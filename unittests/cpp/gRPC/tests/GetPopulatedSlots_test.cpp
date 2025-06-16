@@ -150,7 +150,7 @@ MockServer gRPCGetPopulatedSlotsTests::mockServer;
  */
 TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_create) {
     // Creating getPopulatedSlots object.
-    new GetPopulatedSlots(mockServer.service, *mockServer.dm, true);
+    new GetPopulatedSlots(mockServer.service.get(), *mockServer.dm, true);
     EXPECT_FALSE(mockServer.testCall);
     EXPECT_TRUE(mockServer.asyncCall);
 }

@@ -155,7 +155,7 @@ catena::GetValuePayload gRPCGetValueTests::inVal;
  */
 TEST_F(gRPCGetValueTests, GetValue_create) {
     // Creating getValue object.
-    new GetValue(mockServer.service, *mockServer.dm, true);
+    new GetValue(mockServer.service.get(), *mockServer.dm, true);
     EXPECT_FALSE(mockServer.testCall);
     EXPECT_TRUE(mockServer.asyncCall);
 }

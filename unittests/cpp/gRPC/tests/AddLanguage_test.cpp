@@ -158,7 +158,7 @@ catena::AddLanguagePayload gRPCAddLanguageTests::inVal;
  */
 TEST_F(gRPCAddLanguageTests, AddLanguage_create) {
     // Creating addLanguage object.
-    new AddLanguage(mockServer.service, *mockServer.dm, true);
+    new AddLanguage(mockServer.service.get(), *mockServer.dm, true);
     EXPECT_FALSE(mockServer.testCall);
     EXPECT_TRUE(mockServer.asyncCall);
 }

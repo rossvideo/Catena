@@ -74,13 +74,13 @@ class MockServer {
      */
     void start() {
         // Initializing service and device.
-        service = new MockServiceImpl();
-        dm = new MockDevice();
+        service = std::make_unique<MockServiceImpl>();
+        dm = std::make_unique<MockDevice>();
 
         // Creating the gRPC server.
         builder.AddListeningPort(serverAddr, grpc::InsecureServerCredentials());
         cq = builder.AddCompletionQueue();
-        builder.RegisterService(service);
+        builder.RegisterService(service.get());
         server = builder.BuildAndStart();
 
         // Creating the gRPC client.
@@ -145,9 +145,9 @@ class MockServer {
         // Make sure the calldata objects were destroyed.
         ASSERT_FALSE(testCall);
         ASSERT_FALSE(asyncCall);
-        // Deleting device and service.
-        delete dm;
-        delete service;
+        // Clean up mocks. Can remove when the server is no longer static.
+        dm.~unique_ptr();
+        service.~unique_ptr();
     }
 
     // Address used for gRPC tests.
@@ -155,9 +155,9 @@ class MockServer {
     // Server and service variables.
     grpc::ServerBuilder builder;
     std::unique_ptr<grpc::Server> server = nullptr;
-    MockServiceImpl* service;
+    std::unique_ptr<MockServiceImpl> service = nullptr;
+    std::unique_ptr<MockDevice> dm = nullptr;
     std::mutex mtx;
-    MockDevice* dm;
     // Completion queue variables.
     std::unique_ptr<grpc::ServerCompletionQueue> cq = nullptr;
     std::unique_ptr<std::thread> cqthread = nullptr;

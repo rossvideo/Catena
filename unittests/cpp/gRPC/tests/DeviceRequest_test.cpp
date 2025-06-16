@@ -201,7 +201,7 @@ MockServer gRPCDeviceRequestTests::mockServer;
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_create) {
     // Creating deviceRequest object.
-    new DeviceRequest(mockServer.service, *mockServer.dm, true);
+    new DeviceRequest(mockServer.service.get(), *mockServer.dm, true);
     EXPECT_FALSE(mockServer.testCall);
     EXPECT_TRUE(mockServer.asyncCall);
 }

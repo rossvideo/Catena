@@ -164,7 +164,7 @@ catena::Param gRPCGetParamTests::testParam;
  */
 TEST_F(gRPCGetParamTests, GetParam_create) {
     // Creating getParam object.
-    new GetParam(mockServer.service, *mockServer.dm, true);
+    new GetParam(mockServer.service.get(), *mockServer.dm, true);
     EXPECT_FALSE(mockServer.testCall);
     EXPECT_TRUE(mockServer.asyncCall);
 }

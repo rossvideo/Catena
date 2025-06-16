@@ -155,7 +155,7 @@ catena::LanguagePackRequestPayload gRPCLanguagePackRequestTests::inVal;
  */
 TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_create) {
     // Creating languagePackRequest object.
-    new LanguagePackRequest(mockServer.service, *mockServer.dm, true);
+    new LanguagePackRequest(mockServer.service.get(), *mockServer.dm, true);
     EXPECT_FALSE(mockServer.testCall);
     EXPECT_TRUE(mockServer.asyncCall);
 }

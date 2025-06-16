@@ -217,7 +217,7 @@ MockServer gRPCExecuteCommandTests::mockServer;
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_create) {
     // Creating deviceRequest object.
-    new ExecuteCommand(mockServer.service, *mockServer.dm, true);
+    new ExecuteCommand(mockServer.service.get(), *mockServer.dm, true);
     EXPECT_FALSE(mockServer.testCall);
     EXPECT_TRUE(mockServer.asyncCall);
 }

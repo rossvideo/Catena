@@ -150,7 +150,7 @@ MockServer gRPCListLanguagesTests::mockServer;
  */
 TEST_F(gRPCListLanguagesTests, ListLanguages_create) {
     // Creating listLanguages object.
-    new ListLanguages(mockServer.service, *mockServer.dm, true);
+    new ListLanguages(mockServer.service.get(), *mockServer.dm, true);
     EXPECT_FALSE(mockServer.testCall);
     EXPECT_TRUE(mockServer.asyncCall);
 }

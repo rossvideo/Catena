@@ -59,6 +59,7 @@ namespace gRPC {
  */
 class ICatenaServiceImpl : public catena::CatenaService::AsyncService {
   public:
+    virtual ~ICatenaServiceImpl() = default;
     /**
      * @brief Creates the CallData objects for each gRPC command.
      */

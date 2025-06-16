@@ -163,7 +163,7 @@ catena::MultiSetValuePayload gRPCMultiSetValueTests::inVal;
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_create) {
     // Creating multiSetValue object.
-    new MultiSetValue(mockServer.service, *mockServer.dm, true);
+    new MultiSetValue(mockServer.service.get(), *mockServer.dm, true);
     EXPECT_FALSE(mockServer.testCall);
     EXPECT_TRUE(mockServer.asyncCall);
 }
