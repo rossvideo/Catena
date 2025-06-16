@@ -45,6 +45,7 @@
 #include <IParam.h>
 #include <ParamVisitor.h>
 #include <ISubscriptionManager.h>
+#include <Authorization.h>
 
 // std
 #include <set>
@@ -52,9 +53,6 @@
 
 namespace catena {
 namespace common {
-
-using catena::common::IDevice;
-using catena::common::IParam;
 
 /**
  * @brief Class for managing parameter subscriptions in Catena

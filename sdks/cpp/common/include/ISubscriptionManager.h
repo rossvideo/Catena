@@ -40,16 +40,12 @@
 
 #include <set>
 #include <string>
-#include <memory>
 #include <IDevice.h>
 #include <IParam.h>
+#include <Authorization.h>
 
 namespace catena {
 namespace common {
-
-using catena::common::IDevice;
-using catena::common::IParam;
-using catena::common::Authorizer;
 
 /**
  * @brief Interface for managing parameter subscriptions in Catena
