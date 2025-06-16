@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -116,7 +116,7 @@ TEST_F(RESTLanguagePackRequestTests, LanguagePackRequest_proceedNormal) {
 
     // Defining mock fuctions
     EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
-    EXPECT_CALL(context, fields("language")).Times(1).WillOnce(::testing::ReturnRef(language));
+    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(language));
     EXPECT_CALL(dm, getLanguagePack(::testing::_, ::testing::_)).Times(1);
     ON_CALL(dm, getLanguagePack(::testing::_, ::testing::_))
         .WillByDefault(::testing::Invoke([&rc, &returnVal](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack) {
@@ -142,7 +142,7 @@ TEST_F(RESTLanguagePackRequestTests, LanguagePackRequest_proceedErrReturn) {
 
     // Defining mock fuctions
     EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
-    EXPECT_CALL(context, fields("language")).Times(1).WillOnce(::testing::ReturnRef(language));
+    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(language));
     EXPECT_CALL(dm, getLanguagePack(::testing::_, ::testing::_)).Times(1);
     ON_CALL(dm, getLanguagePack(::testing::_, ::testing::_))
         .WillByDefault(::testing::Invoke([&rc](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack) {
@@ -164,7 +164,7 @@ TEST_F(RESTLanguagePackRequestTests, LanguagePackRequest_proceedErrThrow) {
 
     // Defining mock fuctions
     EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
-    EXPECT_CALL(context, fields("language")).Times(1).WillOnce(::testing::ReturnRef(language));
+    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(language));
     EXPECT_CALL(dm, getLanguagePack(::testing::_, ::testing::_)).Times(1);
     ON_CALL(dm, getLanguagePack(::testing::_, ::testing::_))
         .WillByDefault(::testing::Invoke([&rc](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack) {
@@ -179,11 +179,57 @@ TEST_F(RESTLanguagePackRequestTests, LanguagePackRequest_proceedErrThrow) {
 }
 
 /* 
- * TEST 5 - Writing to console with LanguagePackRequest finish().
+ * TEST 5 - dm.getLanguagePack() throws std::exception.
+ */
+TEST_F(RESTLanguagePackRequestTests, LanguagePackRequest_proceedStdException) {
+    // Setting up the returnVal to test with.
+    catena::exception_with_status rc("Standard exception", catena::StatusCode::INTERNAL);
+
+    // Defining mock fuctions
+    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
+    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(language));
+    EXPECT_CALL(dm, getLanguagePack(::testing::_, ::testing::_)).Times(1);
+    ON_CALL(dm, getLanguagePack(::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke([](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack) {
+            throw std::runtime_error("Standard exception");
+            return catena::exception_with_status("", catena::StatusCode::OK); // Here to ignore errors.
+        }));
+
+    // Calling proceed() and checking written response.
+    languagePackRequest->proceed();
+
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+/* 
+ * TEST 6 - dm.getLanguagePack() throws unknown exception.
+ */
+TEST_F(RESTLanguagePackRequestTests, LanguagePackRequest_proceedUnknownException) {
+    // Setting up the returnVal to test with.
+    catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
+
+    // Defining mock fuctions
+    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
+    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(language));
+    EXPECT_CALL(dm, getLanguagePack(::testing::_, ::testing::_)).Times(1);
+    ON_CALL(dm, getLanguagePack(::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke([](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack) {
+            throw 42; // Throw an int as an unknown exception
+            return catena::exception_with_status("", catena::StatusCode::OK); // Here to ignore errors.
+        }));
+
+    // Calling proceed() and checking written response.
+    languagePackRequest->proceed();
+
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+/* 
+ * TEST 7 - Writing to console with LanguagePackRequest finish().
  */
 TEST_F(RESTLanguagePackRequestTests, LanguagePackRequest_finish) {
     // Calling finish and expecting the console output.
     languagePackRequest->finish();
     // Idk why I cant use .contains() here :/
-    ASSERT_TRUE(MockConsole.str().find("LanguagePackRequest[4] finished\n") != std::string::npos);
+    ASSERT_TRUE(MockConsole.str().find("LanguagePackRequest[6] finished\n") != std::string::npos);
 }

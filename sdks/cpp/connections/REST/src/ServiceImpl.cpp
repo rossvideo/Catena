@@ -56,7 +56,7 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool auth
     router_.addProduct("GET/asset",           AssetRequest::makeOne);
     router_.addProduct("GET/devices",         GetPopulatedSlots::makeOne);
     router_.addProduct("GET/value",           GetValue::makeOne);
-    router_.addProduct("PUT/multi-set-value", MultiSetValue::makeOne);
+    router_.addProduct("PUT/values",          MultiSetValue::makeOne);
     router_.addProduct("PUT/value",           SetValue::makeOne);
     router_.addProduct("GET/param",           GetParam::makeOne);
     router_.addProduct("GET/language-pack",   LanguagePackRequest::makeOne);
