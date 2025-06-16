@@ -231,7 +231,8 @@ Public Member Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Reference to the vector of all subscribed OIDs </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>A copy of the set of all subscribed OIDs</dd></dl>
+<p>Since subManager does not expose its mutex, it is required to return a copy of the set in order to avoid race conditions in the async API calls. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#a1167c1614e23045b12c5b69c3465f16c">catena::common::ISubscriptionManager</a>.</p>
 
