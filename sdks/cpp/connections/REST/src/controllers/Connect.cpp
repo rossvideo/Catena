@@ -70,13 +70,17 @@ void Connect::proceed() {
         cv_.wait(lock, [this] { return hasUpdate_; });
         hasUpdate_ = false;
         writeConsole_(CallStatus::kWrite, true);
-
-        res_.set_slot(dm_.slot());
-        writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), res_);
+        try {
+            if (socket_.is_open() && !shutdown_) {
+                res_.set_slot(dm_.slot());
+                writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), res_);
+            }
+        // A little scuffed but I have no idea how else to detect disconnect.
+        } catch (...) {
+            socket_.close();
+        }
         lock.unlock();
     }
-
-    socket_.close();
 }
 
 void Connect::finish() {

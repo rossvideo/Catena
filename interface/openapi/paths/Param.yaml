@@ -55,7 +55,7 @@ get:
       description: The fully qualified path to the parameter within the device model.
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-      example: text_box
+      example: "text_box"
 
   tags:
     - Parameters
