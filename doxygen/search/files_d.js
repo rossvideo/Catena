@@ -10,5 +10,6 @@ var searchData=
   ['status_2eh_7',['Status.h',['../Status_8h.html',1,'']]],
   ['streamable_2eh_8',['Streamable.h',['../Streamable_8h.html',1,'']]],
   ['structinfo_2eh_9',['StructInfo.h',['../StructInfo_8h.html',1,'']]],
-  ['subscriptionmanager_2eh_10',['SubscriptionManager.h',['../SubscriptionManager_8h.html',1,'']]]
+  ['subscriptionmanager_2eh_10',['SubscriptionManager.h',['../SubscriptionManager_8h.html',1,'']]],
+  ['subscriptions_2eh_11',['Subscriptions.h',['../Subscriptions_8h.html',1,'']]]
 ];

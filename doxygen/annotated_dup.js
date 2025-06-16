@@ -105,7 +105,7 @@ var annotated_dup =
         [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html", "classcatena_1_1REST_1_1SocketReader" ],
         [ "SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", "classcatena_1_1REST_1_1SocketWriter" ],
         [ "SSEWriter", "classcatena_1_1REST_1_1SSEWriter.html", "classcatena_1_1REST_1_1SSEWriter" ],
-        [ "UpdateSubscriptions", "classcatena_1_1REST_1_1UpdateSubscriptions.html", "classcatena_1_1REST_1_1UpdateSubscriptions" ]
+        [ "Subscriptions", "classcatena_1_1REST_1_1Subscriptions.html", "classcatena_1_1REST_1_1Subscriptions" ]
       ] ],
       [ "exception_with_status", "structcatena_1_1exception__with__status.html", null ]
     ] ]

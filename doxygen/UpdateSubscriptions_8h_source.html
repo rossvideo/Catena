@@ -69,7 +69,7 @@ $(document).ready(function() { init_codefold(0); });
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('gRPC_2include_2controllers_2UpdateSubscriptions_8h_source.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('UpdateSubscriptions_8h_source.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -98,7 +98,7 @@ $(document).ready(function(){initNavTree('gRPC_2include_2controllers_2UpdateSubs
   <div class="headertitle"><div class="title">UpdateSubscriptions.h</div></div>
 </div><!--header-->
 <div class="contents">
-<a href="gRPC_2include_2controllers_2UpdateSubscriptions_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*</span></div>
+<a href="UpdateSubscriptions_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> * Copyright 2025 Ross Video Ltd</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment"> *</span></div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment"> * Redistribution and use in source and binary forms, with or without</span></div>
@@ -151,34 +151,22 @@ $(document).ready(function(){initNavTree('gRPC_2include_2controllers_2UpdateSubs
 <div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span> </div>
 <div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    <span class="keywordtype">void</span> sendSubscribedParameters_(<a class="code hl_class" href="classcatena_1_1common_1_1Authorizer.html">catena::common::Authorizer</a>&amp; authz);</div>
 <div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span> </div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    std::vector&lt;std::string&gt; clientScopes_;</div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span> </div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    catena::UpdateSubscriptionsPayload req_;</div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span> </div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    catena::DeviceComponent_ComponentParam res_;</div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span> </div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    std::vector&lt;catena::DeviceComponent_ComponentParam&gt; responses_;</div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    uint32_t current_response_{0};</div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span> </div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    ServerAsyncWriter&lt;catena::DeviceComponent_ComponentParam&gt; writer_;</div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span> </div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>    <a class="code hl_enumeration" href="namespacecatena_1_1gRPC.html#a27aee93775bf0dcce2e1fa3afe6d1982">CallStatus</a> status_;</div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span> </div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    <a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">IDevice</a>&amp; dm_;</div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span> </div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;  </div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span> </div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>    <span class="keywordtype">int</span> objectId_;</div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>    </div>
-<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>    std::mutex mtx_;</div>
-<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span> </div>
-<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>    std::unique_lock&lt;std::mutex&gt; writer_lock_{mtx_, std::defer_lock};</div>
-<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>};</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    catena::UpdateSubscriptionsPayload req_;</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    ServerAsyncWriter&lt;catena::DeviceComponent_ComponentParam&gt; writer_;</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    <a class="code hl_enumeration" href="namespacecatena_1_1gRPC.html#a27aee93775bf0dcce2e1fa3afe6d1982">CallStatus</a> status_;</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    <a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">IDevice</a>&amp; dm_;</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    std::shared_ptr&lt;catena::common::Authorizer&gt; sharedAuthz_;</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    <a class="code hl_class" href="classcatena_1_1common_1_1Authorizer.html">catena::common::Authorizer</a>* authz_;</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    std::set&lt;std::string&gt; subbedOids_{};</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    std::set&lt;std::string&gt;::iterator it_;</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span> </div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    <span class="keywordtype">int</span> objectId_;</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>};</div>
 </div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span> </div>
-<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>}; <span class="comment">// namespace gRPC</span></div>
-<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>}; <span class="comment">// namespace catena</span></div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span> </div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>}; <span class="comment">// namespace gRPC</span></div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>}; <span class="comment">// namespace catena</span></div>
 <div class="ttc" id="aCallData_8h_html"><div class="ttname"><a href="CallData_8h.html">CallData.h</a></div><div class="ttdoc">Base class for gRPC CallData classes which defines getJWSToken_().</div></div>
 <div class="ttc" id="aISubscriptionManager_8h_html"><div class="ttname"><a href="ISubscriptionManager_8h.html">ISubscriptionManager.h</a></div><div class="ttdoc">Interface for managing parameter subscriptions in Catena.</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1Authorizer_html"><div class="ttname"><a href="classcatena_1_1common_1_1Authorizer.html">catena::common::Authorizer</a></div><div class="ttdoc">Class for handling authorization information.</div><div class="ttdef"><b>Definition</b> Authorization.h:69</div></div>
@@ -195,7 +183,7 @@ $(document).ready(function(){initNavTree('gRPC_2include_2controllers_2UpdateSubs
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_1ee1c825a28454f120fade4d126590ba.html">sdks</a></li><li class="navelem"><a class="el" href="dir_c3a31ef84dfd90f7312278dbc4734bdb.html">cpp</a></li><li class="navelem"><a class="el" href="dir_01181b2e4bcbd5d200324c852c35719a.html">connections</a></li><li class="navelem"><a class="el" href="dir_ad1bc33ffc0c46262e23d259a6a8b800.html">gRPC</a></li><li class="navelem"><a class="el" href="dir_88e8bbaad8f68d13e1eb0d923c3ba96f.html">include</a></li><li class="navelem"><a class="el" href="dir_467cfab7fe529c5f74c4e969b5759866.html">controllers</a></li><li class="navelem"><a class="el" href="gRPC_2include_2controllers_2UpdateSubscriptions_8h.html">UpdateSubscriptions.h</a></li>
+    <li class="navelem"><a class="el" href="dir_1ee1c825a28454f120fade4d126590ba.html">sdks</a></li><li class="navelem"><a class="el" href="dir_c3a31ef84dfd90f7312278dbc4734bdb.html">cpp</a></li><li class="navelem"><a class="el" href="dir_01181b2e4bcbd5d200324c852c35719a.html">connections</a></li><li class="navelem"><a class="el" href="dir_ad1bc33ffc0c46262e23d259a6a8b800.html">gRPC</a></li><li class="navelem"><a class="el" href="dir_88e8bbaad8f68d13e1eb0d923c3ba96f.html">include</a></li><li class="navelem"><a class="el" href="dir_467cfab7fe529c5f74c4e969b5759866.html">controllers</a></li><li class="navelem"><a class="el" href="UpdateSubscriptions_8h.html">UpdateSubscriptions.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>
