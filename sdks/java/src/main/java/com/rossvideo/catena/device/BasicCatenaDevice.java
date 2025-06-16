@@ -2,7 +2,6 @@ package com.rossvideo.catena.device;
 
 import java.util.Map;
 
-import com.google.protobuf.Empty;
 import com.rossvideo.catena.device.impl.CommandManager;
 import com.rossvideo.catena.device.impl.MenuGroupManager;
 import com.rossvideo.catena.device.impl.ParamManager;
@@ -20,6 +19,7 @@ import catena.core.parameter.GetValuePayload;
 import catena.core.parameter.Param;
 import catena.core.parameter.SetValuePayload;
 import catena.core.parameter.Value;
+import catena.core.parameter.Empty;
 import io.grpc.stub.StreamObserver;
 
 public class BasicCatenaDevice implements CatenaDevice
@@ -122,14 +122,14 @@ public class BasicCatenaDevice implements CatenaDevice
         
     }
 
-    public void setValue(String oid, int index, Value value)  {
-        setValue(oid, index, value, null);
+    public void setValue(String oid, Value value)  {
+        setValue(oid, value, null);
     }
     
-    public void setValue(String oid, int index, Value value, StreamObserver<Empty> responseObserver) {
+    public void setValue(String oid, Value value, StreamObserver<Empty> responseObserver) {
         try 
         {
-            getParamManager().setValue(oid, index, value);
+            getParamManager().setValue(oid, value);
             
             if (responseObserver != null)
             {
@@ -149,7 +149,6 @@ public class BasicCatenaDevice implements CatenaDevice
                 .setSlot(slot)
                 .setValue(PushValue.newBuilder()
                         .setOid(oid)
-                        .setElementIndex(index)
                         .setValue(value)
                         .build())
                 .build());
@@ -170,9 +169,8 @@ public class BasicCatenaDevice implements CatenaDevice
         }
         
         String oid = request.getOid();
-        int index = request.getElementIndex();
         Value value = request.getValue();
-        setValue(oid, index, value, responseObserver);
+        setValue(oid, value, responseObserver);
     }
     
     protected ScopeValidator getScopes(Map<String, Object> claims)
@@ -204,7 +202,7 @@ public class BasicCatenaDevice implements CatenaDevice
     public void getValue(GetValuePayload request, StreamObserver<Value> responseObserver, Map<String, Object> claims) {
         try
         {
-            Value paramValue = getParamManager().getValue(request.getOid(), request.getElementIndex());
+            Value paramValue = getParamManager().getValue(request.getOid());
             responseObserver.onNext(paramValue);
             responseObserver.onCompleted();
         }
