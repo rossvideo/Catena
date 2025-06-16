@@ -55,7 +55,7 @@ using catena::common::Authorizer;
  * @brief Interface for managing parameter subscriptions in Catena
  */
 class ISubscriptionManager {
-public:
+  public:
     virtual ~ISubscriptionManager() = default;
 
     /**
@@ -80,7 +80,11 @@ public:
     /**
      * @brief Get all subscribed OIDs, including expanding wildcard subscriptions
      * @param dm The device model to use 
-     * @return Reference to the vector of all subscribed OIDs
+     * @return A copy of the set of all subscribed OIDs
+     * 
+     * Since subManager does not expose its mutex, it is required to return a
+     * copy of the set in order to avoid race conditions in the async API
+     * calls.
      */
     virtual std::set<std::string> getAllSubscribedOids(const IDevice& dm) = 0;
 
