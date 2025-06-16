@@ -13,5 +13,5 @@ var dir_467cfab7fe529c5f74c4e969b5759866 =
     [ "ListLanguages.h", "gRPC_2include_2controllers_2ListLanguages_8h.html", "gRPC_2include_2controllers_2ListLanguages_8h" ],
     [ "MultiSetValue.h", "gRPC_2include_2controllers_2MultiSetValue_8h.html", "gRPC_2include_2controllers_2MultiSetValue_8h" ],
     [ "SetValue.h", "gRPC_2include_2controllers_2SetValue_8h.html", "gRPC_2include_2controllers_2SetValue_8h" ],
-    [ "UpdateSubscriptions.h", "UpdateSubscriptions_8h.html", "UpdateSubscriptions_8h" ]
+    [ "UpdateSubscriptions.h", "gRPC_2include_2controllers_2UpdateSubscriptions_8h.html", "gRPC_2include_2controllers_2UpdateSubscriptions_8h" ]
 ];

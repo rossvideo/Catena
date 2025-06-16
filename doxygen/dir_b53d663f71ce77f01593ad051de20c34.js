@@ -13,5 +13,5 @@ var dir_b53d663f71ce77f01593ad051de20c34 =
     [ "ListLanguages.h", "REST_2include_2controllers_2ListLanguages_8h.html", "REST_2include_2controllers_2ListLanguages_8h" ],
     [ "MultiSetValue.h", "REST_2include_2controllers_2MultiSetValue_8h.html", "REST_2include_2controllers_2MultiSetValue_8h" ],
     [ "SetValue.h", "REST_2include_2controllers_2SetValue_8h.html", "REST_2include_2controllers_2SetValue_8h" ],
-    [ "Subscriptions.h", "Subscriptions_8h.html", "Subscriptions_8h" ]
+    [ "UpdateSubscriptions.h", "REST_2include_2controllers_2UpdateSubscriptions_8h.html", "REST_2include_2controllers_2UpdateSubscriptions_8h" ]
 ];
