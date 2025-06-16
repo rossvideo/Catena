@@ -40,7 +40,7 @@
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
 
-#include "../../common/mocks/MockDevice.h"
+#include "MockDevice.h"
 
 // common
 #include <ISubscriptionManager.h>
@@ -105,11 +105,11 @@ class MockServer {
      * Functions to expect when creating a new CallData object.
      */
     void expNew() {
-        EXPECT_CALL(*service, registerItem(::testing::_)).Times(1)
-            .WillOnce(::testing::Invoke([this](ICallData* cd) {
+        EXPECT_CALL(*service, registerItem(::testing::_))
+            .WillRepeatedly(::testing::Invoke([this](ICallData* cd) {
                 asyncCall = cd;
             }));
-        EXPECT_CALL(*service, cq()).Times(2).WillRepeatedly(::testing::Return(cq.get()));
+        EXPECT_CALL(*service, cq()).WillRepeatedly(::testing::Return(cq.get()));
     }
 
     void expectAuthz(grpc::ClientContext* clientContext = nullptr, const std::string& mockToken = "") {

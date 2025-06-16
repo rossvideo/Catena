@@ -47,7 +47,7 @@
 #include <google/protobuf/util/json_util.h>
 
 // Test helpers
-#include "MockServer.h"
+#include "GRPCTest.h"
 #include "MockParam.h"
 
 // gRPC
@@ -57,14 +57,9 @@ using namespace catena::common;
 using namespace catena::gRPC;
 
 // Fixture
-class gRPCGetParamTests : public ::testing::Test {
+class gRPCGetParamTests : public GRPCTest {
   protected:
-    /*
-     * Called at the start of all tests.
-     * Starts the mockServer and initializes the static inVal.
-     */
-    static void SetUpTestSuite() {
-        mockServer.start();
+    gRPCGetParamTests() : GRPCTest() {
         // Setting up the inVal used across all tests.
         inVal.set_slot(1);
         inVal.set_oid("/test_oid");
@@ -74,17 +69,6 @@ class gRPCGetParamTests : public ::testing::Test {
         testParam.mutable_value()->set_string_value("test_value");
         testParam.add_oid_aliases("test_alias");
         (*testParam.mutable_name()->mutable_display_strings())["en"] = "Test Param";
-    }
-
-    /*
-     * Sets up expectations for the creation of a new CallData obj.
-     */
-    void SetUp() override {
-        // Redirecting cout to a stringstream for testing.
-        oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-        // We can always assume that a new CallData obj is created.
-        // Either from initialization or kProceed.
-        mockServer.expNew();
     }
 
     /* 
@@ -105,55 +89,14 @@ class gRPCGetParamTests : public ::testing::Test {
         EXPECT_EQ(outRc.error_message(), expRc.error_message());
     }
 
-    /*
-     * Restores cout after each test.
-     */
-    void TearDown() override {
-        std::cout.rdbuf(oldCout);
-    }
-
-    /*
-     * Called at the end of all tests, shuts down the server and cleans up.
-     */
-    static void TearDownTestSuite() {
-        // Redirecting cout to a stringstream for testing.
-        std::stringstream MockConsole;
-        std::streambuf* oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-        // Destroying the server.
-        EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-            delete mockServer.testCall;
-            mockServer.testCall = nullptr;
-        }));
-        mockServer.shutdown();
-        // Restoring cout
-        std::cout.rdbuf(oldCout);
-    }
-
-    // Console variables
-    std::stringstream MockConsole;
-    std::streambuf* oldCout;
-    // Client variables.
-    grpc::ClientContext clientContext;
-    bool done = false;
-    std::condition_variable cv;
-    std::mutex cv_mtx;
-    std::unique_lock<std::mutex> lock{cv_mtx};
-    static catena::GetParamPayload inVal;
+    catena::GetParamPayload inVal;
     catena::DeviceComponent_ComponentParam outVal;
     grpc::Status outRc;
     // Expected variables
-    static catena::Param testParam;
+    catena::Param testParam;
     catena::DeviceComponent_ComponentParam expVal;
     grpc::Status expRc;
-
-    static MockServer mockServer;
 };
-
-MockServer gRPCGetParamTests::mockServer;
-// Static as its only used to make sure the correct obj is passed into mocked
-// functions.
-catena::GetParamPayload gRPCGetParamTests::inVal;
-catena::Param gRPCGetParamTests::testParam;
 
 /*
  * ============================================================================
@@ -173,6 +116,8 @@ TEST_F(gRPCGetParamTests, GetParam_create) {
  * TEST 2 - Normal case for GetParam proceed().
  */
 TEST_F(gRPCGetParamTests, GetParam_proceed) {
+    new GetParam(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("", catena::StatusCode::OK);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     expVal.set_oid(inVal.oid());
@@ -197,7 +142,7 @@ TEST_F(gRPCGetParamTests, GetParam_proceed) {
             param.CopyFrom(testParam);
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -210,6 +155,8 @@ TEST_F(gRPCGetParamTests, GetParam_proceed) {
  * TEST 3 - GetParam with authz on and valid token.
  */
 TEST_F(gRPCGetParamTests, GetParam_proceedAuthzValid) {
+    new GetParam(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("", catena::StatusCode::OK);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     expVal.set_oid(inVal.oid());
@@ -248,7 +195,7 @@ TEST_F(gRPCGetParamTests, GetParam_proceedAuthzValid) {
             param.CopyFrom(testParam);
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -261,6 +208,8 @@ TEST_F(gRPCGetParamTests, GetParam_proceedAuthzValid) {
  * TEST 4 - GetParam with authz on and invalid token.
  */
 TEST_F(gRPCGetParamTests, GetParam_proceedAuthzInvalid) {
+    new GetParam(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     // Not a token so it should get rejected by the authorizer.
@@ -268,7 +217,7 @@ TEST_F(gRPCGetParamTests, GetParam_proceedAuthzInvalid) {
 
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -281,6 +230,8 @@ TEST_F(gRPCGetParamTests, GetParam_proceedAuthzInvalid) {
  * TEST 5 - GetParam with authz on and invalid token.
  */
 TEST_F(gRPCGetParamTests, GetParam_proceedAuthzJWSNotFound) {
+    new GetParam(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     // Should not be able to find the bearer token.
@@ -288,7 +239,7 @@ TEST_F(gRPCGetParamTests, GetParam_proceedAuthzJWSNotFound) {
 
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -301,6 +252,8 @@ TEST_F(gRPCGetParamTests, GetParam_proceedAuthzJWSNotFound) {
  * TEST 6 - dm.getParam() returns a catena::exception_with_status.
  */
 TEST_F(gRPCGetParamTests, GetParam_proceedErrGetParamReturnCatena) {
+    new GetParam(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     // Mocking kProcess and kFinish functions
@@ -311,7 +264,7 @@ TEST_F(gRPCGetParamTests, GetParam_proceedErrGetParamReturnCatena) {
             status = catena::exception_with_status(rc.what(), rc.status);
             return nullptr;
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -324,6 +277,8 @@ TEST_F(gRPCGetParamTests, GetParam_proceedErrGetParamReturnCatena) {
  * TEST 7 - dm.getParam() throws a catena::exception_with_status.
  */
 TEST_F(gRPCGetParamTests, GetParam_proceedErrGetParamThrowCatena) {
+    new GetParam(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     // Mocking kProcess and kFinish functions
@@ -334,7 +289,7 @@ TEST_F(gRPCGetParamTests, GetParam_proceedErrGetParamThrowCatena) {
             throw catena::exception_with_status(rc.what(), rc.status);
             return nullptr;
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -347,6 +302,8 @@ TEST_F(gRPCGetParamTests, GetParam_proceedErrGetParamThrowCatena) {
  * TEST 8 - dm.getParam() throws a std::runtime_exception.
  */
 TEST_F(gRPCGetParamTests, GetParam_proceedErrGetParamThrowUnknown) {
+    new GetParam(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     // Mocking kProcess and kFinish functions
@@ -357,7 +314,7 @@ TEST_F(gRPCGetParamTests, GetParam_proceedErrGetParamThrowUnknown) {
             throw std::runtime_error(rc.what());
             return nullptr;
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -370,6 +327,8 @@ TEST_F(gRPCGetParamTests, GetParam_proceedErrGetParamThrowUnknown) {
  * TEST 9 - param->toProto() returns a catena::exception_with_status.
  */
 TEST_F(gRPCGetParamTests, GetParam_proceedErrToProtoReturnCatena) {
+    new GetParam(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
@@ -385,7 +344,7 @@ TEST_F(gRPCGetParamTests, GetParam_proceedErrToProtoReturnCatena) {
     EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(expVal.oid()));
     EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1)
         .WillOnce(::testing::Return(catena::exception_with_status(rc.what(), rc.status)));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -398,6 +357,8 @@ TEST_F(gRPCGetParamTests, GetParam_proceedErrToProtoReturnCatena) {
  * TEST 10 - param->toProto() throws a catena::exception_with_status.
  */
 TEST_F(gRPCGetParamTests, GetParam_proceedErrToProtoThrowCatena) {
+    new GetParam(mockServer.service, *mockServer.dm, true);
+
     catena::exception_with_status rc("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
@@ -416,7 +377,7 @@ TEST_F(gRPCGetParamTests, GetParam_proceedErrToProtoThrowCatena) {
             throw catena::exception_with_status(rc.what(), rc.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -429,6 +390,8 @@ TEST_F(gRPCGetParamTests, GetParam_proceedErrToProtoThrowCatena) {
  * TEST 11 - param->toProto() throws a std::runtime_exception.
  */
 TEST_F(gRPCGetParamTests, GetParam_proceedErrToProtoThrowUnknown) {
+    new GetParam(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
@@ -447,7 +410,7 @@ TEST_F(gRPCGetParamTests, GetParam_proceedErrToProtoThrowUnknown) {
             throw std::runtime_error(rc.what());
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));

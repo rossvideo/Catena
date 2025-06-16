@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief A utility class for using Sockets in REST API tests.
+ * @brief A parent class for REST test fixtures.
  * @author benjamin.whitten@rossvideo.com
  * @date 25/05/12
  * @copyright Copyright © 2025 Ross Video Ltd
