@@ -84,6 +84,7 @@ var annotated_dup =
         [ "Singleton", "classcatena_1_1patterns_1_1Singleton.html", "classcatena_1_1patterns_1_1Singleton" ]
       ] ],
       [ "REST", "namespacecatena_1_1REST.html", [
+        [ "AddLanguage", "classcatena_1_1REST_1_1AddLanguage.html", "classcatena_1_1REST_1_1AddLanguage" ],
         [ "AssetRequest", "classcatena_1_1REST_1_1AssetRequest.html", "classcatena_1_1REST_1_1AssetRequest" ],
         [ "BasicParamInfoRequest", "classcatena_1_1REST_1_1BasicParamInfoRequest.html", "classcatena_1_1REST_1_1BasicParamInfoRequest" ],
         [ "CatenaServiceImpl", "classcatena_1_1REST_1_1CatenaServiceImpl.html", "classcatena_1_1REST_1_1CatenaServiceImpl" ],
@@ -97,8 +98,8 @@ var annotated_dup =
         [ "IServiceImpl", "classcatena_1_1REST_1_1IServiceImpl.html", "classcatena_1_1REST_1_1IServiceImpl" ],
         [ "ISocketReader", "classcatena_1_1REST_1_1ISocketReader.html", "classcatena_1_1REST_1_1ISocketReader" ],
         [ "ISocketWriter", "classcatena_1_1REST_1_1ISocketWriter.html", "classcatena_1_1REST_1_1ISocketWriter" ],
-        [ "LanguagePack", "classcatena_1_1REST_1_1LanguagePack.html", "classcatena_1_1REST_1_1LanguagePack" ],
-        [ "Languages", "classcatena_1_1REST_1_1Languages.html", "classcatena_1_1REST_1_1Languages" ],
+        [ "LanguagePackRequest", "classcatena_1_1REST_1_1LanguagePackRequest.html", "classcatena_1_1REST_1_1LanguagePackRequest" ],
+        [ "ListLanguages", "classcatena_1_1REST_1_1ListLanguages.html", "classcatena_1_1REST_1_1ListLanguages" ],
         [ "MultiSetValue", "classcatena_1_1REST_1_1MultiSetValue.html", "classcatena_1_1REST_1_1MultiSetValue" ],
         [ "SetValue", "classcatena_1_1REST_1_1SetValue.html", "classcatena_1_1REST_1_1SetValue" ],
         [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html", "classcatena_1_1REST_1_1SocketReader" ],
