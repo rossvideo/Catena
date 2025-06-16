@@ -50,20 +50,20 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool auth
 
     // Initializing the routes for router_.
 
-    router_.addProduct("GET/v1/connect",                    Connect::makeOne);
-    router_.addProduct("GET/v1",                            DeviceRequest::makeOne);
-    router_.addProduct("POST/v1/command",                   ExecuteCommand::makeOne);
-    router_.addProduct("GET/v1/asset",                      AssetRequest::makeOne);
-    router_.addProduct("GET/v1/get-populated-slots",        GetPopulatedSlots::makeOne);
-    router_.addProduct("GET/v1/value",                      GetValue::makeOne);
-    router_.addProduct("PUT/v1/multi-set-value",            MultiSetValue::makeOne);
-    router_.addProduct("PUT/v1/value",                      SetValue::makeOne);
-    router_.addProduct("GET/v1/get-param",                  GetParam::makeOne);
-    router_.addProduct("GET/v1/language-pack-request",      LanguagePackRequest::makeOne);
-    router_.addProduct("GET/v1/list-languages",             ListLanguages::makeOne);
-    router_.addProduct("PUT/v1/add-language",               AddLanguage::makeOne);
-    router_.addProduct("GET/v1/basic-param-info-request",   BasicParamInfoRequest::makeOne);
-    router_.addProduct("PUT/v1/update-subscriptions",       UpdateSubscriptions::makeOne);
+    router_.addProduct("GET/connect",         Connect::makeOne);
+    router_.addProduct("GET",                 DeviceRequest::makeOne);
+    router_.addProduct("POST/command",        ExecuteCommand::makeOne);
+    router_.addProduct("GET/asset",           AssetRequest::makeOne);
+    router_.addProduct("GET/devices",         GetPopulatedSlots::makeOne);
+    router_.addProduct("GET/value",           GetValue::makeOne);
+    router_.addProduct("PUT/values",          MultiSetValue::makeOne);
+    router_.addProduct("PUT/value",           SetValue::makeOne);
+    router_.addProduct("GET/param",           GetParam::makeOne);
+    router_.addProduct("GET/language-pack",   LanguagePackRequest::makeOne);
+    router_.addProduct("GET/languages",       ListLanguages::makeOne);
+    router_.addProduct("POST/language-pack",  AddLanguage::makeOne);
+    router_.addProduct("GET/basic-param",     BasicParamInfoRequest::makeOne);
+    router_.addProduct("PUT/subscriptions",   UpdateSubscriptions::makeOne);
 }
 
 // Initializing the shutdown signal for all open connections.
@@ -90,13 +90,13 @@ void CatenaServiceImpl::run() {
                     SocketReader context(*subscriptionManager_, EOPath_);
                     context.read(socket, authorizationEnabled_);
                     //TODO: remove v1 from the request key when the router options are updated
-                    std::string requestKey = context.method() + "/v1" + context.endpoint();
+                    std::string requestKey = context.method() + context.endpoint();
                     // Returning empty response with options to the client if required.
                     if (context.method() == "OPTIONS") {
                         rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
                         SocketWriter(socket, context.origin()).sendResponse(rc);
                     // Sending an empty 200 OK response for health check.
-                    } else if (requestKey == "GET/v1/health") {
+                    } else if (requestKey == "GET/health") {
                         SocketWriter(socket, context.origin()).sendResponse(rc);
                     // Otherwise routing to request.
                     } else if (router_.canMake(requestKey)) {

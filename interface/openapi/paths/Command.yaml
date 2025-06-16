@@ -29,9 +29,10 @@
 #
 
 #
-# OpenAPI documentation of the ExecuteCommand RPC for the Catena REST API
+# OpenAPI documentation of the Catena REST API's command endpoint
+# Author: john.naylor@rossvideo.com
 # Author: benjamin.whitten@rossvideo.com
-# Date: 25/04/03
+# Date: 25/06/09
 #
 
 post:
@@ -71,8 +72,8 @@ post:
       description: flag to suppress the server's response unless set to true
       schema:
         type: string
-        enum: ["true", "false"]
-        default: "false" # because protobuf defaults to false
+        enum: ["true"]
+        default: "true" # because protobuf defaults to false
 
   tags:
     - Commands
@@ -84,30 +85,40 @@ post:
       application/json:
         schema:
           $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-        example: {value:{"float32_value": 0.5}}
+        example: {"float32_value":0.5}
 
-    
+
   responses:
     "200":
-      description: The server's response will either be a 'Value' or nothing if 
-        'respond' is false
+      description: |
+        If 'respond' is true, the server's response will one or more 'Values',
+        empty responses, or exceptions. If 'respond' is false, the server will
+        not respond with content, just the status code.
       content:
         application/json:
           schema:
             oneOf:
               - title: No Response
-                description: respond is false or server does not have a 
+                description: respond is true and the server does not have a 
                   response for the command
 
-              - $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+              - title: Response
+                description: respond is true and the server has a response for
+                  the command containing a single 'Value'.
+                fields:
+                  - title: value
+                    $ref: "../../../schema/catena.param_schema.json#/$defs/value"
               
               - $ref: "./Messages.yaml#/$defs/exception"
 
-          example: {int32_value: 1}
+          example: {"data":[{"response":{"string_value":"Command executed successfully"}}]}
 
 
     "500":
       $ref: '../openapi.yaml#/components/responses/InternalServerError'
+
+    "400":
+      $ref: '../openapi.yaml#/components/responses/BadRequest'
           
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'

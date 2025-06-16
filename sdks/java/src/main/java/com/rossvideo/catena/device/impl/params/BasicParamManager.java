@@ -11,7 +11,6 @@ import catena.core.device.Device;
 import catena.core.parameter.Param;
 import catena.core.parameter.Param.Builder;
 import catena.core.parameter.ParamType;
-import catena.core.parameter.StructField;
 import catena.core.parameter.StructValue;
 import catena.core.parameter.Value;
 
@@ -25,9 +24,7 @@ public class BasicParamManager implements ParamManager
             VALUE,
             VALUE_BUILDER,
             STRUCT_VALUE,
-            STRUCT_VALUE_BUILDER,
-            STRUCT_FIELD,
-            STRUCT_FIELD_BUILDER
+            STRUCT_VALUE_BUILDER
         }
         
         private PathToComponent parent; 
@@ -39,8 +36,6 @@ public class BasicParamManager implements ParamManager
         private StructValue structValue;
         private StructValue.Builder structValueBuilder;
         private String fieldName;
-        private StructField structField;
-        private StructField.Builder structFieldBuilder;
         
         public PathToComponent(PathToComponent parent, String fieldName, Param param)
         {
@@ -56,20 +51,28 @@ public class BasicParamManager implements ParamManager
             this.type = Type.VALUE;
             this.value = value;
         }
+
+        public PathToComponent(PathToComponent parent, String fieldName, Value value)
+        {
+            this.parent = parent;
+            this.type = Type.VALUE;
+            this.fieldName = fieldName;
+            this.value = value;
+        }
         
+        public PathToComponent(PathToComponent parent, String fieldName, StructValue structValue)
+        {
+            this.parent = parent;
+            this.type = Type.STRUCT_VALUE;
+            this.fieldName = fieldName;
+            this.structValue = structValue;
+        }
+
         public PathToComponent(PathToComponent parent, StructValue structValue)
         {
             this.parent = parent;
             this.type = Type.STRUCT_VALUE;
             this.structValue = structValue;
-        }
-        
-        public PathToComponent(PathToComponent parent, String fieldName, StructField structField)
-        {
-            this.parent = parent;
-            this.fieldName = fieldName;
-            this.type = Type.STRUCT_FIELD;
-            this.structField = structField;
         }
         
         public PathToComponent(PathToComponent parent, String fieldName, Param.Builder param)
@@ -87,19 +90,19 @@ public class BasicParamManager implements ParamManager
             this.valueBuilder = value;
         }
         
+        public PathToComponent(PathToComponent parent, String fieldName, StructValue.Builder structValue)
+        {
+            this.parent = parent;
+            this.type = Type.STRUCT_VALUE_BUILDER;
+            this.fieldName = fieldName;
+            this.structValueBuilder = structValue;
+        }
+
         public PathToComponent(PathToComponent parent, StructValue.Builder structValue)
         {
             this.parent = parent;
             this.type = Type.STRUCT_VALUE_BUILDER;
             this.structValueBuilder = structValue;
-        }
-        
-        public PathToComponent(PathToComponent parent, String fieldName, StructField.Builder structField)
-        {
-            this.parent = parent;
-            this.fieldName = fieldName;
-            this.type = Type.STRUCT_FIELD_BUILDER;
-            this.structFieldBuilder = structField;
         }
         
         public String getFieldName()
@@ -153,11 +156,6 @@ public class BasicParamManager implements ParamManager
             return structValue;
         }
 
-        public StructField getStructField()
-        {
-            return structField;
-        }
-
         public Param.Builder getParamBuilder()
         {
             return paramBuilder;
@@ -173,16 +171,9 @@ public class BasicParamManager implements ParamManager
             return structValueBuilder;
         }
         
-        public StructField.Builder getStructFieldBuilder()
-        {
-            return structFieldBuilder;
-        }
-        
         public void updateParam(Param.Builder update)
         {
-            if (parent != null && parent.getType() == Type.STRUCT_FIELD_BUILDER) {
-                parent.getStructFieldBuilder().setParam(update);
-            } else if (parent != null  && parent.getType() == Type.PARAM_BUILDER) {
+            if (parent != null  && parent.getType() == Type.PARAM_BUILDER) {
                 parent.getParamBuilder().putParams(fieldName, update.build());
             }
         }
@@ -191,12 +182,8 @@ public class BasicParamManager implements ParamManager
         {
             if (type == Type.PARAM_BUILDER) {
                 paramBuilder.setValue(value);
-            } else if (type == Type.STRUCT_FIELD_BUILDER) {
-                if (structFieldBuilder.hasParam()) {
-                    structFieldBuilder.setParam(structFieldBuilder.getParam().toBuilder().setValue(value));
-                } else {
-                    structFieldBuilder.setValue(value);
-                }
+            } else if (type == Type.STRUCT_VALUE_BUILDER) {
+                structValueBuilder.setField(null, value);
             }
         }
     }
@@ -440,11 +427,11 @@ public class BasicParamManager implements ParamManager
         return structParamBuilder;
     }
     
-    protected StructField.Builder getBuilderForStructField(String fieldName, StructValue.Builder structValue)
+    protected Value.Builder getBuilderForStructValue(String fieldName, StructValue.Builder structValue)
     {
-        StructField existing = structValue.getFieldsOrDefault(fieldName, null);
+        Value existing = structValue.getFieldsOrDefault(fieldName, null);
         structValue.removeFields(fieldName);
-        StructField.Builder structFieldBuilder = structValue.putFieldsBuilderIfAbsent(fieldName);
+        Value.Builder structFieldBuilder = structValue.putFieldsBuilderIfAbsent(fieldName);
         if (existing != null) {
             structFieldBuilder.mergeFrom(existing);                        
         }
@@ -494,8 +481,7 @@ public class BasicParamManager implements ParamManager
                     Value.Builder value = parent.getValueBuilder();
                     StructValue.Builder structValue = value.getStructValueBuilder();
                     PathToComponent structValueChild = new PathToComponent(parent, structValue);
-                    StructField.Builder structFieldBuilder = getBuilderForStructField(oidParts[index], structValue);
-                    PathToComponent fieldChild = new PathToComponent(structValueChild, oidParts[index], structFieldBuilder);
+                    PathToComponent fieldChild = new PathToComponent(structValueChild, oidParts[index], structValue);
                     return pathToValue(oidParts, index + 1, fieldChild, mutable);
                 }
                 case VALUE:
@@ -503,35 +489,13 @@ public class BasicParamManager implements ParamManager
                     Value value = parent.getValue();
                     StructValue structValue = value.getStructValue();
                     PathToComponent structValueChild = new PathToComponent(parent, structValue);
-                    StructField structField = structValue.getFieldsOrDefault(oidParts[index], null);
+                    Value structField = structValue.getFieldsOrDefault(oidParts[index], null);
                     if (structField == null)
                     {
                         return null;
                     }
-                    PathToComponent fieldChild = new PathToComponent(structValueChild, oidParts[index], structField);
-                    return pathToValue(oidParts, index + 1, fieldChild, mutable);
-                }
-                case STRUCT_FIELD_BUILDER:
-                {
-                    StructField.Builder structField = parent.getStructFieldBuilder();
-                    if (structField.hasParam()) {
-                        Param.Builder structFieldValue = structField.getParamBuilder();
-                        return pathToValue(oidParts, index, new PathToComponent(parent, oidParts[index], structFieldValue), mutable);
-                    } else {
-                        Value.Builder structFieldValue = structField.getValueBuilder();
-                        return pathToValue(oidParts, index, new PathToComponent(parent, structFieldValue), mutable);
-                    }
-                }
-                case STRUCT_FIELD:
-                {
-                    StructField structField = parent.getStructField();
-                    if (structField.hasParam()) {
-                        Param structFieldValue = structField.getParam();
-                        return pathToValue(oidParts, index, new PathToComponent(parent, oidParts[index], structFieldValue), mutable);
-                    } else {
-                        Value structFieldValue = structField.getValue();
-                        return pathToValue(oidParts, index, new PathToComponent(parent, structFieldValue), mutable);
-                    }
+                    PathToComponent structChild = new PathToComponent(structValueChild, oidParts[index], structField);
+                    return pathToValue(oidParts, index + 1, structChild, mutable);
                 }
                 default:
                     return null;
@@ -581,7 +545,7 @@ public class BasicParamManager implements ParamManager
     }
 
     @Override
-    public Value getValue(String oid, Integer index)
+    public Value getValue(String oid)
     {
       //TODO handle arrays and inefficient creation of values
         Value v = uncommittedValues.get(oid);
@@ -599,12 +563,6 @@ public class BasicParamManager implements ParamManager
                     return value.getParam().getValue();
                 case VALUE:
                     return value.getValue();
-                case STRUCT_FIELD:
-                    if (value.getStructField().hasParam()) {
-                        return value.getStructField().getParam().getValue();
-                    } else {
-                        return value.getStructField().getValue();                        
-                    }
                 default:
                     return null;
             }
@@ -614,7 +572,7 @@ public class BasicParamManager implements ParamManager
     }
 
     @Override
-    public void setValue(String oid, Integer index, Value value)
+    public void setValue(String oid, Value value)
     {
         //TODO handle arrays
         uncommittedValues.put(oid, value);

@@ -36,8 +36,10 @@ void GetParam::proceed() {
             rc = param->toProto(*ans.mutable_param(), *authz);
         }
     // ERROR
-    } catch (catena::exception_with_status& err) {
+    } catch (const catena::exception_with_status& err) {
         rc = catena::exception_with_status(err.what(), err.status);
+    } catch (const std::exception& err) {
+        rc = catena::exception_with_status(err.what(), catena::StatusCode::INTERNAL);
     } catch (...) {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }

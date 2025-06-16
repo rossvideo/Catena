@@ -33,11 +33,13 @@ void AddLanguage::proceed() {
                 rc = dm_.addLanguage(payload, catena::common::Authorizer::kAuthzDisabled);
             }
         } else {
-            rc = catena::exception_with_status("Failed to convert JSON to protobuf", catena::StatusCode::INVALID_ARGUMENT);
+            rc = catena::exception_with_status("Failed to convert JSON to protobuf: " + status.ToString(), catena::StatusCode::INVALID_ARGUMENT);
         }
     // Likely authentication error, end process.
     } catch (catena::exception_with_status& err) {
         rc = catena::exception_with_status(err.what(), err.status);
+    } catch (const std::exception& e) {
+        rc = catena::exception_with_status(std::string("Error processing request: ") + e.what(), catena::StatusCode::INTERNAL);
     } catch (...) { // Error, end process.
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }

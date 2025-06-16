@@ -29,9 +29,10 @@
 #
 
 #
-# OpenAPI documentation of the DeviceRequest RPC for the Catena REST API
+# OpenAPI documentation of the Catena REST API's languages endpoint
+# Author: john.naylor@rossvideo.com
 # Author: benjamin.whitten@rossvideo.com
-# Date: 25/04/03
+# Date: 25/06/09
 #
 
 get:
@@ -53,7 +54,7 @@ get:
     - name: slot
       in: path
       required: true
-      description: slot number
+      description: The slot of the device model to get language codes from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
       example: 1  
@@ -76,6 +77,9 @@ get:
     
     "500":
       $ref: '../openapi.yaml#/components/responses/InternalServerError'
+
+    "400":
+      $ref: '../openapi.yaml#/components/responses/BadRequest'
           
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'

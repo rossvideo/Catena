@@ -1,4 +1,3 @@
-
 // connections/REST
 #include <controllers/LanguagePackRequest.h>
 using catena::REST::LanguagePackRequest;
@@ -20,14 +19,20 @@ void LanguagePackRequest::proceed() {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
         std::lock_guard lg(dm_.mutex());
-        rc = dm_.getLanguagePack(context_.fields("language"), ans);
-    // ERROR
+        // Get language code from the last part of the path
+        std::string languageCode = context_.fqoid().substr(1); // Remove leading slash
+        rc = dm_.getLanguagePack(languageCode, ans);
+    } catch (const catena::exception_with_status& err) {
+        rc = catena::exception_with_status(err.what(), err.status);
+    } catch (const std::exception& e) {
+        rc = catena::exception_with_status(e.what(), catena::StatusCode::INTERNAL);
     } catch (...) {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
 
-    // Finishing by writing answer to client.
+    // Finish by writing answer to client.
     writer_.sendResponse(rc, ans);
+
 }
 
 void LanguagePackRequest::finish() {

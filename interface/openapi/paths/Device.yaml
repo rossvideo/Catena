@@ -15,7 +15,7 @@
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -29,9 +29,10 @@
 #
 
 #
-# OpenAPI documentation of the DeviceRequest RPC for the Catena REST API
+# OpenAPI documentation of the Catena REST API's device endpoint
+# Author: john.naylor@rossvideo.com
 # Author: benjamin.whitten@rossvideo.com
-# Date: 25/04/03
+# Date: 25/06/09
 #
 
 get:
@@ -69,19 +70,24 @@ get:
             $ref: "../../../schema/catena.device_schema.json"
   
           example: 
-            { 
-              "device": {  
-                "slot": 1,  
-                "multiSetEnabled": true,
-                "subscriptions": true,
-                "accessScopes": [ "st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
-                "defaultScope": "st2138:op"
-              }
+            {
+              "data": [
+                "device": {  
+                  "slot": 1,  
+                  "multiSetEnabled": true,
+                  "subscriptions": true,
+                  "accessScopes": [ "st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
+                  "defaultScope": "st2138:op"
+                }
+              ]
             }
     
     "500":
       $ref: '../openapi.yaml#/components/responses/InternalServerError'
-          
+
+    "400":
+      $ref: '../openapi.yaml#/components/responses/BadRequest'
+
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'
 
