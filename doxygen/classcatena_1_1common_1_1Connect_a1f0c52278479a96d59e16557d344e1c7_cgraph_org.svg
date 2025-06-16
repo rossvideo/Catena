@@ -21,10 +21,10 @@
 <!-- Node2 -->
 <g id="Node000002" class="node">
 <title>Node2</title>
-<g id="a_Node000002"><a xlink:href="classcatena_1_1common_1_1IParam.html#a9111464c2fc6f68b29db19d10610ac31" target="_top" xlink:title="get the descriptor of the parameter">
-<polygon fill="white" stroke="#666666" points="343,-318 205,-318 205,-288 343,-288 343,-318"/>
-<text text-anchor="start" x="213" y="-306" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IParam</text>
-<text text-anchor="middle" x="274" y="-295" font-family="Helvetica,sans-Serif" font-size="10.00">::getDescriptor</text>
+<g id="a_Node000002"><a xlink:href="classcatena_1_1common_1_1ISubscriptionManager.html#ab5d55752a99c745909efca91f2931987" target="_top" xlink:title="Get all subscribed OIDs, including expanding wildcard subscriptions.">
+<polygon fill="white" stroke="#666666" points="358.5,-318 189.5,-318 189.5,-288 358.5,-288 358.5,-318"/>
+<text text-anchor="start" x="197.5" y="-306" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::ISubscription</text>
+<text text-anchor="middle" x="274" y="-295" font-family="Helvetica,sans-Serif" font-size="10.00">Manager::getAllSubscribedOids</text>
 </a>
 </g>
 </g>
@@ -32,18 +32,18 @@
 <g id="edge1_Node000001_Node000002" class="edge">
 <title>Node1&#45;&gt;Node2</title>
 <g id="a_edge1_Node000001_Node000002"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M82.15,-174.12C98.49,-199.77 135.2,-251.68 180,-279 184.72,-281.88 189.77,-284.41 194.99,-286.64"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="193.95,-289.99 204.54,-290.34 196.48,-283.46 193.95,-289.99"/>
+<path fill="none" stroke="#63b8ff" d="M82.15,-174.12C98.49,-199.77 135.2,-251.68 180,-279 182.85,-280.74 185.82,-282.35 188.87,-283.84"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="187.7,-287.15 198.26,-287.99 190.53,-280.75 187.7,-287.15"/>
 </a>
 </g>
 </g>
 <!-- Node3 -->
 <g id="Node000003" class="node">
 <title>Node3</title>
-<g id="a_Node000003"><a xlink:href="classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd" target="_top" xlink:title="Returns true if the call has been canceled.">
-<polygon fill="white" stroke="#666666" points="347.5,-270 200.5,-270 200.5,-240 347.5,-240 347.5,-270"/>
-<text text-anchor="start" x="208.5" y="-258" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IConnect</text>
-<text text-anchor="middle" x="274" y="-247" font-family="Helvetica,sans-Serif" font-size="10.00">::isCancelled</text>
+<g id="a_Node000003"><a xlink:href="classcatena_1_1common_1_1IParam.html#a9111464c2fc6f68b29db19d10610ac31" target="_top" xlink:title="get the descriptor of the parameter">
+<polygon fill="white" stroke="#666666" points="343,-270 205,-270 205,-240 343,-240 343,-270"/>
+<text text-anchor="start" x="213" y="-258" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IParam</text>
+<text text-anchor="middle" x="274" y="-247" font-family="Helvetica,sans-Serif" font-size="10.00">::getDescriptor</text>
 </a>
 </g>
 </g>
@@ -51,18 +51,18 @@
 <g id="edge2_Node000001_Node000003" class="edge">
 <title>Node1&#45;&gt;Node3</title>
 <g id="a_edge2_Node000001_Node000003"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M91.18,-174.08C111.59,-190.32 146.3,-215.85 180,-231 184.42,-232.99 189.05,-234.84 193.76,-236.55"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="192.94,-239.97 203.53,-239.87 195.19,-233.34 192.94,-239.97"/>
+<path fill="none" stroke="#63b8ff" d="M91.18,-174.08C111.59,-190.32 146.3,-215.85 180,-231 184.73,-233.12 189.68,-235.09 194.73,-236.9"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="193.93,-240.32 204.52,-240.19 196.16,-233.68 193.93,-240.32"/>
 </a>
 </g>
 </g>
 <!-- Node4 -->
 <g id="Node000004" class="node">
 <title>Node4</title>
-<g id="a_Node000004"><a xlink:href="classcatena_1_1common_1_1IParamDescriptor.html#ac8fa8aef0a96605c1bdd1d6172312028" target="_top" xlink:title="return true if this is a command parameter">
-<polygon fill="white" stroke="#666666" points="368,-222 180,-222 180,-192 368,-192 368,-222"/>
-<text text-anchor="start" x="188" y="-210" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IParamDescriptor</text>
-<text text-anchor="middle" x="274" y="-199" font-family="Helvetica,sans-Serif" font-size="10.00">::isCommand</text>
+<g id="a_Node000004"><a xlink:href="classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd" target="_top" xlink:title="Returns true if the call has been canceled.">
+<polygon fill="white" stroke="#666666" points="347.5,-222 200.5,-222 200.5,-192 347.5,-192 347.5,-222"/>
+<text text-anchor="start" x="208.5" y="-210" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IConnect</text>
+<text text-anchor="middle" x="274" y="-199" font-family="Helvetica,sans-Serif" font-size="10.00">::isCancelled</text>
 </a>
 </g>
 </g>
@@ -78,10 +78,10 @@
 <!-- Node5 -->
 <g id="Node000005" class="node">
 <title>Node5</title>
-<g id="a_Node000005"><a xlink:href="classcatena_1_1common_1_1ISubscriptionManager.html#a2306837ba01d990d283dbbed75b0a992" target="_top" xlink:title="Check if an OID is subscribed to.">
-<polygon fill="white" stroke="#666666" points="357.5,-174 190.5,-174 190.5,-144 357.5,-144 357.5,-174"/>
-<text text-anchor="start" x="198.5" y="-162" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::ISubscription</text>
-<text text-anchor="middle" x="274" y="-151" font-family="Helvetica,sans-Serif" font-size="10.00">Manager::isSubscribed</text>
+<g id="a_Node000005"><a xlink:href="classcatena_1_1common_1_1IParamDescriptor.html#ac8fa8aef0a96605c1bdd1d6172312028" target="_top" xlink:title="return true if this is a command parameter">
+<polygon fill="white" stroke="#666666" points="368,-174 180,-174 180,-144 368,-144 368,-174"/>
+<text text-anchor="start" x="188" y="-162" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IParamDescriptor</text>
+<text text-anchor="middle" x="274" y="-151" font-family="Helvetica,sans-Serif" font-size="10.00">::isCommand</text>
 </a>
 </g>
 </g>
@@ -89,8 +89,8 @@
 <g id="edge4_Node000001_Node000005" class="edge">
 <title>Node1&#45;&gt;Node5</title>
 <g id="a_edge4_Node000001_Node000005"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M144.08,-159C155.74,-159 167.98,-159 180.08,-159"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="180.2,-162.5 190.2,-159 180.2,-155.5 180.2,-162.5"/>
+<path fill="none" stroke="#63b8ff" d="M144.08,-159C152.39,-159 160.99,-159 169.63,-159"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="169.77,-162.5 179.77,-159 169.77,-155.5 169.77,-162.5"/>
 </a>
 </g>
 </g>
