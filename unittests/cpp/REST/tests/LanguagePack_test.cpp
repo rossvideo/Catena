@@ -190,7 +190,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_GetErrReturn) {
 /* 
  * TEST 1.3 - GET LanguagePack dm.getLanguagePack() throws a catena::exception_with_status error.
  */
-TEST_F(RESTLanguagePackTests, LanguagePack_GetErrThrowCatena) {
+TEST_F(RESTLanguagePackTests, LanguagePack_GetErrThrowCat) {
     catena::exception_with_status rc("Test error", catena::StatusCode::INVALID_ARGUMENT);
     // Defining mock fuctions
     EXPECT_CALL(dm, getLanguagePack(testLanguage, ::testing::_)).Times(1)
@@ -356,7 +356,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PostErrReturn) {
 /* 
  * TEST 2.7 - POST LanguagePack throws a catena::exception_with_status error.
  */
-TEST_F(RESTLanguagePackTests, LanguagePack_PostErrThrowCatena) {
+TEST_F(RESTLanguagePackTests, LanguagePack_PostErrThrowCat) {
     catena::exception_with_status rc("Test error", catena::StatusCode::INVALID_ARGUMENT);
     testMethod = "POST";
     // Setting expectations.
@@ -373,13 +373,30 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PostErrThrowCatena) {
 /* 
  * TEST 2.8 - POST LanguagePack returns a std::runtime error.
  */
+TEST_F(RESTLanguagePackTests, LanguagePack_PostErrThrowStd) {
+    catena::exception_with_status rc("Unknown error", catena::StatusCode::INTERNAL);
+    testMethod = "POST";
+    // Setting expectations.
+    EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([&rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+            throw std::runtime_error(rc.what());
+            return catena::exception_with_status("", catena::StatusCode::OK); // should not return.
+        }));
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+/* 
+ * TEST 2.9 - POST LanguagePack returns an unknown error.
+ */
 TEST_F(RESTLanguagePackTests, LanguagePack_PostErrThrowUnknown) {
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
     testMethod = "POST";
     // Setting expectations.
     EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
-            throw std::runtime_error(rc.what());
+            throw 0;
             return catena::exception_with_status("", catena::StatusCode::OK); // should not return.
         }));
     // Calling proceed() and checking written response.
@@ -508,7 +525,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PutErrReturn) {
 /* 
  * TEST 3.7 - PUT LanguagePack throws a catena::exception_with_status error.
  */
-TEST_F(RESTLanguagePackTests, LanguagePack_PutErrThrowCatena) {
+TEST_F(RESTLanguagePackTests, LanguagePack_PutErrThrowCat) {
     catena::exception_with_status rc("Test error", catena::StatusCode::INVALID_ARGUMENT);
     testMethod = "PUT";
     // Setting expectations.
@@ -525,13 +542,30 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PutErrThrowCatena) {
 /* 
  * TEST 3.8 - PUT LanguagePack returns a std::runtime error.
  */
+TEST_F(RESTLanguagePackTests, LanguagePack_PutErrThrowStd) {
+    catena::exception_with_status rc("Unknown error", catena::StatusCode::INTERNAL);
+    testMethod = "PUT";
+    // Setting expectations.
+    EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([&rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+            throw std::runtime_error(rc.what());
+            return catena::exception_with_status("", catena::StatusCode::OK); // should not return.
+        }));
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+/* 
+ * TEST 3.9 - PUT LanguagePack returns an unknown error.
+ */
 TEST_F(RESTLanguagePackTests, LanguagePack_PutErrThrowUnknown) {
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
     testMethod = "PUT";
     // Setting expectations.
     EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
-            throw std::runtime_error(rc.what());
+            throw 0;
             return catena::exception_with_status("", catena::StatusCode::OK); // should not return.
         }));
     // Calling proceed() and checking written response.
@@ -624,7 +658,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_DeleteErrReturn) {
 /* 
  * TEST 4.5 - DELETE LanguagePack dm.getLanguagePack() throws a catena::exception_with_status error.
  */
-TEST_F(RESTLanguagePackTests, LanguagePack_DeleteErrThrowCatena) {
+TEST_F(RESTLanguagePackTests, LanguagePack_DeleteErrThrowCat) {
     catena::exception_with_status rc("Test error", catena::StatusCode::INVALID_ARGUMENT);
     testMethod = "DELETE";
     // Defining mock fuctions
@@ -641,13 +675,30 @@ TEST_F(RESTLanguagePackTests, LanguagePack_DeleteErrThrowCatena) {
 /* 
  * TEST 4.6 - DELETE LanguagePack dm.getLanguagePack() throws a std::runtime error.
  */
+TEST_F(RESTLanguagePackTests, LanguagePack_DeleteErrThrowStd) {
+    catena::exception_with_status rc("Unknown error", catena::StatusCode::INTERNAL);
+    testMethod = "DELETE";
+    // Defining mock fuctions
+    EXPECT_CALL(dm, removeLanguage(testLanguage, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([&rc](const std::string &languageId, catena::common::Authorizer &authz) {
+            throw std::runtime_error(rc.what());
+            return catena::exception_with_status("", catena::StatusCode::OK); // should not return.
+        }));
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+/* 
+ * TEST 4.6 - DELETE LanguagePack dm.getLanguagePack() throws an unknown error.
+ */
 TEST_F(RESTLanguagePackTests, LanguagePack_DeleteErrThrowUnknown) {
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
     testMethod = "DELETE";
     // Defining mock fuctions
     EXPECT_CALL(dm, removeLanguage(testLanguage, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](const std::string &languageId, catena::common::Authorizer &authz) {
-            throw std::runtime_error(rc.what());
+            throw 0;
             return catena::exception_with_status("", catena::StatusCode::OK); // should not return.
         }));
     // Calling proceed() and checking written response.
