@@ -353,98 +353,6 @@ TEST_F(ConnectTest, HandlesLanguage) {
     proceed_thread.join();
 }
 
-// --- 2. FINISH TESTS ---
-
-// Test 2.1: Test normal finish behavior
-// TEST_F(ConnectTest, FinishClosesConnection) {
-//     static const std::string empty_token;
-//     // Set up expectations for valid authorization
-//     EXPECT_CALL(*socket_reader_, authorizationEnabled())
-//         .WillOnce(Return(false));  // No auth needed for this test
-//     EXPECT_CALL(*socket_reader_, jwsToken())
-//         .WillOnce(ReturnRef(empty_token));  // Empty token since auth is disabled
-    
-//     // Run proceed() in a separate thread
-//     std::thread proceed_thread([this]() {
-//         connect_->proceed();
-//     });
-
-//     // Give proceed() time to start
-//     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-//     // Call finish
-//     connect_->finish();
-
-//     // Verify socket is closed
-//     EXPECT_FALSE(serverSocket.is_open());
-
-//     // Clean up
-//     proceed_thread.join();
-// }
-
-// Test 2.2: Test finish with active signal handlers
-// TEST_F(ConnectTest, FinishDisconnectsSignalHandlers) {
-//     static const std::string empty_token;
-//     // Set up expectations for valid authorization
-//     EXPECT_CALL(*socket_reader_, authorizationEnabled())
-//         .WillOnce(Return(false));
-//     EXPECT_CALL(*socket_reader_, jwsToken())
-//         .WillOnce(ReturnRef(empty_token));  // Empty token since auth is disabled
-    
-//     // Run proceed() in a separate thread
-//     std::thread proceed_thread([this]() {
-//         connect_->proceed();
-//     });
-
-//     // Give proceed() time to start and set up signal handlers
-//     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-//     // Call finish
-//     connect_->finish();
-
-//     // Verify socket is closed
-//     EXPECT_FALSE(serverSocket.is_open());
-
-//     // Verify signal handlers are disconnected by attempting to emit signals
-//     // These should not cause any updates since handlers are disconnected
-//     auto param = std::make_unique<MockParam>();
-//     device_->valueSetByServer.emit("test_oid", param.get());
-//     device_->valueSetByClient.emit("test_oid", param.get());
-    
-//     // No response should be received since handlers are disconnected
-//     EXPECT_EQ(readResponse(), "");
-
-//     // Clean up
-//     proceed_thread.join();
-// }
-
-// // Test 2.3: Test finish sends final OK response
-// TEST_F(ConnectTest, FinishSendsFinalResponse) {
-//     static const std::string empty_token;
-//     // Set up expectations for valid authorization
-//     EXPECT_CALL(*socket_reader_, authorizationEnabled())
-//         .WillOnce(Return(false));
-//     EXPECT_CALL(*socket_reader_, jwsToken())
-//         .WillOnce(ReturnRef(empty_token));  // Empty token since auth is disabled
-    
-//     // Run proceed() in a separate thread
-//     std::thread proceed_thread([this]() {
-//         connect_->proceed();
-//     });
-
-//     // Give proceed() time to start
-//     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-//     // Call finish
-//     connect_->finish();
-
-//     // Verify final OK response is sent
-//     catena::exception_with_status rc("", catena::StatusCode::OK);
-//     EXPECT_EQ(readResponse(), expectedSSEResponse(rc));
-
-//     // Clean up
-//     proceed_thread.join();
-// }
 
 // --- 3. EXCEPTION TESTS ---
 
@@ -453,8 +361,8 @@ TEST_F(ConnectTest, ProceedHandlesCatenaException) {
     // Set up expectations for authorization error
     EXPECT_CALL(*socket_reader_, authorizationEnabled())
         .WillOnce(Return(true));
-    ON_CALL(*socket_reader_, jwsToken())
-        .WillByDefault(Invoke([]() -> const std::string& {
+    EXPECT_CALL(*socket_reader_, jwsToken())
+        .WillOnce(Invoke([]() -> const std::string& {
             static const std::string empty;
             throw catena::exception_with_status("Auth error", catena::StatusCode::UNAUTHENTICATED);
             return empty;
@@ -481,8 +389,8 @@ TEST_F(ConnectTest, ProceedHandlesStdException) {
     // Set up expectations for std::exception
     EXPECT_CALL(*socket_reader_, authorizationEnabled())
         .WillOnce(Return(true));
-    ON_CALL(*socket_reader_, jwsToken())
-        .WillByDefault(Invoke([]() -> const std::string& {
+    EXPECT_CALL(*socket_reader_, jwsToken())
+        .WillOnce(Invoke([]() -> const std::string& {
             static const std::string empty;
             throw std::runtime_error("Runtime error");
             return empty;
@@ -510,8 +418,8 @@ TEST_F(ConnectTest, ProceedHandlesUnknownException) {
     // Set up expectations for unknown exception
     EXPECT_CALL(*socket_reader_, authorizationEnabled())
         .WillOnce(Return(true));
-    ON_CALL(*socket_reader_, jwsToken())
-        .WillByDefault(Invoke([]() -> const std::string& {
+    EXPECT_CALL(*socket_reader_, jwsToken())
+        .WillOnce(Invoke([]() -> const std::string& {
             static const std::string empty;
             throw 42; // Throw an int to trigger catch(...)
             return empty;
@@ -531,5 +439,70 @@ TEST_F(ConnectTest, ProceedHandlesUnknownException) {
 
     // Clean up
     serverSocket.close();
+    proceed_thread.join();
+}
+
+// Test 3.4: Test socket close during response sending with writer failure
+TEST_F(ConnectTest, ProceedHandlesWriterFailure) {
+    // Use the monitor scope token from Authorization_test.cpp
+    std::string mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxM"
+                            "jM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJ"
+                            "zdDIxMzg6bW9uIiwiaWF0IjoxNTE2MjM5MDIyfQ.YkqS7hCxst"
+                            "pXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ";
+
+    // Set up expectations for valid authorization
+    EXPECT_CALL(*socket_reader_, authorizationEnabled())
+        .WillOnce(Return(true));
+    EXPECT_CALL(*socket_reader_, jwsToken())
+        .WillOnce(ReturnRef(mockToken));
+    EXPECT_CALL(*device_, slot())
+        .WillRepeatedly(Return(1));
+    EXPECT_CALL(*socket_reader_, detailLevel())
+        .WillRepeatedly(Return(catena::Device_DetailLevel::Device_DetailLevel_FULL));
+
+    // Create a mock parameter with monitor scope
+    auto param = std::make_unique<MockParam>();
+    EXPECT_CALL(*param, getOid())
+        .WillRepeatedly(ReturnRef(paramOid_));
+    EXPECT_CALL(*param, getScope())
+        .WillRepeatedly(ReturnRef(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
+    EXPECT_CALL(*param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
+        .WillOnce(::testing::Invoke([](catena::Value& value, catena::common::Authorizer&) {
+            value.set_string_value("test_value");
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+
+    // Set up expectation for updateResponse_ call
+    std::set<std::string> subscribed_oids{paramOid_};
+    EXPECT_CALL(*subscription_manager_, getAllSubscribedOids(::testing::Ref(*device_)))
+        .WillRepeatedly(ReturnRef(subscribed_oids));
+
+    // Run proceed() in a separate thread
+    std::thread proceed_thread([this]() {
+        connect_->proceed();
+    });
+
+    // Give proceed() time to start
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    // Close the client socket first
+    clientSocket.close();
+
+    // Give proceed() time to detect the closed socket
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    // Emit a signal to trigger response sending
+    device_->valueSetByServer.emit(paramOid_, param.get());
+
+    // Give proceed() time to attempt sending response and handle the failure
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    // Verify server socket is closed
+    EXPECT_FALSE(serverSocket.is_open());
+
+    // Emit shutdown signal to break out of the wait loop
+    catena::REST::Connect::shutdownSignal_.emit();
+
+    // Clean up
     proceed_thread.join();
 }
