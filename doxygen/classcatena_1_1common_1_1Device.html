@@ -192,9 +192,15 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~Device</b> ()=def
 <tr class="memitem:adb230ca33a5959d587e1bc194a5ea775" id="r_adb230ca33a5959d587e1bc194a5ea775"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#adb230ca33a5959d587e1bc194a5ea775">toProto</a> (::catena::LanguageList &amp;list) const override</td></tr>
 <tr class="memdesc:adb230ca33a5959d587e1bc194a5ea775"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a protobuf representation of the language list.  <br /></td></tr>
 <tr class="separator:adb230ca33a5959d587e1bc194a5ea775"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a42c79543c8d0cca71b17df91694f2fa9" id="r_a42c79543c8d0cca71b17df91694f2fa9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a42c79543c8d0cca71b17df91694f2fa9">hasLanguage</a> (const std::string &amp;languageId) const override</td></tr>
+<tr class="memdesc:a42c79543c8d0cca71b17df91694f2fa9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if device has the specified language pack.  <br /></td></tr>
+<tr class="separator:a42c79543c8d0cca71b17df91694f2fa9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af15d6bed42fc196d4e46c3aa8de39b73" id="r_af15d6bed42fc196d4e46c3aa8de39b73"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#af15d6bed42fc196d4e46c3aa8de39b73">addLanguage</a> (catena::AddLanguagePayload &amp;language, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) override</td></tr>
 <tr class="memdesc:af15d6bed42fc196d4e46c3aa8de39b73"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a language pack to the device. Requires client to have admin:w scope.  <br /></td></tr>
 <tr class="separator:af15d6bed42fc196d4e46c3aa8de39b73"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13aa99ab67c2fe98ac26b2d2f5326290" id="r_a13aa99ab67c2fe98ac26b2d2f5326290"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a13aa99ab67c2fe98ac26b2d2f5326290">removeLanguage</a> (const std::string &amp;languageId, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) override</td></tr>
+<tr class="memdesc:a13aa99ab67c2fe98ac26b2d2f5326290"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removed a language pack from the device. Requires client to have admin:w scope. Fails if the language pack was shipped with the device.  <br /></td></tr>
+<tr class="separator:a13aa99ab67c2fe98ac26b2d2f5326290"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf56f7bf11b8ab6ad93d04cd91ca0bdf" id="r_adf56f7bf11b8ab6ad93d04cd91ca0bdf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#adf56f7bf11b8ab6ad93d04cd91ca0bdf">getLanguagePack</a> (const std::string &amp;languageId, ComponentLanguagePack &amp;pack) const override</td></tr>
 <tr class="memdesc:adf56f7bf11b8ab6ad93d04cd91ca0bdf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finds and returns a language pack based on languageId.  <br /></td></tr>
 <tr class="separator:adf56f7bf11b8ab6ad93d04cd91ca0bdf"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1205,6 +1211,43 @@ template&lt;typename TAG &gt; </div>
 
 </div>
 </div>
+<a id="a42c79543c8d0cca71b17df91694f2fa9" name="a42c79543c8d0cca71b17df91694f2fa9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a42c79543c8d0cca71b17df91694f2fa9">&#9670;&#160;</a></span>hasLanguage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool catena::common::Device::hasLanguage </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>languageId</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns true if device has the specified language pack. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">languageId</td><td>The language id of the language pack to check </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the device has the specified language pack. </dd></dl>
+
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a9cb9b1f50c7202228f1c99d43b03844c">catena::common::IDevice</a>.</p>
+
+</div>
+</div>
 <a id="afca445ccc7d023e325c408afc852f9a1" name="afca445ccc7d023e325c408afc852f9a1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afca445ccc7d023e325c408afc852f9a1">&#9670;&#160;</a></span>mutex()</h2>
 
@@ -1231,6 +1274,54 @@ template&lt;typename TAG &gt; </div>
 <p>Returns the device's mutex. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#adaa519c4733f2b22d84d313e0965de28">catena::common::IDevice</a>.</p>
+
+</div>
+</div>
+<a id="a13aa99ab67c2fe98ac26b2d2f5326290" name="a13aa99ab67c2fe98ac26b2d2f5326290"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a13aa99ab67c2fe98ac26b2d2f5326290">&#9670;&#160;</a></span>removeLanguage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> catena::common::Device::removeLanguage </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>languageId</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
+          <td class="paramname"><em>authz</em> = <code><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a></code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Removed a language pack from the device. Requires client to have admin:w scope. Fails if the language pack was shipped with the device. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">language</td><td>The language to remove from the device. </td></tr>
+    <tr><td class="paramname">authz</td><td>The authorizer object containing client's scopes. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error. </dd></dl>
+
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#ae47e93d33564e6c9bc702dc9545da921">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
