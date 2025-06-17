@@ -16,7 +16,7 @@ using catena::REST::CatenaServiceImpl;
 #include <controllers/LanguagePackRequest.h>
 #include <controllers/ListLanguages.h>
 #include <controllers/BasicParamInfoRequest.h>
-#include <controllers/UpdateSubscriptions.h>
+#include <controllers/Subscriptions.h>
 #include <controllers/ExecuteCommand.h>
 
 using catena::REST::Connect;
@@ -63,7 +63,8 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool auth
     router_.addProduct("GET/languages",       ListLanguages::makeOne);
     router_.addProduct("POST/language-pack",  AddLanguage::makeOne);
     router_.addProduct("GET/basic-param",     BasicParamInfoRequest::makeOne);
-    router_.addProduct("PUT/subscriptions",   UpdateSubscriptions::makeOne);
+    router_.addProduct("GET/subscriptions",   Subscriptions::makeOne);
+    router_.addProduct("PUT/subscriptions",   Subscriptions::makeOne);
 }
 
 // Initializing the shutdown signal for all open connections.

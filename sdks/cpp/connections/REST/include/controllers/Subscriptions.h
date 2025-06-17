@@ -31,8 +31,8 @@
  */
 
 /**
- * @file UpdateSubscriptions.h
- * @brief Implements Catena REST UpdateSubscriptions
+ * @file Subscriptions.h
+ * @brief Implements Catena REST Subscriptions
  * @author zuhayr.sarker@rossvideo.com
  * @date 2025-04-28
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -54,30 +54,30 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the UpdateSubscriptions REST controller.
+ * @brief ICallData class for the Subscriptions REST controller.
  */
-class UpdateSubscriptions : public ICallData {
+class Subscriptions : public ICallData {
 public:
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the UpdateSubscriptions controller.
+     * @brief Constructor for the Subscriptions controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
      * @param dm The device to update subscriptions on.
      */ 
-    UpdateSubscriptions(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    Subscriptions(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     
     /**
-     * @brief UpdateSubscriptions's main process.
+     * @brief Subscriptions's main process.
      */
     void proceed() override;
     
     /**
-     * @brief Finishes the UpdateSubscriptions process.
+     * @brief Finishes the Subscriptions process.
      */
     void finish() override;
     
@@ -89,23 +89,10 @@ public:
      * @param dm The device to connect to.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-        return new UpdateSubscriptions(socket, context, dm);
+        return new Subscriptions(socket, context, dm);
     }
 
 private:
-    /**
-     * @brief Helper method to process a subscription
-     * @param baseOid The base OID 
-     * @param authz The authorizer to use for access control
-     */
-    void processSubscription_(const std::string& baseOid, catena::common::Authorizer& authz);
-
-    /**
-     * @brief Helper method to send all currently subscribed parameters
-     * @param authz The authorizer to use for access control
-     */
-    void sendSubscribedParameters_(catena::common::Authorizer& authz);
-
     /**
      * @brief Helper function to write status messages to the API console.
      * 
@@ -113,7 +100,7 @@ private:
      * @param ok The status of the RPC (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-        std::cout << "UpdateSubscriptions::proceed[" << objectId_ << "]: "
+        std::cout << context_.method() << " Subscriptions::proceed[" << objectId_ << "]: "
                   << catena::common::timeNow() << " status: "
                   << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
                   << std::endl;
@@ -123,66 +110,27 @@ private:
      * @brief The socket to write the response to.
      */
     tcp::socket& socket_;
-
     /**
      * @brief The ISocketReader object.
      */
     ISocketReader& context_;
-
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    SSEWriter writer_;
-
+    std::unique_ptr<ISocketWriter> writer_ = nullptr;
     /**
-     * @brief The request payload
-     */
-    catena::UpdateSubscriptionsPayload req_;
-
-    /**
-     * @brief The response payload for a single response
-     */
-    catena::DeviceComponent_ComponentParam res_;
-
-    /**
-     * @brief Vector to store all responses to be sent
-     */
-    std::vector<catena::DeviceComponent_ComponentParam> responses_;
-
-    /**
-     * @brief Current response index being processed
-     */
-    uint32_t current_response_{0};
-
-    /**
-     * @brief The object's unique id counter
-     */
-    static int objectCounter_;
-
-    /**
-     * @brief The object's unique id
-     */
-    int objectId_;
-
-    /**
-     * @brief The mutex for the writer lock
-     */
-    std::mutex mtx_;
-
-    /**
-     * @brief The writer lock
-     */
-    std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
-
-    /**
-     * @brief The device model
+     * @brief The device to set subscriptions of.
      */
     IDevice& dm_;
-    
+
     /**
-     * @brief The error status
+     * @brief ID of the Subscriptions object
      */
-    catena::exception_with_status rc_;
+    int objectId_;
+    /**
+     * @brief The total # of Subscriptions objects.
+     */
+    static int objectCounter_;
 };
 
 } // namespace REST 

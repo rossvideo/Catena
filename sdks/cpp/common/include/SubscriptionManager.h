@@ -34,30 +34,31 @@
  * @file SubscriptionManager.h
  * @brief Centralized manager for parameter subscriptions in Catena
  * @author zuhayr.sarker@rossvideo.com
- * @date 2025-04-02
+ * @author benjamin.whitten@rossvideo.com
+ * @date 2025-06-11
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-#include <set>
-#include <string>
-#include <vector>
-#include <memory>
+
+// common
 #include <IDevice.h>
 #include <IParam.h>
 #include <ParamVisitor.h>
 #include <ISubscriptionManager.h>
+#include <Authorization.h>
+
+// std
+#include <set>
+#include <string>
 
 namespace catena {
 namespace common {
-
-using catena::common::IDevice;
-using catena::common::IParam;
 
 /**
  * @brief Class for managing parameter subscriptions in Catena
  */
 class SubscriptionManager : public ISubscriptionManager {
-public:
+  public:
     /**
      * @brief Constructor
      */
@@ -68,9 +69,10 @@ public:
      * @param oid The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param/*")
      * @param dm The device model to use 
      * @param rc The status code to return if the operation fails
+     * @param authz The authorizer to use for checking permissions
      * @return true if the subscription was added, false if it already existed
      */
-    bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) override;
+    bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc, Authorizer& authz = Authorizer::kAuthzDisabled) override;
 
     /**
      * @brief Remove an OID subscription
@@ -79,14 +81,18 @@ public:
      * @param rc The status code to return if the operation fails
      * @return true if the subscription was removed, false if it didn't exist
      */
-    bool removeSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) override;
+    bool removeSubscription(const std::string& oid, const IDevice& dm, exception_with_status& rc) override;
 
     /**
      * @brief Get all subscribed OIDs, including expanding wildcard subscriptions
      * @param dm The device model to use 
-     * @return Reference to the vector of all subscribed OIDs
+     * @return A copy of the set of all subscribed OIDs
+     * 
+     * Since subManager does not expose its mutex, it is required to return a
+     * copy of the set in order to avoid race conditions in the async API
+     * calls.
      */
-    const std::set<std::string>& getAllSubscribedOids(IDevice& dm) override;
+    std::set<std::string> getAllSubscribedOids(const IDevice& dm) override;
 
     /**
      * @brief Check if an OID is a wildcard subscription
@@ -95,16 +101,19 @@ public:
      */
     bool isWildcard(const std::string& oid) override;
 
-private:
+    /**
+     * @brief Check if an OID is subscribed to
+     * @param dm The device model to use 
+     * @param oid The OID to check
+     * @return true if the OID is already subscribed to
+     */
+    bool isSubscribed(const std::string& oid, const IDevice& dm) override;
+
+  private:
     /**
      * @brief Mutex for subscription data access
      */
     mutable std::mutex mtx_;
-
-    /**
-     * @brief Lock for protecting subscription data access
-     */
-    mutable std::unique_lock<std::mutex> subscriptionLock_{mtx_, std::defer_lock};
 
     /**
      * @brief Visitor class for collecting subscribed OIDs
