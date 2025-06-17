@@ -211,7 +211,6 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalResponse) {
         .WillOnce(::testing::Return(true))
         .WillOnce(::testing::Return(true))
         .WillOnce(::testing::Return(false));
-    mockServer.expectkFinish();
 
     testRPC.TestCall(mockServer.client.get(), rc, inVal, 3);
 }
@@ -244,7 +243,6 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalNoResponse) {
     // Mocking kWrite functions
     EXPECT_CALL(*mockResponder, getNext()).Times(1).WillOnce(::testing::Return(testRPC.expVals[0]));
     EXPECT_CALL(*mockResponder, hasMore()).Times(1).WillOnce(::testing::Return(false));
-    mockServer.expectkFinish();
 
     testRPC.TestCall(mockServer.client.get(), rc, inVal, 1);
 }
@@ -277,7 +275,6 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalException) {
     // Mocking kWrite functions
     EXPECT_CALL(*mockResponder, getNext()).Times(1).WillOnce(::testing::Return(testRPC.expVals[0]));
     EXPECT_CALL(*mockResponder, hasMore()).Times(1).WillOnce(::testing::Return(false));
-    mockServer.expectkFinish();
 
     testRPC.TestCall(mockServer.client.get(), rc, inVal, 1);
 }
@@ -315,7 +312,6 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_RespondFalse) {
         .WillOnce(::testing::Return(true))
         .WillOnce(::testing::Return(true))
         .WillOnce(::testing::Return(false));
-    mockServer.expectkFinish();
 
     testRPC.TestCall(mockServer.client.get(), rc, inVal);
 }
@@ -362,7 +358,6 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzValid) {
     // Mocking kWrite functions
     EXPECT_CALL(*mockResponder, getNext()).Times(1).WillOnce(::testing::Return(testRPC.expVals[0]));
     EXPECT_CALL(*mockResponder, hasMore()).Times(1).WillOnce(::testing::Return(false));
-    mockServer.expectkFinish();
 
     testRPC.TestCall(mockServer.client.get(), rc, inVal, 1);
 }
@@ -376,7 +371,6 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzInvalid) {
     catena::exception_with_status rc("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
 
     mockServer.expectAuthz(&testRPC.clientContext, "Bearer THIS SHOULD NOT PARSE");
-    mockServer.expectkFinish();
 
     testRPC.TestCall(mockServer.client.get(), rc, catena::ExecuteCommandPayload());
 }
@@ -390,7 +384,6 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzJWSNotFound) {
     catena::exception_with_status rc("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
 
     mockServer.expectAuthz(&testRPC.clientContext, "NOT A BEARER TOKEN");
-    mockServer.expectkFinish();
 
     testRPC.TestCall(mockServer.client.get(), rc, catena::ExecuteCommandPayload());
 }
@@ -410,7 +403,6 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
             status = catena::exception_with_status(rc.what(), rc.status);
             return nullptr;
         }));
-    mockServer.expectkFinish();
 
     testRPC.TestCall(mockServer.client.get(), rc, catena::ExecuteCommandPayload());
 }
@@ -430,7 +422,6 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
             throw catena::exception_with_status(rc.what(), rc.status);
             return nullptr;
         }));
-    mockServer.expectkFinish();
 
     testRPC.TestCall(mockServer.client.get(), rc, catena::ExecuteCommandPayload());
 }
@@ -447,7 +438,6 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowUnknown) {
     mockServer.expectAuthz();
     EXPECT_CALL(*mockServer.dm, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(rc.what())));
-    mockServer.expectkFinish();
 
     testRPC.TestCall(mockServer.client.get(), rc, catena::ExecuteCommandPayload());
 }
@@ -471,7 +461,6 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
         .WillOnce(::testing::Invoke([](const catena::Value& value) {
             return nullptr;
         }));
-    mockServer.expectkFinish();
 
     testRPC.TestCall(mockServer.client.get(), rc, catena::ExecuteCommandPayload());
 }
@@ -496,7 +485,6 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
             throw catena::exception_with_status(rc.what(), rc.status);
             return nullptr;
         }));
-    mockServer.expectkFinish();
 
     testRPC.TestCall(mockServer.client.get(), rc, catena::ExecuteCommandPayload());
 }
@@ -518,7 +506,6 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
         }));
     EXPECT_CALL(*mockCommand, executeCommand(::testing::_)).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(rc.what())));
-    mockServer.expectkFinish();
 
     testRPC.TestCall(mockServer.client.get(), rc, catena::ExecuteCommandPayload());
 }
@@ -548,7 +535,6 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
             throw catena::exception_with_status(rc.what(), rc.status);
             return catena::CommandResponse();
         }));
-    mockServer.expectkFinish();
 
     testRPC.TestCall(mockServer.client.get(), rc, inVal);
 }
@@ -575,7 +561,6 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
         }));
     EXPECT_CALL(*mockResponder, getNext()).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(rc.what())));
-    mockServer.expectkFinish();
 
     testRPC.TestCall(mockServer.client.get(), rc, inVal);
 }

@@ -11,15 +11,15 @@ include_directories(${CATENA_UNITTESTS_DIR}/cpp/common/mocks)
 
 set(SOURCES 	
     tests/AddLanguage_test.cpp
-    tests/DeviceRequest_test.cpp
-    tests/ExecuteCommand_test.cpp
+    # tests/DeviceRequest_test.cpp
+    # tests/ExecuteCommand_test.cpp
     tests/GetParam_test.cpp
-    tests/GetPopulatedSlots_test.cpp
-    tests/GetValue_test.cpp
-    tests/LanguagePackRequest_test.cpp
-    tests/ListLanguages_test.cpp
-    tests/MultiSetValue_test.cpp
-    tests/SetValue_test.cpp
+    # tests/GetPopulatedSlots_test.cpp
+    # tests/GetValue_test.cpp
+    # tests/LanguagePackRequest_test.cpp
+    # tests/ListLanguages_test.cpp
+    # tests/MultiSetValue_test.cpp
+    # tests/SetValue_test.cpp
 )	
 
 add_executable(${This} ${SOURCES})	

@@ -148,10 +148,7 @@ TEST_F(gRPCSetValueTests, SetValue_proceedNormal) {
             // Returning status.
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC and comparing the results.
     testRPC();

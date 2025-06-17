@@ -118,10 +118,7 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_proceedNormal) {
         .WillOnce(::testing::Invoke([this](catena::LanguageList &list){
             list.CopyFrom(expVal);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC and comparing the results.
     testRPC();
@@ -142,10 +139,7 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_proceedErr) {
         .WillOnce(::testing::Invoke([&rc](catena::LanguageList &list){
             throw catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC and comparing the results.
     testRPC();

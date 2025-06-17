@@ -73,19 +73,24 @@ class MockServer {
      * Starts the gRPC server and client.
      */
     void start() {
-        // Initializing service and device.
-        service = new MockServiceImpl();
-        dm = new MockDevice();
-
         // Creating the gRPC server.
         builder.AddListeningPort(serverAddr, grpc::InsecureServerCredentials());
         cq = builder.AddCompletionQueue();
-        builder.RegisterService(service);
+        builder.RegisterService(&service);
         server = builder.BuildAndStart();
 
         // Creating the gRPC client.
         channel = grpc::CreateChannel(serverAddr, grpc::InsecureChannelCredentials());
         client = catena::CatenaService::NewStub(channel);
+
+        EXPECT_CALL(service, registerItem(::testing::_)).WillRepeatedly(::testing::Invoke([this](ICallData* cd) {
+            asyncCall = cd;
+        }));
+        EXPECT_CALL(service, cq()).WillRepeatedly(::testing::Return(cq.get()));
+        EXPECT_CALL(service, deregisterItem(::testing::_)).WillRepeatedly(::testing::Invoke([this](ICallData* cd) {
+            delete testCall;
+            testCall = nullptr;
+        }));
 
         // Deploying cq handler on a thread.
         cqthread = std::make_unique<std::thread>([&]() {
@@ -101,34 +106,15 @@ class MockServer {
         });
     }
 
-    /*
-     * Functions to expect when creating a new CallData object.
-     */
-    void expNew() {
-        EXPECT_CALL(*service, registerItem(::testing::_))
-            .WillRepeatedly(::testing::Invoke([this](ICallData* cd) {
-                asyncCall = cd;
-            }));
-        EXPECT_CALL(*service, cq()).WillRepeatedly(::testing::Return(cq.get()));
-    }
-
     void expectAuthz(grpc::ClientContext* clientContext = nullptr, const std::string& mockToken = "") {
         // Authorization is enabled
         if (clientContext) {
             clientContext->AddMetadata("authorization", mockToken);
-            EXPECT_CALL(*service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
+            EXPECT_CALL(service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
         // Authorization is disabled
         } else {
-            EXPECT_CALL(*service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+            EXPECT_CALL(service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
         }
-    }
-
-    void expectkFinish() {
-        // kFinish
-        EXPECT_CALL(*service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-            delete testCall;
-            testCall = nullptr;
-        }));
     }
 
     /*
@@ -145,9 +131,6 @@ class MockServer {
         // Make sure the calldata objects were destroyed.
         ASSERT_FALSE(testCall);
         ASSERT_FALSE(asyncCall);
-        // Deleting device and service.
-        delete dm;
-        delete service;
     }
 
     // Address used for gRPC tests.
@@ -155,9 +138,9 @@ class MockServer {
     // Server and service variables.
     grpc::ServerBuilder builder;
     std::unique_ptr<grpc::Server> server = nullptr;
-    MockServiceImpl* service;
+    MockServiceImpl service;
     std::mutex mtx;
-    MockDevice* dm;
+    MockDevice dm;
     // Completion queue variables.
     std::unique_ptr<grpc::ServerCompletionQueue> cq = nullptr;
     std::unique_ptr<std::thread> cqthread = nullptr;

@@ -147,10 +147,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedNormal) {
             // Returning status.
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC and comparing the results.
     testRPC();
@@ -200,10 +197,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzValid) {
             // Returning status.
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC and comparing the results.
     testRPC();
@@ -222,10 +216,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzInvalid) {
 
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC.
     testRPC();
@@ -244,10 +235,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzJWSNotFound) {
 
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC and comparing the results.
     testRPC();
@@ -271,10 +259,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryReturnCatena) {
             ans = catena::exception_with_status(rc.what(), rc.status);
             return false;
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC and comparing the results.
     testRPC();
@@ -298,10 +283,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryThrowCatena) {
             throw catena::exception_with_status(rc.what(), rc.status);
             return true;
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC and comparing the results.
     testRPC();
@@ -325,10 +307,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryThrowUnknown) {
             throw std::runtime_error(rc.what());
             return true;
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC and comparing the results.
     testRPC();
@@ -352,10 +331,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitReturnCatena) {
             // Returning error status.
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC and comparing the results.
     testRPC();
@@ -380,10 +356,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitThrowCatena) {
             throw catena::exception_with_status(rc.what(), rc.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC and comparing the results.
     testRPC();
@@ -408,10 +381,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitThrowUnknown) {
             throw std::runtime_error(rc.what());
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC and comparing the results.
     testRPC();

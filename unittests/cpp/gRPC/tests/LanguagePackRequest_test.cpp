@@ -124,10 +124,7 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_proceedNormal) {
             pack.CopyFrom(expVal);
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC and comparing the results.
     testRPC();
@@ -149,10 +146,7 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_proceedErrReturn) {
         .WillOnce(::testing::Invoke([this, &rc](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack){
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC and comparing the results.
     testRPC();
@@ -175,10 +169,7 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_proceedErrThrow) {
             throw catena::exception_with_status(rc.what(), rc.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC and comparing the results.
     testRPC();

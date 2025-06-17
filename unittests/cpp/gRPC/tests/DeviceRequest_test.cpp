@@ -71,7 +71,7 @@ class gRPCDeviceRequestTests : public GRPCTest {
              * everything. They only have their OID set, which is enough to
              * make sure the correct obj is being passed back.
              */
-            StreamReader() {
+            StreamReader(catena::CatenaService::Stub* client, const catena::DeviceRequestPayload& inVal) {
                 expVals.push_back(catena::DeviceComponent()); // [0] Device
                 expVals.push_back(catena::DeviceComponent()); // [1] Menu
                 expVals.push_back(catena::DeviceComponent()); // [2] Language pack
@@ -151,16 +151,16 @@ class gRPCDeviceRequestTests : public GRPCTest {
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_create) {
     // Creating deviceRequest object.
-    new DeviceRequest(mockServer.service, *mockServer.dm, true);
-    EXPECT_FALSE(mockServer.testCall);
-    EXPECT_TRUE(mockServer.asyncCall);
+    new DeviceRequest(&service, dm, true);
+    EXPECT_FALSE(testCall);
+    EXPECT_TRUE(asyncCall);
 }
 
 /*
  * TEST 2 - Normal case for DeviceRequest proceed().
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedNormal) {
-    new DeviceRequest(mockServer.service, *mockServer.dm, true);
+    new DeviceRequest(&service, dm, true);
 
     catena::exception_with_status rc("", catena::StatusCode::OK);
     client.expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
@@ -170,8 +170,8 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedNormal) {
     std::unique_ptr<MockDevice::MockDeviceSerializer> mockSerializer = std::make_unique<MockDevice::MockDeviceSerializer>();
 
     // Mocking kProcess functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, getComponentSerializer(::testing::_, ::testing::_, inVal.detail_level(), true)).Times(1)
+    EXPECT_CALL(&service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(dm, getComponentSerializer(::testing::_, ::testing::_, inVal.detail_level(), true)).Times(1)
         .WillOnce(::testing::Invoke([&mockSerializer](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             // Making sure the correct values were passed in.
             EXPECT_EQ(&authz, &Authorizer::kAuthzDisabled);
@@ -179,7 +179,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedNormal) {
             return std::move(mockSerializer);
         }));
     //Mocking kWrite functions
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(6).WillRepeatedly(::testing::ReturnRef(mockServer.mtx));
+    EXPECT_CALL(dm, mutex()).Times(6).WillRepeatedly(::testing::ReturnRef(mtx));
     EXPECT_CALL(*mockSerializer, getNext()).Times(6)
         .WillOnce(::testing::Return(client.expVals[0]))
         .WillOnce(::testing::Return(client.expVals[1]))
@@ -194,13 +194,8 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedNormal) {
         .WillOnce(::testing::Return(true))
         .WillOnce(::testing::Return(true))
         .WillOnce(::testing::Return(false));
-    // Mocking kFinish functions.
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
 
-    client.MakeCall(mockServer.client.get(), inVal);
+    client.MakeCall(client.get(), inVal);
     client.Await();
 }
 
@@ -208,7 +203,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedNormal) {
  * TEST 3 - DeviceRequest proceed() with detail_level subscriptions.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedSubscriptions) {
-    new DeviceRequest(mockServer.service, *mockServer.dm, true);
+    new DeviceRequest(&service, dm, true);
 
     catena::exception_with_status rc("", catena::StatusCode::OK);
     client.expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
@@ -222,14 +217,14 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedSubscriptions) {
     std::unique_ptr<MockDevice::MockDeviceSerializer> mockSerializer = std::make_unique<MockDevice::MockDeviceSerializer>();
 
     // Mocking kProcess functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.service, getSubscriptionManager()).Times(4).WillRepeatedly(::testing::ReturnRef(mockSubManager));
+    EXPECT_CALL(service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(service, getSubscriptionManager()).Times(4).WillRepeatedly(::testing::ReturnRef(mockSubManager));
     EXPECT_CALL(mockSubManager, addSubscription("oid_test_1", ::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
     EXPECT_CALL(mockSubManager, addSubscription("oid_test_2", ::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
     EXPECT_CALL(mockSubManager, addSubscription("oid_test_3", ::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
     EXPECT_CALL(mockSubManager, getAllSubscribedOids(::testing::_)).Times(1).WillOnce(::testing::Return(subscribedTestOids));
 
-    EXPECT_CALL(*mockServer.dm, getComponentSerializer(::testing::_, ::testing::_, inVal.detail_level(), true)).Times(1)
+    EXPECT_CALL(dm, getComponentSerializer(::testing::_, ::testing::_, inVal.detail_level(), true)).Times(1)
         .WillOnce(::testing::Invoke([&mockSerializer, &subscribedTestOids](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             // Making sure the correct values were passed in.
             EXPECT_EQ(&authz, &Authorizer::kAuthzDisabled);
@@ -237,16 +232,11 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedSubscriptions) {
             return std::move(mockSerializer);
         }));
     //Mocking kWrite functions
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillRepeatedly(::testing::ReturnRef(mockServer.mtx));
+    EXPECT_CALL(dm, mutex()).Times(1).WillRepeatedly(::testing::ReturnRef(mtx));
     EXPECT_CALL(*mockSerializer, getNext()).Times(1).WillOnce(::testing::Return(client.expVals[0]));
     EXPECT_CALL(*mockSerializer, hasMore()).Times(1).WillOnce(::testing::Return(false));
-    // Mocking kFinish functions.
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
 
-    client.MakeCall(mockServer.client.get(), inVal);
+    client.MakeCall(client.get(), inVal);
     client.Await();
 }
 
@@ -254,7 +244,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedSubscriptions) {
  * TEST 4 - DeviceRequest with authz on and valid token.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedAuthzValid) {
-    new DeviceRequest(mockServer.service, *mockServer.dm, true);
+    new DeviceRequest(&service, dm, true);
 
     catena::exception_with_status rc("", catena::StatusCode::OK);
     client.expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
@@ -278,8 +268,8 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedAuthzValid) {
     client.clientContext.AddMetadata("authorization", "Bearer " + mockToken);
 
     // Mocking kProcess functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(*mockServer.dm, getComponentSerializer(::testing::_, ::testing::_, inVal.detail_level(), true)).Times(1)
+    EXPECT_CALL(service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(dm, getComponentSerializer(::testing::_, ::testing::_, inVal.detail_level(), true)).Times(1)
         .WillOnce(::testing::Invoke([&mockSerializer](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             // Making sure the correct values were passed in.
             EXPECT_FALSE(&authz == &Authorizer::kAuthzDisabled);
@@ -287,7 +277,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedAuthzValid) {
             return std::move(mockSerializer);
         }));
     //Mocking kWrite functions
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(6).WillRepeatedly(::testing::ReturnRef(mockServer.mtx));
+    EXPECT_CALL(dm, mutex()).Times(6).WillRepeatedly(::testing::ReturnRef(mtx));
     EXPECT_CALL(*mockSerializer, getNext()).Times(6)
         .WillOnce(::testing::Return(client.expVals[0]))
         .WillOnce(::testing::Return(client.expVals[1]))
@@ -302,13 +292,8 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedAuthzValid) {
         .WillOnce(::testing::Return(true))
         .WillOnce(::testing::Return(true))
         .WillOnce(::testing::Return(false));
-    // Mocking kFinish functions.
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
 
-    client.MakeCall(mockServer.client.get(), inVal);
+    client.MakeCall(client.get(), inVal);
     client.Await();
 }
 
@@ -316,7 +301,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedAuthzValid) {
  * TEST 5 - DeviceRequest with authz on and invalid token.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceeedAuthzInvalid) {
-    new DeviceRequest(mockServer.service, *mockServer.dm, true);
+    new DeviceRequest(&service, dm, true);
 
     catena::exception_with_status rc("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
     client.expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
@@ -324,14 +309,10 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceeedAuthzInvalid) {
     client.clientContext.AddMetadata("authorization", "Bearer THIS SHOULD NOT PARSE");
 
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    EXPECT_CALL(service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
 
     // Sending the RPC.
-    client.MakeCall(mockServer.client.get(), catena::DeviceRequestPayload());
+    client.MakeCall(client.get(), catena::DeviceRequestPayload());
     client.Await();
 }
 
@@ -339,7 +320,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceeedAuthzInvalid) {
  * TEST 6 - DeviceRequest with authz on and invalid token.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedAuthzJWSNotFound) {
-    new DeviceRequest(mockServer.service, *mockServer.dm, true);
+    new DeviceRequest(&service, dm, true);
 
     catena::exception_with_status rc("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
     client.expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
@@ -347,14 +328,10 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedAuthzJWSNotFound) {
     client.clientContext.AddMetadata("authorization", "NOT A BEARER TOKEN");
 
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    EXPECT_CALL(service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
 
     // Sending the RPC.
-    client.MakeCall(mockServer.client.get(), catena::DeviceRequestPayload());
+    client.MakeCall(client.get(), catena::DeviceRequestPayload());
     client.Await();
 }
 
@@ -362,23 +339,19 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedAuthzJWSNotFound) {
  * TEST 7 - dm.getComponentSerializer() returns nullptr.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedErrGetSerializerIllegalState) {
-    new DeviceRequest(mockServer.service, *mockServer.dm, true);
+    new DeviceRequest(&service, dm, true);
 
     catena::exception_with_status rc("Illegal state", catena::StatusCode::INTERNAL);
     client.expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(dm, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             return nullptr;
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
 
     // Sending the RPC.
-    client.MakeCall(mockServer.client.get(), catena::DeviceRequestPayload());
+    client.MakeCall(client.get(), catena::DeviceRequestPayload());
     client.Await();
 }
 
@@ -386,24 +359,20 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedErrGetSerializerIllegalState
  * TEST 8 - dm.getComponentSerializer() throws a catena::exception_with_status.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedErrGetSerializerThrowCatena) {
-    new DeviceRequest(mockServer.service, *mockServer.dm, true);
+    new DeviceRequest(service, dm, true);
 
     catena::exception_with_status rc("Component not found", catena::StatusCode::INVALID_ARGUMENT);
     client.expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(dm, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             throw catena::exception_with_status(rc.what(), rc.status);
             return nullptr;
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
 
     // Sending the RPC.
-    client.MakeCall(mockServer.client.get(), catena::DeviceRequestPayload());
+    client.MakeCall(client.get(), catena::DeviceRequestPayload());
     client.Await();
 }
 
@@ -411,24 +380,20 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedErrGetSerializerThrowCatena)
  * TEST 9 - dm.getComponentSerializer() throws a std::runtime_exception.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedErrGetSerializerThrowUnknown) {
-    new DeviceRequest(mockServer.service, *mockServer.dm, true);
+    new DeviceRequest(&service, dm, true);
 
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
     client.expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(dm, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             throw std::runtime_error(rc.what());
             return nullptr;
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
 
     // Sending the RPC.
-    client.MakeCall(mockServer.client.get(), catena::DeviceRequestPayload());
+    client.MakeCall(client.get(), catena::DeviceRequestPayload());
     client.Await();
 }
 
@@ -436,20 +401,20 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedErrGetSerializerThrowUnknown
  * TEST 10 - serializer.getNext() throws a catena::exception_with_status.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedErrGetNextThrowCatena) {
-    new DeviceRequest(mockServer.service, *mockServer.dm, true);
+    new DeviceRequest(&service, dm, true);
 
     catena::exception_with_status rc("Component not found", catena::StatusCode::INVALID_ARGUMENT);
     client.expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     std::unique_ptr<MockDevice::MockDeviceSerializer> mockSerializer = std::make_unique<MockDevice::MockDeviceSerializer>();
 
     // Mocking kProcess functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(dm, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&mockSerializer](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             return std::move(mockSerializer);
         }));
     //Mocking kWrite functions
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(3).WillRepeatedly(::testing::ReturnRef(mockServer.mtx));
+    EXPECT_CALL(dm, mutex()).Times(3).WillRepeatedly(::testing::ReturnRef(mtx));
     // Reading 2 components successfully before throwing an exception.
     EXPECT_CALL(*mockSerializer, getNext()).Times(3)
         .WillOnce(::testing::Return(client.expVals[0]))
@@ -461,13 +426,8 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedErrGetNextThrowCatena) {
     EXPECT_CALL(*mockSerializer, hasMore()).Times(2)
         .WillOnce(::testing::Return(true))
         .WillOnce(::testing::Return(true));
-    // Mocking kFinish functions.
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
 
-    client.MakeCall(mockServer.client.get(), catena::DeviceRequestPayload());
+    client.MakeCall(client.get(), catena::DeviceRequestPayload());
     client.Await();
 }
 
@@ -475,20 +435,20 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedErrGetNextThrowCatena) {
  * TEST 11 - serializer.getNext() throws a std::runtime_exception.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedErrGetNextThrowUnknown) {
-    new DeviceRequest(mockServer.service, *mockServer.dm, true);
+    new DeviceRequest(&service, dm, true);
 
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
     client.expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     std::unique_ptr<MockDevice::MockDeviceSerializer> mockSerializer = std::make_unique<MockDevice::MockDeviceSerializer>();
 
     // Mocking kProcess functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(dm, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&mockSerializer](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             return std::move(mockSerializer);
         }));
     //Mocking kWrite functions
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(3).WillRepeatedly(::testing::ReturnRef(mockServer.mtx));
+    EXPECT_CALL(dm, mutex()).Times(3).WillRepeatedly(::testing::ReturnRef(mtx));
     // Reading 2 components successfully before throwing an exception.
     EXPECT_CALL(*mockSerializer, getNext()).Times(3)
         .WillOnce(::testing::Return(client.expVals[0]))
@@ -500,12 +460,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedErrGetNextThrowUnknown) {
     EXPECT_CALL(*mockSerializer, hasMore()).Times(2)
         .WillOnce(::testing::Return(true))
         .WillOnce(::testing::Return(true));
-    // Mocking kFinish functions.
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
 
-    client.MakeCall(mockServer.client.get(), catena::DeviceRequestPayload());
+    client.MakeCall(client.get(), catena::DeviceRequestPayload());
     client.Await();
 }

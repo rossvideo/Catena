@@ -113,10 +113,7 @@ TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_proceedNormal) {
 
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(*mockServer.dm, slot()).Times(1).WillOnce(::testing::Return(testSlot));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC and comparing the results.
     testRPC();

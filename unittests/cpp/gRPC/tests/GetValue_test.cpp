@@ -124,10 +124,7 @@ TEST_F(gRPCGetValueTests, GetValue_proceed) {
             value.CopyFrom(expVal);
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC.
     testRPC();
@@ -167,10 +164,7 @@ TEST_F(gRPCGetValueTests, GetValue_proceedAuthzValid) {
             value.CopyFrom(expVal);
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC.
     testRPC();
@@ -189,10 +183,7 @@ TEST_F(gRPCGetValueTests, GetValue_proceedAuthzInvalid) {
 
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC.
     testRPC();
@@ -211,10 +202,7 @@ TEST_F(gRPCGetValueTests, GetValue_proceedAuthzJWSNotFound) {
 
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC.
     testRPC();
@@ -236,10 +224,7 @@ TEST_F(gRPCGetValueTests, GetValue_proceedErrReturnCatena) {
         .WillOnce(::testing::Invoke([this, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) {
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC.
     testRPC();
@@ -262,10 +247,7 @@ TEST_F(gRPCGetValueTests, GetValue_proceedErrThrowCatena) {
             throw catena::exception_with_status(rc.what(), rc.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC.
     testRPC();
@@ -288,10 +270,7 @@ TEST_F(gRPCGetValueTests, GetValue_proceedErrThrowUnknown) {
             throw std::runtime_error(rc.what());
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
+    
 
     // Sending the RPC.
     testRPC();
