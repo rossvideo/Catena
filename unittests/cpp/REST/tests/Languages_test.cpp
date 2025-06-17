@@ -71,7 +71,7 @@ class RESTLanguagesTests : public ::testing::Test, public RESTTest {
         oldCout = std::cout.rdbuf(MockConsole.rdbuf());
 
         // Default expectations for the context.
-        EXPECT_CALL(context, method()).WillRepeatedly(::testing::ReturnRef(testMethod));
+        EXPECT_CALL(context, method()).WillRepeatedly(::testing::Invoke([this](){ return testMethod; }));
         EXPECT_CALL(context, origin()).WillRepeatedly(::testing::ReturnRef(origin));
 
         // Default expectations for the device model.
@@ -92,7 +92,7 @@ class RESTLanguagesTests : public ::testing::Test, public RESTTest {
     std::stringstream MockConsole;
     std::streambuf* oldCout;
     // Context variables.
-    std::string testMethod = "GET";
+    catena::REST::RESTMethod testMethod = catena::REST::Method_GET;
     // Mock objects and endpoint.
     MockSocketReader context;
     std::mutex mockMutex;
@@ -121,7 +121,7 @@ TEST_F(RESTLanguagesTests, Languages_Finish) {
  */
 TEST_F(RESTLanguagesTests, Languages_BadMethod) {
     catena::exception_with_status rc("Bad method", catena::StatusCode::INVALID_ARGUMENT);
-    testMethod = "BAD_METHOD";
+    testMethod = catena::REST::Method_NONE;
     // Should not call any of these on a bad method.
     EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(0);
     // Calling proceed() and checking written response.

@@ -50,6 +50,7 @@ using boost::asio::ip::tcp;
 
 // REST
 #include "SocketWriter.h"
+#include "SocketReader.h"
 using namespace catena::REST;
 
 /*
@@ -70,7 +71,7 @@ class RESTTest {
     }
 
     // Writes a request to the writeSocket which can later be read by SocketReader.
-    void writeRequest(const std::string& method,
+    void writeRequest(catena::REST::RESTMethod method,
                       uint32_t slot,
                       const std::string& endpoint,
                       const std::string& fqoid,
@@ -78,12 +79,13 @@ class RESTTest {
                       const std::unordered_map<std::string, std::string>& fields,
                       const std::string& jwsToken,
                       const std::string& origin,
-                      const std::string& detailLevel,
+                      catena::Device_DetailLevel detailLevel,
                       const std::string& language,
                       const std::string& jsonBody) {
         // Compiling path:
         std::string request = "";
-        request += method + " /st2138-api/v1";
+        request += catena::patterns::EnumDecorator<catena::REST::RESTMethod>().getForwardMap().at(method)
+                + " /st2138-api/v1";
         if (slot != 0) {
             request += "/" + std::to_string(slot);
         }
@@ -109,8 +111,10 @@ class RESTTest {
                    "Origin: " + origin + "\n"
                    "User-Agent: test_agent\n"
                    "Authorization: Bearer " + jwsToken + " \n";
-        if (!detailLevel.empty()) {
-            request += "Detail-Level: " + detailLevel + " \n";
+        if (detailLevel != catena::Device_DetailLevel_UNSET) {
+            request += "Detail-Level: "
+                    + catena::patterns::EnumDecorator<catena::Device_DetailLevel>().getForwardMap().at(detailLevel)
+                    + " \n";
         }
         if (!language.empty()) {
             request += "Language: " + language + " \n";

@@ -72,7 +72,7 @@ class RESTLanguagePackTests : public ::testing::Test, public RESTTest {
 
         // Default expectations for the context.
         EXPECT_CALL(context, fqoid()).WillRepeatedly(::testing::ReturnRefOfCopy("/" + testLanguage));
-        EXPECT_CALL(context, method()).WillRepeatedly(::testing::ReturnRef(testMethod));
+        EXPECT_CALL(context, method()).WillRepeatedly(::testing::Invoke([this](){ return testMethod; }));
         EXPECT_CALL(context, slot()).WillRepeatedly(::testing::Return(0));
         EXPECT_CALL(context, jwsToken()).WillRepeatedly(::testing::ReturnRef(testToken));
         EXPECT_CALL(context, origin()).WillRepeatedly(::testing::ReturnRef(origin));
@@ -81,7 +81,7 @@ class RESTLanguagePackTests : public ::testing::Test, public RESTTest {
 
         // Default expectations for the device model.
         EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMutex));
-        EXPECT_CALL(dm, hasLanguage(testLanguage)).WillRepeatedly(::testing::Invoke([this](){ return testMethod == "PUT"; }));
+        EXPECT_CALL(dm, hasLanguage(testLanguage)).WillRepeatedly(::testing::Invoke([this](){ return testMethod == catena::REST::Method_PUT; }));
 
         // Init testVal.
         testVal.set_language(testLanguage);
@@ -106,7 +106,7 @@ class RESTLanguagePackTests : public ::testing::Test, public RESTTest {
     std::stringstream MockConsole;
     std::streambuf* oldCout;
     // Context variables.
-    std::string testMethod = "GET";
+    catena::REST::RESTMethod testMethod = catena::REST::Method_GET;
     std::string testLanguage = "en";
     std::string testToken = "";
     std::string testJsonBody;
@@ -142,7 +142,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_Finish) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_BadMethod) {
     catena::exception_with_status rc("Bad method", catena::StatusCode::INVALID_ARGUMENT);
-    testMethod = "BAD_METHOD";
+    testMethod = catena::REST::Method_NONE;
     // Setting expectations.
     EXPECT_CALL(context, jwsToken()).Times(0);
     // Should not call any of these on a bad method.
@@ -251,7 +251,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_GETErrThrowUnknown) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_POSTNormal) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    testMethod = "POST";
+    testMethod = catena::REST::Method_POST;
     // Setting expectations.
     EXPECT_CALL(context, jwsToken()).Times(0); // Authz disabled.
     EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
@@ -272,7 +272,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_POSTNormal) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_POSTAuthzValid) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    testMethod = "POST";
+    testMethod = catena::REST::Method_POST;
     authzEnabled = true;
     testToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIiOiIxMjM0NTY3"
                 "ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uOncgc"
@@ -303,7 +303,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_POSTAuthzValid) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_POSTAuthzInvalid) {
     catena::exception_with_status rc("", catena::StatusCode::UNAUTHENTICATED);
-    testMethod = "POST";
+    testMethod = catena::REST::Method_POST;
     authzEnabled = true;
     testToken = "Invalid token";
     // Setting expectations.
@@ -319,7 +319,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_POSTAuthzInvalid) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_POSTFailParse) {
     catena::exception_with_status rc("", catena::StatusCode::INVALID_ARGUMENT);
-    testMethod = "POST";
+    testMethod = catena::REST::Method_POST;
     testJsonBody = "Not a JSON string";
     // Setting expectations.
     // Should not call if json fails to parse.
@@ -334,7 +334,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_POSTFailParse) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_POSTOverwrite) {
     catena::exception_with_status rc("", catena::StatusCode::PERMISSION_DENIED);
-    testMethod = "POST";
+    testMethod = catena::REST::Method_POST;
     // Setting expectations.
     EXPECT_CALL(dm, hasLanguage(testLanguage)).WillOnce(::testing::Return(true));
     // Should not call if trying to overwrite on POST.
@@ -349,7 +349,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_POSTOverwrite) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_POSTErrReturn) {
     catena::exception_with_status rc("Test error", catena::StatusCode::INVALID_ARGUMENT);
-    testMethod = "POST";
+    testMethod = catena::REST::Method_POST;
     // Setting expectations.
     EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
@@ -365,7 +365,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_POSTErrReturn) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_POSTErrThrowCat) {
     catena::exception_with_status rc("Test error", catena::StatusCode::INVALID_ARGUMENT);
-    testMethod = "POST";
+    testMethod = catena::REST::Method_POST;
     // Setting expectations.
     EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
@@ -382,7 +382,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_POSTErrThrowCat) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_POSTErrThrowStd) {
     catena::exception_with_status rc("Unknown error", catena::StatusCode::INTERNAL);
-    testMethod = "POST";
+    testMethod = catena::REST::Method_POST;
     // Setting expectations.
     EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
@@ -399,7 +399,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_POSTErrThrowStd) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_POSTErrThrowUnknown) {
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
-    testMethod = "POST";
+    testMethod = catena::REST::Method_POST;
     // Setting expectations.
     EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
@@ -420,7 +420,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_POSTErrThrowUnknown) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_PUTNormal) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    testMethod = "PUT";
+    testMethod = catena::REST::Method_PUT;
     // Setting expectations.
     EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc, this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
@@ -440,7 +440,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PUTNormal) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_PUTAuthzValid) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    testMethod = "PUT";
+    testMethod = catena::REST::Method_PUT;
     authzEnabled = true;
     testToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIiOiIxMjM0NTY3"
                 "ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uOncgc"
@@ -471,7 +471,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PUTAuthzValid) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_PUTAuthzInvalid) {
     catena::exception_with_status rc("", catena::StatusCode::UNAUTHENTICATED);
-    testMethod = "PUT";
+    testMethod = catena::REST::Method_PUT;
     authzEnabled = true;
     testToken = "Invalid token";
     // Setting expectations.
@@ -487,7 +487,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PUTAuthzInvalid) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_PUTFailParse) {
     catena::exception_with_status rc("", catena::StatusCode::INVALID_ARGUMENT);
-    testMethod = "PUT";
+    testMethod = catena::REST::Method_PUT;
     testJsonBody = "Not a JSON string";
     // Setting expectations.
     // Should not call if json fails to parse.
@@ -502,7 +502,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PUTFailParse) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_PUTNew) {
     catena::exception_with_status rc("", catena::StatusCode::PERMISSION_DENIED);
-    testMethod = "PUT";
+    testMethod = catena::REST::Method_PUT;
     // Setting expectations.
     EXPECT_CALL(dm, hasLanguage(testLanguage)).WillOnce(::testing::Return(false));
     // Should not call if trying to add on PUT.
@@ -517,7 +517,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PUTNew) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_PUTErrReturn) {
     catena::exception_with_status rc("Test error", catena::StatusCode::INVALID_ARGUMENT);
-    testMethod = "PUT";
+    testMethod = catena::REST::Method_PUT;
     // Setting expectations.
     EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
@@ -534,7 +534,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PUTErrReturn) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_PUTErrThrowCat) {
     catena::exception_with_status rc("Test error", catena::StatusCode::INVALID_ARGUMENT);
-    testMethod = "PUT";
+    testMethod = catena::REST::Method_PUT;
     // Setting expectations.
     EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
@@ -551,7 +551,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PUTErrThrowCat) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_PUTErrThrowStd) {
     catena::exception_with_status rc("Unknown error", catena::StatusCode::INTERNAL);
-    testMethod = "PUT";
+    testMethod = catena::REST::Method_PUT;
     // Setting expectations.
     EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
@@ -568,7 +568,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PUTErrThrowStd) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_PUTErrThrowUnknown) {
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
-    testMethod = "PUT";
+    testMethod = catena::REST::Method_PUT;
     // Setting expectations.
     EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
@@ -589,7 +589,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PUTErrThrowUnknown) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_DELETENormal) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    testMethod = "DELETE";
+    testMethod = catena::REST::Method_DELETE;
     // Setting expectations.
     EXPECT_CALL(dm, removeLanguage(testLanguage, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](const std::string &languageId, catena::common::Authorizer &authz) {
@@ -606,7 +606,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_DELETENormal) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_DELETEAuthzValid) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    testMethod = "DELETE";
+    testMethod = catena::REST::Method_DELETE;
     authzEnabled = true;
     testToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIiOiIxMjM0NTY3"
                 "ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uOncgc"
@@ -634,7 +634,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_DELETEAuthzValid) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_DELETEAuthzInvalid) {
     catena::exception_with_status rc("", catena::StatusCode::UNAUTHENTICATED);
-    testMethod = "DELETE";
+    testMethod = catena::REST::Method_DELETE;
     authzEnabled = true;
     testToken = "Invalid token";
     // Setting expectations.
@@ -650,7 +650,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_DELETEAuthzInvalid) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_DELETEErrReturn) {
     catena::exception_with_status rc("Test error", catena::StatusCode::INVALID_ARGUMENT);
-    testMethod = "DELETE";
+    testMethod = catena::REST::Method_DELETE;
     // Defining mock fuctions
     EXPECT_CALL(dm, removeLanguage(testLanguage, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](const std::string &languageId, catena::common::Authorizer &authz) {
@@ -667,7 +667,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_DELETEErrReturn) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_DELETEErrThrowCat) {
     catena::exception_with_status rc("Test error", catena::StatusCode::INVALID_ARGUMENT);
-    testMethod = "DELETE";
+    testMethod = catena::REST::Method_DELETE;
     // Defining mock fuctions
     EXPECT_CALL(dm, removeLanguage(testLanguage, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](const std::string &languageId, catena::common::Authorizer &authz) {
@@ -684,7 +684,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_DELETEErrThrowCat) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_DELETEErrThrowStd) {
     catena::exception_with_status rc("Unknown error", catena::StatusCode::INTERNAL);
-    testMethod = "DELETE";
+    testMethod = catena::REST::Method_DELETE;
     // Defining mock fuctions
     EXPECT_CALL(dm, removeLanguage(testLanguage, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](const std::string &languageId, catena::common::Authorizer &authz) {
@@ -701,7 +701,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_DELETEErrThrowStd) {
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_DELETEErrThrowUnknown) {
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
-    testMethod = "DELETE";
+    testMethod = catena::REST::Method_DELETE;
     // Defining mock fuctions
     EXPECT_CALL(dm, removeLanguage(testLanguage, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([&rc](const std::string &languageId, catena::common::Authorizer &authz) {
