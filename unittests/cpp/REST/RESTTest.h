@@ -146,8 +146,25 @@ class RESTTest {
                jsonBody;
     }
 
+    // Returns what an expect response from SocketWriter with buffer=true should look like.
+    inline std::string expectedResponse(const catena::exception_with_status& rc, const std::vector<std::string>& msgs) {
+        // Compiling body response from messages.
+        std::string jsonBody = "";
+        if (rc.status == catena::StatusCode::OK) {
+            for (const std::string& msg : msgs) {
+                if (jsonBody.empty()) {
+                    jsonBody += "{\"data\":[" + msg;
+                } else {
+                    jsonBody += "," + msg;
+                }
+            }
+            jsonBody += "]}";
+        }
+        return expectedResponse(rc, jsonBody);
+    }
+
     // Returns what an expect response from SSEWriter should look like.
-    inline std::string expectedSSEResponse(const catena::exception_with_status& rc, const std::vector<std::string> msgs = {}) {
+    inline std::string expectedSSEResponse(const catena::exception_with_status& rc, const std::vector<std::string>& msgs = {}) {
         http_exception_with_status httpStatus = codeMap_.at(rc.status);
         // Compiling body response from messages.
         std::string jsonBody = "";

@@ -98,10 +98,9 @@ void DeviceRequest::proceed(bool ok) {
                 if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
                     // Add new subscriptions to both the manager and our tracking list
                     for (const auto& oid : req_.subscribed_oids()) {
-                        // Ignore the rc because it's annoying when it throws
-                        // an error for dublicate adds.
-                        catena::exception_with_status tmpRc{"", catena::StatusCode::OK};
-                        service_->getSubscriptionManager().addSubscription(oid, dm_, tmpRc);
+                        // Supressing errors.
+                        catena::exception_with_status supressRc{"", catena::StatusCode::OK};
+                        service_->getSubscriptionManager().addSubscription(oid, dm_, supressRc, *authz_);
                     }
                     // Get service subscriptions from the manager
                     subscribedOids_ = service_->getSubscriptionManager().getAllSubscribedOids(dm_);

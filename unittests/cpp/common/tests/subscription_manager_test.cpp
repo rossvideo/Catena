@@ -158,7 +158,7 @@ TEST_F(SubscriptionManagerTest, GetAllSubscribedOids) {
     manager->addSubscription("/test/param1", *device, rc);
     manager->addSubscription("/test/param2", *device, rc);
     
-    const auto& oids = manager->getAllSubscribedOids(*device);
+    auto oids = manager->getAllSubscribedOids(*device);
     EXPECT_EQ(oids.size(), 2);
     EXPECT_TRUE(oids.find("/test/param1") != oids.end());
     EXPECT_TRUE(oids.find("/test/param2") != oids.end());
@@ -181,6 +181,8 @@ TEST_F(SubscriptionManagerTest, AddWildcardSubscription) {
                 .WillRepeatedly(::testing::Return(false));
             EXPECT_CALL(*param, getOid())
                 .WillRepeatedly(::testing::ReturnRef(fqoid));
+            EXPECT_CALL(test_descriptor, getAllSubParams())
+                .WillRepeatedly(::testing::ReturnRefOfCopy(std::unordered_map<std::string, IParamDescriptor*>()));
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return param;
         }));
@@ -296,7 +298,7 @@ TEST_F(SubscriptionManagerTest, WildcardSubscriptionExpansion) {
     EXPECT_EQ(rc.status, catena::StatusCode::OK);
     
     // Verify all matching parameters are subscribed, including deeply nested ones
-    const auto& oids = manager->getAllSubscribedOids(*device);
+    auto oids = manager->getAllSubscribedOids(*device);
     std::cout << "DEBUG: Found " << oids.size() << " subscribed OIDs" << std::endl;
     for (const auto& oid : oids) {
         std::cout << "DEBUG: Subscribed OID: " << oid << std::endl;
@@ -395,7 +397,7 @@ TEST_F(SubscriptionManagerTest, BasicWildcardRemoval) {
     EXPECT_EQ(rc.status, catena::StatusCode::OK);
     
     // Verify only the wildcard subscription was removed
-    const auto& oids = manager->getAllSubscribedOids(*device);
+    auto oids = manager->getAllSubscribedOids(*device);
     EXPECT_EQ(oids.size(), 1);
     EXPECT_TRUE(oids.find("/nonwildcard/param") != oids.end());
     
