@@ -51,7 +51,6 @@ class gRPCAddLanguageTests : public GRPCTest {
          * Creates an AddLangauge object.
          */
         void makeOne() override { new AddLanguage(&service, dm, true); }
-        void setDefaultBehaviour() override {}
 
         /*
          * Helper function which initializes an AddLanguagePayload object.

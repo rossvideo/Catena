@@ -72,8 +72,6 @@ class GRPCTest  : public ::testing::Test {
      * Virtual function which creates a single CallData object for the test.
      */
     virtual void makeOne() = 0;
-
-    virtual void setDefaultBehaviour() = 0;
     
     /*
      * Creates a gRPC server and redirects cout before each test.
@@ -102,8 +100,6 @@ class GRPCTest  : public ::testing::Test {
         }));
         EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mtx));
         EXPECT_CALL(service, authorizationEnabled()).WillRepeatedly(::testing::Invoke([this](){ return authzEnabled; }));
-        // Setting additional expectations.
-        setDefaultBehaviour();
 
         // Deploying cq handler on a thread.
         cqthread = std::make_unique<std::thread>([&]() {
