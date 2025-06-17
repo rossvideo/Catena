@@ -23,6 +23,7 @@ set(SOURCES
     tests/SetValue_test.cpp
     tests/GetParam_test.cpp
     tests/BasicParamInfoRequest_test.cpp
+    tests/Connect_test.cpp
 
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/SocketReader.cpp
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/SocketWriter.cpp
