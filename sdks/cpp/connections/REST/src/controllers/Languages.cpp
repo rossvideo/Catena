@@ -19,10 +19,16 @@ void Languages::proceed() {
     catena::LanguageList ans;
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
-        std::lock_guard lg(dm_.mutex());
-        dm_.toProto(ans);
-        if (ans.languages().empty()) {
-            rc = catena::exception_with_status("No languages found", catena::StatusCode::NOT_FOUND);
+        // GET/languages
+        if (context_.method() == "GET") {
+            std::lock_guard lg(dm_.mutex());
+            dm_.toProto(ans);
+            if (ans.languages().empty()) {
+                rc = catena::exception_with_status("No languages found", catena::StatusCode::NOT_FOUND);
+            }
+        // Invalid method.
+        } else {
+            rc = catena::exception_with_status("", catena::StatusCode::INVALID_ARGUMENT);
         }
     } catch (const catena::exception_with_status& err) {
         rc = catena::exception_with_status(std::string(err.what()), err.status);

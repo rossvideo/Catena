@@ -63,157 +63,160 @@ class RESTLanguagesTests : public ::testing::Test, public RESTTest {
   protected:
     RESTLanguagesTests() : RESTTest(&serverSocket, &clientSocket) {}
 
+    /*
+     * Redirects cout and sets default expectations for each method.
+     */
     void SetUp() override {
         // Redirecting cout to a stringstream for testing.
         oldCout = std::cout.rdbuf(MockConsole.rdbuf());
 
+        // Default expectations for the context.
+        EXPECT_CALL(context, method()).WillRepeatedly(::testing::ReturnRef(testMethod));
+        EXPECT_CALL(context, origin()).WillRepeatedly(::testing::ReturnRef(origin));
+
+        // Default expectations for the device model.
+        EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMutex));
+
         // Creating Languages object.
-        EXPECT_CALL(context, origin()).Times(1).WillOnce(::testing::ReturnRef(origin));
-        getLanguages = Languages::makeOne(serverSocket, context, dm);
+        endpoint.reset(Languages::makeOne(serverSocket, context, dm));
     }
 
+    /*
+     * Restores cout after each test.
+     */
     void TearDown() override {
         std::cout.rdbuf(oldCout); // Restoring cout
-        // Cleanup code here
-        if (getLanguages) {
-            delete getLanguages;
-        }
     }
+
+    // Cout variables.
     std::stringstream MockConsole;
     std::streambuf* oldCout;
-    
+    // Context variables.
+    std::string testMethod = "GET";
+    // Mock objects and endpoint.
     MockSocketReader context;
-    MockDevice dm;
     std::mutex mockMutex;
-    catena::REST::ICallData* getLanguages = nullptr;
+    MockDevice dm;
+    std::unique_ptr<ICallData> endpoint = nullptr;
 };
 
-/*
- * ============================================================================
- *                               Languages tests
- * ============================================================================
- * 
- * TEST 1 - Creating a Languages object with makeOne.
+/* 
+ * TEST 0.1 - Creating a Languages object with makeOne.
  */
-TEST_F(RESTLanguagesTests, Languages_create) {
-    ASSERT_TRUE(getLanguages);
+TEST_F(RESTLanguagesTests, Languages_Create) {
+    ASSERT_TRUE(endpoint);
 }
 
 /* 
- * TEST 2 - Normal case for Languages proceed().
+ * TEST 0.2 - Writing to console with Languages finish().
  */
-TEST_F(RESTLanguagesTests, Languages_proceedNormal) {
+TEST_F(RESTLanguagesTests, Languages_Finish) {
+    // Calling finish and expecting the console output.
+    endpoint->finish();
+    ASSERT_TRUE(MockConsole.str().find("Languages[1] finished\n") != std::string::npos);
+}
+
+/* 
+ * TEST 0.3 - Languages proceed() with an invalid method.
+ */
+TEST_F(RESTLanguagesTests, Languages_BadMethod) {
+    catena::exception_with_status rc("Bad method", catena::StatusCode::INVALID_ARGUMENT);
+    testMethod = "BAD_METHOD";
+    // Should not call any of these on a bad method.
+    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(0);
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+/*
+ * ============================================================================
+ *                               GET Languages tests
+ * ============================================================================
+ * 
+ * TEST 1.1 - GET Languages normal case.
+ */
+TEST_F(RESTLanguagesTests, Languages_GETNormal) {
     // Setting up the returnVal to test with.
     catena::LanguageList returnVal;
     catena::exception_with_status rc("", catena::StatusCode::OK);
     returnVal.add_languages("en");
     returnVal.add_languages("fr");
     returnVal.add_languages("es");
-
     // Defining mock fuctions
-    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
-    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1);
-    ON_CALL(dm, toProto(::testing::An<catena::LanguageList&>()))
-        .WillByDefault(::testing::Invoke([&returnVal](catena::LanguageList& list) {
+    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1)
+        .WillOnce(::testing::Invoke([&returnVal](catena::LanguageList& list) {
             list.CopyFrom(returnVal);
         }));
-
     // Calling proceed() and checking written response.
-    getLanguages->proceed();
+    endpoint->proceed();
 
     std::string jsonBody;
-    google::protobuf::util::JsonPrintOptions options; // Default options
-    auto status = google::protobuf::util::MessageToJsonString(returnVal, &jsonBody, options);
+    auto status = google::protobuf::util::MessageToJsonString(returnVal, &jsonBody);
     EXPECT_EQ(readResponse(), expectedResponse(rc, jsonBody));
 }
 
 /* 
- * TEST 3 - Empty language list case.
+ * TEST 1.2 - GET langauges returns an empty list.
  */
-TEST_F(RESTLanguagesTests, Languages_proceedEmptyList) {
+TEST_F(RESTLanguagesTests, Languages_GETEmpty) {
     // Setting up empty language list
     catena::LanguageList returnVal;
     catena::exception_with_status rc("No languages found", catena::StatusCode::NOT_FOUND);
-
     // Defining mock functions
-    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
-    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1);
-    ON_CALL(dm, toProto(::testing::An<catena::LanguageList&>()))
-        .WillByDefault(::testing::Invoke([&returnVal](catena::LanguageList& list) {
+    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1)
+        .WillOnce(::testing::Invoke([&returnVal](catena::LanguageList& list) {
             list.CopyFrom(returnVal);
         }));
-
     // Calling proceed() and checking written response.
-    getLanguages->proceed();
+    endpoint->proceed();
     EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
- * TEST 4 - Standard exception case.
+ * TEST 1.3 - GET Languages throws a catena::exception_with_status error.
  */
-TEST_F(RESTLanguagesTests, Languages_proceedStdException) {
-    // Setting up the rc to test with.
-    catena::exception_with_status rc("Standard error", catena::StatusCode::INTERNAL);
-
-    // Defining mock functions
-    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
-    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1);
-    ON_CALL(dm, toProto(::testing::An<catena::LanguageList&>()))
-        .WillByDefault(::testing::Invoke([&rc](catena::LanguageList& list) {
-            throw std::runtime_error(rc.what());
-        }));
-
-    // Calling proceed() and checking written response.
-    getLanguages->proceed();
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
-}
-
-/* 
- * TEST 5 - Catena exception with status case.
- */
-TEST_F(RESTLanguagesTests, Languages_proceedCatenaException) {
+TEST_F(RESTLanguagesTests, Languages_GETErrThrowCat) {
     // Setting up the rc to test with.
     catena::exception_with_status rc("Device not found", catena::StatusCode::NOT_FOUND);
-
     // Defining mock functions
-    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
-    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1);
-    ON_CALL(dm, toProto(::testing::An<catena::LanguageList&>()))
-        .WillByDefault(::testing::Invoke([&rc](catena::LanguageList& list) {
+    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1)
+        .WillOnce(::testing::Invoke([&rc](catena::LanguageList& list) {
             throw catena::exception_with_status(rc.what(), rc.status);
         }));
-
     // Calling proceed() and checking written response.
-    getLanguages->proceed();
+    endpoint->proceed();
     EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
- * TEST 6 - Unknown exception case.
+ * TEST 1.4 - GET Languages throws a std::runtime error.
  */
-TEST_F(RESTLanguagesTests, Languages_proceedUnknownErr) {
+TEST_F(RESTLanguagesTests, Languages_GETErrThrowStd) {
+    // Setting up the rc to test with.
+    catena::exception_with_status rc("Standard error", catena::StatusCode::INTERNAL);
+    // Defining mock functions
+    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1)
+        .WillOnce(::testing::Invoke([&rc](catena::LanguageList& list) {
+            throw std::runtime_error(rc.what());
+        }));
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+/* 
+ * TEST 1.5 - GET Languages throws an unknown error.
+ */
+TEST_F(RESTLanguagesTests, Languages_GetErrThrowUnknown) {
     // Setting up the rc to test with.
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
-
     // Defining mock functions
-    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
-    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1);
-    ON_CALL(dm, toProto(::testing::An<catena::LanguageList&>()))
-        .WillByDefault(::testing::Invoke([](catena::LanguageList& list) {
-            throw "Unknown error type";
+    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1)
+        .WillOnce(::testing::Invoke([](catena::LanguageList& list) {
+            throw 0;
         }));
-
     // Calling proceed() and checking written response.
-    getLanguages->proceed();
+    endpoint->proceed();
     EXPECT_EQ(readResponse(), expectedResponse(rc));
-}
-
-/* 
- * TEST 7 - Writing to console with Languages finish().
- */
-TEST_F(RESTLanguagesTests, Languages_finish) {
-    // Calling finish and expecting the console output.
-    getLanguages->finish();
-    // Idk why I cant use .contains() here :/
-    ASSERT_TRUE(MockConsole.str().find("Languages[6] finished\n") != std::string::npos);
 }
