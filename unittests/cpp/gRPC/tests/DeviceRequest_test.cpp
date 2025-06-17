@@ -270,10 +270,10 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedSubscriptions) {
     // Mocking kProcess functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
     EXPECT_CALL(*mockServer.service, getSubscriptionManager()).Times(4).WillRepeatedly(::testing::ReturnRef(mockSubManager));
-    EXPECT_CALL(mockSubManager, addSubscription("oid_test_1", ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
-    EXPECT_CALL(mockSubManager, addSubscription("oid_test_2", ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
-    EXPECT_CALL(mockSubManager, addSubscription("oid_test_3", ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
-    EXPECT_CALL(mockSubManager, getAllSubscribedOids(::testing::_)).Times(1).WillOnce(::testing::ReturnRef(subscribedTestOids));
+    EXPECT_CALL(mockSubManager, addSubscription("oid_test_1", ::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(mockSubManager, addSubscription("oid_test_2", ::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(mockSubManager, addSubscription("oid_test_3", ::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(mockSubManager, getAllSubscribedOids(::testing::_)).Times(1).WillOnce(::testing::Return(subscribedTestOids));
 
     EXPECT_CALL(*mockServer.dm, getComponentSerializer(::testing::_, ::testing::_, inVal.detail_level(), true)).Times(1)
         .WillOnce(::testing::Invoke([&mockSerializer, &subscribedTestOids](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){

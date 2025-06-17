@@ -118,9 +118,6 @@ class Connect : public IConnect {
                 return;
             }
 
-            // Get all subscribed OIDs
-            auto subscribedOids = this->subscriptionManager_.getAllSubscribedOids(this->dm_);
-
             // Check if we should process this update based on detail level
             bool should_update = false;
             
@@ -136,8 +133,7 @@ class Connect : public IConnect {
                 }},
                 {catena::Device_DetailLevel_SUBSCRIPTIONS, [&]() {
                     // Update if OID is subscribed or in minimal set
-                    should_update = p->getDescriptor().minimalSet() || 
-                           (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
+                    should_update = p->getDescriptor().minimalSet() || subscriptionManager_.isSubscribed(oid, dm_);
                 }},
                 {catena::Device_DetailLevel_COMMANDS, [&]() {
                     // For COMMANDS, only update command parameters
