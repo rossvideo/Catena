@@ -97,7 +97,6 @@ protected:
     std::unique_ptr<MockSubscriptionManager> subscription_manager_;
     std::string user_agent_ = "test_agent";
     std::string paramOid_ = "test_param";
-    std::string paramScope_ = "test_scope";
 };
 
 // --- 0. INITIAL TESTS ---
