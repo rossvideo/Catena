@@ -24,7 +24,7 @@
 */
 var NAVTREE =
 [
-  [ "cpp-v0.0.10-5", "index.html", [
+  [ "cpp-v0.0.11-2", "index.html", [
     [ "Catena C++ SDK", "index.html", "index" ],
     [ "Cross Compiling", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html", [
       [ "Prequisites", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md3", null ],
