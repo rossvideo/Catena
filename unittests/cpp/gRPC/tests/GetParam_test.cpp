@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the GetParam.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/28
+ * @date 25/06/18
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -94,7 +94,7 @@ class gRPCGetParamTests : public GRPCTest {
         EXPECT_EQ(outVal.SerializeAsString(), expVal.SerializeAsString());
         EXPECT_EQ(outRc.error_code(), static_cast<grpc::StatusCode>(expRc.status));
         EXPECT_EQ(outRc.error_message(), expRc.what());
-        // Make sure another GetPopulatedSlots handler was created.
+        // Make sure another GetParam handler was created.
         EXPECT_TRUE(asyncCall) << "Async handler was not created during runtime";
     }
 
@@ -262,10 +262,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrGetParamThrowUnknown) {
     initPayload(1, "/test_oid");
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(dm, getParam(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
-            throw std::runtime_error(expRc.what());
-            return nullptr;
-        }));
+        .WillOnce(::testing::Throw(std::runtime_error(expRc.what())));
     EXPECT_CALL(*mockParam, getOid()).Times(0);
     EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(0);
     // Sending the RPC.
@@ -318,10 +315,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowUnknown) {
         .WillOnce(::testing::Invoke([this](){ return std::move(mockParam); }));
     EXPECT_CALL(*mockParam, getOid()).WillRepeatedly(::testing::ReturnRef(expVal.oid()));
     EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::Param &param, catena::common::Authorizer &authz)  {
-            throw std::runtime_error(expRc.what());
-            return catena::exception_with_status("", catena::StatusCode::OK);
-        }));
+        .WillOnce(::testing::Throw(std::runtime_error(expRc.what())));
     // Sending the RPC.
     testRPC();
 }

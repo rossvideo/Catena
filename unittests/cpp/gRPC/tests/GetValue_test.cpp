@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the GetValue.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/26
+ * @date 25/06/18
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -228,10 +228,7 @@ TEST_F(gRPCGetValueTests, GetValue_ErrThrowUnknown) {
     initPayload(0, "/test_oid");
     // Setting expectations
     EXPECT_CALL(dm, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
-            throw std::runtime_error(expRc.what());
-            return catena::exception_with_status("", catena::StatusCode::OK);
-        }));
+        .WillOnce(::testing::Throw(std::runtime_error(expRc.what())));
     // Sending the RPC.
     testRPC();
 }

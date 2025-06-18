@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the DeviceRequest.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/26
+ * @date 25/06/18
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -169,7 +169,7 @@ class gRPCDeviceRequestTests : public GRPCTest {
         }
         EXPECT_EQ(outRc.error_code(), static_cast<grpc::StatusCode>(expRc.status));
         EXPECT_EQ(outRc.error_message(), expRc.what());
-        // Make sure another AddLanguage handler was created.
+        // Make sure another DeviceRequest handler was created.
         EXPECT_TRUE(asyncCall) << "Async handler was not created during runtime";
     }
 
@@ -354,10 +354,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowUnknown) {
     expRc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations
     EXPECT_CALL(dm, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
-            throw std::runtime_error(expRc.what());
-            return nullptr;
-        }));
+        .WillOnce(::testing::Throw(std::runtime_error(expRc.what())));
     // Sending the RPC
     testRPC();
 }
@@ -397,10 +394,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowUnknown) {
     EXPECT_CALL(*mockSerializer, getNext()).Times(3)
         .WillOnce(::testing::Return(expVals[0]))
         .WillOnce(::testing::Return(expVals[1]))
-        .WillOnce(::testing::Invoke([this](){
-            throw std::runtime_error(expRc.what());
-            return expVals[1]; // Should not recieve
-        }));
+        .WillOnce(::testing::Throw(std::runtime_error(expRc.what())));
     EXPECT_CALL(*mockSerializer, hasMore()).Times(2).WillRepeatedly(::testing::Return(true));
     // Sending the RPC
     testRPC();

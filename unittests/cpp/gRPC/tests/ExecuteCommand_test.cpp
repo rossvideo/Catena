@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the ExecuteCommand.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/03
+ * @date 25/06/18
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -169,7 +169,7 @@ class gRPCExecuteCommandTests : public GRPCTest {
         }
         EXPECT_EQ(outRc.error_code(), static_cast<grpc::StatusCode>(expRc.status));
         EXPECT_EQ(outRc.error_message(), expRc.what());
-        // Make sure another AddLanguage handler was created.
+        // Make sure another ExecuteCommand handler was created.
         EXPECT_TRUE(asyncCall) << "Async handler was not created during runtime";
     }
 
@@ -191,7 +191,7 @@ class gRPCExecuteCommandTests : public GRPCTest {
  * 
  * TEST 1 - Creating a ExecuteCommand object.
  */
-TEST_F(gRPCExecuteCommandTests, ExecuteCommand_create) {
+TEST_F(gRPCExecuteCommandTests, ExecuteCommand_Create) {
     EXPECT_TRUE(asyncCall);
 }
 

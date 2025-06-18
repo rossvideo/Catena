@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the SetValue.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/27
+ * @date 25/06/18
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -106,7 +106,7 @@ class gRPCSetValueTests : public GRPCTest {
 
 /*
  * ============================================================================
- *                               MultiSetValue tests
+ *                               SetValue tests
  * ============================================================================
  * 
  * TEST 1 - Creating a SetValue object. This tests request_().

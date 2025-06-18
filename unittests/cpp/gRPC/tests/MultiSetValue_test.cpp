@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the MultiSetValue.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/27
+ * @date 25/06/18
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -251,11 +251,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowUnknown) {
     expRc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations
     EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
-            // Throwing error and returning true.
-            throw std::runtime_error(expRc.what());
-            return true;
-        }));
+        .WillOnce(::testing::Throw(std::runtime_error(expRc.what())));
     // Sending the RPC
     testRPC();
 }
@@ -301,11 +297,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
     // Setting expectations
     EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
     EXPECT_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
-            // Throwing error and returning ok.
-            throw std::runtime_error(expRc.what());
-            return catena::exception_with_status("", catena::StatusCode::OK);
-        }));
+        .WillOnce(::testing::Throw(std::runtime_error(expRc.what())));
     // Sending the RPC
     testRPC();
 }

@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the AddLanguage.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/27
+ * @date 25/06/18
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -218,10 +218,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowUnknown) {
     expRc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations
     EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
-            throw std::runtime_error(expRc.what());
-            return catena::exception_with_status("", catena::StatusCode::OK);
-        }));
+        .WillOnce(::testing::Throw(std::runtime_error(expRc.what())));
     // Sending the RPC
     testRPC();
 }

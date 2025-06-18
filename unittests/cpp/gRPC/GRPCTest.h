@@ -31,7 +31,8 @@
 /**
  * @brief A parent class for gRPC test fixtures.
  * @author christian.twarogn@rossvideo.com
- * @date 16/06/25
+ * @author benjamin.whitten@rossvideo.com
+ * @date 25/06/18
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -115,6 +116,7 @@ class GRPCTest  : public ::testing::Test {
             }
         });
 
+        // Creating the CallData object for testing.
         makeOne();
     }
 
@@ -130,7 +132,6 @@ class GRPCTest  : public ::testing::Test {
         // Make sure the calldata objects were destroyed.
         ASSERT_FALSE(testCall) << "Failed to deregister handler";
         ASSERT_FALSE(asyncCall) << "Failed to deregister handler";
-
         // Restoring cout
         std::cout.rdbuf(oldCout);
     }
