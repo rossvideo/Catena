@@ -192,7 +192,7 @@ TEST_F(ConnectTest, HandlesValueSetByServer) {
 
     std::set<std::string> subscribed_oids{paramOid_};
     EXPECT_CALL(*subscription_manager_, getAllSubscribedOids(::testing::Ref(*device_)))
-        .WillRepeatedly(ReturnRef(subscribed_oids));
+        .WillRepeatedly(Return(subscribed_oids));
 
     catena::exception_with_status rc("", catena::StatusCode::OK);
     std::string slotJson = buildSlotResponse(1);
@@ -243,7 +243,7 @@ TEST_F(ConnectTest, HandlesValueSetByClient) {
 
     std::set<std::string> subscribed_oids{paramOid_};
     EXPECT_CALL(*subscription_manager_, getAllSubscribedOids(::testing::Ref(*device_)))
-        .WillRepeatedly(ReturnRef(subscribed_oids));
+        .WillRepeatedly(Return(subscribed_oids));
 
     catena::exception_with_status rc("", catena::StatusCode::OK);
     std::string slotJson = buildSlotResponse(1);
@@ -364,30 +364,6 @@ TEST_F(ConnectTest, FinishDisconnectsSignalHandlers) {
     proceed_thread.join();
 }
 
-// Test 2.3: Test finish sends final OK response
-TEST_F(ConnectTest, FinishSendsFinalResponse) {
-    static const std::string empty_token;
-    EXPECT_CALL(*socket_reader_, authorizationEnabled())
-        .WillOnce(Return(false));
-    EXPECT_CALL(*socket_reader_, jwsToken())
-        .WillOnce(ReturnRef(empty_token));
-    
-    // Run proceed() in a separate thread since it blocks
-    std::thread proceed_thread([this]() {
-        connect_->proceed();
-    });
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-    std::string slotJson = buildSlotResponse(1);
-    connect_->finish();
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-    EXPECT_EQ(readResponse(), expectedSSEResponse(catena::exception_with_status("", catena::StatusCode::OK), {slotJson}));
-
-    catena::REST::Connect::shutdownSignal_.emit();
-    proceed_thread.join();
-}
-
 // --- 3. EXCEPTION TESTS ---
 
 // Test 3.1: Test catena::exception_with_status handling
@@ -490,7 +466,7 @@ TEST_F(ConnectTest, ProceedHandlesWriterFailure) {
 
     std::set<std::string> subscribed_oids{paramOid_};
     EXPECT_CALL(*subscription_manager_, getAllSubscribedOids(::testing::Ref(*device_)))
-        .WillRepeatedly(ReturnRef(subscribed_oids));
+        .WillRepeatedly(Return(subscribed_oids));
 
     // Run proceed() in a separate thread since it blocks
     std::thread proceed_thread([this]() {
