@@ -1,0 +1,14 @@
+
+# Uses the struct from ref_struct.yaml as a template and specifies the value.
+template_oid: /ref_struct
+type: STRUCT
+access_scope: st2138:op
+value:
+  struct_value:
+    fields:
+      nested_struct:
+        value:
+          struct_value:
+            fields:
+              num_1: { value: { int32_value: 1 } }
+              num_2: { value: { int32_value: 2 } }

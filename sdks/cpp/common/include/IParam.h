@@ -28,6 +28,7 @@
 //common 
 #include <Enums.h>
 #include <IConstraint.h>
+#include <IParamDescriptor.h>
 #include <Path.h>
 #include <Status.h>
 
@@ -38,7 +39,6 @@ namespace catena {
 namespace common { 
 
   class Authorizer;
-  class ParamDescriptor;  
 
 /**
  * @brief IParam is the interface for business logic and connection logic to interact with parameters
@@ -173,18 +173,18 @@ class IParam {
     /**
      * @brief define a command for the parameter
      */
-    virtual void defineCommand(std::function<catena::CommandResponse(catena::Value)> command) = 0;
+    virtual void defineCommand(std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(catena::Value)> commandImpl) = 0;
 
     /**
      * @brief execute the command for the parameter
      */
-    virtual catena::CommandResponse executeCommand(const catena::Value&  value) const = 0;
+    virtual std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommand(const catena::Value&  value) const = 0;
 
     /**
      * @brief get the descriptor of the parameter
      * @return the descriptor of the parameter
      */
-    virtual const ParamDescriptor& getDescriptor() const = 0;
+    virtual const IParamDescriptor& getDescriptor() const = 0;
 
     /**
      * @brief Check if the parameter is an array type

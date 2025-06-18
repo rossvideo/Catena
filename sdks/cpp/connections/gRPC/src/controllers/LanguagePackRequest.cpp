@@ -43,12 +43,16 @@ LanguagePackRequest::LanguagePackRequest(ICatenaServiceImpl *service, IDevice& d
 }
 
 void LanguagePackRequest::proceed(bool ok) {
-    std::cout << "LanguagePackRequest::proceed[" << objectId_ << "]: " << timeNow()
-              << " status: " << static_cast<int>(status_) << ", ok: "
-              << std::boolalpha << ok << std::endl;
-    if(!ok){
+    std::cout << "LanguagePackRequest::proceed[" << objectId_ << "]: "
+              << timeNow() << " status: " << static_cast<int>(status_)
+              << ", ok: " << std::boolalpha << ok << std::endl;
+    
+    // If the process is cancelled, finish the process
+    if (!ok) {
+        std::cout << "LanguagePackRequest[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
+
     switch(status_){
         /** 
          * kCreate: Updates status to kProcess and requests the
@@ -66,21 +70,24 @@ void LanguagePackRequest::proceed(bool ok) {
             // Used to serve other clients while processing.
             new LanguagePackRequest(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
-            try { // Getting and returning the requested language.
-                catena::exception_with_status rc{"", catena::StatusCode::OK};
+            { // rc scope
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
+            catena::DeviceComponent_ComponentLanguagePack ans;
+            // Getting and returning the requested language.
+            try {
                 std::lock_guard lg(dm_.mutex());
-                catena::DeviceComponent_ComponentLanguagePack ans;
                 rc = dm_.getLanguagePack(req_.language(), ans);
                 status_ = CallStatus::kFinish;
-                if (rc.status == catena::StatusCode::OK) {
-                    responder_.Finish(ans, Status::OK, this);
-                } else { // Error, end process.
-                    responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
-                }
             } catch (...) { // Error, end process.
-                status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(grpc::StatusCode::UNKNOWN, "unknown error");
-                responder_.FinishWithError(errorStatus, this);
+                rc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
+            }
+            // Writing response to the client.
+            status_ = CallStatus::kFinish;
+            if (rc.status == catena::StatusCode::OK) {
+                responder_.Finish(ans, Status::OK, this);
+            } else {
+                responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+            }
             }
             break;
         /**
@@ -91,10 +98,14 @@ void LanguagePackRequest::proceed(bool ok) {
             std::cout << "LanguagePackRequest[" << objectId_ << "] finished\n";
             service_->deregisterItem(this);
             break;
-        // default: Error, end process.
-        default:
+        /*
+         * default: Error, end process.
+         * This should be impossible to reach.
+         */
+        default: // GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             responder_.FinishWithError(errorStatus, this);
+            // GCOVR_EXCL_STOP
     }
 }

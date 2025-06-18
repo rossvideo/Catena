@@ -20,14 +20,16 @@ void GetValue::proceed() {
         // Getting value at oid from device.
         if (context_.authorizationEnabled()) {
             catena::common::Authorizer authz(context_.jwsToken());
-            rc = dm_.getValue("/" + context_.fields("oid"), ans, authz);
+            rc = dm_.getValue(context_.fqoid(), ans, authz);
         } else {
-            rc = dm_.getValue("/" + context_.fields("oid"), ans, catena::common::Authorizer::kAuthzDisabled);
+            rc = dm_.getValue(context_.fqoid(), ans, catena::common::Authorizer::kAuthzDisabled);
         }
 
     // ERROR
     } catch (const catena::exception_with_status& err) {
         rc = catena::exception_with_status(err.what(), err.status);
+    } catch (const std::exception& err) {
+        rc = catena::exception_with_status(err.what(), catena::StatusCode::INTERNAL);
     } catch (...) {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }

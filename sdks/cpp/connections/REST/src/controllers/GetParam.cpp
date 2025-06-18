@@ -30,14 +30,16 @@ void GetParam::proceed() {
         }
         // Locking device and getting the param.
         std::lock_guard lg(dm_.mutex());
-        std::unique_ptr<IParam> param = dm_.getParam("/" + context_.fields("oid"), rc, *authz);
+        std::unique_ptr<IParam> param = dm_.getParam(context_.fqoid(), rc, *authz);
         if (rc.status == catena::StatusCode::OK && param) {
             ans.set_oid(param->getOid());
-            param->toProto(*ans.mutable_param(), *authz);
+            rc = param->toProto(*ans.mutable_param(), *authz);
         }
     // ERROR
-    } catch (catena::exception_with_status& err) {
+    } catch (const catena::exception_with_status& err) {
         rc = catena::exception_with_status(err.what(), err.status);
+    } catch (const std::exception& err) {
+        rc = catena::exception_with_status(err.what(), catena::StatusCode::INTERNAL);
     } catch (...) {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }

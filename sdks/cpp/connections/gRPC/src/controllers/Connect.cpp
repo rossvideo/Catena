@@ -31,6 +31,7 @@
 // connections/gRPC
 #include <controllers/Connect.h>
 using catena::gRPC::Connect;
+using catena::common::ILanguagePack;
 
 // Initializes the object counter for Connect to 0.
 int catena::gRPC::Connect::objectCounter_ = 0;
@@ -51,14 +52,14 @@ catena::gRPC::Connect::Connect(ICatenaServiceImpl *service, IDevice& dm, bool ok
 // Manages gRPC command execution process using the state variable status.
 void catena::gRPC::Connect::proceed(bool ok) {
     std::cout << "Connect proceed[" << objectId_ << "]: " << timeNow()
-                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                << std::endl;
+                << " status: " << static_cast<int>(status_) << ", ok: "
+                << std::boolalpha << ok << std::endl;
 
     /**
      * The newest connect object (the one that has not yet been attached to a
      * client request) will send shutdown signal to cancel all open connections
      */
-    if(!ok && status_ != CallStatus::kFinish){
+    if (!ok && status_ != CallStatus::kFinish) {
         std::cout << "Connect[" << objectId_ << "] cancelled\n";
         std::cout << "Cancelling all open connections" << std::endl;
         shutdownSignal_.emit();
@@ -93,17 +94,17 @@ void catena::gRPC::Connect::proceed(bool ok) {
                     this->cv_.notify_one();
                 });
                 // Waiting for a value set by server to be sent to execute code.
-                valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-                    updateResponse_(oid, idx, p);
+                valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p){
+                    updateResponse_(oid, p);
                 });
 
                 // Waiting for a value set by client to be sent to execute code.
-                valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-                    updateResponse_(oid, idx, p);
+                valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p){
+                    updateResponse_(oid, p);
                 });
 
                 // Waiting for a language to be added to execute code.
-                languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const IDevice::ComponentLanguagePack& l) {
+                languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const ILanguagePack* l) {
                     updateResponse_(l);
                 });
 
@@ -113,7 +114,6 @@ void catena::gRPC::Connect::proceed(bool ok) {
 
                 // send client a empty update with slot of the device
                 {
-                    std::cout << "Transitioning from kProcess to kWrite" << std::endl;
                     status_ = CallStatus::kWrite;
                     catena::PushUpdates populatedSlots;
                     populatedSlots.set_slot(dm_.slot());
@@ -130,7 +130,6 @@ void catena::gRPC::Connect::proceed(bool ok) {
          * end the process.
          */
         case CallStatus::kWrite:
-            std::cout << "In kWrite state, waiting for updates" << std::endl;
             lock.lock();
             cv_.wait(lock, [this] { return hasUpdate_; });
             hasUpdate_ = false;
@@ -142,7 +141,6 @@ void catena::gRPC::Connect::proceed(bool ok) {
                 break;
             // Send the client an update with the slot of the device.
             } else {
-                std::cout << "Writing update to client" << std::endl;
                 res_.set_slot(dm_.slot());
                 writer_.Write(res_, this);
             }
@@ -153,10 +151,11 @@ void catena::gRPC::Connect::proceed(bool ok) {
          */
         case CallStatus::kFinish:
             std::cout << "Connect[" << objectId_ << "] finished\n";
-            shutdownSignal_.disconnect(shutdownSignalId_);
-            dm_.valueSetByClient.disconnect(valueSetByClientId_);
-            dm_.valueSetByServer.disconnect(valueSetByServerId_);
-            dm_.languageAddedPushUpdate.disconnect(languageAddedId_);
+            // Disconnecting all initialized listeners.
+            if (shutdownSignalId_ != 0) { shutdownSignal_.disconnect(shutdownSignalId_); }
+            if (valueSetByClientId_ != 0) { dm_.valueSetByClient.disconnect(valueSetByClientId_); }
+            if (valueSetByServerId_ != 0) { dm_.valueSetByServer.disconnect(valueSetByServerId_); }
+            if (languageAddedId_ != 0) { dm_.languageAddedPushUpdate.disconnect(languageAddedId_); }
             service_->deregisterItem(this);
             break;
         // default: Error, end process.

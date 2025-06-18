@@ -45,6 +45,7 @@
 
 // common
 #include <rpc/Connect.h>
+#include <ILanguagePack.h>
 #include <Enums.h>
 
 // std
@@ -109,25 +110,22 @@ class Connect : public CallData, public catena::common::Connect {
      * @brief The total # of Connect objects.
      */
     static int objectCounter_;
-    /**
-     * @brief Unused???
-     */
-    unsigned int pushUpdatesId_;
+
     /**
      * @brief Id of operation waiting for valueSetByClient to be emitted.
      * Used when ending the connection.
      */
-    unsigned int valueSetByClientId_;
+    unsigned int valueSetByClientId_ = 0;
     /**
      * @brief Id of operation waiting for valueSetByServer to be emitted.
      * Used when ending the connection.
      */
-    unsigned int valueSetByServerId_;
+    unsigned int valueSetByServerId_ = 0;
     /**
      * @brief Id of operation waiting for languageAddedPushUpdate to be
      * emitted. Used when ending the connection.
      */
-    unsigned int languageAddedId_;
+    unsigned int languageAddedId_ = 0;
 
     /**
      * @brief Signal emitted in the case of an error which requires the all
@@ -137,7 +135,7 @@ class Connect : public CallData, public catena::common::Connect {
     /**
      * @brief ID of the shutdown signal for the Connect object
     */
-    unsigned int shutdownSignalId_;
+    unsigned int shutdownSignalId_ = 0;
 };
 
 }; // namespace gRPC

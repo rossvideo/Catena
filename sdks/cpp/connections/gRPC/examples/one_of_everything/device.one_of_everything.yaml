@@ -1,0 +1,98 @@
+
+slot: 1
+multi_set_enabled: true
+detail_level: FULL
+access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
+default_scope: st2138:mon
+
+params:
+  number_example: 
+    type: INT32
+    value: { int32_value: 0 }
+    name: { display_strings: { en: "Int Example" } }
+    minimal_set: true
+  
+  counter: 
+    type: INT32
+    value: { int32_value: 0 }
+    name: { display_strings: { en: "Counter" } }
+    minimal_set: true
+  
+  # Imports the parameter from the file specified below.
+  float_example:
+    type: FLOAT32
+    value: { float32_value: 0.0 }
+    name: { display_strings: { en: "Float Example" } }
+    access_scope: st2138:op
+    widget: default
+    precision: 1
+  
+  string_example:
+    type: STRING
+    value: { string_value: "Hello World" }
+    name: { display_strings: { en: "String Example" } }
+    access_scope: st2138:cfg
+
+  number_array:
+    type: INT32_ARRAY
+    value: { int32_array_values: { ints: [1, 2, 3, 4] } }
+    name: { display_strings: { en: "Int Array Example" } }
+  
+  # Imports the parameter from the file specified below.
+  float_array:
+    type: FLOAT32_ARRAY
+    value: { float32_array_values: { floats: [1.1, 2.2, 3.3, 4.4] } }
+    name: { display_strings: { en: "Float Array Example" } }
+    max_length: 128
+    precision: 3
+
+  string_array:
+    type: STRING_ARRAY
+    value: { string_array_values: { strings: ["one", "two", "three", "four", "five"] } }
+    name: { display_strings: { en: "String Array Example" } }
+
+  # This is a struct reference imported from another file and used as a
+  # template oid for struct_example and struct_array.
+  ref_struct:
+    import: { file: /params/param.ref_struct.yaml }
+
+  # Imports the parameter from the file specified below.
+  struct_example:
+    import: { file: /params/param.struct_example.yaml }
+
+  # Imports the parameter from the file specified below.
+  struct_array:
+    import: { file: /params/param.struct_array.yaml }
+
+  # This is a struct param containing examples of various constraints.
+  constraint_examples:
+    import: { file: /constraints/param.constraint_examples.yaml }
+
+menu_groups:
+  status:
+    name: { display_strings: { en: "Status" } }
+    menus:
+      product:
+        name: {display_strings: { en: "Product" } }
+        param_oids:
+          - /number_example
+  config:
+    name: { display_strings: { en: "Config" } }
+    menus:
+      catena:
+        name: {display_strings: { en: "Catena" } }
+        param_oids:
+          - /float_example
+          - /string_example
+
+commands:
+  fib_start:
+    type: EMPTY
+  fib_stop:
+    type: EMPTY
+  fib_set:
+    type: INT32
+  randomize:
+    type: EMPTY
+  tape_bot:
+    type: EMPTY

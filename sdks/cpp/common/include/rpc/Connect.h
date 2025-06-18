@@ -103,10 +103,9 @@ class Connect : public IConnect {
      * authorization checks.
      * 
      * @param oid - The OID of the value to update
-     * @param idx - The index of the value to update
      * @param p - The parameter to update
      */
-    void updateResponse_(const std::string& oid, size_t idx, const IParam* p) override {
+    void updateResponse_(const std::string& oid, const IParam* p) override {
         try {
             // If Connect was cancelled, notify client and end process
             if (this->isCancelled()) {
@@ -118,9 +117,6 @@ class Connect : public IConnect {
             if (this->authz_ != &catena::common::Authorizer::kAuthzDisabled && !this->authz_->readAuthz(*p)) {
                 return;
             }
-
-            // Get all subscribed OIDs
-            auto subscribedOids = this->subscriptionManager_.getAllSubscribedOids(this->dm_);
 
             // Check if we should process this update based on detail level
             bool should_update = false;
@@ -137,8 +133,7 @@ class Connect : public IConnect {
                 }},
                 {catena::Device_DetailLevel_SUBSCRIPTIONS, [&]() {
                     // Update if OID is subscribed or in minimal set
-                    should_update = p->getDescriptor().minimalSet() || 
-                           (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
+                    should_update = p->getDescriptor().minimalSet() || subscriptionManager_.isSubscribed(oid, dm_);
                 }},
                 {catena::Device_DetailLevel_COMMANDS, [&]() {
                     // For COMMANDS, only update command parameters
@@ -159,11 +154,8 @@ class Connect : public IConnect {
             if (!should_update) {
                 return;
             }
-    
-    
-            this->res_.mutable_value()->set_oid(oid);
-            this->res_.mutable_value()->set_element_index(idx);
-            
+
+            this->res_.mutable_value()->set_oid(oid);    
             catena::Value* value = this->res_.mutable_value()->mutable_value();
     
             catena::exception_with_status rc{"", catena::StatusCode::OK};
@@ -179,12 +171,12 @@ class Connect : public IConnect {
     }
     
     /**
-     * @brief Updates the response message with a ComponentLanguagePack and
+     * @brief Updates the response message with an ILanguagePack and
      * handles authorization checks.
      * 
-     * @param l The added ComponentLanguagePack emitted by device.
+     * @param l The added ILanguagePack emitted by device.
      */
-    void updateResponse_(const IDevice::ComponentLanguagePack& l) override {
+    void updateResponse_(const ILanguagePack* l) override {
         try {
             // If Connect was cancelled, notify client and end process.
             if (this->isCancelled()){
@@ -199,8 +191,7 @@ class Connect : public IConnect {
             }
             // Updating res_'s device_component and pushing update.
             auto pack = this->res_.mutable_device_component()->mutable_language_pack();
-            pack->set_language(l.language());
-            pack->mutable_language_pack()->CopyFrom(l.language_pack());
+            l->toProto(*pack->mutable_language_pack());
             this->hasUpdate_ = true;
             this->cv_.notify_one();
         } catch(catena::exception_with_status& why){

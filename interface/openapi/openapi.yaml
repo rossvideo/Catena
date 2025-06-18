@@ -31,6 +31,7 @@
 #
 # OpenAPI documentation of the RPCs for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
+# Author: john.naylor@rossvideo.com
 # Date: 25/04/03
 #
 
@@ -39,8 +40,8 @@ info:
   title: Catena API
   version: '1.0'
 servers:
-  - url: https://device.catenamedia.tv:443/api/v1
-  - url: http://localhost:443/api/v1
+  - url: https://device.catenamedia.tv:443/st2138-api/v1
+  - url: http://localhost:443/st2138-api/v1
 
 # default endpoint security is that at least one read scope is required.
 # the permissions in the security array are ORed together.
@@ -56,49 +57,58 @@ security:
     - st2138:mon
 
 paths:
+  /health:
+    $ref: './paths/Health.yaml'
+
   /devices:
     $ref: './paths/Devices.yaml'
 
-  /device/{slot}:
+  /{slot}:
     $ref: './paths/Device.yaml'
 
-  /device/{slot}/stream:
+  /{slot}/stream:
     $ref: './paths/DeviceStream.yaml'
 
-  /device/{slot}/command/{fqoid}:
+  /{slot}/command/{fqoid}:
     $ref: './paths/Command.yaml'
 
-  /device/{slot}/asset/{fqoid}:
+  /{slot}/command/{fqoid}/stream:
+    $ref: './paths/CommandStream.yaml'
+
+  /{slot}/asset/{fqoid}:
     $ref: './paths/Asset.yaml'
 
-  /device/{slot}/asset/{fqoid}/stream:
+  /{slot}/asset/{fqoid}/stream:
     $ref: './paths/AssetStream.yaml'
 
-  /device/{slot}/basic-param/stream/{fqoid}/stream:
+  /{slot}/basic-param/{fqoid}:
+    $ref: './paths/BasicParam.yaml'
+  
+  /{slot}/basic-param/{fqoid}/stream:
     $ref: './paths/BasicParamStream.yaml'
 
-  /device/{slot}/basic-param/{fqoid}:
-    $ref: './paths/BasicParam.yaml'
-
-  /device/{slot}/value/{fqoid}:
+  /{slot}/value/{fqoid}:
     $ref: './paths/Value.yaml'
 
-  /device/{slot}/values:
+  /{slot}/values:
     $ref: './paths/Values.yaml'
 
-  /device/{slot}/subscriptions:
+  /{slot}/subscriptions:
     $ref: './paths/Subscriptions.yaml'
 
-  /device/{slot}/param/{fqoid}:
+  /{slot}/subscriptions/stream:
+    $ref: './paths/SubscriptionsStream.yaml'
+
+  /{slot}/param/{fqoid}:
     $ref: './paths/Param.yaml'
 
-  /device/{slot}/connect:
+  /connect:
     $ref: './paths/Connect.yaml'
 
-  /device/{slot}/language-pack/{language-code}:
+  /{slot}/language-pack/{language-code}:
     $ref: './paths/LanguagePack.yaml'
 
-  /device/{slot}/languages:
+  /{slot}/languages:
     $ref: './paths/Languages.yaml'
 
 components:
@@ -107,43 +117,21 @@ components:
 
     "NotFound": # 404
       description: The requested resource was not found
-      content:
-        text/plain:
-          schema:
-            type: string
-          example: "The requested resource was not found"
+
+    "BadRequest": # 400
+      description: Bad Request - Invalid input parameters or malformed request
 
     "Unauthorized": # 401
       description: Unauthorized, access token is either missing or invalid
-      content:
-        text/plain:
-          schema:
-            type: string
-          example: "Access token is either missing or invalid, is user authenticated?"
 
     "Forbidden": # 403
       description: Forbidden, insufficient permission for access
-      content:
-        text/plain:
-          schema:
-            type: string
-          example: "Permission denied"
 
     "InternalServerError": # 500
       description: An error occurred while processing the request
-      content:
-        text/plain:
-          schema:
-            type: string
-          example: "An error occurred while processing the request"
 
     "ServiceUnavailable": # 503
       description: The service is temporarily unavailable
-      content:
-        text/plain:
-          schema:
-            type: string
-          example: "The service is temporarily unavailable"
 
   securitySchemes:
     oauth2:

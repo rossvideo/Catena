@@ -73,7 +73,7 @@ class ISocketReader {
      * @param socket The socket to read from.
      * @param authz Flag to indicate if authorization is enabled.
      */
-    virtual void read(tcp::socket& socket, bool authz = false) = 0;
+    virtual void read(tcp::socket& socket, bool authz = false, const std::string& version = "v1") = 0;
     /**
      * @brief Returns the HTTP method of the request.
      */
@@ -86,6 +86,10 @@ class ISocketReader {
      * @brief Returns the slot of the device to make the API call on.
      */
     virtual uint32_t slot() const = 0;
+    /**
+     * @brief Returns the fqoid of the asset to make the API call on.
+     */
+    virtual const std::string& fqoid() const = 0;
     /**
      * @brief Returns true if the field exists in the URL, regardless of its value.
      * 
@@ -108,10 +112,6 @@ class ISocketReader {
      */
     virtual const std::string& origin() const = 0;
     /**
-     * @brief Returns the language to return the response in.
-     */
-    virtual const std::string& language() const = 0;
-    /**
      * @brief Returns the detail level to return the response in.
      */
     virtual catena::Device_DetailLevel detailLevel() const = 0;
@@ -124,6 +124,10 @@ class ISocketReader {
      * @brief Returns true if authorization is enabled.
      */
     virtual bool authorizationEnabled() const = 0;
+    /**
+     * @brief Returns true if the client wants a stream response.
+     */
+    virtual bool stream() const = 0;
 
     /**
      * @brief Returns the path to the external object.

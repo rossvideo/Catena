@@ -54,16 +54,15 @@ void GetParam::proceed( bool ok) {
     std::cout << "GetParam::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok << std::endl;
-    
-    if(!ok) {
+
+    // If the process is cancelled, finish the process
+    if (!ok) {
         std::cout << "GetParam[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
-        service_->deregisterItem(this);
-        return;
     }
     
     switch (status_) {
-        /** 
+        /*
          * kCreate: Updates status to kProcess and requests the GetParam
          * command from the service.
          */ 
@@ -73,25 +72,22 @@ void GetParam::proceed( bool ok) {
                                             this);
             break;
 
-        /**
+        /*
          * kProcess: Processes the request asyncronously, updating status to
          * kFinish and notifying the responder once finished.
          */
         case CallStatus::kProcess:
+            // Used to serve other clients while processing.
             new GetParam(service_, dm_, ok);
-            context_.AsyncNotifyWhenDone(this);  
-            status_ = CallStatus::kWrite;
-            // Falling through to kWrite.
+            context_.AsyncNotifyWhenDone(this);
 
-        /**
-         * kWrite: Writes the response to the client.
-         */
-        case CallStatus::kWrite:
+            { // var scope
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
+            std::unique_ptr<IParam> param = nullptr;
+            std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+            catena::common::Authorizer* authz;
             try {
-                catena::exception_with_status rc{"", catena::StatusCode::OK};
                 // Creating authorizer.
-                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
-                catena::common::Authorizer* authz;
                 if (service_->authorizationEnabled()) {
                     sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken_());
                     authz = sharedAuthz.get();
@@ -99,38 +95,31 @@ void GetParam::proceed( bool ok) {
                     authz = &catena::common::Authorizer::kAuthzDisabled;
                 }
                 // Getting the param.
-                std::unique_ptr<IParam> param = dm_.getParam(req_.oid(), rc, *authz);
-                // If everything was successful, writing to the client.
-                if (rc.status == catena::StatusCode::OK && param) {
-                    catena::DeviceComponent_ComponentParam response;
-                    response.set_oid(param->getOid());
-                    param->toProto(*response.mutable_param(), *authz);
-                    status_ = CallStatus::kPostWrite;
-                    writer_.Write(response, this);
-                } else { // Error
-                    status_ = CallStatus::kFinish;
-                    writer_.Finish(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+                std::lock_guard lg(dm_.mutex());
+                param = dm_.getParam(req_.oid(), rc, *authz);
+                // If we found a param update the response.
+                if (param && rc.status == catena::StatusCode::OK) {
+                    res_.set_oid(param->getOid());
+                    rc = param->toProto(*res_.mutable_param(), *authz);
                 }
-            // Likely authentication error, end process.
+            // ERROR
             } catch (catena::exception_with_status& err) {
-                status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
-                writer_.Finish(errorStatus, this);
+                rc = catena::exception_with_status(err.what(), err.status);
             } catch (...) {
-                status_ = CallStatus::kFinish;
-                writer_.Finish(Status::CANCELLED, this);
+                rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
+            }
+            // Writing the response.
+            status_ = CallStatus::kFinish;
+            if (rc.status == catena::StatusCode::OK) {
+                writer_.Finish(res_, Status::OK, this);
+            // Error along the way, finish call with error.
+            } else {
+                writer_.FinishWithError(grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+            }
             }
             break;
 
-        /**
-         * kPostWrite: Finish writing the response to the client.
-         */
-        case CallStatus::kPostWrite:
-            status_ = CallStatus::kFinish;
-            writer_.Finish(Status::OK, this);
-            break;
-
-        /**
+        /*
          * kFinish: Final step of gRPC is to deregister the item from
          * CatenaServiceImpl.
          */
@@ -139,9 +128,14 @@ void GetParam::proceed( bool ok) {
             service_->deregisterItem(this);
             break;
 
-        default:
+        /*
+         * default: Error, end process.
+         * This should be impossible to reach.
+         */
+        default: // GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
-            writer_.Finish(errorStatus, this);
+            writer_.FinishWithError(errorStatus, this);
+            // GCOVR_EXCL_STOP
     }
 }

@@ -103,7 +103,7 @@ class GetPopulatedSlots : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << "Connect::proceed[" << objectId_ << "]: "
+      std::cout << "GetPopulatedSlots::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
                 << std::endl;

@@ -15,7 +15,7 @@
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -29,9 +29,10 @@
 #
 
 #
-# OpenAPI documentation of the GetParam RPC for the Catena REST API
+# OpenAPI documentation of the Catena REST API's param endpoint
+# Author: john.naylor@rossvideo.com
 # Author: benjamin.whitten@rossvideo.com
-# Date: 25/04/03
+# Date: 25/06/09
 #
 
 get:
@@ -54,7 +55,7 @@ get:
       description: The fully qualified path to the parameter within the device model.
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-      example: "/text_box"
+      example: "text_box"
 
   tags:
     - Parameters
@@ -71,7 +72,7 @@ get:
               "oid": "/text_box",
               "param": {
                 "name": {
-                  "displayStrings": {
+                  "display_strings": {
                     "en": "Text Box",
                     "es": "Caja de Texto",
                     "fr": "Boîte de Texte"
@@ -83,6 +84,9 @@ get:
                 }
               }
             }
+
+    "400":
+      $ref: '../openapi.yaml#/components/responses/BadRequest'
 
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'

@@ -28,10 +28,10 @@
 #
 
 #
-# OpenAPI documentation of the BasicParamInfoRequest Request Handler for the Catena REST API
+# OpenAPI documentation of the Catena REST API's values endpoint
+# Author: john.naylor@rossvideo.com
 # Author: benjamin.whitten@rossvideo.com
-# Author: zuhayr.sarker@rossvideo.com
-# Date: 25/04/22
+# Date: 25/06/09
 #
 
 put:
@@ -66,35 +66,47 @@ put:
     content:
       application/json:
         schema:
-          type: array
-          items:
-            type: object
-            properties:
-              fqoid:
-                type: string
-                description: Fully qualified OID of the parameter to get info for
-                schema: 
-                  $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-              value:
+          type: object
+          properties:
+            values:
+              type: array
+              items:
                 type: object
-                schema:
-                  $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-        example:
-          - fqoid: "/ipv4"
-            value:
-              string_value: "192.168.1.1"
-          - fqoid: "/gateway"
-            value:
-              string_value: "192.168.1.254"
-          - fqoid: "/subnet"
-            value:
-              string_value: "255.255.255.0"
-          - fqoid: "/dns"
-            value:
-              string_value: "8.8.8.8"
-          - fqoid: "/dns_alt"
-            value:
-              string_value: "8.8.4.4"
+                properties:
+                  fqoid:
+                    type: string
+                    description: Fully qualified OID of the parameter to get info for
+                    schema: 
+                      $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+                  value:
+                    type: object
+                    schema:
+                      $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+        example: 
+          {
+            "values": [
+              {
+                oid: "/ipv4",
+                value: { string_value: "192.168.1.1" }
+              },
+              {
+                oid: "/gateway",
+                value: { string_value: "192.168.1.254" }
+              },
+              {
+                oid: "/subnet",
+                value: { string_value: "255.255.255.0" }
+              },
+              {
+                oid: "/dns",
+                value: { string_value: "8.8.8.8" }
+              },
+              {
+                oid: "/dns_alt",
+                value: { string_value: "8.8.4.4" }
+              }
+            ]
+          }
 
   responses:
     "204":
@@ -102,6 +114,9 @@ put:
 
     "500":
       $ref: '../openapi.yaml#/components/responses/InternalServerError'
+
+    "400":
+      $ref: '../openapi.yaml#/components/responses/BadRequest'
           
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'

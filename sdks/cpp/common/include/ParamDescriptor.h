@@ -1,5 +1,3 @@
-#pragma once
-
 /*
  * Copyright 2024 Ross Video Ltd
  *
@@ -38,14 +36,15 @@
  * @date 2024-08-20
  */
 
+#pragma once
+
 //common
 #include <Tags.h>
-#include <IParam.h>
 #include <IConstraint.h>
 #include <PolyglotText.h>
-
-// meta
-#include <meta/IsVector.h>
+#include <IParamDescriptor.h>
+#include <IDevice.h>
+#include <Authorization.h>  
 
 // protobuf interface
 #include <interface/param.pb.h>
@@ -53,9 +52,6 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
-#include <type_traits>
-#include <algorithm>
-#include <cassert>
 
 namespace catena {
 namespace common {
@@ -66,7 +62,7 @@ class IDevice; // forward declaration
 /**
  * @brief ParamDescriptor provides information about a parameter
  */
-class ParamDescriptor {
+class ParamDescriptor : public IParamDescriptor {
   public:
     using OidAliases = std::vector<std::string>;
 
@@ -131,7 +127,7 @@ class ParamDescriptor {
       uint32_t max_length,
       std::size_t total_length,
       bool minimal_set,
-      ParamDescriptor* parent)
+      IParamDescriptor* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget},
         scope_{scope}, read_only_{read_only}, template_oid_{template_oid},
         constraint_{constraint}, isCommand_{isCommand}, dev_{dm},
@@ -146,58 +142,58 @@ class ParamDescriptor {
     /**
      * @brief get the parameter type
      */
-    ParamType type() const { return type_; }
+    ParamType type() const override { return type_; }
 
     /**
      * @brief get the parameter name
      */
-    const PolyglotText::DisplayStrings& name() const { return name_.displayStrings(); }
+    const PolyglotText::DisplayStrings& name() const override { return name_.displayStrings(); }
 
     /**
      * @brief get the parameter oid
      */
-    const std::string& getOid() const { return oid_; }
+    const std::string& getOid() const override { return oid_; }
 
     /**
      * @brief set the parameter oid
      */
-    void setOid(const std::string& oid) { oid_ = oid; }
+    void setOid(const std::string& oid) override { oid_ = oid; }
 
 
     /**
      * @brief return true if the parameter has a template oid
      */
-    bool has_template_oid() const;
+    bool hasTemplateOid() const override { return !template_oid_.empty(); };
 
     /**
      * @brief get the parameter's template oid
      */
-    const std::string& template_oid() const;
+    const std::string& templateOid() const override { return template_oid_;};
 
     /**
      * @brief return the readOnly status of the parameter
      */
-    inline bool readOnly() const { return read_only_; }
+    inline bool readOnly() const override { return read_only_; }
 
     /**
      * @brief set the readOnly status of the parameter
      */
-    inline void readOnly(bool flag) { read_only_ = flag; }
+    inline void readOnly(bool flag) override { read_only_ = flag; }
 
     /**
      * @brief get the access scope of the parameter
      */
-    const std::string& getScope() const;
+    const std::string& getScope() const override;
 
     /**
      * @brief get the minimal set status of the parameter
      */
-    inline bool minimalSet() const { return minimal_set_; }
+    inline bool minimalSet() const override { return minimal_set_; }
 
     /**
      * @brief set the minimal set status of the parameter
      */
-    inline void setMinimalSet(bool flag) { minimal_set_ = flag; }
+    inline void setMinimalSet(bool flag) override { minimal_set_ = flag; }
 
     /**
      * @brief Returns the max length of the array/string parameter. If max
@@ -206,7 +202,7 @@ class ParamDescriptor {
      * argument "--default_max_length=#".
      * @returns max_length_
      */
-    uint32_t max_length() const;
+    uint32_t max_length() const override;
     /**
      * @brief Returns the total length of the string_array parameter. If max
      * length is not set in the .JSON file, then the default value of 1024 is
@@ -214,7 +210,7 @@ class ParamDescriptor {
      * argument "--default_max_length=#".
      * @returns total_length_
      */
-    std::size_t total_length() const;
+    std::size_t total_length() const override;
 
     /**
      * @brief serialize param meta data in to protobuf message
@@ -225,7 +221,7 @@ class ParamDescriptor {
      * with the information from the ParamDescriptor
      * 
      */
-    void toProto(catena::Param &param, Authorizer& authz) const;
+    void toProto(catena::Param &param, Authorizer& authz) const override;
 
 
     /**
@@ -236,14 +232,14 @@ class ParamDescriptor {
      * this function will populate all non-value fields of the protobuf param message 
      * with the information from the ParamDescriptor
      */
-    void toProto(catena::BasicParamInfo &paramInfo, Authorizer& authz) const;
+    void toProto(catena::BasicParamInfo &paramInfo, Authorizer& authz) const override;
 
     /**
      * @brief get the parameter name by language
      * @param language the language to get the name for
      * @return the name in the specified language, or an empty string if the language is not found
      */
-    const std::string& name(const std::string& language) const;
+    const std::string& name(const std::string& language) const override;
 
     /**
      * @brief add an item to one of the collections owned by the device
@@ -251,7 +247,7 @@ class ParamDescriptor {
      * @param key item's unique key
      * @param item the item to be added
      */
-    void addSubParam(const std::string& oid, ParamDescriptor* item) {
+    void addSubParam(const std::string& oid, IParamDescriptor* item) override {
       subParams_[oid] = item;
     }
 
@@ -259,7 +255,7 @@ class ParamDescriptor {
      * @brief gets a sub parameter's paramDescriptor
      * @return ParamDescriptor of the sub parameter
      */
-    ParamDescriptor& getSubParam(const std::string& oid) const {
+    IParamDescriptor& getSubParam(const std::string& oid) const override {
       return *subParams_.at(oid);
     }
 
@@ -268,25 +264,114 @@ class ParamDescriptor {
      * @brief return all sub parameters
      * @return a map of all sub parameters
      */
-    const std::unordered_map<std::string, ParamDescriptor*>& getAllSubParams() const {
+    const std::unordered_map<std::string, IParamDescriptor*>& getAllSubParams() const override {
         return subParams_;
     }
 
     /**
      * @brief get a constraint by oid
      */
-    const catena::common::IConstraint* getConstraint() const {
+    const catena::common::IConstraint* getConstraint() const override {
       return constraint_;
     }
 
     /**
+     * @brief CommandResponder is a coroutine that allows commands to return
+     * multiple responses throughout its execution's lifetime.
+     */
+    class CommandResponder : public ICommandResponder {
+      public:
+        /** 
+         * @brief Defines the execution behaviour of the coroutine
+         */
+        struct promise_type {
+            /**
+             * @brief Creates the coroutine handle when created.
+             */
+            inline CommandResponder get_return_object() { 
+              return CommandResponder(std::coroutine_handle<promise_type>::from_promise(*this)); 
+            }
+            /**
+             * @brief Pauses the coroutine after creation until getNext() is
+             * called.
+             */
+            inline std::suspend_always initial_suspend() { return {}; }
+            /**
+             * @brief Pauses the coroutine before destruction.
+             */
+            inline std::suspend_always final_suspend() noexcept { return {}; }
+            /**
+             * @brief Returns a CommandResponse object when co_yield is called
+             * and suspends the coroutine until getNext() is called.
+             */
+            inline std::suspend_always yield_value(catena::CommandResponse& component) { 
+              responseMessage = component;
+              return {}; 
+            }
+            /**
+             * @brief Finishes the coroutine and returns a CommandResponse.
+             */
+            inline void return_value(catena::CommandResponse component) { this->responseMessage = component; }
+            /**
+             * @brief handles exceptions that occur during execution.
+             */
+            inline void unhandled_exception() {
+              exception_ = std::current_exception();
+            }
+            /**
+             * @brief Rethrows exception caught by unhandled_exception().
+             */
+            inline void rethrow_if_exception() {
+              if (exception_) std::rethrow_exception(exception_);
+            }
+
+            catena::CommandResponse responseMessage{};
+            std::exception_ptr exception_; 
+        };
+
+        CommandResponder(std::coroutine_handle<promise_type> h) : handle_(h) {}
+        CommandResponder(const CommandResponder&) = delete;
+        CommandResponder& operator=(const CommandResponder&) = delete;
+        CommandResponder(CommandResponder&& other) : handle_(other.handle_) { other.handle_ = nullptr; }
+        CommandResponder& operator=(CommandResponder&& other) { 
+          if (this != &other) {
+            if (handle_) handle_.destroy();
+            handle_ = other.handle_; 
+            other.handle_ = nullptr; 
+          }
+          return *this; 
+        } 
+        ~CommandResponder() { 
+          if (handle_) handle_.destroy();  
+        }
+
+        /**
+         * @brief Returns true if the coroutine has not finished execution.
+         */
+        inline bool hasMore() const override { return handle_ && !handle_.done(); }
+        /**
+         * @brief Resumes the coroutine and returns a CommandResponse object.
+         */
+        catena::CommandResponse getNext() override {
+          if (hasMore()) {
+            handle_.resume();
+            handle_.promise().rethrow_if_exception();
+          }
+          return std::move(handle_.promise().responseMessage); 
+        }
+
+        private:
+          std::coroutine_handle<promise_type> handle_;
+    };
+
+    /**
      * @brief define the command implementation
-     * @param commandImpl a function that takes a Value and returns a CommandResponse
+     * @param commandImpl a function that takes a Value and returns a CommandResponder
      * 
      * The passed function will be executed when executeCommand is called on this param object.
      * If this is not a command parameter, an exception will be thrown.
      */
-    void defineCommand(std::function<catena::CommandResponse(catena::Value)> commandImpl) {
+    void defineCommand(std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl) override {
       if (!isCommand_) {
         throw std::runtime_error("Cannot define a command on a non-command parameter");
       }
@@ -296,19 +381,19 @@ class ParamDescriptor {
     /**
      * @brief execute the command
      * @param value the value to pass to the command implementation
-     * @return the response from the command implementation
+     * @return the responser from the command implementation
      * 
      * if executeCommand is called for a command that has not been defined, then the returned
      * command response will be an exception with type UNIMPLEMENTED
      */
-    catena::CommandResponse executeCommand(catena::Value value) {
+    std::unique_ptr<ICommandResponder> executeCommand(catena::Value value) override {
       return commandImpl_(value);
     }
 
     /**
      * @brief return true if this is a command parameter
      */
-    inline bool isCommand() const { return isCommand_; }
+    inline bool isCommand() const override { return isCommand_; }
 
   private:
     ParamType type_;  // ParamType is from param.pb.h
@@ -318,7 +403,7 @@ class ParamDescriptor {
     std::string scope_;
     bool read_only_;
 
-    std::unordered_map<std::string, ParamDescriptor*> subParams_;
+    std::unordered_map<std::string, IParamDescriptor*> subParams_;
     std::unordered_map<std::string, catena::common::IParam*> commands_;
     common::IConstraint* constraint_;
     uint32_t max_length_;
@@ -326,18 +411,20 @@ class ParamDescriptor {
     
     std::string oid_;
     std::string template_oid_;
-    ParamDescriptor* parent_;
+    IParamDescriptor* parent_;
     std::reference_wrapper<IDevice> dev_;
 
     bool isCommand_;
     bool minimal_set_;
 
     // default command implementation
-    std::function<catena::CommandResponse(catena::Value)> commandImpl_ = [](catena::Value value) { 
-      catena::CommandResponse response;
-      response.mutable_exception()->set_type("UNIMPLEMENTED");
-      response.mutable_exception()->mutable_error_message()->mutable_display_strings()->insert({"en", "Command not implemented"});
-      return response;
+    std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl_ = [](catena::Value value) -> std::unique_ptr<ICommandResponder> { 
+      return std::make_unique<CommandResponder>([value]() -> CommandResponder {
+        catena::CommandResponse response;
+        response.mutable_exception()->set_type("UNIMPLEMENTED");
+        response.mutable_exception()->mutable_error_message()->mutable_display_strings()->insert({"en", "Command not implemented"});
+        co_return response;
+      }());
     };
 };
 

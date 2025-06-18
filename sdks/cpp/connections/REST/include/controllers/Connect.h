@@ -47,6 +47,7 @@
 #include <Status.h>
 #include <IParam.h>
 #include <IDevice.h>
+#include <ILanguagePack.h>
 #include <utils.h>
 #include <Authorization.h>
 #include <SubscriptionManager.h>
@@ -102,6 +103,7 @@ class Connect : public ICallData, public catena::common::Connect {
      * open connections to be shut down.
      */
     static vdk::signal<void()> shutdownSignal_;
+    
   private:
     /**
      * @brief Helper function to write status messages to the API console.

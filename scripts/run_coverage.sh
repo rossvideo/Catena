@@ -1,7 +1,21 @@
 #!/bin/bash
 
+cd ~/Catena/${BUILD_TARGET}
+echo ~/Catena/${BUILD_TARGET}
+clean=false
+for arg in "$@"; do
+  if [[ "$arg" == "-C"  || "$arg" == "--clean"  || "$arg" == "-c" ]]; then
+    clean=true
+    break
+  fi
+done
 
-cd ~/Catena/sdks/cpp/build
+if [ "$clean" = true ]; then
+  echo "Cleaning build directory..."
+  ninja clean
+  echo "Build directory cleaned."
+fi
+
 ninja
 # Check for -V argument
 verbose=false
@@ -18,8 +32,6 @@ if [ "$verbose" = true ]; then
 else
   ctest
 fi
-
-
 
 cd ~/Catena/
 
@@ -39,7 +51,7 @@ fi
 
 # Conditionally generate HTML report
 if [ "$html_report" = true ]; then
-  gcovr --root ~/Catena --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' --html=coverage/index.html --html-details --lcov=coverage/coverage.info --xml=coverage/coverage.xml
+  gcovr --root ~/Catena --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' -e '(.+/)?examples/' --html=coverage/index.html --html-details --lcov=coverage/coverage.info --xml=coverage/coverage.xml
 else
-  gcovr --root ~/Catena --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' --lcov=coverage/coverage.info --xml=coverage/coverage.xml
+  gcovr --root ~/Catena --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' -e '(.+/)?examples/' --lcov=coverage/coverage.info --xml=coverage/coverage.xml
 fi

@@ -49,10 +49,12 @@ GetValue::GetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok) : CallData
 // Manages gRPC command execution process using the state variable status.
 void GetValue::proceed( bool ok) {
     std::cout << "GetValue::proceed[" << objectId_ << "]: " << timeNow()
-                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                << std::endl;
+                << " status: " << static_cast<int>(status_) << ", ok: "
+                << std::boolalpha << ok << std::endl;
 
-    if(!ok){
+    // If the process is cancelled, finish the process
+    if (!ok) {
+        std::cout << "GetValue[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
 
@@ -77,34 +79,38 @@ void GetValue::proceed( bool ok) {
             // Used to serve other clients while processing.
             new GetValue(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
+
+            { // var scope
+            catena::Value ans;
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
             try {
-                catena::Value ans;
-                catena::exception_with_status rc{"", catena::StatusCode::OK};
-                // If authorization is enabled, check the client's scopes.
-                if(service_->authorizationEnabled()) {
-                    catena::common::Authorizer authz{jwsToken_()};
-                    std::lock_guard lg(dm_.mutex());
-                    rc = dm_.getValue(req_.oid(), ans, authz);
+                /*
+                 * Creating authorizer object. Shared ptr maintains ownership
+                 * while raw ptr ensures we don't delete kAuthzDisabled.
+                 */
+                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+                catena::common::Authorizer* authz;
+                if (service_->authorizationEnabled()) {
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken_());
+                    authz = sharedAuthz.get();
                 } else {
-                    std::lock_guard lg(dm_.mutex());
-                    rc = dm_.getValue(req_.oid(), ans, catena::common::Authorizer::kAuthzDisabled);
+                    authz = &catena::common::Authorizer::kAuthzDisabled;
                 }
-                
-                status_ = CallStatus::kFinish;
-                if (rc.status == catena::StatusCode::OK) {
-                    responder_.Finish(ans, Status::OK, this);
-                } else { // Error, end process.
-                    responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
-                }
-            // Likely authentication error, end process.
+                // Getting the value.
+                std::lock_guard lg(dm_.mutex());
+                rc = dm_.getValue(req_.oid(), ans, *authz);
+            // ERROR.
             } catch (catena::exception_with_status& err) {
-                status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
-                responder_.FinishWithError(errorStatus, this);
-            } catch (...) { // Error, end process.
-                status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(grpc::StatusCode::UNKNOWN, "unknown error");
-                responder_.FinishWithError(errorStatus, this);
+                rc = catena::exception_with_status(err.what(), err.status);
+            } catch (...) {
+                rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
+            }
+            status_ = CallStatus::kFinish;
+            if (rc.status == catena::StatusCode::OK) {
+                responder_.Finish(ans, Status::OK, this);
+            } else { // Error, end process.
+                responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+            }
             }
         break;
         /**
@@ -115,10 +121,14 @@ void GetValue::proceed( bool ok) {
             std::cout << "GetValue[" << objectId_ << "] finished\n";
             service_->deregisterItem(this);
             break;
-        // default: Error, end process.
-        default:
+        /*
+         * default: Error, end process.
+         * This should be impossible to reach.
+         */
+        default:// GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             responder_.FinishWithError(errorStatus, this);
+            // GCOVR_EXCL_STOP
     }
 }

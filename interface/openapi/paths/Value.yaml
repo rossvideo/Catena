@@ -28,10 +28,10 @@
 #
 
 #
-# OpenAPI documentation of the BasicParamInfoRequest Request Handler for the Catena REST API
+# OpenAPI documentation of the Catena REST API's value endpoint
+# Author: john.naylor@rossvideo.com
 # Author: benjamin.whitten@rossvideo.com
-# Author: zuhayr.sarker@rossvideo.com
-# Date: 25/04/22
+# Date: 25/05/14
 #
 
 get:
@@ -74,8 +74,8 @@ get:
               "string_value": "Hello, World!"
             }
 
-    "500":
-      $ref: '../openapi.yaml#/components/responses/InternalServerError'
+    "400":
+      $ref: '../openapi.yaml#/components/responses/BadRequest'
           
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'
@@ -85,6 +85,9 @@ get:
 
     "404":
       $ref: '../openapi.yaml#/components/responses/NotFound'
+
+    "500":
+      $ref: '../openapi.yaml#/components/responses/InternalServerError'
 
     "503":
       $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
@@ -140,6 +143,9 @@ put:
     "204":
       description: Empty response - everything is OK
           
+    "400":
+      $ref: '../openapi.yaml#/components/responses/BadRequest'
+
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'
 

@@ -175,17 +175,7 @@ class BasicParamInfoRequest : public ICallData {
      * @brief The vector of BasicParamInfoResponse objects.
      */
     std::vector<catena::BasicParamInfoResponse> responses_;
-    
-    /**
-     * @brief Mutex for thread safety when writing responses.
-     */
-    std::mutex mtx_;
-    
-    /**
-     * @brief Lock for the writer to prevent concurrent access.
-     */
-    std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
-
+        
     /**
      * @brief Visitor class for collecting parameter info
      */

@@ -46,9 +46,13 @@ void ListLanguages::proceed(bool ok) {
     std::cout << "ListLanguages::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok << std::endl;
-    if(!ok){
+    
+    // If the process is cancelled, finish the process
+    if (!ok) {
+        std::cout << "ListLanguages[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
+
     switch(status_){
         /** 
          * kCreate: Updates status to kProcess and requests the ListLanguages
@@ -86,10 +90,14 @@ void ListLanguages::proceed(bool ok) {
             std::cout << "ListLanguages[" << objectId_ << "] finished\n";
             service_->deregisterItem(this);
             break;
-        // default: Error, end process.
-        default:
+        /*
+         * default: Error, end process.
+         * This should be impossible to reach.
+         */
+        default: // GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             responder_.FinishWithError(errorStatus, this);
+            // GCOVR_EXCL_STOP
     }
 }

@@ -53,11 +53,11 @@ ExecuteCommand::ExecuteCommand(ICatenaServiceImpl *service, IDevice& dm, bool ok
  */
 void ExecuteCommand::proceed(bool ok) {
     std::cout << "ExecuteCommand proceed[" << objectId_ << "]: " << timeNow()
-                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                << std::endl;
+              << " status: " << static_cast<int>(status_) << ", ok: "
+              << std::boolalpha << ok << std::endl;
 
     // If the process is cancelled, finish the process
-    if(!ok){
+    if (!ok) {
         std::cout << "ExecuteCommand[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
@@ -92,14 +92,14 @@ void ExecuteCommand::proceed(bool ok) {
                 }
                 // Executing the command if found.
                 if (command != nullptr) {
-                    res_ = command->executeCommand(req_.value());
+                    responder_ = command->executeCommand(req_.value());
                     status_ = CallStatus::kWrite; 
                 }
             // ERROR
             } catch (catena::exception_with_status& err) {
                 rc = catena::exception_with_status(err.what(), err.status);
             } catch (...) {
-                rc = catena::exception_with_status("unknown error", catena::StatusCode::INTERNAL);
+                rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
             }
             // Ending process if an error occured, falling through otherwise.
             if (rc.status != catena::StatusCode::OK) {
@@ -114,13 +114,40 @@ void ExecuteCommand::proceed(bool ok) {
          * then continues to kPostWrite or kFinish
          */
         case CallStatus::kWrite:
-            /*
-             * Currently only sends on response to the client. Add stream
-             * ability later.
-             */
-            writer_.Write(res_, this);
-            status_ = CallStatus::kPostWrite;
-            break;
+            { // rc scope
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
+            catena::CommandResponse res{};
+            do {
+                if (!responder_) {
+                    // It should not be possible to get here
+                    rc = catena::exception_with_status{"Illegal state", catena::StatusCode::INTERNAL};
+                } else {
+                    // Getting the next component.
+                    try {     
+                        res = responder_->getNext();
+                        status_ = responder_->hasMore() ? CallStatus::kWrite : CallStatus::kPostWrite;
+                    // ERROR
+                    } catch (catena::exception_with_status &err) {
+                        rc = catena::exception_with_status{err.what(), err.status};
+                    } catch (...) {
+                        rc = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
+                    }
+                }
+            // Looping required if we aren't writing to the client.
+            } while (!req_.respond() && rc.status == catena::StatusCode::OK && status_ == CallStatus::kWrite);
+            // Writing to the client.
+            if (rc.status == catena::StatusCode::OK) {
+                if (req_.respond()) {
+                    writer_.Write(res, this);
+                    break;
+                }
+            } else {
+                status_ = CallStatus::kFinish;
+                writer_.Finish(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+                break;
+            }
+            // Fall through of OK and respond = false;
+            }
 
         // Status after finishing writing the response, transitions to kFinish
         case CallStatus::kPostWrite:
@@ -137,10 +164,14 @@ void ExecuteCommand::proceed(bool ok) {
             service_->deregisterItem(this);
             break;
 
-        // Throws an error if the state is not recognized
-        default:
+        /*
+         * default: Error, end process.
+         * This should be impossible to reach.
+         */
+        default: // GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             writer_.Finish(errorStatus, this);
+            // GCOVR_EXCL_STOP
     }
 }

@@ -696,18 +696,11 @@
     },
     "struct_fields": {
       "title": "struct definition",
-      "description": "holds struct data fields or params",
+      "description": "holds struct data fields",
       "type": "object",
       "patternProperties": {
         "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
-          "oneOf": [
-            {
-              "$ref": "#/$defs/field_value"
-            },
-            {
-              "$ref": "#"
-            }
-          ]
+          "$ref": "#/$defs/field_value"
         }
       },
       "additionalProperties": false
@@ -1116,7 +1109,8 @@
       "description": "The fully qualified object ID of a parameter, command, or external object.",
       "$comment": "The pattern is a series of segments starting with a solidus / and containing a valid oid, an array index or the one-past-the-end index.",
       "type": "string",
-      "pattern": "^((?![\\w.]*\\.\\d+$)[a-zA-Z][\\w.]{0,62}|\\d+|-)(\\/((?![\\w.]*\\.\\d+$)[a-zA-Z][\\w.]{0,62}|\\d+|-)){0,31}$"
+      "pattern": "^([\\w]+([\\.]{1}[A-Za-z]+)?)$",
+      "format": "json-pointer"
     },
     "float32": {
       "type": "number",

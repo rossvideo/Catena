@@ -1,0 +1,11 @@
+# INT_CHOICE constraint example
+type: INT32
+value: { int32_value: 1 }
+constraint:
+  type: INT_CHOICE
+  int32_choice:
+    choices:
+      - value: 0
+        name: { display_strings: { en: "Zero" } }
+      - value: 1
+        name: { display_strings: { en: "One" } }

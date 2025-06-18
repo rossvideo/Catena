@@ -43,7 +43,7 @@
 #include <IParam.h>
 #include <Tags.h>
 #include <Path.h>
-#include <ParamDescriptor.h>
+#include <IParamDescriptor.h>
 #include <IDevice.h>
 #include <StructInfo.h>
 #include <PolyglotText.h>
@@ -75,7 +75,7 @@ class ParamWithValue : public catena::common::IParam {
      */
     ParamWithValue(
         T& value,
-        ParamDescriptor& descriptor,
+        IParamDescriptor& descriptor,
         IDevice& dev,
         bool isCommand
     ) : value_{value}, descriptor_{descriptor} {
@@ -92,7 +92,7 @@ class ParamWithValue : public catena::common::IParam {
      */
     ParamWithValue(
         T& value,
-        ParamDescriptor& descriptor
+        IParamDescriptor& descriptor
     ) : value_{value}, descriptor_{descriptor} {
         initializeTracker_(value_.get());
     }
@@ -102,7 +102,7 @@ class ParamWithValue : public catena::common::IParam {
      */
     ParamWithValue(
         T& value,
-        ParamDescriptor& descriptor,
+        IParamDescriptor& descriptor,
         std::shared_ptr<std::size_t> mSizeTracker,
         std::shared_ptr<TSizeTracker> tSizeTracker
     ) : value_{value}, descriptor_{descriptor} {
@@ -117,7 +117,7 @@ class ParamWithValue : public catena::common::IParam {
     ParamWithValue(
         const FieldInfo<FieldType, ParentType>& field, 
         ParentType& parentValue,
-        ParamDescriptor& parentDescriptor
+        IParamDescriptor& parentDescriptor
     ) : descriptor_{parentDescriptor.getSubParam(field.name)}, value_{(parentValue.*(field.memberPtr))} {
         initializeTracker_(value_.get());
     }
@@ -185,7 +185,7 @@ class ParamWithValue : public catena::common::IParam {
         if (!authz.readAuthz(*this)) {
             return catena::exception_with_status("Not authorized to read param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
         } else {
-            descriptor_.toProto(param, authz);        
+            descriptor_.toProto(param, authz);
             catena::common::toProto<T>(*param.mutable_value(), &value_.get(), descriptor_, authz);
         }
         return ans;
@@ -285,16 +285,19 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     /**
-     * @brief define a command for the parameter
-     */
-    void defineCommand(std::function<catena::CommandResponse(catena::Value)> command) override {
-        descriptor_.defineCommand(command);
+     * @brief define the command implementation
+     * @param commandImpl a function that takes a Value and returns a CommandResponder
+     */ 
+    void defineCommand(std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(catena::Value)> commandImpl) {
+        descriptor_.defineCommand(commandImpl);
     }
 
     /**
      * @brief execute the command for the parameter
+     * @param value the value to pass to the command implementation
+     * @return the responser from the command implementation
      */
-    catena::CommandResponse executeCommand(const catena::Value& value) const override {
+    std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommand(const catena::Value& value) const override {
         return descriptor_.executeCommand(value);
     }
 
@@ -332,7 +335,7 @@ class ParamWithValue : public catena::common::IParam {
      * @brief get the descriptor of the parameter
      * @return the descriptor of the parameter
      */
-    const ParamDescriptor& getDescriptor() const override {
+    const IParamDescriptor& getDescriptor() const override {
         return descriptor_;
     }
 
@@ -644,7 +647,7 @@ class ParamWithValue : public catena::common::IParam {
     /**
      * @brief add a child parameter
      */
-    void addParam(const std::string& oid, ParamDescriptor* param) {
+    void addParam(const std::string& oid, IParamDescriptor* param) {
         descriptor_.addSubParam(oid, param);
     }
 
@@ -878,7 +881,7 @@ class ParamWithValue : public catena::common::IParam {
     }
 
   private:
-    ParamDescriptor& descriptor_;
+    IParamDescriptor& descriptor_;
     std::reference_wrapper<T> value_;
 
     /**

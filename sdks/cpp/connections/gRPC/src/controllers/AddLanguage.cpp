@@ -46,8 +46,10 @@ void AddLanguage::proceed(bool ok) {
     std::cout << "AddLanguage::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok << std::endl;
-    
-    if(!ok){
+
+    // If the process is cancelled, finish the process
+    if (!ok) {
+        std::cout << "AddLanguage[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
     
@@ -68,32 +70,37 @@ void AddLanguage::proceed(bool ok) {
             // Used to serve other clients while processing.
             new AddLanguage(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
+            { // rc scope
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
             try {
-                catena::exception_with_status rc{"", catena::StatusCode::OK};
-                // If authorization is enabled, check the client's scopes.
-                if(service_->authorizationEnabled()) {
-                    catena::common::Authorizer authz{jwsToken_()};
-                    std::lock_guard lg(dm_.mutex());
-                    rc = dm_.addLanguage(req_, authz);
+                /*
+                 * Creating authorizer object. Shared ptr maintains ownership
+                 * while raw ptr ensures we don't delete kAuthzDisabled.
+                 */
+                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+                catena::common::Authorizer* authz;
+                if (service_->authorizationEnabled()) {
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken_());
+                    authz = sharedAuthz.get();
                 } else {
-                    std::lock_guard lg(dm_.mutex());
-                    rc = dm_.addLanguage(req_, catena::common::Authorizer::kAuthzDisabled);
+                    authz = &catena::common::Authorizer::kAuthzDisabled;
                 }
-                status_ = CallStatus::kFinish;
-                if (rc.status == catena::StatusCode::OK) {
-                    responder_.Finish(res_, grpc::Status::OK, this);
-                } else { // Error, end process.
-                    responder_.FinishWithError(grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
-                }
-            // Likely authentication error, end process.
+                // Adding the language.
+                std::lock_guard lg(dm_.mutex());
+                rc = dm_.addLanguage(req_, *authz);
+            // ERROR.
             } catch (catena::exception_with_status& err) {
-                status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
-                responder_.FinishWithError(errorStatus, this);
-            } catch (...) { // Error, end process.
-                status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(grpc::StatusCode::UNKNOWN, "unknown error");
-                responder_.FinishWithError(errorStatus, this);
+                rc = catena::exception_with_status(err.what(), err.status);
+            } catch (...) {
+                rc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
+            }
+            // Writing response to the client.
+            status_ = CallStatus::kFinish;
+            if (rc.status == catena::StatusCode::OK) {
+                responder_.Finish(res_, grpc::Status::OK, this);
+            } else { // Error, end process.
+                responder_.FinishWithError(grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+            }
             }
             break;
         /**
@@ -104,10 +111,14 @@ void AddLanguage::proceed(bool ok) {
             std::cout << "AddLanguage[" << objectId_ << "] finished\n";
             service_->deregisterItem(this);
             break;
-        // default: Error, end process.
-        default:
+        /*
+         * default: Error, end process.
+         * This should be impossible to reach.
+         */
+        default: // GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             responder_.FinishWithError(errorStatus, this);
+            // GCOVR_EXCL_STOP
     }
 }

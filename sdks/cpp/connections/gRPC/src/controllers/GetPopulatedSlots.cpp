@@ -48,11 +48,13 @@ GetPopulatedSlots::GetPopulatedSlots(ICatenaServiceImpl *service, IDevice& dm, b
 
 // Manages gRPC command execution process using the state variable status.
 void GetPopulatedSlots::proceed( bool ok) {
-    std::cout << "GetPopulatedSlots::proceed[" << objectId_ << "]: " << timeNow()
-                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                << std::endl;
+    std::cout << "GetPopulatedSlots::proceed[" << objectId_ << "]: "
+              << timeNow() << " status: " << static_cast<int>(status_)
+              << ", ok: " << std::boolalpha << ok << std::endl;
 
-    if(!ok){
+    // If the process is cancelled, finish the process
+    if (!ok) {
+        std::cout << "GetPopulatedSlots[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
 
@@ -88,10 +90,14 @@ void GetPopulatedSlots::proceed( bool ok) {
             std::cout << "GetPopulatedSlots[" << objectId_ << "] finished\n";
             service_->deregisterItem(this);
             break;
-        // default: Error, end process.
-        default:
+        /*
+         * default: Error, end process.
+         * This should be impossible to reach.
+         */
+        default: // GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             responder_.FinishWithError(errorStatus, this);
+            // GCOVR_EXCL_STOP
     }
 }

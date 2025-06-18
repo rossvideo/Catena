@@ -68,6 +68,8 @@ using catena::REST::SocketReader;
 using catena::REST::SocketWriter;
 using catena::REST::SSEWriter;
 
+const std::string V1 = "v1";
+
 namespace catena {
 /**
  * @brief Namespace for classes relating to handling REST API requests.

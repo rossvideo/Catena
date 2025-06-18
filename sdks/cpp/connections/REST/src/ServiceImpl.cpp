@@ -16,7 +16,7 @@ using catena::REST::CatenaServiceImpl;
 #include <controllers/LanguagePackRequest.h>
 #include <controllers/ListLanguages.h>
 #include <controllers/BasicParamInfoRequest.h>
-#include <controllers/UpdateSubscriptions.h>
+#include <controllers/Subscriptions.h>
 #include <controllers/ExecuteCommand.h>
 
 using catena::REST::Connect;
@@ -50,20 +50,21 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool auth
 
     // Initializing the routes for router_.
 
-    router_.addProduct("GET/v1/connect",                    Connect::makeOne);
-    router_.addProduct("GET/v1/device-request",             DeviceRequest::makeOne);
-    router_.addProduct("PUT/v1/execute-command",            ExecuteCommand::makeOne);
-    router_.addProduct("GET/v1/asset-request",              AssetRequest::makeOne);
-    router_.addProduct("GET/v1/get-populated-slots",        GetPopulatedSlots::makeOne);
-    router_.addProduct("GET/v1/get-value",                  GetValue::makeOne);
-    router_.addProduct("PUT/v1/multi-set-value",            MultiSetValue::makeOne);
-    router_.addProduct("PUT/v1/set-value",                  SetValue::makeOne);
-    router_.addProduct("GET/v1/get-param",                  GetParam::makeOne);
-    router_.addProduct("GET/v1/language-pack-request",      LanguagePackRequest::makeOne);
-    router_.addProduct("GET/v1/list-languages",             ListLanguages::makeOne);
-    router_.addProduct("PUT/v1/add-language",               AddLanguage::makeOne);
-    router_.addProduct("GET/v1/basic-param-info-request",   BasicParamInfoRequest::makeOne);
-    router_.addProduct("PUT/v1/update-subscriptions",       UpdateSubscriptions::makeOne);
+    router_.addProduct("GET/connect",         Connect::makeOne);
+    router_.addProduct("GET",                 DeviceRequest::makeOne);
+    router_.addProduct("POST/command",        ExecuteCommand::makeOne);
+    router_.addProduct("GET/asset",           AssetRequest::makeOne);
+    router_.addProduct("GET/devices",         GetPopulatedSlots::makeOne);
+    router_.addProduct("GET/value",           GetValue::makeOne);
+    router_.addProduct("PUT/values",          MultiSetValue::makeOne);
+    router_.addProduct("PUT/value",           SetValue::makeOne);
+    router_.addProduct("GET/param",           GetParam::makeOne);
+    router_.addProduct("GET/language-pack",   LanguagePackRequest::makeOne);
+    router_.addProduct("GET/languages",       ListLanguages::makeOne);
+    router_.addProduct("POST/language-pack",  AddLanguage::makeOne);
+    router_.addProduct("GET/basic-param",     BasicParamInfoRequest::makeOne);
+    router_.addProduct("GET/subscriptions",   Subscriptions::makeOne);
+    router_.addProduct("PUT/subscriptions",   Subscriptions::makeOne);
 }
 
 // Initializing the shutdown signal for all open connections.
@@ -89,11 +90,14 @@ void CatenaServiceImpl::run() {
                     // Reading from the socket.
                     SocketReader context(*subscriptionManager_, EOPath_);
                     context.read(socket, authorizationEnabled_);
+                    //TODO: remove v1 from the request key when the router options are updated
                     std::string requestKey = context.method() + context.endpoint();
                     // Returning empty response with options to the client if required.
                     if (context.method() == "OPTIONS") {
-                        // Set to 204 No Content if in OPTIONS.
                         rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
+                        SocketWriter(socket, context.origin()).sendResponse(rc);
+                    // Sending an empty 200 OK response for health check.
+                    } else if (requestKey == "GET/health") {
                         SocketWriter(socket, context.origin()).sendResponse(rc);
                     // Otherwise routing to request.
                     } else if (router_.canMake(requestKey)) {
@@ -106,7 +110,7 @@ void CatenaServiceImpl::run() {
                     }
                 // ERROR
                 } catch (const catena::exception_with_status& e) {
-                    rc = std::move(catena::exception_with_status(e.what(), e.status)); 
+                    rc = catena::exception_with_status(e.what(), e.status); 
                 } catch (const std::invalid_argument& e) {
                     rc = catena::exception_with_status(e.what(), catena::StatusCode::INVALID_ARGUMENT);
                 } catch (const std::runtime_error& e) {
@@ -117,7 +121,7 @@ void CatenaServiceImpl::run() {
                     rc = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
                 }
             } else {
-                rc = catena::exception_with_status{"Service shutdown", catena::StatusCode::CANCELLED};
+                rc = catena::exception_with_status{"Service unavailable", catena::StatusCode::UNAVAILABLE};
             }
             // Writing to socket if there was an error.
             if (rc.status != catena::StatusCode::OK) {

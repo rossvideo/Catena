@@ -12,7 +12,9 @@ SetValue::SetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
 }
 
 bool SetValue::toMulti_() {
+    auto value = reqs_.add_values();
     reqs_.set_slot(context_.slot());
-    absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), reqs_.add_values());
+    absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), value->mutable_value());
+    value->set_oid(context_.fqoid());
     return status.ok();
 }

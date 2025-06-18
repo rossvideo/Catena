@@ -32,19 +32,28 @@ void AssetRequest::proceed() {
             authz = &catena::common::Authorizer::kAuthzDisabled;
         }
         // Locking device and parsing object data.
-        std::cout << "sending asset: " << context_.fields("oid") <<"\n";
+        std::cout << "sending asset: " << context_.fqoid() <<"\n";
         std::string path = context_.EOPath();
-        path.append("/" + context_.fields("oid"));
+        path.append(context_.fqoid());
 
         // Check if the file exists
         if (!std::filesystem::exists(path)) {
-            std::string notFound = "AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fields("oid") + " not found\n";
+            std::string notFound = "AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fqoid() + " not found\n";
             std::cout << notFound;
             throw catena::exception_with_status(notFound, catena::StatusCode::NOT_FOUND);
         }
         // Read the file into a byte array
         std::ifstream file(path, std::ios::binary);
+        if (!file.is_open()) {
+            std::string error = "AssetRequest[" + std::to_string(objectId_) + "] failed to open file: " + context_.fqoid() + "\n";
+            throw catena::exception_with_status(error, catena::StatusCode::INTERNAL);
+        }
         std::vector<char> file_data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        
+        if (file_data.empty()) {
+            std::string error = "AssetRequest[" + std::to_string(objectId_) + "] file is empty: " + context_.fqoid() + "\n";
+            throw catena::exception_with_status(error, catena::StatusCode::INVALID_ARGUMENT);
+        }
         
         obj.mutable_payload()->set_payload(file_data.data(), file_data.size()); 
 
@@ -53,6 +62,12 @@ void AssetRequest::proceed() {
     // ERROR
     } catch (catena::exception_with_status& err) {
         rc = catena::exception_with_status(err.what(), err.status);
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::string error = "AssetRequest[" + std::to_string(objectId_) + "] filesystem error: " + std::string(e.what()) + "\n";
+        rc = catena::exception_with_status(error, catena::StatusCode::INTERNAL);
+    } catch (const std::exception& e) {
+        std::string error = "AssetRequest[" + std::to_string(objectId_) + "] error: " + std::string(e.what()) + "\n";
+        rc = catena::exception_with_status(error, catena::StatusCode::INTERNAL);
     } catch (...) {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
@@ -63,5 +78,5 @@ void AssetRequest::proceed() {
 
 void AssetRequest::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << "AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fields("oid") +" finished\n";
+    std::cout << "AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fqoid() +" finished\n";
 }

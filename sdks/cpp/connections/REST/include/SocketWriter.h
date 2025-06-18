@@ -32,6 +32,7 @@
  * @file SocketWriter.h
  * @brief Helper class used to write to a socket using boost.
  * @author benjamin.whitten@rossvideo.com
+ * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -67,8 +68,9 @@ class SocketWriter : public ISocketWriter {
      * @brief Constructs a SocketWriter.
      * @param socket The socket to write to.
      * @param origin The origin of the request.
+     * @param buffer Flag indicating whether to buffer a multi-message response.
      */
-    SocketWriter(tcp::socket& socket, const std::string& origin = "*") : socket_{socket}, origin_{origin} {}
+    SocketWriter(tcp::socket& socket, const std::string& origin = "*", bool buffer = false) : socket_{socket}, origin_{origin}, buffer_{buffer} {}
 
     /**
      * @brief Finishes writing the HTTP response.
@@ -86,6 +88,15 @@ class SocketWriter : public ISocketWriter {
      * @brief The origin of the request.
      */
     std::string origin_;
+
+    /**
+     * @brief flag to indicate whether to buffer a multi-message response.
+     */
+    bool buffer_;
+    /**
+     * @brief The json body of the response to write to the client.
+     */
+    std::string jsonBody_ = "";
 };
 
 /**
@@ -131,6 +142,7 @@ const std::map<catena::StatusCode, http_exception_with_status> codeMap_ {
     {catena::StatusCode::CREATED,             {201, "Created"}},
     {catena::StatusCode::ACCEPTED,            {202, "Accepted"}},
     {catena::StatusCode::NO_CONTENT,          {204, "No Content"}},
+    {catena::StatusCode::ALREADY_EXISTS,      {208, "Already Reported"}},
     {catena::StatusCode::CANCELLED,           {400, "Cancelled"}},
     {catena::StatusCode::INVALID_ARGUMENT,    {400, "Bad Request"}},
     {catena::StatusCode::UNAUTHENTICATED,     {401, "Unauthorized"}},
@@ -138,7 +150,6 @@ const std::map<catena::StatusCode, http_exception_with_status> codeMap_ {
     {catena::StatusCode::NOT_FOUND,           {404, "Not Found"}},
     {catena::StatusCode::METHOD_NOT_ALLOWED,  {405, "Method Not Allowed"}},
     {catena::StatusCode::CONFLICT,            {409, "Conflict"}},
-    {catena::StatusCode::ALREADY_EXISTS,      {409, "Conflict"}},
     {catena::StatusCode::ABORTED,             {409, "Conflict"}},
     {catena::StatusCode::FAILED_PRECONDITION, {412, "Precondition Failed"}},
     {catena::StatusCode::UNPROCESSABLE_ENTITY,{422, "Unprocessable Entity"}},

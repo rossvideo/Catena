@@ -84,64 +84,49 @@ class UpdateSubscriptions : public CallData {
     void sendSubscribedParameters_(catena::common::Authorizer& authz);
 
     /**
-     * @brief The client's scopes.
-     */
-    std::vector<std::string> clientScopes_;
-
-    /**
      * @brief The request payload.
      */
     catena::UpdateSubscriptionsPayload req_;
-
-    /**
-     * @brief The response payload for a single response.
-     */
-    catena::DeviceComponent_ComponentParam res_;
-
-    /**
-     * @brief Vector to store all responses to be sent
-     */
-    std::vector<catena::DeviceComponent_ComponentParam> responses_;
-
-    /**
-     * @brief Current response index being processed
-     */
-    uint32_t current_response_{0};
-
     /**
      * @brief gRPC async response writer.
      */
     ServerAsyncWriter<catena::DeviceComponent_ComponentParam> writer_;
-
     /**
      * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
      */
     CallStatus status_;
-
     /**
      * @brief The device to get the value from.
      */
     IDevice& dm_;
+    /**
+     * @brief Shared ptr to the authorizer object so that we can maintain
+     * ownership of raw ptr throughout call lifetime without use of "new"
+     * keyword. 
+     */
+    std::shared_ptr<catena::common::Authorizer> sharedAuthz_;
+    /**
+     * @brief Ptr to the authorizer object. Raw as to not attempt to delete in
+     * case of kAuthzDisabled.
+     */
+    catena::common::Authorizer* authz_;
+    /**
+     * @brief The set of currently subscribed OIDs from sub manager.
+     */
+    std::set<std::string> subbedOids_{};
+    /**
+     * @brief Iterator for the set of subscribed OIDs.
+     */
+    std::set<std::string>::iterator it_;
 
     /**
      * @brief The object's unique id counter.
      */
-    static int objectCounter_;  
-
+    static int objectCounter_;
     /**
      * @brief The object's unique id.
      */
     int objectId_;
-    
-    /**
-     * @brief The mutex for the writer lock.
-     */
-    std::mutex mtx_;
-
-    /**
-     * @brief The writer lock.
-     */
-    std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
 };
 
 }; // namespace gRPC
