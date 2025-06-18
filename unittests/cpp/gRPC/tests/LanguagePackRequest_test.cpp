@@ -47,7 +47,7 @@
 #include <google/protobuf/util/json_util.h>
 
 // Test helpers
-#include "MockServer.h"
+#include "GRPCTest.h"
 
 // gRPC
 #include "controllers/LanguagePackRequest.h"
@@ -56,28 +56,12 @@ using namespace catena::common;
 using namespace catena::gRPC;
 
 // Fixture
-class gRPCLanguagePackRequestTests : public ::testing::Test {
-  protected:
-    /*
-     * Called at the start of all tests.
-     * Starts the mockServer and initializes the static inVal.
-     */
-    static void SetUpTestSuite() {
-        mockServer.start();
+class gRPCLanguagePackRequestTests : public GRPCTest {
+  public:
+    gRPCLanguagePackRequestTests() : GRPCTest() {
         // Setting up the inVal used across all tests.
         inVal.set_slot(1);
         inVal.set_language("en");
-    }
-
-    /*
-     * Sets up expectations for the creation of a new CallData obj.
-     */
-    void SetUp() override {
-        // Redirecting cout to a stringstream for testing.
-        oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-        // We can always assume that a new CallData obj is created.
-        // Either from initialization or kProceed.
-        mockServer.expNew();
     }
 
     /* 
@@ -98,53 +82,12 @@ class gRPCLanguagePackRequestTests : public ::testing::Test {
         EXPECT_EQ(outRc.error_message(), expRc.error_message());
     }
 
-    /*
-     * Restores cout after each test.
-     */
-    void TearDown() override {
-        std::cout.rdbuf(oldCout);
-    }
-
-    /*
-     * Called at the end of all tests, shuts down the server and cleans up.
-     */
-    static void TearDownTestSuite() {
-        // Redirecting cout to a stringstream for testing.
-        std::stringstream MockConsole;
-        std::streambuf* oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-        // Destroying the server.
-        EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-            delete mockServer.testCall;
-            mockServer.testCall = nullptr;
-        }));
-        mockServer.shutdown();
-        // Restoring cout
-        std::cout.rdbuf(oldCout);
-    }
-
-    // Console variables
-    std::stringstream MockConsole;
-    std::streambuf* oldCout;
-    // Client variables.
-    grpc::ClientContext clientContext;
-    bool done = false;
-    std::condition_variable cv;
-    std::mutex cv_mtx;
-    std::unique_lock<std::mutex> lock{cv_mtx};
-    static catena::LanguagePackRequestPayload inVal;
+    catena::LanguagePackRequestPayload inVal;
     catena::DeviceComponent_ComponentLanguagePack outVal;
     grpc::Status outRc;
-    // Expected variables
     catena::DeviceComponent_ComponentLanguagePack expVal;
     grpc::Status expRc;
-
-    static MockServer mockServer;
 };
-
-MockServer gRPCLanguagePackRequestTests::mockServer;
-// Static as its only used to make sure the correct obj is passed into mocked
-// functions.
-catena::LanguagePackRequestPayload gRPCLanguagePackRequestTests::inVal;
 
 /*
  * ============================================================================
@@ -164,6 +107,8 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_create) {
  * TEST 2 - Normal case for LanguagePackRequest proceed().
  */
 TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_proceedNormal) {
+    new LanguagePackRequest(mockServer.service, *mockServer.dm, true);
+    
     // Setting up the expected values.
     catena::exception_with_status rc("", catena::StatusCode::OK);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
@@ -179,7 +124,7 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_proceedNormal) {
             pack.CopyFrom(expVal);
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -192,6 +137,8 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_proceedNormal) {
  * TEST 3 - dm.getLanguagePack returns a catena::Exception_With_Status.
  */
 TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_proceedErrReturn) {
+    new LanguagePackRequest(mockServer.service, *mockServer.dm, true);
+    
     // Setting up the expected values.
     catena::exception_with_status rc("Language pack en not found", catena::StatusCode::NOT_FOUND);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
@@ -202,7 +149,7 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_proceedErrReturn) {
         .WillOnce(::testing::Invoke([this, &rc](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack){
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -215,6 +162,8 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_proceedErrReturn) {
  * TEST 4 - dm.getLanguagePack throws a catena::Exception_With_Status.
  */
 TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_proceedErrThrow) {
+    new LanguagePackRequest(mockServer.service, *mockServer.dm, true);
+    
     // Setting up the expected values.
     catena::exception_with_status rc("unknown error", catena::StatusCode::UNKNOWN);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
@@ -226,7 +175,7 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_proceedErrThrow) {
             throw catena::exception_with_status(rc.what(), rc.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));

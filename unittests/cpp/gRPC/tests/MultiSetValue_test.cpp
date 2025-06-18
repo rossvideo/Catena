@@ -47,7 +47,7 @@
 #include <google/protobuf/util/json_util.h>
 
 // Test helpers
-#include "MockServer.h"
+#include "GRPCTest.h"
 
 // gRPC
 #include "controllers/MultiSetValue.h"
@@ -56,14 +56,13 @@ using namespace catena::common;
 using namespace catena::gRPC;
 
 // Fixture
-class gRPCMultiSetValueTests : public ::testing::Test {
+class gRPCMultiSetValueTests : public GRPCTest {
   protected:
     /*
      * Called at the start of all tests.
-     * Starts the mockServer and initializes the static inVal.
+     * Initializes the inVal.
      */
-    static void SetUpTestSuite() {
-        mockServer.start();
+    gRPCMultiSetValueTests() : GRPCTest() {
         // Setting up the inVal used across all tests.
         inVal.set_slot(1);
         auto values = inVal.mutable_values();
@@ -75,17 +74,6 @@ class gRPCMultiSetValueTests : public ::testing::Test {
         addedVal = values->Add();
         addedVal->set_oid("/test_oid_2");
         addedVal->mutable_value()->set_int32_value(2);
-    }
-
-    /*
-     * Sets up expectations for the creation of a new CallData obj.
-     */
-    void SetUp() override {
-        // Redirecting cout to a stringstream for testing.
-        oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-        // We can always assume that a new CallData obj is created.
-        // Either from initialization or kProceed.
-        mockServer.expNew();
     }
 
     /* 
@@ -106,53 +94,14 @@ class gRPCMultiSetValueTests : public ::testing::Test {
         EXPECT_EQ(outRc.error_message(), expRc.error_message());
     }
 
-    /*
-     * Restores cout after each test.
-     */
-    void TearDown() override {
-        std::cout.rdbuf(oldCout);
-    }
-
-    /*
-     * Called at the end of all tests, shuts down the server and cleans up.
-     */
-    static void TearDownTestSuite() {
-        // Redirecting cout to a stringstream for testing.
-        std::stringstream MockConsole;
-        std::streambuf* oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-        // Destroying the server.
-        EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-            delete mockServer.testCall;
-            mockServer.testCall = nullptr;
-        }));
-        mockServer.shutdown();
-        // Restoring cout
-        std::cout.rdbuf(oldCout);
-    }
-
-    // Console variables
-    std::stringstream MockConsole;
-    std::streambuf* oldCout;
     // Client variables.
-    grpc::ClientContext clientContext;
-    bool done = false;
-    std::condition_variable cv;
-    std::mutex cv_mtx;
-    std::unique_lock<std::mutex> lock{cv_mtx};
-    static catena::MultiSetValuePayload inVal;
+    catena::MultiSetValuePayload inVal;
     catena::Empty outVal;
     grpc::Status outRc;
     // Expected variables
     catena::Empty expVal;
     grpc::Status expRc;
-
-    static MockServer mockServer;
 };
-
-MockServer gRPCMultiSetValueTests::mockServer;
-// Static as its only used to make sure the correct obj is passed into mocked
-// functions.
-catena::MultiSetValuePayload gRPCMultiSetValueTests::inVal;
 
 /*
  * ============================================================================
@@ -172,6 +121,8 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_create) {
  * TEST 2 - Normal case for MultiSetValue proceed().
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedNormal) {
+    new MultiSetValue(mockServer.service, *mockServer.dm, true);
+
     catena::exception_with_status rc("", catena::StatusCode::OK);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
 
@@ -196,7 +147,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedNormal) {
             // Returning status.
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -209,6 +160,8 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedNormal) {
  * TEST 3 - MultiSetValue with authz on and valid token.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzValid) {
+    new MultiSetValue(mockServer.service, *mockServer.dm, true);
+
     catena::exception_with_status rc("", catena::StatusCode::OK);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     // Adding authorization mockToken metadata. This it a random RSA token.
@@ -247,7 +200,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzValid) {
             // Returning status.
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -260,6 +213,8 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzValid) {
  * TEST 4 - MultiSetValue with authz on and invalid token.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzInvalid) {
+    new MultiSetValue(mockServer.service, *mockServer.dm, true);
+
     catena::exception_with_status rc("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     // Not a token so it should get rejected by the authorizer.
@@ -267,7 +222,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzInvalid) {
 
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -280,6 +235,8 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzInvalid) {
  * TEST 5 - MultiSetValue with authz on and invalid token.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzJWSNotFound) {
+    new MultiSetValue(mockServer.service, *mockServer.dm, true);
+
     catena::exception_with_status rc("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     // Should not be able to find the bearer token.
@@ -287,7 +244,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzJWSNotFound) {
 
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -300,6 +257,8 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzJWSNotFound) {
  * TEST 6 - dm.trySetValue returns a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryReturnCatena) {
+    new MultiSetValue(mockServer.service, *mockServer.dm, true);
+
     catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
 
@@ -312,7 +271,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryReturnCatena) {
             ans = catena::exception_with_status(rc.what(), rc.status);
             return false;
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -325,6 +284,8 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryReturnCatena) {
  * TEST 6 - dm.trySetValue throws a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryThrowCatena) {
+    new MultiSetValue(mockServer.service, *mockServer.dm, true);
+
     catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
 
@@ -337,7 +298,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryThrowCatena) {
             throw catena::exception_with_status(rc.what(), rc.status);
             return true;
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -350,6 +311,8 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryThrowCatena) {
  * TEST 7 - dm.trySetValue throws a std::runtime_error.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryThrowUnknown) {
+    new MultiSetValue(mockServer.service, *mockServer.dm, true);
+
     catena::exception_with_status rc("unknown error", catena::StatusCode::UNKNOWN);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
 
@@ -362,7 +325,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryThrowUnknown) {
             throw std::runtime_error(rc.what());
             return true;
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -375,6 +338,8 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryThrowUnknown) {
  * TEST 8 - dm.commitSetValue returns a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitReturnCatena) {
+    new MultiSetValue(mockServer.service, *mockServer.dm, true);
+
     catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
 
@@ -387,7 +352,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitReturnCatena) {
             // Returning error status.
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -400,6 +365,8 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitReturnCatena) {
  * TEST 9 - dm.commitSetValue throws a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitThrowCatena) {
+    new MultiSetValue(mockServer.service, *mockServer.dm, true);
+
     catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
 
@@ -413,7 +380,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitThrowCatena) {
             throw catena::exception_with_status(rc.what(), rc.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));
@@ -426,6 +393,8 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitThrowCatena) {
  * TEST 10 - dm.commitSetValue throws a std::runtime_error.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitThrowUnknown) {
+    new MultiSetValue(mockServer.service, *mockServer.dm, true);
+
     catena::exception_with_status rc("unknown error", catena::StatusCode::UNKNOWN);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
 
@@ -439,7 +408,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitThrowUnknown) {
             throw std::runtime_error(rc.what());
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
     }));

@@ -47,9 +47,9 @@
 #include <google/protobuf/util/json_util.h>
 
 // Test helpers
-#include "MockServer.h"
 #include "MockParam.h"
 #include "MockCommandResponder.h"
+#include "GRPCTest.h"
 
 // gRPC
 #include "controllers/ExecuteCommand.h"
@@ -58,26 +58,11 @@ using namespace catena::common;
 using namespace catena::gRPC;
 
 // Fixture
-class gRPCExecuteCommandTests : public ::testing::Test {
-  protected:
-    /*
-     * Called at the start of all tests.
-     * Starts the mockServer and initializes the static inVal.
-     */
-    static void SetUpTestSuite() {
-        mockServer.start();
-    }
+class gRPCExecuteCommandTests : public GRPCTest {
+  public:
+    gRPCExecuteCommandTests() : GRPCTest() {}
 
-    /*
-     * Sets up expectations for the creation of a new CallData obj.
-     */
-    void SetUp() override {
-        // Redirecting cout to a stringstream for testing.
-        oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-        // We can always assume that a new CallData obj is created.
-        // Either from initialization or kProceed.
-        mockServer.expNew();
-    }
+  protected:
 
     /*
      * This is a test class which makes an async RPC to the MockServer on
@@ -170,43 +155,11 @@ class gRPCExecuteCommandTests : public ::testing::Test {
         return inVal;
     }
 
-    /*
-     * Restores cout after each test.
-     */
-    void TearDown() override {
-        std::cout.rdbuf(oldCout);
-    }
-
-    /*
-     * Called at the end of all tests, shuts down the server and cleans up.
-     */
-    static void TearDownTestSuite() {
-        // Redirecting cout to a stringstream for testing.
-        std::stringstream MockConsole;
-        std::streambuf* oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-        // Destroying the server.
-        EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-            delete mockServer.testCall;
-            mockServer.testCall = nullptr;
-        }));
-        mockServer.shutdown();
-        // Restoring cout
-        std::cout.rdbuf(oldCout);
-    }
-
-    // Console variables
-    std::stringstream MockConsole;
-    std::streambuf* oldCout;
-
     TestRPC testRPC;
-
-    static MockServer mockServer;
 
     std::unique_ptr<MockParam> mockCommand = std::make_unique<MockParam>();
     std::unique_ptr<MockCommandResponder> mockResponder = std::make_unique<MockCommandResponder>();
 };
-
-MockServer gRPCExecuteCommandTests::mockServer;
 
 /*
  * ============================================================================
@@ -226,6 +179,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_create) {
  * TEST 2 - ExecuteCommand returns three CommandResponse responses.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalResponse) {
+    new ExecuteCommand(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("", catena::StatusCode::OK);
     testRPC.expResponse("test_response_1");
     testRPC.expResponse("test_response_2");
@@ -265,6 +220,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalResponse) {
  * TEST 3 - ExecuteCommand returns a CommandResponse no response.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalNoResponse) {
+    new ExecuteCommand(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("", catena::StatusCode::OK);
     testRPC.expNoResponse();
     catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", true);
@@ -296,6 +253,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalNoResponse) {
  * TEST 4 - ExecuteCommand returns a CommandResponse exception.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalException) {
+    new ExecuteCommand(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("", catena::StatusCode::OK);
     testRPC.expException("test_exception_type", "test_exception_details");
     catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", true);
@@ -327,6 +286,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalException) {
  * TEST 5 - ExecuteCommand returns no response (respond = false).
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_RespondFalse) {
+    new ExecuteCommand(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("", catena::StatusCode::OK);
     // We should not read these in the asyncReader.
     testRPC.expResponse("test_response_1");
@@ -364,6 +325,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_RespondFalse) {
  *          enabled.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzValid) {
+    new ExecuteCommand(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("", catena::StatusCode::OK);
     testRPC.expNoResponse();
     catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", true);
@@ -408,6 +371,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzValid) {
  * TEST 7 - ExecuteCommand fails from invalid JWS token.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzInvalid) { 
+    new ExecuteCommand(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
 
     mockServer.expectAuthz(&testRPC.clientContext, "Bearer THIS SHOULD NOT PARSE");
@@ -420,6 +385,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzInvalid) {
  * TEST 8 - ExecuteCommand fails from JWS token not being found.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzJWSNotFound) {
+    new ExecuteCommand(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
 
     mockServer.expectAuthz(&testRPC.clientContext, "NOT A BEARER TOKEN");
@@ -432,6 +399,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzJWSNotFound) {
  * TEST 9 - getCommand does not find a command.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
+    new ExecuteCommand(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("Command not found", catena::StatusCode::INVALID_ARGUMENT);
 
     // Mocking kProcess functions
@@ -450,6 +419,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
  * TEST 10 - getCommand throws a catena::exception_with_status.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
+    new ExecuteCommand(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("Threw error", catena::StatusCode::INVALID_ARGUMENT);
 
     // Mocking kProcess functions
@@ -468,6 +439,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
  * TEST 11 - getCommand throws an std::runtime error.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowUnknown) {
+    new ExecuteCommand(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
 
     // Mocking kProcess functions
@@ -483,6 +456,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowUnknown) {
  * TEST 12 - executeCommand returns a nullptr.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
+    new ExecuteCommand(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("Illegal state", catena::StatusCode::INTERNAL);
 
     // Mocking kProcess functions
@@ -505,6 +480,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
  * TEST 13 - executeCommand throws a catena::exception_with_status.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
+    new ExecuteCommand(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("Threw error", catena::StatusCode::INVALID_ARGUMENT);
 
     // Mocking kProcess functions
@@ -528,6 +505,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
  * TEST 14 - executeCommand returns an std::runtime_error.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
+    new ExecuteCommand(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
 
     // Mocking kProcess functions
@@ -548,6 +527,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
  * TEST 15 - getNext throws a catena::exception_with_status.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
+    new ExecuteCommand(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("Threw error", catena::StatusCode::INVALID_ARGUMENT);
     catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", false);
 
@@ -576,6 +557,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
  * TEST 16 - getNext throws a std::runtime_error.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
+    new ExecuteCommand(mockServer.service, *mockServer.dm, true);
+    
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
     catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", false);
 
