@@ -822,36 +822,36 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getSpecificParamWit
     delete recursiveRequest;
 }
 
-// Test 3.3: Error case - invalid parameter
-TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_invalidParam) {
-    catena::exception_with_status rc("Parameter not found: invalid_param", catena::StatusCode::NOT_FOUND);
+// Test 3.3: Error case - parameter not found
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_parameterNotFound) {
+    catena::exception_with_status rc("Parameter not found: missing_param", catena::StatusCode::NOT_FOUND);
     
-    std::string invalid_param = "invalid_param";
+    std::string missing_param = "missing_param";
 
     // Setup mock expectations
     EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(false));
-    EXPECT_CALL(context, fqoid()).WillRepeatedly(::testing::ReturnRef(invalid_param));
+    EXPECT_CALL(context, fqoid()).WillRepeatedly(::testing::ReturnRef(missing_param));
     EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(false));
     EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMtx));
     
-    EXPECT_CALL(dm, getParam(invalid_param, ::testing::_, ::testing::_))
+    EXPECT_CALL(dm, getParam(missing_param, ::testing::_, ::testing::_))
         .WillOnce(::testing::Invoke([](const std::string&, catena::exception_with_status& status, Authorizer&) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return nullptr;
         }));
 
     // Create a new request for this test
-    auto invalidRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+    auto notFoundRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
 
-    invalidRequest->proceed();
-    invalidRequest->finish();
+    notFoundRequest->proceed();
+    notFoundRequest->finish();
 
     // Match expected and actual responses
     std::string expected = expectedSSEResponse(rc);
     std::string actual = readResponse();
     EXPECT_EQ(actual, expected);
 
-    delete invalidRequest;
+    delete notFoundRequest;
 }
 
 // Test 3.4: Error case - catena exception in getParam
