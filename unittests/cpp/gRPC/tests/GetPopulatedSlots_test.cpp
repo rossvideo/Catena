@@ -57,8 +57,11 @@ using namespace catena::gRPC;
 
 // Fixture
 class gRPCGetPopulatedSlotsTests : public GRPCTest {
-  public:
-    gRPCGetPopulatedSlotsTests() : GRPCTest() {}
+  protected:
+    /*
+     * Creates a GetPopulatedSlots handler object.
+     */
+    void makeOne() override { new GetPopulatedSlots(&service, dm, true); }
 
     /* 
      * Makes an async RPC to the MockServer and waits for a response before
@@ -66,7 +69,7 @@ class gRPCGetPopulatedSlotsTests : public GRPCTest {
      */
     void testRPC() {
         // Sending async RPC.
-        mockServer.client->async()->GetPopulatedSlots(&clientContext, &inVal, &outVal, [this](grpc::Status status){
+        client->async()->GetPopulatedSlots(&clientContext, &inVal, &outVal, [this](grpc::Status status){
             outRc = status;
             done = true;
             cv.notify_one();
@@ -74,16 +77,17 @@ class gRPCGetPopulatedSlotsTests : public GRPCTest {
         cv.wait(lock, [this] { return done; });
         // Comparing the results.
         EXPECT_EQ(outVal.SerializeAsString(), expVal.SerializeAsString());
-        EXPECT_EQ(outRc.error_code(), expRc.error_code());
-        EXPECT_EQ(outRc.error_message(), expRc.error_message());
+        EXPECT_EQ(outRc.error_code(), static_cast<grpc::StatusCode>(expRc.status));
+        EXPECT_EQ(outRc.error_message(), expRc.what());
+        // Make sure another GetPopulatedSlots handler was created.
+        EXPECT_TRUE(asyncCall) << "Async handler was not created during runtime";
     }
 
+    // in/out val
     catena::Empty inVal;
     catena::SlotList outVal;
-    grpc::Status outRc;
     // Expected variables
     catena::SlotList expVal;
-    grpc::Status expRc;
     uint32_t testSlot = 1;
 };
 
@@ -94,27 +98,18 @@ class gRPCGetPopulatedSlotsTests : public GRPCTest {
  * 
  * TEST 1 - Creating a GetPopulatedSlots object.
  */
-TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_create) {
+TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_Create) {
     // Creating getPopulatedSlots object.
-    new GetPopulatedSlots(mockServer.service, *mockServer.dm, true);
-    EXPECT_FALSE(mockServer.testCall);
-    EXPECT_TRUE(mockServer.asyncCall);
+    EXPECT_TRUE(asyncCall);
 }
 
 /*
  * TEST 2 - Normal case for GetPopulatedSlots proceed().
  */
-TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_proceedNormal) {
-    new GetPopulatedSlots(mockServer.service, *mockServer.dm, true);
-
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_Normal) {
     expVal.add_slots(testSlot);
-
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.dm, slot()).Times(1).WillOnce(::testing::Return(testSlot));
-    
-
+    EXPECT_CALL(dm, slot()).Times(1).WillOnce(::testing::Return(testSlot));
     // Sending the RPC and comparing the results.
     testRPC();
 }

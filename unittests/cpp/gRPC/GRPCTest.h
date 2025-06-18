@@ -128,8 +128,8 @@ class GRPCTest  : public ::testing::Test {
         cq->Shutdown();
         cqthread->join();
         // Make sure the calldata objects were destroyed.
-        ASSERT_FALSE(testCall);
-        ASSERT_FALSE(asyncCall);
+        ASSERT_FALSE(testCall) << "Failed to deregister handler";
+        ASSERT_FALSE(asyncCall) << "Failed to deregister handler";
 
         // Restoring cout
         std::cout.rdbuf(oldCout);
@@ -140,7 +140,7 @@ class GRPCTest  : public ::testing::Test {
     std::streambuf* oldCout;
 
     // Expected variables
-    grpc::Status expRc;
+    catena::exception_with_status expRc{"", catena::StatusCode::OK};
 
     // Address used for gRPC tests.
     std::string serverAddr = "0.0.0.0:50051";

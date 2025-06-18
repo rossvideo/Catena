@@ -59,18 +59,21 @@ using namespace catena::gRPC;
 class gRPCSetValueTests : public GRPCTest {
   protected:
     /*
-     * Called at the start of all tests.
-     * Starts the mockServer and initializes the static inVal.
+     * Creates a SetValue handler object.
      */
-    gRPCSetValueTests() : GRPCTest() {
-        // Setting up the inVal used across all tests.
+    void makeOne() override { new SetValue(&service, dm, true); }
+
+    /*
+     * Helper function which initializes a SetValuePayload object and a MultiSetValuePayload object.
+     */
+    void initPayload(uint32_t slot, const std::string& oid, const std::string& value) {
         inVal.set_slot(1);
-        auto value = inVal.mutable_value();
-        value->set_oid("/test_oid");
-        value->mutable_value()->set_string_value("test_value");
+        auto val = inVal.mutable_value();
+        val->set_oid(oid);
+        val->mutable_value()->set_string_value(value);
         // Converting above to multiSetValuePayload for input testing.
         expMultiVal.set_slot(inVal.slot());
-        expMultiVal.add_values()->CopyFrom(*value);
+        expMultiVal.add_values()->CopyFrom(*val);
     }
 
     /* 
@@ -79,7 +82,7 @@ class gRPCSetValueTests : public GRPCTest {
      */
     void testRPC() {
         // Sending async RPC.
-        mockServer.client->async()->SetValue(&clientContext, &inVal, &outVal, [this](grpc::Status status){
+        client->async()->SetValue(&clientContext, &inVal, &outVal, [this](grpc::Status status){
             outRc = status;
             done = true;
             cv.notify_one();
@@ -87,19 +90,18 @@ class gRPCSetValueTests : public GRPCTest {
         cv.wait(lock, [this] { return done; });
         // Comparing the results.
         EXPECT_EQ(outVal.SerializeAsString(), expVal.SerializeAsString());
-        EXPECT_EQ(outRc.error_code(), expRc.error_code());
-        EXPECT_EQ(outRc.error_message(), expRc.error_message());
+        EXPECT_EQ(outRc.error_code(), static_cast<grpc::StatusCode>(expRc.status));
+        EXPECT_EQ(outRc.error_message(), expRc.what());
+        // Make sure another SetValue handler was created.
+        EXPECT_TRUE(asyncCall) << "Async handler was not created during runtime";
     }
 
-    // Client variables.
+    // in/out val
     catena::SingleSetValuePayload inVal;
-    catena::MultiSetValuePayload expMultiVal;
     catena::Empty outVal;
-    grpc::Status outRc;
     // Expected variables
     catena::Empty expVal;
-    grpc::Status expRc;
-
+    catena::MultiSetValuePayload expMultiVal;
 };
 
 /*
@@ -109,47 +111,30 @@ class gRPCSetValueTests : public GRPCTest {
  * 
  * TEST 1 - Creating a SetValue object. This tests request_().
  */
-TEST_F(gRPCSetValueTests, SetValue_create) {
-    // Creating multiSetValue object.
-    new SetValue(mockServer.service, *mockServer.dm, true);
-    EXPECT_FALSE(mockServer.testCall);
-    EXPECT_TRUE(mockServer.asyncCall);
+TEST_F(gRPCSetValueTests, SetValue_Create) {
+    EXPECT_TRUE(asyncCall);
 }
 
 /*
  * TEST 2 - Normal case for SetValue proceed().
  * This tests both create_() and toMulti_().
  */
-TEST_F(gRPCSetValueTests, SetValue_proceedNormal) {
-    new SetValue(mockServer.service, *mockServer.dm, true);
-
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
-            // Checking that function gets correct inputs. Mostly care about
-            // src here.
+TEST_F(gRPCSetValueTests, SetValue_Normal) {
+    initPayload(0, "/test_oid", "test_value");
+    // Setting expectations.
+    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
             EXPECT_EQ(src.SerializeAsString(), expMultiVal.SerializeAsString());
-            EXPECT_EQ(ans.status, catena::StatusCode::OK);
-            EXPECT_EQ(&authz, &Authorizer::kAuthzDisabled);
-            // Setting the output status and returning true.
-            ans = catena::exception_with_status(rc.what(), rc.status);
+            EXPECT_EQ(!authzEnabled, &authz == &catena::common::Authorizer::kAuthzDisabled);
             return true;
         }));
-    EXPECT_CALL(*mockServer.dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
+    EXPECT_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(src.SerializeAsString(), expMultiVal.SerializeAsString());
-            EXPECT_EQ(&authz, &Authorizer::kAuthzDisabled);
-            // Returning status.
-            return catena::exception_with_status(rc.what(), rc.status);
+            EXPECT_EQ(!authzEnabled, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            return catena::exception_with_status(expRc.what(), expRc.status);
         }));
-    
-
-    // Sending the RPC and comparing the results.
+    // Sending the RPC.
     testRPC();
 }
