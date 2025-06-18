@@ -60,7 +60,7 @@ using namespace catena::gRPC;
 class gRPCDeviceRequestTests : public GRPCTest {
   protected:
     /*
-     * Creates an DeviceRequest handler object.
+     * Creates a DeviceRequest handler object.
      */
     void makeOne() override { new DeviceRequest(&service, dm, true); }
 
