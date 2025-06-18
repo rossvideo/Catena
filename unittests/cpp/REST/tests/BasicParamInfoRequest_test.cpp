@@ -134,11 +134,10 @@ protected:
 
 // Preliminary test: Creating a BasicParamInfoRequest object
 TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_create) {
-    // Making sure BasicParamInfoRequest object is created from the SetUp step.
     ASSERT_TRUE(request);
 }
 
-// Test 0.1: Authorization test with std::exceptionh
+// Test 0.1: Authorization test with std::exception
 TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authz_std_exception) {
     catena::exception_with_status rc("Authorization setup failed: Test auth setup failure", catena::StatusCode::UNAUTHENTICATED);
 
@@ -149,7 +148,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authz_std_exception
     request->proceed();
     request->finish();
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::string expected = expectedSSEResponse(rc);
     std::string actual = readResponse();
     EXPECT_EQ(actual, expected);
@@ -167,7 +166,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authz_invalid_token
     request->proceed();
     request->finish();
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::string expected = expectedSSEResponse(rc);
     std::string actual = readResponse();
     EXPECT_EQ(actual, expected);
@@ -221,7 +220,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authz_valid_token) 
 
     delete authzRequest;
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::string jsonBody = catena::REST::test::createParamInfoJson(param_info);
     std::string expected = expectedSSEResponse(rc, {jsonBody});
     std::string actual = readResponse();
@@ -265,7 +264,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParams) 
     request->proceed();
     request->finish();
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::vector<std::string> jsonBodies;
     jsonBodies.push_back(catena::REST::test::createParamInfoJson(param1_info));
     jsonBodies.push_back(catena::REST::test::createParamInfoJson(param2_info));
@@ -288,7 +287,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsEr
     request->proceed();
     request->finish();
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::string expected = expectedSSEResponse(rc);
     std::string actual = readResponse();
     EXPECT_EQ(actual, expected);
@@ -308,7 +307,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getEmptyTopLevelPar
     request->proceed();
     request->finish();
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::string expected = expectedSSEResponse(rc);
     std::string actual = readResponse();
     EXPECT_EQ(actual, expected);
@@ -336,7 +335,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
     request->proceed();
     request->finish();
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::string jsonBody = catena::REST::test::createParamInfoJson(arrayParamInfo);
     std::string expected = expectedSSEResponse(rc, {jsonBody});
     std::string actual = readResponse();
@@ -365,7 +364,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsPr
     request->proceed();
     request->finish();
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::string expected = expectedSSEResponse(rc);
     std::string actual = readResponse();
     EXPECT_EQ(actual, expected);
@@ -408,7 +407,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsTh
     request->proceed();
     request->finish();
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::string expected = expectedSSEResponse(rc);
     std::string actual = readResponse();
     EXPECT_EQ(actual, expected);
@@ -496,7 +495,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
     deepNestingRequest->proceed();
     deepNestingRequest->finish();
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::vector<std::string> jsonBodies;
     jsonBodies.push_back(catena::REST::test::createParamInfoJson(level1_info));
     jsonBodies.push_back(catena::REST::test::createParamInfoJson(level2_info));
@@ -576,7 +575,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
     arrayRequest->proceed();
     arrayRequest->finish();
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::vector<std::string> jsonBodies;
     jsonBodies.push_back(catena::REST::test::createParamInfoJson(parent_info));
     jsonBodies.push_back(catena::REST::test::createParamInfoJson(arrayChild_info));
@@ -662,7 +661,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
     errorRequest->proceed();
     errorRequest->finish();
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::string expected = expectedSSEResponse(rc);
     std::string actual = readResponse();
     
@@ -690,7 +689,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
     errorStatusRequest->proceed();
     errorStatusRequest->finish();
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::string expected = expectedSSEResponse(rc);
     std::string actual = readResponse();
     
@@ -718,7 +717,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
     emptyListRequest->proceed();
     emptyListRequest->finish();
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::string expected = expectedSSEResponse(rc);
     std::string actual = readResponse();
     
@@ -767,13 +766,12 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_proceedSpecificPara
     specificRequest->proceed();
     specificRequest->finish();
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::string jsonBody = catena::REST::test::createParamInfoJson(paramInfo);
     std::string expected = expectedSSEResponse(rc, {jsonBody});
     std::string actual = readResponse();
     EXPECT_EQ(actual, expected);
 
-    // Cleanup
     delete specificRequest;
 }
 
@@ -815,13 +813,12 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getSpecificParamWit
     recursiveRequest->proceed();
     recursiveRequest->finish();
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::string jsonBody = catena::REST::test::createParamInfoJson(paramInfo);
     std::string expected = expectedSSEResponse(rc, {jsonBody});
     std::string actual = readResponse();
     EXPECT_EQ(actual, expected);
 
-    // Cleanup
     delete recursiveRequest;
 }
 
@@ -849,12 +846,11 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_invalidParam) {
     invalidRequest->proceed();
     invalidRequest->finish();
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::string expected = expectedSSEResponse(rc);
     std::string actual = readResponse();
     EXPECT_EQ(actual, expected);
 
-    // Cleanup
     delete invalidRequest;
 }
 
@@ -898,11 +894,105 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_catenaExceptionInGe
     exceptionRequest->proceed();
     exceptionRequest->finish();
 
-    // Get expected and actual responses
+    // Match expected and actual responses
     std::string expected = expectedSSEResponse(rc);
     std::string actual = readResponse();
     EXPECT_EQ(actual, expected);
 
-    // Cleanup
     delete exceptionRequest;
+}
+
+// == SECTION 4 TESTS: Catch blocks at the end of proceed() ==
+
+// Test 4.1: Error case - catena exception in proceed()
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_catchCatenaException) {
+    catena::exception_with_status rc("Test catena exception", catena::StatusCode::INTERNAL);
+    
+    std::string test_param = "test_param";
+    
+    // Setup mock expectations to trigger an exception during proceed()
+    EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(context, fqoid()).WillRepeatedly(::testing::ReturnRef(test_param));
+    EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMtx));
+    
+    EXPECT_CALL(dm, getParam(test_param, ::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke([](const std::string&, catena::exception_with_status&, Authorizer&) -> std::unique_ptr<IParam> {
+            throw catena::exception_with_status("Test catena exception", catena::StatusCode::INTERNAL);
+        }));
+
+    // Create a new request for this test
+    auto catenaExceptionRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+
+    catenaExceptionRequest->proceed();
+    catenaExceptionRequest->finish();
+
+    // Match expected and actual responses
+    std::string expected = expectedSSEResponse(rc);
+    std::string actual = readResponse();
+    EXPECT_EQ(actual, expected);
+
+    delete catenaExceptionRequest;
+}
+
+// Test 4.2: Error case - std::exception in proceed()
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_catchStdException) {
+    catena::exception_with_status rc("Unknown error in BasicParamInfoRequest: Test std exception", catena::StatusCode::UNKNOWN);
+    
+    std::string test_param = "test_param";
+    
+    // Setup mock expectations to trigger a std::exception during proceed()
+    EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(context, fqoid()).WillRepeatedly(::testing::ReturnRef(test_param));
+    EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMtx));
+    
+    EXPECT_CALL(dm, getParam(test_param, ::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke([](const std::string&, catena::exception_with_status&, Authorizer&) -> std::unique_ptr<IParam> {
+            throw std::runtime_error("Test std exception");
+        }));
+
+    // Create a new request for this test
+    auto stdExceptionRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+
+    stdExceptionRequest->proceed();
+    stdExceptionRequest->finish();
+
+    // Match expected and actual responses
+    std::string expected = expectedSSEResponse(rc);
+    std::string actual = readResponse();
+    EXPECT_EQ(actual, expected);
+
+    delete stdExceptionRequest;
+}
+
+// Test 4.3: Error case - unknown exception in proceed()
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_catchUnknownException) {
+    catena::exception_with_status rc("Unknown error in BasicParamInfoRequest", catena::StatusCode::UNKNOWN);
+    
+    std::string test_param = "test_param";
+    
+    // Setup mock expectations to trigger an unknown exception during proceed()
+    EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(context, fqoid()).WillRepeatedly(::testing::ReturnRef(test_param));
+    EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMtx));
+    
+    EXPECT_CALL(dm, getParam(test_param, ::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke([](const std::string&, catena::exception_with_status&, Authorizer&) -> std::unique_ptr<IParam> {
+            throw 42; // Throw an int
+        }));
+
+    // Create a new request for this test
+    auto unknownExceptionRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+
+    unknownExceptionRequest->proceed();
+    unknownExceptionRequest->finish();
+
+    // Match expected and actual responses
+    std::string expected = expectedSSEResponse(rc);
+    std::string actual = readResponse();
+    EXPECT_EQ(actual, expected);
+
+    delete unknownExceptionRequest;
 }
