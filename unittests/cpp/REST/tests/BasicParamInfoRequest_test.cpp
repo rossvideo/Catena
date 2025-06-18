@@ -741,3 +741,135 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
     EXPECT_EQ(actual, expected);
 }
 
+// == MODE 3 TESTS: Get a specific parameter and its children if recursive ==
+
+// Test 3.1: Get specific parameter without recursion
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_proceedSpecificParam) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    std::string mockOid = "mockOid";
+
+    // Setup mock parameter with our helper
+    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
+    catena::REST::test::ParamInfo paramInfo{
+        .oid = mockOid,
+        .type = catena::ParamType::STRING
+    };
+    catena::REST::test::setupMockParam(mockParam.get(), paramInfo);
+
+    // Setup mock expectations for mode 2 (specific parameter)
+    EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(context, fqoid()).WillRepeatedly(::testing::ReturnRef(mockOid));
+    EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMtx));
+    
+    EXPECT_CALL(dm, getParam(mockOid, ::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke(
+            [&mockParam](const std::string&, catena::exception_with_status& status, Authorizer&) {
+                status = catena::exception_with_status("", catena::StatusCode::OK);
+                return std::move(mockParam);
+            }
+        ));
+    
+    // Create a new request for this test
+    auto specificRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+    
+    // Execute
+    specificRequest->proceed();
+    specificRequest->finish();
+
+    // Get expected and actual responses
+    std::string jsonBody = catena::REST::test::createParamInfoJson(paramInfo);
+    std::string expected = expectedSSEResponse(rc, {jsonBody});
+    std::string actual = readResponse();
+    EXPECT_EQ(actual, expected);
+
+    // Cleanup
+    delete specificRequest;
+}
+
+// Test 3.2: Get specific parameter with recursion
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getSpecificParamWithRecursion) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    std::string mockOid = "mockOid";
+    
+    // Create parameter hierarchy using ParamHierarchyBuilder
+    auto mockDesc = ParamHierarchyBuilder::createDescriptor("/" + mockOid);
+    std::string mockOidWSlash = "/" + mockOid;
+    EXPECT_CALL(*mockDesc.descriptor, getOid()).WillRepeatedly(::testing::ReturnRef(mockOidWSlash));
+    
+    // Setup mock parameter with our helper
+    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
+    catena::REST::test::ParamInfo paramInfo{
+        .oid = mockOid,
+        .type = catena::ParamType::STRING
+    };
+    catena::REST::test::setupMockParam(mockParam.get(), paramInfo, mockDesc.descriptor.get());
+
+    // Add isArrayType expectation for the mock parameter
+    EXPECT_CALL(*mockParam, isArrayType()).WillRepeatedly(::testing::Return(false));
+
+    // Setup mock expectations
+    EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(context, fqoid()).WillRepeatedly(::testing::ReturnRef(mockOid));
+    EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMtx));
+    
+    EXPECT_CALL(dm, getParam(mockOid, ::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke(
+            [&mockParam](const std::string&, catena::exception_with_status& status, Authorizer&) {
+                status = catena::exception_with_status("", catena::StatusCode::OK);
+                return std::move(mockParam);
+            }
+        ));
+
+    // Create a new request for this test
+    auto recursiveRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+
+    // Execute
+    recursiveRequest->proceed();
+    recursiveRequest->finish();
+
+    // Get expected and actual responses
+    std::string jsonBody = catena::REST::test::createParamInfoJson(paramInfo);
+    std::string expected = expectedSSEResponse(rc, {jsonBody});
+    std::string actual = readResponse();
+    EXPECT_EQ(actual, expected);
+
+    // Cleanup
+    delete recursiveRequest;
+}
+
+// Test 3.3: Error case - invalid parameter
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_invalidParam) {
+    catena::exception_with_status rc("Invalid parameter", catena::StatusCode::NOT_FOUND);
+    
+    std::string invalid_param = "invalid_param";
+
+    // Setup mock expectations
+    EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(context, fqoid()).WillRepeatedly(::testing::ReturnRef(invalid_param));
+    EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMtx));
+    
+    EXPECT_CALL(dm, getParam(invalid_param, ::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke([](const std::string&, catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("Invalid parameter", catena::StatusCode::NOT_FOUND);
+            return nullptr;
+        }));
+
+    // Create a new request for this test
+    auto invalidRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+
+    // Execute
+    invalidRequest->proceed();
+    invalidRequest->finish();
+
+    // Get expected and actual responses
+    std::string expected = expectedSSEResponse(rc);
+    std::string actual = readResponse();
+    EXPECT_EQ(actual, expected);
+
+    // Cleanup
+    delete invalidRequest;
+}
+
