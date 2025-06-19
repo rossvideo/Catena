@@ -106,7 +106,9 @@ TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_Create) {
  * TEST 2 - Normal case for GetPopulatedSlots proceed().
  */
 TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_Normal) {
-    expVal.add_slots(dm.slot());
+    for (auto [slot, dm]: dms) {
+        expVal.add_slots(slot);
+    }
     // Sending the RPC and comparing the results.
     testRPC();
 }

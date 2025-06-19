@@ -119,11 +119,12 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_Normal) {
     languagePack->set_name("English");
     (*languagePack->mutable_words())["greeting"] = "Hello";
     // Setting expecteations
-    EXPECT_CALL(dm, getLanguagePack(inVal.language(), ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, getLanguagePack(inVal.language(), ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack){
             pack.CopyFrom(expVal);
             return catena::exception_with_status(expRc.what(), expRc.status);
         }));
+    EXPECT_CALL(dm1, getLanguagePack(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }
@@ -134,10 +135,11 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_Normal) {
 TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrReturn) {
     expRc = catena::exception_with_status("Language pack en not found", catena::StatusCode::NOT_FOUND);    
     // Setting expecteations
-    EXPECT_CALL(dm, getLanguagePack(inVal.language(), ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, getLanguagePack(inVal.language(), ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack){
             return catena::exception_with_status(expRc.what(), expRc.status);
         }));
+    EXPECT_CALL(dm1, getLanguagePack(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }
@@ -148,11 +150,12 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrReturn) {
 TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrThrow) {
     expRc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
     // Setting expecteations
-    EXPECT_CALL(dm, getLanguagePack(inVal.language(), ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, getLanguagePack(inVal.language(), ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack){
             throw catena::exception_with_status(expRc.what(), expRc.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
+    EXPECT_CALL(dm1, getLanguagePack(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }

@@ -65,6 +65,7 @@ get:
    
     - name: fqoid
       in: path
+      nullable: true
       required: false
       description: The prefix of the OID to get info for
       schema:

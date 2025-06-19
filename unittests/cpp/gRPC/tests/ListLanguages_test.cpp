@@ -109,10 +109,11 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_Normal) {
     *expVal.add_languages() = "fr";
     *expVal.add_languages() = "es";
     // Setting expectations
-    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1)
+    EXPECT_CALL(dm0, toProto(::testing::An<catena::LanguageList&>())).Times(1)
         .WillOnce(::testing::Invoke([this](catena::LanguageList &list){
             list.CopyFrom(expVal);
         }));
+    EXPECT_CALL(dm1, toProto(::testing::An<catena::LanguageList&>())).Times(0);
     // Sending the RPC.
     testRPC();
 }
@@ -123,10 +124,11 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_Normal) {
 TEST_F(gRPCListLanguagesTests, ListLanguages_Err) {
     expRc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations
-    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1)
+    EXPECT_CALL(dm0, toProto(::testing::An<catena::LanguageList&>())).Times(1)
         .WillOnce(::testing::Invoke([this](catena::LanguageList &list){
             throw catena::exception_with_status(expRc.what(), expRc.status);
         }));
+    EXPECT_CALL(dm1, toProto(::testing::An<catena::LanguageList&>())).Times(0);
     // Sending the RPC.
     testRPC();
 }

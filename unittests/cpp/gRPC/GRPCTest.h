@@ -99,8 +99,10 @@ class GRPCTest  : public ::testing::Test {
         EXPECT_CALL(service, deregisterItem(::testing::_)).WillRepeatedly(::testing::Invoke([this](ICallData* cd) {
             testCall.reset(nullptr);
         }));
-        EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mtx));
-        EXPECT_CALL(dm, slot()).WillRepeatedly(::testing::Return(0));
+        EXPECT_CALL(dm0, mutex()).WillRepeatedly(::testing::ReturnRef(mtx0));
+        EXPECT_CALL(dm0, slot()).WillRepeatedly(::testing::Return(0));
+        EXPECT_CALL(dm1, mutex()).WillRepeatedly(::testing::ReturnRef(mtx1));
+        EXPECT_CALL(dm1, slot()).WillRepeatedly(::testing::Return(1));
         EXPECT_CALL(service, authorizationEnabled()).WillRepeatedly(::testing::Invoke([this](){ return authzEnabled; }));
 
         // Deploying cq handler on a thread.
@@ -150,9 +152,11 @@ class GRPCTest  : public ::testing::Test {
     grpc::ServerBuilder builder;
     std::unique_ptr<grpc::Server> server = nullptr;
     MockServiceImpl service;
-    std::mutex mtx;
-    MockDevice dm;
-    SlotMap dms = {{0, &dm}};
+    std::mutex mtx0;
+    std::mutex mtx1;
+    MockDevice dm0;
+    MockDevice dm1;
+    SlotMap dms = {{0, &dm0}, {1, &dm1}};
     bool authzEnabled = false;
     // Completion queue variables.
     std::unique_ptr<grpc::ServerCompletionQueue> cq = nullptr;

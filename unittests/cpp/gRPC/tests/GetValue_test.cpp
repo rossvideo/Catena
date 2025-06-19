@@ -116,13 +116,14 @@ TEST_F(gRPCGetValueTests, GetValue_Normal) {
     initPayload(0, "/test_oid");
     expVal.set_string_value("test_value");
     // Setting expectations
-    EXPECT_CALL(dm, getValue(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, getValue(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(!authzEnabled, &authz == &catena::common::Authorizer::kAuthzDisabled);
             value.CopyFrom(expVal);
             return catena::exception_with_status(expRc.what(), expRc.status);
         }));
+    EXPECT_CALL(dm1, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }
@@ -149,13 +150,14 @@ TEST_F(gRPCGetValueTests, GetValue_AuthzValid) {
                             "dvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
     clientContext.AddMetadata("authorization", "Bearer " + mockToken);
     // Setting expectations
-    EXPECT_CALL(dm, getValue(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, getValue(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(!authzEnabled, &authz == &catena::common::Authorizer::kAuthzDisabled);
             value.CopyFrom(expVal);
             return catena::exception_with_status(expRc.what(), expRc.status);
         }));
+    EXPECT_CALL(dm1, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }
@@ -169,7 +171,8 @@ TEST_F(gRPCGetValueTests, GetValue_AuthzInvalid) {
     authzEnabled = true;
     clientContext.AddMetadata("authorization", "Bearer THIS SHOULD NOT PARSE");
     // Setting expectations
-    EXPECT_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }
@@ -184,7 +187,8 @@ TEST_F(gRPCGetValueTests, GetValue_AuthzJWSNotFound) {
     authzEnabled = true;
     clientContext.AddMetadata("authorization", "NOT A BEARER TOKEN");
     // Setting expectations
-    EXPECT_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }
@@ -196,10 +200,11 @@ TEST_F(gRPCGetValueTests, GetValue_ErrReturnCatena) {
     expRc = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
     initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(dm, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
             return catena::exception_with_status(expRc.what(), expRc.status);
         }));
+    EXPECT_CALL(dm1, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }
@@ -211,11 +216,12 @@ TEST_F(gRPCGetValueTests, GetValue_ErrThrowCatena) {
     expRc = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
     initPayload(0, "/test_oid");
     // Setting expectations
-    EXPECT_CALL(dm, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
             throw catena::exception_with_status(expRc.what(), expRc.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
+    EXPECT_CALL(dm1, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }
@@ -227,8 +233,9 @@ TEST_F(gRPCGetValueTests, GetValue_ErrThrowUnknown) {
     expRc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     initPayload(0, "/test_oid");
     // Setting expectations
-    EXPECT_CALL(dm, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(expRc.what())));
+    EXPECT_CALL(dm1, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }

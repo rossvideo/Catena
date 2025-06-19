@@ -109,7 +109,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_Create) {
 TEST_F(gRPCAddLanguageTests, AddLanguage_Normal) {
     initPayload(0, "en", "English", {{"greeting", "Hello"}});
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(language.SerializeAsString(), inVal.SerializeAsString());
@@ -117,6 +117,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_Normal) {
             // Setting the output status and returning true.
             return catena::exception_with_status(expRc.what(), expRc.status);
         }));
+    EXPECT_CALL(dm1, addLanguage(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -142,7 +143,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_AuthzValid) {
                             "dvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
     clientContext.AddMetadata("authorization", "Bearer " + mockToken);
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(language.SerializeAsString(), inVal.SerializeAsString());
@@ -150,6 +151,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_AuthzValid) {
             // Setting the output status and returning true.
             return catena::exception_with_status(expRc.what(), expRc.status);
         }));
+    EXPECT_CALL(dm1, addLanguage(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -163,7 +165,8 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_AuthzInvalid) {
     authzEnabled = true;
     clientContext.AddMetadata("authorization", "Bearer THIS SHOULD NOT PARSE");
     // Setting expectations
-    EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0, addLanguage(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1, addLanguage(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -177,7 +180,8 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_AuthzJWSNotFound) {
     authzEnabled = true;
     clientContext.AddMetadata("authorization", "NOT A BEARER TOKEN");
     // Setting expectations
-    EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0, addLanguage(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1, addLanguage(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -188,10 +192,11 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_AuthzJWSNotFound) {
 TEST_F(gRPCAddLanguageTests, AddLanguage_ErrReturnCatena) {
     expRc = catena::exception_with_status("Language already exists", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
-    EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
             return catena::exception_with_status(expRc.what(), expRc.status);
         }));
+    EXPECT_CALL(dm1, addLanguage(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -202,11 +207,12 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrReturnCatena) {
 TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowCatena) {
     expRc = catena::exception_with_status("Language already exists", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
-    EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
             throw catena::exception_with_status(expRc.what(), expRc.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
+    EXPECT_CALL(dm1, addLanguage(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -217,8 +223,9 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowCatena) {
 TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowUnknown) {
     expRc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations
-    EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(expRc.what())));
+    EXPECT_CALL(dm1, addLanguage(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }

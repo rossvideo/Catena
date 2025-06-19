@@ -120,7 +120,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_Normal) {
     initPayload(0, {{"/test_oid_1", "test_value_1"},{"/test_oid_2", "test_value_2"}});
     expRc = catena::exception_with_status("", catena::StatusCode::OK);
     // Setting expectations
-    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(src.SerializeAsString(), inVal.SerializeAsString());
@@ -129,7 +129,8 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_Normal) {
             ans = catena::exception_with_status(expRc.what(), expRc.status);
             return true;
         }));
-    EXPECT_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm1, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(src.SerializeAsString(), inVal.SerializeAsString());
@@ -137,6 +138,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_Normal) {
             // Setting the output status and returning true.
             return catena::exception_with_status(expRc.what(), expRc.status);
         }));
+    EXPECT_CALL(dm1, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -163,7 +165,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_AuthzValid) {
                             "dvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
     clientContext.AddMetadata("authorization", "Bearer " + mockToken);
     // Setting expectations
-    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(src.SerializeAsString(), inVal.SerializeAsString());
@@ -172,7 +174,8 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_AuthzValid) {
             ans = catena::exception_with_status(expRc.what(), expRc.status);
             return true;
         }));
-    EXPECT_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm1, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(src.SerializeAsString(), inVal.SerializeAsString());
@@ -180,6 +183,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_AuthzValid) {
             // Setting the output status and returning true.
             return catena::exception_with_status(expRc.what(), expRc.status);
         }));
+    EXPECT_CALL(dm1, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -193,7 +197,10 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_AuthzInvalid) {
     authzEnabled = true;
     clientContext.AddMetadata("authorization", "Bearer THIS SHOULD NOT PARSE");
     // Setting expectations
-    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }
@@ -207,7 +214,10 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_AuthzJWSNotFound) {
     authzEnabled = true;
     clientContext.AddMetadata("authorization", "NOT A BEARER TOKEN");
     // Setting expectations
-    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -218,12 +228,15 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_AuthzJWSNotFound) {
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryReturnCatena) {
     expRc = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
-    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
             // Setting the output status and returning false.
             ans = catena::exception_with_status(expRc.what(), expRc.status);
             return false;
         }));
+    EXPECT_CALL(dm1, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -234,12 +247,15 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryReturnCatena) {
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowCatena) {
     expRc = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
-    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
             // Throwing error and returning true.
             throw catena::exception_with_status(expRc.what(), expRc.status);
             return true;
         }));
+    EXPECT_CALL(dm1, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -250,8 +266,11 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowCatena) {
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowUnknown) {
     expRc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations
-    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(expRc.what())));
+    EXPECT_CALL(dm1, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -262,12 +281,14 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowUnknown) {
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitReturnCatena) {
     expRc = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
-    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
-    EXPECT_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(dm1, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
             // Returning error status.
             return catena::exception_with_status(expRc.what(), expRc.status);
         }));
+    EXPECT_CALL(dm1, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -278,13 +299,15 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitReturnCatena) {
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowCatena) {
     expRc = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
-    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
-    EXPECT_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(dm1, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
             // Throwing error and returning ok.
             throw catena::exception_with_status(expRc.what(), expRc.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
+    EXPECT_CALL(dm1, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -295,9 +318,11 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowCatena) {
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
     expRc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations
-    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
-    EXPECT_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(dm1, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(expRc.what())));
+    EXPECT_CALL(dm1, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
