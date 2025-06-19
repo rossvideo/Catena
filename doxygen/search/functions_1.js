@@ -6,7 +6,7 @@ var searchData=
   ['addlanguage_3',['addlanguage',['../classcatena_1_1common_1_1Device.html#af15d6bed42fc196d4e46c3aa8de39b73',1,'catena::common::Device::addLanguage()'],['../classcatena_1_1common_1_1IDevice.html#ac4b696a3becfd9f2d2f267e52258733a',1,'catena::common::IDevice::addLanguage()'],['../classcatena_1_1gRPC_1_1AddLanguage.html#a0ae1753d9616686b772b506dcde8da69',1,'catena::gRPC::AddLanguage::AddLanguage()']]],
   ['addmenu_4',['addMenu',['../classcatena_1_1common_1_1MenuGroup.html#a3510177a085fdfa4b596d1a2dba4236f',1,'catena::common::MenuGroup']]],
   ['addparam_5',['addParam',['../classcatena_1_1common_1_1ParamWithValue.html#afe3eb9870102162f6b5df422fe49805d',1,'catena::common::ParamWithValue']]],
-  ['addparamtoresponses_6',['addParamToResponses',['../classcatena_1_1gRPC_1_1BasicParamInfoRequest.html#a54a70569d16e5c063ba6a8224a573e71',1,'catena::gRPC::BasicParamInfoRequest']]],
+  ['addparamtoresponses_6',['addParamToResponses',['../classcatena_1_1gRPC_1_1ParamInfoRequest.html#abb7215623d629f82747af4f92fc94f9d',1,'catena::gRPC::ParamInfoRequest']]],
   ['addpeer_7',['addPeer',['../classcatena_1_1gRPC_1_1PeerManager.html#ac8b575b34fd3b2a683e316ad128d38fd',1,'catena::gRPC::PeerManager']]],
   ['addproduct_8',['addProduct',['../classcatena_1_1patterns_1_1GenericFactory.html#a31ee2959ec29c96c0be704711ab38b2d',1,'catena::patterns::GenericFactory']]],
   ['addsubparam_9',['addsubparam',['../classcatena_1_1common_1_1ParamDescriptor.html#ac399b9689cf78a01b38bd3b40e8d79a5',1,'catena::common::ParamDescriptor::addSubParam()'],['../classcatena_1_1common_1_1IParamDescriptor.html#a5af42f1caf859a871bd4e677b2247b34',1,'catena::common::IParamDescriptor::addSubParam()']]],
