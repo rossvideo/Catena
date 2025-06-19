@@ -860,20 +860,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_catenaExceptionInGetParam) {
     
     std::string test_param = "test_param";
 
-    // Setup mock parameter that will throw in toProto
-    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
-    catena::REST::test::ParamInfo paramInfo{
-        .oid = test_param,
-        .type = catena::ParamType::STRING
-    };
-    catena::REST::test::setupMockParam(mockParam.get(), paramInfo);
-
-    // Make toProto throw the exception
-    EXPECT_CALL(*mockParam, toProto(::testing::An<catena::ParamInfoResponse&>(), ::testing::An<catena::common::Authorizer&>()))
-        .WillOnce(::testing::Invoke([](catena::ParamInfoResponse&, catena::common::Authorizer&) -> catena::exception_with_status {
-            throw catena::exception_with_status("Error processing parameter", catena::StatusCode::INTERNAL);
-        }));
-
     // Setup mock expectations
     EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(false));
     EXPECT_CALL(context, fqoid()).WillRepeatedly(::testing::ReturnRef(test_param));
@@ -881,12 +867,10 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_catenaExceptionInGetParam) {
     EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMtx));
     
     EXPECT_CALL(dm, getParam(test_param, ::testing::_, ::testing::_))
-        .WillOnce(::testing::Invoke(
-            [&mockParam](const std::string&, catena::exception_with_status& status, Authorizer&) {
-                status = catena::exception_with_status("", catena::StatusCode::OK);
-                return std::move(mockParam);
-            }
-        ));
+        .WillOnce(::testing::Invoke([](const std::string&, catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("Error processing parameter", catena::StatusCode::INTERNAL);
+            return nullptr;
+        }));
 
     // Create a new request for this test
     auto exceptionRequest = ParamInfoRequest::makeOne(serverSocket, context, dm);
