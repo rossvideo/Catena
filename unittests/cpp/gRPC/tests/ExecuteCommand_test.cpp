@@ -119,7 +119,8 @@ class gRPCExecuteCommandTests : public GRPCTest {
     /*
      * Streamlines the creation of executeCommandPayloads. 
      */
-    void initPayload(const std::string& oid, const std::string& value, bool respond = true) {
+    void initPayload(uint32_t slot, const std::string& oid, const std::string& value, bool respond = true) {
+        inVal.set_slot(slot);
         inVal.set_oid(oid);
         inVal.mutable_value()->set_string_value(value);
         inVal.set_respond(respond);
@@ -199,7 +200,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_Create) {
  * TEST 2 - ExecuteCommand returns three CommandResponse responses.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalResponse) {
-    initPayload("test_command", "test_value", true);
+    initPayload(0, "test_command", "test_value", true);
     expResponse("test_response_1");
     expResponse("test_response_2");
     expResponse("test_response_3");
@@ -234,7 +235,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalResponse) {
  * TEST 3 - ExecuteCommand returns a CommandResponse no response.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalNoResponse) {
-    initPayload("test_command", "test_value", true);
+    initPayload(0, "test_command", "test_value", true);
     expNoResponse();
     // Setting expectations
     EXPECT_CALL(dm0, getCommand(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
@@ -261,7 +262,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalNoResponse) {
  * TEST 4 - ExecuteCommand returns a CommandResponse exception.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalException) {
-    initPayload("test_command", "test_value", true);
+    initPayload(0, "test_command", "test_value", true);
     expException("test_exception_type", "test_exception_details");
     // Setting expectations
     EXPECT_CALL(dm0, getCommand(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
@@ -288,7 +289,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalException) {
  * TEST 5 - ExecuteCommand returns no response (respond = false).
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_RespondFalse) {
-    initPayload("test_command", "test_value", false);
+    initPayload(0, "test_command", "test_value", false);
     expResponse("test_response_1");
     expResponse("test_response_2");
     expResponse("test_response_3");
@@ -324,7 +325,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_RespondFalse) {
  *          enabled.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzValid) {
-    initPayload("test_command", "test_value", true);
+    initPayload(0, "test_command", "test_value", true);
     expNoResponse();
     // Adding authorization mockToken metadata. This it a random RSA token
     authzEnabled = true;
@@ -393,7 +394,20 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzJWSNotFound) {
 }
 
 /*
- * TEST 9 - getCommand does not find a command.
+ * TEST 9 - No device in the specified slot.
+ */
+TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ErrGetSerializerIllegalState) {
+    initPayload(dms.size(), "test_command", "test_value", true);
+    expRc = catena::exception_with_status("device not found in slot " + std::to_string(dms.size()), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC
+    testRPC();
+}
+
+/*
+ * TEST 10 - getCommand does not find a command.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
     expRc = catena::exception_with_status("Command not found", catena::StatusCode::INVALID_ARGUMENT);
@@ -409,7 +423,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
 }
 
 /*
- * TEST 10 - getCommand throws a catena::exception_with_status.
+ * TEST 11 - getCommand throws a catena::exception_with_status.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
     expRc = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
@@ -425,7 +439,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
 }
 
 /*
- * TEST 11 - getCommand throws an std::runtime error.
+ * TEST 12 - getCommand throws an std::runtime error.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowUnknown) {
     expRc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -438,7 +452,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowUnknown) {
 }
 
 /*
- * TEST 12 - executeCommand returns a nullptr.
+ * TEST 13 - executeCommand returns a nullptr.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
     expRc = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
@@ -458,7 +472,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
 }
 
 /*
- * TEST 13 - executeCommand throws a catena::exception_with_status.
+ * TEST 14 - executeCommand throws a catena::exception_with_status.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
     expRc = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
@@ -479,7 +493,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
 }
 
 /*
- * TEST 14 - executeCommand returns an std::runtime_error.
+ * TEST 15 - executeCommand returns an std::runtime_error.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
     expRc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -497,11 +511,11 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
 }
 
 /*
- * TEST 15 - getNext throws a catena::exception_with_status.
+ * TEST 16 - getNext throws a catena::exception_with_status.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
     expRc = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
-    initPayload("test_command", "test_value", false);
+    initPayload(0, "test_command", "test_value", false);
     // Setting expectations
     EXPECT_CALL(dm0, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
@@ -523,11 +537,11 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
 }
 
 /*
- * TEST 16 - getNext throws a std::runtime_error.
+ * TEST 17 - getNext throws a std::runtime_error.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
     expRc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
-    initPayload("test_command", "test_value", false);
+    initPayload(0, "test_command", "test_value", false);
     // Setting expectations
     EXPECT_CALL(dm0, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {

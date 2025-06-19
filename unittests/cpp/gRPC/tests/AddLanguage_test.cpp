@@ -202,7 +202,20 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrReturnCatena) {
 }
 
 /*
- * TEST 7 - dm.addLanguage() throws a catena::exception_with_status.
+ * TEST 7 - No device in the specified slot.
+ */
+TEST_F(gRPCAddLanguageTests, AddLanguage_ErrInvalidSlot) {
+    initPayload(dms.size(), "", "", {});
+    expRc = catena::exception_with_status("device not found in slot " + std::to_string(dms.size()), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0, addLanguage(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1, addLanguage(::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC
+    testRPC();
+}
+
+/*
+ * TEST 8 - dm.addLanguage() throws a catena::exception_with_status.
  */
 TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowCatena) {
     expRc = catena::exception_with_status("Language already exists", catena::StatusCode::INVALID_ARGUMENT);
@@ -218,7 +231,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowCatena) {
 }
 
 /*
- * TEST 8 - dm.addLanguage() throws a std::runtime_exception.
+ * TEST 9 - dm.addLanguage() throws a std::runtime_exception.
  */
 TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowUnknown) {
     expRc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);

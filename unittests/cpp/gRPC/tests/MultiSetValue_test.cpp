@@ -223,7 +223,22 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_AuthzJWSNotFound) {
 }
 
 /*
- * TEST 6 - dm.trySetValue returns a catena::Exception_With_Status.
+ * TEST 6 - No device in the specified slot.
+ */
+TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrInvalidSlot) {
+    initPayload(dms.size(), {});
+    expRc = catena::exception_with_status("device not found in slot " + std::to_string(dms.size()), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC
+    testRPC();
+}
+
+/*
+ * TEST 7 - dm.trySetValue returns a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryReturnCatena) {
     expRc = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
@@ -242,7 +257,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryReturnCatena) {
 }
 
 /*
- * TEST 6 - dm.trySetValue throws a catena::Exception_With_Status.
+ * TEST 8 - dm.trySetValue throws a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowCatena) {
     expRc = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
@@ -261,7 +276,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowCatena) {
 }
 
 /*
- * TEST 7 - dm.trySetValue throws a std::runtime_error.
+ * TEST 9 - dm.trySetValue throws a std::runtime_error.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowUnknown) {
     expRc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
@@ -276,7 +291,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowUnknown) {
 }
 
 /*
- * TEST 8 - dm.commitSetValue returns a catena::Exception_With_Status.
+ * TEST 10 - dm.commitSetValue returns a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitReturnCatena) {
     expRc = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
@@ -294,7 +309,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitReturnCatena) {
 }
 
 /*
- * TEST 9 - dm.commitSetValue throws a catena::Exception_With_Status.
+ * TEST 11 - dm.commitSetValue throws a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowCatena) {
     expRc = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
@@ -313,7 +328,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowCatena) {
 }
 
 /*
- * TEST 10 - dm.commitSetValue throws a std::runtime_error.
+ * TEST 12 - dm.commitSetValue throws a std::runtime_error.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
     expRc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);

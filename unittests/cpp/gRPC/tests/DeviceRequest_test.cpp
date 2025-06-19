@@ -325,7 +325,20 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzJWSNotFound) {
 }
 
 /*
- * TEST 7 - dm.getComponentSerializer() returns nullptr.
+ * TEST 7 - No device in the specified slot.
+ */
+TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
+    initPayload(dms.size(), catena::Device_DetailLevel_FULL, {});
+    expRc = catena::exception_with_status("device not found in slot " + std::to_string(dms.size()), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC
+    testRPC();
+}
+
+/*
+ * TEST 8 - dm.getComponentSerializer() returns nullptr.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerIllegalState) {
     expRc = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
@@ -337,7 +350,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerIllegalState) {
 }
 
 /*
- * TEST 8 - dm.getComponentSerializer() throws a catena::exception_with_status.
+ * TEST 9 - dm.getComponentSerializer() throws a catena::exception_with_status.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowCatena) {
     expRc = catena::exception_with_status("Component not found", catena::StatusCode::INVALID_ARGUMENT);
@@ -353,7 +366,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowCatena) {
 }
 
 /*
- * TEST 9 - dm.getComponentSerializer() throws a std::runtime_exception.
+ * TEST 10 - dm.getComponentSerializer() throws a std::runtime_exception.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowUnknown) {
     expRc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -366,7 +379,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowUnknown) {
 }
 
 /*
- * TEST 10 - serializer.getNext() throws a catena::exception_with_status.
+ * TEST 11 - serializer.getNext() throws a catena::exception_with_status.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowCatena) {
     expRc = catena::exception_with_status("Component not found", catena::StatusCode::INVALID_ARGUMENT);
@@ -389,7 +402,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowCatena) {
 }
 
 /*
- * TEST 11 - serializer.getNext() throws a std::runtime_exception.
+ * TEST 12 - serializer.getNext() throws a std::runtime_exception.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowUnknown) {
     expRc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);

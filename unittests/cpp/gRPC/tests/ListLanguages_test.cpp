@@ -119,7 +119,20 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_Normal) {
 }
 
 /*
- * TEST 2 - Normal case for ListLanguages proceed().
+ * TEST 2 - No device in the specified slot.
+ */
+TEST_F(gRPCListLanguagesTests, ListLanguages_ErrInvalidSlot) {
+    inVal.set_slot(dms.size());
+    expRc = catena::exception_with_status("device not found in slot " + std::to_string(dms.size()), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0, toProto(::testing::An<catena::LanguageList&>())).Times(0);
+    EXPECT_CALL(dm1, toProto(::testing::An<catena::LanguageList&>())).Times(0);
+    // Sending the RPC
+    testRPC();
+}
+
+/*
+ * TEST 3 - dm.toProto() throws a catena::exception_with_status.
  */
 TEST_F(gRPCListLanguagesTests, ListLanguages_Err) {
     expRc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
