@@ -152,11 +152,6 @@ class BasicParamInfoRequest : public ICallData {
     IDevice& dm_;
 
     /**
-     * @brief The oid prefix to get parameter info for.
-     */
-    std::string oid_prefix_;
-    
-    /**
      * @brief Whether to recursively get parameter info.
      */
     bool recursive_;
