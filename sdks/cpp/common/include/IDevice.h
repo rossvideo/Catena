@@ -168,6 +168,13 @@ class IDevice {
     using ComponentLanguagePack = catena::DeviceComponent_ComponentLanguagePack;
 
     /**
+     * @brief Returns true if device has the specified language pack.
+     * @param languageId The language id of the language pack to check
+     * @return True if the device has the specified language pack.
+     */
+    virtual bool hasLanguage(const std::string& languageId) const = 0;
+
+    /**
      * @brief Adds a language pack to the device. Requires client to have
      * admin:w scope.
      * @param language The language to add to the device.
@@ -177,7 +184,17 @@ class IDevice {
      * Intention is for the AddLanguage RPCs / API calls to be serviced by this
      * method.
      */
-    virtual catena::exception_with_status addLanguage (catena::AddLanguagePayload& language, Authorizer& authz = Authorizer::kAuthzDisabled) = 0;
+    virtual catena::exception_with_status addLanguage(catena::AddLanguagePayload& language, Authorizer& authz = Authorizer::kAuthzDisabled) = 0;
+
+    /**
+     * @brief Removed a language pack from the device. Requires client to have
+     * admin:w scope. Fails if the language pack was shipped with the device.
+     * @param language The language to remove from the device.
+     * @param authz The authorizer object containing client's scopes.
+     * @return An exception_with_status with status set OK if successful,
+     * otherwise an error.
+     */
+    virtual catena::exception_with_status removeLanguage(const std::string& languageId, Authorizer& authz = Authorizer::kAuthzDisabled) = 0;
 
     /**
      * @brief Finds and returns a language pack based on languageId.

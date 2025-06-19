@@ -1,10 +1,10 @@
 /*
  * Copyright 2025 Ross Video Ltd
  *
- * Redistribution and use in source and binary forms, with or without
+ * Redistribution and use in souexpRce and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice,
+ * 1. Redistributions of souexpRce code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the AddLanguage.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/27
+ * @date 25/06/18
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -45,40 +45,51 @@ using namespace catena::common;
 using namespace catena::gRPC;
 
 // Fixture
-class gRPCAddLanguageTests : public GRPCTest {    
-    public:
-        gRPCAddLanguageTests() : GRPCTest() {
-            inVal.set_slot(1);
-            inVal.set_id("en");
-            auto languagePack = inVal.mutable_language_pack();
-            languagePack->set_name("English");
-            (*languagePack->mutable_words())["greeting"] = "Hello";
+class gRPCAddLanguageTests : public GRPCTest {
+  protected:
+    /*
+     * Creates an AddLangauge handler object.
+     */
+    void makeOne() override { new AddLanguage(&service, dm, true); }
 
-            // Creating the AddLanguage object.
+    /*
+     * Helper function which initializes an AddLanguagePayload object.
+     */
+    void initPayload(uint32_t slot, const std::string& id, const std::string& name, const std::unordered_map<std::string, std::string>& words) {
+        inVal.set_slot(slot);
+        inVal.set_id(id);
+        auto pack = inVal.mutable_language_pack();
+        pack->set_name(name);
+        for (const auto& word : words) {
+            (*pack->mutable_words())[word.first] = word.second;
         }
+    }
 
-    protected:
+    /* 
+    * Makes an async RPC to the MockServer and waits for a response before
+    * comparing output.
+    */
+    void testRPC() {
+        // Sending async RPC.
+        client->async()->AddLanguage(&clientContext, &inVal, &outVal, [this](grpc::Status status){
+            outRc = status;
+            done = true;
+            cv.notify_one();
+        });
+        cv.wait(lock, [this] { return done; });
+        // Comparing the results.
+        EXPECT_EQ(outVal.SerializeAsString(), expVal.SerializeAsString());
+        EXPECT_EQ(outRc.error_code(), static_cast<grpc::StatusCode>(expRc.status));
+        EXPECT_EQ(outRc.error_message(), expRc.what());
+        // Make sure another AddLanguage handler was created.
+        EXPECT_TRUE(asyncCall) << "Async handler was not created during runtime";
+    }
 
-        /* 
-        * Makes an async RPC to the MockServer and waits for a response before
-        * comparing output.
-        */
-        void testRPC() {
-            // Sending async RPC.
-            mockServer.client->async()->AddLanguage(&clientContext, &inVal, &outVal, [this](grpc::Status status){
-                outRc = status;
-                done = true;
-                cv.notify_one();
-            });
-            cv.wait(lock, [this] { return done; });
-            // Comparing the results.
-            EXPECT_EQ(outVal.SerializeAsString(), expVal.SerializeAsString());
-            EXPECT_EQ(outRc.error_code(), expRc.error_code());
-            EXPECT_EQ(outRc.error_message(), expRc.error_message());
-        }
-
-        catena::AddLanguagePayload inVal;
-        catena::Empty outVal;
+    // in/out val
+    catena::AddLanguagePayload inVal;
+    catena::Empty outVal;
+    // Expected variables
+    catena::Empty expVal;
 };
 
 /*
@@ -88,51 +99,35 @@ class gRPCAddLanguageTests : public GRPCTest {
  * 
  * TEST 1 - Creating a AddLanguage object.
  */
-TEST_F(gRPCAddLanguageTests, AddLanguage_create) {
-    new AddLanguage(mockServer.service, *mockServer.dm, true);
-    EXPECT_FALSE(mockServer.testCall);
-    EXPECT_TRUE(mockServer.asyncCall);
+TEST_F(gRPCAddLanguageTests, AddLanguage_Create) {
+    EXPECT_TRUE(asyncCall);
 }
 
 /*
  * TEST 2 - Normal case for AddLanguage proceed().
  */
-TEST_F(gRPCAddLanguageTests, AddLanguage_proceeedNormal) {
-    new AddLanguage(mockServer.service, *mockServer.dm, true);
-
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-
+TEST_F(gRPCAddLanguageTests, AddLanguage_Normal) {
+    initPayload(1, "en", "English", {{"greeting", "Hello"}});
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, addLanguage(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+    EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(language.SerializeAsString(), inVal.SerializeAsString());
-            EXPECT_EQ(&authz, &Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled, &authz == &catena::common::Authorizer::kAuthzDisabled);
             // Setting the output status and returning true.
-            return catena::exception_with_status(rc.what(), rc.status);
+            return catena::exception_with_status(expRc.what(), expRc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
-    // Sending the RPC and comparing the results.
+    // Sending the RPC
     testRPC();
 }
 
 /*
  * TEST 3 - AddLanguage with authz on and valid token.
  */
-TEST_F(gRPCAddLanguageTests, AddLanguage_proceeedAuthzValid) {
-    new AddLanguage(mockServer.service, *mockServer.dm, true);
-
-    // Setting up the expected results.
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+TEST_F(gRPCAddLanguageTests, AddLanguage_AuthzValid) {
+    initPayload(1, "en", "English", {{"greeting", "Hello"}});
     // Adding authorization mockToken metadata. This it a random RSA token.
+    authzEnabled = true;
     std::string mockToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIi"
                             "OiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2Nvc"
                             "GUiOiJzdDIxMzg6bW9uOncgc3QyMTM4Om9wOncgc3QyMTM4Om"
@@ -146,145 +141,84 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_proceeedAuthzValid) {
                             "bOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9M"
                             "dvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
     clientContext.AddMetadata("authorization", "Bearer " + mockToken);
-
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, addLanguage(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+    EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(language.SerializeAsString(), inVal.SerializeAsString());
-            EXPECT_FALSE(&authz == &Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled, &authz == &catena::common::Authorizer::kAuthzDisabled);
             // Setting the output status and returning true.
-            return catena::exception_with_status(rc.what(), rc.status);
+            return catena::exception_with_status(expRc.what(), expRc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
-    // Sending the RPC and comparing the results.
+    // Sending the RPC
     testRPC();
 }
 
 /*
  * TEST 4 - AddLanguage with authz on and invalid token.
  */
-TEST_F(gRPCAddLanguageTests, AddLanguage_proceeedAuthzInvalid) {
-    new AddLanguage(mockServer.service, *mockServer.dm, true);
-
-    // Setting up the expected results.
-    catena::exception_with_status rc("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+TEST_F(gRPCAddLanguageTests, AddLanguage_AuthzInvalid) {
+    expRc = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
     // Not a token so it should get rejected by the authorizer.
+    authzEnabled = true;
     clientContext.AddMetadata("authorization", "Bearer THIS SHOULD NOT PARSE");
-
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
-    // Sending the RPC and comparing the results.
+    // Setting expectations
+    EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC
     testRPC();
 }
 
 /*
  * TEST 5 - AddLanguage with authz on and invalid token.
  */
-TEST_F(gRPCAddLanguageTests, AddLanguage_proceeedAuthzJWSNotFound) {
-    new AddLanguage(mockServer.service, *mockServer.dm, true);
-
-    catena::exception_with_status rc("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+TEST_F(gRPCAddLanguageTests, AddLanguage_AuthzJWSNotFound) {
+    expRc = catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
     // Should not be able to find the bearer token.
+    authzEnabled = true;
     clientContext.AddMetadata("authorization", "NOT A BEARER TOKEN");
-
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
-    // Sending the RPC and comparing the results.
+    // Setting expectations
+    EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC
     testRPC();
 }
 
 /*
  * TEST 6 - dm.addLanguage() returns a catena::exception_with_status.
  */
-TEST_F(gRPCAddLanguageTests, AddLanguage_proceedErrReturnCatena) {
-    new AddLanguage(mockServer.service, *mockServer.dm, true);
-
-    catena::exception_with_status rc("Language already exists", catena::StatusCode::INVALID_ARGUMENT);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, addLanguage(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
-            return catena::exception_with_status(rc.what(), rc.status);
+TEST_F(gRPCAddLanguageTests, AddLanguage_ErrReturnCatena) {
+    expRc = catena::exception_with_status("Language already exists", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+            return catena::exception_with_status(expRc.what(), expRc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
-    // Sending the RPC.
+    // Sending the RPC
     testRPC();
 }
 
 /*
  * TEST 7 - dm.addLanguage() throws a catena::exception_with_status.
  */
-TEST_F(gRPCAddLanguageTests, AddLanguage_proceedErrThrowCatena) {
-    new AddLanguage(mockServer.service, *mockServer.dm, true);
-
-    catena::exception_with_status rc("Language already exists", catena::StatusCode::INVALID_ARGUMENT);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, addLanguage(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
-            throw catena::exception_with_status(rc.what(), rc.status);
+TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowCatena) {
+    expRc = catena::exception_with_status("Language already exists", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+            throw catena::exception_with_status(expRc.what(), expRc.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete this->mockServer.testCall;
-        this->mockServer.testCall = nullptr;
-    }));
-
-    // Sending the RPC.
+    // Sending the RPC
     testRPC();
 }
 
 /*
  * TEST 8 - dm.addLanguage() throws a std::runtime_exception.
  */
-TEST_F(gRPCAddLanguageTests, AddLanguage_proceedErrThrowUnknown) {
-    new AddLanguage(mockServer.service, *mockServer.dm, true);
-
-    catena::exception_with_status rc("unknown error", catena::StatusCode::UNKNOWN);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, addLanguage(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
-            throw std::runtime_error(rc.what());
-            return catena::exception_with_status("", catena::StatusCode::OK);
-        }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
-    // Sending the RPC.
+TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowUnknown) {
+    expRc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
+    // Setting expectations
+    EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Throw(std::runtime_error(expRc.what())));
+    // Sending the RPC
     testRPC();
 }

@@ -66,7 +66,9 @@ class MockDevice : public IDevice {
     MOCK_METHOD(void, toProto, (Device& dst, Authorizer& authz, bool shallow), (const, override));
     MOCK_METHOD(void, toProto, (LanguagePacks& packs), (const, override));
     MOCK_METHOD(void, toProto, (LanguageList& list), (const, override));
+    MOCK_METHOD(bool, hasLanguage, (const std::string& LanguageId), (const, override));
     MOCK_METHOD(exception_with_status, addLanguage, (AddLanguagePayload& language, Authorizer& authz), (override));
+    MOCK_METHOD(exception_with_status, removeLanguage, (const std::string& LanguageId, Authorizer& authz), (override));
     MOCK_METHOD(exception_with_status, getLanguagePack, (const std::string& languageId, ComponentLanguagePack& pack), (const, override));
     class MockDeviceSerializer : public IDeviceSerializer {
       public:

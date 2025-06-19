@@ -12,9 +12,8 @@ using catena::REST::CatenaServiceImpl;
 #include <controllers/AssetRequest.h>
 #include <controllers/GetValue.h>
 #include <controllers/GetPopulatedSlots.h>
-#include <controllers/AddLanguage.h>
-#include <controllers/LanguagePackRequest.h>
-#include <controllers/ListLanguages.h>
+#include <controllers/LanguagePack.h>
+#include <controllers/Languages.h>
 #include <controllers/BasicParamInfoRequest.h>
 #include <controllers/Subscriptions.h>
 #include <controllers/ExecuteCommand.h>
@@ -59,9 +58,11 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool auth
     router_.addProduct("PUT/values",          MultiSetValue::makeOne);
     router_.addProduct("PUT/value",           SetValue::makeOne);
     router_.addProduct("GET/param",           GetParam::makeOne);
-    router_.addProduct("GET/language-pack",   LanguagePackRequest::makeOne);
-    router_.addProduct("GET/languages",       ListLanguages::makeOne);
-    router_.addProduct("POST/language-pack",  AddLanguage::makeOne);
+    router_.addProduct("GET/language-pack",   LanguagePack::makeOne);
+    router_.addProduct("PUT/language-pack",   LanguagePack::makeOne);
+    router_.addProduct("POST/language-pack",  LanguagePack::makeOne);
+    router_.addProduct("DELETE/language-pack", LanguagePack::makeOne);
+    router_.addProduct("GET/languages",       Languages::makeOne);
     router_.addProduct("GET/basic-param",     BasicParamInfoRequest::makeOne);
     router_.addProduct("GET/subscriptions",   Subscriptions::makeOne);
     router_.addProduct("PUT/subscriptions",   Subscriptions::makeOne);
