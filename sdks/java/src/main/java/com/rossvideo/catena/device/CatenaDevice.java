@@ -11,8 +11,8 @@ import catena.core.externalobject.ExternalObjectRequestPayload;
 import catena.core.language.AddLanguagePayload;
 import catena.core.language.LanguageList;
 import catena.core.language.LanguagePackRequestPayload;
-import catena.core.parameter.BasicParamInfoRequestPayload;
-import catena.core.parameter.BasicParamInfoResponse;
+import catena.core.parameter.ParamInfoRequestPayload;
+import catena.core.parameter.ParamInfoResponse;
 import catena.core.parameter.CommandResponse;
 import catena.core.parameter.ExecuteCommandPayload;
 import catena.core.parameter.GetParamPayload;
@@ -31,7 +31,7 @@ public interface CatenaDevice
     // add getPopulatedSlots?
     public default void executeCommand(ExecuteCommandPayload request, StreamObserver<CommandResponse> responseObserver, Map<String, Object> claims) { responseObserver.onError(new UnsupportedOperationException("Not supported")); };
     public default void externalObjectRequest(ExternalObjectRequestPayload request, StreamObserver<ExternalObjectPayload> responseObserver, Map<String, Object> claims) { responseObserver.onError(new UnsupportedOperationException("Not supported")); };
-    public default void basicParamInfoRequest(BasicParamInfoRequestPayload request, StreamObserver<BasicParamInfoResponse> responseObserver, Map<String, Object> claims) { responseObserver.onError(new UnsupportedOperationException("Not supported")); };
+    public default void paramInfoRequest(ParamInfoRequestPayload request, StreamObserver<ParamInfoResponse> responseObserver, Map<String, Object> claims) { responseObserver.onError(new UnsupportedOperationException("Not supported")); };
     public default void setValue(SetValuePayload request, StreamObserver<Empty> responseObserver, Map<String, Object> claims) { responseObserver.onError(new UnsupportedOperationException("Not supported")); };
     public default void getValue(GetValuePayload request, StreamObserver<Value> responseObserver, Map<String, Object> claims) { responseObserver.onError(new UnsupportedOperationException("Not supported")); };
     public default void multiSetValue(MultiSetValuePayload request, StreamObserver<Empty> responseObserver, Map<String, Object> claims) { responseObserver.onError(new UnsupportedOperationException("Not supported")); };
