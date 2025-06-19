@@ -191,6 +191,8 @@ class RESTTest {
     }
 
     std::string origin = "*";
+
+    // Read/write helper variables.
     boost::asio::io_context io_context;
     tcp::socket clientSocket{io_context};
     tcp::socket serverSocket{io_context};
