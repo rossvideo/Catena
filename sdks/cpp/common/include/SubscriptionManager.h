@@ -153,7 +153,7 @@ class SubscriptionManager : public ISubscriptionManager {
     /**
      * @brief Set of all active subscriptions (unique and expanded wildcards)
      */
-    std::set<std::string> subscriptions_;
+    std::unordered_map<uint32_t, std::set<std::string>> subscriptions_;
 
     /**
      * @brief Update the combined list of all subscribed OIDs

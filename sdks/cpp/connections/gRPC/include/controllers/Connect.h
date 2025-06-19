@@ -115,19 +115,16 @@ class Connect : public CallData, public catena::common::Connect {
      * @brief Id of operation waiting for valueSetByClient to be emitted.
      * Used when ending the connection.
      */
-    unsigned int valueSetByClientId_ = 0;
     SignalMap valueSetByClientIds_;
     /**
      * @brief Id of operation waiting for valueSetByServer to be emitted.
      * Used when ending the connection.
      */
-    unsigned int valueSetByServerId_ = 0;
     SignalMap valueSetByServerIds_;
     /**
      * @brief Id of operation waiting for languageAddedPushUpdate to be
      * emitted. Used when ending the connection.
      */
-    unsigned int languageAddedId_ = 0;
     SignalMap languageAddedIds_;
 
     /**
