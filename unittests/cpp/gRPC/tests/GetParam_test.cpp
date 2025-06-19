@@ -62,7 +62,7 @@ class gRPCGetParamTests : public GRPCTest {
     /*
      * Creates a GetParam handler object.
      */
-    void makeOne() override { new GetParam(&service, dm, true); }
+    void makeOne() override { new GetParam(&service, dms, true); }
 
     void initPayload(uint32_t slot, const std::string& oid) {
         inVal.set_slot(slot);
@@ -123,7 +123,7 @@ TEST_F(gRPCGetParamTests, GetParam_create) {
  * TEST 2 - Normal case for GetParam proceed().
  */
 TEST_F(gRPCGetParamTests, GetParam_Normal) {
-    initPayload(1, "/test_oid");
+    initPayload(0, "/test_oid");
     initExpVal("/test_oid", "test_value", "test_alias", "Test Param");
     // Setting expectations
     EXPECT_CALL(dm, getParam(inVal.oid(), ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
@@ -149,7 +149,7 @@ TEST_F(gRPCGetParamTests, GetParam_Normal) {
  * TEST 3 - GetParam with authz on and valid token.
  */
 TEST_F(gRPCGetParamTests, GetParam_AuthzValid) {
-    initPayload(1, "/test_oid");
+    initPayload(0, "/test_oid");
     initExpVal("/test_oid", "test_value", "test_alias", "Test Param");
     // Adding authorization mockToken metadata. This it a random RSA token.
     authzEnabled = true;
@@ -223,7 +223,7 @@ TEST_F(gRPCGetParamTests, GetParam_AuthzJWSNotFound) {
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrGetParamReturnCatena) {
     expRc = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
-    initPayload(1, "/test_oid");
+    initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(dm, getParam(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
@@ -241,7 +241,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrGetParamReturnCatena) {
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrGetParamThrowCatena) {
     expRc = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
-    initPayload(1, "/test_oid");
+    initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(dm, getParam(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
@@ -259,7 +259,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrGetParamThrowCatena) {
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrGetParamThrowUnknown) {
     expRc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
-    initPayload(1, "/test_oid");
+    initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(dm, getParam(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(expRc.what())));
@@ -274,7 +274,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrGetParamThrowUnknown) {
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrToProtoReturnCatena) {
     expRc = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
-    initPayload(1, "/test_oid");
+    initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(dm, getParam(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](){ return std::move(mockParam); }));
@@ -290,7 +290,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoReturnCatena) {
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowCatena) {
     expRc = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
-    initPayload(1, "/test_oid");
+    initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(dm, getParam(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](){ return std::move(mockParam); }));
@@ -309,7 +309,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowCatena) {
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowUnknown) {
     expRc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
-    initPayload(1, "/test_oid");
+    initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(dm, getParam(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](){ return std::move(mockParam); }));

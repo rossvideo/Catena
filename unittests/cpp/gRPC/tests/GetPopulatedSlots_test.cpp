@@ -61,7 +61,7 @@ class gRPCGetPopulatedSlotsTests : public GRPCTest {
     /*
      * Creates a GetPopulatedSlots handler object.
      */
-    void makeOne() override { new GetPopulatedSlots(&service, dm, true); }
+    void makeOne() override { new GetPopulatedSlots(&service, dms, true); }
 
     /* 
      * Makes an async RPC to the MockServer and waits for a response before
@@ -88,7 +88,6 @@ class gRPCGetPopulatedSlotsTests : public GRPCTest {
     catena::SlotList outVal;
     // Expected variables
     catena::SlotList expVal;
-    uint32_t testSlot = 1;
 };
 
 /*
@@ -107,9 +106,7 @@ TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_Create) {
  * TEST 2 - Normal case for GetPopulatedSlots proceed().
  */
 TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_Normal) {
-    expVal.add_slots(testSlot);
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(dm, slot()).Times(1).WillOnce(::testing::Return(testSlot));
+    expVal.add_slots(dm.slot());
     // Sending the RPC and comparing the results.
     testRPC();
 }

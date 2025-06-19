@@ -61,7 +61,7 @@ class gRPCMultiSetValueTests : public GRPCTest {
     /*
      * Creates a MultiSetValue handler object.
      */
-    void makeOne() override { new MultiSetValue(&service, dm, true); }
+    void makeOne() override { new MultiSetValue(&service, dms, true); }
 
     /*
      * Helper function which initializes a MultiSetValuePayload object.

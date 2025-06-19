@@ -61,7 +61,7 @@ class gRPCGetValueTests : public GRPCTest {
     /*
      * Creates a GetValue handler object.
      */
-    void makeOne() override { new GetValue(&service, dm, true); }
+    void makeOne() override { new GetValue(&service, dms, true); }
 
     /*
      * Helper function which initializes a GetValuePayload object.

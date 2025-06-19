@@ -61,7 +61,7 @@ class gRPCListLanguagesTests : public GRPCTest {
     /*
      * Creates a ListLanguages handler object.
      */
-    void makeOne() override { new ListLanguages(&service, dm, true); }
+    void makeOne() override { new ListLanguages(&service, dms, true); }
 
     /* 
      * Makes an async RPC to the MockServer and waits for a response before

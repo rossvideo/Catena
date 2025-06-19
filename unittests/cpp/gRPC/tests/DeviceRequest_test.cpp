@@ -62,7 +62,7 @@ class gRPCDeviceRequestTests : public GRPCTest {
     /*
      * Creates a DeviceRequest handler object.
      */
-    void makeOne() override { new DeviceRequest(&service, dm, true); }
+    void makeOne() override { new DeviceRequest(&service, dms, true); }
 
     /*
      * This is a test class which makes an async RPC to the MockServer on

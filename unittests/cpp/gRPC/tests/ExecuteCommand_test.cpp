@@ -63,7 +63,7 @@ class gRPCExecuteCommandTests : public GRPCTest {
     /*
      * Creates an ExecuteCommand handler object.
      */
-    void makeOne() override { new ExecuteCommand(&service, dm, true); }
+    void makeOne() override { new ExecuteCommand(&service, dms, true); }
 
     /*
      * This is a test class which makes an async RPC to the MockServer on

@@ -100,6 +100,7 @@ class GRPCTest  : public ::testing::Test {
             testCall.reset(nullptr);
         }));
         EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mtx));
+        EXPECT_CALL(dm, slot()).WillRepeatedly(::testing::Return(0));
         EXPECT_CALL(service, authorizationEnabled()).WillRepeatedly(::testing::Invoke([this](){ return authzEnabled; }));
 
         // Deploying cq handler on a thread.
@@ -151,6 +152,7 @@ class GRPCTest  : public ::testing::Test {
     MockServiceImpl service;
     std::mutex mtx;
     MockDevice dm;
+    SlotMap dms = {{0, &dm}};
     bool authzEnabled = false;
     // Completion queue variables.
     std::unique_ptr<grpc::ServerCompletionQueue> cq = nullptr;

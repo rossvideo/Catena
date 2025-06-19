@@ -50,7 +50,7 @@ class gRPCAddLanguageTests : public GRPCTest {
     /*
      * Creates an AddLangauge handler object.
      */
-    void makeOne() override { new AddLanguage(&service, dm, true); }
+    void makeOne() override { new AddLanguage(&service, dms, true); }
 
     /*
      * Helper function which initializes an AddLanguagePayload object.
@@ -107,7 +107,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_Create) {
  * TEST 2 - Normal case for AddLanguage proceed().
  */
 TEST_F(gRPCAddLanguageTests, AddLanguage_Normal) {
-    initPayload(1, "en", "English", {{"greeting", "Hello"}});
+    initPayload(0, "en", "English", {{"greeting", "Hello"}});
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
@@ -125,7 +125,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_Normal) {
  * TEST 3 - AddLanguage with authz on and valid token.
  */
 TEST_F(gRPCAddLanguageTests, AddLanguage_AuthzValid) {
-    initPayload(1, "en", "English", {{"greeting", "Hello"}});
+    initPayload(0, "en", "English", {{"greeting", "Hello"}});
     // Adding authorization mockToken metadata. This it a random RSA token.
     authzEnabled = true;
     std::string mockToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIi"

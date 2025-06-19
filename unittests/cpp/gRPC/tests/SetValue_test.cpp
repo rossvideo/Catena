@@ -61,13 +61,13 @@ class gRPCSetValueTests : public GRPCTest {
     /*
      * Creates a SetValue handler object.
      */
-    void makeOne() override { new SetValue(&service, dm, true); }
+    void makeOne() override { new SetValue(&service, dms, true); }
 
     /*
      * Helper function which initializes a SetValuePayload object and a MultiSetValuePayload object.
      */
     void initPayload(uint32_t slot, const std::string& oid, const std::string& value) {
-        inVal.set_slot(1);
+        inVal.set_slot(slot);
         auto val = inVal.mutable_value();
         val->set_oid(oid);
         val->mutable_value()->set_string_value(value);

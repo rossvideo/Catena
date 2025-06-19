@@ -61,7 +61,7 @@ class gRPCLanguagePackRequestTests : public GRPCTest {
     /*
      * Creates a LanguagePackRequest handler object.
      */
-    void makeOne() override { new LanguagePackRequest(&service, dm, true); }
+    void makeOne() override { new LanguagePackRequest(&service, dms, true); }
 
     /*
      * Helper function which initializes a LanguagePackRequestPayload object.
