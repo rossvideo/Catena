@@ -88,9 +88,9 @@ get:
             type: string
           
           example: |
-            data: <stringified {info: BasicParamInfo, array_length: 0}>
-            data: <stringified {info: BasicParamInfo, array_length: 1}>
-            data: <stringified {info: BasicParamInfo, array_length: 2}>
+            data: <stringified {info: ParamInfo, array_length: 0}>
+            data: <stringified {info: ParamInfo, array_length: 1}>
+            data: <stringified {info: ParamInfo, array_length: 2}>
 
     "500":
       $ref: '../openapi.yaml#/components/responses/InternalServerError'
