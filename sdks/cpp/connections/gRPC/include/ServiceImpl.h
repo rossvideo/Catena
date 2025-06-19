@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -52,7 +52,7 @@
 #include <controllers/DeviceRequest.h>
 #include <controllers/GetParam.h>
 #include <controllers/ExternalObjectRequest.h>
-#include <controllers/BasicParamInfoRequest.h>
+#include <controllers/ParamInfoRequest.h>
 #include <controllers/ExecuteCommand.h>
 #include <controllers/AddLanguage.h>
 #include <controllers/ListLanguages.h>

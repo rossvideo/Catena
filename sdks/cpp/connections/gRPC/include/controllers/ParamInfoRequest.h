@@ -29,9 +29,8 @@
  */
 
 /**
- * @file BasicParamInfoRequest.h
- * @brief Implements Catena gRPC BasicParamInfoRequest
- * @author john.naylor@rossvideo.com
+ * @file ParamInfoRequest.h
+ * @brief Implements gRPC ParamInfoRequest controller.
  * @author zuhayr.sarker@rossvideo.com
  * @date 2025-02-06
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -50,27 +49,29 @@ using catena::common::Path;
 using catena::common::ParamVisitor;
 using catena::common::IParam;
 using catena::common::Authorizer;
+using catena::common::IParamVisitor;
+using catena::common::timeNow;
 
 namespace catena {
 namespace gRPC {
 
 /**
- * @brief CallData class for the BasicParamInfoRequest RPC
+ * @brief CallData class for the ParamInfoRequest gRPC controller.
  */
-class BasicParamInfoRequest : public CallData {
+class ParamInfoRequest : public CallData {
   public:
     /**
-     * @brief Constructor for the CallData class of the BasicParamInfoRequest
+     * @brief Constructor for the CallData class of the ParamInfoRequest
      * gRPC. Calls proceed() once initialized.
      *
      * @param service - Pointer to the parent CatenaServiceImpl.
      * @param dm - Address of the device to get the value from.
      * @param ok - Flag to check if the command was successfully executed.
      */ 
-    BasicParamInfoRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    ParamInfoRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok);
 
     /**
-     * @brief Manages the steps of the BasicParamInfoRequest gRPC command
+     * @brief Manages the steps of the ParamInfoRequest gRPC command
      * through the state variable status. Returns the value of the
      * parameter specified by the user.
      *
@@ -158,18 +159,18 @@ class BasicParamInfoRequest : public CallData {
     /**
      * @brief Visitor class for collecting parameter info
      */
-    class BasicParamInfoVisitor : public catena::common::IParamVisitor {
+    class ParamInfoVisitor : public catena::common::IParamVisitor {
       public:
         /**
-         * @brief Constructor for the BasicParamInfoVisitor class
+         * @brief Constructor for the ParamInfoVisitor class
          * @param device The device to visit
          * @param authz The authorizer
          * @param responses The vector of responses
          * @param request The request
          */
-        BasicParamInfoVisitor(IDevice& device, catena::common::Authorizer& authz, 
+        ParamInfoVisitor(IDevice& device, catena::common::Authorizer& authz, 
                             std::vector<catena::BasicParamInfoResponse>& responses,
-                            BasicParamInfoRequest& request)
+                            ParamInfoRequest& request)
             : device_(device), authz_(authz), responses_(responses), request_(request) {}
 
         /**
@@ -206,7 +207,7 @@ class BasicParamInfoRequest : public CallData {
         /**
          * @brief The request payload within the visitor
          */
-        BasicParamInfoRequest& request_;
+        ParamInfoRequest& request_;
     };
 };
 

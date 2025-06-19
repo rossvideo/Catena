@@ -29,8 +29,8 @@
  */
 
 /**
- * @file BasicParamInfoRequest.h
- * @brief Implements REST BasicParamInfoRequest controller.
+ * @file ParamInfoRequest.h
+ * @brief Implements REST ParamInfoRequest controller.
  * @author zuhayr.sarker@rossvideo.com
  * @date 2025-04-22
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -62,30 +62,30 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the BasicParamInfoRequest REST controller.
+ * @brief ICallData class for the ParamInfoRequest REST controller.
  */
-class BasicParamInfoRequest : public ICallData {
+class ParamInfoRequest : public ICallData {
   public:
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the BasicParamInfoRequest controller.
+     * @brief Constructor for the ParamInfoRequest controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
      * @param dm The device to get the parameter info from.
      */ 
-    BasicParamInfoRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    ParamInfoRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     
     /**
-     * @brief BasicParamInfoRequest's main process.
+     * @brief ParamInfoRequest's main process.
      */
     void proceed() override;
     
     /**
-     * @brief Finishes the BasicParamInfoRequest process
+     * @brief Finishes the ParamInfoRequest process
      */
     void finish() override;
     
@@ -97,7 +97,7 @@ class BasicParamInfoRequest : public ICallData {
      * @param dm The device to connect to.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new BasicParamInfoRequest(socket, context, dm);
+      return new ParamInfoRequest(socket, context, dm);
     }
     
     
@@ -108,7 +108,7 @@ class BasicParamInfoRequest : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << "BasicParamInfoRequest::proceed[" << objectId_ << "]: "
+      std::cout << "ParamInfoRequest::proceed[" << objectId_ << "]: "
                 << timeNow() << " status: "<< static_cast<int>(status)
                 <<", ok: "<< std::boolalpha << ok << std::endl;
     }
@@ -157,12 +157,12 @@ class BasicParamInfoRequest : public ICallData {
     bool recursive_;
 
     /**
-     * @brief ID of the BasicParamInfoRequest object
+     * @brief ID of the ParamInfoRequest object
      */
     int objectId_;
     
     /**
-     * @brief The total # of BasicParamInfoRequest objects.
+     * @brief The total # of ParamInfoRequest objects.
      */
     static int objectCounter_;
     
@@ -174,18 +174,18 @@ class BasicParamInfoRequest : public ICallData {
     /**
      * @brief Visitor class for collecting parameter info
      */
-    class BasicParamInfoVisitor : public catena::common::IParamVisitor {
+    class ParamInfoVisitor : public catena::common::IParamVisitor {
         public:
             /**
-             * @brief Constructor for the BasicParamInfoVisitor class
+             * @brief Constructor for the ParamInfoVisitor class
              * @param device The device to visit
              * @param authz The authorizer
              * @param responses The vector of responses
              * @param request The request
              */
-            BasicParamInfoVisitor(catena::common::IDevice& device, catena::common::Authorizer& authz,
+            ParamInfoVisitor(catena::common::IDevice& device, catena::common::Authorizer& authz,
                                 std::vector<catena::BasicParamInfoResponse>& responses,
-                                BasicParamInfoRequest& request)
+                                ParamInfoRequest& request)
                 : device_(device), authz_(authz), responses_(responses), request_(request) {}
 
             /**
@@ -222,7 +222,7 @@ class BasicParamInfoRequest : public ICallData {
             /**
              * @brief The request payload within the visitor
              */
-            BasicParamInfoRequest& request_;
+            ParamInfoRequest& request_;
     };
 };
 
