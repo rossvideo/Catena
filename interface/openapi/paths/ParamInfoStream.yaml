@@ -29,7 +29,7 @@
 #
 
 #
-# OpenAPI documentation of the Catena REST API's streamed basic-param endpoint
+# OpenAPI documentation of the Catena REST API's streamed param-info endpoint
 # API
 # Author: john.naylor@rossvideo.com
 # Author: benjamin.whitten@rossvideo.com
@@ -39,7 +39,7 @@
 
 get:
   summary: Gets information about parameters within a device model
-  operationId: BasicParamStream
+  operationId: ParamInfoStream
 
   # default security is read-only
   
@@ -65,7 +65,7 @@ get:
    
     - name: fqoid
       in: path
-      required: false
+      required: true
       description: The prefix of the OID to get info for
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"

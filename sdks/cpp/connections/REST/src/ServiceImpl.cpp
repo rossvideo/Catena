@@ -1,4 +1,3 @@
-
 // connections/REST
 #include <ServiceImpl.h>
 using catena::REST::CatenaServiceImpl;
@@ -63,7 +62,7 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool auth
     router_.addProduct("POST/language-pack",  LanguagePack::makeOne);
     router_.addProduct("DELETE/language-pack", LanguagePack::makeOne);
     router_.addProduct("GET/languages",       Languages::makeOne);
-    router_.addProduct("GET/basic-param",     BasicParamInfoRequest::makeOne);
+    router_.addProduct("GET/param-info",      BasicParamInfoRequest::makeOne);
     router_.addProduct("GET/subscriptions",   Subscriptions::makeOne);
     router_.addProduct("PUT/subscriptions",   Subscriptions::makeOne);
 }

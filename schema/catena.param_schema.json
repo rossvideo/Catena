@@ -784,20 +784,14 @@
       "oneOf": [{ "required": ["url"] }, { "required": ["file"] }],
       "additionalProperties": false
     },
-    "basic_param_info": {
-      "title": "Basic Param Info",
+    "param_info": {
+      "title": "Param Info",
       "description": "Summary information about a parameter",
       "type": "object",
       "properties": {
-        "oid": {
-          "$ref": "#/$defs/oid"
-        },
-        "name": {
-          "$ref": "#/$defs/polyglot_text"
-        },
-        "type": {
-          "$ref": "#/$defs/param_type"
-        }
+        "oid": { "$ref": "#/$defs/oid" },
+        "name": { "$ref": "#/$defs/polyglot_text" },
+        "type": { "$ref": "#/$defs/param_type" }
       },
       "$comment": "not having oid as required is correct because this schema is used in 2 places - param which would be duplicative, and as a message payload where it's needed",
       "additionalProperties": false

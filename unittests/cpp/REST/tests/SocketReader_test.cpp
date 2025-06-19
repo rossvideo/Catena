@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -209,10 +209,10 @@ TEST_F(RESTSocketReaderTests, SocketReader_EndpointParameters) {
  * TEST 10 - Testing parsing of subscriptions endpoints.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointSubscriptions) {
-    // GET /v1/{slot}/basic-param/{fqoid}/stream
-    testCall("GET", 1, "/basic-param", "/test/oid", true, {{"recursive", "true"}}, false, "", "*", "NONE", "en", "");
-    // GET /v1/{slot}/basic-param/{fqoid}
-    testCall("GET", 1, "/basic-param", "/test/oid", false, {{"recursive", "true"}}, false, "", "*", "NONE", "en", "");
+    // GET /v1/{slot}/param-info/{fqoid}/stream
+    testCall("GET", 1, "/param-info", "/test/oid", true, {{"recursive", "true"}}, false, "", "*", "NONE", "en", "");
+    // GET /v1/{slot}/param-info/{fqoid}
+    testCall("GET", 1, "/param-info", "/test/oid", false, {{"recursive", "true"}}, false, "", "*", "NONE", "en", "");
     // GET /v1/{slot}/subscriptions/{fqoid}
     testCall("GET", 1, "/subscriptions", "", false, {}, false, "", "*", "NONE", "en", "");
     // PUT /v1/{slot}/value/{fqoid}
