@@ -45,7 +45,7 @@ set(sources
     "src/controllers/GetParam.cpp"
     "src/controllers/LanguagePack.cpp"
     "src/controllers/Languages.cpp"
-    "src/controllers/BasicParamInfoRequest.cpp"
+    "src/controllers/ParamInfoRequest.cpp"
     "src/controllers/Subscriptions.cpp"
 )
 

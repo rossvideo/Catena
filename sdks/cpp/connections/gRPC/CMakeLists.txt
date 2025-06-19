@@ -32,7 +32,7 @@ set(sources
     "src/ServiceCredentials.cpp"
     "src/ServiceImpl.cpp" 
     "src/controllers/AddLanguage.cpp"
-    "src/controllers/BasicParamInfoRequest.cpp"
+    "src/controllers/ParamInfoRequest.cpp"
     "src/controllers/Connect.cpp"
     "src/controllers/DeviceRequest.cpp"
     "src/controllers/ExecuteCommand.cpp"

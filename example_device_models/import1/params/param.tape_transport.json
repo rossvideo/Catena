@@ -1,5 +1,5 @@
 {
-    "basic_param_info": {
+    "param_info": {
         "name": {
             "monoglot": "Tape Transport as example of re-used or reference sub-device."
         },
@@ -10,7 +10,7 @@
     "commands": {
         "play": {
             "param": {
-                "basic_param_info": {
+                "param_info": {
                     "name": {
                         "monoglot": ">"
                     }
@@ -19,7 +19,7 @@
         },
         "stop": {
             "param": {
-                "basic_param_info": {
+                "param_info": {
                     "name": {
                         "monoglot": "[]"
                     }
@@ -28,7 +28,7 @@
         },
         "pause": {
             "param": {
-                "basic_param_info": {
+                "param_info": {
                     "name": {
                         "monoglot": "||"
                     }
@@ -37,7 +37,7 @@
         },
         "eject": {
             "param": {
-                "basic_param_info": {
+                "param_info": {
                     "name": {
                         "monoglot": "^"
                     }
@@ -46,7 +46,7 @@
         },
         "load": {
             "param": {
-                "basic_param_info": {
+                "param_info": {
                     "name": {
                         "monoglot": "v"
                     }
@@ -55,7 +55,7 @@
         },
         "rewind": {
             "param": {
-                "basic_param_info": {
+                "param_info": {
                     "name": {
                         "monoglot": "<<"
                     }
@@ -64,7 +64,7 @@
         },
         "fast_forward": {
             "param": {
-                "basic_param_info": {
+                "param_info": {
                     "name": {
                         "monoglot": ">>"
                     }
@@ -77,7 +77,7 @@
             "fields": {
                 "play_mode": {
                     "param": {
-                        "basic_param_info": {
+                        "param_info": {
                             "name": {
                                 "monoglot": "Play Mode"
                             },
@@ -111,7 +111,7 @@
                 },
                 "inpoint": {
                     "param": {
-                        "basic_param_info": {
+                        "param_info": {
                             "name": {
                                 "monoglot": "In Point"
                             },
@@ -126,7 +126,7 @@
                 },
                 "outpoint": {
                     "param": {
-                        "basic_param_info": {
+                        "param_info": {
                             "name": {
                                 "monoglot": "Out Point"
                             },
@@ -141,7 +141,7 @@
                 },
                 "play_speed": {
                     "param": {
-                        "basic_param_info": {
+                        "param_info": {
                             "name": {
                                 "monoglot": "Play Speed"
                             },

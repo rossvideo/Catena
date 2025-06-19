@@ -48,6 +48,6 @@ message DataPayload {
 
 <div style="text-align: center">
 
-[Next Page: BasicParamInfoRequest](BasicParamInfoRequest.html)
+[Next Page: ParamInfoRequest](ParamInfoRequest.html)
 
 </div>

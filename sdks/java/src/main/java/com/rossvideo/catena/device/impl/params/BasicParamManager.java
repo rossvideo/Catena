@@ -14,7 +14,7 @@ import catena.core.parameter.ParamType;
 import catena.core.parameter.StructValue;
 import catena.core.parameter.Value;
 
-public class BasicParamManager implements ParamManager
+public class ParamInfoManager implements ParamManager
 {
     protected static class PathToComponent
     {
@@ -192,7 +192,7 @@ public class BasicParamManager implements ParamManager
     private Map<String, Param.Builder> uncommittedParams = new HashMap<>();
     private Map<String, Value> uncommittedValues = new HashMap<>();
     
-    public BasicParamManager(Device.Builder deviceBuilder)
+    public ParamInfoManager(Device.Builder deviceBuilder)
     {
         this.deviceBuilder = deviceBuilder;
     }
