@@ -66,8 +66,19 @@ void UpdateSubscriptions::proceed(bool ok) {
             { // rc scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             try {
+                // Getting device at specified slot.
+                if (dms_.contains(req_.slot())) {
+                    dm_ = dms_.at(req_.slot());
+                }
+                // Making sure the device exists.
+                if (!dm_) {
+                    rc = catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
+
                 // Make sure subscriptions are enabled.
-                if (dm_.subscriptions()) {
+                } else if (!dm_->subscriptions()) {
+                    rc = catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::FAILED_PRECONDITION);
+
+                } else {
                     // Supressing errors.
                     catena::exception_with_status supressErr{"", catena::StatusCode::OK};
                     // Creating authorizer.
@@ -79,18 +90,16 @@ void UpdateSubscriptions::proceed(bool ok) {
                     }
                     // Processing removed OIDs
                     for (const auto& oid : req_.removed_oids()) {     
-                        service_->getSubscriptionManager().removeSubscription(oid, dm_, supressErr);
+                        service_->getSubscriptionManager().removeSubscription(oid, *dm_, supressErr);
                     }
                     // Processing added OIDs
                     for (const auto& oid : req_.added_oids()) {                    
-                        service_->getSubscriptionManager().addSubscription(oid, dm_, supressErr, *authz_);
+                        service_->getSubscriptionManager().addSubscription(oid, *dm_, supressErr, *authz_);
                     }
                     // Getting all subscribed OIDs and entering kWrite
-                    subbedOids_ = service_->getSubscriptionManager().getAllSubscribedOids(dm_);
+                    subbedOids_ = service_->getSubscriptionManager().getAllSubscribedOids(*dm_);
                     it_ = subbedOids_.begin();
                     status_ = CallStatus::kWrite;
-                } else {
-                    rc = catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::FAILED_PRECONDITION);
                 }
             // ERROR
             } catch (const catena::exception_with_status& err) {
@@ -115,10 +124,10 @@ void UpdateSubscriptions::proceed(bool ok) {
 
             try {
                 // Getting the next parameter while ignoring errors.
-                while (!param && it_ != subbedOids_.end()) {
-                    std::lock_guard lg(dm_.mutex());
+                while (!param && it_ != subbedOids_.end() && dm_) {
+                    std::lock_guard lg(dm_->mutex());
                     catena::exception_with_status supressErr{"", catena::StatusCode::OK};
-                    param = dm_.getParam(*it_, supressErr);
+                    param = dm_->getParam(*it_, supressErr);
                     // If param exists then serialize the response.
                     if (param) {
                         res.Clear();

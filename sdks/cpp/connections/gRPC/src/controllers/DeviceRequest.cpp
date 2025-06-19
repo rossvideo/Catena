@@ -98,19 +98,6 @@ void DeviceRequest::proceed(bool ok) {
                         authz_ = sharedAuthz_.get();
                     } else {
                         authz_ = &catena::common::Authorizer::kAuthzDisabled;
-                    authz_ = &catena::common::Authorizer::kAuthzDisabled;
-                }
-
-                // req_.detail_level defaults to FULL
-                catena::Device_DetailLevel dl = req_.detail_level();
-
-                // Getting subscribed oids if dl == SUBSCRIPTIONS.
-                if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
-                    // Add new subscriptions to both the manager and our tracking list
-                    for (const auto& oid : req_.subscribed_oids()) {
-                        // Supressing errors.
-                        catena::exception_with_status supressRc{"", catena::StatusCode::OK};
-                        service_->getSubscriptionManager().addSubscription(oid, dm_, supressRc, *authz_);
                     }
 
                     // req_.detail_level defaults to FULL
@@ -120,10 +107,9 @@ void DeviceRequest::proceed(bool ok) {
                     if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
                         // Add new subscriptions to both the manager and our tracking list
                         for (const auto& oid : req_.subscribed_oids()) {
-                            // Ignore the rc because it's annoying when it throws
-                            // an error for dublicate adds.
-                            catena::exception_with_status tmpRc{"", catena::StatusCode::OK};
-                            service_->getSubscriptionManager().addSubscription(oid, *dm_, tmpRc);
+                            // Supressing errors.
+                            catena::exception_with_status supressRc{"", catena::StatusCode::OK};
+                            service_->getSubscriptionManager().addSubscription(oid, *dm_, supressRc, *authz_);
                         }
                         // Get service subscriptions from the manager
                         subscribedOids_ = service_->getSubscriptionManager().getAllSubscribedOids(*dm_);
