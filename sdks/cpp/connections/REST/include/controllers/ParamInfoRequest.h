@@ -167,9 +167,9 @@ class ParamInfoRequest : public ICallData {
     static int objectCounter_;
     
     /**
-     * @brief The vector of BasicParamInfoResponse objects.
+     * @brief The vector of ParamInfoResponse objects.
      */
-    std::vector<catena::BasicParamInfoResponse> responses_;
+    std::vector<catena::ParamInfoResponse> responses_;
         
     /**
      * @brief Visitor class for collecting parameter info
@@ -184,7 +184,7 @@ class ParamInfoRequest : public ICallData {
              * @param request The request
              */
             ParamInfoVisitor(catena::common::IDevice& device, catena::common::Authorizer& authz,
-                                std::vector<catena::BasicParamInfoResponse>& responses,
+                                std::vector<catena::ParamInfoResponse>& responses,
                                 ParamInfoRequest& request)
                 : device_(device), authz_(authz), responses_(responses), request_(request) {}
 
@@ -217,7 +217,7 @@ class ParamInfoRequest : public ICallData {
             /**
              * @brief The vector of responses within the visitor
              */
-            std::vector<catena::BasicParamInfoResponse>& responses_;
+            std::vector<catena::ParamInfoResponse>& responses_;
 
             /**
              * @brief The request payload within the visitor

@@ -56,7 +56,7 @@ void ParamInfoRequest::proceed(bool ok) {
     switch (status_) {
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
-            service_->RequestBasicParamInfoRequest(&context_, &req_, &writer_, 
+            service_->RequestParamInfoRequest(&context_, &req_, &writer_, 
                         service_->cq(), service_->cq(), this);
             break;  
 

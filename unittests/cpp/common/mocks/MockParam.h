@@ -65,7 +65,7 @@ public:
     MOCK_METHOD(catena::exception_with_status, toProto, (catena::Value& dst, Authorizer& authz), (const, override));
     MOCK_METHOD(catena::exception_with_status, fromProto, (const catena::Value& src, Authorizer& authz), (override));
     MOCK_METHOD(catena::exception_with_status, toProto, (catena::Param& param, Authorizer& authz), (const, override));
-    MOCK_METHOD(catena::exception_with_status, toProto, (catena::BasicParamInfoResponse& paramInfo, Authorizer& authz), (const, override));
+    MOCK_METHOD(catena::exception_with_status, toProto, (catena::ParamInfoResponse& paramInfo, Authorizer& authz), (const, override));
     MOCK_METHOD(ParamType, type, (), (const, override));
     MOCK_METHOD(const std::string&, getOid, (), (const, override));
     MOCK_METHOD(void, setOid, (const std::string& oid), (override));

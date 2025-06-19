@@ -104,7 +104,7 @@ class ParamInfoRequest : public CallData {
     /**
      * @brief The request payload.
      */
-    catena::BasicParamInfoRequestPayload req_;
+    catena::ParamInfoRequestPayload req_;
 
     /**
      * @brief The response payload.
@@ -114,7 +114,7 @@ class ParamInfoRequest : public CallData {
     /**
      * @brief gRPC async response writer.
      */
-    ServerAsyncWriter<catena::BasicParamInfoResponse> writer_;
+    ServerAsyncWriter<catena::ParamInfoResponse> writer_;
     
     /**
      * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
@@ -134,12 +134,12 @@ class ParamInfoRequest : public CallData {
     /**
      * @brief The object's unique id counter.
      */
-    static int objectCounter_;  
-
+    static int objectCounter_;
+    
     /**
-     * @brief The vector of BasicParamInfoResponse objects.
+     * @brief The vector of ParamInfoResponse objects.
      */
-    std::vector<catena::BasicParamInfoResponse> responses_;
+    std::vector<catena::ParamInfoResponse> responses_;
 
     /**
      * @brief The current response index.
@@ -168,8 +168,8 @@ class ParamInfoRequest : public CallData {
          * @param responses The vector of responses
          * @param request The request
          */
-        ParamInfoVisitor(IDevice& device, catena::common::Authorizer& authz, 
-                            std::vector<catena::BasicParamInfoResponse>& responses,
+        ParamInfoVisitor(catena::common::IDevice& device, catena::common::Authorizer& authz,
+                            std::vector<catena::ParamInfoResponse>& responses,
                             ParamInfoRequest& request)
             : device_(device), authz_(authz), responses_(responses), request_(request) {}
 
@@ -202,7 +202,7 @@ class ParamInfoRequest : public CallData {
         /**
          * @brief The vector of responses within the visitor
          */
-        std::vector<catena::BasicParamInfoResponse>& responses_;
+        std::vector<catena::ParamInfoResponse>& responses_;
 
         /**
          * @brief The request payload within the visitor

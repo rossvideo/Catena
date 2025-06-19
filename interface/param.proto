@@ -8,7 +8,7 @@
 *
 * 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 *
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
 * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
 * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
 * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
@@ -45,7 +45,7 @@ enum ParamType {
     DATA = 50; // Used to allow commands to accept files
 }
 
-message BasicParamInfo {
+message ParamInfo {
   /* The parameter's OID */
   string oid = 1;
 
@@ -238,14 +238,14 @@ message GetParamPayload {
   string oid = 2;  // Uniquely identifies the param at device scope
 }
 
-message BasicParamInfoResponse {
-  BasicParamInfo info = 1;
-  uint32 array_length = 2; // If this BasicParamInfoResponse is for an array parameter, include the length of the array
+message ParamInfoResponse {
+  ParamInfo info = 1;
+  uint32 array_length = 2; // If this ParamInfoResponse is for an array parameter, include the length of the array
 }
 
 /* Specifies the OID and potentially its subtree of
  * child parameters if the recursive flag is set. */
-message BasicParamInfoRequestPayload {
+message ParamInfoRequestPayload {
   uint32 slot = 1; // Uniquely identifies the device at node scope.
 
   /* Uniquely identifies starting parameter relative to device.params
