@@ -105,7 +105,7 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      * @param EOPath The path to the external object.
      * @param authz Flag to enable authorization.
      */
-    CatenaServiceImpl(ServerCompletionQueue* cq, SlotMap dms, std::string& EOPath, bool authz);  
+    CatenaServiceImpl(ServerCompletionQueue* cq, std::vector<IDevice*> dms, std::string& EOPath, bool authz);  
     /**
      * @brief Creates the CallData objects for each gRPC command.
      */
