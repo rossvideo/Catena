@@ -40,21 +40,18 @@
 
 #include <set>
 #include <string>
-#include <memory>
 #include <IDevice.h>
 #include <IParam.h>
+#include <Authorization.h>
 
 namespace catena {
 namespace common {
-
-using catena::common::IDevice;
-using catena::common::IParam;
 
 /**
  * @brief Interface for managing parameter subscriptions in Catena
  */
 class ISubscriptionManager {
-public:
+  public:
     virtual ~ISubscriptionManager() = default;
 
     /**
@@ -62,9 +59,10 @@ public:
      * @param oid The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param/*")
      * @param dm The device model to use 
      * @param rc The status code to return if the operation fails
+     * @param authz The authorizer to use for checking permissions
      * @return true if the subscription was added, false if it already existed
      */
-    virtual bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) = 0;
+    virtual bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc, Authorizer& authz = Authorizer::kAuthzDisabled) = 0;
 
     /**
      * @brief Remove an OID subscription
@@ -73,14 +71,18 @@ public:
      * @param rc The status code to return if the operation fails
      * @return true if the subscription was removed, false if it didn't exist
      */
-    virtual bool removeSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) = 0;
+    virtual bool removeSubscription(const std::string& oid, const IDevice& dm, exception_with_status& rc) = 0;
 
     /**
      * @brief Get all subscribed OIDs, including expanding wildcard subscriptions
      * @param dm The device model to use 
-     * @return Reference to the vector of all subscribed OIDs
+     * @return A copy of the set of all subscribed OIDs
+     * 
+     * Since subManager does not expose its mutex, it is required to return a
+     * copy of the set in order to avoid race conditions in the async API
+     * calls.
      */
-    virtual const std::set<std::string>& getAllSubscribedOids(IDevice& dm) = 0;
+    virtual std::set<std::string> getAllSubscribedOids(const IDevice& dm) = 0;
 
     /**
      * @brief Check if an OID is a wildcard subscription
@@ -88,6 +90,14 @@ public:
      * @return true if the OID is greater than or equal to 2 characters and ends with "/*"
      */
     virtual bool isWildcard(const std::string& oid) = 0;
+
+    /**
+     * @brief Check if an OID is subscribed to
+     * @param dm The device model to use 
+     * @param oid The OID to check
+     * @return true if the OID is already subscribed to
+     */
+    virtual bool isSubscribed(const std::string& oid, const IDevice& dm) = 0;
 };
 
 } // namespace common

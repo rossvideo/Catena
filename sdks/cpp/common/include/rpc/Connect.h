@@ -103,10 +103,9 @@ class Connect : public IConnect {
      * authorization checks.
      * 
      * @param oid - The OID of the value to update
-     * @param idx - The index of the value to update
      * @param p - The parameter to update
      */
-    void updateResponse_(const std::string& oid, size_t idx, const IParam* p) override {
+    void updateResponse_(const std::string& oid, const IParam* p) override {
         try {
             // If Connect was cancelled, notify client and end process
             if (this->isCancelled()) {
@@ -118,9 +117,6 @@ class Connect : public IConnect {
             if (this->authz_ != &catena::common::Authorizer::kAuthzDisabled && !this->authz_->readAuthz(*p)) {
                 return;
             }
-
-            // Get all subscribed OIDs
-            auto subscribedOids = this->subscriptionManager_.getAllSubscribedOids(this->dm_);
 
             // Check if we should process this update based on detail level
             bool should_update = false;
@@ -137,8 +133,7 @@ class Connect : public IConnect {
                 }},
                 {catena::Device_DetailLevel_SUBSCRIPTIONS, [&]() {
                     // Update if OID is subscribed or in minimal set
-                    should_update = p->getDescriptor().minimalSet() || 
-                           (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
+                    should_update = p->getDescriptor().minimalSet() || subscriptionManager_.isSubscribed(oid, dm_);
                 }},
                 {catena::Device_DetailLevel_COMMANDS, [&]() {
                     // For COMMANDS, only update command parameters
@@ -159,11 +154,8 @@ class Connect : public IConnect {
             if (!should_update) {
                 return;
             }
-    
-    
-            this->res_.mutable_value()->set_oid(oid);
-            this->res_.mutable_value()->set_element_index(idx);
-            
+
+            this->res_.mutable_value()->set_oid(oid);    
             catena::Value* value = this->res_.mutable_value()->mutable_value();
     
             catena::exception_with_status rc{"", catena::StatusCode::OK};

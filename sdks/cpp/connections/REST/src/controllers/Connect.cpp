@@ -11,13 +11,14 @@ Connect::Connect(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
     catena::common::Connect(dm, context.getSubscriptionManager()) {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
+    
     // Parsing fields and assigning to respective variables.
     userAgent_ = context.fields("user_agent");
     forceConnection_ = context.hasField("force_connection");
 
     // Set detail level from context
     detailLevel_ = context_.detailLevel();
-    dm_.detail_level(detailLevel_);
+
 }
 
 void Connect::proceed() {
@@ -33,12 +34,12 @@ void Connect::proceed() {
             this->cv_.notify_one();
         });
         // Waiting for a value set by server to be sent to execute code.
-        valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-            updateResponse_(oid, idx, p);
+        valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p){
+            updateResponse_(oid, p);
         });
         // Waiting for a value set by client to be sent to execute code.
-        valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-            updateResponse_(oid, idx, p);
+        valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p){
+            updateResponse_(oid, p);
         });
         // Waiting for a language to be added to execute code.
         languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const ILanguagePack* l) {
@@ -51,6 +52,14 @@ void Connect::proceed() {
     // Used to catch the authz error.
     } catch (catena::exception_with_status& err) {
         writer_.sendResponse(err);
+        shutdown_ = true;
+    } catch (const std::exception& e) {
+        writer_.sendResponse(catena::exception_with_status(std::string("Connection setup failed: ") + e.what(), 
+                                                         catena::StatusCode::INTERNAL));
+        shutdown_ = true;
+    } catch (...) {
+        writer_.sendResponse(catena::exception_with_status("Unknown error during connection setup", 
+                                                         catena::StatusCode::UNKNOWN));
         shutdown_ = true;
     }
 
@@ -76,13 +85,11 @@ void Connect::proceed() {
 
 void Connect::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    try {
-        shutdownSignal_.disconnect(shutdownSignalId_);
-        dm_.valueSetByClient.disconnect(valueSetByClientId_);
-        dm_.valueSetByServer.disconnect(valueSetByServerId_);
-        dm_.languageAddedPushUpdate.disconnect(languageAddedId_);
-    // Listener not yet initialized.
-    } catch (...) {}
+    // Disconnecting all initialized listeners.
+    if (shutdownSignalId_ != 0) { shutdownSignal_.disconnect(shutdownSignalId_); }
+    if (valueSetByClientId_ != 0) { dm_.valueSetByClient.disconnect(valueSetByClientId_); }
+    if (valueSetByServerId_ != 0) { dm_.valueSetByServer.disconnect(valueSetByServerId_); }
+    if (languageAddedId_ != 0) { dm_.languageAddedPushUpdate.disconnect(languageAddedId_); }
     // Finishing and closing the socket.
     if (socket_.is_open()) {
         writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK));

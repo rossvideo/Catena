@@ -21,6 +21,13 @@ void ListLanguages::proceed() {
     try {
         std::lock_guard lg(dm_.mutex());
         dm_.toProto(ans);
+        if (ans.languages_size() == 0) {
+            rc = catena::exception_with_status("No languages found", catena::StatusCode::NOT_FOUND);
+        }
+    } catch (const catena::exception_with_status& e) {
+        rc = catena::exception_with_status(std::string(e.what()), e.status);
+    } catch (const std::exception& e) {
+        rc = catena::exception_with_status(e.what(), catena::StatusCode::INTERNAL);
     } catch (...) {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }

@@ -57,7 +57,7 @@ void DeviceRequest::proceed(bool ok) {
               << std::boolalpha << ok << std::endl;
     
     // If the process is cancelled, finish the process
-    if(!ok){
+    if (!ok) {
         std::cout << "DeviceRequest[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
@@ -98,6 +98,19 @@ void DeviceRequest::proceed(bool ok) {
                         authz_ = sharedAuthz_.get();
                     } else {
                         authz_ = &catena::common::Authorizer::kAuthzDisabled;
+                    authz_ = &catena::common::Authorizer::kAuthzDisabled;
+                }
+
+                // req_.detail_level defaults to FULL
+                catena::Device_DetailLevel dl = req_.detail_level();
+
+                // Getting subscribed oids if dl == SUBSCRIPTIONS.
+                if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
+                    // Add new subscriptions to both the manager and our tracking list
+                    for (const auto& oid : req_.subscribed_oids()) {
+                        // Supressing errors.
+                        catena::exception_with_status supressRc{"", catena::StatusCode::OK};
+                        service_->getSubscriptionManager().addSubscription(oid, dm_, supressRc, *authz_);
                     }
 
                     // req_.detail_level defaults to FULL

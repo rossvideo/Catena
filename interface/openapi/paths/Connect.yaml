@@ -29,9 +29,10 @@
 #
 
 #
-# OpenAPI documentation of the Connect RPC for the Catena REST API
+# OpenAPI documentation of the Catena REST API's connect endpoint
+# Author: john.naylor@rossvideo.com
 # Author: benjamin.whitten@rossvideo.com
-# Date: 25/04/03
+# Date: 25/06/09
 #
 
 get:
@@ -41,7 +42,6 @@ get:
   # default security is read-only
 
   parameters:
-
     - name: Detail-Level
       in: header
       required: false
@@ -75,13 +75,25 @@ get:
           schema:
             type: string
             example: |
-              value: <stringified Value object>
-              exception: <stringified Exception object>
-              device_component: <stringified DeviceComponent object>
-              invalidated_external_object_id: <stringified invalidated_external_object_id object>
-              trap_message: <stringified TrapMessage object>
-              invalidate_device_model: <boolean>
-              remove_components: <stringified RemoveComponents object>
-              slots_added: <stringified SlotList object>
-              slots_removed: <stringified SlotList object>
+              data: <stringified Value object>
+              data: <stringified Exception object>
+              data: <stringified DeviceComponent object>
+              data: <stringified invalidated_external_object_id object>
+              data: <stringified TrapMessage object>
+              data: <boolean>
+              data: <stringified RemoveComponents object>
+              data: <stringified SlotList object>
+              data: <stringified SlotList object>
               done
+    "400":
+      $ref: '../openapi.yaml#/components/responses/BadRequest'
+    "401":
+      $ref: '../openapi.yaml#/components/responses/Unauthorized'
+    "403":
+      $ref: '../openapi.yaml#/components/responses/Forbidden'
+    "404":
+      $ref: '../openapi.yaml#/components/responses/NotFound'
+    "500":
+      $ref: '../openapi.yaml#/components/responses/InternalServerError'
+    "503":
+      $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'

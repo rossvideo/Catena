@@ -54,12 +54,11 @@ void GetParam::proceed( bool ok) {
     std::cout << "GetParam::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok << std::endl;
-    
-    if(!ok) {
+
+    // If the process is cancelled, finish the process
+    if (!ok) {
         std::cout << "GetParam[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
-        service_->deregisterItem(this);
-        return;
     }
     
     switch (status_) {

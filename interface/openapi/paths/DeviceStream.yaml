@@ -29,9 +29,10 @@
 #
 
 #
-# OpenAPI documentation of the DeviceRequest RPC for the Catena REST API
+# OpenAPI documentation of the Catena REST API's streamed device endpoint
+# Author: john.naylor@rossvideo.com
 # Author: benjamin.whitten@rossvideo.com
-# Date: 25/04/03
+# Date: 25/06/09
 #
 
 get:
@@ -71,13 +72,15 @@ get:
             type: string
   
           example: |
-            param: <stringified ComponentParam>
-            constraint: <stringified ComponentConstraint>
-            etc: <more DeviceComponents>
-            done
+            data: <stringified ComponentParam>
+            data: <stringified ComponentConstraint>
+            data: <more DeviceComponents>
     
     "500":
       $ref: '../openapi.yaml#/components/responses/InternalServerError'
+
+    "400":
+      $ref: '../openapi.yaml#/components/responses/BadRequest'
           
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'

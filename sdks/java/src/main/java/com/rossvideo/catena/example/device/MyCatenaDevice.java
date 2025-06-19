@@ -13,18 +13,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Empty;
-import com.rossvideo.catena.command.SimpleCommandHandler;
-import com.rossvideo.catena.command.SimpleCommandStreamObserver;
 import com.rossvideo.catena.device.BasicCatenaDevice;
 import com.rossvideo.catena.device.CatenaServer;
 import com.rossvideo.catena.device.impl.CommandManager;
 import com.rossvideo.catena.device.impl.ConstraintUtils;
 import com.rossvideo.catena.device.impl.ParamManager;
 import com.rossvideo.catena.device.impl.ParamManager.WidgetHint;
-import com.rossvideo.catena.example.device.command.FooCommandHandler;
-import com.rossvideo.catena.example.device.command.ServerPushFileCommandHandler;
-import com.rossvideo.catena.example.device.command.ServerReceiveFileCommandHandler;
 import com.rossvideo.catena.example.error.UnknownOidException;
 import com.rossvideo.catena.utils.IOUtils;
 
@@ -38,6 +32,7 @@ import catena.core.parameter.Param;
 import catena.core.parameter.ParamType;
 import catena.core.parameter.SetValuePayload;
 import catena.core.parameter.Value;
+import catena.core.parameter.Empty;
 import io.grpc.stub.StreamObserver;
 
 public class MyCatenaDevice extends BasicCatenaDevice {
@@ -63,10 +58,12 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private Timer clockTimer = new Timer();
     private volatile boolean clockUpdating = false;
+    private CommandHandler commandHandler;
 
     public MyCatenaDevice(CatenaServer server, int slot, File workingDirectory) { 
         super(server, slot);
-        this.workingDirectory = workingDirectory; 
+        this.workingDirectory = workingDirectory;
+        this.commandHandler = new CommandHandler(workingDirectory); 
         init();
     }
     
@@ -105,7 +102,7 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     
     private void updateTime()
     {
-        Value clockOn = getParamManager().getValue(CLOCK_ON_OID, 0);
+        Value clockOn = getParamManager().getValue(CLOCK_ON_OID);
         boolean shouldUpdate = clockOn == null ? false : clockOn.getInt32Value() != 0;
         if (!shouldUpdate)
         {
@@ -125,7 +122,7 @@ public class MyCatenaDevice extends BasicCatenaDevice {
         String time = getTime();
         try
         {
-            setValue(DATE_AND_TIME_OID, 0, Value.newBuilder().setStringValue(time).build());
+            setValue(DATE_AND_TIME_OID, Value.newBuilder().setStringValue(time).build());
         }
         catch (UnknownOidException ex)
         {
@@ -217,7 +214,6 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     }
     
     private void buildCommands() {
-        //createParamDescriptor(String oid, String name, ParamType type, boolean readOnly, Value value)
         CommandManager manager = getCommandManager();
         manager.createParamDescriptor(CMD_FOO_OID, "String Command", ParamType.STRING, false, Value.newBuilder().setStringValue("").build());
         manager.createParamDescriptor(CMD_REVERSE_OID, "Reverse String", ParamType.STRING, false, Value.newBuilder().setStringValue("").build());
@@ -226,36 +222,18 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     }
 
     @Override
-    public StreamObserver<ExecuteCommandPayload> executeCommand(ExecuteCommandPayload firstMessage, StreamObserver<CommandResponse> responseStream, Map<String, Object> claims)
+    public void executeCommand(ExecuteCommandPayload request, StreamObserver<CommandResponse> responseStream, Map<String, Object> claims)
     {
-        String oid = firstMessage.getOid();
-        switch (oid)
-        {
-            case CMD_FOO_OID:
-                return new FooCommandHandler(getSlot(), responseStream);
-            case CMD_FILE_RECEIVE_OID:
-                return new ServerReceiveFileCommandHandler(getWorkingDirectory(), responseStream);
-            case CMD_FILE_TRANSMIT_OID:
-                return new ServerPushFileCommandHandler(responseStream);
-            case CMD_REVERSE_OID:
-                return new SimpleCommandStreamObserver(responseStream, new SimpleCommandHandler()
-                        {
-                            @Override
-                            public CommandResponse processCommand(ExecuteCommandPayload commandExecution) throws Exception
-                            {
-                                if (!commandExecution.hasValue() || !commandExecution.getValue().hasStringValue())
-                                {
-                                    throw new IllegalArgumentException("No string value provided.");
-                                }
-                                String value = commandExecution.getValue().getStringValue();
-                                StringBuilder sb = new StringBuilder(value);
-                                sb.reverse();
-                                return CommandResponse.newBuilder().setResponse(Value.newBuilder().setStringValue(sb.toString())).build();
-                            }
-                        });
-            default:
-                throw new UnknownOidException(oid);
-        }
+        int commandSlot = request.getSlot();
+		String oid = request.getOid();
+		boolean respond = request.getRespond();
+
+		System.out.println("SERVER: processing command:");
+		System.out.println("\tslot:    " + commandSlot);
+		System.out.println("\toid:     " + oid);
+		System.out.println("\trespond: " + respond);
+
+        commandHandler.executeCommand(request, responseStream);
     }
     
     

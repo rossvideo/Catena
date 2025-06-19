@@ -1,6 +1,7 @@
 package com.rossvideo.catena.datapayload;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,6 +33,34 @@ public class DataPayloadBuilder
     {
         this(new ResetableFileInputStream(file), file.getName(), mimeType);
     }
+
+    public DataPayload createCompleteFileDataPayload() throws IOException
+    {        
+        DataPayload.Builder message = DataPayload.newBuilder();
+        message.putMetadata(METADATA_FILE_NAME, name);
+        message.putMetadata(METADATA_CONTENT_TYPE, mimeType); 
+        
+        if (!hasDigest())
+        {
+            calculateDigest();
+            message.setDigest(ByteString.copyFrom(digest));
+        }
+
+        byte[] data = readAllBytes(payload);
+        message.setPayload(ByteString.copyFrom(data));
+        
+        return message.build();
+    }
+
+    private static byte[] readAllBytes(InputStream in) throws IOException {
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    byte[] data = new byte[8192];
+    int nRead;
+    while ((nRead = in.read(data, 0, data.length)) != -1) {
+        buffer.write(data, 0, nRead);
+    }
+    return buffer.toByteArray();
+}
     
     public void setDigest(byte[] digest)
     {
