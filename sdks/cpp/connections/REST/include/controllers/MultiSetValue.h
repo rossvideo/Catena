@@ -66,6 +66,7 @@ class MultiSetValue : public ICallData {
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the MultiSetValue controller.
@@ -74,7 +75,7 @@ class MultiSetValue : public ICallData {
      * @param context The ISocketReader object.
      * @param dm The device to set values on.
      */ 
-    MultiSetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    MultiSetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief MultiSetValue's main process.
      */
@@ -92,8 +93,8 @@ class MultiSetValue : public ICallData {
      * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new MultiSetValue(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new MultiSetValue(socket, context, dms);
     }
   protected:
     /**
@@ -103,7 +104,7 @@ class MultiSetValue : public ICallData {
      * @param dm The device to set the value(s) of.
      * @param objectId The object's unique id.
      */
-    MultiSetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm, int objectId);
+    MultiSetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms, int objectId);
     /**
      * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.
      * @returns True if successful.
@@ -135,9 +136,9 @@ class MultiSetValue : public ICallData {
      */
     SocketWriter writer_;
     /**
-     * @brief The device to set values of.
+     * @brief Map of slot numbers to device pointers.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 
     /**
      * @brief The MultiSetValuePayload from the request.

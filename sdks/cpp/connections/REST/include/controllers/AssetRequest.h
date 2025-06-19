@@ -68,6 +68,7 @@ class AssetRequest : public ICallData {
   public:
     // Specifying which Device to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the GetParam controller.
@@ -76,7 +77,7 @@ class AssetRequest : public ICallData {
      * @param context The ISocketReader object.
      * @param dm The device to get the parameter from.
      */ 
-    AssetRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    AssetRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief GetParam's main process.
      */
@@ -94,8 +95,8 @@ class AssetRequest : public ICallData {
      * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new AssetRequest(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new AssetRequest(socket, context, dms);
     }
     
 
@@ -148,9 +149,9 @@ class AssetRequest : public ICallData {
      */
     SocketWriter writer_;
     /**
-     * @brief The device to set values of.
+     * @brief Map of slot numbers to device pointers.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 
     /**
      * @brief ID of the object

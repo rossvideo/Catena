@@ -132,7 +132,7 @@ class MultiSetValue : public CallData {
     /**
      * @brief Map of slot numbers to device pointers.
      */
-    SlotMap dms_;
+    SlotMap& dms_;
     /**
      * The status of the transaction for use in responder.finish functions.
      */

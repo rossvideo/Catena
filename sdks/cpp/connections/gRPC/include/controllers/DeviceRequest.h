@@ -92,7 +92,7 @@ class DeviceRequest : public CallData {
     /**
      * @brief Map of slot numbers to device pointers.
      */
-    SlotMap dms_;
+    SlotMap& dms_;
     /**
      * @brief The device at the specified slot in dms_.
      */

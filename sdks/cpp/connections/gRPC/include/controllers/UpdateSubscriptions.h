@@ -98,7 +98,7 @@ class UpdateSubscriptions : public CallData {
     /**
      * @brief Map of slot numbers to device pointers.
      */
-    SlotMap dms_;
+    SlotMap& dms_;
     /**
      * @brief The device we are updating the subscriptions for.
      */

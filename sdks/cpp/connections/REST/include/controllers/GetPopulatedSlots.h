@@ -66,6 +66,7 @@ class GetPopulatedSlots : public ICallData {
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the GetPopulatedSlots controller.
@@ -74,7 +75,7 @@ class GetPopulatedSlots : public ICallData {
      * @param context The ISocketReader object.
      * @param dm The device to get the populated slots of.
      */ 
-    GetPopulatedSlots(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    GetPopulatedSlots(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief GetPopulatedSlots's main process.
      */
@@ -92,8 +93,8 @@ class GetPopulatedSlots : public ICallData {
      * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new GetPopulatedSlots(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new GetPopulatedSlots(socket, context, dms);
     }
   private:
     /**
@@ -118,9 +119,9 @@ class GetPopulatedSlots : public ICallData {
      */
     SocketWriter writer_;
     /**
-     * @brief The device to get slot of.
+     * @brief Map of slot numbers to device pointers.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
  
     /**
      * @brief ID of the GetPopulatedSlots object

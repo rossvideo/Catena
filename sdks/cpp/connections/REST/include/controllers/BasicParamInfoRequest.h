@@ -69,6 +69,7 @@ class BasicParamInfoRequest : public ICallData {
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the BasicParamInfoRequest controller.
@@ -77,7 +78,7 @@ class BasicParamInfoRequest : public ICallData {
      * @param context The ISocketReader object.
      * @param dm The device to get the parameter info from.
      */ 
-    BasicParamInfoRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    BasicParamInfoRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     
     /**
      * @brief BasicParamInfoRequest's main process.
@@ -96,8 +97,8 @@ class BasicParamInfoRequest : public ICallData {
      * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new BasicParamInfoRequest(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new BasicParamInfoRequest(socket, context, dms);
     }
     
     
@@ -147,9 +148,9 @@ class BasicParamInfoRequest : public ICallData {
     catena::exception_with_status rc_;
 
     /**
-     * @brief The device to get parameter info from.
+     * @brief Map of slot numbers to device pointers.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 
     /**
      * @brief The oid prefix to get parameter info for.

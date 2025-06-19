@@ -40,6 +40,7 @@ CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, std::vector<IDev
       EOPath_{EOPath}, 
       authorizationEnabled_{authz},
       subscriptionManager_{std::make_unique<catena::common::SubscriptionManager>()} {
+    // Adding dms to slotMap.
     for (auto dm : dms) {
         if (dms_.contains(dm->slot())) {
             throw std::runtime_error("Device with slot " + std::to_string(dm->slot()) + " already exists in the map.");

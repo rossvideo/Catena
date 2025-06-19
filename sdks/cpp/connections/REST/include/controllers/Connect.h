@@ -68,6 +68,8 @@ class Connect : public ICallData, public catena::common::Connect {
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
+    using SignalMap = catena::common::SignalMap;
 
     /**
      * @brief Constructor for the Connect controller.
@@ -76,7 +78,7 @@ class Connect : public ICallData, public catena::common::Connect {
      * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */ 
-    Connect(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    Connect(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief Connect's main process.
      */
@@ -94,8 +96,8 @@ class Connect : public ICallData, public catena::common::Connect {
      * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new Connect(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new Connect(socket, context, dms);
     }
     
     /**
@@ -142,17 +144,17 @@ class Connect : public ICallData, public catena::common::Connect {
      * @brief Id of operation waiting for valueSetByClient to be emitted.
      * Used when ending the connection.
      */
-    unsigned int valueSetByClientId_;
+    SignalMap valueSetByClientIds_;
     /**
      * @brief Id of operation waiting for valueSetByServer to be emitted.
      * Used when ending the connection.
      */
-    unsigned int valueSetByServerId_;
+    SignalMap valueSetByServerIds_;
     /**
      * @brief Id of operation waiting for languageAddedPushUpdate to be
      * emitted. Used when ending the connection.
      */
-    unsigned int languageAddedId_;
+    SignalMap languageAddedIds_;
     /**
      * @brief ID of the shutdown signal for the Connect object
     */

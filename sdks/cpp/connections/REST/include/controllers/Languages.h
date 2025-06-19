@@ -65,6 +65,7 @@ class Languages : public ICallData {
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the Languages controller.
@@ -73,7 +74,7 @@ class Languages : public ICallData {
      * @param context The ISocketReader object.
      * @param dm The device to list languages from.
      */ 
-    Languages(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    Languages(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief Languages's main process.
      */
@@ -91,8 +92,8 @@ class Languages : public ICallData {
      * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new Languages(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new Languages(socket, context, dms);
     }
     
 
@@ -122,9 +123,9 @@ class Languages : public ICallData {
      */
     SocketWriter writer_;
     /**
-     * @brief The device to list languages from.
+     * @brief Map of slot numbers to device pointers.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 
     /**
      * @brief ID of the Languages object

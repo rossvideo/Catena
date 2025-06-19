@@ -34,21 +34,25 @@ void expandEnvVariables(std::string &str) {
     }
 }
 
-CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool authz, uint16_t port)
+CatenaServiceImpl::CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOPath, bool authz, uint16_t port)
     : version_{"1.0.0"},
-      dm_{dm},
       EOPath_{EOPath},
       port_{port},
       authorizationEnabled_{authz},
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
       router_{Router::getInstance()},
       subscriptionManager_{std::make_unique<catena::common::SubscriptionManager>()} {
-    if (authorizationEnabled_) {
-        std::cout<<"Authorization enabled."<<std::endl;
+    if (authorizationEnabled_) { std::cout<<"Authorization enabled."<<std::endl; }
+    // Adding dms to slotMap.
+    for (auto dm : dms) {
+        if (dms_.contains(dm->slot())) {
+            throw std::runtime_error("Device with slot " + std::to_string(dm->slot()) + " already exists in the map.");
+        } else {
+            dms_[dm->slot()] = dm;
+        }
     }
 
     // Initializing the routes for router_.
-
     router_.addProduct("GET/connect",         Connect::makeOne);
     router_.addProduct("GET",                 DeviceRequest::makeOne);
     router_.addProduct("POST/command",        ExecuteCommand::makeOne);
@@ -102,7 +106,7 @@ void CatenaServiceImpl::run() {
                         SocketWriter(socket, context.origin()).sendResponse(rc);
                     // Otherwise routing to request.
                     } else if (router_.canMake(requestKey)) {
-                        std::unique_ptr<ICallData> request = router_.makeProduct(requestKey, socket, context, dm_);
+                        std::unique_ptr<ICallData> request = router_.makeProduct(requestKey, socket, context, dms_);
                         request->proceed();
                         request->finish();
                     // ERROR

@@ -47,8 +47,8 @@ using catena::common::IDevice;
 // Initializes the object counter for BasicParamInfoRequest to 0.
 int BasicParamInfoRequest::objectCounter_ = 0;
 
-BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm},
+BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms},
     rc_("", catena::StatusCode::OK), recursive_{false} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
@@ -80,10 +80,21 @@ void BasicParamInfoRequest::proceed() {
         catena::exception_with_status rc{"", catena::StatusCode::OK};
         std::shared_ptr<Authorizer> sharedAuthz;
         Authorizer* authz;
-        
-        // Handle authorization setup
+        IDevice* dm = nullptr;
+        // Getting device at specified slot.
+        if (dms_.contains(context_.slot())) {
+            dm = dms_.at(context_.slot());
+        }
         try {
-            if (context_.authorizationEnabled()) {
+            // Getting device at specified slot.
+            if (dms_.contains(context_.slot())) {
+                dm = dms_.at(context_.slot());
+            }
+            // Making sure the device exists.
+            if (!dm) {
+                rc_ = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+            // Handle authorization setup
+            } else if (context_.authorizationEnabled()) {
                 sharedAuthz = std::make_shared<Authorizer>(context_.jwsToken());
                 authz = sharedAuthz.get();
             } else {
@@ -101,8 +112,8 @@ void BasicParamInfoRequest::proceed() {
                 std::vector<std::unique_ptr<IParam>> top_level_params;
 
                 {
-                    std::lock_guard lg(dm_.mutex());
-                    top_level_params = dm_.getTopLevelParams(rc, *authz);
+                    std::lock_guard lg(dm->mutex());
+                    top_level_params = dm->getTopLevelParams(rc, *authz);
                 }
 
                 if (rc.status != catena::StatusCode::OK) {
@@ -110,7 +121,7 @@ void BasicParamInfoRequest::proceed() {
                 } else if (top_level_params.empty()) {
                     rc_ = catena::exception_with_status("No top-level parameters found", catena::StatusCode::NOT_FOUND);
                 } else {
-                    std::lock_guard lg(dm_.mutex());
+                    std::lock_guard lg(dm->mutex());
                     responses_.clear();
                     // Process each top-level parameter
                     for (auto& top_level_param : top_level_params) {
@@ -136,8 +147,8 @@ void BasicParamInfoRequest::proceed() {
                 std::vector<std::unique_ptr<IParam>> top_level_params;
 
                 {
-                    std::lock_guard lg(dm_.mutex());
-                    top_level_params = dm_.getTopLevelParams(rc, *authz);
+                    std::lock_guard lg(dm->mutex());
+                    top_level_params = dm->getTopLevelParams(rc, *authz);
                 }
 
                 if (rc.status != catena::StatusCode::OK) {
@@ -145,7 +156,7 @@ void BasicParamInfoRequest::proceed() {
                 } else if (top_level_params.empty()) {
                     rc_ = catena::exception_with_status("No top-level parameters found", catena::StatusCode::NOT_FOUND);
                 } else {
-                    std::lock_guard lg(dm_.mutex());
+                    std::lock_guard lg(dm->mutex());
                     responses_.clear();
                     // Process each top-level parameter recursively
                     for (auto& top_level_param : top_level_params) {
@@ -160,8 +171,8 @@ void BasicParamInfoRequest::proceed() {
                                 }
                             }
                             // Recursively traverse all children of the top-level parameter
-                            BasicParamInfoVisitor visitor(dm_, *authz, responses_, *this);
-                            ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), dm_, visitor);
+                            BasicParamInfoVisitor visitor(*dm, *authz, responses_, *this);
+                            ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), *dm, visitor);
                         } catch (const catena::exception_with_status& err) {
                             rc_ = catena::exception_with_status(err.what(), err.status);
                             break;
@@ -172,8 +183,8 @@ void BasicParamInfoRequest::proceed() {
             // Mode 3: Get a specific parameter and its children
             else if (!oid_prefix_.empty()) { 
                 {
-                    std::lock_guard lg(dm_.mutex());
-                    param = dm_.getParam(oid_prefix_, rc, *authz);
+                    std::lock_guard lg(dm->mutex());
+                    param = dm->getParam(oid_prefix_, rc, *authz);
                 }
 
                 if (rc.status != catena::StatusCode::OK) {
@@ -198,8 +209,8 @@ void BasicParamInfoRequest::proceed() {
                         
                         // If recursive is true, collect all parameter info recursively through visitor pattern
                         if (recursive_) {
-                            BasicParamInfoVisitor visitor(dm_, *authz, responses_, *this);
-                            ParamVisitor::traverseParams(param.get(), oid_prefix_, dm_, visitor);
+                            BasicParamInfoVisitor visitor(*dm, *authz, responses_, *this);
+                            ParamVisitor::traverseParams(param.get(), oid_prefix_, *dm, visitor);
                         }
                     } catch (const catena::exception_with_status& err) {
                         rc_ = catena::exception_with_status(err.what(), err.status);

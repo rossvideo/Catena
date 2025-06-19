@@ -86,7 +86,7 @@ class AddLanguage : public CallData {
     /**
      * @brief Map of slot numbers to device pointers.
      */
-    SlotMap dms_;
+    SlotMap& dms_;
     /**
      * @brief The object's unique id.
      */

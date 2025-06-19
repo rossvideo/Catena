@@ -61,6 +61,7 @@ public:
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the Subscriptions controller.
@@ -69,7 +70,7 @@ public:
      * @param context The ISocketReader object.
      * @param dm The device to update subscriptions on.
      */ 
-    Subscriptions(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    Subscriptions(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     
     /**
      * @brief Subscriptions's main process.
@@ -88,8 +89,8 @@ public:
      * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-        return new Subscriptions(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+        return new Subscriptions(socket, context, dms);
     }
 
 private:
@@ -119,9 +120,9 @@ private:
      */
     std::unique_ptr<ISocketWriter> writer_ = nullptr;
     /**
-     * @brief The device to set subscriptions of.
+     * @brief Map of slot numbers to device pointers.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 
     /**
      * @brief ID of the Subscriptions object

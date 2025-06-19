@@ -66,6 +66,7 @@ class DeviceRequest : public ICallData {
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the DeviceRequest controller.
@@ -74,7 +75,7 @@ class DeviceRequest : public ICallData {
      * @param context The ISocketReader object.
      * @param dm The device to get information from.
      */ 
-    DeviceRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    DeviceRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief DeviceRequest's main process.
      */
@@ -92,8 +93,8 @@ class DeviceRequest : public ICallData {
      * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new DeviceRequest(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new DeviceRequest(socket, context, dms);
     }
     
 
@@ -123,9 +124,9 @@ class DeviceRequest : public ICallData {
      */
     std::unique_ptr<ISocketWriter> writer_ = nullptr;
     /**
-     * @brief The device to get components from.
+     * @brief Map of slot numbers to device pointers.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 
     /**
      * @brief A list of the subscribed oids to return.

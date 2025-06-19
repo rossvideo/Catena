@@ -35,8 +35,8 @@ using catena::REST::Subscriptions;
 // Initializes the object counter for Subscriptions to 0.
 int Subscriptions::objectCounter_ = 0;
 
-Subscriptions::Subscriptions(tcp::socket& socket, ISocketReader& context, IDevice& dm)
-    : socket_(socket), context_(context), dm_(dm) {
+Subscriptions::Subscriptions(tcp::socket& socket, ISocketReader& context, SlotMap& dms)
+    : socket_(socket), context_(context), dms_(dms) {
     
     // GET
     if (context.method() == "GET") {
@@ -60,7 +60,21 @@ void Subscriptions::proceed() {
     catena::exception_with_status supressErr{"", catena::StatusCode::OK};
 
     try {
-        if (dm_.subscriptions()) {
+        IDevice* dm = nullptr;
+        // Getting device at specified slot.
+        if (dms_.contains(context_.slot())) {
+            dm = dms_.at(context_.slot());
+        }
+
+        // Making sure the device exists.
+        if (!dm) {
+            rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+
+        // Making sure the device supports subscriptions.
+        } else if (!dm->subscriptions()) {
+            rc = catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::FAILED_PRECONDITION);
+        
+        } else {
             // Creating authorizer.
             catena::common::Authorizer* authz = nullptr;
             std::shared_ptr<catena::common::Authorizer> sharedAuthz;
@@ -73,11 +87,11 @@ void Subscriptions::proceed() {
 
             // GET/subscriptions - Get and write all subscribed OIDs.
             if (context_.method() == "GET") {
-                auto subbedOids = context_.getSubscriptionManager().getAllSubscribedOids(dm_);
+                auto subbedOids = context_.getSubscriptionManager().getAllSubscribedOids(*dm);
                 for (auto oid : subbedOids) {
                     supressErr = catena::exception_with_status{"", catena::StatusCode::OK};
                     catena::DeviceComponent_ComponentParam res;
-                    auto param = dm_.getParam(oid, supressErr, *authz);
+                    auto param = dm->getParam(oid, supressErr, *authz);
                     // Converting to proto.
                     if (param) {
                         res.set_oid(param->getOid());
@@ -101,11 +115,11 @@ void Subscriptions::proceed() {
                 } else {
                     // Processing removed OIDs
                     for (const auto& oid : req.removed_oids()) {
-                        context_.getSubscriptionManager().removeSubscription(oid, dm_, supressErr);
+                        context_.getSubscriptionManager().removeSubscription(oid, *dm, supressErr);
                     }
                     // Processing added OIDs
                     for (const auto& oid : req.added_oids()) {
-                        context_.getSubscriptionManager().addSubscription(oid, dm_, supressErr, *authz);
+                        context_.getSubscriptionManager().addSubscription(oid, *dm, supressErr, *authz);
                     }
                 }
 
@@ -113,8 +127,6 @@ void Subscriptions::proceed() {
             } else {
                 rc = catena::exception_with_status("", catena::StatusCode::INVALID_ARGUMENT);
             }
-        } else {
-            rc = catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::FAILED_PRECONDITION);
         }
     // ERROR
     } catch (const catena::exception_with_status& err) {

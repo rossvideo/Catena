@@ -212,7 +212,7 @@ class Connect : public IConnect {
     /**
      * @brief Map of slot numbers to device pointers.
      */
-    SlotMap dms_;
+    SlotMap& dms_;
     /**
      * @brief Bool indicating whether the child has an update to write.
      */

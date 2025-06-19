@@ -66,6 +66,7 @@ class GetValue : public ICallData {
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the GetValue controller.
@@ -74,7 +75,7 @@ class GetValue : public ICallData {
      * @param context The ISocketReader object.
      * @param dm The device to get the value from.
      */ 
-    GetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    GetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief GetValue's main process.
      */
@@ -92,8 +93,8 @@ class GetValue : public ICallData {
      * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new GetValue(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new GetValue(socket, context, dms);
     }
     
     
@@ -123,9 +124,9 @@ class GetValue : public ICallData {
      */
     SocketWriter writer_;
     /**
-     * @brief The device to set values of.
+     * @brief Map of slot numbers to device pointers.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 
     /**
      * @brief ID of the GetValue object
