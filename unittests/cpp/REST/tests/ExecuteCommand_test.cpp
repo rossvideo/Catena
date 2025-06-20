@@ -68,7 +68,7 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
         slot_ = slot;
         fqoid_ = oid;
         auto status = google::protobuf::util::MessageToJsonString(inVal_, &jsonBody_);
-        EXPECT_TRUE(status.ok()) << "Failed to convert Value to JSON";
+        ASSERT_TRUE(status.ok()) << "Failed to convert Value to JSON";
         respond_ = respond;
     }
 
@@ -107,6 +107,7 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
             for (const auto& expVal : expVals_) {
                 jsonBodies.push_back("");
                 auto status = google::protobuf::util::MessageToJsonString(expVal, &jsonBodies.back());
+                ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
             }
         }
         EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, jsonBodies));

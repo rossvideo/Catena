@@ -60,7 +60,7 @@ class RESTLanguagesTests : public RESTEndpointTest {
         std::string expJson = "";
         if (!expVal_.languages().empty()) {
             auto status = google::protobuf::util::MessageToJsonString(expVal_, &expJson);
-            EXPECT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
+            ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
         }
         EXPECT_EQ(readResponse(), expectedResponse(expRc_, expJson));
     }

@@ -72,7 +72,7 @@ class RESTGetParamTests : public RESTEndpointTest {
         param->add_oid_aliases(alias);
         (*param->mutable_name()->mutable_display_strings())["en"] = enName;
         auto status = google::protobuf::util::MessageToJsonString(expVal_, &expJson_);
-        EXPECT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
+        ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
     }
 
     /*

@@ -71,7 +71,7 @@ class RESTLanguagePackTests : public RESTEndpointTest {
             inVal_.mutable_words()->insert({word.first, word.second});
         }
         auto status = google::protobuf::util::MessageToJsonString(inVal_, &jsonBody_);
-        EXPECT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
+        ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
     }
 
     /*
@@ -95,7 +95,7 @@ class RESTLanguagePackTests : public RESTEndpointTest {
         std::string expJson = "";
         if (!expVal_.language().empty()) {
             auto status = google::protobuf::util::MessageToJsonString(expVal_, &expJson);
-            EXPECT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
+            ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
         }
         EXPECT_EQ(readResponse(), expectedResponse(expRc_, expJson));
     }
