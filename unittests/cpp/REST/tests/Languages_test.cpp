@@ -37,8 +37,6 @@
 
 // Test helpers
 #include "RESTTest.h"
-#include "MockSocketReader.h"
-#include "MockDevice.h"
 
 // REST
 #include "controllers/Languages.h"
@@ -49,9 +47,14 @@ using namespace catena::REST;
 // Fixture
 class RESTLanguagesTests : public RESTEndpointTest {
   protected:
+    /*
+     * Creates a Languages handler object.
+     */
+    ICallData* makeOne() override { return Languages::makeOne(serverSocket_, context_, dm0_); }  
 
-    ICallData* makeOne() override { return Languages::makeOne(serverSocket, context_, dm0_); }  
-
+    /*
+     * Calls proceed and tests the response.
+     */
     void testCall() {
         endpoint_->proceed();
         std::string expJson = "";

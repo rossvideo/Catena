@@ -50,10 +50,10 @@ class RESTMultiSetValueTests : public RESTEndpointTest {
     /*
      * Creates a MultiSetValue handler object.
      */
-    ICallData* makeOne() override { return MultiSetValue::makeOne(serverSocket, context_, dm0_); }
+    ICallData* makeOne() override { return MultiSetValue::makeOne(serverSocket_, context_, dm0_); }
 
     /*
-     * Streamlines the creation of MultiSetValuePayload. 
+     * Streamlines the creation of endpoint input. 
      */
     void initPayload(uint32_t slot, const std::vector<std::pair<std::string, std::string>>& setValues) {
         slot_ = slot;

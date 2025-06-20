@@ -14,14 +14,14 @@ using namespace testing;
 
 class RESTConnectTest : public ::testing::Test, public RESTTest {
 protected:
-    RESTConnectTest() : RESTTest(&serverSocket, &clientSocket) {}
+    RESTConnectTest() : RESTTest(&serverSocket_, &clientSocket_) {}
 
     void SetUp() override {
         // Set up common expectations
         setupCommonExpectations();
         
         // Create Connect instance
-        connect_ = catena::REST::Connect::makeOne(serverSocket, socket_reader_, device_);
+        connect_ = catena::REST::Connect::makeOne(serverSocket_, socket_reader_, device_);
     }
 
     void TearDown() override {
@@ -39,7 +39,7 @@ protected:
         EXPECT_CALL(socket_reader_, getSubscriptionManager())
             .WillRepeatedly(ReturnRef(subscription_manager_));
         EXPECT_CALL(socket_reader_, origin())
-            .WillRepeatedly(ReturnRef(origin));
+            .WillRepeatedly(ReturnRef(origin_));
         EXPECT_CALL(socket_reader_, fields("user_agent"))
             .WillRepeatedly(ReturnRef(user_agent_));
         EXPECT_CALL(socket_reader_, hasField("force_connection"))
@@ -151,7 +151,7 @@ TEST_F(RESTConnectTest, ProceedHandlesValidAuthz) {
     EXPECT_EQ(readResponse(), expectedSSEResponse(rc, {slotJson}));
 
     catena::REST::Connect::shutdownSignal_.emit();
-    serverSocket.close();
+    serverSocket_.close();
     proceed_thread.join();
 }
 
@@ -204,7 +204,7 @@ TEST_F(RESTConnectTest, HandlesValueSetByServer) {
     EXPECT_EQ(readResponse(), expectedSSEResponse(rc, {slotJson, updateJson}));
 
     catena::REST::Connect::shutdownSignal_.emit();
-    serverSocket.close();
+    serverSocket_.close();
     proceed_thread.join();
 }
 
@@ -255,7 +255,7 @@ TEST_F(RESTConnectTest, HandlesValueSetByClient) {
     EXPECT_EQ(readResponse(), expectedSSEResponse(rc, {slotJson, updateJson}));
 
     catena::REST::Connect::shutdownSignal_.emit();
-    serverSocket.close();
+    serverSocket_.close();
     proceed_thread.join();
 }
 
@@ -298,7 +298,7 @@ TEST_F(RESTConnectTest, HandlesLanguage) {
     EXPECT_EQ(readResponse(), expectedSSEResponse(rc, {slotJson, updateJson}));
 
     catena::REST::Connect::shutdownSignal_.emit();
-    serverSocket.close();
+    serverSocket_.close();
     proceed_thread.join();
 }
 
@@ -321,7 +321,7 @@ TEST_F(RESTConnectTest, FinishClosesConnection) {
     connect_->finish();
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-    EXPECT_FALSE(serverSocket.is_open());
+    EXPECT_FALSE(serverSocket_.is_open());
 
     catena::REST::Connect::shutdownSignal_.emit();
     proceed_thread.join();
@@ -345,7 +345,7 @@ TEST_F(RESTConnectTest, FinishDisconnectsSignalHandlers) {
     connect_->finish();
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-    EXPECT_FALSE(serverSocket.is_open());
+    EXPECT_FALSE(serverSocket_.is_open());
 
     // Verify signal handlers are disconnected by attempting to emit signals
     auto param = std::make_unique<MockParam>();
@@ -379,7 +379,7 @@ TEST_F(RESTConnectTest, ProceedHandlesCatenaException) {
 
     EXPECT_EQ(readResponse(), expectedSSEResponse(catena::exception_with_status("Auth error", catena::StatusCode::UNAUTHENTICATED)));
 
-    serverSocket.close();
+    serverSocket_.close();
     proceed_thread.join();
 }
 
@@ -403,7 +403,7 @@ TEST_F(RESTConnectTest, ProceedHandlesStdException) {
     EXPECT_EQ(readResponse(), expectedSSEResponse(
         catena::exception_with_status("Connection setup failed: Runtime error", catena::StatusCode::INTERNAL)));
 
-    serverSocket.close();
+    serverSocket_.close();
     proceed_thread.join();
 }
 
@@ -427,7 +427,7 @@ TEST_F(RESTConnectTest, ProceedHandlesUnknownException) {
     EXPECT_EQ(readResponse(), expectedSSEResponse(
         catena::exception_with_status("Unknown error during connection setup", catena::StatusCode::UNKNOWN)));
 
-    serverSocket.close();
+    serverSocket_.close();
     proceed_thread.join();
 }
 
@@ -468,13 +468,13 @@ TEST_F(RESTConnectTest, ProceedHandlesWriterFailure) {
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-    clientSocket.close();
+    clientSocket_.close();
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
     device_.valueSetByServer.emit(paramOid_, param.get());
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-    EXPECT_FALSE(serverSocket.is_open());
+    EXPECT_FALSE(serverSocket_.is_open());
 
     catena::REST::Connect::shutdownSignal_.emit();
     proceed_thread.join();

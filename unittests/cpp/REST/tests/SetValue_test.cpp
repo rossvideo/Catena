@@ -48,12 +48,12 @@ using namespace catena::REST;
 class RESTSetValueTests : public RESTEndpointTest {
   protected:
     /*
-     * Creates a MultiSetValue handler object.
+     * Creates a SetValue handler object.
      */
-    ICallData* makeOne() override { return SetValue::makeOne(serverSocket, context_, dm0_); }
+    ICallData* makeOne() override { return SetValue::makeOne(serverSocket_, context_, dm0_); }
 
     /*
-     * Streamlines the creation of SetValuePayload. 
+     * Streamlines the creation of endpoint input. 
      */
     void initPayload(uint32_t slot, const std::string& oid, const std::string& value) {
         slot_ = slot;
@@ -87,7 +87,7 @@ TEST_F(RESTSetValueTests, SetValue_Create) {
 }
 
 /* 
- * TEST 4 - Writing to console with SetValue finish().
+ * TEST 2 - Writing to console with SetValue finish().
  */
 TEST_F(RESTSetValueTests, SetValue_Finish) {
     endpoint_->finish();
@@ -95,7 +95,7 @@ TEST_F(RESTSetValueTests, SetValue_Finish) {
 }
 
 /* 
- * TEST 2 - Normal case for SetValue toMulti_().
+ * TEST 3 - Normal case for SetValue toMulti_().
  */
 TEST_F(RESTSetValueTests, SetValue_Normal) {
     initPayload(0, "/test_oid", "test_value");
@@ -114,7 +114,7 @@ TEST_F(RESTSetValueTests, SetValue_Normal) {
 }
 
 /* 
- * TEST 3 - SetValue toMulti_() fails to parse the JSON.
+ * TEST 4 - SetValue toMulti_() fails to parse the JSON.
  */
 TEST_F(RESTSetValueTests, SetValue_FailParse) {
     expRc_ = catena::exception_with_status("Failed to convert JSON to protobuf", catena::StatusCode::INVALID_ARGUMENT);

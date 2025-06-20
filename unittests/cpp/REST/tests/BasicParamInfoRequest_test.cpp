@@ -66,20 +66,20 @@ using namespace catena::REST;
 // Fixture
 class RESTBasicParamInfoRequestTests : public ::testing::Test, public RESTTest {
 protected:
-    RESTBasicParamInfoRequestTests() : RESTTest(&serverSocket, &clientSocket) {}
+    RESTBasicParamInfoRequestTests() : RESTTest(&serverSocket_, &clientSocket_) {}
 
     void SetUp() override {
         // Redirecting cout to a stringstream for testing
         oldCout = std::cout.rdbuf(MockConsole.rdbuf());
 
         // Set default actions for common mock calls
-        EXPECT_CALL(context, origin()).WillRepeatedly(::testing::ReturnRef(origin));
+        EXPECT_CALL(context, origin()).WillRepeatedly(::testing::ReturnRef(origin_));
         EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(false));
         EXPECT_CALL(context, fqoid()).WillRepeatedly(::testing::ReturnRef(empty_prefix));
         EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMtx));
         EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(false));
 
-        request = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+        request = BasicParamInfoRequest::makeOne(serverSocket_, context, dm);
     }
 
     void TearDown() override {
@@ -216,7 +216,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authz_valid_token) 
         }));
 
     // Make a new request for this test
-    auto authzRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+    auto authzRequest = BasicParamInfoRequest::makeOne(serverSocket_, context, dm);
     
     // Execute
     authzRequest->proceed();
@@ -500,7 +500,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
         ));
 
     // Create a new request after setting up all expectations
-    auto deepNestingRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+    auto deepNestingRequest = BasicParamInfoRequest::makeOne(serverSocket_, context, dm);
 
     // Execute
     deepNestingRequest->proceed();
@@ -581,7 +581,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
             }));
 
     // Create a new request after setting up all expectations
-    auto arrayRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+    auto arrayRequest = BasicParamInfoRequest::makeOne(serverSocket_, context, dm);
 
     // Execute
     arrayRequest->proceed();
@@ -668,7 +668,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
             }));
 
     // Create a new request after setting up all expectations
-    auto errorRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+    auto errorRequest = BasicParamInfoRequest::makeOne(serverSocket_, context, dm);
 
     // Execute
     errorRequest->proceed();
@@ -697,7 +697,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
         }));
 
     // Create a new request after setting up all expectations
-    auto errorStatusRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+    auto errorStatusRequest = BasicParamInfoRequest::makeOne(serverSocket_, context, dm);
 
     // Execute
     errorStatusRequest->proceed();
@@ -726,7 +726,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
         }));
 
     // Create a new request after setting up all expectations
-    auto emptyListRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+    auto emptyListRequest = BasicParamInfoRequest::makeOne(serverSocket_, context, dm);
 
     // Execute
     emptyListRequest->proceed();

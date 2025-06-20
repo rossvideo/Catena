@@ -50,10 +50,10 @@ class RESTLanguagePackTests : public RESTEndpointTest {
     /*
      * Creates a LanguagePack handler object.
      */
-    ICallData* makeOne() override { return LanguagePack::makeOne(serverSocket, context_, dm0_); }
+    ICallData* makeOne() override { return LanguagePack::makeOne(serverSocket_, context_, dm0_); }
 
     /*
-     * Streamlines the creation of LanguagePack Payload. 
+     * Streamlines the creation of endpoint input. 
      */
     void initPayload(uint32_t slot, const std::string& language) {
         slot_ = slot;
@@ -61,7 +61,7 @@ class RESTLanguagePackTests : public RESTEndpointTest {
         fqoid_ = "/" + language;
     }
     /*
-     * Streamlines the creation of LanguagePack payload with json body. 
+     * Streamlines the creation of endpoint input with json body. 
      */
     void initPayload(uint32_t slot, const std::string& language, const std::string& name, 
                      const std::unordered_map<std::string, std::string>& words) {
@@ -73,8 +73,9 @@ class RESTLanguagePackTests : public RESTEndpointTest {
         auto status = google::protobuf::util::MessageToJsonString(inVal_, &jsonBody_);
         EXPECT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
     }
+
     /*
-     * Streamlines the creation of expected LanguagePack. 
+     * Streamlines the creation of the expected output ComponentLanguagePack. 
      */
     void initExpVal(const std::string& language, const std::string& name, 
                     const std::unordered_map<std::string, std::string>& words) {
@@ -85,6 +86,7 @@ class RESTLanguagePackTests : public RESTEndpointTest {
             pack->mutable_words()->insert({word.first, word.second});
         }
     }
+
     /*
      * Calls proceed and tests the response.
      */
@@ -98,7 +100,8 @@ class RESTLanguagePackTests : public RESTEndpointTest {
         EXPECT_EQ(readResponse(), expectedResponse(expRc_, expJson));
     }
 
-    std::string language_;
+    // In vals
+    std::string language_; // fqoid_ without the leading "/"
     catena::LanguagePack inVal_;
     // Expected values
     catena::DeviceComponent_ComponentLanguagePack expVal_;

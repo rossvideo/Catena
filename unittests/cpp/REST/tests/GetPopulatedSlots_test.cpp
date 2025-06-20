@@ -47,7 +47,10 @@ using namespace catena::REST;
 // Fixture
 class RESTGetPopulatedSlotsTests : public RESTEndpointTest {
   protected:
-    ICallData* makeOne() override { return GetPopulatedSlots::makeOne(serverSocket, context_, dm0_); }
+    /*
+     * Creates a GetPopulatedSlots handler object.
+     */
+    ICallData* makeOne() override { return GetPopulatedSlots::makeOne(serverSocket_, context_, dm0_); }
 
     /*
      * Calls proceed and tests the response.
@@ -80,7 +83,7 @@ TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_Create) {
 /* 
  * TEST 2 - Writing to console with GetPopulatedSlots finish().
  */
-TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_finish) {
+TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_Finish) {
     endpoint_->finish();
     ASSERT_TRUE(MockConsole_.str().find("GetPopulatedSlots[1] finished\n") != std::string::npos);
 }

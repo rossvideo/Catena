@@ -51,16 +51,19 @@ class RESTGetParamTests : public RESTEndpointTest {
     /*
      * Creates a GetParam handler object.
      */
-    ICallData* makeOne() override { return GetParam::makeOne(serverSocket, context_, dm0_); }
+    ICallData* makeOne() override { return GetParam::makeOne(serverSocket_, context_, dm0_); }
 
     /*
-     * Streamlines the creation of GetParamPayload. 
+     * Streamlines the creation of endpoint input. 
      */
     void initPayload(uint32_t slot, const std::string& oid) {
         slot_ = slot;
         fqoid_ = oid;
     }
 
+    /*
+     * Streamlines the creation of the expected output ComponentParam. 
+     */
     void initExpVal(const std::string& oid, const std::string& value, const std::string& alias, const std::string& enName) {
         expVal_.set_oid(oid);
         auto param = expVal_.mutable_param();
@@ -94,20 +97,20 @@ class RESTGetParamTests : public RESTEndpointTest {
  * 
  * TEST 1 - Creating a GetParam object.
  */
-TEST_F(RESTGetParamTests, GetParam_create) {
+TEST_F(RESTGetParamTests, GetParam_Create) {
     EXPECT_TRUE(endpoint_);
 }
 
 /* 
  * TEST 2 - Writing to console with GetParam finish().
  */
-TEST_F(RESTGetParamTests, GetParam_finish) {
+TEST_F(RESTGetParamTests, GetParam_Finish) {
     endpoint_->finish();
     ASSERT_TRUE(MockConsole_.str().find("GetParam[1] finished\n") != std::string::npos);
 }
 
 /*
- * TEST 2 - Normal case for GetParam proceed().
+ * TEST 3 - Normal case for GetParam proceed().
  */
 TEST_F(RESTGetParamTests, GetParam_Normal) {
     initPayload(0, "/test_oid");
@@ -133,7 +136,7 @@ TEST_F(RESTGetParamTests, GetParam_Normal) {
 }
 
 /*
- * TEST 3 - GetParam with authz on and valid token.
+ * TEST 4 - GetParam with authz on and valid token.
  */
 TEST_F(RESTGetParamTests, GetParam_AuthzValid) {
     initPayload(0, "/test_oid");
@@ -171,7 +174,7 @@ TEST_F(RESTGetParamTests, GetParam_AuthzValid) {
 }
 
 /*
- * TEST 4 - GetParam with authz on and invalid token.
+ * TEST 5 - GetParam with authz on and invalid token.
  */
 TEST_F(RESTGetParamTests, GetParam_AuthzInvalid) {
     expRc_ = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
@@ -238,7 +241,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowStd) {
 }
 
 /*
- * TEST 8 - dm.getParam() throws an unknown error.
+ * TEST 9 - dm.getParam() throws an unknown error.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -253,7 +256,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowUnknown) {
 }
 
 /*
- * TEST 9 - param->toProto() returns a catena::exception_with_status.
+ * TEST 10 - param->toProto() returns a catena::exception_with_status.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrToProtoReturnCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -269,7 +272,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoReturnCatena) {
 }
 
 /*
- * TEST 10 - param->toProto() throws a catena::exception_with_status.
+ * TEST 11 - param->toProto() throws a catena::exception_with_status.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -288,7 +291,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowCatena) {
 }
 
 /*
- * TEST 11 - param->toProto() throws a std::runtime_exception.
+ * TEST 12 - param->toProto() throws a std::runtime_exception.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowStd) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -304,7 +307,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowStd) {
 }
 
 /*
- * TEST 11 - param->toProto() throws an unknown error.
+ * TEST 13 - param->toProto() throws an unknown error.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
