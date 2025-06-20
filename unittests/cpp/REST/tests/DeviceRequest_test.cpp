@@ -240,20 +240,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_authz_valid_token) {
     EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
-// Test 0.5: Test authorization with std::exception
-TEST_F(RESTDeviceRequestTests, DeviceRequest_authz_std_exception) {
-    catena::exception_with_status rc("Device request failed: Test auth setup failure", catena::StatusCode::INTERNAL);
-
-    EXPECT_CALL(socket_reader_, authorizationEnabled())
-        .WillOnce(Return(true));
-    EXPECT_CALL(socket_reader_, jwsToken())
-        .WillOnce(Throw(std::runtime_error("Test auth setup failure")));
-    
-    device_request_->proceed();
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
-}
-
-// Test 0.6: Test subscribed OIDs handling
+// Test 0.5: Test subscribed OIDs handling
 TEST_F(RESTDeviceRequestTests, DeviceRequest_subscribed_oids) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     std::set<std::string> expectedSubscribedOids = {"param1", "param2", "param3"};
@@ -377,7 +364,20 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_finish) {
 
 // --- 3. EXCEPTION TESTS ---
 
-// Test 3.1: Test catch (...) exception handling
+// Test 3.1: Test std::exception by throwing in authorization setup
+TEST_F(RESTDeviceRequestTests, DeviceRequest_authz_std_exception) {
+    catena::exception_with_status rc("Device request failed: Test auth setup failure", catena::StatusCode::INTERNAL);
+
+    EXPECT_CALL(socket_reader_, authorizationEnabled())
+        .WillOnce(Return(true));
+    EXPECT_CALL(socket_reader_, jwsToken())
+        .WillOnce(Throw(std::runtime_error("Test auth setup failure")));
+    
+    device_request_->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+// Test 3.2: Test catch (...) exception handling
 // Note: catena and std exceptions covered in authorization tests
 TEST_F(RESTDeviceRequestTests, DeviceRequest_catch_unknown_exception) {
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
