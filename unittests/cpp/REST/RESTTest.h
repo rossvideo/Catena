@@ -37,19 +37,34 @@
 
 #pragma once
 
-// std
-#include <string>
-
-// common
-#include <Status.h>
+// gtest
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 // boost
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 using boost::asio::ip::tcp;
 
+// protobuf
+#include <interface/device.pb.h>
+#include <google/protobuf/util/json_util.h>
+
+// Mock classes
+#include "MockSocketReader.h"
+#include "MockDevice.h"
+
+// std
+#include <string>
+
+// common
+#include <Status.h>
+
 // REST
 #include "SocketWriter.h"
+#include "interface/ICallData.h"
+
+using namespace catena::common;
 using namespace catena::REST;
 
 /*
@@ -201,4 +216,61 @@ class RESTTest {
   private:
     tcp::socket* writeSocket = nullptr;
     tcp::socket* readSocket = nullptr;
+};
+
+class RESTEndpointTest : public ::testing::Test, public RESTTest {
+  protected:
+    RESTEndpointTest() : RESTTest(&serverSocket, &clientSocket) {}
+
+    /*
+     * Virtual function which creates a single CallData object for the test.
+     */
+    virtual ICallData* makeOne() = 0;
+  
+    void SetUp() override {
+        // Redirecting cout to a stringstream for testing.
+        oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
+        
+        // Setting default expectations
+        // Default expectations for the context.
+        EXPECT_CALL(context_, method()).WillRepeatedly(::testing::ReturnRef(method_));
+        EXPECT_CALL(context_, origin()).WillRepeatedly(::testing::ReturnRef(origin));
+        EXPECT_CALL(context_, slot()).WillRepeatedly(::testing::Invoke([this]() { return slot_; }));
+        EXPECT_CALL(context_, fqoid()).WillRepeatedly(::testing::ReturnRef(fqoid_));
+        EXPECT_CALL(context_, jsonBody()).WillRepeatedly(::testing::ReturnRef(jsonBody_));
+        EXPECT_CALL(context_, authorizationEnabled()).WillRepeatedly(::testing::Invoke([this]() { return authzEnabled_; }));
+        EXPECT_CALL(context_, stream()).WillRepeatedly(::testing::Invoke([this]() { return stream_; }));
+        // Default expectations for the device model.
+        EXPECT_CALL(dm0_, mutex()).WillRepeatedly(::testing::ReturnRef(mtx0_));
+        EXPECT_CALL(dm1_, mutex()).WillRepeatedly(::testing::ReturnRef(mtx1_));
+
+        ICallData* ep = makeOne();
+        endpoint_.reset(ep);
+    }
+
+    void TearDown() override {
+        std::cout.rdbuf(oldCout_); // Restoring cout
+    }
+
+    // Cout variables
+    std::stringstream MockConsole_;
+    std::streambuf* oldCout_;
+
+    // in/out val
+    std::string method_ = "GET";
+    uint32_t slot_ = 0;
+    std::string fqoid_ = "";
+    bool stream_ = true;
+    bool authzEnabled_ = false;
+    std::string jsonBody_ = "";
+    // Expected variables
+    catena::exception_with_status expRc_{"", catena::StatusCode::OK};
+
+    MockSocketReader context_;
+    std::mutex mtx0_;
+    std::mutex mtx1_;
+    MockDevice dm0_;
+    MockDevice dm1_;
+
+    std::unique_ptr<ICallData> endpoint_;
 };

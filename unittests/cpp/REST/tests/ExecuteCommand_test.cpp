@@ -35,35 +35,28 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-// gtest
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-// std
-#include <string>
-
-// protobuf
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 // Test helpers
 #include "RESTTest.h"
-#include "MockSocketReader.h"
-#include "MockDevice.h"
 #include "MockCommandResponder.h"
 #include "MockParam.h"
 
 // REST
 #include "controllers/ExecuteCommand.h"
-#include "SocketWriter.h"
 
 using namespace catena::common;
 using namespace catena::REST;
 
 // Fixture
-class RESTExecuteCommandTests : public ::testing::Test, public RESTTest {
+class RESTExecuteCommandTests : public RESTEndpointTest {
   protected:
-    RESTExecuteCommandTests() : RESTTest(&serverSocket, &clientSocket) {}
+    RESTExecuteCommandTests() : RESTEndpointTest() {
+        EXPECT_CALL(context_, hasField("respond")).WillRepeatedly(::testing::Invoke([this]() { return respond_; }));
+    }
+
+    /*
+     * Creates an ExecuteCommand handler object.
+     */
+    ICallData* makeOne() override { return ExecuteCommand::makeOne(serverSocket, context_, dm0_); }
 
     /*
      * Streamlines the creation of executeCommandPayloads. 
@@ -72,18 +65,6 @@ class RESTExecuteCommandTests : public ::testing::Test, public RESTTest {
         slot_ = slot;
         fqoid_ = oid;
         auto status = google::protobuf::util::MessageToJsonString(inVal_, &jsonBody_);
-        EXPECT_TRUE(status.ok()) << "Failed to convert Value to JSON";
-        respond_ = respond;
-    }
-
-    /*
-     * Streamlines the creation of executeCommandPayloads. 
-     */
-    void initPayload(const std::string& oid, const std::string& value, bool respond = true) {
-        fqoid_ = oid;
-        catena::Value val;
-        val.set_string_value(value);
-        auto status = google::protobuf::util::MessageToJsonString(val, &jsonBody_);
         EXPECT_TRUE(status.ok()) << "Failed to convert Value to JSON";
         respond_ = respond;
     }
@@ -112,28 +93,6 @@ class RESTExecuteCommandTests : public ::testing::Test, public RESTTest {
         expVals_.push_back(catena::CommandResponse());
         expVals_.back().mutable_no_response();
     }
-
-    void SetUp() override {
-        // Redirecting cout to a stringstream for testing.
-        oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
-
-        // Setting default expectations
-        // Default expectations for the context.
-        EXPECT_CALL(context_, method()).WillRepeatedly(::testing::ReturnRef(method_));
-        EXPECT_CALL(context_, origin()).WillRepeatedly(::testing::ReturnRef(origin));
-        EXPECT_CALL(context_, slot()).WillRepeatedly(::testing::Invoke([this]() { return slot_; }));
-        EXPECT_CALL(context_, fqoid()).WillRepeatedly(::testing::ReturnRef(fqoid_));
-        EXPECT_CALL(context_, jsonBody()).WillRepeatedly(::testing::ReturnRef(jsonBody_));
-        EXPECT_CALL(context_, authorizationEnabled()).WillRepeatedly(::testing::Invoke([this]() { return authzEnabled_; }));
-        EXPECT_CALL(context_, hasField("respond")).WillRepeatedly(::testing::Invoke([this]() { return respond_; }));
-        EXPECT_CALL(context_, stream()).WillRepeatedly(::testing::Invoke([this]() { return stream_; }));
-        // Default expectations for the device model.
-        EXPECT_CALL(dm0_, mutex()).WillRepeatedly(::testing::ReturnRef(mtx0_));
-        EXPECT_CALL(dm1_, mutex()).WillRepeatedly(::testing::ReturnRef(mtx1_));
-
-        ICallData* executeCommand = ExecuteCommand::makeOne(serverSocket, context_, dm0_);
-        endpoint_.reset(executeCommand);
-    }
     
     /*
      * Calls proceed and tests the response.
@@ -150,35 +109,11 @@ class RESTExecuteCommandTests : public ::testing::Test, public RESTTest {
         EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, jsonBodies));
     }
 
-    void TearDown() override {
-        std::cout.rdbuf(oldCout_); // Restoring cout
-    }
-
-    // Cout variables
-    std::stringstream MockConsole_;
-    std::streambuf* oldCout_;
-
-    // in/out val
-    std::string jsonBody_ = "";
+    // in variables
+    catena::Value inVal_;
+    bool respond_ = false;
     // Expected variables
     std::vector<catena::CommandResponse> expVals_;
-    catena::exception_with_status expRc_{"", catena::StatusCode::OK};
-    std::string method_ = "GET";
-    catena::Value inVal_;
-
-    uint32_t slot_ = 0;
-    std::string fqoid_ = "";
-    bool respond_ = false;
-    bool stream_ = true;
-    bool authzEnabled_ = false;
-
-    MockSocketReader context_;
-    std::mutex mtx0_;
-    std::mutex mtx1_;
-    MockDevice dm0_;
-    MockDevice dm1_;
-
-    std::unique_ptr<ICallData> endpoint_;
 
     std::unique_ptr<MockParam> mockCommand_ = std::make_unique<MockParam>();
     std::unique_ptr<MockCommandResponder> mockResponder_ = std::make_unique<MockCommandResponder>();
