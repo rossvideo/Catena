@@ -129,6 +129,69 @@ inline std::string createParamInfoJson(const ParamInfo& info) {
     return jsonBody;
 }
 
+/*
+ * ============================================================================
+ *                        DeviceRequest Helpers
+ * ============================================================================
+ */
+
+/**
+ * @brief Helper class to populate DeviceComponent objects with expected values
+ * Similar to the gRPC test's StreamReader pattern
+ */
+class DeviceComponentHelper {
+public:
+    DeviceComponentHelper() {
+        // Create expected values with one of everything, similar to gRPC test
+        expVals.push_back(catena::DeviceComponent()); // [0] Device
+        expVals.push_back(catena::DeviceComponent()); // [1] Menu
+        expVals.push_back(catena::DeviceComponent()); // [2] Language pack
+        expVals.push_back(catena::DeviceComponent()); // [3] Constraint
+        expVals.push_back(catena::DeviceComponent()); // [4] Param
+        expVals.push_back(catena::DeviceComponent()); // [5] Command
+        
+        expVals[0].mutable_device()->set_slot(1);
+        expVals[1].mutable_menu()->set_oid("menu_test");
+        expVals[2].mutable_language_pack()->set_language("language_test");
+        expVals[3].mutable_shared_constraint()->set_oid("constraint_test");
+        expVals[4].mutable_param()->set_oid("param_test");
+        expVals[5].mutable_command()->set_oid("command_test");
+    }
+    
+    /**
+     * @brief Serializes a DeviceComponent to JSON string
+     * @param component The DeviceComponent to serialize
+     * @return The serialized JSON string
+     */
+    std::string serializeToJson(const catena::DeviceComponent& component) {
+        std::string jsonString;
+        google::protobuf::util::JsonPrintOptions options;
+        options.add_whitespace = false;
+        auto status = google::protobuf::util::MessageToJsonString(component, &jsonString, options);
+        if (!status.ok()) {
+            return "{}"; // Return empty object if serialization fails
+        }
+        return jsonString;
+    }
+    
+    /**
+     * @brief Creates expected response JSON body from components
+     * @param components Vector of DeviceComponent objects
+     * @return The JSON body in the format {"data":[component1,component2,...]}
+     */
+    std::string createExpectedJsonBody(const std::vector<catena::DeviceComponent>& components) {
+        std::string jsonBody = "{\"data\":[";
+        for (size_t i = 0; i < components.size(); ++i) {
+            if (i > 0) jsonBody += ",";
+            jsonBody += serializeToJson(components[i]);
+        }
+        jsonBody += "]}";
+        return jsonBody;
+    }
+    
+    std::vector<catena::DeviceComponent> expVals;
+};
+
 } // namespace test
 } // namespace REST
 } // namespace catena 
