@@ -363,6 +363,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_finish) {
 }
 
 // --- 3. EXCEPTION TESTS ---
+// Note: catena exception covered in authorization test
 
 // Test 3.1: Test std::exception by throwing in authorization setup
 TEST_F(RESTDeviceRequestTests, DeviceRequest_authz_std_exception) {
@@ -378,7 +379,6 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_authz_std_exception) {
 }
 
 // Test 3.2: Test catch (...) exception handling
-// Note: catena and std exceptions covered in authorization tests
 TEST_F(RESTDeviceRequestTests, DeviceRequest_catch_unknown_exception) {
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
 
