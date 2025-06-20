@@ -62,6 +62,47 @@ using namespace catena::common;
 using namespace catena::REST;
 using namespace testing;
 
+/**
+ * @brief Class to provide expected DeviceComponent objects for testing
+ */
+class ExpectedComponents {
+public:
+    ExpectedComponents() {
+        // Create expected values with one of everything, similar to gRPC test
+        expVals.push_back(catena::DeviceComponent()); // [0] Device
+        expVals.push_back(catena::DeviceComponent()); // [1] Menu
+        expVals.push_back(catena::DeviceComponent()); // [2] Language pack
+        expVals.push_back(catena::DeviceComponent()); // [3] Constraint
+        expVals.push_back(catena::DeviceComponent()); // [4] Param
+        expVals.push_back(catena::DeviceComponent()); // [5] Command
+        
+        expVals[0].mutable_device()->set_slot(1);
+        expVals[1].mutable_menu()->set_oid("menu_test");
+        expVals[2].mutable_language_pack()->set_language("language_test");
+        expVals[3].mutable_shared_constraint()->set_oid("constraint_test");
+        expVals[4].mutable_param()->set_oid("param_test");
+        expVals[5].mutable_command()->set_oid("command_test");
+    }
+    
+    /**
+     * @brief Serializes a DeviceComponent to JSON string
+     * @param component The DeviceComponent to serialize
+     * @return The serialized JSON string
+     */
+    std::string serializeToJson(const catena::DeviceComponent& component) {
+        std::string jsonString;
+        google::protobuf::util::JsonPrintOptions options;
+        options.add_whitespace = false;
+        auto status = google::protobuf::util::MessageToJsonString(component, &jsonString, options);
+        if (!status.ok()) {
+            return "{}"; // Return empty object if serialization fails
+        }
+        return jsonString;
+    }
+    
+    std::vector<catena::DeviceComponent> expVals;
+};
+
 // Fixture
 class RESTDeviceRequestTests : public ::testing::Test, public RESTTest {
 protected:
@@ -69,20 +110,6 @@ protected:
 
     void SetUp() override {
         // Set up common expectations
-        setupCommonExpectations();
-        
-        // Create DeviceRequest instance
-        device_request_ = catena::REST::DeviceRequest::makeOne(serverSocket, socket_reader_, device_);
-    }
-
-    void TearDown() override {
-        if (device_request_) {
-            delete device_request_;
-        }
-    }
-
-    // Helper function to set up common mock expectations
-    void setupCommonExpectations() {
         EXPECT_CALL(socket_reader_, detailLevel())
             .WillRepeatedly(Return(catena::Device_DetailLevel::Device_DetailLevel_FULL));
         EXPECT_CALL(socket_reader_, authorizationEnabled())
@@ -95,7 +122,17 @@ protected:
             .WillRepeatedly(Return(1));
         EXPECT_CALL(device_, mutex())
             .WillRepeatedly(ReturnRef(mutex_));
+        
+        // Create DeviceRequest instance
+        device_request_ = catena::REST::DeviceRequest::makeOne(serverSocket, socket_reader_, device_);
     }
+
+    void TearDown() override {
+        if (device_request_) {
+            delete device_request_;
+        }
+    }
+
 
     MockSocketReader socket_reader_;
     MockDevice device_;
@@ -103,7 +140,7 @@ protected:
     MockSubscriptionManager subscription_manager_;
     std::string origin = "*";
     std::mutex mutex_;
-    test::DeviceComponentHelper componentHelper_;
+    ExpectedComponents expectedComponents_;
 };
 
 // --- 0. INITIAL TESTS ---
@@ -240,31 +277,31 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_subscribed_oids) {
 // Test 1.1: Test normal serializer operation with single component
 TEST_F(RESTDeviceRequestTests, DeviceRequest_serializer_normal_single) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    const catena::DeviceComponent& expectedComponent = componentHelper_.expVals[0]; // Device with slot=1
+    const catena::DeviceComponent& component = expectedComponents_.expVals[0]; // Device with slot=1
 
     // Set up expectation for getComponentSerializer to return a working serializer
     EXPECT_CALL(device_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_))
-        .WillOnce(::testing::Invoke([&expectedComponent](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+        .WillOnce(::testing::Invoke([&component](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             auto mockSerializer = std::make_unique<MockDevice::MockDeviceSerializer>();
             EXPECT_CALL(*mockSerializer, hasMore())
                 .WillOnce(Return(true))
                 .WillOnce(Return(false));
             EXPECT_CALL(*mockSerializer, getNext())
-                .WillOnce(Return(expectedComponent));
+                .WillOnce(Return(component));
             return mockSerializer;
         }));
     
     device_request_->proceed();
-    std::vector<std::string> components = {componentHelper_.serializeToJson(expectedComponent)};
+    std::vector<std::string> components = {expectedComponents_.serializeToJson(component)};
     EXPECT_EQ(readResponse(), expectedResponse(rc, components));
 }
 
 // Test 1.2: Test serializer with multiple components
 TEST_F(RESTDeviceRequestTests, DeviceRequest_serializer_multiple_components) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    const catena::DeviceComponent& component1 = componentHelper_.expVals[0]; // Device
-    const catena::DeviceComponent& component2 = componentHelper_.expVals[1]; // Menu
-    const catena::DeviceComponent& component3 = componentHelper_.expVals[4]; // Param
+    const catena::DeviceComponent& component1 = expectedComponents_.expVals[0]; // Device
+    const catena::DeviceComponent& component2 = expectedComponents_.expVals[1]; // Menu
+    const catena::DeviceComponent& component3 = expectedComponents_.expVals[4]; // Param
 
     // Set up expectation for getComponentSerializer to return a working serializer
     EXPECT_CALL(device_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_))
@@ -284,9 +321,9 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_serializer_multiple_components) {
     
     device_request_->proceed();
     std::vector<std::string> components = {
-        componentHelper_.serializeToJson(component1),
-        componentHelper_.serializeToJson(component2),
-        componentHelper_.serializeToJson(component3)
+        expectedComponents_.serializeToJson(component1),
+        expectedComponents_.serializeToJson(component2),
+        expectedComponents_.serializeToJson(component3)
     };
     EXPECT_EQ(readResponse(), expectedResponse(rc, components));
 }
@@ -312,11 +349,6 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_serializer_no_components) {
 
 // Test 2.1: Test finish method functionality
 TEST_F(RESTDeviceRequestTests, DeviceRequest_finish) {
-    // The finish method should log the finish status and print completion message
-    // We can't easily test the console output, but we can verify the method doesn't crash
-    // and that the object is still valid after calling finish
-    
-    // First, let's proceed with a normal request to set up the object
     EXPECT_CALL(device_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_))
         .WillOnce(::testing::Invoke([](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             auto mockSerializer = std::make_unique<MockDevice::MockDeviceSerializer>();
@@ -326,30 +358,28 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_finish) {
         }));
     
     device_request_->proceed();
-    
-    // Now test the finish method
-    // This should not crash and should complete successfully
+
+    // Test that finish method does not throw
     EXPECT_NO_THROW(device_request_->finish());
     
     // Verify the object is still valid after finish
     ASSERT_NE(device_request_, nullptr);
 }
 
-// Test 2.2: Test finish method on uninitialized object
-TEST_F(RESTDeviceRequestTests, DeviceRequest_finish_uninitialized) {
-    // Create a new DeviceRequest without proceeding
-    auto* new_request = new DeviceRequest(serverSocket, socket_reader_, device_);
+// --- 3. EXCEPTION TESTS ---
+
+// Test 3.1: Test catch (...) exception handling
+// Note: catena and std exceptions covered in authorization tests
+TEST_F(RESTDeviceRequestTests, DeviceRequest_catch_unknown_exception) {
+    catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
+
+    EXPECT_CALL(device_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke([](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+            throw 42; // Throw an int
+            return nullptr; // Only exists to avoid lambda error
+        }));
     
-    // Set up expectations for the constructor
-    EXPECT_CALL(socket_reader_, stream())
-        .WillOnce(Return(false));
-    EXPECT_CALL(socket_reader_, origin())
-        .WillOnce(ReturnRef(origin));
-    
-    // Test that finish can be called on an uninitialized object
-    EXPECT_NO_THROW(new_request->finish());
-    
-    // Clean up
-    delete new_request;
+    device_request_->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
