@@ -171,7 +171,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_writer_type_selection) {
             .WillOnce(ReturnRef(origin));
         
         // Create a new DeviceRequest for unary mode
-        auto* unary_request = new DeviceRequest(serverSocket, socket_reader_, device_);
+        auto* unary_request = DeviceRequest::makeOne(serverSocket, socket_reader_, device_);
         EXPECT_NE(unary_request, nullptr);
         delete unary_request;
     }
@@ -185,7 +185,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_writer_type_selection) {
             .WillOnce(ReturnRef(origin));
         
         // Create a new DeviceRequest for streaming mode
-        auto* stream_request = new DeviceRequest(serverSocket, socket_reader_, device_);
+        auto* stream_request = DeviceRequest::makeOne(serverSocket, socket_reader_, device_);
         EXPECT_NE(stream_request, nullptr);
         delete stream_request;
     }
