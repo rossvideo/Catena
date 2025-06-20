@@ -15,9 +15,8 @@ set(SOURCES
     tests/SocketReader_test.cpp
     tests/SocketWriter_test.cpp    
     tests/GetValue_test.cpp
-    tests/AddLanguage_test.cpp
-    tests/LanguagePackRequest_test.cpp
-    tests/ListLanguages_test.cpp
+    tests/LanguagePack_test.cpp
+    tests/Languages_test.cpp
     tests/GetPopulatedSlots_test.cpp
     tests/MultiSetValue_test.cpp
     tests/SetValue_test.cpp
@@ -30,9 +29,8 @@ set(SOURCES
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/SocketReader.cpp
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/SocketWriter.cpp
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/GetValue.cpp
-    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/AddLanguage.cpp
-    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/LanguagePackRequest.cpp
-    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/ListLanguages.cpp
+    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/LanguagePack.cpp
+    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/Languages.cpp
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/GetPopulatedSlots.cpp
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/MultiSetValue.cpp
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/SetValue.cpp

@@ -29,8 +29,8 @@
  */
 
 /**
- * @file ListLanguages.h
- * @brief Implements REST ListLanguages controller.
+ * @file LanguagePack.h
+ * @brief Implements REST LanguagePack controller.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -58,29 +58,28 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the ListLanguages REST controller.
+ * @brief ICallData class for the LanguagePack REST controller.
  */
-class ListLanguages : public ICallData {
+class LanguagePack : public ICallData {
   public:
-    // Specifying which Device and IParam to use (defaults to catena::...)
+    // Specifying which Device to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
-    using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the ListLanguages controller.
+     * @brief Constructor for the LanguagePack controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to list languages from.
+     * @param dm The device to get the language pack from.
      */ 
-    ListLanguages(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    LanguagePack(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
-     * @brief ListLanguages's main process.
+     * @brief LanguagePack's main processes.
      */
     void proceed() override;
     
     /**
-     * @brief Finishes the ListLanguages process.
+     * @brief Finishes the LanguagePack process.
      */
     void finish() override;
     
@@ -92,7 +91,7 @@ class ListLanguages : public ICallData {
      * @param dm The device to connect to.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new ListLanguages(socket, context, dm);
+      return new LanguagePack(socket, context, dm);
     }
     
 
@@ -104,8 +103,8 @@ class ListLanguages : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << "ListLanguages::proceed[" << objectId_ << "]: "
-                << catena::common::timeNow() << " status: "
+      std::cout << context_.method() << " LanguagePack::proceed[" << objectId_
+                << "]: " << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
                 << std::endl;
     }
@@ -122,16 +121,16 @@ class ListLanguages : public ICallData {
      */
     SocketWriter writer_;
     /**
-     * @brief The device to list languages from.
+     * @brief The device to get language pack from.
      */
     IDevice& dm_;
 
     /**
-     * @brief ID of the ListLanguages object
+     * @brief ID of the LanguagePack object
      */
     int objectId_;
     /**
-     * @brief The total # of ListLanguages objects.
+     * @brief The total # of LanguagePack objects.
      */
     static int objectCounter_;
 };
