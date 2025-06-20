@@ -66,81 +66,90 @@ using namespace testing;
  * @brief Class to provide expected DeviceComponent objects for testing
  */
 class ExpectedComponents {
-public:
-    ExpectedComponents() {
-        // Create expected values with one of everything, similar to gRPC test
-        expVals.push_back(catena::DeviceComponent()); // [0] Device
-        expVals.push_back(catena::DeviceComponent()); // [1] Menu
-        expVals.push_back(catena::DeviceComponent()); // [2] Language pack
-        expVals.push_back(catena::DeviceComponent()); // [3] Constraint
-        expVals.push_back(catena::DeviceComponent()); // [4] Param
-        expVals.push_back(catena::DeviceComponent()); // [5] Command
-        
-        expVals[0].mutable_device()->set_slot(1);
-        expVals[1].mutable_menu()->set_oid("menu_test");
-        expVals[2].mutable_language_pack()->set_language("language_test");
-        expVals[3].mutable_shared_constraint()->set_oid("constraint_test");
-        expVals[4].mutable_param()->set_oid("param_test");
-        expVals[5].mutable_command()->set_oid("command_test");
-    }
-    
-    /**
-     * @brief Serializes a DeviceComponent to JSON string
-     * @param component The DeviceComponent to serialize
-     * @return The serialized JSON string
-     */
-    std::string serializeToJson(const catena::DeviceComponent& component) {
-        std::string jsonString;
-        google::protobuf::util::JsonPrintOptions options;
-        options.add_whitespace = false;
-        auto status = google::protobuf::util::MessageToJsonString(component, &jsonString, options);
-        if (!status.ok()) {
-            return "{}"; // Return empty object if serialization fails
+    public:
+        ExpectedComponents() {
+            // Create expected values with one of everything, similar to gRPC test
+            expVals.push_back(catena::DeviceComponent()); // [0] Device
+            expVals.push_back(catena::DeviceComponent()); // [1] Menu
+            expVals.push_back(catena::DeviceComponent()); // [2] Language pack
+            expVals.push_back(catena::DeviceComponent()); // [3] Constraint
+            expVals.push_back(catena::DeviceComponent()); // [4] Param
+            expVals.push_back(catena::DeviceComponent()); // [5] Command
+            
+            expVals[0].mutable_device()->set_slot(1);
+            expVals[1].mutable_menu()->set_oid("menu_test");
+            expVals[2].mutable_language_pack()->set_language("language_test");
+            expVals[3].mutable_shared_constraint()->set_oid("constraint_test");
+            expVals[4].mutable_param()->set_oid("param_test");
+            expVals[5].mutable_command()->set_oid("command_test");
         }
-        return jsonString;
-    }
-    
-    std::vector<catena::DeviceComponent> expVals;
+        
+        /**
+        * @brief Serializes a DeviceComponent to JSON string
+        * @param component The DeviceComponent to serialize
+        * @return The serialized JSON string
+        */
+        std::string serializeToJson(const catena::DeviceComponent& component) {
+            std::string jsonString;
+            google::protobuf::util::JsonPrintOptions options;
+            options.add_whitespace = false;
+            auto status = google::protobuf::util::MessageToJsonString(component, &jsonString, options);
+            if (!status.ok()) {
+                return "{}"; // Return empty object if serialization fails
+            }
+            return jsonString;
+        }
+        
+        std::vector<catena::DeviceComponent> expVals;
 };
 
 // Fixture
 class RESTDeviceRequestTests : public ::testing::Test, public RESTTest {
-protected:
-    RESTDeviceRequestTests() : RESTTest(&serverSocket, &clientSocket) {}
+    protected:
+        RESTDeviceRequestTests() : RESTTest(&serverSocket, &clientSocket) {}
 
-    void SetUp() override {
-        // Set up common expectations
-        EXPECT_CALL(socket_reader_, detailLevel())
-            .WillRepeatedly(Return(catena::Device_DetailLevel::Device_DetailLevel_FULL));
-        EXPECT_CALL(socket_reader_, authorizationEnabled())
-            .WillRepeatedly(Return(false));
-        EXPECT_CALL(socket_reader_, stream())
-            .WillRepeatedly(Return(false));
-        EXPECT_CALL(socket_reader_, origin())
-            .WillRepeatedly(ReturnRef(origin));
-        EXPECT_CALL(device_, slot())
-            .WillRepeatedly(Return(1));
-        EXPECT_CALL(device_, mutex())
-            .WillRepeatedly(ReturnRef(mutex_));
-        
-        // Create DeviceRequest instance
-        device_request_ = catena::REST::DeviceRequest::makeOne(serverSocket, socket_reader_, device_);
-    }
+        void SetUp() override {
+            // Redirecting cout to a stringstream for testing.
+            oldCout = std::cout.rdbuf(MockConsole.rdbuf());
 
-    void TearDown() override {
-        if (device_request_) {
-            delete device_request_;
+            // Set up common expectations
+            EXPECT_CALL(socket_reader_, detailLevel())
+                .WillRepeatedly(Return(catena::Device_DetailLevel::Device_DetailLevel_FULL));
+            EXPECT_CALL(socket_reader_, authorizationEnabled())
+                .WillRepeatedly(Return(false));
+            EXPECT_CALL(socket_reader_, stream())
+                .WillRepeatedly(Return(false));
+            EXPECT_CALL(socket_reader_, origin())
+                .WillRepeatedly(ReturnRef(origin));
+            EXPECT_CALL(device_, slot())
+                .WillRepeatedly(Return(1));
+            EXPECT_CALL(device_, mutex())
+                .WillRepeatedly(ReturnRef(mutex_));
+            
+            // Create DeviceRequest instance
+            device_request_ = catena::REST::DeviceRequest::makeOne(serverSocket, socket_reader_, device_);
         }
-    }
+
+        void TearDown() override {
+            std::cout.rdbuf(oldCout); // Restoring cout
+            
+            if (device_request_) {
+                delete device_request_;
+            }
+        }
 
 
-    MockSocketReader socket_reader_;
-    MockDevice device_;
-    catena::REST::ICallData* device_request_ = nullptr;
-    MockSubscriptionManager subscription_manager_;
-    std::string origin = "*";
-    std::mutex mutex_;
-    ExpectedComponents expectedComponents_;
+        MockSocketReader socket_reader_;
+        MockDevice device_;
+        catena::REST::ICallData* device_request_ = nullptr;
+        MockSubscriptionManager subscription_manager_;
+        std::string origin = "*";
+        std::mutex mutex_;
+        ExpectedComponents expectedComponents_;
+        
+        // Cout variables.
+        std::stringstream MockConsole;
+        std::streambuf* oldCout;
 };
 
 // --- 0. INITIAL TESTS ---
