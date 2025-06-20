@@ -238,6 +238,7 @@ class RESTEndpointTest : public ::testing::Test, public RESTTest {
         EXPECT_CALL(context_, slot()).WillRepeatedly(::testing::Invoke([this]() { return slot_; }));
         EXPECT_CALL(context_, fqoid()).WillRepeatedly(::testing::ReturnRef(fqoid_));
         EXPECT_CALL(context_, jsonBody()).WillRepeatedly(::testing::ReturnRef(jsonBody_));
+        EXPECT_CALL(context_, jwsToken()).WillRepeatedly(::testing::ReturnRef(jwsToken_));
         EXPECT_CALL(context_, authorizationEnabled()).WillRepeatedly(::testing::Invoke([this]() { return authzEnabled_; }));
         EXPECT_CALL(context_, stream()).WillRepeatedly(::testing::Invoke([this]() { return stream_; }));
         // Default expectations for the device model.
@@ -263,6 +264,7 @@ class RESTEndpointTest : public ::testing::Test, public RESTTest {
     bool stream_ = true;
     bool authzEnabled_ = false;
     std::string jsonBody_ = "";
+    std::string jwsToken_ = "";
     // Expected variables
     catena::exception_with_status expRc_{"", catena::StatusCode::OK};
 
