@@ -197,9 +197,9 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~ParamDescriptor</
 <tr class="memitem:a7a1a03ff4ba15c7b1bd086d6395315db" id="r_a7a1a03ff4ba15c7b1bd086d6395315db"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a7a1a03ff4ba15c7b1bd086d6395315db">toProto</a> (catena::Param &amp;param, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const override</td></tr>
 <tr class="memdesc:a7a1a03ff4ba15c7b1bd086d6395315db"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize param meta data in to protobuf message  <br /></td></tr>
 <tr class="separator:a7a1a03ff4ba15c7b1bd086d6395315db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af74e549b698e07d15260612a64c42455" id="r_af74e549b698e07d15260612a64c42455"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#af74e549b698e07d15260612a64c42455">toProto</a> (catena::ParamInfo &amp;paramInfo, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const override</td></tr>
-<tr class="memdesc:af74e549b698e07d15260612a64c42455"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize param meta data in to protobuf message  <br /></td></tr>
-<tr class="separator:af74e549b698e07d15260612a64c42455"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af6ad5eeb4ec1f5c901d883ebc696e5a8" id="r_af6ad5eeb4ec1f5c901d883ebc696e5a8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#af6ad5eeb4ec1f5c901d883ebc696e5a8">toProto</a> (catena::BasicParamInfo &amp;paramInfo, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const override</td></tr>
+<tr class="memdesc:af6ad5eeb4ec1f5c901d883ebc696e5a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize param meta data in to protobuf message  <br /></td></tr>
+<tr class="separator:af6ad5eeb4ec1f5c901d883ebc696e5a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a157db36f837904b8fd93db03c24e0a80" id="r_a157db36f837904b8fd93db03c24e0a80"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a157db36f837904b8fd93db03c24e0a80">name</a> (const std::string &amp;language) const override</td></tr>
 <tr class="memdesc:a157db36f837904b8fd93db03c24e0a80"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the parameter name by language  <br /></td></tr>
 <tr class="separator:a157db36f837904b8fd93db03c24e0a80"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1006,8 +1006,56 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
+<a id="af6ad5eeb4ec1f5c901d883ebc696e5a8" name="af6ad5eeb4ec1f5c901d883ebc696e5a8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af6ad5eeb4ec1f5c901d883ebc696e5a8">&#9670;&#160;</a></span>toProto() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void catena::common::ParamDescriptor::toProto </td>
+          <td>(</td>
+          <td class="paramtype">catena::BasicParamInfo &amp;&#160;</td>
+          <td class="paramname"><em>paramInfo</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
+          <td class="paramname"><em>authz</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>serialize param meta data in to protobuf message </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">paramInfo</td><td>the protobuf message to serialize to </td></tr>
+    <tr><td class="paramname">authz</td><td>the authorization information</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>this function will populate all non-value fields of the protobuf param message with the information from the <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html" title="ParamDescriptor provides information about a parameter.">ParamDescriptor</a> </p>
+
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a5b2d2c32685775b6d40f3145fbba1089">catena::common::IParamDescriptor</a>.</p>
+
+</div>
+</div>
 <a id="a7a1a03ff4ba15c7b1bd086d6395315db" name="a7a1a03ff4ba15c7b1bd086d6395315db"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7a1a03ff4ba15c7b1bd086d6395315db">&#9670;&#160;</a></span>toProto() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a1a03ff4ba15c7b1bd086d6395315db">&#9670;&#160;</a></span>toProto() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1051,54 +1099,6 @@ Here is the caller graph for this function:</div>
 <p>this function will populate all non-value fields of the protobuf param message with the information from the <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html" title="ParamDescriptor provides information about a parameter.">ParamDescriptor</a> </p>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a2d37e2fb40c62467aafcac8d76d8bebb">catena::common::IParamDescriptor</a>.</p>
-
-</div>
-</div>
-<a id="af74e549b698e07d15260612a64c42455" name="af74e549b698e07d15260612a64c42455"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af74e549b698e07d15260612a64c42455">&#9670;&#160;</a></span>toProto() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void catena::common::ParamDescriptor::toProto </td>
-          <td>(</td>
-          <td class="paramtype">catena::ParamInfo &amp;&#160;</td>
-          <td class="paramname"><em>paramInfo</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
-          <td class="paramname"><em>authz</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>serialize param meta data in to protobuf message </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">paramInfo</td><td>the protobuf message to serialize to </td></tr>
-    <tr><td class="paramname">authz</td><td>the authorization information</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>this function will populate all non-value fields of the protobuf param message with the information from the <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html" title="ParamDescriptor provides information about a parameter.">ParamDescriptor</a> </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ac54e6b0af6943231eb32098afc0a6ee9">catena::common::IParamDescriptor</a>.</p>
 
 </div>
 </div>

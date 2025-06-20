@@ -26,6 +26,7 @@ var hierarchy =
     [ "catena::gRPC::ICallData", "classcatena_1_1gRPC_1_1ICallData.html", [
       [ "catena::gRPC::CallData", "classcatena_1_1gRPC_1_1CallData.html", [
         [ "catena::gRPC::AddLanguage", "classcatena_1_1gRPC_1_1AddLanguage.html", null ],
+        [ "catena::gRPC::BasicParamInfoRequest", "classcatena_1_1gRPC_1_1BasicParamInfoRequest.html", null ],
         [ "catena::gRPC::Connect", "classcatena_1_1gRPC_1_1Connect.html", null ],
         [ "catena::gRPC::DeviceRequest", "classcatena_1_1gRPC_1_1DeviceRequest.html", null ],
         [ "catena::gRPC::ExecuteCommand", "classcatena_1_1gRPC_1_1ExecuteCommand.html", null ],
@@ -38,12 +39,12 @@ var hierarchy =
         [ "catena::gRPC::MultiSetValue", "classcatena_1_1gRPC_1_1MultiSetValue.html", [
           [ "catena::gRPC::SetValue", "classcatena_1_1gRPC_1_1SetValue.html", null ]
         ] ],
-        [ "catena::gRPC::ParamInfoRequest", "classcatena_1_1gRPC_1_1ParamInfoRequest.html", null ],
         [ "catena::gRPC::UpdateSubscriptions", "classcatena_1_1gRPC_1_1UpdateSubscriptions.html", null ]
       ] ]
     ] ],
     [ "catena::REST::ICallData", "classcatena_1_1REST_1_1ICallData.html", [
       [ "catena::REST::AssetRequest", "classcatena_1_1REST_1_1AssetRequest.html", null ],
+      [ "catena::REST::BasicParamInfoRequest", "classcatena_1_1REST_1_1BasicParamInfoRequest.html", null ],
       [ "catena::REST::Connect", "classcatena_1_1REST_1_1Connect.html", null ],
       [ "catena::REST::DeviceRequest", "classcatena_1_1REST_1_1DeviceRequest.html", null ],
       [ "catena::REST::ExecuteCommand", "classcatena_1_1REST_1_1ExecuteCommand.html", null ],
@@ -55,7 +56,6 @@ var hierarchy =
       [ "catena::REST::MultiSetValue", "classcatena_1_1REST_1_1MultiSetValue.html", [
         [ "catena::REST::SetValue", "classcatena_1_1REST_1_1SetValue.html", null ]
       ] ],
-      [ "catena::REST::ParamInfoRequest", "classcatena_1_1REST_1_1ParamInfoRequest.html", null ],
       [ "catena::REST::Subscriptions", "classcatena_1_1REST_1_1Subscriptions.html", null ]
     ] ],
     [ "catena::common::IParamDescriptor::ICommandResponder", "classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html", [
