@@ -18,8 +18,8 @@ import catena.core.language.AddLanguagePayload;
 import catena.core.language.LanguageList;
 import catena.core.language.LanguagePackRequestPayload;
 import catena.core.language.Slot;
-import catena.core.parameter.BasicParamInfoRequestPayload;
-import catena.core.parameter.BasicParamInfoResponse;
+import catena.core.parameter.ParamInfoRequestPayload;
+import catena.core.parameter.ParamInfoResponse;
 import catena.core.parameter.CommandResponse;
 import catena.core.parameter.ExecuteCommandPayload;
 import catena.core.parameter.GetParamPayload;
@@ -219,12 +219,12 @@ public class CatenaServer extends CatenaServiceImplBase
     }
 
     @Override
-    public void basicParamInfoRequest(BasicParamInfoRequestPayload request, StreamObserver<BasicParamInfoResponse> responseObserver)
+    public void paramInfoRequest(ParamInfoRequestPayload request, StreamObserver<ParamInfoResponse> responseObserver)
     {
         CatenaDevice device = getDevice(request.getSlot());
         if (device != null)
         {
-            device.basicParamInfoRequest(request, responseObserver, getClaims());
+            device.paramInfoRequest(request, responseObserver, getClaims());
         }
         else
         {

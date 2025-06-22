@@ -2,7 +2,7 @@
 ![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
 :::
 
-# BasicParamInfoRequest
+# ListLanguages
 Gets the languages supported by the device model.
 
 ### IN

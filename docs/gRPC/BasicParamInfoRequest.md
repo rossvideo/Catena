@@ -2,14 +2,14 @@
 ![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
 :::
 
-# BasicParamInfoRequest
+# ParamInfoRequest
 Gets a parameter's basic information from the device model connected to the specified slot
 
 ### IN
 ```
 /* Specifies the OID and potentially its subtree of
  * child parameters if the recursive flag is set. */
-message BasicParamInfoRequestPayload {
+message ParamInfoRequestPayload {
   uint32 slot = 1;       // Uniquely identifies the device at node scope.
   string oid_prefix = 2; /* Uniquely identifies starting parameter relative to
                           * device.params. Specifying "" selects all top-level
@@ -20,15 +20,15 @@ message BasicParamInfoRequestPayload {
 ```
 
 ### OUT
-A stream of BasicParamInfoResponses
+A stream of ParamInfoResponses
 ```
-message BasicParamInfoResponse {
-  BasicParamInfo info = 1;
-  uint32 array_length = 2; // If this BasicParamInfoResponse is for an array 
+message ParamInfoResponse {
+  ParamInfo info = 1;
+  uint32 array_length = 2; // If this ParamInfoResponse is for an array 
                            // parameter, include the length of the array.
 }
 
-message BasicParamInfo {
+message ParamInfo {
   string oid = 1;          // The parameter's OID.
   PolyglotText name = 2;   // The parameter's name to display in a client GUI.
   ParamType type = 3;      // The parameter's type.

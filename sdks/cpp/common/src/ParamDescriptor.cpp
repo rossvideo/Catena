@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -75,7 +75,7 @@ void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {
 }
 
 
-void ParamDescriptor::toProto(catena::BasicParamInfo &paramInfo, Authorizer& authz) const {
+void ParamDescriptor::toProto(catena::ParamInfo &paramInfo, Authorizer& authz) const {
     paramInfo.set_type(type_);
     paramInfo.set_oid(oid_);
     paramInfo.set_template_oid(template_oid_);
