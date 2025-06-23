@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -52,14 +52,14 @@
 using namespace catena::REST;
 
 // Fixture
-class RESTSocketReaderTests : public ::testing::Test, public RESTTest {
+class RESTSocketReaderTests : public testing::Test, public RESTTest {
   protected:
     // Defining the in/out sockets.
-    RESTSocketReaderTests() : RESTTest(&clientSocket, &serverSocket) {}
+    RESTSocketReaderTests() : RESTTest(&clientSocket_, &serverSocket_) {}
 
     // Writes a request to a socket to later be read by the SocketReader.
     void SetUp() override {
-        origin = "test_origin";
+        origin_ = "test_origin";
         // Making sure the reader properly adds the subscriptions manager.
         EXPECT_EQ(&socketReader.getSubscriptionManager(), &sm);
         EXPECT_EQ(socketReader.EOPath(), EOPath);
@@ -82,7 +82,7 @@ class RESTSocketReaderTests : public ::testing::Test, public RESTTest {
         // Writing the request to the socket and reading.
         writeRequest(method, slot, endpoint, fqoid, stream, fields,
                      jwsToken, origin, detailLevel, language, jsonBody);
-        socketReader.read(serverSocket, authz);
+        socketReader.read(serverSocket_, authz);
         // Validating the results.
         if (!authz) { jwsToken = ""; }
         if (detailLevel ==  catena::Device_DetailLevel_UNSET) {
@@ -210,10 +210,10 @@ TEST_F(RESTSocketReaderTests, SocketReader_EndpointParameters) {
  * TEST 10 - Testing parsing of subscriptions endpoints.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointSubscriptions) {
-    // GET /v1/{slot}/basic-param/{fqoid}/stream
-    testCall(catena::REST::Method_GET, 1, "/basic-param", "/test/oid", true, {{"recursive", "true"}}, false, "", "*", catena::Device_DetailLevel_NONE, "en", "");
-    // GET /v1/{slot}/basic-param/{fqoid}
-    testCall(catena::REST::Method_GET, 1, "/basic-param", "/test/oid", false, {{"recursive", "true"}}, false, "", "*", catena::Device_DetailLevel_NONE, "en", "");
+    // GET /v1/{slot}/param-info/{fqoid}/stream
+    testCall("GET", 1, "/param-info", "/test/oid", true, {{"recursive", "true"}}, false, "", "*", "NONE", "en", "");
+    // GET /v1/{slot}/param-info/{fqoid}
+    testCall("GET", 1, "/param-info", "/test/oid", false, {{"recursive", "true"}}, false, "", "*", "NONE", "en", "");
     // GET /v1/{slot}/subscriptions/{fqoid}
     testCall(catena::REST::Method_GET, 1, "/subscriptions", "", false, {}, false, "", "*", catena::Device_DetailLevel_NONE, "en", "");
     // PUT /v1/{slot}/value/{fqoid}

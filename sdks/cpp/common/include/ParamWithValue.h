@@ -197,7 +197,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param paramInfo the protobuf value to serialize to
      * @param authz the authorization information
      */
-    catena::exception_with_status toProto(catena::BasicParamInfoResponse& paramInfo, Authorizer& authz) const override {
+    catena::exception_with_status toProto(catena::ParamInfoResponse& paramInfo, Authorizer& authz) const override {
         catena::exception_with_status ans{"", catena::StatusCode::OK};
         if (!authz.readAuthz(*this)) {
             ans = catena::exception_with_status("Not authorized to read param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);

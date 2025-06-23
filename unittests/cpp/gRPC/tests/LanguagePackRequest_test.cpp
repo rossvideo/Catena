@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the LanguagePackRequest.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/27
+ * @date 25/06/18
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -47,7 +47,7 @@
 #include <google/protobuf/util/json_util.h>
 
 // Test helpers
-#include "MockServer.h"
+#include "GRPCTest.h"
 
 // gRPC
 #include "controllers/LanguagePackRequest.h"
@@ -56,28 +56,19 @@ using namespace catena::common;
 using namespace catena::gRPC;
 
 // Fixture
-class gRPCLanguagePackRequestTests : public ::testing::Test {
+class gRPCLanguagePackRequestTests : public GRPCTest {
   protected:
     /*
-     * Called at the start of all tests.
-     * Starts the mockServer and initializes the static inVal.
+     * Creates a LanguagePackRequest handler object.
      */
-    static void SetUpTestSuite() {
-        mockServer.start();
-        // Setting up the inVal used across all tests.
-        inVal.set_slot(1);
-        inVal.set_language("en");
-    }
+    void makeOne() override { new LanguagePackRequest(&service, dm, true); }
 
     /*
-     * Sets up expectations for the creation of a new CallData obj.
+     * Helper function which initializes a LanguagePackRequestPayload object.
      */
-    void SetUp() override {
-        // Redirecting cout to a stringstream for testing.
-        oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-        // We can always assume that a new CallData obj is created.
-        // Either from initialization or kProceed.
-        mockServer.expNew();
+    void initPayload(uint32_t slot, const std::string& language) {
+        inVal.set_slot(slot);
+        inVal.set_language(language);
     }
 
     /* 
@@ -86,7 +77,7 @@ class gRPCLanguagePackRequestTests : public ::testing::Test {
      */
     void testRPC() {
         // Sending async RPC.
-        mockServer.client->async()->LanguagePackRequest(&clientContext, &inVal, &outVal, [this](grpc::Status status){
+        client->async()->LanguagePackRequest(&clientContext, &inVal, &outVal, [this](grpc::Status status){
             outRc = status;
             done = true;
             cv.notify_one();
@@ -94,57 +85,18 @@ class gRPCLanguagePackRequestTests : public ::testing::Test {
         cv.wait(lock, [this] { return done; });
         // Comparing the results.
         EXPECT_EQ(outVal.SerializeAsString(), expVal.SerializeAsString());
-        EXPECT_EQ(outRc.error_code(), expRc.error_code());
-        EXPECT_EQ(outRc.error_message(), expRc.error_message());
+        EXPECT_EQ(outRc.error_code(), static_cast<grpc::StatusCode>(expRc.status));
+        EXPECT_EQ(outRc.error_message(), expRc.what());
+        // Make sure another LanguagePackRequest handler was created.
+        EXPECT_TRUE(asyncCall) << "Async handler was not created during runtime";
     }
 
-    /*
-     * Restores cout after each test.
-     */
-    void TearDown() override {
-        std::cout.rdbuf(oldCout);
-    }
-
-    /*
-     * Called at the end of all tests, shuts down the server and cleans up.
-     */
-    static void TearDownTestSuite() {
-        // Redirecting cout to a stringstream for testing.
-        std::stringstream MockConsole;
-        std::streambuf* oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-        // Destroying the server.
-        EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-            delete mockServer.testCall;
-            mockServer.testCall = nullptr;
-        }));
-        mockServer.shutdown();
-        // Restoring cout
-        std::cout.rdbuf(oldCout);
-    }
-
-    // Console variables
-    std::stringstream MockConsole;
-    std::streambuf* oldCout;
-    // Client variables.
-    grpc::ClientContext clientContext;
-    bool done = false;
-    std::condition_variable cv;
-    std::mutex cv_mtx;
-    std::unique_lock<std::mutex> lock{cv_mtx};
-    static catena::LanguagePackRequestPayload inVal;
+    // in/out val
+    catena::LanguagePackRequestPayload inVal;
     catena::DeviceComponent_ComponentLanguagePack outVal;
-    grpc::Status outRc;
     // Expected variables
     catena::DeviceComponent_ComponentLanguagePack expVal;
-    grpc::Status expRc;
-
-    static MockServer mockServer;
 };
-
-MockServer gRPCLanguagePackRequestTests::mockServer;
-// Static as its only used to make sure the correct obj is passed into mocked
-// functions.
-catena::LanguagePackRequestPayload gRPCLanguagePackRequestTests::inVal;
 
 /*
  * ============================================================================
@@ -153,84 +105,54 @@ catena::LanguagePackRequestPayload gRPCLanguagePackRequestTests::inVal;
  * 
  * TEST 1 - Creating a LanguagePackRequest object.
  */
-TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_create) {
-    // Creating languagePackRequest object.
-    new LanguagePackRequest(mockServer.service, *mockServer.dm, true);
-    EXPECT_FALSE(mockServer.testCall);
-    EXPECT_TRUE(mockServer.asyncCall);
+TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_Create) {
+    EXPECT_TRUE(asyncCall);
 }
 
 /* 
  * TEST 2 - Normal case for LanguagePackRequest proceed().
  */
-TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_proceedNormal) {
-    // Setting up the expected values.
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_Normal) {
+    initPayload(0, "en");
     expVal.set_language(inVal.language());
     auto languagePack = expVal.mutable_language_pack();
     languagePack->set_name("English");
     (*languagePack->mutable_words())["greeting"] = "Hello";
-    
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, getLanguagePack(inVal.language(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack){
+    // Setting expecteations
+    EXPECT_CALL(dm, getLanguagePack(inVal.language(), ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack){
             pack.CopyFrom(expVal);
-            return catena::exception_with_status(rc.what(), rc.status);
+            return catena::exception_with_status(expRc.what(), expRc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
-    // Sending the RPC and comparing the results.
+    // Sending the RPC.
     testRPC();
 }
 
 /* 
  * TEST 3 - dm.getLanguagePack returns a catena::Exception_With_Status.
  */
-TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_proceedErrReturn) {
-    // Setting up the expected values.
-    catena::exception_with_status rc("Language pack en not found", catena::StatusCode::NOT_FOUND);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-    
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, getLanguagePack(inVal.language(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack){
-            return catena::exception_with_status(rc.what(), rc.status);
+TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrReturn) {
+    expRc = catena::exception_with_status("Language pack en not found", catena::StatusCode::NOT_FOUND);    
+    // Setting expecteations
+    EXPECT_CALL(dm, getLanguagePack(inVal.language(), ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack){
+            return catena::exception_with_status(expRc.what(), expRc.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
-    // Sending the RPC and comparing the results.
+    // Sending the RPC.
     testRPC();
 }
 
 /* 
  * TEST 4 - dm.getLanguagePack throws a catena::Exception_With_Status.
  */
-TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_proceedErrThrow) {
-    // Setting up the expected values.
-    catena::exception_with_status rc("unknown error", catena::StatusCode::UNKNOWN);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-    
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, getLanguagePack(inVal.language(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack){
-            throw catena::exception_with_status(rc.what(), rc.status);
+TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrThrow) {
+    expRc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
+    // Setting expecteations
+    EXPECT_CALL(dm, getLanguagePack(inVal.language(), ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack){
+            throw catena::exception_with_status(expRc.what(), expRc.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
-    // Sending the RPC and comparing the results.
+    // Sending the RPC.
     testRPC();
 }
