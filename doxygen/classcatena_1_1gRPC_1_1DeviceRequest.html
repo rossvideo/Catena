@@ -114,9 +114,9 @@ Collaboration diagram for catena::gRPC::DeviceRequest:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ad3a549c5ed79b81060e41148c0428ae9" id="r_ad3a549c5ed79b81060e41148c0428ae9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1gRPC_1_1DeviceRequest.html#ad3a549c5ed79b81060e41148c0428ae9">DeviceRequest</a> (<a class="el" href="classcatena_1_1gRPC_1_1ICatenaServiceImpl.html">ICatenaServiceImpl</a> *service, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm, bool ok)</td></tr>
-<tr class="memdesc:ad3a549c5ed79b81060e41148c0428ae9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for <a class="el" href="classcatena_1_1gRPC_1_1ExternalObjectRequest.html" title="CallData class for the ExternalObjectRequest RPC.">ExternalObjectRequest</a> class.  <br /></td></tr>
-<tr class="separator:ad3a549c5ed79b81060e41148c0428ae9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c3c85343cbc5fa988c9dfc10d2794d3" id="r_a6c3c85343cbc5fa988c9dfc10d2794d3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1gRPC_1_1DeviceRequest.html#a6c3c85343cbc5fa988c9dfc10d2794d3">DeviceRequest</a> (<a class="el" href="classcatena_1_1gRPC_1_1ICatenaServiceImpl.html">ICatenaServiceImpl</a> *service, SlotMap &amp;dms, bool ok)</td></tr>
+<tr class="memdesc:a6c3c85343cbc5fa988c9dfc10d2794d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for <a class="el" href="classcatena_1_1gRPC_1_1ExternalObjectRequest.html" title="CallData class for the ExternalObjectRequest RPC.">ExternalObjectRequest</a> class.  <br /></td></tr>
+<tr class="separator:a6c3c85343cbc5fa988c9dfc10d2794d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae551adf8b29584ab6d41b22ce166ffd1" id="r_ae551adf8b29584ab6d41b22ce166ffd1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1gRPC_1_1DeviceRequest.html#ae551adf8b29584ab6d41b22ce166ffd1">proceed</a> (bool ok) override</td></tr>
 <tr class="memdesc:ae551adf8b29584ab6d41b22ce166ffd1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Manages <a class="el" href="namespacecatena_1_1gRPC.html" title="Namespace containing classes relating to the gRPC API.">gRPC</a> request through a state machine.  <br /></td></tr>
 <tr class="separator:ae551adf8b29584ab6d41b22ce166ffd1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -149,8 +149,8 @@ ServerContext&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for the CallData classes which defines the jwsToken_ class.">CallData</a> class for the <a class="el" href="classcatena_1_1gRPC_1_1DeviceRequest.html" title="CallData class for the DeviceRequest RPC.">DeviceRequest</a> RPC. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="ad3a549c5ed79b81060e41148c0428ae9" name="ad3a549c5ed79b81060e41148c0428ae9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad3a549c5ed79b81060e41148c0428ae9">&#9670;&#160;</a></span>DeviceRequest()</h2>
+<a id="a6c3c85343cbc5fa988c9dfc10d2794d3" name="a6c3c85343cbc5fa988c9dfc10d2794d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6c3c85343cbc5fa988c9dfc10d2794d3">&#9670;&#160;</a></span>DeviceRequest()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -164,8 +164,8 @@ ServerContext&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;&#160;</td>
-          <td class="paramname"><em>dm</em>, </td>
+          <td class="paramtype">SlotMap &amp;&#160;</td>
+          <td class="paramname"><em>dms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

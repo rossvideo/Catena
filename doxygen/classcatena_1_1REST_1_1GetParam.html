@@ -122,12 +122,15 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>IDevice</b> = <a cla
 <tr class="memitem:a76992fb15d17512d1319510aefe240a9" id="r_a76992fb15d17512d1319510aefe240a9"><td class="memItemLeft" align="right" valign="top"><a id="a76992fb15d17512d1319510aefe240a9" name="a76992fb15d17512d1319510aefe240a9"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>IParam</b> = <a class="el" href="classcatena_1_1common_1_1IParam.html">catena::common::IParam</a></td></tr>
 <tr class="separator:a76992fb15d17512d1319510aefe240a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a217bff23bad8fa70d7c9ea02c2fec3ef" id="r_a217bff23bad8fa70d7c9ea02c2fec3ef"><td class="memItemLeft" align="right" valign="top"><a id="a217bff23bad8fa70d7c9ea02c2fec3ef" name="a217bff23bad8fa70d7c9ea02c2fec3ef"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>SlotMap</b> = catena::common::SlotMap</td></tr>
+<tr class="separator:a217bff23bad8fa70d7c9ea02c2fec3ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a16b807af1f493d0881281e0fc42d49d2" id="r_a16b807af1f493d0881281e0fc42d49d2"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1GetParam.html#a16b807af1f493d0881281e0fc42d49d2">GetParam</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;context, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm)</td></tr>
-<tr class="memdesc:a16b807af1f493d0881281e0fc42d49d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1REST_1_1GetParam.html" title="ICallData class for the GetParam REST controller.">GetParam</a> controller.  <br /></td></tr>
-<tr class="separator:a16b807af1f493d0881281e0fc42d49d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae79db4141dfa065dae0027140b315ae5" id="r_ae79db4141dfa065dae0027140b315ae5"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1GetParam.html#ae79db4141dfa065dae0027140b315ae5">GetParam</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;context, SlotMap &amp;dms)</td></tr>
+<tr class="memdesc:ae79db4141dfa065dae0027140b315ae5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1REST_1_1GetParam.html" title="ICallData class for the GetParam REST controller.">GetParam</a> controller.  <br /></td></tr>
+<tr class="separator:ae79db4141dfa065dae0027140b315ae5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7d1aa01bf544b001374233367f183105" id="r_a7d1aa01bf544b001374233367f183105"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1GetParam.html#a7d1aa01bf544b001374233367f183105">proceed</a> () override</td></tr>
 <tr class="memdesc:a7d1aa01bf544b001374233367f183105"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1REST_1_1GetParam.html" title="ICallData class for the GetParam REST controller.">GetParam</a>'s main process.  <br /></td></tr>
 <tr class="separator:a7d1aa01bf544b001374233367f183105"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -137,9 +140,9 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:acdc9cae8fa10022f14bcea914b4f5257" id="r_acdc9cae8fa10022f14bcea914b4f5257"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1GetParam.html#acdc9cae8fa10022f14bcea914b4f5257">makeOne</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;context, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm)</td></tr>
-<tr class="memdesc:acdc9cae8fa10022f14bcea914b4f5257"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a new controller object for use with GenericFactory.  <br /></td></tr>
-<tr class="separator:acdc9cae8fa10022f14bcea914b4f5257"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a838d1f0bcc60afaad7cf0d43ca643e12" id="r_a838d1f0bcc60afaad7cf0d43ca643e12"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1GetParam.html#a838d1f0bcc60afaad7cf0d43ca643e12">makeOne</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;context, SlotMap &amp;dms)</td></tr>
+<tr class="memdesc:a838d1f0bcc60afaad7cf0d43ca643e12"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a new controller object for use with GenericFactory.  <br /></td></tr>
+<tr class="separator:a838d1f0bcc60afaad7cf0d43ca643e12"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
@@ -147,8 +150,8 @@ Additional Inherited Members</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classcatena_1_1REST_1_1ICallData.html" title="Interface class for REST API controllers.">ICallData</a> class for the <a class="el" href="classcatena_1_1REST_1_1GetParam.html" title="ICallData class for the GetParam REST controller.">GetParam</a> <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> controller. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a16b807af1f493d0881281e0fc42d49d2" name="a16b807af1f493d0881281e0fc42d49d2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a16b807af1f493d0881281e0fc42d49d2">&#9670;&#160;</a></span>GetParam()</h2>
+<a id="ae79db4141dfa065dae0027140b315ae5" name="ae79db4141dfa065dae0027140b315ae5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae79db4141dfa065dae0027140b315ae5">&#9670;&#160;</a></span>GetParam()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -168,8 +171,8 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;&#160;</td>
-          <td class="paramname"><em>dm</em>&#160;</td>
+          <td class="paramtype">SlotMap &amp;&#160;</td>
+          <td class="paramname"><em>dms</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -221,8 +224,8 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
-<a id="acdc9cae8fa10022f14bcea914b4f5257" name="acdc9cae8fa10022f14bcea914b4f5257"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acdc9cae8fa10022f14bcea914b4f5257">&#9670;&#160;</a></span>makeOne()</h2>
+<a id="a838d1f0bcc60afaad7cf0d43ca643e12" name="a838d1f0bcc60afaad7cf0d43ca643e12"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a838d1f0bcc60afaad7cf0d43ca643e12">&#9670;&#160;</a></span>makeOne()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -245,8 +248,8 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;&#160;</td>
-          <td class="paramname"><em>dm</em>&#160;</td>
+          <td class="paramtype">SlotMap &amp;&#160;</td>
+          <td class="paramname"><em>dms</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
