@@ -48,6 +48,10 @@ using namespace catena::REST;
 // Fixture
 class RESTGetParamTests : public RESTEndpointTest {
   protected:
+    RESTGetParamTests() : RESTEndpointTest() {
+        // Default expectations for the device model 1 (should not be called).
+        EXPECT_CALL(dm1_, getParam(testing::An<const std::string&>(), testing::_, testing::_)).Times(0);
+    }
     /*
      * Creates a GetParam handler object.
      */
@@ -190,7 +194,20 @@ TEST_F(RESTGetParamTests, GetParam_AuthzInvalid) {
 }
 
 /*
- * TEST 6 - dm.getParam() returns a catena::exception_with_status.
+ * TEST 6 - No device in the specified slot.
+ */
+TEST_F(RESTGetParamTests, GetParam_ErrInvalidSlot) {
+    initPayload(dms_.size(), "/test_oid");
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 7 - dm.getParam() returns a catena::exception_with_status.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrGetParamReturnCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -208,7 +225,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrGetParamReturnCatena) {
 }
 
 /*
- * TEST 7 - dm.getParam() throws a catena::exception_with_status.
+ * TEST 8 - dm.getParam() throws a catena::exception_with_status.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -226,7 +243,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowCatena) {
 }
 
 /*
- * TEST 8 - dm.getParam() throws a std::runtime_exception.
+ * TEST 9 - dm.getParam() throws a std::runtime_exception.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowStd) {
     expRc_ = catena::exception_with_status("Std error", catena::StatusCode::INTERNAL);
@@ -241,7 +258,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowStd) {
 }
 
 /*
- * TEST 9 - dm.getParam() throws an unknown error.
+ * TEST 10 - dm.getParam() throws an unknown error.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -256,7 +273,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowUnknown) {
 }
 
 /*
- * TEST 10 - param->toProto() returns a catena::exception_with_status.
+ * TEST 11 - param->toProto() returns a catena::exception_with_status.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrToProtoReturnCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -272,7 +289,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoReturnCatena) {
 }
 
 /*
- * TEST 11 - param->toProto() throws a catena::exception_with_status.
+ * TEST 12 - param->toProto() throws a catena::exception_with_status.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -291,7 +308,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowCatena) {
 }
 
 /*
- * TEST 12 - param->toProto() throws a std::runtime_exception.
+ * TEST 13 - param->toProto() throws a std::runtime_exception.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowStd) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -307,7 +324,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowStd) {
 }
 
 /*
- * TEST 13 - param->toProto() throws an unknown error.
+ * TEST 14 - param->toProto() throws an unknown error.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);

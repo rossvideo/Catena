@@ -47,6 +47,11 @@ using namespace catena::REST;
 // Fixture
 class RESTSetValueTests : public RESTEndpointTest {
   protected:
+    RESTSetValueTests() : RESTEndpointTest() {
+        // Default expectations for the device model 1 (should not be called).
+        EXPECT_CALL(dm1_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(0);
+        EXPECT_CALL(dm1_, commitMultiSetValue(testing::_, testing::_)).Times(0);
+    }
     /*
      * Creates a SetValue handler object.
      */

@@ -396,7 +396,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzJWSNotFound) {
 /*
  * TEST 9 - No device in the specified slot.
  */
-TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ErrGetSerializerIllegalState) {
+TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
     initPayload(dms.size(), "test_command", "test_value", true);
     expRc = catena::exception_with_status("device not found in slot " + std::to_string(dms.size()), catena::StatusCode::NOT_FOUND);
     // Setting expectations
