@@ -1,6 +1,7 @@
 var namespacecatena_1_1REST =
 [
     [ "AssetRequest", "classcatena_1_1REST_1_1AssetRequest.html", "classcatena_1_1REST_1_1AssetRequest" ],
+    [ "BasicParamInfoRequest", "classcatena_1_1REST_1_1BasicParamInfoRequest.html", "classcatena_1_1REST_1_1BasicParamInfoRequest" ],
     [ "CatenaServiceImpl", "classcatena_1_1REST_1_1CatenaServiceImpl.html", "classcatena_1_1REST_1_1CatenaServiceImpl" ],
     [ "Connect", "classcatena_1_1REST_1_1Connect.html", "classcatena_1_1REST_1_1Connect" ],
     [ "DeviceRequest", "classcatena_1_1REST_1_1DeviceRequest.html", "classcatena_1_1REST_1_1DeviceRequest" ],
@@ -15,7 +16,6 @@ var namespacecatena_1_1REST =
     [ "LanguagePack", "classcatena_1_1REST_1_1LanguagePack.html", "classcatena_1_1REST_1_1LanguagePack" ],
     [ "Languages", "classcatena_1_1REST_1_1Languages.html", "classcatena_1_1REST_1_1Languages" ],
     [ "MultiSetValue", "classcatena_1_1REST_1_1MultiSetValue.html", "classcatena_1_1REST_1_1MultiSetValue" ],
-    [ "ParamInfoRequest", "classcatena_1_1REST_1_1ParamInfoRequest.html", "classcatena_1_1REST_1_1ParamInfoRequest" ],
     [ "SetValue", "classcatena_1_1REST_1_1SetValue.html", "classcatena_1_1REST_1_1SetValue" ],
     [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html", "classcatena_1_1REST_1_1SocketReader" ],
     [ "SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", "classcatena_1_1REST_1_1SocketWriter" ],

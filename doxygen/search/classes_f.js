@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['updatesubscriptions_0',['UpdateSubscriptions',['../classcatena_1_1gRPC_1_1UpdateSubscriptions.html',1,'catena::gRPC']]]
+  ['typelist_0',['TypeList',['../classcatena_1_1meta_1_1TypeList.html',1,'catena::meta']]]
 ];

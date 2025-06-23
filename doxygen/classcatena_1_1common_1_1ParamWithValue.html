@@ -179,9 +179,9 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~ParamWithValue</b
 <tr class="memitem:ac3bed0393b165df02bd34a7520733509" id="r_ac3bed0393b165df02bd34a7520733509"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#ac3bed0393b165df02bd34a7520733509">toProto</a> (catena::Param &amp;param, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const override</td></tr>
 <tr class="memdesc:ac3bed0393b165df02bd34a7520733509"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter descriptor to protobuf include both the descriptor and the value  <br /></td></tr>
 <tr class="separator:ac3bed0393b165df02bd34a7520733509"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4604d117287412cc176b62113cd1578c" id="r_a4604d117287412cc176b62113cd1578c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a4604d117287412cc176b62113cd1578c">toProto</a> (catena::ParamInfoResponse &amp;paramInfo, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const override</td></tr>
-<tr class="memdesc:a4604d117287412cc176b62113cd1578c"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter descriptor to protobuf include both the descriptor and the value  <br /></td></tr>
-<tr class="separator:a4604d117287412cc176b62113cd1578c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9e59ebcc2bfa81da748bbe3f431437d" id="r_ac9e59ebcc2bfa81da748bbe3f431437d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#ac9e59ebcc2bfa81da748bbe3f431437d">toProto</a> (catena::BasicParamInfoResponse &amp;paramInfo, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const override</td></tr>
+<tr class="memdesc:ac9e59ebcc2bfa81da748bbe3f431437d"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter descriptor to protobuf include both the descriptor and the value  <br /></td></tr>
+<tr class="separator:ac9e59ebcc2bfa81da748bbe3f431437d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6027ca23cb1897c44d933a9f3a4dd29d" id="r_a6027ca23cb1897c44d933a9f3a4dd29d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a6027ca23cb1897c44d933a9f3a4dd29d">fromProto</a> (const catena::Value &amp;value, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) override</td></tr>
 <tr class="memdesc:a6027ca23cb1897c44d933a9f3a4dd29d"><td class="mdescLeft">&#160;</td><td class="mdescRight">deserialize the parameter value from protobuf if authorized  <br /></td></tr>
 <tr class="separator:a6027ca23cb1897c44d933a9f3a4dd29d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -998,8 +998,64 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
+<a id="ac9e59ebcc2bfa81da748bbe3f431437d" name="ac9e59ebcc2bfa81da748bbe3f431437d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac9e59ebcc2bfa81da748bbe3f431437d">&#9670;&#160;</a></span>toProto() <span class="overload">[1/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a>&lt; T &gt;::toProto </td>
+          <td>(</td>
+          <td class="paramtype">catena::BasicParamInfoResponse &amp;&#160;</td>
+          <td class="paramname"><em>paramInfo</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
+          <td class="paramname"><em>authz</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>serialize the parameter descriptor to protobuf include both the descriptor and the value </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">paramInfo</td><td>the protobuf value to serialize to </td></tr>
+    <tr><td class="paramname">authz</td><td>the authorization information </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#a83ab33a73104c70443ceeaa3bfd98172">catena::common::IParam</a>.</p>
+
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a55ceeb3c4f8934314af7457b96becbc0">catena::common::IParamDescriptor::getOid()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ade1d7d4fd21e79ff2045feeb9425d923">catena::PERMISSION_DENIED</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a2d0c5c9888480653d5c189c102513401">catena::common::Authorizer::readAuthz()</a>, and <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a2d37e2fb40c62467aafcac8d76d8bebb">catena::common::IParamDescriptor::toProto()</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_ac9e59ebcc2bfa81da748bbe3f431437d_cgraph.svg" width="520" height="179"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+
+</div>
+</div>
 <a id="ac3bed0393b165df02bd34a7520733509" name="ac3bed0393b165df02bd34a7520733509"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac3bed0393b165df02bd34a7520733509">&#9670;&#160;</a></span>toProto() <span class="overload">[1/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ac3bed0393b165df02bd34a7520733509">&#9670;&#160;</a></span>toProto() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1050,62 +1106,6 @@ template&lt;typename T &gt; </div>
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_ac3bed0393b165df02bd34a7520733509_cgraph.svg" width="520" height="179"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
-</div>
-
-</div>
-</div>
-<a id="a4604d117287412cc176b62113cd1578c" name="a4604d117287412cc176b62113cd1578c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4604d117287412cc176b62113cd1578c">&#9670;&#160;</a></span>toProto() <span class="overload">[2/3]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a>&lt; T &gt;::toProto </td>
-          <td>(</td>
-          <td class="paramtype">catena::ParamInfoResponse &amp;&#160;</td>
-          <td class="paramname"><em>paramInfo</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
-          <td class="paramname"><em>authz</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>serialize the parameter descriptor to protobuf include both the descriptor and the value </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">paramInfo</td><td>the protobuf value to serialize to </td></tr>
-    <tr><td class="paramname">authz</td><td>the authorization information </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#af19b4c2e712a1ba64df678f990d21a9c">catena::common::IParam</a>.</p>
-
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a55ceeb3c4f8934314af7457b96becbc0">catena::common::IParamDescriptor::getOid()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ade1d7d4fd21e79ff2045feeb9425d923">catena::PERMISSION_DENIED</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a2d0c5c9888480653d5c189c102513401">catena::common::Authorizer::readAuthz()</a>, and <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a2d37e2fb40c62467aafcac8d76d8bebb">catena::common::IParamDescriptor::toProto()</a>.</p>
-<div class="dynheader">
-Here is the call graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a4604d117287412cc176b62113cd1578c_cgraph.svg" width="520" height="179"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>

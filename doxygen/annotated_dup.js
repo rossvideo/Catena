@@ -41,6 +41,7 @@ var annotated_dup =
       ] ],
       [ "gRPC", "namespacecatena_1_1gRPC.html", [
         [ "AddLanguage", "classcatena_1_1gRPC_1_1AddLanguage.html", "classcatena_1_1gRPC_1_1AddLanguage" ],
+        [ "BasicParamInfoRequest", "classcatena_1_1gRPC_1_1BasicParamInfoRequest.html", "classcatena_1_1gRPC_1_1BasicParamInfoRequest" ],
         [ "CallData", "classcatena_1_1gRPC_1_1CallData.html", "classcatena_1_1gRPC_1_1CallData" ],
         [ "CatenaServiceImpl", "classcatena_1_1gRPC_1_1CatenaServiceImpl.html", "classcatena_1_1gRPC_1_1CatenaServiceImpl" ],
         [ "Connect", "classcatena_1_1gRPC_1_1Connect.html", "classcatena_1_1gRPC_1_1Connect" ],
@@ -56,7 +57,6 @@ var annotated_dup =
         [ "LanguagePackRequest", "classcatena_1_1gRPC_1_1LanguagePackRequest.html", "classcatena_1_1gRPC_1_1LanguagePackRequest" ],
         [ "ListLanguages", "classcatena_1_1gRPC_1_1ListLanguages.html", "classcatena_1_1gRPC_1_1ListLanguages" ],
         [ "MultiSetValue", "classcatena_1_1gRPC_1_1MultiSetValue.html", "classcatena_1_1gRPC_1_1MultiSetValue" ],
-        [ "ParamInfoRequest", "classcatena_1_1gRPC_1_1ParamInfoRequest.html", "classcatena_1_1gRPC_1_1ParamInfoRequest" ],
         [ "PeerInfo", "classcatena_1_1gRPC_1_1PeerInfo.html", "classcatena_1_1gRPC_1_1PeerInfo" ],
         [ "PeerManager", "classcatena_1_1gRPC_1_1PeerManager.html", "classcatena_1_1gRPC_1_1PeerManager" ],
         [ "SetValue", "classcatena_1_1gRPC_1_1SetValue.html", "classcatena_1_1gRPC_1_1SetValue" ],
@@ -85,6 +85,7 @@ var annotated_dup =
       ] ],
       [ "REST", "namespacecatena_1_1REST.html", [
         [ "AssetRequest", "classcatena_1_1REST_1_1AssetRequest.html", "classcatena_1_1REST_1_1AssetRequest" ],
+        [ "BasicParamInfoRequest", "classcatena_1_1REST_1_1BasicParamInfoRequest.html", "classcatena_1_1REST_1_1BasicParamInfoRequest" ],
         [ "CatenaServiceImpl", "classcatena_1_1REST_1_1CatenaServiceImpl.html", "classcatena_1_1REST_1_1CatenaServiceImpl" ],
         [ "Connect", "classcatena_1_1REST_1_1Connect.html", "classcatena_1_1REST_1_1Connect" ],
         [ "DeviceRequest", "classcatena_1_1REST_1_1DeviceRequest.html", "classcatena_1_1REST_1_1DeviceRequest" ],
@@ -99,7 +100,6 @@ var annotated_dup =
         [ "LanguagePack", "classcatena_1_1REST_1_1LanguagePack.html", "classcatena_1_1REST_1_1LanguagePack" ],
         [ "Languages", "classcatena_1_1REST_1_1Languages.html", "classcatena_1_1REST_1_1Languages" ],
         [ "MultiSetValue", "classcatena_1_1REST_1_1MultiSetValue.html", "classcatena_1_1REST_1_1MultiSetValue" ],
-        [ "ParamInfoRequest", "classcatena_1_1REST_1_1ParamInfoRequest.html", "classcatena_1_1REST_1_1ParamInfoRequest" ],
         [ "SetValue", "classcatena_1_1REST_1_1SetValue.html", "classcatena_1_1REST_1_1SetValue" ],
         [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html", "classcatena_1_1REST_1_1SocketReader" ],
         [ "SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", "classcatena_1_1REST_1_1SocketWriter" ],

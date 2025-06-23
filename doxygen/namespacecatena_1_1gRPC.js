@@ -1,6 +1,7 @@
 var namespacecatena_1_1gRPC =
 [
     [ "AddLanguage", "classcatena_1_1gRPC_1_1AddLanguage.html", "classcatena_1_1gRPC_1_1AddLanguage" ],
+    [ "BasicParamInfoRequest", "classcatena_1_1gRPC_1_1BasicParamInfoRequest.html", "classcatena_1_1gRPC_1_1BasicParamInfoRequest" ],
     [ "CallData", "classcatena_1_1gRPC_1_1CallData.html", "classcatena_1_1gRPC_1_1CallData" ],
     [ "CatenaServiceImpl", "classcatena_1_1gRPC_1_1CatenaServiceImpl.html", "classcatena_1_1gRPC_1_1CatenaServiceImpl" ],
     [ "Connect", "classcatena_1_1gRPC_1_1Connect.html", "classcatena_1_1gRPC_1_1Connect" ],
@@ -16,7 +17,6 @@ var namespacecatena_1_1gRPC =
     [ "LanguagePackRequest", "classcatena_1_1gRPC_1_1LanguagePackRequest.html", "classcatena_1_1gRPC_1_1LanguagePackRequest" ],
     [ "ListLanguages", "classcatena_1_1gRPC_1_1ListLanguages.html", "classcatena_1_1gRPC_1_1ListLanguages" ],
     [ "MultiSetValue", "classcatena_1_1gRPC_1_1MultiSetValue.html", "classcatena_1_1gRPC_1_1MultiSetValue" ],
-    [ "ParamInfoRequest", "classcatena_1_1gRPC_1_1ParamInfoRequest.html", "classcatena_1_1gRPC_1_1ParamInfoRequest" ],
     [ "PeerInfo", "classcatena_1_1gRPC_1_1PeerInfo.html", "classcatena_1_1gRPC_1_1PeerInfo" ],
     [ "PeerManager", "classcatena_1_1gRPC_1_1PeerManager.html", "classcatena_1_1gRPC_1_1PeerManager" ],
     [ "SetValue", "classcatena_1_1gRPC_1_1SetValue.html", "classcatena_1_1gRPC_1_1SetValue" ],
