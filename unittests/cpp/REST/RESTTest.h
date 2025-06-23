@@ -165,7 +165,7 @@ class RESTTest {
     inline std::string expectedResponse(const catena::exception_with_status& rc, const std::vector<std::string>& msgs) {
         // Compiling body response from messages.
         std::string jsonBody = "";
-        if (rc.status == catena::StatusCode::OK) {
+        if (rc.status == catena::StatusCode::OK && !msgs.empty()) {
             for (const std::string& msg : msgs) {
                 if (jsonBody.empty()) {
                     jsonBody += "{\"data\":[" + msg;
@@ -271,7 +271,7 @@ class RESTEndpointTest : public ::testing::Test, public RESTTest {
     std::string method_ = "GET";
     uint32_t slot_ = 0;
     std::string fqoid_ = "";
-    bool stream_ = true;
+    bool stream_ = false;
     bool authzEnabled_ = false;
     std::string jsonBody_ = "";
     std::string jwsToken_ = "";

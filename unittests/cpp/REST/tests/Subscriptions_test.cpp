@@ -271,7 +271,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETNormal) {
 TEST_F(RESTSubscriptionsTests, Subscriptions_GETStream) {
     initPayload(0);
     // Remaking with stream enabled.
-    EXPECT_CALL(context_, stream()).WillOnce(::testing::Return(true));
+    stream_ = true;
     endpoint_.reset(makeOne());
     // Sending call
     testCall();
