@@ -99,7 +99,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_Create) {
 
 // Test 0.1: Authorization test with std::exception
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_AuthzStdException) {
-    expRc_ = catena::exception_with_status("Authorization setup failed: Test auth setup failure", catena::StatusCode::UNAUTHENTICATED);
+    expRc_ = catena::exception_with_status("Authorization setup failed: Test auth setup failure", catena::StatusCode::INTERNAL);
     authzEnabled_ = true;
 
     // Setup mock expectations
