@@ -53,9 +53,6 @@ ParamInfoRequest::ParamInfoRequest(tcp::socket& socket, ISocketReader& context, 
     rc_("", catena::StatusCode::OK), recursive_{false} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
-    
-    // Get recursive from query parameters - presence alone means true
-    recursive_ = context_.hasField("recursive");
 }
 
 void ParamInfoRequest::proceed() {
@@ -66,6 +63,9 @@ void ParamInfoRequest::proceed() {
         catena::exception_with_status rc{"", catena::StatusCode::OK};
         std::shared_ptr<Authorizer> sharedAuthz;
         Authorizer* authz;
+
+        // Get recursive from query parameters - presence alone means true
+        recursive_ = context_.hasField("recursive");
         
         // Handle authorization setup
         try {
