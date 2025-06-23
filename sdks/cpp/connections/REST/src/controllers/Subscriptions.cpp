@@ -38,16 +38,12 @@ int Subscriptions::objectCounter_ = 0;
 Subscriptions::Subscriptions(tcp::socket& socket, ISocketReader& context, IDevice& dm)
     : socket_(socket), context_(context), dm_(dm) {
     
-    // GET
-    if (context.method() == "GET") {
-        if (context.stream()) {
-            writer_ = std::make_unique<SSEWriter>(socket_, context_.origin());
-        } else {
-            writer_ = std::make_unique<SocketWriter>(socket_, context_.origin(), true);
-        }
-    // PUT
+    // GET (stream)
+    if (context.method() == "GET" && context.stream()) {
+        writer_ = std::make_unique<SSEWriter>(socket_, context_.origin());
+    // GET (no stream) or PUT
     } else {
-        writer_ = std::make_unique<SocketWriter>(socket_, context_.origin());
+        writer_ = std::make_unique<SocketWriter>(socket_, context_.origin(), true);
     }
 
     objectId_ = objectCounter_++;
