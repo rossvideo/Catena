@@ -211,9 +211,9 @@ TEST_F(RESTSocketReaderTests, SocketReader_EndpointParameters) {
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointSubscriptions) {
     // GET /v1/{slot}/param-info/{fqoid}/stream
-    testCall("GET", 1, "/param-info", "/test/oid", true, {{"recursive", "true"}}, false, "", "*", "NONE", "en", "");
+    testCall(catena::REST::Method_GET, 1, "/param-info", "/test/oid", true, {{"recursive", "true"}}, false, "", "*", catena::Device_DetailLevel_NONE, "en", "");
     // GET /v1/{slot}/param-info/{fqoid}
-    testCall("GET", 1, "/param-info", "/test/oid", false, {{"recursive", "true"}}, false, "", "*", "NONE", "en", "");
+    testCall(catena::REST::Method_GET, 1, "/param-info", "/test/oid", false, {{"recursive", "true"}}, false, "", "*", catena::Device_DetailLevel_NONE, "en", "");
     // GET /v1/{slot}/subscriptions/{fqoid}
     testCall(catena::REST::Method_GET, 1, "/subscriptions", "", false, {}, false, "", "*", catena::Device_DetailLevel_NONE, "en", "");
     // PUT /v1/{slot}/value/{fqoid}

@@ -85,7 +85,7 @@ class RESTTest {
     }
 
     // Writes a request to the writeSocket_ which can later be read by SocketReader.
-    void writeRequest(const std::string& method,
+    void writeRequest(catena::REST::RESTMethod method,
                       uint32_t slot,
                       const std::string& endpoint,
                       const std::string& fqoid,
@@ -243,7 +243,7 @@ class RESTEndpointTest : public ::testing::Test, public RESTTest {
         
         // Setting default expectations
         // Default expectations for the context.
-        EXPECT_CALL(context_, method()).WillRepeatedly(::testing::ReturnRef(method_));
+        EXPECT_CALL(context_, method()).WillRepeatedly(::testing::Invoke([this](){ return method_; }));
         EXPECT_CALL(context_, origin()).WillRepeatedly(::testing::ReturnRef(origin_));
         EXPECT_CALL(context_, slot()).WillRepeatedly(::testing::Invoke([this]() { return slot_; }));
         EXPECT_CALL(context_, fqoid()).WillRepeatedly(::testing::ReturnRef(fqoid_));
@@ -271,7 +271,7 @@ class RESTEndpointTest : public ::testing::Test, public RESTTest {
     std::streambuf* oldCout_;
 
     // in/out val
-    std::string method_ = "GET";
+    catena::REST::RESTMethod method_ = Method_GET;
     uint32_t slot_ = 0;
     std::string fqoid_ = "";
     bool stream_ = false;

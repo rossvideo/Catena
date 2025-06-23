@@ -39,7 +39,7 @@ Subscriptions::Subscriptions(tcp::socket& socket, ISocketReader& context, IDevic
     : socket_(socket), context_(context), dm_(dm) {
     
     // GET (stream)
-    if (context.method() == "GET" && context.stream()) {
+    if (context.method() == Method_GET && context.stream()) {
         writer_ = std::make_unique<SSEWriter>(socket_, context_.origin());
     // GET (no stream) or PUT
     } else {
