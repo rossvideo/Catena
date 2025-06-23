@@ -163,7 +163,7 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      */
     ServerCompletionQueue* cq_; 
     /**
-     * @brief Map of slot numbers to device pointers.
+     * @brief A map of slots to ptrs to their corresponding device.
      * 
      * Devices are global objects so raw ptrs should be safe.
      */

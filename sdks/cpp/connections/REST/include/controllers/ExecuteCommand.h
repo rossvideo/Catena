@@ -126,7 +126,7 @@ class ExecuteCommand : public ICallData {
      */
     ISocketReader& context_;
     /**
-     * @brief Map of slot numbers to device pointers.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
     SlotMap& dms_;
 };

@@ -124,7 +124,7 @@ class DeviceRequest : public ICallData {
      */
     std::unique_ptr<ISocketWriter> writer_ = nullptr;
     /**
-     * @brief Map of slot numbers to device pointers.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
     SlotMap& dms_;
 
