@@ -25,6 +25,7 @@ set(SOURCES
     tests/Subscriptions_test.cpp
     tests/Connect_test.cpp
     tests/ExecuteCommand_test.cpp
+    tests/DeviceRequest_test.cpp
 
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/SocketReader.cpp
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/SocketWriter.cpp

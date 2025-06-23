@@ -17,6 +17,9 @@ protected:
     RESTConnectTest() : RESTTest(&serverSocket_, &clientSocket_) {}
 
     void SetUp() override {
+        // Redirecting cout to a stringstream for testing.
+        oldCout = std::cout.rdbuf(MockConsole.rdbuf());
+
         // Set up common expectations
         setupCommonExpectations();
         
@@ -25,6 +28,8 @@ protected:
     }
 
     void TearDown() override {
+        std::cout.rdbuf(oldCout); // Restoring cout
+        
         if (connect_) {
             delete connect_;
         }
@@ -92,6 +97,10 @@ protected:
     MockSubscriptionManager subscription_manager_;
     std::string user_agent_ = "test_agent";
     std::string paramOid_ = "test_param";
+    
+    // Cout variables.
+    std::stringstream MockConsole;
+    std::streambuf* oldCout;
 };
 
 // --- 0. INITIAL TESTS ---
