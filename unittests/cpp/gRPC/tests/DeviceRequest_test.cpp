@@ -63,7 +63,7 @@ class gRPCDeviceRequestTests : public GRPCTest {
     /*
      * Creates a DeviceRequest handler object.
      */
-    void makeOne() override { new DeviceRequest(&service, dms, true); }
+    void makeOne() override { new DeviceRequest(&service_, dms_, true); }
 
     /*
      * This is a test class which makes an async RPC to the MockServer on
@@ -71,19 +71,19 @@ class gRPCDeviceRequestTests : public GRPCTest {
      */
     class StreamReader : public grpc::ClientReadReactor<catena::DeviceComponent> {
         public:
-            StreamReader(std::vector<catena::DeviceComponent>* outVals, grpc::Status* outRc)
-                : outVals_(outVals), outRc_(outRc) {}
+            StreamReader(std::vector<catena::DeviceComponent>* outVals, grpc::Status* outRc_)
+                : outVals_(outVals), outRc_(outRc_) {}
             /*
              * This function makes an async RPC to the MockServer.
              */
-            void MakeCall(catena::CatenaService::Stub* client, grpc::ClientContext* clientContext, const catena::DeviceRequestPayload* inVal) {
+            void MakeCall(catena::CatenaService::Stub* client, grpc::ClientContext* clientContext_, const catena::DeviceRequestPayload* inVal_) {
                 // Sending async RPC.
-                client->async()->DeviceRequest(clientContext, inVal, this);
+                client->async()->DeviceRequest(clientContext_, inVal_, this);
                 StartRead(&outVal_);
                 StartCall();
             }
             /*
-             * Triggers when a read is done and adds output to outVals_.
+             * Triggers when a read is done_ and adds output to outVals_.
              */
             void OnReadDone(bool ok) override {
                 if (ok) {
@@ -120,10 +120,10 @@ class gRPCDeviceRequestTests : public GRPCTest {
      * Helper function which initializes an DeviceRequestPayload object.
      */
     void initPayload(uint32_t slot, const catena::Device_DetailLevel& dl, const std::set<std::string>& subbedOids) {
-        inVal.set_detail_level(dl);
-        inVal.set_slot(slot);
+        inVal_.set_detail_level(dl);
+        inVal_.set_slot(slot);
         for (const auto& oid : subbedOids) {
-            inVal.add_subscribed_oids(oid);
+            inVal_.add_subscribed_oids(oid);
         }
     }
 
@@ -134,23 +134,23 @@ class gRPCDeviceRequestTests : public GRPCTest {
         if (expNum > 6 ) { expNum = 6; }
         switch (expNum) {
             case 6:
-                expVals.emplace(expVals.begin(), catena::DeviceComponent());
-                expVals.begin()->mutable_command()->set_oid("command_test");
+                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.begin()->mutable_command()->set_oid("command_test");
             case 5:
-                expVals.emplace(expVals.begin(), catena::DeviceComponent());
-                expVals.begin()->mutable_param()->set_oid("param_test");
+                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.begin()->mutable_param()->set_oid("param_test");
             case 4:
-                expVals.emplace(expVals.begin(), catena::DeviceComponent());
-                expVals.begin()->mutable_shared_constraint()->set_oid("constraint_test");
+                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.begin()->mutable_shared_constraint()->set_oid("constraint_test");
             case 3:
-                expVals.emplace(expVals.begin(), catena::DeviceComponent());
-                expVals.begin()->mutable_language_pack()->set_language("language_test");
+                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.begin()->mutable_language_pack()->set_language("language_test");
             case 2:
-                expVals.emplace(expVals.begin(), catena::DeviceComponent());
-                expVals.begin()->mutable_menu()->set_oid("menu_test");
+                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.begin()->mutable_menu()->set_oid("menu_test");
             case 1:
-                expVals.emplace(expVals.begin(), catena::DeviceComponent());
-                expVals.begin()->mutable_device()->set_slot(inVal.slot());
+                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.begin()->mutable_device()->set_slot(inVal_.slot());
         }
     }
 
@@ -160,27 +160,27 @@ class gRPCDeviceRequestTests : public GRPCTest {
     */
     void testRPC() {
         // Sending async RPC.
-        StreamReader streamReader(&outVals, &outRc);
-        streamReader.MakeCall(client.get(), &clientContext, &inVal);
+        StreamReader streamReader(&outVals_, &outRc_);
+        streamReader.MakeCall(client_.get(), &clientContext_, &inVal_);
         streamReader.Await();
         // Comparing the results.
-        ASSERT_EQ(outVals.size(), expVals.size()) << "Output missing >= 1 DeviceComponents";
-        for (uint32_t i = 0; i < outVals.size(); i++) {
-            EXPECT_EQ(outVals[i].SerializeAsString(), expVals[i].SerializeAsString());
+        ASSERT_EQ(outVals_.size(), expVals_.size()) << "Output missing >= 1 DeviceComponents";
+        for (uint32_t i = 0; i < outVals_.size(); i++) {
+            EXPECT_EQ(outVals_[i].SerializeAsString(), expVals_[i].SerializeAsString());
         }
-        EXPECT_EQ(outRc.error_code(), static_cast<grpc::StatusCode>(expRc.status));
-        EXPECT_EQ(outRc.error_message(), expRc.what());
+        EXPECT_EQ(outRc_.error_code(), static_cast<grpc::StatusCode>(expRc_.status));
+        EXPECT_EQ(outRc_.error_message(), expRc_.what());
         // Make sure another DeviceRequest handler was created.
-        EXPECT_TRUE(asyncCall) << "Async handler was not created during runtime";
+        EXPECT_TRUE(asyncCall_) << "Async handler was not created during runtime";
     }
 
     // in/out val
-    catena::DeviceRequestPayload inVal;
-    std::vector<catena::DeviceComponent> outVals;
+    catena::DeviceRequestPayload inVal_;
+    std::vector<catena::DeviceComponent> outVals_;
     // Expected variables
-    std::vector<catena::DeviceComponent> expVals;
+    std::vector<catena::DeviceComponent> expVals_;
 
-    std::unique_ptr<MockDeviceSerializer> mockSerializer = std::make_unique<MockDeviceSerializer>();
+    std::unique_ptr<MockDeviceSerializer> mockSerializer_ = std::make_unique<MockDeviceSerializer>();
 };
 
 /*
@@ -191,7 +191,7 @@ class gRPCDeviceRequestTests : public GRPCTest {
  * TEST 1 - Creating a DeviceRequest object.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_Create) {
-    EXPECT_TRUE(asyncCall);
+    EXPECT_TRUE(asyncCall_);
 }
 
 /*
@@ -201,21 +201,21 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_Normal) {
     initPayload(0, catena::Device_DetailLevel::Device_DetailLevel_FULL, {});
     initExpVal(6);
     // Setting expectations
-    EXPECT_CALL(dm0, getComponentSerializer(::testing::_, ::testing::_, inVal.detail_level(), true)).Times(1)
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, inVal_.detail_level(), true)).Times(1)
         .WillOnce(::testing::Invoke([this](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             // Making sure the correct values were passed in
-            EXPECT_EQ(!authzEnabled, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
             EXPECT_TRUE(subscribedOids.empty());
-            return std::move(mockSerializer);
+            return std::move(mockSerializer_);
         }));
-    EXPECT_CALL(*mockSerializer, getNext()).Times(6)
-        .WillOnce(::testing::Return(expVals[0]))
-        .WillOnce(::testing::Return(expVals[1]))
-        .WillOnce(::testing::Return(expVals[2]))
-        .WillOnce(::testing::Return(expVals[3]))
-        .WillOnce(::testing::Return(expVals[4]))
-        .WillOnce(::testing::Return(expVals[5]));
-    EXPECT_CALL(*mockSerializer, hasMore()).Times(6)
+    EXPECT_CALL(*mockSerializer_, getNext()).Times(6)
+        .WillOnce(::testing::Return(expVals_[0]))
+        .WillOnce(::testing::Return(expVals_[1]))
+        .WillOnce(::testing::Return(expVals_[2]))
+        .WillOnce(::testing::Return(expVals_[3]))
+        .WillOnce(::testing::Return(expVals_[4]))
+        .WillOnce(::testing::Return(expVals_[5]));
+    EXPECT_CALL(*mockSerializer_, hasMore()).Times(6)
         .WillOnce(::testing::Return(true))
         .WillOnce(::testing::Return(true))
         .WillOnce(::testing::Return(true))
@@ -235,27 +235,27 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_Subscriptions) {
     initExpVal(1);
     MockSubscriptionManager mockSubManager;
     // Setting expectations
-    EXPECT_CALL(service, getSubscriptionManager()).WillRepeatedly(::testing::ReturnRef(mockSubManager));
+    EXPECT_CALL(service_, getSubscriptionManager()).WillRepeatedly(::testing::ReturnRef(mockSubManager));
     for (auto oid : subscribedTestOids) {
         EXPECT_CALL(mockSubManager, addSubscription(oid, ::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Invoke(
         [this](const std::string &oid, catena::common::IDevice &dm, catena::exception_with_status &rc, catena::common::Authorizer &authz){
             // Making sure the correct values were passed in
-            EXPECT_EQ(!authzEnabled, &authz == &catena::common::Authorizer::kAuthzDisabled);
-            EXPECT_EQ(&dm, &dm0);
+            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(&dm, &dm0_);
             return true;
         }));
     }
     EXPECT_CALL(mockSubManager, getAllSubscribedOids(::testing::_)).Times(1).WillOnce(::testing::Return(subscribedTestOids));
-    EXPECT_CALL(dm0, getComponentSerializer(::testing::_, ::testing::_, inVal.detail_level(), true)).Times(1)
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, inVal_.detail_level(), true)).Times(1)
         .WillOnce(::testing::Invoke([this, &subscribedTestOids](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             // Making sure the correct values were passed in
-            EXPECT_EQ(!authzEnabled, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
             EXPECT_EQ(subscribedOids, subscribedTestOids);
-            return std::move(mockSerializer);
+            return std::move(mockSerializer_);
         }));
-    EXPECT_CALL(dm1, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(*mockSerializer, getNext()).Times(1).WillOnce(::testing::Return(expVals[0]));
-    EXPECT_CALL(*mockSerializer, hasMore()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(*mockSerializer_, getNext()).Times(1).WillOnce(::testing::Return(expVals_[0]));
+    EXPECT_CALL(*mockSerializer_, hasMore()).Times(1).WillOnce(::testing::Return(false));
     // Sending the RPC
     testRPC();
 }
@@ -267,7 +267,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzValid) {
     initPayload(0, catena::Device_DetailLevel::Device_DetailLevel_MINIMAL, {});
     initExpVal(1);
     // Adding authorization mockToken metadata. This it a random RSA token
-    authzEnabled = true;
+    authzEnabled_ = true;
     std::string mockToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIi"
                             "OiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2Nvc"
                             "GUiOiJzdDIxMzg6bW9uOncgc3QyMTM4Om9wOncgc3QyMTM4Om"
@@ -280,18 +280,18 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzValid) {
                             "yISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg_w"
                             "bOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9M"
                             "dvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
-    clientContext.AddMetadata("authorization", "Bearer " + mockToken);
+    clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
     // Setting expectations
-    EXPECT_CALL(dm0, getComponentSerializer(::testing::_, ::testing::_, inVal.detail_level(), true)).Times(1)
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, inVal_.detail_level(), true)).Times(1)
         .WillOnce(::testing::Invoke([this](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             // Making sure the correct values were passed in.
-            EXPECT_EQ(!authzEnabled, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
             EXPECT_TRUE(subscribedOids.empty());
-            return std::move(mockSerializer);
+            return std::move(mockSerializer_);
         }));
-    EXPECT_CALL(dm1, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(*mockSerializer, getNext()).Times(1).WillOnce(::testing::Return(expVals[0]));
-    EXPECT_CALL(*mockSerializer, hasMore()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(*mockSerializer_, getNext()).Times(1).WillOnce(::testing::Return(expVals_[0]));
+    EXPECT_CALL(*mockSerializer_, hasMore()).Times(1).WillOnce(::testing::Return(false));
     // Sending the RPC
     testRPC();
 }
@@ -300,12 +300,12 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzValid) {
  * TEST 5 - DeviceRequest with authz on and invalid token.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzInvalid) {
-    expRc = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
+    expRc_ = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
     // Not a token so it should get rejected by the authorizer
-    authzEnabled = true;
-    clientContext.AddMetadata("authorization", "Bearer THIS SHOULD NOT PARSE");
+    authzEnabled_ = true;
+    clientContext_.AddMetadata("authorization", "Bearer THIS SHOULD NOT PARSE");
     // Setting expectations
-    EXPECT_CALL(dm0, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -314,13 +314,13 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzInvalid) {
  * TEST 6 - DeviceRequest with authz on and invalid token.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzJWSNotFound) {
-    expRc = catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
+    expRc_ = catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
     // Should not be able to find the bearer token
-    authzEnabled = true;
-    clientContext.AddMetadata("authorization", "NOT A BEARER TOKEN");
+    authzEnabled_ = true;
+    clientContext_.AddMetadata("authorization", "NOT A BEARER TOKEN");
     // Setting expectations
-    EXPECT_CALL(dm0, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm1, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -329,11 +329,11 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzJWSNotFound) {
  * TEST 7 - No device in the specified slot.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
-    initPayload(dms.size(), catena::Device_DetailLevel_FULL, {});
-    expRc = catena::exception_with_status("device not found in slot " + std::to_string(dms.size()), catena::StatusCode::NOT_FOUND);
+    initPayload(dms_.size(), catena::Device_DetailLevel_FULL, {});
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     // Setting expectations
-    EXPECT_CALL(dm0, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm1, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -342,10 +342,10 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
  * TEST 8 - dm.getComponentSerializer() returns nullptr.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerIllegalState) {
-    expRc = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
+    expRc_ = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
     // Setting expectations
-    EXPECT_CALL(dm0, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(nullptr));
-    EXPECT_CALL(dm1, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(nullptr));
+    EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -354,14 +354,14 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerIllegalState) {
  * TEST 9 - dm.getComponentSerializer() throws a catena::exception_with_status.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowCatena) {
-    expRc = catena::exception_with_status("Component not found", catena::StatusCode::INVALID_ARGUMENT);
+    expRc_ = catena::exception_with_status("Component not found", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
-    EXPECT_CALL(dm0, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
-            throw catena::exception_with_status(expRc.what(), expRc.status);
+            throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return nullptr;
         }));
-    EXPECT_CALL(dm1, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -370,11 +370,11 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowCatena) {
  * TEST 10 - dm.getComponentSerializer() throws a std::runtime_exception.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowUnknown) {
-    expRc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
+    expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations
-    EXPECT_CALL(dm0, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Throw(std::runtime_error(expRc.what())));
-    EXPECT_CALL(dm1, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
+    EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -383,21 +383,21 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowUnknown) {
  * TEST 11 - serializer.getNext() throws a catena::exception_with_status.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowCatena) {
-    expRc = catena::exception_with_status("Component not found", catena::StatusCode::INVALID_ARGUMENT);
+    expRc_ = catena::exception_with_status("Component not found", catena::StatusCode::INVALID_ARGUMENT);
     initExpVal(2);
     // Setting expectations
-    EXPECT_CALL(dm0, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](){ return std::move(mockSerializer); }));
-    EXPECT_CALL(dm1, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](){ return std::move(mockSerializer_); }));
+    EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Reading 2 components successfully before throwing an exception.
-    EXPECT_CALL(*mockSerializer, getNext()).Times(3)
-        .WillOnce(::testing::Return(expVals[0]))
-        .WillOnce(::testing::Return(expVals[1]))
+    EXPECT_CALL(*mockSerializer_, getNext()).Times(3)
+        .WillOnce(::testing::Return(expVals_[0]))
+        .WillOnce(::testing::Return(expVals_[1]))
         .WillOnce(::testing::Invoke([this](){
-            throw catena::exception_with_status(expRc.what(), expRc.status);
-            return expVals[1]; // Should not recieve
+            throw catena::exception_with_status(expRc_.what(), expRc_.status);
+            return expVals_[1]; // Should not recieve
         }));
-    EXPECT_CALL(*mockSerializer, hasMore()).Times(2).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(*mockSerializer_, hasMore()).Times(2).WillRepeatedly(::testing::Return(true));
     // Sending the RPC
     testRPC();
 }
@@ -406,18 +406,18 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowCatena) {
  * TEST 12 - serializer.getNext() throws a std::runtime_exception.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowUnknown) {
-    expRc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
+    expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     initExpVal(2);
     // Setting expectations
-    EXPECT_CALL(dm0, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](){ return std::move(mockSerializer); }));
-    EXPECT_CALL(dm1, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](){ return std::move(mockSerializer_); }));
+    EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Reading 2 components successfully before throwing an exception.
-    EXPECT_CALL(*mockSerializer, getNext()).Times(3)
-        .WillOnce(::testing::Return(expVals[0]))
-        .WillOnce(::testing::Return(expVals[1]))
-        .WillOnce(::testing::Throw(std::runtime_error(expRc.what())));
-    EXPECT_CALL(*mockSerializer, hasMore()).Times(2).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(*mockSerializer_, getNext()).Times(3)
+        .WillOnce(::testing::Return(expVals_[0]))
+        .WillOnce(::testing::Return(expVals_[1]))
+        .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
+    EXPECT_CALL(*mockSerializer_, hasMore()).Times(2).WillRepeatedly(::testing::Return(true));
     // Sending the RPC
     testRPC();
 }

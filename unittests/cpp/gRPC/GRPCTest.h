@@ -81,42 +81,42 @@ class GRPCTest : public ::testing::Test {
      */
     void SetUp() override {
         // Redirecting cout to a stringstream for testing.
-        oldCout = std::cout.rdbuf(MockConsole.rdbuf());
+        oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
         
         // Creating the gRPC server.
-        builder.AddListeningPort(serverAddr, grpc::InsecureServerCredentials());
-        cq = builder.AddCompletionQueue();
-        builder.RegisterService(&service);
-        server = builder.BuildAndStart();
+        builder_.AddListeningPort(serverAddr_, grpc::InsecureServerCredentials());
+        cq_ = builder_.AddCompletionQueue();
+        builder_.RegisterService(&service_);
+        server_ = builder_.BuildAndStart();
 
         // Creating the gRPC client.
-        channel = grpc::CreateChannel(serverAddr, grpc::InsecureChannelCredentials());
-        client = catena::CatenaService::NewStub(channel);
+        channel_ = grpc::CreateChannel(serverAddr_, grpc::InsecureChannelCredentials());
+        client_ = catena::CatenaService::NewStub(channel_);
 
         // Setting common expected values for the mock service.
-        EXPECT_CALL(service, registerItem(::testing::_)).WillRepeatedly(::testing::Invoke([this](ICallData* cd) {
-            asyncCall.reset(cd);
+        EXPECT_CALL(service_, registerItem(::testing::_)).WillRepeatedly(::testing::Invoke([this](ICallData* cd) {
+            asyncCall_.reset(cd);
         }));
-        EXPECT_CALL(service, cq()).WillRepeatedly(::testing::Return(cq.get()));
-        EXPECT_CALL(service, deregisterItem(::testing::_)).WillRepeatedly(::testing::Invoke([this](ICallData* cd) {
-            testCall.reset(nullptr);
+        EXPECT_CALL(service_, cq()).WillRepeatedly(::testing::Return(cq_.get()));
+        EXPECT_CALL(service_, deregisterItem(::testing::_)).WillRepeatedly(::testing::Invoke([this](ICallData* cd) {
+            testCall_.reset(nullptr);
         }));
-        EXPECT_CALL(dm0, mutex()).WillRepeatedly(::testing::ReturnRef(mtx0));
-        EXPECT_CALL(dm0, slot()).WillRepeatedly(::testing::Return(0));
-        EXPECT_CALL(dm1, mutex()).WillRepeatedly(::testing::ReturnRef(mtx1));
-        EXPECT_CALL(dm1, slot()).WillRepeatedly(::testing::Return(1));
-        EXPECT_CALL(service, authorizationEnabled()).WillRepeatedly(::testing::Invoke([this](){ return authzEnabled; }));
+        EXPECT_CALL(dm0_, mutex()).WillRepeatedly(::testing::ReturnRef(mtx0_));
+        EXPECT_CALL(dm0_, slot()).WillRepeatedly(::testing::Return(0));
+        EXPECT_CALL(dm1_, mutex()).WillRepeatedly(::testing::ReturnRef(mtx1_));
+        EXPECT_CALL(dm1_, slot()).WillRepeatedly(::testing::Return(1));
+        EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(::testing::Invoke([this](){ return authzEnabled_; }));
 
         // Deploying cq handler on a thread.
-        cqthread = std::make_unique<std::thread>([&]() {
+        cqthread_ = std::make_unique<std::thread>([&]() {
             void* ignored_tag;
             bool ok;
-            while (cq->Next(&ignored_tag, &ok)) {
-                if (!testCall) {
-                    testCall.swap(asyncCall);
+            while (cq_->Next(&ignored_tag, &ok)) {
+                if (!testCall_) {
+                    testCall_.swap(asyncCall_);
                 }
-                if (testCall) {
-                    testCall->proceed(ok);
+                if (testCall_) {
+                    testCall_->proceed(ok);
                 }
             }
         });
@@ -130,50 +130,50 @@ class GRPCTest : public ::testing::Test {
      */
     void TearDown() override {
         // Cleaning up the server.
-        server->Shutdown();
+        server_->Shutdown();
         // Cleaning the cq
-        cq->Shutdown();
-        cqthread->join();
+        cq_->Shutdown();
+        cqthread_->join();
         // Make sure the calldata objects were destroyed.
-        ASSERT_FALSE(testCall) << "Failed to deregister handler";
-        ASSERT_FALSE(asyncCall) << "Failed to deregister handler";
+        ASSERT_FALSE(testCall_) << "Failed to deregister handler";
+        ASSERT_FALSE(asyncCall_) << "Failed to deregister handler";
         // Restoring cout
-        std::cout.rdbuf(oldCout);
+        std::cout.rdbuf(oldCout_);
     }
 
     // Cout variables
-    std::stringstream MockConsole;
-    std::streambuf* oldCout;
+    std::stringstream MockConsole_;
+    std::streambuf* oldCout_;
 
     // Expected variables
-    catena::exception_with_status expRc{"", catena::StatusCode::OK};
+    catena::exception_with_status expRc_{"", catena::StatusCode::OK};
 
     // Address used for gRPC tests.
-    std::string serverAddr = "0.0.0.0:50051";
+    std::string serverAddr_ = "0.0.0.0:50051";
     // Server and service variables.
-    grpc::ServerBuilder builder;
-    std::unique_ptr<grpc::Server> server = nullptr;
-    MockServiceImpl service;
-    std::mutex mtx0;
-    std::mutex mtx1;
-    MockDevice dm0;
-    MockDevice dm1;
-    SlotMap dms = {{0, &dm0}, {1, &dm1}};
-    bool authzEnabled = false;
+    grpc::ServerBuilder builder_;
+    std::unique_ptr<grpc::Server> server_ = nullptr;
+    MockServiceImpl service_;
+    std::mutex mtx0_;
+    std::mutex mtx1_;
+    MockDevice dm0_;
+    MockDevice dm1_;
+    SlotMap dms_ = {{0, &dm0_}, {1, &dm1_}};
+    bool authzEnabled_ = false;
     // Completion queue variables.
-    std::unique_ptr<grpc::ServerCompletionQueue> cq = nullptr;
-    std::unique_ptr<std::thread> cqthread = nullptr;
-    bool ok = true;
+    std::unique_ptr<grpc::ServerCompletionQueue> cq_ = nullptr;
+    std::unique_ptr<std::thread> cqthread_ = nullptr;
+    bool ok_ = true;
     // Client variables.
-    std::shared_ptr<grpc::Channel> channel = nullptr;
-    std::unique_ptr<catena::CatenaService::Stub> client = nullptr;
-    grpc::ClientContext clientContext;
-    bool done = false;
-    std::condition_variable cv;
-    std::mutex cv_mtx;
-    std::unique_lock<std::mutex> lock{cv_mtx};
-    grpc::Status outRc;
+    std::shared_ptr<grpc::Channel> channel_ = nullptr;
+    std::unique_ptr<catena::CatenaService::Stub> client_ = nullptr;
+    grpc::ClientContext clientContext_;
+    bool done_ = false;
+    std::condition_variable cv_;
+    std::mutex cv_mtx_;
+    std::unique_lock<std::mutex> lock_{cv_mtx_};
+    grpc::Status outRc_;
     // gRPC test variables.
-    std::unique_ptr<ICallData> testCall = nullptr;
-    std::unique_ptr<ICallData> asyncCall = nullptr;
+    std::unique_ptr<ICallData> testCall_ = nullptr;
+    std::unique_ptr<ICallData> asyncCall_ = nullptr;
 };
