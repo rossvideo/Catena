@@ -21,7 +21,7 @@ set(SOURCES
     tests/MultiSetValue_test.cpp
     tests/SetValue_test.cpp
     tests/GetParam_test.cpp
-    tests/BasicParamInfoRequest_test.cpp
+    tests/ParamInfoRequest_test.cpp
     tests/Subscriptions_test.cpp
     tests/Connect_test.cpp
     tests/ExecuteCommand_test.cpp
@@ -36,7 +36,7 @@ set(SOURCES
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/MultiSetValue.cpp
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/SetValue.cpp
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/GetParam.cpp
-    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/BasicParamInfoRequest.cpp
+    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/ParamInfoRequest.cpp
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/Subscriptions.cpp
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/ExecuteCommand.cpp
 )	
