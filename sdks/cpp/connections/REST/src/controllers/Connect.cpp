@@ -90,10 +90,5 @@ void Connect::finish() {
     if (valueSetByClientId_ != 0) { dm_.valueSetByClient.disconnect(valueSetByClientId_); }
     if (valueSetByServerId_ != 0) { dm_.valueSetByServer.disconnect(valueSetByServerId_); }
     if (languageAddedId_ != 0) { dm_.languageAddedPushUpdate.disconnect(languageAddedId_); }
-    // Finishing and closing the socket.
-    if (socket_.is_open()) {
-        writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK));
-        socket_.close();
-    }
     std::cout << "Connect[" << objectId_ << "] finished\n";
 }

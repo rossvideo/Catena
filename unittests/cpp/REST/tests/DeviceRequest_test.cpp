@@ -31,13 +31,13 @@
 /**
  * @brief This file is for testing the DeviceRequest.cpp file.
  * @author zuhayr.sarker@rossvideo.com
+ * @author benjamin.whitten@rossvideo.com
  * @date 2025-06-20
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 // Test helpers
 #include "RESTTest.h"
-#include "MockDevice.h"
 #include "MockDeviceSerializer.h"
 #include "MockSubscriptionManager.h"
 
