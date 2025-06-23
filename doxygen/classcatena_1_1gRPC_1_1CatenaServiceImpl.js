@@ -1,6 +1,6 @@
 var classcatena_1_1gRPC_1_1CatenaServiceImpl =
 [
-    [ "CatenaServiceImpl", "classcatena_1_1gRPC_1_1CatenaServiceImpl.html#a342df399becd215b94a024a7d6210cca", null ],
+    [ "CatenaServiceImpl", "classcatena_1_1gRPC_1_1CatenaServiceImpl.html#a7b0aa3a6c2d6057617a730883e0108b0", null ],
     [ "authorizationEnabled", "classcatena_1_1gRPC_1_1CatenaServiceImpl.html#a2b02f9563c3724a4e6bcb4363b68a2ee", null ],
     [ "cq", "classcatena_1_1gRPC_1_1CatenaServiceImpl.html#aaf4beebf9697331f818971a1d5e00311", null ],
     [ "deregisterItem", "classcatena_1_1gRPC_1_1CatenaServiceImpl.html#aedb1dbf19cdfb2a6a80bd96d613a79aa", null ],
