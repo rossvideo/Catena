@@ -176,7 +176,7 @@ $(document).ready(function(){initNavTree('SubscriptionManager_8h_source.html',''
 <div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>            std::set&lt;std::string&gt;&amp; oids_;</div>
 <div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>    };</div>
 <div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span> </div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>    std::set&lt;std::string&gt; subscriptions_;</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>    std::unordered_map&lt;uint32_t, std::set&lt;std::string&gt;&gt; subscriptions_;</div>
 <div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span> </div>
 <div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>    <span class="keywordtype">void</span> updateAllSubscribedOids_(IDevice&amp; dm);</div>
 <div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>};</div>

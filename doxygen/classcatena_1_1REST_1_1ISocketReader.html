@@ -124,9 +124,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a5ac83c85296cc1ef23d62dd51a409802" id="r_a5ac83c85296cc1ef23d62dd51a409802"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a5ac83c85296cc1ef23d62dd51a409802">read</a> (tcp::socket &amp;socket, bool authz=false, const std::string &amp;version=&quot;v1&quot;)=0</td></tr>
 <tr class="memdesc:a5ac83c85296cc1ef23d62dd51a409802"><td class="mdescLeft">&#160;</td><td class="mdescRight">Populates variables using information read from the inputted socket.  <br /></td></tr>
 <tr class="separator:a5ac83c85296cc1ef23d62dd51a409802"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae2011e753a4f3f1fcc7932d91dafc8e3" id="r_ae2011e753a4f3f1fcc7932d91dafc8e3"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="namespacecatena_1_1REST.html#a41324383cc28492c334974a51fe45b54">RESTMethod</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#ae2011e753a4f3f1fcc7932d91dafc8e3">method</a> () const =0</td></tr>
-<tr class="memdesc:ae2011e753a4f3f1fcc7932d91dafc8e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the HTTP method of the request.  <br /></td></tr>
-<tr class="separator:ae2011e753a4f3f1fcc7932d91dafc8e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2324ffe58b754f328bc3402fb73b9e97" id="r_a2324ffe58b754f328bc3402fb73b9e97"><td class="memItemLeft" align="right" valign="top">virtual const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a2324ffe58b754f328bc3402fb73b9e97">method</a> () const =0</td></tr>
+<tr class="memdesc:a2324ffe58b754f328bc3402fb73b9e97"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the HTTP method of the request.  <br /></td></tr>
+<tr class="separator:a2324ffe58b754f328bc3402fb73b9e97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b576f2353e31997d1def492e6bf76a2" id="r_a2b576f2353e31997d1def492e6bf76a2"><td class="memItemLeft" align="right" valign="top">virtual const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a2b576f2353e31997d1def492e6bf76a2">endpoint</a> () const =0</td></tr>
 <tr class="memdesc:a2b576f2353e31997d1def492e6bf76a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> endpoint of the request.  <br /></td></tr>
 <tr class="separator:a2b576f2353e31997d1def492e6bf76a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -475,8 +475,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ae2011e753a4f3f1fcc7932d91dafc8e3" name="ae2011e753a4f3f1fcc7932d91dafc8e3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae2011e753a4f3f1fcc7932d91dafc8e3">&#9670;&#160;</a></span>method()</h2>
+<a id="a2324ffe58b754f328bc3402fb73b9e97" name="a2324ffe58b754f328bc3402fb73b9e97"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2324ffe58b754f328bc3402fb73b9e97">&#9670;&#160;</a></span>method()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -485,7 +485,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual <a class="el" href="namespacecatena_1_1REST.html#a41324383cc28492c334974a51fe45b54">RESTMethod</a> catena::REST::ISocketReader::method </td>
+          <td class="memname">virtual const std::string &amp; catena::REST::ISocketReader::method </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -500,7 +500,7 @@ Public Member Functions</h2></td></tr>
 
 <p>Returns the HTTP method of the request. </p>
 
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a240084c7a4f8fd879ffdc850efca6e70">catena::REST::SocketReader</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a83236f1c3ab45215d0b34d4b6a2fa16e">catena::REST::SocketReader</a>.</p>
 
 </div>
 </div>

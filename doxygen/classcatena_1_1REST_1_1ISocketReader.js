@@ -10,7 +10,7 @@ var classcatena_1_1REST_1_1ISocketReader =
     [ "hasField", "classcatena_1_1REST_1_1ISocketReader.html#a6d34e20b825111130d125fd9bbc94918", null ],
     [ "jsonBody", "classcatena_1_1REST_1_1ISocketReader.html#a17a8cacd3fb5bea629bc8502b81a11d8", null ],
     [ "jwsToken", "classcatena_1_1REST_1_1ISocketReader.html#a40cce0729beee533eb49071c27bba1c2", null ],
-    [ "method", "classcatena_1_1REST_1_1ISocketReader.html#ae2011e753a4f3f1fcc7932d91dafc8e3", null ],
+    [ "method", "classcatena_1_1REST_1_1ISocketReader.html#a2324ffe58b754f328bc3402fb73b9e97", null ],
     [ "origin", "classcatena_1_1REST_1_1ISocketReader.html#a861883ac9aa268d15940886780aff1b3", null ],
     [ "read", "classcatena_1_1REST_1_1ISocketReader.html#a5ac83c85296cc1ef23d62dd51a409802", null ],
     [ "slot", "classcatena_1_1REST_1_1ISocketReader.html#a7e0b91f0e2cf951eca9e3018ede398c0", null ],
