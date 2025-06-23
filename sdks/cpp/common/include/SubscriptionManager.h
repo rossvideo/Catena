@@ -99,7 +99,7 @@ class SubscriptionManager : public ISubscriptionManager {
      * @param oid The OID to check
      * @return true if the OID is greater than or equal to 2 characters and ends with "/*"
      */
-    bool isWildcard(const std::string& oid) override;
+    bool isWildcard(const std::string& oid) const override;
 
     /**
      * @brief Check if an OID is subscribed to
@@ -114,6 +114,24 @@ class SubscriptionManager : public ISubscriptionManager {
      * @brief Mutex for subscription data access
      */
     mutable std::mutex mtx_;
+
+
+    /**
+     * @brief Check if adding a subscription would exceed resource limits
+     * @param oid The OID to be added
+     * @param dm The device model
+     * @param rc The status code to return if limits would be exceeded
+     * @return true if within limits, false otherwise
+     */
+    bool checkResourceLimits_(const std::string& oid, const IDevice& dm, exception_with_status& rc) const;
+
+    /**
+     * @brief Count the actual number of OIDs that would be expanded from a wildcard
+     * @param wildcardOid The wildcard OID to count
+     * @param dm The device model
+     * @return Actual number of OIDs that would be expanded
+     */
+    size_t countWildcardExpansion_(const std::string& wildcardOid, const IDevice& dm) const;
 
     /**
      * @brief Visitor class for collecting subscribed OIDs

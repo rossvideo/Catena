@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -93,6 +93,10 @@ class RESTSubscriptionsTests : public ::testing::Test, public RESTTest {
         // default expectations for the device model.
         EXPECT_CALL(dm, subscriptions()).WillRepeatedly(::testing::Return(true));
         EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMutex));
+        
+        // Set up expectations for the device limits that resource checks will use
+        EXPECT_CALL(dm, default_max_length()).WillRepeatedly(::testing::Return(1024));
+        EXPECT_CALL(dm, default_total_length()).WillRepeatedly(::testing::Return(1024));
 
         // Default expectations for each test param.
         for (size_t i = 0; i < oids.size(); ++i) {
@@ -439,7 +443,41 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETToProtoThrowUnknown) {
  *                              PUT Subscriptions tests
  * ============================================================================
  * 
- * TEST 2.1 - PUT Subscriptions normal case.
+ * TEST 2.1 - PUT Subscriptions add.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddOnly) {
+    testMethod = "PUT";
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    initPayload({"param1", "param2"}, {});  // Only adding
+    // Setting expectations.
+    EXPECT_CALL(context, jwsToken()).Times(0); // Authz false
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+    EXPECT_EQ(added_oids, 2); // Both oids should be added.
+    EXPECT_EQ(removed_oids, 0); // No oids should be removed.
+}
+
+/* 
+ * TEST 2.2 - PUT Subscriptions remove.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemoveOnly) {
+    testMethod = "PUT";
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    initPayload({}, {"param1", "param2"});  // Only removing
+    // Setting expectations.
+    EXPECT_CALL(context, jwsToken()).Times(0); // Authz false
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+    EXPECT_EQ(added_oids, 0); // No oids should be added.
+    EXPECT_EQ(removed_oids, 2); // Both oids should be removed.
+}
+
+/* 
+ * TEST 2.3 - PUT Subscriptions add and remove same OIDs (concurrency test).
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTNormal) {
     testMethod = "PUT";
@@ -451,12 +489,12 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTNormal) {
     // Calling proceed() and checking written response.
     endpoint->proceed();
     EXPECT_EQ(readResponse(), expectedResponse(rc));
-    EXPECT_EQ(added_oids, 2); // Both oids should be added.
+    EXPECT_EQ(added_oids, 0); // No oids should be added since they're also being removed.
     EXPECT_EQ(removed_oids, 2); // Both oids should be removed.
 }
 
 /* 
- * TEST 2.2 - PUT Subscriptions with a valid token.
+ * TEST 2.4 - PUT Subscriptions add and remove same OIDs with authz.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAuthzValid) {
     testMethod = "PUT";
@@ -477,12 +515,29 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAuthzValid) {
     // Calling proceed() and checking written response.
     endpoint->proceed();
     EXPECT_EQ(readResponse(), expectedResponse(rc));
-    EXPECT_EQ(added_oids, 2); // Both oids should be added.
+    EXPECT_EQ(added_oids, 0); // No oids should be added since they're also being removed.
     EXPECT_EQ(removed_oids, 2); // Both oids should be removed.
 }
 
 /* 
- * TEST 2.3 - PUT Subscriptions normal case.
+ * TEST 2.5 - PUT Subscriptions add and remove different OIDs (concurrency test).
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddAndRemoveDifferentOids) {
+    testMethod = "PUT";
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    initPayload({"param1"}, {"param2"});  // Different OIDs
+    // Setting expectations.
+    EXPECT_CALL(context, jwsToken()).Times(0); // Authz false
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+    EXPECT_EQ(added_oids, 1); // param1 should be added.
+    EXPECT_EQ(removed_oids, 1); // param2 should be removed.
+}
+
+/* 
+ * TEST 2.6 - PUT Subscriptions fail to parse JSON.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTFailParse) {
     testMethod = "PUT";
@@ -499,7 +554,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTFailParse) {
 }
 
 /* 
- * TEST 2.4 - PUT Subscriptions add and remove return an error.
+ * TEST 2.7 - PUT Subscriptions add and remove return errors.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTReturnErr) {
     testMethod = "PUT";
@@ -523,12 +578,12 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTReturnErr) {
     // Calling proceed() and checking written response.
     endpoint->proceed();
     EXPECT_EQ(readResponse(), expectedResponse(rc));
-    EXPECT_EQ(added_oids, 2); // All oids but errParam should be added.
+    EXPECT_EQ(added_oids, 0); // No oids should be added since they're also being removed.
     EXPECT_EQ(removed_oids, 2); // All oids but errParam should be removed.
 }
 
 /* 
- * TEST 2.5 - PUT Subscriptions remove throws a catena::exception_with_status.
+ * TEST 2.8 - PUT Subscriptions remove throws a catena::exception_with_status.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowCatena) {
     testMethod = "PUT";
@@ -551,7 +606,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowCatena) {
 }
 
 /* 
- * TEST 2.6 - PUT Subscriptions remove throws a std::runtime_error.
+ * TEST 2.9 - PUT Subscriptions remove throws a std::runtime_error.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowUnknown) {
     testMethod = "PUT";
@@ -574,7 +629,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowUnknown) {
 }
 
 /* 
- * TEST 2.7 - PUT Subscriptions add throws a catena::exception_with_status.
+ * TEST 2.10 - PUT Subscriptions add throws a catena::exception_with_status.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowCatena) {
     testMethod = "PUT";
@@ -597,7 +652,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowCatena) {
 }
 
 /* 
- * TEST 2.8 - PUT Subscriptions add throws a std::runtime_error.
+ * TEST 2.11 - PUT Subscriptions add throws a std::runtime_error.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowUnknown) {
     testMethod = "PUT";

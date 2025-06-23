@@ -99,13 +99,25 @@ void Subscriptions::proceed() {
                     rc = catena::exception_with_status("Failed to parse JSON Body", catena::StatusCode::INVALID_ARGUMENT);
             
                 } else {
-                    // Processing removed OIDs
+                    // Processing removed OIDs first
                     for (const auto& oid : req.removed_oids()) {
                         context_.getSubscriptionManager().removeSubscription(oid, dm_, supressErr);
                     }
-                    // Processing added OIDs
+                    // Processing added OIDs, but skip any that are also in removed_oids
                     for (const auto& oid : req.added_oids()) {
-                        context_.getSubscriptionManager().addSubscription(oid, dm_, supressErr, *authz);
+                        // Check if this OID is also in removed_oids
+                        bool isAlsoRemoved = false;
+                        for (const auto& removedOid : req.removed_oids()) {
+                            if (oid == removedOid) {
+                                isAlsoRemoved = true;
+                                break;
+                            }
+                        }
+                        
+                        // Only add if it's not also being removed
+                        if (!isAlsoRemoved) {
+                            context_.getSubscriptionManager().addSubscription(oid, dm_, supressErr, *authz);
+                        }
                     }
                 }
 

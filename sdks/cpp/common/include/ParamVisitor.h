@@ -78,6 +78,15 @@ class ParamVisitor : public IParamVisitor {
          * @param visitor The visitor to use
          */
         static void traverseParams(IParam* param, const std::string& path, IDevice& device, IParamVisitor& visitor);
+
+        /**
+         * @brief Count the number of parameters that would be traversed
+         * @param param The parameter to start counting from
+         * @param path The path of the parameter
+         * @param device The device to traverse
+         * @return The number of parameters that would be visited
+         */
+        static size_t countParams(IParam* param, const std::string& path, IDevice& device);
 };
 
 } // namespace common

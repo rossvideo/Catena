@@ -91,5 +91,24 @@ void ParamVisitor::traverseParams(IParam* param, const std::string& path, IDevic
     }
 }
 
+// Count the number of parameters that would be traversed
+size_t ParamVisitor::countParams(IParam* param, const std::string& path, IDevice& device) {
+    if (!param) return 0;
+
+    size_t count = 0;
+    
+    // Simple local visitor class that just increments a counter
+    struct CountingVisitor : public IParamVisitor {
+        size_t& count_;
+        CountingVisitor(size_t& count) : count_(count) {}
+        void visit(IParam*, const std::string&) override { count_++; }
+        void visitArray(IParam*, const std::string&, uint32_t) override { count_++; }
+    };
+
+    CountingVisitor visitor(count);
+    traverseParams(param, path, device, visitor);
+    return count;
+}
+
 } // namespace common
 } // namespace catena 

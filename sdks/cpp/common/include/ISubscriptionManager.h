@@ -89,7 +89,7 @@ class ISubscriptionManager {
      * @param oid The OID to check
      * @return true if the OID is greater than or equal to 2 characters and ends with "/*"
      */
-    virtual bool isWildcard(const std::string& oid) = 0;
+    virtual bool isWildcard(const std::string& oid) const = 0;
 
     /**
      * @brief Check if an OID is subscribed to
