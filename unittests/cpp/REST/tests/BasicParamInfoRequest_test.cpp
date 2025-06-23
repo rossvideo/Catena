@@ -761,7 +761,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_proceedSpecificPara
         ));
     
     // Create a new request for this test
-    auto specificRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+    auto specificRequest = BasicParamInfoRequest::makeOne(serverSocket_, context, dm);
     
     specificRequest->proceed();
     specificRequest->finish();
@@ -808,7 +808,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getSpecificParamWit
         ));
 
     // Create a new request for this test
-    auto recursiveRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+    auto recursiveRequest = BasicParamInfoRequest::makeOne(serverSocket_, context, dm);
 
     recursiveRequest->proceed();
     recursiveRequest->finish();
@@ -841,7 +841,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_parameterNotFound) 
         }));
 
     // Create a new request for this test
-    auto notFoundRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+    auto notFoundRequest = BasicParamInfoRequest::makeOne(serverSocket_, context, dm);
 
     notFoundRequest->proceed();
     notFoundRequest->finish();
@@ -889,7 +889,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_catenaExceptionInGe
         ));
 
     // Create a new request for this test
-    auto exceptionRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+    auto exceptionRequest = BasicParamInfoRequest::makeOne(serverSocket_, context, dm);
 
     exceptionRequest->proceed();
     exceptionRequest->finish();
@@ -922,7 +922,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_catchCatenaExceptio
         }));
 
     // Create a new request for this test
-    auto catenaExceptionRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+    auto catenaExceptionRequest = BasicParamInfoRequest::makeOne(serverSocket_, context, dm);
 
     catenaExceptionRequest->proceed();
     catenaExceptionRequest->finish();
@@ -953,7 +953,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_catchStdException) 
         }));
 
     // Create a new request for this test
-    auto stdExceptionRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+    auto stdExceptionRequest = BasicParamInfoRequest::makeOne(serverSocket_, context, dm);
 
     stdExceptionRequest->proceed();
     stdExceptionRequest->finish();
@@ -984,7 +984,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_catchUnknownExcepti
         }));
 
     // Create a new request for this test
-    auto unknownExceptionRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+    auto unknownExceptionRequest = BasicParamInfoRequest::makeOne(serverSocket_, context, dm);
 
     unknownExceptionRequest->proceed();
     unknownExceptionRequest->finish();

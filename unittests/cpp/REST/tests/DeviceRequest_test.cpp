@@ -37,8 +37,8 @@
 
 // Test helpers
 #include "RESTTest.h"
-#include "MockCommandResponder.h"
-#include "MockParam.h"
+#include "MockDevice.h"
+#include "MockDeviceSerializer.h"
 #include "MockSubscriptionManager.h"
 
 // REST
@@ -133,7 +133,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Normal) {
             EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
             EXPECT_EQ(dl, catena::Device_DetailLevel_FULL);
             EXPECT_TRUE(subscribedOids.empty());
-            auto mockSerializer = std::make_unique<MockDevice::MockDeviceSerializer>();
+            auto mockSerializer = std::make_unique<MockDeviceSerializer>();
             EXPECT_CALL(*mockSerializer, hasMore())
                 .WillOnce(testing::Return(true))
                 .WillOnce(testing::Return(true))
@@ -162,7 +162,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Stream) {
             EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
             EXPECT_EQ(dl, catena::Device_DetailLevel_FULL);
             EXPECT_TRUE(subscribedOids.empty());
-            auto mockSerializer = std::make_unique<MockDevice::MockDeviceSerializer>();
+            auto mockSerializer = std::make_unique<MockDeviceSerializer>();
             EXPECT_CALL(*mockSerializer, hasMore()).Times(4)
                 .WillOnce(testing::Return(true))
                 .WillOnce(testing::Return(true))
@@ -197,7 +197,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_AuthzValid) {
             EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
             EXPECT_EQ(dl, catena::Device_DetailLevel_FULL);
             EXPECT_TRUE(subscribedOids.empty());
-            auto mockSerializer = std::make_unique<MockDevice::MockDeviceSerializer>();
+            auto mockSerializer = std::make_unique<MockDeviceSerializer>();
             EXPECT_CALL(*mockSerializer, hasMore()).WillOnce(testing::Return(false));
             EXPECT_CALL(*mockSerializer, getNext()).Times(0);
             return mockSerializer;
@@ -221,7 +221,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Subscriptions) {
         .WillOnce(::testing::Invoke([&expectedSubscribedOids](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             EXPECT_EQ(subscribedOids, expectedSubscribedOids);
             EXPECT_EQ(dl, catena::Device_DetailLevel_SUBSCRIPTIONS);
-            auto mockSerializer = std::make_unique<MockDevice::MockDeviceSerializer>();
+            auto mockSerializer = std::make_unique<MockDeviceSerializer>();
             EXPECT_CALL(*mockSerializer, hasMore()).WillOnce(testing::Return(false));
             EXPECT_CALL(*mockSerializer, getNext()).Times(0);
             return mockSerializer;
