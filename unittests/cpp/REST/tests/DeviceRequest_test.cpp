@@ -128,8 +128,8 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Finish) {
 TEST_F(RESTDeviceRequestTests, DeviceRequest_Normal) {
     initExpVal(3);
     // Set up expectation for getComponentSerializer to return a working serializer
-    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_))
-        .WillOnce(::testing::Invoke([this](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+    EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_))
+        .WillOnce(testing::Invoke([this](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
             EXPECT_EQ(dl, catena::Device_DetailLevel_FULL);
             EXPECT_TRUE(subscribedOids.empty());
@@ -157,8 +157,8 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Stream) {
     // Initializing expected values
     initExpVal(3);
     // Set up expectation for getComponentSerializer to return a working serializer
-    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_))
-        .WillOnce(::testing::Invoke([this](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+    EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_))
+        .WillOnce(testing::Invoke([this](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
             EXPECT_EQ(dl, catena::Device_DetailLevel_FULL);
             EXPECT_TRUE(subscribedOids.empty());
@@ -192,8 +192,8 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_AuthzValid) {
                 "46M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
     authzEnabled_ = true;
     // Set up expectation for getComponentSerializer to return a working serializer
-    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+    EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
             EXPECT_EQ(dl, catena::Device_DetailLevel_FULL);
             EXPECT_TRUE(subscribedOids.empty());
@@ -214,11 +214,11 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Subscriptions) {
     EXPECT_CALL(context_, detailLevel()).WillOnce(testing::Return(catena::Device_DetailLevel_SUBSCRIPTIONS));
     EXPECT_CALL(context_, getSubscriptionManager()).Times(1)
         .WillOnce(testing::ReturnRef(mockSubManager));
-    EXPECT_CALL(mockSubManager, getAllSubscribedOids(::testing::Ref(dm0_))).Times(1)
+    EXPECT_CALL(mockSubManager, getAllSubscribedOids(testing::Ref(dm0_))).Times(1)
         .WillOnce(testing::Return(expectedSubscribedOids));
     // Set up expectation for getComponentSerializer to verify subscribed OIDs are passed
-    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([&expectedSubscribedOids](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+    EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([&expectedSubscribedOids](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             EXPECT_EQ(subscribedOids, expectedSubscribedOids);
             EXPECT_EQ(dl, catena::Device_DetailLevel_SUBSCRIPTIONS);
             auto mockSerializer = std::make_unique<MockDeviceSerializer>();
@@ -237,7 +237,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_AuthzInvalid) {
     authzEnabled_ = true;
     jwsToken_ = "invalid_token";
     // Setting expectations.
-    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
     // Calling proceed and testing the output
     testCall();
 }
@@ -246,8 +246,8 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_AuthzInvalid) {
 TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrGetSerializerIllegalState) {
     expRc_ = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
     // Setting expectations
-    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_))
-        .Times(1).WillOnce(::testing::Return(nullptr));
+    EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_))
+        .Times(1).WillOnce(testing::Return(nullptr));
     // Calling proceed and testing the output
     testCall();
 }
@@ -256,7 +256,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrGetSerializerIllegalState) {
 TEST_F(RESTDeviceRequestTests, DeviceRequest_GetSerializerThrowStd) {
     expRc_ = catena::exception_with_status("Device request failed: std error", catena::StatusCode::INTERNAL);
     // Setting expectations
-    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+    EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_))
         .Times(1).WillOnce(testing::Throw(std::runtime_error("std error")));
     // Calling proceed and testing the output
     testCall();
@@ -266,7 +266,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_GetSerializerThrowStd) {
 TEST_F(RESTDeviceRequestTests, DeviceRequest_GetSerializerThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations
-    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+    EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_))
         .Times(1).WillOnce(testing::Throw(42));
     // Calling proceed and testing the output
     testCall();

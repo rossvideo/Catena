@@ -53,7 +53,7 @@
 using namespace catena::REST;
 
 // Fixture
-class RESTSocketWriterTests : public ::testing::Test, public RESTTest {
+class RESTSocketWriterTests : public testing::Test, public RESTTest {
   protected:
     RESTSocketWriterTests() : RESTTest(&serverSocket_, &clientSocket_) {
         origin_ = "test-origin.com";

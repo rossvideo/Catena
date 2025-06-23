@@ -103,8 +103,8 @@ TEST_F(RESTGetValueTests, GetValue_Normal) {
     initPayload(0, "/test_oid");
     expVal_.set_string_value("test_value");
     // Setting expectations
-    EXPECT_CALL(dm0_, getValue(fqoid_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
+    EXPECT_CALL(dm0_, getValue(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
             value.CopyFrom(expVal_);
@@ -133,8 +133,8 @@ TEST_F(RESTGetValueTests, GetValue_AuthzValid) {
                 "_wbOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9MdvJH-cx1s1"
                 "46M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
     // Setting expectations
-    EXPECT_CALL(dm0_, getValue(fqoid_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
+    EXPECT_CALL(dm0_, getValue(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
             value.CopyFrom(expVal_);
@@ -153,7 +153,7 @@ TEST_F(RESTGetValueTests, GetValue_AuthzInvalid) {
     authzEnabled_ = true;
     jwsToken_ = "THIS SHOULD NOT PARSE";
     // Setting expectations
-    EXPECT_CALL(dm0_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, getValue(testing::_, testing::_, testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }
@@ -165,8 +165,8 @@ TEST_F(RESTGetValueTests, GetValue_ErrReturnCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
     initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(dm0_, getValue(fqoid_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
+    EXPECT_CALL(dm0_, getValue(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
     // Sending the RPC.
@@ -180,8 +180,8 @@ TEST_F(RESTGetValueTests, GetValue_ErrThrowCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
     initPayload(0, "/test_oid");
     // Setting expectations
-    EXPECT_CALL(dm0_, getValue(fqoid_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
+    EXPECT_CALL(dm0_, getValue(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -196,8 +196,8 @@ TEST_F(RESTGetValueTests, GetValue_ErrThrowStd) {
     expRc_ = catena::exception_with_status("std error", catena::StatusCode::INTERNAL);
     initPayload(0, "/test_oid");
     // Setting expectations
-    EXPECT_CALL(dm0_, getValue(fqoid_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
+    EXPECT_CALL(dm0_, getValue(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Throw(std::runtime_error(expRc_.what())));
     // Sending the RPC.
     testRPC();
 }
@@ -209,8 +209,8 @@ TEST_F(RESTGetValueTests, GetValue_ErrThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     initPayload(0, "/test_oid");
     // Setting expectations
-    EXPECT_CALL(dm0_, getValue(fqoid_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Throw(0));
+    EXPECT_CALL(dm0_, getValue(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Throw(0));
     // Sending the RPC.
     testRPC();
 }

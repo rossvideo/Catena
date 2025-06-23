@@ -104,8 +104,8 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_Normal) {
     initPayload(0, {{"/test_oid_1", "test_value_1"},{"/test_oid_2", "test_value_2"}});
     expRc_ = catena::exception_with_status("", catena::StatusCode::OK);
     // Setting expectations
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
+    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(src.SerializeAsString(), inVal_.SerializeAsString());
             EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
@@ -113,15 +113,15 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_Normal) {
             ans = catena::exception_with_status(expRc_.what(), expRc_.status);
             return true;
         }));
-    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
+    EXPECT_CALL(dm0_, commitMultiSetValue(testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(src.SerializeAsString(), inVal_.SerializeAsString());
             EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
             // Setting the output status and returning true.
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
-    // Sending the call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -144,8 +144,8 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_AuthzValid) {
                 "_wbOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9MdvJH-cx1s1"
                 "46M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
     // Setting expectations
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
+    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(src.SerializeAsString(), inVal_.SerializeAsString());
             EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
@@ -153,15 +153,15 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_AuthzValid) {
             ans = catena::exception_with_status(expRc_.what(), expRc_.status);
             return true;
         }));
-    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
+    EXPECT_CALL(dm0_, commitMultiSetValue(testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(src.SerializeAsString(), inVal_.SerializeAsString());
             EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
             // Setting the output status and returning true.
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
-    // Sending the call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -175,8 +175,8 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_AuthzInvalid) {
     authzEnabled_ = true;
     jwsToken_ = "Bearer THIS SHOULD NOT PARSE";
     // Setting expectations
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    // Sending the call
+    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(0);
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -188,8 +188,8 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_FailParse) {
     expRc_ = catena::exception_with_status("Failed to convert JSON to protobuf", catena::StatusCode::INVALID_ARGUMENT);
     jsonBody_ = "Not a JSON string";
     // Setting expectations
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    // Sending the call
+    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(0);
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -200,13 +200,13 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrTryReturnCatena) {
     initPayload(0, {});
     expRc_ = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
+    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
             // Setting the output status and returning false.
             ans = catena::exception_with_status(expRc_.what(), expRc_.status);
             return false;
         }));
-    // Sending the call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -217,13 +217,13 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrTryThrowCatena) {
     initPayload(0, {});
     expRc_ = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
+    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
             // Throwing error and returning true.
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return true;
         }));
-    // Sending the call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -234,9 +234,9 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrTryThrowUnknown) {
     initPayload(0, {});
     expRc_ = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
-    // Sending the call
+    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Throw(std::runtime_error(expRc_.what())));
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -247,13 +247,13 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitReturnCatena) {
     initPayload(0, {});
     expRc_ = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
-    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
+    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(1).WillOnce(testing::Return(true));
+    EXPECT_CALL(dm0_, commitMultiSetValue(testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
             // Returning error status.
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
-    // Sending the call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -264,14 +264,14 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitThrowCatena) {
     initPayload(0, {});
     expRc_ = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
-    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
+    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(1).WillOnce(testing::Return(true));
+    EXPECT_CALL(dm0_, commitMultiSetValue(testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
             // Throwing error and returning ok.
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    // Sending the call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -282,9 +282,9 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
     initPayload(0, {});
     expRc_ = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
-    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
-    // Sending the call
+    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(1).WillOnce(testing::Return(true));
+    EXPECT_CALL(dm0_, commitMultiSetValue(testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Throw(std::runtime_error(expRc_.what())));
+    // Calling proceed and testing the output
     testCall();
 }

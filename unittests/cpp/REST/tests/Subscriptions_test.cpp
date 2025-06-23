@@ -68,12 +68,12 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
      */
     RESTSubscriptionsTests() : RESTEndpointTest() {
         // Default expectations for context_.
-        EXPECT_CALL(context_, getSubscriptionManager()).WillRepeatedly(::testing::ReturnRef(subManager_));
+        EXPECT_CALL(context_, getSubscriptionManager()).WillRepeatedly(testing::ReturnRef(subManager_));
         // Default expectations for device model.
-        EXPECT_CALL(dm0_, subscriptions()).WillRepeatedly(::testing::Return(true));
+        EXPECT_CALL(dm0_, subscriptions()).WillRepeatedly(testing::Return(true));
         // Default expectations for sub manager.
-        EXPECT_CALL(subManager_, getAllSubscribedOids(::testing::_))
-            .WillRepeatedly(::testing::Invoke([this](const catena::common::IDevice &dm){
+        EXPECT_CALL(subManager_, getAllSubscribedOids(testing::_))
+            .WillRepeatedly(testing::Invoke([this](const catena::common::IDevice &dm){
                 // Make sure device is passed in.
                 EXPECT_EQ(&dm, &dm0_);
                 return std::set<std::string>(oids_.begin(), oids_.end());
@@ -91,14 +91,14 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
             EXPECT_TRUE(status.ok()) << "Failed to convert test response to JSON";
 
             // Default expectations for test params_ for GET calls.
-            EXPECT_CALL(dm0_, getParam(oids_[i], ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+            EXPECT_CALL(dm0_, getParam(oids_[i], testing::_, testing::_)).WillRepeatedly(testing::Invoke(
                 [this, i](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
                     // Make sure authz is correctly passed in.
                     EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
                     return std::move(params_[i]);
                 }));
-            EXPECT_CALL(*params_.back(), getOid()).WillRepeatedly(::testing::ReturnRefOfCopy(oids_[i]));
-            EXPECT_CALL(*params_.back(), toProto(::testing::An<catena::Param&>(), ::testing::_)).WillRepeatedly(::testing::Invoke(
+            EXPECT_CALL(*params_.back(), getOid()).WillRepeatedly(testing::ReturnRefOfCopy(oids_[i]));
+            EXPECT_CALL(*params_.back(), toProto(testing::An<catena::Param&>(), testing::_)).WillRepeatedly(testing::Invoke(
                 [this, i](catena::Param &param, catena::common::Authorizer &authz) {
                     // Make sure authz is correctly passed in.
                     EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
@@ -107,14 +107,14 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
                 }));
 
             // Default expectations for test params_ for PUT calls.
-            EXPECT_CALL(subManager_, removeSubscription(oids_[i], ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+            EXPECT_CALL(subManager_, removeSubscription(oids_[i], testing::_, testing::_)).WillRepeatedly(testing::Invoke(
                 [this](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc) {
                     // Make sure device is correctly passed in.
                     EXPECT_EQ(&dm, &dm0_);
                     this->removedOids_++;
                     return true;
                 }));
-            EXPECT_CALL(subManager_, addSubscription(oids_[i], ::testing::_, ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+            EXPECT_CALL(subManager_, addSubscription(oids_[i], testing::_, testing::_, testing::_)).WillRepeatedly(testing::Invoke(
                 [this](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc, catena::common::Authorizer& authz) {
                     // Make sure authz and device are correctly passed in.
                     EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
@@ -217,9 +217,9 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_NotSupported) {
     initPayload(0);
     expRc_ = catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::FAILED_PRECONDITION);
     // Setting expectations.
-    EXPECT_CALL(dm0_, subscriptions()).WillOnce(::testing::Return(false));
+    EXPECT_CALL(dm0_, subscriptions()).WillOnce(testing::Return(false));
     EXPECT_CALL(context_, getSubscriptionManager()).Times(0); // Should not call.
-    // Sending call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -232,9 +232,9 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_AuthzInalid) {
     authzEnabled_ = true;
     jwsToken_ = "Invalid token";
     // Setting expectations.
-    EXPECT_CALL(dm0_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, getParam(testing::An<const std::string&>(), testing::_, testing::_)).Times(0);
     EXPECT_CALL(context_, getSubscriptionManager()).Times(0); // Should not call.
-    // Sending call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -247,7 +247,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_BadMethod) {
     method_ = "BAD_METHOD";
     // Setting expectations.
     EXPECT_CALL(context_, getSubscriptionManager()).Times(0); // Should not call.
-    // Sending call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -261,7 +261,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_BadMethod) {
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_GETNormal) {
     initPayload(0);
-    // Sending call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -273,7 +273,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETStream) {
     // Remaking with stream enabled.
     stream_ = true;
     endpoint_.reset(makeOne());
-    // Sending call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -293,7 +293,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETAuthzValid) {
                 "uIwNOVM3EcVEaLyISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg"
                 "_wbOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9MdvJH-cx1s1"
                 "46M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
-    // Sending call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -304,12 +304,12 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETGetParamReturnErr) {
     initPayload(0);
     oids_.insert(oids_.begin(), "errParam");
     // Setting expectations.
-    EXPECT_CALL(dm0_, getParam("errParam", ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Invoke(
+    EXPECT_CALL(dm0_, getParam("errParam", testing::_, testing::_)).Times(1).WillOnce(testing::Invoke(
         [](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
             status = catena::exception_with_status("Param not found", catena::StatusCode::NOT_FOUND);
             return nullptr; // Simulating an error.
         }));
-    // Sending call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -321,12 +321,12 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETGetParamThrowCatena) {
     expRc_ = catena::exception_with_status{"Param not found", catena::StatusCode::NOT_FOUND};
     oids_.insert(oids_.begin(), "errParam");
     // Setting expectations.
-    EXPECT_CALL(dm0_, getParam("errParam", ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Invoke(
+    EXPECT_CALL(dm0_, getParam("errParam", testing::_, testing::_)).Times(1).WillOnce(testing::Invoke(
         [this](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return nullptr; // Simulating an error.
         }));
-    // Sending call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -338,9 +338,9 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETGetParamThrowUnknown) {
     expRc_ = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
     oids_.insert(oids_.begin(), "errParam");
     // Setting expectations.
-    EXPECT_CALL(dm0_, getParam("errParam", ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Throw(std::runtime_error("Unknown error occurred")));
-    // Sending call
+    EXPECT_CALL(dm0_, getParam("errParam", testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Throw(std::runtime_error("Unknown error occurred")));
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -352,17 +352,17 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETToProtoReturnErr) {
     oids_.insert(oids_.begin(), "errParam");
     std::unique_ptr<MockParam> errParam = std::make_unique<MockParam>();
     // Setting expectations.
-    EXPECT_CALL(dm0_, getParam("errParam", ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Invoke(
+    EXPECT_CALL(dm0_, getParam("errParam", testing::_, testing::_)).Times(1).WillOnce(testing::Invoke(
         [&errParam](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
             return std::move(errParam);
         }));
-    EXPECT_CALL(*errParam, getOid()).WillRepeatedly(::testing::ReturnRef(oids_[0]));
-    EXPECT_CALL(*errParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).WillRepeatedly(::testing::Invoke(
+    EXPECT_CALL(*errParam, getOid()).WillRepeatedly(testing::ReturnRef(oids_[0]));
+    EXPECT_CALL(*errParam, toProto(testing::An<catena::Param&>(), testing::_)).WillRepeatedly(testing::Invoke(
         [](catena::Param &param, catena::common::Authorizer &authz) {
             // Simulating an error in conversion.
             return catena::exception_with_status("Failed to convert to proto", catena::StatusCode::UNKNOWN);
         }));
-    // Sending call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -375,17 +375,17 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETToProtoThrowCatena) {
     oids_.insert(oids_.begin(), "errParam");
     std::unique_ptr<MockParam> errParam = std::make_unique<MockParam>();
 
-    EXPECT_CALL(dm0_, getParam("errParam", ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Invoke(
+    EXPECT_CALL(dm0_, getParam("errParam", testing::_, testing::_)).Times(1).WillOnce(testing::Invoke(
         [&errParam](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
             return std::move(errParam);
         }));
-    EXPECT_CALL(*errParam, getOid()).WillRepeatedly(::testing::ReturnRef(oids_[0]));
-    EXPECT_CALL(*errParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).WillRepeatedly(::testing::Invoke(
+    EXPECT_CALL(*errParam, getOid()).WillRepeatedly(testing::ReturnRef(oids_[0]));
+    EXPECT_CALL(*errParam, toProto(testing::An<catena::Param&>(), testing::_)).WillRepeatedly(testing::Invoke(
         [this](catena::Param &param, catena::common::Authorizer &authz) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    // Sending call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -398,14 +398,14 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETToProtoThrowUnknown) {
     oids_.insert(oids_.begin(), "errParam");
     std::unique_ptr<MockParam> errParam = std::make_unique<MockParam>();
     // Setting expectations.
-    EXPECT_CALL(dm0_, getParam("errParam", ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Invoke(
+    EXPECT_CALL(dm0_, getParam("errParam", testing::_, testing::_)).Times(1).WillOnce(testing::Invoke(
         [&errParam](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
             return std::move(errParam);
         }));
-    EXPECT_CALL(*errParam, getOid()).WillRepeatedly(::testing::ReturnRef(oids_[0]));
-    EXPECT_CALL(*errParam, toProto(::testing::An<catena::Param&>(), ::testing::_))
-        .WillRepeatedly(::testing::Throw(std::runtime_error("Unknown error")));
-    // Sending call
+    EXPECT_CALL(*errParam, getOid()).WillRepeatedly(testing::ReturnRef(oids_[0]));
+    EXPECT_CALL(*errParam, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillRepeatedly(testing::Throw(std::runtime_error("Unknown error")));
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -419,7 +419,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETToProtoThrowUnknown) {
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTNormal) {
     method_ = "PUT";
     initPayload(0, {"param1", "param2"}, {"param1", "param2"});
-    // Sending call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -440,7 +440,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAuthzValid) {
                 "uIwNOVM3EcVEaLyISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg"
                 "_wbOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9MdvJH-cx1s1"
                 "46M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
-    // Sending call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -453,7 +453,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTFailParse) {
     jsonBody_ = "Not a JSON string";
     // Setting expectations.
     EXPECT_CALL(context_, jwsToken()).Times(0); // Authz false
-    // Sending call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -464,19 +464,19 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTReturnErr) {
     method_ = "PUT";
     initPayload(0, {"errParam", "param1", "param2"}, {"errParam", "param1", "param2"});
     // Setting expectations.
-    EXPECT_CALL(subManager_, removeSubscription("errParam", ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+    EXPECT_CALL(subManager_, removeSubscription("errParam", testing::_, testing::_)).WillRepeatedly(testing::Invoke(
         [](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc) {
             // Simulating an error in removing subscription.
             rc = catena::exception_with_status("Failed to remove subscription", catena::StatusCode::INVALID_ARGUMENT);
             return false;
         }));
-    EXPECT_CALL(subManager_, addSubscription("errParam", ::testing::_, ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+    EXPECT_CALL(subManager_, addSubscription("errParam", testing::_, testing::_, testing::_)).WillRepeatedly(testing::Invoke(
         [](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc, catena::common::Authorizer& authz) {
             // Simulating an error in adding subscription.
             rc = catena::exception_with_status("Failed to add subscription", catena::StatusCode::INVALID_ARGUMENT);
             return false;
         }));
-    // Sending call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -488,13 +488,13 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowCatena) {
     expRc_ = catena::exception_with_status{"Failed to remove subscription", catena::StatusCode::INVALID_ARGUMENT};
     initPayload(0, {}, {"errParam", "param1", "param2"});
     // Setting expectations.
-    EXPECT_CALL(subManager_, removeSubscription("errParam", ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+    EXPECT_CALL(subManager_, removeSubscription("errParam", testing::_, testing::_)).WillRepeatedly(testing::Invoke(
         [this](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc) {
             // Simulating an error in removing subscription.
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return false;
         }));
-    // Sending call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -506,9 +506,9 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowUnknown) {
     expRc_ = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
     initPayload(0, {}, {"errParam", "param1", "param2"});
     // Setting expectations.
-    EXPECT_CALL(subManager_, removeSubscription("errParam", ::testing::_, ::testing::_))
-        .WillRepeatedly(::testing::Throw(std::runtime_error(expRc_.what())));
-    // Sending call
+    EXPECT_CALL(subManager_, removeSubscription("errParam", testing::_, testing::_))
+        .WillRepeatedly(testing::Throw(std::runtime_error(expRc_.what())));
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -520,13 +520,13 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowCatena) {
     expRc_ = catena::exception_with_status{"Failed to remove subscription", catena::StatusCode::INVALID_ARGUMENT};
     initPayload(0, {"errParam", "param1", "param2"}, {});
     // Setting expectations.
-    EXPECT_CALL(subManager_, addSubscription("errParam", ::testing::_, ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+    EXPECT_CALL(subManager_, addSubscription("errParam", testing::_, testing::_, testing::_)).WillRepeatedly(testing::Invoke(
         [this](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc, catena::common::Authorizer& authz) {
             // Simulating an error in adding subscription.
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return false;
         }));
-    // Sending call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -538,8 +538,8 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowUnknown) {
     expRc_ = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
     initPayload(0, {"errParam", "param1", "param2"}, {});
     // Setting expectations.
-    EXPECT_CALL(subManager_, addSubscription("errParam", ::testing::_, ::testing::_, ::testing::_))
-        .WillRepeatedly(::testing::Throw(std::runtime_error(expRc_.what())));
-    // Sending call
+    EXPECT_CALL(subManager_, addSubscription("errParam", testing::_, testing::_, testing::_))
+        .WillRepeatedly(testing::Throw(std::runtime_error(expRc_.what())));
+    // Calling proceed and testing the output
     testCall();
 }

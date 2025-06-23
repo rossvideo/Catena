@@ -93,7 +93,7 @@ TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_Finish) {
  */
 TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_Normal) {
     expVal_.add_slots(dm0_.slot());
-    // Sending the call
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -103,7 +103,7 @@ TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_Normal) {
 TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_proceedErr) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations
-    EXPECT_CALL(dm0_, slot()).Times(1).WillOnce(::testing::Throw(std::runtime_error("Unknown error")));
-    // Sending the call
+    EXPECT_CALL(dm0_, slot()).Times(1).WillOnce(testing::Throw(std::runtime_error("Unknown error")));
+    // Calling proceed and testing the output
     testCall();
 }

@@ -120,13 +120,13 @@ TEST_F(RESTConnectTest, Connect_Create) {
 }
 
 // Test 2.1: Test finish behaviour with no active signal handlers
-TEST_F(RESTConnectTest, FinishClosesConnection) {
+TEST_F(RESTConnectTest, Connect_FinishClosesConnection) {
     EXPECT_NO_THROW(endpoint_->finish());
     ASSERT_TRUE(MockConsole_.str().find("Connect[1] finished\n") != std::string::npos);
 }
 
 // Test 0.2: Test unauthorized connection
-TEST_F(RESTConnectTest, ProceedHandlesAuthzError) {
+TEST_F(RESTConnectTest, Connect_HandlesAuthzError) {
     jwsToken_ = "invalid_token";
     authzEnabled_ = true;
     expRc_ = catena::exception_with_status("", catena::StatusCode::UNAUTHENTICATED);
@@ -136,7 +136,7 @@ TEST_F(RESTConnectTest, ProceedHandlesAuthzError) {
 }
 
 // Test 0.3: Test authorized connection
-TEST_F(RESTConnectTest, ProceedHandlesValidAuthz) {
+TEST_F(RESTConnectTest, Connect_HandlesValidAuthz) {
     jwsToken_ = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkw"
                 "IiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIiwiaWF0I"
                 "joxNTE2MjM5MDIyfQ.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ";
@@ -160,7 +160,7 @@ TEST_F(RESTConnectTest, ProceedHandlesValidAuthz) {
 // --- 1. SIGNAL TESTS ---
 
 // Test 1.1: Test value set by server signal
-TEST_F(RESTConnectTest, HandlesValueSetByServer) {
+TEST_F(RESTConnectTest, Connect_HandlesValueSetByServer) {
     jwsToken_ = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkw"
                 "IiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIiwiaWF0I"
                 "joxNTE2MjM5MDIyfQ.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ";
@@ -171,8 +171,8 @@ TEST_F(RESTConnectTest, HandlesValueSetByServer) {
         .WillRepeatedly(testing::ReturnRef(paramOid_));
     EXPECT_CALL(*param, getScope())
         .WillRepeatedly(testing::ReturnRef(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
-    EXPECT_CALL(*param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
-        .WillOnce(::testing::Invoke([](catena::Value& value, catena::common::Authorizer&) {
+    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<catena::common::Authorizer&>()))
+        .WillOnce(testing::Invoke([](catena::Value& value, catena::common::Authorizer&) {
             value.set_string_value("test_value");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -198,7 +198,7 @@ TEST_F(RESTConnectTest, HandlesValueSetByServer) {
 }
 
 // Test 1.2: Test value set by client signal
-TEST_F(RESTConnectTest, HandlesValueSetByClient) {
+TEST_F(RESTConnectTest, Connect_HandlesValueSetByClient) {
     jwsToken_ = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkw"
                 "IiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIiwiaWF0I"
                 "joxNTE2MjM5MDIyfQ.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ";
@@ -209,8 +209,8 @@ TEST_F(RESTConnectTest, HandlesValueSetByClient) {
         .WillRepeatedly(testing::ReturnRef(paramOid_));
     EXPECT_CALL(*param, getScope())
         .WillRepeatedly(testing::ReturnRef(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
-    EXPECT_CALL(*param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
-        .WillOnce(::testing::Invoke([](catena::Value& value, catena::common::Authorizer&) {
+    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<catena::common::Authorizer&>()))
+        .WillOnce(testing::Invoke([](catena::Value& value, catena::common::Authorizer&) {
             value.set_string_value("test_value");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -236,15 +236,15 @@ TEST_F(RESTConnectTest, HandlesValueSetByClient) {
 }
 
 // Test 1.3: Test language signal
-TEST_F(RESTConnectTest, HandlesLanguage) {
+TEST_F(RESTConnectTest, Connect_HandlesLanguage) {
     jwsToken_ = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkw"
                 "IiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIiwiaWF0I"
                 "joxNTE2MjM5MDIyfQ.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ";
     authzEnabled_ = true;
 
     auto languagePack = std::make_unique<MockLanguagePack>();
-    EXPECT_CALL(*languagePack, toProto(::testing::_))
-        .WillOnce(::testing::Invoke([](catena::LanguagePack& pack) {
+    EXPECT_CALL(*languagePack, toProto(testing::_))
+        .WillOnce(testing::Invoke([](catena::LanguagePack& pack) {
             pack.set_name("English");
             (*pack.mutable_words())["greeting"] = "Hello";
         }));
@@ -272,7 +272,7 @@ TEST_F(RESTConnectTest, HandlesLanguage) {
 // --- 3. EXCEPTION TESTS ---
 
 // Test 3.2: Test std::exception handling
-TEST_F(RESTConnectTest, ProceedHandlesStdException) {
+TEST_F(RESTConnectTest, Connect_HandlesStdException) {
     expRc_ = catena::exception_with_status("Connection setup failed: Runtime error", catena::StatusCode::INTERNAL);
     authzEnabled_ = true;
     EXPECT_CALL(context_, jwsToken())
@@ -293,7 +293,7 @@ TEST_F(RESTConnectTest, ProceedHandlesStdException) {
 }
 
 // Test 3.3: Test unknown exception handling
-TEST_F(RESTConnectTest, ProceedHandlesUnknownException) {
+TEST_F(RESTConnectTest, Connect_HandlesUnknownException) {
     expRc_ = catena::exception_with_status("Unknown error during connection setup", catena::StatusCode::UNKNOWN);
     authzEnabled_ = true;
     EXPECT_CALL(context_, jwsToken())
@@ -309,7 +309,7 @@ TEST_F(RESTConnectTest, ProceedHandlesUnknownException) {
 }
 
 // Test 3.4: Test socket close during response sending with writer failure
-TEST_F(RESTConnectTest, ProceedHandlesWriterFailure) {
+TEST_F(RESTConnectTest, Connect_HandlesWriterFailure) {
     jwsToken_ = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkw"
                 "IiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIiwiaWF0I"
                 "joxNTE2MjM5MDIyfQ.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ";
@@ -320,7 +320,7 @@ TEST_F(RESTConnectTest, ProceedHandlesWriterFailure) {
         .WillRepeatedly(testing::ReturnRef(paramOid_));
     EXPECT_CALL(*param, getScope())
         .WillRepeatedly(testing::ReturnRef(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
-    EXPECT_CALL(*param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
+    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<catena::common::Authorizer&>()))
         .WillOnce(testing::Invoke([](catena::Value& value, catena::common::Authorizer&) {
             value.set_string_value("test_value");
             return catena::exception_with_status("", catena::StatusCode::OK);

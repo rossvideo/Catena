@@ -100,16 +100,16 @@ TEST_F(RESTSetValueTests, SetValue_Finish) {
 TEST_F(RESTSetValueTests, SetValue_Normal) {
     initPayload(0, "/test_oid", "test_value");
     // Setting expectations
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
+    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
             auto val = (*src.mutable_values())[0];
             EXPECT_EQ(val.oid(), fqoid_);
             EXPECT_EQ(val.value().SerializeAsString(), inVal_.SerializeAsString());
             return true;
         }));
-    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(catena::exception_with_status(expRc_.what(), expRc_.status)));
-    // Sending call
+    EXPECT_CALL(dm0_, commitMultiSetValue(testing::_, testing::_)).Times(1).WillOnce(testing::Return(catena::exception_with_status(expRc_.what(), expRc_.status)));
+    // Calling proceed and testing the output
     testCall();
 }
 
@@ -120,8 +120,8 @@ TEST_F(RESTSetValueTests, SetValue_FailParse) {
     expRc_ = catena::exception_with_status("Failed to convert JSON to protobuf", catena::StatusCode::INVALID_ARGUMENT);
     jsonBody_ = "Not a JSON string";
     // Setting expectations
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
-    // Sending call
+    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(0);
+    EXPECT_CALL(dm0_, commitMultiSetValue(testing::_, testing::_)).Times(0);
+    // Calling proceed and testing the output
     testCall();
 }

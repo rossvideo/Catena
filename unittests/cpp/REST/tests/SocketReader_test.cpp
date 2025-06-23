@@ -52,7 +52,7 @@
 using namespace catena::REST;
 
 // Fixture
-class RESTSocketReaderTests : public ::testing::Test, public RESTTest {
+class RESTSocketReaderTests : public testing::Test, public RESTTest {
   protected:
     // Defining the in/out sockets.
     RESTSocketReaderTests() : RESTTest(&clientSocket_, &serverSocket_) {}
