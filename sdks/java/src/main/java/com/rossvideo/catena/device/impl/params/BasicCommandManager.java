@@ -6,7 +6,7 @@ import catena.core.device.Device;
 import catena.core.device.Device.Builder;
 import catena.core.parameter.Param;
 
-public class BasicCommandManager extends BasicParamManager implements CommandManager
+public class BasicCommandManager extends ParamInfoManager implements CommandManager
 {
 
     public BasicCommandManager(Builder deviceBuilder)

@@ -6,7 +6,7 @@ import com.rossvideo.catena.device.impl.CommandManager;
 import com.rossvideo.catena.device.impl.MenuGroupManager;
 import com.rossvideo.catena.device.impl.ParamManager;
 import com.rossvideo.catena.device.impl.params.BasicCommandManager;
-import com.rossvideo.catena.device.impl.params.BasicParamManager;
+import com.rossvideo.catena.device.impl.params.ParamInfoManager;
 import com.rossvideo.catena.oauth.ScopeValidator;
 import com.rossvideo.catena.oauth.SimpleScopeValidator;
 
@@ -69,7 +69,7 @@ public class BasicCatenaDevice implements CatenaDevice
     }
 
     protected ParamManager createParamManager(Device.Builder deviceBuilder) {
-        return new BasicParamManager(deviceBuilder);
+        return new ParamInfoManager(deviceBuilder);
     }
     
     protected CommandManager createCommandManager(Device.Builder deviceBuilder) {
