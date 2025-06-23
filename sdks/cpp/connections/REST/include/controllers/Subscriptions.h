@@ -68,7 +68,7 @@ public:
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to update subscriptions on.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     Subscriptions(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     
@@ -87,7 +87,7 @@ public:
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
         return new Subscriptions(socket, context, dms);

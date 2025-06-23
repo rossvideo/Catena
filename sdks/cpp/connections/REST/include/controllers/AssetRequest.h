@@ -75,7 +75,7 @@ class AssetRequest : public ICallData {
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to get the parameter from.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     AssetRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
@@ -93,7 +93,7 @@ class AssetRequest : public ICallData {
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
       return new AssetRequest(socket, context, dms);

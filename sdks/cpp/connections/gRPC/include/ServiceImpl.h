@@ -101,7 +101,7 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
     /**
      * @brief Constructor for the CatenaServiceImpl class.
      * @param cq The completion queue for the server.
-     * @param dm The device to implement Catena services to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param EOPath The path to the external object.
      * @param authz Flag to enable authorization.
      */

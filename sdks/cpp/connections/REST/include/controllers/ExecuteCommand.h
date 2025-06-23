@@ -69,7 +69,7 @@ class ExecuteCommand : public ICallData {
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to execute the command on.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     ExecuteCommand(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     
@@ -88,7 +88,7 @@ class ExecuteCommand : public ICallData {
      * 
      * @param socket The socket to write the response stream to.
      * @param context The SocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
       return new ExecuteCommand(socket, context, dms);

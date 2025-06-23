@@ -55,7 +55,7 @@ class SetValue : public MultiSetValue {
      * gRPC. Calls proceed() once initialized.
      *
      * @param service - Pointer to the parent CatenaServiceImpl.
-     * @param dm - Address of the device to get the value from.
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok - Flag to check if the command was successfully executed.
      */ 
     SetValue(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
@@ -71,8 +71,6 @@ class SetValue : public MultiSetValue {
      * @brief Creates a new SetValue object to serve other clients while
      * processing.
      *
-     * @param service - Pointer to the parent CatenaServiceImpl.
-     * @param dm - Address of the device to get the value from.
      * @param ok - Flag to check if the command was successfully executed.
      *  
      * Helper function to allow reuse of MultiSetValue's proceed().

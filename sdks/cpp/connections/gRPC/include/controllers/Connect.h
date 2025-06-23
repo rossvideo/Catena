@@ -64,7 +64,7 @@ class Connect : public CallData, public catena::common::Connect {
      * Calls proceed() once initialized.
      *
      * @param service - Pointer to the parent CatenaServiceImpl.
-     * @param dm - Address of the device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok - Flag to check if the command was successfully executed.
      */ 
     Connect(ICatenaServiceImpl *service, SlotMap& dms, bool ok);

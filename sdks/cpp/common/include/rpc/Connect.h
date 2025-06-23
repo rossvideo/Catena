@@ -71,7 +71,7 @@ class Connect : public IConnect {
     Connect() = delete;
     /**
      * @brief Constructor for the Connect class.
-     * @param dm The device manager.
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param authz true if authorization is enabled, false otherwise.
      * @param jwsToken The client's JWS token.
      * @param subscriptionManager The subscription manager.

@@ -58,7 +58,7 @@ class MultiSetValue : public CallData {
      * gRPC. Calls proceed() once initialized.
      *
      * @param service - Pointer to the parent CatenaServiceImpl.
-     * @param dm - Address of the device to get the value from.
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok - Flag to check if the command was successfully executed.
      */ 
     MultiSetValue(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
@@ -77,7 +77,7 @@ class MultiSetValue : public CallData {
      * Helper function to allow reuse of proceed().
      *
      * @param service Pointer to the parent CatenaServiceImpl.
-     * @param dm Address of the device to get the value from.
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok Flag to check if the command was successfully executed.
      * @param objectId objectCounter_ + 1
      */ 
@@ -95,8 +95,6 @@ class MultiSetValue : public CallData {
      *   
      * Helper function to allow reuse of proceed().
      *
-     * @param service Pointer to the parent CatenaServiceImpl.
-     * @param dm Address of the device to get the value from.
      * @param ok Flag to check if the command was successfully executed.
      */ 
     virtual void create_(bool ok);

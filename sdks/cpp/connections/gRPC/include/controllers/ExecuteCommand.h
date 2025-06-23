@@ -55,7 +55,7 @@ class ExecuteCommand : public CallData {
      * @brief Constructor for ExecuteCommand class
      *
      * @param service the service to which the command wll be executed
-     * @param dm the device to execute the command to
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok flag to check if command was successfully executed 
      */
     ExecuteCommand(ICatenaServiceImpl *service, SlotMap& dms, bool ok);

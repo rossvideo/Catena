@@ -58,7 +58,7 @@ class DeviceRequest : public CallData {
      * @brief Constructor for ExternalObjectRequest class
      *
      * @param service the service to which the request is made
-     * @param dm the device for which the request is made
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok flag to check if request is successful 
      */
     DeviceRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok);

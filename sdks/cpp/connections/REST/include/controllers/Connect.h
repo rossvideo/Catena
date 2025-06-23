@@ -76,7 +76,7 @@ class Connect : public ICallData, public catena::common::Connect {
      *
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     Connect(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
@@ -94,7 +94,7 @@ class Connect : public ICallData, public catena::common::Connect {
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
       return new Connect(socket, context, dms);

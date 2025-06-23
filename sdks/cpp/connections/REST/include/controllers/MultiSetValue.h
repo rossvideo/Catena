@@ -73,7 +73,7 @@ class MultiSetValue : public ICallData {
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to set values on.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     MultiSetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
@@ -91,7 +91,7 @@ class MultiSetValue : public ICallData {
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
       return new MultiSetValue(socket, context, dms);
@@ -101,7 +101,7 @@ class MultiSetValue : public ICallData {
      * @brief Constructor for child SetValue rest endpoints. Does not call proceed().
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to set the value(s) of.
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param objectId The object's unique id.
      */
     MultiSetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms, int objectId);

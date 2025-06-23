@@ -73,7 +73,7 @@ class DeviceRequest : public ICallData {
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to get information from.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     DeviceRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
@@ -91,7 +91,7 @@ class DeviceRequest : public ICallData {
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
       return new DeviceRequest(socket, context, dms);
