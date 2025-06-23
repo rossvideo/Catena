@@ -35,57 +35,44 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-// gtest
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-// std
-#include <string>
-
-// protobuf
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 // Test helpers
 #include "RESTTest.h"
-#include "MockSocketReader.h"
-#include "MockDevice.h"
 
 // REST
 #include "controllers/SetValue.h"
-#include "SocketWriter.h"
 
 using namespace catena::common;
 using namespace catena::REST;
 
 // Fixture
-class RESTSetValueTests : public ::testing::Test, public RESTTest {
+class RESTSetValueTests : public RESTEndpointTest {
   protected:
-    RESTSetValueTests() : RESTTest(&serverSocket, &clientSocket) {}
+    /*
+     * Creates a SetValue handler object.
+     */
+    ICallData* makeOne() override { return SetValue::makeOne(serverSocket_, context_, dm0_); }
 
-    void SetUp() override {
-        // Redirecting cout to a stringstream for testing.
-        oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-
-        // Creating setValue object.
-        EXPECT_CALL(context, origin()).Times(1).WillOnce(::testing::ReturnRef(origin));
-        setValue = SetValue::makeOne(serverSocket, context, dm);
+    /*
+     * Streamlines the creation of endpoint input. 
+     */
+    void initPayload(uint32_t slot, const std::string& oid, const std::string& value) {
+        slot_ = slot;
+        fqoid_ = oid;
+        inVal_.set_string_value(value);
+        auto status = google::protobuf::util::MessageToJsonString(inVal_, &jsonBody_);
+        ASSERT_TRUE(status.ok()) << "Failed to convert input value to JSON";
     }
 
-    void TearDown() override {
-        std::cout.rdbuf(oldCout); // Restoring cout
-        // Cleanup code here
-        if (setValue) {
-            delete setValue;
-        }
+    /*
+     * Calls proceed and tests the response.
+     */
+    void testCall() {
+        endpoint_->proceed();
+        EXPECT_EQ(readResponse(), expectedResponse(expRc_));
     }
 
-    std::stringstream MockConsole;
-    std::streambuf* oldCout;
-    
-    MockSocketReader context;
-    MockDevice dm;
-    catena::REST::ICallData* setValue = nullptr;
+    // in vals
+    catena::Value inVal_;
 };
 
 /*
@@ -95,59 +82,46 @@ class RESTSetValueTests : public ::testing::Test, public RESTTest {
  * 
  * TEST 1 - Creating a SetValue object with makeOne.
  */
-TEST_F(RESTSetValueTests, SetValue_create) {
-    // Making sure setValue is created from the SetUp step.
-    ASSERT_TRUE(setValue);
+TEST_F(RESTSetValueTests, SetValue_Create) {
+    ASSERT_TRUE(endpoint_);
 }
 
 /* 
- * TEST 2 - Normal case for SetValue toMulti_().
+ * TEST 2 - Writing to console with SetValue finish().
  */
-TEST_F(RESTSetValueTests, SetValue_proceedNormal) {
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    std::mutex mockMutex;
-    std::string mockJsonBody = "{\"string_value\": \"test value 1\"}";
-    std::string mockFqoid = "/text_box";
-
-    // Defining mock functions
-    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockFqoid));
-    EXPECT_CALL(context, jsonBody()).Times(1).WillOnce(::testing::ReturnRef(mockJsonBody));
-    EXPECT_CALL(context, slot()).Times(1).WillOnce(::testing::Return(1));
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
-    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
-    EXPECT_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(catena::exception_with_status(rc.what(), rc.status)));
-
-    setValue->proceed();
-
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
+TEST_F(RESTSetValueTests, SetValue_Finish) {
+    endpoint_->finish();
+    ASSERT_TRUE(MockConsole_.str().find("SetValue[1] finished\n") != std::string::npos);
 }
 
 /* 
- * TEST 3 - TEST 11 - SetValue toMulti_() fails to parse the JSON.
+ * TEST 3 - Normal case for SetValue toMulti_().
  */
-TEST_F(RESTSetValueTests, SetValue_proceedFailParse) {
-    catena::exception_with_status rc("Failed to convert JSON to protobuf", catena::StatusCode::INVALID_ARGUMENT);
-    std::string mockJsonBody = "Not a JSON string";
-    std::string mockFqoid = "";
-
-    // Defining mock functions
-    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockFqoid));
-    EXPECT_CALL(context, jsonBody()).Times(1).WillOnce(::testing::ReturnRef(mockJsonBody));
-    EXPECT_CALL(context, slot()).Times(1).WillOnce(::testing::Return(1));
-    EXPECT_CALL(context, authorizationEnabled()).Times(0);
-
-    setValue->proceed();
-
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
+TEST_F(RESTSetValueTests, SetValue_Normal) {
+    initPayload(0, "/test_oid", "test_value");
+    // Setting expectations
+    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
+            // Checking that function gets correct inputs.
+            auto val = (*src.mutable_values())[0];
+            EXPECT_EQ(val.oid(), fqoid_);
+            EXPECT_EQ(val.value().SerializeAsString(), inVal_.SerializeAsString());
+            return true;
+        }));
+    EXPECT_CALL(dm0_, commitMultiSetValue(testing::_, testing::_)).Times(1).WillOnce(testing::Return(catena::exception_with_status(expRc_.what(), expRc_.status)));
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /* 
- * TEST 4 - Writing to console with SetValue finish().
+ * TEST 4 - SetValue toMulti_() fails to parse the JSON.
  */
-TEST_F(RESTSetValueTests, SetValue_finish) {
-    // Calling finish and expecting the console output.
-    setValue->finish();
-    // Idk why I cant use .contains() here :/
-    ASSERT_TRUE(MockConsole.str().find("SetValue[3] finished\n") != std::string::npos);
+TEST_F(RESTSetValueTests, SetValue_FailParse) {
+    expRc_ = catena::exception_with_status("Failed to convert JSON to protobuf", catena::StatusCode::INVALID_ARGUMENT);
+    jsonBody_ = "Not a JSON string";
+    // Setting expectations
+    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(0);
+    EXPECT_CALL(dm0_, commitMultiSetValue(testing::_, testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
 }

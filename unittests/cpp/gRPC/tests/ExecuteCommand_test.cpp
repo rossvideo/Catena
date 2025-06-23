@@ -214,7 +214,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalResponse) {
     EXPECT_CALL(*mockCommand, executeCommand(::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](const catena::Value& value) {
             // Making sure the correct values were passed in.
-            EXPECT_EQ(value.string_value(), "test_value");
+            EXPECT_EQ(value.SerializeAsString(), inVal.value().SerializeAsString());
             return std::move(mockResponder);
         }));
     EXPECT_CALL(*mockResponder, getNext()).Times(3)

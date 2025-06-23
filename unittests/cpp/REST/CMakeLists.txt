@@ -24,6 +24,7 @@ set(SOURCES
     tests/ParamInfoRequest_test.cpp
     tests/Subscriptions_test.cpp
     tests/Connect_test.cpp
+    tests/ExecuteCommand_test.cpp
     tests/DeviceRequest_test.cpp
 
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/SocketReader.cpp
@@ -37,6 +38,7 @@ set(SOURCES
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/GetParam.cpp
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/ParamInfoRequest.cpp
     ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/Subscriptions.cpp
+    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/ExecuteCommand.cpp
 )	
 
 add_executable(${This} ${SOURCES})	

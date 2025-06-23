@@ -52,14 +52,14 @@
 using namespace catena::REST;
 
 // Fixture
-class RESTSocketReaderTests : public ::testing::Test, public RESTTest {
+class RESTSocketReaderTests : public testing::Test, public RESTTest {
   protected:
     // Defining the in/out sockets.
-    RESTSocketReaderTests() : RESTTest(&clientSocket, &serverSocket) {}
+    RESTSocketReaderTests() : RESTTest(&clientSocket_, &serverSocket_) {}
 
     // Writes a request to a socket to later be read by the SocketReader.
     void SetUp() override {
-        origin = "test_origin";
+        origin_ = "test_origin";
         // Making sure the reader properly adds the subscriptions manager.
         EXPECT_EQ(&socketReader.getSubscriptionManager(), &sm);
         EXPECT_EQ(socketReader.EOPath(), EOPath);
@@ -82,7 +82,7 @@ class RESTSocketReaderTests : public ::testing::Test, public RESTTest {
         // Writing the request to the socket and reading.
         writeRequest(method, slot, endpoint, fqoid, stream, fields,
                      jwsToken, origin, detailLevel, language, jsonBody);
-        socketReader.read(serverSocket, authz);
+        socketReader.read(serverSocket_, authz);
         // Validating the results.
         if (!authz) { jwsToken = ""; }
         if (detailLevel.empty()) { detailLevel = "NONE"; }

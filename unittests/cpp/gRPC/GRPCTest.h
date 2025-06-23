@@ -47,11 +47,13 @@
 
 #include "MockDevice.h"
 #include "MockServiceImpl.h"
+#include "interface/ICallData.h"
 
 // protobuf
 #include <interface/device.pb.h>
 #include <interface/service.grpc.pb.h>
 #include <google/protobuf/util/json_util.h>
+#include <grpcpp/grpcpp.h>
 
 // common
 #include <Status.h>
@@ -67,7 +69,7 @@ using namespace catena::gRPC;
  * GRPCTest class inherited by test fixtures to provide functions for
  * writing, reading, and verifying requests and responses.
  */
-class GRPCTest  : public ::testing::Test {
+class GRPCTest : public ::testing::Test {
   protected:
     /*
      * Virtual function which creates a single CallData object for the test.
