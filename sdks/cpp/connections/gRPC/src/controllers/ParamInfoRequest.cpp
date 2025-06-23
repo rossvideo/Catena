@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -29,12 +29,12 @@
  */
 
 // connections/gRPC
-#include <controllers/BasicParamInfoRequest.h>
-using catena::gRPC::BasicParamInfoRequest;
+#include <controllers/ParamInfoRequest.h>
+using catena::gRPC::ParamInfoRequest;
 
-int BasicParamInfoRequest::objectCounter_ = 0;
+int ParamInfoRequest::objectCounter_ = 0;
 
-BasicParamInfoRequest::BasicParamInfoRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+ParamInfoRequest::ParamInfoRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
     : CallData(service), dms_{dms}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);
@@ -42,27 +42,27 @@ BasicParamInfoRequest::BasicParamInfoRequest(ICatenaServiceImpl *service, SlotMa
     proceed(ok);  // start the process
 }
 
-void BasicParamInfoRequest::proceed(bool ok) {
-    std::cout << "BasicParamInfoRequest::proceed[" << objectId_ << "]: "
+void ParamInfoRequest::proceed(bool ok) {
+    std::cout << "ParamInfoRequest::proceed[" << objectId_ << "]: "
               << timeNow() << " status: " << static_cast<int>(status_)
               << ", ok: " << std::boolalpha << ok << std::endl;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        std::cout << "BasicParamInfoRequest[" << objectId_ << "] cancelled\n";
+        std::cout << "ParamInfoRequest[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
 
     switch (status_) {
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
-            service_->RequestBasicParamInfoRequest(&context_, &req_, &writer_, 
+            service_->RequestParamInfoRequest(&context_, &req_, &writer_, 
                         service_->cq(), service_->cq(), this);
-            break;
+            break;  
 
         case CallStatus::kProcess:
 
-            new BasicParamInfoRequest(service_, dms_, ok);
+            new ParamInfoRequest(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
             
             try {
@@ -144,7 +144,7 @@ void BasicParamInfoRequest::proceed(bool ok) {
                         
                         // If recursive is true, collect all parameter info recursively through visitor pattern
                         if (req_.recursive()) {
-                            BasicParamInfoVisitor visitor(*dm, *authz, responses_, *this);
+                            ParamInfoVisitor visitor(*dm, *authz, responses_, *this);
                             ParamVisitor::traverseParams(param.get(), req_.oid_prefix(), *dm, visitor);
                         }
 
@@ -183,7 +183,7 @@ void BasicParamInfoRequest::proceed(bool ok) {
                             }
                             
                             // Collect all parameter info recursively through visitor pattern
-                            BasicParamInfoVisitor visitor(*dm, *authz, responses_, *this);
+                            ParamInfoVisitor visitor(*dm, *authz, responses_, *this);
                             ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), *dm, visitor);
                         }
                         
@@ -206,7 +206,7 @@ void BasicParamInfoRequest::proceed(bool ok) {
             } catch (...) {
                 status_ = CallStatus::kFinish;
                 grpc::Status errorStatus(grpc::StatusCode::INTERNAL, 
-                    "Failed due to unknown error in BasicParamInfoRequest");
+                    "Failed due to unknown error in ParamInfoRequest");
                 writer_.Finish(errorStatus, this);
                 break;
             }
@@ -265,7 +265,7 @@ void BasicParamInfoRequest::proceed(bool ok) {
 /** Updates the array_length field in the protobuf responses
  * for all responses that contain array_name in their OID
  */
-void BasicParamInfoRequest::updateArrayLengths_(const std::string& array_name, uint32_t length) {
+void ParamInfoRequest::updateArrayLengths_(const std::string& array_name, uint32_t length) {
     if (length > 0) {
         for (auto it = responses_.rbegin(); it != responses_.rend(); ++it) {
             // Only update if the OID exactly matches the array name
@@ -277,7 +277,7 @@ void BasicParamInfoRequest::updateArrayLengths_(const std::string& array_name, u
 }
 
 // Helper method to add a parameter to the responses
-void BasicParamInfoRequest::addParamToResponses(IParam* param, Authorizer& authz) {
+void ParamInfoRequest::addParamToResponses(IParam* param, Authorizer& authz) {
     responses_.emplace_back();
     auto& response = responses_.back();
     response.mutable_info();
@@ -285,7 +285,7 @@ void BasicParamInfoRequest::addParamToResponses(IParam* param, Authorizer& authz
 }
 
 // Visits a parameter and adds it to the response vector
-void BasicParamInfoRequest::BasicParamInfoVisitor::visit(IParam* param, const std::string& path) {
+void ParamInfoRequest::ParamInfoVisitor::visit(IParam* param, const std::string& path) {
     // Only add non-array parameters that aren't the top-most parameter
     bool isTopParameter = path == request_.req_.oid_prefix() || path == "/" + param->getOid();
     bool isArray = param->isArrayType();
@@ -297,7 +297,7 @@ void BasicParamInfoRequest::BasicParamInfoVisitor::visit(IParam* param, const st
 }
 
 // Visits an array and updates the array length information
-void BasicParamInfoRequest::BasicParamInfoVisitor::visitArray(IParam* param, const std::string& path, uint32_t length) {
+void ParamInfoRequest::ParamInfoVisitor::visitArray(IParam* param, const std::string& path, uint32_t length) {
     // Only add array parameters that aren't the top-most parameter
     bool isTopParameter = path == request_.req_.oid_prefix() || path == "/" + param->getOid();
     if (isTopParameter) {

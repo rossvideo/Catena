@@ -29,11 +29,12 @@
  */
 
 // connections/REST
-#include <controllers/BasicParamInfoRequest.h>
-using catena::REST::BasicParamInfoRequest;
+#include <controllers/ParamInfoRequest.h>
+using catena::REST::ParamInfoRequest;
 
 // common
 #include <Tags.h>
+#include <Authorization.h>
 #include <ParamVisitor.h>
 
 // type aliases
@@ -44,35 +45,20 @@ using catena::common::IParam;
 using catena::common::Authorizer;
 using catena::common::IDevice;
 
-// Initializes the object counter for BasicParamInfoRequest to 0.
-int BasicParamInfoRequest::objectCounter_ = 0;
+// Initializes the object counter for ParamInfoRequest to 0.
+int ParamInfoRequest::objectCounter_ = 0;
 
-BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+ParamInfoRequest::ParamInfoRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms},
     rc_("", catena::StatusCode::OK), recursive_{false} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
     
-    // Parsing fields and assigning to respective variables.
-    try {
-        // Get recursive from query parameters - presence means true unless explicitly set to false
-        recursive_ = context_.hasField("recursive");
-
-        // Get oid_prefix from query parameters
-        oid_prefix_ = context_.fqoid();
-        if (oid_prefix_ == "%7B%7D" || oid_prefix_ == "%7Boid_prefix%7D" || oid_prefix_.empty()) {
-            oid_prefix_ = "";
-        }
-    } catch (const catena::exception_with_status& err) {
-        rc_ = catena::exception_with_status(err.what(), err.status);
-    } catch (const std::exception& e) {
-        rc_ = catena::exception_with_status(std::string("Failed to parse fields: ") + e.what(), catena::StatusCode::INVALID_ARGUMENT);
-    } catch (...) {
-        rc_ = catena::exception_with_status("Unknown error while parsing fields", catena::StatusCode::UNKNOWN);
-    }
+    // Get recursive from query parameters - presence alone means true
+    recursive_ = context_.hasField("recursive");
 }
 
-void BasicParamInfoRequest::proceed() {
+void ParamInfoRequest::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
 
     try {
@@ -108,7 +94,7 @@ void BasicParamInfoRequest::proceed() {
 
         if (rc_.status == catena::StatusCode::OK) {
             // Mode 1: Get all top-level parameters without recursion
-            if (oid_prefix_.empty() && !recursive_) {
+            if (context_.fqoid().empty() && !recursive_) {
                 std::vector<std::unique_ptr<IParam>> top_level_params;
 
                 {
@@ -143,7 +129,7 @@ void BasicParamInfoRequest::proceed() {
                 }
             }
             // Mode 2: Get all top-level parameters with recursion
-            else if (oid_prefix_.empty() && recursive_) {
+            else if (context_.fqoid().empty() && recursive_) {
                 std::vector<std::unique_ptr<IParam>> top_level_params;
 
                 {
@@ -171,7 +157,7 @@ void BasicParamInfoRequest::proceed() {
                                 }
                             }
                             // Recursively traverse all children of the top-level parameter
-                            BasicParamInfoVisitor visitor(*dm, *authz, responses_, *this);
+                            ParamInfoVisitor visitor(*dm, *authz, responses_, *this);
                             ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), *dm, visitor);
                         } catch (const catena::exception_with_status& err) {
                             rc_ = catena::exception_with_status(err.what(), err.status);
@@ -181,16 +167,16 @@ void BasicParamInfoRequest::proceed() {
                 }
             }
             // Mode 3: Get a specific parameter and its children
-            else if (!oid_prefix_.empty()) { 
+            else if (!context_.fqoid().empty()) { 
                 {
                     std::lock_guard lg(dm->mutex());
-                    param = dm->getParam(oid_prefix_, rc, *authz);
+                    param = dm->getParam(context_.fqoid(), rc, *authz);
                 }
 
                 if (rc.status != catena::StatusCode::OK) {
                     rc_ = catena::exception_with_status(rc.what(), rc.status);
                 } else if (!param) {
-                    rc_ = catena::exception_with_status("Parameter not found: " + oid_prefix_, catena::StatusCode::NOT_FOUND);
+                    rc_ = catena::exception_with_status("Parameter not found: " + context_.fqoid(), catena::StatusCode::NOT_FOUND);
                 } else {
                     responses_.clear();
                     
@@ -209,8 +195,8 @@ void BasicParamInfoRequest::proceed() {
                         
                         // If recursive is true, collect all parameter info recursively through visitor pattern
                         if (recursive_) {
-                            BasicParamInfoVisitor visitor(*dm, *authz, responses_, *this);
-                            ParamVisitor::traverseParams(param.get(), oid_prefix_, *dm, visitor);
+                            ParamInfoVisitor visitor(*dm, *authz, responses_, *this);
+                            ParamVisitor::traverseParams(param.get(), context_.fqoid(), *dm, visitor);
                         }
                     } catch (const catena::exception_with_status& err) {
                         rc_ = catena::exception_with_status(err.what(), err.status);
@@ -222,15 +208,15 @@ void BasicParamInfoRequest::proceed() {
     } catch (const catena::exception_with_status& err) {
         rc_ = catena::exception_with_status(err.what(), err.status);
     } catch (const std::exception& e) {
-        rc_ = catena::exception_with_status(std::string("Unknown error in BasicParamInfoRequest: ") + e.what(), catena::StatusCode::UNKNOWN);
+        rc_ = catena::exception_with_status(std::string("Unknown error in ParamInfoRequest: ") + e.what(), catena::StatusCode::UNKNOWN);
     } catch (...) {
-        rc_ = catena::exception_with_status("Unknown error in BasicParamInfoRequest", catena::StatusCode::UNKNOWN);
+        rc_ = catena::exception_with_status("Unknown error in ParamInfoRequest", catena::StatusCode::UNKNOWN);
     }
 }
 
-void BasicParamInfoRequest::finish() {
+void ParamInfoRequest::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << "BasicParamInfoRequest[" << objectId_ << "] finished\n";
+    std::cout << "ParamInfoRequest[" << objectId_ << "] finished\n";
     
     if (responses_.empty()) {
         // If no responses, send at least one response with the error status
@@ -245,7 +231,7 @@ void BasicParamInfoRequest::finish() {
 }
 
 // Helper method to add a parameter to the responses
-void BasicParamInfoRequest::addParamToResponses_(IParam* param, catena::common::Authorizer& authz) {
+void ParamInfoRequest::addParamToResponses_(IParam* param, catena::common::Authorizer& authz) {
     responses_.emplace_back();
     auto& response = responses_.back();
     response.mutable_info();
@@ -253,7 +239,7 @@ void BasicParamInfoRequest::addParamToResponses_(IParam* param, catena::common::
 }
 
 // Updates the array_length field in the protobuf responses
-void BasicParamInfoRequest::updateArrayLengths_(const std::string& array_name, uint32_t length) {
+void ParamInfoRequest::updateArrayLengths_(const std::string& array_name, uint32_t length) {
     if (length > 0) {
         for (auto it = responses_.rbegin(); it != responses_.rend(); ++it) {
             // Only update if the OID exactly matches the array name
@@ -265,9 +251,9 @@ void BasicParamInfoRequest::updateArrayLengths_(const std::string& array_name, u
 }
 
 // Visits a parameter and adds it to the response vector
-void BasicParamInfoRequest::BasicParamInfoVisitor::visit(IParam* param, const std::string& path) {
+void ParamInfoRequest::ParamInfoVisitor::visit(IParam* param, const std::string& path) {
     // Only add non-array parameters that aren't the top-most parameter
-    bool isTopParameter = path == request_.oid_prefix_ || path == "/" + param->getOid();
+    bool isTopParameter = path == request_.context_.fqoid() || path == "/" + param->getOid();
     bool isArray = param->isArrayType();
     if (isTopParameter || isArray) {
         return;
@@ -277,9 +263,9 @@ void BasicParamInfoRequest::BasicParamInfoVisitor::visit(IParam* param, const st
 }
 
 // Visits an array and updates the array length information
-void BasicParamInfoRequest::BasicParamInfoVisitor::visitArray(IParam* param, const std::string& path, uint32_t length) {
+void ParamInfoRequest::ParamInfoVisitor::visitArray(IParam* param, const std::string& path, uint32_t length) {
     // Only add array parameters that aren't the top-most parameter
-    bool isTopParameter = path == request_.oid_prefix_ || path == "/" + param->getOid();
+    bool isTopParameter = path == request_.context_.fqoid() || path == "/" + param->getOid();
     if (isTopParameter) {
         return;
     }

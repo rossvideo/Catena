@@ -29,8 +29,8 @@
  */
 
 /**
- * @file BasicParamInfoRequest.h
- * @brief Implements REST BasicParamInfoRequest controller.
+ * @file ParamInfoRequest.h
+ * @brief Implements REST ParamInfoRequest controller.
  * @author zuhayr.sarker@rossvideo.com
  * @date 2025-04-22
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -62,9 +62,9 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the BasicParamInfoRequest REST controller.
+ * @brief ICallData class for the ParamInfoRequest REST controller.
  */
-class BasicParamInfoRequest : public ICallData {
+class ParamInfoRequest : public ICallData {
   public:
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
@@ -72,21 +72,21 @@ class BasicParamInfoRequest : public ICallData {
     using SlotMap = catena::common::SlotMap;
 
     /**
-     * @brief Constructor for the BasicParamInfoRequest controller.
+     * @brief Constructor for the ParamInfoRequest controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
      * @param dm The device to get the parameter info from.
      */ 
-    BasicParamInfoRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
+    ParamInfoRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     
     /**
-     * @brief BasicParamInfoRequest's main process.
+     * @brief ParamInfoRequest's main process.
      */
     void proceed() override;
     
     /**
-     * @brief Finishes the BasicParamInfoRequest process
+     * @brief Finishes the ParamInfoRequest process
      */
     void finish() override;
     
@@ -98,7 +98,7 @@ class BasicParamInfoRequest : public ICallData {
      * @param dm The device to connect to.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
-      return new BasicParamInfoRequest(socket, context, dms);
+      return new ParamInfoRequest(socket, context, dms);
     }
     
     
@@ -109,7 +109,7 @@ class BasicParamInfoRequest : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << "BasicParamInfoRequest::proceed[" << objectId_ << "]: "
+      std::cout << "ParamInfoRequest::proceed[" << objectId_ << "]: "
                 << timeNow() << " status: "<< static_cast<int>(status)
                 <<", ok: "<< std::boolalpha << ok << std::endl;
     }
@@ -153,45 +153,40 @@ class BasicParamInfoRequest : public ICallData {
     SlotMap& dms_;
 
     /**
-     * @brief The oid prefix to get parameter info for.
-     */
-    std::string oid_prefix_;
-    
-    /**
      * @brief Whether to recursively get parameter info.
      */
     bool recursive_;
 
     /**
-     * @brief ID of the BasicParamInfoRequest object
+     * @brief ID of the ParamInfoRequest object
      */
     int objectId_;
     
     /**
-     * @brief The total # of BasicParamInfoRequest objects.
+     * @brief The total # of ParamInfoRequest objects.
      */
     static int objectCounter_;
     
     /**
-     * @brief The vector of BasicParamInfoResponse objects.
+     * @brief The vector of ParamInfoResponse objects.
      */
-    std::vector<catena::BasicParamInfoResponse> responses_;
+    std::vector<catena::ParamInfoResponse> responses_;
         
     /**
      * @brief Visitor class for collecting parameter info
      */
-    class BasicParamInfoVisitor : public catena::common::IParamVisitor {
+    class ParamInfoVisitor : public catena::common::IParamVisitor {
         public:
             /**
-             * @brief Constructor for the BasicParamInfoVisitor class
+             * @brief Constructor for the ParamInfoVisitor class
              * @param device The device to visit
              * @param authz The authorizer
              * @param responses The vector of responses
              * @param request The request
              */
-            BasicParamInfoVisitor(catena::common::IDevice& device, catena::common::Authorizer& authz,
-                                std::vector<catena::BasicParamInfoResponse>& responses,
-                                BasicParamInfoRequest& request)
+            ParamInfoVisitor(catena::common::IDevice& device, catena::common::Authorizer& authz,
+                                std::vector<catena::ParamInfoResponse>& responses,
+                                ParamInfoRequest& request)
                 : device_(device), authz_(authz), responses_(responses), request_(request) {}
 
             /**
@@ -223,12 +218,12 @@ class BasicParamInfoRequest : public ICallData {
             /**
              * @brief The vector of responses within the visitor
              */
-            std::vector<catena::BasicParamInfoResponse>& responses_;
+            std::vector<catena::ParamInfoResponse>& responses_;
 
             /**
              * @brief The request payload within the visitor
              */
-            BasicParamInfoRequest& request_;
+            ParamInfoRequest& request_;
     };
 };
 

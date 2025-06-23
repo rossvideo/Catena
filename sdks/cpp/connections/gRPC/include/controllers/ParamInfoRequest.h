@@ -29,9 +29,8 @@
  */
 
 /**
- * @file BasicParamInfoRequest.h
- * @brief Implements Catena gRPC BasicParamInfoRequest
- * @author john.naylor@rossvideo.com
+ * @file ParamInfoRequest.h
+ * @brief Implements gRPC ParamInfoRequest controller.
  * @author zuhayr.sarker@rossvideo.com
  * @date 2025-02-06
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -50,27 +49,29 @@ using catena::common::Path;
 using catena::common::ParamVisitor;
 using catena::common::IParam;
 using catena::common::Authorizer;
+using catena::common::IParamVisitor;
+using catena::common::timeNow;
 
 namespace catena {
 namespace gRPC {
 
 /**
- * @brief CallData class for the BasicParamInfoRequest RPC
+ * @brief CallData class for the ParamInfoRequest gRPC controller.
  */
-class BasicParamInfoRequest : public CallData {
+class ParamInfoRequest : public CallData {
   public:
     /**
-     * @brief Constructor for the CallData class of the BasicParamInfoRequest
+     * @brief Constructor for the CallData class of the ParamInfoRequest
      * gRPC. Calls proceed() once initialized.
      *
      * @param service - Pointer to the parent CatenaServiceImpl.
      * @param dm - Address of the device to get the value from.
      * @param ok - Flag to check if the command was successfully executed.
      */ 
-    BasicParamInfoRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
+    ParamInfoRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
 
     /**
-     * @brief Manages the steps of the BasicParamInfoRequest gRPC command
+     * @brief Manages the steps of the ParamInfoRequest gRPC command
      * through the state variable status. Returns the value of the
      * parameter specified by the user.
      *
@@ -103,7 +104,7 @@ class BasicParamInfoRequest : public CallData {
     /**
      * @brief The request payload.
      */
-    catena::BasicParamInfoRequestPayload req_;
+    catena::ParamInfoRequestPayload req_;
 
     /**
      * @brief The response payload.
@@ -113,7 +114,7 @@ class BasicParamInfoRequest : public CallData {
     /**
      * @brief gRPC async response writer.
      */
-    ServerAsyncWriter<catena::BasicParamInfoResponse> writer_;
+    ServerAsyncWriter<catena::ParamInfoResponse> writer_;
     
     /**
      * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
@@ -133,12 +134,12 @@ class BasicParamInfoRequest : public CallData {
     /**
      * @brief The object's unique id counter.
      */
-    static int objectCounter_;  
-
+    static int objectCounter_;
+    
     /**
-     * @brief The vector of BasicParamInfoResponse objects.
+     * @brief The vector of ParamInfoResponse objects.
      */
-    std::vector<catena::BasicParamInfoResponse> responses_;
+    std::vector<catena::ParamInfoResponse> responses_;
 
     /**
      * @brief The current response index.
@@ -158,18 +159,18 @@ class BasicParamInfoRequest : public CallData {
     /**
      * @brief Visitor class for collecting parameter info
      */
-    class BasicParamInfoVisitor : public catena::common::IParamVisitor {
+    class ParamInfoVisitor : public catena::common::IParamVisitor {
       public:
         /**
-         * @brief Constructor for the BasicParamInfoVisitor class
+         * @brief Constructor for the ParamInfoVisitor class
          * @param device The device to visit
          * @param authz The authorizer
          * @param responses The vector of responses
          * @param request The request
          */
-        BasicParamInfoVisitor(IDevice& device, catena::common::Authorizer& authz, 
-                            std::vector<catena::BasicParamInfoResponse>& responses,
-                            BasicParamInfoRequest& request)
+        ParamInfoVisitor(catena::common::IDevice& device, catena::common::Authorizer& authz,
+                            std::vector<catena::ParamInfoResponse>& responses,
+                            ParamInfoRequest& request)
             : device_(device), authz_(authz), responses_(responses), request_(request) {}
 
         /**
@@ -201,12 +202,12 @@ class BasicParamInfoRequest : public CallData {
         /**
          * @brief The vector of responses within the visitor
          */
-        std::vector<catena::BasicParamInfoResponse>& responses_;
+        std::vector<catena::ParamInfoResponse>& responses_;
 
         /**
          * @brief The request payload within the visitor
          */
-        BasicParamInfoRequest& request_;
+        ParamInfoRequest& request_;
     };
 };
 

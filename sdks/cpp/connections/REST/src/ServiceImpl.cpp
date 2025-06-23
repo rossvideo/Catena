@@ -1,4 +1,3 @@
-
 // connections/REST
 #include <ServiceImpl.h>
 using catena::REST::CatenaServiceImpl;
@@ -14,7 +13,7 @@ using catena::REST::CatenaServiceImpl;
 #include <controllers/GetPopulatedSlots.h>
 #include <controllers/LanguagePack.h>
 #include <controllers/Languages.h>
-#include <controllers/BasicParamInfoRequest.h>
+#include <controllers/ParamInfoRequest.h>
 #include <controllers/Subscriptions.h>
 #include <controllers/ExecuteCommand.h>
 
@@ -67,7 +66,7 @@ CatenaServiceImpl::CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOP
     router_.addProduct("POST/language-pack",  LanguagePack::makeOne);
     router_.addProduct("DELETE/language-pack", LanguagePack::makeOne);
     router_.addProduct("GET/languages",       Languages::makeOne);
-    router_.addProduct("GET/basic-param",     BasicParamInfoRequest::makeOne);
+    router_.addProduct("GET/param-info",      ParamInfoRequest::makeOne);
     router_.addProduct("GET/subscriptions",   Subscriptions::makeOne);
     router_.addProduct("PUT/subscriptions",   Subscriptions::makeOne);
 }

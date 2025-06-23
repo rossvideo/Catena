@@ -41,7 +41,7 @@ service CatenaService {
 
   rpc ExternalObjectRequest(ExternalObjectRequestPayload) returns (stream ExternalObjectPayload);
 
-  rpc BasicParamInfoRequest(BasicParamInfoRequestPayload) returns (stream BasicParamInfoResponse);
+  rpc ParamInfoRequest(ParamInfoRequestPayload) returns (stream ParamInfoResponse);
 
   rpc SetValue(SingleSetValuePayload) returns (catena.Empty);
 
