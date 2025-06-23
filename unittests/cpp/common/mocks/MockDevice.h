@@ -63,18 +63,13 @@ class MockDevice : public IDevice {
     MOCK_METHOD(uint32_t, default_total_length, (), (const, override));
     MOCK_METHOD(void, set_default_max_length, (const uint32_t default_max_length), (override));
     MOCK_METHOD(void, set_default_total_length, (const uint32_t default_total_length), (override));
-    MOCK_METHOD(void, toProto, (Device& dst, Authorizer& authz, bool shallow), (const, override));
+    MOCK_METHOD(void, toProto, (::catena::Device& dst, Authorizer& authz, bool shallow), (const, override));
     MOCK_METHOD(void, toProto, (LanguagePacks& packs), (const, override));
     MOCK_METHOD(void, toProto, (LanguageList& list), (const, override));
     MOCK_METHOD(bool, hasLanguage, (const std::string& LanguageId), (const, override));
     MOCK_METHOD(exception_with_status, addLanguage, (AddLanguagePayload& language, Authorizer& authz), (override));
     MOCK_METHOD(exception_with_status, removeLanguage, (const std::string& LanguageId, Authorizer& authz), (override));
     MOCK_METHOD(exception_with_status, getLanguagePack, (const std::string& languageId, ComponentLanguagePack& pack), (const, override));
-    class MockDeviceSerializer : public IDeviceSerializer {
-      public:
-        MOCK_METHOD(bool, hasMore, (), (const, override));
-        MOCK_METHOD(DeviceComponent, getNext, (), (override));
-    };
     MOCK_METHOD(std::unique_ptr<IDeviceSerializer>, getComponentSerializer, (Authorizer& authz, const std::set<std::string>& subscribedOids, Device_DetailLevel dl, bool shallow), (const, override));
     MOCK_METHOD(void, addItem, (const std::string& key, IParam* item), (override));
     MOCK_METHOD(void, addItem, (const std::string& key, IConstraint* item), (override));

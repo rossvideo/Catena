@@ -51,6 +51,7 @@
 
 // gRPC
 #include "MockSubscriptionManager.h"
+#include "MockDeviceSerializer.h"
 #include "controllers/DeviceRequest.h"
 
 using namespace catena::common;
@@ -179,7 +180,7 @@ class gRPCDeviceRequestTests : public GRPCTest {
     // Expected variables
     std::vector<catena::DeviceComponent> expVals;
 
-    std::unique_ptr<MockDevice::MockDeviceSerializer> mockSerializer = std::make_unique<MockDevice::MockDeviceSerializer>();
+    std::unique_ptr<MockDeviceSerializer> mockSerializer = std::make_unique<MockDeviceSerializer>();
 };
 
 /*

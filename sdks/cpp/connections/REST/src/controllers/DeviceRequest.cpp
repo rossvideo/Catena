@@ -59,17 +59,20 @@ void DeviceRequest::proceed() {
             serializer_ = dm->getComponentSerializer(*authz, subscribedOids_, dl, shallowCopy);
 
             // Getting each component and writing to the stream.
-            while (serializer_->hasMore()) {
-                writeConsole_(CallStatus::kWrite, socket_.is_open());
-                catena::DeviceComponent component{};
-                {
-                    std::lock_guard lg(dm->mutex());
-                    component = serializer_->getNext();
+            if (serializer_) {
+                while (serializer_->hasMore()) {
+                    writeConsole_(CallStatus::kWrite, socket_.is_open());
+                    catena::DeviceComponent component{};
+                    {
+                        std::lock_guard lg(dm->mutex());
+                        component = serializer_->getNext();
+                    }
+                    writer_->sendResponse(rc, component);
                 }
-                writer_->sendResponse(rc, component);
+            } else {
+                rc = catena::exception_with_status{"Illegal state", catena::StatusCode::INTERNAL};
             }
         }
-        
     // ERROR: Update rc.
     } catch (catena::exception_with_status& err) {
         rc = catena::exception_with_status{err.what(), err.status};

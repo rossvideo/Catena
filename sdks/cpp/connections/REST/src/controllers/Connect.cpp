@@ -32,6 +32,8 @@ void Connect::proceed() {
         // Set detail level from request
         detailLevel_ = context_.detailLevel();
 
+        catena::PushUpdates populatedSlots;
+
         // Connecting to each device in dms_.
         for (auto [slot, dm] : dms_) {
             if (dm) {
@@ -47,12 +49,11 @@ void Connect::proceed() {
                 languageAddedIds_[slot] = dm->languageAddedPushUpdate.connect([this, slot](const ILanguagePack* l) {
                     updateResponse_(l, slot);
                 });
-                // Send client a empty update with slot of the device
-                catena::PushUpdates populatedSlots;
-                populatedSlots.set_slot(slot);
-                writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), populatedSlots);
+                populatedSlots.mutable_slots_added()->add_slots(slot);
             }
         }
+        // Send client a empty update with slots populated by devices.
+        writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), populatedSlots); 
     // Used to catch the authz error.
     } catch (catena::exception_with_status& err) {
         writer_.sendResponse(err);
@@ -102,11 +103,6 @@ void Connect::finish() {
                 dm->languageAddedPushUpdate.disconnect(languageAddedIds_[slot]);
             }
         }
-    }
-    // Finishing and closing the socket.
-    if (socket_.is_open()) {
-        writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK));
-        socket_.close();
     }
     std::cout << "Connect[" << objectId_ << "] finished\n";
 }

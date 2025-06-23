@@ -14,21 +14,16 @@ GetPopulatedSlots::GetPopulatedSlots(tcp::socket& socket, ISocketReader& context
 
 void GetPopulatedSlots::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
-    try {
-        // Getting slot from dm.
-        SlotList slotList;
-        for (auto [slot, dm] : dms_) {
-            // If a devices exists at the slot, add it to the response.
-            if (dm) {
-                slotList.add_slots(slot);
-            }
+    // Getting slot from dm.
+    SlotList slotList;
+    for (auto [slot, dm] : dms_) {
+        // If a devices exists at the slot, add it to the response.
+        if (dm) {
+            slotList.add_slots(slot);
         }
-        // Writing response.
-        writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), slotList);
-    } catch (...) {
-        catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
-        writer_.sendResponse(rc);
     }
+    // Writing response.
+    writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), slotList);
 }
 
 void GetPopulatedSlots::finish() {

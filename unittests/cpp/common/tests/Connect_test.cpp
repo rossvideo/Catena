@@ -617,7 +617,6 @@ TEST_F(CommonConnectTests, updateResponseLanguagePacktoProto) {
         }));
     
     // Create a test connect instance
-    // auto testConnect = std::make_unique<TestConnect>(dms_, subscriptionManager);
     connect->initAuthz_(monitorToken, true);
     
     connect->updateResponse_(languagePack.get(), 0);
