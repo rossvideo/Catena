@@ -114,9 +114,9 @@ Collaboration diagram for catena::gRPC::CatenaServiceImpl:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a7b0aa3a6c2d6057617a730883e0108b0" id="r_a7b0aa3a6c2d6057617a730883e0108b0"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1gRPC_1_1CatenaServiceImpl.html#a7b0aa3a6c2d6057617a730883e0108b0">CatenaServiceImpl</a> (ServerCompletionQueue *<a class="el" href="classcatena_1_1gRPC_1_1CatenaServiceImpl.html#aaf4beebf9697331f818971a1d5e00311">cq</a>, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm, std::string &amp;<a class="el" href="classcatena_1_1gRPC_1_1CatenaServiceImpl.html#a63be827f9b558e6ec477712fef5970c5">EOPath</a>, bool authz)</td></tr>
-<tr class="memdesc:a7b0aa3a6c2d6057617a730883e0108b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1gRPC_1_1CatenaServiceImpl.html" title="Implements Catena gRPC request handlers.">CatenaServiceImpl</a> class.  <br /></td></tr>
-<tr class="separator:a7b0aa3a6c2d6057617a730883e0108b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a342df399becd215b94a024a7d6210cca" id="r_a342df399becd215b94a024a7d6210cca"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1gRPC_1_1CatenaServiceImpl.html#a342df399becd215b94a024a7d6210cca">CatenaServiceImpl</a> (ServerCompletionQueue *<a class="el" href="classcatena_1_1gRPC_1_1CatenaServiceImpl.html#aaf4beebf9697331f818971a1d5e00311">cq</a>, std::vector&lt; <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> * &gt; dms, std::string &amp;<a class="el" href="classcatena_1_1gRPC_1_1CatenaServiceImpl.html#a63be827f9b558e6ec477712fef5970c5">EOPath</a>, bool authz)</td></tr>
+<tr class="memdesc:a342df399becd215b94a024a7d6210cca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1gRPC_1_1CatenaServiceImpl.html" title="Implements Catena gRPC request handlers.">CatenaServiceImpl</a> class.  <br /></td></tr>
+<tr class="separator:a342df399becd215b94a024a7d6210cca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad3900e792aeac053792435323e2f9d15" id="r_ad3900e792aeac053792435323e2f9d15"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1gRPC_1_1CatenaServiceImpl.html#ad3900e792aeac053792435323e2f9d15">init</a> () override</td></tr>
 <tr class="memdesc:ad3900e792aeac053792435323e2f9d15"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates the <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for the CallData classes which defines the jwsToken_ class.">CallData</a> objects for each <a class="el" href="namespacecatena_1_1gRPC.html" title="Namespace containing classes relating to the gRPC API.">gRPC</a> command.  <br /></td></tr>
 <tr class="separator:ad3900e792aeac053792435323e2f9d15"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -148,8 +148,8 @@ Public Member Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Implements Catena <a class="el" href="namespacecatena_1_1gRPC.html" title="Namespace containing classes relating to the gRPC API.">gRPC</a> request handlers. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a7b0aa3a6c2d6057617a730883e0108b0" name="a7b0aa3a6c2d6057617a730883e0108b0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7b0aa3a6c2d6057617a730883e0108b0">&#9670;&#160;</a></span>CatenaServiceImpl()</h2>
+<a id="a342df399becd215b94a024a7d6210cca" name="a342df399becd215b94a024a7d6210cca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a342df399becd215b94a024a7d6210cca">&#9670;&#160;</a></span>CatenaServiceImpl()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -163,8 +163,8 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;&#160;</td>
-          <td class="paramname"><em>dm</em>, </td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> * &gt;&#160;</td>
+          <td class="paramname"><em>dms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -190,7 +190,7 @@ Public Member Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">cq</td><td>The completion queue for the server. </td></tr>
-    <tr><td class="paramname">dm</td><td>The device to implement Catena services to. </td></tr>
+    <tr><td class="paramname">dms</td><td>A map of slots to ptrs to their corresponding device. </td></tr>
     <tr><td class="paramname">EOPath</td><td>The path to the external object. </td></tr>
     <tr><td class="paramname">authz</td><td>Flag to enable authorization. </td></tr>
   </table>
