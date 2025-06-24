@@ -20,7 +20,7 @@ void Languages::proceed() {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
         // GET/languages
-        if (context_.method() == "GET") {
+        if (context_.method() == Method_GET) {
             std::lock_guard lg(dm_.mutex());
             dm_.toProto(ans);
             if (ans.languages().empty()) {
@@ -44,5 +44,6 @@ void Languages::proceed() {
 
 void Languages::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << "Languages[" << objectId_ << "] finished\n";
+    std::cout << catena::patterns::EnumDecorator<RESTMethod>().getForwardMap().at(context_.method())
+              << "Languages[" << objectId_ << "] finished\n";
 }
