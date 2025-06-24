@@ -30,7 +30,7 @@ void Languages::proceed() {
             rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
 
         // GET/languages
-        } else if (context_.method() == "GET") {
+        } else if (context_.method() == Method_GET) {
             std::lock_guard lg(dm->mutex());
             dm->toProto(ans);
             if (ans.languages().empty()) {
@@ -54,5 +54,6 @@ void Languages::proceed() {
 
 void Languages::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << "Languages[" << objectId_ << "] finished\n";
+    std::cout << catena::patterns::EnumDecorator<RESTMethod>().getForwardMap().at(context_.method())
+              << "Languages[" << objectId_ << "] finished\n";
 }

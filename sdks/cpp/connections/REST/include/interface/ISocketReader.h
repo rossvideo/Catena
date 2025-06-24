@@ -53,6 +53,11 @@ namespace catena {
 namespace REST {
  
 /**
+ * @brief Enum for REST methods.
+ */
+enum RESTMethod : uint32_t { Method_NONE, Method_GET, Method_POST, Method_PUT, Method_PATCH, Method_DELETE, Method_HEAD, Method_OPTIONS };
+
+/**
  * @brief Interface for the SocketReader class.
  * 
  * Overriden constructor should be passed in a socket, which should then be
@@ -77,7 +82,7 @@ class ISocketReader {
     /**
      * @brief Returns the HTTP method of the request.
      */
-    virtual const std::string& method() const = 0;
+    virtual RESTMethod method() const = 0;
     /**
      * @brief Returns the REST endpoint of the request.
      */

@@ -39,7 +39,7 @@ Subscriptions::Subscriptions(tcp::socket& socket, ISocketReader& context, SlotMa
     : socket_(socket), context_(context), dms_(dms) {
     
     // GET (stream)
-    if (context.method() == "GET" && context.stream()) {
+    if (context.method() == Method_GET && context.stream()) {
         writer_ = std::make_unique<SSEWriter>(socket_, context_.origin());
     // GET (no stream) or PUT
     } else {
@@ -82,7 +82,7 @@ void Subscriptions::proceed() {
             }
 
             // GET/subscriptions - Get and write all subscribed OIDs.
-            if (context_.method() == "GET") {
+            if (context_.method() == Method_GET) {
                 auto subbedOids = context_.getSubscriptionManager().getAllSubscribedOids(*dm);
                 for (auto oid : subbedOids) {
                     supressErr = catena::exception_with_status{"", catena::StatusCode::OK};
@@ -101,7 +101,7 @@ void Subscriptions::proceed() {
                 }
 
             // PUT/subscriptions - Add/remove subscriptions.
-            } else if (context_.method() == "PUT") {
+            } else if (context_.method() == Method_PUT) {
                 // Parsing JSON body.
                 catena::UpdateSubscriptionsPayload req;
                 absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &req);

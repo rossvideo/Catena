@@ -49,7 +49,7 @@ using namespace catena::REST;
 class MockSocketReader : public ISocketReader {
   public:
     MOCK_METHOD(void, read, (tcp::socket& socket, bool authz, const std::string& version), (override));
-    MOCK_METHOD(const std::string&, method, (), (const, override));
+    MOCK_METHOD(RESTMethod, method, (), (const, override));
     MOCK_METHOD(const std::string&, endpoint, (), (const, override));
     MOCK_METHOD(uint32_t, slot, (), (const, override));
     MOCK_METHOD(const std::string&, fqoid, (), (const, override));

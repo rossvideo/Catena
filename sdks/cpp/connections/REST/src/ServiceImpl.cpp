@@ -95,13 +95,14 @@ void CatenaServiceImpl::run() {
                     SocketReader context(*subscriptionManager_, EOPath_);
                     context.read(socket, authorizationEnabled_);
                     //TODO: remove v1 from the request key when the router options are updated
-                    std::string requestKey = context.method() + context.endpoint();
+                    auto& methodMap = catena::patterns::EnumDecorator<RESTMethod>().getForwardMap(); // Temp
+                    std::string requestKey = methodMap.at(context.method()) + context.endpoint();
                     // Returning empty response with options to the client if required.
-                    if (context.method() == "OPTIONS") {
+                    if (context.method() == Method_OPTIONS) {
                         rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
                         SocketWriter(socket, context.origin()).sendResponse(rc);
                     // Sending an empty 200 OK response for health check.
-                    } else if (requestKey == "GET/health") {
+                    } else if (context.method() == Method_GET && context.endpoint() == "/health") {
                         SocketWriter(socket, context.origin()).sendResponse(rc);
                     // Otherwise routing to request.
                     } else if (router_.canMake(requestKey)) {
