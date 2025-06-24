@@ -39,8 +39,7 @@ CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, IDevice& dm, std
         : cq_{cq}, 
           dm_{dm}, 
           EOPath_{EOPath}, 
-          authorizationEnabled_{authz},
-          subscriptionManager_{std::make_unique<catena::common::SubscriptionManager>()} {}
+          authorizationEnabled_{authz} {}
 
 /**
  * Creates the CallData objects for each gRPC command.

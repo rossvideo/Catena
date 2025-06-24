@@ -22,7 +22,8 @@ using catena::REST::Connect;
 // Defining the port flag from SharedFlags.h
 ABSL_FLAG(uint16_t, port, 443, "Catena REST service port");
 
-// expand env variables
+// (UNUSED) expand env variables
+// GCOVR_EXCL_START
 void expandEnvVariables(std::string &str) {
     static std::regex env{"\\$\\{([^}]+)\\}"};
     std::smatch match;
@@ -32,39 +33,37 @@ void expandEnvVariables(std::string &str) {
         str.replace(match[0].first, match[0].second, var);
     }
 }
+// GCOVR_EXCL_STOP
 
 CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool authz, uint16_t port)
-    : version_{"1.0.0"},
+    : version_{"v1"},
       dm_{dm},
       EOPath_{EOPath},
       port_{port},
       authorizationEnabled_{authz},
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
-      router_{Router::getInstance()},
-      subscriptionManager_{std::make_unique<catena::common::SubscriptionManager>()} {
-    if (authorizationEnabled_) {
-        std::cout<<"Authorization enabled."<<std::endl;
+      router_{Router::getInstance()} {
+
+    // Initializing the routes for router_ unless already done.
+    if (!router_.canMake("PUT/subscriptions")) {
+        router_.addProduct("GET/connect",         Connect::makeOne);
+        router_.addProduct("GET",                 DeviceRequest::makeOne);
+        router_.addProduct("POST/command",        ExecuteCommand::makeOne);
+        router_.addProduct("GET/asset",           AssetRequest::makeOne);
+        router_.addProduct("GET/devices",         GetPopulatedSlots::makeOne);
+        router_.addProduct("GET/value",           GetValue::makeOne);
+        router_.addProduct("PUT/values",          MultiSetValue::makeOne);
+        router_.addProduct("PUT/value",           SetValue::makeOne);
+        router_.addProduct("GET/param",           GetParam::makeOne);
+        router_.addProduct("GET/language-pack",   LanguagePack::makeOne);
+        router_.addProduct("PUT/language-pack",   LanguagePack::makeOne);
+        router_.addProduct("POST/language-pack",  LanguagePack::makeOne);
+        router_.addProduct("DELETE/language-pack", LanguagePack::makeOne);
+        router_.addProduct("GET/languages",       Languages::makeOne);
+        router_.addProduct("GET/param-info",      ParamInfoRequest::makeOne);
+        router_.addProduct("GET/subscriptions",   Subscriptions::makeOne);
+        router_.addProduct("PUT/subscriptions",   Subscriptions::makeOne);
     }
-
-    // Initializing the routes for router_.
-
-    router_.addProduct("GET/connect",         Connect::makeOne);
-    router_.addProduct("GET",                 DeviceRequest::makeOne);
-    router_.addProduct("POST/command",        ExecuteCommand::makeOne);
-    router_.addProduct("GET/asset",           AssetRequest::makeOne);
-    router_.addProduct("GET/devices",         GetPopulatedSlots::makeOne);
-    router_.addProduct("GET/value",           GetValue::makeOne);
-    router_.addProduct("PUT/values",          MultiSetValue::makeOne);
-    router_.addProduct("PUT/value",           SetValue::makeOne);
-    router_.addProduct("GET/param",           GetParam::makeOne);
-    router_.addProduct("GET/language-pack",   LanguagePack::makeOne);
-    router_.addProduct("PUT/language-pack",   LanguagePack::makeOne);
-    router_.addProduct("POST/language-pack",  LanguagePack::makeOne);
-    router_.addProduct("DELETE/language-pack", LanguagePack::makeOne);
-    router_.addProduct("GET/languages",       Languages::makeOne);
-    router_.addProduct("GET/param-info",      ParamInfoRequest::makeOne);
-    router_.addProduct("GET/subscriptions",   Subscriptions::makeOne);
-    router_.addProduct("PUT/subscriptions",   Subscriptions::makeOne);
 }
 
 // Initializing the shutdown signal for all open connections.
@@ -88,8 +87,8 @@ void CatenaServiceImpl::run() {
             if (!shutdown_) {
                 try {
                     // Reading from the socket.
-                    SocketReader context(*subscriptionManager_, EOPath_);
-                    context.read(socket, authorizationEnabled_);
+                    SocketReader context(subscriptionManager_, EOPath_);
+                    context.read(socket, authorizationEnabled_, version_);
                     //TODO: remove v1 from the request key when the router options are updated
                     std::string requestKey = context.method() + context.endpoint();
                     // Returning empty response with options to the client if required.
@@ -158,6 +157,8 @@ void CatenaServiceImpl::Shutdown() {
     dummySocket.connect(tcp::endpoint(tcp::v4(), port_));
 };
 
+// (UNUSED)
+// GCOVR_EXCL_START
 bool CatenaServiceImpl::is_port_in_use_() const {
     try {
         boost::asio::io_context io_context;
@@ -167,3 +168,4 @@ bool CatenaServiceImpl::is_port_in_use_() const {
         return true;  // Port is in use
     }
 }
+// GCOVR_EXCL_STOP

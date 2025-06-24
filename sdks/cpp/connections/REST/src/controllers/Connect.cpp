@@ -21,6 +21,14 @@ Connect::Connect(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
 
 }
 
+Connect::~Connect() {
+    // Disconnecting all initialized listeners.
+    if (shutdownSignalId_ != 0) { shutdownSignal_.disconnect(shutdownSignalId_); }
+    if (valueSetByClientId_ != 0) { dm_.valueSetByClient.disconnect(valueSetByClientId_); }
+    if (valueSetByServerId_ != 0) { dm_.valueSetByServer.disconnect(valueSetByServerId_); }
+    if (languageAddedId_ != 0) { dm_.languageAddedPushUpdate.disconnect(languageAddedId_); }
+}
+
 void Connect::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
 
@@ -85,10 +93,5 @@ void Connect::proceed() {
 
 void Connect::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    // Disconnecting all initialized listeners.
-    if (shutdownSignalId_ != 0) { shutdownSignal_.disconnect(shutdownSignalId_); }
-    if (valueSetByClientId_ != 0) { dm_.valueSetByClient.disconnect(valueSetByClientId_); }
-    if (valueSetByServerId_ != 0) { dm_.valueSetByServer.disconnect(valueSetByServerId_); }
-    if (languageAddedId_ != 0) { dm_.languageAddedPushUpdate.disconnect(languageAddedId_); }
     std::cout << "Connect[" << objectId_ << "] finished\n";
 }

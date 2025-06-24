@@ -78,6 +78,10 @@ class Connect : public ICallData, public catena::common::Connect {
      */ 
     Connect(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
+     * @brief Destructor for the Connect controller.
+     */
+    virtual ~Connect();
+    /**
      * @brief Connect's main process.
      */
     void proceed() override;

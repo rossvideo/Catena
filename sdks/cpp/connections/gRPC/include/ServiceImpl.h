@@ -66,7 +66,7 @@
 #include <IDevice.h>
 #include <Authorization.h>
 #include <SharedFlags.h>
-#include <ISubscriptionManager.h>
+#include <SubscriptionManager.h>
 
 // std
 #include <iostream>
@@ -126,7 +126,7 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      * @brief Get the subscription manager
      * @return Reference to the subscription manager
      */
-    inline catena::common::ISubscriptionManager& getSubscriptionManager() override { return *subscriptionManager_; }
+    inline catena::common::ISubscriptionManager& getSubscriptionManager() override { return subscriptionManager_; }
     /**
      * @brief Returns a pointer to the server's completion queue.
      */
@@ -135,6 +135,14 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      * @brief Returns the EOPath.
      */
     const std::string& EOPath() override { return EOPath_; }
+    /**
+     * @brief Returns the device model.
+     */
+    const IDevice& dm(uint32_t slot = 0) const { return dm_; }
+    /**
+     * @brief Returns the size of the registry of CallData objects
+     */
+    uint32_t registrySize() const { return registry_.size(); }
     /**
      * @brief Registers a CallData object into the registry
      * @param cd The CallData object to register
@@ -177,7 +185,7 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
     /**
      * @brief The subscription manager for handling parameter subscriptions
      */
-    std::unique_ptr<catena::common::ISubscriptionManager> subscriptionManager_;
+    catena::common::SubscriptionManager subscriptionManager_;
 };
 
 }; // namespace gRPC

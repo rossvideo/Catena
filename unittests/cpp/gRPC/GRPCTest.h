@@ -58,11 +58,6 @@
 // common
 #include <Status.h>
 
-// boost
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
-using boost::asio::ip::tcp;
-
 using namespace catena::gRPC;
 
 /*
