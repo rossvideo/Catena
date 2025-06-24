@@ -90,8 +90,7 @@ void CatenaServiceImpl::run() {
                     SocketReader context(subscriptionManager_, EOPath_);
                     context.read(socket, authorizationEnabled_, version_);
                     //TODO: remove v1 from the request key when the router options are updated
-                    auto& methodMap = catena::patterns::EnumDecorator<RESTMethod>().getForwardMap(); // Temp
-                    std::string requestKey = methodMap.at(context.method()) + context.endpoint();
+                    std::string requestKey = RESTMethodMap().getForwardMap().at(context.method()) + context.endpoint();
                     // Returning empty response with options to the client if required.
                     if (context.method() == Method_OPTIONS) {
                         rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
@@ -106,9 +105,10 @@ void CatenaServiceImpl::run() {
                         request->finish();
                     // ERROR
                     } else { 
-                        rc = catena::exception_with_status("Request " + requestKey + " does not exist", catena::StatusCode::INVALID_ARGUMENT);
+                        rc = catena::exception_with_status("Request " + requestKey + " does not exist", catena::StatusCode::UNIMPLEMENTED);
                     }
                 // ERROR
+                // GCOVR_EXCL_START
                 } catch (const catena::exception_with_status& e) {
                     rc = catena::exception_with_status(e.what(), e.status); 
                 } catch (const std::invalid_argument& e) {
@@ -119,7 +119,7 @@ void CatenaServiceImpl::run() {
                     rc = catena::exception_with_status(e.what(), catena::StatusCode::UNKNOWN);
                 } catch (...) {
                     rc = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
-                }
+                } // GCOVR_EXCL_STOP
             } else {
                 rc = catena::exception_with_status{"Service unavailable", catena::StatusCode::UNAVAILABLE};
             }

@@ -59,8 +59,9 @@ using namespace boost::urls;
 namespace catena {
 namespace REST {
 
+using RESTMethodMap = catena::patterns::EnumDecorator<RESTMethod>;
 template <>
-inline const catena::patterns::EnumDecorator<RESTMethod>::FwdMap catena::patterns::EnumDecorator<RESTMethod>::fwdMap_ = {
+inline const RESTMethodMap::FwdMap RESTMethodMap::fwdMap_ = {
   {catena::REST::Method_NONE,    "NONE"},
   {catena::REST::Method_GET,     "GET"},
   {catena::REST::Method_POST,    "POST"},

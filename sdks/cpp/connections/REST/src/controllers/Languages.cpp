@@ -28,7 +28,7 @@ void Languages::proceed() {
             }
         // Invalid method.
         } else {
-            rc = catena::exception_with_status("", catena::StatusCode::INVALID_ARGUMENT);
+            rc = catena::exception_with_status("", catena::StatusCode::UNIMPLEMENTED);
         }
     } catch (const catena::exception_with_status& err) {
         rc = catena::exception_with_status(std::string(err.what()), err.status);
@@ -44,6 +44,6 @@ void Languages::proceed() {
 
 void Languages::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << catena::patterns::EnumDecorator<RESTMethod>().getForwardMap().at(context_.method())
+    std::cout << RESTMethodMap().getForwardMap().at(context_.method())
               << "Languages[" << objectId_ << "] finished\n";
 }

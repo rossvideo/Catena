@@ -243,7 +243,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_AuthzInalid) {
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_BadMethod) {
     initPayload(0);
-    expRc_ = catena::exception_with_status("Bad method", catena::StatusCode::INVALID_ARGUMENT);
+    expRc_ = catena::exception_with_status("Bad method", catena::StatusCode::UNIMPLEMENTED);
     method_ = Method_NONE;
     // Setting expectations.
     EXPECT_CALL(context_, getSubscriptionManager()).Times(0); // Should not call.

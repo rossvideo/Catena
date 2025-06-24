@@ -52,17 +52,30 @@ class RESTServiceImplTests : public testing::Test {
   protected:
     void SetUp() override {
         // Redirecting cout to a stringstream for testing.
-        // oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
+        oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
 
         service_ = std::make_unique<CatenaServiceImpl>(dm_, EOPath_, authzEnabled_, port_);
     }
 
     void TearDown() override {
-        // std::cout.rdbuf(oldCout_);
+        std::cout.rdbuf(oldCout_);
     }
 
-    void makeCall() {
-        
+    std::string makeCall(RESTMethod method, const std::string& endpoint) {
+        boost::asio::io_context io_context;
+        tcp::socket clientSocket(io_context);
+        clientSocket.connect(tcp::endpoint(tcp::v4(), port_));
+        // Compiling request.
+        std::string request = "";
+        request += RESTMethodMap().getForwardMap().at(method);
+        request += " /st2138-api/" + service_->version() + endpoint + " HTTP/1.1\r\n\r\n";
+        // Writing to service.
+        boost::asio::write(clientSocket, boost::asio::buffer(request));
+        // Reading and returning the response.
+        boost::asio::streambuf buffer;
+        boost::asio::read_until(clientSocket, buffer, "\r\n\r\n");
+        std::istream response_stream(&buffer);
+        return std::string(std::istreambuf_iterator<char>(response_stream), std::istreambuf_iterator<char>());
     }
 
     std::unique_ptr<CatenaServiceImpl> service_ = nullptr;
@@ -74,7 +87,8 @@ class RESTServiceImplTests : public testing::Test {
     uint16_t port_ = 50050;
     bool authzEnabled_ = false;
 
-    MockDevice dm_;
+    // We really don't care about uninteresting function errors here.
+    testing::NiceMock<MockDevice> dm_;
     std::string EOPath_ = "path/to/extenal/object";
 };
 
@@ -85,26 +99,62 @@ TEST_F(RESTServiceImplTests, ServiceImpl_Create) {
 }
 
 TEST_F(RESTServiceImplTests, ServiceImpl_RunAndShutdown) {
+    // Starting the service.
     std::thread run_thread([this]() {
         service_->run();
     });
-    std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Allow some time for the server to start
+    std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Allow some time for the server to start
+    // Shutting down the service.
     service_->Shutdown();
     run_thread.join();
 }
 
 TEST_F(RESTServiceImplTests, ServiceImpl_Router) {
+    // Starting the service.
     std::thread run_thread([this]() {
         service_->run();
     });
-    std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Allow some time for the server to start
+    std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Allow some time for the server to start    
+    // A vector of each method and endpoint to test.
+    std::vector<std::pair<RESTMethod, std::string>> routes = {
+        {Method_GET,     "/health"       },
+        {Method_OPTIONS, "/value"        },
+        {Method_GET,     "/devices"      },
+        {Method_GET,     ""              },
+        {Method_POST,    "/command"      },
+        {Method_GET,     "/asset"        },
+        // {Method_POST,    "/asset"        },
+        // {Method_PUT,     "/asset"        },
+        // {Method_DELETE,  "/asset"        },
+        {Method_GET,     "/param-info"   },
+        {Method_GET,     "/value"        },
+        {Method_PUT,     "/value"        },
+        {Method_PUT,     "/values"       },
+        {Method_GET,     "/subscriptions"},
+        {Method_PUT,     "/subscriptions"},
+        {Method_GET,     "/param"        },
+        {Method_GET,     "/connect"      },
+        {Method_GET,     "/language-pack"},
+        {Method_POST,    "/language-pack"},
+        {Method_DELETE,  "/language-pack"},
+        {Method_PUT,     "/language-pack"},
+        {Method_GET,     "/languages"    }
+    };
+    for (auto& [method, endpoint] : routes) {
+        std::string response = makeCall(method, endpoint);
+        ASSERT_TRUE(!response.empty())
+            << "No response read from " << RESTMethodMap().getForwardMap().at(method) << endpoint;
+        EXPECT_TRUE(!response.starts_with("HTTP/1.1 501 Not Implemented"))
+            << "Failed to route " << RESTMethodMap().getForwardMap().at(method) << endpoint;
+    }
+    // Making sure router returns proper error on invalid method/endpoints.
+    std::string response = makeCall(Method_NONE, "/does-not-exist");
+    ASSERT_TRUE(!response.empty())
+        << "No response read from NONE/Does not exist";
+    EXPECT_TRUE(response.starts_with("HTTP/1.1 501 Not Implemented"))
+        << "Router should fail to route NONE/does-not-exist";
 
-    boost::asio::io_context io_context;
-    tcp::socket clientSocket(io_context);
-    clientSocket.connect(tcp::endpoint(tcp::v4(), port_));
-    boost::asio::write(clientSocket, boost::asio::buffer("GET /st2138-api/v1/health http\r\n\r\n"));
-    std::this_thread::sleep_for(std::chrono::milliseconds(200)); 
-
+    // Shutting down the service.
     service_->Shutdown();
     run_thread.join();
 }

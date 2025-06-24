@@ -126,7 +126,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_Finish) {
  * TEST 0.3 - LanguagePack proceed() with an invalid method.
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_BadMethod) {
-    expRc_ = catena::exception_with_status("Bad method", catena::StatusCode::INVALID_ARGUMENT);
+    expRc_ = catena::exception_with_status("Bad method", catena::StatusCode::UNIMPLEMENTED);
     initPayload(0, "tl");
     method_ = Method_NONE;
     // Setting expectations.

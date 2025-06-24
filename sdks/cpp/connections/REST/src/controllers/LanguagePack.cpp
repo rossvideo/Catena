@@ -68,7 +68,7 @@ void LanguagePack::proceed() {
 
         // Invalid method.
         } else {
-            rc = catena::exception_with_status("", catena::StatusCode::INVALID_ARGUMENT);
+            rc = catena::exception_with_status("", catena::StatusCode::UNIMPLEMENTED);
         }
     // ERROR
     } catch (catena::exception_with_status& err) {
@@ -90,6 +90,6 @@ void LanguagePack::proceed() {
 
 void LanguagePack::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << catena::patterns::EnumDecorator<RESTMethod>().getForwardMap().at(context_.method())
+    std::cout << RESTMethodMap().getForwardMap().at(context_.method())
               << " LanguagePack[" << objectId_ << "] finished\n";
 }

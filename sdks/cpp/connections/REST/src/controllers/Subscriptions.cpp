@@ -107,7 +107,7 @@ void Subscriptions::proceed() {
 
             // Invalid method.
             } else {
-                rc = catena::exception_with_status("", catena::StatusCode::INVALID_ARGUMENT);
+                rc = catena::exception_with_status("", catena::StatusCode::UNIMPLEMENTED);
             }
         } else {
             rc = catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::FAILED_PRECONDITION);
