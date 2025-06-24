@@ -61,6 +61,10 @@ class RESTServiceImplTests : public testing::Test {
         // std::cout.rdbuf(oldCout_);
     }
 
+    void makeCall() {
+        
+    }
+
     std::unique_ptr<CatenaServiceImpl> service_ = nullptr;
 
     // Cout variables
@@ -85,6 +89,22 @@ TEST_F(RESTServiceImplTests, ServiceImpl_RunAndShutdown) {
         service_->run();
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Allow some time for the server to start
+    service_->Shutdown();
+    run_thread.join();
+}
+
+TEST_F(RESTServiceImplTests, ServiceImpl_Router) {
+    std::thread run_thread([this]() {
+        service_->run();
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Allow some time for the server to start
+
+    boost::asio::io_context io_context;
+    tcp::socket clientSocket(io_context);
+    clientSocket.connect(tcp::endpoint(tcp::v4(), port_));
+    boost::asio::write(clientSocket, boost::asio::buffer("GET /st2138-api/v1/health http\r\n\r\n"));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200)); 
+
     service_->Shutdown();
     run_thread.join();
 }
