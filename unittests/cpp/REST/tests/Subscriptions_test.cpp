@@ -442,7 +442,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemoveOnly) {
 }
 
  /*
- * TEST 2.3 - PUT Subscriptions normal case.
+ * TEST 2.3 - PUT Subscriptions simultaneous add and remove.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTNormal) {
     method_ = Method_PUT;
