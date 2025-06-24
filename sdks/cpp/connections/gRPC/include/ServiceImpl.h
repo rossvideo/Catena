@@ -136,13 +136,9 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      */
     const std::string& EOPath() override { return EOPath_; }
     /**
-     * @brief Returns the device model.
+     * @brief Returns the size of the registry.
      */
-    const IDevice& dm(uint32_t slot = 0) const { return dm_; }
-    /**
-     * @brief Returns the size of the registry of CallData objects
-     */
-    uint32_t registrySize() const { return registry_.size(); }
+    uint32_t registrySize() const override { return registry_.size(); }
     /**
      * @brief Registers a CallData object into the registry
      * @param cd The CallData object to register

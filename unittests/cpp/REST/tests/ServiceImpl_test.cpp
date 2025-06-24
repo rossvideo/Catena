@@ -50,18 +50,26 @@ using namespace catena::REST;
 
 class RESTServiceImplTests : public testing::Test {
   protected:
+    /*
+     * Redirects cout and creates out service for testing.
+     */
     void SetUp() override {
-        // Redirecting cout to a stringstream for testing.
         oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
-
         service_ = std::make_unique<CatenaServiceImpl>(dm_, EOPath_, authzEnabled_, port_);
     }
 
+    /*
+     * Restored cout.
+     */
     void TearDown() override {
         std::cout.rdbuf(oldCout_);
     }
 
+    /*
+     * Helper function which makes a REST call to the service.
+     */
     std::string makeCall(RESTMethod method, const std::string& endpoint) {
+        // Creating client and connecting to the service port.
         boost::asio::io_context io_context;
         tcp::socket clientSocket(io_context);
         clientSocket.connect(tcp::endpoint(tcp::v4(), port_));
@@ -86,18 +94,24 @@ class RESTServiceImplTests : public testing::Test {
 
     uint16_t port_ = 50050;
     bool authzEnabled_ = false;
+    std::string EOPath_ = "path/to/extenal/object";
 
     // We really don't care about uninteresting function errors here.
     testing::NiceMock<MockDevice> dm_;
-    std::string EOPath_ = "path/to/extenal/object";
 };
 
+/*
+ * TEST 1 - Creating a REST CatenaServiceImpl.
+ */
 TEST_F(RESTServiceImplTests, ServiceImpl_Create) {
     ASSERT_TRUE(service_);
     EXPECT_EQ(service_->authorizationEnabled(), authzEnabled_);
     EXPECT_EQ(service_->version(), "v1");
 }
 
+/*
+ * TEST 2 - Running and shutting down the REST CatenaServiceImpl.
+ */
 TEST_F(RESTServiceImplTests, ServiceImpl_RunAndShutdown) {
     // Starting the service.
     std::thread run_thread([this]() {
@@ -109,6 +123,9 @@ TEST_F(RESTServiceImplTests, ServiceImpl_RunAndShutdown) {
     run_thread.join();
 }
 
+/*
+ * TEST 3 - Testing the service's router against all valid endpoints. 
+ */
 TEST_F(RESTServiceImplTests, ServiceImpl_Router) {
     // Starting the service.
     std::thread run_thread([this]() {
@@ -124,7 +141,7 @@ TEST_F(RESTServiceImplTests, ServiceImpl_Router) {
         {Method_POST,    "/command"      },
         {Method_GET,     "/asset"        },
         // {Method_POST,    "/asset"        },
-        // {Method_PUT,     "/asset"        },
+        // {Method_PUT,     "/asset"        }, Not implemented atm
         // {Method_DELETE,  "/asset"        },
         {Method_GET,     "/param-info"   },
         {Method_GET,     "/value"        },

@@ -58,6 +58,7 @@ class MockServiceImpl : public ICatenaServiceImpl {
     MOCK_METHOD(ISubscriptionManager&, getSubscriptionManager, (), (override));
     MOCK_METHOD(grpc::ServerCompletionQueue*, cq, (), (override));
     MOCK_METHOD(const std::string&, EOPath, (), (override));
+    MOCK_METHOD(uint32_t, registrySize, (), (const, override));
     MOCK_METHOD(void, registerItem, (ICallData* cd), (override));
     MOCK_METHOD(void, deregisterItem, (ICallData* cd), (override));
 };

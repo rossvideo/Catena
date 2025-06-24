@@ -111,7 +111,6 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      * @brief Returns true if authorization is enabled.
      */
     bool authorizationEnabled() override { return authorizationEnabled_; };
-    const boost::asio::io_context& io_context() const { return io_context_; }
 
   private:
     /**

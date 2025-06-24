@@ -62,6 +62,9 @@ using namespace catena::gRPC;
 // Fixture
 class gRPCServiceImplTests : public testing::Test {
   protected:
+    /*
+     * Redirects cout and creates a grpc server around our service for testing.
+     */
     void SetUp() override {
         // Redirecting cout to a stringstream for testing.
         oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
@@ -79,6 +82,9 @@ class gRPCServiceImplTests : public testing::Test {
         client_ = catena::CatenaService::NewStub(channel_);
     }
 
+    /*
+     * Restored cout and cleans up the server.
+     */
     void TearDown() override {
         // Cleaning up the server.
         server_->Shutdown();
@@ -125,6 +131,5 @@ TEST_F(gRPCServiceImplTests, ServiceImpl_CreateDestroy) {
     ASSERT_TRUE(service_);
     EXPECT_EQ(service_->authorizationEnabled(), authzEnabled_);
     EXPECT_EQ(service_->EOPath(), EOPath_);
-    EXPECT_EQ(&service_->dm(), &dm_);
     service_->shutdownServer(); // Does nothing.
 }
