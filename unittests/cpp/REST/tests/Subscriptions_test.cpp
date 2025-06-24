@@ -425,7 +425,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETToProtoThrowUnknown) {
  * TEST 2.1 - PUT Subscriptions add only
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddOnly) {
-    method_ = "PUT";
+    method_ = Method_PUT;
     initPayload(0, {"param1", "param2"}, {});  
     // Calling proceed and testing the output
     testCall();
@@ -435,7 +435,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddOnly) {
  * TEST 2.2 - PUT Subscriptions remove only
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemoveOnly) {
-    method_ = "PUT";
+    method_ = Method_PUT;
     initPayload(0, {}, {"param1", "param2"});
     // Calling proceed and testing the output
     testCall();
