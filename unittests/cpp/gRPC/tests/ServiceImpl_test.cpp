@@ -131,5 +131,7 @@ TEST_F(gRPCServiceImplTests, ServiceImpl_CreateDestroy) {
     ASSERT_TRUE(service_);
     EXPECT_EQ(service_->authorizationEnabled(), authzEnabled_);
     EXPECT_EQ(service_->EOPath(), EOPath_);
+    // Give it time to set up and timeout once.
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     service_->shutdownServer(); // Does nothing.
 }

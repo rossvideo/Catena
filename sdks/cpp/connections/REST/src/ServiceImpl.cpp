@@ -119,7 +119,8 @@ void CatenaServiceImpl::run() {
                     rc = catena::exception_with_status(e.what(), catena::StatusCode::UNKNOWN);
                 } catch (...) {
                     rc = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
-                } // GCOVR_EXCL_STOP
+                }
+                // GCOVR_EXCL_STOP
             } else {
                 rc = catena::exception_with_status{"Service unavailable", catena::StatusCode::UNAVAILABLE};
             }
