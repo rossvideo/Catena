@@ -152,13 +152,13 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
         std::vector<std::string> jsonBodies;
         // Additional stuff based on method used.
         if (expRc_.status == catena::StatusCode::OK) {
-            if (method_ == "GET") {
+            if (method_ == Method_GET) {
                 for (auto param : responses_) {
                     jsonBodies.emplace_back();
                     auto status = google::protobuf::util::MessageToJsonString(param, &jsonBodies.back());
                     ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
                 }
-            } else if (method_ == "PUT") {
+            } else if (method_ == Method_PUT) {
                 // We should expect either 0 or 2 added oids.
                 if (inVal_.added_oids().empty()) {
                     EXPECT_EQ(addedOids_, 0);
@@ -244,7 +244,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_AuthzInalid) {
 TEST_F(RESTSubscriptionsTests, Subscriptions_BadMethod) {
     initPayload(0);
     expRc_ = catena::exception_with_status("Bad method", catena::StatusCode::INVALID_ARGUMENT);
-    method_ = "BAD_METHOD";
+    method_ = Method_NONE;
     // Setting expectations.
     EXPECT_CALL(context_, getSubscriptionManager()).Times(0); // Should not call.
     // Calling proceed and testing the output
@@ -417,7 +417,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETToProtoThrowUnknown) {
  * TEST 2.1 - PUT Subscriptions normal case.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTNormal) {
-    method_ = "PUT";
+    method_ = Method_PUT;
     initPayload(0, {"param1", "param2"}, {"param1", "param2"});
     // Calling proceed and testing the output
     testCall();
@@ -427,7 +427,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTNormal) {
  * TEST 2.2 - PUT Subscriptions with a valid token.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAuthzValid) {
-    method_ = "PUT";
+    method_ = Method_PUT;
     initPayload(0, {"param1", "param2"}, {"param1", "param2"});
     authzEnabled_ = true;
     jwsToken_ = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIiOiIxMjM0NTY3"
@@ -448,7 +448,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAuthzValid) {
  * TEST 2.3 - PUT Subscriptions normal case.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTFailParse) {
-    method_ = "PUT";
+    method_ = Method_PUT;
     expRc_ = catena::exception_with_status("Failed to parse JSON Body", catena::StatusCode::INVALID_ARGUMENT);
     jsonBody_ = "Not a JSON string";
     // Setting expectations.
@@ -461,7 +461,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTFailParse) {
  * TEST 2.4 - PUT Subscriptions add and remove return an error.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTReturnErr) {
-    method_ = "PUT";
+    method_ = Method_PUT;
     initPayload(0, {"errParam", "param1", "param2"}, {"errParam", "param1", "param2"});
     // Setting expectations.
     EXPECT_CALL(subManager_, removeSubscription("errParam", testing::_, testing::_)).WillRepeatedly(testing::Invoke(
@@ -484,7 +484,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTReturnErr) {
  * TEST 2.5 - PUT Subscriptions remove throws a catena::exception_with_status.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowCatena) {
-    method_ = "PUT";
+    method_ = Method_PUT;
     expRc_ = catena::exception_with_status{"Failed to remove subscription", catena::StatusCode::INVALID_ARGUMENT};
     initPayload(0, {}, {"errParam", "param1", "param2"});
     // Setting expectations.
@@ -502,7 +502,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowCatena) {
  * TEST 2.6 - PUT Subscriptions remove throws a std::runtime_error.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowUnknown) {
-    method_ = "PUT";
+    method_ = Method_PUT;
     expRc_ = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
     initPayload(0, {}, {"errParam", "param1", "param2"});
     // Setting expectations.
@@ -516,7 +516,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowUnknown) {
  * TEST 2.7 - PUT Subscriptions add throws a catena::exception_with_status.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowCatena) {
-    method_ = "PUT";
+    method_ = Method_PUT;
     expRc_ = catena::exception_with_status{"Failed to remove subscription", catena::StatusCode::INVALID_ARGUMENT};
     initPayload(0, {"errParam", "param1", "param2"}, {});
     // Setting expectations.
@@ -534,7 +534,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowCatena) {
  * TEST 2.8 - PUT Subscriptions add throws a std::runtime_error.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowUnknown) {
-    method_ = "PUT";
+    method_ = Method_PUT;
     expRc_ = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
     initPayload(0, {"errParam", "param1", "param2"}, {});
     // Setting expectations.
