@@ -39,7 +39,6 @@
 // Test helpers
 #include "RESTTest.h"
 #include "MockParam.h"
-#include "RESTTestHelpers.h"
 #include "CommonTestHelpers.h"
 
 // REST
@@ -47,6 +46,86 @@
 
 using namespace catena::common;
 using namespace catena::REST;
+
+/*
+ * ============================================================================
+ *                        ParamInfoRequest Helpers
+ * ============================================================================
+ */
+
+struct ParamInfo {
+    std::string oid;
+    // std::string name; // Might be irrelevant
+    catena::ParamType type;
+    // std::string template_oid = ""; // Might be irrelevant
+    uint32_t array_length = 0;
+    catena::StatusCode status = catena::StatusCode::OK;  // Default to OK
+};
+
+/**
+ * @brief Creates or populates a ParamInfoResponse with the specified parameters
+ */
+inline void setupParamInfo(catena::ParamInfoResponse& response, const ParamInfo& info) {
+    response.mutable_info()->set_oid(info.oid);
+    // response.mutable_info()->mutable_name()->mutable_display_strings()->insert({"en", info.name}); // Might be irrelevant
+    response.mutable_info()->set_type(info.type);
+    // response.mutable_info()->set_template_oid(info.template_oid); // Might be irrelevant
+    response.set_array_length(info.array_length);
+}
+
+/**
+ * @brief Sets up a mock parameter to return a ParamInfoResponse
+ *        Also sets up getDescriptor, isArrayType, and size for array types if descriptor is provided.
+ */
+inline void setupMockParam(catena::common::MockParam* mockParam, const ParamInfo& info, const catena::common::IParamDescriptor* descriptor = nullptr) {
+    EXPECT_CALL(*mockParam, getOid())
+        .WillRepeatedly(::testing::ReturnRef(info.oid));
+
+    // Set up getDescriptor if provided
+    if (descriptor) {
+        EXPECT_CALL(*mockParam, getDescriptor())
+            .WillRepeatedly(::testing::ReturnRef(*descriptor));
+    }
+
+    // Set up isArrayType and size if array_length > 0
+    if (info.array_length > 0) {
+        EXPECT_CALL(*mockParam, isArrayType())
+            .WillRepeatedly(::testing::Return(true));
+        EXPECT_CALL(*mockParam, size())
+            .WillRepeatedly(::testing::Return(info.array_length));
+    } else {
+        EXPECT_CALL(*mockParam, isArrayType())
+            .WillRepeatedly(::testing::Return(false));
+    }
+
+    // Only expect toProto if status indicates success (HTTP status < 300)
+    if (catena::REST::codeMap_.at(info.status).first < 300) {
+        EXPECT_CALL(*mockParam, toProto(::testing::An<catena::ParamInfoResponse&>(), ::testing::_))
+            .WillRepeatedly(::testing::Invoke([info](catena::ParamInfoResponse& response, catena::common::Authorizer&) {
+                setupParamInfo(response, info);
+                return catena::exception_with_status("", catena::StatusCode::OK);
+            }));
+    }
+}
+
+/**
+ * @brief Creates and serializes a ParamInfoResponse to JSON
+ * @return The serialized JSON string
+ */
+inline std::string createParamInfoJson(const ParamInfo& info) {
+    catena::ParamInfoResponse response;
+    setupParamInfo(response, info);
+    std::string jsonBody;
+    google::protobuf::util::JsonPrintOptions options;
+    auto status = google::protobuf::util::MessageToJsonString(response, &jsonBody, options);
+    return jsonBody;
+}
+
+/*
+ * ============================================================================
+ *                        ParamInfoRequest Tests
+ * ============================================================================
+ */
 
 class RESTParamInfoRequestTests : public RESTEndpointTest {
 protected:
@@ -85,12 +164,6 @@ protected:
         return {std::move(parentDesc), std::move(childDesc), nested_oid};
     }
 };
-
-/*
- * ============================================================================
- *                        ParamInfoRequest tests
- * ============================================================================
- */
 
 // Preliminary test: Creating a ParamInfoRequest object
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_Create) {
@@ -142,12 +215,12 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_AuthzValid) {
     
     // Setup mock parameter
     auto param = std::make_unique<MockParam>();
-    catena::REST::test::ParamInfo param_info{
+    ParamInfo param_info{
         .oid = "test_param",
         .type = catena::ParamType::STRING
     };
     auto desc = ParamHierarchyBuilder::createDescriptor("/" + param_info.oid);
-    catena::REST::test::setupMockParam(param.get(), param_info, desc.descriptor.get());
+    setupMockParam(param.get(), param_info, desc.descriptor.get());
     fqoid_ = param_info.oid;
 
     // Add isArrayType expectation
@@ -163,7 +236,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_AuthzValid) {
     endpoint_->finish();
 
     // Match expected and actual responses
-    std::string jsonBody = catena::REST::test::createParamInfoJson(param_info);
+    std::string jsonBody = createParamInfoJson(param_info);
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, {jsonBody}));
 }
 
@@ -172,20 +245,20 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_AuthzValid) {
 // Test 1.1: Get all top-level parameters without recursion
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParams) {
     // Setup mock parameters
-    catena::REST::test::ParamInfo param1_info{ .oid = "param1", .type = catena::ParamType::STRING };
-    catena::REST::test::ParamInfo param2_info{ .oid = "param2", .type = catena::ParamType::STRING };
+    ParamInfo param1_info{ .oid = "param1", .type = catena::ParamType::STRING };
+    ParamInfo param2_info{ .oid = "param2", .type = catena::ParamType::STRING };
     auto desc1 = ParamHierarchyBuilder::createDescriptor("/" + param1_info.oid);
     auto desc2 = ParamHierarchyBuilder::createDescriptor("/" + param2_info.oid);
     
     // Create ParamInfo structs
-    catena::REST::test::ParamInfo param1_info_struct{param1_info.oid, param1_info.type};
-    catena::REST::test::ParamInfo param2_info_struct{param2_info.oid, param2_info.type};
+    ParamInfo param1_info_struct{param1_info.oid, param1_info.type};
+    ParamInfo param2_info_struct{param2_info.oid, param2_info.type};
 
     auto param1 = std::make_unique<MockParam>();
-    catena::REST::test::setupMockParam(param1.get(), param1_info_struct, desc1.descriptor.get());
+    setupMockParam(param1.get(), param1_info_struct, desc1.descriptor.get());
 
     auto param2 = std::make_unique<MockParam>();
-    catena::REST::test::setupMockParam(param2.get(), param2_info_struct, desc2.descriptor.get());
+    setupMockParam(param2.get(), param2_info_struct, desc2.descriptor.get());
 
     std::vector<std::unique_ptr<IParam>> top_level_params;
     top_level_params.push_back(std::move(param1));
@@ -203,8 +276,8 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParams) {
 
     // Match expected and actual responses
     std::vector<std::string> jsonBodies;
-    jsonBodies.push_back(catena::REST::test::createParamInfoJson(param1_info));
-    jsonBodies.push_back(catena::REST::test::createParamInfoJson(param2_info));
+    jsonBodies.push_back(createParamInfoJson(param1_info));
+    jsonBodies.push_back(createParamInfoJson(param2_info));
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, jsonBodies));
 }
 
@@ -248,10 +321,10 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getEmptyTopLevelParams) {
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithArray) {
     // Setup mock parameters
     std::vector<std::unique_ptr<IParam>> top_level_params;
-    catena::REST::test::ParamInfo arrayParamInfo{ .oid = "array_param", .type = catena::ParamType::STRING_ARRAY, .array_length = 5 };
+    ParamInfo arrayParamInfo{ .oid = "array_param", .type = catena::ParamType::STRING_ARRAY, .array_length = 5 };
     auto desc = ParamHierarchyBuilder::createDescriptor("/" + arrayParamInfo.oid);
     auto arrayParam = std::make_unique<MockParam>();
-    catena::REST::test::setupMockParam(arrayParam.get(), arrayParamInfo, desc.descriptor.get());
+    setupMockParam(arrayParam.get(), arrayParamInfo, desc.descriptor.get());
     top_level_params.push_back(std::move(arrayParam));
 
     // Setup mock expectations
@@ -265,7 +338,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithArray) {
     endpoint_->finish();
 
     // Match expected and actual responses
-    std::string jsonBody = catena::REST::test::createParamInfoJson(arrayParamInfo);
+    std::string jsonBody = createParamInfoJson(arrayParamInfo);
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, {jsonBody}));
 }
 
@@ -275,10 +348,10 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsProcessingEr
     
     // Setup mock parameters
     std::vector<std::unique_ptr<IParam>> top_level_params;
-    catena::REST::test::ParamInfo errorParamInfo{ .oid = "error_param", .type = catena::ParamType::STRING, .status = catena::StatusCode::INTERNAL };
+    ParamInfo errorParamInfo{ .oid = "error_param", .type = catena::ParamType::STRING, .status = catena::StatusCode::INTERNAL };
     auto desc = ParamHierarchyBuilder::createDescriptor("/" + errorParamInfo.oid);
     auto errorParam = std::make_unique<MockParam>();
-    catena::REST::test::setupMockParam(errorParam.get(), errorParamInfo, desc.descriptor.get());
+    setupMockParam(errorParam.get(), errorParamInfo, desc.descriptor.get());
     top_level_params.push_back(std::move(errorParam));
 
     // Setup mock expectations   
@@ -300,14 +373,14 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsThrow) {
     expRc_ = catena::exception_with_status("Error getting top-level parameters", catena::StatusCode::INTERNAL);
     
     // Setup mock parameters
-    catena::REST::test::ParamInfo param1_info{ .oid = "param1", .type = catena::ParamType::STRING };
-    catena::REST::test::ParamInfo param2_info{ .oid = "param2", .type = catena::ParamType::STRING };
+    ParamInfo param1_info{ .oid = "param1", .type = catena::ParamType::STRING };
+    ParamInfo param2_info{ .oid = "param2", .type = catena::ParamType::STRING };
     auto desc1 = ParamHierarchyBuilder::createDescriptor("/" + param1_info.oid);
     auto desc2 = ParamHierarchyBuilder::createDescriptor("/" + param2_info.oid);
     auto param1 = std::make_unique<MockParam>();
-    catena::REST::test::setupMockParam(param1.get(), param1_info, desc1.descriptor.get());
+    setupMockParam(param1.get(), param1_info, desc1.descriptor.get());
     auto param2 = std::make_unique<MockParam>();
-    catena::REST::test::setupMockParam(param2.get(), param2_info, desc2.descriptor.get());
+    setupMockParam(param2.get(), param2_info, desc2.descriptor.get());
     
     // Set up param2 to throw during processing
     EXPECT_CALL(*param2, getOid())
@@ -341,9 +414,9 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsThrow) {
 // Test 2.1: Get top-level parameters with recursion and deep nesting
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithDeepNesting) {
     // Define parameter info structs first
-    catena::REST::test::ParamInfo level1_info{.oid = "level1", .type = catena::ParamType::STRING};
-    catena::REST::test::ParamInfo level2_info{.oid = "level2", .type = catena::ParamType::STRING};
-    catena::REST::test::ParamInfo level3_info{.oid = "level3", .type = catena::ParamType::STRING};
+    ParamInfo level1_info{.oid = "level1", .type = catena::ParamType::STRING};
+    ParamInfo level2_info{.oid = "level2", .type = catena::ParamType::STRING};
+    ParamInfo level3_info{.oid = "level3", .type = catena::ParamType::STRING};
 
     // Create parameter hierarchy using ParamHierarchyBuilder
     auto level1Desc = ParamHierarchyBuilder::createDescriptor("/" + level1_info.oid);
@@ -363,18 +436,18 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithDeepNest
     EXPECT_CALL(*level3Desc.descriptor, getOid()).WillRepeatedly(testing::ReturnRef(level3Oid));
 
     // Create ParamInfo structs
-    catena::REST::test::ParamInfo level1_info_struct{level1_info.oid, level1_info.type};
-    catena::REST::test::ParamInfo level2_info_struct{level2_info.oid, level2_info.type};
-    catena::REST::test::ParamInfo level3_info_struct{level3_info.oid, level3_info.type};
+    ParamInfo level1_info_struct{level1_info.oid, level1_info.type};
+    ParamInfo level2_info_struct{level2_info.oid, level2_info.type};
+    ParamInfo level3_info_struct{level3_info.oid, level3_info.type};
 
     auto level1 = std::make_unique<MockParam>();
-    catena::REST::test::setupMockParam(level1.get(), level1_info_struct, level1Desc.descriptor.get());
+    setupMockParam(level1.get(), level1_info_struct, level1Desc.descriptor.get());
 
     auto level2 = std::make_unique<MockParam>();
-    catena::REST::test::setupMockParam(level2.get(), level2_info_struct, level2Desc.descriptor.get());
+    setupMockParam(level2.get(), level2_info_struct, level2Desc.descriptor.get());
 
     auto level3 = std::make_unique<MockParam>();
-    catena::REST::test::setupMockParam(level3.get(), level3_info_struct, level3Desc.descriptor.get());
+    setupMockParam(level3.get(), level3_info_struct, level3Desc.descriptor.get());
 
     // Setup top-level params
     std::vector<std::unique_ptr<IParam>> top_level_params;
@@ -415,21 +488,21 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithDeepNest
 
     // Match expected and actual responses
     std::vector<std::string> jsonBodies;
-    jsonBodies.push_back(catena::REST::test::createParamInfoJson(level1_info));
-    jsonBodies.push_back(catena::REST::test::createParamInfoJson(level2_info));
-    jsonBodies.push_back(catena::REST::test::createParamInfoJson(level3_info));
+    jsonBodies.push_back(createParamInfoJson(level1_info));
+    jsonBodies.push_back(createParamInfoJson(level2_info));
+    jsonBodies.push_back(createParamInfoJson(level3_info));
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, jsonBodies));
 }
 
 // Test 2.2: Get top-level parameters with recursion and arrays
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursionAndArrays) {
     // Define parameter info
-    catena::REST::test::ParamInfo parent_info{
+    ParamInfo parent_info{
         .oid = "parent",
         .type = catena::ParamType::STRING_ARRAY,
         .array_length = 5
     };
-    catena::REST::test::ParamInfo arrayChild_info{
+    ParamInfo arrayChild_info{
         .oid = "array_child",
         .type = catena::ParamType::STRING_ARRAY,
         .array_length = 3
@@ -448,10 +521,10 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursio
 
     // Create mock params using helpers
     auto parentParam = std::make_unique<MockParam>();
-    catena::REST::test::setupMockParam(parentParam.get(), parent_info, parentDesc.descriptor.get());
+    setupMockParam(parentParam.get(), parent_info, parentDesc.descriptor.get());
 
     auto arrayChild = std::make_unique<MockParam>();
-    catena::REST::test::setupMockParam(arrayChild.get(), arrayChild_info, childDesc.descriptor.get());
+    setupMockParam(arrayChild.get(), arrayChild_info, childDesc.descriptor.get());
 
     // Set up top-level params
     std::vector<std::unique_ptr<IParam>> top_level_params;
@@ -485,8 +558,8 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursio
 
     // Match expected and actual responses
     std::vector<std::string> jsonBodies;
-    jsonBodies.push_back(catena::REST::test::createParamInfoJson(parent_info));
-    jsonBodies.push_back(catena::REST::test::createParamInfoJson(arrayChild_info));
+    jsonBodies.push_back(createParamInfoJson(parent_info));
+    jsonBodies.push_back(createParamInfoJson(arrayChild_info));
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, jsonBodies));
 }
 
@@ -495,11 +568,11 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursio
     expRc_ = catena::exception_with_status("Error processing child parameter", catena::StatusCode::INTERNAL);
 
     // Define parameter info
-    catena::REST::test::ParamInfo parent_info{
+    ParamInfo parent_info{
         .oid = "parent",
         .type = catena::ParamType::STRING
     };
-    catena::REST::test::ParamInfo errorChild_info{
+    ParamInfo errorChild_info{
         .oid = "error_child",
         .type = catena::ParamType::STRING,
         .status = catena::StatusCode::INTERNAL
@@ -517,15 +590,15 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursio
     EXPECT_CALL(*childDesc.descriptor, getOid()).WillRepeatedly(testing::ReturnRef(childOid));
 
     // Create ParamInfo structs
-    catena::REST::test::ParamInfo parent_info_struct{parent_info.oid, parent_info.type};
-    catena::REST::test::ParamInfo error_child_info_struct{errorChild_info.oid, errorChild_info.type};
+    ParamInfo parent_info_struct{parent_info.oid, parent_info.type};
+    ParamInfo error_child_info_struct{errorChild_info.oid, errorChild_info.type};
 
     auto parentParam = std::make_unique<MockParam>();
-    catena::REST::test::setupMockParam(parentParam.get(), parent_info_struct, parentDesc.descriptor.get());
+    setupMockParam(parentParam.get(), parent_info_struct, parentDesc.descriptor.get());
 
     // For the error child, set up a param that throws in toProto
     auto errorChild = std::make_unique<MockParam>();
-    catena::REST::test::setupMockParam(errorChild.get(), error_child_info_struct, childDesc.descriptor.get());
+    setupMockParam(errorChild.get(), error_child_info_struct, childDesc.descriptor.get());
     EXPECT_CALL(*errorChild, toProto(testing::An<catena::ParamInfoResponse&>(), testing::An<catena::common::Authorizer&>()))
         .WillOnce(testing::Invoke([](catena::ParamInfoResponse&, catena::common::Authorizer&) -> catena::exception_with_status {
             throw catena::exception_with_status("Error processing child parameter", catena::StatusCode::INTERNAL);
@@ -614,12 +687,12 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_proceedSpecificParam) {
 
     // Setup mock parameter with our helper
     std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
-    catena::REST::test::ParamInfo paramInfo{
+    ParamInfo paramInfo{
         .oid = fqoid_,
         .type = catena::ParamType::STRING_ARRAY,
         .array_length = 5
     };
-    catena::REST::test::setupMockParam(mockParam.get(), paramInfo);
+    setupMockParam(mockParam.get(), paramInfo);
 
     // Add expectations for array type and size to trigger array length update logic
     EXPECT_CALL(*mockParam, isArrayType()).WillRepeatedly(testing::Return(true));
@@ -638,7 +711,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_proceedSpecificParam) {
     endpoint_->finish();
 
     // Match expected and actual responses
-    std::string jsonBody = catena::REST::test::createParamInfoJson(paramInfo);
+    std::string jsonBody = createParamInfoJson(paramInfo);
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, {jsonBody}));
 }
 
@@ -654,11 +727,11 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getSpecificParamWithRecursion
     
     // Setup mock parameter with our helper
     std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
-    catena::REST::test::ParamInfo paramInfo{
+    ParamInfo paramInfo{
         .oid = fqoid_,
         .type = catena::ParamType::STRING
     };
-    catena::REST::test::setupMockParam(mockParam.get(), paramInfo, mockDesc.descriptor.get());
+    setupMockParam(mockParam.get(), paramInfo, mockDesc.descriptor.get());
 
     // Setup mock expectations
     EXPECT_CALL(context_, hasField("recursive")).WillOnce(testing::Return(true));
@@ -674,7 +747,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getSpecificParamWithRecursion
     endpoint_->finish();
 
     // Match expected and actual responses
-    std::string jsonBody = catena::REST::test::createParamInfoJson(paramInfo);
+    std::string jsonBody = createParamInfoJson(paramInfo);
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, {jsonBody}));
 }
 
