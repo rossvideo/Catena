@@ -159,26 +159,8 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
                     ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
                 }
             } else if (method_ == Method_PUT) {
-                // Calculate expected counts based on Subscriptions.cpp logic
-                uint32_t expectedRemoved = inVal_.removed_oids().size();
-                uint32_t expectedAdded = 0;
-                
-                // Count OIDs that are in added_oids but NOT in removed_oids
-                for (const auto& addedOid : inVal_.added_oids()) {
-                    bool isAlsoRemoved = false;
-                    for (const auto& removedOid : inVal_.removed_oids()) {
-                        if (addedOid == removedOid) {
-                            isAlsoRemoved = true;
-                            break;
-                        }
-                    }
-                    if (!isAlsoRemoved) {
-                        expectedAdded++;
-                    }
-                }
-                
-                EXPECT_EQ(addedOids_, expectedAdded);
-                EXPECT_EQ(removedOids_, expectedRemoved);
+                EXPECT_EQ(addedOids_, inVal_.added_oids().size());
+                EXPECT_EQ(removedOids_, inVal_.removed_oids().size());
             }
         }
         // Response format based on stream or unary.

@@ -93,30 +93,17 @@ void Subscriptions::proceed() {
                 absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &req);
                 if (!status.ok()) {
                     rc = catena::exception_with_status("Failed to parse JSON Body", catena::StatusCode::INVALID_ARGUMENT);
-            
                 } else {
-                    // Processing removed OIDs first
-                    for (const auto& oid : req.removed_oids()) {
-                        context_.getSubscriptionManager().removeSubscription(oid, dm_, supressErr);
-                    }
-                    // Processing added OIDs, but skip any that are also in removed_oids
+                    // Process added OIDs
                     for (const auto& oid : req.added_oids()) {
-                        // Check if this OID is also in removed_oids
-                        bool isAlsoRemoved = false;
-                        for (const auto& removedOid : req.removed_oids()) {
-                            if (oid == removedOid) {
-                                isAlsoRemoved = true;
-                                break;
-                            }
-                        }
-                        
-                        // Only add if it's not also being removed
-                        if (!isAlsoRemoved) {
-                            context_.getSubscriptionManager().addSubscription(oid, dm_, supressErr, *authz);
-                        }
+                        bool added = context_.getSubscriptionManager().addSubscription(oid, dm_, supressErr, *authz);
+                    }
+                    // Process removed OIDs
+                    for (const auto& oid : req.removed_oids()) {
+                        bool removed = context_.getSubscriptionManager().removeSubscription(oid, dm_, supressErr);
                     }
                 }
-
+                
             // Invalid method.
             } else {
                 rc = catena::exception_with_status("", catena::StatusCode::INVALID_ARGUMENT);
