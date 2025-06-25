@@ -96,11 +96,11 @@ void Subscriptions::proceed() {
                 } else {
                     // Process added OIDs
                     for (const auto& oid : req.added_oids()) {
-                        bool added = context_.getSubscriptionManager().addSubscription(oid, dm_, supressErr, *authz);
+                        context_.getSubscriptionManager().addSubscription(oid, dm_, supressErr, *authz);
                     }
                     // Process removed OIDs
                     for (const auto& oid : req.removed_oids()) {
-                        bool removed = context_.getSubscriptionManager().removeSubscription(oid, dm_, supressErr);
+                        context_.getSubscriptionManager().removeSubscription(oid, dm_, supressErr);
                     }
                 }
                 
