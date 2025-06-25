@@ -133,7 +133,7 @@ class SubscriptionManager : public ISubscriptionManager {
              */
             void visit(catena::common::IParam* param, const std::string& path) override {
                 // Filter out array elements (paths ending with indices) to prevent invalid paths
-                Path pathObj = Path::fromPath(path);
+                Path pathObj = Path(path);
                 if (pathObj.back_is_index()) {
                     return;  // Skip array elements but continue traversal
                 }
