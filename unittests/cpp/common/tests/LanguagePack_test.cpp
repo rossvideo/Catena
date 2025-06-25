@@ -45,6 +45,8 @@
 
 using namespace catena::common;
 
+
+// Fixture
 class LanguagePackTest : public ::testing::Test {
   protected:
     // Initializes testPack
@@ -57,10 +59,6 @@ class LanguagePackTest : public ::testing::Test {
         testPack_.reset(new LanguagePack(languageCode_, name_, {words_[0], words_[1]}, dm_));
     }
 
-    void TearDown() override {
-        
-    }
-
     std::unique_ptr<LanguagePack> testPack_ = nullptr;
     std::string languageCode_ = "en";
     std::string name_ = "English";
@@ -71,10 +69,16 @@ class LanguagePackTest : public ::testing::Test {
     MockDevice dm_;
 };
 
+/*
+ * TEST 1 - Testing creation of LanguagePack
+ */
 TEST_F(LanguagePackTest, LanguagePack_Create) {
     EXPECT_TRUE(testPack_) << "Failed to create LanguagePack";
 }
 
+/*
+ * TEST 2 - Testing use of LanguagePack.begin() and LanguagePack.end()
+ */
 TEST_F(LanguagePackTest, LanguagePack_Iterator) {
     std::unordered_map<std::string, std::string> words;
     words.insert(testPack_->begin(), testPack_->end());
@@ -83,6 +87,9 @@ TEST_F(LanguagePackTest, LanguagePack_Iterator) {
     }
 }
 
+/*
+ * TEST 3 - Testing use of LanguagePack.toProto()
+ */
 TEST_F(LanguagePackTest, LanguagePack_ToProto) {
     catena::LanguagePack protoPack;
     // Call toProto.
@@ -95,6 +102,9 @@ TEST_F(LanguagePackTest, LanguagePack_ToProto) {
     }
 }
 
+/*
+ * TEST 4 - Testing use of LanguagePack.fromProto()
+ */
 TEST_F(LanguagePackTest, LanguagePack_FromProto) {
     // Initi languagePack with french.
     catena::LanguagePack frenchPack;
