@@ -222,22 +222,20 @@ $(document).ready(function(){initNavTree('Path_8h_source.html',''); initResizabl
 <div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>    }</div>
 </div>
 <div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span> </div>
-<div class="line"><a id="l00279" name="l00279"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#ae1865e211b1d08c12df37b6c28e4fa73">  279</a></span>    <span class="keyword">static</span> <a class="code hl_class" href="classcatena_1_1common_1_1Path.html">Path</a> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#ae1865e211b1d08c12df37b6c28e4fa73">fromPath</a>(<span class="keyword">const</span> std::string&amp; pathString);</div>
-<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span> </div>
-<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>    <span class="keyword">using </span>Segments = std::vector&lt;Segment&gt;;</div>
-<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span>    Segments segments_{}; </div>
-<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>    std::size_t frontIdx_{0}; </div>
-<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span>    <span class="keywordtype">void</span> escape_(std::string&amp; str);</div>
-<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span> </div>
-<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span>    std::string unescape_(<span class="keyword">const</span> std::string&amp; str);</div>
-<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span>};</div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>    <span class="keyword">using </span>Segments = std::vector&lt;Segment&gt;;</div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>    Segments segments_{}; </div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>    std::size_t frontIdx_{0}; </div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>    <span class="keywordtype">void</span> escape_(std::string&amp; str);</div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span> </div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>    std::string unescape_(<span class="keyword">const</span> std::string&amp; str);</div>
+<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>};</div>
 </div>
-<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span> </div>
-<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span>}  <span class="comment">// namespace common</span></div>
-<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span>}  <span class="comment">// namespace catena</span></div>
-<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span> </div>
-<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span><a class="code hl_class" href="classcatena_1_1common_1_1Path.html">catena::common::Path</a> <span class="keyword">operator</span><span class="stringliteral">&quot;&quot;</span> _path(<span class="keyword">const</span> <span class="keywordtype">char</span>* lit, std::size_t sz);</div>
+<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span> </div>
+<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>}  <span class="comment">// namespace common</span></div>
+<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span>}  <span class="comment">// namespace catena</span></div>
+<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span> </div>
+<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span><a class="code hl_class" href="classcatena_1_1common_1_1Path.html">catena::common::Path</a> <span class="keyword">operator</span><span class="stringliteral">&quot;&quot;</span> _path(<span class="keyword">const</span> <span class="keywordtype">char</span>* lit, std::size_t sz);</div>
 <div class="ttc" id="aclasscatena_1_1common_1_1Path_html"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html">catena::common::Path</a></div><div class="ttdoc">Converts json pointers to items within the data model to a path of &quot;segments&quot; that can be iterated ov...</div><div class="ttdef"><b>Definition</b> Path.h:65</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a154c0ab9589fbf11d872053e869a62ca"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a154c0ab9589fbf11d872053e869a62ca">catena::common::Path::front_is_string</a></div><div class="ttdeci">bool front_is_string() const</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a1690b3ea621c581607cf394fbe5f0f7e"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a1690b3ea621c581607cf394fbe5f0f7e">catena::common::Path::front_as_string</a></div><div class="ttdeci">const std::string &amp; front_as_string() const</div></div>
@@ -263,7 +261,6 @@ $(document).ready(function(){initNavTree('Path_8h_source.html',''); initResizabl
 <div class="ttc" id="aclasscatena_1_1common_1_1Path_html_ac6322b03a662c484c09e83df0664ad48"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#ac6322b03a662c484c09e83df0664ad48">catena::common::Path::fqoid</a></div><div class="ttdeci">std::string fqoid() const</div><div class="ttdoc">return a fully qualified, albeit escaped oid</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1Path_html_ad2487342bef5315cb4413e25d95c8097"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#ad2487342bef5315cb4413e25d95c8097">catena::common::Path::size</a></div><div class="ttdeci">Index size() const</div><div class="ttdoc">return the number of segments in the Path</div><div class="ttdef"><b>Definition</b> Path.h:132</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1Path_html_ad55f7fcb7d9d1c6ef012bd5b72ea6bcd"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#ad55f7fcb7d9d1c6ef012bd5b72ea6bcd">catena::common::Path::back_is_string</a></div><div class="ttdeci">bool back_is_string() const</div></div>
-<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_ae1865e211b1d08c12df37b6c28e4fa73"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#ae1865e211b1d08c12df37b6c28e4fa73">catena::common::Path::fromPath</a></div><div class="ttdeci">static Path fromPath(const std::string &amp;pathString)</div><div class="ttdoc">Create a Path from a string that may contain multiple segments.</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1Path_html_aee8036a35a13fe883796c8dabfdfb2f0"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#aee8036a35a13fe883796c8dabfdfb2f0">catena::common::Path::back_as_string</a></div><div class="ttdeci">const std::string &amp; back_as_string() const</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1Path_html_aef917e2e6824eb8a6e2f4215a4bb0656"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#aef917e2e6824eb8a6e2f4215a4bb0656">catena::common::Path::back_is_index</a></div><div class="ttdeci">bool back_is_index() const</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1Path_html_aff66461b7b6ecc1b22bd81ff54090b35"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#aff66461b7b6ecc1b22bd81ff54090b35">catena::common::Path::back_as_index</a></div><div class="ttdeci">Index back_as_index() const</div></div>
