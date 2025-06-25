@@ -93,6 +93,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1Path.html',''
   <div class="summary">
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-static-attribs">Static Public Attributes</a> &#124;
 <a href="classcatena_1_1common_1_1Path-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">catena::common::Path Class Reference</div></div>
@@ -191,6 +192,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>unpop</b> () noexcept
 <tr class="memitem:a78d9ce830ff5916038433dbea0462bc8" id="r_a78d9ce830ff5916038433dbea0462bc8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Path.html#a78d9ce830ff5916038433dbea0462bc8">push_back</a> (<a class="el" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Index</a> idx)</td></tr>
 <tr class="memdesc:a78d9ce830ff5916038433dbea0462bc8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a new index segment to the path.  <br /></td></tr>
 <tr class="separator:a78d9ce830ff5916038433dbea0462bc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:ae1865e211b1d08c12df37b6c28e4fa73" id="r_ae1865e211b1d08c12df37b6c28e4fa73"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classcatena_1_1common_1_1Path.html">Path</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Path.html#ae1865e211b1d08c12df37b6c28e4fa73">fromPath</a> (const std::string &amp;pathString)</td></tr>
+<tr class="memdesc:ae1865e211b1d08c12df37b6c28e4fa73"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <a class="el" href="classcatena_1_1common_1_1Path.html" title="Converts json pointers to items within the data model to a path of &quot;segments&quot; that can be iterated ov...">Path</a> from a string that may contain multiple segments.  <br /></td></tr>
+<tr class="separator:ae1865e211b1d08c12df37b6c28e4fa73"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
@@ -462,6 +469,41 @@ static constexpr <a class="el" href="classcatena_1_1common_1_1Path.html#a568efad
 <p>The fully qualified oid is rooted at the device and includes all popped segments. </p>
 <dl class="section examples"><dt>Examples</dt><dd><a class="el" href="path_8cpp-example.html#a1">path.cpp</a>.</dd>
 </dl>
+
+</div>
+</div>
+<a id="ae1865e211b1d08c12df37b6c28e4fa73" name="ae1865e211b1d08c12df37b6c28e4fa73"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae1865e211b1d08c12df37b6c28e4fa73">&#9670;&#160;</a></span>fromPath()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="classcatena_1_1common_1_1Path.html">Path</a> catena::common::Path::fromPath </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>pathString</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Create a <a class="el" href="classcatena_1_1common_1_1Path.html" title="Converts json pointers to items within the data model to a path of &quot;segments&quot; that can be iterated ov...">Path</a> from a string that may contain multiple segments. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">pathString</td><td>The path string to parse (e.g., "/param/0/subparam") </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="classcatena_1_1common_1_1Path.html" title="Converts json pointers to items within the data model to a path of &quot;segments&quot; that can be iterated ov...">Path</a> object with properly parsed segments </dd></dl>
 
 </div>
 </div>

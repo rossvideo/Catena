@@ -124,12 +124,12 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:a9e16530ff77a84dcb7c2b78d94dc88cd" id="r_a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd">isCancelled</a> ()=0</td></tr>
 <tr class="memdesc:a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if the call has been canceled.  <br /></td></tr>
 <tr class="separator:a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5c5fc96d2da16542c86e443085894182" id="r_a5c5fc96d2da16542c86e443085894182"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a5c5fc96d2da16542c86e443085894182">updateResponse_</a> (const std::string &amp;oid, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *p, uint32_t slot)=0</td></tr>
-<tr class="memdesc:a5c5fc96d2da16542c86e443085894182"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with parameter values and handles authorization checks.  <br /></td></tr>
-<tr class="separator:a5c5fc96d2da16542c86e443085894182"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a13d36e283fe2780d001042aacca872c6" id="r_a13d36e283fe2780d001042aacca872c6"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a13d36e283fe2780d001042aacca872c6">updateResponse_</a> (const <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *l, uint32_t slot)=0</td></tr>
-<tr class="memdesc:a13d36e283fe2780d001042aacca872c6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with a <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface for Language Packs.">ILanguagePack</a> and handles authorization checks.  <br /></td></tr>
-<tr class="separator:a13d36e283fe2780d001042aacca872c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a058696007b25b45e2c7d4ecfd0c5c7" id="r_a2a058696007b25b45e2c7d4ecfd0c5c7"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a2a058696007b25b45e2c7d4ecfd0c5c7">updateResponse_</a> (const std::string &amp;oid, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *p)=0</td></tr>
+<tr class="memdesc:a2a058696007b25b45e2c7d4ecfd0c5c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with parameter values and handles authorization checks.  <br /></td></tr>
+<tr class="separator:a2a058696007b25b45e2c7d4ecfd0c5c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19c4f6ad5535ef773d3852f0cd20a95b" id="r_a19c4f6ad5535ef773d3852f0cd20a95b"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a19c4f6ad5535ef773d3852f0cd20a95b">updateResponse_</a> (const <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *l)=0</td></tr>
+<tr class="memdesc:a19c4f6ad5535ef773d3852f0cd20a95b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with a <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface for Language Packs.">ILanguagePack</a> and handles authorization checks.  <br /></td></tr>
+<tr class="separator:a19c4f6ad5535ef773d3852f0cd20a95b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a02ef98650e356794414eb781a552fddb" id="r_a02ef98650e356794414eb781a552fddb"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a02ef98650e356794414eb781a552fddb">initAuthz_</a> (const std::string &amp;jwsToken, bool authz=false)=0</td></tr>
 <tr class="memdesc:a02ef98650e356794414eb781a552fddb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets up the authorizer object with the jwsToken.  <br /></td></tr>
 <tr class="separator:a02ef98650e356794414eb781a552fddb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -218,8 +218,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="a13d36e283fe2780d001042aacca872c6" name="a13d36e283fe2780d001042aacca872c6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a13d36e283fe2780d001042aacca872c6">&#9670;&#160;</a></span>updateResponse_() <span class="overload">[1/2]</span></h2>
+<a id="a19c4f6ad5535ef773d3852f0cd20a95b" name="a19c4f6ad5535ef773d3852f0cd20a95b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a19c4f6ad5535ef773d3852f0cd20a95b">&#9670;&#160;</a></span>updateResponse_() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -231,18 +231,8 @@ Here is the caller graph for this function:</div>
           <td class="memname">virtual void catena::common::IConnect::updateResponse_ </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *&#160;</td>
-          <td class="paramname"><em>l</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramname"><em>l</em></td><td>)</td>
           <td></td>
-          <td class="paramtype">uint32_t&#160;</td>
-          <td class="paramname"><em>slot</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -260,12 +250,12 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Connect.html#a79a548ee8b6b66ed2b9b1dbb29bf77d1">catena::common::Connect</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Connect.html#ab0762ce0d7bc1691e328f305eec2ace5">catena::common::Connect</a>.</p>
 
 </div>
 </div>
-<a id="a5c5fc96d2da16542c86e443085894182" name="a5c5fc96d2da16542c86e443085894182"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5c5fc96d2da16542c86e443085894182">&#9670;&#160;</a></span>updateResponse_() <span class="overload">[2/2]</span></h2>
+<a id="a2a058696007b25b45e2c7d4ecfd0c5c7" name="a2a058696007b25b45e2c7d4ecfd0c5c7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2a058696007b25b45e2c7d4ecfd0c5c7">&#9670;&#160;</a></span>updateResponse_() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -283,13 +273,7 @@ Here is the caller graph for this function:</div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *&#160;</td>
-          <td class="paramname"><em>p</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">uint32_t&#160;</td>
-          <td class="paramname"><em>slot</em>&#160;</td>
+          <td class="paramname"><em>p</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -313,7 +297,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Connect.html#a8ff9c432f5f47f67746433d1827fd19d">catena::common::Connect</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Connect.html#a1f0c52278479a96d59e16557d344e1c7">catena::common::Connect</a>.</p>
 
 </div>
 </div>
