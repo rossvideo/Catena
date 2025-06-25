@@ -26,7 +26,7 @@
         },
 
         {
-            "label": "Generate Coverage",
+            "label": "Generate Coverage Report",
             "type": "shell",
             "command": "cd ${workspaceFolder} && ./scripts/run_coverage.sh",
             "group": {
@@ -36,7 +36,7 @@
             "problemMatcher": []
         },
         {
-            "label": "Generate Coverage with HTML",
+            "label": "Generate Coverage Report with HTML Server",
             "type": "shell",
             "command": "cd ${workspaceFolder} && ./scripts/run_coverage.sh --html && cd coverage && echo 'Starting server...' && echo 'Coverage report available at: http://0.0.0.0:8000/index.html' && echo 'Press Ctrl+C to stop the server' && python3 -m http.server 8000",
             "group": {
@@ -51,6 +51,17 @@
                 "focus": true
             },
             "isBackground": true
+        },
+        {
+            "label": "Generate Clean Coverage Report (Rebuild)",
+            "type": "shell",
+            // This triggers a rebuild on coverage
+            "command": "cd ${workspaceFolder} && ./scripts/run_coverage.sh --clean",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
         },
         {
             "label": "Run Ninja",
@@ -84,6 +95,34 @@
                 "isDefault": true
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Clean Coverage Files",
+            "type": "shell",
+            // Removes coverage files and devcontainer artifact build directory
+            "command": "cd ${workspaceFolder} && if [ -d coverage ]; then rm -rf coverage; fi && if [ -d sdks/cpp/build ]; then rm -rf sdks/cpp/build; fi && sudo find . -type f \\( -name \"*.gcov\" -o -name \"*.gcda\" -o -name \"*.gcno\" \\) -delete",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Fresh Build with HTML Coverage Report",
+            "type": "shell",
+            "command": "", // The actual "command" is the set of processes below
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [],
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Clean Coverage Files",
+                "Fresh Build",
+                "Generate Clean Coverage Report (Rebuild)",
+                "Generate Coverage Report with HTML Server"
+            ]
         }
     ],
     "version": "2.0.0"
