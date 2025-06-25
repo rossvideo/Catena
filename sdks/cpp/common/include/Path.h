@@ -271,6 +271,13 @@ class Path {
         segments_.emplace_back(std::in_place_type<Index>, idx);
     }
 
+    /**
+     * @brief Create a Path from a string that may contain multiple segments
+     * @param pathString The path string to parse (e.g., "/param/0/subparam")
+     * @return Path object with properly parsed segments
+     */
+    static Path fromPath(const std::string& pathString);
+
   private:
     using Segments = std::vector<Segment>;
     Segments segments_{}; /**< the path split into its components */

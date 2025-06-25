@@ -41,6 +41,8 @@ void ParamVisitor::traverseParams(IParam* param, const std::string& path, IDevic
     // First visit the current parameter itself
     visitor.visit(param, path);
 
+    Path current_path = Path::fromPath(path);
+    
     // Special handling for array-type parameters
     if (param->isArrayType()) {
         uint32_t array_length = param->size();
@@ -49,8 +51,7 @@ void ParamVisitor::traverseParams(IParam* param, const std::string& path, IDevic
             visitor.visitArray(param, path, array_length);
             
             // Only process array elements if we're not already inside an array element
-            Path current_path{path};
-            if (!current_path.back_is_index()) {
+            //if (!current_path.back_is_index()) {
                 for (uint32_t i = 0; i < array_length; i++) {
                     // Create path for this array element (e.g., "/params/array/0")
                     Path indexed_path{path, std::to_string(i)};
@@ -63,7 +64,7 @@ void ParamVisitor::traverseParams(IParam* param, const std::string& path, IDevic
                         traverseParams(indexed_param.get(), indexed_path.toString(), device, visitor);
                     }
                 }
-            }
+            //}
         }
     }
     
@@ -72,6 +73,7 @@ void ParamVisitor::traverseParams(IParam* param, const std::string& path, IDevic
     if (descriptor.getAllSubParams().empty()) {
         return;  // No children to traverse
     }
+    
     
     for (const auto& [child_name, child_desc] : descriptor.getAllSubParams()) {
         // Skip invalid child names (empty or absolute paths)

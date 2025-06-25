@@ -228,3 +228,37 @@ std::string Path::fqoid() const {
 Path operator"" _path(const char *lit, std::size_t sz) {
     return Path(lit);
 }
+
+// This function is used to create a Path object from a string that may contain multiple segments   
+Path Path::fromPath(const std::string& pathString) {
+    Path result;
+    std::string path = pathString;
+    
+    // Ensure path starts with '/' for proper parsing
+    if (!path.empty() && path[0] != '/') {
+        path = "/" + path;
+    }
+    
+    // Split by '/' and add each segment
+    std::stringstream ss(path);
+    std::string segment;
+    bool first = true;
+    
+    while (std::getline(ss, segment, '/')) {
+        if (first) {
+            first = false;
+            continue; // Skip empty first segment
+        }
+        
+        if (segment.empty()) continue;
+        
+        // Check if segment is a number (index)
+        if (std::all_of(segment.begin(), segment.end(), ::isdigit)) {
+            result.push_back(std::stoul(segment));
+        } else {
+            result.push_back(segment);
+        }
+    }
+    
+    return result;
+}
