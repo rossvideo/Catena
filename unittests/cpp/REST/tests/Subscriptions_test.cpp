@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -162,18 +162,8 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
                     ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
                 }
             } else if (method_ == Method_PUT) {
-                // We should expect either 0 or 2 added oids.
-                if (inVal_.added_oids().empty()) {
-                    EXPECT_EQ(addedOids_, 0);
-                } else {
-                    EXPECT_EQ(addedOids_, 2);
-                }
-                // We should expect either 0 or 2 removed oids.
-                if (inVal_.removed_oids().empty()) {
-                    EXPECT_EQ(removedOids_, 0);
-                } else {
-                    EXPECT_EQ(removedOids_, 2);
-                }
+                EXPECT_EQ(addedOids_, inVal_.added_oids().size());
+                EXPECT_EQ(removedOids_, inVal_.removed_oids().size());
             }
         }
         // Response format based on stream or unary.
@@ -428,7 +418,27 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETToProtoThrowUnknown) {
  *                              PUT Subscriptions tests
  * ============================================================================
  * 
- * TEST 2.1 - PUT Subscriptions normal case.
+ * TEST 2.1 - PUT Subscriptions add only
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddOnly) {
+    method_ = Method_PUT;
+    initPayload(0, {"param1", "param2"}, {});  
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 2.2 - PUT Subscriptions remove only
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemoveOnly) {
+    method_ = Method_PUT;
+    initPayload(0, {}, {"param1", "param2"});
+    // Calling proceed and testing the output
+    testCall();
+}
+
+ /*
+ * TEST 2.3 - PUT Subscriptions simultaneous add and remove.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTNormal) {
     method_ = Method_PUT;
@@ -438,7 +448,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTNormal) {
 }
 
 /* 
- * TEST 2.2 - PUT Subscriptions with a valid token.
+ * TEST 2.4 - PUT Subscriptions with a valid token.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAuthzValid) {
     method_ = Method_PUT;
@@ -459,7 +469,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAuthzValid) {
 }
 
 /* 
- * TEST 2.3 - PUT Subscriptions normal case.
+ * TEST 2.5 - PUT Subscriptions normal case.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTFailParse) {
     method_ = Method_PUT;
@@ -472,30 +482,34 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTFailParse) {
 }
 
 /* 
- * TEST 2.4 - PUT Subscriptions add and remove return an error.
+ * TEST 2.6 - PUT Subscriptions add and remove return an error.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTReturnErr) {
     method_ = Method_PUT;
     initPayload(0, {"errParam", "param1", "param2"}, {"errParam", "param1", "param2"});
-    // Setting expectations.
+    
+    // Set up expectations for errParam specifically to increment counters
     EXPECT_CALL(subManager_, removeSubscription("errParam", testing::_, testing::_)).WillRepeatedly(testing::Invoke(
-        [](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc) {
+        [this](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc) {
             // Simulating an error in removing subscription.
             rc = catena::exception_with_status("Failed to remove subscription", catena::StatusCode::INVALID_ARGUMENT);
+            this->removedOids_++; 
             return false;
         }));
     EXPECT_CALL(subManager_, addSubscription("errParam", testing::_, testing::_, testing::_)).WillRepeatedly(testing::Invoke(
-        [](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc, catena::common::Authorizer& authz) {
+        [this](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc, catena::common::Authorizer& authz) {
             // Simulating an error in adding subscription.
             rc = catena::exception_with_status("Failed to add subscription", catena::StatusCode::INVALID_ARGUMENT);
+            this->addedOids_++;
             return false;
         }));
+    
     // Calling proceed and testing the output
     testCall();
 }
 
 /* 
- * TEST 2.5 - PUT Subscriptions remove throws a catena::exception_with_status.
+ * TEST 2.7 - PUT Subscriptions remove throws a catena::exception_with_status.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowCatena) {
     method_ = Method_PUT;
@@ -513,7 +527,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowCatena) {
 }
 
 /* 
- * TEST 2.6 - PUT Subscriptions remove throws a std::runtime_error.
+ * TEST 2.8 - PUT Subscriptions remove throws a std::runtime_error.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowUnknown) {
     method_ = Method_PUT;
@@ -527,7 +541,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowUnknown) {
 }
 
 /* 
- * TEST 2.7 - PUT Subscriptions add throws a catena::exception_with_status.
+ * TEST 2.9 - PUT Subscriptions add throws a catena::exception_with_status.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowCatena) {
     method_ = Method_PUT;
@@ -545,7 +559,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowCatena) {
 }
 
 /* 
- * TEST 2.8 - PUT Subscriptions add throws a std::runtime_error.
+ * TEST 2.10 - PUT Subscriptions add throws a std::runtime_error.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowUnknown) {
     method_ = Method_PUT;

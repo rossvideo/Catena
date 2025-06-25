@@ -88,13 +88,13 @@ void UpdateSubscriptions::proceed(bool ok) {
                     } else {
                         authz_ = &catena::common::Authorizer::kAuthzDisabled;
                     }
-                    // Processing removed OIDs
-                    for (const auto& oid : req_.removed_oids()) {     
-                        service_->getSubscriptionManager().removeSubscription(oid, *dm_, supressErr);
-                    }
-                    // Processing added OIDs
+                    // Process added OIDs
                     for (const auto& oid : req_.added_oids()) {                    
                         service_->getSubscriptionManager().addSubscription(oid, *dm_, supressErr, *authz_);
+                    }
+                    // Process removed OIDs
+                    for (const auto& oid : req_.removed_oids()) {     
+                        service_->getSubscriptionManager().removeSubscription(oid, *dm_, supressErr);
                     }
                     // Getting all subscribed OIDs and entering kWrite
                     subbedOids_ = service_->getSubscriptionManager().getAllSubscribedOids(*dm_);
