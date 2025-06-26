@@ -40,8 +40,6 @@ void ParamVisitor::traverseParams(IParam* param, const std::string& path, IDevic
 
     // First visit the current parameter itself
     visitor.visit(param, path);
-
-    Path current_path{path};
     
     // Special handling for array-type parameters
     if (param->isArrayType()) {
@@ -53,14 +51,15 @@ void ParamVisitor::traverseParams(IParam* param, const std::string& path, IDevic
             // Only process array elements if we're not already inside an array element
             for (uint32_t i = 0; i < array_length; i++) {
                 // Create path for this array element (e.g., "/params/array/0")
-                Path indexed_path{path, std::to_string(i)};
+                Path indexed_path(path);
+                indexed_path.push_back(std::to_string(i));
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 
                 // Get the parameter for this array index
-                auto indexed_param = device.getParam(indexed_path.toString(), rc);
+                auto indexed_param = device.getParam(indexed_path.toString(true), rc);
                 if (indexed_param) {
                     // Recursively process this array element and all its children
-                    traverseParams(indexed_param.get(), indexed_path.toString(), device, visitor);
+                    traverseParams(indexed_param.get(), indexed_path.toString(true), device, visitor);
                 }
             }
         }
@@ -78,15 +77,16 @@ void ParamVisitor::traverseParams(IParam* param, const std::string& path, IDevic
         if (child_name.empty() || child_name[0] == '/') continue;
         
         // Construct the full path for this child
-        Path child_path{path, child_name};
+        Path child_path(path);
+        child_path.push_back(child_name);
         catena::exception_with_status rc{"", catena::StatusCode::OK};
         
         // Get the child parameter
-        auto sub_param = device.getParam(child_path.toString(), rc);
+        auto sub_param = device.getParam(child_path.toString(true), rc);
         
         // If child exists and we can access it, process it recursively
         if (rc.status == catena::StatusCode::OK && sub_param) {
-            traverseParams(sub_param.get(), child_path.toString(), device, visitor);
+            traverseParams(sub_param.get(), child_path.toString(true), device, visitor);
         }
     }
 }

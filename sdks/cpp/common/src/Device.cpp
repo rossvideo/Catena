@@ -294,8 +294,8 @@ std::vector<std::unique_ptr<IParam>> Device::getTopLevelParams(catena::exception
     try {
         for (const auto& [name, param] : params_) {
             if (authz.readAuthz(*param)) { 
-                Path path{name};
-                auto param_ptr = getParam(path.toString(true), status, authz);  
+                Path path(name);
+                auto param_ptr = getParam(path, status, authz);  
                 if (param_ptr) {
                     result.push_back(std::move(param_ptr));
                 }
