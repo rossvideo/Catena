@@ -38,16 +38,12 @@ int Subscriptions::objectCounter_ = 0;
 Subscriptions::Subscriptions(tcp::socket& socket, ISocketReader& context, IDevice& dm)
     : socket_(socket), context_(context), dm_(dm) {
     
-    // GET
-    if (context.method() == "GET") {
-        if (context.stream()) {
-            writer_ = std::make_unique<SSEWriter>(socket_, context_.origin());
-        } else {
-            writer_ = std::make_unique<SocketWriter>(socket_, context_.origin(), true);
-        }
-    // PUT
+    // GET (stream)
+    if (context.method() == Method_GET && context.stream()) {
+        writer_ = std::make_unique<SSEWriter>(socket_, context_.origin());
+    // GET (no stream) or PUT
     } else {
-        writer_ = std::make_unique<SocketWriter>(socket_, context_.origin());
+        writer_ = std::make_unique<SocketWriter>(socket_, context_.origin(), true);
     }
 
     objectId_ = objectCounter_++;
@@ -72,7 +68,7 @@ void Subscriptions::proceed() {
             }
 
             // GET/subscriptions - Get and write all subscribed OIDs.
-            if (context_.method() == "GET") {
+            if (context_.method() == Method_GET) {
                 auto subbedOids = context_.getSubscriptionManager().getAllSubscribedOids(dm_);
                 for (auto oid : subbedOids) {
                     supressErr = catena::exception_with_status{"", catena::StatusCode::OK};
@@ -91,24 +87,23 @@ void Subscriptions::proceed() {
                 }
 
             // PUT/subscriptions - Add/remove subscriptions.
-            } else if (context_.method() == "PUT") {
+            } else if (context_.method() == Method_PUT) {
                 // Parsing JSON body.
                 catena::UpdateSubscriptionsPayload req;
                 absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &req);
                 if (!status.ok()) {
                     rc = catena::exception_with_status("Failed to parse JSON Body", catena::StatusCode::INVALID_ARGUMENT);
-            
                 } else {
-                    // Processing removed OIDs
-                    for (const auto& oid : req.removed_oids()) {
-                        context_.getSubscriptionManager().removeSubscription(oid, dm_, supressErr);
-                    }
-                    // Processing added OIDs
+                    // Process added OIDs
                     for (const auto& oid : req.added_oids()) {
                         context_.getSubscriptionManager().addSubscription(oid, dm_, supressErr, *authz);
                     }
+                    // Process removed OIDs
+                    for (const auto& oid : req.removed_oids()) {
+                        context_.getSubscriptionManager().removeSubscription(oid, dm_, supressErr);
+                    }
                 }
-
+                
             // Invalid method.
             } else {
                 rc = catena::exception_with_status("", catena::StatusCode::INVALID_ARGUMENT);

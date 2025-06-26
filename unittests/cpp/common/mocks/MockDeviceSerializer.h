@@ -29,38 +29,25 @@
  */
 
 /**
- * @brief A collection of mock classes used across the REST tests.
+ * @brief Mock device serializer object.
  * @author benjamin.whitten@rossvideo.com
- * @author zuhayr.sarker@rossvideo.com
- * @date 25/05/13
+ * @date 25/06/23
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
 
 #include <gmock/gmock.h>
-#include <interface/ISocketReader.h>
-#include <ISubscriptionManager.h>
 #include <IDevice.h>
 
-using namespace catena::REST;
+namespace catena {
+namespace common {
 
-// Mocking the ISocketReader interface
-class MockSocketReader : public ISocketReader {
+class MockDeviceSerializer : public IDevice::IDeviceSerializer {
   public:
-    MOCK_METHOD(void, read, (tcp::socket& socket, bool authz, const std::string& version), (override));
-    MOCK_METHOD(RESTMethod, method, (), (const, override));
-    MOCK_METHOD(const std::string&, endpoint, (), (const, override));
-    MOCK_METHOD(uint32_t, slot, (), (const, override));
-    MOCK_METHOD(const std::string&, fqoid, (), (const, override));
-    MOCK_METHOD(bool, hasField, (const std::string& key), (const, override));
-    MOCK_METHOD(const std::string&, fields, (const std::string& key), (const, override));
-    MOCK_METHOD(const std::string&, jwsToken, (), (const, override));
-    MOCK_METHOD(const std::string&, origin, (), (const, override));
-    MOCK_METHOD(catena::Device_DetailLevel, detailLevel, (), (const, override));
-    MOCK_METHOD(const std::string&, jsonBody, (), (const, override));
-    MOCK_METHOD(catena::common::ISubscriptionManager&, getSubscriptionManager, (), (override));
-    MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
-    MOCK_METHOD(bool, stream, (), (const, override));
-    MOCK_METHOD(const std::string&, EOPath, (), (const, override));
-}; 
+    MOCK_METHOD(bool, hasMore, (), (const, override));
+    MOCK_METHOD(DeviceComponent, getNext, (), (override));
+};
+
+}; // namespace common
+}; // namespace catena

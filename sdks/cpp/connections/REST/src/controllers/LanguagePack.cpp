@@ -25,7 +25,7 @@ void LanguagePack::proceed() {
         std::string languageId = context_.fqoid().substr(1);
 
         // Authz required for all methods except GET.
-        if (context_.method() != "GET" && context_.authorizationEnabled()) {
+        if (context_.method() != Method_GET && context_.authorizationEnabled()) {
             // Authorizer throws an error if invalid jws token so no need to handle rc.
             sharedAuthz = std::make_shared<catena::common::Authorizer>(context_.jwsToken());
             authz = sharedAuthz.get();
@@ -34,12 +34,12 @@ void LanguagePack::proceed() {
         }
 
         // GET/language-pack
-        if (context_.method() == "GET") {
+        if (context_.method() == Method_GET) {
             std::lock_guard lg(dm_.mutex());
             rc = dm_.getLanguagePack(languageId, ans);
 
         // POST/language-pack and PUT/language-pack
-        } else if (context_.method() == "POST" || context_.method() == "PUT") {
+        } else if (context_.method() == Method_POST || context_.method() == Method_PUT) {
             // Constructing the AddLanguagePayload
             catena::AddLanguagePayload payload;
             payload.set_slot(context_.slot());
@@ -49,8 +49,8 @@ void LanguagePack::proceed() {
             if (status.ok()) {
                 std::lock_guard lg(dm_.mutex());
                 // Making sure we are only adding with POST and updating with PUT.
-                if (context_.method() == "POST" && dm_.hasLanguage(languageId)
-                    || context_.method() == "PUT" && !dm_.hasLanguage(languageId)) {
+                if (context_.method() == Method_POST && dm_.hasLanguage(languageId)
+                    || context_.method() == Method_PUT && !dm_.hasLanguage(languageId)) {
                     rc = catena::exception_with_status("", catena::StatusCode::PERMISSION_DENIED);
                 } else {
                     // addLanguage ensures shipped languages are not changed.
@@ -62,7 +62,7 @@ void LanguagePack::proceed() {
             }
 
         // DELETE/language-pack
-        } else if (context_.method() == "DELETE") {
+        } else if (context_.method() == Method_DELETE) {
             std::lock_guard lg(dm_.mutex());
             rc = dm_.removeLanguage(languageId, *authz);
 
@@ -80,7 +80,7 @@ void LanguagePack::proceed() {
     }
 
     // Finishing by writing answer to client.
-    if (context_.method() == "GET") {
+    if (context_.method() == Method_GET) {
         writer_.sendResponse(rc, ans);
     } else {
         // For POST, PUT and DELETE we do not return a message.
@@ -90,5 +90,6 @@ void LanguagePack::proceed() {
 
 void LanguagePack::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << context_.method() << " LanguagePack[" << objectId_ << "] finished\n";
+    std::cout << catena::patterns::EnumDecorator<RESTMethod>().getForwardMap().at(context_.method())
+              << " LanguagePack[" << objectId_ << "] finished\n";
 }

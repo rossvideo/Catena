@@ -35,57 +35,38 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-// gtest
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-// std
-#include <string>
-
-// protobuf
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 // Test helpers
 #include "RESTTest.h"
-#include "MockSocketReader.h"
-#include "MockDevice.h"
 
 // REST
 #include "controllers/GetPopulatedSlots.h"
-#include "SocketWriter.h"
 
 using namespace catena::common;
 using namespace catena::REST;
 
 // Fixture
-class RESTGetPopulatedSlotsTests : public ::testing::Test, public RESTTest {
+class RESTGetPopulatedSlotsTests : public RESTEndpointTest {
   protected:
-    RESTGetPopulatedSlotsTests() : RESTTest(&serverSocket, &clientSocket) {}
+    /*
+     * Creates a GetPopulatedSlots handler object.
+     */
+    ICallData* makeOne() override { return GetPopulatedSlots::makeOne(serverSocket_, context_, dm0_); }
 
-    void SetUp() override {
-        // Redirecting cout to a stringstream for testing.
-        oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-
-        // Creating GetPopulatedSlots object.
-        EXPECT_CALL(context, origin()).Times(1).WillOnce(::testing::ReturnRef(origin));
-        getPopulatedSlots = GetPopulatedSlots::makeOne(serverSocket, context, dm);
-    }
-
-    void TearDown() override {
-        std::cout.rdbuf(oldCout); // Restoring cout
-        // Cleanup code here
-        if (getPopulatedSlots) {
-            delete getPopulatedSlots;
+    /*
+     * Calls proceed and tests the response.
+     */
+    void testCall() {
+        endpoint_->proceed();
+        std::string expJson = "";
+        if (!expVal_.slots().empty()) {
+            auto status = google::protobuf::util::MessageToJsonString(expVal_, &expJson);
+            ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
         }
+        EXPECT_EQ(readResponse(), expectedResponse(expRc_, expJson));
     }
-    std::stringstream MockConsole;
-    std::streambuf* oldCout;
-    
-    MockSocketReader context;
-    MockDevice dm;
-    std::mutex mockMutex;
-    catena::REST::ICallData* getPopulatedSlots = nullptr;
+
+    // Expected values
+    catena::SlotList expVal_;
 };
 
 /*
@@ -95,46 +76,34 @@ class RESTGetPopulatedSlotsTests : public ::testing::Test, public RESTTest {
  * 
  * TEST 1 - Creating a GetPopulatedSlots object with makeOne.
  */
-TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_create) {
-    ASSERT_TRUE(getPopulatedSlots);
+TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_Create) {
+    ASSERT_TRUE(endpoint_);
 }
 
 /* 
- * TEST 2 - Normal case for GetPopulatedSlots proceed().
+ * TEST 2 - Writing to console with GetPopulatedSlots finish().
  */
-TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_proceedNormal) {
-    catena::exception_with_status rc("OK", catena::StatusCode::OK);
-    uint32_t slot = 1;
-    // Expected JSON response.
-    catena::SlotList slotList;
-    slotList.add_slots(slot);
+TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_Finish) {
+    endpoint_->finish();
+    ASSERT_TRUE(MockConsole_.str().find("GetPopulatedSlots[1] finished\n") != std::string::npos);
+}
 
-    EXPECT_CALL(dm, slot()).Times(1).WillOnce(::testing::Return(1));
-
-    getPopulatedSlots->proceed();
-
-    std::string jsonBody;
-    google::protobuf::util::JsonPrintOptions options; // Default options
-    auto status = google::protobuf::util::MessageToJsonString(slotList, &jsonBody, options);
-    EXPECT_EQ(readResponse(), expectedResponse(rc, jsonBody));
+/*
+ * TEST 3 - Normal case for GetPopulatedSlots proceed().
+ */
+TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_Normal) {
+    expVal_.add_slots(dm0_.slot());
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /* 
- * TEST 3 - dm.slot() throws an error.
+ * TEST 4 - dm.slot() throws an error.
  */
 TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_proceedErr) {
-    catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
-    EXPECT_CALL(dm, slot()).Times(1).WillOnce(::testing::Throw(std::runtime_error("Unknown error")));
-    getPopulatedSlots->proceed();
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
-}
-
-/* 
- * TEST 4 - Writing to console with GetPopulatedSlots finish().
- */
-TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_finish) {
-    // Calling finish and expecting the console output.
-    getPopulatedSlots->finish();
-    // Idk why I cant use .contains() here :/
-    ASSERT_TRUE(MockConsole.str().find("GetPopulatedSlots[3] finished\n") != std::string::npos);
+    expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
+    // Setting expectations
+    EXPECT_CALL(dm0_, slot()).Times(1).WillOnce(testing::Throw(std::runtime_error("Unknown error")));
+    // Calling proceed and testing the output
+    testCall();
 }
