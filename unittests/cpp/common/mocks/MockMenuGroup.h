@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief Mock class for the IMenuGroup object.
+ * @brief Mock implementation for the IMenuGroup class.
  * @author benjamin.whitten@rossvideo.com
  * @date 25/06/26
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -43,6 +43,7 @@
 namespace catena {
 namespace common {
 
+// Mock implementation for the IMenuGroup class.
 class MockMenuGroup : public IMenuGroup {
   public:
     MOCK_METHOD(void, toProto, (catena::MenuGroup& menuGroup, bool shallow), (const, override));
