@@ -35,21 +35,12 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
- // gtest
-#include <gtest/gtest.h>
-
-// std
-#include <string>
-
-// protobuf
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 // Test helpers
 #include "RESTTest.h"
 
 // REST
 #include "SocketWriter.h"
+
 using namespace catena::REST;
 
 // Fixture

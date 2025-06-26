@@ -30,7 +30,7 @@
 
 /**
  * @brief Mock implementation for the IParam class.
- * @author benjamin.whitten@rossvideo.com
+ * @author zuhayr.sarker@rossvideo.com
  * @date 25/06/26
  * @copyright Copyright © 2025 Ross Video Ltd
  */
