@@ -41,7 +41,7 @@ void ParamVisitor::traverseParams(IParam* param, const std::string& path, IDevic
     // First visit the current parameter itself
     visitor.visit(param, path);
 
-    Path current_path(path);
+    Path current_path{path};
     
     // Special handling for array-type parameters
     if (param->isArrayType()) {
