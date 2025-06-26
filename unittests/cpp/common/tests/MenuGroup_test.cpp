@@ -65,8 +65,7 @@ class MenuGroupTest : public ::testing::Test {
         {"en", "Menu Group"},
         {"fr", "Groupe de menus"}
     };
-    MockDevice dm_;
-    
+    MockDevice dm_;    
 };
 
 /*
