@@ -120,6 +120,15 @@ jobs:
           push: true
           tags: "${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}:latest"
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            IMAGE_TITLE="Catena Development Container"
+            IMAGE_DESCRIPTION="Development container for Catena"
+            IMAGE_VERSION="1.0.0"
+            IMAGE_VENDOR="Ross Video"
+            CMAKE_BUILD_TYPE=Debug
+            CONNECTIONS='gRPC;REST'
+            BUILD_TARGET=build/cpp
+        
       
       # This step generates an artifact attestation for the image, which is an unforgeable statement about where and how it was built. It increases supply chain security for people who consume the image. For more information, see [Using artifact attestations to establish provenance for builds](/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds).
       - name: Generate artifact attestation
