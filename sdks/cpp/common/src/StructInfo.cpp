@@ -116,27 +116,18 @@ template<>
 void catena::common::fromProto<std::vector<int32_t>>(const Value& src, std::vector<int32_t>* dst, const IParamDescriptor& pd, const Authorizer& authz) {
     if (src.has_int32_array_values()) {
         dst->clear();
-        const catena::Int32List& int_array = src.int32_array_values();
         const IConstraint* constraint = pd.getConstraint();
-        catena::Value item;
         
         // Right now from proto is able to append any number of values to the vector
         // Do we want to keep this behavior?
-        for (int i = 0; i < int_array.ints_size(); ++i) {
-            item.set_int32_value(int_array.ints(i));
+        for (int32_t i : src.int32_array_values().ints()) {
+            catena::Value item;
+            item.set_int32_value(i);
             if (!constraint || constraint->satisfied(item)) {
-                if (i < dst->size()) {
-                    (*dst)[i] = int_array.ints(i);
-                } else {
-                    dst->push_back(int_array.ints(i));
-                }
+                dst->push_back(i);
             } else if (constraint->isRange()) {
                 // round src to a valid value in the range
-                if (i < dst->size()) {
-                    (*dst)[i] = constraint->apply(item).int32_value();
-                } else {
-                    dst->push_back(constraint->apply(item).int32_value());
-                }
+                dst->push_back(constraint->apply(item).int32_value());
             }
         }
     }
@@ -155,16 +146,15 @@ template<>
 void catena::common::fromProto<std::vector<float>>(const Value& src, std::vector<float>* dst, const IParamDescriptor& pd, const Authorizer& authz) {
     if (src.has_float32_array_values()) {
         dst->clear();
-        const catena::Float32List& float_array = src.float32_array_values();
         const IConstraint* constraint = pd.getConstraint();
-        catena::Value item;
 
         // Right now from proto is able to append any number of values to the vector
         // Do we want to keep this behavior?
-        for (int i = 0; i < float_array.floats_size(); ++i) {
-            item.set_float32_value(float_array.floats(i));
+        for (float f : src.float32_array_values().floats()) {
+            catena::Value item;
+            item.set_float32_value(f);
             if (!constraint || constraint->satisfied(item)) {
-                dst->push_back(float_array.floats(i));
+                dst->push_back(f);
             } else {
                 // float32 constraint is always a range
                 // round src to a valid value in the range
@@ -187,17 +177,14 @@ template<>
 void catena::common::fromProto<std::vector<std::string>>(const Value& src, std::vector<std::string>* dst, const IParamDescriptor& pd, const Authorizer& authz) {
     if (src.has_string_array_values()) {
         dst->clear();
-        const catena::StringList& string_array = src.string_array_values();
         const IConstraint* constraint = pd.getConstraint();
-        catena::Value item;
 
-        for (int i = 0; i < string_array.strings_size(); ++i) {
-            item.set_string_value(string_array.strings(i));
-            // if parameter does not satisfy the constraint, then the element is unchanged
+        for (const std::string& s : src.string_array_values().strings()) {
+            catena::Value item;
+            item.set_string_value(s);
             if (!constraint || constraint->satisfied(item)) {
-                dst->push_back(string_array.strings(i));
+                dst->push_back(s);
             }
-                
         }
     }
 }
