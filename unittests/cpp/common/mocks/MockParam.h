@@ -45,18 +45,7 @@ namespace common {
 
 // Mock implementation for the IParam class.
 class MockParam : public IParam {
-	public:
-    MockParam() = default;
-    virtual ~MockParam() = default;
-
-    // Explicitly declare move semantics
-    MockParam(MockParam&&) = default;
-    MockParam& operator=(MockParam&&) = default;
-
-    // Explicitly delete copy semantics
-    MockParam(const MockParam&) = delete;
-    MockParam& operator=(const MockParam&) = delete;
-
+  public:
     MOCK_METHOD(std::unique_ptr<IParam>, copy, (), (const, override));
     MOCK_METHOD(catena::exception_with_status, toProto, (catena::Value& dst, Authorizer& authz), (const, override));
     MOCK_METHOD(catena::exception_with_status, fromProto, (const catena::Value& src, Authorizer& authz), (override));
