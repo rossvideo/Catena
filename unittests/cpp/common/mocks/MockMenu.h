@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief Mock class for the IMenu object.
+ * @brief Mock implementation for the IMenu class.
  * @author benjamin.whitten@rossvideo.com
  * @date 25/06/26
  * @copyright Copyright © 2025 Ross Video Ltd
