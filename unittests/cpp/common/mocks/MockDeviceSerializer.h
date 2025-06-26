@@ -29,9 +29,9 @@
  */
 
 /**
- * @brief Mock device serializer object.
+ * @brief Mock implementation for the IDeviceSerializer class.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/23
+ * @date 25/06/26
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -43,6 +43,7 @@
 namespace catena {
 namespace common {
 
+// Mock implementation for the IDeviceSerializer class.
 class MockDeviceSerializer : public IDevice::IDeviceSerializer {
   public:
     MOCK_METHOD(bool, hasMore, (), (const, override));

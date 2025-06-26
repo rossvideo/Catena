@@ -29,10 +29,9 @@
  */
 
 /**
- * @brief A collection of mock classes used across the REST tests.
+ * @brief Mock implementation for the IDevice class.
  * @author benjamin.whitten@rossvideo.com
- * @author zuhayr.sarker@rossvideo.com
- * @date 25/05/13
+ * @date 25/06/26
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -40,16 +39,11 @@
 
 #include <gmock/gmock.h>
 #include <IDevice.h>
-#include <IParam.h>
-#include <ISubscriptionManager.h>
-#include <rpc/IConnect.h>
-#include <IParamDescriptor.h>
-#include <Status.h>
-#include <Authorization.h>
 
 namespace catena {
 namespace common {
 
+// Mock implementation for the IDevice class.
 class MockDevice : public IDevice {
   public:
     MOCK_METHOD(void, slot, (const uint32_t slot), (override));
