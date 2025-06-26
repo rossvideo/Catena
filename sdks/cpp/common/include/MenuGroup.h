@@ -101,7 +101,13 @@ class MenuGroup : public IMenuGroup {
      * @param oid the key of the menu
      * @param menu the menu
      */
-    void addMenu(const std::string& oid, std::unique_ptr<IMenu> menu) override { menus_.emplace(oid, std::move(menu)); }
+    void addMenu(const std::string& oid, std::unique_ptr<IMenu> menu) override {
+        if (menu) { // Sanitzing menu first.
+            menus_.emplace(oid, std::move(menu));
+        } else {
+            throw std::runtime_error("Cannot add a nullptr menu to MenuGroup");
+        }
+    }
 
     /**
      * @brief get menus from menu group

@@ -55,6 +55,7 @@ using namespace catena::common;
 
 class MenuGroupTest : public ::testing::Test {
   protected:
+    // Creates a MenuGroup for testing.
     void SetUp() override {
         EXPECT_CALL(dm_, addItem(oid_, testing::An<IMenuGroup*>())).Times(1).WillOnce(
             testing::Invoke([](const std::string &key, IMenuGroup *item){
@@ -63,12 +64,7 @@ class MenuGroupTest : public ::testing::Test {
         menuGroup_.reset(new MenuGroup(oid_, {name_[0], name_[1]}, dm_));
     }
 
-    void TearDown() override {
-        // Cleanup code if needed
-    }
-
     std::unique_ptr<MenuGroup> menuGroup_;
-
     std::string oid_ = "menu_group";
     std::vector<std::pair<std::string, std::string>> name_ = {
         {"en", "Menu Group"},
@@ -78,11 +74,27 @@ class MenuGroupTest : public ::testing::Test {
     
 };
 
+/*
+ * TEST 1 - MenuGroup creation.
+ */
 TEST_F(MenuGroupTest, MenuGroup_Create) {
     EXPECT_TRUE(menuGroup_) << "Failed to create MenuGroup";
 }
 
-TEST_F(MenuGroupTest, MenuGroup_addMenu) {
+/*
+ * TEST 2 - MenuGroup constructor error handling.
+ */
+TEST_F(MenuGroupTest, MenuGroup_CreateErr) {
+    MockDevice errDm;
+    EXPECT_CALL(errDm, addItem(oid_, testing::An<IMenuGroup*>())).Times(1)
+        .WillOnce(testing::Throw(std::runtime_error("Device error")));
+    EXPECT_THROW(MenuGroup(oid_, {name_[0], name_[1]}, errDm), std::runtime_error);
+}
+
+/*
+ * TEST 3 - Adding andd retrieving menus from MenuGroup.
+ */
+TEST_F(MenuGroupTest, MenuGroup_AddMenu) {
     // Adding two menus.
     std::unordered_map<std::string, IMenu*> menus;
     menus["menu1"] = nullptr;
@@ -99,7 +111,17 @@ TEST_F(MenuGroupTest, MenuGroup_addMenu) {
     }
 }
 
-TEST_F(MenuGroupTest, MenuGroup_toProto) {
+/*
+ * TEST 4 - Adding invalid menus to MenuGroup.
+ */
+TEST_F(MenuGroupTest, MenuGroup_ErrAddNullMenu) {
+    EXPECT_THROW(menuGroup_->addMenu("menu1", nullptr), std::runtime_error) << "Expected to throw when adding a nullptr menu";
+}
+
+/*
+ * TEST 5 - MenuGroup toProto serialization.
+ */
+TEST_F(MenuGroupTest, MenuGroup_ToProto) {
     // Adding two menus and setting expectations.
     std::vector<std::string> menus = {"menu1", "menu2"};
     for (auto& oid : menus) {
@@ -124,7 +146,10 @@ TEST_F(MenuGroupTest, MenuGroup_toProto) {
     }
 }
 
-TEST_F(MenuGroupTest, MenuGroup_toProtoShallow) {
+/*
+ * TEST 6 - MenuGroup toProto shallow serialization.
+ */
+TEST_F(MenuGroupTest, MenuGroup_ToProtoShallow) {
     // Adding two menus and setting expectations.
     std::vector<std::string> menus = {"menu1", "menu2"};
     for (auto& oid : menus) {
@@ -140,4 +165,18 @@ TEST_F(MenuGroupTest, MenuGroup_toProtoShallow) {
         EXPECT_EQ(protoMenuGroup.name().display_strings().at(lang), name);
     }
     EXPECT_TRUE(protoMenuGroup.menus().empty()) << "Menus should not be serialized in shallow mode";
+}
+
+/*
+ * TEST 7 - MenuGroup toProto error handling.
+ */
+TEST_F(MenuGroupTest, MenuGroup_ErrMenuToProto) {
+    // Adding a menu and setting expectations.
+    std::unique_ptr<MockMenu> menu = std::make_unique<MockMenu>();
+    EXPECT_CALL(*menu, toProto(::testing::_)).Times(1)
+        .WillOnce(::testing::Throw(std::runtime_error("Menu toProto error")));
+    menuGroup_->addMenu("menu1", std::move(menu));
+    // Calling toProto
+    catena::MenuGroup protoMenuGroup;
+    EXPECT_THROW(menuGroup_->toProto(protoMenuGroup, false), std::runtime_error) << "Expected to throw on menu toProto";
 }
