@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,39 +29,26 @@
  */
 
 /**
- * @file Menu.cpp
- * @brief Implements the Menu class
- * @author Ben Mostafa Ben.Mostafa@rossvideo.com
- * @date 2024-10-10
- * @copyright Copyright (c) 2024 Ross Video
+ * @brief Mock class for the IMenuGroup object.
+ * @author benjamin.whitten@rossvideo.com
+ * @date 25/06/26
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-// common
-#include <Menu.h>
-using namespace catena::common;
+#pragma once
 
-Menu::Menu(const catena::common::PolyglotText::ListInitializer name, bool hidden, bool disabled, const OidInitializer param_oids,
-           const OidInitializer command_oids, const PairInitializer& client_hints, std::string oid,
-           IMenuGroup& menuGroup)
-    : name_{name}, hidden_{hidden}, disabled_{disabled}, param_oids_{param_oids}, command_oids_{command_oids},
-      client_hints_{client_hints.begin(), client_hints.end()} {
-    menuGroup.addMenu(oid, std::make_unique<Menu>(std::move(*this)));
-}
+#include <gmock/gmock.h>
+#include "IMenuGroup.h"
 
-void Menu::toProto(::catena::Menu& menu) const {
-    name_.toProto(*menu.mutable_name());
-    menu.set_hidden(hidden_);
-    menu.set_disabled(disabled_);
-    menu.clear_param_oids();
-    menu.clear_command_oids();
-    menu.clear_client_hints();
-    for (const auto& oid : param_oids_) {
-        menu.add_param_oids(oid);
-    }
-    for (const auto& oid : command_oids_) {
-        menu.add_command_oids(oid);
-    }
-    for (const auto& [key, value] : client_hints_) {
-        (*menu.mutable_client_hints())[key] = value;
-    }
-}
+namespace catena {
+namespace common {
+
+class MockMenuGroup : public IMenuGroup {
+  public:
+    MOCK_METHOD(void, toProto, (catena::MenuGroup& menuGroup, bool shallow), (const, override));
+    MOCK_METHOD(void, addMenu, (const std::string& oid, std::unique_ptr<IMenu> menu), (override));
+    MOCK_METHOD(const MenuMap*, menus, (), (const, override));
+};
+
+} // namespace common
+} // namespace catena

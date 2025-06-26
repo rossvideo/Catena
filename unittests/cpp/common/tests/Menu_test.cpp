@@ -39,10 +39,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-// protobuf
-#include <interface/device.pb.h>
-#include <interface/service.grpc.pb.h>
-#include <google/protobuf/util/json_util.h>
+// Mock objects
+#include "MockMenuGroup.h"
 
 // common
 #include "Menu.h"
@@ -51,22 +49,26 @@ using namespace catena::common;
 
 class MenuTest : public ::testing::Test {
   protected:
+    // Creates a Menu for testing.
     void SetUp() override {
-        // Setup code if needed
-
+        EXPECT_CALL(menuGroup_, addMenu(oid_, testing::_)).Times(1)
+            .WillOnce(testing::Invoke([this](const std::string& oid, std::unique_ptr<IMenu> menu) {
+                ASSERT_TRUE(menu) << "Menu should not be nullptr";
+                menu_ = std::move(menu);
+            }));
+        Menu({names_[0],       names_[1]}, hidden_, disabled_,
+             {paramOids_[0],   paramOids_[1]},
+             {commandOids_[0], commandOids_[1]},
+             {clientHints_[0], clientHints_[1]}, oid_, menuGroup_);
     }
 
-    void TearDown() override {
-        // Cleanup code if needed
-    }
-
-    std::unique_ptr<Menu> menu_;
-    std::vector<std::pair<std::string, std::string>> names = {
+    std::unique_ptr<IMenu> menu_;
+    std::vector<std::pair<std::string, std::string>> names_ = {
         {"en", "Name"},
         {"fr", "Name but in French"}
     };
-    bool hidden = true;
-    bool disabled = true;
+    bool hidden_ = true;
+    bool disabled_ = true;
     std::vector<std::string> paramOids_ = {
         "param1",
         "param2"
@@ -79,13 +81,47 @@ class MenuTest : public ::testing::Test {
         {"hint1", "This is a hint"},
         {"hint2", "This is another hint"}
     };
+    std::string oid_ = "test_menu";
+    MockMenuGroup menuGroup_;
 };
 
+/*
+ * TEST 1 - Menu creation.
+ */
 TEST_F(MenuTest, Menu_Create) {
-
+    EXPECT_TRUE(menu_) << "Failed to create Menu";
 }
 
-TEST_F(MenuTest, Menu_Move) {
-    
+/*
+ * TEST 2 - Menu constructor error handling.
+ */
+TEST_F(MenuTest, Menu_ErrCreate) {
+    MockMenuGroup errMenuGroup;
+    EXPECT_CALL(errMenuGroup, addMenu(oid_, testing::_)).Times(1)
+        .WillOnce(testing::Throw(std::runtime_error("MenuGroup error")));
+    EXPECT_THROW(Menu({}, hidden_, disabled_, {}, {}, {}, oid_, errMenuGroup), std::runtime_error);
 }
 
+/*
+ * TEST 3 - Menu toProto serialization.
+ */
+TEST_F(MenuTest, Menu_ToProto) {
+    // Calling toProto
+    ::catena::Menu protoMenu;
+    menu_->toProto(protoMenu);
+    // Checking results
+    for (auto& [lang, name] : names_) {
+        EXPECT_EQ(protoMenu.name().display_strings().at(lang), name);
+    }
+    EXPECT_EQ(protoMenu.hidden(), hidden_);
+    EXPECT_EQ(protoMenu.disabled(), disabled_);
+    for (auto& oid: paramOids_) {
+        EXPECT_TRUE(std::find(protoMenu.param_oids().begin(), protoMenu.param_oids().end(), oid) != protoMenu.param_oids().end());
+    }
+    for (auto& oid: commandOids_) {
+        EXPECT_TRUE(std::find(protoMenu.command_oids().begin(), protoMenu.command_oids().end(), oid) != protoMenu.command_oids().end());
+    }
+    for (auto& [key, value] : clientHints_) {
+        EXPECT_EQ(protoMenu.client_hints().at(key), value);
+    }
+}

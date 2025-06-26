@@ -38,7 +38,6 @@
 
 // common
 #include <MenuGroup.h>
-
 using namespace catena::common;
 
 void MenuGroup::toProto(::catena::MenuGroup& menuGroup, bool shallow = false) const {

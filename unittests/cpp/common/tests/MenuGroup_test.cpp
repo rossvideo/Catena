@@ -43,11 +43,6 @@
 #include <mocks/MockDevice.h>
 #include <mocks/MockMenu.h>
 
-// protobuf
-#include <interface/device.pb.h>
-#include <interface/service.grpc.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 // common
 #include "MenuGroup.h"
 
@@ -84,7 +79,7 @@ TEST_F(MenuGroupTest, MenuGroup_Create) {
 /*
  * TEST 2 - MenuGroup constructor error handling.
  */
-TEST_F(MenuGroupTest, MenuGroup_CreateErr) {
+TEST_F(MenuGroupTest, MenuGroup_ErrCreate) {
     MockDevice errDm;
     EXPECT_CALL(errDm, addItem(oid_, testing::An<IMenuGroup*>())).Times(1)
         .WillOnce(testing::Throw(std::runtime_error("Device error")));
@@ -119,7 +114,14 @@ TEST_F(MenuGroupTest, MenuGroup_ErrAddNullMenu) {
 }
 
 /*
- * TEST 5 - MenuGroup toProto serialization.
+ * TEST 5 - Adding menu with invalid oid to MenuGroup.
+ */
+TEST_F(MenuGroupTest, MenuGroup_ErrAddNoOid) {
+    EXPECT_THROW(menuGroup_->addMenu("", std::make_unique<MockMenu>()), std::runtime_error) << "Expected to throw when adding a nullptr menu";
+}
+
+/*
+ * TEST 6 - MenuGroup toProto serialization.
  */
 TEST_F(MenuGroupTest, MenuGroup_ToProto) {
     // Adding two menus and setting expectations.
@@ -147,7 +149,7 @@ TEST_F(MenuGroupTest, MenuGroup_ToProto) {
 }
 
 /*
- * TEST 6 - MenuGroup toProto shallow serialization.
+ * TEST 7 - MenuGroup toProto shallow serialization.
  */
 TEST_F(MenuGroupTest, MenuGroup_ToProtoShallow) {
     // Adding two menus and setting expectations.
@@ -168,7 +170,7 @@ TEST_F(MenuGroupTest, MenuGroup_ToProtoShallow) {
 }
 
 /*
- * TEST 7 - MenuGroup toProto error handling.
+ * TEST 8 - MenuGroup toProto error handling.
  */
 TEST_F(MenuGroupTest, MenuGroup_ErrMenuToProto) {
     // Adding a menu and setting expectations.

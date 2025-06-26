@@ -40,8 +40,7 @@
 
 // common
 #include <IMenu.h>
-
-// common
+#include <IMenuGroup.h>
 #include <IDevice.h>
 #include <PolyglotText.h>
 
@@ -52,17 +51,13 @@
 #include <unordered_map>
 #include <vector>
 
-
-
 namespace catena {
 namespace common {
-
-class MenuGroup; // forward declaration
 
 /**
  * @brief A device menu
  */
-class Menu : public common::IMenu {
+class Menu : public IMenu {
   public:
     /**
      * @brief a list of oids, used by main constructor
@@ -115,7 +110,7 @@ class Menu : public common::IMenu {
          const OidInitializer param_oids,
          const OidInitializer command_oids,
          const PairInitializer& client_hints, 
-         std::string oid, catena::common::MenuGroup& menuGroup);
+         std::string oid, IMenuGroup& menuGroup);
 
 
     /**
