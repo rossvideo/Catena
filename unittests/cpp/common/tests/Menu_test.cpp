@@ -1,7 +1,5 @@
-#pragma once
-
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -17,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -31,36 +29,63 @@
  */
 
 /**
- * @file IMenu.h
- * @brief Interface for Menus
- * @author Ben Mostafa Ben.Mostafa@rossvideo.com
- * @date 2024-10-04
- * @copyright Copyright (c) 2024 Ross Video
+ * @brief This file is for testing the Menu.cpp file.
+ * @author benjamin.whitten@rossvideo.com
+ * @date 25/06/26
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-// protobuf interface
-#include <interface/menu.pb.h>
+// gtest
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
-namespace catena {
-namespace common {
+// protobuf
+#include <interface/device.pb.h>
+#include <interface/service.grpc.pb.h>
+#include <google/protobuf/util/json_util.h>
 
-/**
- * @brief Interface for Menus
- */
-class IMenu {
-  public:
-    IMenu() = default;
-    IMenu(IMenu&&) = default;
-    IMenu& operator=(IMenu&&) = default;
-    virtual ~IMenu() = default;
+// common
+#include "Menu.h"
 
-    /**
-     * @brief serialize a menu to a protobuf message
-     * @param menu the protobuf message
-     */
-    virtual void toProto(catena::Menu& menu) const = 0;
+using namespace catena::common;
 
+class MenuTest : public ::testing::Test {
+  protected:
+    void SetUp() override {
+        // Setup code if needed
+
+    }
+
+    void TearDown() override {
+        // Cleanup code if needed
+    }
+
+    std::unique_ptr<Menu> menu_;
+    std::vector<std::pair<std::string, std::string>> names = {
+        {"en", "Name"},
+        {"fr", "Name but in French"}
+    };
+    bool hidden = true;
+    bool disabled = true;
+    std::vector<std::string> paramOids_ = {
+        "param1",
+        "param2"
+    };
+    std::vector<std::string> commandOids_ {
+        "command1",
+        "command2"
+    };
+    std::vector<std::pair<std::string, std::string>> clientHints_ = {
+        {"hint1", "This is a hint"},
+        {"hint2", "This is another hint"}
+    };
 };
 
-}  // namespace common
-}  // namespace catena
+TEST_F(MenuTest, Menu_Create) {
+
+}
+
+TEST_F(MenuTest, Menu_Move) {
+    
+}
+

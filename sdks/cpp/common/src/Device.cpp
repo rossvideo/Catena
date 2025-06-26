@@ -485,7 +485,7 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
                         co_yield component;
                         component.Clear();
                         ::catena::Menu* dstMenu = component.mutable_menu()->mutable_menu();
-                        menu.toProto(*dstMenu);
+                        menu->toProto(*dstMenu);
                         component.mutable_menu()->set_oid(oid);
                     }
                 }
