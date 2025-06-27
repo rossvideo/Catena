@@ -35,27 +35,13 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-// gtest
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-// std
-#include <string>
-
-// protobuf
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 // Test helpers
 #include "RESTTest.h"
-#include "MockSocketReader.h"
 #include "MockParam.h"
-#include "MockDevice.h"
 #include "MockSubscriptionManager.h"
 
 // REST
 #include "controllers/Subscriptions.h"
-#include "SocketWriter.h"
 
 using namespace catena::common;
 using namespace catena::REST;
