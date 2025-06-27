@@ -38,6 +38,8 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
     bool wildcard = isWildcard(oid);
     std::string baseOid;
     std::unique_ptr<IParam> param = nullptr;
+    // Getting set of subscriptions for the specified device.
+    std::set<std::string>& dmSubscriptions = subscriptions_[dm.slot()];
 
     // Getting base Oid if wildcard.
     if (wildcard) {
@@ -55,8 +57,8 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
     // Normal case.
     if (!wildcard && param) {
         // Add the subscription if it doesn't already exist.
-        if (!subscriptions_.contains(baseOid)) {
-            subscriptions_.insert(baseOid);
+        if (!dmSubscriptions.contains(baseOid)) {
+            dmSubscriptions.insert(baseOid);
         // Subscription already exists.
         } else {
             rc = catena::exception_with_status("Subscription already exists for OID: " + baseOid, catena::StatusCode::ALREADY_EXISTS);
@@ -64,7 +66,7 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
     
     // Add all sub params case.
     } else if (wildcard && param) {
-        SubscriptionVisitor visitor(subscriptions_);
+        SubscriptionVisitor visitor(dmSubscriptions);
         ParamVisitor::traverseParams(param.get(), baseOid, dm, visitor);
 
     // Add all params case.
@@ -76,7 +78,7 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
         }
         for (auto& param : allParams) {
             if (authz.readAuthz(*param)) {
-                SubscriptionVisitor visitor(subscriptions_);
+                SubscriptionVisitor visitor(dmSubscriptions);
                 ParamVisitor::traverseParams(param.get(), "/" + param->getOid(), dm, visitor);
             }
         }
@@ -89,16 +91,18 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
 bool SubscriptionManager::removeSubscription(const std::string& oid, const IDevice& dm, catena::exception_with_status& rc) {
     std::lock_guard sg(mtx_);
     rc = catena::exception_with_status{"", catena::StatusCode::OK};
+    // Getting set of subscriptions for the specified device.
+    std::set<std::string>& dmSubscriptions = subscriptions_[dm.slot()];
 
     // Wildcard case.
     if (isWildcard(oid)) {
         // Expand wildcard and remove all matching OIDs
         std::string basePath = oid.substr(0, oid.length() - 2);
         bool found = false;
-        auto it = subscriptions_.begin();
-        while (it != subscriptions_.end()) {
+        auto it = dmSubscriptions.begin();
+        while (it != dmSubscriptions.end()) {
             if (it->starts_with(basePath)) {
-                it = subscriptions_.erase(it);
+                it = dmSubscriptions.erase(it);
                 found = true;
             } else {
                 ++it;
@@ -109,9 +113,9 @@ bool SubscriptionManager::removeSubscription(const std::string& oid, const IDevi
         }
     // Normal case.
     } else {
-        auto it = subscriptions_.find(oid);
-        if (it != subscriptions_.end()) {
-            subscriptions_.erase(it);
+        auto it = dmSubscriptions.find(oid);
+        if (it != dmSubscriptions.end()) {
+            dmSubscriptions.erase(it);
         } else {
             rc = catena::exception_with_status("Subscription not found for OID: " + oid, catena::StatusCode::NOT_FOUND);
         }
@@ -123,7 +127,7 @@ bool SubscriptionManager::removeSubscription(const std::string& oid, const IDevi
 // Get all subscribed OIDs
 std::set<std::string> SubscriptionManager::getAllSubscribedOids(const IDevice& dm) {
     std::lock_guard sg(mtx_);
-    return subscriptions_;
+    return subscriptions_[dm.slot()];
 }
 
 // Returns true if the OID ends with "/*", indicating it's a wildcard subscription
@@ -133,5 +137,5 @@ bool SubscriptionManager::isWildcard(const std::string& oid) {
 
 bool SubscriptionManager:: isSubscribed(const std::string& oid, const IDevice& dm) {
     std::lock_guard sg(mtx_);
-    return subscriptions_.contains(oid);
+    return subscriptions_.contains(dm.slot()) && subscriptions_[dm.slot()].contains(oid);
 }

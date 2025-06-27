@@ -55,7 +55,8 @@ class RESTServiceImplTests : public testing::Test {
      */
     void SetUp() override {
         oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
-        service_ = std::make_unique<CatenaServiceImpl>(dm_, EOPath_, authzEnabled_, port_);
+        EXPECT_CALL(dm_, slot()).WillRepeatedly(testing::Return(0));
+        service_.reset(new CatenaServiceImpl({&dm_}, EOPath_, authzEnabled_, port_));
     }
 
     /*

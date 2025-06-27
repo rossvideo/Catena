@@ -65,7 +65,6 @@ class LanguagePack : public common::ILanguagePack {
      */
     using ListInitializer = std::initializer_list<std::pair<std::string, std::string>>;
 
-  public:
     LanguagePack() = delete;
     /**
      * @brief LanguagePack does not have copy semantics
@@ -113,12 +112,12 @@ class LanguagePack : public common::ILanguagePack {
     void toProto(::catena::LanguagePack& pack) const override;
 
     /**
-     * get the begin iterator to the key/word pairs
+     * @brief get the begin iterator to the key/word pairs
      */
-    inline const_iterator begin() const override{ return words_.cbegin(); }
+    inline const_iterator begin() const override { return words_.cbegin(); }
 
     /**
-     * get the end iterator to the key/word pairs
+     * @brief get the end iterator to the key/word pairs
      */
     inline const_iterator end() const override { return words_.cend(); }
 

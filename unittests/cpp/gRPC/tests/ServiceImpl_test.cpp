@@ -68,10 +68,11 @@ class gRPCServiceImplTests : public testing::Test {
     void SetUp() override {
         // Redirecting cout to a stringstream for testing.
         oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
+        EXPECT_CALL(dm_, slot()).WillRepeatedly(testing::Return(0));
         // Creating the gRPC server.
         builder_.AddListeningPort(serverAddr_, grpc::InsecureServerCredentials());
         cq_ = builder_.AddCompletionQueue();
-        service_ = std::make_unique<CatenaServiceImpl>(cq_.get(), dm_, EOPath_, authzEnabled_);
+        service_.reset(new CatenaServiceImpl(cq_.get(), {&dm_}, EOPath_, authzEnabled_));
         builder_.RegisterService(service_.get());
         server_ = builder_.BuildAndStart();
         service_->init();

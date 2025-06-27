@@ -71,7 +71,7 @@ class IConnect {
      * @param oid - The OID of the value to update
      * @param p - The parameter to update
      */
-    virtual void updateResponse_(const std::string& oid, const IParam* p) = 0;
+    virtual void updateResponse_(const std::string& oid, const IParam* p, uint32_t slot) = 0;
     
     /**
      * @brief Updates the response message with a ILanguagePack and
@@ -79,7 +79,7 @@ class IConnect {
      * 
      * @param l The added ILanguagePack emitted by device.
      */
-    virtual void updateResponse_(const ILanguagePack* l) = 0;
+    virtual void updateResponse_(const ILanguagePack* l, uint32_t slot) = 0;
     
     /**
      * @brief Sets up the authorizer object with the jwsToken.

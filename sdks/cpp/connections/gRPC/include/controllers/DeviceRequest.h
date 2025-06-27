@@ -58,10 +58,10 @@ class DeviceRequest : public CallData {
      * @brief Constructor for ExternalObjectRequest class
      *
      * @param service the service to which the request is made
-     * @param dm the device for which the request is made
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok flag to check if request is successful 
      */
-    DeviceRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    DeviceRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
     /**
      * @brief Manages gRPC request through a state machine
      *
@@ -90,9 +90,13 @@ class DeviceRequest : public CallData {
      */
     CallStatus status_;
     /**
-     * @brief Reference to the device to which the request is made
+     * @brief A map of slots to ptrs to their corresponding device.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
+    /**
+     * @brief The device at the specified slot in dms_.
+     */
+    IDevice* dm_ = nullptr;
     /**
      * @brief Shared ptr to the authorizer object so that we can maintain
      * ownership of raw ptr throughout call lifetime without use of "new"

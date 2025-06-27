@@ -6,8 +6,8 @@ using catena::REST::LanguagePack;
 // Initializes the object counter for LanguagePack to 0.
 int LanguagePack::objectCounter_ = 0;
 
-LanguagePack::LanguagePack(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
+LanguagePack::LanguagePack(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
@@ -23,6 +23,11 @@ void LanguagePack::proceed() {
     try {
         // Remove leading "/"
         std::string languageId = context_.fqoid().substr(1);
+        IDevice* dm = nullptr;
+        // Getting device at specified slot.
+        if (dms_.contains(context_.slot())) {
+            dm = dms_.at(context_.slot());
+        }
 
         // Authz required for all methods except GET.
         if (context_.method() != Method_GET && context_.authorizationEnabled()) {
@@ -33,10 +38,14 @@ void LanguagePack::proceed() {
             authz = &catena::common::Authorizer::kAuthzDisabled;
         }
 
+        // Making sure the device exists.
+        if (!dm) {
+            rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+
         // GET/language-pack
-        if (context_.method() == Method_GET) {
-            std::lock_guard lg(dm_.mutex());
-            rc = dm_.getLanguagePack(languageId, ans);
+        } else if (context_.method() == Method_GET) {
+            std::lock_guard lg(dm->mutex());
+            rc = dm->getLanguagePack(languageId, ans);
 
         // POST/language-pack and PUT/language-pack
         } else if (context_.method() == Method_POST || context_.method() == Method_PUT) {
@@ -47,14 +56,14 @@ void LanguagePack::proceed() {
             absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), payload.mutable_language_pack());
 
             if (status.ok()) {
-                std::lock_guard lg(dm_.mutex());
+                std::lock_guard lg(dm->mutex());
                 // Making sure we are only adding with POST and updating with PUT.
-                if (context_.method() == Method_POST && dm_.hasLanguage(languageId)
-                    || context_.method() == Method_PUT && !dm_.hasLanguage(languageId)) {
+                if (context_.method() == Method_POST  && dm->hasLanguage(languageId)
+                    || context_.method() == Method_PUT && !dm->hasLanguage(languageId)) {
                     rc = catena::exception_with_status("", catena::StatusCode::PERMISSION_DENIED);
                 } else {
                     // addLanguage ensures shipped languages are not changed.
-                    rc = dm_.addLanguage(payload, *authz);
+                    rc = dm->addLanguage(payload, *authz);
                 }
             } else {
                 // Failed to parse JSON.
@@ -63,8 +72,8 @@ void LanguagePack::proceed() {
 
         // DELETE/language-pack
         } else if (context_.method() == Method_DELETE) {
-            std::lock_guard lg(dm_.mutex());
-            rc = dm_.removeLanguage(languageId, *authz);
+            std::lock_guard lg(dm->mutex());
+            rc = dm->removeLanguage(languageId, *authz);
 
         // Invalid method.
         } else {

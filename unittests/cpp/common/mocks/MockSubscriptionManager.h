@@ -29,34 +29,28 @@
  */
 
 /**
- * @brief A collection of mock classes used across the REST tests.
- * @author benjamin.whitten@rossvideo.com
+ * @brief Mock implementation for the ISubscriptionManager class.
  * @author zuhayr.sarker@rossvideo.com
- * @date 25/05/13
+ * @date 25/06/26
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
 
 #include <gmock/gmock.h>
-#include <IDevice.h>
-#include <IParam.h>
 #include <ISubscriptionManager.h>
-#include <rpc/IConnect.h>
-#include <IParamDescriptor.h>
-#include <Status.h>
-#include <Authorization.h>
 
 namespace catena {
 namespace common {
 
+// Mock implementation for the ISubscriptionManager class.
 class MockSubscriptionManager : public ISubscriptionManager {
   public:
-      MOCK_METHOD(bool, addSubscription, (const std::string& oid, IDevice& dm, exception_with_status& rc, Authorizer& authz), (override));
-      MOCK_METHOD(bool, removeSubscription, (const std::string& oid, const IDevice& dm, exception_with_status& rc), (override));
-      MOCK_METHOD(std::set<std::string>, getAllSubscribedOids, (const IDevice& dm), (override));
-      MOCK_METHOD(bool, isWildcard, (const std::string& oid), (override));
-      MOCK_METHOD(bool, isSubscribed, (const std::string& oid, const IDevice& dm), (override));
+    MOCK_METHOD(bool, addSubscription, (const std::string& oid, IDevice& dm, exception_with_status& rc, Authorizer& authz), (override));
+    MOCK_METHOD(bool, removeSubscription, (const std::string& oid, const IDevice& dm, exception_with_status& rc), (override));
+    MOCK_METHOD(std::set<std::string>, getAllSubscribedOids, (const IDevice& dm), (override));
+    MOCK_METHOD(bool, isWildcard, (const std::string& oid), (override));
+    MOCK_METHOD(bool, isSubscribed, (const std::string& oid, const IDevice& dm), (override));
 };
 
 } // namespace common

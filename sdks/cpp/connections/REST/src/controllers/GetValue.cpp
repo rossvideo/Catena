@@ -6,8 +6,8 @@ using catena::REST::GetValue;
 // Initializes the object counter for GetValue to 0.
 int GetValue::objectCounter_ = 0;
 
-GetValue::GetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
+GetValue::GetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
@@ -17,12 +17,22 @@ void GetValue::proceed() {
     catena::Value ans;
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
+        IDevice* dm = nullptr;
+        // Getting device at specified slot.
+        if (dms_.contains(context_.slot())) {
+            dm = dms_.at(context_.slot());
+        }
+
+        // Making sure the device exists.
+        if (!dm) {
+            rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+
         // Getting value at oid from device.
-        if (context_.authorizationEnabled()) {
+        } else if (context_.authorizationEnabled()) {
             catena::common::Authorizer authz(context_.jwsToken());
-            rc = dm_.getValue(context_.fqoid(), ans, authz);
+            rc = dm->getValue(context_.fqoid(), ans, authz);
         } else {
-            rc = dm_.getValue(context_.fqoid(), ans, catena::common::Authorizer::kAuthzDisabled);
+            rc = dm->getValue(context_.fqoid(), ans, catena::common::Authorizer::kAuthzDisabled);
         }
 
     // ERROR

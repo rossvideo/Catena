@@ -29,26 +29,21 @@
  */
 
 /**
- * @brief A collection of mock classes used across the REST tests.
+ * @brief Mock implementation for the IParamDescriptor class.
  * @author benjamin.whitten@rossvideo.com
- * @author zuhayr.sarker@rossvideo.com
- * @date 25/05/13
+ * @date 25/06/26
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
 
 #include <gmock/gmock.h>
-#include <IDevice.h>
-#include <IParam.h>
 #include <IParamDescriptor.h>
-#include <Status.h>
-#include <Authorization.h>
 
 namespace catena {
 namespace common {
 
-//Mock implementation of ParamDescriptor for testing
+// Mock implementation for the IParamDescriptor class.
 class MockParamDescriptor : public IParamDescriptor {
   public:
     MOCK_METHOD(ParamType, type, (), (const, override));
