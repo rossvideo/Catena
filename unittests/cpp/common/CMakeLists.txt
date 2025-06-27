@@ -26,6 +26,7 @@ set(SOURCES
     tests/param_visitor_test.cpp
     tests/Authorization_test.cpp
     tests/Connect_test.cpp
+    tests/LanguagePack_test.cpp
 )
 
 add_executable(${This} ${SOURCES})

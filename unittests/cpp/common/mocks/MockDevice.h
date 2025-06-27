@@ -63,9 +63,9 @@ class MockDevice : public IDevice {
     MOCK_METHOD(uint32_t, default_total_length, (), (const, override));
     MOCK_METHOD(void, set_default_max_length, (const uint32_t default_max_length), (override));
     MOCK_METHOD(void, set_default_total_length, (const uint32_t default_total_length), (override));
-    MOCK_METHOD(void, toProto, (::catena::Device& dst, Authorizer& authz, bool shallow), (const, override));
-    MOCK_METHOD(void, toProto, (LanguagePacks& packs), (const, override));
-    MOCK_METHOD(void, toProto, (LanguageList& list), (const, override));
+    MOCK_METHOD(void, toProto, (catena::Device& dst, Authorizer& authz, bool shallow), (const, override));
+    MOCK_METHOD(void, toProto, (catena::LanguagePacks& packs), (const, override));
+    MOCK_METHOD(void, toProto, (catena::LanguageList& list), (const, override));
     MOCK_METHOD(bool, hasLanguage, (const std::string& LanguageId), (const, override));
     MOCK_METHOD(exception_with_status, addLanguage, (AddLanguagePayload& language, Authorizer& authz), (override));
     MOCK_METHOD(exception_with_status, removeLanguage, (const std::string& LanguageId, Authorizer& authz), (override));

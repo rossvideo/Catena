@@ -76,14 +76,14 @@ public:
     virtual void fromProto(const catena::LanguagePack& pack) = 0;
 
     /**
-     * get the begin iterator to the key/word pairs
+     * @brief get the begin iterator to the key/word pairs
      */
-    virtual const_iterator begin() const = 0;
+    virtual inline const_iterator begin() const = 0;
 
     /**
-     * get the end iterator to the key/word pairs
+     * @brief get the end iterator to the key/word pairs
      */
-    virtual const_iterator end() const = 0;
+    virtual inline const_iterator end() const = 0;
 };
 }  // namespace common
 }  // namespace catena
