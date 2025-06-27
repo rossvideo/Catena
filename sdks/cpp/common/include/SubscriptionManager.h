@@ -132,7 +132,11 @@ class SubscriptionManager : public ISubscriptionManager {
              * @param path The path of the parameter
              */
             void visit(catena::common::IParam* param, const std::string& path) override {
-                oids_.insert(path);
+                // Skip array elements (paths ending with indices) to prevent invalid paths
+                Path pathObj = Path(path);
+                if (!pathObj.back_is_index()) {
+                    oids_.insert(path);
+                }
             }
             
             /**
