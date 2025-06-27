@@ -45,13 +45,18 @@
 
 // common
 #include "StructInfo.h"
+#include "Enums.h"
 
 using namespace catena::common;
 
 class StructInfoTest : public ::testing::Test {
   protected:
     catena::Value val_;
-    MockParamDescriptor pd_;
+    MockParamDescriptor pd_, subpd1_, subpd2_;
+    std::unordered_map<std::string, MockParamDescriptor&> subParams_ {
+        {"f1", subpd1_},
+        {"f2", subpd2_}
+    };
     MockConstraint constraint_;
     catena::Value constrainedVal_;
 };
@@ -265,12 +270,12 @@ TEST_F(StructInfoTest, StringFromProtoNoString) {
 }
 
 /* ============================================================================
- *                              VECTOR<INT32_T>
+ *                                 INT ARRAY
  * ============================================================================
  * 
  * 
  */
-TEST_F(StructInfoTest, IntVectorToProto) {
+TEST_F(StructInfoTest, IntArrayToProto) {
     std::vector<int32_t> src = {1, 2, 3, 4, 5};
     val_.mutable_int32_array_values()->add_ints(9); // Make sure it clears
     toProto(val_, &src, pd_, Authorizer::kAuthzDisabled);
@@ -280,7 +285,7 @@ TEST_F(StructInfoTest, IntVectorToProto) {
     EXPECT_EQ(val_.int32_array_values().ints_size(), src.size());
 }
 
-TEST_F(StructInfoTest, IntVectorFromProto) {
+TEST_F(StructInfoTest, IntArrayFromProto) {
     std::vector<int32_t> dst = {9}; // Make sure it clears
     auto array = val_.mutable_int32_array_values();
     for (auto i : {1, 2, 3, 4, 5}) {
@@ -296,7 +301,7 @@ TEST_F(StructInfoTest, IntVectorFromProto) {
     EXPECT_EQ(dst.size(), val_.int32_array_values().ints_size());
 }
 
-TEST_F(StructInfoTest, IntVectorFromProtoConstraint) {
+TEST_F(StructInfoTest, IntArrayFromProtoConstraint) {
     std::vector<int32_t> dst = {9}; // Make sure it clears
     auto array = val_.mutable_int32_array_values();
     for (auto i : {1, 2, 3, 4, 5}) {
@@ -314,7 +319,7 @@ TEST_F(StructInfoTest, IntVectorFromProtoConstraint) {
     EXPECT_EQ(dst.size(), val_.int32_array_values().ints_size());
 }
 
-TEST_F(StructInfoTest, IntVectorFromProtoRange) {
+TEST_F(StructInfoTest, IntArrayFromProtoRange) {
     std::vector<int32_t> dst = {9}; // Make sure it clears
     auto array = val_.mutable_int32_array_values();
     for (auto i : {1, 2, 3, 4, 5}) {
@@ -341,7 +346,7 @@ TEST_F(StructInfoTest, IntVectorFromProtoRange) {
     EXPECT_EQ(dst.size(), constrainedVal_.int32_array_values().ints_size());
 }
 
-TEST_F(StructInfoTest, IntVectorFromProtoNoIntVector) {
+TEST_F(StructInfoTest, IntArrayFromProtoNoIntArray) {
     std::vector<int32_t> exp = {9};
     std::vector<int32_t> dst(exp.begin(), exp.end());
     val_.set_string_value("Not an int vector");
@@ -350,7 +355,7 @@ TEST_F(StructInfoTest, IntVectorFromProtoNoIntVector) {
     EXPECT_EQ(dst, exp);
 }
 
-TEST_F(StructInfoTest, IntVectorFromProtoUnsatisfied) {
+TEST_F(StructInfoTest, IntArrayFromProtoUnsatisfied) {
     std::vector<int32_t> dst = {9}; // Make sure it clears
     auto array = val_.mutable_int32_array_values();
     for (auto i : {1, 2, 3, 4, 5}) {
@@ -366,12 +371,12 @@ TEST_F(StructInfoTest, IntVectorFromProtoUnsatisfied) {
 }
 
 /* ============================================================================
- *                               VECTOR<FLOAT>
+ *                                FLOAT ARRAY
  * ============================================================================
  * 
  * 
  */
-TEST_F(StructInfoTest, FloatVectorToProto) {
+TEST_F(StructInfoTest, FloatArrayToProto) {
     std::vector<float> src = {1.1, 2.2, 3.3, 4.4, 5.5};
     val_.mutable_float32_array_values()->add_floats(9.9); // Make sure it clears
     toProto(val_, &src, pd_, Authorizer::kAuthzDisabled);
@@ -381,7 +386,7 @@ TEST_F(StructInfoTest, FloatVectorToProto) {
     EXPECT_EQ(val_.float32_array_values().floats_size(), src.size());
 }
 
-TEST_F(StructInfoTest, FloatVectorFromProto) {
+TEST_F(StructInfoTest, FloatArrayFromProto) {
     std::vector<float> dst = {9.9}; // Make sure it clears
     auto array = val_.mutable_float32_array_values();
     for (auto f : {1.1, 2.2, 3.3, 4.4, 5.5}) {
@@ -397,7 +402,7 @@ TEST_F(StructInfoTest, FloatVectorFromProto) {
     EXPECT_EQ(dst.size(), val_.float32_array_values().floats_size());
 }
 
-TEST_F(StructInfoTest, FloatVectorFromProtoConstraint) {
+TEST_F(StructInfoTest, FloatArrayFromProtoConstraint) {
     std::vector<float> dst = {9.9}; // Make sure it clears
     auto array = val_.mutable_float32_array_values();
     for (auto f : {1.1, 2.2, 3.3, 4.4, 5.5}) {
@@ -415,7 +420,7 @@ TEST_F(StructInfoTest, FloatVectorFromProtoConstraint) {
     EXPECT_EQ(dst.size(), val_.float32_array_values().floats_size());
 }
 
-TEST_F(StructInfoTest, FloatVectorFromProtoRange) {
+TEST_F(StructInfoTest, FloatArrayFromProtoRange) {
     std::vector<float> dst = {9.9}; // Make sure it clears
     auto array = val_.mutable_float32_array_values();
     for (auto f : {1.1, 2.2, 3.3, 4.4, 5.5}) {
@@ -441,7 +446,7 @@ TEST_F(StructInfoTest, FloatVectorFromProtoRange) {
     EXPECT_EQ(dst.size(), constrainedVal_.float32_array_values().floats_size());
 }
 
-TEST_F(StructInfoTest, FloatVectorFromProtoNoFloatVector) {
+TEST_F(StructInfoTest, FloatArrayFromProtoNoFloatArray) {
     std::vector<float> exp = {9.9};
     std::vector<float> dst(exp.begin(), exp.end());
     val_.set_string_value("Not a float vector");
@@ -451,12 +456,12 @@ TEST_F(StructInfoTest, FloatVectorFromProtoNoFloatVector) {
 }
 
 /* ============================================================================
- *                               VECTOR<STRING>
+ *                               STRING ARRAY
  * ============================================================================
  * 
  * 
  */
-TEST_F(StructInfoTest, StringVectorToProto) {
+TEST_F(StructInfoTest, StringArrayToProto) {
     std::vector<std::string> src = {"first", "second", "third"};
     val_.mutable_string_array_values()->add_strings("last"); // Make sure it clears
     toProto(val_, &src, pd_, Authorizer::kAuthzDisabled);
@@ -466,7 +471,7 @@ TEST_F(StructInfoTest, StringVectorToProto) {
     EXPECT_EQ(val_.string_array_values().strings_size(), src.size());
 }
 
-TEST_F(StructInfoTest, StringVectorFromProto) {
+TEST_F(StructInfoTest, StringArrayFromProto) {
     std::vector<std::string> dst = {"Hello, world!"}; // Make sure it clears
     auto array = val_.mutable_string_array_values();
     for (auto s : {"first", "second", "third"}) {
@@ -482,7 +487,7 @@ TEST_F(StructInfoTest, StringVectorFromProto) {
     EXPECT_EQ(dst.size(), val_.string_array_values().strings_size());
 }
 
-TEST_F(StructInfoTest, StringVectorFromProtoConstraint) {
+TEST_F(StructInfoTest, StringArrayFromProtoConstraint) {
     std::vector<std::string> dst = {"Hello, world!"}; // Make sure it clears
     auto array = val_.mutable_string_array_values();
     for (auto s : {"first", "second", "third"}) {
@@ -500,7 +505,7 @@ TEST_F(StructInfoTest, StringVectorFromProtoConstraint) {
     EXPECT_EQ(dst.size(), val_.string_array_values().strings_size());
 }
 
-TEST_F(StructInfoTest, StringVectorFromProtoNoStringVector) {
+TEST_F(StructInfoTest, StringArrayFromProtoNoStringArray) {
     std::vector<std::string> exp = {"Hello, world!"};
     std::vector<std::string> dst(exp.begin(), exp.end());
     val_.set_int32_value(64); // Not a string vector
@@ -509,7 +514,7 @@ TEST_F(StructInfoTest, StringVectorFromProtoNoStringVector) {
     EXPECT_EQ(dst, exp);
 }
 
-TEST_F(StructInfoTest, StringVectorFromProtoUnsatisfied) {
+TEST_F(StructInfoTest, StringArrayFromProtoUnsatisfied) {
     std::vector<std::string> dst = {"Hello, world!"}; // Make sure it clears
     auto array = val_.mutable_string_array_values();
     for (auto s : {"first", "second", "third"}) {
@@ -523,3 +528,99 @@ TEST_F(StructInfoTest, StringVectorFromProtoUnsatisfied) {
     fromProto(val_, &dst, pd_, Authorizer::kAuthzDisabled);
     EXPECT_TRUE(dst.empty());
 }
+
+/* ============================================================================
+ *                                  STRUCT
+ * ============================================================================
+ * 
+ * 
+ */
+
+struct TestStruct1 {
+    int32_t f1;
+    int32_t f2;
+    using isCatenaStruct = void;
+};
+template<>
+struct catena::common::StructInfo<TestStruct1> {
+    using Type = std::tuple<FieldInfo<int32_t, TestStruct1>, FieldInfo<int32_t, TestStruct1>>;
+    static constexpr Type fields = {{"f1", &TestStruct1::f1}, {"f2", &TestStruct1::f2}};
+};
+
+struct TestStruct2 {
+    float f1;
+    float f2;
+    using isCatenaStruct = void;
+};
+template<>
+struct catena::common::StructInfo<TestStruct2> {
+    using Type = std::tuple<FieldInfo<float, TestStruct2>, FieldInfo<float, TestStruct2>>;
+    static constexpr Type fields = {{"f1", &TestStruct2::f1}, {"f2", &TestStruct2::f2}};
+};
+
+TEST_F(StructInfoTest, StructToProto) {
+    TestStruct1 src{.f1{1}, .f2{2}};
+    for (auto& [field, subPd] : subParams_) {
+        EXPECT_CALL(pd_, getSubParam(field)).Times(1).WillOnce(::testing::ReturnRef(subPd));
+        EXPECT_CALL(subPd, getScope()).WillRepeatedly(testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
+    }
+    toProto(val_, &src, pd_, Authorizer::kAuthzDisabled);
+    EXPECT_EQ(val_.struct_value().fields().at("f1").int32_value(), src.f1);
+    EXPECT_EQ(val_.struct_value().fields().at("f2").int32_value(), src.f2);
+}
+
+/* ============================================================================
+ *                               STRUCT ARRAY
+ * ============================================================================
+ * 
+ * 
+ */
+TEST_F(StructInfoTest, StructArrayToProto) {
+    std::vector<TestStruct1> src = {
+        {.f1{1}, .f2{2}},
+        {.f1{3}, .f2{4}},
+        {.f1{5}, .f2{6}}
+    };
+    for (auto& [field, subPd] : subParams_) {
+        EXPECT_CALL(pd_, getSubParam(field)).WillRepeatedly(::testing::ReturnRef(subPd));
+        EXPECT_CALL(subPd, getScope()).WillRepeatedly(testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
+    }
+    toProto(val_, &src, pd_, Authorizer::kAuthzDisabled);
+    EXPECT_EQ(val_.struct_array_values().struct_values_size(), src.size());
+    for (size_t i = 0; i < src.size(); i += 1) {
+        auto structProto = val_.struct_array_values().struct_values().at(i);
+        EXPECT_EQ(structProto.fields().at("f1").int32_value(), src[i].f1);
+        EXPECT_EQ(structProto.fields().at("f2").int32_value(), src[i].f2);
+    }
+}
+
+/* ============================================================================
+ *                              VARIANT STRUCT
+ * ============================================================================
+ * 
+ * 
+ */
+using TestVariantStruct = std::variant<TestStruct1, TestStruct2>;
+template<>
+inline std::array<const char*, 2> catena::common::alternativeNames<TestVariantStruct>{"TestStruct1", "TestStruct2"};
+
+TEST_F(StructInfoTest, VariantStructToProto) {
+    TestVariantStruct src{TestStruct2{.f1{1.1}, .f2{2.2}}};
+    std::string variantType = alternativeNames<TestVariantStruct>[src.index()];
+    EXPECT_CALL(pd_, getSubParam(variantType)).WillOnce(::testing::ReturnRef(pd_));
+    for (auto& [field, subPd] : subParams_) {
+        EXPECT_CALL(pd_, getSubParam(field)).Times(1).WillOnce(::testing::ReturnRef(subPd));
+        EXPECT_CALL(subPd, getScope()).WillRepeatedly(testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
+    }
+    auto index = src.index();
+    toProto(val_, &src, pd_, Authorizer::kAuthzDisabled);
+    EXPECT_EQ(val_.struct_variant_value().struct_variant_type(), variantType);
+    EXPECT_EQ(val_.struct_variant_value().value().struct_value().fields().at("f1").float32_value(), std::get<TestStruct2>(src).f1);
+    EXPECT_EQ(val_.struct_variant_value().value().struct_value().fields().at("f2").float32_value(), std::get<TestStruct2>(src).f2);
+
+    // std::visit([&](auto& arg){
+    //     EXPECT_EQ(val_.struct_variant_value().value().struct_value().fields().at("f1").float32_value(), arg.f1);
+    //     EXPECT_EQ(val_.struct_variant_value().value().struct_value().fields().at("f2").float32_value(), arg.f2);
+    // }, src);
+}
+
