@@ -9,5 +9,6 @@ var classcatena_1_1gRPC_1_1CatenaServiceImpl =
     [ "init", "classcatena_1_1gRPC_1_1CatenaServiceImpl.html#ad3900e792aeac053792435323e2f9d15", null ],
     [ "processEvents", "classcatena_1_1gRPC_1_1CatenaServiceImpl.html#a83508fd3de430d32677e1831a39aa8a7", null ],
     [ "registerItem", "classcatena_1_1gRPC_1_1CatenaServiceImpl.html#a6f25bea1f8db6d33c49d11620de61d65", null ],
+    [ "registrySize", "classcatena_1_1gRPC_1_1CatenaServiceImpl.html#a596d8f29aa4e2cb84320e7035b672c32", null ],
     [ "shutdownServer", "classcatena_1_1gRPC_1_1CatenaServiceImpl.html#ae09ec97e6d09bfd1a83ce2def021df48", null ]
 ];
