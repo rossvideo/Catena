@@ -404,5 +404,8 @@ class IDevice {
     vdk::signal<void(const std::string&, const IParam*)> valueSetByServer;
 };
 
+using SlotMap = std::unordered_map<uint32_t, IDevice*>;
+using SignalMap = std::unordered_map<uint32_t, uint32_t>;
+
 }  // namespace common
 }  // namespace catena

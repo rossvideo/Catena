@@ -64,10 +64,10 @@ class Connect : public CallData, public catena::common::Connect {
      * Calls proceed() once initialized.
      *
      * @param service - Pointer to the parent CatenaServiceImpl.
-     * @param dm - Address of the device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok - Flag to check if the command was successfully executed.
      */ 
-    Connect(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    Connect(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
     /**
      * @brief Manages the steps of the Connect gRPC command
      * through the state variable status. Returns the value of the
@@ -115,17 +115,17 @@ class Connect : public CallData, public catena::common::Connect {
      * @brief Id of operation waiting for valueSetByClient to be emitted.
      * Used when ending the connection.
      */
-    unsigned int valueSetByClientId_ = 0;
+    SignalMap valueSetByClientIds_;
     /**
      * @brief Id of operation waiting for valueSetByServer to be emitted.
      * Used when ending the connection.
      */
-    unsigned int valueSetByServerId_ = 0;
+    SignalMap valueSetByServerIds_;
     /**
      * @brief Id of operation waiting for languageAddedPushUpdate to be
      * emitted. Used when ending the connection.
      */
-    unsigned int languageAddedId_ = 0;
+    SignalMap languageAddedIds_;
 
     /**
      * @brief Signal emitted in the case of an error which requires the all

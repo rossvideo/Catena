@@ -39,8 +39,8 @@ int GetParam::objectCounter_ = 0;
  * then starts the process.
  */
 
-GetParam::GetParam(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : CallData(service), dm_{dm}, writer_(&context_),
+GetParam::GetParam(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+    : CallData(service), dms_{dms}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);
     objectId_ = objectCounter_++;
@@ -78,7 +78,7 @@ void GetParam::proceed( bool ok) {
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
-            new GetParam(service_, dm_, ok);
+            new GetParam(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
 
             { // var scope
@@ -86,21 +86,33 @@ void GetParam::proceed( bool ok) {
             std::unique_ptr<IParam> param = nullptr;
             std::shared_ptr<catena::common::Authorizer> sharedAuthz;
             catena::common::Authorizer* authz;
+            IDevice* dm = nullptr;
             try {
-                // Creating authorizer.
-                if (service_->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken_());
-                    authz = sharedAuthz.get();
-                } else {
-                    authz = &catena::common::Authorizer::kAuthzDisabled;
+                // Getting device at specified slot.
+                if (dms_.contains(req_.slot())) {
+                    dm = dms_.at(req_.slot());
                 }
-                // Getting the param.
-                std::lock_guard lg(dm_.mutex());
-                param = dm_.getParam(req_.oid(), rc, *authz);
-                // If we found a param update the response.
-                if (param && rc.status == catena::StatusCode::OK) {
-                    res_.set_oid(param->getOid());
-                    rc = param->toProto(*res_.mutable_param(), *authz);
+                
+                // Making sure the device exists.
+                if (!dm) {
+                    rc = catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
+
+                } else {
+                    // Creating authorizer.
+                    if (service_->authorizationEnabled()) {
+                        sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken_());
+                        authz = sharedAuthz.get();
+                    } else {
+                        authz = &catena::common::Authorizer::kAuthzDisabled;
+                    }
+                    // Getting the param.
+                    std::lock_guard lg(dm->mutex());
+                    param = dm->getParam(req_.oid(), rc, *authz);
+                    // If we found a param update the response.
+                    if (param && rc.status == catena::StatusCode::OK) {
+                        res_.set_oid(param->getOid());
+                        rc = param->toProto(*res_.mutable_param(), *authz);
+                    }
                 }
             // ERROR
             } catch (catena::exception_with_status& err) {

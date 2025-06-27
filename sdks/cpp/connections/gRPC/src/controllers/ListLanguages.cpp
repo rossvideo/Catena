@@ -35,8 +35,8 @@ using catena::gRPC::ListLanguages;
 // Initializes the object counter for SetValue to 0.
 int ListLanguages::objectCounter_ = 0;
 
-ListLanguages::ListLanguages(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : CallData(service), dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+ListLanguages::ListLanguages(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+    : CallData(service), dms_{dms}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service_->registerItem(this);
     proceed(ok);
@@ -68,18 +68,34 @@ void ListLanguages::proceed(bool ok) {
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
-            new ListLanguages(service_, dm_, ok);
+            new ListLanguages(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
-            try { // Getting and returning languages.
-                std::lock_guard lg(dm_.mutex());
-                catena::LanguageList ans;
-                dm_.toProto(ans);
-                status_ = CallStatus::kFinish;
-                responder_.Finish(ans, Status::OK, this);
+            { // rc scope
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
+            catena::LanguageList ans;
+            try {
+                IDevice* dm = nullptr;
+                // Getting device at specified slot.
+                if (dms_.contains(req_.slot())) {
+                    dm = dms_.at(req_.slot());
+                }
+                // Making sure the device exists.
+                if (!dm) {
+                    rc = catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
+                // Getting and returning languages.
+                } else {
+                    std::lock_guard lg(dm->mutex());
+                    dm->toProto(ans);
+                }
             } catch (...) { // Error, end process.
-                status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(grpc::StatusCode::UNKNOWN, "unknown error");
-                responder_.FinishWithError(errorStatus, this);
+                rc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
+            }
+            status_ = CallStatus::kFinish;
+            if (rc.status == catena::StatusCode::OK) {
+                responder_.Finish(ans, Status::OK, this);
+            } else {
+                responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+            }
             }
             break;
         /**

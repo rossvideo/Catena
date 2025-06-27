@@ -308,6 +308,7 @@ class RESTEndpointTest : public ::testing::Test, public RESTTest {
     std::mutex mtx1_;
     MockDevice dm0_;
     MockDevice dm1_;
+    SlotMap dms_ = {{0, &dm0_}, {1, &dm1_}};
     std::unique_ptr<ICallData> endpoint_;
 };
 

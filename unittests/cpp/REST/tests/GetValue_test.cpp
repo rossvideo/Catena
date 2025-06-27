@@ -47,10 +47,14 @@ using namespace catena::REST;
 // Fixture
 class RESTGetValueTests : public RESTEndpointTest {
   protected:
+    RESTGetValueTests() : RESTEndpointTest() {
+        // Default expectations for the device model 1 (should not be called).
+        EXPECT_CALL(dm1_, getValue(testing::_, testing::_, testing::_)).Times(0);
+    }
     /*
      * Creates a GetValue handler object.
      */
-    ICallData* makeOne() override { return GetValue::makeOne(serverSocket_, context_, dm0_); }
+    ICallData* makeOne() override { return GetValue::makeOne(serverSocket_, context_, dms_); }
 
     /*
      * Streamlines the creation of endpoint input. 
@@ -63,7 +67,7 @@ class RESTGetValueTests : public RESTEndpointTest {
     /*
      * Calls proceed and tests the response.
      */
-    void testRPC() {
+    void testCall() {
         endpoint_->proceed();
         std::string expJson = "";
         if (!expVal_.string_value().empty()) {
@@ -110,8 +114,8 @@ TEST_F(RESTGetValueTests, GetValue_Normal) {
             value.CopyFrom(expVal_);
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
-    // Sending the RPC.
-    testRPC();
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /*
@@ -140,8 +144,8 @@ TEST_F(RESTGetValueTests, GetValue_AuthzValid) {
             value.CopyFrom(expVal_);
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
-    // Sending the RPC.
-    testRPC();
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /*
@@ -154,8 +158,21 @@ TEST_F(RESTGetValueTests, GetValue_AuthzInvalid) {
     jwsToken_ = "THIS SHOULD NOT PARSE";
     // Setting expectations
     EXPECT_CALL(dm0_, getValue(testing::_, testing::_, testing::_)).Times(0);
-    // Sending the RPC.
-    testRPC();
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 6 - No device in the specified slot.
+ */
+TEST_F(RESTGetValueTests, GetValue_ErrInvalidSlot) {
+    initPayload(dms_.size(), "/test_oid");
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /*
@@ -169,8 +186,8 @@ TEST_F(RESTGetValueTests, GetValue_ErrReturnCatena) {
         .WillOnce(testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
-    // Sending the RPC.
-    testRPC();
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /*
@@ -185,8 +202,8 @@ TEST_F(RESTGetValueTests, GetValue_ErrThrowCatena) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    // Sending the RPC.
-    testRPC();
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /*
@@ -198,8 +215,8 @@ TEST_F(RESTGetValueTests, GetValue_ErrThrowStd) {
     // Setting expectations
     EXPECT_CALL(dm0_, getValue(fqoid_, testing::_, testing::_)).Times(1)
         .WillOnce(testing::Throw(std::runtime_error(expRc_.what())));
-    // Sending the RPC.
-    testRPC();
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /*
@@ -211,6 +228,6 @@ TEST_F(RESTGetValueTests, GetValue_ErrThrowUnknown) {
     // Setting expectations
     EXPECT_CALL(dm0_, getValue(fqoid_, testing::_, testing::_)).Times(1)
         .WillOnce(testing::Throw(0));
-    // Sending the RPC.
-    testRPC();
+    // Calling proceed and testing the output
+    testCall();
 }
