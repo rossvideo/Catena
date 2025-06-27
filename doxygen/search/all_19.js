@@ -1,7 +1,7 @@
 var searchData=
 [
   ['_7eauthorizer_0',['~Authorizer',['../classcatena_1_1common_1_1Authorizer.html#a09c54e470cc936a3fad2e2bef92ca384',1,'catena::common::Authorizer']]],
-  ['_7econnect_1',['~connect',['../classcatena_1_1common_1_1Connect.html#afa1a5e9a2bce4cac9a6c362f66eacdb2',1,'catena::common::Connect::~Connect()'],['../classcatena_1_1REST_1_1Connect.html#a2df537cb3d379910d52ba14ced454b24',1,'catena::REST::Connect::~Connect()']]],
+  ['_7econnect_1',['~Connect',['../classcatena_1_1common_1_1Connect.html#afa1a5e9a2bce4cac9a6c362f66eacdb2',1,'catena::common::Connect']]],
   ['_7edevice_2',['~Device',['../classcatena_1_1common_1_1Device.html#ab8a13b735718ebc42a2d79733f23a3f7',1,'catena::common::Device']]],
   ['_7eexternalobjectrequest_3',['~ExternalObjectRequest',['../classcatena_1_1gRPC_1_1ExternalObjectRequest.html#a280a7fc8ab34d78aedfc99a1d19bba36',1,'catena::gRPC::ExternalObjectRequest']]],
   ['_7eicalldata_4',['~ICallData',['../classcatena_1_1gRPC_1_1ICallData.html#ac4e4408ec52d1ef27b59739fbcff5ff6',1,'catena::gRPC::ICallData']]],
