@@ -58,12 +58,8 @@
 // common
 #include <Status.h>
 
-// boost
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
-using boost::asio::ip::tcp;
-
-using namespace catena::gRPC;
+namespace catena {
+namespace gRPC {
 
 /*
  * GRPCTest class inherited by test fixtures to provide functions for
@@ -171,3 +167,6 @@ class GRPCTest : public ::testing::Test {
     std::unique_ptr<ICallData> testCall = nullptr;
     std::unique_ptr<ICallData> asyncCall = nullptr;
 };
+
+} // namespace gRPC
+} // namespace catena

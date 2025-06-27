@@ -29,33 +29,27 @@
  */
 
 /**
- * @brief A collection of mock classes used across the REST tests.
- * @author benjamin.whitten@rossvideo.com
+ * @brief Mock implementation for the ILanguagePack class.
  * @author zuhayr.sarker@rossvideo.com
- * @date 25/05/13
+ * @date 25/06/26
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
 
 #include <gmock/gmock.h>
-#include <IDevice.h>
-#include <IParam.h>
-#include <ISubscriptionManager.h>
-#include <rpc/IConnect.h>
-#include <IParamDescriptor.h>
-#include <Status.h>
-#include <Authorization.h>
+#include <ILanguagePack.h>
 
 namespace catena {
 namespace common {
 
+// Mock implementation for the ILanguagePack class.
 class MockLanguagePack : public ILanguagePack {
   public:
-      MOCK_METHOD(void, toProto, (catena::LanguagePack&), (const, override));
-      MOCK_METHOD(void, fromProto, (const catena::LanguagePack&), (override));
-      MOCK_METHOD(const_iterator, begin, (), (const, override));
-      MOCK_METHOD(const_iterator, end, (), (const, override));
+    MOCK_METHOD(void, toProto, (catena::LanguagePack&), (const, override));
+    MOCK_METHOD(void, fromProto, (const catena::LanguagePack&), (override));
+    MOCK_METHOD(const_iterator, begin, (), (const, override));
+    MOCK_METHOD(const_iterator, end, (), (const, override));
 };
 
 } // namespace common
