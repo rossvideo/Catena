@@ -46,9 +46,6 @@
 #include <IDevice.h>
 #include <Authorization.h>  
 
-// protobuf interface
-#include <interface/param.pb.h>
-
 #include <vector>
 #include <string>
 #include <unordered_map>
