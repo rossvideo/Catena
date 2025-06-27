@@ -114,9 +114,9 @@ Collaboration diagram for catena::gRPC::ExecuteCommand:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ac6643937b7e5925d2c43dbb0e29c2248" id="r_ac6643937b7e5925d2c43dbb0e29c2248"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1gRPC_1_1ExecuteCommand.html#ac6643937b7e5925d2c43dbb0e29c2248">ExecuteCommand</a> (<a class="el" href="classcatena_1_1gRPC_1_1ICatenaServiceImpl.html">ICatenaServiceImpl</a> *service, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm, bool ok)</td></tr>
-<tr class="memdesc:ac6643937b7e5925d2c43dbb0e29c2248"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for <a class="el" href="classcatena_1_1gRPC_1_1ExecuteCommand.html" title="CallData class for the ExecuteCommand RPC.">ExecuteCommand</a> class.  <br /></td></tr>
-<tr class="separator:ac6643937b7e5925d2c43dbb0e29c2248"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70463bcf0ef311d6b4a4982c9f51f33e" id="r_a70463bcf0ef311d6b4a4982c9f51f33e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1gRPC_1_1ExecuteCommand.html#a70463bcf0ef311d6b4a4982c9f51f33e">ExecuteCommand</a> (<a class="el" href="classcatena_1_1gRPC_1_1ICatenaServiceImpl.html">ICatenaServiceImpl</a> *service, SlotMap &amp;dms, bool ok)</td></tr>
+<tr class="memdesc:a70463bcf0ef311d6b4a4982c9f51f33e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for <a class="el" href="classcatena_1_1gRPC_1_1ExecuteCommand.html" title="CallData class for the ExecuteCommand RPC.">ExecuteCommand</a> class.  <br /></td></tr>
+<tr class="separator:a70463bcf0ef311d6b4a4982c9f51f33e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a20404dadcba84fd96277052f061cdb1a" id="r_a20404dadcba84fd96277052f061cdb1a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1gRPC_1_1ExecuteCommand.html#a20404dadcba84fd96277052f061cdb1a">proceed</a> (bool ok) override</td></tr>
 <tr class="memdesc:a20404dadcba84fd96277052f061cdb1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Manages <a class="el" href="namespacecatena_1_1gRPC.html" title="Namespace containing classes relating to the gRPC API.">gRPC</a> command execution through a state machine.  <br /></td></tr>
 <tr class="separator:a20404dadcba84fd96277052f061cdb1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -149,8 +149,8 @@ ServerContext&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for the CallData classes which defines the jwsToken_ class.">CallData</a> class for the <a class="el" href="classcatena_1_1gRPC_1_1ExecuteCommand.html" title="CallData class for the ExecuteCommand RPC.">ExecuteCommand</a> RPC. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="ac6643937b7e5925d2c43dbb0e29c2248" name="ac6643937b7e5925d2c43dbb0e29c2248"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac6643937b7e5925d2c43dbb0e29c2248">&#9670;&#160;</a></span>ExecuteCommand()</h2>
+<a id="a70463bcf0ef311d6b4a4982c9f51f33e" name="a70463bcf0ef311d6b4a4982c9f51f33e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a70463bcf0ef311d6b4a4982c9f51f33e">&#9670;&#160;</a></span>ExecuteCommand()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -164,8 +164,8 @@ ServerContext&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;&#160;</td>
-          <td class="paramname"><em>dm</em>, </td>
+          <td class="paramtype">SlotMap &amp;&#160;</td>
+          <td class="paramname"><em>dms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -185,7 +185,7 @@ ServerContext&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">service</td><td>the service to which the command wll be executed </td></tr>
-    <tr><td class="paramname">dm</td><td>the device to execute the command to </td></tr>
+    <tr><td class="paramname">dms</td><td>A map of slots to ptrs to their corresponding device. </td></tr>
     <tr><td class="paramname">ok</td><td>flag to check if command was successfully executed </td></tr>
   </table>
   </dd>
