@@ -119,12 +119,15 @@ Public Types</h2></td></tr>
 <tr class="memitem:a8f6ee5ad8d4f23f283785d2b4351d8fd" id="r_a8f6ee5ad8d4f23f283785d2b4351d8fd"><td class="memItemLeft" align="right" valign="top"><a id="a8f6ee5ad8d4f23f283785d2b4351d8fd" name="a8f6ee5ad8d4f23f283785d2b4351d8fd"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>IDevice</b> = <a class="el" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a></td></tr>
 <tr class="separator:a8f6ee5ad8d4f23f283785d2b4351d8fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2181ae76fa06126dd6374f5cbbc573d" id="r_ad2181ae76fa06126dd6374f5cbbc573d"><td class="memItemLeft" align="right" valign="top"><a id="ad2181ae76fa06126dd6374f5cbbc573d" name="ad2181ae76fa06126dd6374f5cbbc573d"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>SlotMap</b> = catena::common::SlotMap</td></tr>
+<tr class="separator:ad2181ae76fa06126dd6374f5cbbc573d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ad4d237d6bb210d2e78263ecbc4f56625" id="r_ad4d237d6bb210d2e78263ecbc4f56625"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1LanguagePack.html#ad4d237d6bb210d2e78263ecbc4f56625">LanguagePack</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;context, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm)</td></tr>
-<tr class="memdesc:ad4d237d6bb210d2e78263ecbc4f56625"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1REST_1_1LanguagePack.html" title="ICallData class for the LanguagePack REST controller.">LanguagePack</a> controller.  <br /></td></tr>
-<tr class="separator:ad4d237d6bb210d2e78263ecbc4f56625"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa1a7004b513af79c6984db19b5ce11e4" id="r_aa1a7004b513af79c6984db19b5ce11e4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1LanguagePack.html#aa1a7004b513af79c6984db19b5ce11e4">LanguagePack</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;context, SlotMap &amp;dms)</td></tr>
+<tr class="memdesc:aa1a7004b513af79c6984db19b5ce11e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1REST_1_1LanguagePack.html" title="ICallData class for the LanguagePack REST controller.">LanguagePack</a> controller.  <br /></td></tr>
+<tr class="separator:aa1a7004b513af79c6984db19b5ce11e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3e4de6d392e27b195852e6ea27c20eac" id="r_a3e4de6d392e27b195852e6ea27c20eac"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1LanguagePack.html#a3e4de6d392e27b195852e6ea27c20eac">proceed</a> () override</td></tr>
 <tr class="memdesc:a3e4de6d392e27b195852e6ea27c20eac"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1REST_1_1LanguagePack.html" title="ICallData class for the LanguagePack REST controller.">LanguagePack</a>'s main processes.  <br /></td></tr>
 <tr class="separator:a3e4de6d392e27b195852e6ea27c20eac"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -134,9 +137,9 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:abbd812557638436d1cfd5c96592bff25" id="r_abbd812557638436d1cfd5c96592bff25"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1LanguagePack.html#abbd812557638436d1cfd5c96592bff25">makeOne</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;context, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm)</td></tr>
-<tr class="memdesc:abbd812557638436d1cfd5c96592bff25"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a new controller object for use with GenericFactory.  <br /></td></tr>
-<tr class="separator:abbd812557638436d1cfd5c96592bff25"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb56c776fc51f1b57d72841a136fe436" id="r_abb56c776fc51f1b57d72841a136fe436"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1LanguagePack.html#abb56c776fc51f1b57d72841a136fe436">makeOne</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;context, SlotMap &amp;dms)</td></tr>
+<tr class="memdesc:abb56c776fc51f1b57d72841a136fe436"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a new controller object for use with GenericFactory.  <br /></td></tr>
+<tr class="separator:abb56c776fc51f1b57d72841a136fe436"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
@@ -144,8 +147,8 @@ Additional Inherited Members</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classcatena_1_1REST_1_1ICallData.html" title="Interface class for REST API controllers.">ICallData</a> class for the <a class="el" href="classcatena_1_1REST_1_1LanguagePack.html" title="ICallData class for the LanguagePack REST controller.">LanguagePack</a> <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> controller. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="ad4d237d6bb210d2e78263ecbc4f56625" name="ad4d237d6bb210d2e78263ecbc4f56625"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad4d237d6bb210d2e78263ecbc4f56625">&#9670;&#160;</a></span>LanguagePack()</h2>
+<a id="aa1a7004b513af79c6984db19b5ce11e4" name="aa1a7004b513af79c6984db19b5ce11e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa1a7004b513af79c6984db19b5ce11e4">&#9670;&#160;</a></span>LanguagePack()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -165,8 +168,8 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;&#160;</td>
-          <td class="paramname"><em>dm</em>&#160;</td>
+          <td class="paramtype">SlotMap &amp;&#160;</td>
+          <td class="paramname"><em>dms</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -181,7 +184,7 @@ Additional Inherited Members</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">socket</td><td>The socket to write the response to. </td></tr>
     <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object. </td></tr>
-    <tr><td class="paramname">dm</td><td>The device to get the language pack from. </td></tr>
+    <tr><td class="paramname">dms</td><td>A map of slots to ptrs to their corresponding device. </td></tr>
   </table>
   </dd>
 </dl>
@@ -218,8 +221,8 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
-<a id="abbd812557638436d1cfd5c96592bff25" name="abbd812557638436d1cfd5c96592bff25"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abbd812557638436d1cfd5c96592bff25">&#9670;&#160;</a></span>makeOne()</h2>
+<a id="abb56c776fc51f1b57d72841a136fe436" name="abb56c776fc51f1b57d72841a136fe436"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abb56c776fc51f1b57d72841a136fe436">&#9670;&#160;</a></span>makeOne()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -242,8 +245,8 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;&#160;</td>
-          <td class="paramname"><em>dm</em>&#160;</td>
+          <td class="paramtype">SlotMap &amp;&#160;</td>
+          <td class="paramname"><em>dms</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -263,7 +266,7 @@ Additional Inherited Members</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">socket</td><td>The socket to write the response stream to. </td></tr>
     <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object. </td></tr>
-    <tr><td class="paramname">dm</td><td>The device to connect to. </td></tr>
+    <tr><td class="paramname">dms</td><td>A map of slots to ptrs to their corresponding device. </td></tr>
   </table>
   </dd>
 </dl>
