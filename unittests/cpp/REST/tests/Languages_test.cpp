@@ -47,10 +47,14 @@ using namespace catena::REST;
 // Fixture
 class RESTLanguagesTests : public RESTEndpointTest {
   protected:
+    RESTLanguagesTests() : RESTEndpointTest() {
+        // Default expectations for the device model 1 (should not be called).
+        EXPECT_CALL(dm1_, toProto(testing::An<catena::LanguageList&>())).Times(0);
+    }
     /*
      * Creates a Languages handler object.
      */
-    ICallData* makeOne() override { return Languages::makeOne(serverSocket_, context_, dm0_); }  
+    ICallData* makeOne() override { return Languages::makeOne(serverSocket_, context_, dms_); }  
 
     /*
      * Calls proceed and tests the response.
@@ -90,6 +94,18 @@ TEST_F(RESTLanguagesTests, Languages_Finish) {
 TEST_F(RESTLanguagesTests, Languages_BadMethod) {
     expRc_ = catena::exception_with_status("Bad method", catena::StatusCode::INVALID_ARGUMENT);
     method_ = Method_NONE;
+    // Setting expectations
+    EXPECT_CALL(dm0_, toProto(testing::An<catena::LanguageList&>())).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/* 
+ * TEST 0.3 - Languages proceed() with an invalid method.
+ */
+TEST_F(RESTLanguagesTests, Languages_InvalidSlot) {
+    slot_ = dms_.size();
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
     // Setting expectations
     EXPECT_CALL(dm0_, toProto(testing::An<catena::LanguageList&>())).Times(0);
     // Calling proceed and testing the output

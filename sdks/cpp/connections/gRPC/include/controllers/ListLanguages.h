@@ -54,10 +54,10 @@ class ListLanguages : public CallData {
      * Calls proceed() once initialized.
      *
      * @param service - Pointer to the parent CatenaServiceImpl.
-     * @param dm - Address of the device to get the value from.
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok - Flag to check if the command was successfully executed.
      */ 
-    ListLanguages(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    ListLanguages(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
     /**
      * @brief Manages the steps of the ListLanguages gRPC command through
      * the state variable status.
@@ -80,9 +80,9 @@ class ListLanguages : public CallData {
      */
     CallStatus status_;
     /**
-     * @brief The device containing the languages to list.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
     /**
      * @brief The object's unique id.
      */

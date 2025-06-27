@@ -66,15 +66,16 @@ class MultiSetValue : public ICallData {
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the MultiSetValue controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to set values on.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    MultiSetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    MultiSetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief MultiSetValue's main process.
      */
@@ -90,20 +91,20 @@ class MultiSetValue : public ICallData {
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new MultiSetValue(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new MultiSetValue(socket, context, dms);
     }
   protected:
     /**
      * @brief Constructor for child SetValue rest endpoints. Does not call proceed().
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to set the value(s) of.
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param objectId The object's unique id.
      */
-    MultiSetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm, int objectId);
+    MultiSetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms, int objectId);
     /**
      * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.
      * @returns True if successful.
@@ -135,9 +136,9 @@ class MultiSetValue : public ICallData {
      */
     SocketWriter writer_;
     /**
-     * @brief The device to set values of.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 
     /**
      * @brief The MultiSetValuePayload from the request.

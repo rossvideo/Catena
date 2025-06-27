@@ -101,11 +101,11 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
     /**
      * @brief Constructor for the CatenaServiceImpl class.
      * @param cq The completion queue for the server.
-     * @param dm The device to implement Catena services to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param EOPath The path to the external object.
      * @param authz Flag to enable authorization.
      */
-    CatenaServiceImpl(ServerCompletionQueue* cq, IDevice& dm, std::string& EOPath, bool authz);  
+    CatenaServiceImpl(ServerCompletionQueue* cq, std::vector<IDevice*> dms, std::string& EOPath, bool authz);  
     /**
      * @brief Creates the CallData objects for each gRPC command.
      */
@@ -163,9 +163,11 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      */
     ServerCompletionQueue* cq_; 
     /**
-     * @brief The device to implement Catena services to
+     * @brief A map of slots to ptrs to their corresponding device.
+     * 
+     * Devices are global objects so raw ptrs should be safe.
      */
-    IDevice& dm_;
+    SlotMap dms_;
     /**
      * @brief The path to the external object
      */

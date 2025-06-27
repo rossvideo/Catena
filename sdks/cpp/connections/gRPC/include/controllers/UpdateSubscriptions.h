@@ -57,10 +57,10 @@ class UpdateSubscriptions : public CallData {
      * @brief Constructor for the CallData class of the UpdateSubscriptions RPC
      * gRPC. Calls proceed() once initialized.
      * @param service The CatenaServiceImpl instance
-     * @param dm The device model
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok Flag indicating if initialization was successful
      */
-    UpdateSubscriptions(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    UpdateSubscriptions(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
 
     /**
      * @brief Manages the steps of the UpdateSubscriptions gRPC command
@@ -96,9 +96,13 @@ class UpdateSubscriptions : public CallData {
      */
     CallStatus status_;
     /**
-     * @brief The device to get the value from.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
+    /**
+     * @brief The device we are updating the subscriptions for.
+     */
+    IDevice* dm_ = nullptr;
     /**
      * @brief Shared ptr to the authorizer object so that we can maintain
      * ownership of raw ptr throughout call lifetime without use of "new"

@@ -50,7 +50,7 @@ class RESTGetPopulatedSlotsTests : public RESTEndpointTest {
     /*
      * Creates a GetPopulatedSlots handler object.
      */
-    ICallData* makeOne() override { return GetPopulatedSlots::makeOne(serverSocket_, context_, dm0_); }
+    ICallData* makeOne() override { return GetPopulatedSlots::makeOne(serverSocket_, context_, dms_); }
 
     /*
      * Calls proceed and tests the response.
@@ -92,18 +92,9 @@ TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_Finish) {
  * TEST 3 - Normal case for GetPopulatedSlots proceed().
  */
 TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_Normal) {
-    expVal_.add_slots(dm0_.slot());
-    // Calling proceed and testing the output
-    testCall();
-}
-
-/* 
- * TEST 4 - dm.slot() throws an error.
- */
-TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_proceedErr) {
-    expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
-    // Setting expectations
-    EXPECT_CALL(dm0_, slot()).Times(1).WillOnce(testing::Throw(std::runtime_error("Unknown error")));
+    for (auto& [slot, dm] : dms_) {
+        expVal_.add_slots(slot);
+    }
     // Calling proceed and testing the output
     testCall();
 }

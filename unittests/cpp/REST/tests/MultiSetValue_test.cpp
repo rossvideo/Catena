@@ -47,10 +47,16 @@ using namespace catena::REST;
 // Fixture
 class RESTMultiSetValueTests : public RESTEndpointTest {
   protected:
+    RESTMultiSetValueTests() : RESTEndpointTest() {
+        // Default expectations for the device model 1 (should not be called).
+        EXPECT_CALL(dm1_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(0);
+        EXPECT_CALL(dm1_, commitMultiSetValue(testing::_, testing::_)).Times(0);
+    }
+
     /*
      * Creates a MultiSetValue handler object.
      */
-    ICallData* makeOne() override { return MultiSetValue::makeOne(serverSocket_, context_, dm0_); }
+    ICallData* makeOne() override { return MultiSetValue::makeOne(serverSocket_, context_, dms_); }
 
     /*
      * Streamlines the creation of endpoint input. 
@@ -176,6 +182,21 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_AuthzInvalid) {
     jwsToken_ = "Bearer THIS SHOULD NOT PARSE";
     // Setting expectations
     EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 6 - No device in the specified slot.
+ */
+TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlot) {
+    initPayload(dms_.size(), {});
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     // Calling proceed and testing the output
     testCall();
 }

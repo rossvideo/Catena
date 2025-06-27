@@ -64,12 +64,16 @@ protected:
     /*
      * Creates a Connect handler object.
      */
-    ICallData* makeOne() override { return catena::REST::Connect::makeOne(serverSocket_, context_, dm0_); }
+    ICallData* makeOne() override { return catena::REST::Connect::makeOne(serverSocket_, context_, dms_); }
 
     // Helper function to build slot response
-    std::string buildSlotResponse(uint32_t slot) {
+    std::string buildSlotResponse() {
         catena::PushUpdates populatedSlots;
-        populatedSlots.set_slot(slot);
+        for (auto& [slot, dm] : dms_) {
+            if (dm) {
+                populatedSlots.mutable_slots_added()->add_slots(slot);
+            }
+        }
         std::string slotJson;
         google::protobuf::util::JsonPrintOptions options;
         auto status = google::protobuf::util::MessageToJsonString(populatedSlots, &slotJson, options);
@@ -142,7 +146,7 @@ TEST_F(RESTConnectTest, Connect_HandlesValidAuthz) {
                 "joxNTE2MjM5MDIyfQ.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ";
     authzEnabled_ = true;
 
-    std::string slotJson = buildSlotResponse(0);
+    std::string slotJson = buildSlotResponse();
 
     // Run proceed() in a separate thread since it blocks
     std::thread proceed_thread([this]() {
@@ -177,7 +181,7 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByServer) {
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
 
-    std::string slotJson = buildSlotResponse(0);
+    std::string slotJson = buildSlotResponse();
     std::string updateJson = buildParamUpdateResponse(0, paramOid_, "test_value");
 
     // Run proceed() in a separate thread since it blocks
@@ -215,7 +219,7 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByClient) {
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
 
-    std::string slotJson = buildSlotResponse(0);
+    std::string slotJson = buildSlotResponse();
     std::string updateJson = buildParamUpdateResponse(0, paramOid_, "test_value");
 
     // Run proceed() in a separate thread since it blocks
@@ -249,7 +253,7 @@ TEST_F(RESTConnectTest, Connect_HandlesLanguage) {
             (*pack.mutable_words())["greeting"] = "Hello";
         }));
 
-    std::string slotJson = buildSlotResponse(0);
+    std::string slotJson = buildSlotResponse();
     std::string updateJson = buildLanguagePackUpdateResponse(0, "English", {{"greeting", "Hello"}});
 
     // Run proceed() in a separate thread since it blocks

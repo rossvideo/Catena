@@ -69,15 +69,16 @@ class ParamInfoRequest : public ICallData {
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the ParamInfoRequest controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to get the parameter info from.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    ParamInfoRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    ParamInfoRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     
     /**
      * @brief ParamInfoRequest's main process.
@@ -94,10 +95,10 @@ class ParamInfoRequest : public ICallData {
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new ParamInfoRequest(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new ParamInfoRequest(socket, context, dms);
     }
     
     
@@ -147,9 +148,9 @@ class ParamInfoRequest : public ICallData {
     catena::exception_with_status rc_;
 
     /**
-     * @brief The device to get parameter info from.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 
     /**
      * @brief Whether to recursively get parameter info.

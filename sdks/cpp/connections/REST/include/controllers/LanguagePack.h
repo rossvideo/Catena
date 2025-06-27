@@ -64,15 +64,16 @@ class LanguagePack : public ICallData {
   public:
     // Specifying which Device to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the LanguagePack controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to get the language pack from.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    LanguagePack(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    LanguagePack(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief LanguagePack's main processes.
      */
@@ -88,10 +89,10 @@ class LanguagePack : public ICallData {
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new LanguagePack(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new LanguagePack(socket, context, dms);
     }
     
 
@@ -122,9 +123,9 @@ class LanguagePack : public ICallData {
      */
     SocketWriter writer_;
     /**
-     * @brief The device to get language pack from.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 
     /**
      * @brief ID of the LanguagePack object

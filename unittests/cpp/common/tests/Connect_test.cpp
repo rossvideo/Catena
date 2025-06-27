@@ -40,9 +40,9 @@ using namespace catena::common;
 
 // Test class that implements Connect for testing both interface and implementation
 class TestConnect : public Connect {
-public:
-    TestConnect(IDevice& dm, ISubscriptionManager& subscriptionManager) 
-        : Connect(dm, subscriptionManager) {}
+  public:
+    TestConnect(SlotMap& dms, ISubscriptionManager& subscriptionManager) 
+        : Connect(dms, subscriptionManager) {}
     
     bool isCancelled() override { return cancelled_; }
     void setCancelled(bool cancelled) { cancelled_ = cancelled; }
@@ -56,23 +56,15 @@ public:
     bool hasUpdate() const { return hasUpdate_; }
     const catena::PushUpdates& getResponse() const { return res_; }
 
-private:
+  private:
     bool cancelled_ = false;
 };
 
 // Fixture
 class CommonConnectTests : public ::testing::Test {
-protected:
+  protected:
     void SetUp() override {
-        connect = std::make_unique<TestConnect>(dm, subscriptionManager);
-        
-        // Common test data
-        // Using monitor token from Authorization_test.cpp 
-        monitorToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIiwiaWF0IjoxNTE2MjM5MDIyfQ.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ";
-        // Using operator token from Authorization_test.cpp (no monitor permissions)
-        operatorToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6b3AiLCJpYXQiOjE1MTYyMzkwMjJ9.lduNvr6tEaLFeIYR4bH5tC55WUSDBEe5PFz9rvGRD3o";
-        testOid = "/test/param";
-
+        connect = std::make_unique<TestConnect>(dms_, subscriptionManager);
         // Set detail level to FULL
         connect->detailLevel_ = catena::Device_DetailLevel_FULL;
     }
@@ -82,10 +74,18 @@ protected:
     }
 
     // Common test data
-    std::string monitorToken;
-    std::string operatorToken;
-    std::string testOid;
-    MockDevice dm;
+    std::string monitorToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiO"
+                               "iIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2N"
+                               "vcGUiOiJzdDIxMzg6bW9uIiwiaWF0IjoxNTE2MjM5MDIyf"
+                               "Q.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ";
+    std::string operatorToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIi"
+                                "OiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic"
+                                "2NvcGUiOiJzdDIxMzg6b3AiLCJpYXQiOjE1MTYyMzkwMj"
+                                "J9.lduNvr6tEaLFeIYR4bH5tC55WUSDBEe5PFz9rvGRD3o";
+    std::string testOid = "/test/param";
+    MockDevice dm0_;
+    MockDevice dm1_;
+    SlotMap dms_ = {{0, &dm0_}, {1, &dm1_}};
     MockSubscriptionManager subscriptionManager;
     std::unique_ptr<TestConnect> connect;
 
@@ -100,7 +100,7 @@ protected:
             }));
 
         // Setup detail level expectation
-        ON_CALL(dm, detail_level())
+        ON_CALL(dm0_, detail_level())
             .WillByDefault(::testing::Invoke([]() {
                 return catena::Device_DetailLevel_UNSET;
             }));
@@ -117,7 +117,7 @@ protected:
 
         // Setup subscription manager expectations
         static std::set<std::string> subscribed_set{testOid};
-        EXPECT_CALL(subscriptionManager, isSubscribed(::testing::_, ::testing::Ref(dm)))
+        EXPECT_CALL(subscriptionManager, isSubscribed(::testing::_, ::testing::Ref(dm0_)))
             .WillRepeatedly(::testing::Invoke([this](const std::string& oid, const IDevice&) {
                 return oid == testOid;
             }));
@@ -182,7 +182,7 @@ TEST_F(CommonConnectTests, updateResponseReadAuthzFails) {
     EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
         .Times(0);  // Should not be called since readAuthz will fail
     
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_FALSE(connect->hasUpdate());
 }
 
@@ -202,7 +202,7 @@ TEST_F(CommonConnectTests, updateResponseAuthzOff) {
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
     
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_TRUE(connect->hasUpdate());
 }
 
@@ -221,7 +221,7 @@ TEST_F(CommonConnectTests, updateResponseAuthzOnFails) {
             return catena::exception_with_status("Auth failed", catena::StatusCode::PERMISSION_DENIED);
         }));
     
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_FALSE(connect->hasUpdate());
 }
 
@@ -240,7 +240,7 @@ TEST_F(CommonConnectTests, updateResponseAuthzOnSucceeds) {
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
     
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_TRUE(connect->hasUpdate());
 }
 
@@ -252,7 +252,7 @@ TEST_F(CommonConnectTests, updateResponseLanguagePackAuthzOff) {
     // Test authorization disabled - should allow update
     connect->initAuthz_("", false);
     
-    connect->updateResponse_(languagePack.get());
+    connect->updateResponse_(languagePack.get(), 0);
     EXPECT_TRUE(connect->hasUpdate());
 }
 
@@ -264,7 +264,7 @@ TEST_F(CommonConnectTests, updateResponseLanguagePackAuthzOnFails) {
     // Test authorization enabled but fails - no monitor scope
     connect->initAuthz_(operatorToken, true);
     
-    connect->updateResponse_(languagePack.get());
+    connect->updateResponse_(languagePack.get(), 0);
     EXPECT_FALSE(connect->hasUpdate());
 }
 
@@ -276,7 +276,7 @@ TEST_F(CommonConnectTests, updateResponseLanguagePackAuthzOnSucceeds) {
     // Test authorization enabled and succeeds - with monitor scope
     connect->initAuthz_(monitorToken, true);
     
-    connect->updateResponse_(languagePack.get());
+    connect->updateResponse_(languagePack.get(), 0);
     EXPECT_TRUE(connect->hasUpdate());
 }
 
@@ -298,7 +298,7 @@ TEST_F(CommonConnectTests, updateResponseCancelled) {
     EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
         .Times(0);  // Should not be called since we cancelled
     
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_TRUE(connect->hasUpdate());  // Should be true even though toProto wasn't called
 }
 
@@ -310,7 +310,7 @@ TEST_F(CommonConnectTests, updateResponseLanguagePackCancelled) {
     // Set cancelled to true
     connect->setCancelled(true);
     
-    connect->updateResponse_(languagePack.get());
+    connect->updateResponse_(languagePack.get(), 0);
     EXPECT_TRUE(connect->hasUpdate());  // Should be true even though we didn't set language pack data
 }
 
@@ -335,20 +335,20 @@ TEST_F(CommonConnectTests, updateResponseLODFull) {
         }));
     
     // Test FULL detail level lambda - should always update regardless of other conditions
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_TRUE(connect->hasUpdate());
 
     // Verify that FULL updates even with non-minimal set
     EXPECT_CALL(descriptor, minimalSet())
         .WillRepeatedly(::testing::Return(false));
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_TRUE(connect->hasUpdate());
 
     // Verify that FULL updates even when not subscribed
     static std::set<std::string> empty_set;
-    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
+    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm0_)))
         .WillRepeatedly(::testing::Return(empty_set));
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_TRUE(connect->hasUpdate());
 }
 
@@ -372,14 +372,14 @@ TEST_F(CommonConnectTests, updateResponseLODMinimalwMinimalSet) {
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
     
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_TRUE(connect->hasUpdate());
 
     // Verify that MINIMAL updates even when not subscribed
     static std::set<std::string> empty_set;
-    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
+    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm0_)))
         .WillRepeatedly(::testing::Return(empty_set));
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_TRUE(connect->hasUpdate());
 }
 
@@ -401,11 +401,11 @@ TEST_F(CommonConnectTests, updateResponseLODMinimalNoMinimalSet) {
     EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
         .Times(0);  // Should not be called since not in minimal set
     
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_FALSE(connect->hasUpdate());
 
     // Verify that MINIMAL doesn't update even when subscribed
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_FALSE(connect->hasUpdate());
 }
 
@@ -430,16 +430,16 @@ TEST_F(CommonConnectTests, updateResponseLODSubscriptionsSubscribedOid) {
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
     
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_TRUE(connect->hasUpdate());
 
     // Verify that SUBSCRIPTIONS updates when in minimal set
     EXPECT_CALL(descriptor, minimalSet())
         .WillRepeatedly(::testing::Return(true));
     static std::set<std::string> empty_set;
-    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
+    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm0_)))
         .WillRepeatedly(::testing::Return(empty_set));
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_TRUE(connect->hasUpdate());
 }
 
@@ -457,14 +457,14 @@ TEST_F(CommonConnectTests, updateResponseLODSubscriptionsUnsubscribedOid) {
     EXPECT_CALL(descriptor, minimalSet())
         .WillRepeatedly(::testing::Return(false));
     static std::set<std::string> empty_set;
-    EXPECT_CALL(subscriptionManager, isSubscribed(::testing::_, ::testing::Ref(dm)))
+    EXPECT_CALL(subscriptionManager, isSubscribed(::testing::_, ::testing::Ref(dm0_)))
         .WillRepeatedly(::testing::Return(false));
 
     // Setup param toProto to succeed (but it shouldn't be called)
     EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
         .Times(0);  // Should not be called since not subscribed and not in minimal set
     
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_FALSE(connect->hasUpdate());
 }
 
@@ -489,16 +489,16 @@ TEST_F(CommonConnectTests, updateResponseLODCommandsCommandParam) {
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
     
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_TRUE(connect->hasUpdate());
 
     // Verify that COMMANDS updates regardless of minimal set or subscription status
     EXPECT_CALL(descriptor, minimalSet())
         .WillRepeatedly(::testing::Return(false));
     static std::set<std::string> empty_set;
-    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
+    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm0_)))
         .WillRepeatedly(::testing::Return(empty_set));
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_TRUE(connect->hasUpdate());
 }
 
@@ -520,13 +520,13 @@ TEST_F(CommonConnectTests, updateResponseLODCommandsNonCommandParam) {
     EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
         .Times(0);  // Should not be called since not a command
     
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_FALSE(connect->hasUpdate());
 
     // Verify that COMMANDS doesn't update even when in minimal set or subscribed
     EXPECT_CALL(descriptor, minimalSet())
         .WillRepeatedly(::testing::Return(true));;
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_FALSE(connect->hasUpdate());
 }
 
@@ -544,7 +544,7 @@ TEST_F(CommonConnectTests, updateResponseLODNone) {
     EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
         .Times(0);  // Should not be called since detail level is NONE
     
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_FALSE(connect->hasUpdate());
 
     // Verify that NONE doesn't update even with all conditions met
@@ -552,7 +552,7 @@ TEST_F(CommonConnectTests, updateResponseLODNone) {
         .WillRepeatedly(::testing::Return(true));
     EXPECT_CALL(descriptor, isCommand())
         .WillRepeatedly(::testing::Return(true));
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_FALSE(connect->hasUpdate());
 }
 
@@ -572,7 +572,7 @@ TEST_F(CommonConnectTests, updateResponseLODUnset) {
     EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
         .Times(0);  // Should not be called since detail level is UNSET
     
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_FALSE(connect->hasUpdate());
 
     // Verify that UNSET doesn't update even with all conditions met
@@ -580,7 +580,7 @@ TEST_F(CommonConnectTests, updateResponseLODUnset) {
         .WillRepeatedly(::testing::Return(true));
     EXPECT_CALL(descriptor, isCommand())
         .WillRepeatedly(::testing::Return(true));
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_FALSE(connect->hasUpdate());
 }
 
@@ -601,7 +601,7 @@ TEST_F(CommonConnectTests, updateResponseExceptionParamToProto) {
             throw catena::exception_with_status("Test exception", catena::StatusCode::INTERNAL);
         }));
 
-    connect->updateResponse_(testOid, &param);
+    connect->updateResponse_(testOid, &param, 0);
     EXPECT_FALSE(connect->hasUpdate());
 }
 
@@ -617,10 +617,9 @@ TEST_F(CommonConnectTests, updateResponseLanguagePacktoProto) {
         }));
     
     // Create a test connect instance
-    auto testConnect = std::make_unique<TestConnect>(dm, subscriptionManager);
-    testConnect->initAuthz_(monitorToken, true);
+    connect->initAuthz_(monitorToken, true);
     
-    testConnect->updateResponse_(languagePack.get());
-    EXPECT_FALSE(testConnect->hasUpdate());
+    connect->updateResponse_(languagePack.get(), 0);
+    EXPECT_FALSE(connect->hasUpdate());
 }
 
