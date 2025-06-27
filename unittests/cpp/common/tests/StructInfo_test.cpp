@@ -617,10 +617,41 @@ TEST_F(StructInfoTest, VariantStructToProto) {
     EXPECT_EQ(val_.struct_variant_value().struct_variant_type(), variantType);
     EXPECT_EQ(val_.struct_variant_value().value().struct_value().fields().at("f1").float32_value(), std::get<TestStruct2>(src).f1);
     EXPECT_EQ(val_.struct_variant_value().value().struct_value().fields().at("f2").float32_value(), std::get<TestStruct2>(src).f2);
-
-    // std::visit([&](auto& arg){
-    //     EXPECT_EQ(val_.struct_variant_value().value().struct_value().fields().at("f1").float32_value(), arg.f1);
-    //     EXPECT_EQ(val_.struct_variant_value().value().struct_value().fields().at("f2").float32_value(), arg.f2);
-    // }, src);
 }
 
+/* ============================================================================
+ *                           VARIANT STRUCT ARRAY
+ * ============================================================================
+ * 
+ * 
+ */
+TEST_F(StructInfoTest, VariantStructArrayToProto) {
+    std::vector<TestVariantStruct> src = {
+        TestStruct1{.f1{1}, .f2{2}},
+        TestStruct2{.f1{3.3}, .f2{4.4}},
+        TestStruct1{.f1{5}, .f2{6}}
+    };
+    for (auto& testStruct : src) {
+        std::string variantType = alternativeNames<TestVariantStruct>[testStruct.index()];
+        EXPECT_CALL(pd_, getSubParam(variantType)).WillRepeatedly(::testing::ReturnRef(pd_));
+    }
+    for (auto& [field, subPd] : subParams_) {
+        EXPECT_CALL(pd_, getSubParam(field)).WillRepeatedly(::testing::ReturnRef(subPd));
+        EXPECT_CALL(subPd, getScope()).WillRepeatedly(testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
+    }
+    toProto(val_, &src, pd_, Authorizer::kAuthzDisabled);
+    EXPECT_EQ(val_.struct_variant_array_values().struct_variants_size(), src.size());
+    for (size_t i = 0; i < src.size(); i += 1) {
+        auto& testStruct = src[i];
+        std::string variantType = alternativeNames<TestVariantStruct>[testStruct.index()];
+        auto structProto = val_.struct_variant_array_values().struct_variants().at(i);
+        EXPECT_EQ(structProto.struct_variant_type(), variantType);
+        if (variantType == "TestStruct1") {
+            EXPECT_EQ(structProto.value().struct_value().fields().at("f1").int32_value(), std::get<TestStruct1>(testStruct).f1);
+            EXPECT_EQ(structProto.value().struct_value().fields().at("f2").int32_value(), std::get<TestStruct1>(testStruct).f2);
+        } else {
+            EXPECT_EQ(structProto.value().struct_value().fields().at("f1").float32_value(), std::get<TestStruct2>(testStruct).f1);
+            EXPECT_EQ(structProto.value().struct_value().fields().at("f2").float32_value(), std::get<TestStruct2>(testStruct).f2);
+        }
+    }
+}
