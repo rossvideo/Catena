@@ -50,6 +50,7 @@ class SetValue : public MultiSetValue {
   // Specifying which Device and IParam to use (defaults to catena::...)
   using IDevice = catena::common::IDevice;
   using IParam = catena::common::IParam;
+  using SlotMap = catena::common::SlotMap;
 
   public:
     /**
@@ -57,18 +58,18 @@ class SetValue : public MultiSetValue {
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to set the value in.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    SetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    SetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief Creates a new rest object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new SetValue(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new SetValue(socket, context, dms);
     }
   private:
     /**

@@ -35,27 +35,13 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-// gtest
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-// std
-#include <string>
-
-// protobuf
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 // Test helpers
 #include "RESTTest.h"
-#include "MockSocketReader.h"
 #include "MockParam.h"
-#include "MockDevice.h"
 #include "MockSubscriptionManager.h"
 
 // REST
 #include "controllers/Subscriptions.h"
-#include "SocketWriter.h"
 
 using namespace catena::common;
 using namespace catena::REST;
@@ -71,6 +57,9 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
         EXPECT_CALL(context_, getSubscriptionManager()).WillRepeatedly(testing::ReturnRef(subManager_));
         // Default expectations for device model.
         EXPECT_CALL(dm0_, subscriptions()).WillRepeatedly(testing::Return(true));
+        // Default expectations for device model 1 (do not call).
+        EXPECT_CALL(dm1_, subscriptions()).Times(0);
+        EXPECT_CALL(dm1_, getParam(testing::An<const std::string&>(), testing::_, testing::_)).Times(0);
         // Default expectations for sub manager.
         EXPECT_CALL(subManager_, getAllSubscribedOids(testing::_))
             .WillRepeatedly(testing::Invoke([this](const catena::common::IDevice &dm){
@@ -128,7 +117,7 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
     /*
      * Creates a Subscriptions handler object.
      */
-    ICallData* makeOne() override { return Subscriptions::makeOne(serverSocket_, context_, dm0_); }
+    ICallData* makeOne() override { return Subscriptions::makeOne(serverSocket_, context_, dms_); }
 
     /*
      * Streamlines the creation of endpoint_ input. 
@@ -241,6 +230,17 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_BadMethod) {
     testCall();
 }
 
+/* 
+ * TEST 0.6 - Subscriptions with an invalid slot.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_InvalidSlot) {
+    initPayload(dms_.size());
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations.
+    EXPECT_CALL(context_, getSubscriptionManager()).Times(0); // Should not call.
+    // Calling proceed and testing the output
+    testCall();
+}
 
 /*
  * ============================================================================

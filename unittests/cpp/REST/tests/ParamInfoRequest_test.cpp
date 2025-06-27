@@ -52,12 +52,15 @@ class RESTParamInfoRequestTests : public RESTEndpointTest {
 protected:
     RESTParamInfoRequestTests() : RESTEndpointTest() {
         EXPECT_CALL(context_, hasField("recursive")).WillRepeatedly(testing::Return(false));
+        // Default expectations for the device model 1 (should not be called).
+        EXPECT_CALL(dm1_, getParam(fqoid_, testing::_, testing::_)).Times(0);
+        EXPECT_CALL(dm1_, getTopLevelParams(testing::_, testing::_)).Times(0);
     }
 
     /*
      * Creates a ParamInfoRequest handler object.
      */
-    ICallData* makeOne() override { return ParamInfoRequest::makeOne(serverSocket_, context_, dm0_); }
+    ICallData* makeOne() override { return ParamInfoRequest::makeOne(serverSocket_, context_, dms_); }
 
     // Helper method to setup parameter hierarchy
     struct ParamHierarchy {
@@ -117,6 +120,18 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_AuthzInvalid) {
     expRc_ = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
     jwsToken_ = "test_token";
     authzEnabled_ = true;
+
+    endpoint_->proceed();
+    endpoint_->finish();
+
+    // Match expected and actual responses
+    EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
+}
+
+// Test 0.3: Authorization test with invalid slot
+TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_InvalidSlot) {
+    slot_ = dms_.size();
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
 
     endpoint_->proceed();
     endpoint_->finish();

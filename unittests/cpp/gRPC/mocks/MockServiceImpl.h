@@ -29,26 +29,23 @@
  */
 
 /**
- * @brief A collection of mock classes used across the gRPC tests.
+ * @brief Mock implementation for the gRPC ICatenaServiceImpl class.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/22
+ * @date 25/06/26
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
 
 #include <gmock/gmock.h>
-#include <grpcpp/grpcpp.h>
-
-// common
-#include <ISubscriptionManager.h>
-
-// gRPC
-#include "interface/IServiceImpl.h"
+#include <interface/IServiceImpl.h>
 
 using namespace catena::common;
-using namespace catena::gRPC;
 
+namespace catena {
+namespace gRPC {
+
+// Mock implementation for the gRPC ICatenaServiceImpl class.
 class MockServiceImpl : public ICatenaServiceImpl {
   public:
     MOCK_METHOD(void, init, (), (override));
@@ -61,3 +58,6 @@ class MockServiceImpl : public ICatenaServiceImpl {
     MOCK_METHOD(void, registerItem, (ICallData* cd), (override));
     MOCK_METHOD(void, deregisterItem, (ICallData* cd), (override));
 };
+
+} // namespace gRPC
+} // namespace catena

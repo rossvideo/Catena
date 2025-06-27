@@ -71,13 +71,13 @@ class Connect : public IConnect {
     Connect() = delete;
     /**
      * @brief Constructor for the Connect class.
-     * @param dm The device manager.
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param authz true if authorization is enabled, false otherwise.
      * @param jwsToken The client's JWS token.
      * @param subscriptionManager The subscription manager.
      */
-    Connect(IDevice& dm, ISubscriptionManager& subscriptionManager) : 
-        dm_{dm}, 
+    Connect(SlotMap& dms, ISubscriptionManager& subscriptionManager) : 
+        dms_{dms}, 
         subscriptionManager_{subscriptionManager},
         detailLevel_{catena::Device_DetailLevel_UNSET} {
     }
@@ -105,65 +105,52 @@ class Connect : public IConnect {
      * @param oid - The OID of the value to update
      * @param p - The parameter to update
      */
-    void updateResponse_(const std::string& oid, const IParam* p) override {
+    void updateResponse_(const std::string& oid, const IParam* p, uint32_t slot) override {
         try {
             // If Connect was cancelled, notify client and end process
-            if (this->isCancelled()) {
-                this->hasUpdate_ = true;
-                this->cv_.notify_one();
-                return;
-            }
+            if (isCancelled()) {
+                hasUpdate_ = true;
+                cv_.notify_one();
 
-            if (this->authz_ != &catena::common::Authorizer::kAuthzDisabled && !this->authz_->readAuthz(*p)) {
-                return;
-            }
+            } else if (authz_ == &catena::common::Authorizer::kAuthzDisabled || authz_->readAuthz(*p)) {
+                // Map of detail levels to their update logic
+                const std::unordered_map<catena::Device_DetailLevel, std::function<bool()>> detailLevelMap {
+                    {catena::Device_DetailLevel_FULL, [&]() {
+                        // Always update for FULL detail level
+                        return true;
+                    }},
+                    {catena::Device_DetailLevel_MINIMAL, [&]() {
+                        // For MINIMAL, only update if it's in the minimal set
+                        return p->getDescriptor().minimalSet();
+                    }},
+                    {catena::Device_DetailLevel_SUBSCRIPTIONS, [&]() {
+                        // Update if OID is subscribed or in minimal set
+                        return p->getDescriptor().minimalSet() || (dms_[slot] && subscriptionManager_.isSubscribed(oid, *dms_[slot]));
+                    }},
+                    {catena::Device_DetailLevel_COMMANDS, [&]() {
+                        // For COMMANDS, only update command parameters
+                        return p->getDescriptor().isCommand();
+                    }},
+                    {catena::Device_DetailLevel_NONE, [&]() {
+                        // Don't send any updates
+                        return false;
+                    }}
+                };
 
-            // Check if we should process this update based on detail level
-            bool should_update = false;
+                if (detailLevelMap.contains(detailLevel_) && detailLevelMap.at(detailLevel_)()) {
+                    res_.Clear();
+                    res_.set_slot(slot);
+                    res_.mutable_value()->set_oid(oid);    
+                    catena::Value* value = res_.mutable_value()->mutable_value();
             
-            // Map of detail levels to their update logic
-            const std::unordered_map<catena::Device_DetailLevel, std::function<void()>> detailLevelMap {
-                {catena::Device_DetailLevel_FULL, [&]() {
-                    // Always update for FULL detail level
-                    should_update = true;
-                }},
-                {catena::Device_DetailLevel_MINIMAL, [&]() {
-                    // For MINIMAL, only update if it's in the minimal set
-                    should_update = p->getDescriptor().minimalSet();
-                }},
-                {catena::Device_DetailLevel_SUBSCRIPTIONS, [&]() {
-                    // Update if OID is subscribed or in minimal set
-                    should_update = p->getDescriptor().minimalSet() || subscriptionManager_.isSubscribed(oid, dm_);
-                }},
-                {catena::Device_DetailLevel_COMMANDS, [&]() {
-                    // For COMMANDS, only update command parameters
-                    should_update = p->getDescriptor().isCommand();
-                }},
-                {catena::Device_DetailLevel_NONE, [&]() {
-                    // Don't send any updates
-                    should_update = false;
-                }}
-            };
-
-            if (detailLevelMap.contains(this->detailLevel_)) {
-                detailLevelMap.at(this->detailLevel_)();
-            } else {
-                should_update = false;
-            }
-    
-            if (!should_update) {
-                return;
-            }
-
-            this->res_.mutable_value()->set_oid(oid);    
-            catena::Value* value = this->res_.mutable_value()->mutable_value();
-    
-            catena::exception_with_status rc{"", catena::StatusCode::OK};
-            rc = p->toProto(*value, *authz_);
-            //If the param conversion was successful, send the update
-            if (rc.status == catena::StatusCode::OK) {
-                this->hasUpdate_ = true;
-                this->cv_.notify_one();
+                    catena::exception_with_status rc{"", catena::StatusCode::OK};
+                    rc = p->toProto(*value, *authz_);
+                    //If the param conversion was successful, send the update
+                    if (rc.status == catena::StatusCode::OK) {
+                        hasUpdate_ = true;
+                        cv_.notify_one();
+                    }
+                }
             }
         } catch(catena::exception_with_status& why) {
             // if an error is thrown, no update is pushed to the client
@@ -176,24 +163,25 @@ class Connect : public IConnect {
      * 
      * @param l The added ILanguagePack emitted by device.
      */
-    void updateResponse_(const ILanguagePack* l) override {
+    void updateResponse_(const ILanguagePack* l, uint32_t slot) override {
         try {
             // If Connect was cancelled, notify client and end process.
-            if (this->isCancelled()){
-                this->hasUpdate_ = true;
-                this->cv_.notify_one();
+            if (isCancelled()){
+                hasUpdate_ = true;
+                cv_.notify_one();
                 return;
             }
             // Returning if authorization is enabled and the client does not have monitor scope.
-            if (this->authz_ != &catena::common::Authorizer::kAuthzDisabled
-                && !this->authz_->hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
+            if (authz_ != &catena::common::Authorizer::kAuthzDisabled
+                && !authz_->hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
                 return;
             }
             // Updating res_'s device_component and pushing update.
-            auto pack = this->res_.mutable_device_component()->mutable_language_pack();
+            res_.set_slot(slot);
+            auto pack = res_.mutable_device_component()->mutable_language_pack();
             l->toProto(*pack->mutable_language_pack());
-            this->hasUpdate_ = true;
-            this->cv_.notify_one();
+            hasUpdate_ = true;
+            cv_.notify_one();
         } catch(catena::exception_with_status& why){
             // if an error is thrown, no update is pushed to the client
         }
@@ -222,9 +210,9 @@ class Connect : public IConnect {
      */
     catena::common::Authorizer* authz_;
     /**
-     * @brief The connected device.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
     /**
      * @brief Bool indicating whether the child has an update to write.
      */

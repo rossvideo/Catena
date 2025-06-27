@@ -65,15 +65,19 @@ using boost::asio::ip::tcp;
 #include "interface/ICallData.h"
 
 using namespace catena::common;
-using namespace catena::REST;
+
+namespace catena {
+namespace REST {
 
 /*
- * RESTTest class inherited by test fixtures to provide functions for
- * writing, reading, and verifying requests and responses.
+ * Surface level RESTTest class inherited by test fixtures to provide functions
+ * for writing, reading, and verifying requests and responses.
  */
 class RESTTest {
   protected:
-    // Constructor to connecting sockets (write(in) -> read(out)).
+    /*
+     * Connects sockets (write(in) -> read(out)).
+     */
     RESTTest(tcp::socket* in, tcp::socket* out) : writeSocket_(in), readSocket_(out) {
         // Neither can be nullptr.
         if (!writeSocket_ || !readSocket_) {
@@ -84,7 +88,10 @@ class RESTTest {
         acceptor_.accept(*writeSocket_);
     }
 
-    // Writes a request to the writeSocket_ which can later be read by SocketReader.
+    /*
+     * Writes a request to the writeSocket_ which can later be read by
+     * SocketReader.
+     */
     void writeRequest(catena::REST::RESTMethod method,
                       uint32_t slot,
                       const std::string& endpoint,
@@ -140,9 +147,12 @@ class RESTTest {
         boost::asio::write(*writeSocket_, boost::asio::buffer(request));
     }
 
-    // Returns whatever has been writen to the readSocket_..
-    // *Note: This only reads a limited amount of data (up to 4096 bytes). This
-    // suffices for testing, mostly because I don't feel like making it dynamic.
+    /*
+     * Returns whatever has been writen to the readSocket_..
+     *
+     * Note: This only reads a limited amount of data (up to 4096 bytes). This
+     * suffices for testing because I don't feel like making it dynamic.
+     */
     std::string readResponse() {
         boost::asio::streambuf buffer;
         boost::asio::read_until(*readSocket_, buffer, "\r\n\r\n");
@@ -150,7 +160,9 @@ class RESTTest {
         return std::string(std::istreambuf_iterator<char>(response_stream), std::istreambuf_iterator<char>());
     }
 
-    // Returns what an expect response from SocketWriter should look like.
+    /*
+     * Returns what an expect response from SocketWriter should look like.
+     */
     inline std::string expectedResponse(const catena::exception_with_status& rc, const std::string& jsonBody = "") {
         http_exception_with_status httpStatus = codeMap_.at(rc.status);
         return "HTTP/1.1 " + std::to_string(httpStatus.first) + " " + httpStatus.second + "\r\n"
@@ -164,7 +176,10 @@ class RESTTest {
                jsonBody;
     }
 
-    // Returns what an expect response from SocketWriter with buffer=true should look like.
+    /*
+     * Returns what an expect response from SocketWriter with buffer == true
+     * should look like.
+     */
     inline std::string expectedResponse(const catena::exception_with_status& rc, const std::vector<std::string>& msgs) {
         // Compiling body response from messages.
         std::string jsonBody = "";
@@ -181,7 +196,9 @@ class RESTTest {
         return expectedResponse(rc, jsonBody);
     }
 
-    // Returns what an expect response from SSEWriter should look like.
+    /*
+     *Returns what an expect response from SSEWriter should look like.
+     */
     inline std::string expectedSSEResponse(const catena::exception_with_status& rc, const std::vector<std::string>& msgs = {}) {
         http_exception_with_status httpStatus = codeMap_.at(rc.status);
         // Compiling body response from messages.
@@ -202,14 +219,15 @@ class RESTTest {
                jsonBody;
     }
 
-    // Debug helper to check socket status
+    /*
+     * Debug helper to check socket status
+     */
     std::string getSocketStatus() const {
         return "available: " + std::to_string(readSocket_->available()) + 
                ", open: " + std::to_string(readSocket_->is_open());
     }
 
     std::string origin_ = "*";
-
     // Read/write helper variables.
     boost::asio::io_context io_context_;
     tcp::socket clientSocket_{io_context_};
@@ -221,6 +239,11 @@ class RESTTest {
     tcp::socket* readSocket_ = nullptr;
 };
 
+/*
+ * In depth RESTTest class inherited by endpoint test fixtures to provide 
+ * uniform variable names, uniform endpoint creation, and functions for
+ * writing, reading, and verifying requests and responses.
+ */
 class RESTEndpointTest : public ::testing::Test, public RESTTest {
   protected:
     /*
@@ -269,7 +292,6 @@ class RESTEndpointTest : public ::testing::Test, public RESTTest {
     // Cout variables
     std::stringstream MockConsole_;
     std::streambuf* oldCout_;
-
     // in/out val
     catena::REST::RESTMethod method_ = Method_GET;
     uint32_t slot_ = 0;
@@ -280,12 +302,15 @@ class RESTEndpointTest : public ::testing::Test, public RESTTest {
     std::string jwsToken_ = "";
     // Expected variables
     catena::exception_with_status expRc_{"", catena::StatusCode::OK};
-
     // Mock objects and endpoint.
     MockSocketReader context_;
     std::mutex mtx0_;
     std::mutex mtx1_;
     MockDevice dm0_;
     MockDevice dm1_;
+    SlotMap dms_ = {{0, &dm0_}, {1, &dm1_}};
     std::unique_ptr<ICallData> endpoint_;
 };
+
+} // namespace REST
+} // namespace catena

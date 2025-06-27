@@ -294,7 +294,7 @@ void RunRESTServer() {
         uint16_t port = absl::GetFlag(FLAGS_port);
 
         // Creating and running the REST service.
-        CatenaServiceImpl api(dm, EOPath, authorization, port);
+        CatenaServiceImpl api({&dm}, EOPath, authorization, port);
         globalApi = &api;
         std::cout << "API Version: " << api.version() << std::endl;
         std::cout << "REST on 0.0.0.0:" << port << std::endl;

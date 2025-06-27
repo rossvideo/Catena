@@ -54,27 +54,24 @@ using boost::asio::ip::tcp;
 namespace catena {
 namespace REST {
 
-using catena::common::IParam;
-using catena::common::IDevice;
-using catena::common::timeNow;
-
 /**
  * @brief ICallData class for the ExecuteCommand REST controller.
  */
 class ExecuteCommand : public ICallData {
   public:
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-        return new ExecuteCommand(socket, context, dm);
-    }
+    // Specifying which Device and IParam to use (defaults to catena::...)
+    using IDevice = catena::common::IDevice;
+    using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the ExecuteCommand controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to execute the command on.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    ExecuteCommand(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    ExecuteCommand(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     
     /**
      * @brief ExecuteCommand's main process.
@@ -91,13 +88,11 @@ class ExecuteCommand : public ICallData {
      * 
      * @param socket The socket to write the response stream to.
      * @param context The SocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
-      return new ExecuteCommand(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new ExecuteCommand(socket, context, dms);
     }
-    
-
 
   private:
       /**
@@ -107,7 +102,7 @@ class ExecuteCommand : public ICallData {
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << "ExecuteCommand::proceed[" << objectId_ << "]: "
-                << timeNow() << " status: "<< static_cast<int>(status)
+                << catena::common::timeNow() << " status: "<< static_cast<int>(status)
                 <<", ok: "<< std::boolalpha << ok << std::endl;
     }
     /**
@@ -131,9 +126,9 @@ class ExecuteCommand : public ICallData {
      */
     ISocketReader& context_;
     /**
-     * @brief The device to connect to.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 };
 
 } // namespace REST

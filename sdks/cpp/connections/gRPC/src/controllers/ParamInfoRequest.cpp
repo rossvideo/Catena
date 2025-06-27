@@ -34,8 +34,8 @@ using catena::gRPC::ParamInfoRequest;
 
 int ParamInfoRequest::objectCounter_ = 0;
 
-ParamInfoRequest::ParamInfoRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : CallData(service), dm_{dm}, writer_(&context_),
+ParamInfoRequest::ParamInfoRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+    : CallData(service), dms_{dms}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);
     objectId_ = objectCounter_++;
@@ -62,7 +62,7 @@ void ParamInfoRequest::proceed(bool ok) {
 
         case CallStatus::kProcess:
 
-            new ParamInfoRequest(service_, dm_, ok);
+            new ParamInfoRequest(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
             
             try {
@@ -70,6 +70,16 @@ void ParamInfoRequest::proceed(bool ok) {
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 std::shared_ptr<Authorizer> sharedAuthz;
                 Authorizer* authz;
+                IDevice* dm = nullptr;
+                // Getting device at specified slot.
+                if (dms_.contains(req_.slot())) {
+                    dm = dms_.at(req_.slot());
+                }
+                // Making sure the device exists.
+                if (!dm) {
+                    throw catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
+                }
+
                 if (service_->authorizationEnabled()) {
                     sharedAuthz = std::make_shared<Authorizer>(jwsToken_());
                     authz = sharedAuthz.get();
@@ -82,12 +92,12 @@ void ParamInfoRequest::proceed(bool ok) {
                     std::vector<std::unique_ptr<IParam>> top_level_params;
 
                     {
-                    std::lock_guard lg(dm_.mutex());
-                    top_level_params = dm_.getTopLevelParams(rc, *authz);
+                    std::lock_guard lg(dm->mutex());
+                    top_level_params = dm->getTopLevelParams(rc, *authz);
                     }
 
                     if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
-                        std::lock_guard lg(dm_.mutex());                    
+                        std::lock_guard lg(dm->mutex());                    
                         responses_.clear();  
                         // Process each top-level parameter
                         for (auto& top_level_param : top_level_params) {
@@ -113,8 +123,8 @@ void ParamInfoRequest::proceed(bool ok) {
                 // Mode 2: Get a specific parameter and its children
                 } else if (!req_.oid_prefix().empty()) { 
                     {
-                    std::lock_guard lg(dm_.mutex());
-                    param = dm_.getParam(req_.oid_prefix(), rc, *authz);
+                    std::lock_guard lg(dm->mutex());
+                    param = dm->getParam(req_.oid_prefix(), rc, *authz);
                     }
 
                     if (rc.status == catena::StatusCode::OK && param) {
@@ -134,8 +144,8 @@ void ParamInfoRequest::proceed(bool ok) {
                         
                         // If recursive is true, collect all parameter info recursively through visitor pattern
                         if (req_.recursive()) {
-                            ParamInfoVisitor visitor(dm_, *authz, responses_, *this);
-                            ParamVisitor::traverseParams(param.get(), req_.oid_prefix(), dm_, visitor);
+                            ParamInfoVisitor visitor(*dm, *authz, responses_, *this);
+                            ParamVisitor::traverseParams(param.get(), req_.oid_prefix(), *dm, visitor);
                         }
 
                         // Begin writing responses back to the client
@@ -153,12 +163,12 @@ void ParamInfoRequest::proceed(bool ok) {
                     std::vector<std::unique_ptr<IParam>> top_level_params;
 
                     {
-                        std::lock_guard lg(dm_.mutex());
-                        top_level_params = dm_.getTopLevelParams(rc, *authz);
+                        std::lock_guard lg(dm->mutex());
+                        top_level_params = dm->getTopLevelParams(rc, *authz);
                     }
 
                     if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
-                        std::lock_guard lg(dm_.mutex());                     
+                        std::lock_guard lg(dm->mutex());                     
                         responses_.clear();  
                         // Process each top-level parameter recursively
                         for (auto& top_level_param : top_level_params) {
@@ -173,8 +183,8 @@ void ParamInfoRequest::proceed(bool ok) {
                             }
                             
                             // Collect all parameter info recursively through visitor pattern
-                            ParamInfoVisitor visitor(dm_, *authz, responses_, *this);
-                            ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), dm_, visitor);
+                            ParamInfoVisitor visitor(*dm, *authz, responses_, *this);
+                            ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), *dm, visitor);
                         }
                         
                         // Begin writing responses back to the client
