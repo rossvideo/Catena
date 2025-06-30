@@ -71,7 +71,8 @@ class ParamHierarchyBuilder {
 public:
     struct DescriptorInfo {
         std::shared_ptr<MockParamDescriptor> descriptor;
-        std::unordered_map<std::string, IParamDescriptor*> subParams;
+        std::shared_ptr<std::unordered_map<std::string, IParamDescriptor*>> subParams;
+        DescriptorInfo() : subParams(std::make_shared<std::unordered_map<std::string, IParamDescriptor*>>()) {}
     };
 
     /**
@@ -85,7 +86,7 @@ public:
         EXPECT_CALL(*info.descriptor, getOid())
             .WillRepeatedly(::testing::ReturnRef(oid));
         EXPECT_CALL(*info.descriptor, getAllSubParams())
-            .WillRepeatedly(::testing::ReturnRef(info.subParams));
+            .WillRepeatedly(::testing::ReturnRef(*info.subParams));
         return info;
     }
 
@@ -96,7 +97,7 @@ public:
      * @param child The child descriptor
      */
     static void addChild(DescriptorInfo& parent, const std::string& name, DescriptorInfo& child) {
-        parent.subParams[name] = child.descriptor.get();
+        parent.subParams->emplace(name, child.descriptor.get());
     }
 };
 
