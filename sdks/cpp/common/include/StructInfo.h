@@ -257,23 +257,22 @@ void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, con
 template <CatenaStructArray T>
 void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
     using structType = T::value_type;
-    if (!src.has_struct_array_values()) {
-        // src is not an array so it cannot be deserialized into an array
-        return;
-    }
-    auto& srcArray = src.struct_array_values().struct_values();
-    dst->clear(); // empty the destination vector
+    // src is not an array so it cannot be deserialized into an array
+    if (src.has_struct_array_values()) {
+        auto& srcArray = src.struct_array_values().struct_values();
+        dst->clear(); // empty the destination vector
     
-    // Right now from proto is able to append any number of values to the
-    // vector
-    // Do we want to keep this behavior?
+        // Right now from proto is able to append any number of values to the
+        // vector
+        // Do we want to keep this behavior?
 
-    // iterate over each element in the src array and call fromProto for each
-    for (int i = 0; i < srcArray.size(); ++i) {
-        catena::Value item;
-        *item.mutable_struct_value() = srcArray.Get(i);
-        structType& elemValue = dst->emplace_back();
-        fromProto(item, &elemValue, pd, authz);
+        // iterate over each element in the src array and call fromProto for each
+        for (int i = 0; i < srcArray.size(); ++i) {
+            catena::Value item;
+            *item.mutable_struct_value() = srcArray.Get(i);
+            structType& elemValue = dst->emplace_back();
+            fromProto(item, &elemValue, pd, authz);
+        }
     }
 }
 
@@ -289,60 +288,50 @@ void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, con
 template <CatenaStruct T>
 void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
     auto fields = StructInfo<T>::fields; // get tuple of FieldInfo for this struct type
-    if (!src.has_struct_value()) {
-        // src is not a struct so it cannot be deserialized into a struct
-        return;
+    // src is not a struct so it cannot be deserialized into a struct
+    if (src.has_struct_value()) {
+        auto& srcFields = src.struct_value().fields();
+
+        // lambda function to call fromProto for the given field if it is authorized
+        auto writeField = [&](const auto& field) {
+            IParamDescriptor& subParam = pd.getSubParam(field.name);
+            // Only update if authorized and field is in the src.
+            if (authz.writeAuthz(subParam) && srcFields.contains(field.name)) {
+                /**
+                 * &(dst->*(field.memberPtr)) will pass the address of the
+                 * corresponding value field in dst to the fromProto function.
+                 * 
+                 * the correct specialization of fromProto will be called based on
+                 * the type of the field memberPtr.
+                 */
+                fromProto(srcFields.at(field.name), &(dst->*(field.memberPtr)), subParam, authz);
+            }            
+        };
+
+        // call writeField for each field in the dst struct
+        // If the src value contains a field that is not in the dst struct, it
+        // will be ignored
+        std::apply([&](auto... field) {
+            (writeField(field), ...);
+        }, fields);
     }
-    auto& srcFields = src.struct_value().fields();
-
-    // lambda function to call fromProto for the given field if it is authorized
-    auto writeField = [&](const auto& field) {
-        IParamDescriptor& subParam = pd.getSubParam(field.name);
-        if (!authz.writeAuthz(subParam)) {
-            // not authorized to write to this field or the field is not in
-            // the src
-            return;
-        }
-        if (!srcFields.contains(field.name)) {
-            // field not found in src so it is not being updated
-            return;
-        }
-        const catena::Value& fieldValue = srcFields.at(field.name);
-
-        /**
-         * &(dst->*(field.memberPtr)) will pass the address of the
-         * corresponding value field in dst to the fromProto function.
-         * 
-         * the correct specialization of fromProto will be called based on the
-         * type of the field memberPtr.
-         */
-        fromProto(fieldValue, &(dst->*(field.memberPtr)), subParam, authz);
-    };
-
-    // call writeField for each field in the dst struct
-    // If the src value contains a field that is not in the dst struct, it will
-    // be ignored
-    std::apply([&](auto... field) {
-        (writeField(field), ...);
-    }, fields);
 }
 
 template <IsVariantArray T>
 void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
     using VariantType = T::value_type;
-    if (!src.has_struct_variant_array_values()) {
-        // src is not an array so it cannot be deserialized into an array
-        return;
-    }
-    auto& srcArray = src.struct_variant_array_values().struct_variants();
-    dst->clear(); // empty the destination vector
+    // src is not an array so it cannot be deserialized into an array
+    if (src.has_struct_variant_array_values()) {
+        auto& srcArray = src.struct_variant_array_values().struct_variants();
+        dst->clear(); // empty the destination vector
 
-    // iterate over each element in the src array and call fromProto for each
-    for (int i = 0; i < srcArray.size(); ++i) {
-        catena::Value item;
-        *item.mutable_struct_variant_value() = srcArray.Get(i);
-        VariantType& elemValue = dst->emplace_back();
-        fromProto(item, &elemValue, pd, authz);
+        // iterate over each element in the src array and call fromProto for each
+        for (int i = 0; i < srcArray.size(); ++i) {
+            catena::Value item;
+            *item.mutable_struct_variant_value() = srcArray.Get(i);
+            VariantType& elemValue = dst->emplace_back();
+            fromProto(item, &elemValue, pd, authz);
+        }
     }
 }
 
@@ -374,10 +363,7 @@ inline std::size_t _findTypeIndex(const std::string& typeName, const std::array<
  */
 template <meta::IsVariant V, std::size_t Index>
 void _changeType(V& variant, const std::size_t newTypeIndex) {
-    if constexpr (Index == std::variant_size_v<V>) {
-        // reached the end of the variant, type not found
-        return;
-    } else {
+    if constexpr (Index != std::variant_size_v<V>) {
         using NewType = std::variant_alternative_t<Index, V>;
         if (newTypeIndex == Index) {
             // found the new type, change the variant to the default value of
@@ -386,32 +372,29 @@ void _changeType(V& variant, const std::size_t newTypeIndex) {
         } else {
             _changeType<V, Index + 1>(variant, newTypeIndex);
         }
-    }
+    } // else reached the end of the variant, type not found
 }
 
 template <meta::IsVariant T>
 void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
-    if (!src.has_struct_variant_value()) {
-        // src is not a variant so it cannot be deserialized into a variant
-        return;
-    }
-    const catena::StructVariantValue& srcVariant = src.struct_variant_value();
-    std::string variantType = srcVariant.struct_variant_type();
-    
-    std::size_t typeIndex = _findTypeIndex(variantType, alternativeNames<T>);
-    if (typeIndex >= alternativeNames<T>.size()) {
-        // variant type not found in the list of alternatives
-        return;
-    }
-    if (typeIndex != dst->index()) {
-        // The type of the variant needs to be changed
-        _changeType<T, 0>(*dst, typeIndex);
-    }
+    // src is not a variant so it cannot be deserialized into a variant
+    if (src.has_struct_variant_value()) {
+        const catena::StructVariantValue& srcVariant = src.struct_variant_value();
+        std::string variantType = srcVariant.struct_variant_type();
+        
+        std::size_t typeIndex = _findTypeIndex(variantType, alternativeNames<T>);
+        if (typeIndex < alternativeNames<T>.size()) {
+            if (typeIndex != dst->index()) {
+                // The type of the variant needs to be changed
+                _changeType<T, 0>(*dst, typeIndex);
+            }
 
-    IParamDescriptor& subParam= pd.getSubParam(variantType);
-    std::visit([&](auto& arg) {
-        fromProto(srcVariant.value(), &arg, subParam, authz);
-    }, *dst); 
+            IParamDescriptor& subParam= pd.getSubParam(variantType);
+            std::visit([&](auto& arg) {
+                fromProto(srcVariant.value(), &arg, subParam, authz);
+            }, *dst); 
+        }
+    }
 }
 
 }  // namespace common

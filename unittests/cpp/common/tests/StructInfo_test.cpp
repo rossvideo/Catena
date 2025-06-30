@@ -569,6 +569,22 @@ TEST_F(StructInfoTest, StructToProto) {
     EXPECT_EQ(val_.struct_value().fields().at("f2").int32_value(), src.f2);
 }
 
+TEST_F(StructInfoTest, StructFromProto) {
+    TestStruct1 dst{.f1{0}, .f2{0}};
+    for (auto& [field, value] : (std::unordered_map<std::string, int32_t>){{"f1", 1}, {"f2", 2}}) {
+        catena::Value fieldVal;
+        fieldVal.set_int32_value(value);
+        val_.mutable_struct_value()->mutable_fields()->insert({field, fieldVal});
+    }
+    EXPECT_CALL(pd_, getSubParam(testing::_)).WillRepeatedly(::testing::ReturnRef(pd_));
+    EXPECT_CALL(pd_, getScope()).WillRepeatedly(testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
+    EXPECT_CALL(pd_, readOnly()).WillRepeatedly(testing::Return(false));
+    EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(nullptr));
+    fromProto(val_, &dst, pd_, Authorizer::kAuthzDisabled);
+    EXPECT_EQ(dst.f1, val_.struct_value().fields().at("f1").int32_value());
+    EXPECT_EQ(dst.f2, val_.struct_value().fields().at("f2").int32_value());
+}
+
 /* ============================================================================
  *                               STRUCT ARRAY
  * ============================================================================
@@ -593,6 +609,33 @@ TEST_F(StructInfoTest, StructArrayToProto) {
         EXPECT_EQ(structProto.fields().at("f2").int32_value(), src[i].f2);
     }
 }
+TEST_F(StructInfoTest, StructArrayFromProto) {
+    std::vector<TestStruct1> src = {
+        {.f1{9}, .f2{9}} // Should be cleared
+    };
+    for (auto& testStruct : (std::vector<std::unordered_map<std::string, int32_t>>){{{"f1", 1}, {"f2", 2}},
+                                                                                    {{"f1", 3}, {"f2", 4}},
+                                                                                    {{"f1", 5}, {"f2", 6}}}) {
+        auto newStruct = val_.mutable_struct_array_values()->add_struct_values();
+        for (auto& [field, value] : testStruct) {
+            catena::Value fieldVal;
+            fieldVal.set_int32_value(value);
+            newStruct->mutable_fields()->insert({field, fieldVal});
+        }
+    }
+    EXPECT_CALL(pd_, getSubParam(testing::_)).WillRepeatedly(::testing::ReturnRef(pd_));
+    EXPECT_CALL(pd_, getScope()).WillRepeatedly(testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
+    EXPECT_CALL(pd_, readOnly()).WillRepeatedly(testing::Return(false));
+    EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(nullptr));
+    fromProto(val_, &src, pd_, Authorizer::kAuthzDisabled);
+    EXPECT_EQ(src.size(), val_.struct_array_values().struct_values_size());
+    for (size_t i = 0; i < src.size(); i += 1) {
+        auto& structProto = val_.struct_array_values().struct_values().at(i);
+        EXPECT_EQ(src[i].f1, structProto.fields().at("f1").int32_value());
+        EXPECT_EQ(src[i].f2, structProto.fields().at("f2").int32_value());
+    }
+}
+
 
 /* ============================================================================
  *                              VARIANT STRUCT
@@ -619,6 +662,25 @@ TEST_F(StructInfoTest, VariantStructToProto) {
     EXPECT_EQ(val_.struct_variant_value().value().struct_value().fields().at("f2").float32_value(), std::get<TestStruct2>(src).f2);
 }
 
+TEST_F(StructInfoTest, VariantStructFromProto) {
+    TestVariantStruct dst{TestStruct1{.f1{9}, .f2{9}}};
+    catena::Value fieldVal;
+    val_.mutable_struct_variant_value()->set_struct_variant_type("TestStruct2");
+    for (auto& [field, value] : (std::unordered_map<std::string, float>){{"f1", 1.1}, {"f2", 2.2}}) {
+        catena::Value fieldVal;
+        fieldVal.set_float32_value(value);
+        val_.mutable_struct_variant_value()->mutable_value()->mutable_struct_value()->mutable_fields()->insert({field, fieldVal});
+    }
+    EXPECT_CALL(pd_, getSubParam(testing::_)).WillRepeatedly(::testing::ReturnRef(pd_));
+    EXPECT_CALL(pd_, getScope()).WillRepeatedly(testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
+    EXPECT_CALL(pd_, readOnly()).WillRepeatedly(testing::Return(false));
+    EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(nullptr));
+    fromProto(val_, &dst, pd_, Authorizer::kAuthzDisabled);
+    EXPECT_EQ(alternativeNames<TestVariantStruct>[dst.index()], val_.struct_variant_value().struct_variant_type());
+    EXPECT_EQ(std::get<TestStruct2>(dst).f1, val_.struct_variant_value().value().struct_value().fields().at("f1").float32_value());
+    EXPECT_EQ(std::get<TestStruct2>(dst).f2, val_.struct_variant_value().value().struct_value().fields().at("f2").float32_value());
+}
+
 /* ============================================================================
  *                           VARIANT STRUCT ARRAY
  * ============================================================================
@@ -643,6 +705,51 @@ TEST_F(StructInfoTest, VariantStructArrayToProto) {
     EXPECT_EQ(val_.struct_variant_array_values().struct_variants_size(), src.size());
     for (size_t i = 0; i < src.size(); i += 1) {
         auto& testStruct = src[i];
+        std::string variantType = alternativeNames<TestVariantStruct>[testStruct.index()];
+        auto structProto = val_.struct_variant_array_values().struct_variants().at(i);
+        EXPECT_EQ(structProto.struct_variant_type(), variantType);
+        if (variantType == "TestStruct1") {
+            EXPECT_EQ(structProto.value().struct_value().fields().at("f1").int32_value(), std::get<TestStruct1>(testStruct).f1);
+            EXPECT_EQ(structProto.value().struct_value().fields().at("f2").int32_value(), std::get<TestStruct1>(testStruct).f2);
+        } else {
+            EXPECT_EQ(structProto.value().struct_value().fields().at("f1").float32_value(), std::get<TestStruct2>(testStruct).f1);
+            EXPECT_EQ(structProto.value().struct_value().fields().at("f2").float32_value(), std::get<TestStruct2>(testStruct).f2);
+        }
+    }
+}
+
+TEST_F(StructInfoTest, VariantStructArrayFromProto) {
+    std::vector<TestVariantStruct> dst = {
+        TestStruct1{.f1{9}, .f2{9}}
+    };
+    std::vector<TestVariantStruct> testVals = {
+        TestStruct1{.f1{1}, .f2{2}},
+        TestStruct2{.f1{3.3}, .f2{4.4}},
+        TestStruct1{.f1{5}, .f2{6}}
+    };
+    for (auto& testVal : testVals) {
+        std::string variantType = alternativeNames<TestVariantStruct>[testVal.index()];
+        auto newStruct = val_.mutable_struct_variant_array_values()->add_struct_variants();
+        newStruct->set_struct_variant_type(variantType);
+        catena::Value f1, f2;
+        if (variantType == "TestStruct1") {
+            f1.set_int32_value(std::get<TestStruct1>(testVal).f1);
+            f2.set_int32_value(std::get<TestStruct1>(testVal).f2);
+        } else {
+            f1.set_float32_value(std::get<TestStruct2>(testVal).f1);
+            f2.set_float32_value(std::get<TestStruct2>(testVal).f2);
+        }
+        newStruct->mutable_value()->mutable_struct_value()->mutable_fields()->insert({"f1", f1});
+        newStruct->mutable_value()->mutable_struct_value()->mutable_fields()->insert({"f2", f2});
+    }
+    EXPECT_CALL(pd_, getSubParam(testing::_)).WillRepeatedly(::testing::ReturnRef(pd_));
+    EXPECT_CALL(pd_, getScope()).WillRepeatedly(testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
+    EXPECT_CALL(pd_, readOnly()).WillRepeatedly(testing::Return(false));
+    EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(nullptr));
+    fromProto(val_, &dst, pd_, Authorizer::kAuthzDisabled);
+    EXPECT_EQ(val_.struct_variant_array_values().struct_variants_size(), dst.size());
+    for (size_t i = 0; i < dst.size(); i += 1) {
+        auto& testStruct = dst[i];
         std::string variantType = alternativeNames<TestVariantStruct>[testStruct.index()];
         auto structProto = val_.struct_variant_array_values().struct_variants().at(i);
         EXPECT_EQ(structProto.struct_variant_type(), variantType);
