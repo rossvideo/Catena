@@ -62,7 +62,7 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
   
     void TearDown() override { /* Cleanup code here */ }
 
-    void testCall(catena::REST::RESTMethod method,
+    void testCall(RESTMethod method,
                   uint32_t slot,
                   std::string endpoint,
                   std::string fqoid,

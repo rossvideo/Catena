@@ -104,7 +104,7 @@ class LanguagePack : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << catena::patterns::EnumDecorator<RESTMethod>().getForwardMap().at(context_.method())
+      std::cout << RESTMethodMap().getForwardMap().at(context_.method())
                 << " LanguagePack::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) << ", ok: " << std::boolalpha << ok
