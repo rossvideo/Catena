@@ -120,7 +120,7 @@ void Subscriptions::proceed() {
                 
             // Invalid method.
             } else {
-                rc = catena::exception_with_status("", catena::StatusCode::INVALID_ARGUMENT);
+                rc = catena::exception_with_status("", catena::StatusCode::UNIMPLEMENTED);
             }
         }
     // ERROR
