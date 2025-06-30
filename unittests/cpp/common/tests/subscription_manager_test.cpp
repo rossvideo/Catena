@@ -100,6 +100,65 @@ protected:
                 status = catena::exception_with_status("", catena::StatusCode::OK);
                 return params;
             }));
+
+        // Build the test parameter hierarchies
+        buildTestHierarchies();
+    }
+
+    // Define the parameter hierarchy using a tree structure for clarity
+    struct Node {
+        std::string name;  
+        std::string oid;  
+        std::vector<Node> children;
+    };
+
+    // Test hierarchies as fixture members
+    Node wildcardRoot;
+    Node nonwildcardRoot;
+    std::map<std::string, ParamHierarchyBuilder::DescriptorInfo> wildcardDescriptors;
+    std::map<std::string, ParamHierarchyBuilder::DescriptorInfo> nonwildcardDescriptors;
+
+    // Recursive function to build descriptors and establish parent-child relationships
+    void buildTree(const Node& node, std::map<std::string, ParamHierarchyBuilder::DescriptorInfo>& descriptors) {
+        descriptors[node.oid] = ParamHierarchyBuilder::createDescriptor(node.oid);
+        for (const auto& child : node.children) {
+            buildTree(child, descriptors);
+            ParamHierarchyBuilder::addChild(
+                descriptors[node.oid],
+                child.name,
+                descriptors[child.oid]
+            );
+        }
+    }
+
+    void buildTestHierarchies() {
+        // Define the wildcard hierarchy that will be expanded by "/test/*"
+        wildcardRoot = {
+            "root",
+            "/test",
+            {
+                Node{"param1", "/test/param1", {}},
+                Node{"nested", "/test/nested", {
+                    Node{"param2", "/test/nested/param2", {}},
+                    Node{"deeper", "/test/nested/deeper", {
+                        Node{"param3", "/test/nested/deeper/param3", {}}
+                    }}
+                }}
+            }
+        };
+
+        // Define the non-wildcard hierarchy that should NOT be affected by wildcard operations
+        nonwildcardRoot = {
+            "nonwildcard",
+            "/nonwildcard",
+            {
+                Node{"param", "/nonwildcard/param", {}}
+            }
+        };
+
+        // Build descriptors for both hierarchies
+        buildTree(wildcardRoot, wildcardDescriptors);
+        buildTree(nonwildcardRoot, nonwildcardDescriptors);
     }
 
     std::unique_ptr<SubscriptionManager> manager;
@@ -108,8 +167,10 @@ protected:
     MockParamDescriptor test_descriptor;
 };
 
-// Test adding a new subscription
-TEST_F(SubscriptionManagerTest, AddNewSubscription) {
+// ======= BASIC SUBSCRIPTION TESTS =======
+
+// Test 1.1: Adding a new subscription
+TEST_F(SubscriptionManagerTest, Subscription_AddNewSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
     // Test adding a new subscription
@@ -117,8 +178,8 @@ TEST_F(SubscriptionManagerTest, AddNewSubscription) {
     EXPECT_EQ(rc.status, catena::StatusCode::OK);
 }
 
-// Test adding a duplicate subscription
-TEST_F(SubscriptionManagerTest, AddDuplicateSubscription) {
+// Test 1.2: Adding a duplicate subscription
+TEST_F(SubscriptionManagerTest, Subscription_AddDuplicateSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
     // Add initial subscription
@@ -129,8 +190,8 @@ TEST_F(SubscriptionManagerTest, AddDuplicateSubscription) {
     EXPECT_EQ(rc.status, catena::StatusCode::ALREADY_EXISTS);
 }
 
-// Test removing an existing subscription
-TEST_F(SubscriptionManagerTest, RemoveExistingSubscription) {
+// Test 1.3: Removing an existing subscription
+TEST_F(SubscriptionManagerTest, Subscription_RemoveExistingSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
     // Add a subscription first
@@ -141,8 +202,8 @@ TEST_F(SubscriptionManagerTest, RemoveExistingSubscription) {
     EXPECT_EQ(rc.status, catena::StatusCode::OK);
 }
 
-// Test removing a non-existent subscription
-TEST_F(SubscriptionManagerTest, RemoveNonExistentSubscription) {
+// Test 1.4: Removing a non-existent subscription
+TEST_F(SubscriptionManagerTest, Subscription_RemoveNonExistentSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
     // Try to remove a subscription that doesn't exist
@@ -150,8 +211,8 @@ TEST_F(SubscriptionManagerTest, RemoveNonExistentSubscription) {
     EXPECT_EQ(rc.status, catena::StatusCode::NOT_FOUND);
 }
 
-// Test getting all subscribed OIDs
-TEST_F(SubscriptionManagerTest, GetAllSubscribedOids) {
+// Test 1.5: Getting all subscribed OIDs
+TEST_F(SubscriptionManagerTest, Subscription_GetAllSubscribedOids) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
     // Add some subscriptions
@@ -164,36 +225,10 @@ TEST_F(SubscriptionManagerTest, GetAllSubscribedOids) {
     EXPECT_TRUE(oids.find("/test/param2") != oids.end());
 }
 
+// ======= WILDCARD SUBSCRIPTION TESTS =======   
 
-// ======= BASIC WILDCARD TESTS =======   
-
-// Test adding a wildcard subscription
-TEST_F(SubscriptionManagerTest, AddWildcardSubscription) {
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    
-    // Set up mock behavior for getParam
-    EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
-        .WillRepeatedly(::testing::Invoke([this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
-            auto param = std::make_unique<MockParam>();
-            EXPECT_CALL(*param, getDescriptor())
-                .WillRepeatedly(::testing::ReturnRef(test_descriptor));
-            EXPECT_CALL(*param, isArrayType())
-                .WillRepeatedly(::testing::Return(false));
-            EXPECT_CALL(*param, getOid())
-                .WillRepeatedly(::testing::ReturnRef(fqoid));
-            EXPECT_CALL(test_descriptor, getAllSubParams())
-                .WillRepeatedly(::testing::ReturnRefOfCopy(std::unordered_map<std::string, IParamDescriptor*>()));
-            status = catena::exception_with_status("", catena::StatusCode::OK);
-            return param;
-        }));
-    
-    // Test adding a wildcard subscription
-    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc));
-    EXPECT_EQ(rc.status, catena::StatusCode::OK);
-}
-
-// Test isWildcard function
-TEST_F(SubscriptionManagerTest, IsWildcard) {
+// Test 2.1: Basic wildcard pattern validation
+TEST_F(SubscriptionManagerTest, Wildcard_IsWildcard) {
     // Test valid wildcard patterns
     EXPECT_TRUE(manager->isWildcard("/test/*"));
     EXPECT_TRUE(manager->isWildcard("/test/nested/*"));
@@ -205,214 +240,128 @@ TEST_F(SubscriptionManagerTest, IsWildcard) {
     EXPECT_FALSE(manager->isWildcard("/test/"));
     EXPECT_FALSE(manager->isWildcard(""));
 
-    //Test array wildcard patterns
+    // Test array wildcard patterns
     EXPECT_TRUE(manager->isWildcard("/test/array/*"));
     EXPECT_TRUE(manager->isWildcard("/test/array/0/*"));
     EXPECT_TRUE(manager->isWildcard("/test/array/1/*"));
     EXPECT_FALSE(manager->isWildcard("/test/array/0"));
     EXPECT_FALSE(manager->isWildcard("/test/array/1"));
-    
 }
 
-// Test basic wildcard subscription expansion
-TEST_F(SubscriptionManagerTest, WildcardSubscriptionExpansion) {
-    std::cout << "\n=== WildcardSubscriptionExpansion test started ===\n" << std::endl;
+// Test 2.2: Basic wildcard subscription addition
+TEST_F(SubscriptionManagerTest, Wildcard_AddWildcardSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-
-    // Define the parameter hierarchy for wildcard expansion using a tree structure
-    struct Node {
-        std::string name;  
-        std::string oid;  
-        std::vector<Node> children;
-    };
-
-    Node root{
-        "root",
-        "/test",
-        {
-            Node{"param1", "/test/param1", {}},
-            Node{"nested", "/test/nested", {
-                Node{"param2", "/test/nested/param2", {}},
-                Node{"deeper", "/test/nested/deeper", {
-                    Node{"param3", "/test/nested/deeper/param3", {}}
-                }}
-            }}
-        }
-    };
-
-    std::map<std::string, ParamHierarchyBuilder::DescriptorInfo> descriptors;
-
-    // Recursive function to build descriptors and establish parent-child relationships
-    std::function<void(const Node&)> buildTree;
-    buildTree = [&](const Node& node) {
-        descriptors[node.oid] = ParamHierarchyBuilder::createDescriptor(node.oid);
-        for (const auto& child : node.children) {
-            buildTree(child);
-            ParamHierarchyBuilder::addChild(
-                descriptors[node.oid],
-                child.name,
-                descriptors[child.oid]
-            );
-        }
-    };
-
-    buildTree(root);
-
-    // Set up device to return our mock parameters
-    EXPECT_CALL(*device, getParam(
-        ::testing::Matcher<const std::string&>(::testing::_), 
-        ::testing::Matcher<catena::exception_with_status&>(::testing::_), 
-        ::testing::Matcher<Authorizer&>(::testing::_)))
+    
+    // Set up device to return wildcard root parameter
+    EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
-            [descriptors = descriptors](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
-
+            [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
                 auto param = std::make_unique<MockParam>();
-
-                // Handle wildcard requests (e.g., "/test/*" should return the root "/test" parameter)
                 if (fqoid == "/test/*") {
-                    setupMockParam(param.get(), "/test", *descriptors.at("/test").descriptor);
-                } else if (descriptors.find(fqoid) != descriptors.end()) {
-                    // Handle specific parameter requests by looking up in our descriptor map
-                    setupMockParam(param.get(), fqoid, *descriptors.at(fqoid).descriptor);
+                    setupMockParam(param.get(), "/test", *wildcardDescriptors.at("/test").descriptor);
+                } else if (wildcardDescriptors.find(fqoid) != wildcardDescriptors.end()) {
+                    setupMockParam(param.get(), fqoid, *wildcardDescriptors.at(fqoid).descriptor);
                 } else {
                     status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
                     return nullptr;
                 }
-
                 status = catena::exception_with_status("", catena::StatusCode::OK);
                 return param;
             }
         ));
 
-    // Set up device to return all mock parameters for getTopLevelParams
+    // Test adding a wildcard subscription
+    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc));
+    EXPECT_EQ(rc.status, catena::StatusCode::OK);
+}
+
+// Test 2.3: Wildcard subscription expansion verification
+TEST_F(SubscriptionManagerTest, Wildcard_ExpansionVerification) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    
+    // Set up device to return wildcard parameters
+    EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+                auto param = std::make_unique<MockParam>();
+                if (fqoid == "/test/*") {
+                    setupMockParam(param.get(), "/test", *wildcardDescriptors.at("/test").descriptor);
+                } else if (wildcardDescriptors.find(fqoid) != wildcardDescriptors.end()) {
+                    setupMockParam(param.get(), fqoid, *wildcardDescriptors.at(fqoid).descriptor);
+                } else {
+                    status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
+                    return nullptr;
+                }
+                status = catena::exception_with_status("", catena::StatusCode::OK);
+                return param;
+            }
+        ));
+
+    // Set up device to return top-level parameters
     EXPECT_CALL(*device, getTopLevelParams(::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
-            [descriptors = descriptors](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+            [this](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
                 std::vector<std::unique_ptr<IParam>> params;
                 auto param = std::make_unique<MockParam>();
-                setupMockParam(param.get(), "/test", *descriptors.at("/test").descriptor);
+                setupMockParam(param.get(), "/test", *wildcardDescriptors.at("/test").descriptor);
                 params.push_back(std::move(param));
                 status = catena::exception_with_status("", catena::StatusCode::OK);
                 return params;
             }
         ));
 
-    // === TEST SCENARIO: Add wildcard subscription ===
-    // This should trigger the expansion process and add all 6 parameters under /test/*
+    // Add wildcard subscription
     EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc));
 
-    // === VERIFICATION: Check that all expected parameters were subscribed ===
+    // Verify all 6 parameters were subscribed
     auto oids = manager->getAllSubscribedOids(*device);
-
-    // Should have exactly 6 parameters: root + 5 children
     EXPECT_EQ(oids.size(), 6);
-    
-    // Verify each expected parameter is present
-    EXPECT_TRUE(oids.find("/test") != oids.end());                    // Root parameter
-    EXPECT_TRUE(oids.find("/test/nested") != oids.end());             // Intermediate parameter
-    EXPECT_TRUE(oids.find("/test/nested/deeper") != oids.end());      // Nested intermediate parameter
-    EXPECT_TRUE(oids.find("/test/param1") != oids.end());             // Leaf parameter
-    EXPECT_TRUE(oids.find("/test/nested/param2") != oids.end());      // Nested leaf parameter
-    EXPECT_TRUE(oids.find("/test/nested/deeper/param3") != oids.end()); // Deep nested leaf parameter
-
-    std::cout << "\n=== WildcardSubscriptionExpansion test completed ===\n" << std::endl;
+    EXPECT_TRUE(oids.find("/test") != oids.end());
+    EXPECT_TRUE(oids.find("/test/param1") != oids.end());
+    EXPECT_TRUE(oids.find("/test/nested") != oids.end());
+    EXPECT_TRUE(oids.find("/test/nested/param2") != oids.end());
+    EXPECT_TRUE(oids.find("/test/nested/deeper") != oids.end());
+    EXPECT_TRUE(oids.find("/test/nested/deeper/param3") != oids.end());
 }
 
-//Test basic wildcard removal
-TEST_F(SubscriptionManagerTest, BasicWildcardRemoval) {
-    std::cout << "\n=== BasicWildcardRemoval test started ===\n" << std::endl;
+// Test 2.4: Wildcard subscription removal
+TEST_F(SubscriptionManagerTest, Wildcard_RemoveWildcardSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-
-    // Define the parameter hierarchy for wildcard removal using a tree structure
-    struct Node {
-        std::string name;  
-        std::string oid;  
-        std::vector<Node> children;
-    };
-
-    // Define the main test hierarchy that will be covered by wildcard "/test/*"
-    Node root{
-        "root",
-        "/test",
-        {
-            Node{"param1", "/test/param1", {}},
-            Node{"nested", "/test/nested", {
-                Node{"param2", "/test/nested/param2", {}},
-                Node{"deeper", "/test/nested/deeper", {
-                    Node{"param3", "/test/nested/deeper/param3", {}}
-                }}
-            }}
-        }
-    };
-
-    // Define a separate hierarchy that should NOT be affected by wildcard removal
-    Node nonwildcard_node{
-        "nonwildcard",
-        "/nonwildcard",
-        {
-            Node{"param", "/nonwildcard/param", {}}
-        }
-    };
-
-    std::map<std::string, ParamHierarchyBuilder::DescriptorInfo> descriptors;
-
-    // Recursive function to build descriptors and establish parent-child relationships
-    std::function<void(const Node&)> buildTree;
-    buildTree = [&](const Node& node) {
-        descriptors[node.oid] = ParamHierarchyBuilder::createDescriptor(node.oid);
-        for (const auto& child : node.children) {
-            buildTree(child);
-            ParamHierarchyBuilder::addChild(
-                descriptors[node.oid],
-                child.name,
-                descriptors[child.oid]
-            );
-        }
-    };
-
-    buildTree(root);
-    buildTree(nonwildcard_node);
-
-    // Set up device to return our mock parameters
-    EXPECT_CALL(*device, getParam(
-        ::testing::Matcher<const std::string&>(::testing::_), 
-        ::testing::Matcher<catena::exception_with_status&>(::testing::_), 
-        ::testing::Matcher<Authorizer&>(::testing::_)))
+    
+    // Set up device to return both wildcard and non-wildcard parameters
+    EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
-            [descriptors = descriptors](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
-
+            [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
                 auto param = std::make_unique<MockParam>();
-
-                // Handle wildcard requests (e.g., "/test/*" should return the root "/test" parameter)
                 if (fqoid == "/test/*") {
-                    setupMockParam(param.get(), "/test", *descriptors.at("/test").descriptor);
-                } else if (descriptors.find(fqoid) != descriptors.end()) {
-                    // Handle specific parameter requests by looking up in our descriptor map
-                    setupMockParam(param.get(), fqoid, *descriptors.at(fqoid).descriptor);
+                    setupMockParam(param.get(), "/test", *wildcardDescriptors.at("/test").descriptor);
+                } else if (wildcardDescriptors.find(fqoid) != wildcardDescriptors.end()) {
+                    setupMockParam(param.get(), fqoid, *wildcardDescriptors.at(fqoid).descriptor);
+                } else if (nonwildcardDescriptors.find(fqoid) != nonwildcardDescriptors.end()) {
+                    setupMockParam(param.get(), fqoid, *nonwildcardDescriptors.at(fqoid).descriptor);
                 } else {
                     status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
                     return nullptr;
                 }
-
                 status = catena::exception_with_status("", catena::StatusCode::OK);
                 return param;
             }
         ));
 
-    // Set up device to return all mock parameters for getTopLevelParams
+    // Set up device to return top-level parameters
     EXPECT_CALL(*device, getTopLevelParams(::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
-            [descriptors = descriptors](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+            [this](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
                 std::vector<std::unique_ptr<IParam>> params;
                 
                 // Add test parameter
                 auto test_param = std::make_unique<MockParam>();
-                setupMockParam(test_param.get(), "/test", *descriptors.at("/test").descriptor);
+                setupMockParam(test_param.get(), "/test", *wildcardDescriptors.at("/test").descriptor);
                 params.push_back(std::move(test_param));
                 
-                // Add the nonwildcard parameter (should not be affected by wildcard operations)
+                // Add nonwildcard parameter
                 auto nonwildcard_param = std::make_unique<MockParam>();
-                setupMockParam(nonwildcard_param.get(), "/nonwildcard", *descriptors.at("/nonwildcard").descriptor);
+                setupMockParam(nonwildcard_param.get(), "/nonwildcard", *nonwildcardDescriptors.at("/nonwildcard").descriptor);
                 params.push_back(std::move(nonwildcard_param));
                 
                 status = catena::exception_with_status("", catena::StatusCode::OK);
@@ -420,61 +369,100 @@ TEST_F(SubscriptionManagerTest, BasicWildcardRemoval) {
             }
         ));
     
-    // === TEST SCENARIO 1: Add wildcard subscription ===
-    // This should add all parameters under /test/* (6 total: /test, /test/param1, /test/nested, etc.)
+    // Add wildcard subscription
     EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc));
-    EXPECT_EQ(rc.status, catena::StatusCode::OK);
     
-    // === TEST SCENARIO 2: Add non-wildcard subscription ===
-    // This should add only the specific parameter /nonwildcard/param
+    // Add non-wildcard subscription
     EXPECT_TRUE(manager->addSubscription("/nonwildcard/param", *device, rc));
-    EXPECT_EQ(rc.status, catena::StatusCode::OK);
     
-    // === TEST SCENARIO 3: Remove wildcard subscription ===
-    // This should remove only the parameters that match /test/* pattern
-    // The /nonwildcard/param should remain unaffected
+    // Remove wildcard subscription
     EXPECT_TRUE(manager->removeSubscription("/test/*", *device, rc));
     EXPECT_EQ(rc.status, catena::StatusCode::OK);
+}
+
+// Test 2.5: Wildcard removal verification
+TEST_F(SubscriptionManagerTest, Wildcard_RemovalVerification) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
     
-    // === VERIFICATION: Check that only non-wildcard subscription remains ===
+    // Set up device to return both wildcard and non-wildcard parameters
+    EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+                auto param = std::make_unique<MockParam>();
+                if (fqoid == "/test/*") {
+                    setupMockParam(param.get(), "/test", *wildcardDescriptors.at("/test").descriptor);
+                } else if (wildcardDescriptors.find(fqoid) != wildcardDescriptors.end()) {
+                    setupMockParam(param.get(), fqoid, *wildcardDescriptors.at(fqoid).descriptor);
+                } else if (nonwildcardDescriptors.find(fqoid) != nonwildcardDescriptors.end()) {
+                    setupMockParam(param.get(), fqoid, *nonwildcardDescriptors.at(fqoid).descriptor);
+                } else {
+                    status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
+                    return nullptr;
+                }
+                status = catena::exception_with_status("", catena::StatusCode::OK);
+                return param;
+            }
+        ));
+
+    // Set up device to return top-level parameters
+    EXPECT_CALL(*device, getTopLevelParams(::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [this](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+                std::vector<std::unique_ptr<IParam>> params;
+                
+                // Add test parameter
+                auto test_param = std::make_unique<MockParam>();
+                setupMockParam(test_param.get(), "/test", *wildcardDescriptors.at("/test").descriptor);
+                params.push_back(std::move(test_param));
+                
+                // Add nonwildcard parameter
+                auto nonwildcard_param = std::make_unique<MockParam>();
+                setupMockParam(nonwildcard_param.get(), "/nonwildcard", *nonwildcardDescriptors.at("/nonwildcard").descriptor);
+                params.push_back(std::move(nonwildcard_param));
+                
+                status = catena::exception_with_status("", catena::StatusCode::OK);
+                return params;
+            }
+        ));
+    
+    // Add both subscriptions
+    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc));
+    EXPECT_TRUE(manager->addSubscription("/nonwildcard/param", *device, rc));
+    
+    // Remove wildcard subscription
+    EXPECT_TRUE(manager->removeSubscription("/test/*", *device, rc));
+    
+    // Verify only non-wildcard subscription remains
     auto oids = manager->getAllSubscribedOids(*device);
-    EXPECT_EQ(oids.size(), 1);  // Should only have /nonwildcard/param left
-    EXPECT_TRUE(oids.find("/nonwildcard/param") != oids.end());  // Verify the correct one remains
-    
-    // === TEST SCENARIO 4: Test error cases ===
+    EXPECT_EQ(oids.size(), 1);
+    EXPECT_TRUE(oids.find("/nonwildcard/param") != oids.end());
+}
+
+// Test 2.6: Error cases for wildcard removal
+TEST_F(SubscriptionManagerTest, Wildcard_RemoveNonExistentWildcard) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
     
     // Try to remove a wildcard subscription that doesn't exist
     EXPECT_FALSE(manager->removeSubscription("/test/*", *device, rc));
     EXPECT_EQ(rc.status, catena::StatusCode::NOT_FOUND);
+}
+
+// Test 2.7: Remove wildcard with invalid path
+TEST_F(SubscriptionManagerTest, Wildcard_RemoveInvalidPath) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
     
     // Try to remove a wildcard subscription with an invalid path
     EXPECT_FALSE(manager->removeSubscription("/invalid/*", *device, rc));
     EXPECT_EQ(rc.status, catena::StatusCode::NOT_FOUND);
+}
+
+// Test 2.8: Remove wildcard with invalid format
+TEST_F(SubscriptionManagerTest, Wildcard_RemoveInvalidFormat) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
     
     // Try to remove a subscription with invalid wildcard format (wildcard in middle)
     EXPECT_FALSE(manager->removeSubscription("/test/*/param", *device, rc));
     EXPECT_EQ(rc.status, catena::StatusCode::NOT_FOUND);
-    
-    std::cout << "\n=== BasicWildcardRemoval test completed ===\n" << std::endl;
 }
 
-
-// === WILDCARD ARRAY TESTS ===
-
-//Test array wildcard subscription expansion
-TEST_F(SubscriptionManagerTest, ArrayWildcardSubscriptionExpansion) {
-    std::cout << "\n=== ArrayWildcardSubscriptionExpansion test started ===\n" << std::endl;
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    
-    // @todo
-    
-}
-
-//Test array wildcard removal
-TEST_F(SubscriptionManagerTest, ArrayWildcardRemoval) {
-    std::cout << "\n=== ArrayWildcardRemoval test started ===\n" << std::endl;
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    
-    // @todo
-}
-
+//@todo: Array tests
