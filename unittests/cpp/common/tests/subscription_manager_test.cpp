@@ -93,13 +93,20 @@ protected:
         EXPECT_CALL(test_descriptor, getOid())
             .WillRepeatedly(::testing::ReturnRef(test_oid));
 
-        // Set up default behavior for getTopLevelParams
-        EXPECT_CALL(*device, getTopLevelParams(::testing::Matcher<catena::exception_with_status&>(::testing::_), ::testing::Matcher<Authorizer&>(::testing::_)))
-            .WillRepeatedly(::testing::Invoke([](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
-                std::vector<std::unique_ptr<IParam>> params;
-                status = catena::exception_with_status("", catena::StatusCode::OK);
-                return params;
-            }));
+    // Set up default behavior for getScope to avoid uninteresting mock warnings
+    static const std::string scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
+    EXPECT_CALL(test_descriptor, getScope())
+        .WillRepeatedly(::testing::Invoke([]() {
+            return std::ref(scope);
+        }));
+
+    // Set up default behavior for getTopLevelParams
+    EXPECT_CALL(*device, getTopLevelParams(::testing::Matcher<catena::exception_with_status&>(::testing::_), ::testing::Matcher<Authorizer&>(::testing::_)))
+        .WillRepeatedly(::testing::Invoke([](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+            std::vector<std::unique_ptr<IParam>> params;
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return params;
+        }));
 
         // Build the test parameter hierarchies
         buildTestHierarchies();
@@ -169,56 +176,41 @@ protected:
 
 // ======= BASIC SUBSCRIPTION TESTS =======
 
-// Test 1.1: Adding a new subscription
+// Test 1.1: Success case - Adding a new subscription
 TEST_F(SubscriptionManagerTest, Subscription_AddNewSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    
-    // Test adding a new subscription
-    EXPECT_TRUE(manager->addSubscription("/test/param", *device, rc));
+    EXPECT_TRUE(manager->addSubscription("/test/param", *device, rc, catena::common::Authorizer::kAuthzDisabled));
     EXPECT_EQ(rc.status, catena::StatusCode::OK);
 }
 
-// Test 1.2: Adding a duplicate subscription
+// Test 1.2: Error case - Adding a duplicate subscription
 TEST_F(SubscriptionManagerTest, Subscription_AddDuplicateSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    
-    // Add initial subscription
-    manager->addSubscription("/test/param", *device, rc);
-    
-    // Try to add the same subscription again
-    EXPECT_FALSE(manager->addSubscription("/test/param", *device, rc));
+    manager->addSubscription("/test/param", *device, rc, catena::common::Authorizer::kAuthzDisabled);
+    EXPECT_FALSE(manager->addSubscription("/test/param", *device, rc, catena::common::Authorizer::kAuthzDisabled));
     EXPECT_EQ(rc.status, catena::StatusCode::ALREADY_EXISTS);
 }
 
-// Test 1.3: Removing an existing subscription
+// Test 1.3: Success case - Removing an existing subscription
 TEST_F(SubscriptionManagerTest, Subscription_RemoveExistingSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    
-    // Add a subscription first
-    manager->addSubscription("/test/param", *device, rc);
-    
-    // Remove the subscription
+    manager->addSubscription("/test/param", *device, rc, catena::common::Authorizer::kAuthzDisabled);
     EXPECT_TRUE(manager->removeSubscription("/test/param", *device, rc));
     EXPECT_EQ(rc.status, catena::StatusCode::OK);
 }
 
-// Test 1.4: Removing a non-existent subscription
+// Test 1.4: Error case - Removing a non-existent subscription
 TEST_F(SubscriptionManagerTest, Subscription_RemoveNonExistentSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    
-    // Try to remove a subscription that doesn't exist
     EXPECT_FALSE(manager->removeSubscription("/test/param", *device, rc));
     EXPECT_EQ(rc.status, catena::StatusCode::NOT_FOUND);
 }
 
-// Test 1.5: Getting all subscribed OIDs
+// Test 1.5: Success case - Getting all subscribed OIDs
 TEST_F(SubscriptionManagerTest, Subscription_GetAllSubscribedOids) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    
-    // Add some subscriptions
-    manager->addSubscription("/test/param1", *device, rc);
-    manager->addSubscription("/test/param2", *device, rc);
-    
+    manager->addSubscription("/test/param1", *device, rc, catena::common::Authorizer::kAuthzDisabled);
+    manager->addSubscription("/test/param2", *device, rc, catena::common::Authorizer::kAuthzDisabled);
     auto oids = manager->getAllSubscribedOids(*device);
     EXPECT_EQ(oids.size(), 2);
     EXPECT_TRUE(oids.find("/test/param1") != oids.end());
@@ -227,7 +219,7 @@ TEST_F(SubscriptionManagerTest, Subscription_GetAllSubscribedOids) {
 
 // ======= WILDCARD SUBSCRIPTION TESTS =======   
 
-// Test 2.1: Basic wildcard pattern validation
+// Test 2.1: Success case - Basic wildcard pattern validation
 TEST_F(SubscriptionManagerTest, Wildcard_IsWildcard) {
     // Test valid wildcard patterns
     EXPECT_TRUE(manager->isWildcard("/test/*"));
@@ -248,7 +240,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_IsWildcard) {
     EXPECT_FALSE(manager->isWildcard("/test/array/1"));
 }
 
-// Test 2.2: Basic wildcard subscription addition
+// Test 2.2: Success case - Basic wildcard subscription addition
 TEST_F(SubscriptionManagerTest, Wildcard_AddWildcardSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
@@ -271,11 +263,11 @@ TEST_F(SubscriptionManagerTest, Wildcard_AddWildcardSubscription) {
         ));
 
     // Test adding a wildcard subscription
-    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc));
+    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc, catena::common::Authorizer::kAuthzDisabled));
     EXPECT_EQ(rc.status, catena::StatusCode::OK);
 }
 
-// Test 2.3: Wildcard subscription expansion verification
+// Test 2.3: Success case - Wildcard subscription expansion verification
 TEST_F(SubscriptionManagerTest, Wildcard_ExpansionVerification) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
@@ -311,7 +303,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_ExpansionVerification) {
         ));
 
     // Add wildcard subscription
-    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc));
+    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc, catena::common::Authorizer::kAuthzDisabled));
 
     // Verify all 6 parameters were subscribed
     auto oids = manager->getAllSubscribedOids(*device);
@@ -324,7 +316,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_ExpansionVerification) {
     EXPECT_TRUE(oids.find("/test/nested/deeper/param3") != oids.end());
 }
 
-// Test 2.4: Wildcard subscription removal
+// Test 2.4: Success case - Wildcard subscription removal
 TEST_F(SubscriptionManagerTest, Wildcard_RemoveWildcardSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
@@ -370,17 +362,17 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemoveWildcardSubscription) {
         ));
     
     // Add wildcard subscription
-    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc));
+    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc, catena::common::Authorizer::kAuthzDisabled));
     
     // Add non-wildcard subscription
-    EXPECT_TRUE(manager->addSubscription("/nonwildcard/param", *device, rc));
+    EXPECT_TRUE(manager->addSubscription("/nonwildcard/param", *device, rc, catena::common::Authorizer::kAuthzDisabled));
     
     // Remove wildcard subscription
     EXPECT_TRUE(manager->removeSubscription("/test/*", *device, rc));
     EXPECT_EQ(rc.status, catena::StatusCode::OK);
 }
 
-// Test 2.5: Wildcard removal verification
+// Test 2.5: Success case - Wildcard removal verification
 TEST_F(SubscriptionManagerTest, Wildcard_RemovalVerification) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
@@ -426,8 +418,8 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemovalVerification) {
         ));
     
     // Add both subscriptions
-    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc));
-    EXPECT_TRUE(manager->addSubscription("/nonwildcard/param", *device, rc));
+    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc, catena::common::Authorizer::kAuthzDisabled));
+    EXPECT_TRUE(manager->addSubscription("/nonwildcard/param", *device, rc, catena::common::Authorizer::kAuthzDisabled));
     
     // Remove wildcard subscription
     EXPECT_TRUE(manager->removeSubscription("/test/*", *device, rc));
@@ -438,7 +430,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemovalVerification) {
     EXPECT_TRUE(oids.find("/nonwildcard/param") != oids.end());
 }
 
-// Test 2.6: Error cases for wildcard removal
+// Test 2.6: Error case - Wildcard removal
 TEST_F(SubscriptionManagerTest, Wildcard_RemoveNonExistentWildcard) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
@@ -447,7 +439,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemoveNonExistentWildcard) {
     EXPECT_EQ(rc.status, catena::StatusCode::NOT_FOUND);
 }
 
-// Test 2.7: Remove wildcard with invalid path
+// Test 2.7: Error case - Remove wildcard with invalid path
 TEST_F(SubscriptionManagerTest, Wildcard_RemoveInvalidPath) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
@@ -456,7 +448,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemoveInvalidPath) {
     EXPECT_EQ(rc.status, catena::StatusCode::NOT_FOUND);
 }
 
-// Test 2.8: Remove wildcard with invalid format
+// Test 2.8: Error case - Remove wildcard with invalid format
 TEST_F(SubscriptionManagerTest, Wildcard_RemoveInvalidFormat) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
@@ -465,4 +457,59 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemoveInvalidFormat) {
     EXPECT_EQ(rc.status, catena::StatusCode::NOT_FOUND);
 }
 
-//@todo: Array tests
+// ======= ALL PARAMS SUBSCRIPTION TESTS =======
+
+// Test 3.1: Success case - Basic "all params" subscription addition
+TEST_F(SubscriptionManagerTest, AllParams_AddAllParamsSubscription) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    
+    // Set up device to return multiple top-level parameters
+    EXPECT_CALL(*device, getTopLevelParams(::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [this](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+                std::vector<std::unique_ptr<IParam>> params;
+                
+                // Add test parameter 
+                auto test_param = std::make_unique<MockParam>();
+                setupMockParam(test_param.get(), "/test", test_descriptor);
+                // Use the same pattern as Authorization_test.cpp
+                const std::string& scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
+                EXPECT_CALL(*test_param, getScope())
+                    .WillRepeatedly(::testing::ReturnRef(scope));
+                params.push_back(std::move(test_param));
+                
+                // Add nonwildcard parameter
+                auto nonwildcard_param = std::make_unique<MockParam>();
+                setupMockParam(nonwildcard_param.get(), "/nonwildcard", test_descriptor);
+                EXPECT_CALL(*nonwildcard_param, getScope())
+                    .WillRepeatedly(::testing::ReturnRef(scope));
+                params.push_back(std::move(nonwildcard_param));
+                
+                status = catena::exception_with_status("", catena::StatusCode::OK);
+                return params;
+            }
+        ));
+
+    // Test adding "all params" subscription
+    EXPECT_TRUE(manager->addSubscription("/*", *device, rc, catena::common::Authorizer::kAuthzDisabled));
+    EXPECT_EQ(rc.status, catena::StatusCode::OK);
+}
+
+// Test 3.2: Success case - "All params" subscription expansion verification
+
+// Test 3.3: Success case - "All params" subscription removal
+
+// Test 3.4: Success case - "All params" removal verification
+
+// Test 3.5: Error case - Remove non-existent "all params" subscription
+
+// Test 3.6: Error case - "All params" with getTopLevelParams error
+
+// Test 3.7: Success case - "All params" with empty top-level parameters
+
+// Test 3.8: Success case - "All params" with authorization filtering
+
+// Test 3.9: Success case - "All params" with mixed authorization results 
+// This is new, I've never mixed up authorization before
+
+// Test 3.10: Error case - "All params" with exception during parameter traversal
