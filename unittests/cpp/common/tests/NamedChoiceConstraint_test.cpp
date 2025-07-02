@@ -45,6 +45,29 @@
 
 using namespace catena::common;
 
+/* 
+ * TEST 1.1 - Testing NamedChoiceConstraint constructor when the type is not int or string
+ */
+TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_InvalidCreate) {
+    { // Without device
+    EXPECT_THROW(NamedChoiceConstraint<float> constraint({{1.1, {}}, {2.2, {}}}, true, "test_oid", false), std::runtime_error)
+        << "Constructor should throw an error when defined with a type other than int and string";
+    }
+    { // With device
+    MockDevice dm;
+    EXPECT_THROW(NamedChoiceConstraint<float> constraint({{1.1, {}}, {2.2, {}}}, true, "test_oid", false, dm), std::runtime_error)
+        << "Constructor should throw an error when defined with a type other than int and string";
+    }
+}
+
+
+
+/* ============================================================================
+ *                                    INT
+ * ============================================================================
+ * 
+ * TEST 1.1 - Testing Int NamedChoiceConstraint constructors
+ */
 TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_IntCreate) {
     bool shared = false;
     std::string oid = "test_oid";
@@ -66,7 +89,9 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_IntCreate) {
     EXPECT_FALSE(constraint.isRange()) << "NamedChoiceConstraint should not be a range constraint";
     }
 }
-
+/* 
+ * TEST 1.2 - Testing Int NamedChoiceConstraint satisfied
+ */
 TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_IntSatisfied) {
     NamedChoiceConstraint<int32_t> constraint({{1, {}}, {2, {}}}, true, "test_oid", false);
     catena::Value src;
@@ -80,7 +105,9 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_IntSatisfied) {
     src.set_int32_value(3);
     EXPECT_FALSE(constraint.satisfied(src)) << "Constraint should not be satisfied by invalid value 3";
 }
-
+/* 
+ * TEST 1.3 - Testing Int NamedChoiceConstraint apply
+ */
 TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_IntApply) {
     NamedChoiceConstraint<int32_t> constraint({{1, {}}, {2, {}}}, true, "test_oid", false);
     catena::Value src;
@@ -89,7 +116,9 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_IntApply) {
     res = constraint.apply(src);
     EXPECT_EQ(res.SerializeAsString(), "") << "Apply should return an empty value for int32 NamedChoiceConstraint";
 }
-
+/* 
+ * TEST 1.4 - Testing Int NamedChoiceConstraint toProto
+ */
 TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_IntToProto) {
     NamedChoiceConstraint<int32_t>::ListInitializer choicesInit = {
         {1, PolyglotText::ListInitializer{{"en", "one"}}},
@@ -111,6 +140,12 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_IntToProto) {
 
 
 
+/* ============================================================================
+ *                                  STRING
+ * ============================================================================
+ * 
+ * TEST 2.1 - Testing String NamedChoiceConstraint constructors
+ */
 TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringCreate) {
     bool shared = false;
     std::string oid = "test_oid";
@@ -132,7 +167,9 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringCreate) {
     EXPECT_FALSE(constraint.isRange()) << "NamedChoiceConstraint should not be a range constraint";
     }
 }
-
+/*
+ * TEST 2.2 - Testing String NamedChoiceConstraint satified with strict set to true
+ */
 TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringSatisfiedStrict) {
     NamedChoiceConstraint<std::string> constraint({{"Choice1", {}}, {"Choice2", {}}}, true, "test_oid", false);
     catena::Value src;
@@ -146,7 +183,9 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringSatisfiedStrict) {
     src.set_string_value("Choice3");
     EXPECT_FALSE(constraint.satisfied(src)) << "Constraint should not be satisfied by invalid value Choice3";
 }
-
+/* 
+ * TEST 2.3 - Testing String NamedChoiceConstraint satified with strict set to false
+ */
 TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringSatisfiedNotStrict) {
     NamedChoiceConstraint<std::string> constraint({{"Choice1", {}}, {"Choice2", {}}}, false, "test_oid", false);
     catena::Value src;
@@ -160,7 +199,9 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringSatisfiedNotStrict) 
     src.set_string_value("Choice3");
     EXPECT_TRUE(constraint.satisfied(src)) << "Constraint should be satisfied by invalid value Choice3 if not strict";
 }
-
+/* 
+ * TEST 2.4 - Testing String NamedChoiceConstraint apply
+ */
 TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringApply) {
     NamedChoiceConstraint<std::string> constraint({{"Choice1", {}}, {"Choice2", {}}}, true, "test_oid", false);
     catena::Value src;
@@ -169,7 +210,9 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringApply) {
     res = constraint.apply(src);
     EXPECT_EQ(res.SerializeAsString(), "") << "Apply should return an empty value for string NamedChoiceConstraint";
 }
-
+/* 
+ * TEST 2.5 - Testing String NamedChoiceConstraint toProto
+ */
 TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringToProto) {
     NamedChoiceConstraint<std::string>::ListInitializer choicesInit = {
         {"Choice1", PolyglotText::ListInitializer{{"en", "one"}}},

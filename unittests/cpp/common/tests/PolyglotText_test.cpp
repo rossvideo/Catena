@@ -59,7 +59,6 @@ TEST(PolyglotTextTest, PolyglotText_Create) {
     pt = PolyglotText({{"de", "name in german"}});
     EXPECT_EQ(displayStrings, pt.displayStrings()) << "Failed to create PolyglotText with initializer list constructor";
 }
-
 /*
  * TEST 2 - Testing PolyglotText toProto.
  */
@@ -67,14 +66,11 @@ TEST(PolyglotTextTest, PolyglotText_Move) {
     // Creating PolyglotText;
     PolyglotText::DisplayStrings displayStrings = {{"en", "Name"}, {"fr", "Nom"}};
     PolyglotText pt(displayStrings);
-
     PolyglotText pt2(std::move(pt));
     EXPECT_EQ(displayStrings, pt2.displayStrings()) << "Failed to move PolyglotText";
 }
-
-
 /*
- * TEST 2 - Testing PolyglotText toProto.
+ * TEST 3 - Testing PolyglotText toProto.
  */
 TEST(PolyglotTextTest, PolyglotText_ToProto) {
     // Creating PolyglotText;
@@ -84,9 +80,8 @@ TEST(PolyglotTextTest, PolyglotText_ToProto) {
     pt.toProto(dst);
     EXPECT_EQ(PolyglotText::DisplayStrings(dst.display_strings().begin(), dst.display_strings().end()), displayStrings);
 }
-
 /*
- * TEST 3 - Testing PolyglotText toProto with no displayStrings.
+ * TEST 4 - Testing PolyglotText toProto with no displayStrings.
  */
 TEST(PolyglotTextTest, PolyglotText_ToProtoEmpty) {
     // Creating PolyglotText;

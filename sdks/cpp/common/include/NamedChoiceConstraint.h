@@ -38,19 +38,16 @@
  * @copyright Copyright (c) 2024 Ross Video
  */
 
- /**
-  * @example use_constraints.cpp
-  * Demonstrates use of this and other constraints.
-  */
+/**
+ * @example use_constraints.cpp
+ * Demonstrates use of this and other constraints.
+ */
 
 // commmon
 #include <IConstraint.h>
-#include <IParam.h>
 #include <Tags.h>
 #include <PolyglotText.h>
 #include <IDevice.h>
-
-#include <google/protobuf/message_lite.h>
 
 #include <string>
 #include <unordered_set>
@@ -85,8 +82,7 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
      * @note  the first choice provided will be the default for the constraint
      */
     NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, IDevice& dm)
-        : choices_{init.begin(), init.end()}, strict_{strict}, default_{init.begin()->first}, oid_{oid},
-          shared_{shared} {
+        : NamedChoiceConstraint(init, strict, oid, shared) {
         dm.addItem(oid, this);
     }
 
@@ -100,8 +96,12 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
      * @note  the first choice provided will be the default for the constraint
      */
     NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
-        : choices_{init.begin(), init.end()}, strict_{strict}, default_{init.begin()->first}, oid_{oid},
-          shared_{shared} {}
+        : choices_{init.begin(), init.end()}, strict_{strict},
+          default_{init.begin()->first}, oid_{oid}, shared_{shared} {
+        if constexpr (!std::is_same<T, int32_t>::value && !std::is_same<T, std::string>::value) {
+            throw std::runtime_error("Cannot create NamedChoiceConstraint with type other than int32_t or std::string");
+        }
+    }
 
     /**
      * @brief default destructor
@@ -143,7 +143,7 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
      * @param msg the protobuf message to populate
      */
     void toProto(catena::Constraint& constraint) const override {
-
+        // Int choice serialization
         if constexpr (std::is_same<T, int32_t>::value) {
             constraint.set_type(catena::Constraint::INT_CHOICE);
             for (auto& [value, name] : choices_) {
@@ -152,7 +152,7 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
                 name.toProto(*intChoice->mutable_name());
             }
         }  
-
+        // String choice serialization
         else if constexpr (std::is_same<T, std::string>::value) {
             constraint.set_type(catena::Constraint::STRING_STRING_CHOICE);
             for (auto& [value, name] : choices_) {
