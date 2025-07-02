@@ -46,7 +46,7 @@
 using namespace catena::common;
 
 /* 
- * TEST 1.1 - Testing NamedChoiceConstraint constructor when the type is not int or string
+ * TEST 0.1 - Testing NamedChoiceConstraint constructor when the type is not int or string
  */
 TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_InvalidCreate) {
     { // Without device
@@ -55,6 +55,7 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_InvalidCreate) {
     }
     { // With device
     MockDevice dm;
+    EXPECT_CALL(dm, addItem(::testing::_, testing::An<IConstraint*>())).Times(0);
     EXPECT_THROW(NamedChoiceConstraint<float> constraint({{1.1, {}}, {2.2, {}}}, true, "test_oid", false, dm), std::runtime_error)
         << "Constructor should throw an error when defined with a type other than int and string";
     }
@@ -128,7 +129,7 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_IntToProto) {
     NamedChoiceConstraint<int32_t> constraint({{1, {{"en", "one"}}}, {2, {{"en", "two"}}}}, true, "test_oid", false);
     catena::Constraint protoConstraint;
     constraint.toProto(protoConstraint);
-
+    // Comparing results
     EXPECT_EQ(protoConstraint.type(), catena::Constraint_ConstraintType_INT_CHOICE);
     EXPECT_EQ(choices.size(), protoConstraint.int32_choice().choices_size());
     for (const auto& protoChoice : protoConstraint.int32_choice().choices()) {
@@ -222,7 +223,7 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringToProto) {
     NamedChoiceConstraint<std::string> constraint({{"Choice1", {{"en", "one"}}}, {"Choice2", {{"en", "two"}}}}, true, "test_oid", false);
     catena::Constraint protoConstraint;
     constraint.toProto(protoConstraint);
-
+    // Comparing results
     EXPECT_EQ(protoConstraint.type(), catena::Constraint_ConstraintType_STRING_STRING_CHOICE);
     EXPECT_EQ(choices.size(), protoConstraint.string_string_choice().choices_size());
     for (const auto& protoChoice : protoConstraint.string_string_choice().choices()) {

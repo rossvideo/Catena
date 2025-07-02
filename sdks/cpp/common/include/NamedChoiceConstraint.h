@@ -71,7 +71,22 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
      */
     using ListInitializer = std::initializer_list<std::pair<T, PolyglotText::ListInitializer>>;
 
-  public:
+    /**
+     * @brief Construct a new Named Choice Constraint object
+     * @param init the list of choices
+     * @param strict should the value be constrained if not in choices
+     * @param oid the oid of the constraint
+     * @param shared is the constraint shared
+     * @note  the first choice provided will be the default for the constraint
+     */
+    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
+        : choices_{init.begin(), init.end()}, strict_{strict},
+          default_{init.begin()->first}, oid_{oid}, shared_{shared} {
+        if constexpr (!std::is_same<T, int32_t>::value && !std::is_same<T, std::string>::value) {
+            throw std::runtime_error("Cannot create NamedChoiceConstraint with type other than int32_t or std::string");
+        }
+    }
+
     /**
      * @brief Construct a new Named Choice Constraint object
      * @param init the list of choices
@@ -84,23 +99,6 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
     NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, IDevice& dm)
         : NamedChoiceConstraint(init, strict, oid, shared) {
         dm.addItem(oid, this);
-    }
-
-    /**
-     * @brief Construct a new Named Choice Constraint object
-     * @param init the list of choices
-     * @param strict should the value be constrained if not in choices
-     * @param oid the oid of the constraint
-     * @param shared is the constraint shared
-     * @param parent the param to add the constraint to
-     * @note  the first choice provided will be the default for the constraint
-     */
-    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
-        : choices_{init.begin(), init.end()}, strict_{strict},
-          default_{init.begin()->first}, oid_{oid}, shared_{shared} {
-        if constexpr (!std::is_same<T, int32_t>::value && !std::is_same<T, std::string>::value) {
-            throw std::runtime_error("Cannot create NamedChoiceConstraint with type other than int32_t or std::string");
-        }
     }
 
     /**
