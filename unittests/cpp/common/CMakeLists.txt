@@ -27,6 +27,7 @@ set(SOURCES
     tests/Authorization_test.cpp
     tests/Connect_test.cpp
     tests/LanguagePack_test.cpp
+    tests/PolyglotText_test.cpp
 )
 
 add_executable(${This} ${SOURCES})
