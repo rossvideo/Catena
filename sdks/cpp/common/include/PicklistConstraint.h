@@ -67,7 +67,6 @@ class PicklistConstraint : public IConstraint {
      */
     using ListInitializer = std::initializer_list<std::string>;
 
-  public:
     /**
      * @brief Construct a new Picklist Constraint object
      * @param init the list of choices

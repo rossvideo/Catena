@@ -114,17 +114,14 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
      * @return true if the value satisfies the constraint
      */
     bool satisfied(const catena::Value& src) const override {
-
+        bool ans = false;
         if constexpr (std::is_same<T, int32_t>::value) {
-            return choices_.contains(src.int32_value());
+            ans = choices_.contains(src.int32_value());
         }
-
-        if constexpr (std::is_same<T, std::string>::value) {
-            if (!strict_) {
-                return true;
-            }
-            return choices_.contains(src.string_value());
+        else if constexpr (std::is_same<T, std::string>::value) {
+            ans = !strict_ || choices_.contains(src.string_value());
         }
+        return ans;
     }
 
     /**
@@ -138,8 +135,7 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
      * Calling this will always return an empty value.
      */
     catena::Value apply(const catena::Value& src) const override {
-        catena::Value val;
-        return val;
+        return catena::Value();
     }
 
     /**
@@ -155,9 +151,9 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
                 intChoice->set_value(value);
                 name.toProto(*intChoice->mutable_name());
             }
-        }
+        }  
 
-        if constexpr (std::is_same<T, std::string>::value) {
+        else if constexpr (std::is_same<T, std::string>::value) {
             constraint.set_type(catena::Constraint::STRING_STRING_CHOICE);
             for (auto& [value, name] : choices_) {
                 auto stringChoice = constraint.mutable_string_string_choice()->add_choices();

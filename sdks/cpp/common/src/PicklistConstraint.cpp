@@ -53,11 +53,7 @@ PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::s
 PicklistConstraint::~PicklistConstraint() = default;
 
 bool PicklistConstraint::satisfied(const catena::Value& src) const {
-    if (!strict_) {
-        return true;
-    }
-
-    return choices_.contains(src.string_value());
+    return !strict_ || choices_.contains(src.string_value());
 }
 
 /**
@@ -65,12 +61,10 @@ bool PicklistConstraint::satisfied(const catena::Value& src) const {
  * will always return an empty value.
  */
 catena::Value PicklistConstraint::apply(const catena::Value& src) const {
-    catena::Value val;
-    return val;
+    return catena::Value();
 }
 
 void PicklistConstraint::toProto(catena::Constraint& constraint) const {
-
     constraint.set_type(catena::Constraint::STRING_CHOICE);
     for (std::string choice : choices_) {
         constraint.mutable_string_choice()->add_choices(choice);
