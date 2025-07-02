@@ -41,6 +41,8 @@
 // REST
 #include "controllers/LanguagePack.h"
 
+#include <Logger.h>
+
 using namespace catena::common;
 using namespace catena::REST;
 

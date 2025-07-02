@@ -29,6 +29,7 @@ RUN . /root/toolchain.env \
     valgrind=$VALGRIND_VERSION \
     curl=$CURL_VERSION \
     && npm install -g n \
+    && apt-get install -y libgoogle-glog-dev \
     && apt-get clean
 
 # Install gRPC

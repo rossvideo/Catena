@@ -60,6 +60,7 @@
 #include <signal.h>
 #include <iostream>
 #include <thread>
+#include "Logger.h"
 
 using grpc::Server;
 using catena::gRPC::CatenaServiceImpl;
@@ -72,7 +73,7 @@ Server *globalServer = nullptr;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        std::cout << "Caught signal " << sig << ", shutting down" << std::endl;
+        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
         if (globalServer != nullptr) {
             globalServer->Shutdown();
             globalServer = nullptr;
@@ -112,7 +113,7 @@ void RunRPCServer(std::string addr)
 
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
-        std::cout << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms) << '\n';
+        DEBUG_LOG << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
 
         globalServer = server.get();
 
@@ -126,12 +127,16 @@ void RunRPCServer(std::string addr)
         cq_thread.join();
 
     } catch (std::exception &why) {
-        std::cerr << "Problem: " << why.what() << '\n';
+        LOG(ERROR) << "Problem: " << why.what();
     }
 }
 
 int main(int argc, char* argv[])
 {
+    FLAGS_logtostderr = false;          // Keep logging to files
+    FLAGS_log_dir = GLOG_LOGGING_DIR;   // Set the log directory
+    google::InitGoogleLogging("external_object_request");
+
     std::string addr;
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);

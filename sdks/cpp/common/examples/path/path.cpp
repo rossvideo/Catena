@@ -37,30 +37,28 @@
 
 // common
 #include <Path.h>
-
+#include <Logger.h>
 #include <iostream>
 #include <memory>
 #include <utility>
 
 using catena::common::Path;
-using std::cout;
-using std::endl;
 
 void document(Path& p) {
-    cout << "path: " << p.fqoid() << "\nhas length: " << p.size() << endl;
+    DEBUG_LOG << "path: " << p.fqoid() << "\nhas length: " << p.size();
     while (p.size()) {
         if (p.front_is_index()) {
             Path::Index idx = p.front_as_index();
-            cout << "segment " << p.walked() << " has type Index and value: ";
+            std::string debugString = "segment " + std::to_string(p.walked()) + " has type Index and value: ";
             if (idx == Path::kEnd) {
-              cout << "kEnd";
+              debugString += "kEnd";
             } else {
-              cout << idx;
+              debugString += std::to_string(idx);
             }
-            cout << endl;
+            DEBUG_LOG << debugString;
         }
         if (p.front_is_string()) {
-            cout << "segment " << p.walked() << " has type string and value: " << p.front_as_string() << endl;
+            DEBUG_LOG << "segment " << p.walked() << " has type string and value: " << p.front_as_string();
         }
         p.pop();
     }
@@ -81,16 +79,16 @@ int main() {
     document(struct_array);
 
     // The document method consumes the Path passed to it
-    cout << "\njptr should be empty" << endl;
+    DEBUG_LOG << "\njptr should be empty";
     document(struct_array);
     
     // we can reverse this 2 ways - reverse the last pop operation
-    cout << "\njptr should have its last segment" << endl;
+    DEBUG_LOG << "\njptr should have its last segment";
     struct_array.unpop();
     document(struct_array);
 
     // or rewind to the very beginning
-    cout << "\njptr should be fully restored" << endl;
+    DEBUG_LOG << "\njptr should be fully restored";
     struct_array.rewind();
     document(struct_array);
 

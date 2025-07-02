@@ -51,6 +51,8 @@
 #include <boost/asio.hpp>
 using boost::asio::ip::tcp;
 
+#include <Logger.h>
+
 namespace catena {
 namespace REST {
 
@@ -101,9 +103,9 @@ class ExecuteCommand : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << "ExecuteCommand::proceed[" << objectId_ << "]: "
+      DEBUG_LOG << "ExecuteCommand::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "<< static_cast<int>(status)
-                <<", ok: "<< std::boolalpha << ok << std::endl;
+                <<", ok: "<< std::boolalpha << ok;
     }
     /**
      * @brief The number of ExecuteCommand objects created.

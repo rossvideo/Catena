@@ -54,66 +54,73 @@
 // protobuf interface
 #include <interface/param.pb.h>
 
+#include <iostream>
+#include "Logger.h"
+
 using namespace catena::common;
 using namespace use_structs;
 using catena::common::ParamTag;
-#include <iostream>
+
 int main() {
+    FLAGS_logtostderr = false;          // Keep logging to files
+    FLAGS_log_dir = GLOG_LOGGING_DIR;   // Set the log directory
+    google::InitGoogleLogging("use_structs");
+
     // lock the model
     std::lock_guard lg(dm.mutex());
     catena::exception_with_status err{"", catena::StatusCode::OK};
 
     std::unique_ptr<IParam> ip = dm.getParam("/location", err);
     if (ip == nullptr){
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     auto& locationParam = *dynamic_cast<ParamWithValue<Location>*>(ip.get());
     Location& loc = locationParam.get();
 
-    std::cout << "Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
+    DEBUG_LOG << "Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
               << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
-              << "' " << loc.longitude.seconds << "\")" << std::endl;
+              << "' " << loc.longitude.seconds << "\")";
 
     catena::Value value;
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    std::cout << "Location: " << value.DebugString() << std::endl;
+    DEBUG_LOG << "Location: " << value.DebugString();
 
     // this line is for demonstrating the fromProto method
     // this should never be done in a real device
     value.mutable_struct_value()->mutable_fields()->at("latitude").mutable_struct_value()->mutable_fields()->at("degrees").set_float32_value(100);
     ip->fromProto(value, Authorizer::kAuthzDisabled);
 
-    std::cout << "New Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
+    DEBUG_LOG << "New Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
               << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
-              << "' " << loc.longitude.seconds << "\")" << std::endl;
+              << "' " << loc.longitude.seconds << "\")";
 
     ip = dm.getParam("/location/latitude", err);
     if (ip == nullptr){
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     value.Clear();
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    std::cout << "Latitude: " << value.DebugString() << std::endl;
+    DEBUG_LOG << "Latitude: " << value.DebugString();
 
     ip = dm.getParam("/location/latitude/degrees", err);
     if (ip == nullptr){
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     value.Clear();
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    std::cout << "Latitude degrees: " << value.DebugString() << std::endl;
+    DEBUG_LOG << "Latitude degrees: " << value.DebugString();
 
     ip = dm.getParam("/location/longitude/seconds", err);
     if (ip == nullptr){
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     value.Clear();
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    std::cout << "Longitude seconds: " << value.DebugString() << std::endl;
+    DEBUG_LOG << "Longitude seconds: " << value.DebugString();
 
     return EXIT_SUCCESS;
 }

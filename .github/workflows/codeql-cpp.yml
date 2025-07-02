@@ -180,3 +180,14 @@ jobs:
       uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
+
+    - name: Upload error and fatal logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: error-logs
+        path: |
+          logs/*error*.log
+          logs/*fatal*.log
+        if-no-files-found: ignore
+        retention-days: 1

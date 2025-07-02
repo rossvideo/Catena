@@ -59,16 +59,17 @@ using namespace catena::common;
 using namespace use_variants;
 using catena::common::ParamTag;
 #include <iostream>
+#include "Logger.h"
 
 void printCoordinate(const Coordinates_elem& coord) {
     std::visit([](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, Cartesian>) {
-            std::cout << "Cartesian: " << arg.x << ", " << arg.y << ", " << arg.z << std::endl;
+            DEBUG_LOG << "Cartesian: " << arg.x << ", " << arg.y << ", " << arg.z;
         } else if constexpr (std::is_same_v<T, _coordinates::Cylindrical>) {
-            std::cout << "Cylindrical: " << arg.rho << ", " << arg.phi << "°, " << arg.z << std::endl;
+            DEBUG_LOG << "Cylindrical: " << arg.rho << ", " << arg.phi << "°, " << arg.z;
         } else if constexpr (std::is_same_v<T, _coordinates::Spherical>) {
-            std::cout << "Spherical: " << arg.r << ", " << arg.theta << "°, " << arg.phi << "°" << std::endl;
+            DEBUG_LOG << "Spherical: " << arg.r << ", " << arg.theta << "°, " << arg.phi << "°";
         }
     }, coord);
 }
@@ -82,74 +83,74 @@ int main() {
     // get the number param
     ip = dm.getParam("/number", err);
     if (!ip) {
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     catena::Param numberParam;
     ip->toProto(numberParam, Authorizer::kAuthzDisabled);
-    std::cout << numberParam.DebugString() << std::endl;
+    DEBUG_LOG << numberParam.DebugString();
 
     use_variants::Number& number = getParamValue<use_variants::Number>(ip.get());
     number = "five";
     ip->toProto(numberParam, Authorizer::kAuthzDisabled);
-    std::cout << "Updated Number:\n" << numberParam.DebugString() << std::endl;
+    DEBUG_LOG << "Updated Number:\n" << numberParam.DebugString();
 
     // get the coordinates param
     ip = dm.getParam("/coordinates", err);
     if (!ip) {
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     catena::Param coordinatesParam;
     ip->toProto(coordinatesParam, Authorizer::kAuthzDisabled);
-    std::cout << coordinatesParam.DebugString() << std::endl;
+    DEBUG_LOG << coordinatesParam.DebugString();
 
     ip = dm.getParam("/coordinates/2", err);
     if (!ip) {
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     use_variants::Coordinates_elem& coord = getParamValue<use_variants::Coordinates_elem>(ip.get());
-    std::cout << "Coordinate/2: ";
+    DEBUG_LOG << "Coordinate/2: ";
     printCoordinate(coord);
 
     ip = dm.getParam("/cartesian", err);
     if (!ip) {
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     catena::Value value;
     value.mutable_struct_variant_value()->set_struct_variant_type("cartesian");
     dm.getValue("/cartesian", *value.mutable_struct_variant_value()->mutable_value());
     dm.setValue("/coordinates/2", value);
-    std::cout << "Updated Coordinate/2: ";
+    DEBUG_LOG << "Updated Coordinate/2: ";
     printCoordinate(coord);
 
-    std::cout << "\n";
+    DEBUG_LOG << "\n";
 
 
     ip = dm.getParam("/coordinates/0", err);
     if (!ip) {
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    std::cout << value.DebugString() << std::endl;
+    DEBUG_LOG << value.DebugString();
 
     value.set_int32_value(42);
     dm.setValue("/coordinates/0/cartesian/z", value);
 
-    std::cout << "\n";
+    DEBUG_LOG << "\n";
 
     ip = dm.getParam("/coordinates/0/cartesian", err);
     if (!ip) {
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    std::cout << value.DebugString() << std::endl;
+    DEBUG_LOG << value.DebugString();
     use_variants::Cartesian& cartesian = getParamValue<use_variants::Cartesian>(ip.get());
-    std::cout << "Updated Coordinates/0/cartesian: ";
+    DEBUG_LOG << "Updated Coordinates/0/cartesian: ";
     printCoordinate(cartesian);
 
     return EXIT_SUCCESS;

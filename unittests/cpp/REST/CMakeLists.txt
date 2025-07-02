@@ -37,7 +37,8 @@ target_link_libraries(${This}
         catena_connections_REST
         pthread	
     PRIVATE	
-        ${GTEST_BOTH_LIBRARIES}	
+        ${GTEST_BOTH_LIBRARIES}
+        glog::glog
         GTest::GTest	
         GTest::Main	
         GTest::gmock	

@@ -30,6 +30,7 @@
 
 // connections/gRPC
 #include <controllers/LanguagePackRequest.h>
+#include "Logger.h"
 using catena::gRPC::LanguagePackRequest;
 
 // Initializes the object counter for LanguagePackRequest to 0.
@@ -43,13 +44,13 @@ LanguagePackRequest::LanguagePackRequest(ICatenaServiceImpl *service, SlotMap& d
 }
 
 void LanguagePackRequest::proceed(bool ok) {
-    std::cout << "LanguagePackRequest::proceed[" << objectId_ << "]: "
+    DEBUG_LOG << "LanguagePackRequest::proceed[" << objectId_ << "]: "
               << timeNow() << " status: " << static_cast<int>(status_)
-              << ", ok: " << std::boolalpha << ok << std::endl;
+              << ", ok: " << std::boolalpha << ok;
     
     // If the process is cancelled, finish the process
     if (!ok) {
-        std::cout << "LanguagePackRequest[" << objectId_ << "] cancelled\n";
+        DEBUG_LOG << "LanguagePackRequest[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -107,7 +108,7 @@ void LanguagePackRequest::proceed(bool ok) {
          * CatenaServiceImpl.
          */
         case CallStatus::kFinish:
-            std::cout << "LanguagePackRequest[" << objectId_ << "] finished\n";
+            DEBUG_LOG << "LanguagePackRequest[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

@@ -54,10 +54,17 @@
 // protobuf interface
 #include <interface/param.pb.h>
 
+#include <iostream>
+#include <Logger.h>
+
 using namespace catena::common;
 using namespace use_templates;
-#include <iostream>
+
 int main() {
+    FLAGS_logtostderr = false;          // Keep logging to files
+    FLAGS_log_dir = GLOG_LOGGING_DIR;   // Set the log directory
+    google::InitGoogleLogging("use_templates");
+
     // lock the model
     std::lock_guard lg(dm.mutex());
     catena::exception_with_status ans{"", catena::StatusCode::OK};
@@ -70,7 +77,7 @@ int main() {
     ip = dm.getParam("/city", ans);
     if (ip == nullptr){
         // /city Param does not exist
-        std::cout << "/city " << ans.what() << std::endl;
+        DEBUG_LOG << "/city " << ans.what();
     }
 
     /**
@@ -78,29 +85,27 @@ int main() {
      */
     ip = dm.getParam("/ottawa", ans);
     if (ip == nullptr){
-        std::cerr << "Error: " << ans.what() << std::endl;
+        LOG(ERROR) << "Error: " << ans.what();
         return EXIT_FAILURE;
     }
     auto& canadasCapital = *dynamic_cast<ParamWithValue<City>*>(ip.get());
     City& city = canadasCapital.get();
-    std::cout << "Canada's capital city is " << city.city_name
+    DEBUG_LOG << "Canada's capital city is " << city.city_name
               << " at latitude " << city.latitude
               << " and longitude " << city.longitude
-              << " with a population of " << city.population
-              << std::endl;
+              << " with a population of " << city.population;
 
     ip = dm.getParam("/toronto", ans);
     if (ip == nullptr){
-        std::cerr << "Error: " << ans.what() << std::endl;
+        LOG(ERROR) << "Error: " << ans.what();
         return EXIT_FAILURE;
     }
     auto& ontariosCapital = *dynamic_cast<ParamWithValue<City>*>(ip.get());
     City& city2 = ontariosCapital.get();
-    std::cout << "Ontario's capital city is " << city2.city_name
+    DEBUG_LOG << "Ontario's capital city is " << city2.city_name
               << " at latitude " << city2.latitude
               << " and longitude " << city2.longitude
-              << " with a population of " << city2.population
-              << std::endl;
+              << " with a population of " << city2.population;
    
     return EXIT_SUCCESS;
 }

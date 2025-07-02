@@ -54,6 +54,7 @@
 #include <thread>
 #include <chrono>
 #include <signal.h>
+#include "Logger.h"
 
 using grpc::Server;
 using catena::gRPC::CatenaServiceImpl;
@@ -66,7 +67,7 @@ std::atomic<bool> globalLoop = true;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        std::cout << "Caught signal " << sig << ", shutting down" << std::endl;
+        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
         globalLoop = false;
         if (globalServer != nullptr) {
             globalServer->Shutdown();
@@ -104,7 +105,7 @@ void RunRPCServer(std::string addr)
         builder.RegisterService(&service);
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
-        std::cout << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms) << '\n';
+        DEBUG_LOG << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
 
         globalServer = server.get();
 
@@ -113,7 +114,7 @@ void RunRPCServer(std::string addr)
 
         // Notifies the console when a value is set by the client.
         uint32_t valueSetByClientId = dm.valueSetByClient.connect([](const std::string& oid, const IParam* p) {
-            std::cout << "*** signal received: " << oid << " has been changed by client" << '\n';
+            DEBUG_LOG << "*** signal received: " << oid << " has been changed by client";
         });
 
         // wait for the server to shutdown and tidy up
@@ -124,7 +125,7 @@ void RunRPCServer(std::string addr)
         cq_thread.join();
 
     } catch (std::exception &why) {
-        std::cerr << "Problem: " << why.what() << '\n';
+        LOG(ERROR) << "Problem: " << why.what();
     }
 }
 
@@ -155,7 +156,7 @@ void defineCommands() {
                     state = "playing";
                     dm.valueSetByServer.emit("/state", stateParam.get());
                 }
-                std::cout << "video is " << state << "\n";
+                DEBUG_LOG << "video is " << state;
                 response.mutable_no_response();
             }
             co_return response;
@@ -181,7 +182,7 @@ void defineCommands() {
                     state = "paused";
                     dm.valueSetByServer.emit("/state", stateParam.get());
                 }
-                std::cout << "video is " << state << "\n";
+                DEBUG_LOG << "video is " << state;
                 response.mutable_no_response();
             }
             co_return response;
@@ -191,6 +192,10 @@ void defineCommands() {
 
 int main(int argc, char* argv[])
 {
+    FLAGS_logtostderr = false;          // Keep logging to files
+    FLAGS_log_dir = GLOG_LOGGING_DIR;   // Set the log directory
+    google::InitGoogleLogging("use_commands");
+
     std::string addr;
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);

@@ -136,5 +136,5 @@ void Subscriptions::proceed() {
 
 void Subscriptions::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << context_.method() << " Subscriptions[" << objectId_ << "] finished\n";
+    DEBUG_LOG << context_.method() << " Subscriptions[" << objectId_ << "] finished\n";
 }

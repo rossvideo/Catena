@@ -30,6 +30,7 @@
 
 // connections/gRPC
 #include <controllers/UpdateSubscriptions.h>
+#include <Logger.h>
 using catena::gRPC::UpdateSubscriptions;
 
 int UpdateSubscriptions::objectCounter_ = 0;
@@ -43,13 +44,13 @@ UpdateSubscriptions::UpdateSubscriptions(ICatenaServiceImpl *service, SlotMap& d
 }
 
 void UpdateSubscriptions::proceed(bool ok) {
-    std::cout << "UpdateSubscriptions proceed[" << objectId_ << "]: "
+    DEBUG_LOG << "UpdateSubscriptions proceed[" << objectId_ << "]: "
               << timeNow() << " status: " << static_cast<int>(status_)
-              << ", ok: " << std::boolalpha << ok << std::endl;
+              << ", ok: " << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        std::cout << "UpdateSubscriptions[" << objectId_ << "] cancelled\n";
+        DEBUG_LOG << "UpdateSubscriptions[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -170,7 +171,7 @@ void UpdateSubscriptions::proceed(bool ok) {
             break;
 
         case CallStatus::kFinish:
-            std::cout << "UpdateSubscriptions[" << objectId_ << "] finished\n";
+            DEBUG_LOG << "UpdateSubscriptions[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*
