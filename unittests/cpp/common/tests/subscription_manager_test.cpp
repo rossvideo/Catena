@@ -50,6 +50,8 @@ using namespace catena::common;
 
 class SubscriptionManagerTest : public ::testing::Test {
 protected:
+    SubscriptionManagerTest() : authz_(jwsToken_) {}
+    
     void SetUp() override {
         manager = std::make_unique<SubscriptionManager>();
         device = std::make_unique<MockDevice>();
@@ -60,11 +62,11 @@ protected:
             .WillRepeatedly(::testing::Invoke([](const std::string& jptr, catena::Value& value, Authorizer& authz) -> catena::exception_with_status {
                 return catena::exception_with_status("", catena::StatusCode::OK);
             }));
-
-        // Set up default behavior for mutex
         static std::mutex test_mutex;
         EXPECT_CALL(*device, mutex())
             .WillRepeatedly(::testing::ReturnRef(test_mutex));
+        EXPECT_CALL(*device, slot())
+            .WillRepeatedly(::testing::Return(0));
 
         // Set up default behavior for getParam
         EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
@@ -100,6 +102,11 @@ protected:
             return std::ref(scope);
         }));
 
+    // Set up default behavior for getAllSubParams to avoid uninteresting mock warnings
+    static std::unordered_map<std::string, IParamDescriptor*> empty_sub_params;
+    EXPECT_CALL(test_descriptor, getAllSubParams())
+        .WillRepeatedly(::testing::ReturnRef(empty_sub_params));
+
     // Set up default behavior for getTopLevelParams
     EXPECT_CALL(*device, getTopLevelParams(::testing::Matcher<catena::exception_with_status&>(::testing::_), ::testing::Matcher<Authorizer&>(::testing::_)))
         .WillRepeatedly(::testing::Invoke([](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
@@ -127,7 +134,13 @@ protected:
 
     // Recursive function to build descriptors and establish parent-child relationships
     void buildTree(const Node& node, std::map<std::string, ParamHierarchyBuilder::DescriptorInfo>& descriptors) {
-        descriptors[node.oid] = ParamHierarchyBuilder::createDescriptor(node.oid);
+        // Convert path to OID (remove leading slash)
+        std::string oid = node.oid;
+        if (oid.starts_with("/") && oid.length() > 1) {
+            oid = oid.substr(1);
+        }
+        
+        descriptors[node.oid] = ParamHierarchyBuilder::createDescriptor(oid);
         for (const auto& child : node.children) {
             buildTree(child, descriptors);
             ParamHierarchyBuilder::addChild(
@@ -172,6 +185,9 @@ protected:
     std::unique_ptr<MockDevice> device;
     std::unique_ptr<MockParam> mockParam;
     MockParamDescriptor test_descriptor;
+    std::string jwsToken_ = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uOncgc3QyMTM4Om9wOncgc3QyMTM4OmNmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MTUxNjIzOTAyMiwibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dTokrEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko9653v0khyUT4UKeOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKHkWi4P3-CYWrwe-g6b4-a33Q0k6tSGI1hGf2bA9cRYr-VyQ_T3RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEmuIwNOVM3EcVEaLyISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg_wbOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9MdvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
+    catena::common::Authorizer authz_;
+
 };
 
 // ======= BASIC SUBSCRIPTION TESTS =======
@@ -179,22 +195,22 @@ protected:
 // Test 1.1: Success case - Adding a new subscription
 TEST_F(SubscriptionManagerTest, Subscription_AddNewSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    EXPECT_TRUE(manager->addSubscription("/test/param", *device, rc, catena::common::Authorizer::kAuthzDisabled));
+    EXPECT_TRUE(manager->addSubscription("/test/param", *device, rc, authz_));
     EXPECT_EQ(rc.status, catena::StatusCode::OK);
 }
 
 // Test 1.2: Error case - Adding a duplicate subscription
 TEST_F(SubscriptionManagerTest, Subscription_AddDuplicateSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    manager->addSubscription("/test/param", *device, rc, catena::common::Authorizer::kAuthzDisabled);
-    EXPECT_FALSE(manager->addSubscription("/test/param", *device, rc, catena::common::Authorizer::kAuthzDisabled));
+    manager->addSubscription("/test/param", *device, rc, authz_);
+    EXPECT_FALSE(manager->addSubscription("/test/param", *device, rc, authz_));
     EXPECT_EQ(rc.status, catena::StatusCode::ALREADY_EXISTS);
 }
 
 // Test 1.3: Success case - Removing an existing subscription
 TEST_F(SubscriptionManagerTest, Subscription_RemoveExistingSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    manager->addSubscription("/test/param", *device, rc, catena::common::Authorizer::kAuthzDisabled);
+    manager->addSubscription("/test/param", *device, rc, authz_);
     EXPECT_TRUE(manager->removeSubscription("/test/param", *device, rc));
     EXPECT_EQ(rc.status, catena::StatusCode::OK);
 }
@@ -209,8 +225,8 @@ TEST_F(SubscriptionManagerTest, Subscription_RemoveNonExistentSubscription) {
 // Test 1.5: Success case - Getting all subscribed OIDs
 TEST_F(SubscriptionManagerTest, Subscription_GetAllSubscribedOids) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    manager->addSubscription("/test/param1", *device, rc, catena::common::Authorizer::kAuthzDisabled);
-    manager->addSubscription("/test/param2", *device, rc, catena::common::Authorizer::kAuthzDisabled);
+    manager->addSubscription("/test/param1", *device, rc, authz_);
+    manager->addSubscription("/test/param2", *device, rc, authz_);
     auto oids = manager->getAllSubscribedOids(*device);
     EXPECT_EQ(oids.size(), 2);
     EXPECT_TRUE(oids.find("/test/param1") != oids.end());
@@ -263,7 +279,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_AddWildcardSubscription) {
         ));
 
     // Test adding a wildcard subscription
-    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc, catena::common::Authorizer::kAuthzDisabled));
+    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc, authz_));
     EXPECT_EQ(rc.status, catena::StatusCode::OK);
 }
 
@@ -303,7 +319,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_ExpansionVerification) {
         ));
 
     // Add wildcard subscription
-    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc, catena::common::Authorizer::kAuthzDisabled));
+    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc, authz_));
 
     // Verify all 6 parameters were subscribed
     auto oids = manager->getAllSubscribedOids(*device);
@@ -362,10 +378,10 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemoveWildcardSubscription) {
         ));
     
     // Add wildcard subscription
-    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc, catena::common::Authorizer::kAuthzDisabled));
+    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc, authz_));
     
     // Add non-wildcard subscription
-    EXPECT_TRUE(manager->addSubscription("/nonwildcard/param", *device, rc, catena::common::Authorizer::kAuthzDisabled));
+    EXPECT_TRUE(manager->addSubscription("/nonwildcard/param", *device, rc, authz_));
     
     // Remove wildcard subscription
     EXPECT_TRUE(manager->removeSubscription("/test/*", *device, rc));
@@ -418,8 +434,8 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemovalVerification) {
         ));
     
     // Add both subscriptions
-    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc, catena::common::Authorizer::kAuthzDisabled));
-    EXPECT_TRUE(manager->addSubscription("/nonwildcard/param", *device, rc, catena::common::Authorizer::kAuthzDisabled));
+    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc, authz_));
+    EXPECT_TRUE(manager->addSubscription("/nonwildcard/param", *device, rc, authz_));
     
     // Remove wildcard subscription
     EXPECT_TRUE(manager->removeSubscription("/test/*", *device, rc));
@@ -459,57 +475,69 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemoveInvalidFormat) {
 
 // ======= ALL PARAMS SUBSCRIPTION TESTS =======
 
-// Test 3.1: Success case - Basic "all params" subscription addition
+// Test 3.1: Success case - Basic "all params" subscription addition and removal
 TEST_F(SubscriptionManagerTest, AllParams_AddAllParamsSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
-    // Set up device to return multiple top-level parameters
+    // Define a simple hierarchy: param with param/subparam as a sub-parameter
+    std::map<std::string, ParamHierarchyBuilder::DescriptorInfo> allParamsDescriptors;    
+    std::string parentOid = "param";
+    std::string subOid = "param/subparam";
+    allParamsDescriptors[parentOid] = ParamHierarchyBuilder::createDescriptor(parentOid);
+    allParamsDescriptors[subOid] = ParamHierarchyBuilder::createDescriptor(subOid);
+    ParamHierarchyBuilder::addChild(allParamsDescriptors[parentOid], "subparam", allParamsDescriptors[subOid]);
+
+    // Create mock parameters
+    auto parentParam = std::make_unique<MockParam>();
+    setupMockParam(parentParam.get(), parentOid, *allParamsDescriptors[parentOid].descriptor.get());
+    auto subParam = std::make_unique<MockParam>();
+    setupMockParam(subParam.get(), subOid, *allParamsDescriptors[subOid].descriptor.get());
+    
+    // Set up getScope expectations (needed for authorization checks)
+    const std::string param_scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
+    EXPECT_CALL(*parentParam, getScope())
+        .WillRepeatedly(::testing::ReturnRef(param_scope));
+    EXPECT_CALL(*subParam, getScope())
+        .WillRepeatedly(::testing::ReturnRef(param_scope));
+    
+    // Set up device to return all parameters 
     EXPECT_CALL(*device, getTopLevelParams(::testing::_, ::testing::_))
-        .WillRepeatedly(::testing::Invoke(
-            [this](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+        .WillOnce(::testing::Invoke(
+            [&parentParam, &subParam, &param_scope](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
                 std::vector<std::unique_ptr<IParam>> params;
-                
-                // Add test parameter 
-                auto test_param = std::make_unique<MockParam>();
-                setupMockParam(test_param.get(), "/test", test_descriptor);
-                // Use the same pattern as Authorization_test.cpp
-                const std::string& scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
-                EXPECT_CALL(*test_param, getScope())
-                    .WillRepeatedly(::testing::ReturnRef(scope));
-                params.push_back(std::move(test_param));
-                
-                // Add nonwildcard parameter
-                auto nonwildcard_param = std::make_unique<MockParam>();
-                setupMockParam(nonwildcard_param.get(), "/nonwildcard", test_descriptor);
-                EXPECT_CALL(*nonwildcard_param, getScope())
-                    .WillRepeatedly(::testing::ReturnRef(scope));
-                params.push_back(std::move(nonwildcard_param));
-                
+                // Return both the parent and sub-parameter
+                params.push_back(std::move(parentParam));
+                params.push_back(std::move(subParam));
                 status = catena::exception_with_status("", catena::StatusCode::OK);
                 return params;
             }
         ));
 
-    // Test adding "all params" subscription
-    EXPECT_TRUE(manager->addSubscription("/*", *device, rc, catena::common::Authorizer::kAuthzDisabled));
+    // Test adding "all params" subscription with authorization enabled
+    EXPECT_TRUE(manager->addSubscription("/*", *device, rc, authz_));
     EXPECT_EQ(rc.status, catena::StatusCode::OK);
+    
+    // Verify that both the parent and sub-parameter were subscribed
+    auto oids = manager->getAllSubscribedOids(*device);
+    EXPECT_EQ(oids.size(), 2);
+    EXPECT_TRUE(oids.find("/param") != oids.end());
+    EXPECT_TRUE(oids.find("/param/subparam") != oids.end());
+
+    // Now remove the "all params" subscription
+    EXPECT_TRUE(manager->removeSubscription("/*", *device, rc));
+    EXPECT_EQ(rc.status, catena::StatusCode::OK);
+    
+    // Verify that all subscriptions were removed
+    oids = manager->getAllSubscribedOids(*device);
+    EXPECT_EQ(oids.size(), 0);
 }
 
-// Test 3.2: Success case - "All params" subscription expansion verification
 
-// Test 3.3: Success case - "All params" subscription removal
-
-// Test 3.4: Success case - "All params" removal verification
-
-// Test 3.5: Error case - Remove non-existent "all params" subscription
-
-// Test 3.6: Error case - "All params" with getTopLevelParams error
-
-// Test 3.7: Success case - "All params" with empty top-level parameters
-
-// Test 3.8: Success case - "All params" with authorization filtering
-
-// Test 3.9: Success case - "All params" with mixed authorization results 
+// Test 3.3: Success case - "All params" with mixed authorization results 
 // This is new, I've never mixed up authorization before
 
-// Test 3.10: Error case - "All params" with exception during parameter traversal
+// Test 3.4: Error case - Remove non-existent "all params" subscription
+
+// Test 3.5: Error case - "All params" with getTopLevelParams error
+
+// Test 3.6: Error case - "All params" with exception during parameter traversal

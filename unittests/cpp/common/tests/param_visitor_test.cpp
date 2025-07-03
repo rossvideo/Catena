@@ -234,8 +234,6 @@ TEST_F(ParamVisitorTest, VisitNestedParams) {
 
 //Test visiting a parameter with array elements
 TEST_F(ParamVisitorTest, VisitArrayElements) {
-    std::cout << "\n=== VisitArrayElements test started ===" << std::endl;
-
     // Set up mock param to be an array type
     std::string array_oid = "/test/array";
     std::string element_param = "param";  // Parameter name for array elements
@@ -277,7 +275,6 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
             } else if (fqoid == array_oid) {
                 setupMockParam(param.get(), array_oid, *array_root.descriptor, true, 2);
             } else {
-                std::cout << "DEBUG TEST: Rejecting invalid path: " << fqoid << std::endl;
                 status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
                 return nullptr;
             }
@@ -288,17 +285,6 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
     MockParamVisitor visitor;
     ParamVisitor::traverseParams(mockParam.get(), array_oid, *device, visitor);
     
-    std::cout << "\nDEBUG: Visited paths:" << std::endl;
-    for (size_t i = 0; i < visitor.visitedPaths.size(); ++i) {
-        std::cout << "  " << i << ": " << visitor.visitedPaths[i] << std::endl;
-    }
-    
-    std::cout << "\nDEBUG: Visited arrays:" << std::endl;
-    for (size_t i = 0; i < visitor.visitedArrays.size(); ++i) {
-        std::cout << "  " << i << ": path=" << visitor.visitedArrays[i].first 
-                  << ", length=" << visitor.visitedArrays[i].second << std::endl;
-    }
-    
     EXPECT_EQ(visitor.visitedPaths.size(), 5);  // Root + 2 array elements + 2 element params
     EXPECT_EQ(visitor.visitedPaths[0], array_oid);  // First path should be array root
     EXPECT_EQ(visitor.visitedPaths[1], array_oid + "/0");  // Second path should be first element
@@ -308,5 +294,4 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
     EXPECT_EQ(visitor.visitedArrays.size(), 1);  // Should have one array visit
     EXPECT_EQ(visitor.visitedArrays[0].first, array_oid);  // Array path
     EXPECT_EQ(visitor.visitedArrays[0].second, 2);  // Array length
-    std::cout << "\n=== VisitArrayElements test completed ===\n" << std::endl;
 } 

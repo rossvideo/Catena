@@ -72,6 +72,7 @@ public:
     struct DescriptorInfo {
         std::shared_ptr<MockParamDescriptor> descriptor;
         std::shared_ptr<std::unordered_map<std::string, IParamDescriptor*>> subParams;
+        std::string oid;
         DescriptorInfo() : subParams(std::make_shared<std::unordered_map<std::string, IParamDescriptor*>>()) {}
     };
 
@@ -82,9 +83,10 @@ public:
      */
     static DescriptorInfo createDescriptor(const std::string& oid) {
         DescriptorInfo info;
+        info.oid = oid; 
         info.descriptor = std::make_shared<MockParamDescriptor>();
         EXPECT_CALL(*info.descriptor, getOid())
-            .WillRepeatedly(::testing::ReturnRef(oid));
+            .WillRepeatedly(::testing::ReturnRef(info.oid)); 
         EXPECT_CALL(*info.descriptor, getAllSubParams())
             .WillRepeatedly(::testing::ReturnRef(*info.subParams));
         return info;
