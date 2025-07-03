@@ -145,18 +145,42 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_IntToProto) {
  *                                  STRING
  * ============================================================================
  * 
- * TEST 2.1 - Testing String NamedChoiceConstraint constructors
+ * TEST 2.1 - Testing STRING_CHOICE NamedChoiceConstraint constructors
  */
 TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringCreate) {
     bool shared = false;
     std::string oid = "test_oid";
-    { // std::string constructor with no device
+    { // STRING_CHOICE constructor with no device
+    NamedChoiceConstraint<std::string> constraint({{"Choice1", {}}, {"Choice2", {}}}, true, oid, shared);
+    EXPECT_EQ(constraint.getOid(), oid);
+    EXPECT_EQ(constraint.isShared(), shared);
+    EXPECT_FALSE(constraint.isRange()) << "NamedChoiceConstraint should not be a range constraint";
+    }
+    { // STRING_CHOICE constructor with device
+    MockDevice dm;
+    EXPECT_CALL(dm, addItem(oid, testing::An<IConstraint*>())).Times(1).WillOnce(
+        testing::Invoke([](const std::string &key, IConstraint *item){
+            EXPECT_TRUE(item) << "No item passed into dm.addItem()";
+        }));
+    NamedChoiceConstraint<std::string> constraint({{"Choice1", {}}, {"Choice2", {}}}, true, oid, shared, dm);
+    EXPECT_EQ(constraint.getOid(), oid);
+    EXPECT_EQ(constraint.isShared(), shared);
+    EXPECT_FALSE(constraint.isRange()) << "NamedChoiceConstraint should not be a range constraint";
+    }
+}
+/* 
+ * TEST 2.2 - Testing STRING_STRING_CHOICE NamedChoiceConstraint constructors
+ */
+TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringStringCreate) {
+    bool shared = false;
+    std::string oid = "test_oid";
+    { // STRING_STRING_CHOICE constructor with no device
     NamedChoiceConstraint<std::string> constraint({{"Choice1", {{"en", "Choice 1"}}}, {"Choice2", {{"en", "Choice 2"}}}}, true, oid, shared);
     EXPECT_EQ(constraint.getOid(), oid);
     EXPECT_EQ(constraint.isShared(), shared);
     EXPECT_FALSE(constraint.isRange()) << "NamedChoiceConstraint should not be a range constraint";
     }
-    { // std::string constructor with device
+    { // STRING_STRING_CHOICE constructor with device
     MockDevice dm;
     EXPECT_CALL(dm, addItem(oid, testing::An<IConstraint*>())).Times(1).WillOnce(
         testing::Invoke([](const std::string &key, IConstraint *item){
@@ -169,7 +193,7 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringCreate) {
     }
 }
 /*
- * TEST 2.2 - Testing String NamedChoiceConstraint satified with strict set to true
+ * TEST 2.3 - Testing String NamedChoiceConstraint satified with strict set to true
  */
 TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringSatisfiedStrict) {
     NamedChoiceConstraint<std::string> constraint({{"Choice1", {}}, {"Choice2", {}}}, true, "test_oid", false);
@@ -185,7 +209,7 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringSatisfiedStrict) {
     EXPECT_FALSE(constraint.satisfied(src)) << "Constraint should not be satisfied by invalid value Choice3";
 }
 /* 
- * TEST 2.3 - Testing String NamedChoiceConstraint satified with strict set to false
+ * TEST 2.4 - Testing String NamedChoiceConstraint satified with strict set to false
  */
 TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringSatisfiedNotStrict) {
     NamedChoiceConstraint<std::string> constraint({{"Choice1", {}}, {"Choice2", {}}}, false, "test_oid", false);
@@ -201,7 +225,7 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringSatisfiedNotStrict) 
     EXPECT_TRUE(constraint.satisfied(src)) << "Constraint should be satisfied by invalid value Choice3 if not strict";
 }
 /* 
- * TEST 2.4 - Testing String NamedChoiceConstraint apply
+ * TEST 2.5 - Testing String NamedChoiceConstraint apply
  */
 TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringApply) {
     NamedChoiceConstraint<std::string> constraint({{"Choice1", {}}, {"Choice2", {}}}, true, "test_oid", false);
@@ -212,9 +236,29 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringApply) {
     EXPECT_EQ(res.SerializeAsString(), "") << "Apply should return an empty value for string NamedChoiceConstraint";
 }
 /* 
- * TEST 2.5 - Testing String NamedChoiceConstraint toProto
+ * TEST 2.6 - Testing String NamedChoiceConstraint toProto
  */
 TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringToProto) {
+    NamedChoiceConstraint<std::string>::ListInitializer choicesInit = {
+        {"Choice1", PolyglotText::ListInitializer{}},
+        {"Choice2", PolyglotText::ListInitializer{}}
+    };
+    NamedChoiceConstraint<std::string>::Choices choices(choicesInit.begin(), choicesInit.end());
+    NamedChoiceConstraint<std::string> constraint({{"Choice1", {}}, {"Choice2", {}}}, true, "test_oid", false);
+    catena::Constraint protoConstraint;
+    constraint.toProto(protoConstraint);
+    // Comparing results
+    EXPECT_EQ(protoConstraint.type(), catena::Constraint::STRING_CHOICE);
+    EXPECT_EQ(choices.size(), protoConstraint.string_string_choice().choices_size());
+    for (const auto& protoChoice : protoConstraint.string_string_choice().choices()) {
+        EXPECT_TRUE(choices.contains(protoChoice.value())) << "Choice value should be in the choices map";
+        EXPECT_TRUE(protoChoice.name().display_strings().empty()) << "Display strings should be empty for STRING_CHOICE";
+    }
+}
+/* 
+ * TEST 2.7 - Testing STRING_STRING_CHOICE NamedChoiceConstraint toProto
+ */
+TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringStringToProto) {
     NamedChoiceConstraint<std::string>::ListInitializer choicesInit = {
         {"Choice1", PolyglotText::ListInitializer{{"en", "one"}}},
         {"Choice2", PolyglotText::ListInitializer{{"en", "two"}}}
