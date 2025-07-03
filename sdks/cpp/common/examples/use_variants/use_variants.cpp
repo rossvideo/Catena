@@ -74,7 +74,9 @@ void printCoordinate(const Coordinates_elem& coord) {
     }, coord);
 }
 
-int main() {
+int main (int argc, char** argv) {
+    Logger::StartLogging(argc, argv);
+    
     // // lock the model
     std::lock_guard lg(dm.mutex());
     catena::exception_with_status err{"", catena::StatusCode::OK};
@@ -126,9 +128,6 @@ int main() {
     DEBUG_LOG << "Updated Coordinate/2: ";
     printCoordinate(coord);
 
-    DEBUG_LOG << "\n";
-
-
     ip = dm.getParam("/coordinates/0", err);
     if (!ip) {
         LOG(ERROR) << "Error: " << err.what();
@@ -139,8 +138,6 @@ int main() {
 
     value.set_int32_value(42);
     dm.setValue("/coordinates/0/cartesian/z", value);
-
-    DEBUG_LOG << "\n";
 
     ip = dm.getParam("/coordinates/0/cartesian", err);
     if (!ip) {
@@ -153,6 +150,8 @@ int main() {
     DEBUG_LOG << "Updated Coordinates/0/cartesian: ";
     printCoordinate(cartesian);
 
+    // Shutdown Google Logging
+    google::ShutdownGoogleLogging();
     return EXIT_SUCCESS;
 }
 

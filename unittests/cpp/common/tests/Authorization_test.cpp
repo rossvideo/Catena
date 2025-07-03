@@ -39,8 +39,25 @@
 #include "MockParamDescriptor.h"
 #include "Authorization.h"
 #include "Enums.h"
+#include <Logger.h>
+
+// gtest
+#include <gtest/gtest.h>
 
 using namespace catena::common;
+
+class AuthorizationTest : public ::testing::Test {
+  protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("AuthorizationTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
+};
 
 // A collection of valid tokens with one scope each.
 const std::unordered_map<std::string, std::string> testTokens {
@@ -61,7 +78,7 @@ const std::unordered_map<std::string, std::string> testTokens {
  * 
  * TEST 1 - Creating an authorizer object with a valid JWS token.
  */
-TEST(AuthorizationTests, Authz_createValid) {
+TEST(AuthorizationTest, Authz_createValid) {
     // Valid tokens.
     for (auto& [currentScope, currentToken] : testTokens) {
         EXPECT_NO_THROW(Authorizer authz(currentToken));
@@ -71,7 +88,7 @@ TEST(AuthorizationTests, Authz_createValid) {
 /* 
  * TEST 2 - Failing to create an authorizer object with a invalid JWS token.
  */
-TEST(AuthorizationTests, Authz_createInvalid) {
+TEST(AuthorizationTest, Authz_createInvalid) {
     // Invalid token.
     std::string invalid_token = "This is not a valid token";
     EXPECT_THROW(Authorizer authz(invalid_token), catena::exception_with_status);
@@ -80,7 +97,7 @@ TEST(AuthorizationTests, Authz_createInvalid) {
 /* 
  * TEST 3 - Testing hasAuthz().
  */
-TEST(AuthorizationTests, Authz_hasAuthz) {   
+TEST(AuthorizationTest, Authz_hasAuthz) {   
     for (auto& [currentScope, currentToken] : testTokens) {
         Authorizer* authz = nullptr;
         EXPECT_NO_THROW(authz = new Authorizer(currentToken));
@@ -101,7 +118,7 @@ TEST(AuthorizationTests, Authz_hasAuthz) {
 /* 
  * TEST 4 - Testing readAuthz().
  */
-TEST(AuthorizationTests, Authz_readAuthz) {
+TEST(AuthorizationTest, Authz_readAuthz) {
     MockParam param;
     MockParamDescriptor pd;
     for (auto& [currentScope, currentToken] : testTokens) {
@@ -126,7 +143,7 @@ TEST(AuthorizationTests, Authz_readAuthz) {
 /* 
  * TEST 5 - Testing writeAuthz().
  */
-TEST(AuthorizationTests, Authz_writeAuthz) {
+TEST(AuthorizationTest, Authz_writeAuthz) {
     MockParam param;
     MockParamDescriptor pd;
     for (auto& [currentScope, currentToken] : testTokens) {
@@ -157,7 +174,7 @@ TEST(AuthorizationTests, Authz_writeAuthz) {
 /* 
  * TEST 6 - Testing authorizer with no scope.
  */
-TEST(AuthorizationTests, Authz_scopeNone) {
+TEST(AuthorizationTest, Authz_scopeNone) {
     std::string noScope = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMj"
                           "M0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2M"
                           "jM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw"
@@ -197,7 +214,7 @@ TEST(AuthorizationTests, Authz_scopeNone) {
 /* 
  * TEST 7 - Testing kAuthzDisabled.
  */
-TEST(AuthorizationTests, Authz_disabled) {
+TEST(AuthorizationTest, Authz_disabled) {
     Authorizer* authz = &Authorizer::kAuthzDisabled;
     MockParam param;
     MockParamDescriptor pd;
@@ -235,7 +252,7 @@ TEST(AuthorizationTests, Authz_disabled) {
 /* 
  * TEST 8 - Testing authorizer with multiple scopes.
  */
-TEST(AuthorizationTests, Authz_scopeMulti) {
+TEST(AuthorizationTest, Authz_scopeMulti) {
     // This token has st2138:mon and st2138:op:w scopes.
     std::string multiScopes = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOi"
                               "IxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2Nvc"

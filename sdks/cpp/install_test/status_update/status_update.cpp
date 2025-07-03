@@ -268,5 +268,8 @@ int main(int argc, char* argv[])
   
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
+    
+    // Shutdown Google Logging
+    google::ShutdownGoogleLogging();
     return 0;
 }

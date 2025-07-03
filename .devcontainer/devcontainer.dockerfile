@@ -61,6 +61,9 @@ RUN mkdir -p ~/Catena \
     && git pull origin develop \
     && git submodule update --init --recursive
 
+# Install glog
+RUN sudo apt-get install -y libgoogle-glog-dev
+
 # Build Catena
 RUN mkdir -p ~/Catena/${BUILD_TARGET} \
     && cd ~/Catena/${BUILD_TARGET} \
@@ -77,6 +80,3 @@ WORKDIR /home/${USER_NAME}/Catena
 VOLUME ["/home/${USER_NAME}/Catena"] 
 
 ENTRYPOINT ["/bin/sh", "-c", "/bin/bash"]
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD ~/Catena/${BUILD_TARGET}/common/examples/hello_world/hello_world || exit 1

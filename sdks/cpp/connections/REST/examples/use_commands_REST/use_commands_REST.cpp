@@ -176,9 +176,7 @@ void defineCommands() {
 }
 
 int main(int argc, char* argv[]) {
-    FLAGS_logtostderr = false;          // Keep logging to files
-    FLAGS_log_dir = GLOG_LOGGING_DIR;   // Set the log directory
-    google::InitGoogleLogging("use_commands_REST");
+    Logger::StartLogging(argc, argv);
 
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
@@ -188,5 +186,8 @@ int main(int argc, char* argv[]) {
     
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
+    
+    // Shutdown Google Logging
+    google::ShutdownGoogleLogging();
     return 0;
 } 

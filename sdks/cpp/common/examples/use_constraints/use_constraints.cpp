@@ -64,10 +64,8 @@ using namespace use_constraints;
 using catena::common::ParamTag;
 using catena::common::getParamValue;
 
-int main() {
-    FLAGS_logtostderr = false;          // Keep logging to files
-    FLAGS_log_dir = GLOG_LOGGING_DIR;   // Set the log directory
-    google::InitGoogleLogging("use_constraints");
+int main (int argc, char** argv) {
+    Logger::StartLogging(argc, argv);
 
     // lock the model
     std::lock_guard lg(dm.mutex());

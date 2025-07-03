@@ -220,9 +220,7 @@ void RunRPCServer(std::string addr)
 
 int main(int argc, char* argv[])
 {
-    FLAGS_logtostderr = false;          // Keep logging to files
-    FLAGS_log_dir = GLOG_LOGGING_DIR;   // Set the log directory
-    google::InitGoogleLogging("status_update");
+    Logger::StartLogging(argc, argv);
 
     std::string addr;
     absl::SetProgramUsageMessage("Runs the Catena Service");
@@ -232,5 +230,8 @@ int main(int argc, char* argv[])
   
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
+    
+    // Shutdown Google Logging
+    google::ShutdownGoogleLogging();
     return 0;
 }

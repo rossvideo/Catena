@@ -17,7 +17,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -42,25 +42,55 @@
 
 #include <iostream>
 #include <sstream>
+#include <filesystem>
 
 #ifdef NDEBUG
   // Release build: only log to file
   #define DEBUG_LOG LOG(INFO)
 #else
-  #define DEBUG_LOG DebugLogger()
+  #define DEBUG_LOG Logger()
 #endif
 
-class DebugLogger {
+class Logger {
 public:
-  DebugLogger() = default;
+  Logger() = default;
 
   template <typename T>
-  DebugLogger& operator<<(const T& value) {
+  Logger& operator<<(const T& value) {
     stream_ << value;
     return *this;
   }
 
-  ~DebugLogger() {
+  static void StartLogging(const std::string& name) {
+    FLAGS_logtostderr = false;          // Keep logging to files
+    FLAGS_log_dir = GLOG_LOGGING_DIR;
+    
+    // Store the name in a static variable to ensure it stays alive
+    // for the lifetime of the program, since glog stores the pointer
+    static std::string program_name;
+    program_name = name;
+    google::InitGoogleLogging(program_name.c_str());
+    std::cout << "[       ] Program output gets sent to " << GLOG_LOGGING_DIR << std::endl;
+  }
+
+  static void StartLogging(int argc, char** argv) {
+    std::string name = "no_name";
+    for (int i = 1; i < argc; ++i) {
+      if (std::string(argv[i]) == "--silent") {
+        FLAGS_minloglevel = 2;
+      }
+    }
+
+    if (argc >= 1) {
+      // Extract just the basename from argv[0] to avoid path separators in log filename
+      std::filesystem::path execPath(argv[0]);
+      name = execPath.filename().string();
+    }
+
+    StartLogging(name);
+  }
+
+  ~Logger() {
     std::string output = stream_.str();
 
     // Output to stdout

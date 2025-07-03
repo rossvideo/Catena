@@ -50,7 +50,16 @@
 using namespace catena::common;
 
 class SubscriptionManagerTest : public ::testing::Test {
-protected:
+  protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("SubscriptionManagerTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
     void SetUp() override {
         manager = std::make_unique<SubscriptionManager>();
         device = std::make_unique<MockDevice>();

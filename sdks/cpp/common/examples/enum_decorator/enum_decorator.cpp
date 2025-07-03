@@ -94,10 +94,8 @@ const Primes::FwdMap Primes::fwdMap_ = {
     {Primes_e::kEleven, "eleven"}
 };
 
-int main() {
-    FLAGS_logtostderr = false;          // Keep logging to files
-    FLAGS_log_dir = GLOG_LOGGING_DIR;   // Set the log directory
-    google::InitGoogleLogging("enum_decorator");
+int main (int argc, char** argv) {
+    Logger::StartLogging(argc, argv);
     
     // default constructor, sets value to zero
     Counter c0;

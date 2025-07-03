@@ -64,10 +64,8 @@
 #include <iostream>
 
 using namespace catena::common;
-int main () {
-    FLAGS_logtostderr = false;          // Keep logging to files
-    FLAGS_log_dir = GLOG_LOGGING_DIR;   // Set the log directory
-    google::InitGoogleLogging("hello_world");
+int main (int argc, char** argv) {
+    Logger::StartLogging(argc, argv);
 
     // The client code, below, directly accesses parts of the device model
     // so we assert a lock on the device model's mutex to ensure threadsafe 
@@ -187,6 +185,8 @@ int main () {
         DEBUG_LOG << f << " ";
     }
 
+    // Shutdown Google Logging
+    google::ShutdownGoogleLogging();
     return EXIT_SUCCESS;
 
     // The Device::LockGuard object will automatically release the lock

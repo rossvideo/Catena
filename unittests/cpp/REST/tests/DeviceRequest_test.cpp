@@ -50,6 +50,16 @@ using namespace catena::REST;
 // Fixture
 class RESTDeviceRequestTests : public RESTEndpointTest {
   protected:
+
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RESTDeviceRequestTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
     /*
      * Sets default expectations for detailLevel().
      */

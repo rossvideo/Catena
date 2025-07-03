@@ -240,7 +240,10 @@ int main() {
     cout << "*** Example failed to run!" << why.what();
     return 1;
   }
-  return 0;
+  
+    // Shutdown Google Logging
+    google::ShutdownGoogleLogging();
+    return 0;
 }
 
 /* Possible Output

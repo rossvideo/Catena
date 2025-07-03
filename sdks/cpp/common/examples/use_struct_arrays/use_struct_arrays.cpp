@@ -60,10 +60,8 @@ using namespace catena::common;
 using namespace AudioDeck;
 using catena::common::ParamTag;
 
-int main() {
-    FLAGS_logtostderr = false;          // Keep logging to files
-    FLAGS_log_dir = GLOG_LOGGING_DIR;   // Set the log directory
-    google::InitGoogleLogging("use_struct_arrays");
+int main (int argc, char** argv) {
+    Logger::StartLogging(argc, argv);
 
     // lock the model
     std::lock_guard lg(dm.mutex());
