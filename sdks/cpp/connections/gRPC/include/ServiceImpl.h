@@ -66,7 +66,7 @@
 #include <IDevice.h>
 #include <Authorization.h>
 #include <SharedFlags.h>
-#include <ISubscriptionManager.h>
+#include <SubscriptionManager.h>
 
 // std
 #include <iostream>
@@ -101,11 +101,11 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
     /**
      * @brief Constructor for the CatenaServiceImpl class.
      * @param cq The completion queue for the server.
-     * @param dm The device to implement Catena services to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param EOPath The path to the external object.
      * @param authz Flag to enable authorization.
      */
-    CatenaServiceImpl(ServerCompletionQueue* cq, IDevice& dm, std::string& EOPath, bool authz);  
+    CatenaServiceImpl(ServerCompletionQueue* cq, std::vector<IDevice*> dms, std::string& EOPath, bool authz);  
     /**
      * @brief Creates the CallData objects for each gRPC command.
      */
@@ -126,7 +126,7 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      * @brief Get the subscription manager
      * @return Reference to the subscription manager
      */
-    inline catena::common::ISubscriptionManager& getSubscriptionManager() override { return *subscriptionManager_; }
+    inline catena::common::ISubscriptionManager& getSubscriptionManager() override { return subscriptionManager_; }
     /**
      * @brief Returns a pointer to the server's completion queue.
      */
@@ -135,6 +135,10 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      * @brief Returns the EOPath.
      */
     const std::string& EOPath() override { return EOPath_; }
+    /**
+     * @brief Returns the size of the registry.
+     */
+    uint32_t registrySize() const override { return registry_.size(); }
     /**
      * @brief Registers a CallData object into the registry
      * @param cd The CallData object to register
@@ -163,9 +167,11 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      */
     ServerCompletionQueue* cq_; 
     /**
-     * @brief The device to implement Catena services to
+     * @brief A map of slots to ptrs to their corresponding device.
+     * 
+     * Devices are global objects so raw ptrs should be safe.
      */
-    IDevice& dm_;
+    SlotMap dms_;
     /**
      * @brief The path to the external object
      */
@@ -177,7 +183,7 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
     /**
      * @brief The subscription manager for handling parameter subscriptions
      */
-    std::unique_ptr<catena::common::ISubscriptionManager> subscriptionManager_;
+    catena::common::SubscriptionManager subscriptionManager_;
 };
 
 }; // namespace gRPC

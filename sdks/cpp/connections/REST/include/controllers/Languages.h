@@ -65,15 +65,16 @@ class Languages : public ICallData {
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the Languages controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to list languages from.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    Languages(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    Languages(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief Languages's main process.
      */
@@ -89,10 +90,10 @@ class Languages : public ICallData {
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new Languages(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new Languages(socket, context, dms);
     }
     
 
@@ -104,7 +105,7 @@ class Languages : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << catena::patterns::EnumDecorator<RESTMethod>().getForwardMap().at(context_.method())
+      std::cout << RESTMethodMap().getForwardMap().at(context_.method())
                 << "Languages::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) << ", ok: " << std::boolalpha << ok
@@ -123,9 +124,9 @@ class Languages : public ICallData {
      */
     SocketWriter writer_;
     /**
-     * @brief The device to list languages from.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 
     /**
      * @brief ID of the Languages object

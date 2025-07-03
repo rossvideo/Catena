@@ -35,12 +35,6 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
- // gtest
-#include <gtest/gtest.h>
-
-// std
-#include <string>
-
 // Common
 #include <SubscriptionManager.h>
 
@@ -49,6 +43,7 @@
 
 // REST
 #include "SocketReader.h"
+
 using namespace catena::REST;
 
 // Fixture
@@ -67,7 +62,7 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
   
     void TearDown() override { /* Cleanup code here */ }
 
-    void testCall(catena::REST::RESTMethod method,
+    void testCall(RESTMethod method,
                   uint32_t slot,
                   std::string endpoint,
                   std::string fqoid,

@@ -34,7 +34,7 @@ void SocketReader::read(tcp::socket& socket, bool authz, const std::string& vers
     std::istringstream(header) >> methodStr >> url >> httpVersion;
 
     // Converting method to enum.
-    auto& methodMap = catena::patterns::EnumDecorator<RESTMethod>().getReverseMap();
+    auto& methodMap = RESTMethodMap().getReverseMap();
     if (methodMap.contains(methodStr)) {
         method_ = methodMap.at(methodStr);
     }

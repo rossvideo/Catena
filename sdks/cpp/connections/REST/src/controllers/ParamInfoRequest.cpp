@@ -48,8 +48,8 @@ using catena::common::IDevice;
 // Initializes the object counter for ParamInfoRequest to 0.
 int ParamInfoRequest::objectCounter_ = 0;
 
-ParamInfoRequest::ParamInfoRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm},
+ParamInfoRequest::ParamInfoRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms},
     rc_("", catena::StatusCode::OK), recursive_{false} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
@@ -62,104 +62,114 @@ void ParamInfoRequest::proceed() {
         std::unique_ptr<IParam> param;
         std::shared_ptr<Authorizer> sharedAuthz;
         Authorizer* authz;
+        IDevice* dm = nullptr;
+        // Getting device at specified slot.
+        if (dms_.contains(context_.slot())) {
+            dm = dms_.at(context_.slot());
+        }
+        // Making sure the device exists.
+        if (!dm) {
+            rc_ = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
 
-        // Get recursive from query parameters - presence alone means true
-        recursive_ = context_.hasField("recursive");
-
-        // Handle authorization setup
-        if (context_.authorizationEnabled()) {
-            sharedAuthz = std::make_shared<Authorizer>(context_.jwsToken());
-            authz = sharedAuthz.get();
         } else {
-            authz = &Authorizer::kAuthzDisabled;
-        }
+            // Get recursive from query parameters - presence alone means true
+            recursive_ = context_.hasField("recursive");
 
-        // Mode 1: Get all top-level parameters without recursion
-        if (context_.fqoid().empty() && !recursive_) {
-            std::vector<std::unique_ptr<IParam>> top_level_params;
-            {
-                std::lock_guard lg(dm_.mutex());
-                top_level_params = dm_.getTopLevelParams(rc_, *authz);
+            // Handle authorization setup
+            if (context_.authorizationEnabled()) {
+                sharedAuthz = std::make_shared<Authorizer>(context_.jwsToken());
+                authz = sharedAuthz.get();
+            } else {
+                authz = &Authorizer::kAuthzDisabled;
             }
-                
-            // Process each top-level parameter
-            if (rc_.status == catena::StatusCode::OK)  {
-                if (top_level_params.empty()) {
-                    rc_ = catena::exception_with_status("No top-level parameters found", catena::StatusCode::NOT_FOUND);
-                } else {
-                    std::lock_guard lg(dm_.mutex());
-                    responses_.clear();
-                    for (auto& top_level_param : top_level_params) {
-                        // Add the parameter to our response list
-                        addParamToResponses_(top_level_param.get(), *authz);
-                        // For array types, calculate and update array length
-                        if (top_level_param->isArrayType()) {
-                            uint32_t array_length = top_level_param->size();
-                            if (array_length > 0) {
-                                updateArrayLengths_(top_level_param->getOid(), array_length);
+
+            // Mode 1: Get all top-level parameters without recursion
+            if (context_.fqoid().empty() && !recursive_) {
+                std::vector<std::unique_ptr<IParam>> top_level_params;
+                {
+                    std::lock_guard lg(dm->mutex());
+                    top_level_params = dm->getTopLevelParams(rc_, *authz);
+                }
+                    
+                // Process each top-level parameter
+                if (rc_.status == catena::StatusCode::OK)  {
+                    if (top_level_params.empty()) {
+                        rc_ = catena::exception_with_status("No top-level parameters found", catena::StatusCode::NOT_FOUND);
+                    } else {
+                        std::lock_guard lg(dm->mutex());
+                        responses_.clear();
+                        for (auto& top_level_param : top_level_params) {
+                            // Add the parameter to our response list
+                            addParamToResponses_(top_level_param.get(), *authz);
+                            // For array types, calculate and update array length
+                            if (top_level_param->isArrayType()) {
+                                uint32_t array_length = top_level_param->size();
+                                if (array_length > 0) {
+                                    updateArrayLengths_(top_level_param->getOid(), array_length);
+                                }
                             }
                         }
                     }
                 }
             }
-        }
-        // Mode 2: Get all top-level parameters with recursion
-        else if (context_.fqoid().empty() && recursive_) {
-            std::vector<std::unique_ptr<IParam>> top_level_params;
-            {
-                std::lock_guard lg(dm_.mutex());
-                top_level_params = dm_.getTopLevelParams(rc_, *authz);
-            }
-            if (rc_.status == catena::StatusCode::OK) {
-                if (top_level_params.empty()) {
-                    rc_ = catena::exception_with_status("No top-level parameters found", catena::StatusCode::NOT_FOUND);
-                } else {
-                    std::lock_guard lg(dm_.mutex());
-                    responses_.clear();
-                    // Process each top-level parameter recursively
-                    for (auto& top_level_param : top_level_params) {
-                        // Add the parameter to our response list
-                        addParamToResponses_(top_level_param.get(), *authz);
-                        // For array types, calculate and update array length
-                        if (top_level_param->isArrayType()) {
-                            uint32_t array_length = top_level_param->size();
-                            if (array_length > 0) {
-                                updateArrayLengths_(top_level_param->getOid(), array_length);
+            // Mode 2: Get all top-level parameters with recursion
+            else if (context_.fqoid().empty() && recursive_) {
+                std::vector<std::unique_ptr<IParam>> top_level_params;
+                {
+                    std::lock_guard lg(dm->mutex());
+                    top_level_params = dm->getTopLevelParams(rc_, *authz);
+                }
+                if (rc_.status == catena::StatusCode::OK) {
+                    if (top_level_params.empty()) {
+                        rc_ = catena::exception_with_status("No top-level parameters found", catena::StatusCode::NOT_FOUND);
+                    } else {
+                        std::lock_guard lg(dm->mutex());
+                        responses_.clear();
+                        // Process each top-level parameter recursively
+                        for (auto& top_level_param : top_level_params) {
+                            // Add the parameter to our response list
+                            addParamToResponses_(top_level_param.get(), *authz);
+                            // For array types, calculate and update array length
+                            if (top_level_param->isArrayType()) {
+                                uint32_t array_length = top_level_param->size();
+                                if (array_length > 0) {
+                                    updateArrayLengths_(top_level_param->getOid(), array_length);
+                                }
                             }
+                            // Recursively traverse all children of the top-level parameter
+                            ParamInfoVisitor visitor(*dm, *authz, responses_, *this);
+                            ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), *dm, visitor);
                         }
-                        // Recursively traverse all children of the top-level parameter
-                        ParamInfoVisitor visitor(dm_, *authz, responses_, *this);
-                        ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), dm_, visitor);
                     }
                 }
             }
-        }
-        // Mode 3: Get a specific parameter and its children
-        else if (!context_.fqoid().empty()) { 
-            {
-                std::lock_guard lg(dm_.mutex());
-                param = dm_.getParam(context_.fqoid(), rc_, *authz);
-            }
+            // Mode 3: Get a specific parameter and its children
+            else if (!context_.fqoid().empty()) { 
+                {
+                    std::lock_guard lg(dm->mutex());
+                    param = dm->getParam(context_.fqoid(), rc_, *authz);
+                }
 
-            if (rc_.status == catena::StatusCode::OK) {
-                if (!param) {
-                    rc_ = catena::exception_with_status("Parameter not found: " + context_.fqoid(), catena::StatusCode::NOT_FOUND);
-                } else {
-                    responses_.clear();
-                    // Add the main parameter first 
-                    responses_.emplace_back();
-                    param->toProto(responses_.back(), *authz);
-                    // If the parameter is an array, update the array length
-                    if (param->isArrayType()) {
-                        uint32_t array_length = param->size();
-                        if (array_length > 0) {
-                            updateArrayLengths_(param->getOid(), array_length);
+                if (rc_.status == catena::StatusCode::OK) {
+                    if (!param) {
+                        rc_ = catena::exception_with_status("Parameter not found: " + context_.fqoid(), catena::StatusCode::NOT_FOUND);
+                    } else {
+                        responses_.clear();
+                        // Add the main parameter first 
+                        responses_.emplace_back();
+                        param->toProto(responses_.back(), *authz);
+                        // If the parameter is an array, update the array length
+                        if (param->isArrayType()) {
+                            uint32_t array_length = param->size();
+                            if (array_length > 0) {
+                                updateArrayLengths_(param->getOid(), array_length);
+                            }
                         }
-                    }
-                    // If recursive is true, collect all parameter info recursively through visitor pattern
-                    if (recursive_) {
-                        ParamInfoVisitor visitor(dm_, *authz, responses_, *this);
-                        ParamVisitor::traverseParams(param.get(), context_.fqoid(), dm_, visitor);
+                        // If recursive is true, collect all parameter info recursively through visitor pattern
+                        if (recursive_) {
+                            ParamInfoVisitor visitor(*dm, *authz, responses_, *this);
+                            ParamVisitor::traverseParams(param.get(), context_.fqoid(), *dm, visitor);
+                        }
                     }
                 }
             }

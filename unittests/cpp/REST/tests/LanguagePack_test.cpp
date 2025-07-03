@@ -47,10 +47,17 @@ using namespace catena::REST;
 // Fixture
 class RESTLanguagePackTests : public RESTEndpointTest {
   protected:
+    RESTLanguagePackTests() : RESTEndpointTest() {
+        // Default expectations for the device model 1 (should not be called).
+        EXPECT_CALL(dm1_, getLanguagePack(testing::_, testing::_)).Times(0);
+        EXPECT_CALL(dm1_, hasLanguage(testing::_)).Times(0);
+        EXPECT_CALL(dm1_, addLanguage(testing::_, testing::_)).Times(0);
+        EXPECT_CALL(dm1_, removeLanguage(testing::_, testing::_)).Times(0);
+    }
     /*
      * Creates a LanguagePack handler object.
      */
-    ICallData* makeOne() override { return LanguagePack::makeOne(serverSocket_, context_, dm0_); }
+    ICallData* makeOne() override { return LanguagePack::makeOne(serverSocket_, context_, dms_); }
 
     /*
      * Streamlines the creation of endpoint input. 
@@ -126,9 +133,23 @@ TEST_F(RESTLanguagePackTests, LanguagePack_Finish) {
  * TEST 0.3 - LanguagePack proceed() with an invalid method.
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_BadMethod) {
-    expRc_ = catena::exception_with_status("Bad method", catena::StatusCode::INVALID_ARGUMENT);
+    expRc_ = catena::exception_with_status("Bad method", catena::StatusCode::UNIMPLEMENTED);
     initPayload(0, "tl");
     method_ = Method_NONE;
+    // Setting expectations.
+    EXPECT_CALL(dm0_, getLanguagePack(testing::_, testing::_)).Times(0);
+    EXPECT_CALL(dm0_, addLanguage(testing::_, testing::_)).Times(0);
+    EXPECT_CALL(dm0_, removeLanguage(testing::_, testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/* 
+ * TEST 0.4 - LanguagePack proceed() with an invalid slot.
+ */
+TEST_F(RESTLanguagePackTests, LanguagePack_InvalidSlot) {
+    initPayload(dms_.size(), "tl");
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
     // Setting expectations.
     EXPECT_CALL(dm0_, getLanguagePack(testing::_, testing::_)).Times(0);
     EXPECT_CALL(dm0_, addLanguage(testing::_, testing::_)).Times(0);

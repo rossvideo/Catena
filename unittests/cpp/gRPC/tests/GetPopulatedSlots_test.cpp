@@ -35,17 +35,6 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-// gtest
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-// std
-#include <string>
-
-// protobuf
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 // Test helpers
 #include "GRPCTest.h"
 
@@ -61,7 +50,7 @@ class gRPCGetPopulatedSlotsTests : public GRPCTest {
     /*
      * Creates a GetPopulatedSlots handler object.
      */
-    void makeOne() override { new GetPopulatedSlots(&service, dm, true); }
+    void makeOne() override { new GetPopulatedSlots(&service_, dms_, true); }
 
     /* 
      * Makes an async RPC to the MockServer and waits for a response before
@@ -69,26 +58,25 @@ class gRPCGetPopulatedSlotsTests : public GRPCTest {
      */
     void testRPC() {
         // Sending async RPC.
-        client->async()->GetPopulatedSlots(&clientContext, &inVal, &outVal, [this](grpc::Status status){
-            outRc = status;
-            done = true;
-            cv.notify_one();
+        client_->async()->GetPopulatedSlots(&clientContext_, &inVal_, &outVal_, [this](grpc::Status status){
+            outRc_ = status;
+            done_ = true;
+            cv_.notify_one();
         });
-        cv.wait(lock, [this] { return done; });
+        cv_.wait(lock_, [this] { return done_; });
         // Comparing the results.
-        EXPECT_EQ(outVal.SerializeAsString(), expVal.SerializeAsString());
-        EXPECT_EQ(outRc.error_code(), static_cast<grpc::StatusCode>(expRc.status));
-        EXPECT_EQ(outRc.error_message(), expRc.what());
+        EXPECT_EQ(outVal_.SerializeAsString(), expVal_.SerializeAsString());
+        EXPECT_EQ(outRc_.error_code(), static_cast<grpc::StatusCode>(expRc_.status));
+        EXPECT_EQ(outRc_.error_message(), expRc_.what());
         // Make sure another GetPopulatedSlots handler was created.
-        EXPECT_TRUE(asyncCall) << "Async handler was not created during runtime";
+        EXPECT_TRUE(asyncCall_) << "Async handler was not created during runtime";
     }
 
     // in/out val
-    catena::Empty inVal;
-    catena::SlotList outVal;
+    catena::Empty inVal_;
+    catena::SlotList outVal_;
     // Expected variables
-    catena::SlotList expVal;
-    uint32_t testSlot = 1;
+    catena::SlotList expVal_;
 };
 
 /*
@@ -100,16 +88,16 @@ class gRPCGetPopulatedSlotsTests : public GRPCTest {
  */
 TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_Create) {
     // Creating getPopulatedSlots object.
-    EXPECT_TRUE(asyncCall);
+    EXPECT_TRUE(asyncCall_);
 }
 
 /*
  * TEST 2 - Normal case for GetPopulatedSlots proceed().
  */
 TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_Normal) {
-    expVal.add_slots(testSlot);
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(dm, slot()).Times(1).WillOnce(::testing::Return(testSlot));
+    for (auto [slot, dm]: dms_) {
+        expVal_.add_slots(slot);
+    }
     // Sending the RPC and comparing the results.
     testRPC();
 }

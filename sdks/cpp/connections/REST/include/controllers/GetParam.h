@@ -66,15 +66,16 @@ class GetParam : public ICallData {
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the GetParam controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to get the parameter from.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    GetParam(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    GetParam(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief GetParam's main process.
      */
@@ -90,10 +91,10 @@ class GetParam : public ICallData {
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new GetParam(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new GetParam(socket, context, dms);
     }
 
   private:
@@ -122,9 +123,9 @@ class GetParam : public ICallData {
      */
     SocketWriter writer_;
     /**
-     * @brief The device to set values of.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 
     /**
      * @brief ID of the GetParam object

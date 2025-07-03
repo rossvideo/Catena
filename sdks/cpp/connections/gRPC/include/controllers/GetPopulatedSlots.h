@@ -56,10 +56,10 @@ class GetPopulatedSlots : public CallData{
      * gRPC. Calls proceed() once initialized.
      *
      * @param service - Pointer to the parent CatenaServiceImpl.
-     * @param dm - Address of the device to get the populated slots of.
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok - Flag to check if the command was successfully executed.
      */ 
-    GetPopulatedSlots(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    GetPopulatedSlots(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
     /**
     * @brief Manages the steps of the GetPopulatedSlots gRPC command
     * through the state variable status. Returns the number of populated
@@ -89,9 +89,9 @@ class GetPopulatedSlots : public CallData{
      */
     CallStatus status_;
     /**
-     * @brief The device to get the populated slots of.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
     /**
      * @brief The object's unique id.
      */

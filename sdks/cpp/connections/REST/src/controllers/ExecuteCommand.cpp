@@ -11,8 +11,8 @@ using catena::common::IParamDescriptor;
 // Initializes the object counter for ExecuteCommand to 0.
 int ExecuteCommand::objectCounter_ = 0;
 
-ExecuteCommand::ExecuteCommand(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
+ExecuteCommand::ExecuteCommand(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
@@ -24,9 +24,19 @@ void ExecuteCommand::proceed() {
     bool respond = context_.hasField("respond");
 
     try {
-        // Parse JSON body if not empty.
         catena::Value val;
-        if (!context_.jsonBody().empty()) {
+        IDevice* dm = nullptr;
+
+        // Getting device at specified slot.
+        if (dms_.contains(context_.slot())) {
+            dm = dms_.at(context_.slot());
+        }
+        // Making sure the device exists.
+        if (!dm) {
+            rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+
+        // Parse JSON body if not empty.
+        } else if (!context_.jsonBody().empty()) {
             auto status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &val);
             if (!status.ok()) {
                 rc = catena::exception_with_status("Failed to parse JSON body", catena::StatusCode::INVALID_ARGUMENT);
@@ -39,9 +49,9 @@ void ExecuteCommand::proceed() {
             std::unique_ptr<IParam> command = nullptr;
             if (context_.authorizationEnabled()) {
                 catena::common::Authorizer authz{context_.jwsToken()};
-                command = dm_.getCommand(context_.fqoid(), rc, authz);
+                command = dm->getCommand(context_.fqoid(), rc, authz);
             } else {
-                command = dm_.getCommand(context_.fqoid(), rc, catena::common::Authorizer::kAuthzDisabled);
+                command = dm->getCommand(context_.fqoid(), rc, catena::common::Authorizer::kAuthzDisabled);
             }
 
             // If the command is not found, return an error

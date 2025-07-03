@@ -42,6 +42,9 @@
 #include <Tags.h>
 #include <PolyglotText.h>
 
+// protobuf interface
+#include <interface/param.pb.h>
+
 namespace catena {
 namespace common {
 

@@ -39,8 +39,8 @@ int GetPopulatedSlots::objectCounter_ = 0;
  * Constructor which initializes and registers the current GetPopulatedSlots
  * object, then starts the process.
  */
-GetPopulatedSlots::GetPopulatedSlots(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : CallData(service), dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+GetPopulatedSlots::GetPopulatedSlots(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+    : CallData(service), dms_{dms}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service_->registerItem(this);
     proceed(ok);
@@ -74,10 +74,15 @@ void GetPopulatedSlots::proceed( bool ok) {
         case CallStatus::kProcess:
             {
                 // Used to serve other clients while processing.
-                new GetPopulatedSlots(service_, dm_, ok);
+                new GetPopulatedSlots(service_, dms_, ok);
                 context_.AsyncNotifyWhenDone(this);
                 catena::SlotList ans;
-                ans.add_slots(dm_.slot());
+                for (auto [slot, dm] : dms_) {
+                    // If a devices exists at the slot, add it to the response.
+                    if (dm) {
+                        ans.add_slots(slot);
+                    }
+                }
                 status_ = CallStatus::kFinish;
                 responder_.Finish(ans, Status::OK, this);
             }

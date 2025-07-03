@@ -61,15 +61,16 @@ public:
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the Subscriptions controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to update subscriptions on.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    Subscriptions(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    Subscriptions(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     
     /**
      * @brief Subscriptions's main process.
@@ -86,10 +87,10 @@ public:
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-        return new Subscriptions(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+        return new Subscriptions(socket, context, dms);
     }
 
 private:
@@ -100,7 +101,7 @@ private:
      * @param ok The status of the RPC (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-        std::cout << catena::patterns::EnumDecorator<RESTMethod>().getForwardMap().at(context_.method())
+        std::cout <<RESTMethodMap().getForwardMap().at(context_.method())
                   << " Subscriptions::proceed[" << objectId_ << "]: "
                   << catena::common::timeNow() << " status: "
                   << static_cast<int>(status) << ", ok: " << std::boolalpha << ok
@@ -120,9 +121,9 @@ private:
      */
     std::unique_ptr<ISocketWriter> writer_ = nullptr;
     /**
-     * @brief The device to set subscriptions of.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 
     /**
      * @brief ID of the Subscriptions object

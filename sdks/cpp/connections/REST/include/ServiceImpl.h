@@ -45,7 +45,7 @@
 #include <IParam.h>
 #include <Authorization.h>
 #include <Enums.h>
-#include <ISubscriptionManager.h>
+#include <SubscriptionManager.h>
 #include <SharedFlags.h>
 
 // REST
@@ -68,8 +68,6 @@ using catena::REST::SocketReader;
 using catena::REST::SocketWriter;
 using catena::REST::SSEWriter;
 
-const std::string V1 = "v1";
-
 namespace catena {
 /**
  * @brief Namespace for classes relating to handling REST API requests.
@@ -84,6 +82,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
   // Specifying which Device and IParam to use (defaults to catena::...)
   using IDevice = catena::common::IDevice;
   using IParam = catena::common::IParam;
+  using SlotMap = catena::common::SlotMap;
 
   public:
     /**
@@ -94,7 +93,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      * @param authz Flag to enable authorization.
      * @param port The port to listen on. Default is 443.
      */
-    explicit CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool authz = false, uint16_t port = 443);
+    explicit CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOPath, bool authz = false, uint16_t port = 443);
 
     /**
      * @brief Returns the API's version.
@@ -118,7 +117,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
     /**
      * @brief The subscription manager for handling parameter subscriptions
      */
-    std::unique_ptr<catena::common::ISubscriptionManager> subscriptionManager_;
+    catena::common::SubscriptionManager subscriptionManager_;
 
     /**
      * @brief Returns true if port_ is already in use.
@@ -144,9 +143,11 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      */
     uint16_t port_;
     /**
-     * @brief The device to implement Catena services to
+     * @brief A map of slots to ptrs to their corresponding device.
+     * 
+     * Devices are global objects so raw ptrs should be safe.
      */
-    IDevice& dm_;
+    catena::common::SlotMap dms_;
     /**
      * @brief The path to the external object
      */
@@ -173,7 +174,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
                                                     std::string,
                                                     tcp::socket&,
                                                     ISocketReader&,
-                                                    IDevice&>;
+                                                    SlotMap&>;
     /**
      * @brief Creating an ICallData factory for handling request routing.
      */

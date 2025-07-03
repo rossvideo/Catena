@@ -294,8 +294,10 @@ std::vector<std::unique_ptr<IParam>> Device::getTopLevelParams(catena::exception
     try {
         for (const auto& [name, param] : params_) {
             if (authz.readAuthz(*param)) { 
-                Path path{name};
-                auto param_ptr = getParam(path.toString(true), status, authz);  
+                //By default, names don't have a leading slash, so we add it here.
+                std::string path_name = "/" + name;
+                Path path(path_name);
+                auto param_ptr = getParam(path, status, authz);  
                 if (param_ptr) {
                     result.push_back(std::move(param_ptr));
                 }

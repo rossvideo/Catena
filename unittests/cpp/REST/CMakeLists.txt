@@ -11,9 +11,9 @@ include_directories(mocks)
 include_directories(${CATENA_UNITTESTS_DIR}/cpp/common)
 include_directories(${CATENA_UNITTESTS_DIR}/cpp/common/mocks)
 
-set(SOURCES 	
+set(SOURCES
     tests/SocketReader_test.cpp
-    tests/SocketWriter_test.cpp    
+    tests/SocketWriter_test.cpp
     tests/GetValue_test.cpp
     tests/LanguagePack_test.cpp
     tests/Languages_test.cpp
@@ -26,19 +26,7 @@ set(SOURCES
     tests/Connect_test.cpp
     tests/ExecuteCommand_test.cpp
     tests/DeviceRequest_test.cpp
-
-    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/SocketReader.cpp
-    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/SocketWriter.cpp
-    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/GetValue.cpp
-    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/LanguagePack.cpp
-    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/Languages.cpp
-    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/GetPopulatedSlots.cpp
-    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/MultiSetValue.cpp
-    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/SetValue.cpp
-    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/GetParam.cpp
-    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/ParamInfoRequest.cpp
-    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/Subscriptions.cpp
-    ${CATENA_CPP_ROOT_DIR}/connections/REST/src/controllers/ExecuteCommand.cpp
+    tests/ServiceImpl_test.cpp
 )	
 
 add_executable(${This} ${SOURCES})	

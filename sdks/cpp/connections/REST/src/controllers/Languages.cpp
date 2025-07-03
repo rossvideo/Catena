@@ -6,8 +6,8 @@ using catena::REST::Languages;
 // Initializes the object counter for Languages to 0.
 int Languages::objectCounter_ = 0;
 
-Languages::Languages(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
+Languages::Languages(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
@@ -19,16 +19,26 @@ void Languages::proceed() {
     catena::LanguageList ans;
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
+        IDevice* dm = nullptr;
+        // Getting device at specified slot.
+        if (dms_.contains(context_.slot())) {
+            dm = dms_.at(context_.slot());
+        }
+
+        // Making sure the device exists.
+        if (!dm) {
+            rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+
         // GET/languages
-        if (context_.method() == Method_GET) {
-            std::lock_guard lg(dm_.mutex());
-            dm_.toProto(ans);
+        } else if (context_.method() == Method_GET) {
+            std::lock_guard lg(dm->mutex());
+            dm->toProto(ans);
             if (ans.languages().empty()) {
                 rc = catena::exception_with_status("No languages found", catena::StatusCode::NOT_FOUND);
             }
         // Invalid method.
         } else {
-            rc = catena::exception_with_status("", catena::StatusCode::INVALID_ARGUMENT);
+            rc = catena::exception_with_status("", catena::StatusCode::UNIMPLEMENTED);
         }
     } catch (const catena::exception_with_status& err) {
         rc = catena::exception_with_status(std::string(err.what()), err.status);
@@ -44,6 +54,6 @@ void Languages::proceed() {
 
 void Languages::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << catena::patterns::EnumDecorator<RESTMethod>().getForwardMap().at(context_.method())
+    std::cout << RESTMethodMap().getForwardMap().at(context_.method())
               << "Languages[" << objectId_ << "] finished\n";
 }

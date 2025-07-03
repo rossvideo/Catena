@@ -28,6 +28,7 @@ set(SOURCES
     tests/Connect_test.cpp
     tests/MenuGroup_test.cpp
     tests/Menu_test.cpp
+    tests/LanguagePack_test.cpp
 )
 
 add_executable(${This} ${SOURCES})
