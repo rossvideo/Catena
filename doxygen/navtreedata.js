@@ -132,10 +132,10 @@ var NAVTREEINDEX =
 "classcatena_1_1REST_1_1CatenaServiceImpl.html",
 "classcatena_1_1common_1_1Authorizer.html#afc70628c3d7fb1b6b2d1a9e2dddf7f5c",
 "classcatena_1_1common_1_1IMenuGroup.html",
-"classcatena_1_1common_1_1ParamDescriptor.html#a542de6f36c9ad1c127da0cbf2ea29697",
-"classcatena_1_1gRPC_1_1CallData.html",
-"classcatena_1_1patterns_1_1EnumDecorator.html#a5b381dd49122b46f4aca4b103c4f5c7f",
-"namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3b1d30cc8dadf912c63485ca943476ca"
+"classcatena_1_1common_1_1ParamDescriptor.html#a416c949c6ebff2c4dc8d7f62e179f1be",
+"classcatena_1_1common_1_1SubscriptionManager.html#a9efb56ebfe6712d9b08b71f0ff57350b",
+"classcatena_1_1patterns_1_1EnumDecorator.html#a1b38861ecab835aef36eb0722de4d1c7",
+"md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md48"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
