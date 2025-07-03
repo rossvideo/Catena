@@ -33,7 +33,6 @@ var annotated_dup =
         [ "ParamVisitor", "classcatena_1_1common_1_1ParamVisitor.html", "classcatena_1_1common_1_1ParamVisitor" ],
         [ "ParamWithValue", "classcatena_1_1common_1_1ParamWithValue.html", "classcatena_1_1common_1_1ParamWithValue" ],
         [ "Path", "classcatena_1_1common_1_1Path.html", "classcatena_1_1common_1_1Path" ],
-        [ "PicklistConstraint", "classcatena_1_1common_1_1PicklistConstraint.html", "classcatena_1_1common_1_1PicklistConstraint" ],
         [ "PolyglotText", "classcatena_1_1common_1_1PolyglotText.html", "classcatena_1_1common_1_1PolyglotText" ],
         [ "RangeConstraint", "classcatena_1_1common_1_1RangeConstraint.html", "classcatena_1_1common_1_1RangeConstraint" ],
         [ "StructInfo", "structcatena_1_1common_1_1StructInfo.html", null ],
