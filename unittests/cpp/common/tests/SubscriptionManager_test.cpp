@@ -682,3 +682,9 @@ TEST_F(SubscriptionManagerTest, AllParams_ParameterTraversalException) {
     // Test adding "all params" subscription when parameter traversal throws an exception
     EXPECT_THROW(manager->addSubscription("/*", *device, rc, authz_), std::runtime_error);
 }
+
+
+/**
+
+    @todo ARRAY TESTS!
+ */
