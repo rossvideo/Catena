@@ -91,7 +91,6 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1IMenuGroup.ht
 
 <div class="header">
   <div class="summary">
-<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="classcatena_1_1common_1_1IMenuGroup-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">catena::common::IMenuGroup Class Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div></div>
@@ -108,12 +107,6 @@ Inheritance diagram for catena::common::IMenuGroup:</div>
 <div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1IMenuGroup__inherit__graph.svg" width="230" height="110"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-types" name="pub-types"></a>
-Public Types</h2></td></tr>
-<tr class="memitem:a131f98516f520a9975ca0729b1b69610" id="r_a131f98516f520a9975ca0729b1b69610"><td class="memItemLeft" align="right" valign="top"><a id="a131f98516f520a9975ca0729b1b69610" name="a131f98516f520a9975ca0729b1b69610"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>MenuMap</b> = std::unordered_map&lt; std::string, std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IMenu.html">IMenu</a> &gt; &gt;</td></tr>
-<tr class="separator:a131f98516f520a9975ca0729b1b69610"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a87bd42f41f4e5770031c7206541ab548" id="r_a87bd42f41f4e5770031c7206541ab548"><td class="memItemLeft" align="right" valign="top"><a id="a87bd42f41f4e5770031c7206541ab548" name="a87bd42f41f4e5770031c7206541ab548"></a>
@@ -125,18 +118,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ae59aa8c3ff83243acaa7449906deb78e" id="r_ae59aa8c3ff83243acaa7449906deb78e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IMenuGroup.html#ae59aa8c3ff83243acaa7449906deb78e">toProto</a> (catena::MenuGroup &amp;menuGroup, bool shallow) const =0</td></tr>
 <tr class="memdesc:ae59aa8c3ff83243acaa7449906deb78e"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize a menu group to a protobuf message  <br /></td></tr>
 <tr class="separator:ae59aa8c3ff83243acaa7449906deb78e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab5ab36b7072f70b19193e675d9dde352" id="r_ab5ab36b7072f70b19193e675d9dde352"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IMenuGroup.html#ab5ab36b7072f70b19193e675d9dde352">addMenu</a> (const std::string &amp;oid, std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IMenu.html">IMenu</a> &gt; menu)=0</td></tr>
-<tr class="memdesc:ab5ab36b7072f70b19193e675d9dde352"><td class="mdescLeft">&#160;</td><td class="mdescRight">add a menu to the group using move semantics  <br /></td></tr>
-<tr class="separator:ab5ab36b7072f70b19193e675d9dde352"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8c8926bc0d5496b9748757aaa01695d4" id="r_a8c8926bc0d5496b9748757aaa01695d4"><td class="memItemLeft" align="right" valign="top">virtual const MenuMap *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IMenuGroup.html#a8c8926bc0d5496b9748757aaa01695d4">menus</a> () const =0</td></tr>
-<tr class="memdesc:a8c8926bc0d5496b9748757aaa01695d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">get menus from menu group  <br /></td></tr>
-<tr class="separator:a8c8926bc0d5496b9748757aaa01695d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab36da13ce8ac443a9024fedbcc52b022" id="r_ab36da13ce8ac443a9024fedbcc52b022"><td class="memItemLeft" align="right" valign="top">virtual const std::unordered_map&lt; std::string, <a class="el" href="classcatena_1_1common_1_1Menu.html">catena::common::Menu</a> &gt; *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IMenuGroup.html#ab36da13ce8ac443a9024fedbcc52b022">menus</a> () const =0</td></tr>
+<tr class="memdesc:ab36da13ce8ac443a9024fedbcc52b022"><td class="mdescLeft">&#160;</td><td class="mdescRight">get menus from menu group  <br /></td></tr>
+<tr class="separator:ab36da13ce8ac443a9024fedbcc52b022"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface for <a class="el" href="classcatena_1_1common_1_1Menu.html" title="A device menu.">Menu</a> Group. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="ab5ab36b7072f70b19193e675d9dde352" name="ab5ab36b7072f70b19193e675d9dde352"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab5ab36b7072f70b19193e675d9dde352">&#9670;&#160;</a></span>addMenu()</h2>
+<a id="ab36da13ce8ac443a9024fedbcc52b022" name="ab36da13ce8ac443a9024fedbcc52b022"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab36da13ce8ac443a9024fedbcc52b022">&#9670;&#160;</a></span>menus()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -145,54 +135,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual void catena::common::IMenuGroup::addMenu </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>oid</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IMenu.html">IMenu</a> &gt;&#160;</td>
-          <td class="paramname"><em>menu</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>add a menu to the group using move semantics </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">oid</td><td>the key of the menu </td></tr>
-    <tr><td class="paramname">menu</td><td>the menu </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1MenuGroup.html#a484bcdeee3cf35b510906357194e16c0">catena::common::MenuGroup</a>.</p>
-
-</div>
-</div>
-<a id="a8c8926bc0d5496b9748757aaa01695d4" name="a8c8926bc0d5496b9748757aaa01695d4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8c8926bc0d5496b9748757aaa01695d4">&#9670;&#160;</a></span>menus()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual const MenuMap * catena::common::IMenuGroup::menus </td>
+          <td class="memname">virtual const std::unordered_map&lt; std::string, <a class="el" href="classcatena_1_1common_1_1Menu.html">catena::common::Menu</a> &gt; * catena::common::IMenuGroup::menus </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -208,7 +151,7 @@ Public Member Functions</h2></td></tr>
 <p>get menus from menu group </p>
 <dl class="section return"><dt>Returns</dt><dd>a map of menus </dd></dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1MenuGroup.html#ad79bbd7ccb9e3a9d065880c480fd3dc9">catena::common::MenuGroup</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1MenuGroup.html#a8b6ce21e3e1407e2f197d1f9a6ae017b">catena::common::MenuGroup</a>.</p>
 
 </div>
 </div>
