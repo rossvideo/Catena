@@ -66,7 +66,6 @@ class RangeConstraint : public catena::common::IConstraint {
      * @param display_max the maximum value to display
      * @param oid the oid of the constraint
      * @param shared is the constraint shared
-     * @param parent the param to add the constraint to
      */
     RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid, bool shared)
         : min_(min), max_(max), step_{step}, display_min_{display_min},
