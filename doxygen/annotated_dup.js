@@ -19,7 +19,7 @@ var annotated_dup =
         [ "IParam", "classcatena_1_1common_1_1IParam.html", "classcatena_1_1common_1_1IParam" ],
         [ "IParamDescriptor", "classcatena_1_1common_1_1IParamDescriptor.html", "classcatena_1_1common_1_1IParamDescriptor" ],
         [ "IParamVisitor", "classcatena_1_1common_1_1IParamVisitor.html", "classcatena_1_1common_1_1IParamVisitor" ],
-        [ "IPolyglotText", "classcatena_1_1common_1_1IPolyglotText.html", "classcatena_1_1common_1_1IPolyglotText" ],
+        [ "IPolyglotText", "classcatena_1_1common_1_1IPolyglotText.html", null ],
         [ "ISubscriptionManager", "classcatena_1_1common_1_1ISubscriptionManager.html", "classcatena_1_1common_1_1ISubscriptionManager" ],
         [ "LanguagePack", "classcatena_1_1common_1_1LanguagePack.html", "classcatena_1_1common_1_1LanguagePack" ],
         [ "LanguagePackTag", "structcatena_1_1common_1_1LanguagePackTag.html", null ],
@@ -33,7 +33,8 @@ var annotated_dup =
         [ "ParamVisitor", "classcatena_1_1common_1_1ParamVisitor.html", "classcatena_1_1common_1_1ParamVisitor" ],
         [ "ParamWithValue", "classcatena_1_1common_1_1ParamWithValue.html", "classcatena_1_1common_1_1ParamWithValue" ],
         [ "Path", "classcatena_1_1common_1_1Path.html", "classcatena_1_1common_1_1Path" ],
-        [ "PolyglotText", "classcatena_1_1common_1_1PolyglotText.html", "classcatena_1_1common_1_1PolyglotText" ],
+        [ "PicklistConstraint", "classcatena_1_1common_1_1PicklistConstraint.html", "classcatena_1_1common_1_1PicklistConstraint" ],
+        [ "PolyglotText", "classcatena_1_1common_1_1PolyglotText.html", null ],
         [ "RangeConstraint", "classcatena_1_1common_1_1RangeConstraint.html", "classcatena_1_1common_1_1RangeConstraint" ],
         [ "StructInfo", "structcatena_1_1common_1_1StructInfo.html", null ],
         [ "SubscriptionManager", "classcatena_1_1common_1_1SubscriptionManager.html", "classcatena_1_1common_1_1SubscriptionManager" ]

@@ -125,83 +125,17 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a9aa536789cb6fc51296e0973ce4e5fb6" id="r_a9aa536789cb6fc51296e0973ce4e5fb6"><td class="memItemLeft" align="right" valign="top"><a id="a9aa536789cb6fc51296e0973ce4e5fb6" name="a9aa536789cb6fc51296e0973ce4e5fb6"></a>
 <a class="el" href="classcatena_1_1common_1_1IPolyglotText.html">IPolyglotText</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classcatena_1_1common_1_1IPolyglotText.html">IPolyglotText</a> &amp;&amp;)=default</td></tr>
 <tr class="separator:a9aa536789cb6fc51296e0973ce4e5fb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf66405d7671eec9e1ff29eab8850fb9" id="r_acf66405d7671eec9e1ff29eab8850fb9"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IPolyglotText.html#acf66405d7671eec9e1ff29eab8850fb9">toProto</a> (catena::PolyglotText &amp;dst) const =0</td></tr>
-<tr class="memdesc:acf66405d7671eec9e1ff29eab8850fb9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serializes the multilingual text into a protobuf message.  <br /></td></tr>
-<tr class="separator:acf66405d7671eec9e1ff29eab8850fb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ec781bbc3a10f581d603b0ae3d27b90" id="r_a4ec781bbc3a10f581d603b0ae3d27b90"><td class="memItemLeft" align="right" valign="top">virtual const DisplayStrings &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IPolyglotText.html#a4ec781bbc3a10f581d603b0ae3d27b90">displayStrings</a> () const =0</td></tr>
-<tr class="memdesc:a4ec781bbc3a10f581d603b0ae3d27b90"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the unordered map of multilingual text.  <br /></td></tr>
+<tr class="memitem:a814ea68b9c2031151944a5d2167a937f" id="r_a814ea68b9c2031151944a5d2167a937f"><td class="memItemLeft" align="right" valign="top"><a id="a814ea68b9c2031151944a5d2167a937f" name="a814ea68b9c2031151944a5d2167a937f"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>toProto</b> (google::protobuf::MessageLite &amp;msg) const =0</td></tr>
+<tr class="separator:a814ea68b9c2031151944a5d2167a937f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ec781bbc3a10f581d603b0ae3d27b90" id="r_a4ec781bbc3a10f581d603b0ae3d27b90"><td class="memItemLeft" align="right" valign="top"><a id="a4ec781bbc3a10f581d603b0ae3d27b90" name="a4ec781bbc3a10f581d603b0ae3d27b90"></a>
+virtual const DisplayStrings &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>displayStrings</b> () const =0</td></tr>
 <tr class="separator:a4ec781bbc3a10f581d603b0ae3d27b90"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface for managing multilingual text with support for serialization to protocol buffers. </p>
 <p>Defines the contract for handling and accessing multilingual display strings and serializing them into protocol buffers. </p>
-</div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a4ec781bbc3a10f581d603b0ae3d27b90" name="a4ec781bbc3a10f581d603b0ae3d27b90"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4ec781bbc3a10f581d603b0ae3d27b90">&#9670;&#160;</a></span>displayStrings()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual const DisplayStrings &amp; catena::common::IPolyglotText::displayStrings </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Returns the unordered map of multilingual text. </p>
-
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1PolyglotText.html#a135fed58709cf256ea8d353dd03060f8">catena::common::PolyglotText</a>.</p>
-
-</div>
-</div>
-<a id="acf66405d7671eec9e1ff29eab8850fb9" name="acf66405d7671eec9e1ff29eab8850fb9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acf66405d7671eec9e1ff29eab8850fb9">&#9670;&#160;</a></span>toProto()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual void catena::common::IPolyglotText::toProto </td>
-          <td>(</td>
-          <td class="paramtype">catena::PolyglotText &amp;&#160;</td>
-          <td class="paramname"><em>dst</em></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Serializes the multilingual text into a protobuf message. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">dst</td><td>The destination protobuf object. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1PolyglotText.html#a53f169aba4c59c535035da6920a4bed3">catena::common::PolyglotText</a>.</p>
-
-</div>
-</div>
-<hr/>The documentation for this class was generated from the following file:<ul>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>/home/runner/work/Catena/Catena/sdks/cpp/common/include/<a class="el" href="IPolyglotText_8h_source.html">IPolyglotText.h</a></li>
 </ul>
 </div><!-- contents -->
