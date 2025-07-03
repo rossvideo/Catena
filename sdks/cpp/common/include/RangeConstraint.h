@@ -201,7 +201,7 @@ class RangeConstraint : public catena::common::IConstraint {
             constraint.mutable_int32_range()->set_display_min(display_min_);
             constraint.mutable_int32_range()->set_display_max(display_max_);
         }
-        // Falot range constraint
+        // Float range constraint
         else if constexpr(std::is_same<T, float>::value) {
             constraint.set_type(catena::Constraint::FLOAT_RANGE);
             constraint.mutable_float_range()->set_min_value(min_);
