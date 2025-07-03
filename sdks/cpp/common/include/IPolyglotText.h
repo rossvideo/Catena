@@ -37,7 +37,6 @@
  * @copyright Copyright (c) 2024 Ross Video
  */
 
-// #include "google/protobuf/message_lite.h"
 // Protobuf
 #include <interface/language.pb.h>
 
