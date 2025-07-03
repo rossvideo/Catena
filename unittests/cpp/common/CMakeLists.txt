@@ -26,6 +26,8 @@ set(SOURCES
     tests/param_visitor_test.cpp
     tests/Authorization_test.cpp
     tests/Connect_test.cpp
+    tests/MenuGroup_test.cpp
+    tests/Menu_test.cpp
     tests/StructInfo_test.cpp
     tests/LanguagePack_test.cpp
     tests/PolyglotText_test.cpp
