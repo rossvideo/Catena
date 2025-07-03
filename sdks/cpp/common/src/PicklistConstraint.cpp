@@ -31,26 +31,16 @@
 // common
 #include <PicklistConstraint.h>
 
-// protobuf interface
-#include <interface/param.pb.h>
-
-using IParam = catena::common::IParam;
-
 using catena::common::PicklistConstraint;
 
-PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::string oid, 
-    bool shared, IDevice& dm)
-    : choices_{init.begin(), init.end()}, 
-    strict_{strict}, oid_{oid}, default_{*init.begin()}, shared_{shared} {
+PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
+    : choices_{init.begin(), init.end()}, strict_{strict}, oid_{oid},
+      default_{*init.begin()}, shared_{shared} {}
+
+PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::string oid, bool shared, IDevice& dm)
+    : PicklistConstraint(init, strict, oid, shared) {
     dm.addItem(oid, this);
 }
-
-PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::string oid, 
-    bool shared)
-    : choices_{init.begin(), init.end()}, 
-    strict_{strict}, oid_{oid}, default_{*init.begin()}, shared_{shared} {}
-
-PicklistConstraint::~PicklistConstraint() = default;
 
 bool PicklistConstraint::satisfied(const catena::Value& src) const {
     return !strict_ || choices_.contains(src.string_value());

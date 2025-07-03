@@ -41,13 +41,10 @@
 
 // common
 #include <IConstraint.h>
-#include <IParam.h>
 #include <Tags.h>
 #include <IDevice.h>
 
-// catena interface
-#include <google/protobuf/message_lite.h>
-
+// std
 #include <cmath>
 
 namespace catena {

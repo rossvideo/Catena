@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the PicklistConstraint.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/07/02
+ * @date 25/07/03
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -45,49 +45,85 @@
 
 using namespace catena::common;
 
-
+/* 
+ * TEST 1 - Testing PickListConstraint Constructors
+ */
 TEST(PicklistConstraintTest, PicklistConstraint_Create) {
     // Variables to reuse
-    PicklistConstraint::ListInitializer choices = {"Choice1", "Choice2", "Choice3"};
-    bool strict = true;
     std::string oid = "test_oid";
     bool shared = false;
-    MockDevice dm;
-    // Constructor with no device
-    PicklistConstraint constraint(choices, strict, oid, shared);
+    { // Constructor with no device
+    PicklistConstraint constraint({"Choice1", "Choice2"}, true, oid, shared);
     EXPECT_EQ(constraint.getOid(), oid);
     EXPECT_EQ(constraint.isShared(), shared);
     EXPECT_FALSE(constraint.isRange()) << "PicklistConstraint should not be a range constraint";
-    // Constructor with device.
+    }
+    { // Constructor with device.
+    MockDevice dm;
     EXPECT_CALL(dm, addItem(oid, testing::An<IConstraint*>())).Times(1).WillOnce(
         testing::Invoke([](const std::string &key, IConstraint *item){
             EXPECT_TRUE(item) << "No item passed into dm.addItem()";
         }));
-    constraint = PicklistConstraint(choices, strict, oid, shared, dm);
+    PicklistConstraint constraint({"Choice1", "Choice2"}, true, oid, shared, dm);
     EXPECT_EQ(constraint.getOid(), oid);
     EXPECT_EQ(constraint.isShared(), shared);
     EXPECT_FALSE(constraint.isRange()) << "PicklistConstraint should not be a range constraint";
+    }
 }
-
-TEST(PicklistConstraintTest, PicklistConstraint_SatisfiedNotStrict) {
-    PicklistConstraint constraint({"Choice1", "Choice2", "Choice3"}, false, "test_oid", false);
-    catena::Value src;
-    src.set_string_value("Choice4");
-    EXPECT_TRUE(constraint.satisfied(src)) << "PicklistConstraint should be satisfied when not strict";
-}
-
+/* 
+ * TEST 2 - Testing PickListConstraint Satisfied with strict set to true
+ */
 TEST(PicklistConstraintTest, PicklistConstraint_SatisfiedStrict) {
-    
+    PicklistConstraint constraint({"Choice1", "Choice2"}, true, "test_oid", false);
+    catena::Value src;
+    // Valid
+    src.set_string_value("Choice1");
+    EXPECT_TRUE(constraint.satisfied(src)) << "PicklistConstraint should be satisfied with valid value \"Choice1\"";
+    // Valid
+    src.set_string_value("Choice2");
+    EXPECT_TRUE(constraint.satisfied(src)) << "PicklistConstraint should be satisfied with valid value \"Choice2\"";
+    // Invalid
+    src.set_string_value("Choice3");
+    EXPECT_FALSE(constraint.satisfied(src)) << "PicklistConstraint should not be satisfied with invalid value \"Choice3\" when strict";
 }
-
+/* 
+ * TEST 3 - Testing PickListConstraint Satisfied with strict set to false
+ */
+TEST(PicklistConstraintTest, PicklistConstraint_SatisfiedNotStrict) {
+    PicklistConstraint constraint({"Choice1", "Choice2"}, false, "test_oid", false);
+    catena::Value src;
+    // Valid
+    src.set_string_value("Choice1");
+    EXPECT_TRUE(constraint.satisfied(src)) << "PicklistConstraint should be satisfied with valid value \"Choice1\"";
+    // Valid
+    src.set_string_value("Choice2");
+    EXPECT_TRUE(constraint.satisfied(src)) << "PicklistConstraint should be satisfied with valid value \"Choice2\"";
+    // Valid
+    src.set_string_value("Choice3");
+    EXPECT_TRUE(constraint.satisfied(src)) << "PicklistConstraint should be satisfied with invalid value \"Choice3\" when not strict";
+}
+/* 
+ * TEST 4 - Testing PickListConstraint Apply
+ */
 TEST(PicklistConstraintTest, PicklistConstraint_Apply) {
-    
+    PicklistConstraint constraint({"Choice1", "Choice2"}, false, "test_oid", false);
+    catena::Value src;
+    catena::Value res;
+    src.set_string_value("SomeChoice");
+    res = constraint.apply(src);
+    EXPECT_EQ(res.SerializeAsString(), "") << "Apply should return an empty value for PicklistConstraint";
 }
-
+/* 
+ * TEST 5 - Testing PickListConstraint toProto
+ */
 TEST(PicklistConstraintTest, PicklistConstraint_ToProto) {
-    
-}
-
-TEST(PicklistConstraintTest, PicklistConstraint_ToProtoEmpty) {
-    
+    PicklistConstraint::ListInitializer choicesInit = {"Choice1", "Choice2"};
+    PicklistConstraint::Choices choices(choicesInit.begin(), choicesInit.end());
+    PicklistConstraint constraint(choicesInit, false, "test_oid", false);
+    catena::Constraint protoConstraint;
+    constraint.toProto(protoConstraint);
+    // Comparing results
+    EXPECT_EQ(protoConstraint.type(), catena::Constraint::STRING_CHOICE);
+    const auto& protoChoices = protoConstraint.string_choice().choices();
+    EXPECT_EQ(choices, PicklistConstraint::Choices(protoChoices.begin(), protoChoices.end()));
 }

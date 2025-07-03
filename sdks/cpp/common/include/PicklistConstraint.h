@@ -40,12 +40,10 @@
 
 // common
 #include <IConstraint.h>
-#include <IParam.h>
 #include <Tags.h>
 #include <IDevice.h>
 
-#include <google/protobuf/message_lite.h>
-
+// std
 #include <string>
 #include <unordered_set>
 #include <initializer_list>
@@ -73,10 +71,9 @@ class PicklistConstraint : public IConstraint {
      * @param strict should the value be constrained if not in choices
      * @param oid the oid of the constraint
      * @param shared is the constraint shared
-     * @param dm the device to add the constraint to
      * @note  the first choice provided will be the default for the constraint
      */
-    PicklistConstraint(ListInitializer init, bool strict, std::string oid, bool shared, IDevice& dm);
+    PicklistConstraint(ListInitializer init, bool strict, std::string oid, bool shared);
 
     /**
      * @brief Construct a new Picklist Constraint object
@@ -84,15 +81,15 @@ class PicklistConstraint : public IConstraint {
      * @param strict should the value be constrained if not in choices
      * @param oid the oid of the constraint
      * @param shared is the constraint shared
-     * @param parent the param to add the constraint to
+     * @param dm the device to add the constraint to
      * @note  the first choice provided will be the default for the constraint
      */
-    PicklistConstraint(ListInitializer init, bool strict, std::string oid, bool shared);
+    PicklistConstraint(ListInitializer init, bool strict, std::string oid, bool shared, IDevice& dm);
 
     /**
      * @brief default destructor
      */
-    virtual ~PicklistConstraint();
+    virtual ~PicklistConstraint() = default;
 
     /**
      * @brief check if a value satisfies the constraint

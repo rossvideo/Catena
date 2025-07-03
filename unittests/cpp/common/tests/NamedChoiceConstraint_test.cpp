@@ -224,7 +224,7 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringToProto) {
     catena::Constraint protoConstraint;
     constraint.toProto(protoConstraint);
     // Comparing results
-    EXPECT_EQ(protoConstraint.type(), catena::Constraint_ConstraintType_STRING_STRING_CHOICE);
+    EXPECT_EQ(protoConstraint.type(), catena::Constraint::STRING_STRING_CHOICE);
     EXPECT_EQ(choices.size(), protoConstraint.string_string_choice().choices_size());
     for (const auto& protoChoice : protoConstraint.string_string_choice().choices()) {
         ASSERT_TRUE(choices.contains(protoChoice.value())) << "Choice value should be in the choices map";
