@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the SubscriptionManager.cpp file.
  * @author zuhayr.sarker@rossvideo.com
- * @date 25/05/16
+ * @date 25/07/03
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -78,6 +78,9 @@ protected:
                     .WillRepeatedly(::testing::Return(false));
                 EXPECT_CALL(*param, getOid())
                     .WillRepeatedly(::testing::ReturnRef(fqoid));
+                static const std::string scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
+                EXPECT_CALL(*param, getScope())
+                    .WillRepeatedly(::testing::ReturnRef(scope));
                 status = catena::exception_with_status("", catena::StatusCode::OK);
                 return param;
             }));
@@ -179,6 +182,34 @@ protected:
         // Build descriptors for both hierarchies
         buildTree(wildcardRoot, wildcardDescriptors);
         buildTree(nonwildcardRoot, nonwildcardDescriptors);
+    }
+
+    // Helper function to set up "all params" test hierarchy
+    struct AllParamsTestSetup {
+        std::map<std::string, ParamHierarchyBuilder::DescriptorInfo> descriptors;
+        std::unique_ptr<MockParam> parentParam;
+        std::unique_ptr<MockParam> subParam;
+        std::string parentOid;
+        std::string subOid;
+    };
+
+    AllParamsTestSetup setupAllParamsTestHierarchy() {
+        AllParamsTestSetup setup;
+        
+        // Define a simple hierarchy: param with param/subparam as a sub-parameter
+        setup.parentOid = "param";
+        setup.subOid = "param/subparam";
+        setup.descriptors[setup.parentOid] = ParamHierarchyBuilder::createDescriptor(setup.parentOid);
+        setup.descriptors[setup.subOid] = ParamHierarchyBuilder::createDescriptor(setup.subOid);
+        ParamHierarchyBuilder::addChild(setup.descriptors[setup.parentOid], "subparam", setup.descriptors[setup.subOid]);
+
+        // Create mock parameters
+        setup.parentParam = std::make_unique<MockParam>();
+        setup.subParam = std::make_unique<MockParam>();
+        setupMockParam(setup.parentParam.get(), setup.parentOid, *setup.descriptors[setup.parentOid].descriptor.get());
+        setupMockParam(setup.subParam.get(), setup.subOid, *setup.descriptors[setup.subOid].descriptor.get());
+        
+        return setup;
     }
 
     std::unique_ptr<SubscriptionManager> manager;
@@ -487,33 +518,20 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemoveInvalidFormat) {
 TEST_F(SubscriptionManagerTest, AllParams_AddAllParamsSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
-    // Define a simple hierarchy: param with param/subparam as a sub-parameter
-    std::map<std::string, ParamHierarchyBuilder::DescriptorInfo> allParamsDescriptors;    
-    std::string parentOid = "param";
-    std::string subOid = "param/subparam";
-    allParamsDescriptors[parentOid] = ParamHierarchyBuilder::createDescriptor(parentOid);
-    allParamsDescriptors[subOid] = ParamHierarchyBuilder::createDescriptor(subOid);
-    ParamHierarchyBuilder::addChild(allParamsDescriptors[parentOid], "subparam", allParamsDescriptors[subOid]);
-
-    // Create mock parameters
-    auto parentParam = std::make_unique<MockParam>();
-    setupMockParam(parentParam.get(), parentOid, *allParamsDescriptors[parentOid].descriptor.get());
-    auto subParam = std::make_unique<MockParam>();
-    setupMockParam(subParam.get(), subOid, *allParamsDescriptors[subOid].descriptor.get());
-    
-    // Set up getScope expectations (needed for authorization checks)
-    const std::string param_scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
-    EXPECT_CALL(*parentParam, getScope())
-        .WillRepeatedly(::testing::ReturnRef(param_scope));
-    EXPECT_CALL(*subParam, getScope())
-        .WillRepeatedly(::testing::ReturnRef(param_scope));
+    // Set up test hierarchy using helper function
+    auto setup = setupAllParamsTestHierarchy();
     
     // Set up device to return all parameters 
     EXPECT_CALL(*device, getTopLevelParams(::testing::_, ::testing::_))
         .WillOnce(::testing::Invoke(
-            [&parentParam, &subParam, &param_scope](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+            [&setup](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
                 std::vector<std::unique_ptr<IParam>> params;
-                // Return both the parent and sub-parameter
+                // Create new parameters with proper authorization setup
+                auto parentParam = std::make_unique<MockParam>();
+                setupMockParam(parentParam.get(), setup.parentOid, *setup.descriptors[setup.parentOid].descriptor);
+                auto subParam = std::make_unique<MockParam>();
+                setupMockParam(subParam.get(), setup.subOid, *setup.descriptors[setup.subOid].descriptor);
+                // Return both parameters
                 params.push_back(std::move(parentParam));
                 params.push_back(std::move(subParam));
                 status = catena::exception_with_status("", catena::StatusCode::OK);
@@ -540,11 +558,127 @@ TEST_F(SubscriptionManagerTest, AllParams_AddAllParamsSubscription) {
     EXPECT_EQ(oids.size(), 0);
 }
 
-// Test 3.3: Success case - "All params" with mixed authorization results 
-// This is new, I've never mixed up authorization before
+// Test 3.2: Success case - "All params" with mixed authorization results
+TEST_F(SubscriptionManagerTest, AllParams_MixedAuthorizationResults) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    
+    // Set up test hierarchy using helper function
+    auto setup = setupAllParamsTestHierarchy();
+    
+    // Set up different scopes for authorization testing
+    const std::string authorized_scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
+    const std::string unauthorized_scope = Scopes().getForwardMap().at(Scopes_e::kUndefined);
+    
+    // Override getParam behavior for this test to return parameters with correct scopes
+    // Override getParam behavior for this test to return parameters with correct scopes
+    EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [&setup, &authorized_scope, &unauthorized_scope](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+                auto param = std::make_unique<MockParam>();
+                // Setup parameters with correct scopes based on OID pattern
+                if (fqoid.find(setup.subOid) != std::string::npos) {
+                    setupMockParam(param.get(), fqoid, *setup.descriptors[setup.subOid].descriptor, false, 0, unauthorized_scope);
+                } else if (fqoid.find(setup.parentOid) != std::string::npos) {
+                    setupMockParam(param.get(), fqoid, *setup.descriptors[setup.parentOid].descriptor, false, 0, authorized_scope);
+                } else {
+                    status = catena::exception_with_status("Parameter not found", catena::StatusCode::NOT_FOUND);
+                    return nullptr;
+                }
+                status = catena::exception_with_status("", catena::StatusCode::OK);
+                return param;
+            }
+        ));
+    
+    // Set up device to return all parameters
+    EXPECT_CALL(*device, getTopLevelParams(::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke(
+            [&setup, &authorized_scope, &unauthorized_scope](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+                std::vector<std::unique_ptr<IParam>> params;
+                auto parentParam = std::make_unique<MockParam>();
+                setupMockParam(parentParam.get(), setup.parentOid, *setup.descriptors[setup.parentOid].descriptor);
+                params.push_back(std::move(parentParam));
+                status = catena::exception_with_status("", catena::StatusCode::OK);
+                return params;
+            }
+        ));
 
-// Test 3.4: Error case - Remove non-existent "all params" subscription
+    // Test adding "all params" subscription with mixed authorization
+    EXPECT_TRUE(manager->addSubscription("/*", *device, rc, authz_));
+    EXPECT_EQ(rc.status, catena::StatusCode::OK);
+    
+    // Verify that only the authorized parameter was subscribed
+    auto oids = manager->getAllSubscribedOids(*device);
+    EXPECT_EQ(oids.size(), 1);
+    EXPECT_TRUE(oids.find("/param") != oids.end());
+    EXPECT_TRUE(oids.find("/param/subparam") == oids.end()); // Should not be subscribed due to authorization
+}
 
-// Test 3.5: Error case - "All params" with getTopLevelParams error
+// Test 3.3: Error case - Remove non-existent "all params" subscription
+TEST_F(SubscriptionManagerTest, AllParams_RemoveNonExistentAllParamsSubscription) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    
+    // Try to remove an "all params" subscription that doesn't exist
+    EXPECT_FALSE(manager->removeSubscription("/*", *device, rc));
+    EXPECT_EQ(rc.status, catena::StatusCode::NOT_FOUND);
+    
+    // Verify no subscriptions exist
+    auto oids = manager->getAllSubscribedOids(*device);
+    EXPECT_EQ(oids.size(), 0);
+}
 
-// Test 3.6: Error case - "All params" with exception during parameter traversal
+// Test 3.4: Error case - "All params" with getTopLevelParams error
+TEST_F(SubscriptionManagerTest, AllParams_GetTopLevelParamsError) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    
+    // Set up device to return error from getTopLevelParams
+    EXPECT_CALL(*device, getTopLevelParams(::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke(
+            [](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+                status = catena::exception_with_status("Failed to get top level parameters", catena::StatusCode::INTERNAL);
+                return std::vector<std::unique_ptr<IParam>>();
+            }
+        ));
+
+    // Test adding "all params" subscription when getTopLevelParams fails
+    EXPECT_FALSE(manager->addSubscription("/*", *device, rc, authz_));
+    EXPECT_EQ(rc.status, catena::StatusCode::INTERNAL);
+    
+    // Verify no subscriptions were added
+    auto oids = manager->getAllSubscribedOids(*device);
+    EXPECT_EQ(oids.size(), 0);
+}
+
+// Test 3.5: Error case - "All params" with exception during parameter traversal
+TEST_F(SubscriptionManagerTest, AllParams_ParameterTraversalException) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    
+    // Set up test hierarchy using helper function
+    auto setup = setupAllParamsTestHierarchy();
+    
+    // Set up getScope expectations (needed for authorization checks)
+    const std::string param_scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
+    EXPECT_CALL(*setup.parentParam, getScope())
+        .WillRepeatedly(::testing::ReturnRef(param_scope));
+    EXPECT_CALL(*setup.subParam, getScope())
+        .WillRepeatedly(::testing::ReturnRef(param_scope));
+    
+    // Set up getAllSubParams to throw an exception during traversal
+    EXPECT_CALL(*setup.descriptors[setup.parentOid].descriptor, getAllSubParams())
+        .WillRepeatedly(::testing::Throw(std::runtime_error("Traversal error")));
+    
+    // Set up device to return all parameters 
+    EXPECT_CALL(*device, getTopLevelParams(::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke(
+            [&setup, &param_scope](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+                std::vector<std::unique_ptr<IParam>> params;
+                // Return both the parent and sub-parameter
+                params.push_back(std::move(setup.parentParam));
+                params.push_back(std::move(setup.subParam));
+                status = catena::exception_with_status("", catena::StatusCode::OK);
+                return params;
+            }
+        ));
+
+    // Test adding "all params" subscription when parameter traversal throws an exception
+    EXPECT_THROW(manager->addSubscription("/*", *device, rc, authz_), std::runtime_error);
+}

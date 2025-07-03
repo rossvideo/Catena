@@ -95,6 +95,11 @@ inline void setupMockParam(catena::common::MockParam* mockParam, const ParamInfo
             .WillRepeatedly(::testing::ReturnRef(*descriptor));
     }
 
+    // Set up getScope for authorization checks (default to monitor scope)
+    static const std::string scope = catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kMonitor);
+    EXPECT_CALL(*mockParam, getScope())
+        .WillRepeatedly(::testing::ReturnRef(scope));
+
     // Set up isArrayType and size if array_length > 0
     if (info.array_length > 0) {
         EXPECT_CALL(*mockParam, isArrayType())
