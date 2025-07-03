@@ -233,6 +233,14 @@ TEST_F(SubscriptionManagerTest, Subscription_GetAllSubscribedOids) {
     EXPECT_TRUE(oids.find("/test/param2") != oids.end());
 }
 
+//Test 1.6: Success case - isSubscribed
+TEST_F(SubscriptionManagerTest, Subscription_IsSubscribed) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    manager->addSubscription("/test/param1", *device, rc, authz_);
+    EXPECT_TRUE(manager->isSubscribed("/test/param1", *device));
+    EXPECT_FALSE(manager->isSubscribed("/test/param2", *device));
+}
+
 // ======= WILDCARD SUBSCRIPTION TESTS =======   
 
 // Test 2.1: Success case - Basic wildcard pattern validation
@@ -531,7 +539,6 @@ TEST_F(SubscriptionManagerTest, AllParams_AddAllParamsSubscription) {
     oids = manager->getAllSubscribedOids(*device);
     EXPECT_EQ(oids.size(), 0);
 }
-
 
 // Test 3.3: Success case - "All params" with mixed authorization results 
 // This is new, I've never mixed up authorization before
