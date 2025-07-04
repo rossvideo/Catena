@@ -17,6 +17,24 @@ Connect::Connect(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
     forceConnection_ = context.hasField("force_connection");
 }
 
+Connect::~Connect() {
+    // Disconnecting all initialized listeners.
+    if (shutdownSignalId_ != 0) { shutdownSignal_.disconnect(shutdownSignalId_); }
+    for (auto [slot, dm] : dms_) {
+        if (dm) {
+            if (valueSetByClientIds_.contains(slot)) {
+                dm->valueSetByClient.disconnect(valueSetByClientIds_[slot]);
+            }
+            if (valueSetByServerIds_.contains(slot)) {
+                dm->valueSetByServer.disconnect(valueSetByServerIds_[slot]);
+            }
+            if (languageAddedIds_.contains(slot)) {
+                dm->languageAddedPushUpdate.disconnect(languageAddedIds_[slot]);
+            }
+        }
+    }
+}
+
 void Connect::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
 
@@ -89,20 +107,5 @@ void Connect::proceed() {
 
 void Connect::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    // Disconnecting all initialized listeners.
-    if (shutdownSignalId_ != 0) { shutdownSignal_.disconnect(shutdownSignalId_); }
-    for (auto [slot, dm] : dms_) {
-        if (dm) {
-            if (valueSetByClientIds_.contains(slot)) {
-                dm->valueSetByClient.disconnect(valueSetByClientIds_[slot]);
-            }
-            if (valueSetByServerIds_.contains(slot)) {
-                dm->valueSetByServer.disconnect(valueSetByServerIds_[slot]);
-            }
-            if (languageAddedIds_.contains(slot)) {
-                dm->languageAddedPushUpdate.disconnect(languageAddedIds_[slot]);
-            }
-        }
-    }
     std::cout << "Connect[" << objectId_ << "] finished\n";
 }

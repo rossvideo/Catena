@@ -38,8 +38,7 @@ ABSL_FLAG(uint16_t, port, 6254, "Catena gRPC service port");
 CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, std::vector<IDevice*> dms, std::string& EOPath, bool authz)
     : cq_{cq},
       EOPath_{EOPath}, 
-      authorizationEnabled_{authz},
-      subscriptionManager_{std::make_unique<catena::common::SubscriptionManager>()} {
+      authorizationEnabled_{authz} {
     // Adding dms to slotMap.
     for (auto dm : dms) {
         if (dms_.contains(dm->slot())) {
@@ -48,7 +47,6 @@ CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, std::vector<IDev
             dms_[dm->slot()] = dm;
         }
     }
-
 }
 
 /**
