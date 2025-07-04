@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -28,25 +28,31 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <ServiceImpl.h>
+/**
+ * @brief Mock implementation for the IConstraint class.
+ * @author benjamin.whitten@rossvideo.com
+ * @date 25/06/26
+ * @copyright Copyright © 2025 Ross Video Ltd
+ */
 
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
-#include "absl/strings/str_format.h"
+#pragma once
 
-#include <iostream>
+#include <gmock/gmock.h>
+#include "IConstraint.h"
 
-// set up the command line parameters
-ABSL_FLAG(uint16_t, port, 443, "Catena REST API port");
-ABSL_FLAG(std::string, certs, "${HOME}/test_certs", "path/to/certs/files");
-ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate");
-ABSL_FLAG(bool, authz, false, "use OAuth token authorization");
-ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to search for external objects");
+namespace catena {
+namespace common {
 
-int main () {
-    catena::API api;
-    std::cout << "API Version: " << api.version() << std::endl;
-    api.run();
-    return 0;
-}
+// Mock implementation for the IConstraint class.
+class MockConstraint : public IConstraint {
+  public:
+    MOCK_METHOD(void, toProto, (catena::Constraint& constraint), (const, override));
+    MOCK_METHOD(bool, satisfied, (const catena::Value& src), (const, override));
+    MOCK_METHOD(catena::Value, apply, (const catena::Value& src), (const, override));
+    MOCK_METHOD(bool, isRange, (), (const, override));
+    MOCK_METHOD(bool, isShared, (), (const, override));
+    MOCK_METHOD(const std::string&, getOid, (), (const, override));
+};
+
+} // namespace common
+} // namespace catena

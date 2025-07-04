@@ -45,7 +45,7 @@
 #include <IParam.h>
 #include <Authorization.h>
 #include <Enums.h>
-#include <ISubscriptionManager.h>
+#include <SubscriptionManager.h>
 #include <SharedFlags.h>
 
 // REST
@@ -67,8 +67,6 @@ using boost::asio::ip::tcp;
 using catena::REST::SocketReader;
 using catena::REST::SocketWriter;
 using catena::REST::SSEWriter;
-
-const std::string V1 = "v1";
 
 namespace catena {
 /**
@@ -119,7 +117,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
     /**
      * @brief The subscription manager for handling parameter subscriptions
      */
-    std::unique_ptr<catena::common::ISubscriptionManager> subscriptionManager_;
+    catena::common::SubscriptionManager subscriptionManager_;
 
     /**
      * @brief Returns true if port_ is already in use.

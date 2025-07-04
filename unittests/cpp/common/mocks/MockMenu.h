@@ -1,7 +1,5 @@
-#pragma once
-
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,36 +29,25 @@
  */
 
 /**
- * @file IMenu.h
- * @brief Interface for Menus
- * @author Ben Mostafa Ben.Mostafa@rossvideo.com
- * @date 2024-10-04
- * @copyright Copyright (c) 2024 Ross Video
+ * @brief Mock implementation for the IMenu class.
+ * @author benjamin.whitten@rossvideo.com
+ * @date 25/06/26
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-// protobuf interface
-#include <interface/menu.pb.h>
+#pragma once
+
+#include <gmock/gmock.h>
+#include "IMenu.h"
 
 namespace catena {
 namespace common {
 
-/**
- * @brief Interface for Menus
- */
-class IMenu {
+// Mock implementation for the IMenu class.
+class MockMenu : public IMenu {
   public:
-    IMenu() = default;
-    IMenu(IMenu&&) = default;
-    IMenu& operator=(IMenu&&) = default;
-    virtual ~IMenu() = default;
-
-    /**
-     * @brief serialize a menu to a protobuf message
-     * @param menu the protobuf message
-     */
-    virtual void toProto(catena::Menu& menu) const = 0;
-
+    MOCK_METHOD(void, toProto, (catena::Menu& menu), (const, override));
 };
 
-}  // namespace common
-}  // namespace catena
+} // namespace common
+} // namespace catena

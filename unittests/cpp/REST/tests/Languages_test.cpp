@@ -92,7 +92,7 @@ TEST_F(RESTLanguagesTests, Languages_Finish) {
  * TEST 0.3 - Languages proceed() with an invalid method.
  */
 TEST_F(RESTLanguagesTests, Languages_BadMethod) {
-    expRc_ = catena::exception_with_status("Bad method", catena::StatusCode::INVALID_ARGUMENT);
+    expRc_ = catena::exception_with_status("Bad method", catena::StatusCode::UNIMPLEMENTED);
     method_ = Method_NONE;
     // Setting expectations
     EXPECT_CALL(dm0_, toProto(testing::An<catena::LanguageList&>())).Times(0);
