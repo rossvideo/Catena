@@ -76,7 +76,7 @@ class ParamVisitor : public IParamVisitor {
          * @param path The path of the parameter
          * @param device The device to visit
          * @param visitor The visitor to use
-         * @param authz The authorizer to use for checking permissions during traversal
+         * @param authz The authorizer to use
          */
         static void traverseParams(IParam* param, const std::string& path, IDevice& device, IParamVisitor& visitor, Authorizer& authz);
 };

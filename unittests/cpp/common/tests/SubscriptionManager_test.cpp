@@ -161,10 +161,18 @@ protected:
             "/test",
             {
                 Node{"param1", "/test/param1", {}},
-                Node{"nested", "/test/nested", {
-                    Node{"param2", "/test/nested/param2", {}},
-                    Node{"deeper", "/test/nested/deeper", {
-                        Node{"param3", "/test/nested/deeper/param3", {}}
+                Node{"basic", "/test/basic", {
+                    Node{"param2", "/test/basic/param2", {}},
+                    Node{"deeper", "/test/basic/deeper", {
+                        Node{"param3", "/test/basic/deeper/param3", {}}
+                    }}                
+                }},
+                Node{"array", "/test/array", {
+                    Node{"0", "/test/array/0", {
+                        Node{"subparam", "/test/array/0/subparam", {}}
+                    }},
+                    Node{"1", "/test/array/1", {
+                        Node{"subparam", "/test/array/1/subparam", {}}
                     }}
                 }}
             }
@@ -221,7 +229,7 @@ protected:
 
 };
 
-// ======= BASIC SUBSCRIPTION TESTS =======
+// ======= 1. BASIC SUBSCRIPTION TESTS =======
 
 // Test 1.1: Success case - Adding a new subscription
 TEST_F(SubscriptionManagerTest, Subscription_AddNewSubscription) {
@@ -272,13 +280,13 @@ TEST_F(SubscriptionManagerTest, Subscription_IsSubscribed) {
     EXPECT_FALSE(manager->isSubscribed("/test/param2", *device));
 }
 
-// ======= WILDCARD SUBSCRIPTION TESTS =======   
+// ======= 2. WILDCARD SUBSCRIPTION TESTS =======   
 
 // Test 2.1: Success case - Basic wildcard pattern validation
 TEST_F(SubscriptionManagerTest, Wildcard_IsWildcard) {
     // Test valid wildcard patterns
     EXPECT_TRUE(manager->isWildcard("/test/*"));
-    EXPECT_TRUE(manager->isWildcard("/test/nested/*"));
+    EXPECT_TRUE(manager->isWildcard("/test/basic/*"));
     EXPECT_TRUE(manager->isWildcard("/*"));
     
     // Test invalid patterns
@@ -360,15 +368,18 @@ TEST_F(SubscriptionManagerTest, Wildcard_ExpansionVerification) {
     // Add wildcard subscription
     EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc, authz_));
 
-    // Verify all 6 parameters were subscribed
+    // Verify all 9 parameters were subscribed
     auto oids = manager->getAllSubscribedOids(*device);
-    EXPECT_EQ(oids.size(), 6);
+    EXPECT_EQ(oids.size(), 9);
     EXPECT_TRUE(oids.find("/test") != oids.end());
     EXPECT_TRUE(oids.find("/test/param1") != oids.end());
-    EXPECT_TRUE(oids.find("/test/nested") != oids.end());
-    EXPECT_TRUE(oids.find("/test/nested/param2") != oids.end());
-    EXPECT_TRUE(oids.find("/test/nested/deeper") != oids.end());
-    EXPECT_TRUE(oids.find("/test/nested/deeper/param3") != oids.end());
+    EXPECT_TRUE(oids.find("/test/basic") != oids.end());
+    EXPECT_TRUE(oids.find("/test/basic/param2") != oids.end());
+    EXPECT_TRUE(oids.find("/test/basic/deeper") != oids.end());
+    EXPECT_TRUE(oids.find("/test/basic/deeper/param3") != oids.end());
+    EXPECT_TRUE(oids.find("/test/array") != oids.end());
+    EXPECT_TRUE(oids.find("/test/array/0/subparam") != oids.end());
+    EXPECT_TRUE(oids.find("/test/array/1/subparam") != oids.end());
 }
 
 // Test 2.4: Success case - Wildcard subscription removal
@@ -512,7 +523,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemoveInvalidFormat) {
     EXPECT_EQ(rc.status, catena::StatusCode::NOT_FOUND);
 }
 
-// ======= ALL PARAMS SUBSCRIPTION TESTS =======
+// ======= 3. ALL PARAMS SUBSCRIPTION TESTS =======
 
 // Test 3.1: Success case - Basic "all params" subscription addition and removal
 TEST_F(SubscriptionManagerTest, AllParams_AddAllParamsSubscription) {
@@ -569,7 +580,6 @@ TEST_F(SubscriptionManagerTest, AllParams_MixedAuthorizationResults) {
     const std::string authorized_scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
     const std::string unauthorized_scope = Scopes().getForwardMap().at(Scopes_e::kUndefined);
     
-    // Override getParam behavior for this test to return parameters with correct scopes
     // Override getParam behavior for this test to return parameters with correct scopes
     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
@@ -683,8 +693,241 @@ TEST_F(SubscriptionManagerTest, AllParams_ParameterTraversalException) {
     EXPECT_THROW(manager->addSubscription("/*", *device, rc, authz_), std::runtime_error);
 }
 
+// ======= 4. ARRAY SUBSCRIPTION TESTS =======
 
-/**
+// Test 4.1: Success case - Basic array subscription with nested elements
+TEST_F(SubscriptionManagerTest, Array_BasicArraySubscriptionWithNestedElements) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    
+    // Set up array parameter with nested structure
+    auto arrayParam = std::make_unique<MockParam>();
+    setupMockParam(arrayParam.get(), "/test/array", test_descriptor, true, 2);
+    
+    // Set up device to return array elements with nested parameters
+    EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke([this](const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
+            auto param = std::make_unique<MockParam>();
+            setupMockParam(param.get(), fqoid, test_descriptor, false);
+            static const std::string scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
+            EXPECT_CALL(*param, getScope())
+                .WillRepeatedly(::testing::ReturnRef(scope));
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return param;
+        }));
 
-    @todo ARRAY TESTS!
- */
+    // Test adding array subscription
+    EXPECT_TRUE(manager->addSubscription("/test/array", *device, rc, authz_));
+    EXPECT_EQ(rc.status, catena::StatusCode::OK);
+    
+    // Verify array is subscribed
+    auto oids = manager->getAllSubscribedOids(*device);
+    EXPECT_EQ(oids.size(), 1);
+    EXPECT_TRUE(oids.find("/test/array") != oids.end());
+    
+    // Remove array subscription
+    EXPECT_TRUE(manager->removeSubscription("/test/array", *device, rc));
+    EXPECT_EQ(rc.status, catena::StatusCode::OK);
+    
+    // Verify array subscription was removed
+    oids = manager->getAllSubscribedOids(*device);
+    EXPECT_EQ(oids.size(), 0);
+}
+
+// Test 4.2: Success case - Array wildcard subscription with nested elements
+TEST_F(SubscriptionManagerTest, Array_WildcardSubscriptionWithNestedElements) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    
+    // Set up array parameter with nested structure
+    auto arrayParam = std::make_unique<MockParam>();
+    setupMockParam(arrayParam.get(), "/test/array", test_descriptor, true, 2);
+    auto subParam0 = std::make_unique<MockParam>();
+    setupMockParam(subParam0.get(), "/test/array/0/subparam", test_descriptor, false);
+    auto subParam1 = std::make_unique<MockParam>();
+    setupMockParam(subParam1.get(), "/test/array/1/subparam", test_descriptor, false);
+    
+    // Set up device to return array and subparams
+    EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
+                auto it = wildcardDescriptors.find(fqoid);
+                if (it != wildcardDescriptors.end()) {
+                    auto param = std::make_unique<MockParam>();
+                    setupMockParam(param.get(), fqoid, *it->second.descriptor);
+                    status = catena::exception_with_status("", catena::StatusCode::OK);
+                    return param;
+                } else {
+                    status = catena::exception_with_status("Not found", catena::StatusCode::NOT_FOUND);
+                    return nullptr;
+                }
+            }
+        ));
+
+    // Test adding array wildcard subscription
+    EXPECT_TRUE(manager->addSubscription("/test/array/*", *device, rc, authz_));
+    EXPECT_EQ(rc.status, catena::StatusCode::OK);
+    
+    // Verify array and its elements with complete parameter paths are subscribed
+    auto oids = manager->getAllSubscribedOids(*device);
+    EXPECT_EQ(oids.size(), 3); // Array + 2 elements with sub-parameters
+    EXPECT_TRUE(oids.find("/test/array") != oids.end());
+    EXPECT_TRUE(oids.find("/test/array/0/subparam") != oids.end());
+    EXPECT_TRUE(oids.find("/test/array/1/subparam") != oids.end());
+    
+    // Remove array wildcard subscription
+    EXPECT_TRUE(manager->removeSubscription("/test/array/*", *device, rc));
+    EXPECT_EQ(rc.status, catena::StatusCode::OK);
+    
+    // Verify all array subscriptions were removed
+    oids = manager->getAllSubscribedOids(*device);
+    EXPECT_EQ(oids.size(), 0);
+}
+
+// Test 4.3: Success case - Mixed array and non-array subscriptions with authorization
+TEST_F(SubscriptionManagerTest, Array_MixedSubscriptions) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    
+    // Set up array parameter
+    auto arrayParam = std::make_unique<MockParam>();
+    setupMockParam(arrayParam.get(), "/test/array", test_descriptor, true, 2);
+    static const std::string authorized_scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
+    EXPECT_CALL(*arrayParam, getScope())
+        .WillRepeatedly(::testing::ReturnRef(authorized_scope));
+    
+    // Set up regular parameter
+    auto regularParam = std::make_unique<MockParam>();
+    setupMockParam(regularParam.get(), "/test/regular", test_descriptor, false);
+    EXPECT_CALL(*regularParam, getScope())
+        .WillRepeatedly(::testing::ReturnRef(authorized_scope));
+    
+    // Set up device to return both parameters
+    EXPECT_CALL(*device, getParam("/test/array", ::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke([&arrayParam](const std::string&, catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return std::move(arrayParam);
+        }));
+    EXPECT_CALL(*device, getParam("/test/regular", ::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke([&regularParam](const std::string&, catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return std::move(regularParam);
+        }));
+
+    // Add both subscriptions
+    EXPECT_TRUE(manager->addSubscription("/test/array", *device, rc, authz_));
+    EXPECT_TRUE(manager->addSubscription("/test/regular", *device, rc, authz_));
+    
+    // Verify both subscriptions exist
+    auto oids = manager->getAllSubscribedOids(*device);
+    EXPECT_EQ(oids.size(), 2);
+    EXPECT_TRUE(oids.find("/test/array") != oids.end());
+    EXPECT_TRUE(oids.find("/test/regular") != oids.end());
+}
+
+// Test 4.4: Success case - Array element subscription
+TEST_F(SubscriptionManagerTest, Array_ElementSubscription) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    
+    // Set up array element parameter with sub-parameter
+    auto elementParam = std::make_unique<MockParam>();
+    setupMockParam(elementParam.get(), "/test/array/0/subparam", test_descriptor, false);
+    
+    // Set up device to return array element parameter
+    EXPECT_CALL(*device, getParam("/test/array/0/subparam", ::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke([&elementParam](const std::string&, catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return std::move(elementParam);
+        }));
+
+    // Test adding array element subscription with proper sub-parameter path
+    EXPECT_TRUE(manager->addSubscription("/test/array/0/subparam", *device, rc, authz_));
+    EXPECT_EQ(rc.status, catena::StatusCode::OK);
+    
+    // Verify array element sub-parameter is subscribed
+    auto oids = manager->getAllSubscribedOids(*device);
+    EXPECT_EQ(oids.size(), 1);
+    EXPECT_TRUE(oids.find("/test/array/0/subparam") != oids.end());
+}
+
+// Test 4.5: Success case - Array element subscription isSubscribed check
+TEST_F(SubscriptionManagerTest, Array_IsSubscribedCheck) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    
+    // Set up device to return parameters
+    EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
+                auto it = wildcardDescriptors.find(fqoid);
+                if (it != wildcardDescriptors.end()) {
+                    auto param = std::make_unique<MockParam>();
+                    setupMockParam(param.get(), fqoid, *it->second.descriptor);
+                    status = catena::exception_with_status("", catena::StatusCode::OK);
+                    return param;
+                } else {
+                    status = catena::exception_with_status("Not found", catena::StatusCode::NOT_FOUND);
+                    return nullptr;
+                }
+            }
+        ));
+
+    // Add array element subscription
+    EXPECT_TRUE(manager->addSubscription("/test/array/0/subparam", *device, rc, authz_));
+    
+    // Test isSubscribed for array element subscription
+    EXPECT_TRUE(manager->isSubscribed("/test/array/0/subparam", *device));
+    EXPECT_FALSE(manager->isSubscribed("/test/array/1/subparam", *device)); // Not subscribed to yet.
+    EXPECT_FALSE(manager->isSubscribed("/test/other", *device)); // Doesn't exist.
+    
+    // Add another array element subscription
+    EXPECT_TRUE(manager->addSubscription("/test/array/1/subparam", *device, rc, authz_));
+    
+    // Test isSubscribed for both array element subscriptions
+    EXPECT_TRUE(manager->isSubscribed("/test/array/0/subparam", *device)); 
+    EXPECT_TRUE(manager->isSubscribed("/test/array/1/subparam", *device));
+    EXPECT_FALSE(manager->isSubscribed("/test/array/2/subparam", *device)); // Was never subscribed to.
+}
+
+// Test 4.6: Error case - Duplicate array element subscription
+TEST_F(SubscriptionManagerTest, Array_DuplicateSubscription) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    
+    // Set up device to return parameters using wildcardDescriptors
+    EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
+                auto it = wildcardDescriptors.find(fqoid);
+                if (it != wildcardDescriptors.end()) {
+                    auto param = std::make_unique<MockParam>();
+                    setupMockParam(param.get(), fqoid, *it->second.descriptor);
+                    status = catena::exception_with_status("", catena::StatusCode::OK);
+                    return param;
+                } else {
+                    status = catena::exception_with_status("Not found", catena::StatusCode::NOT_FOUND);
+                    return nullptr;
+                }
+            }
+        ));
+
+    // Add array element subscription
+    EXPECT_TRUE(manager->addSubscription("/test/array/0/subparam", *device, rc, authz_));
+    
+    // Try to add duplicate array element subscription
+    EXPECT_FALSE(manager->addSubscription("/test/array/0/subparam", *device, rc, authz_));
+    EXPECT_EQ(rc.status, catena::StatusCode::ALREADY_EXISTS);
+    
+    // Verify only one subscription exists
+    auto oids = manager->getAllSubscribedOids(*device);
+    EXPECT_EQ(oids.size(), 1);
+    EXPECT_TRUE(oids.find("/test/array/0/subparam") != oids.end());
+}
+
+// Test 4.7: Error case - Remove non-existent array subscription
+TEST_F(SubscriptionManagerTest, Array_RemoveNonExistentSubscription) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    
+    // Try to remove non-existent array subscription
+    EXPECT_FALSE(manager->removeSubscription("/test/array", *device, rc));
+    EXPECT_EQ(rc.status, catena::StatusCode::NOT_FOUND);
+    
+    // Verify no subscriptions exist
+    auto oids = manager->getAllSubscribedOids(*device);
+    EXPECT_EQ(oids.size(), 0);
+}
