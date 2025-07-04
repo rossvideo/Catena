@@ -276,6 +276,8 @@ class Path {
     Segments segments_{}; /**< the path split into its components */
     std::size_t frontIdx_{0}; /**< index of current front of path */
 
+    std::string toString(bool leading_slash, std::size_t startIdx) const;
+
     /**
      * @brief replace / and ~ characters with ~1 & ~0
      *

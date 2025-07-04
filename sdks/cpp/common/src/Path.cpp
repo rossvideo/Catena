@@ -187,42 +187,32 @@ std::string Path::unescape_(const std::string &str) {
     return ans;
 }
 
-std::string Path::toString(bool leading_slash) const {
+std::string Path::toString(bool leading_slash, std::size_t startIdx) const {
     std::stringstream ans{""};
     bool first = true;
-    for (auto it = segments_.cbegin() + frontIdx_; it != segments_.cend(); ++it) {
+    for (auto it = segments_.cbegin() + startIdx; it != segments_.cend(); ++it) {
+        ans << (first && !leading_slash ? "" : "/");
         if (std::holds_alternative<Index>(*it)) {
             Index idx = std::get<Index>(*it);
             if (idx == kEnd) {
-                ans << (first && !leading_slash ? "" : "/") << "-";
+                ans << "-";
             } else {
-                ans << (first && !leading_slash ? "" : "/") << idx;
+                ans << idx;
             }
-        }
-        if (std::holds_alternative<std::string>(*it)) {
-            ans << (first && !leading_slash ? "" : "/") << std::get<std::string>(*it);
+        } else if (std::holds_alternative<std::string>(*it)) {
+            ans << std::get<std::string>(*it);
         }
         first = false;
     }
     return ans.str();
 }
 
+std::string Path::toString(bool leading_slash) const {
+    return toString(leading_slash, frontIdx_);
+}
+
 std::string Path::fqoid() const {
-    std::stringstream ans{""};
-    for (auto it = segments_.cbegin(); it != segments_.cend(); ++it) {
-        if (std::holds_alternative<Index>(*it)) {
-            Index idx = std::get<Index>(*it);
-            if (idx == kEnd) {
-                ans << "/-";
-            } else {
-                ans << "/" << idx;
-            }
-        }
-        if (std::holds_alternative<std::string>(*it)) {
-            ans << "/" << std::get<std::string>(*it);
-        }
-    }
-    return ans.str();
+    return toString(true, 0);
 }
 
 Path operator"" _path(const char *lit, std::size_t sz) {
