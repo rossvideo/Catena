@@ -152,7 +152,7 @@ TEST_F(RESTConnectTest, Connect_HandlesValidAuthz) {
     std::thread proceed_thread([this]() {
         endpoint_->proceed();
     });
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
     catena::REST::Connect::shutdownSignal_.emit();
     proceed_thread.join();
 
@@ -188,10 +188,10 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByServer) {
     std::thread proceed_thread([this]() {
         endpoint_->proceed();
     });
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     dm0_.valueSetByServer.emit(paramOid_, param.get());
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     catena::REST::Connect::shutdownSignal_.emit();
     proceed_thread.join();
@@ -226,10 +226,10 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByClient) {
     std::thread proceed_thread([this]() {
         endpoint_->proceed();
     });
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     dm0_.valueSetByClient.emit(paramOid_, param.get());
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     catena::REST::Connect::shutdownSignal_.emit();
     proceed_thread.join();
@@ -260,10 +260,10 @@ TEST_F(RESTConnectTest, Connect_HandlesLanguage) {
     std::thread proceed_thread([this]() {
         endpoint_->proceed();
     });
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     dm0_.languageAddedPushUpdate.emit(languagePack.get());
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     catena::REST::Connect::shutdownSignal_.emit();
     proceed_thread.join();
@@ -290,7 +290,7 @@ TEST_F(RESTConnectTest, Connect_HandlesStdException) {
     std::thread proceed_thread([this]() {
         endpoint_->proceed();
     });
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
     proceed_thread.join();
 
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
@@ -334,13 +334,13 @@ TEST_F(RESTConnectTest, Connect_HandlesWriterFailure) {
     std::thread proceed_thread([this]() {
         endpoint_->proceed();
     });
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     clientSocket_.close();
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     dm0_.valueSetByServer.emit(paramOid_, param.get());
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     EXPECT_FALSE(serverSocket_.is_open());
 
