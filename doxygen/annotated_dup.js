@@ -106,6 +106,5 @@ var annotated_dup =
         [ "Subscriptions", "classcatena_1_1REST_1_1Subscriptions.html", "classcatena_1_1REST_1_1Subscriptions" ]
       ] ],
       [ "exception_with_status", "structcatena_1_1exception__with__status.html", null ]
-    ] ],
-    [ "Logger", "classLogger.html", null ]
+    ] ]
 ];

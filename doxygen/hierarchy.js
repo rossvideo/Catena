@@ -112,7 +112,6 @@ var hierarchy =
       [ "catena::common::SubscriptionManager", "classcatena_1_1common_1_1SubscriptionManager.html", null ]
     ] ],
     [ "catena::common::LanguagePackTag", "structcatena_1_1common_1_1LanguagePackTag.html", null ],
-    [ "Logger", "classLogger.html", null ],
     [ "catena::common::MenuGroupTag", "structcatena_1_1common_1_1MenuGroupTag.html", null ],
     [ "catena::common::MenuTag", "structcatena_1_1common_1_1MenuTag.html", null ],
     [ "catena::meta::NthElementT< L, N >", "classcatena_1_1meta_1_1NthElementT.html", null ],
