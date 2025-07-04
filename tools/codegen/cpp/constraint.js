@@ -142,44 +142,31 @@ function namedChoicesArg(desc) {
   let choices;
   if (this.type === "int32_t") {
     choices = desc.int32_choice.choices;
+  } else if (desc.type === "STRING_CHOICE") {
+    choices = desc.string_choice.choices;
   } else {
     choices = desc.string_string_choice.choices;
   }
   let ans = '{';
     for (let i = 0; i < choices.length; ++i) {
-      if (this.type === "int32_t") {
-        ans += `{${choices[i].value},{`;
+      if (desc.type === "STRING_CHOICE") {
+        ans += `{"${choices[i]}",{`;
       } else {
-        ans += `{"${choices[i].value}",{`;
-      }
-      let display_strings = choices[i].name.display_strings;
-      let pairs = Object.keys(display_strings).length;
-      for (let lang in display_strings) {
-        ans += `{"${lang}","${display_strings[lang]}"}`;
-        if (--pairs > 0) {
-          ans += ',';
+        if (this.type === "int32_t") {
+          ans += `{${choices[i].value},{`;
+        } else {
+          ans += `{"${choices[i].value}",{`;
+        }
+        let display_strings = choices[i].name.display_strings;
+        let pairs = Object.keys(display_strings).length;
+        for (let lang in display_strings) {
+          ans += `{"${lang}","${display_strings[lang]}"}`;
+          if (--pairs > 0) {
+            ans += ',';
+          }
         }
       }
       ans += '}}';
-      if (i < choices.length - 1) {
-        ans += ',';
-      } else {
-        ans += '}';
-      }
-    }
-  return ans;
-}
-
-/**
- * 
- * @param {object} desc param descriptor
- * @returns the choices for the picklist constraint
- */
-function choicesArg(desc) {
-  let choices = desc.string_choice.choices;
-  let ans = '{';
-    for (let i = 0; i < choices.length; ++i) {
-      ans += `"${choices[i]}"`;
       if (i < choices.length - 1) {
         ans += ',';
       } else {
@@ -248,9 +235,6 @@ class Constraint extends CppCtor {
     } else if (this.constraintType === "NamedChoiceConstraint") {
       this.arguments.push(namedChoicesArg.bind(this));
       this.arguments.push(strictArg);
-    } else if (this.constraintType === "PicklistConstraint") {
-      this.arguments.push(choicesArg);
-      this.arguments.push(strictArg);
     }
     this.arguments.push(quoted.bind(this.oid));
     this.arguments.push(sharedArg.bind(this));
@@ -267,7 +251,7 @@ class Constraint extends CppCtor {
       FLOAT_RANGE: ["float", "RangeConstraint"],
       INT_CHOICE: ["int32_t", "NamedChoiceConstraint"],
       STRING_STRING_CHOICE: ["std::string", "NamedChoiceConstraint"],
-      STRING_CHOICE: ["std::string", "PicklistConstraint"],
+      STRING_CHOICE: ["std::string", "NamedChoiceConstraint"],
       ALARM_TABLE: ["", ""], // not yet implemented
     };
 
@@ -278,18 +262,6 @@ class Constraint extends CppCtor {
       throw new Error(`Alarm table not yet implemented`);
     } else {
       throw new Error(`Unknown type ${desc.type}`);
-    }
-  }
-
-  /**
-   *
-   * @returns the C++ type of the constraint
-   */
-  objectType() {
-    if (this.constraintType === "PicklistConstraint") {
-      return "PicklistConstraint";
-    } else {
-      return `${this.constraintType}<${this.type}>`;
     }
   }
 
@@ -329,7 +301,7 @@ class Constraint extends CppCtor {
    */
   getInitializer() {
     this.initialized = true;
-    return `catena::common::${this.objectType()} ${this.variableName()}(${this.arguments.map((arg) => arg(this.desc)).join(", ")});`;
+    return `catena::common::${this.constraintType}<${this.type}> ${this.variableName()}(${this.arguments.map((arg) => arg(this.desc)).join(", ")});`;
   }
 }
 

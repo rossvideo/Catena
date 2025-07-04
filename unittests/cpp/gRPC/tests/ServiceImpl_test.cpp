@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the ServiceImpl.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/24
+ * @date 25/07/03
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -135,4 +135,20 @@ TEST_F(gRPCServiceImplTests, ServiceImpl_CreateDestroy) {
     // Give it time to set up and timeout once.
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     service_->shutdownServer(); // Does nothing.
+}
+
+/*
+ * TEST 2 - Creating a REST CatenaServiceImpl.
+ *
+ * This is not under the fixture because setting up a gRPC server is time
+ * consuming and not needed.
+ */
+TEST(gRPCServiceImplTests_NoFixture, ServiceImpl_CreateDuplicateSlot) {
+    MockDevice dm1, dm2;
+    std::string EOPath = "/Test/EO/Path";
+    EXPECT_CALL(dm1, slot()).WillRepeatedly(testing::Return(0));
+    EXPECT_CALL(dm2, slot()).WillRepeatedly(testing::Return(0));
+    // Creating a service with a duplicate slot.
+    EXPECT_THROW(CatenaServiceImpl(nullptr, {&dm1, &dm2}, EOPath, false), std::runtime_error)
+        << "Creating a service with two devices sharing a slot should throw an error.";
 }

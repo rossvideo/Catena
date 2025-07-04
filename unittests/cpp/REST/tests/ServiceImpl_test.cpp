@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the ServiceImpl.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 2025-06-24
+ * @date 2025/07/03
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -111,7 +111,18 @@ TEST_F(RESTServiceImplTests, ServiceImpl_Create) {
 }
 
 /*
- * TEST 2 - Running and shutting down the REST CatenaServiceImpl.
+ * TEST 2 - Creating a REST CatenaServiceImpl.
+ */
+TEST_F(RESTServiceImplTests, ServiceImpl_CreateDuplicateSlot) {
+    MockDevice dm2;
+    EXPECT_CALL(dm2, slot()).WillRepeatedly(testing::Return(0));
+    // Creating a service with a duplicate slot.
+    EXPECT_THROW(CatenaServiceImpl({&dm_, &dm2}, EOPath_, authzEnabled_, port_ + 2), std::runtime_error)
+        << "Creating a service with two devices sharing a slot should throw an error.";
+}
+
+/*
+ * TEST 3 - Running and shutting down the REST CatenaServiceImpl.
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_RunAndShutdown) {
     // Starting the service.
@@ -125,7 +136,7 @@ TEST_F(RESTServiceImplTests, ServiceImpl_RunAndShutdown) {
 }
 
 /*
- * TEST 3 - Testing the service's router against all valid endpoints. 
+ * TEST 4 - Testing the service's router against all valid endpoints. 
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_Router) {
     // Starting the service.
