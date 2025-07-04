@@ -239,8 +239,7 @@ int main() {
   return 0;
 }
 
-/* Example Output
-
+/* Possible Output
 Dog Tests
 Labrador: can go forwards and backwards. bark 
 Jack Russell: can go forwards and backwards. bark bark bark bark 

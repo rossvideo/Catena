@@ -118,7 +118,7 @@ int main() {
     for (auto& num : odd_numbers) {
         std::cout << num << " ";
     }
-    std::cout << "\n"; // odd_numbers initial value: 0  2 4 6 8
+    std::cout << "\n"; // odd_numbers initial value: 1 3 5 7 9
 
     // Setting an element to a value outside the range will cause it to be constrained to the max/min values
     value.set_int32_value(-2); // below min
@@ -129,7 +129,7 @@ int main() {
     }
     // setting odd_numbers[2] to a value below the min will cause it to be set to the min value
     std::cout << "odd_numbers[2] set to -2\n";
-    std::cout << "odd_numbers[2] value: " << odd_numbers[2] << "\n"; // odd_numbers[2] value: 0
+    std::cout << "odd_numbers[2] value: " << odd_numbers[2] << "\n"; // odd_numbers[2] value: 1
 
     // Constraints also apply when setting the value of the whole array
     std::vector<int32_t> newValue = {8, 12, -6, 3};
@@ -140,7 +140,7 @@ int main() {
     for (auto& num : odd_numbers) {
         std::cout << num << " ";
     }
-    std::cout << "\n" << std::endl; // odd_numbers value: 7 9 1 3 9
+    std::cout << "\n" << std::endl; // odd_numbers value: 7 9 1 3
 
 
     /**
@@ -275,7 +275,7 @@ int main() {
     return EXIT_SUCCESS;
 }
 
-/* possible output
+/* Possible Output
 button initial value: 0
 button set to 1
 button value: 1
@@ -286,7 +286,7 @@ odd_numbers initial value: 1 3 5 7 9
 odd_numbers[2] set to -2
 odd_numbers[2] value: 1
 odd_numbers set to 8 12 -6 3
-odd_numbers value: 7 9 1 3 9 
+odd_numbers value: 7 9 1 3
 
 gain initial value: 0.5
 gain set to 1.5

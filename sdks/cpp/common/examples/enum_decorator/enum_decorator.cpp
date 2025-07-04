@@ -139,7 +139,7 @@ int main() {
     std::cout << "p5: " << p5.toString() << " = " << Primes::utype(p5) << std::endl;
 }
 
-/* possible output
+/* Possible Output
 c0: default has value: 0
 c1: one
 c2: 2
