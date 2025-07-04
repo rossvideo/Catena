@@ -74,9 +74,8 @@ void AssetRequest::proceed() {
 
     // Finishing by writing answer to client.
     writer_.sendResponse(rc, obj);
-}
 
-void AssetRequest::finish() {
+    // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << "AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fqoid() +" finished\n";
 }

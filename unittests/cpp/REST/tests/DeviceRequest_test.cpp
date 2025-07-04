@@ -118,13 +118,6 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Create) {
     ASSERT_TRUE(endpoint_);
 }
 
-// Test 0.2: Test finish method functionality
-TEST_F(RESTDeviceRequestTests, DeviceRequest_Finish) {
-    // Test that finish method does not throw
-    EXPECT_NO_THROW(endpoint_->finish());
-    ASSERT_TRUE(MockConsole_.str().find("DeviceRequest[1] finished\n") != std::string::npos);
-}
-
 // --- 1. PROCEED TESTS ---
 // Test 1.1: Test proceed unary response with multiple components
 TEST_F(RESTDeviceRequestTests, DeviceRequest_Normal) {

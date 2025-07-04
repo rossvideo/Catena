@@ -89,11 +89,6 @@ class Connect : public ICallData, public catena::common::Connect {
     void proceed() override;
     
     /**
-     * @brief Finishes the Connect process.
-     */
-    void finish() override;
-    
-    /**
      * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.

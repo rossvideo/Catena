@@ -79,11 +79,6 @@ class ExecuteCommand : public ICallData {
     void proceed() override;
     
     /**
-     * @brief Finishes the ExecuteCommand process
-     */
-    void finish() override;
-    
-    /**
      * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.

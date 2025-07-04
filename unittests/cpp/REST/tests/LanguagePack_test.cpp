@@ -122,15 +122,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_Create) {
 }
 
 /* 
- * TEST 0.2 - Writing to console with LanguagePack finish().
- */
-TEST_F(RESTLanguagePackTests, LanguagePack_Finish) {
-    endpoint_->finish();
-    ASSERT_TRUE(MockConsole_.str().find("LanguagePack[1] finished\n") != std::string::npos);
-}
-
-/* 
- * TEST 0.3 - LanguagePack proceed() with an invalid method.
+ * TEST 0.2 - LanguagePack proceed() with an invalid method.
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_BadMethod) {
     expRc_ = catena::exception_with_status("Bad method", catena::StatusCode::UNIMPLEMENTED);
@@ -145,7 +137,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_BadMethod) {
 }
 
 /* 
- * TEST 0.4 - LanguagePack proceed() with an invalid slot.
+ * TEST 0.3 - LanguagePack proceed() with an invalid slot.
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_InvalidSlot) {
     initPayload(dms_.size(), "tl");

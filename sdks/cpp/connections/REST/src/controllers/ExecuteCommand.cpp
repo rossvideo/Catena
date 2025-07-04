@@ -80,9 +80,8 @@ void ExecuteCommand::proceed() {
     if (rc.status != catena::StatusCode::OK || !respond) {
         writer_.sendResponse(rc);
     }
-}
 
-void ExecuteCommand::finish() {
+    // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << "ExecuteCommand[" << objectId_ << "] finished\n";
-} 
+}

@@ -71,10 +71,6 @@ class ICallData {
 		 * @brief The controller's main process.
 		 */
 		virtual void proceed() = 0;
-		/**
-		 * @brief Finishes the controller.
-		 */
-		virtual void finish() = 0;
 
 	protected:
 		/**

@@ -95,16 +95,8 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_Create) {
     EXPECT_TRUE(endpoint_);
 }
 
-/* 
- * TEST 2 - Writing to console with MultiSetValue finish().
- */
-TEST_F(RESTMultiSetValueTests, MultiSetValue_Finish) {
-    endpoint_->finish();
-    ASSERT_TRUE(MockConsole_.str().find("MultiSetValue[1] finished\n") != std::string::npos);
-}
-
 /*
- * TEST 3 - Normal case for MultiSetValue proceed().
+ * TEST 2 - Normal case for MultiSetValue proceed().
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_Normal) {
     initPayload(0, {{"/test_oid_1", "test_value_1"},{"/test_oid_2", "test_value_2"}});
@@ -132,7 +124,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_Normal) {
 }
 
 /*
- * TEST 4 - MultiSetValue with authz on and valid token.
+ * TEST 3 - MultiSetValue with authz on and valid token.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_AuthzValid) {
     initPayload(0, {{"/test_oid_1", "test_value_1"},{"/test_oid_2", "test_value_2"}});
@@ -172,7 +164,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_AuthzValid) {
 }
 
 /*
- * TEST 5 - MultiSetValue with authz on and invalid token.
+ * TEST 4 - MultiSetValue with authz on and invalid token.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_AuthzInvalid) {
     initPayload(0, {});
@@ -187,7 +179,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_AuthzInvalid) {
 }
 
 /*
- * TEST 6 - No device in the specified slot.
+ * TEST 5 - No device in the specified slot.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlot) {
     initPayload(dms_.size(), {});

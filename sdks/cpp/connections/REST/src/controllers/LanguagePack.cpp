@@ -95,9 +95,8 @@ void LanguagePack::proceed() {
         // For POST, PUT and DELETE we do not return a message.
         writer_.sendResponse(rc);
     }
-}
 
-void LanguagePack::finish() {
+    // Wiring the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << RESTMethodMap().getForwardMap().at(context_.method())
               << " LanguagePack[" << objectId_ << "] finished\n";

@@ -103,9 +103,8 @@ void Connect::proceed() {
         }
         lock.unlock();
     }
-}
 
-void Connect::finish() {
+    // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << "Connect[" << objectId_ << "] finished\n";
 }

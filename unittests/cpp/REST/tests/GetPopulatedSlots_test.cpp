@@ -79,17 +79,8 @@ class RESTGetPopulatedSlotsTests : public RESTEndpointTest {
 TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_Create) {
     ASSERT_TRUE(endpoint_);
 }
-
-/* 
- * TEST 2 - Writing to console with GetPopulatedSlots finish().
- */
-TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_Finish) {
-    endpoint_->finish();
-    ASSERT_TRUE(MockConsole_.str().find("GetPopulatedSlots[1] finished\n") != std::string::npos);
-}
-
 /*
- * TEST 3 - Normal case for GetPopulatedSlots proceed().
+ * TEST 2 - Normal case for GetPopulatedSlots proceed().
  */
 TEST_F(RESTGetPopulatedSlotsTests, GetPopulatedSlots_Normal) {
     for (auto& [slot, dm] : dms_) {

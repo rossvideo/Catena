@@ -109,7 +109,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_AuthzStdException) {
     EXPECT_CALL(context_, jwsToken()).WillRepeatedly(testing::Throw(std::runtime_error("Test auth setup failure")));
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
@@ -122,7 +121,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_AuthzInvalid) {
     authzEnabled_ = true;
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
@@ -134,13 +132,12 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_InvalidSlot) {
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
 }
 
-// Test 0.3: Authorization test with valid token
+// Test 0.4: Authorization test with valid token
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_AuthzValid) {
     // Use a valid JWT token that was borrowed from GetValue_test.cpp
     jwsToken_ = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIiOiIxMjM0NTY3"
@@ -175,7 +172,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_AuthzValid) {
         }));
     
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     std::string jsonBody = catena::REST::test::createParamInfoJson(param_info);
@@ -214,7 +210,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParams) {
         }));
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     std::vector<std::string> jsonBodies;
@@ -235,7 +230,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsError) {
         }));
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
@@ -253,7 +247,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getEmptyTopLevelParams) {
         }));
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
@@ -277,7 +270,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithArray) {
         }));
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     std::string jsonBody = catena::REST::test::createParamInfoJson(arrayParamInfo);
@@ -304,7 +296,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsProcessingEr
         }));
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
@@ -345,7 +336,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsThrow) {
         }));
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
@@ -426,7 +416,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithDeepNest
         ));
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     std::vector<std::string> jsonBodies;
@@ -496,7 +485,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursio
             }));
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     std::vector<std::string> jsonBodies;
@@ -574,7 +562,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursio
             }));
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
@@ -594,7 +581,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithErrorSta
         }));
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
@@ -614,7 +600,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithEmptyLis
         }));
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
@@ -650,7 +635,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_proceedSpecificParam) {
         ));
     
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     std::string jsonBody = catena::REST::test::createParamInfoJson(paramInfo);
@@ -686,7 +670,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getSpecificParamWithRecursion
         ));
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     std::string jsonBody = catena::REST::test::createParamInfoJson(paramInfo);
@@ -706,7 +689,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_parameterNotFound) {
         }));
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
@@ -725,7 +707,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_catenaExceptionInGetParam) {
         }));
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
@@ -745,7 +726,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_catchCatenaException) {
         }));
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
@@ -763,7 +743,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_catchStdException) {
         }));
 
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
@@ -782,7 +761,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_catchUnknownException) {
 
     // Create a new endpoint_ for this test
     endpoint_->proceed();
-    endpoint_->finish();
 
     // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));

@@ -59,8 +59,6 @@ namespace REST {
 
 /**
  * @brief Helper class used to write a unary response to a socket using boost.
- * 
- * This writer buffers the response until a call to finish() is made.
  */
 class SocketWriter : public ISocketWriter {
   public:
@@ -74,8 +72,10 @@ class SocketWriter : public ISocketWriter {
 
     /**
      * @brief Finishes writing the HTTP response.
-     * @param msg The protobuf message to write (if status is OK)
-     * @param err The error status to finish with. If status is OK, writes the message, otherwise writes the error.
+     * @param msg The protobuf message to write (if status is OK). An empty
+     * message signals the writer to flush the response if buffer is on.
+     * @param err The error status to finish with. If status is OK, writes the
+     * message, otherwise writes the error.
      */
     void sendResponse(const catena::exception_with_status& err, const google::protobuf::Message& msg = catena::Empty()) override;
 

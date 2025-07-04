@@ -84,9 +84,8 @@ void DeviceRequest::proceed() {
     }
     // empty msg signals unary to send response. Does nothing for stream.
     writer_->sendResponse(rc);
-}
 
-void DeviceRequest::finish() {
+    // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
 }
