@@ -41,13 +41,10 @@
 
 // common
 #include <IConstraint.h>
-#include <IParam.h>
 #include <Tags.h>
 #include <IDevice.h>
 
-// catena interface
-#include <google/protobuf/message_lite.h>
-
+// std
 #include <cmath>
 
 namespace catena {
@@ -59,7 +56,51 @@ namespace common {
  */
 template <typename T>
 class RangeConstraint : public catena::common::IConstraint {
-public:
+  public:
+    /**
+     * @brief Construct a new Range Constraint object
+     * @param min the minimum value
+     * @param max the maximum value
+     * @param step the step size
+     * @param display_min the minimum value to display
+     * @param display_max the maximum value to display
+     * @param oid the oid of the constraint
+     * @param shared is the constraint shared
+     */
+    RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid, bool shared)
+        : min_(min), max_(max), step_{step}, display_min_{display_min},
+          display_max_{display_max}, oid_{oid}, shared_{shared} {
+        if constexpr(!std::is_same<T, int32_t>::value && !std::is_same<T, float>::value) {
+            throw std::runtime_error("Cannot create RangeConstraint with type other than int32_t or float");
+        }
+    }
+
+    /**
+     * @brief Construct a new Range Constraint object
+     * @param min the minimum value
+     * @param max the maximum value
+     * @param step the step size
+     * @param display_min the minimum value to display
+     * @param display_max the maximum value to display
+     * @param oid the oid of the constraint
+     * @param shared is the constraint shared
+     * @param dm the device to add the constraint to
+     */
+    RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid, bool shared, IDevice& dm)
+        : RangeConstraint(min, max, step, display_min, display_max, oid, shared) {
+        dm.addItem(oid, this);
+    }
+
+    /**
+     * @brief Construct a new Range Constraint object
+     * @param min the minimum value
+     * @param max the maximum value
+     * @param oid the oid of the constraint
+     * @param shared is the constraint shared
+     */
+    RangeConstraint(T min, T max, T step, std::string oid, bool shared)
+        : RangeConstraint(min, max, step, min, max, oid, shared) {}
+
     /**
      * @brief Construct a new Range Constraint object
      * @param min the minimum value
@@ -69,57 +110,7 @@ public:
      * @param dm the device to add the constraint to
      */
     RangeConstraint(T min, T max, T step, std::string oid, bool shared, IDevice& dm)
-        : min_(min), max_(max), step_{step}, 
-        display_min_{min}, display_max_{max}, oid_{oid}, shared_{shared} {
-        dm.addItem(oid, this);
-    }
-
-    /**
-     * @brief Construct a new Range Constraint object
-     * @param min the minimum value
-     * @param max the maximum value
-     * @param oid the oid of the constraint
-     * @param shared is the constraint shared
-     * @param parent the param to add the constraint to
-     */
-    template <typename U>
-    RangeConstraint(T min, T max, T step, std::string oid, bool shared)
-        : min_(min), max_(max), step_{step}, 
-        display_min_{min}, display_max_{max}, oid_{oid}, shared_{shared} {}
-
-    /**
-     * @brief Construct a new Range Constraint object
-     * @param min the minimum value
-     * @param max the maximum value
-     * @param step the step size
-     * @param display_min the minimum value to display
-     * @param display_max the maximum value to display
-     * @param oid the oid of the constraint
-     * @param shared is the constraint shared
-     * @param dm the device to add the constraint to
-     */
-    RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid,
-        bool shared, IDevice& dm)
-        : min_(min), max_(max), step_(step),
-        display_min_{display_min}, display_max_{display_max}, oid_{oid}, shared_{shared} {
-        dm.addItem(oid, this);
-    }
-
-    /**
-     * @brief Construct a new Range Constraint object
-     * @param min the minimum value
-     * @param max the maximum value
-     * @param step the step size
-     * @param display_min the minimum value to display
-     * @param display_max the maximum value to display
-     * @param oid the oid of the constraint
-     * @param shared is the constraint shared
-     * @param parent the param to add the constraint to
-     */
-    RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid, 
-        bool shared)
-        : min_(min), max_(max), step_(step),
-        display_min_{display_min}, display_max_{display_max}, oid_{oid}, shared_{shared} {}
+        : RangeConstraint(min, max, step, min, max, oid, shared, dm) {}
 
     /**
      * @brief default destructor
@@ -136,18 +127,18 @@ public:
      * If the step size is not 0, the value must also be a multiple of the step size.
      */
     bool satisfied(const catena::Value& src) const override {
-
+        bool ans = false;
         if constexpr(std::is_same<T, int32_t>::value) {
-            return src.int32_value() >= min_ 
-                && src.int32_value() <= max_
-                && (!step_ || (src.int32_value() - min_) % step_ == 0);
+            ans = src.int32_value() >= min_ 
+                  && src.int32_value() <= max_
+                  && (!step_ || (src.int32_value() - min_) % step_ == 0);
         }
-
-        if constexpr(std::is_same<T, float>::value) {
-            return src.float32_value() >= min_ 
-                && src.float32_value() <= max_
-                && (!step_ || std::fmod(src.float32_value() - min_, step_) == 0);
+        else if constexpr(std::is_same<T, float>::value) {
+            ans = src.float32_value() >= min_ 
+                  && src.float32_value() <= max_
+                  && (!step_ || std::fmod(src.float32_value() - min_, step_) == 0);
         }
+        return ans;
     }
 
     /**
@@ -161,39 +152,39 @@ public:
      */
     catena::Value apply(const catena::Value& src) const override {
         catena::Value constrainedVal;
-
         if constexpr(std::is_same<T, int32_t>::value) {
             // return empty value if src is not valid
-            if (!src.has_int32_value()) { return constrainedVal; }
-            int32_t s = src.int32_value();
-
-            // constrain if not within allowed range
-            if (s < min_) {
-                constrainedVal.set_int32_value(min_);
-            } else if (s > max_) {
-                constrainedVal.set_int32_value(max_);
-            } else if (!step_ || (s - min_) % step_ != 0) {
-                constrainedVal.set_int32_value(s - ((s - min_) % step_));
+            if (src.has_int32_value()) {
+                int32_t s = src.int32_value();
+                // constrain if not within allowed range
+                if (s < min_) {
+                    constrainedVal.set_int32_value(min_);
+                } else if (s > max_) {
+                    constrainedVal.set_int32_value(max_);
+                } else if (step_ && (s - min_) % step_ != 0) {
+                    constrainedVal.set_int32_value(s - ((s - min_) % step_));
+                } else {
+                    constrainedVal.set_int32_value(s);
+                }
             }
-            return constrainedVal;
         }
-
-        if constexpr(std::is_same<T, float>::value) {
-
+        else if constexpr(std::is_same<T, float>::value) {
             // return empty value if src is not valid
-            if (!src.has_float32_value()) { return constrainedVal; }
-            float s = src.float32_value();
-
-            // constrain if not within allowed range
-            if (s < min_) {
-                constrainedVal.set_float32_value(min_);
-            } else if (s > max_) {
-                constrainedVal.set_float32_value(max_);
-            } else if (!step_ || std::fmod(s - min_, step_) != 0) {
-                constrainedVal.set_float32_value(s - std::fmod(s - min_, step_));
+            if (src.has_float32_value()) {
+                float s = src.float32_value();
+                // constrain if not within allowed range
+                if (s < min_) {
+                    constrainedVal.set_float32_value(min_);
+                } else if (s > max_) {
+                    constrainedVal.set_float32_value(max_);
+                } else if (step_ && std::fmod(s - min_, step_) != 0) {
+                    constrainedVal.set_float32_value(s - std::fmod(s - min_, step_));
+                } else {
+                    constrainedVal.set_float32_value(s);
+                }
             }
-            return constrainedVal;
         }
+        return constrainedVal;
     }
 
     /**
@@ -201,7 +192,7 @@ public:
      * @param msg the protobuf message to populate
      */
     void toProto(catena::Constraint& constraint) const override {
-
+        // Int range constraint
         if constexpr(std::is_same<T, int32_t>::value) {
             constraint.set_type(catena::Constraint::INT_RANGE);
             constraint.mutable_int32_range()->set_min_value(min_);
@@ -209,9 +200,9 @@ public:
             constraint.mutable_int32_range()->set_step(step_);
             constraint.mutable_int32_range()->set_display_min(display_min_);
             constraint.mutable_int32_range()->set_display_max(display_max_);
-        } 
-
-        if constexpr(std::is_same<T, float>::value) {
+        }
+        // Float range constraint
+        else if constexpr(std::is_same<T, float>::value) {
             constraint.set_type(catena::Constraint::FLOAT_RANGE);
             constraint.mutable_float_range()->set_min_value(min_);
             constraint.mutable_float_range()->set_max_value(max_);
@@ -240,13 +231,13 @@ public:
     const std::string& getOid() const override { return oid_; }
 
 private:
-    T min_;         ///< the minimum value
-    T max_;         ///< the maximum value
-    T step_;        ///< the step size
-    T display_min_; ///< the minimum value to display
-    T display_max_; ///< the maximum value to display
-    bool strict_;   ///< should the value be constrained on apply
-    bool shared_;   ///< is the constraint shared
+    T min_;           ///< the minimum value
+    T max_;           ///< the maximum value
+    T step_;          ///< the step size
+    T display_min_;   ///< the minimum value to display
+    T display_max_;   ///< the maximum value to display
+    bool strict_;     ///< should the value be constrained on apply
+    bool shared_;     ///< is the constraint shared
     std::string oid_; ///< the oid of the constraint
 };
 
