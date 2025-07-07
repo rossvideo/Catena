@@ -51,20 +51,20 @@
                 {
                   "struct_value": {
                     "fields": {
-                      "response": { "value": {"int32_value": 0}},
-                      "frequency": { "value": {"float32_value": 0}},
-                      "gain": { "value": {"float32_value": 0}},
-                      "q_factor": { "value": {"float32_value": 0}}
+                      "response": {"int32_value": 0},
+                      "frequency": {"float32_value": 0},
+                      "gain": {"float32_value": 0},
+                      "q_factor": {"float32_value": 0}
                     }
                   }
                 },
                 {
                   "struct_value": {
                     "fields": {
-                      "response": { "value": {"int32_value": 0}},
-                      "frequency": { "value": {"float32_value": 0}},
-                      "gain": { "value": {"float32_value": 0}},
-                      "q_factor": { "value": {"float32_value": 0}}
+                      "response": {"int32_value": 0},
+                      "frequency": {"float32_value": 0},
+                      "gain": {"float32_value": 0},
+                      "q_factor": {"float32_value": 0}
                     }
                   }
                 }
@@ -84,33 +84,31 @@
             {
               "struct_value": {
                 "fields": {
-                  "fader":{"value": {"float32_value": 0.0}},
+                  "fader":{"float32_value": 0.0},
                   "eq_list": {
-                    "value": {
-                      "struct_array_values": {
-                        "struct_values": [
-                          {
-                            "struct_value": {
-                              "fields": {
-                                "response": { "value": {"int32_value": 1}},
-                                "frequency": { "value": {"float32_value": 100}},
-                                "gain": { "value": {"float32_value": 0}},
-                                "q_factor": { "value": {"float32_value": 0}}
-                              }
-                            }
-                          },
-                          {
-                            "struct_value": {
-                              "fields": {
-                                "response": { "value": {"int32_value": 2}},
-                                "frequency": { "value": {"float32_value": 200}},
-                                "gain": { "value": {"float32_value": 0}},
-                                "q_factor": { "value": {"float32_value": 0}}
-                              }
+                    "struct_array_values": {
+                      "struct_values": [
+                        {
+                          "struct_value": {
+                            "fields": {
+                              "response": {"int32_value": 1},
+                              "frequency": {"float32_value": 100},
+                              "gain": {"float32_value": 0},
+                              "q_factor": {"float32_value": 0}
                             }
                           }
-                        ]
-                      }
+                        },
+                        {
+                          "struct_value": {
+                            "fields": {
+                              "response": {"int32_value": 2},
+                              "frequency": {"float32_value": 200},
+                              "gain": {"float32_value": 0},
+                              "q_factor": {"float32_value": 0}
+                            }
+                          }
+                        }
+                      ]
                     }
                   }
                 }
@@ -119,33 +117,31 @@
             {
               "struct_value": {
                 "fields": {
-                  "fader":{"value": {"float32_value": 0.1}},
+                  "fader":{"float32_value": 0.1},
                   "eq_list": {
-                    "value": {
-                      "struct_array_values": {
-                        "struct_values": [
-                          {
-                            "struct_value": {
-                              "fields": {
-                                "response": { "value": {"int32_value": 3}},
-                                "frequency": { "value": {"float32_value": 300}},
-                                "gain": { "value": {"float32_value": 0}},
-                                "q_factor": { "value": {"float32_value": 0}}
-                              }
-                            }
-                          },
-                          {
-                            "struct_value": {
-                              "fields": {
-                                "response": { "value": {"int32_value": 4}},
-                                "frequency": { "value": {"float32_value": 400}},
-                                "gain": { "value": {"float32_value": 0}},
-                                "q_factor": { "value": {"float32_value": 0}}
-                              }
+                    "struct_array_values": {
+                      "struct_values": [
+                        {
+                          "struct_value": {
+                            "fields": {
+                              "response": {"int32_value": 3},
+                              "frequency": {"float32_value": 300},
+                              "gain": {"float32_value": 0},
+                              "q_factor": {"float32_value": 0}
                             }
                           }
-                        ]
-                      }
+                        },
+                        {
+                          "struct_value": {
+                            "fields": {
+                              "response": {"int32_value": 4},
+                              "frequency": {"float32_value": 400},
+                              "gain": {"float32_value": 0},
+                              "q_factor": {"float32_value": 0}
+                            }
+                          }
+                        }
+                      ]
                     }
                   }
                 }
@@ -154,33 +150,31 @@
             {
               "struct_value": {
                 "fields": {
-                  "fader":{"value": {"float32_value": 0.2}},
+                  "fader":{"float32_value": 0.2},
                   "eq_list": {
-                    "value": {
-                      "struct_array_values": {
-                        "struct_values": [
-                          {
-                            "struct_value": {
-                              "fields": {
-                                "response": { "value": {"int32_value": 5}},
-                                "frequency": { "value": {"float32_value": 500}},
-                                "gain": { "value": {"float32_value": 0}},
-                                "q_factor": { "value": {"float32_value": 0}}
-                              }
-                            }
-                          },
-                          {
-                            "struct_value": {
-                              "fields": {
-                                "response": { "value": {"int32_value": 6}},
-                                "frequency": { "value": {"float32_value": 600}},
-                                "gain": { "value": {"float32_value": 0}},
-                                "q_factor": { "value": {"float32_value": 0}}
-                              }
+                    "struct_array_values": {
+                      "struct_values": [
+                        {
+                          "struct_value": {
+                            "fields": {
+                              "response": {"int32_value": 5},
+                              "frequency": {"float32_value": 500},
+                              "gain": {"float32_value": 0},
+                              "q_factor": {"float32_value": 0}
                             }
                           }
-                        ]
-                      }
+                        },
+                        {
+                          "struct_value": {
+                            "fields": {
+                              "response": {"int32_value": 6},
+                              "frequency": {"float32_value": 600},
+                              "gain": {"float32_value": 0},
+                              "q_factor": {"float32_value": 0}
+                            }
+                          }
+                        }
+                      ]
                     }
                   }
                 }
@@ -189,33 +183,31 @@
             {
               "struct_value": {
                 "fields": {
-                  "fader":{"value": {"float32_value": 0.3}},
+                  "fader":{"float32_value": 0.3},
                   "eq_list": {
-                    "value": {
-                      "struct_array_values": {
-                        "struct_values": [
-                          {
-                            "struct_value": {
-                              "fields": {
-                                "response": { "value": {"int32_value": 7}},
-                                "frequency": { "value": {"float32_value": 700}},
-                                "gain": { "value": {"float32_value": 0}},
-                                "q_factor": { "value": {"float32_value": 0}}
-                              }
-                            }
-                          },
-                          {
-                            "struct_value": {
-                              "fields": {
-                                "response": { "value": {"int32_value": 8}},
-                                "frequency": { "value": {"float32_value": 800}},
-                                "gain": { "value": {"float32_value": 0}},
-                                "q_factor": { "value": {"float32_value": 0}}
-                              }
+                    "struct_array_values": {
+                      "struct_values": [
+                        {
+                          "struct_value": {
+                            "fields": {
+                              "response": {"int32_value": 7},
+                              "frequency": {"float32_value": 700},
+                              "gain": {"float32_value": 0},
+                              "q_factor": {"float32_value": 0}
                             }
                           }
-                        ]
-                      }
+                        },
+                        {
+                          "struct_value": {
+                            "fields": {
+                              "response": {"int32_value": 8},
+                              "frequency": {"float32_value": 800},
+                              "gain": {"float32_value": 0},
+                              "q_factor": {"float32_value": 0}
+                            }
+                          }
+                        }
+                      ]
                     }
                   }
                 }
@@ -264,8 +256,8 @@
           "value": {
             "struct_value": {
               "fields": {
-                "room_size": { "value": { "float32_value": 0.7 } },
-                "damping": { "value": { "float32_value": 0.3 } }
+                "room_size": { "float32_value": 0.7 },
+                "damping": { "float32_value": 0.3 }
               }
             }
           }
@@ -284,8 +276,8 @@
               "value": {
                 "struct_value": {
                   "fields": {
-                    "room_size": { "value": { "float32_value": 0.8 } },
-                    "damping": { "value": { "float32_value": 0.3 } }
+                    "room_size": { "float32_value": 0.8 },
+                    "damping": { "float32_value": 0.3 }
                   }
                 }
               }
@@ -295,8 +287,8 @@
               "value": {
                 "struct_value": {
                   "fields": {
-                    "time": { "value": { "float32_value": 0.4 } },
-                    "feedback": { "value": { "float32_value": 0.6 } }
+                    "time": { "float32_value": 0.4 },
+                    "feedback": { "float32_value": 0.6 }
                   }
                 }
               }
@@ -348,16 +340,16 @@
                 {
                   "struct_value": {
                     "fields": {
-                      "time": { "value": { "float32_value": 0.3 } },
-                      "feedback": { "value": { "float32_value": 0.5 } }
+                      "time": { "float32_value": 0.3 },
+                      "feedback": { "float32_value": 0.5 }
                     }
                   }
                 },
                 {
                   "struct_value": {
                     "fields": {
-                      "time": { "value": { "float32_value": 0.6 } },
-                      "feedback": { "value": { "float32_value": 0.4 } }
+                      "time": { "float32_value": 0.6 },
+                      "feedback": { "float32_value": 0.4 }
                     }
                   }
                 }
