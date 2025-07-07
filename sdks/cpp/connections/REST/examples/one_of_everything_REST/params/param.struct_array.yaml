@@ -11,16 +11,14 @@ value:
       - struct_value:
           fields:
             nested_struct:
-              value:
-                struct_value:
-                  fields:
-                    num_1: { value: { int32_value: 1 } }
-                    num_2: { value: { int32_value: 2 } }
+              struct_value:
+                fields:
+                  num_1: {int32_value: 1}
+                  num_2: {int32_value: 2}
       - struct_value:
           fields:
             nested_struct:
-              value:
-                struct_value:
-                  fields:
-                    num_1: { value: { int32_value: 3 } }
-                    num_2: { value: { int32_value: 4 } }
+              struct_value:
+                fields:
+                  num_1: {int32_value: 3}
+                  num_2: {int32_value: 4}
