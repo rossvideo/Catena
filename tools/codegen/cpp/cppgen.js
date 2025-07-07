@@ -141,7 +141,6 @@ class CppGen {
     bloc(`#include <LanguagePack.h>`);
     bloc(`#include <Device.h>`);
     bloc(`#include <RangeConstraint.h>`);
-    bloc(`#include <PicklistConstraint.h>`);
     bloc(`#include <NamedChoiceConstraint.h>`);
     bloc(`#include <Enums.h>`);
     bloc(`#include <StructInfo.h>`);
@@ -159,7 +158,6 @@ class CppGen {
     bloc(`using catena::common::ParamWithValue;`);
     bloc(`using catena::common::Device;`);
     bloc(`using catena::common::RangeConstraint;`);
-    bloc(`using catena::common::PicklistConstraint;`);
     bloc(`using catena::common::NamedChoiceConstraint;`);
     bloc(`using catena::common::IParam;`);
     bloc(`using catena::common::EmptyValue;`);

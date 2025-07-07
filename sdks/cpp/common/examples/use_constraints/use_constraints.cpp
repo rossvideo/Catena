@@ -51,7 +51,6 @@
 #include <PolyglotText.h>
 #include <RangeConstraint.h>
 #include <NamedChoiceConstraint.h>
-#include <PicklistConstraint.h>
 
 // interface
 #include <interface/param.pb.h>

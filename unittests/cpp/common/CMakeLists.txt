@@ -30,6 +30,9 @@ set(SOURCES
     tests/Menu_test.cpp
     tests/StructInfo_test.cpp
     tests/LanguagePack_test.cpp
+    tests/PolyglotText_test.cpp
+    tests/NamedChoiceConstraint_test.cpp
+    tests/RangeConstraint_test.cpp
 )
 
 add_executable(${This} ${SOURCES})

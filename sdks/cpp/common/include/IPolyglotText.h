@@ -37,7 +37,8 @@
  * @copyright Copyright (c) 2024 Ross Video
  */
 
-#include "google/protobuf/message_lite.h" 
+// Protobuf
+#include <interface/language.pb.h>
 
 #include <unordered_map>
 #include <string>
@@ -57,16 +58,22 @@ class IPolyglotText {
   public:
     using DisplayStrings = std::unordered_map<std::string, std::string>;
     using ListInitializer = std::initializer_list<std::pair<std::string, std::string>>;
-  public:
+  
     IPolyglotText() = default;
     IPolyglotText(IPolyglotText&&) = default;
     IPolyglotText& operator=(IPolyglotText&&) = default;
     virtual ~IPolyglotText() = default;
 
-    virtual void toProto(google::protobuf::MessageLite& msg) const = 0;
-
+    /**
+     * @brief Serializes the multilingual text into a protobuf message.
+     * @param dst The destination protobuf object.
+     */
+    virtual void toProto(catena::PolyglotText& dst) const = 0;
+    /**
+     * @brief Returns the unordered map of multilingual text.
+     */
     virtual const DisplayStrings& displayStrings() const = 0;
-
 };
+
 }  // namespace common
 }  // namespace catena
