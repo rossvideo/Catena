@@ -126,7 +126,7 @@ $(document).ready(function(){initNavTree('enum_decorator_8cpp-example.html','');
 <div class="line"> </div>
 <div class="line"><span class="comment">// common</span></div>
 <div class="line"><span class="preprocessor">#include &lt;<a class="code" href="EnumDecorator_8h.html">patterns/EnumDecorator.h</a>&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="Logger_8h.html">Logger.h</a>&gt;</span></div>
+<div class="line"> </div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// example using the ENUMDECORATOR macros</span></div>
@@ -183,50 +183,49 @@ $(document).ready(function(){initNavTree('enum_decorator_8cpp-example.html','');
 <div class="line">    {Primes_e::kEleven, <span class="stringliteral">&quot;eleven&quot;</span>}</div>
 <div class="line">};</div>
 <div class="line"> </div>
-<div class="line"><span class="keywordtype">int</span> main (<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span>** argv) {</div>
-<div class="line">    Logger::StartLogging(argc, argv);</div>
-<div class="line">    </div>
+<div class="line"><span class="keywordtype">int</span> main() {</div>
+<div class="line"> </div>
 <div class="line">    <span class="comment">// default constructor, sets value to zero</span></div>
 <div class="line">    Counter c0;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;c0: &quot;</span> &lt;&lt; c0.toString() &lt;&lt; <span class="stringliteral">&quot; has value: &quot;</span> &lt;&lt; Counter::utype(c0);</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;c0: &quot;</span> &lt;&lt; c0.<a id="a1" name="a1"></a><a class="code hl_function" href="classcatena_1_1patterns_1_1EnumDecorator.html#a2b64f8fee4d3faa69a2c53f068c01d6d">toString</a>() &lt;&lt; <span class="stringliteral">&quot; has value: &quot;</span> &lt;&lt; Counter::utype(c0) &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// construct from enum value</span></div>
 <div class="line">    Counter c1(Counter_e::kOne);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;c1: &quot;</span> &lt;&lt; c1.toString();</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;c1: &quot;</span> &lt;&lt; c1.toString() &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// construct from string</span></div>
 <div class="line">    Counter c2(<span class="stringliteral">&quot;two&quot;</span>);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;c2: &quot;</span> &lt;&lt; Counter::utype(c2);</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;c2: &quot;</span> &lt;&lt; Counter::utype(c2) &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// construct from integer</span></div>
 <div class="line">    Counter c3(2);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;c3: &quot;</span> &lt;&lt; c3.toString() &lt;&lt; <span class="stringliteral">&quot; has value: &quot;</span> &lt;&lt; Counter::utype(c3);</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;c3: &quot;</span> &lt;&lt; c3.toString() &lt;&lt; <span class="stringliteral">&quot; has value: &quot;</span> &lt;&lt; Counter::utype(c3) &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// construct from invalid string</span></div>
 <div class="line">    Counter c4(<span class="stringliteral">&quot;three&quot;</span>);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;c4: &quot;</span> &lt;&lt; c4.toString() &lt;&lt; <span class="stringliteral">&quot; has value: &quot;</span> &lt;&lt; Counter::utype(c4);</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;c4: &quot;</span> &lt;&lt; c4.toString() &lt;&lt; <span class="stringliteral">&quot; has value: &quot;</span> &lt;&lt; Counter::utype(c4) &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// construct from invalid integer</span></div>
 <div class="line">    Counter c5(-1);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;c5: &quot;</span> &lt;&lt; c5.toString() &lt;&lt; <span class="stringliteral">&quot; has value: &quot;</span> &lt;&lt; Counter::utype(c5);</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;c5: &quot;</span> &lt;&lt; c5.toString() &lt;&lt; <span class="stringliteral">&quot; has value: &quot;</span> &lt;&lt; Counter::utype(c5) &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// inequality</span></div>
-<div class="line">    DEBUG_LOG &lt;&lt; std::boolalpha &lt;&lt; <span class="stringliteral">&quot;c1 == c2: &quot;</span> &lt;&lt; (c1 == c2);</div>
+<div class="line">    std::cout &lt;&lt; std::boolalpha &lt;&lt; <span class="stringliteral">&quot;c1 == c2: &quot;</span> &lt;&lt; (c1 == c2) &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// equality</span></div>
-<div class="line">    DEBUG_LOG &lt;&lt; std::boolalpha &lt;&lt; <span class="stringliteral">&quot;c2 == c3: &quot;</span> &lt;&lt; (c2 == c3);</div>
+<div class="line">    std::cout &lt;&lt; std::boolalpha &lt;&lt; <span class="stringliteral">&quot;c2 == c3: &quot;</span> &lt;&lt; (c2 == c3) &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// cast to string</span></div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;c3: &quot;</span> &lt;&lt; std::string(c3);</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;c3: &quot;</span> &lt;&lt; std::string(c3) &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// Using the hand-built EnumDecorator for Primes</span></div>
 <div class="line">    <span class="comment">// default constructor, demonstrates that the default value is zero</span></div>
 <div class="line">    <span class="comment">// so it&#39;s recommended to use this behaviour to flag an undefined or invalid EnumDecorator</span></div>
 <div class="line">    Primes p0; </div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;p0: &quot;</span> &lt;&lt; p0.toString() &lt;&lt; <span class="stringliteral">&quot; = &quot;</span> &lt;&lt; Primes::utype(p0);</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;p0: &quot;</span> &lt;&lt; p0.toString() &lt;&lt; <span class="stringliteral">&quot; = &quot;</span> &lt;&lt; Primes::utype(p0) &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    Primes p5(Primes_e::kFive);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;p5: &quot;</span> &lt;&lt; p5.toString() &lt;&lt; <span class="stringliteral">&quot; = &quot;</span> &lt;&lt; Primes::utype(p5);</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;p5: &quot;</span> &lt;&lt; p5.toString() &lt;&lt; <span class="stringliteral">&quot; = &quot;</span> &lt;&lt; Primes::utype(p5) &lt;&lt; std::endl;</div>
 <div class="line">}</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">/* possible output</span></div>
@@ -243,8 +242,8 @@ $(document).ready(function(){initNavTree('enum_decorator_8cpp-example.html','');
 <div class="line"><span class="comment">p5: five = 5</span></div>
 <div class="line"><span class="comment">*/</span></div>
 <div class="ttc" id="aEnumDecorator_8h_html"><div class="ttname"><a href="EnumDecorator_8h.html">EnumDecorator.h</a></div><div class="ttdoc">Provides an enum with useful extra functionality.</div></div>
-<div class="ttc" id="aLogger_8h_html"><div class="ttname"><a href="Logger_8h.html">Logger.h</a></div><div class="ttdoc">Logger class.</div></div>
 <div class="ttc" id="aclasscatena_1_1patterns_1_1EnumDecorator_html"><div class="ttname"><a href="classcatena_1_1patterns_1_1EnumDecorator.html">catena::patterns::EnumDecorator</a></div><div class="ttdoc">Enhances default C++ enums by adding functionality for converting between enum values,...</div><div class="ttdef"><b>Definition</b> EnumDecorator.h:67</div></div>
+<div class="ttc" id="aclasscatena_1_1patterns_1_1EnumDecorator_html_a2b64f8fee4d3faa69a2c53f068c01d6d"><div class="ttname"><a href="classcatena_1_1patterns_1_1EnumDecorator.html#a2b64f8fee4d3faa69a2c53f068c01d6d">catena::patterns::EnumDecorator::toString</a></div><div class="ttdeci">const std::string &amp; toString() const</div><div class="ttdoc">get the string representation of the enum value</div><div class="ttdef"><b>Definition</b> EnumDecorator.h:209</div></div>
 </div><!-- fragment --> </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
