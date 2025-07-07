@@ -94,19 +94,35 @@ $(document).ready(function(){initNavTree('path_8cpp-example.html',''); initResiz
 </div><!--header-->
 <div class="contents">
 <p>demonstrates use of a variety of json-pointers that are useful with catena models.</p>
-<div class="fragment"><div class="line"><span class="comment">// Licensed under the Creative Commons Attribution NoDerivatives 4.0</span></div>
-<div class="line"><span class="comment">// International Licensing (CC-BY-ND-4.0);</span></div>
-<div class="line"><span class="comment">// you may not use this file except in compliance with the License.</span></div>
-<div class="line"><span class="comment">// You may obtain a copy of the License at:</span></div>
-<div class="line"><span class="comment">//</span></div>
-<div class="line"><span class="comment">// https://creativecommons.org/licenses/by-nd/4.0/</span></div>
-<div class="line"><span class="comment">//</span></div>
-<div class="line"><span class="comment">// Unless required by applicable law or agreed to in writing, software</span></div>
-<div class="line"><span class="comment">// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span></div>
-<div class="line"><span class="comment">// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span></div>
-<div class="line"><span class="comment">// See the License for the specific language governing permissions and</span></div>
-<div class="line"><span class="comment">// limitations under the License.</span></div>
-<div class="line"><span class="comment">//</span></div>
+<div class="fragment"><div class="line"><span class="comment">/*</span></div>
+<div class="line"><span class="comment"> * Copyright 2025 Ross Video Ltd</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * Redistribution and use in source and binary forms, with or without</span></div>
+<div class="line"><span class="comment"> * modification, are permitted provided that the following conditions are met:</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * 1. Redistributions of source code must retain the above copyright notice,</span></div>
+<div class="line"><span class="comment"> * this list of conditions and the following disclaimer.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * 2. Redistributions in binary form must reproduce the above copyright notice,</span></div>
+<div class="line"><span class="comment"> * this list of conditions and the following disclaimer in the documentation</span></div>
+<div class="line"><span class="comment"> * and/or other materials provided with the distribution.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * 3. Neither the name of the copyright holder nor the names of its</span></div>
+<div class="line"><span class="comment"> * contributors may be used to endorse or promote products derived from this</span></div>
+<div class="line"><span class="comment"> * software without specific prior written permission.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”</span></div>
+<div class="line"><span class="comment"> * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span></div>
+<div class="line"><span class="comment"> * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE</span></div>
+<div class="line"><span class="comment"> * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE</span></div>
+<div class="line"><span class="comment"> * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR</span></div>
+<div class="line"><span class="comment"> * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF</span></div>
+<div class="line"><span class="comment"> * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS</span></div>
+<div class="line"><span class="comment"> * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN</span></div>
+<div class="line"><span class="comment"> * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)</span></div>
+<div class="line"><span class="comment"> * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span></div>
+<div class="line"><span class="comment"> * POSSIBILITY OF SUCH DAMAGE.</span></div>
+<div class="line"><span class="comment"> */</span></div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// common</span></div>
 <div class="line"><span class="preprocessor">#include &lt;<a class="code" href="Path_8h.html">Path.h</a>&gt;</span></div>
@@ -140,17 +156,17 @@ $(document).ready(function(){initNavTree('path_8cpp-example.html',''); initResiz
 <div class="line">}</div>
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">int</span> main() {</div>
-<div class="line">    Path top_level_oid{<span class="stringliteral">&quot;/top_level_oid&quot;</span>};</div>
+<div class="line">    Path top_level_oid(<span class="stringliteral">&quot;/top_level_oid&quot;</span>);</div>
 <div class="line">    document(top_level_oid);</div>
 <div class="line"> </div>
-<div class="line">    Path top_level_array_element{<span class="stringliteral">&quot;/top_level_array/3&quot;</span>};</div>
+<div class="line">    Path top_level_array_element(<span class="stringliteral">&quot;/top_level_array/3&quot;</span>);</div>
 <div class="line">    document(top_level_array_element);</div>
 <div class="line"> </div>
-<div class="line">    Path nested_struct{<span class="stringliteral">&quot;/parent/child/grandchild&quot;</span>};</div>
+<div class="line">    Path nested_struct(<span class="stringliteral">&quot;/parent/child/grandchild&quot;</span>);</div>
 <div class="line">    document(nested_struct);</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// demos the one-past-the-end element accessor</span></div>
-<div class="line">    Path struct_array{<span class="stringliteral">&quot;/parent/-/child&quot;</span>};</div>
+<div class="line">    Path struct_array(<span class="stringliteral">&quot;/parent/-/child&quot;</span>);</div>
 <div class="line">    document(struct_array);</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// The document method consumes the Path passed to it</span></div>
@@ -167,11 +183,17 @@ $(document).ready(function(){initNavTree('path_8cpp-example.html',''); initResiz
 <div class="line">    struct_array.rewind();</div>
 <div class="line">    document(struct_array);</div>
 <div class="line"> </div>
-<div class="line">    Path struct_array_element_field{<span class="stringliteral">&quot;/parent/3/child&quot;</span>};</div>
+<div class="line">    Path struct_array_element_field(<span class="stringliteral">&quot;/parent/3/child&quot;</span>);</div>
+<div class="line">    document(struct_array_element_field);</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// Adds a new segment to the Path</span></div>
+<div class="line">    cout &lt;&lt; <span class="stringliteral">&quot;\njptr should have additional segment \&quot;grandChild\&quot;&quot;</span> &lt;&lt; endl;</div>
+<div class="line">    struct_array_element_field.rewind();</div>
+<div class="line">    struct_array_element_field.push_back(<span class="stringliteral">&quot;grandChild&quot;</span>);</div>
 <div class="line">    document(struct_array_element_field);</div>
 <div class="line">}</div>
 <div class="line"> </div>
-<div class="line"><span class="comment">/* possible output</span></div>
+<div class="line"><span class="comment">/* Possible Output</span></div>
 <div class="line"><span class="comment">path: /top_level_oid</span></div>
 <div class="line"><span class="comment">has length: 1</span></div>
 <div class="line"><span class="comment">segment 0 has type string and value: top_level_oid</span></div>
@@ -210,10 +232,18 @@ $(document).ready(function(){initNavTree('path_8cpp-example.html',''); initResiz
 <div class="line"><span class="comment">segment 0 has type string and value: parent</span></div>
 <div class="line"><span class="comment">segment 1 has type Index and value: 3</span></div>
 <div class="line"><span class="comment">segment 2 has type string and value: child</span></div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">jptr should have additional segment &quot;grandChild&quot;</span></div>
+<div class="line"><span class="comment">path: /parent/3/child/grandChild</span></div>
+<div class="line"><span class="comment">has length: 4</span></div>
+<div class="line"><span class="comment">segment 0 has type string and value: parent</span></div>
+<div class="line"><span class="comment">segment 1 has type Index and value: 3</span></div>
+<div class="line"><span class="comment">segment 2 has type string and value: child</span></div>
+<div class="line"><span class="comment">segment 3 has type string and value: grandChild</span></div>
 <div class="line"><span class="comment">*/</span></div>
 <div class="ttc" id="aPath_8h_html"><div class="ttname"><a href="Path_8h.html">Path.h</a></div><div class="ttdoc">Handles Path objects used to uniquely identify and access OIDs.</div></div>
-<div class="ttc" id="aclasscatena_1_1common_1_1Path_html"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html">catena::common::Path</a></div><div class="ttdoc">Converts json pointers to items within the data model to a path of &quot;segments&quot; that can be iterated ov...</div><div class="ttdef"><b>Definition</b> Path.h:66</div></div>
-<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_ac6322b03a662c484c09e83df0664ad48"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#ac6322b03a662c484c09e83df0664ad48">catena::common::Path::fqoid</a></div><div class="ttdeci">std::string fqoid() const</div><div class="ttdoc">return a fully qualified oid</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html">catena::common::Path</a></div><div class="ttdoc">Converts json pointers to items within the data model to a path of &quot;segments&quot; that can be iterated ov...</div><div class="ttdef"><b>Definition</b> Path.h:65</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_ac6322b03a662c484c09e83df0664ad48"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#ac6322b03a662c484c09e83df0664ad48">catena::common::Path::fqoid</a></div><div class="ttdeci">std::string fqoid() const</div><div class="ttdoc">return a fully qualified, albeit escaped oid</div></div>
 </div><!-- fragment --> </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
