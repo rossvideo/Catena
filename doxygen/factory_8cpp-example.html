@@ -284,7 +284,6 @@ $(document).ready(function(){initNavTree('factory_8cpp-example.html',''); initRe
 <div class="line">  DEBUG_LOG &lt;&lt; _breed &lt;&lt; <span class="stringliteral">&quot; arrrroooooo!&quot;</span>;</div>
 <div class="line">}</div>
 <div class="line"> </div>
-<div class="line"><span class="keyword">using </span>std::cout;</div>
 <div class="line"><span class="keywordtype">int</span> main() {</div>
 <div class="line">  FLAGS_logtostderr = <span class="keyword">false</span>;          <span class="comment">// Keep logging to files</span></div>
 <div class="line">  FLAGS_log_dir = GLOG_LOGGING_DIR;   <span class="comment">// Set the log directory</span></div>
@@ -295,9 +294,9 @@ $(document).ready(function(){initNavTree('factory_8cpp-example.html',''); initRe
 <div class="line">    Dog::Factory&amp; df = Dog::Factory::getInstance();</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// print its inventory</span></div>
-<div class="line">    <span class="comment">// cout &lt;&lt; &quot;Dog Factory\n&quot; &lt;&lt; df &lt;&lt; endl;</span></div>
+<div class="line">    <span class="comment">// DEBUG_LOG &lt;&lt; &quot;Dog Factory\n&quot; &lt;&lt; df &lt;&lt; endl;</span></div>
 <div class="line"> </div>
-<div class="line">    cout &lt;&lt; <span class="stringliteral">&quot;Dog Tests&quot;</span>;</div>
+<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;Dog Tests&quot;</span>;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">/*</span></div>
 <div class="line"><span class="comment">     * Create 3 dogs of different types</span></div>
@@ -314,19 +313,19 @@ $(document).ready(function(){initNavTree('factory_8cpp-example.html',''); initRe
 <div class="line">    (*jackRussell)();</div>
 <div class="line">    rabid-&gt;operator()();  <span class="comment">// alternative syntax</span></div>
 <div class="line"> </div>
-<div class="line">    cout &lt;&lt; <span class="stringliteral">&quot;Factory Test&quot;</span>;</div>
+<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;Factory Test&quot;</span>;</div>
 <div class="line">    <span class="comment">// verify that the factory cannot make goldfish.</span></div>
 <div class="line">    <span class="keywordflow">try</span> {</div>
 <div class="line">      df.makeProduct(<span class="stringliteral">&quot;goldfish&quot;</span>, <span class="stringliteral">&quot;koi carp&quot;</span>, 0);</div>
 <div class="line">    } <span class="keywordflow">catch</span> (std::exception&amp; why) {</div>
-<div class="line">      cout &lt;&lt; <span class="stringliteral">&quot;Problem: &quot;</span> &lt;&lt; why.what();</div>
+<div class="line">      DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;Problem: &quot;</span> &lt;&lt; why.what();</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    cout &lt;&lt; <span class="stringliteral">&quot;Destructors here...&quot;</span>;</div>
+<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;Destructors here...&quot;</span>;</div>
 <div class="line">  } <span class="keywordflow">catch</span> (std::exception&amp; why) {</div>
 <div class="line">    <span class="comment">// something went wrong with the example, so exit with non-zero error code</span></div>
 <div class="line">    <span class="comment">// this should stop the build</span></div>
-<div class="line">    cout &lt;&lt; <span class="stringliteral">&quot;*** Example failed to run!&quot;</span> &lt;&lt; why.what();</div>
+<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;*** Example failed to run!&quot;</span> &lt;&lt; why.what();</div>
 <div class="line">    <span class="keywordflow">return</span> 1;</div>
 <div class="line">  }</div>
 <div class="line">  </div>
