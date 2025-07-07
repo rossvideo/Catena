@@ -27,39 +27,29 @@
       "value": {
         "struct_value": {
           "fields": {
-            "departure": {
-              "value": {}
-            },
+            "departure": {},
             "destination": {
-              "value": {
-                "struct_value": {
-                  "fields": {
-                    "name": {"value": {"string_value": "Paris"}},
-                    "location": {
-                      "value": {
-                        "struct_value": {
-                          "fields": {
-                            "latitude": {
-                              "value": {
-                                "struct_value": {
-                                  "fields": {
-                                    "degrees": {"value": {"int32_value": 48}},
-                                    "minutes": {"value": {"int32_value": 43}},
-                                    "seconds": {"value": {"float32_value": 49.1}}
-                                  }
-                                }
-                              }
-                            },
-                            "longitude": {
-                              "value": {
-                                "struct_value": {
-                                  "fields": {
-                                    "degrees": {"value": {"int32_value": 2}},
-                                    "minutes": {"value": {"int32_value": 22}},
-                                    "seconds": {"value": {"float32_value": 22.1}}
-                                  }
-                                }
-                              }
+              "struct_value": {
+                "fields": {
+                  "name": {"string_value": "Paris"},
+                  "location": {
+                    "struct_value": {
+                      "fields": {
+                        "latitude": {
+                          "struct_value": {
+                            "fields": {
+                              "degrees": {"int32_value": 48},
+                              "minutes": {"int32_value": 43},
+                              "seconds": {"float32_value": 49.1}
+                            }
+                          }
+                        },
+                        "longitude": {
+                          "struct_value": {
+                            "fields": {
+                              "degrees": {"int32_value": 2},
+                              "minutes": {"int32_value": 22},
+                              "seconds": {"float32_value": 22.1}
                             }
                           }
                         }

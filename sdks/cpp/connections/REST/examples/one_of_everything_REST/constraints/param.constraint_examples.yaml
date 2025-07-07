@@ -42,15 +42,15 @@ params:
 value: 
   struct_value:
     fields:
-      int32_range: { value: { int32_value: 6 } }
-      int32_choice: { value: { int32_value: 1 } }
-      # int32_alarm: { value: { int32_value: 0 } }
-      float32_range: { value: { float32_value: 10.5 } }
-      string_choice: { value: { string_value: "a" } }
-      string_length: { value: { string_value: "Hello worl" } }
-      int_array_range: { value: { int32_array_values: { ints: [0, 2, 4, 6, 8, 10] } } }
-      int_array_choice: { value: { int32_array_values: { ints: [0, 1, 0, 0, 1] } } }
-      # int_array_alarm: { value: { int32_array_values: { ints: [0, 1, 2, 3, 4] } } }
-      float_array_range: { value: { float32_array_values: { floats: [11.5, 22.5, 33.5, 44.5] } } }
-      string_array_choice: { value: { string_array_values: { strings: [a, b, a] } } }
-      string_array_length: { value: { string_array_values: { strings: [a, b, c, d, e, f, g, h, i, j] } } }
+      int32_range: { int32_value: 6}
+      int32_choice: { int32_value: 1 }
+      # int32_alarm:{ int32_value: 0 }
+      float32_range: { float32_value: 10.5 }
+      string_choice: { string_value: "a" }
+      string_length: { string_value: "Hello worl" }
+      int_array_range: { int32_array_values: { ints: [0, 2, 4, 6, 8, 10] } }
+      int_array_choice: { int32_array_values: { ints: [0, 1, 0, 0, 1] } }
+      # int_array_alarm: { int32_array_values: { ints: [0, 1, 2, 3, 4] } }
+      float_array_range: { float32_array_values: { floats: [11.5, 22.5, 33.5, 44.5] } }
+      string_array_choice: { string_array_values: { strings: [a, b, a] } }
+      string_array_length: { string_array_values: { strings: [a, b, c, d, e, f, g, h, i, j] } }
