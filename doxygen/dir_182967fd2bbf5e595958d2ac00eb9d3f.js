@@ -18,6 +18,7 @@ var dir_182967fd2bbf5e595958d2ac00eb9d3f =
     [ "IPolyglotText.h", "IPolyglotText_8h.html", "IPolyglotText_8h" ],
     [ "ISubscriptionManager.h", "ISubscriptionManager_8h.html", "ISubscriptionManager_8h" ],
     [ "LanguagePack.h", "common_2include_2LanguagePack_8h.html", "common_2include_2LanguagePack_8h" ],
+    [ "Logger.h", "Logger_8h.html", "Logger_8h" ],
     [ "Menu.h", "Menu_8h.html", "Menu_8h" ],
     [ "MenuGroup.h", "MenuGroup_8h.html", "MenuGroup_8h" ],
     [ "NamedChoiceConstraint.h", "NamedChoiceConstraint_8h.html", "NamedChoiceConstraint_8h" ],
