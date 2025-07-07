@@ -44,24 +44,20 @@
     "struct_value": {
       "fields": {
         "latitude": {
-          "value": {
-            "struct_value": {
-              "fields": {
-                "degrees": { "value": { "int32_value": 1 } },
-                "minutes": { "value": { "int32_value": 2 } },
-                "seconds": { "value": { "float32_value": 3 } }
-              }
+          "struct_value": {
+            "fields": {
+              "degrees": {"int32_value": 1},
+              "minutes": {"int32_value": 2},
+              "seconds": {"float32_value": 3}
             }
           }
         },
         "longitude": {
-          "value": {
-            "struct_value": {
-              "fields": {
-                "degrees": { "value": { "int32_value": 4 } },
-                "minutes": { "value": { "int32_value": 5 } },
-                "seconds": { "value": { "float32_value": 6 } }
-              }
+          "struct_value": {
+            "fields": {
+              "degrees": {"int32_value": 4},
+              "minutes": {"int32_value": 5},
+              "seconds": {"float32_value": 6}
             }
           }
         }
