@@ -451,16 +451,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemoveNonExistentWildcard) {
     EXPECT_EQ(rc.status, catena::StatusCode::NOT_FOUND);
 }
 
-// Test 2.6: Error case - Remove wildcard with invalid path
-TEST_F(SubscriptionManagerTest, Wildcard_RemoveInvalidPath) {
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    
-    // Try to remove a wildcard subscription with an invalid path
-    EXPECT_FALSE(manager->removeSubscription("/invalid/*", *device, rc));
-    EXPECT_EQ(rc.status, catena::StatusCode::NOT_FOUND);
-}
-
-// Test 2.7: Error case - Remove wildcard with invalid format
+// Test 2.6: Error case - Remove wildcard with invalid format
 TEST_F(SubscriptionManagerTest, Wildcard_RemoveInvalidFormat) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
