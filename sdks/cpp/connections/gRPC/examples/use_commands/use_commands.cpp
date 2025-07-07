@@ -54,7 +54,7 @@
 #include <thread>
 #include <chrono>
 #include <signal.h>
-#include "Logger.h"
+#include <Logger.h>
 
 using grpc::Server;
 using catena::gRPC::CatenaServiceImpl;

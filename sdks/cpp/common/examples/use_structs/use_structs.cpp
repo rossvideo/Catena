@@ -55,7 +55,7 @@
 #include <interface/param.pb.h>
 
 #include <iostream>
-#include "Logger.h"
+#include <Logger.h>
 
 using namespace catena::common;
 using namespace use_structs;

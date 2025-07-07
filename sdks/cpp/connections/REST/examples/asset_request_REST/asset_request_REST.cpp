@@ -61,7 +61,7 @@
 #include <chrono>
 #include <signal.h>
 #include <functional>
-#include "Logger.h"
+#include <Logger.h>
 
 using namespace catena::common;
 

@@ -60,7 +60,7 @@
 // it's in the BINARY folder structure, not SOURCE.
 #include <interface/param.pb.h> // catena::Value
 
-#include "Logger.h"
+#include <Logger.h>
 #include <iostream>
 
 using namespace catena::common;

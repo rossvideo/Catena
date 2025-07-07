@@ -37,7 +37,7 @@
 
 // common
 #include <patterns/GenericFactory.h>
-#include "Logger.h"
+#include <Logger.h>
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -195,7 +195,6 @@ UniDiDog::~ConcreteDog() {
   DEBUG_LOG << _breed << " arrrroooooo!";
 }
 
-using std::cout;
 int main() {
   FLAGS_logtostderr = false;          // Keep logging to files
   FLAGS_log_dir = GLOG_LOGGING_DIR;   // Set the log directory
@@ -206,9 +205,9 @@ int main() {
     Dog::Factory& df = Dog::Factory::getInstance();
 
     // print its inventory
-    // cout << "Dog Factory\n" << df << endl;
+    // DEBUG_LOG << "Dog Factory\n" << df << endl;
 
-    cout << "Dog Tests";
+    DEBUG_LOG << "Dog Tests";
 
     /*
      * Create 3 dogs of different types
@@ -225,19 +224,19 @@ int main() {
     (*jackRussell)();
     rabid->operator()();  // alternative syntax
 
-    cout << "Factory Test";
+    DEBUG_LOG << "Factory Test";
     // verify that the factory cannot make goldfish.
     try {
       df.makeProduct("goldfish", "koi carp", 0);
     } catch (std::exception& why) {
-      cout << "Problem: " << why.what();
+      DEBUG_LOG << "Problem: " << why.what();
     }
 
-    cout << "Destructors here...";
+    DEBUG_LOG << "Destructors here...";
   } catch (std::exception& why) {
     // something went wrong with the example, so exit with non-zero error code
     // this should stop the build
-    cout << "*** Example failed to run!" << why.what();
+    DEBUG_LOG << "*** Example failed to run!" << why.what();
     return 1;
   }
   

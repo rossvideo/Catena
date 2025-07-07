@@ -59,7 +59,7 @@ using namespace catena::common;
 using namespace use_variants;
 using catena::common::ParamTag;
 #include <iostream>
-#include "Logger.h"
+#include <Logger.h>
 
 void printCoordinate(const Coordinates_elem& coord) {
     std::visit([](auto&& arg) {

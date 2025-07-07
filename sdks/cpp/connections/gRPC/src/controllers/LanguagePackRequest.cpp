@@ -30,7 +30,7 @@
 
 // connections/gRPC
 #include <controllers/LanguagePackRequest.h>
-#include "Logger.h"
+#include <Logger.h>
 using catena::gRPC::LanguagePackRequest;
 
 // Initializes the object counter for LanguagePackRequest to 0.

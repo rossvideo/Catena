@@ -60,7 +60,7 @@
 #include <signal.h>
 #include <iostream>
 #include <thread>
-#include "Logger.h"
+#include <Logger.h>
 
 using grpc::Server;
 using catena::gRPC::CatenaServiceImpl;
