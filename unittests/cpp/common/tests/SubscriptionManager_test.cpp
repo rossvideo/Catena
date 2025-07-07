@@ -442,7 +442,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemoveWildcardSubscription) {
     EXPECT_TRUE(oids.find("/test") == oids.end()); // Wildcard subscriptions should be removed
 }
 
-// Test 2.6: Error case - Wildcard removal
+// Test 2.5: Error case - Wildcard removal
 TEST_F(SubscriptionManagerTest, Wildcard_RemoveNonExistentWildcard) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
@@ -451,7 +451,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemoveNonExistentWildcard) {
     EXPECT_EQ(rc.status, catena::StatusCode::NOT_FOUND);
 }
 
-// Test 2.7: Error case - Remove wildcard with invalid path
+// Test 2.6: Error case - Remove wildcard with invalid path
 TEST_F(SubscriptionManagerTest, Wildcard_RemoveInvalidPath) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
@@ -460,7 +460,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemoveInvalidPath) {
     EXPECT_EQ(rc.status, catena::StatusCode::NOT_FOUND);
 }
 
-// Test 2.8: Error case - Remove wildcard with invalid format
+// Test 2.7: Error case - Remove wildcard with invalid format
 TEST_F(SubscriptionManagerTest, Wildcard_RemoveInvalidFormat) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
