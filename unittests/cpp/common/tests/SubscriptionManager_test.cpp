@@ -632,7 +632,32 @@ TEST_F(SubscriptionManagerTest, AllParams_ParameterTraversalException) {
 
 // ======= 4. ARRAY SUBSCRIPTION TESTS =======
 
-// Test 4.1: Success case - Basic array subscription with nested elements
+// Test 4.1: Success case - Basic array element subscription
+TEST_F(SubscriptionManagerTest, Array_ElementSubscription) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    
+    // Set up array element parameter with sub-parameter
+    auto elementParam = std::make_unique<MockParam>();
+    setupMockParam(elementParam.get(), "/test/array/0/subparam", test_descriptor, false);
+    
+    // Set up device to return array element parameter
+    EXPECT_CALL(*device, getParam("/test/array/0/subparam", ::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke([&elementParam](const std::string&, catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return std::move(elementParam);
+        }));
+
+    // Test adding array element subscription with proper sub-parameter path
+    EXPECT_TRUE(manager->addSubscription("/test/array/0/subparam", *device, rc, authz_));
+    EXPECT_EQ(rc.status, catena::StatusCode::OK);
+    
+    // Verify array element sub-parameter is subscribed
+    auto oids = manager->getAllSubscribedOids(*device);
+    EXPECT_EQ(oids.size(), 1);
+    EXPECT_TRUE(oids.find("/test/array/0/subparam") != oids.end());
+}
+
+// Test 4.2: Success case - Basic array subscription with nested elements
 TEST_F(SubscriptionManagerTest, Array_BasicArraySubscriptionWithNestedElements) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
@@ -670,7 +695,7 @@ TEST_F(SubscriptionManagerTest, Array_BasicArraySubscriptionWithNestedElements) 
     EXPECT_EQ(oids.size(), 0);
 }
 
-// Test 4.2: Success case - Array wildcard subscription with nested elements
+// Test 4.3: Success case - Array wildcard subscription with nested elements
 TEST_F(SubscriptionManagerTest, Array_WildcardSubscriptionWithNestedElements) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
@@ -717,31 +742,6 @@ TEST_F(SubscriptionManagerTest, Array_WildcardSubscriptionWithNestedElements) {
     // Verify all array subscriptions were removed
     oids = manager->getAllSubscribedOids(*device);
     EXPECT_EQ(oids.size(), 0);
-}
-
-// Test 4.3: Success case - Array element subscription
-TEST_F(SubscriptionManagerTest, Array_ElementSubscription) {
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    
-    // Set up array element parameter with sub-parameter
-    auto elementParam = std::make_unique<MockParam>();
-    setupMockParam(elementParam.get(), "/test/array/0/subparam", test_descriptor, false);
-    
-    // Set up device to return array element parameter
-    EXPECT_CALL(*device, getParam("/test/array/0/subparam", ::testing::_, ::testing::_))
-        .WillOnce(::testing::Invoke([&elementParam](const std::string&, catena::exception_with_status& status, Authorizer&) {
-            status = catena::exception_with_status("", catena::StatusCode::OK);
-            return std::move(elementParam);
-        }));
-
-    // Test adding array element subscription with proper sub-parameter path
-    EXPECT_TRUE(manager->addSubscription("/test/array/0/subparam", *device, rc, authz_));
-    EXPECT_EQ(rc.status, catena::StatusCode::OK);
-    
-    // Verify array element sub-parameter is subscribed
-    auto oids = manager->getAllSubscribedOids(*device);
-    EXPECT_EQ(oids.size(), 1);
-    EXPECT_TRUE(oids.find("/test/array/0/subparam") != oids.end());
 }
 
 // Test 4.4: Success case - Array element subscription isSubscribed check
