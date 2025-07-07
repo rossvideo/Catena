@@ -427,73 +427,19 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemoveWildcardSubscription) {
             }
         ));
     
-    // Add wildcard subscription
-    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc, authz_));
-    
-    // Add non-wildcard subscription
-    EXPECT_TRUE(manager->addSubscription("/nonwildcard/param", *device, rc, authz_));
-    
-    // Remove wildcard subscription
-    EXPECT_TRUE(manager->removeSubscription("/test/*", *device, rc));
-    EXPECT_EQ(rc.status, catena::StatusCode::OK);
-}
-
-// Test 2.5: Success case - Wildcard removal verification
-TEST_F(SubscriptionManagerTest, Wildcard_RemovalVerification) {
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    
-    // Set up device to return both wildcard and non-wildcard parameters
-    EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
-        .WillRepeatedly(::testing::Invoke(
-            [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
-                auto param = std::make_unique<MockParam>();
-                if (fqoid == "/test/*") {
-                    setupMockParam(param.get(), "/test", *wildcardDescriptors.at("/test").descriptor);
-                } else if (wildcardDescriptors.find(fqoid) != wildcardDescriptors.end()) {
-                    setupMockParam(param.get(), fqoid, *wildcardDescriptors.at(fqoid).descriptor);
-                } else if (nonwildcardDescriptors.find(fqoid) != nonwildcardDescriptors.end()) {
-                    setupMockParam(param.get(), fqoid, *nonwildcardDescriptors.at(fqoid).descriptor);
-                } else {
-                    status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
-                    return nullptr;
-                }
-                status = catena::exception_with_status("", catena::StatusCode::OK);
-                return param;
-            }
-        ));
-
-    // Set up device to return top-level parameters
-    EXPECT_CALL(*device, getTopLevelParams(::testing::_, ::testing::_))
-        .WillRepeatedly(::testing::Invoke(
-            [this](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
-                std::vector<std::unique_ptr<IParam>> params;
-                
-                // Add test parameter
-                auto test_param = std::make_unique<MockParam>();
-                setupMockParam(test_param.get(), "/test", *wildcardDescriptors.at("/test").descriptor);
-                params.push_back(std::move(test_param));
-                
-                // Add nonwildcard parameter
-                auto nonwildcard_param = std::make_unique<MockParam>();
-                setupMockParam(nonwildcard_param.get(), "/nonwildcard", *nonwildcardDescriptors.at("/nonwildcard").descriptor);
-                params.push_back(std::move(nonwildcard_param));
-                
-                status = catena::exception_with_status("", catena::StatusCode::OK);
-                return params;
-            }
-        ));
-    
     // Add both subscriptions
     EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc, authz_));
     EXPECT_TRUE(manager->addSubscription("/nonwildcard/param", *device, rc, authz_));
     
     // Remove wildcard subscription
     EXPECT_TRUE(manager->removeSubscription("/test/*", *device, rc));
+    EXPECT_EQ(rc.status, catena::StatusCode::OK);
     
-    // Verify only non-wildcard subscription remains
+    // Verify the state after removal
     auto oids = manager->getAllSubscribedOids(*device);
     EXPECT_EQ(oids.size(), 1);
     EXPECT_TRUE(oids.find("/nonwildcard/param") != oids.end());
+    EXPECT_TRUE(oids.find("/test") == oids.end()); // Wildcard subscriptions should be removed
 }
 
 // Test 2.6: Error case - Wildcard removal
