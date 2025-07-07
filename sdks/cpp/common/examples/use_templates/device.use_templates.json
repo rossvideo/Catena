@@ -59,26 +59,10 @@
       "value": {
         "struct_value": {
           "fields": {
-            "city_name": {
-              "value": {
-                "string_value": "Ottawa"
-              }
-            },
-            "latitude": {
-              "value": {
-                "float32_value": 45.4215
-              }
-            },
-            "longitude": {
-              "value": {
-                "float32_value": -75.6972
-              }
-            },
-            "population": {
-              "value": {
-                "int32_value": 934243
-              }
-            }
+            "city_name": {"string_value": "Ottawa"},
+            "latitude": {"float32_value": 45.4215},
+            "longitude": {"float32_value": -75.6972},
+            "population": {"int32_value": 934243}
           }
         }
       }
@@ -94,26 +78,10 @@
       "value": {
         "struct_value": {
           "fields": {
-            "city_name": {
-              "value": {
-                "string_value": "Toronto"
-              }
-            },
-            "latitude": {
-              "value": {
-                "float32_value": 43.6511
-              }
-            },
-            "longitude": {
-              "value": {
-                "float32_value": -79.3470
-              }
-            },
-            "population": {
-              "value": {
-                "int32_value": 2731571
-              }
-            }
+            "city_name": {"string_value": "Toronto"},
+            "latitude": {"float32_value": 43.6511},
+            "longitude": {"float32_value": -79.3470},
+            "population": {"int32_value": 2731571}
           }
         }
       }

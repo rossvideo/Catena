@@ -134,7 +134,6 @@ void CatenaServiceImpl::run() {
             }
             // Writing to socket if there was an error.
             if (rc.status != catena::StatusCode::OK) {
-                std::cout<<"Error caught"<<std::endl;
                 // Try ensures that we don't fail to decrement active requests.
                 try {
                     SocketWriter writer(socket);

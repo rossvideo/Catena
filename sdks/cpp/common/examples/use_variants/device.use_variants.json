@@ -45,21 +45,9 @@
       "value": {
         "struct_value": {
           "fields": {
-            "x": {
-              "value": {
-                "int32_value": 5
-              }
-            },
-            "y": {
-              "value": {
-                "int32_value": 10
-              }
-            },
-            "z": {
-              "value": {
-                "int32_value": 15
-              }
-            }
+            "x": {"int32_value": 5},
+            "y": {"int32_value": 10},
+            "z": {"int32_value": 15}
           }
         }
       }
@@ -129,21 +117,9 @@
               "value": {
                 "struct_value": {
                   "fields": {
-                    "x": {
-                      "value": {
-                        "int32_value": 1
-                      }
-                    },
-                    "y": {
-                      "value": {
-                        "int32_value": 2
-                      }
-                    },
-                    "z": {
-                      "value": {
-                        "int32_value": 3
-                      }
-                    }
+                    "x": {"int32_value": 1},
+                    "y": {"int32_value": 2},
+                    "z": {"int32_value": 3}
                   }
                 }
               }
@@ -153,21 +129,9 @@
               "value": {
                 "struct_value": {
                   "fields": {
-                    "rho": {
-                      "value": {
-                        "int32_value": 1
-                      }
-                    },
-                    "phi": {
-                      "value": {
-                        "int32_value": 90
-                      }
-                    },
-                    "z": {
-                      "value": {
-                        "int32_value": 3
-                      }
-                    }
+                    "rho": {"int32_value": 1},
+                    "phi": {"int32_value": 90},
+                    "z": {"int32_value": 3}
                   }
                 }
               }
@@ -177,21 +141,9 @@
               "value": {
                 "struct_value": {
                   "fields": {
-                    "r": {
-                      "value": {
-                        "int32_value": 1
-                      }
-                    },
-                    "theta": {
-                      "value": {
-                        "int32_value": 90
-                      }
-                    },
-                    "phi": {
-                      "value": {
-                        "int32_value": 180
-                      }
-                    }
+                    "r": {"int32_value": 1},
+                    "theta": {"int32_value": 90},
+                    "phi": {"int32_value": 180}
                   }
                 }
               }
