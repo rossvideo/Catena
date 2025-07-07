@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -39,7 +39,7 @@
  * It presumes the reader has understood the start_here example and
  * builds on that. Less chatty comments.
  * 
- * @copyright Copyright (c) 2024 Ross Video
+ * @copyright Copyright (c) 2025 Ross Video
  */
 
 // device model

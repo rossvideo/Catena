@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,24 +28,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Licensed under the Creative Commons Attribution NoDerivatives 4.0
-// International Licensing (CC-BY-ND-4.0);
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at:
-//
-// https://creativecommons.org/licenses/by-nd/4.0/
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-
 /**
  * @brief Example program to demonstrate the Path class
  * @file path.cpp
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @copyright Copyright © 2025 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
  */
 
@@ -110,6 +96,12 @@ int main() {
 
     Path struct_array_element_field("/parent/3/child");
     document(struct_array_element_field);
+
+    // Adds a new segment to the Path
+    cout << "\njptr should have additional segment \"grandChild\"" << endl;
+    struct_array_element_field.rewind();
+    struct_array_element_field.push_back("grandChild");
+    document(struct_array_element_field);
 }
 
 /* Possible Output
@@ -151,4 +143,12 @@ has length: 3
 segment 0 has type string and value: parent
 segment 1 has type Index and value: 3
 segment 2 has type string and value: child
+
+jptr should have additional segment "grandChild"
+path: /parent/3/child/grandChild
+has length: 4
+segment 0 has type string and value: parent
+segment 1 has type Index and value: 3
+segment 2 has type string and value: child
+segment 3 has type string and value: grandChild
 */
