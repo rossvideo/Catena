@@ -420,7 +420,7 @@ class Param {
               throw new Error(`Subparam ${field} not found`);
             }
             let paramDef = subParam.template_param || subParam;
-            mappedFields.push(`.${field}${this.valueInitializer(typeValue.fields[field].value, subParam.type, paramDef)}`);
+            mappedFields.push(`.${field}${this.valueInitializer(typeValue.fields[field], subParam.type, paramDef)}`);
           }
         }
         return `${mappedFields.join(",")}`;
