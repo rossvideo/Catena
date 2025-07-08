@@ -144,13 +144,10 @@ $(document).ready(function(){initNavTree('hello_world_8cpp-example.html',''); in
 <div class="line"><span class="comment">// it&#39;s in the BINARY folder structure, not SOURCE.</span></div>
 <div class="line"><span class="preprocessor">#include &lt;interface/param.pb.h&gt;</span> <span class="comment">// catena::Value</span></div>
 <div class="line"> </div>
-<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="Logger_8h.html">Logger.h</a>&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"> </div>
 <div class="line"><span class="keyword">using namespace </span><a class="code hl_namespace" href="namespacecatena_1_1common.html">catena::common</a>;</div>
-<div class="line"><span class="keywordtype">int</span> main (<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span>** argv) {</div>
-<div class="line">    Logger::StartLogging(argc, argv);</div>
 <div class="line"> </div>
+<div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><span class="keywordtype">int</span> main () {</div>
 <div class="line">    <span class="comment">// The client code, below, directly accesses parts of the device model</span></div>
 <div class="line">    <span class="comment">// so we assert a lock on the device model&#39;s mutex to ensure threadsafe </span></div>
 <div class="line">    <span class="comment">// behaviour. This is a simple example, and in a real-world application</span></div>
@@ -170,7 +167,7 @@ $(document).ready(function(){initNavTree('hello_world_8cpp-example.html',''); in
 <div class="line">    <span class="comment">// an IParam* supplied by the Device&#39;s look up method</span></div>
 <div class="line">    std::unique_ptr&lt;IParam&gt; ip = dm.getParam(<span class="stringliteral">&quot;/hello&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
-<div class="line">        LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what();</div>
+<div class="line">        std::cerr &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what() &lt;&lt; std::endl;</div>
 <div class="line">        <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">    }</div>
 <div class="line">    <span class="keyword">auto</span>&amp; helloParam = *<span class="keyword">dynamic_cast&lt;</span><a id="_a2" name="_a2"></a><a class="code hl_class" href="classcatena_1_1common_1_1ParamWithValue.html">ParamWithValue&lt;std::string&gt;</a>*<span class="keyword">&gt;</span>(ip.get());</div>
@@ -182,95 +179,96 @@ $(document).ready(function(){initNavTree('hello_world_8cpp-example.html',''); in
 <div class="line">    <span class="comment">// The assertion of the lock, above is essential to thread safety because</span></div>
 <div class="line">    <span class="comment">// asynchronous access by connected client will also change the Device Model&#39;s </span></div>
 <div class="line">    <span class="comment">// state.</span></div>
-<div class="line">    DEBUG_LOG &lt;&lt; helloValue;</div>
+<div class="line">    std::cout &lt;&lt; helloValue &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// and we can change the value</span></div>
 <div class="line">    helloValue = <span class="stringliteral">&quot;Goodbye, Cruel World!&quot;</span>;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; helloValue;</div>
+<div class="line">    std::cout &lt;&lt; helloValue &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// Example with a parameter of type int</span></div>
 <div class="line">    ip = dm.<a id="a4" name="a4"></a><a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#a0bedb3aa28dd3e2ee0f3ca0daf585cd6">getParam</a>(<span class="stringliteral">&quot;/count&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
-<div class="line">        LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what();</div>
+<div class="line">        std::cerr &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what() &lt;&lt; std::endl;</div>
 <div class="line">        <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">    }</div>
 <div class="line">    <span class="keyword">auto</span>&amp; countParam = *<span class="keyword">dynamic_cast&lt;</span><a class="code hl_class" href="classcatena_1_1common_1_1ParamWithValue.html">ParamWithValue&lt;int&gt;</a>*<span class="keyword">&gt;</span>(ip.get());</div>
 <div class="line">    int32_t&amp; countValue = countParam.<a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#a380b12a09281e8ad4ee415b2257c655c">get</a>();</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;counter initial value: &quot;</span> &lt;&lt; countValue;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;counter initial value: &quot;</span> &lt;&lt; countValue &lt;&lt; std::endl;</div>
 <div class="line">    countValue++;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;counter incremented value: &quot;</span> &lt;&lt; countValue;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;counter incremented value: &quot;</span> &lt;&lt; countValue &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// Example with a parameter of type float</span></div>
 <div class="line">    ip = dm.<a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#a0bedb3aa28dd3e2ee0f3ca0daf585cd6">getParam</a>(<span class="stringliteral">&quot;/gain&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
-<div class="line">        LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what();</div>
+<div class="line">        std::cerr &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what() &lt;&lt; std::endl;</div>
 <div class="line">        <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">    }</div>
 <div class="line">    <span class="keyword">auto</span>&amp; gainParam = *<span class="keyword">dynamic_cast&lt;</span><a class="code hl_class" href="classcatena_1_1common_1_1ParamWithValue.html">ParamWithValue&lt;float&gt;</a>*<span class="keyword">&gt;</span>(ip.get());</div>
 <div class="line">    <span class="keywordtype">float</span>&amp; gainValue = gainParam.<a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#a380b12a09281e8ad4ee415b2257c655c">get</a>();</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;gain initial value: &quot;</span> &lt;&lt; gainValue;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;gain initial value: &quot;</span> &lt;&lt; gainValue &lt;&lt; std::endl;</div>
 <div class="line">    gainValue *= gainValue;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;gain squared value: &quot;</span> &lt;&lt; gainValue;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;gain squared value: &quot;</span> &lt;&lt; gainValue &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// Example with array of strings</span></div>
 <div class="line">    ip = dm.<a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#a0bedb3aa28dd3e2ee0f3ca0daf585cd6">getParam</a>(<span class="stringliteral">&quot;/phonetic_alphabet&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
-<div class="line">        LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what();</div>
+<div class="line">        std::cerr &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what() &lt;&lt; std::endl;</div>
 <div class="line">        <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">    }</div>
 <div class="line">    <span class="keyword">auto</span>&amp; phonetic_alphabetParam = *<span class="keyword">dynamic_cast&lt;</span><a class="code hl_class" href="classcatena_1_1common_1_1ParamWithValue.html">ParamWithValue&lt;std::vector&lt;std::string&gt;</a><span class="keyword">&gt;</span>*&gt;(ip.get());</div>
 <div class="line">    std::vector&lt;std::string&gt;&amp; phonetic_alphabetValue = phonetic_alphabetParam.<a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#a380b12a09281e8ad4ee415b2257c655c">get</a>();</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;phonetic alphabet initial value: &quot;</span>;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;phonetic alphabet initial value: &quot;</span>;</div>
 <div class="line">    <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span>&amp; s : phonetic_alphabetValue) {</div>
-<div class="line">        DEBUG_LOG &lt;&lt; s &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
+<div class="line">        std::cout &lt;&lt; s &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
 <div class="line">    }</div>
-<div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; std::endl;</div>
 <div class="line">    <span class="comment">// note we change the length of the vector - decrease by one</span></div>
 <div class="line">    phonetic_alphabetValue = {<span class="stringliteral">&quot;Whiskey&quot;</span>, <span class="stringliteral">&quot;Yankee&quot;</span>, <span class="stringliteral">&quot;Zulu&quot;</span>};</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;phonetic alphabet new value: &quot;</span>;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;phonetic alphabet new value: &quot;</span>;</div>
 <div class="line">    <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span>&amp; s : phonetic_alphabetValue) {</div>
-<div class="line">        DEBUG_LOG &lt;&lt; s &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
+<div class="line">        std::cout &lt;&lt; s &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
 <div class="line">    }</div>
+<div class="line">    std::cout &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// Example with array of integers</span></div>
-<div class="line">    ip = dm.getParam(<span class="stringliteral">&quot;/primes&quot;</span>, err);</div>
+<div class="line">    ip = dm.<a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#a0bedb3aa28dd3e2ee0f3ca0daf585cd6">getParam</a>(<span class="stringliteral">&quot;/primes&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
-<div class="line">        LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what();</div>
+<div class="line">        std::cerr &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what() &lt;&lt; std::endl;</div>
 <div class="line">        <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">    }</div>
 <div class="line">    <span class="keyword">auto</span>&amp; primesParam = *<span class="keyword">dynamic_cast&lt;</span><a class="code hl_class" href="classcatena_1_1common_1_1ParamWithValue.html">ParamWithValue&lt;std::vector&lt;int&gt;</a><span class="keyword">&gt;</span>*&gt;(ip.get());</div>
 <div class="line">    std::vector&lt;int&gt;&amp; primesValue = primesParam.<a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#a380b12a09281e8ad4ee415b2257c655c">get</a>();</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;primes initial value: &quot;</span>;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;primes initial value: &quot;</span>;</div>
 <div class="line">    <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span>&amp; i : primesValue) {</div>
-<div class="line">        DEBUG_LOG &lt;&lt; i &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
+<div class="line">        std::cout &lt;&lt; i &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
 <div class="line">    }</div>
-<div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; std::endl;</div>
 <div class="line">    <span class="comment">// note we change the length of the vector - increase by one</span></div>
 <div class="line">    primesValue = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31};</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;primes new value: &quot;</span>;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;primes new value: &quot;</span>;</div>
 <div class="line">    <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span>&amp; i : primesValue) {</div>
-<div class="line">        DEBUG_LOG &lt;&lt; i &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
+<div class="line">        std::cout &lt;&lt; i &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
 <div class="line">    }</div>
+<div class="line">    std::cout &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// example with array of floats that&#39;s initially empty</span></div>
-<div class="line">    ip = dm.getParam(<span class="stringliteral">&quot;/physical_constants&quot;</span>, err);</div>
+<div class="line">    ip = dm.<a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#a0bedb3aa28dd3e2ee0f3ca0daf585cd6">getParam</a>(<span class="stringliteral">&quot;/physical_constants&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
-<div class="line">        LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what();</div>
+<div class="line">        std::cerr &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what() &lt;&lt; std::endl;</div>
 <div class="line">        <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">    }</div>
 <div class="line">    <span class="keyword">auto</span>&amp; physical_constantsParam = *<span class="keyword">dynamic_cast&lt;</span><a class="code hl_class" href="classcatena_1_1common_1_1ParamWithValue.html">ParamWithValue&lt;std::vector&lt;float&gt;</a><span class="keyword">&gt;</span>*&gt;(ip.get());</div>
 <div class="line">    std::vector&lt;float&gt;&amp; physical_constantsValue = physical_constantsParam.<a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#a380b12a09281e8ad4ee415b2257c655c">get</a>();</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;physical constants &quot;</span> &lt;&lt; (physical_constantsValue.<a id="a5" name="a5"></a><a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#aad918685bdc22bfb09674276e43b23da">size</a>() == 0 ? <span class="stringliteral">&quot;is empty&quot;</span> : <span class="stringliteral">&quot;is not empty&quot;</span>);</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;physical constants &quot;</span> &lt;&lt; (physical_constantsValue.<a id="a5" name="a5"></a><a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#aad918685bdc22bfb09674276e43b23da">size</a>() == 0 ? <span class="stringliteral">&quot;is empty&quot;</span> : <span class="stringliteral">&quot;is not empty&quot;</span>) &lt;&lt; std::endl;</div>
 <div class="line">    physical_constantsValue.push_back(3.14159);</div>
 <div class="line">    physical_constantsValue.push_back(2.71828);</div>
 <div class="line">    physical_constantsValue.push_back(1.61803);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;physical constants new value: &quot;</span>;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;physical constants new value: &quot;</span>;</div>
 <div class="line">    <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span>&amp; f : physical_constantsValue) {</div>
-<div class="line">        DEBUG_LOG &lt;&lt; f &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
+<div class="line">        std::cout &lt;&lt; f &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
 <div class="line">    }</div>
+<div class="line">    std::cout &lt;&lt; std::endl;</div>
 <div class="line"> </div>
-<div class="line">    <span class="comment">// Shutdown Google Logging</span></div>
-<div class="line">    google::ShutdownGoogleLogging();</div>
 <div class="line">    <span class="keywordflow">return</span> EXIT_SUCCESS;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// The Device::LockGuard object will automatically release the lock</span></div>
@@ -293,7 +291,6 @@ $(document).ready(function(){initNavTree('hello_world_8cpp-example.html',''); in
 <div class="line"><span class="comment">*/</span></div>
 <div class="ttc" id="aDevice_8h_html"><div class="ttname"><a href="Device_8h.html">Device.h</a></div><div class="ttdoc">Device class definition.</div></div>
 <div class="ttc" id="aIParam_8h_html"><div class="ttname"><a href="IParam_8h.html">IParam.h</a></div><div class="ttdoc">Interface for parameters.</div></div>
-<div class="ttc" id="aLogger_8h_html"><div class="ttname"><a href="Logger_8h.html">Logger.h</a></div><div class="ttdoc">Logger class.</div></div>
 <div class="ttc" id="aMenuGroup_8h_html"><div class="ttname"><a href="MenuGroup_8h.html">MenuGroup.h</a></div><div class="ttdoc">MenuGroups support.</div></div>
 <div class="ttc" id="aMenu_8h_html"><div class="ttname"><a href="Menu_8h.html">Menu.h</a></div><div class="ttdoc">Menus support.</div></div>
 <div class="ttc" id="aParamDescriptor_8h_html"><div class="ttname"><a href="ParamDescriptor_8h.html">ParamDescriptor.h</a></div><div class="ttdoc">Interface for accessing parameter descriptions.</div></div>
