@@ -128,3 +128,4 @@ Run-WSLCommand 23 "Git config user info" "git config --global user.email '$gitEm
 
 # start cursor
 Run-WSLCommand 25 "Start Cursor" "cd ~/Catena && code ."
+
