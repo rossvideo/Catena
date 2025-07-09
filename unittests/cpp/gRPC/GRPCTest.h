@@ -108,6 +108,7 @@ class GRPCTest : public ::testing::Test {
             void* ignored_tag;
             bool ok;
             while (cq_->Next(&ignored_tag, &ok)) {
+                std::cerr<<"Processing cq event"<<std::endl;
                 if (!testCall_) {
                     testCall_.swap(asyncCall_);
                 }
@@ -115,6 +116,7 @@ class GRPCTest : public ::testing::Test {
                     testCall_->proceed(ok);
                 }
             }
+            std::cerr<<""<<std::endl;
         });
 
         // Creating the CallData object for testing.

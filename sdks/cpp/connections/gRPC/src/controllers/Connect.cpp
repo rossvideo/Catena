@@ -64,9 +64,12 @@ void catena::gRPC::Connect::proceed(bool ok) {
         std::cout << "Cancelling all open connections" << std::endl;
         shutdownSignal_.emit();
         status_ = CallStatus::kFinish;
+        std::cerr<<"status_ set to kFinish"<<std::endl;
     }
 
+    std::cerr<<"making lock"<<std::endl;
     std::unique_lock<std::mutex> lock{mtx_, std::defer_lock};
+    std::cerr<<"entering switch"<<std::endl;
     switch (status_) {
         /** 
          * kCreate: Updates status to kProcess and requests the Connect command
@@ -81,6 +84,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
          * kFinish and notifying the responder once finished.
          */
         case CallStatus::kProcess:
+            std::cerr<<"status_ = kProcess"<<std::endl;
             // Used to serve other clients while processing.
             new Connect(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
@@ -132,6 +136,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
          * end the process.
          */
         case CallStatus::kWrite:
+            std::cerr<<"status_ = kWrite"<<std::endl;
             lock.lock();
             cv_.wait(lock, [this] { return hasUpdate_; });
             hasUpdate_ = false;
@@ -153,16 +158,22 @@ void catena::gRPC::Connect::proceed(bool ok) {
         case CallStatus::kFinish:
             std::cout << "Connect[" << objectId_ << "] finished\n";
             // Disconnecting all initialized listeners.
-            if (shutdownSignalId_ != 0) { shutdownSignal_.disconnect(shutdownSignalId_); }
+            if (shutdownSignalId_ != 0) {
+                std::cerr <<" Disconnecting shutdownSignalId" << std::endl;
+                shutdownSignal_.disconnect(shutdownSignalId_);
+            }
             for (auto [slot, dm] : dms_) {
                 if (dm) {
                     if (valueSetByClientIds_.contains(slot)) {
+                        std::cerr <<" Disconnecting valueSetByClient for slot " << slot << std::endl;
                         dm->valueSetByClient.disconnect(valueSetByClientIds_[slot]);
                     }
                     if (valueSetByServerIds_.contains(slot)) {
+                        std::cerr <<" Disconnecting valueSetByServer for slot " << slot << std::endl;
                         dm->valueSetByServer.disconnect(valueSetByServerIds_[slot]);
                     }
                     if (languageAddedIds_.contains(slot)) {
+                        std::cerr <<" Disconnecting languageAddedIds for slot " << slot << std::endl;
                         dm->languageAddedPushUpdate.disconnect(languageAddedIds_[slot]);
                     }
                 }
@@ -171,10 +182,12 @@ void catena::gRPC::Connect::proceed(bool ok) {
             break;
         // default: Error, end process.
         default:
+            std::cerr<<"status_ = illegal"<<std::endl;
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             writer_.Finish(errorStatus, this);
     }
+    std::cerr<<"End of function"<<std::endl;
 }
 
 // Returns true if the connection has been cancelled.

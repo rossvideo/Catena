@@ -63,8 +63,8 @@ class gRPCConnectTests : public GRPCTest {
      */
     class StreamReader : public grpc::ClientReadReactor<catena::PushUpdates> {
       public:
-        StreamReader(std::vector<catena::PushUpdates>* outVals_, grpc::Status* outRc_, uint32_t reads = 0)
-            : outVals_(outVals_), outRc_(outRc_), reads_{reads} {}
+        StreamReader(std::vector<catena::PushUpdates>* outVals_, grpc::Status* outRc_)
+            : outVals_(outVals_), outRc_(outRc_) {}
         /*
          * This function makes an async RPC to the MockServer.
          */
@@ -79,14 +79,7 @@ class gRPCConnectTests : public GRPCTest {
         */
         void OnReadDone(bool ok) override {
             if (ok) {
-                std::cerr<<"Reading"<<std::endl;
                 outVals_->emplace_back(outVal_);
-                currentRead_++;
-                if (currentRead_ == reads_) {
-                    std::cerr<<"Done"<<std::endl;
-                    done_ = true;
-                    cv_.notify_one();
-                }
                 StartRead(&outVal_);
             }
         }
@@ -95,26 +88,18 @@ class gRPCConnectTests : public GRPCTest {
          */
         void OnDone(const grpc::Status& status) override {
             *outRc_ = status;
-            if (!done_) {
-                done_ = true;
-                cv_.notify_one();
-            }
+            done_ = true;
+            cv_.notify_one();
         }
         /*
          * Blocks until the RPC is finished. 
          */
-        inline void Await() {
-            std::cerr<<"Awaiting..."<<std::endl;
-            cv_.wait(lock_, [this] { return done_; });
-        }
+        inline void Await() { cv_.wait(lock_, [this] { return done_; }); }
         
       private:
         // Pointers to the output variables.
         grpc::Status* outRc_;
         std::vector<catena::PushUpdates>* outVals_;
-
-        uint32_t reads_ = 0;
-        uint32_t currentRead_ = 0;
 
         catena::PushUpdates outVal_;
         bool done_ = false;
@@ -136,7 +121,6 @@ class gRPCConnectTests : public GRPCTest {
      * Adds a PushValue to the expected values.
      */
     void expPushValue(uint32_t slot, const std::string& oid, const std::string& stringVal) {
-        std::cerr<<"Expecting pushUpdate"<<std::endl;
         // Add PushUpdate.
         expVals_.push_back(catena::PushUpdates());
         auto pushUpdate = expVals_.back();
@@ -161,34 +145,18 @@ class gRPCConnectTests : public GRPCTest {
             (*langComponent->mutable_language_pack()->mutable_words())[key] = value;
         }
     }
-    void connect(uint32_t reads = 0) {
-        std::thread clientThread([this, reads]{
-            // Sending async RPC.
-            streamReader_.reset(new StreamReader(&outVals_, &outRc_, reads));
-            streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
-            std::cerr<<"Awaiting"<<std::endl;
-            streamReader_->Await();
-        });
-        clientThread.join();
-    }
     /* 
      * Makes an async RPC to the MockServer and waits for a response before
      * comparing output.
      */
     void testRPC() {
         // Comparing the results.
-        std::cerr<<"Comparing"<<std::endl;
         ASSERT_EQ(outVals_.size(), expVals_.size()) << "Output missing >= 1 PushUpdate";
         for (uint32_t i = 0; i < outVals_.size(); i++) {
             EXPECT_EQ(outVals_[i].SerializeAsString(), expVals_[i].SerializeAsString());
         }
         // Make sure another Command handler was created.
         EXPECT_TRUE(asyncCall_) << "Async handler was not created during runtime";
-        std::cerr<<"Done with RPC"<<std::endl;
-    }
-
-    ~gRPCConnectTests() {
-        std::cerr<<"Destructing"<<std::endl;
         EXPECT_EQ(outRc_.error_code(), static_cast<grpc::StatusCode>(expRc_.status));
         EXPECT_EQ(outRc_.error_message(), expRc_.what());
     }
@@ -201,7 +169,6 @@ class gRPCConnectTests : public GRPCTest {
     bool respond_ = false;
 
     MockSubscriptionManager subManager;
-    std::unique_ptr<StreamReader> streamReader_ = nullptr;
 };
 
 /*
@@ -216,32 +183,8 @@ TEST_F(gRPCConnectTests, Connect_Create) {
 }
 
 TEST_F(gRPCConnectTests, Connect_ValueSetByClient) {
-    MockParam param0;
-    MockParam param1;
-    std::cerr<<"Setting payload and expectations"<<std::endl;
-    initPayload("en", catena::Device_DetailLevel_FULL, "test_user_agent", false);
-    expPushValue(0, "test_param_0", "test_value_0");
-    // expPushValue(1, "test_param_1", "test_value_1");
-    // Setting expectations
-    // EXPECT_CALL(param0, toProto(testing::An<catena::Value&>(), testing::_)).Times(1)
-    //     .WillOnce([](catena::Value& dst, Authorizer&) {
-    //         dst.set_string_value("test_value_0");
-    //         return catena::exception_with_status("", catena::StatusCode::OK);
-    //     });
-    // EXPECT_CALL(param1, toProto(testing::An<catena::Value&>(), testing::_)).Times(1)
-    //     .WillOnce([](catena::Value& dst, Authorizer&) {
-    //         dst.set_string_value("test_value_1");
-    //         return catena::exception_with_status("", catena::StatusCode::OK);
-    //     });
-    std::cerr<<"Connecting"<<std::endl;
-    connect(1); // Connecting to the service.
-    // std::this_thread::sleep_for(std::chrono::seconds(2));
-    // std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Wait for the RPC to start.
-    // std::cerr<<"Sending sig 0"<<std::endl;
-    // dm0_.valueSetByClient.emit("test_param_0", &param0);
-    // std::cerr<<"Sending sig 1"<<std::endl;
-    // dm1_.valueSetByClient.emit("test_param_1", &param1);
-    // testRPC();
+    StreamReader streamReader(&outVals_, &outRc_);
+    streamReader.MakeCall(client_.get(), &clientContext_, &inVal_);
 }
 
 // TEST_F(gRPCConnectTests, Connect_ValueSetByServer) {
