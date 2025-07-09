@@ -113,7 +113,7 @@ Run-WSLCommand 15 "Add Docker Repo" $dockerCommand
 Run-WSLCommand 16 "Install Docker" "sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
 
 # docker settings
-Run-WSLCommand 17 "usermod docker" "sudo usermod -aG docker ctwarog"
+Run-WSLCommand 17 "usermod docker" "sudo usermod -aG docker $defaultUser"
 Run-WSLCommand 18 "enable docker.service" "sudo systemctl enable docker.service"
 Run-WSLCommand 19 "enable containerd.service" "sudo systemctl enable containerd.service"
 Run-WSLCommand 20 "Start Docker" "sudo service docker start"
@@ -128,3 +128,4 @@ Run-WSLCommand 23 "Git config user info" "git config --global user.email '$gitEm
 
 # start cursor
 Run-WSLCommand 25 "Start Cursor" "cd ~/Catena && code ."
+

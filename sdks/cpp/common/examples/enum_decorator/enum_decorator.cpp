@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,7 +31,7 @@
 /**
  * @brief Example program to demonstrate ENUMDECORATOR macros
  * @file enum_decorator.cpp
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @copyright Copyright © 2025 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
  */
 
@@ -139,7 +139,7 @@ int main() {
     std::cout << "p5: " << p5.toString() << " = " << Primes::utype(p5) << std::endl;
 }
 
-/* possible output
+/* Possible Output
 c0: default has value: 0
 c1: one
 c2: 2

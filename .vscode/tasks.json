@@ -66,7 +66,7 @@
         {
             "label": "Run Ninja",
             "type": "shell",
-            "command": "cd ${workspaceFolder}/${env:BUILD_TARGET} && ninja",
+            "command": "cd ${workspaceFolder}/${env:BUILD_TARGET} && ninja -j16",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -89,7 +89,7 @@
             //    - Install prefix set to /usr/local/.local
             //    - Coverage flags set for C++ and C
             // 4. Run ninja to build the project
-            "command": "if [ -f ${workspaceFolder}/${env:BUILD_TARGET}/build.ninja ]; then (cd ${workspaceFolder}/${env:BUILD_TARGET} && ninja clean); fi && if [ ! -d ${workspaceFolder}/${env:BUILD_TARGET} ]; then mkdir -p ${workspaceFolder}/${env:BUILD_TARGET}; fi && cmake -G Ninja -DCMAKE_BUILD_TYPE=${env:CMAKE_BUILD_TYPE} -DCONNECTIONS=${env:CONNECTIONS} -DCMAKE_CXX_FLAGS=\"--coverage\" -DCMAKE_C_FLAGS=\"--coverage\" -DCMAKE_EXE_LINKER_FLAGS=\"--coverage\" -DCMAKE_INSTALL_PREFIX=/usr/local/.local -B ${workspaceFolder}/${env:BUILD_TARGET} ${workspaceFolder}/sdks/cpp && cd ${workspaceFolder}/${env:BUILD_TARGET} && ninja",
+            "command": "if [ -f ${workspaceFolder}/${env:BUILD_TARGET}/build.ninja ]; then (cd ${workspaceFolder}/${env:BUILD_TARGET} && ninja clean); fi && if [ ! -d ${workspaceFolder}/${env:BUILD_TARGET} ]; then mkdir -p ${workspaceFolder}/${env:BUILD_TARGET}; fi && cmake -G Ninja -DCMAKE_BUILD_TYPE=${env:CMAKE_BUILD_TYPE} -DCONNECTIONS=${env:CONNECTIONS} -DCMAKE_CXX_FLAGS=\"--coverage\" -DCMAKE_C_FLAGS=\"--coverage\" -DCMAKE_EXE_LINKER_FLAGS=\"--coverage\" -DCMAKE_INSTALL_PREFIX=/usr/local/.local -B ${workspaceFolder}/${env:BUILD_TARGET} ${workspaceFolder}/sdks/cpp && cd ${workspaceFolder}/${env:BUILD_TARGET} && ninja -j16",
             "group": {
                 "kind": "build",
                 "isDefault": true
