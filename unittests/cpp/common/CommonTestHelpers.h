@@ -14,7 +14,7 @@
  * 3. Neither the name of the copyright holder nor the names of its
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -54,15 +54,19 @@ namespace common {
  * @param size The array size if it's an array type (defaults to 0)
  * @param scope The scope to return (defaults to monitor)
  */
-inline void setupMockParam(MockParam* param, const std::string& oid, const IParamDescriptor& descriptor, bool isArray = false, uint32_t size = 0, const std::string& scope = Scopes().getForwardMap().at(Scopes_e::kMonitor)) {
+inline void setupMockParam(MockParam* param, const std::string& oid, MockParamDescriptor* descriptor, bool isArray = false, uint32_t size = 0, const std::string& scope = Scopes().getForwardMap().at(Scopes_e::kMonitor)) {
     EXPECT_CALL(*param, getOid())
         .WillRepeatedly(::testing::ReturnRef(oid));
     EXPECT_CALL(*param, getDescriptor())
-        .WillRepeatedly(::testing::ReturnRef(descriptor));
+        .WillRepeatedly(::testing::ReturnRef(*descriptor));
     EXPECT_CALL(*param, isArrayType())
         .WillRepeatedly(::testing::Return(isArray));
     EXPECT_CALL(*param, getScope())
         .WillRepeatedly(::testing::ReturnRef(scope));
+    EXPECT_CALL(*descriptor, isCommand())
+        .WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(*descriptor, minimalSet())
+        .WillRepeatedly(::testing::Return(true));
     if (isArray) {
         EXPECT_CALL(*param, size())
             .WillRepeatedly(::testing::Return(size));

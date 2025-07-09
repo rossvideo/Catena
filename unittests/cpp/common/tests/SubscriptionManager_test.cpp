@@ -45,11 +45,21 @@
 #include <Status.h>
 #include <Authorization.h>
 #include <SubscriptionManager.h>
+#include <Logger.h>
 
 using namespace catena::common;
 
 class SubscriptionManagerTest : public ::testing::Test {
 protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("SubscriptionManagerTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
     SubscriptionManagerTest() : authz_(jwsToken_) {}
     
     void SetUp() override {
@@ -214,8 +224,8 @@ protected:
         // Create mock parameters
         setup.parentParam = std::make_unique<MockParam>();
         setup.subParam = std::make_unique<MockParam>();
-        setupMockParam(setup.parentParam.get(), setup.parentOid, *setup.descriptors[setup.parentOid].descriptor.get());
-        setupMockParam(setup.subParam.get(), setup.subOid, *setup.descriptors[setup.subOid].descriptor.get());
+        setupMockParam(setup.parentParam.get(), setup.parentOid, setup.descriptors[setup.parentOid].descriptor.get());
+        setupMockParam(setup.subParam.get(), setup.subOid, setup.descriptors[setup.subOid].descriptor.get());
         
         return setup;
     }
@@ -313,9 +323,9 @@ TEST_F(SubscriptionManagerTest, Wildcard_AddWildcardSubscription) {
             [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
                 auto param = std::make_unique<MockParam>();
                 if (fqoid == "/test/*") {
-                    setupMockParam(param.get(), "/test", *wildcardDescriptors.at("/test").descriptor);
+                    setupMockParam(param.get(), "/test", wildcardDescriptors.at("/test").descriptor.get());
                 } else if (wildcardDescriptors.find(fqoid) != wildcardDescriptors.end()) {
-                    setupMockParam(param.get(), fqoid, *wildcardDescriptors.at(fqoid).descriptor);
+                    setupMockParam(param.get(), fqoid, wildcardDescriptors.at(fqoid).descriptor.get());
                 } else {
                     status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
                     return nullptr;
@@ -340,9 +350,9 @@ TEST_F(SubscriptionManagerTest, Wildcard_ExpansionVerification) {
             [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
                 auto param = std::make_unique<MockParam>();
                 if (fqoid == "/test/*") {
-                    setupMockParam(param.get(), "/test", *wildcardDescriptors.at("/test").descriptor);
+                    setupMockParam(param.get(), "/test", wildcardDescriptors.at("/test").descriptor.get());
                 } else if (wildcardDescriptors.find(fqoid) != wildcardDescriptors.end()) {
-                    setupMockParam(param.get(), fqoid, *wildcardDescriptors.at(fqoid).descriptor);
+                    setupMockParam(param.get(), fqoid, wildcardDescriptors.at(fqoid).descriptor.get());
                 } else {
                     status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
                     return nullptr;
@@ -358,7 +368,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_ExpansionVerification) {
             [this](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
                 std::vector<std::unique_ptr<IParam>> params;
                 auto param = std::make_unique<MockParam>();
-                setupMockParam(param.get(), "/test", *wildcardDescriptors.at("/test").descriptor);
+                setupMockParam(param.get(), "/test", wildcardDescriptors.at("/test").descriptor.get());
                 params.push_back(std::move(param));
                 status = catena::exception_with_status("", catena::StatusCode::OK);
                 return params;
@@ -392,11 +402,11 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemoveWildcardSubscription) {
             [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
                 auto param = std::make_unique<MockParam>();
                 if (fqoid == "/test/*") {
-                    setupMockParam(param.get(), "/test", *wildcardDescriptors.at("/test").descriptor);
+                    setupMockParam(param.get(), "/test", wildcardDescriptors.at("/test").descriptor.get());
                 } else if (wildcardDescriptors.find(fqoid) != wildcardDescriptors.end()) {
-                    setupMockParam(param.get(), fqoid, *wildcardDescriptors.at(fqoid).descriptor);
+                    setupMockParam(param.get(), fqoid, wildcardDescriptors.at(fqoid).descriptor.get());
                 } else if (nonwildcardDescriptors.find(fqoid) != nonwildcardDescriptors.end()) {
-                    setupMockParam(param.get(), fqoid, *nonwildcardDescriptors.at(fqoid).descriptor);
+                    setupMockParam(param.get(), fqoid, nonwildcardDescriptors.at(fqoid).descriptor.get());
                 } else {
                     status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
                     return nullptr;
@@ -414,12 +424,12 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemoveWildcardSubscription) {
                 
                 // Add test parameter
                 auto test_param = std::make_unique<MockParam>();
-                setupMockParam(test_param.get(), "/test", *wildcardDescriptors.at("/test").descriptor);
+                setupMockParam(test_param.get(), "/test", wildcardDescriptors.at("/test").descriptor.get());
                 params.push_back(std::move(test_param));
                 
                 // Add nonwildcard parameter
                 auto nonwildcard_param = std::make_unique<MockParam>();
-                setupMockParam(nonwildcard_param.get(), "/nonwildcard", *nonwildcardDescriptors.at("/nonwildcard").descriptor);
+                setupMockParam(nonwildcard_param.get(), "/nonwildcard", nonwildcardDescriptors.at("/nonwildcard").descriptor.get());
                 params.push_back(std::move(nonwildcard_param));
                 
                 status = catena::exception_with_status("", catena::StatusCode::OK);
@@ -476,9 +486,9 @@ TEST_F(SubscriptionManagerTest, AllParams_AddAllParamsSubscription) {
                 std::vector<std::unique_ptr<IParam>> params;
                 // Create new parameters with proper authorization setup
                 auto parentParam = std::make_unique<MockParam>();
-                setupMockParam(parentParam.get(), setup.parentOid, *setup.descriptors[setup.parentOid].descriptor);
+                setupMockParam(parentParam.get(), setup.parentOid, setup.descriptors[setup.parentOid].descriptor.get());
                 auto subParam = std::make_unique<MockParam>();
-                setupMockParam(subParam.get(), setup.subOid, *setup.descriptors[setup.subOid].descriptor);
+                setupMockParam(subParam.get(), setup.subOid, setup.descriptors[setup.subOid].descriptor.get());
                 // Return both parameters
                 params.push_back(std::move(parentParam));
                 params.push_back(std::move(subParam));
@@ -524,9 +534,9 @@ TEST_F(SubscriptionManagerTest, AllParams_MixedAuthorizationResults) {
                 auto param = std::make_unique<MockParam>();
                 // Setup parameters with correct scopes based on OID pattern
                 if (fqoid.find(setup.subOid) != std::string::npos) {
-                    setupMockParam(param.get(), fqoid, *setup.descriptors[setup.subOid].descriptor, false, 0, unauthorized_scope);
+                    setupMockParam(param.get(), fqoid, setup.descriptors[setup.subOid].descriptor.get(), false, 0, unauthorized_scope);
                 } else if (fqoid.find(setup.parentOid) != std::string::npos) {
-                    setupMockParam(param.get(), fqoid, *setup.descriptors[setup.parentOid].descriptor, false, 0, authorized_scope);
+                    setupMockParam(param.get(), fqoid, setup.descriptors[setup.parentOid].descriptor.get(), false, 0, authorized_scope);
                 } else {
                     status = catena::exception_with_status("Parameter not found", catena::StatusCode::NOT_FOUND);
                     return nullptr;
@@ -542,7 +552,7 @@ TEST_F(SubscriptionManagerTest, AllParams_MixedAuthorizationResults) {
             [&setup, &authorized_scope, &unauthorized_scope](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
                 std::vector<std::unique_ptr<IParam>> params;
                 auto parentParam = std::make_unique<MockParam>();
-                setupMockParam(parentParam.get(), setup.parentOid, *setup.descriptors[setup.parentOid].descriptor);
+                setupMockParam(parentParam.get(), setup.parentOid, setup.descriptors[setup.parentOid].descriptor.get());
                 params.push_back(std::move(parentParam));
                 status = catena::exception_with_status("", catena::StatusCode::OK);
                 return params;
@@ -638,7 +648,7 @@ TEST_F(SubscriptionManagerTest, Array_ElementSubscription) {
     
     // Set up array element parameter with sub-parameter
     auto elementParam = std::make_unique<MockParam>();
-    setupMockParam(elementParam.get(), "/test/array/0/subparam", test_descriptor, false);
+    setupMockParam(elementParam.get(), "/test/array/0/subparam", &test_descriptor, false);
     
     // Set up device to return array element parameter
     EXPECT_CALL(*device, getParam("/test/array/0/subparam", ::testing::_, ::testing::_))
@@ -663,13 +673,13 @@ TEST_F(SubscriptionManagerTest, Array_BasicArraySubscriptionWithNestedElements) 
     
     // Set up array parameter with nested structure
     auto arrayParam = std::make_unique<MockParam>();
-    setupMockParam(arrayParam.get(), "/test/array", test_descriptor, true, 2);
+    setupMockParam(arrayParam.get(), "/test/array", &test_descriptor, true, 2);
     
     // Set up device to return array elements with nested parameters
     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke([this](const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
             auto param = std::make_unique<MockParam>();
-            setupMockParam(param.get(), fqoid, test_descriptor, false);
+            setupMockParam(param.get(), fqoid, &test_descriptor, false);
             static const std::string scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
             EXPECT_CALL(*param, getScope())
                 .WillRepeatedly(::testing::ReturnRef(scope));
@@ -701,11 +711,11 @@ TEST_F(SubscriptionManagerTest, Array_WildcardSubscriptionWithNestedElements) {
     
     // Set up array parameter with nested structure
     auto arrayParam = std::make_unique<MockParam>();
-    setupMockParam(arrayParam.get(), "/test/array", test_descriptor, true, 2);
+    setupMockParam(arrayParam.get(), "/test/array", &test_descriptor, true, 2);
     auto subParam0 = std::make_unique<MockParam>();
-    setupMockParam(subParam0.get(), "/test/array/0/subparam", test_descriptor, false);
+    setupMockParam(subParam0.get(), "/test/array/0/subparam", &test_descriptor, false);
     auto subParam1 = std::make_unique<MockParam>();
-    setupMockParam(subParam1.get(), "/test/array/1/subparam", test_descriptor, false);
+    setupMockParam(subParam1.get(), "/test/array/1/subparam", &test_descriptor, false);
     
     // Set up device to return array and subparams
     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
@@ -714,7 +724,7 @@ TEST_F(SubscriptionManagerTest, Array_WildcardSubscriptionWithNestedElements) {
                 auto it = wildcardDescriptors.find(fqoid);
                 if (it != wildcardDescriptors.end()) {
                     auto param = std::make_unique<MockParam>();
-                    setupMockParam(param.get(), fqoid, *it->second.descriptor);
+                    setupMockParam(param.get(), fqoid, it->second.descriptor.get());
                     status = catena::exception_with_status("", catena::StatusCode::OK);
                     return param;
                 } else {
@@ -755,7 +765,7 @@ TEST_F(SubscriptionManagerTest, Array_IsSubscribedCheck) {
                 auto it = wildcardDescriptors.find(fqoid);
                 if (it != wildcardDescriptors.end()) {
                     auto param = std::make_unique<MockParam>();
-                    setupMockParam(param.get(), fqoid, *it->second.descriptor);
+                    setupMockParam(param.get(), fqoid, it->second.descriptor.get());
                     status = catena::exception_with_status("", catena::StatusCode::OK);
                     return param;
                 } else {
@@ -793,7 +803,7 @@ TEST_F(SubscriptionManagerTest, Array_DuplicateSubscription) {
                 auto it = wildcardDescriptors.find(fqoid);
                 if (it != wildcardDescriptors.end()) {
                     auto param = std::make_unique<MockParam>();
-                    setupMockParam(param.get(), fqoid, *it->second.descriptor);
+                    setupMockParam(param.get(), fqoid, it->second.descriptor.get());
                     status = catena::exception_with_status("", catena::StatusCode::OK);
                     return param;
                 } else {
