@@ -164,7 +164,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a4c54a33ecabe230515542939cdf70a97"><td class="mdescLeft">&#160;</td><td class="mdescRight">return a string representation of the <a class="el" href="classcatena_1_1common_1_1Path.html" title="Converts json pointers to items within the data model to a path of &quot;segments&quot; that can be iterated ov...">Path</a>  <br /></td></tr>
 <tr class="separator:a4c54a33ecabe230515542939cdf70a97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac6322b03a662c484c09e83df0664ad48" id="r_ac6322b03a662c484c09e83df0664ad48"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Path.html#ac6322b03a662c484c09e83df0664ad48">fqoid</a> () const</td></tr>
-<tr class="memdesc:ac6322b03a662c484c09e83df0664ad48"><td class="mdescLeft">&#160;</td><td class="mdescRight">return a fully qualified, albeit escaped oid  <br /></td></tr>
+<tr class="memdesc:ac6322b03a662c484c09e83df0664ad48"><td class="mdescLeft">&#160;</td><td class="mdescRight">return a fully qualified oid  <br /></td></tr>
 <tr class="separator:ac6322b03a662c484c09e83df0664ad48"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8d8e5e7559aca13d6b49a1561c668c43" id="r_a8d8e5e7559aca13d6b49a1561c668c43"><td class="memItemLeft" align="right" valign="top"><a id="a8d8e5e7559aca13d6b49a1561c668c43" name="a8d8e5e7559aca13d6b49a1561c668c43"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>pop</b> () noexcept</td></tr>
@@ -342,8 +342,8 @@ static constexpr <a class="el" href="classcatena_1_1common_1_1Path.html#a568efad
     <tr><td class="paramname"><a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">catena::exception_with_status</a></td><td>if path is empty or back is not an Index. <div class="fragment"><div class="line"><span class="comment">// recommended usage</span></div>
 <div class="line"><a class="code hl_typedef" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Path::Index</a> idx = p.back_is_index() ? p.back_as_index() : <a class="code hl_variable" href="classcatena_1_1common_1_1Path.html#aa4da601b74fb1e2aca3d6e05c34f143e">Path::kError</a>;</div>
 <div class="line"><span class="keywordflow">if</span> (idx == <a class="code hl_variable" href="classcatena_1_1common_1_1Path.html#aa4da601b74fb1e2aca3d6e05c34f143e">Path::kError</a>) { <span class="comment">// error handling here }</span></div>
-<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a568efadd6fc647b3d644211699cf8ce9"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">catena::common::Path::Index</a></div><div class="ttdeci">size_t Index</div><div class="ttdoc">Type for indices, unsigned int.</div><div class="ttdef"><b>Definition</b> Path.h:70</div></div>
-<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_aa4da601b74fb1e2aca3d6e05c34f143e"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#aa4da601b74fb1e2aca3d6e05c34f143e">catena::common::Path::kError</a></div><div class="ttdeci">static constexpr Index kError</div><div class="ttdoc">used to signal an error</div><div class="ttdef"><b>Definition</b> Path.h:88</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a568efadd6fc647b3d644211699cf8ce9"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">catena::common::Path::Index</a></div><div class="ttdeci">size_t Index</div><div class="ttdoc">Type for indices, unsigned int.</div><div class="ttdef"><b>Definition</b> Path.h:71</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_aa4da601b74fb1e2aca3d6e05c34f143e"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#aa4da601b74fb1e2aca3d6e05c34f143e">catena::common::Path::kError</a></div><div class="ttdeci">static constexpr Index kError</div><div class="ttdoc">used to signal an error</div><div class="ttdef"><b>Definition</b> Path.h:89</div></div>
 </div><!-- fragment --> </td></tr>
   </table>
   </dd>
@@ -457,9 +457,9 @@ static constexpr <a class="el" href="classcatena_1_1common_1_1Path.html#a568efad
       </table>
 </div><div class="memdoc">
 
-<p>return a fully qualified, albeit escaped oid </p>
+<p>return a fully qualified oid </p>
 <dl class="section return"><dt>Returns</dt><dd>std::string</dd></dl>
-<p>The fully qualified oid is rooted at the device and includes all popped segments. </p>
+<p>The fully qualified oid is rooted at the device and includes all segments popped from the front. </p>
 
 </div>
 </div>

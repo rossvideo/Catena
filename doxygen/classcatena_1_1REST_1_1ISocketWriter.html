@@ -126,7 +126,7 @@ Public Member Functions</h2></td></tr>
 <a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html">ISocketWriter</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html">ISocketWriter</a> &amp;&amp;)=default</td></tr>
 <tr class="separator:a609ed37959b60b07b3eb06bd78af5381"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a063ef9d3b8e4fd04d3f9cbf8d2d3b9ff" id="r_a063ef9d3b8e4fd04d3f9cbf8d2d3b9ff"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a063ef9d3b8e4fd04d3f9cbf8d2d3b9ff">sendResponse</a> (const <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;err, const google::protobuf::Message &amp;msg=catena::Empty())=0</td></tr>
-<tr class="memdesc:a063ef9d3b8e4fd04d3f9cbf8d2d3b9ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes a HTTP response.  <br /></td></tr>
+<tr class="memdesc:a063ef9d3b8e4fd04d3f9cbf8d2d3b9ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes writing the HTTP response.  <br /></td></tr>
 <tr class="separator:a063ef9d3b8e4fd04d3f9cbf8d2d3b9ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -166,11 +166,11 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Writes a HTTP response. </p>
+<p>Finishes writing the HTTP response. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">msg</td><td>The protobuf message to write as JSON. </td></tr>
-    <tr><td class="paramname">err</td><td>The error status of the response. </td></tr>
+    <tr><td class="paramname">err</td><td>The error status to finish with. </td></tr>
   </table>
   </dd>
 </dl>
