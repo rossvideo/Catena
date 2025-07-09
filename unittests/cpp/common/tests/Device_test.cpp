@@ -42,6 +42,9 @@
 #include <LanguagePack.h>
 #include <interface/device.pb.h>
 #include <mocks/MockLanguagePack.h>
+#include <mocks/MockParam.h>
+#include <mocks/MockParamDescriptor.h>
+#include <CommonTestHelpers.h>
 
 using namespace catena::common;
 
@@ -295,6 +298,245 @@ TEST_F(DeviceTest, LanguagePack_RemoveNotFound) {
 
 // ======== 4. Param/Command Tests ========
 // Covers getParam, getTopLevelParams, and getCommand
+
+// --- Get Param Tests (String-based overload) ---
+
+// 4.1: Success Case - Test Get Param with Valid String Path
+TEST_F(DeviceTest, GetParam_String_Success) {
+    // Create a mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockParam.get(), "/testParam", mockDescriptor.get(), false, 0, adminScope);
+    
+    EXPECT_CALL(*mockParam, copy())
+        .WillOnce(testing::Return(std::make_unique<MockParam>()));
+    
+    device_->addItem("testParam", mockParam.get());
+    
+    // Test getting the parameter
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto result = device_->getParam("/testParam", status, *adminAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::OK);
+    EXPECT_NE(result, nullptr);
+}
+
+// 4.2: Error Case - Test Get Param with Empty String Path
+TEST_F(DeviceTest, GetParam_String_EmptyPath) {
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto result = device_->getParam("", status, *adminAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::INVALID_ARGUMENT);
+    EXPECT_EQ(std::string(status.what()), "Invalid json pointer ");
+    EXPECT_EQ(result, nullptr);
+}
+
+// 4.3: Error Case - Test Get Param with Invalid String Path
+TEST_F(DeviceTest, GetParam_String_InvalidPath) {
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto result = device_->getParam("/invalid/path", status, *adminAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::NOT_FOUND);
+    EXPECT_EQ(std::string(status.what()), "Param /invalid/path does not exist");
+    EXPECT_EQ(result, nullptr);
+}
+
+// 4.4: Error Case - Test Get Param Not Authorized (String)
+TEST_F(DeviceTest, GetParam_String_NotAuthorized) {
+    // Create a mock parameter that requires specific authorization
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - parameter requires admin scope but monitor token only has st2138:mon
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockParam.get(), "/restrictedParam", mockDescriptor.get(), false, 0, adminScope);
+    
+    // copy() should not be called since authorization will fail
+    EXPECT_CALL(*mockParam, copy())
+        .Times(0);
+    
+    device_->addItem("restrictedParam", mockParam.get());
+    
+    // Test with monitor authorization (should fail)
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto result = device_->getParam("/restrictedParam", status, *monitorAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::PERMISSION_DENIED);
+    EXPECT_EQ(std::string(status.what()), "Not authorized to read the param /restrictedParam");
+    EXPECT_EQ(result, nullptr);
+}
+
+// 4.5: Error Case - Test Get Param with Invalid Json Pointer (String)
+TEST_F(DeviceTest, GetParam_String_InvalidJsonPointer) {
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto result = device_->getParam("/invalid[", status, *adminAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::INVALID_ARGUMENT);
+    EXPECT_EQ(result, nullptr);
+}
+
+// 4.6: Error Case - Test Get Param Internal Error (String)
+TEST_F(DeviceTest, GetParam_String_InternalError) {
+    // Create a mock parameter that throws std::exception
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockParam.get(), "/errorParam", mockDescriptor.get(), false, 0, adminScope);
+    
+    EXPECT_CALL(*mockParam, copy())
+        .WillOnce(testing::Invoke([]() -> std::unique_ptr<IParam> {
+            throw std::runtime_error("Internal error in copy");
+        }));
+    
+    device_->addItem("errorParam", mockParam.get());
+    
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto result = device_->getParam("/errorParam", status, *adminAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::INTERNAL);
+    EXPECT_EQ(std::string(status.what()), "Internal error in copy");
+    EXPECT_EQ(result, nullptr);
+}
+
+// 4.7: Error Case - Test Get Param Unknown Error (String)
+TEST_F(DeviceTest, GetParam_String_UnknownError) {
+    // Create a mock parameter that throws unknown exception
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockParam.get(), "/unknownErrorParam", mockDescriptor.get(), false, 0, adminScope);
+    
+    EXPECT_CALL(*mockParam, copy())
+        .WillOnce(testing::Invoke([]() -> std::unique_ptr<IParam> {
+            throw 42; // Throw an int (unknown exception type)
+        }));
+    
+    device_->addItem("unknownErrorParam", mockParam.get());
+    
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto result = device_->getParam("/unknownErrorParam", status, *adminAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::UNKNOWN);
+    EXPECT_EQ(std::string(status.what()), "Unknown error");
+    EXPECT_EQ(result, nullptr);
+}
+
+// --- Get Param Tests (Path-based overload) ---
+
+// 4.8: Success Case - Test Get Param with Valid Path Object
+TEST_F(DeviceTest, GetParam_Path_Success) {
+    // Create a mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockParam.get(), "/testParam", mockDescriptor.get(), false, 0, adminScope);
+    
+    EXPECT_CALL(*mockParam, copy())
+        .WillOnce(testing::Return(std::make_unique<MockParam>()));
+    
+    device_->addItem("testParam", mockParam.get());
+    
+    // Test getting the parameter using Path overload
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    catena::common::Path path("/testParam");
+    auto result = device_->getParam(path, status, *adminAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::OK);
+    EXPECT_NE(result, nullptr);
+}
+
+// 4.9: Error Case - Test Get Param with Empty Path Object
+TEST_F(DeviceTest, GetParam_Path_EmptyPath) {
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    catena::common::Path path("");
+    auto result = device_->getParam(path, status, *adminAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::INVALID_ARGUMENT);
+    EXPECT_EQ(std::string(status.what()), "Invalid json pointer ");
+    EXPECT_EQ(result, nullptr);
+}
+
+// 4.10: Error Case - Test Get Param with Invalid Path Object
+TEST_F(DeviceTest, GetParam_Path_InvalidPath) {
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    catena::common::Path path("/invalid/path");
+    auto result = device_->getParam(path, status, *adminAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::NOT_FOUND);
+    EXPECT_EQ(std::string(status.what()), "Param /invalid/path does not exist");
+    EXPECT_EQ(result, nullptr);
+}
+
+// 4.11: Error Case - Test Get Param Not Authorized (Path)
+TEST_F(DeviceTest, GetParam_Path_NotAuthorized) {
+    // Create a mock parameter that requires specific authorization
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - parameter requires admin scope but monitor token only has st2138:mon
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockParam.get(), "/restrictedParam", mockDescriptor.get(), false, 0, adminScope);
+    
+    // copy() should not be called since authorization will fail
+    EXPECT_CALL(*mockParam, copy())
+        .Times(0);
+    
+    device_->addItem("restrictedParam", mockParam.get());
+    
+    // Test with monitor authorization (should fail)
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    catena::common::Path path("/restrictedParam");
+    auto result = device_->getParam(path, status, *monitorAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::PERMISSION_DENIED);
+    EXPECT_EQ(std::string(status.what()), "Not authorized to read the param /restrictedParam");
+    EXPECT_EQ(result, nullptr);
+}
+
+// 4.12: Error Case - Test Get Param with Non-String Front Element (Path)
+TEST_F(DeviceTest, GetParam_Path_NonStringFrontElement) {
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    catena::common::Path path("/123"); // Path with numeric front element
+    auto result = device_->getParam(path, status, *adminAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::INVALID_ARGUMENT);
+    EXPECT_EQ(std::string(status.what()), "Invalid json pointer /123");
+    EXPECT_EQ(result, nullptr);
+}
+
+// 4.13: Success Case - Test Get Param with Sub-path (Path)
+TEST_F(DeviceTest, GetParam_Path_SubPath) {
+    // Create a mock parameter that supports sub-parameters
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    auto mockSubParam = std::make_unique<MockParam>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockParam.get(), "/parentParam", mockDescriptor.get(), false, 0, adminScope);
+    
+    EXPECT_CALL(*mockParam, getParam(testing::_, testing::_, testing::_))
+        .WillOnce(testing::Return(std::move(mockSubParam)));
+    
+    device_->addItem("parentParam", mockParam.get());
+    
+    // Test getting a sub-parameter using Path overload
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    catena::common::Path path("/parentParam/subParam");
+    auto result = device_->getParam(path, status, *adminAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::OK);
+    EXPECT_NE(result, nullptr);
+}
 
 // ======== 5. Serialization Tests ========
 // Covers toProto calls, getComponentSerializer, and getDeviceSerializer
