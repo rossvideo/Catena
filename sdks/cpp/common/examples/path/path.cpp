@@ -79,16 +79,16 @@ int main() {
     document(struct_array);
 
     // The document method consumes the Path passed to it
-    DEBUG_LOG << "\njptr should be empty";
+    DEBUG_LOG << "jptr should be empty";
     document(struct_array);
     
     // we can reverse this 2 ways - reverse the last pop operation
-    DEBUG_LOG << "\njptr should have its last segment";
+    DEBUG_LOG << "jptr should have its last segment";
     struct_array.unpop();
     document(struct_array);
 
     // or rewind to the very beginning
-    DEBUG_LOG << "\njptr should be fully restored";
+    DEBUG_LOG << "jptr should be fully restored";
     struct_array.rewind();
     document(struct_array);
 
@@ -96,7 +96,7 @@ int main() {
     document(struct_array_element_field);
 
     // Adds a new segment to the Path
-    cout << "\njptr should have additional segment \"grandChild\"" << endl;
+    DEBUG_LOG << "jptr should have additional segment \"grandChild\"";
     struct_array_element_field.rewind();
     struct_array_element_field.push_back("grandChild");
     document(struct_array_element_field);
