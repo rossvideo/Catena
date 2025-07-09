@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,7 +37,7 @@
  * It does not support any connections so is not a complete example
  * of a working device.
  * 
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 // this include header was generated from the json device model
