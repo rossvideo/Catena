@@ -2,7 +2,6 @@ var classcatena_1_1REST_1_1MultiSetValue =
 [
     [ "MultiSetValue", "classcatena_1_1REST_1_1MultiSetValue.html#a647896d2b04f6f629ce6babc28ab57e0", null ],
     [ "MultiSetValue", "classcatena_1_1REST_1_1MultiSetValue.html#ae8ff50e6ac1c7edac8ae58630d2cc01b", null ],
-    [ "finish", "classcatena_1_1REST_1_1MultiSetValue.html#ad1c4acd6720dbefe3931d8be4ed3f386", null ],
     [ "proceed", "classcatena_1_1REST_1_1MultiSetValue.html#aa26fed6e620381131c08323271c131f7", null ],
     [ "toMulti_", "classcatena_1_1REST_1_1MultiSetValue.html#aab2e113d20c17ab09bbcc275e97770bf", null ],
     [ "writeConsole_", "classcatena_1_1REST_1_1MultiSetValue.html#ab373b650b84ffc2105e7d2b73f3e3f96", null ],
