@@ -185,7 +185,7 @@ void ParamInfoRequest::proceed() {
 
 void ParamInfoRequest::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << "ParamInfoRequest[" << objectId_ << "] finished\n";
+    DEBUG_LOG << "ParamInfoRequest[" << objectId_ << "] finished\n";
     
     if (responses_.empty()) {
         // If no responses, send at least one response with the error status

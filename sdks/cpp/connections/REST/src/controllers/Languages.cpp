@@ -54,6 +54,6 @@ void Languages::proceed() {
 
 void Languages::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << RESTMethodMap().getForwardMap().at(context_.method())
-              << "Languages[" << objectId_ << "] finished\n";
+    DEBUG_LOG << RESTMethodMap().getForwardMap().at(context_.method())
+              << "Languages[" << objectId_ << "] finished";
 }

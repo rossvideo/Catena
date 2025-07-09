@@ -30,6 +30,7 @@
 
 // connections/gRPC
 #include <ServiceImpl.h>
+#include <Logger.h>
 using catena::gRPC::CatenaServiceImpl;
 
 // Defining the port flag from SharedFlags.h
@@ -76,7 +77,7 @@ vdk::signal<void()> catena::gRPC::Connect::shutdownSignal_;
 void CatenaServiceImpl::processEvents() {
     void *tag;
     bool ok;
-    std::cout << "Start processing events\n";
+    DEBUG_LOG << "Start processing events\n";
     while (true) {
         gpr_timespec deadline =
             gpr_time_add(gpr_now(GPR_CLOCK_REALTIME), gpr_time_from_seconds(1, GPR_TIMESPAN));
@@ -110,5 +111,5 @@ void CatenaServiceImpl::deregisterItem(ICallData *cd) {
     if (it != registry_.end()) {
         registry_.erase(it);
     }
-    std::cout << "Active RPCs remaining: " << registry_.size() << '\n';
+    DEBUG_LOG << "Active RPCs remaining: " << registry_.size() << '\n';
 }

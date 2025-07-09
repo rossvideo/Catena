@@ -47,6 +47,15 @@ using namespace catena::gRPC;
 // Fixture
 class gRPCGetPopulatedSlotsTests : public GRPCTest {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("gRPCGetPopulatedSlotsTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
     /*
      * Creates a GetPopulatedSlots handler object.
      */

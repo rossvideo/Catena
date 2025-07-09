@@ -49,6 +49,16 @@ using namespace catena::REST;
 // Fixture
 class RESTExecuteCommandTests : public RESTEndpointTest {
   protected:
+
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RESTExecuteCommandTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
     /*
      * Sets default expectations for hasField("respond").
      */

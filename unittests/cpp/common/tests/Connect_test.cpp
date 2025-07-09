@@ -35,6 +35,7 @@
 #include "MockLanguagePack.h"
 #include <rpc/Connect.h>
 #include <iostream>
+#include <Logger.h>
 
 using namespace catena::common;
 
@@ -61,8 +62,17 @@ class TestConnect : public Connect {
 };
 
 // Fixture
-class CommonConnectTests : public ::testing::Test {
+class CommonConnectTest : public ::testing::Test {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("ConnectTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
     void SetUp() override {
         connect = std::make_unique<TestConnect>(dms_, subscriptionManager);
         // Set detail level to FULL
@@ -163,7 +173,7 @@ class CommonConnectTests : public ::testing::Test {
 // == 1. Authorization Tests ==
 
 // Test 1.1: EXPECT FALSE - Parameter updateResponse readAuthz check fails
-TEST_F(CommonConnectTests, updateResponseReadAuthzFails) {
+TEST_F(CommonConnectTest, updateResponseReadAuthzFails) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
@@ -187,7 +197,7 @@ TEST_F(CommonConnectTests, updateResponseReadAuthzFails) {
 }
 
 // Test 1.2: EXPECT TRUE - Parameter updateResponse authorization check when disabled
-TEST_F(CommonConnectTests, updateResponseAuthzOff) {
+TEST_F(CommonConnectTest, updateResponseAuthzOff) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
@@ -207,7 +217,7 @@ TEST_F(CommonConnectTests, updateResponseAuthzOff) {
 }
 
 // Test 1.3: EXPECT FALSE - Parameter updateResponse authorization check when enabled but fails
-TEST_F(CommonConnectTests, updateResponseAuthzOnFails) {
+TEST_F(CommonConnectTest, updateResponseAuthzOnFails) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
@@ -226,7 +236,7 @@ TEST_F(CommonConnectTests, updateResponseAuthzOnFails) {
 }
 
 // Test 1.4: EXPECT TRUE - Parameter updateResponse authorization check when enabled and succeeds
-TEST_F(CommonConnectTests, updateResponseAuthzOnSucceeds) {
+TEST_F(CommonConnectTest, updateResponseAuthzOnSucceeds) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
@@ -245,7 +255,7 @@ TEST_F(CommonConnectTests, updateResponseAuthzOnSucceeds) {
 }
 
 // Test 1.5: EXPECT TRUE - LanguagePack updateResponse authorization check when disabled
-TEST_F(CommonConnectTests, updateResponseLanguagePackAuthzOff) {
+TEST_F(CommonConnectTest, updateResponseLanguagePackAuthzOff) {
     // Setup test data
     auto languagePack = setupLanguagePack();
     
@@ -257,7 +267,7 @@ TEST_F(CommonConnectTests, updateResponseLanguagePackAuthzOff) {
 }
 
 // Test 1.6: EXPECT FALSE - LanguagePack updateResponse authorization check when enabled but fails
-TEST_F(CommonConnectTests, updateResponseLanguagePackAuthzOnFails) {
+TEST_F(CommonConnectTest, updateResponseLanguagePackAuthzOnFails) {
     // Setup test data
     auto languagePack = setupLanguagePack();
     
@@ -269,7 +279,7 @@ TEST_F(CommonConnectTests, updateResponseLanguagePackAuthzOnFails) {
 }
 
 // Test 1.7: EXPECT TRUE - LanguagePack updateResponse authorization check when enabled and succeeds
-TEST_F(CommonConnectTests, updateResponseLanguagePackAuthzOnSucceeds) {
+TEST_F(CommonConnectTest, updateResponseLanguagePackAuthzOnSucceeds) {
     // Setup test data
     auto languagePack = setupLanguagePack();
     
@@ -284,7 +294,7 @@ TEST_F(CommonConnectTests, updateResponseLanguagePackAuthzOnSucceeds) {
 // == 2. Cancellation Tests ==
 
 // Test 2.1: EXPECT TRUE - Parameter updateResponse cancelled 
-TEST_F(CommonConnectTests, updateResponseCancelled) {
+TEST_F(CommonConnectTest, updateResponseCancelled) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
@@ -303,7 +313,7 @@ TEST_F(CommonConnectTests, updateResponseCancelled) {
 }
 
 // Test 2.2: EXPECT TRUE - LanguagePack updateResponse cancelled
-TEST_F(CommonConnectTests, updateResponseLanguagePackCancelled) {
+TEST_F(CommonConnectTest, updateResponseLanguagePackCancelled) {
     // Setup test data
     auto languagePack = setupLanguagePack();
     
@@ -317,7 +327,7 @@ TEST_F(CommonConnectTests, updateResponseLanguagePackCancelled) {
 // == 3. Detail Level Tests ==
 
 // Test 3.1: EXPECT TRUE - Test updateResponse_ on FULL detail level
-TEST_F(CommonConnectTests, updateResponseLODFull) {
+TEST_F(CommonConnectTest, updateResponseLODFull) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
@@ -353,7 +363,7 @@ TEST_F(CommonConnectTests, updateResponseLODFull) {
 }
 
 // Test 3.2: EXPECT TRUE - Test updateResponse_ on MINIMAL detail level with minimal set
-TEST_F(CommonConnectTests, updateResponseLODMinimalwMinimalSet) {
+TEST_F(CommonConnectTest, updateResponseLODMinimalwMinimalSet) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
@@ -384,7 +394,7 @@ TEST_F(CommonConnectTests, updateResponseLODMinimalwMinimalSet) {
 }
 
 // Test 3.3: EXPECT FALSE - Test updateResponse_ on MINIMAL detail level without minimal set
-TEST_F(CommonConnectTests, updateResponseLODMinimalNoMinimalSet) {
+TEST_F(CommonConnectTest, updateResponseLODMinimalNoMinimalSet) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
@@ -410,7 +420,7 @@ TEST_F(CommonConnectTests, updateResponseLODMinimalNoMinimalSet) {
 }
 
 // Test 3.4: EXPECT TRUE - Test updateResponse_ on SUBSCRIPTIONS detail level with subscribed OID
-TEST_F(CommonConnectTests, updateResponseLODSubscriptionsSubscribedOid) {
+TEST_F(CommonConnectTest, updateResponseLODSubscriptionsSubscribedOid) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
@@ -444,7 +454,7 @@ TEST_F(CommonConnectTests, updateResponseLODSubscriptionsSubscribedOid) {
 }
 
 // Test 3.5: EXPECT FALSE - Test updateResponse_ on SUBSCRIPTIONS detail level with unsubscribed OID
-TEST_F(CommonConnectTests, updateResponseLODSubscriptionsUnsubscribedOid) {
+TEST_F(CommonConnectTest, updateResponseLODSubscriptionsUnsubscribedOid) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
@@ -469,7 +479,7 @@ TEST_F(CommonConnectTests, updateResponseLODSubscriptionsUnsubscribedOid) {
 }
 
 // Test 3.6: EXPECT TRUE - Test updateResponse_ on COMMANDS detail level with command parameter
-TEST_F(CommonConnectTests, updateResponseLODCommandsCommandParam) {
+TEST_F(CommonConnectTest, updateResponseLODCommandsCommandParam) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
@@ -503,7 +513,7 @@ TEST_F(CommonConnectTests, updateResponseLODCommandsCommandParam) {
 }
 
 // Test 3.7: EXPECT FALSE - Test updateResponse_ on COMMANDS detail level with non-command parameter
-TEST_F(CommonConnectTests, updateResponseLODCommandsNonCommandParam) {
+TEST_F(CommonConnectTest, updateResponseLODCommandsNonCommandParam) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
@@ -531,7 +541,7 @@ TEST_F(CommonConnectTests, updateResponseLODCommandsNonCommandParam) {
 }
 
 // Test 3.8: EXPECT FALSE - Test updateResponse_ on NONE detail level
-TEST_F(CommonConnectTests, updateResponseLODNone) {
+TEST_F(CommonConnectTest, updateResponseLODNone) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
@@ -557,7 +567,7 @@ TEST_F(CommonConnectTests, updateResponseLODNone) {
 }
 
 // Test 3.9: EXPECT FALSE - Test updateResponse_ on UNSET detail level
-TEST_F(CommonConnectTests, updateResponseLODUnset) {
+TEST_F(CommonConnectTest, updateResponseLODUnset) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
@@ -587,7 +597,7 @@ TEST_F(CommonConnectTests, updateResponseLODUnset) {
 // == 4. Exception Handling Tests ==
 
 // Test 4.1: EXPECT FALSE - If toProto throws, no update is pushed to the client
-TEST_F(CommonConnectTests, updateResponseExceptionParamToProto) {
+TEST_F(CommonConnectTest, updateResponseExceptionParamToProto) {
     MockParam param;
     MockParamDescriptor descriptor;
     setupCommonExpectations(param, descriptor);
@@ -606,7 +616,7 @@ TEST_F(CommonConnectTests, updateResponseExceptionParamToProto) {
 }
 
 // Test 4.2: EXPECT FALSE - If any exception is thrown inside updateResponse_ (language pack), no update is pushed to the client
-TEST_F(CommonConnectTests, updateResponseLanguagePacktoProto) {
+TEST_F(CommonConnectTest, updateResponseLanguagePacktoProto) {
     // Create a language pack that will throw when accessed
     auto languagePack = std::make_unique<MockLanguagePack>();
     

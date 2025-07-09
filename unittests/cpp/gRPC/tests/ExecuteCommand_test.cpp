@@ -49,6 +49,15 @@ using namespace catena::gRPC;
 // Fixture
 class gRPCExecuteCommandTests : public GRPCTest {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("gRPCExecuteCommandTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
     /*
      * Creates an ExecuteCommand handler object.
      */

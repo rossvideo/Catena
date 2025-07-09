@@ -37,6 +37,7 @@
 
 // Common
 #include <SubscriptionManager.h>
+#include <Logger.h>
 
 // Test helpers
 #include "RESTTest.h"
@@ -49,6 +50,15 @@ using namespace catena::REST;
 // Fixture
 class RESTSocketReaderTests : public testing::Test, public RESTTest {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RESTSocketReaderTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
     // Defining the in/out sockets.
     RESTSocketReaderTests() : RESTTest(&clientSocket_, &serverSocket_) {}
 

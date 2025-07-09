@@ -16,7 +16,7 @@ RUN . /root/toolchain.env \
     build-essential sudo \
     cmake=$CMAKE_VERSION \
     nodejs=$NODEJS_VERSION \
-    npm git=$GIT_VERSION \
+    npm git \
     libssl-dev=$OPENSSL_VERSION \
     doxygen=$DOXYGEN_VERSION \
     graphviz=$GRAPHVIZ_VERSION \
@@ -29,6 +29,7 @@ RUN . /root/toolchain.env \
     valgrind=$VALGRIND_VERSION \
     curl=$CURL_VERSION \
     && npm install -g n \
+    && apt-get install -y libgoogle-glog-dev \
     && apt-get clean
 
 # Install gRPC

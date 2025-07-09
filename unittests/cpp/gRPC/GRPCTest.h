@@ -57,6 +57,7 @@
 
 // common
 #include <Status.h>
+#include <Logger.h>
 
 namespace catena {
 namespace gRPC {
@@ -71,7 +72,7 @@ class GRPCTest : public ::testing::Test {
      * Virtual function which creates a single CallData object for the test.
      */
     virtual void makeOne() = 0;
-    
+
     /*
      * Creates a gRPC server and redirects cout before each test.
      */

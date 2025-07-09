@@ -27,7 +27,7 @@ set(SOURCES
     tests/ExecuteCommand_test.cpp
     tests/DeviceRequest_test.cpp
     tests/ServiceImpl_test.cpp
-)	
+)
 
 add_executable(${This} ${SOURCES})	
 
@@ -37,7 +37,8 @@ target_link_libraries(${This}
         catena_connections_REST
         pthread	
     PRIVATE	
-        ${GTEST_BOTH_LIBRARIES}	
+        ${GTEST_BOTH_LIBRARIES}
+        glog::glog
         GTest::GTest	
         GTest::Main	
         GTest::gmock	

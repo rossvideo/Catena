@@ -63,6 +63,7 @@
 #include <chrono>
 #include <signal.h>
 #include <functional>
+#include <Logger.h>
 
 using namespace catena::common;
 
@@ -72,7 +73,7 @@ std::atomic<bool> globalLoop = true;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        std::cout << "Caught signal " << sig << ", shutting down" << std::endl;
+        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
         globalLoop = false;
         if (globalApi != nullptr) {
             globalApi->Shutdown();
@@ -87,7 +88,7 @@ void statusUpdateExample(){
     dm.valueSetByClient.connect([](const std::string& oid, const IParam* p) {
         // all we do here is print out the oid of the parameter that was changed
         // your biz logic would do something _even_more_ interesting!
-        std::cout << "*** signal received: " << oid << " has been changed by client" << '\n';
+        DEBUG_LOG << "*** signal received: " << oid << " has been changed by client";
     });
 
     // The rest is the "sending end" of the status update example
@@ -107,7 +108,7 @@ void statusUpdateExample(){
         {
             std::lock_guard lg(dm.mutex());
             counter.get()++;
-            std::cout << counter.getOid() << " set to " << counter.get() << '\n';
+            DEBUG_LOG << counter.getOid() << " set to " << counter.get();
             dm.valueSetByServer.emit("/counter", &counter);
         }
     }
@@ -128,8 +129,8 @@ void RunRESTServer() {
         // Creating and running the REST service.
         catena::REST::CatenaServiceImpl api({&dm}, EOPath, authorization, port);
         globalApi = &api;
-        std::cout << "API Version: " << api.version() << std::endl;
-        std::cout << "REST on 0.0.0.0:" << port << std::endl;
+        DEBUG_LOG << "API Version: " << api.version();
+        DEBUG_LOG << "REST on 0.0.0.0:" << port;
         
         std::thread counterLoop(statusUpdateExample);
 
@@ -138,15 +139,20 @@ void RunRESTServer() {
         counterLoop.join();
 
     } catch (std::exception &why) {
-        std::cerr << "Problem: " << why.what() << '\n';
+        LOG(ERROR) << "Problem: " << why.what();
     }
 }
 
 int main(int argc, char* argv[]) {
+    Logger::StartLogging(argc, argv);
+
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
     
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
+    
+    // Shutdown Google Logging
+    google::ShutdownGoogleLogging();
     return 0;
 } 
