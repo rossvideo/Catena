@@ -30,6 +30,7 @@
 
 // connections/gRPC
 #include <controllers/GetValue.h>
+#include <Logger.h>
 using catena::gRPC::GetValue;
 
 // Initializes the object counter for GetValue to 0.
@@ -48,13 +49,13 @@ GetValue::GetValue(ICatenaServiceImpl *service, SlotMap& dms, bool ok) : CallDat
 
 // Manages gRPC command execution process using the state variable status.
 void GetValue::proceed( bool ok) {
-    std::cout << "GetValue::proceed[" << objectId_ << "]: " << timeNow()
+    DEBUG_LOG << "GetValue::proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: "
-                << std::boolalpha << ok << std::endl;
+                << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        std::cout << "GetValue[" << objectId_ << "] cancelled\n";
+        DEBUG_LOG << "GetValue[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -130,7 +131,7 @@ void GetValue::proceed( bool ok) {
          * CatenaServiceImpl.
          */
         case CallStatus::kFinish:
-            std::cout << "GetValue[" << objectId_ << "] finished\n";
+            DEBUG_LOG << "GetValue[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

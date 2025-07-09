@@ -40,6 +40,7 @@ add_executable(${This} ${SOURCES})
 
 target_link_libraries(${This} PRIVATE
     ${GTEST_BOTH_LIBRARIES}
+    glog::glog
     GTest::GTest
     GTest::Main
     GTest::gmock

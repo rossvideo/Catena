@@ -69,5 +69,5 @@ void MultiSetValue::proceed() {
 
 void MultiSetValue::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << typeName_ << "SetValue[" << objectId_ << "] finished\n";
+    DEBUG_LOG << typeName_ << "SetValue[" << objectId_ << "] finished\n";
 }

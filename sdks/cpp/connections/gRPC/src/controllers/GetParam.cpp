@@ -30,6 +30,7 @@
 
 // connections/gRPC
 #include <controllers/GetParam.h>
+#include <Logger.h>
 using catena::gRPC::GetParam;
 
 int GetParam::objectCounter_ = 0;
@@ -51,13 +52,13 @@ GetParam::GetParam(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
  * Manages the steps of the GetParam gRPC command through the state variable status.
  */
 void GetParam::proceed( bool ok) {
-    std::cout << "GetParam::proceed[" << objectId_ << "]: " << timeNow()
+    DEBUG_LOG << "GetParam::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
-              << std::boolalpha << ok << std::endl;
+              << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        std::cout << "GetParam[" << objectId_ << "] cancelled\n";
+        DEBUG_LOG << "GetParam[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
     
@@ -136,7 +137,7 @@ void GetParam::proceed( bool ok) {
          * CatenaServiceImpl.
          */
         case CallStatus::kFinish:
-            std::cout << "GetParam[" << objectId_ << "] finished\n";
+            DEBUG_LOG << "GetParam[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
 

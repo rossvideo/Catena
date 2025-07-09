@@ -30,6 +30,7 @@
 
 // connections/gRPC
 #include <controllers/ListLanguages.h>
+#include <Logger.h>
 using catena::gRPC::ListLanguages;
 
 // Initializes the object counter for SetValue to 0.
@@ -43,13 +44,13 @@ ListLanguages::ListLanguages(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
 }
 
 void ListLanguages::proceed(bool ok) {
-    std::cout << "ListLanguages::proceed[" << objectId_ << "]: " << timeNow()
+    DEBUG_LOG << "ListLanguages::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
-              << std::boolalpha << ok << std::endl;
+              << std::boolalpha << ok;
     
     // If the process is cancelled, finish the process
     if (!ok) {
-        std::cout << "ListLanguages[" << objectId_ << "] cancelled\n";
+        DEBUG_LOG << "ListLanguages[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -103,7 +104,7 @@ void ListLanguages::proceed(bool ok) {
          * CatenaServiceImpl.
          */
         case CallStatus::kFinish:
-            std::cout << "ListLanguages[" << objectId_ << "] finished\n";
+            DEBUG_LOG << "ListLanguages[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

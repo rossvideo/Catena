@@ -45,11 +45,21 @@
 #include <Status.h>
 #include <Authorization.h>
 #include <SubscriptionManager.h>
+#include <Logger.h>
 
 using namespace catena::common;
 
 class SubscriptionManagerTest : public ::testing::Test {
-protected:
+  protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("SubscriptionManagerTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
     void SetUp() override {
         manager = std::make_unique<SubscriptionManager>();
         device = std::make_unique<MockDevice>();
@@ -216,7 +226,7 @@ TEST_F(SubscriptionManagerTest, IsWildcard) {
 
 // Test basic wildcard subscription expansion
 TEST_F(SubscriptionManagerTest, WildcardSubscriptionExpansion) {
-    std::cout << "\n=== WildcardSubscriptionExpansion test started ===\n" << std::endl;
+    DEBUG_LOG << "=== WildcardSubscriptionExpansion test started ===";
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
     // Store OIDs as class members to return references
@@ -269,7 +279,7 @@ TEST_F(SubscriptionManagerTest, WildcardSubscriptionExpansion) {
             } else if (fqoid == param3_oid) {
                 setupMockParam(param.get(), param3_oid, *param3.descriptor);
             } else {
-                std::cout << "DEBUG: Invalid path: " << fqoid << std::endl;
+                DEBUG_LOG << "DEBUG: Invalid path: " << fqoid;
                 status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
                 return nullptr;
             }
@@ -299,9 +309,9 @@ TEST_F(SubscriptionManagerTest, WildcardSubscriptionExpansion) {
     
     // Verify all matching parameters are subscribed, including deeply nested ones
     auto oids = manager->getAllSubscribedOids(*device);
-    std::cout << "DEBUG: Found " << oids.size() << " subscribed OIDs" << std::endl;
+    DEBUG_LOG << "DEBUG: Found " << oids.size() << " subscribed OIDs";
     for (const auto& oid : oids) {
-        std::cout << "DEBUG: Subscribed OID: " << oid << std::endl;
+        DEBUG_LOG << "DEBUG: Subscribed OID: " << oid;
     }
     EXPECT_EQ(oids.size(), 6);
     EXPECT_TRUE(oids.find("/test") != oids.end());
@@ -311,12 +321,12 @@ TEST_F(SubscriptionManagerTest, WildcardSubscriptionExpansion) {
     EXPECT_TRUE(oids.find("/test/nested/param2") != oids.end());
     EXPECT_TRUE(oids.find("/test/nested/deeper/param3") != oids.end());
 
-    std::cout << "\n=== WildcardSubscriptionExpansion test completed ===\n" << std::endl;
+    DEBUG_LOG << "=== WildcardSubscriptionExpansion test completed ===";
 }
 
 //Test basic wildcard removal
 TEST_F(SubscriptionManagerTest, BasicWildcardRemoval) {
-    std::cout << "\n=== BasicWildcardRemoval test started ===\n" << std::endl;
+    DEBUG_LOG << "=== BasicWildcardRemoval test started ===";
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
     // Store OIDs as class members to return references
@@ -413,7 +423,7 @@ TEST_F(SubscriptionManagerTest, BasicWildcardRemoval) {
     EXPECT_FALSE(manager->removeSubscription("/test/*/param", *device, rc));
     EXPECT_EQ(rc.status, catena::StatusCode::NOT_FOUND);
     
-    std::cout << "\n=== BasicWildcardRemoval test completed ===\n" << std::endl;
+    DEBUG_LOG << "=== BasicWildcardRemoval test completed ===";
 }
 
 
@@ -421,7 +431,7 @@ TEST_F(SubscriptionManagerTest, BasicWildcardRemoval) {
 
 //Test array wildcard subscription expansion
 TEST_F(SubscriptionManagerTest, ArrayWildcardSubscriptionExpansion) {
-    std::cout << "\n=== ArrayWildcardSubscriptionExpansion test started ===\n" << std::endl;
+    DEBUG_LOG << "=== ArrayWildcardSubscriptionExpansion test started ===";
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
     // @todo
@@ -430,7 +440,7 @@ TEST_F(SubscriptionManagerTest, ArrayWildcardSubscriptionExpansion) {
 
 //Test array wildcard removal
 TEST_F(SubscriptionManagerTest, ArrayWildcardRemoval) {
-    std::cout << "\n=== ArrayWildcardRemoval test started ===\n" << std::endl;
+    DEBUG_LOG << "=== ArrayWildcardRemoval test started ===";
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
     // @todo
