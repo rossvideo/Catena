@@ -288,15 +288,15 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
                 .WillRepeatedly(::testing::ReturnRef(scope));
             
             if (fqoid == array_oid + "/0/" + element_param) {
-                setupMockParam(param.get(), fqoid, *element_param0.descriptor);
+                setupMockParam(param.get(), fqoid, element_param0.descriptor.get());
             } else if (fqoid == array_oid + "/1/" + element_param) {
-                setupMockParam(param.get(), fqoid, *element_param1.descriptor);
+                setupMockParam(param.get(), fqoid, element_param1.descriptor.get());
             } else if (fqoid == array_oid + "/0") {
-                setupMockParam(param.get(), fqoid, *element0.descriptor);
+                setupMockParam(param.get(), fqoid, element0.descriptor.get());
             } else if (fqoid == array_oid + "/1") {
-                setupMockParam(param.get(), fqoid, *element1.descriptor);
+                setupMockParam(param.get(), fqoid, element1.descriptor.get());
             } else if (fqoid == array_oid) {
-                setupMockParam(param.get(), array_oid, *array_root.descriptor, true, 2);
+                setupMockParam(param.get(), array_oid, array_root.descriptor.get(), true, 2);
             } else {
                 status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
                 return nullptr;
@@ -308,13 +308,13 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
     MockParamVisitor visitor;
     ParamVisitor::traverseParams(mockParam.get(), array_oid, *device, visitor, authz_);
     
-    EXPECT_EQ(visitor.visitedPaths.size(), 5);  // Root + 2 array elements + 2 element params
-    EXPECT_EQ(visitor.visitedPaths[0], array_oid);  // First path should be array root
-    EXPECT_EQ(visitor.visitedPaths[1], array_oid + "/0");  // Second path should be first element
-    EXPECT_EQ(visitor.visitedPaths[2], array_oid + "/0/" + element_param);  // Third path should be first element's param
-    EXPECT_EQ(visitor.visitedPaths[3], array_oid + "/1");  // Fourth path should be second element
-    EXPECT_EQ(visitor.visitedPaths[4], array_oid + "/1/" + element_param);  // Fifth path should be second element's param
-    EXPECT_EQ(visitor.visitedArrays.size(), 1);  // Should have one array visit
-    EXPECT_EQ(visitor.visitedArrays[0].first, array_oid);  // Array path
-    EXPECT_EQ(visitor.visitedArrays[0].second, 2);  // Array length
+    EXPECT_EQ(visitor.visitedPaths.size(), 5); 
+    EXPECT_EQ(visitor.visitedPaths[0], array_oid); 
+    EXPECT_EQ(visitor.visitedPaths[1], array_oid + "/0"); 
+    EXPECT_EQ(visitor.visitedPaths[2], array_oid + "/0/" + element_param);
+    EXPECT_EQ(visitor.visitedPaths[3], array_oid + "/1"); 
+    EXPECT_EQ(visitor.visitedPaths[4], array_oid + "/1/" + element_param); 
+    EXPECT_EQ(visitor.visitedArrays.size(), 1); 
+    EXPECT_EQ(visitor.visitedArrays[0].first, array_oid); 
+    EXPECT_EQ(visitor.visitedArrays[0].second, 2);  
 } 
