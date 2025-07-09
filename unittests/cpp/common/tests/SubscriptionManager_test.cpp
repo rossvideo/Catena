@@ -45,11 +45,21 @@
 #include <Status.h>
 #include <Authorization.h>
 #include <SubscriptionManager.h>
+#include <Logger.h>
 
 using namespace catena::common;
 
 class SubscriptionManagerTest : public ::testing::Test {
 protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("SubscriptionManagerTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
     SubscriptionManagerTest() : authz_(jwsToken_) {}
     
     void SetUp() override {
