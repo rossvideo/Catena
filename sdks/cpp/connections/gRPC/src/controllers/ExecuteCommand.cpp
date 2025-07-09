@@ -30,6 +30,7 @@
 
 // connections/gRPC
 #include <controllers/ExecuteCommand.h>
+#include <Logger.h>
 using catena::gRPC::ExecuteCommand;
 
 //Counter for generating unique object IDs - static, so initializes at start
@@ -52,13 +53,13 @@ ExecuteCommand::ExecuteCommand(ICatenaServiceImpl *service, SlotMap& dms, bool o
  * handling errors and responses accordingly 
  */
 void ExecuteCommand::proceed(bool ok) {
-    std::cout << "ExecuteCommand proceed[" << objectId_ << "]: " << timeNow()
+    DEBUG_LOG << "ExecuteCommand proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
-              << std::boolalpha << ok << std::endl;
+              << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        std::cout << "ExecuteCommand[" << objectId_ << "] cancelled\n";
+        DEBUG_LOG << "ExecuteCommand[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -170,7 +171,7 @@ void ExecuteCommand::proceed(bool ok) {
          * process
          */
         case CallStatus::kFinish:
-            std::cout << "ExecuteCommand[" << objectId_ << "] finished\n";
+            DEBUG_LOG << "ExecuteCommand[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
 

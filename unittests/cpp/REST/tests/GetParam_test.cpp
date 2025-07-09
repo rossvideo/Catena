@@ -48,6 +48,16 @@ using namespace catena::REST;
 // Fixture
 class RESTGetParamTests : public RESTEndpointTest {
   protected:
+
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RESTGetParamTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+    
     RESTGetParamTests() : RESTEndpointTest() {
         // Default expectations for the device model 1 (should not be called).
         EXPECT_CALL(dm1_, getParam(testing::An<const std::string&>(), testing::_, testing::_)).Times(0);

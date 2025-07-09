@@ -105,7 +105,7 @@ function(set_up_gRPC_targets)
     )
 
     # Provide link libraries
-    target_link_libraries(${GRPC_TARGET} PUBLIC protobuf::libprotobuf-lite gRPC::grpc++)
+    target_link_libraries(${GRPC_TARGET} PUBLIC protobuf::libprotobuf-lite gRPC::grpc++ glog::glog)
 
     # use the protobuf generate function provided by the protobuf package to make the c++ source files
     protobuf_generate(

@@ -49,6 +49,15 @@ using namespace catena::gRPC;
 // Fixture
 class gRPCDeviceRequestTests : public GRPCTest {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("gRPCDeviceRequestTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
     /*
      * Creates a DeviceRequest handler object.
      */

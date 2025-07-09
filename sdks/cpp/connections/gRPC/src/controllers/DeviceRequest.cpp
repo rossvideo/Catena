@@ -30,6 +30,7 @@
 
 // connections/gRPC
 #include <controllers/DeviceRequest.h>
+#include <Logger.h>
 using catena::gRPC::DeviceRequest;
 
 // Counter for generating unique object IDs - static, so initializes at start
@@ -52,13 +53,13 @@ DeviceRequest::DeviceRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
  * handling errors and responses accordingly 
  */
 void DeviceRequest::proceed(bool ok) {
-    std::cout << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
+    DEBUG_LOG << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
-              << std::boolalpha << ok << std::endl;
+              << std::boolalpha << ok;
     
     // If the process is cancelled, finish the process
     if (!ok) {
-        std::cout << "DeviceRequest[" << objectId_ << "] cancelled\n";
+        DEBUG_LOG << "DeviceRequest[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
     
@@ -183,7 +184,7 @@ void DeviceRequest::proceed(bool ok) {
          * the process
          */
         case CallStatus::kFinish:
-            std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
+            DEBUG_LOG << "DeviceRequest[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
 

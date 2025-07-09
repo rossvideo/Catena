@@ -30,6 +30,7 @@
 
 // connections/gRPC
 #include <controllers/Connect.h>
+#include <Logger.h>
 using catena::gRPC::Connect;
 using catena::common::ILanguagePack;
 
@@ -51,17 +52,17 @@ catena::gRPC::Connect::Connect(ICatenaServiceImpl *service, SlotMap& dms, bool o
 
 // Manages gRPC command execution process using the state variable status.
 void catena::gRPC::Connect::proceed(bool ok) {
-    std::cout << "Connect proceed[" << objectId_ << "]: " << timeNow()
+    DEBUG_LOG << "Connect proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: "
-                << std::boolalpha << ok << std::endl;
+                << std::boolalpha << ok;
 
     /**
      * The newest connect object (the one that has not yet been attached to a
      * client request) will send shutdown signal to cancel all open connections
      */
     if (!ok && status_ != CallStatus::kFinish) {
-        std::cout << "Connect[" << objectId_ << "] cancelled\n";
-        std::cout << "Cancelling all open connections" << std::endl;
+        DEBUG_LOG << "Connect[" << objectId_ << "] cancelled";
+        DEBUG_LOG << "Cancelling all open connections";
         shutdownSignal_.emit();
         status_ = CallStatus::kFinish;
     }
@@ -138,7 +139,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
             // If connect was cancelled finish the process.
             if (context_.IsCancelled()) {
                 status_ = CallStatus::kFinish;
-                std::cout << "Connection[" << objectId_ << "] cancelled\n";
+                DEBUG_LOG << "Connection[" << objectId_ << "] cancelled";
                 writer_.Finish(Status::CANCELLED, this);
                 break;
             // Send the client an update with the slot of the device.
@@ -151,7 +152,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
          * kFinish: Ends the connection.
          */
         case CallStatus::kFinish:
-            std::cout << "Connect[" << objectId_ << "] finished\n";
+            DEBUG_LOG << "Connect[" << objectId_ << "] finished";
             // Disconnecting all initialized listeners.
             if (shutdownSignalId_ != 0) { shutdownSignal_.disconnect(shutdownSignalId_); }
             for (auto [slot, dm] : dms_) {

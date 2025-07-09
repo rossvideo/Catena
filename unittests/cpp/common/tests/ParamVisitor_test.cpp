@@ -39,34 +39,30 @@
 #include "MockParam.h"
 #include "MockParamDescriptor.h"
 #include "MockDevice.h"
+#include "MockParamVisitor.h"
 #include "CommonTestHelpers.h"
 #include <IDevice.h>
 #include <IParam.h>
 #include <Status.h>
 #include <Authorization.h>
 #include <ParamVisitor.h>
+#include <Logger.h>
 
 using namespace catena::common;
-
-// Mock visitor that records visited parameters and arrays
-class MockParamVisitor : public IParamVisitor {
-public:
-    std::vector<std::string> visitedPaths;
-    std::vector<std::pair<std::string, uint32_t>> visitedArrays;
-
-    void visit(IParam* param, const std::string& path) override {
-        visitedPaths.push_back(path);
-    }
-
-    void visitArray(IParam* param, const std::string& path, uint32_t length) override {
-        visitedArrays.push_back({path, length});
-    }
-};
 
 class ParamVisitorTest : public ::testing::Test {
 protected:
     ParamVisitorTest() : authz_(jwsToken_) {}
     
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("ParamVisitorTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
     void SetUp() override {
         device = std::make_unique<MockDevice>();
         mockParam = std::make_unique<MockParam>();
