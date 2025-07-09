@@ -55,6 +55,7 @@
 #include <chrono>
 #include <signal.h>
 #include <functional>
+#include <Logger.h>
 
 using grpc::Server;
 
@@ -75,7 +76,7 @@ std::atomic<bool> globalLoop = true;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        std::cout << "Caught signal " << sig << ", shutting down" << std::endl;
+        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
         globalLoop = false;
         if (globalServer != nullptr) {
             globalServer->Shutdown();
@@ -139,35 +140,35 @@ void counterUpdateHandler(const std::string& oid, const IParam* p, const int32_t
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
     const int32_t& counter = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    std::cout << "*** client set counter to " << counter << '\n';
+    DEBUG_LOG << "*** client set counter to " << counter;
 }
 
 void text_boxUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
     const std::string& text_box = dynamic_cast<const ParamWithValue<std::string>*>(p)->get();
-    std::cout << "*** client set text_box to " << text_box << '\n';
+    DEBUG_LOG << "*** client set text_box to " << text_box;
 }
 
 void buttonUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
     const int32_t& button = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    std::cout << "*** client set button to " << button << '\n';
+    DEBUG_LOG << "*** client set button to " << button;
 }
 
 void sliderUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
     const int32_t& slider = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    std::cout << "*** client set slider to " << slider << '\n';
+    DEBUG_LOG << "*** client set slider to " << slider;
 }
 
 void combo_boxUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
     const int32_t& combo_box = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    std::cout << "*** client set combo_box to " << combo_box << '\n';
+    DEBUG_LOG << "*** client set combo_box to " << combo_box;
 }
 
 void statusUpdateExample(){   
@@ -201,7 +202,7 @@ void statusUpdateExample(){
             {
                 std::lock_guard lg(dm.mutex());
                 counter.get()++;
-                std::cout << counter.getOid() << " set to " << counter.get() << '\n';
+                DEBUG_LOG << counter.getOid() << " set to " << counter.get();
                 dm.valueSetByServer.emit("/counter", &counter, 0);
             }
         }
@@ -237,7 +238,7 @@ void RunRPCServer(std::string addr)
         builder.RegisterService(&service);
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
-        std::cout << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms) << '\n';
+        DEBUG_LOG << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
 
         globalServer = server.get();
 
@@ -253,7 +254,7 @@ void RunRPCServer(std::string addr)
         cq_thread.join();
 
     } catch (std::exception &why) {
-        std::cerr << "Problem: " << why.what() << '\n';
+        LOG(ERROR) << "Problem: " << why.what();
     }
 }
 
@@ -267,5 +268,8 @@ int main(int argc, char* argv[])
   
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
+    
+    // Shutdown Google Logging
+    google::ShutdownGoogleLogging();
     return 0;
 }

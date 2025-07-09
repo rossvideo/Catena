@@ -50,6 +50,8 @@
 #include <SocketWriter.h>
 #include "interface/ICallData.h"
 
+#include <Logger.h>
+
 namespace catena {
 namespace REST {
 
@@ -101,11 +103,10 @@ private:
      * @param ok The status of the RPC (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-        std::cout <<RESTMethodMap().getForwardMap().at(context_.method())
+        DEBUG_LOG << RESTMethodMap().getForwardMap().at(context_.method())
                   << " Subscriptions::proceed[" << objectId_ << "]: "
                   << catena::common::timeNow() << " status: "
-                  << static_cast<int>(status) << ", ok: " << std::boolalpha << ok
-                  << std::endl;
+                  << static_cast<int>(status) << ", ok: " << std::boolalpha << ok;
     }
 
     /**

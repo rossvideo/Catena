@@ -107,7 +107,7 @@ Location loc = {{91.f, 82.f, 73.f}, 10.0f, 20.0f, -30, "Old Trafford"}, loc2;
 catena::exception_with_status ans{"", catena::StatusCode::OK};
 std::unique_ptr<IParam> locParam = dm.getParam("/location", ans);
 loc2 = locParam->get();
-std::cout << "Location: " << loc2.latitude << ", " << loc2.longitude << ", " << loc2.altitude << ", "
+DEBUG_LOG << "Location: " << loc2.latitude << ", " << loc2.longitude << ", " << loc2.altitude << ", "
             << loc2.name << ", " << loc2.coords.x << ", " << loc2.coords.y << ", " << loc2.coords.z
             << '\n';
 locParam->get() = loc;

@@ -55,6 +55,8 @@
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 
+#include <Logger.h>
+
 namespace catena {
 namespace REST {
 
@@ -117,10 +119,9 @@ class MultiSetValue : public ICallData {
      * @param ok The status of the RPC (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << typeName_ << "SetValue::proceed[" << objectId_ << "]: "
+      DEBUG_LOG << typeName_ << "SetValue::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
-                << static_cast<int>(status) << ", ok: " << std::boolalpha << ok
-                << std::endl;
+                << static_cast<int>(status) << ", ok: " << std::boolalpha << ok;
     }
 
     /**

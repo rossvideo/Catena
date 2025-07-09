@@ -50,6 +50,16 @@ using namespace catena::REST;
 
 class RESTConnectTest : public RESTEndpointTest {
 protected:
+
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RESTConnectTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
     RESTConnectTest() : RESTEndpointTest() {
         EXPECT_CALL(context_, detailLevel())
             .WillRepeatedly(testing::Return(catena::Device_DetailLevel::Device_DetailLevel_FULL));

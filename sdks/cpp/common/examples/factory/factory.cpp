@@ -37,7 +37,7 @@
 
 // common
 #include <patterns/GenericFactory.h>
-
+#include <Logger.h>
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -77,7 +77,7 @@ class Dog {
   /*
    * Allow derived classes to override the destructor.
    */
-  virtual ~Dog() { std::cout << " whimper..." << std::endl; }
+  virtual ~Dog() { DEBUG_LOG << " whimper..."; }
 
   /*
    * Use defaults for copying and assigning Dogs
@@ -132,7 +132,7 @@ class ConcreteDog : public Dog {
     for (uint32_t i = 0; i < _barkiness; ++i) {
       ans << "bark ";
     }
-    std::cout << ans.str() << std::endl;
+    DEBUG_LOG << ans.str();
   }
 
   /*
@@ -144,7 +144,7 @@ class ConcreteDog : public Dog {
   /*
    * Print out the breed name on destruction
    */
-  ~ConcreteDog() { std::cout << _breed; }
+  ~ConcreteDog() { DEBUG_LOG << _breed; }
 
   /*
    * Factory components must define a maker function that's static,
@@ -192,19 +192,22 @@ bool UniDiDog::_added = UniDiDog::registerWithFactory();
  */
 template <>
 UniDiDog::~ConcreteDog() {
-  std::cout << _breed << " arrrroooooo!";
+  DEBUG_LOG << _breed << " arrrroooooo!";
 }
 
-using std::cout, std::endl;
 int main() {
+  FLAGS_logtostderr = false;          // Keep logging to files
+  FLAGS_log_dir = GLOG_LOGGING_DIR;   // Set the log directory
+  google::InitGoogleLogging("factory");
+  
   try {
     // get instance of the Dog Factory
     Dog::Factory& df = Dog::Factory::getInstance();
 
     // print its inventory
-    // cout << "Dog Factory\n" << df << endl;
+    // DEBUG_LOG << "Dog Factory\n" << df << endl;
 
-    cout << "\nDog Tests" << endl;
+    DEBUG_LOG << "Dog Tests";
 
     /*
      * Create 3 dogs of different types
@@ -221,22 +224,25 @@ int main() {
     (*jackRussell)();
     rabid->operator()();  // alternative syntax
 
-    cout << "\nFactory Test" << endl;
+    DEBUG_LOG << "Factory Test";
     // verify that the factory cannot make goldfish.
     try {
       df.makeProduct("goldfish", "koi carp", 0);
     } catch (std::exception& why) {
-      cout << "Problem: " << why.what() << endl;
+      DEBUG_LOG << "Problem: " << why.what();
     }
 
-    cout << "\nDestructors here..." << endl;
+    DEBUG_LOG << "Destructors here...";
   } catch (std::exception& why) {
     // something went wrong with the example, so exit with non-zero error code
     // this should stop the build
-    cout << "\n\n*** Example failed to run!" << why.what() << "\n\n" << endl;
+    DEBUG_LOG << "*** Example failed to run!" << why.what();
     return 1;
   }
-  return 0;
+  
+    // Shutdown Google Logging
+    google::ShutdownGoogleLogging();
+    return 0;
 }
 
 /* Possible Output

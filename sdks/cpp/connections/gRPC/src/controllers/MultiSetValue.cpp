@@ -30,6 +30,7 @@
 
 // connections/gRPC
 #include <controllers/MultiSetValue.h>
+#include <Logger.h>
 using catena::gRPC::MultiSetValue;
 
 // Initializes the object counter for SetValue to 0.
@@ -55,13 +56,13 @@ void MultiSetValue::create_(bool ok) {
 }
 
 void MultiSetValue::proceed(bool ok) { 
-    std::cout << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
+    DEBUG_LOG << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: "
-                << std::boolalpha << ok << std::endl;
+                << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        std::cout << typeName << "[" << objectId_ << "] cancelled\n";
+        DEBUG_LOG << typeName << "[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
     
@@ -136,7 +137,7 @@ void MultiSetValue::proceed(bool ok) {
          * CatenaServiceImpl.
          */
         case CallStatus::kFinish:
-            std::cout << typeName << "[" << objectId_ << "] finished\n";
+            DEBUG_LOG << typeName << "[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

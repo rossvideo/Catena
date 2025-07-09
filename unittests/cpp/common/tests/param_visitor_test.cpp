@@ -39,32 +39,28 @@
 #include "MockParam.h"
 #include "MockParamDescriptor.h"
 #include "MockDevice.h"
+#include "MockParamVisitor.h"
 #include "CommonTestHelpers.h"
 #include <IDevice.h>
 #include <IParam.h>
 #include <Status.h>
 #include <Authorization.h>
 #include <ParamVisitor.h>
+#include <Logger.h>
 
 using namespace catena::common;
 
-// Mock visitor that records visited parameters and arrays
-class MockParamVisitor : public IParamVisitor {
-public:
-    std::vector<std::string> visitedPaths;
-    std::vector<std::pair<std::string, uint32_t>> visitedArrays;
-
-    void visit(IParam* param, const std::string& path) override {
-        visitedPaths.push_back(path);
-    }
-
-    void visitArray(IParam* param, const std::string& path, uint32_t length) override {
-        visitedArrays.push_back({path, length});
-    }
-};
-
 class ParamVisitorTest : public ::testing::Test {
 protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("ParamVisitorTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
     void SetUp() override {
         device = std::make_unique<MockDevice>();
         mockParam = std::make_unique<MockParam>();
@@ -234,7 +230,7 @@ TEST_F(ParamVisitorTest, VisitNestedParams) {
 
 //Test visiting a parameter with array elements
 TEST_F(ParamVisitorTest, VisitArrayElements) {
-    std::cout << "\n=== VisitArrayElements test started ===" << std::endl;
+    DEBUG_LOG << "\n=== VisitArrayElements test started ===";
 
     // Set up mock param to be an array type
     std::string array_oid = "/test/array";
@@ -277,7 +273,7 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
             } else if (fqoid == array_oid) {
                 setupMockParam(param.get(), array_oid, *array_root.descriptor, true, 2);
             } else {
-                std::cout << "DEBUG TEST: Rejecting invalid path: " << fqoid << std::endl;
+                DEBUG_LOG << "DEBUG TEST: Rejecting invalid path: " << fqoid;
                 status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
                 return nullptr;
             }
@@ -288,15 +284,15 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
     MockParamVisitor visitor;
     ParamVisitor::traverseParams(mockParam.get(), array_oid, *device, visitor);
     
-    std::cout << "\nDEBUG: Visited paths:" << std::endl;
+    DEBUG_LOG << "\nDEBUG: Visited paths:";
     for (size_t i = 0; i < visitor.visitedPaths.size(); ++i) {
-        std::cout << "  " << i << ": " << visitor.visitedPaths[i] << std::endl;
+        DEBUG_LOG << "  " << i << ": " << visitor.visitedPaths[i];
     }
     
-    std::cout << "\nDEBUG: Visited arrays:" << std::endl;
+    DEBUG_LOG << "\nDEBUG: Visited arrays:";
     for (size_t i = 0; i < visitor.visitedArrays.size(); ++i) {
-        std::cout << "  " << i << ": path=" << visitor.visitedArrays[i].first 
-                  << ", length=" << visitor.visitedArrays[i].second << std::endl;
+        DEBUG_LOG << "  " << i << ": path=" << visitor.visitedArrays[i].first 
+                  << ", length=" << visitor.visitedArrays[i].second;
     }
     
     EXPECT_EQ(visitor.visitedPaths.size(), 5);  // Root + 2 array elements + 2 element params
@@ -308,5 +304,5 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
     EXPECT_EQ(visitor.visitedArrays.size(), 1);  // Should have one array visit
     EXPECT_EQ(visitor.visitedArrays[0].first, array_oid);  // Array path
     EXPECT_EQ(visitor.visitedArrays[0].second, 2);  // Array length
-    std::cout << "\n=== VisitArrayElements test completed ===\n" << std::endl;
+    DEBUG_LOG << "\n=== VisitArrayElements test completed ===";
 } 

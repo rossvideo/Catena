@@ -53,23 +53,28 @@
 // protobuf interface
 #include <interface/param.pb.h>
 
+#include <iostream>
+#include <Logger.h>
+
 using namespace catena::common;
 using namespace AudioDeck;
 using catena::common::ParamTag;
-#include <iostream>
-int main() {
+
+int main (int argc, char** argv) {
+    Logger::StartLogging(argc, argv);
+
     // lock the model
     std::lock_guard lg(dm.mutex());
     catena::exception_with_status err{"", catena::StatusCode::OK};
 
     std::unique_ptr<IParam> ip = dm.getParam("/audio_deck", err);
     if (ip == nullptr){
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     catena::Value value;
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    std::cout << "audio_deck: " << value.DebugString() << std::endl;
+    DEBUG_LOG << "audio_deck: " << value.DebugString();
 
     // this line is for demonstrating the fromProto method
     // this should never be done in a real device
@@ -78,12 +83,12 @@ int main() {
 
     ip = dm.getParam("/audio_deck/2", err);
     if (ip == nullptr){
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     value.Clear();
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    std::cout << "audio_deck[2]: " << value.DebugString() << std::endl;
+    DEBUG_LOG << "audio_deck[2]: " << value.DebugString();
 
 
     // add a new audio channel to audio_deck
@@ -91,28 +96,28 @@ int main() {
     value.Clear();
     err = dm.setValue("/audio_deck/-", value);
     if (err.status != catena::StatusCode::OK){
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
-    std::cout << "new audio channel: " << value.DebugString() << std::endl;
+    DEBUG_LOG << "new audio channel: " << value.DebugString();
 
     ip = dm.getParam("/audio_deck/3/eq_list/0/response", err);
     if (ip == nullptr){
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     value.Clear();
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    std::cout << "/audio_deck/1/eq_list/1/response: " << value.DebugString() << std::endl;
+    DEBUG_LOG << "/audio_deck/1/eq_list/1/response: " << value.DebugString();
 
     ip = dm.getParam("/audio_deck/2/eq_list/1/q_factor", err);
     if (ip == nullptr){
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     value.Clear();
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    std::cout << "/audio_deck/2/eq_list/1/q_factor: " << value.DebugString() << std::endl;
+    DEBUG_LOG << "/audio_deck/2/eq_list/1/q_factor: " << value.DebugString();
 
     return EXIT_SUCCESS;
 }

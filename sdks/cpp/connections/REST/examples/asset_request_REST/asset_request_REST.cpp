@@ -61,8 +61,7 @@
 #include <chrono>
 #include <signal.h>
 #include <functional>
-
-#include <iostream>
+#include <Logger.h>
 
 using namespace catena::common;
 
@@ -71,7 +70,7 @@ catena::REST::CatenaServiceImpl *globalApi = nullptr;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        std::cout << "Caught signal " << sig << ", shutting down" << std::endl;
+        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
         if (globalApi != nullptr) {
             globalApi->Shutdown();
             globalApi = nullptr;
@@ -95,20 +94,25 @@ void RunRESTServer() {
         // Creating and running the REST service.
         catena::REST::CatenaServiceImpl api({&dm}, EOPath, authorization, port);
         globalApi = &api;
-        std::cout << "API Version: " << api.version() << std::endl;
-        std::cout << "REST on 0.0.0.0:" << port << std::endl;
+        DEBUG_LOG << "API Version: " << api.version();
+        DEBUG_LOG << "REST on 0.0.0.0:" << port;
                 
         api.run();
     } catch (std::exception &why) {
-        std::cerr << "Problem: " << why.what() << '\n';
+        LOG(ERROR) << "Problem: " << why.what();
     }
 }
 
 int main(int argc, char* argv[]) {
+    Logger::StartLogging(argc, argv);
+
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
     
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
+    
+    // Shutdown Google Logging
+    google::ShutdownGoogleLogging();
     return 0;
 }
