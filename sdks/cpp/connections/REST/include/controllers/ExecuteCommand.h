@@ -42,9 +42,13 @@
 #include <SocketWriter.h>
 #include "interface/ICallData.h"
 
+// Protobuf
+#include <google/protobuf/util/json_util.h>
+
 // common
 #include <Device.h>
 #include <IParam.h>
+#include <Status.h>
 #include <rpc/TimeNow.h>
 
 // boost
@@ -65,6 +69,7 @@ class ExecuteCommand : public ICallData {
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
     using SlotMap = catena::common::SlotMap;
+    using CommandResponder = catena::common::IParamDescriptor::ICommandResponder;
 
     /**
      * @brief Constructor for the ExecuteCommand controller.
@@ -117,7 +122,7 @@ class ExecuteCommand : public ICallData {
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    SSEWriter writer_;
+    std::unique_ptr<ISocketWriter> writer_ = nullptr;
     /**
      * @brief The ISocketReader object.
      */
