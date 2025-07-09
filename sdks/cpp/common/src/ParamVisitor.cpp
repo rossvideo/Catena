@@ -35,7 +35,7 @@ namespace catena {
 namespace common {
 
 // Traverses the parameters of a device and visits each parameter using the visitor
-void ParamVisitor::traverseParams(IParam* param, const std::string& path, IDevice& device, IParamVisitor& visitor) {
+void ParamVisitor::traverseParams(IParam* param, const std::string& path, IDevice& device, IParamVisitor& visitor, Authorizer& authz) {
     if (!param) return;
 
     // First visit the current parameter itself
@@ -56,10 +56,10 @@ void ParamVisitor::traverseParams(IParam* param, const std::string& path, IDevic
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 
                 // Get the parameter for this array index
-                auto indexed_param = device.getParam(indexed_path.toString(true), rc);
-                if (indexed_param) {
+                auto indexed_param = device.getParam(indexed_path.toString(true), rc, authz);
+                if (indexed_param && authz.readAuthz(*indexed_param)) {
                     // Recursively process this array element and all its children
-                    traverseParams(indexed_param.get(), indexed_path.toString(true), device, visitor);
+                    traverseParams(indexed_param.get(), indexed_path.toString(true), device, visitor, authz);
                 }
             }
         }
@@ -82,11 +82,11 @@ void ParamVisitor::traverseParams(IParam* param, const std::string& path, IDevic
         catena::exception_with_status rc{"", catena::StatusCode::OK};
         
         // Get the child parameter
-        auto sub_param = device.getParam(child_path.toString(true), rc);
+        auto sub_param = device.getParam(child_path.toString(true), rc, authz);
         
         // If child exists and we can access it, process it recursively
-        if (rc.status == catena::StatusCode::OK && sub_param) {
-            traverseParams(sub_param.get(), child_path.toString(true), device, visitor);
+        if (rc.status == catena::StatusCode::OK && sub_param && authz.readAuthz(*sub_param)) {
+            traverseParams(sub_param.get(), child_path.toString(true), device, visitor, authz);
         }
     }
 }

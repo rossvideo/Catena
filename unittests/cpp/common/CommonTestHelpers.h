@@ -52,14 +52,17 @@ namespace common {
  * @param descriptor The descriptor to return
  * @param isArray Whether this is an array type (defaults to false)
  * @param size The array size if it's an array type (defaults to 0)
+ * @param scope The scope to return (defaults to monitor)
  */
-inline void setupMockParam(MockParam* param, const std::string& oid, const IParamDescriptor& descriptor, bool isArray = false, uint32_t size = 0) {
+inline void setupMockParam(MockParam* param, const std::string& oid, const IParamDescriptor& descriptor, bool isArray = false, uint32_t size = 0, const std::string& scope = Scopes().getForwardMap().at(Scopes_e::kMonitor)) {
     EXPECT_CALL(*param, getOid())
         .WillRepeatedly(::testing::ReturnRef(oid));
     EXPECT_CALL(*param, getDescriptor())
         .WillRepeatedly(::testing::ReturnRef(descriptor));
     EXPECT_CALL(*param, isArrayType())
         .WillRepeatedly(::testing::Return(isArray));
+    EXPECT_CALL(*param, getScope())
+        .WillRepeatedly(::testing::ReturnRef(scope));
     if (isArray) {
         EXPECT_CALL(*param, size())
             .WillRepeatedly(::testing::Return(size));
@@ -71,7 +74,9 @@ class ParamHierarchyBuilder {
 public:
     struct DescriptorInfo {
         std::shared_ptr<MockParamDescriptor> descriptor;
-        std::unordered_map<std::string, IParamDescriptor*> subParams;
+        std::shared_ptr<std::unordered_map<std::string, IParamDescriptor*>> subParams;
+        std::string oid;
+        DescriptorInfo() : subParams(std::make_shared<std::unordered_map<std::string, IParamDescriptor*>>()) {}
     };
 
     /**
@@ -81,11 +86,12 @@ public:
      */
     static DescriptorInfo createDescriptor(const std::string& oid) {
         DescriptorInfo info;
+        info.oid = oid; 
         info.descriptor = std::make_shared<MockParamDescriptor>();
         EXPECT_CALL(*info.descriptor, getOid())
-            .WillRepeatedly(::testing::ReturnRef(oid));
+            .WillRepeatedly(::testing::ReturnRef(info.oid)); 
         EXPECT_CALL(*info.descriptor, getAllSubParams())
-            .WillRepeatedly(::testing::ReturnRef(info.subParams));
+            .WillRepeatedly(::testing::ReturnRef(*info.subParams));
         return info;
     }
 
@@ -96,7 +102,7 @@ public:
      * @param child The child descriptor
      */
     static void addChild(DescriptorInfo& parent, const std::string& name, DescriptorInfo& child) {
-        parent.subParams[name] = child.descriptor.get();
+        parent.subParams->emplace(name, child.descriptor.get());
     }
 };
 

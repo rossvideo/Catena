@@ -150,7 +150,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_InvalidSlot) {
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
 }
 
-// Test 0.3: Authorization test with valid token
+// Test 0.4: Authorization test with valid token
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_AuthzValid) {
     // Use a valid JWT token that was borrowed from GetValue_test.cpp
     jwsToken_ = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIiOiIxMjM0NTY3"
