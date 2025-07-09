@@ -56,20 +56,24 @@
 #include <interface/param.pb.h>
 
 #include <iostream>
+#include <Logger.h>
+#include <glog/logging.h>
 
 using namespace catena::common;
 using namespace use_constraints;
 using catena::common::ParamTag;
 using catena::common::getParamValue;
 
-int main() {
+int main (int argc, char** argv) {
+    Logger::StartLogging(argc, argv);
+
     // lock the model
     std::lock_guard lg(dm.mutex());
 
     catena::exception_with_status err{"", catena::StatusCode::OK};
     catena::Value value;
     std::string clientScope = "operate";
-
+    std::string debugString;
 
     /**
      * The button param uses an INT_CHOICE constraint to limit the valid values to 0 and 1. This
@@ -80,24 +84,24 @@ int main() {
      */
     std::unique_ptr<IParam> ip = dm.getParam("/button", err);
     if (ip == nullptr){
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     int32_t& button = getParamValue<int32_t>(ip.get());
-    std::cout << "button initial value: " << button << "\n"; // button initial value: 0
+    DEBUG_LOG << "button initial value: " << button; // button initial value: 0
 
     // This is to mimic a setValue call coming from a client
     value.set_int32_value(1); // "On"
     dm.setValue("/button", value);
     // setting button to one of the valid choices will work as usual
-    std::cout << "button set to 1\n";
-    std::cout << "button value: " << button << "\n"; // button value: 1
+    DEBUG_LOG << "button set to 1";
+    DEBUG_LOG << "button value: " << button; // button value: 1
 
     // setting button to an invalid choice will do nothing
     value.set_int32_value(3); // "Invalid choice"
     dm.setValue("/button", value);
-    std::cout << "button set to 3\n";
-    std::cout << "button value: " << button << "\n" << std::endl; // button value: 1
+    DEBUG_LOG << "button set to 3";
+    DEBUG_LOG << "button value: " << button; // button value: 1
 
 
     /**
@@ -110,37 +114,37 @@ int main() {
      */
     ip = dm.getParam("/odd_numbers", err);
     if (ip == nullptr){
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     std::vector<int32_t>& odd_numbers = getParamValue<std::vector<int32_t>>(ip.get());
-    std::cout << "odd_numbers initial value: ";
+    debugString = "odd_numbers initial value: ";
     for (auto& num : odd_numbers) {
-        std::cout << num << " ";
+        debugString += std::to_string(num) + " ";
     }
-    std::cout << "\n"; // odd_numbers initial value: 1 3 5 7 9
+    DEBUG_LOG << debugString; // odd_numbers initial value: 0  2 4 6 8
 
     // Setting an element to a value outside the range will cause it to be constrained to the max/min values
     value.set_int32_value(-2); // below min
     err = dm.setValue("/odd_numbers/2", value);
     if (err.status != catena::StatusCode::OK) { // check for error in case the array has less than 3 elements
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     // setting odd_numbers[2] to a value below the min will cause it to be set to the min value
-    std::cout << "odd_numbers[2] set to -2\n";
-    std::cout << "odd_numbers[2] value: " << odd_numbers[2] << "\n"; // odd_numbers[2] value: 1
+    DEBUG_LOG << "odd_numbers[2] set to -2";
+    DEBUG_LOG << "odd_numbers[2] value: " << odd_numbers[2]; // odd_numbers[2] value: 0
 
     // Constraints also apply when setting the value of the whole array
     std::vector<int32_t> newValue = {8, 12, -6, 3};
     value.mutable_int32_array_values()->mutable_ints()->Assign(newValue.begin(), newValue.end());
     dm.setValue("/odd_numbers", value);
-    std::cout << "odd_numbers set to 8 12 -6 3\n";
-    std::cout << "odd_numbers value: ";
+    DEBUG_LOG << "odd_numbers set to 8 12 -6 3";
+    debugString = "odd_numbers value: ";
     for (auto& num : odd_numbers) {
-        std::cout << num << " ";
+        debugString += std::to_string(num) + " ";
     }
-    std::cout << "\n" << std::endl; // odd_numbers value: 7 9 1 3
+    DEBUG_LOG << debugString; // odd_numbers value: 7 9 1 3 9
 
 
     /**
@@ -151,41 +155,41 @@ int main() {
      */
     ip = dm.getParam("/gain", err);
     if (ip == nullptr){
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     float& gain = getParamValue<float>(ip.get());
-    std::cout << "gain initial value: " << gain << std::endl; // gain initial value: 0.5
+    DEBUG_LOG << "gain initial value: " << gain; // gain initial value: 0.5
     value.set_float32_value(1.5); // within range
     dm.setValue("/gain", value);
-    std::cout << "gain set to 1.5\n";
-    std::cout << "gain value: " << gain << "\n"; // gain value: 1.5
+    DEBUG_LOG << "gain set to 1.5";
+    DEBUG_LOG << "gain value: " << gain; // gain value: 1.5
 
     value.set_float32_value(10.5); // above max
     dm.setValue("/gain", value);
-    std::cout << "gain set to 10.5\n";
-    std::cout << "gain value: " << gain << "\n"; // gain value: 10
+    DEBUG_LOG << "gain set to 10.5";
+    DEBUG_LOG << "gain value: " << gain; // gain value: 10
 
     ip = dm.getParam("/volume_array", err);
     if (ip == nullptr){
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     std::vector<float>& volume = getParamValue<std::vector<float>>(ip.get());
-    std::cout << "volume initial value: ";
+    debugString = "volume initial value: ";
     for (auto& vol : volume) {
-        std::cout << vol << " ";
+        debugString += std::to_string(vol) + " ";
     }
-    std::cout << "\n"; // volume initial value: 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+    DEBUG_LOG << debugString; // volume initial value: 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
     std::vector<float> newVolume = {0.5, 12, -4, 1, 2.1, 3.3, 4.51, 5.751};
     value.mutable_float32_array_values()->mutable_floats()->Assign(newVolume.begin(), newVolume.end());
     dm.setValue("/volume_array", value);
-    std::cout << "volume set to 0.5 12 -4 1 2.1 3.3 4.51 5.751\n";
-    std::cout << "volume value: ";
+    DEBUG_LOG << "volume set to 0.5 12 -4 1 2.1 3.3 4.51 5.751";
+    debugString = "volume value: ";
     for (auto& vol : volume) {
-        std::cout << vol << " ";
+        debugString += std::to_string(vol) + " ";
     }
-    std::cout << "\n" << std::endl; // volume value: 0.5 10.0 0.0 1.0 2.0 3.25 4.5 5.75
+    DEBUG_LOG << debugString; // volume value: 0.5 10.0 0.0 1.0 2.0 3.25 4.5 5.75
 
 
     /**
@@ -196,20 +200,20 @@ int main() {
      */
     ip = dm.getParam("/display_size", err);
     if (ip == nullptr){
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     std::string& display_size = getParamValue<std::string>(ip.get());
-    std::cout << "display_size initial value: " << display_size << std::endl;
+    DEBUG_LOG << "display_size initial value: " << display_size;
     value.set_string_value("small"); // valid choice
     dm.setValue("/display_size", value);
-    std::cout << "display_size set to small\n";
-    std::cout << "display_size value: " << display_size << "\n"; // display_size value: small
+    DEBUG_LOG << "display_size set to small";
+    DEBUG_LOG << "display_size value: " << display_size; // display_size value: small
 
     value.set_string_value("tiny"); // invalid choice
     dm.setValue("/display_size", value);
-    std::cout << "display_size set to tiny\n";
-    std::cout << "display_size value: " << display_size << "\n" << std::endl; // display_size value: small
+    DEBUG_LOG << "display_size set to tiny";
+    DEBUG_LOG << "display_size value: " << display_size;
 
 
     /**
@@ -222,20 +226,20 @@ int main() {
      */
     ip = dm.getParam("/image", err);
     if (ip == nullptr){
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     std::string& image = getParamValue<std::string>(ip.get());
-    std::cout << "image initial value: " << image << std::endl;
+    DEBUG_LOG << "image initial value: " << image;
     value.set_string_value("eo://dog.png"); // valid choice
     dm.setValue("/image", value);
-    std::cout << "image set to dog\n";
-    std::cout << "image value: " << image << "\n"; // image value: eo://dog.png
+    DEBUG_LOG << "image set to dog";
+    DEBUG_LOG << "image value: " << image; // image value: eo://dog.png
 
     value.set_string_value("eo://bird.png"); // invalid choice
     dm.setValue("/image", value);
-    std::cout << "image set to bird\n";
-    std::cout << "image value: " << image << "\n" << std::endl; // image value: eo://bird.png
+    DEBUG_LOG << "image set to bird";
+    DEBUG_LOG << "image value: " << image; // image value: eo://bird.png
 
 
     /**
@@ -248,15 +252,15 @@ int main() {
      */
     ip = dm.getParam("/button_array", err);
     if (ip == nullptr){
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     std::vector<int32_t>& button_array = getParamValue<std::vector<int32_t>>(ip.get());
-    std::cout << "button_array initial value: ";
+    debugString = "button_array initial value: ";
     for (auto& num : button_array) {
-        std::cout << num << " ";
+        debugString += std::to_string(num) + " ";
     }
-    std::cout << "\n"; // button_array initial value: 0 0 0 0
+    DEBUG_LOG << debugString; // button_array initial value: 0 0 0 0
 
     /**
      * If the incomming value has more elemnts than the button_array, the extra elements will be appended
@@ -265,12 +269,12 @@ int main() {
     std::vector<int32_t> arrayVal = {0, 1, -1, 2, 2, 1};
     value.mutable_int32_array_values()->mutable_ints()->Assign(arrayVal.begin(), arrayVal.end());
     dm.setValue("/button_array", value);
-    std::cout << "button_array set to 0 1 -1 2 2 1\n";
-    std::cout << "button_array value: ";
+    DEBUG_LOG << "button_array set to 0 1 -1 2 2 1";
+    debugString = "button_array value: ";
     for (auto& num : button_array) {
-        std::cout << num << " ";
+        debugString += std::to_string(num) + " ";
     }
-    std::cout << "\n" << std::endl; // button_array value: 0 1 0 0 1
+    DEBUG_LOG << debugString; // button_array value: 0 1 0 0 1
 
     return EXIT_SUCCESS;
 }

@@ -181,7 +181,7 @@ void ParamInfoRequest::proceed() {
     } catch (...) {
         rc_ = catena::exception_with_status("Unknown error in ParamInfoRequest", catena::StatusCode::UNKNOWN);
     }
-    
+
     // Writing responses to the client.
     if (responses_.empty()) {
         // If no responses, send at least one response with the error status
@@ -194,7 +194,7 @@ void ParamInfoRequest::proceed() {
     
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << "ParamInfoRequest[" << objectId_ << "] finished\n";
+    DEBUG_LOG << "ParamInfoRequest[" << objectId_ << "] finished\n";
 }
 
 // Helper method to add a parameter to the responses

@@ -98,6 +98,6 @@ void LanguagePack::proceed() {
 
     // Wiring the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << RESTMethodMap().getForwardMap().at(context_.method())
-              << " LanguagePack[" << objectId_ << "] finished\n";
+    DEBUG_LOG << RESTMethodMap().getForwardMap().at(context_.method())
+              << " LanguagePack[" << objectId_ << "] finished";
 }

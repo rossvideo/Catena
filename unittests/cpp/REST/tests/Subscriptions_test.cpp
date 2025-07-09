@@ -49,6 +49,15 @@ using namespace catena::REST;
 // Fixture
 class RESTSubscriptionsTests : public RESTEndpointTest {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RESTSubscriptionsTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
     /*
      * Sets default expectations for the Subscriptions tests.
      */

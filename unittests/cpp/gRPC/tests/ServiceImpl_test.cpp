@@ -55,6 +55,7 @@
 
 // common
 #include <Status.h>
+#include <Logger.h>
 
 using namespace catena::common;
 using namespace catena::gRPC;
@@ -62,6 +63,15 @@ using namespace catena::gRPC;
 // Fixture
 class gRPCServiceImplTests : public testing::Test {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("gRPCServiceImplTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
     /*
      * Redirects cout and creates a grpc server around our service for testing.
      */

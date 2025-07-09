@@ -43,7 +43,7 @@ CatenaServiceImpl::CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOP
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
       router_{Router::getInstance()} {
 
-    if (authorizationEnabled_) { std::cout<<"Authorization enabled."<<std::endl; }
+    if (authorizationEnabled_) { DEBUG_LOG <<"Authorization enabled."; }
     // Adding dms to slotMap.
     for (auto dm : dms) {
         if (dms_.contains(dm->slot())) {
@@ -144,7 +144,7 @@ void CatenaServiceImpl::run() {
             {
                 std::lock_guard<std::mutex> lock(activeRequestMutex_);
                 activeRequests_ -= 1;
-                std::cout<<"Active requests remaining: "<<activeRequests_<<std::endl;
+                DEBUG_LOG<<"Active requests remaining: "<<activeRequests_;
             }
         }).detach();
     }

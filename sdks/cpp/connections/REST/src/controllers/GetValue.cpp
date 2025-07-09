@@ -49,5 +49,5 @@ void GetValue::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << "GetValue[" << objectId_ << "] finished\n";
+    DEBUG_LOG << "GetValue[" << objectId_ << "] finished\n";
 }

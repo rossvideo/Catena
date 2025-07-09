@@ -32,14 +32,14 @@ void AssetRequest::proceed() {
             authz = &catena::common::Authorizer::kAuthzDisabled;
         }
         // Locking device and parsing object data.
-        std::cout << "sending asset: " << context_.fqoid() <<"\n";
+        DEBUG_LOG << "sending asset: " << context_.fqoid() <<"\n";
         std::string path = context_.EOPath();
         path.append(context_.fqoid());
 
         // Check if the file exists
         if (!std::filesystem::exists(path)) {
             std::string notFound = "AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fqoid() + " not found\n";
-            std::cout << notFound;
+            DEBUG_LOG << notFound;
             throw catena::exception_with_status(notFound, catena::StatusCode::NOT_FOUND);
         }
         // Read the file into a byte array
@@ -58,7 +58,7 @@ void AssetRequest::proceed() {
         obj.mutable_payload()->set_payload(file_data.data(), file_data.size()); 
 
         //For now we are sending the whole file in one go
-        std::cout << "AssetRequest[" + std::to_string(objectId_) + "] sent\n";
+        DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] sent\n";
     // ERROR
     } catch (catena::exception_with_status& err) {
         rc = catena::exception_with_status(err.what(), err.status);
@@ -77,5 +77,5 @@ void AssetRequest::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << "AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fqoid() +" finished\n";
+    DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fqoid() +" finished\n";
 }

@@ -47,6 +47,15 @@ using namespace catena::REST;
 // Fixture
 class RESTLanguagesTests : public RESTEndpointTest {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RESTLanguagesTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+    
     RESTLanguagesTests() : RESTEndpointTest() {
         // Default expectations for the device model 1 (should not be called).
         EXPECT_CALL(dm1_, toProto(testing::An<catena::LanguageList&>())).Times(0);

@@ -32,6 +32,13 @@ project(Catena_cpp VERSION 0.0.1 LANGUAGES C CXX)
 get_filename_component(CATENA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.. ABSOLUTE)
 set(CATENA_CPP_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
+find_package(glog REQUIRED)
+# Set default log directory if not provided
+if(NOT DEFINED GLOG_LOGGING_DIR)
+    set(GLOG_LOGGING_DIR "${CMAKE_CURRENT_BINARY_DIR}/logs")
+endif()
+add_compile_definitions(GLOG_LOGGING_DIR="${GLOG_LOGGING_DIR}")
+
 add_compile_options(--coverage)
 add_link_options(--coverage)
 

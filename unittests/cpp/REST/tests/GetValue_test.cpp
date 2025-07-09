@@ -47,6 +47,15 @@ using namespace catena::REST;
 // Fixture
 class RESTGetValueTests : public RESTEndpointTest {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RESTGetValueTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+    
     RESTGetValueTests() : RESTEndpointTest() {
         // Default expectations for the device model 1 (should not be called).
         EXPECT_CALL(dm1_, getValue(testing::_, testing::_, testing::_)).Times(0);

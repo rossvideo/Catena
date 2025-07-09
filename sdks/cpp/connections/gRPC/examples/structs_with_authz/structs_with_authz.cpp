@@ -52,6 +52,7 @@
 #include <thread>
 #include <chrono>
 #include <signal.h>
+#include <Logger.h>
 
 using grpc::Server;
 using catena::gRPC::CatenaServiceImpl;
@@ -64,7 +65,7 @@ std::atomic<bool> globalLoop = true;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        std::cout << "Caught signal " << sig << ", shutting down" << std::endl;
+        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
         globalLoop = false;
         if (globalServer != nullptr) {
             globalServer->Shutdown();
@@ -78,13 +79,13 @@ void handle_signal(int sig) {
 void audioDeckUpdateHandler(const std::string& jptr, const IParam* p) {
     Path oid(jptr);
     if(oid.empty()){
-        std::cout << "*** Whole struct array was updated" << '\n';
+        DEBUG_LOG << "*** Whole struct array was updated";
     } else{
         std::size_t index = oid.front_as_index();
         if (index == Path::kEnd) {
-            std::cout << "*** Index is \"-\", new element added to struct array" << '\n';
+            DEBUG_LOG << "*** Index is \"-\", new element added to struct array";
         } else {
-            std::cout << "*** audio_channel[" << index << "] was updated" << '\n';
+            DEBUG_LOG << "*** audio_channel[" << index << "] was updated";
         }
     }
 
@@ -121,7 +122,7 @@ void RunRPCServer(std::string addr)
         builder.RegisterService(&service);
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
-        std::cout << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms) << '\n';
+        DEBUG_LOG << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
 
         globalServer = server.get();
 
@@ -132,7 +133,7 @@ void RunRPCServer(std::string addr)
         handlers["audio_deck"] = audioDeckUpdateHandler;
 
         dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p) {
-            std::cout << "signal recieved: " << oid << " has been changed by client" << '\n';
+            DEBUG_LOG << "signal recieved: " << oid << " has been changed by client";
 
             // make a copy of the path that we can safely pop segments from
             Path jptr(oid); 
@@ -151,12 +152,14 @@ void RunRPCServer(std::string addr)
         cq_thread.join();
 
     } catch (std::exception &why) {
-        std::cerr << "Problem: " << why.what() << '\n';
+        LOG(ERROR) << "Problem: " << why.what();
     }
 }
 
 int main(int argc, char* argv[])
 {
+    Logger::StartLogging(argc, argv);
+
     std::string addr;
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
@@ -165,5 +168,8 @@ int main(int argc, char* argv[])
   
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
+    
+    // Shutdown Google Logging
+    google::ShutdownGoogleLogging();
     return 0;
 }

@@ -106,5 +106,5 @@ void Connect::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << "Connect[" << objectId_ << "] finished\n";
+    DEBUG_LOG << "Connect[" << objectId_ << "] finished";
 }

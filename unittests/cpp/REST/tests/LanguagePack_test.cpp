@@ -41,12 +41,23 @@
 // REST
 #include "controllers/LanguagePack.h"
 
+#include <Logger.h>
+
 using namespace catena::common;
 using namespace catena::REST;
 
 // Fixture
 class RESTLanguagePackTests : public RESTEndpointTest {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RESTLanguagePackTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+    
     RESTLanguagePackTests() : RESTEndpointTest() {
         // Default expectations for the device model 1 (should not be called).
         EXPECT_CALL(dm1_, getLanguagePack(testing::_, testing::_)).Times(0);

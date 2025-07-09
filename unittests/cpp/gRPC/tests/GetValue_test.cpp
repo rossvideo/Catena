@@ -47,6 +47,15 @@ using namespace catena::gRPC;
 // Fixture
 class gRPCGetValueTests : public GRPCTest {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("gRPCGetValueTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
     /*
      * Creates a GetValue handler object.
      */

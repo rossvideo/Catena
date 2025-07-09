@@ -27,5 +27,5 @@ void GetPopulatedSlots::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << "GetPopulatedSlots[" << objectId_ << "] finished\n";
+    DEBUG_LOG << "GetPopulatedSlots[" << objectId_ << "] finished\n";
 }

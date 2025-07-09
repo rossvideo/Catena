@@ -54,7 +54,9 @@
 #include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
- 
+
+#include <Logger.h>
+
 namespace catena {
 namespace REST {
 
@@ -99,10 +101,9 @@ class GetPopulatedSlots : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << "GetPopulatedSlots::proceed[" << objectId_ << "]: "
+      DEBUG_LOG << "GetPopulatedSlots::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
-                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
-                << std::endl;
+                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok;
     }
  
     /**

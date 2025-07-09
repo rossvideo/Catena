@@ -87,5 +87,5 @@ void DeviceRequest::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
+    DEBUG_LOG << "DeviceRequest[" << objectId_ << "] finished\n";
 }

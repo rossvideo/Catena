@@ -50,6 +50,16 @@ using namespace catena::REST;
 
 class RESTParamInfoRequestTests : public RESTEndpointTest {
 protected:
+    
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RESTParamInfoRequestTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
     RESTParamInfoRequestTests() : RESTEndpointTest() {
         EXPECT_CALL(context_, hasField("recursive")).WillRepeatedly(testing::Return(false));
         // Default expectations for the device model 1 (should not be called).

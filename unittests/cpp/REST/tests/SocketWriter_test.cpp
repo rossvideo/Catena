@@ -35,6 +35,9 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
+// common
+#include <Logger.h>
+
 // Test helpers
 #include "RESTTest.h"
 
@@ -46,6 +49,15 @@ using namespace catena::REST;
 // Fixture
 class RESTSocketWriterTests : public testing::Test, public RESTTest {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RESTSocketWriterTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+    
     RESTSocketWriterTests() : RESTTest(&serverSocket_, &clientSocket_) {
         origin_ = "test-origin.com";
     }

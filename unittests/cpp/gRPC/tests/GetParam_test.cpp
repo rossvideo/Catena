@@ -35,6 +35,9 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
+// common
+#include <Logger.h>
+
 // Test helpers
 #include "GRPCTest.h"
 #include "MockParam.h"
@@ -48,6 +51,15 @@ using namespace catena::gRPC;
 // Fixture
 class gRPCGetParamTests : public GRPCTest {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("gRPCGetParamTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
     /*
      * Creates a GetParam handler object.
      */

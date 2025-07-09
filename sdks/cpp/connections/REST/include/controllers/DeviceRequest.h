@@ -55,6 +55,8 @@
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 
+#include <Logger.h>
+
 namespace catena {
 namespace REST {
 
@@ -101,10 +103,9 @@ class DeviceRequest : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << "DeviceRequest::proceed[" << objectId_ << "]: "
+      DEBUG_LOG << "DeviceRequest::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
-                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
-                << std::endl;
+                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok;
     }
     /**
      * @brief The socket to write the response stream to.

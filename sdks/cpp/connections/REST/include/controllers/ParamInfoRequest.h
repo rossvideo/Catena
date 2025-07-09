@@ -53,6 +53,8 @@
 #include <ParamVisitor.h>
 #include <rpc/TimeNow.h>
 
+#include <Logger.h>
+
 // Forward declarations
 using catena::common::IParam;
 using catena::common::IParamVisitor;
@@ -104,9 +106,9 @@ class ParamInfoRequest : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << "ParamInfoRequest::proceed[" << objectId_ << "]: "
+      DEBUG_LOG << "ParamInfoRequest::proceed[" << objectId_ << "]: "
                 << timeNow() << " status: "<< static_cast<int>(status)
-                <<", ok: "<< std::boolalpha << ok << std::endl;
+                <<", ok: "<< std::boolalpha << ok;
     }
     /**
      * @brief Helper method to add a parameter to the responses

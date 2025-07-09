@@ -11,17 +11,24 @@
 #include <fstream>
 #include <string>
 #include <tuple>
+#include <Logger.h>
+#include "../src/utils.cpp" // Include the file to test
 
 namespace fs = std::filesystem;
 
-// int main(int argc, char** argv) {
-//     ::testing::InitGoogleTest(&argc, argv);
-//     return RUN_ALL_TESTS();
-// }
+class UtilsTest : public ::testing::Test {
+protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("UtilsTest");
+    }
 
-#include "../src/utils.cpp" // Include the file to test
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+};
 
-TEST(utils_tests, ReadFile_Success) {
+TEST(UtilsTest, ReadFile_Success) {
     std::string test_content = "Hello, world!";
     fs::path test_path = "test_file.txt";
     
@@ -39,7 +46,7 @@ TEST(utils_tests, ReadFile_Success) {
     fs::remove(test_path);
 }
 
-TEST(utils_tests, ReadFile_FileNotFound) {
+TEST(UtilsTest, ReadFile_FileNotFound) {
     fs::path test_path = "non_existent_file.txt";
     
     // Expect an exception since the file doesn't exist
@@ -48,31 +55,31 @@ TEST(utils_tests, ReadFile_FileNotFound) {
 
 // SUBS TESTS
 
-TEST(utils_tests, Subs_NormalCase) {
+TEST(UtilsTest, Subs_NormalCase) {
     std::string str = "hello world, world!";
     catena::subs(str, "world", "everyone");
     EXPECT_EQ(str, "hello everyone, everyone!");
 }
 
-TEST(utils_tests, Subs_NoMatch) {
+TEST(UtilsTest, Subs_NoMatch) {
     std::string str = "hello world";
     catena::subs(str, "foo", "bar");
     EXPECT_EQ(str, "hello world"); // No changes should be made
 }
 
-TEST(utils_tests, Subs_EmptyString) {
+TEST(UtilsTest, Subs_EmptyString) {
     std::string str = "";
     catena::subs(str, "foo", "bar");
     EXPECT_EQ(str, ""); // No changes should be made
 }
 
-TEST(utils_tests, Subs_ReplaceWithEmpty) {
+TEST(UtilsTest, Subs_ReplaceWithEmpty) {
     std::string str = "aaa bbb aaa";
     catena::subs(str, "aaa", "");
     EXPECT_EQ(str, " bbb ");
 }
 
-TEST(utils_tests, Subs_EmptySearchString) {
+TEST(UtilsTest, Subs_EmptySearchString) {
     std::string str = "hello world";
     catena::subs(str, "", "bar");
     EXPECT_EQ(str, "hello world"); // No changes should be made
@@ -81,7 +88,7 @@ TEST(utils_tests, Subs_EmptySearchString) {
 
 // SPLIT TESTS
 
-TEST(utils_tests, Split_NormalCase) {
+TEST(UtilsTest, Split_NormalCase) {
     std::vector<std::string> out;
     std::string str = "comma,seperated,values";
     std::vector<std::string> ans = {"comma", "seperated", "values"};
@@ -89,7 +96,7 @@ TEST(utils_tests, Split_NormalCase) {
     EXPECT_EQ(out, ans);
 }
 
-TEST(utils_tests, Split_NoMatch) {
+TEST(UtilsTest, Split_NoMatch) {
     std::vector<std::string> out;
     std::string str = "comma,seperated,values";
     std::vector<std::string> ans = {"comma,seperated,values"};
@@ -97,7 +104,7 @@ TEST(utils_tests, Split_NoMatch) {
     EXPECT_EQ(out, ans);
 }
 
-TEST(utils_tests, Split_EmptyDelim) {
+TEST(UtilsTest, Split_EmptyDelim) {
     std::vector<std::string> out;
     std::string str = "comma,seperated,values";
     std::vector<std::string> ans = {"comma,seperated,values"};
@@ -105,7 +112,7 @@ TEST(utils_tests, Split_EmptyDelim) {
     EXPECT_EQ(out, ans);
 }
 
-TEST(utils_tests, Split_OverwriteVector) {
+TEST(UtilsTest, Split_OverwriteVector) {
     std::vector<std::string> out = {"some", "initial", "values"};
     std::string str = "comma,seperated,values";
     std::vector<std::string> ans = {"comma", "seperated", "values"};

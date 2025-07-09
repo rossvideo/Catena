@@ -42,6 +42,7 @@
 #include "MockDevice.h"
 
 #include "LanguagePack.h"
+#include <Logger.h>
 
 using namespace catena::common;
 
@@ -49,6 +50,14 @@ using namespace catena::common;
 // Fixture
 class LanguagePackTest : public ::testing::Test {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("LanguagePackTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
     // Initializes testPack
     void SetUp() override {
         // Expect a call to dm_.addItem() when initializing testPack_.
