@@ -35,6 +35,9 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
+// common
+#include <Logger.h>
+
 // gtest
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -50,6 +53,15 @@ using namespace catena::REST;
 
 class RESTServiceImplTests : public testing::Test {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RESTServiceImplTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
     /*
      * Redirects cout and creates out service for testing.
      */

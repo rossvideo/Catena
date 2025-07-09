@@ -83,5 +83,5 @@ void ExecuteCommand::proceed() {
 
 void ExecuteCommand::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << "ExecuteCommand[" << objectId_ << "] finished\n";
+    DEBUG_LOG << "ExecuteCommand[" << objectId_ << "] finished\n";
 } 

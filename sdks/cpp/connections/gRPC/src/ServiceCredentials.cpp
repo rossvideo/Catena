@@ -30,7 +30,7 @@
 
 #include <SharedFlags.h>
 #include <ServiceCredentials.h>
-
+#include <Logger.h>
 // catena
 #include <utils.h>
 
@@ -49,7 +49,7 @@ grpc::Status catena::gRPC::JWTAuthMetadataProcessor::Process(const InputMetadata
 
     // remove the 'Bearer ' text from the beginning
     try {
-        std::cout<<"Removed bearer text"<<std::endl;
+        DEBUG_LOG<<"Removed bearer text";
         grpc::string_ref t = authz->second.substr(7);
         std::string token(t.begin(), t.end());
         auto decoded = jwt::decode(token);

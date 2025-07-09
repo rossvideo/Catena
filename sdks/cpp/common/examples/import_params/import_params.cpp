@@ -52,10 +52,12 @@
 // protobuf interface
 #include <interface/param.pb.h>
 
+#include <iostream>
+#include <Logger.h>
+
 using namespace catena::common;
 using namespace import_params;
 using catena::common::ParamTag;
-#include <iostream>
 
 std::string locationToString(const City::Location& location) {
     return "Lat:" +
@@ -69,7 +71,9 @@ std::string locationToString(const City::Location& location) {
            "";
 }
 
-int main() {
+int main (int argc, char** argv) {
+    Logger::StartLogging(argc, argv);
+
     // lock the model
     std::lock_guard lg(dm.mutex());
     catena::exception_with_status err{"", catena::StatusCode::OK};
@@ -81,12 +85,12 @@ int main() {
      */
     std::unique_ptr<catena::common::IParam> p = dm.getParam("/plane_ticket", err);
     if (p == nullptr){
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     Plane_ticket& plane_ticket = getParamValue<Plane_ticket>(p.get());
-    std::cout << "Departure: " << plane_ticket.departure.name << " (" << locationToString(plane_ticket.departure.location) << ")" << std::endl;
-    std::cout << "Destination: " << plane_ticket.destination.name << " (" << locationToString(plane_ticket.destination.location) << ")\n" << std::endl;
+    DEBUG_LOG << "Departure: " << plane_ticket.departure.name << " (" << locationToString(plane_ticket.departure.location) << ")";
+    DEBUG_LOG << "Destination: " << plane_ticket.destination.name << " (" << locationToString(plane_ticket.destination.location) << ")";
 
     /**
      * When a new Plane_ticket is created, the departure subparam is initialized with the value defined in the 
@@ -94,8 +98,8 @@ int main() {
      * the default value defined in the location param.
      */
     Plane_ticket new_plane_ticket;
-    std::cout << "Departure: " << new_plane_ticket.departure.name << " (" << locationToString(new_plane_ticket.departure.location) << ")" << std::endl;
-    std::cout << "Destination: " << new_plane_ticket.destination.name << " (" << locationToString(new_plane_ticket.destination.location) << ")\n" << std::endl;
+    DEBUG_LOG << "Departure: " << new_plane_ticket.departure.name << " (" << locationToString(new_plane_ticket.departure.location) << ")";
+    DEBUG_LOG << "Destination: " << new_plane_ticket.destination.name << " (" << locationToString(new_plane_ticket.destination.location) << ")";
 
     return EXIT_SUCCESS;
 }

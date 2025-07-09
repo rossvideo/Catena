@@ -47,6 +47,15 @@ using namespace catena::REST;
 // Fixture
 class RESTGetPopulatedSlotsTests : public RESTEndpointTest {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RESTGetPopulatedSlotsTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+    
     /*
      * Creates a GetPopulatedSlots handler object.
      */

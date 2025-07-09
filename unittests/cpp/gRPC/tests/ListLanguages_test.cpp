@@ -47,6 +47,15 @@ using namespace catena::gRPC;
 // Fixture
 class gRPCListLanguagesTests : public GRPCTest {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("gRPCListLanguagesTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
     /*
      * Creates a ListLanguages handler object.
      */
