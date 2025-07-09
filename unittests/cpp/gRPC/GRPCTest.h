@@ -77,7 +77,7 @@ class GRPCTest : public ::testing::Test {
      */
     void SetUp() override {
         // Redirecting cout to a stringstream for testing.
-        oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
+        // oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
         
         // Creating the gRPC server.
         builder_.AddListeningPort(serverAddr_, grpc::InsecureServerCredentials());
@@ -134,7 +134,7 @@ class GRPCTest : public ::testing::Test {
         ASSERT_FALSE(testCall_) << "Failed to deregister handler";
         ASSERT_FALSE(asyncCall_) << "Failed to deregister handler";
         // Restoring cout
-        std::cout.rdbuf(oldCout_);
+        // std::cout.rdbuf(oldCout_);
     }
 
     // Cout variables
