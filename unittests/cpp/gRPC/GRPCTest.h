@@ -71,13 +71,31 @@ class GRPCTest : public ::testing::Test {
      * Virtual function which creates a single CallData object for the test.
      */
     virtual void makeOne() = 0;
+
+    /*
+     * Processes events in the server's completion queue.
+     * 
+     * Virtual so that it can be overridden in derived classes if needed.
+     */
+    virtual void processEvents() {
+        void* ignored_tag;
+        bool ok;
+        while (cq_->Next(&ignored_tag, &ok)) {
+            if (!testCall_) {
+                testCall_.swap(asyncCall_);
+            }
+            if (testCall_) {
+                testCall_->proceed(ok);
+            }
+        }
+    }
     
     /*
      * Creates a gRPC server and redirects cout before each test.
      */
     void SetUp() override {
         // Redirecting cout to a stringstream for testing.
-        // oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
+        oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
         
         // Creating the gRPC server.
         builder_.AddListeningPort(serverAddr_, grpc::InsecureServerCredentials());
@@ -104,20 +122,7 @@ class GRPCTest : public ::testing::Test {
         EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(::testing::Invoke([this](){ return authzEnabled_; }));
 
         // Deploying cq handler on a thread.
-        cqthread_ = std::make_unique<std::thread>([&]() {
-            void* ignored_tag;
-            bool ok;
-            while (cq_->Next(&ignored_tag, &ok)) {
-                std::cerr<<"Processing cq event"<<std::endl;
-                if (!testCall_) {
-                    testCall_.swap(asyncCall_);
-                }
-                if (testCall_) {
-                    testCall_->proceed(ok);
-                }
-            }
-            std::cerr<<""<<std::endl;
-        });
+        cqthread_ = std::make_unique<std::thread>([&]{processEvents();});
 
         // Creating the CallData object for testing.
         makeOne();
@@ -136,7 +141,7 @@ class GRPCTest : public ::testing::Test {
         ASSERT_FALSE(testCall_) << "Failed to deregister handler";
         ASSERT_FALSE(asyncCall_) << "Failed to deregister handler";
         // Restoring cout
-        // std::cout.rdbuf(oldCout_);
+        std::cout.rdbuf(oldCout_);
     }
 
     // Cout variables
