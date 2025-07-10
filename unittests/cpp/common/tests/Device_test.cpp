@@ -31,7 +31,7 @@
 /**
  * @brief Unit tests for Device.cpp
  * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
- * @date 2025-01-27
+ * @date 2025-07-10
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -53,7 +53,7 @@ protected:
     void SetUp() override {
         // Create a device with basic parameters
         device_ = std::make_unique<Device>(
-            0,  // slot
+            1,  // slot
             catena::Device_DetailLevel_FULL,  // detail_level
             std::vector<std::string>{"admin"},  // access_scopes
             "admin",  // default_scope
@@ -103,13 +103,307 @@ protected:
 
 // 0.1 - Test device creation
 TEST_F(DeviceTest, Device_Create) {
-    EXPECT_EQ(device_->slot(), 0);
+    EXPECT_EQ(device_->slot(), 1);
     EXPECT_EQ(device_->detail_level(), catena::Device_DetailLevel_FULL);
     EXPECT_TRUE(device_->subscriptions());
     EXPECT_EQ(device_->getDefaultScope(), "admin");
 }
 
 // ======== 1. Multi-Set Tests ========
+
+// --- TryMultiSetValue Tests ---
+
+// 1.1: Success Case - Test Multi-Set Value with Single Value (Multi-Set Enabled)
+TEST_F(DeviceTest, TryMultiSetValue_SingleValueSuccess) {
+    // Create mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockParam.get(), "/param1", mockDescriptor.get(), false, 0, adminScope);
+    
+    // Set up basic expectations for copy() - return mocks that validate successfully
+    EXPECT_CALL(*mockParam, copy())
+        .WillOnce(testing::Invoke([]() { 
+            auto mock = std::make_unique<MockParam>();
+            EXPECT_CALL(*mock, validateSetValue(testing::_, testing::_, testing::_, testing::_))
+                .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, catena::common::Authorizer&, catena::exception_with_status& status) {
+                    status = catena::exception_with_status("", catena::StatusCode::OK);
+                    return true;
+                }));
+            return mock;
+        }))
+        .WillOnce(testing::Invoke([]() { 
+            auto mock = std::make_unique<MockParam>();
+            EXPECT_CALL(*mock, resetValidate())
+                .Times(1);
+            return mock;
+        }));
+    
+    device_->addItem("param1", mockParam.get());
+    
+    // Create a payload with single value (should succeed even with multi-set enabled)
+    catena::MultiSetValuePayload payload;
+    auto* setValue = payload.add_values();
+    setValue->set_oid("/param1");
+    auto* value = setValue->mutable_value();
+    value->set_int32_value(42);
+    
+    // Test the multi-set validation
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    bool result = device_->tryMultiSetValue(payload, status, *adminAuthz_);
+    
+    // Should succeed even with multi-set enabled because there's only one value
+    EXPECT_TRUE(result);
+    EXPECT_EQ(status.status, catena::StatusCode::OK);
+}
+
+// 1.2: Success Case - Test Multi-Set Value with Multiple Valid Parameters
+TEST_F(DeviceTest, TryMultiSetValue_MultipleValuesSuccess) {
+    // Create mock parameters and add them to the device
+    auto mockParam1 = std::make_shared<MockParam>();
+    auto mockParam2 = std::make_shared<MockParam>();
+    auto mockDescriptor1 = std::make_shared<MockParamDescriptor>();
+    auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockParam1.get(), "/param1", mockDescriptor1.get(), false, 0, adminScope);
+    setupMockParam(mockParam2.get(), "/param2", mockDescriptor2.get(), false, 0, adminScope);
+    
+    // Set up basic expectations for copy() - return mocks that validate successfully
+    EXPECT_CALL(*mockParam1, copy())
+        .WillOnce(testing::Invoke([]() { 
+            auto mock = std::make_unique<MockParam>();
+            EXPECT_CALL(*mock, validateSetValue(testing::_, testing::Eq(3), testing::_, testing::_))
+                .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, catena::common::Authorizer&, catena::exception_with_status& status) {
+                    status = catena::exception_with_status("", catena::StatusCode::OK);
+                    return true;
+                }));
+            return mock;
+        }))
+        .WillOnce(testing::Invoke([]() { 
+            auto mock = std::make_unique<MockParam>();
+            EXPECT_CALL(*mock, resetValidate())
+                .Times(1);
+            return mock;
+        }));
+    EXPECT_CALL(*mockParam2, copy())
+        .WillOnce(testing::Invoke([]() { 
+            auto mock = std::make_unique<MockParam>();
+            EXPECT_CALL(*mock, validateSetValue(testing::_, testing::_, testing::_, testing::_))
+                .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, catena::common::Authorizer&, catena::exception_with_status& status) {
+                    status = catena::exception_with_status("", catena::StatusCode::OK);
+                    return true;
+                }));
+            return mock;
+        }))
+        .WillOnce(testing::Invoke([]() { 
+            auto mock = std::make_unique<MockParam>();
+            EXPECT_CALL(*mock, resetValidate())
+                .Times(1);
+            return mock;
+        }));
+    
+    device_->addItem("param1", mockParam1.get());
+    device_->addItem("param2", mockParam2.get());
+    
+    // Create a payload with multiple values
+    catena::MultiSetValuePayload payload;
+    
+    // First value - with path ending in index
+    auto* setValue1 = payload.add_values();
+    setValue1->set_oid("/param1/3");
+    auto* value1 = setValue1->mutable_value();
+    value1->set_int32_value(42);
+    
+    // Second value - regular path
+    auto* setValue2 = payload.add_values();
+    setValue2->set_oid("/param2");
+    auto* value2 = setValue2->mutable_value();
+    value2->set_string_value("test");
+    
+    // Test the multi-set validation
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    bool result = device_->tryMultiSetValue(payload, status, *adminAuthz_);
+    
+    // Should succeed
+    EXPECT_TRUE(result);
+    EXPECT_EQ(status.status, catena::StatusCode::OK);
+}
+
+// 1.3: Error Case - Test Multi-Set Value with Multi-Set Disabled
+TEST_F(DeviceTest, TryMultiSetValue_MultiSetDisabled) {
+    // Create a device with multi-set disabled
+    auto deviceDisabled = std::make_unique<Device>(
+        1,  // slot
+        catena::Device_DetailLevel_FULL,  // detail_level
+        std::vector<std::string>{"admin"},  // access_scopes
+        "admin",  // default_scope
+        false,  // multi_set_enabled - DISABLED
+        true   // subscriptions
+    );
+    
+    // Create a payload with multiple values
+    catena::MultiSetValuePayload payload;
+    
+    // First value
+    auto* setValue1 = payload.add_values();
+    setValue1->set_oid("/param1");
+    auto* value1 = setValue1->mutable_value();
+    value1->set_int32_value(42);
+    
+    // Second value
+    auto* setValue2 = payload.add_values();
+    setValue2->set_oid("/param2");
+    auto* value2 = setValue2->mutable_value();
+    value2->set_string_value("test");
+    
+    // Test the multi-set validation - should fail because multi-set is disabled
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    bool result = deviceDisabled->tryMultiSetValue(payload, status, *adminAuthz_);
+    
+    // Should fail
+    EXPECT_FALSE(result);
+    EXPECT_EQ(status.status, catena::StatusCode::PERMISSION_DENIED);
+    EXPECT_EQ(std::string(status.what()), "Multi-set is disabled for the device in slot 1");
+}
+
+// 1.4: Error Case - Test Multi-Set Value with Non-existent Parameter
+TEST_F(DeviceTest, TryMultiSetValue_NonExistentParameter) {
+    // Create a payload with a non-existent parameter
+    catena::MultiSetValuePayload payload;
+    
+    // First value - non-existent parameter
+    auto* setValue1 = payload.add_values();
+    setValue1->set_oid("/nonexistentParam");
+    auto* value1 = setValue1->mutable_value();
+    value1->set_int32_value(42);
+    
+    // Second value - also non-existent
+    auto* setValue2 = payload.add_values();
+    setValue2->set_oid("/anotherNonexistentParam");
+    auto* value2 = setValue2->mutable_value();
+    value2->set_string_value("test");
+    
+    // Test the multi-set validation
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    bool result = device_->tryMultiSetValue(payload, status, *adminAuthz_);
+    
+    // Should fail because the first parameter doesn't exist
+    EXPECT_FALSE(result);
+    EXPECT_EQ(status.status, catena::StatusCode::NOT_FOUND);
+    EXPECT_EQ(std::string(status.what()), "Param /nonexistentParam does not exist");
+}
+
+// 1.5: Error Case - Test Multi-Set Value with Validation Failure
+TEST_F(DeviceTest, TryMultiSetValue_ValidationFailure) {
+    // Create mock parameters and add them to the device
+    auto mockParam1 = std::make_shared<MockParam>();
+    auto mockParam2 = std::make_shared<MockParam>();
+    auto mockDescriptor1 = std::make_shared<MockParamDescriptor>();
+    auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockParam1.get(), "/param1", mockDescriptor1.get(), false, 0, adminScope);
+    setupMockParam(mockParam2.get(), "/param2", mockDescriptor2.get(), false, 0, adminScope);
+    
+    // Set up expectations for getParam calls - first should fail validation, second should not be called for validation
+    EXPECT_CALL(*mockParam1, copy())
+        .WillOnce(testing::Invoke([]() { 
+            auto mock = std::make_unique<MockParam>();
+            EXPECT_CALL(*mock, validateSetValue(testing::_, testing::_, testing::_, testing::_))
+                .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, catena::common::Authorizer&, catena::exception_with_status& status) {
+                    status = catena::exception_with_status("Validation failed", catena::StatusCode::INVALID_ARGUMENT);
+                    return false;
+                }));
+            return mock;
+        }))
+        .WillOnce(testing::Invoke([]() { 
+            auto mock = std::make_unique<MockParam>();
+            EXPECT_CALL(*mock, resetValidate())
+                .Times(1);
+            return mock;
+        }));
+    // param2 should be called for reset even though validation failed on param1
+    EXPECT_CALL(*mockParam2, copy())
+        .WillOnce(testing::Invoke([]() { 
+            auto mock = std::make_unique<MockParam>();
+            EXPECT_CALL(*mock, resetValidate())
+                .Times(1);
+            return mock;
+        }));
+    
+    device_->addItem("param1", mockParam1.get());
+    device_->addItem("param2", mockParam2.get());
+    
+    // Create a payload with multiple values
+    catena::MultiSetValuePayload payload;
+    
+    // First value
+    auto* setValue1 = payload.add_values();
+    setValue1->set_oid("/param1");
+    auto* value1 = setValue1->mutable_value();
+    value1->set_int32_value(42);
+    
+    // Second value
+    auto* setValue2 = payload.add_values();
+    setValue2->set_oid("/param2");
+    auto* value2 = setValue2->mutable_value();
+    value2->set_string_value("test");
+    
+    // Test the multi-set validation
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    bool result = device_->tryMultiSetValue(payload, status, *adminAuthz_);
+    
+    // Should fail due to validation error
+    EXPECT_FALSE(result);
+    EXPECT_EQ(status.status, catena::StatusCode::INVALID_ARGUMENT);
+    EXPECT_EQ(std::string(status.what()), "Validation failed");
+}
+
+// 1.6: Error Case - Test Multi-Set Value with Catena Exception
+TEST_F(DeviceTest, TryMultiSetValue_CatenaException) {
+    // Create mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockParam.get(), "/param1", mockDescriptor.get(), false, 0, adminScope);
+    
+    // Set up expectations for copy() - throw a catena exception during first copy, second copy for reset
+    EXPECT_CALL(*mockParam, copy())
+        .WillOnce(testing::Invoke([]() -> std::unique_ptr<IParam> {
+            throw catena::exception_with_status("Test catena exception", catena::StatusCode::INTERNAL);
+        }))
+        .WillOnce(testing::Invoke([]() -> std::unique_ptr<IParam> {
+            auto mock = std::make_unique<MockParam>();
+            EXPECT_CALL(*mock, resetValidate())
+                .Times(1);
+            return mock;
+        }));
+    
+    device_->addItem("param1", mockParam.get());
+    
+    // Create a payload with single value
+    catena::MultiSetValuePayload payload;
+    auto* setValue = payload.add_values();
+    setValue->set_oid("/param1");
+    auto* value = setValue->mutable_value();
+    value->set_int32_value(42);
+    
+    // Test the multi-set validation
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    bool result = device_->tryMultiSetValue(payload, status, *adminAuthz_);
+    
+    // Should fail due to catena exception
+    EXPECT_FALSE(result);
+    EXPECT_EQ(status.status, catena::StatusCode::INTERNAL);
+    EXPECT_EQ(std::string(status.what()), "Test catena exception");
+}
 
 // ======== 2. Get/Set Value Tests ========
 
@@ -754,7 +1048,7 @@ TEST_F(DeviceTest, Device_ToProtoShallow) {
     catena::Device proto;
     device_->toProto(proto, *adminAuthz_, true); // shallow copy
     
-    EXPECT_EQ(proto.slot(), 0);
+    EXPECT_EQ(proto.slot(), 1);
     EXPECT_EQ(proto.detail_level(), catena::Device_DetailLevel_FULL);
     EXPECT_TRUE(proto.multi_set_enabled());
     EXPECT_TRUE(proto.subscriptions());

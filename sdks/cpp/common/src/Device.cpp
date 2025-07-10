@@ -47,7 +47,7 @@ using namespace catena::common;
 bool Device::tryMultiSetValue (catena::MultiSetValuePayload src, catena::exception_with_status& ans, Authorizer& authz) {
     // Making sure multi set is enabled.
     if (src.values_size() > 1 && !multi_set_enabled_) {
-        ans = catena::exception_with_status("Multi-set is disabled for the device in slot " + slot_, catena::StatusCode::PERMISSION_DENIED);
+        ans = catena::exception_with_status("Multi-set is disabled for the device in slot " + std::to_string(slot_), catena::StatusCode::PERMISSION_DENIED);
     } else {
         // Looping through and validating set value requests.
         for (const catena::SetValuePayload& setValuePayload : src.values()) {

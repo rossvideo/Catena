@@ -67,6 +67,10 @@ inline void setupMockParam(MockParam* param, const std::string& oid, MockParamDe
         EXPECT_CALL(*param, size())
             .WillRepeatedly(::testing::Return(size));
     }
+    // Set default isCommand for params to be false
+    EXPECT_CALL(*descriptor, isCommand())
+        .WillRepeatedly(::testing::Return(false));
+
 }
 
 // Helper class for setting up parameter hierarchies in tests
