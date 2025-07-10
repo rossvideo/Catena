@@ -63,10 +63,6 @@ inline void setupMockParam(MockParam* param, const std::string& oid, MockParamDe
         .WillRepeatedly(::testing::Return(isArray));
     EXPECT_CALL(*param, getScope())
         .WillRepeatedly(::testing::ReturnRef(scope));
-    EXPECT_CALL(*descriptor, isCommand())
-        .WillRepeatedly(::testing::Return(false));
-    EXPECT_CALL(*descriptor, minimalSet())
-        .WillRepeatedly(::testing::Return(true));
     if (isArray) {
         EXPECT_CALL(*param, size())
             .WillRepeatedly(::testing::Return(size));
