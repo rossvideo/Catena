@@ -91,7 +91,6 @@ void catena::gRPC::Connect::proceed(bool ok) {
             new Connect(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
             try {
-                catena::exception_with_status rc{"", catena::StatusCode::OK};
                 initAuthz_(jwsToken_(), service_->authorizationEnabled());
                 // Set detail level from request
                 detailLevel_ = req_.detail_level();

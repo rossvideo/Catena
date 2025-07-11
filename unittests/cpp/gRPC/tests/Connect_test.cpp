@@ -238,7 +238,7 @@ TEST_F(gRPCConnectTests, Connect_Create) {
  *          mockDevice signals.
  */
 TEST_F(gRPCConnectTests, Connect_ConnectDisconnect) {
-    streamReader_.reset(new StreamReader(&outVals_, &outRc_));
+    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
     streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
     streamReader_->Await();
     testRPC();
@@ -250,14 +250,14 @@ TEST_F(gRPCConnectTests, Connect_ValueSetByClient) {
     expPushValue(0, "oid0", "value0");
     expPushValue(1, "oid1", "value1");
     // Setting expectations
-    EXPECT_CALL(param0, getScope()).WillRepeatedly(testing::ReturnRef(""));
+    EXPECT_CALL(param0, getScope()).WillRepeatedly(testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
     EXPECT_CALL(param0, toProto(testing::An<catena::Value&>(), testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](catena::Value& dst, Authorizer& authz) {
             EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
             dst.set_string_value("value0");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(param1, getScope()).WillRepeatedly(testing::ReturnRef(""));
+    EXPECT_CALL(param1, getScope()).WillRepeatedly(testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
     EXPECT_CALL(param1, toProto(testing::An<catena::Value&>(), testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](catena::Value& dst, Authorizer& authz) {
             EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
@@ -265,7 +265,7 @@ TEST_F(gRPCConnectTests, Connect_ValueSetByClient) {
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
     // Making call
-    streamReader_.reset(new StreamReader(&outVals_, &outRc_));
+    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
     streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
     streamReader_->Await();
     dm0_.valueSetByClient.emit("oid0", &param0);
@@ -281,14 +281,16 @@ TEST_F(gRPCConnectTests, Connect_ValueSetByServer) {
     expPushValue(0, "oid0", "value0");
     expPushValue(1, "oid1", "value1");
     // Setting expectations
-    EXPECT_CALL(param0, getScope()).WillRepeatedly(testing::ReturnRef(""));
+    EXPECT_CALL(param0, getScope()).WillRepeatedly(
+        testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
     EXPECT_CALL(param0, toProto(testing::An<catena::Value&>(), testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](catena::Value& dst, Authorizer& authz) {
             EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
             dst.set_string_value("value0");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(param1, getScope()).WillRepeatedly(testing::ReturnRef(""));
+    EXPECT_CALL(param1, getScope()).WillRepeatedly(
+        testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
     EXPECT_CALL(param1, toProto(testing::An<catena::Value&>(), testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](catena::Value& dst, Authorizer& authz) {
             EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
@@ -296,7 +298,7 @@ TEST_F(gRPCConnectTests, Connect_ValueSetByServer) {
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
     // Making call
-    streamReader_.reset(new StreamReader(&outVals_, &outRc_));
+    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
     streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
     streamReader_->Await();
     dm0_.valueSetByServer.emit("oid0", &param0);
@@ -323,7 +325,7 @@ TEST_F(gRPCConnectTests, Connect_LanguageAddedPushUpdate) {
             (*pack.mutable_words())["key1"] = "value1";
         }));
     // Making call
-    streamReader_.reset(new StreamReader(&outVals_, &outRc_));
+    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
     streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
     streamReader_->Await();
     dm0_.languageAddedPushUpdate.emit(&languagePack0);
@@ -331,4 +333,77 @@ TEST_F(gRPCConnectTests, Connect_LanguageAddedPushUpdate) {
     dm1_.languageAddedPushUpdate.emit(&languagePack1);
     streamReader_->Await();
     testRPC();
+}
+
+TEST_F(gRPCConnectTests, Connect_AuthzValid) {
+    MockParam param0, param1;
+    MockLanguagePack languagePack0, languagePack1;
+    initPayload("en", catena::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
+    expPushValue(0, "oid0", "value0");
+    expPushValue(0, "oid0", "value0");
+    expLanguage(0, "language0", {{"key0", "value0"}});
+    // Adding authorization mockToken metadata. This it a random RSA token
+    authzEnabled_ = true;
+    std::string mockToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIi"
+                            "OiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2Nvc"
+                            "GUiOiJzdDIxMzg6bW9uOncgc3QyMTM4Om9wOncgc3QyMTM4Om"
+                            "NmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MTUxNjIzOTAyMiw"
+                            "ibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dTo"
+                            "krEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko965"
+                            "3v0khyUT4UKeOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKH"
+                            "kWi4P3-CYWrwe-g6b4-a33Q0k6tSGI1hGf2bA9cRYr-VyQ_T3"
+                            "RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEmuIwNOVM3EcVEaL"
+                            "yISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg_w"
+                            "bOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9M"
+                            "dvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
+    clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
+    // Setting expectations
+    EXPECT_CALL(param0, getScope()).WillRepeatedly(
+        testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
+    EXPECT_CALL(param0, toProto(testing::An<catena::Value&>(), testing::_)).Times(2)
+        .WillRepeatedly(testing::Invoke([this](catena::Value& dst, Authorizer& authz) {
+            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            dst.set_string_value("value0");
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    EXPECT_CALL(languagePack0, toProto(testing::_)).Times(1)
+        .WillOnce(testing::Invoke([](catena::LanguagePack &pack) {
+            pack.set_name("language0");
+            (*pack.mutable_words())["key0"] = "value0";
+        }));
+    // Making call
+    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
+    streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
+    streamReader_->Await();
+    dm0_.valueSetByClient.emit("oid0", &param0);
+    streamReader_->Await();
+    dm0_.valueSetByServer.emit("oid0", &param0);
+    streamReader_->Await();
+    dm0_.languageAddedPushUpdate.emit(&languagePack0);
+    streamReader_->Await();
+    testRPC();
+}
+
+TEST_F(gRPCConnectTests, Connect_AuthzInvalid) {
+    expRc_ = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
+    // Not a token so it should get rejected by the authorizer
+    authzEnabled_ = true;
+    clientContext_.AddMetadata("authorization", "Bearer THIS SHOULD NOT PARSE");
+    // Making call
+    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
+    streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
+    streamReader_->Await();
+    streamReader_.reset(nullptr);
+}
+
+TEST_F(gRPCConnectTests, Connect_AuthzJWSNotFound) {
+    expRc_ = catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
+    // Should not be able to find the bearer token
+    authzEnabled_ = true;
+    clientContext_.AddMetadata("authorization", "NOT A BEARER TOKEN");
+    // Making call
+    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
+    streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
+    streamReader_->Await();
+    streamReader_.reset(nullptr);
 }
