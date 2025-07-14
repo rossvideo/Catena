@@ -14,14 +14,18 @@ var classcatena_1_1common_1_1IDevice =
     [ "default_total_length", "classcatena_1_1common_1_1IDevice.html#af0932dc3bb5bb73dda7db8679b00a831", null ],
     [ "detail_level", "classcatena_1_1common_1_1IDevice.html#a01f4337f08896e3add24fdf57ec6afb3", null ],
     [ "detail_level", "classcatena_1_1common_1_1IDevice.html#afb60030c822f844ea26021c88e561e87", null ],
+    [ "getAssetRequest", "classcatena_1_1common_1_1IDevice.html#a4d383890acfe1fb7f22a2d4341672d94", null ],
     [ "getCommand", "classcatena_1_1common_1_1IDevice.html#accf44b99feeb6eb71ea40c2e151890a5", null ],
     [ "getComponentSerializer", "classcatena_1_1common_1_1IDevice.html#a02c4d9fea9e09915d7f609510fdaf7c9", null ],
     [ "getDefaultScope", "classcatena_1_1common_1_1IDevice.html#a35c2f0ae42226e16579d8b54214d368b", null ],
+    [ "getLanguageAddedPushUpdate", "classcatena_1_1common_1_1IDevice.html#aec8f8eb9cb3692eab411bf5327e8c34b", null ],
     [ "getLanguagePack", "classcatena_1_1common_1_1IDevice.html#ad6c4856988084e9f0b71b9fca4cb1c63", null ],
     [ "getParam", "classcatena_1_1common_1_1IDevice.html#a758a5060fde67304ed1a371318d38432", null ],
     [ "getParam", "classcatena_1_1common_1_1IDevice.html#ab32c92e2d64e1797dd4f20289d822158", null ],
     [ "getTopLevelParams", "classcatena_1_1common_1_1IDevice.html#a01f5486b4a592d4592585ed218e4f11d", null ],
     [ "getValue", "classcatena_1_1common_1_1IDevice.html#afc52e8ece30cd01b428c6a14c855b5d3", null ],
+    [ "getValueSetByClient", "classcatena_1_1common_1_1IDevice.html#a7113faaf384c1a3faac27c1537ec4e92", null ],
+    [ "getValueSetByServer", "classcatena_1_1common_1_1IDevice.html#aa365bd7809bfe119412de8869f11b500", null ],
     [ "hasLanguage", "classcatena_1_1common_1_1IDevice.html#a9cb9b1f50c7202228f1c99d43b03844c", null ],
     [ "mutex", "classcatena_1_1common_1_1IDevice.html#adaa519c4733f2b22d84d313e0965de28", null ],
     [ "removeLanguage", "classcatena_1_1common_1_1IDevice.html#ae47e93d33564e6c9bc702dc9545da921", null ],
@@ -35,8 +39,5 @@ var classcatena_1_1common_1_1IDevice =
     [ "toProto", "classcatena_1_1common_1_1IDevice.html#a1415587e6e966386507c825b3014bc6a", null ],
     [ "toProto", "classcatena_1_1common_1_1IDevice.html#a20b966db2c4deee23e2da500be62fe4e", null ],
     [ "toProto", "classcatena_1_1common_1_1IDevice.html#a87aeb86d17cd61768f1868531d70d607", null ],
-    [ "tryMultiSetValue", "classcatena_1_1common_1_1IDevice.html#ab152733e66bbdf4e0486fb69956f0f91", null ],
-    [ "languageAddedPushUpdate", "classcatena_1_1common_1_1IDevice.html#ae5382de470c68d7b91307267b017ff08", null ],
-    [ "valueSetByClient", "classcatena_1_1common_1_1IDevice.html#a82bdd242af55b872dece8c193e18f7d8", null ],
-    [ "valueSetByServer", "classcatena_1_1common_1_1IDevice.html#aba2be3e452ebab8089babf28b9e3f411", null ]
+    [ "tryMultiSetValue", "classcatena_1_1common_1_1IDevice.html#ab152733e66bbdf4e0486fb69956f0f91", null ]
 ];

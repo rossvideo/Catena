@@ -253,6 +253,18 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~Device</b> ()=def
 <tr class="memitem:a766e4d7496590f163280af23e1206718" id="r_a766e4d7496590f163280af23e1206718"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a766e4d7496590f163280af23e1206718">shouldSendParam</a> (const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &amp;param, bool is_subscribed, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const override</td></tr>
 <tr class="memdesc:a766e4d7496590f163280af23e1206718"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if a parameter should be sent based on detail level and authorization  <br /></td></tr>
 <tr class="separator:a766e4d7496590f163280af23e1206718"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adbae70c7d6b3db45356cd6e6cf0bca95" id="r_adbae70c7d6b3db45356cd6e6cf0bca95"><td class="memItemLeft" align="right" valign="top">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#adbae70c7d6b3db45356cd6e6cf0bca95">getValueSetByClient</a> () override</td></tr>
+<tr class="memdesc:adbae70c7d6b3db45356cd6e6cf0bca95"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the signal emitted when a value is set by the client.  <br /></td></tr>
+<tr class="separator:adbae70c7d6b3db45356cd6e6cf0bca95"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e20304b867558c7fd77a8cf9cb7d627" id="r_a0e20304b867558c7fd77a8cf9cb7d627"><td class="memItemLeft" align="right" valign="top">vdk::signal&lt; void(const <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a0e20304b867558c7fd77a8cf9cb7d627">getLanguageAddedPushUpdate</a> () override</td></tr>
+<tr class="memdesc:a0e20304b867558c7fd77a8cf9cb7d627"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the signal emitted when a language pack is added to the device.  <br /></td></tr>
+<tr class="separator:a0e20304b867558c7fd77a8cf9cb7d627"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac7d2618b26fdf77883c88a5583e0eb26" id="r_ac7d2618b26fdf77883c88a5583e0eb26"><td class="memItemLeft" align="right" valign="top">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ac7d2618b26fdf77883c88a5583e0eb26">getValueSetByServer</a> () override</td></tr>
+<tr class="memdesc:ac7d2618b26fdf77883c88a5583e0eb26"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the signal emitted when a value is set by the server, or business logic.  <br /></td></tr>
+<tr class="separator:ac7d2618b26fdf77883c88a5583e0eb26"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3951fab597be8f5175bc623fb0405e9" id="r_ae3951fab597be8f5175bc623fb0405e9"><td class="memItemLeft" align="right" valign="top">vdk::signal&lt; void(const std::string &amp;)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ae3951fab597be8f5175bc623fb0405e9">getAssetRequest</a> () override</td></tr>
+<tr class="memdesc:ae3951fab597be8f5175bc623fb0405e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the asset request signal  <br /></td></tr>
+<tr class="separator:ae3951fab597be8f5175bc623fb0405e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classcatena_1_1common_1_1IDevice"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classcatena_1_1common_1_1IDevice')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a></td></tr>
 <tr class="memitem:ac71fc03628cf95184ea9f4c0bd761a65 inherit pub_methods_classcatena_1_1common_1_1IDevice" id="r_ac71fc03628cf95184ea9f4c0bd761a65"><td class="memItemLeft" align="right" valign="top">
 &#160;</td><td class="memItemRight" valign="bottom"><b>IDevice</b> ()=default</td></tr>
@@ -262,22 +274,6 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~Device</b> ()=def
 virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IDevice</b> ()=default</td></tr>
 <tr class="memdesc:abebb94b11714c5df3cd66dd0783d4dc5 inherit pub_methods_classcatena_1_1common_1_1IDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy the <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a> object. <br /></td></tr>
 <tr class="separator:abebb94b11714c5df3cd66dd0783d4dc5 inherit pub_methods_classcatena_1_1common_1_1IDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
-Additional Inherited Members</h2></td></tr>
-<tr class="inherit_header pub_attribs_classcatena_1_1common_1_1IDevice"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_classcatena_1_1common_1_1IDevice')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a></td></tr>
-<tr class="memitem:a82bdd242af55b872dece8c193e18f7d8 inherit pub_attribs_classcatena_1_1common_1_1IDevice" id="r_a82bdd242af55b872dece8c193e18f7d8"><td class="memItemLeft" align="right" valign="top">
-vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *)&gt;&#160;</td><td class="memItemRight" valign="bottom"><b>valueSetByClient</b></td></tr>
-<tr class="memdesc:a82bdd242af55b872dece8c193e18f7d8 inherit pub_attribs_classcatena_1_1common_1_1IDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a value is set by the client. Intended recipient is the business logic. <br /></td></tr>
-<tr class="separator:a82bdd242af55b872dece8c193e18f7d8 inherit pub_attribs_classcatena_1_1common_1_1IDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae5382de470c68d7b91307267b017ff08 inherit pub_attribs_classcatena_1_1common_1_1IDevice" id="r_ae5382de470c68d7b91307267b017ff08"><td class="memItemLeft" align="right" valign="top">
-vdk::signal&lt; void(const <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *)&gt;&#160;</td><td class="memItemRight" valign="bottom"><b>languageAddedPushUpdate</b></td></tr>
-<tr class="memdesc:ae5382de470c68d7b91307267b017ff08 inherit pub_attribs_classcatena_1_1common_1_1IDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a language pack is added to the device. Intended recipient is the business logic. <br /></td></tr>
-<tr class="separator:ae5382de470c68d7b91307267b017ff08 inherit pub_attribs_classcatena_1_1common_1_1IDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aba2be3e452ebab8089babf28b9e3f411 inherit pub_attribs_classcatena_1_1common_1_1IDevice" id="r_aba2be3e452ebab8089babf28b9e3f411"><td class="memItemLeft" align="right" valign="top">
-vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *)&gt;&#160;</td><td class="memItemRight" valign="bottom"><b>valueSetByServer</b></td></tr>
-<tr class="memdesc:aba2be3e452ebab8089babf28b9e3f411 inherit pub_attribs_classcatena_1_1common_1_1IDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a value is set by the server, or business logic. Intended recipient is the connection manager. <br /></td></tr>
-<tr class="separator:aba2be3e452ebab8089babf28b9e3f411 inherit pub_attribs_classcatena_1_1common_1_1IDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Implements the <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a> interface defined in the protobuf. </p>
@@ -717,6 +713,36 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
+<a id="ae3951fab597be8f5175bc623fb0405e9" name="ae3951fab597be8f5175bc623fb0405e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae3951fab597be8f5175bc623fb0405e9">&#9670;&#160;</a></span>getAssetRequest()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">vdk::signal&lt; void(const std::string &amp;)&gt; &amp; catena::common::Device::getAssetRequest </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>get the asset request signal </p>
+<dl class="section return"><dt>Returns</dt><dd>the signal </dd></dl>
+
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a4d383890acfe1fb7f22a2d4341672d94">catena::common::IDevice</a>.</p>
+
+</div>
+</div>
 <a id="ad8bd07b2ced46650127f0bb2e238c1b9" name="ad8bd07b2ced46650127f0bb2e238c1b9"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad8bd07b2ced46650127f0bb2e238c1b9">&#9670;&#160;</a></span>getCommand()</h2>
 
@@ -945,6 +971,36 @@ template&lt;typename TAG &gt; </div>
 <dl class="section return"><dt>Returns</dt><dd>nullptr if the item is not found, otherwise the item </dd></dl>
 
 <p class="reference">References <a class="el" href="Tags_8h.html#a764e6373739edd434886539928e91f7a">GET_ITEM</a>.</p>
+
+</div>
+</div>
+<a id="a0e20304b867558c7fd77a8cf9cb7d627" name="a0e20304b867558c7fd77a8cf9cb7d627"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e20304b867558c7fd77a8cf9cb7d627">&#9670;&#160;</a></span>getLanguageAddedPushUpdate()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">vdk::signal&lt; void(const <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *)&gt; &amp; catena::common::Device::getLanguageAddedPushUpdate </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>get the signal emitted when a language pack is added to the device. </p>
+<dl class="section return"><dt>Returns</dt><dd>the signal </dd></dl>
+
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#aec8f8eb9cb3692eab411bf5327e8c34b">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
@@ -1208,6 +1264,66 @@ template&lt;typename TAG &gt; </div>
 <dl class="section return"><dt>Returns</dt><dd>an <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error. Intention is to for GetValue RPCs / API calls to be serviced by this method. </dd></dl>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#afc52e8ece30cd01b428c6a14c855b5d3">catena::common::IDevice</a>.</p>
+
+</div>
+</div>
+<a id="adbae70c7d6b3db45356cd6e6cf0bca95" name="adbae70c7d6b3db45356cd6e6cf0bca95"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adbae70c7d6b3db45356cd6e6cf0bca95">&#9670;&#160;</a></span>getValueSetByClient()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *)&gt; &amp; catena::common::Device::getValueSetByClient </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>get the signal emitted when a value is set by the client. </p>
+<dl class="section return"><dt>Returns</dt><dd>the signal </dd></dl>
+
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a7113faaf384c1a3faac27c1537ec4e92">catena::common::IDevice</a>.</p>
+
+</div>
+</div>
+<a id="ac7d2618b26fdf77883c88a5583e0eb26" name="ac7d2618b26fdf77883c88a5583e0eb26"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac7d2618b26fdf77883c88a5583e0eb26">&#9670;&#160;</a></span>getValueSetByServer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *)&gt; &amp; catena::common::Device::getValueSetByServer </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>get the signal emitted when a value is set by the server, or business logic. </p>
+<dl class="section return"><dt>Returns</dt><dd>the signal </dd></dl>
+
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#aa365bd7809bfe119412de8869f11b500">catena::common::IDevice</a>.</p>
 
 </div>
 </div>

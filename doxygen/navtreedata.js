@@ -131,11 +131,11 @@ var NAVTREEINDEX =
 "AddLanguage_8h.html",
 "classcatena_1_1REST_1_1AssetRequest.html#ab54dd1582bd7bd946fce1fddf0b7632d",
 "classcatena_1_1common_1_1Authorizer.html#ae9960a775fac6bc42d22559e2f764eda",
-"classcatena_1_1common_1_1IMenu.html#a2e700a6d84c3377724202e0c8fa745a8",
-"classcatena_1_1common_1_1ParamDescriptor.html#a318e77afa7093262a879c4228e66a5dd",
-"classcatena_1_1gRPC_1_1CallData.html#aed7ce6ff9696b9201c0375318a4d839d",
-"classcatena_1_1patterns_1_1EnumDecorator.html#aab694717d516882e456c63a9ba2104a9",
-"namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a6f38e6fade54bc708b875c87d4ccb38f"
+"classcatena_1_1common_1_1ILanguagePack.html#a3e6a4f733927ce286195246e666f8c9f",
+"classcatena_1_1common_1_1NamedChoiceConstraint.html#afd18f2b92cd389d887a82523faa3686f",
+"classcatena_1_1gRPC_1_1AddLanguage.html#a69d4c47066d33bd5d18aea939fccb151",
+"classcatena_1_1patterns_1_1EnumDecorator.html#a57716f5cc9852c264ec2adfef3a4408f",
+"namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a37725e080fa541b79a5397e8e1942feb"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

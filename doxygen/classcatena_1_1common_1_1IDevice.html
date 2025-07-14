@@ -94,7 +94,6 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1IDevice.html'
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="classcatena_1_1common_1_1IDevice-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">catena::common::IDevice Class Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div></div>
 </div><!--header-->
@@ -230,21 +229,18 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IDevice</b> ()=de
 <tr class="memitem:af36964314a102e8d8a16931979f4c6d9" id="r_af36964314a102e8d8a16931979f4c6d9"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#af36964314a102e8d8a16931979f4c6d9">shouldSendParam</a> (const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &amp;param, bool is_subscribed, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const =0</td></tr>
 <tr class="memdesc:af36964314a102e8d8a16931979f4c6d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if a parameter should be sent based on detail level and authorization  <br /></td></tr>
 <tr class="separator:af36964314a102e8d8a16931979f4c6d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:a82bdd242af55b872dece8c193e18f7d8" id="r_a82bdd242af55b872dece8c193e18f7d8"><td class="memItemLeft" align="right" valign="top"><a id="a82bdd242af55b872dece8c193e18f7d8" name="a82bdd242af55b872dece8c193e18f7d8"></a>
-vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *)&gt;&#160;</td><td class="memItemRight" valign="bottom"><b>valueSetByClient</b></td></tr>
-<tr class="memdesc:a82bdd242af55b872dece8c193e18f7d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a value is set by the client. Intended recipient is the business logic. <br /></td></tr>
-<tr class="separator:a82bdd242af55b872dece8c193e18f7d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae5382de470c68d7b91307267b017ff08" id="r_ae5382de470c68d7b91307267b017ff08"><td class="memItemLeft" align="right" valign="top"><a id="ae5382de470c68d7b91307267b017ff08" name="ae5382de470c68d7b91307267b017ff08"></a>
-vdk::signal&lt; void(const <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *)&gt;&#160;</td><td class="memItemRight" valign="bottom"><b>languageAddedPushUpdate</b></td></tr>
-<tr class="memdesc:ae5382de470c68d7b91307267b017ff08"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a language pack is added to the device. Intended recipient is the business logic. <br /></td></tr>
-<tr class="separator:ae5382de470c68d7b91307267b017ff08"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aba2be3e452ebab8089babf28b9e3f411" id="r_aba2be3e452ebab8089babf28b9e3f411"><td class="memItemLeft" align="right" valign="top"><a id="aba2be3e452ebab8089babf28b9e3f411" name="aba2be3e452ebab8089babf28b9e3f411"></a>
-vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *)&gt;&#160;</td><td class="memItemRight" valign="bottom"><b>valueSetByServer</b></td></tr>
-<tr class="memdesc:aba2be3e452ebab8089babf28b9e3f411"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a value is set by the server, or business logic. Intended recipient is the connection manager. <br /></td></tr>
-<tr class="separator:aba2be3e452ebab8089babf28b9e3f411"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7113faaf384c1a3faac27c1537ec4e92" id="r_a7113faaf384c1a3faac27c1537ec4e92"><td class="memItemLeft" align="right" valign="top">virtual vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a7113faaf384c1a3faac27c1537ec4e92">getValueSetByClient</a> ()=0</td></tr>
+<tr class="memdesc:a7113faaf384c1a3faac27c1537ec4e92"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a value is set by the client. Intended recipient is the business logic.  <br /></td></tr>
+<tr class="separator:a7113faaf384c1a3faac27c1537ec4e92"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec8f8eb9cb3692eab411bf5327e8c34b" id="r_aec8f8eb9cb3692eab411bf5327e8c34b"><td class="memItemLeft" align="right" valign="top">virtual vdk::signal&lt; void(const <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#aec8f8eb9cb3692eab411bf5327e8c34b">getLanguageAddedPushUpdate</a> ()=0</td></tr>
+<tr class="memdesc:aec8f8eb9cb3692eab411bf5327e8c34b"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a language pack is added to the device. Intended recipient is the business logic.  <br /></td></tr>
+<tr class="separator:aec8f8eb9cb3692eab411bf5327e8c34b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa365bd7809bfe119412de8869f11b500" id="r_aa365bd7809bfe119412de8869f11b500"><td class="memItemLeft" align="right" valign="top">virtual vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#aa365bd7809bfe119412de8869f11b500">getValueSetByServer</a> ()=0</td></tr>
+<tr class="memdesc:aa365bd7809bfe119412de8869f11b500"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a value is set by the server, or business logic. Intended recipient is the connection manager.  <br /></td></tr>
+<tr class="separator:aa365bd7809bfe119412de8869f11b500"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d383890acfe1fb7f22a2d4341672d94" id="r_a4d383890acfe1fb7f22a2d4341672d94"><td class="memItemLeft" align="right" valign="top">virtual vdk::signal&lt; void(const std::string &amp;)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a4d383890acfe1fb7f22a2d4341672d94">getAssetRequest</a> ()=0</td></tr>
+<tr class="memdesc:a4d383890acfe1fb7f22a2d4341672d94"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when an asset request is made. Intended recipient is the business logic.  <br /></td></tr>
+<tr class="separator:a4d383890acfe1fb7f22a2d4341672d94"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface class for <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a>. </p>
@@ -660,6 +656,35 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
+<a id="a4d383890acfe1fb7f22a2d4341672d94" name="a4d383890acfe1fb7f22a2d4341672d94"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4d383890acfe1fb7f22a2d4341672d94">&#9670;&#160;</a></span>getAssetRequest()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual vdk::signal&lt; void(const std::string &amp;)&gt; &amp; catena::common::IDevice::getAssetRequest </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>signal emitted when an asset request is made. Intended recipient is the business logic. </p>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#ae3951fab597be8f5175bc623fb0405e9">catena::common::Device</a>.</p>
+
+</div>
+</div>
 <a id="accf44b99feeb6eb71ea40c2e151890a5" name="accf44b99feeb6eb71ea40c2e151890a5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#accf44b99feeb6eb71ea40c2e151890a5">&#9670;&#160;</a></span>getCommand()</h2>
 
@@ -804,6 +829,35 @@ Here is the caller graph for this function:</div>
 <p>Returns the device's default scope. </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#ab52d0101133233dcdb54d381675a24e9">catena::common::Device</a>.</p>
+
+</div>
+</div>
+<a id="aec8f8eb9cb3692eab411bf5327e8c34b" name="aec8f8eb9cb3692eab411bf5327e8c34b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aec8f8eb9cb3692eab411bf5327e8c34b">&#9670;&#160;</a></span>getLanguageAddedPushUpdate()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual vdk::signal&lt; void(const <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *)&gt; &amp; catena::common::IDevice::getLanguageAddedPushUpdate </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>signal emitted when a language pack is added to the device. Intended recipient is the business logic. </p>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#a0e20304b867558c7fd77a8cf9cb7d627">catena::common::Device</a>.</p>
 
 </div>
 </div>
@@ -1067,6 +1121,64 @@ Here is the caller graph for this function:</div>
 <dl class="section return"><dt>Returns</dt><dd>an <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error. Intention is to for GetValue RPCs / API calls to be serviced by this method. </dd></dl>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#abd8593ef03bc63539bd551abee1b5537">catena::common::Device</a>.</p>
+
+</div>
+</div>
+<a id="a7113faaf384c1a3faac27c1537ec4e92" name="a7113faaf384c1a3faac27c1537ec4e92"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7113faaf384c1a3faac27c1537ec4e92">&#9670;&#160;</a></span>getValueSetByClient()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *)&gt; &amp; catena::common::IDevice::getValueSetByClient </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>signal emitted when a value is set by the client. Intended recipient is the business logic. </p>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#adbae70c7d6b3db45356cd6e6cf0bca95">catena::common::Device</a>.</p>
+
+</div>
+</div>
+<a id="aa365bd7809bfe119412de8869f11b500" name="aa365bd7809bfe119412de8869f11b500"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa365bd7809bfe119412de8869f11b500">&#9670;&#160;</a></span>getValueSetByServer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *)&gt; &amp; catena::common::IDevice::getValueSetByServer </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>signal emitted when a value is set by the server, or business logic. Intended recipient is the connection manager. </p>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#ac7d2618b26fdf77883c88a5583e0eb26">catena::common::Device</a>.</p>
 
 </div>
 </div>
