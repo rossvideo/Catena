@@ -44,6 +44,8 @@
 #include <mocks/MockLanguagePack.h>
 #include <mocks/MockParam.h>
 #include <mocks/MockParamDescriptor.h>
+#include <mocks/MockConstraint.h>
+#include <mocks/MockMenuGroup.h>
 #include <CommonTestHelpers.h>
 
 using namespace catena::common;
@@ -1315,17 +1317,856 @@ TEST_F(DeviceTest, GetCommand_Exception) {
     EXPECT_EQ(result, nullptr);
 }
 
-// ======== 5. Serialization Tests ========
-// Covers toProto calls, getComponentSerializer, and getDeviceSerializer
+// ======== 5. toProto Tests ========
 
-// 5.1 - Test shallow toProto serialization
-TEST_F(DeviceTest, Device_ToProtoShallow) {
-    catena::Device proto;
-    device_->toProto(proto, *adminAuthz_, true); // shallow copy
+// --- Base toProto Device Tests ---
+
+// 5.1 - Test shallow vs deep toProto serialization
+TEST_F(DeviceTest, Device_ToProtoShallowVsDeep) {
+    // Test shallow copy - should only serialize basic properties
+    catena::Device shallowProto;
+    device_->toProto(shallowProto, *adminAuthz_, true); // shallow copy
     
+    EXPECT_EQ(shallowProto.slot(), 1);
+    EXPECT_EQ(shallowProto.detail_level(), catena::Device_DetailLevel_FULL);
+    EXPECT_TRUE(shallowProto.multi_set_enabled());
+    EXPECT_TRUE(shallowProto.subscriptions());
+    EXPECT_EQ(shallowProto.default_scope(), "admin");
+    
+    // Verify shallow copy does NOT serialize collections
+    EXPECT_EQ(shallowProto.params_size(), 0);
+    EXPECT_EQ(shallowProto.commands_size(), 0);
+    EXPECT_EQ(shallowProto.constraints_size(), 0);
+    EXPECT_EQ(shallowProto.menu_groups_size(), 0);
+    EXPECT_EQ(shallowProto.language_packs().packs_size(), 0);
+    
+    // Test deep copy - should serialize everything
+    catena::Device deepProto;
+    device_->toProto(deepProto, *adminAuthz_, false); // deep copy
+    
+    EXPECT_EQ(deepProto.slot(), 1);
+    EXPECT_EQ(deepProto.detail_level(), catena::Device_DetailLevel_FULL);
+    EXPECT_TRUE(deepProto.multi_set_enabled());
+    EXPECT_TRUE(deepProto.subscriptions());
+    EXPECT_EQ(deepProto.default_scope(), "admin");
+    
+    // Verify deep copy DOES serialize collections (language packs from SetUp)
+    EXPECT_EQ(deepProto.language_packs().packs_size(), 2);
+    EXPECT_TRUE(deepProto.language_packs().packs().contains("en"));
+    EXPECT_TRUE(deepProto.language_packs().packs().contains("fr"));
+}
+
+// 5.2 - Test toProto with parameters serialization
+TEST_F(DeviceTest, Device_ToProtoWithParameters) {
+    // Create mock parameters and add them to the device
+    auto mockParam1 = std::make_shared<MockParam>();
+    auto mockParam2 = std::make_shared<MockParam>();
+    auto mockDescriptor1 = std::make_shared<MockParamDescriptor>();
+    auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockParam1.get(), "/param1", mockDescriptor1.get(), false, 0, adminScope);
+    setupMockParam(mockParam2.get(), "/param2", mockDescriptor2.get(), false, 0, adminScope);
+    
+    // Set up expectations for shouldSendParam and toProto calls
+    EXPECT_CALL(*mockParam1, getDescriptor())
+        .WillRepeatedly(testing::ReturnRef(*mockDescriptor1));
+    EXPECT_CALL(*mockParam2, getDescriptor())
+        .WillRepeatedly(testing::ReturnRef(*mockDescriptor2));
+    
+    EXPECT_CALL(*mockParam1, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            param.set_type(catena::ParamType::INT32);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    EXPECT_CALL(*mockParam2, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            param.set_type(catena::ParamType::STRING);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    
+    device_->addItem("param1", mockParam1.get());
+    device_->addItem("param2", mockParam2.get());
+    
+    catena::Device proto;
+    device_->toProto(proto, *adminAuthz_, false);
+    
+    // Verify parameters were serialized
+    EXPECT_EQ(proto.params_size(), 2);
+    EXPECT_TRUE(proto.params().contains("param1"));
+    EXPECT_TRUE(proto.params().contains("param2"));
+    EXPECT_EQ(proto.params().at("param1").type(), catena::ParamType::INT32);
+    EXPECT_EQ(proto.params().at("param2").type(), catena::ParamType::STRING);
+}
+
+// 5.3 - Test toProto with commands serialization
+TEST_F(DeviceTest, Device_ToProtoWithCommands) {
+    // Create mock commands and add them to the device
+    auto mockCommand1 = std::make_shared<MockParam>();
+    auto mockCommand2 = std::make_shared<MockParam>();
+    auto mockDescriptor1 = std::make_shared<MockParamDescriptor>();
+    auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockCommand1.get(), "/command1", mockDescriptor1.get(), false, 0, adminScope);
+    setupMockParam(mockCommand2.get(), "/command2", mockDescriptor2.get(), false, 0, adminScope);
+    
+    // Set up expectations for shouldSendParam and toProto calls
+    EXPECT_CALL(*mockCommand1, getDescriptor())
+        .WillRepeatedly(testing::ReturnRef(*mockDescriptor1));
+    EXPECT_CALL(*mockCommand2, getDescriptor())
+        .WillRepeatedly(testing::ReturnRef(*mockDescriptor2));
+    
+    // Override isCommand to return true for commands
+    EXPECT_CALL(*mockDescriptor1, isCommand())
+        .WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(*mockDescriptor2, isCommand())
+        .WillRepeatedly(testing::Return(true));
+    
+    EXPECT_CALL(*mockCommand1, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            param.set_type(catena::ParamType::INT32);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    EXPECT_CALL(*mockCommand2, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            param.set_type(catena::ParamType::STRING);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    
+    device_->addItem("command1", mockCommand1.get());
+    device_->addItem("command2", mockCommand2.get());
+    
+    catena::Device proto;
+    device_->toProto(proto, *adminAuthz_, false);
+    
+    // Verify commands were serialized
+    EXPECT_EQ(proto.commands_size(), 2);
+    EXPECT_TRUE(proto.commands().contains("command1"));
+    EXPECT_TRUE(proto.commands().contains("command2"));
+    EXPECT_EQ(proto.commands().at("command1").type(), catena::ParamType::INT32);
+    EXPECT_EQ(proto.commands().at("command2").type(), catena::ParamType::STRING);
+}
+
+// 5.4 - Test toProto with constraints serialization
+TEST_F(DeviceTest, Device_ToProtoWithConstraints) {
+    // Create mock constraints and add them to the device
+    auto mockConstraint1 = std::make_shared<MockConstraint>();
+    auto mockConstraint2 = std::make_shared<MockConstraint>();
+    
+    EXPECT_CALL(*mockConstraint1, toProto(testing::An<catena::Constraint&>()))
+        .WillOnce(testing::Invoke([](catena::Constraint& constraint) {
+            constraint.set_ref_oid("constraint1");
+        }));
+    EXPECT_CALL(*mockConstraint2, toProto(testing::An<catena::Constraint&>()))
+        .WillOnce(testing::Invoke([](catena::Constraint& constraint) {
+            constraint.set_ref_oid("constraint2");
+        }));
+    
+    device_->addItem("constraint1", mockConstraint1.get());
+    device_->addItem("constraint2", mockConstraint2.get());
+    
+    catena::Device proto;
+    device_->toProto(proto, *adminAuthz_, false);
+    
+    // Verify constraints were serialized
+    EXPECT_EQ(proto.constraints_size(), 2);
+    EXPECT_TRUE(proto.constraints().contains("constraint1"));
+    EXPECT_TRUE(proto.constraints().contains("constraint2"));
+    EXPECT_EQ(proto.constraints().at("constraint1").ref_oid(), "constraint1");
+    EXPECT_EQ(proto.constraints().at("constraint2").ref_oid(), "constraint2");
+}
+
+// 5.5 - Test toProto with language packs serialization
+TEST_F(DeviceTest, Device_ToProtoWithLanguagePacks) {
+    // Language packs are already set up in SetUp()
+    catena::Device proto;
+    device_->toProto(proto, *adminAuthz_, false);
+    
+    // Verify language packs were serialized
+    EXPECT_EQ(proto.language_packs().packs_size(), 2);
+    EXPECT_TRUE(proto.language_packs().packs().contains("en"));
+    EXPECT_TRUE(proto.language_packs().packs().contains("fr"));
+    EXPECT_EQ(proto.language_packs().packs().at("en").name(), "English");
+    EXPECT_EQ(proto.language_packs().packs().at("fr").name(), "French");
+}
+
+// 5.6 - Test toProto with menu groups serialization
+TEST_F(DeviceTest, Device_ToProtoWithMenuGroups) {
+    // Create mock menu groups and add them to the device
+    auto mockMenuGroup1 = std::make_shared<MockMenuGroup>();
+    auto mockMenuGroup2 = std::make_shared<MockMenuGroup>();
+    
+    EXPECT_CALL(*mockMenuGroup1, toProto(testing::An<catena::MenuGroup&>(), false))
+        .WillOnce(testing::Invoke([](catena::MenuGroup& menuGroup, bool shallow) {
+            auto* name = menuGroup.mutable_name();
+            name->mutable_display_strings()->insert({"en", "Menu Group 1"});
+        }));
+    EXPECT_CALL(*mockMenuGroup2, toProto(testing::An<catena::MenuGroup&>(), false))
+        .WillOnce(testing::Invoke([](catena::MenuGroup& menuGroup, bool shallow) {
+            auto* name = menuGroup.mutable_name();
+            name->mutable_display_strings()->insert({"en", "Menu Group 2"});
+        }));
+    
+    device_->addItem("menuGroup1", mockMenuGroup1.get());
+    device_->addItem("menuGroup2", mockMenuGroup2.get());
+    
+    catena::Device proto;
+    device_->toProto(proto, *adminAuthz_, false);
+    
+    // Verify menu groups were serialized
+    EXPECT_EQ(proto.menu_groups_size(), 2);
+    EXPECT_TRUE(proto.menu_groups().contains("menuGroup1"));
+    EXPECT_TRUE(proto.menu_groups().contains("menuGroup2"));
+    EXPECT_EQ(proto.menu_groups().at("menuGroup1").name().display_strings().at("en"), "Menu Group 1");
+    EXPECT_EQ(proto.menu_groups().at("menuGroup2").name().display_strings().at("en"), "Menu Group 2");
+}
+
+// 5.7 - Test toProto with minimal detail level (should skip constraints, language packs, menu groups)
+TEST_F(DeviceTest, Device_ToProtoMinimalDetailLevel) {
+    // Create a device with minimal detail level
+    auto minimalDevice = std::make_unique<Device>(
+        2,  // slot
+        catena::Device_DetailLevel_MINIMAL,  // detail_level
+        std::vector<std::string>{"admin"},  // access_scopes
+        "admin",  // default_scope
+        true,  // multi_set_enabled
+        true   // subscriptions
+    );
+    
+    // Add some constraints, language packs, and menu groups
+    auto mockConstraint = std::make_shared<MockConstraint>();
+    auto mockMenuGroup = std::make_shared<MockMenuGroup>();
+    
+    // These should NOT be called because of minimal detail level
+    EXPECT_CALL(*mockConstraint, toProto(testing::_))
+        .Times(0);
+    EXPECT_CALL(*mockMenuGroup, toProto(testing::_, false))
+        .Times(0);
+    
+    minimalDevice->addItem("constraint1", mockConstraint.get());
+    minimalDevice->addItem("menuGroup1", mockMenuGroup.get());
+    
+    catena::Device proto;
+    minimalDevice->toProto(proto, *adminAuthz_, false);
+    
+    // Verify basic properties are still serialized
+    EXPECT_EQ(proto.slot(), 2);
+    EXPECT_EQ(proto.detail_level(), catena::Device_DetailLevel_MINIMAL);
+    EXPECT_TRUE(proto.multi_set_enabled());
+    EXPECT_TRUE(proto.subscriptions());
+    EXPECT_EQ(proto.default_scope(), "admin");
+    
+    // Verify constraints and menu groups were NOT serialized
+    EXPECT_EQ(proto.constraints_size(), 0);
+    EXPECT_EQ(proto.menu_groups_size(), 0);
+}
+
+// 5.8 - Test toProto with authorization filtering (unauthorized parameters should not be serialized)
+TEST_F(DeviceTest, Device_ToProtoWithAuthorizationFiltering) {
+    // Create mock parameters with different authorization requirements
+    auto mockAuthorizedParam = std::make_shared<MockParam>();
+    auto mockUnauthorizedParam = std::make_shared<MockParam>();
+    auto mockDescriptor1 = std::make_shared<MockParamDescriptor>();
+    auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - authorized param allows monitor access, unauthorized param requires admin
+    static const std::string monitorScope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockAuthorizedParam.get(), "/authorizedParam", mockDescriptor1.get(), false, 0, monitorScope);
+    setupMockParam(mockUnauthorizedParam.get(), "/unauthorizedParam", mockDescriptor2.get(), false, 0, adminScope);
+    
+    // Set up expectations for shouldSendParam and toProto calls
+    EXPECT_CALL(*mockAuthorizedParam, getDescriptor())
+        .WillRepeatedly(testing::ReturnRef(*mockDescriptor1));
+    EXPECT_CALL(*mockUnauthorizedParam, getDescriptor())
+        .WillRepeatedly(testing::ReturnRef(*mockDescriptor2));
+    
+    // Only the authorized param should be serialized
+    EXPECT_CALL(*mockAuthorizedParam, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            param.set_type(catena::ParamType::INT32);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    EXPECT_CALL(*mockUnauthorizedParam, toProto(testing::An<catena::Param&>(), testing::_))
+        .Times(0); // Should not be called
+    
+    device_->addItem("authorizedParam", mockAuthorizedParam.get());
+    device_->addItem("unauthorizedParam", mockUnauthorizedParam.get());
+    
+    catena::Device proto;
+    device_->toProto(proto, *monitorAuthz_, false);
+    
+    // Verify only authorized parameters were serialized
+    EXPECT_EQ(proto.params_size(), 1);
+    EXPECT_TRUE(proto.params().contains("authorizedParam"));
+    EXPECT_FALSE(proto.params().contains("unauthorizedParam"));
+    EXPECT_EQ(proto.params().at("authorizedParam").type(), catena::ParamType::INT32);
+}
+
+// 5.9 - Test toProto with mixed content (parameters, commands, constraints, language packs, menu groups)
+TEST_F(DeviceTest, Device_ToProtoWithMixedContent) {
+    // Create various mock objects
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockCommand = std::make_shared<MockParam>();
+    auto mockConstraint = std::make_shared<MockConstraint>();
+    auto mockMenuGroup = std::make_shared<MockMenuGroup>();
+    auto mockDescriptor1 = std::make_shared<MockParamDescriptor>();
+    auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockParam.get(), "/testParam", mockDescriptor1.get(), false, 0, adminScope);
+    setupMockParam(mockCommand.get(), "/testCommand", mockDescriptor2.get(), false, 0, adminScope);
+    
+    // Set up expectations
+    EXPECT_CALL(*mockParam, getDescriptor())
+        .WillRepeatedly(testing::ReturnRef(*mockDescriptor1));
+    EXPECT_CALL(*mockCommand, getDescriptor())
+        .WillRepeatedly(testing::ReturnRef(*mockDescriptor2));
+    
+    // Override isCommand to return true for the command
+    EXPECT_CALL(*mockDescriptor2, isCommand())
+        .WillRepeatedly(testing::Return(true));
+    
+    EXPECT_CALL(*mockParam, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            param.set_type(catena::ParamType::INT32);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    EXPECT_CALL(*mockCommand, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            param.set_type(catena::ParamType::STRING);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    EXPECT_CALL(*mockConstraint, toProto(testing::An<catena::Constraint&>()))
+        .WillOnce(testing::Invoke([](catena::Constraint& constraint) {
+            constraint.set_ref_oid("testConstraint");
+        }));
+    EXPECT_CALL(*mockMenuGroup, toProto(testing::An<catena::MenuGroup&>(), false))
+        .WillOnce(testing::Invoke([](catena::MenuGroup& menuGroup, bool shallow) {
+            auto* name = menuGroup.mutable_name();
+            name->mutable_display_strings()->insert({"en", "Test Menu Group"});
+        }));
+    
+    // Add all items to device
+    device_->addItem("testParam", mockParam.get());
+    device_->addItem("testCommand", mockCommand.get());
+    device_->addItem("testConstraint", mockConstraint.get());
+    device_->addItem("testMenuGroup", mockMenuGroup.get());
+    
+    catena::Device proto;
+    device_->toProto(proto, *adminAuthz_, false);
+    
+    // Verify all components were serialized
     EXPECT_EQ(proto.slot(), 1);
     EXPECT_EQ(proto.detail_level(), catena::Device_DetailLevel_FULL);
     EXPECT_TRUE(proto.multi_set_enabled());
     EXPECT_TRUE(proto.subscriptions());
     EXPECT_EQ(proto.default_scope(), "admin");
+    
+    // Verify parameters
+    EXPECT_EQ(proto.params_size(), 1);
+    EXPECT_TRUE(proto.params().contains("testParam"));
+    EXPECT_EQ(proto.params().at("testParam").type(), catena::ParamType::INT32);
+    
+    // Verify commands
+    EXPECT_EQ(proto.commands_size(), 1);
+    EXPECT_TRUE(proto.commands().contains("testCommand"));
+    EXPECT_EQ(proto.commands().at("testCommand").type(), catena::ParamType::STRING);
+    
+    // Verify constraints
+    EXPECT_EQ(proto.constraints_size(), 1);
+    EXPECT_TRUE(proto.constraints().contains("testConstraint"));
+    EXPECT_EQ(proto.constraints().at("testConstraint").ref_oid(), "testConstraint");
+    
+    // Verify menu groups
+    EXPECT_EQ(proto.menu_groups_size(), 1);
+    EXPECT_TRUE(proto.menu_groups().contains("testMenuGroup"));
+    EXPECT_EQ(proto.menu_groups().at("testMenuGroup").name().display_strings().at("en"), "Test Menu Group");
+    
+    // Verify language packs (from SetUp)
+    EXPECT_EQ(proto.language_packs().packs_size(), 2);
+    EXPECT_TRUE(proto.language_packs().packs().contains("en"));
+    EXPECT_TRUE(proto.language_packs().packs().contains("fr"));
 }
+
+// 5.10 - Test toProto with empty collections
+TEST_F(DeviceTest, Device_ToProtoWithEmptyCollections) {
+    // Create a device with no additional items
+    auto emptyDevice = std::make_unique<Device>(
+        3,  // slot
+        catena::Device_DetailLevel_FULL,  // detail_level
+        std::vector<std::string>{"admin"},  // access_scopes
+        "admin",  // default_scope
+        true,  // multi_set_enabled
+        true   // subscriptions
+    );
+    
+    catena::Device proto;
+    emptyDevice->toProto(proto, *adminAuthz_, false);
+    
+    // Verify basic properties are serialized
+    EXPECT_EQ(proto.slot(), 3);
+    EXPECT_EQ(proto.detail_level(), catena::Device_DetailLevel_FULL);
+    EXPECT_TRUE(proto.multi_set_enabled());
+    EXPECT_TRUE(proto.subscriptions());
+    EXPECT_EQ(proto.default_scope(), "admin");
+    
+    // Verify collections are empty
+    EXPECT_EQ(proto.params_size(), 0);
+    EXPECT_EQ(proto.commands_size(), 0);
+    EXPECT_EQ(proto.constraints_size(), 0);
+    EXPECT_EQ(proto.menu_groups_size(), 0);
+    EXPECT_EQ(proto.language_packs().packs_size(), 0);
+}
+
+// 5.11 - Test toProto with exception handling in parameter serialization
+TEST_F(DeviceTest, Device_ToProtoWithParameterSerializationException) {
+    // Create a mock parameter that throws during toProto
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockParam.get(), "/exceptionParam", mockDescriptor.get(), false, 0, adminScope);
+    
+    EXPECT_CALL(*mockParam, getDescriptor())
+        .WillRepeatedly(testing::ReturnRef(*mockDescriptor));
+    EXPECT_CALL(*mockParam, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) -> catena::exception_with_status {
+            throw std::runtime_error("Parameter serialization failed");
+        }));
+    
+    device_->addItem("exceptionParam", mockParam.get());
+    
+    // Should throw because Device::toProto doesn't catch exceptions
+    catena::Device proto;
+    EXPECT_THROW(device_->toProto(proto, *adminAuthz_, false), std::runtime_error);
+}
+
+// 5.12 - Test toProto with exception handling in constraint serialization
+TEST_F(DeviceTest, Device_ToProtoWithConstraintSerializationException) {
+    // Create a mock constraint that throws during toProto
+    auto mockConstraint = std::make_shared<MockConstraint>();
+    
+    EXPECT_CALL(*mockConstraint, toProto(testing::An<catena::Constraint&>()))
+        .WillOnce(testing::Invoke([](catena::Constraint& constraint) {
+            throw std::runtime_error("Constraint serialization failed");
+        }));
+    
+    device_->addItem("exceptionConstraint", mockConstraint.get());
+    
+    // Should throw because Device::toProto doesn't catch exceptions
+    catena::Device proto;
+    EXPECT_THROW(device_->toProto(proto, *adminAuthz_, false), std::runtime_error);
+}
+
+// 5.13 - Test toProto with exception handling in menu group serialization
+TEST_F(DeviceTest, Device_ToProtoWithMenuGroupSerializationException) {
+    // Create a mock menu group that throws during toProto
+    auto mockMenuGroup = std::make_shared<MockMenuGroup>();
+    
+    EXPECT_CALL(*mockMenuGroup, toProto(testing::An<catena::MenuGroup&>(), false))
+        .WillOnce(testing::Invoke([](catena::MenuGroup& menuGroup, bool shallow) {
+            throw std::runtime_error("Menu group serialization failed");
+        }));
+    
+    device_->addItem("exceptionMenuGroup", mockMenuGroup.get());
+    
+    // Should throw because Device::toProto doesn't catch exceptions
+    catena::Device proto;
+    EXPECT_THROW(device_->toProto(proto, *adminAuthz_, false), std::runtime_error);
+}
+
+// 5.14 - Test toProto with different detail levels
+TEST_F(DeviceTest, Device_ToProtoWithDifferentDetailLevels) {
+    // Test with NONE detail level
+    auto noneDevice = std::make_unique<Device>(
+        4,  // slot
+        catena::Device_DetailLevel_NONE,  // detail_level
+        std::vector<std::string>{"admin"},  // access_scopes
+        "admin",  // default_scope
+        true,  // multi_set_enabled
+        true   // subscriptions
+    );
+    
+    catena::Device protoNone;
+    noneDevice->toProto(protoNone, *adminAuthz_, false);
+    
+    EXPECT_EQ(protoNone.slot(), 4);
+    EXPECT_EQ(protoNone.detail_level(), catena::Device_DetailLevel_NONE);
+    EXPECT_EQ(protoNone.params_size(), 0);
+    EXPECT_EQ(protoNone.commands_size(), 0);
+    EXPECT_EQ(protoNone.constraints_size(), 0);
+    EXPECT_EQ(protoNone.menu_groups_size(), 0);
+    
+    // Test with FULL detail level (should include everything)
+    auto fullDevice = std::make_unique<Device>(
+        5,  // slot
+        catena::Device_DetailLevel_FULL,  // detail_level
+        std::vector<std::string>{"admin"},  // access_scopes
+        "admin",  // default_scope
+        true,  // multi_set_enabled
+        true   // subscriptions
+    );
+    
+    // Add some items to test serialization
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockConstraint = std::make_shared<MockConstraint>();
+    auto mockMenuGroup = std::make_shared<MockMenuGroup>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockParam.get(), "/testParam", mockDescriptor.get(), false, 0, adminScope);
+    
+    EXPECT_CALL(*mockParam, getDescriptor())
+        .WillRepeatedly(testing::ReturnRef(*mockDescriptor));
+    EXPECT_CALL(*mockParam, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            param.set_type(catena::ParamType::INT32);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    EXPECT_CALL(*mockConstraint, toProto(testing::An<catena::Constraint&>()))
+        .WillOnce(testing::Invoke([](catena::Constraint& constraint) {
+            constraint.set_ref_oid("testConstraint");
+        }));
+    EXPECT_CALL(*mockMenuGroup, toProto(testing::An<catena::MenuGroup&>(), false))
+        .WillOnce(testing::Invoke([](catena::MenuGroup& menuGroup, bool shallow) {
+            auto* name = menuGroup.mutable_name();
+            name->mutable_display_strings()->insert({"en", "Test Menu Group"});
+        }));
+    
+    fullDevice->addItem("testParam", mockParam.get());
+    fullDevice->addItem("testConstraint", mockConstraint.get());
+    fullDevice->addItem("testMenuGroup", mockMenuGroup.get());
+    
+    catena::Device protoFull;
+    fullDevice->toProto(protoFull, *adminAuthz_, false);
+    
+    EXPECT_EQ(protoFull.slot(), 5);
+    EXPECT_EQ(protoFull.detail_level(), catena::Device_DetailLevel_FULL);
+    EXPECT_EQ(protoFull.params_size(), 1);
+    EXPECT_EQ(protoFull.constraints_size(), 1);
+    EXPECT_EQ(protoFull.menu_groups_size(), 1);
+}
+
+// --- toProto Language Tests ---
+
+// ==== 6. Device Serializer Tests ====
+
+
+
+// ==== 7. shouldSendParam Tests ====
+
+// 7.1 - Test shouldSendParam with FULL detail level
+TEST_F(DeviceTest, ShouldSendParam_FullDetailLevel) {
+    // Create a device with FULL detail level
+    auto fullDevice = std::make_unique<Device>(
+        6,  // slot
+        catena::Device_DetailLevel_FULL,  // detail_level
+        std::vector<std::string>{"admin"},  // access_scopes
+        "admin",  // default_scope
+        true,  // multi_set_enabled
+        true   // subscriptions
+    );
+    
+    // Create mock parameters with different characteristics
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockCommand = std::make_shared<MockParam>();
+    auto mockMinimalParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    auto mockCommandDescriptor = std::make_shared<MockParamDescriptor>();
+    auto mockMinimalDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockParam.get(), "/testParam", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(mockCommand.get(), "/testCommand", mockCommandDescriptor.get(), false, 0, adminScope);
+    setupMockParam(mockMinimalParam.get(), "/minimalParam", mockMinimalDescriptor.get(), false, 0, adminScope);
+    
+    // Set up expectations for descriptors
+    EXPECT_CALL(*mockDescriptor, minimalSet())
+        .WillRepeatedly(testing::Return(false));
+    EXPECT_CALL(*mockCommandDescriptor, isCommand())
+        .WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(*mockMinimalDescriptor, minimalSet())
+        .WillRepeatedly(testing::Return(true));
+    
+    // Test that all parameters should be sent in FULL detail level
+    EXPECT_TRUE(fullDevice->shouldSendParam(*mockParam, false, *adminAuthz_));
+    EXPECT_TRUE(fullDevice->shouldSendParam(*mockCommand, false, *adminAuthz_));
+    EXPECT_TRUE(fullDevice->shouldSendParam(*mockMinimalParam, false, *adminAuthz_));
+}
+
+// 7.2 - Test shouldSendParam with COMMANDS detail level
+TEST_F(DeviceTest, ShouldSendParam_CommandsDetailLevel) {
+    // Create a device with COMMANDS detail level
+    auto commandsDevice = std::make_unique<Device>(
+        7,  // slot
+        catena::Device_DetailLevel_COMMANDS,  // detail_level
+        std::vector<std::string>{"admin"},  // access_scopes
+        "admin",  // default_scope
+        true,  // multi_set_enabled
+        true   // subscriptions
+    );
+    
+    // Create mock parameters with different characteristics
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockCommand = std::make_shared<MockParam>();
+    auto mockMinimalParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    auto mockCommandDescriptor = std::make_shared<MockParamDescriptor>();
+    auto mockMinimalDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(mockParam.get(), "/testParam", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(mockCommand.get(), "/testCommand", mockCommandDescriptor.get(), false, 0, adminScope);
+    setupMockParam(mockMinimalParam.get(), "/minimalParam", mockMinimalDescriptor.get(), false, 0, adminScope);
+    
+    // Set up expectations for descriptors
+    EXPECT_CALL(*mockDescriptor, minimalSet())
+        .WillRepeatedly(testing::Return(false));
+    EXPECT_CALL(*mockCommandDescriptor, isCommand())
+        .WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(*mockMinimalDescriptor, minimalSet())
+        .WillRepeatedly(testing::Return(true));
+    
+    // Test that only commands should be sent in COMMANDS detail level
+    EXPECT_FALSE(commandsDevice->shouldSendParam(*mockParam, false, *adminAuthz_));
+    EXPECT_TRUE(commandsDevice->shouldSendParam(*mockCommand, false, *adminAuthz_));
+    EXPECT_FALSE(commandsDevice->shouldSendParam(*mockMinimalParam, false, *adminAuthz_));
+}
+
+// 7.3 - Test shouldSendParam with MINIMAL detail level
+TEST_F(DeviceTest, ShouldSendParam_MinimalDetailLevel) {
+    // Create a device with MINIMAL detail level
+    auto minimalDevice = std::make_unique<Device>(
+        8,  // slot
+        catena::Device_DetailLevel_MINIMAL,  // detail_level
+        std::vector<std::string>{"admin"},  // access_scopes
+        "admin",  // default_scope
+        true,  // multi_set_enabled
+        true   // subscriptions
+    );
+    
+    // Create mock parameters with different characteristics
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockCommand = std::make_shared<MockParam>();
+    auto mockMinimalParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    auto mockCommandDescriptor = std::make_shared<MockParamDescriptor>();
+    auto mockMinimalDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    
+    // Set up expectations for descriptors BEFORE setupMockParam to avoid conflicts
+    EXPECT_CALL(*mockDescriptor, minimalSet())
+        .WillRepeatedly(testing::Return(false));
+    EXPECT_CALL(*mockCommandDescriptor, isCommand())
+        .WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(*mockMinimalDescriptor, minimalSet())
+        .WillRepeatedly(testing::Return(true));
+    
+    // Set up mock parameters after descriptor expectations
+    setupMockParam(mockParam.get(), "/testParam", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(mockCommand.get(), "/testCommand", mockCommandDescriptor.get(), false, 0, adminScope);
+    setupMockParam(mockMinimalParam.get(), "/minimalParam", mockMinimalDescriptor.get(), false, 0, adminScope);
+    
+    // Test that only minimal parameters should be sent in MINIMAL detail level
+    EXPECT_FALSE(minimalDevice->shouldSendParam(*mockParam, false, *adminAuthz_));
+    EXPECT_FALSE(minimalDevice->shouldSendParam(*mockCommand, false, *adminAuthz_));
+    EXPECT_TRUE(minimalDevice->shouldSendParam(*mockMinimalParam, false, *adminAuthz_));
+}
+
+// 7.4 - Test shouldSendParam with SUBSCRIPTIONS detail level
+TEST_F(DeviceTest, ShouldSendParam_SubscriptionsDetailLevel) {
+    // Create a device with SUBSCRIPTIONS detail level
+    auto subscriptionsDevice = std::make_unique<Device>(
+        9,  // slot
+        catena::Device_DetailLevel_SUBSCRIPTIONS,  // detail_level
+        std::vector<std::string>{"admin"},  // access_scopes
+        "admin",  // default_scope
+        true,  // multi_set_enabled
+        true   // subscriptions
+    );
+    
+    // Create mock parameters with different characteristics
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockCommand = std::make_shared<MockParam>();
+    auto mockMinimalParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    auto mockCommandDescriptor = std::make_shared<MockParamDescriptor>();
+    auto mockMinimalDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    
+    // Set up expectations for descriptors BEFORE setupMockParam to avoid conflicts
+    EXPECT_CALL(*mockDescriptor, minimalSet())
+        .WillRepeatedly(testing::Return(false));
+    EXPECT_CALL(*mockCommandDescriptor, isCommand())
+        .WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(*mockMinimalDescriptor, minimalSet())
+        .WillRepeatedly(testing::Return(true));
+    
+    // Set up mock parameters after descriptor expectations
+    setupMockParam(mockParam.get(), "/testParam", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(mockCommand.get(), "/testCommand", mockCommandDescriptor.get(), false, 0, adminScope);
+    setupMockParam(mockMinimalParam.get(), "/minimalParam", mockMinimalDescriptor.get(), false, 0, adminScope);
+    
+    // Test that minimal parameters and subscribed parameters should be sent in SUBSCRIPTIONS detail level
+    EXPECT_FALSE(subscriptionsDevice->shouldSendParam(*mockParam, false, *adminAuthz_)); // Not minimal, not subscribed
+    EXPECT_FALSE(subscriptionsDevice->shouldSendParam(*mockCommand, false, *adminAuthz_)); // Not minimal, not subscribed
+    EXPECT_TRUE(subscriptionsDevice->shouldSendParam(*mockMinimalParam, false, *adminAuthz_)); // Minimal
+    EXPECT_TRUE(subscriptionsDevice->shouldSendParam(*mockParam, true, *adminAuthz_)); // Subscribed
+    EXPECT_TRUE(subscriptionsDevice->shouldSendParam(*mockCommand, true, *adminAuthz_)); // Subscribed
+}
+
+// 7.5 - Test shouldSendParam with NONE detail level
+TEST_F(DeviceTest, ShouldSendParam_NoneDetailLevel) {
+    // Create a device with NONE detail level
+    auto noneDevice = std::make_unique<Device>(
+        10,  // slot
+        catena::Device_DetailLevel_NONE,  // detail_level
+        std::vector<std::string>{"admin"},  // access_scopes
+        "admin",  // default_scope
+        true,  // multi_set_enabled
+        true   // subscriptions
+    );
+    
+    // Create mock parameters with different characteristics
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockCommand = std::make_shared<MockParam>();
+    auto mockMinimalParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    auto mockCommandDescriptor = std::make_shared<MockParamDescriptor>();
+    auto mockMinimalDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    
+    // Set up expectations for descriptors BEFORE setupMockParam to avoid conflicts
+    EXPECT_CALL(*mockDescriptor, minimalSet())
+        .WillRepeatedly(testing::Return(false));
+    EXPECT_CALL(*mockCommandDescriptor, isCommand())
+        .WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(*mockMinimalDescriptor, minimalSet())
+        .WillRepeatedly(testing::Return(true));
+    
+    // Set up mock parameters after descriptor expectations
+    setupMockParam(mockParam.get(), "/testParam", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(mockCommand.get(), "/testCommand", mockCommandDescriptor.get(), false, 0, adminScope);
+    setupMockParam(mockMinimalParam.get(), "/minimalParam", mockMinimalDescriptor.get(), false, 0, adminScope);
+    
+    // Test that all parameters should be sent in NONE detail level (if authorized)
+    EXPECT_TRUE(noneDevice->shouldSendParam(*mockParam, false, *adminAuthz_));
+    EXPECT_TRUE(noneDevice->shouldSendParam(*mockCommand, false, *adminAuthz_));
+    EXPECT_TRUE(noneDevice->shouldSendParam(*mockMinimalParam, false, *adminAuthz_));
+}
+
+// // 5.20 - Test shouldSendParam with authorization filtering
+// TEST_F(DeviceTest, ShouldSendParam_AuthorizationFiltering) {
+//     // Create a device with FULL detail level
+//     auto device = std::make_unique<Device>(
+//         11,  // slot
+//         catena::Device_DetailLevel_FULL,  // detail_level
+//         std::vector<std::string>{"admin"},  // access_scopes
+//         "admin",  // default_scope
+//         true,  // multi_set_enabled
+//         true   // subscriptions
+//     );
+    
+//     // Create mock parameters with different authorization requirements
+//     auto mockAuthorizedParam = std::make_shared<MockParam>();
+//     auto mockUnauthorizedParam = std::make_shared<MockParam>();
+//     auto mockDescriptor1 = std::make_shared<MockParamDescriptor>();
+//     auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
+    
+//     // Set up authorization - authorized param allows monitor access, unauthorized param requires admin
+//     static const std::string monitorScope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
+//     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    
+//     // Set up expectations for descriptors
+//     EXPECT_CALL(*mockDescriptor1, minimalSet())
+//         .WillRepeatedly(testing::Return(false));
+//     EXPECT_CALL(*mockDescriptor2, minimalSet())
+//         .WillRepeatedly(testing::Return(false));
+    
+//     // Set up expectations for getScope to ensure authorization works correctly
+//     EXPECT_CALL(*mockAuthorizedParam, getScope())
+//         .WillRepeatedly(testing::ReturnRef(monitorScope));
+//     EXPECT_CALL(*mockUnauthorizedParam, getScope())
+//         .WillRepeatedly(testing::ReturnRef(adminScope));
+    
+//     // Set up other mock expectations manually to avoid conflicts with getScope
+//     static const std::string authorizedOid = "/authorizedParam";
+//     static const std::string unauthorizedOid = "/unauthorizedParam";
+    
+//     EXPECT_CALL(*mockAuthorizedParam, getOid())
+//         .WillRepeatedly(testing::ReturnRef(authorizedOid));
+//     EXPECT_CALL(*mockAuthorizedParam, getDescriptor())
+//         .WillRepeatedly(testing::ReturnRef(*mockDescriptor1));
+//     EXPECT_CALL(*mockAuthorizedParam, isArrayType())
+//         .WillRepeatedly(testing::Return(false));
+    
+//     EXPECT_CALL(*mockUnauthorizedParam, getOid())
+//         .WillRepeatedly(testing::ReturnRef(unauthorizedOid));
+//     EXPECT_CALL(*mockUnauthorizedParam, getDescriptor())
+//         .WillRepeatedly(testing::ReturnRef(*mockDescriptor2));
+//     EXPECT_CALL(*mockUnauthorizedParam, isArrayType())
+//         .WillRepeatedly(testing::Return(false));
+    
+//     // Test with monitor authorization (should only allow authorized param)
+//     EXPECT_TRUE(device->shouldSendParam(*mockAuthorizedParam, false, *monitorAuthz_));
+//     EXPECT_FALSE(device->shouldSendParam(*mockUnauthorizedParam, false, *monitorAuthz_));
+    
+//     // Test with admin authorization (should allow both)
+//     EXPECT_TRUE(device->shouldSendParam(*mockAuthorizedParam, false, *adminAuthz_));
+//     EXPECT_TRUE(device->shouldSendParam(*mockUnauthorizedParam, false, *adminAuthz_));
+// }
+
+// // 5.21 - Test shouldSendParam with UNSET detail level
+// TEST_F(DeviceTest, ShouldSendParam_UnsetDetailLevel) {
+//     // Create a device with UNSET detail level
+//     auto unsetDevice = std::make_unique<Device>(
+//         12,  // slot
+//         catena::Device_DetailLevel_UNSET,  // detail_level
+//         std::vector<std::string>{"admin"},  // access_scopes
+//         "admin",  // default_scope
+//         true,  // multi_set_enabled
+//         true   // subscriptions
+//     );
+    
+//     // Create mock parameter
+//     auto mockParam = std::make_shared<MockParam>();
+//     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    
+//     // Set up authorization - admin token has st2138:adm:w scope
+//     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    
+//     // Set up expectations for descriptor
+//     EXPECT_CALL(*mockDescriptor, minimalSet())
+//         .WillRepeatedly(testing::Return(false));
+    
+//     // Set up expectations for getScope to ensure authorization works correctly
+//     EXPECT_CALL(*mockParam, getScope())
+//         .WillRepeatedly(testing::ReturnRef(adminScope));
+    
+//     // Set up other mock expectations manually to avoid conflicts with getScope
+//     static const std::string testOid = "/testParam";
+    
+//     EXPECT_CALL(*mockParam, getOid())
+//         .WillRepeatedly(testing::ReturnRef(testOid));
+//     EXPECT_CALL(*mockParam, getDescriptor())
+//         .WillRepeatedly(testing::ReturnRef(*mockDescriptor));
+//     EXPECT_CALL(*mockParam, isArrayType())
+//         .WillRepeatedly(testing::Return(false));
+    
+//     // Test that parameters should be sent in UNSET detail level (treated as FULL)
+//     EXPECT_TRUE(unsetDevice->shouldSendParam(*mockParam, false, *adminAuthz_));
+// }
