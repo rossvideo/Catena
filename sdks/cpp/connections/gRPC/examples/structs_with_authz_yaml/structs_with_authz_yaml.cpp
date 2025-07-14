@@ -138,7 +138,7 @@ void RunRPCServer(std::string addr)
             jptr.pop();
 
             if (handlers.contains(front)) {
-                handlers[front](jptr.toString(), p);
+                handlers[front](jptr.toString(true), p);
             }
         });
 
