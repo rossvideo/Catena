@@ -93,6 +93,9 @@ class StructInfoTest : public ::testing::Test {
         EXPECT_CALL(pd_, getScope()).WillRepeatedly(testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
         EXPECT_CALL(pd_, readOnly()).WillRepeatedly(testing::Return(false));
         EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(nullptr));
+        EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(5));
+        EXPECT_CALL(pd_, total_length()).WillRepeatedly(testing::Return(20));
+        EXPECT_CALL(constraint_, isRange()).WillRepeatedly(testing::Return(false));
     }
     /*
      * Helper function to initialize arrays of TestStruct1s for TEST 6
@@ -214,7 +217,7 @@ TEST_F(StructInfoTest, IntFromProtoConstraint) {
     int32_t dst = 0;
     val_.set_int32_value(64);
     // Setting expectations.
-    EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(&constraint_));
+    EXPECT_CALL(pd_, getConstraint()).Times(2).WillRepeatedly(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, satisfied(testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](const catena::Value &src) {
             EXPECT_EQ(val_.SerializeAsString(), src.SerializeAsString());
@@ -232,9 +235,8 @@ TEST_F(StructInfoTest, IntFromProtoRange) {
     val_.set_int32_value(64);
     constrainedVal_.set_int32_value(32);
     // Setting expectations.
-    EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(&constraint_));
-    EXPECT_CALL(constraint_, satisfied(testing::_)).Times(1).WillOnce(testing::Return(false));
-    EXPECT_CALL(constraint_, isRange()).Times(1).WillOnce(testing::Return(true));
+    EXPECT_CALL(pd_, getConstraint()).Times(2).WillRepeatedly(testing::Return(&constraint_));
+    EXPECT_CALL(constraint_, isRange()).Times(2).WillRepeatedly(testing::Return(true));
     EXPECT_CALL(constraint_, apply(testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](const catena::Value &src) {
             EXPECT_EQ(val_.SerializeAsString(), src.SerializeAsString());
@@ -303,7 +305,7 @@ TEST_F(StructInfoTest, FloatFromProtoConstraint) {
     float dst = 0;
     val_.set_float32_value(64.64);
     // Setting expectations.
-    EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(&constraint_));
+    EXPECT_CALL(pd_, getConstraint()).Times(2).WillRepeatedly(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, satisfied(testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](const catena::Value &src) {
             EXPECT_EQ(val_.SerializeAsString(), src.SerializeAsString());
@@ -322,8 +324,8 @@ TEST_F(StructInfoTest, FloatFromProtoRange) {
     val_.set_float32_value(64.64);
     constrainedVal_.set_float32_value(32.32);
     // Setting expectations.
-    EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(&constraint_));
-    EXPECT_CALL(constraint_, satisfied(testing::_)).Times(1).WillOnce(testing::Return(false));
+    EXPECT_CALL(pd_, getConstraint()).Times(2).WillRepeatedly(testing::Return(&constraint_));
+    EXPECT_CALL(constraint_, isRange()).Times(2).WillRepeatedly(testing::Return(true));
     EXPECT_CALL(constraint_, apply(testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](const catena::Value &src) {
             EXPECT_EQ(val_.SerializeAsString(), src.SerializeAsString());
@@ -355,7 +357,7 @@ TEST_F(StructInfoTest, FloatFromProtoNoFloat) {
  */
 TEST_F(StructInfoTest, StringToProto) {
     // Initializing in/out variables.
-    std::string src = "Hello, World!";
+    std::string src = "Hello";
     // Calling toProto() and comparing the result
     toProto(val_, &src, pd_, Authorizer::kAuthzDisabled);
     EXPECT_EQ(val_.string_value(), src);
@@ -366,7 +368,7 @@ TEST_F(StructInfoTest, StringToProto) {
 TEST_F(StructInfoTest, StringFromProto) {
     // Initializing in/out variables.
     std::string dst = "";
-    val_.set_string_value("Hello, World!");
+    val_.set_string_value("Hello");
     // Calling fromProto() and comparing the result
     fromProto(val_, &dst, pd_, Authorizer::kAuthzDisabled);
     EXPECT_EQ(dst, val_.string_value());
@@ -377,7 +379,7 @@ TEST_F(StructInfoTest, StringFromProto) {
 TEST_F(StructInfoTest, StringFromProtoConstraint) {
     // Initializing in/out variables.
     std::string dst = "";
-    val_.set_string_value("Hello, World!");
+    val_.set_string_value("Hello");
     // Setting expectations.
     EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, satisfied(testing::_)).Times(1)
@@ -395,7 +397,7 @@ TEST_F(StructInfoTest, StringFromProtoConstraint) {
 TEST_F(StructInfoTest, StringFromProtoUnsatisfied) {
     // Initializing in/out variables.
     std::string dst = "";
-    val_.set_string_value("Hello, World!");
+    val_.set_string_value("Hello");
     // Setting expectations.
     EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, satisfied(testing::_)).Times(1).WillOnce(testing::Return(false));
@@ -408,7 +410,7 @@ TEST_F(StructInfoTest, StringFromProtoUnsatisfied) {
  */
 TEST_F(StructInfoTest, StringFromProtoNoString) {
     // Initializing in/out variables.
-    std::string dst = "Hello, World!";
+    std::string dst = "Hello";
     val_.set_int32_value(64.64); // Not a string
     // Calling fromProto() and comparing the result
     fromProto(val_, &dst, pd_, Authorizer::kAuthzDisabled);
@@ -461,7 +463,7 @@ TEST_F(StructInfoTest, IntArrayFromProtoConstraint) {
     }
     // Setting expectations.
     uint32_t times = val_.mutable_int32_array_values()->ints_size();
-    EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(&constraint_));
+    EXPECT_CALL(pd_, getConstraint()).Times(2).WillRepeatedly(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, satisfied(testing::_)).Times(times).WillRepeatedly(testing::Return(true));
     // Calling fromProto() and comparing the result
     fromProto(val_, &dst, pd_, Authorizer::kAuthzDisabled);
@@ -481,9 +483,8 @@ TEST_F(StructInfoTest, IntArrayFromProtoRange) {
     }
     // Setting expectations.
     uint32_t times = val_.mutable_int32_array_values()->ints_size();
-    EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(&constraint_));
-    EXPECT_CALL(constraint_, satisfied(testing::_)).Times(times).WillRepeatedly(testing::Return(false));
-    EXPECT_CALL(constraint_, isRange()).Times(times).WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(pd_, getConstraint()).Times(2).WillRepeatedly(testing::Return(&constraint_));
+    EXPECT_CALL(constraint_, isRange()).Times(times + 1).WillRepeatedly(testing::Return(true));
     // Contraint sets non-odd numbers to 0.
     EXPECT_CALL(constraint_, apply(testing::_)).Times(times)
         .WillRepeatedly(testing::Invoke([this](const catena::Value &src) {
@@ -524,10 +525,9 @@ TEST_F(StructInfoTest, IntArrayFromProtoUnsatisfied) {
     // Setting expectations.
     EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, satisfied(testing::_)).WillRepeatedly(testing::Return(false));
-    EXPECT_CALL(constraint_, isRange()).WillRepeatedly(testing::Return(false));
     // Calling fromProto() and comparing the result
     fromProto(val_, &dst, pd_, Authorizer::kAuthzDisabled);
-    EXPECT_TRUE(dst.empty());
+    EXPECT_EQ(dst, (std::vector<int32_t>){9});
 }
 
 
@@ -559,7 +559,7 @@ TEST_F(StructInfoTest, FloatArrayFromProto) {
         val_.mutable_float32_array_values()->add_floats(f);
     }
     // Setting expectations.
-    EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(nullptr));
+    EXPECT_CALL(pd_, getConstraint()).Times(2).WillRepeatedly(testing::Return(nullptr));
     // Calling fromProto() and comparing the result
     fromProto(val_, &dst, pd_, Authorizer::kAuthzDisabled);
     EXPECT_EQ(dst.size(), val_.float32_array_values().floats_size());
@@ -578,7 +578,7 @@ TEST_F(StructInfoTest, FloatArrayFromProtoConstraint) {
     }
     // Setting expectations.
     uint32_t times = val_.mutable_float32_array_values()->floats_size();
-    EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(&constraint_));
+    EXPECT_CALL(pd_, getConstraint()).Times(2).WillRepeatedly(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, satisfied(testing::_)).Times(times).WillRepeatedly(testing::Return(true));
     // Calling fromProto() and comparing the result
     fromProto(val_, &dst, pd_, Authorizer::kAuthzDisabled);
@@ -598,8 +598,8 @@ TEST_F(StructInfoTest, FloatArrayFromProtoRange) {
     }
     // Setting expectations.
     uint32_t times = val_.mutable_float32_array_values()->floats_size();
-    EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(&constraint_));
-    EXPECT_CALL(constraint_, satisfied(testing::_)).Times(times).WillRepeatedly(testing::Return(false));
+    EXPECT_CALL(pd_, getConstraint()).Times(2).WillRepeatedly(testing::Return(&constraint_));
+    EXPECT_CALL(constraint_, isRange()).Times(times + 1).WillRepeatedly(testing::Return(true));
     // Contraint caps numbers at 3.
     EXPECT_CALL(constraint_, apply(testing::_)).Times(times)
         .WillRepeatedly(testing::Invoke([this](const catena::Value &src) {
@@ -650,12 +650,12 @@ TEST_F(StructInfoTest, StringArrayToProto) {
  */
 TEST_F(StructInfoTest, StringArrayFromProto) {
     // Initializing in/out variables.
-    std::vector<std::string> dst = {"Hello, world!"};
+    std::vector<std::string> dst = {"Hello"};
     for (auto s : {"first", "second", "third"}) {
         val_.mutable_string_array_values()->add_strings(s);
     }
     // Setting expectations.
-    EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(nullptr));
+    EXPECT_CALL(pd_, getConstraint()).Times(2).WillRepeatedly(testing::Return(nullptr));
     // Calling fromProto() and comparing the result
     fromProto(val_, &dst, pd_, Authorizer::kAuthzDisabled);
     EXPECT_EQ(dst.size(), val_.string_array_values().strings_size());
@@ -668,13 +668,13 @@ TEST_F(StructInfoTest, StringArrayFromProto) {
  */
 TEST_F(StructInfoTest, StringArrayFromProtoConstraint) {
     // Initializing in/out variables.
-    std::vector<std::string> dst = {"Hello, world!"};
+    std::vector<std::string> dst = {"Hello"};
     for (auto s : {"first", "second", "third"}) {
         val_.mutable_string_array_values()->add_strings(s);
     }
     // Setting expectations.
     uint32_t times = val_.mutable_string_array_values()->strings_size();
-    EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(&constraint_));
+    EXPECT_CALL(pd_, getConstraint()).Times(2).WillRepeatedly(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, satisfied(testing::_)).Times(times).WillRepeatedly(testing::Return(true));
     // Calling fromProto() and comparing the result
     fromProto(val_, &dst, pd_, Authorizer::kAuthzDisabled);
@@ -688,7 +688,7 @@ TEST_F(StructInfoTest, StringArrayFromProtoConstraint) {
  */
 TEST_F(StructInfoTest, StringArrayFromProtoNoStringArray) {
     // Initializing in/out variables.
-    std::vector<std::string> exp = {"Hello, world!"};
+    std::vector<std::string> exp = {"Hello"};
     std::vector<std::string> dst(exp.begin(), exp.end());
     val_.set_int32_value(64); // Not a string vector
     // Calling fromProto() and comparing the result
@@ -700,17 +700,16 @@ TEST_F(StructInfoTest, StringArrayFromProtoNoStringArray) {
  */
 TEST_F(StructInfoTest, StringArrayFromProtoUnsatisfied) {
     // Initializing in/out variables.
-    std::vector<std::string> dst = {"Hello, world!"};
+    std::vector<std::string> dst = {"Hello"};
     for (auto s : {"first", "second", "third"}) {
         val_.mutable_string_array_values()->add_strings(s);
     }
     // Setting expectations.
     EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, satisfied(testing::_)).WillRepeatedly(testing::Return(false));
-    EXPECT_CALL(constraint_, isRange()).WillRepeatedly(testing::Return(false));
     // Calling fromProto() and comparing the result
     fromProto(val_, &dst, pd_, Authorizer::kAuthzDisabled);
-    EXPECT_TRUE(dst.empty());
+    EXPECT_EQ(dst, (std::vector<std::string>{"Hello"}));
 }
 
 /* ============================================================================

@@ -157,24 +157,24 @@ template <typename T>
 void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz);
 
 /**
- * toProto specialization to serialize an entire array of structured data to
- * protobuf
+ * Free standing method to validate a call to fromProto before making it.
  * 
- * enabled if T is a vector of CatenaStruct
+ * generic template declaration
  * 
  * @tparam T the type of the value
  */
-template <CatenaStructArray T>
-void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
-    using structType = T::value_type;
-    auto* dstArray = dst.mutable_struct_array_values();
-    
-    for (const auto& item : *src) {
-        catena::Value elemValue;
-        toProto(elemValue, &item, pd, authz);
-        *dstArray->add_struct_values() = *elemValue.mutable_struct_value();
-    }
-}
+template <typename T>
+bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, const Authorizer& authz);
+
+/**
+ * Free standing method to deserialize a value from protobuf
+ * 
+ * generic template declaration
+ * 
+ * @tparam T the type of the value
+ */
+template <typename T>
+void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz);
 
 /**
  * toProto specialization to serialize a single struct value to protobuf.
@@ -214,66 +214,28 @@ void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const
     }, fields);
 }
 
-template <IsVariantArray T>
-void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
-    for (const auto& item : *src) {
-        catena::Value elemValue;
-        toProto(elemValue, &item, pd, authz);
-        *dst.mutable_struct_variant_array_values()->add_struct_variants() = *elemValue.mutable_struct_variant_value();
+template <CatenaStruct T>
+bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
+    auto fields = StructInfo<T>::fields; // get tuple of FieldInfo for this struct type
+    bool ans = true;
+    if (!authz.writeAuthz(pd)) {
+        ans = false;
+    } else if (!src.has_struct_value()) {
+        ans = false;
+    } else {
+        auto& srcFields = src.struct_value().fields();
+        // lambda function to call validFromProto for the given field
+        auto testWriteField = [&](const auto& field) {
+            IParamDescriptor& subParam = pd.getSubParam(field.name);
+            ans = ans && srcFields.contains(field.name)
+                  && validFromProto(srcFields.at(field.name), &(dst->*(field.memberPtr)), subParam, authz);
+        };
+        // call testWriteField for each field in the dst struct.
+        std::apply([&](auto... field) {
+            (testWriteField(field), ...);
+        }, fields);
     }
-}
-
-template <meta::IsVariant T>
-void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
-    std::string variantType = alternativeNames<T>[src->index()];
-    IParamDescriptor& subParam = pd.getSubParam(variantType);
-    std::visit([&](auto& arg) {
-        catena::Value elemValue;
-        toProto(elemValue, &arg, subParam, authz);
-        catena::StructVariantValue* structVariant = dst.mutable_struct_variant_value();
-        structVariant->set_struct_variant_type(variantType);
-        *structVariant->mutable_value() = elemValue;
-    }, *src);
-}
-
-/**
- * Free standing method to deserialize a value from protobuf
- * 
- * generic template declaration
- * 
- * @tparam T the type of the value
- */
-template <typename T>
-void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz);
-
-/**
- * fromProto specialization to deserialize an entire array of structured data
- * from protobuf
- * 
- * enabled if T is a vector of struct with isCatenaStruct defined
- * 
- * @tparam T the type of the value
- */
-template <CatenaStructArray T>
-void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
-    using structType = T::value_type;
-    // src is not an array so it cannot be deserialized into an array
-    if (src.has_struct_array_values()) {
-        auto& srcArray = src.struct_array_values().struct_values();
-        dst->clear(); // empty the destination vector
-    
-        // Right now from proto is able to append any number of values to the
-        // vector
-        // Do we want to keep this behavior?
-
-        // iterate over each element in the src array and call fromProto for each
-        for (int i = 0; i < srcArray.size(); ++i) {
-            catena::Value item;
-            *item.mutable_struct_value() = srcArray.Get(i);
-            structType& elemValue = dst->emplace_back();
-            fromProto(item, &elemValue, pd, authz);
-        }
-    }
+    return ans;
 }
 
 /**
@@ -287,9 +249,8 @@ void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, con
  */
 template <CatenaStruct T>
 void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
-    auto fields = StructInfo<T>::fields; // get tuple of FieldInfo for this struct type
-    // src is not a struct so it cannot be deserialized into a struct
-    if (src.has_struct_value()) {
+    if (validFromProto(src, dst, pd, authz)) {
+        auto fields = StructInfo<T>::fields; // get tuple of FieldInfo for this struct type
         auto& srcFields = src.struct_value().fields();
 
         // lambda function to call fromProto for the given field if it is authorized
@@ -317,19 +278,75 @@ void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, con
     }
 }
 
-template <IsVariantArray T>
+/**
+ * toProto specialization to serialize an entire array of structured data to
+ * protobuf
+ * 
+ * enabled if T is a vector of CatenaStruct
+ * 
+ * @tparam T the type of the value
+ */
+template <CatenaStructArray T>
+void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
+    using structType = T::value_type;
+    auto* dstArray = dst.mutable_struct_array_values();
+    
+    for (const auto& item : *src) {
+        catena::Value elemValue;
+        toProto(elemValue, &item, pd, authz);
+        *dstArray->add_struct_values() = *elemValue.mutable_struct_value();
+    }
+}
+
+template <CatenaStructArray T>
+bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
+    using structType = T::value_type;
+    bool ans = true;
+    if (!authz.writeAuthz(pd)) {
+        ans = false;
+    } else if (!src.has_struct_array_values()) {
+        ans = false;
+    } else if (src.struct_array_values().struct_values_size() > pd.max_length()) {
+        ans = false;
+    } else {
+        auto& srcArray = src.struct_array_values().struct_values();
+        structType testStruct; // Empty struct for testing.
+        for (int i = 0; i < srcArray.size(); ++i) {
+            catena::Value item;
+            *item.mutable_struct_value() = srcArray.Get(i);
+            if (!validFromProto(item, &testStruct, pd, authz)) {
+                ans = false;
+                break;
+            }
+        }
+    }
+    return ans;
+}
+
+/**
+ * fromProto specialization to deserialize an entire array of structured data
+ * from protobuf
+ * 
+ * enabled if T is a vector of struct with isCatenaStruct defined
+ * 
+ * @tparam T the type of the value
+ */
+template <CatenaStructArray T>
 void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
-    using VariantType = T::value_type;
-    // src is not an array so it cannot be deserialized into an array
-    if (src.has_struct_variant_array_values()) {
-        auto& srcArray = src.struct_variant_array_values().struct_variants();
+    if (validFromProto(src, dst, pd, authz)) {
+        using structType = T::value_type;
+        auto& srcArray = src.struct_array_values().struct_values();
         dst->clear(); // empty the destination vector
+    
+        // Right now from proto is able to append any number of values to the
+        // vector
+        // Do we want to keep this behavior?
 
         // iterate over each element in the src array and call fromProto for each
         for (int i = 0; i < srcArray.size(); ++i) {
             catena::Value item;
-            *item.mutable_struct_variant_value() = srcArray.Get(i);
-            VariantType& elemValue = dst->emplace_back();
+            *item.mutable_struct_value() = srcArray.Get(i);
+            structType& elemValue = dst->emplace_back();
             fromProto(item, &elemValue, pd, authz);
         }
     }
@@ -376,9 +393,47 @@ void _changeType(V& variant, const std::size_t newTypeIndex) {
 }
 
 template <meta::IsVariant T>
+void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
+    std::string variantType = alternativeNames<T>[src->index()];
+    IParamDescriptor& subParam = pd.getSubParam(variantType);
+    std::visit([&](auto& arg) {
+        catena::Value elemValue;
+        toProto(elemValue, &arg, subParam, authz);
+        catena::StructVariantValue* structVariant = dst.mutable_struct_variant_value();
+        structVariant->set_struct_variant_type(variantType);
+        *structVariant->mutable_value() = elemValue;
+    }, *src);
+}
+
+template <meta::IsVariant T>
+bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
+    bool ans = true;
+    if (!authz.writeAuthz(pd)) {
+        ans = false;
+    } else if (!src.has_struct_variant_value()) {
+        ans = false;
+    } else {
+        const catena::StructVariantValue& srcVariant = src.struct_variant_value();
+        std::string variantType = srcVariant.struct_variant_type();
+        std::size_t typeIndex = _findTypeIndex(variantType, alternativeNames<T>);
+        if (typeIndex >= alternativeNames<T>.size()) {
+            ans = false;
+        } else {
+            T testVariant;
+            _changeType<T, 0>(testVariant, typeIndex);
+
+            IParamDescriptor& subParam= pd.getSubParam(variantType);
+            std::visit([&](auto& arg) {
+                ans = ans && validFromProto(srcVariant.value(), &arg, subParam, authz);
+            }, testVariant); 
+        }
+    }
+    return ans;
+}
+
+template <meta::IsVariant T>
 void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
-    // src is not a variant so it cannot be deserialized into a variant
-    if (src.has_struct_variant_value()) {
+    if (validFromProto(src, dst, pd, authz)) {
         const catena::StructVariantValue& srcVariant = src.struct_variant_value();
         std::string variantType = srcVariant.struct_variant_type();
         
@@ -393,6 +448,57 @@ void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, con
             std::visit([&](auto& arg) {
                 fromProto(srcVariant.value(), &arg, subParam, authz);
             }, *dst); 
+        }
+    }
+}
+
+template <IsVariantArray T>
+void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
+    for (const auto& item : *src) {
+        catena::Value elemValue;
+        toProto(elemValue, &item, pd, authz);
+        *dst.mutable_struct_variant_array_values()->add_struct_variants() = *elemValue.mutable_struct_variant_value();
+    }
+}
+
+template <IsVariantArray T>
+bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
+    using VariantType = T::value_type;
+    bool ans = true;
+    if (!authz.writeAuthz(pd)) {
+        ans = false;
+    } else if (!src.has_struct_variant_array_values()) {
+        ans = false;
+    } else if (src.struct_variant_array_values().struct_variants_size() > pd.max_length()) {
+        ans = false;
+    } else {
+        auto& srcArray = src.struct_variant_array_values().struct_variants();
+        for (int i = 0; i < srcArray.size(); ++i) {
+            VariantType testStruct; // Empty struct for testing.
+            catena::Value item;
+            *item.mutable_struct_variant_value() = srcArray.Get(i);
+            if (!validFromProto(item, &testStruct, pd, authz)) {
+                ans = false;
+                break;
+            }
+        }
+    }
+    return ans;
+}
+
+template <IsVariantArray T>
+void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
+    if (validFromProto(src, dst, pd, authz)) {
+        using VariantType = T::value_type;
+        auto& srcArray = src.struct_variant_array_values().struct_variants();
+        dst->clear(); // empty the destination vector
+
+        // iterate over each element in the src array and call fromProto for each
+        for (int i = 0; i < srcArray.size(); ++i) {
+            catena::Value item;
+            *item.mutable_struct_variant_value() = srcArray.Get(i);
+            VariantType& elemValue = dst->emplace_back();
+            fromProto(item, &elemValue, pd, authz);
         }
     }
 }
