@@ -102,15 +102,15 @@ void catena::gRPC::Connect::proceed(bool ok) {
                 for (auto [slot, dm] : dms_) {
                     if (dm) {
                         // Waiting for a value set by server to be sent to execute code.
-                        valueSetByServerIds_[slot] = dm->valueSetByServer.connect([this, slot](const std::string& oid, const IParam* p){
+                        valueSetByServerIds_[slot] = dm->getValueSetByServer().connect([this, slot](const std::string& oid, const IParam* p){
                             updateResponse_(oid, p, slot);
                         });
                         // Waiting for a value set by client to be sent to execute code.
-                        valueSetByClientIds_[slot] = dm->valueSetByClient.connect([this, slot](const std::string& oid, const IParam* p){
+                        valueSetByClientIds_[slot] = dm->getValueSetByClient().connect([this, slot](const std::string& oid, const IParam* p){
                             updateResponse_(oid, p, slot);
                         });
                         // Waiting for a language to be added to execute code.
-                        languageAddedIds_[slot] = dm->languageAddedPushUpdate.connect([this, slot](const ILanguagePack* l) {
+                        languageAddedIds_[slot] = dm->getLanguageAddedPushUpdate().connect([this, slot](const ILanguagePack* l) {
                             updateResponse_(l, slot);
                         });
                         // Send client a empty update with slot of the device
@@ -158,13 +158,13 @@ void catena::gRPC::Connect::proceed(bool ok) {
             for (auto [slot, dm] : dms_) {
                 if (dm) {
                     if (valueSetByClientIds_.contains(slot)) {
-                        dm->valueSetByClient.disconnect(valueSetByClientIds_[slot]);
+                        dm->getValueSetByClient().disconnect(valueSetByClientIds_[slot]);
                     }
                     if (valueSetByServerIds_.contains(slot)) {
-                        dm->valueSetByServer.disconnect(valueSetByServerIds_[slot]);
+                        dm->getValueSetByServer().disconnect(valueSetByServerIds_[slot]);
                     }
                     if (languageAddedIds_.contains(slot)) {
-                        dm->languageAddedPushUpdate.disconnect(languageAddedIds_[slot]);
+                        dm->getLanguageAddedPushUpdate().disconnect(languageAddedIds_[slot]);
                     }
                 }
             }

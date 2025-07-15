@@ -181,7 +181,7 @@ void statusUpdateExample(){
         handlers["/combo_box"] = combo_boxUpdateHandler;
 
         // this is the "receiving end" of the status update example
-        dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
+        dm.getValueSetByClient().connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
             handlers[oid](oid, p, idx);
         });
 
