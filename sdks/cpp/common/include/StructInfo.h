@@ -192,6 +192,7 @@ catena::exception_with_status toProto(catena::Value& dst, const T* src, const IP
     if (!authz.readAuthz(pd)) {
         rc = catena::exception_with_status("Not authorized to read param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
     } else {
+        dst.clear_struct_value();
         auto fields = StructInfo<T>::fields; // get tuple of FieldInfo for this struct type
         auto* dstFields = dst.mutable_struct_value()->mutable_fields();
 
@@ -216,6 +217,10 @@ catena::exception_with_status toProto(catena::Value& dst, const T* src, const IP
         std::apply([&](auto... field) {
             (readField(field), ...);
         }, fields);
+    }
+    // Return an empty struct if the serialization failed
+    if (rc.status != catena::StatusCode::OK) {
+        dst.clear_struct_value();
     }
     return rc;
 }
@@ -270,17 +275,14 @@ catena::exception_with_status fromProto(const catena::Value& src, T* dst, const 
         // lambda function to call fromProto for the given field if it is authorized
         auto writeField = [&](const auto& field) {
             IParamDescriptor& subParam = pd.getSubParam(field.name);
-            // Only update if authorized and field is in the src.
-            if (authz.writeAuthz(subParam) && srcFields.contains(field.name)) {
-                /**
-                 * &(dst->*(field.memberPtr)) will pass the address of the
-                 * corresponding value field in dst to the fromProto function.
-                 * 
-                 * the correct specialization of fromProto will be called based on
-                 * the type of the field memberPtr.
-                 */
-                fromProto(srcFields.at(field.name), &(dst->*(field.memberPtr)), subParam, authz);
-            }
+            /**
+             * &(dst->*(field.memberPtr)) will pass the address of the
+             * corresponding value field in dst to the fromProto function.
+             * 
+             * the correct specialization of fromProto will be called based on
+             * the type of the field memberPtr.
+             */
+            fromProto(srcFields.at(field.name), &(dst->*(field.memberPtr)), subParam, authz);
         };
 
         // call writeField for each field in the dst struct
@@ -308,6 +310,7 @@ catena::exception_with_status toProto(catena::Value& dst, const T* src, const IP
     if (!authz.readAuthz(pd)) {
         rc = catena::exception_with_status("Not authorized to read param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
     } else {
+        dst.clear_struct_array_values();
         using structType = T::value_type;
         auto* dstArray = dst.mutable_struct_array_values();
         
@@ -317,6 +320,10 @@ catena::exception_with_status toProto(catena::Value& dst, const T* src, const IP
             *dstArray->add_struct_values() = *elemValue.mutable_struct_value();
             if (rc.status != catena::StatusCode::OK) { break; }
         }
+    }
+    // Return an empty array if the serialization failed
+    if (rc.status != catena::StatusCode::OK) {
+        dst.clear_struct_array_values();
     }
     return rc;
 }
@@ -363,11 +370,6 @@ catena::exception_with_status fromProto(const catena::Value& src, T* dst, const 
         using structType = T::value_type;
         auto& srcArray = src.struct_array_values().struct_values();
         dst->clear(); // empty the destination vector
-    
-        // Right now from proto is able to append any number of values to the
-        // vector
-        // Do we want to keep this behavior?
-
         // iterate over each element in the src array and call fromProto for each
         for (int i = 0; i < srcArray.size(); ++i) {
             catena::Value item;
@@ -426,6 +428,7 @@ catena::exception_with_status toProto(catena::Value& dst, const T* src, const IP
     if (!authz.readAuthz(pd)) {
         rc = catena::exception_with_status("Not authorized to read param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
     } else {
+        dst.clear_struct_variant_value();
         std::string variantType = alternativeNames<T>[src->index()];
         IParamDescriptor& subParam = pd.getSubParam(variantType);
         std::visit([&](auto& arg) {
@@ -437,6 +440,10 @@ catena::exception_with_status toProto(catena::Value& dst, const T* src, const IP
                 *structVariant->mutable_value() = elemValue;
             }
         }, *src);
+    }
+    // Return an empty array if the serialization failed
+    if (rc.status != catena::StatusCode::OK) {
+        dst.clear_struct_variant_value();
     }
     return rc;
 }
@@ -501,12 +508,17 @@ catena::exception_with_status toProto(catena::Value& dst, const T* src, const IP
     if (!authz.readAuthz(pd)) {
         rc = catena::exception_with_status("Not authorized to read param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
     } else {
+        dst.clear_struct_variant_array_values();
         for (const auto& item : *src) {
             catena::Value elemValue;
             rc = toProto(elemValue, &item, pd, authz);
             *dst.mutable_struct_variant_array_values()->add_struct_variants() = *elemValue.mutable_struct_variant_value();
             if (rc.status != catena::StatusCode::OK) { break; }
         }
+    }
+    // Return an empty array if the serialization failed
+    if (rc.status != catena::StatusCode::OK) {
+        dst.clear_struct_variant_array_values();
     }
     return rc;
 }

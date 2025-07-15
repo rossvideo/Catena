@@ -136,7 +136,6 @@ catena::exception_with_status catena::common::fromProto<float>(const catena::Val
         if (!constraint || !constraint->isRange()) {
              *dst = src.float32_value();
         } else {
-            // float32 constraint is always a range
             // round src to a valid value in the range
             *dst = constraint->apply(src).float32_value();
         }
@@ -367,8 +366,7 @@ catena::exception_with_status catena::common::fromProto<std::vector<std::string>
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     if (validFromProto(src, dst, pd, rc, authz)) {
         dst->clear();
-        const IConstraint* constraint = pd.getConstraint();
-         for (const std::string& s : src.string_array_values().strings()) {
+        for (const std::string& s : src.string_array_values().strings()) {
             dst->push_back(s);
         }
     }
