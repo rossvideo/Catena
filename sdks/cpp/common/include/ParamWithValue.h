@@ -472,7 +472,7 @@ class ParamWithValue : public catena::common::IParam {
 
         if (oidIndex >= value.size() || oidIndex == catena::common::Path::kEnd) {
             // If index is out of bounds, return nullptr
-            status = catena::exception_with_status("Index out of bounds in path " + oid.fqoid(), catena::StatusCode::OUT_OF_RANGE);
+            status = catena::exception_with_status("Index " + std::to_string(oidIndex) + " out of bounds in path " + oid.fqoid(), catena::StatusCode::OUT_OF_RANGE);
             return nullptr;
         }
 
@@ -705,7 +705,7 @@ class ParamWithValue : public catena::common::IParam {
             ans = catena::exception_with_status("Index not specified in SetValue call to " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
         // Index must be within bounds.
         } else if (index != Path::kEnd && index >= *mSizeTracker_) {
-            ans = catena::exception_with_status("Index out of bounds of array " + descriptor_.getOid(), catena::StatusCode::OUT_OF_RANGE);
+            ans = catena::exception_with_status("Index " + std::to_string(index) + " out of bounds of array " + descriptor_.getOid(), catena::StatusCode::OUT_OF_RANGE);
         // memVal must pass all validation checks in validFromProto.
         } else if (validFromProto(protoVal, &testVal, descriptor_, ans, authz)) {
             // Valid case if validFromProto returns true.

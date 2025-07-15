@@ -242,7 +242,7 @@ bool validFromProto(const catena::Value& src, const T* dst, const IParamDescript
             if (rc.status == catena::StatusCode::OK) {
                 // Must contain all the field
                 if (!srcFields.contains(field.name)) {
-                    rc = catena::exception_with_status(pd.getOid() + " does not contain field " + field.name, catena::StatusCode::INVALID_ARGUMENT);
+                    rc = catena::exception_with_status("Missing field " + std::string(field.name) + " from " + pd.getOid(), catena::StatusCode::INVALID_ARGUMENT);
                 } else {
                     validFromProto(srcFields.at(field.name), &(dst->*(field.memberPtr)), subParam, rc, authz);
                 }
