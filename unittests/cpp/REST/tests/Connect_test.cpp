@@ -192,7 +192,7 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByServer) {
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-    dm0_.valueSetByServer.emit(paramOid_, param.get());
+    dm0_.getValueSetByServer().emit(paramOid_, param.get());
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     catena::REST::Connect::shutdownSignal_.emit();
@@ -228,7 +228,7 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByClient) {
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-    dm0_.valueSetByClient.emit(paramOid_, param.get());
+    dm0_.getValueSetByClient().emit(paramOid_, param.get());
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     catena::REST::Connect::shutdownSignal_.emit();
@@ -260,7 +260,7 @@ TEST_F(RESTConnectTest, Connect_HandlesLanguage) {
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-    dm0_.languageAddedPushUpdate.emit(languagePack.get());
+    dm0_.getLanguageAddedPushUpdate().emit(languagePack.get());
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     catena::REST::Connect::shutdownSignal_.emit();
@@ -335,7 +335,7 @@ TEST_F(RESTConnectTest, Connect_HandlesWriterFailure) {
     clientSocket_.close();
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-    dm0_.valueSetByServer.emit(paramOid_, param.get());
+    dm0_.getValueSetByServer().emit(paramOid_, param.get());
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     EXPECT_FALSE(serverSocket_.is_open());
