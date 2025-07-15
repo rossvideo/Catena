@@ -160,13 +160,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param clientScope the client scope
      */
     catena::exception_with_status toProto(catena::Value& value, Authorizer& authz) const override {
-        catena::exception_with_status ans{"", catena::StatusCode::OK};
-        if (!authz.readAuthz(*this)) {
-            ans = catena::exception_with_status("Not authorized to read param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
-        } else {
-            catena::common::toProto<T>(value, &value_.get(), descriptor_, authz);
-        }
-        return ans;
+        return catena::common::toProto<T>(value, &value_.get(), descriptor_, authz);
     }
 
     /**
@@ -176,14 +170,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param clientScope the client scope
      */
     catena::exception_with_status toProto(catena::Param& param, Authorizer& authz) const override {
-        catena::exception_with_status ans{"", catena::StatusCode::OK};
-        if (!authz.readAuthz(*this)) {
-            return catena::exception_with_status("Not authorized to read param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
-        } else {
-            descriptor_.toProto(param, authz);
-            catena::common::toProto<T>(*param.mutable_value(), &value_.get(), descriptor_, authz);
-        }
-        return ans;
+        return catena::common::toProto<T>(*param.mutable_value(), &value_.get(), descriptor_, authz);
     }
 
     /**
@@ -209,16 +196,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param clientScope the client scope
      */
     catena::exception_with_status fromProto(const catena::Value& value, Authorizer& authz) override {
-        catena::exception_with_status ans{"", catena::StatusCode::OK};
-        if (!authz.readAuthz(*this)) {
-            ans = catena::exception_with_status("Not authorized to read param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
-        }
-        else if (!authz.writeAuthz(*this)) {
-            ans = catena::exception_with_status("Not authorized to write to param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
-        } else {
-            catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
-        }
-        return ans;
+        return catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
     }
 
     /**
@@ -686,11 +664,8 @@ class ParamWithValue : public catena::common::IParam {
         if (index != Path::kNone) {
             ans = catena::exception_with_status("Index not applicable to setValue for param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
         // newVal must pass all validation checks in validFromProto.
-        } else if (!validFromProto(protoVal, &oldVal, descriptor_, authz)) {
-            ans = catena::exception_with_status("FromProto would not work ", catena::StatusCode::INVALID_ARGUMENT);
-
-        // Valid case
-        } else {
+        } else if (validFromProto(protoVal, &oldVal, descriptor_, ans, authz)) {
+            // Valid case if validFromProto returns true.
             mSizeTracker_ = std::make_shared<std::size_t>(str_length(newVal));
         }
 
@@ -732,16 +707,16 @@ class ParamWithValue : public catena::common::IParam {
         } else if (index != Path::kEnd && index >= *mSizeTracker_) {
             ans = catena::exception_with_status("Index out of bounds of array " + descriptor_.getOid(), catena::StatusCode::OUT_OF_RANGE);
         // memVal must pass all validation checks in validFromProto.
-        } else if (!validFromProto(protoVal, &testVal, descriptor_, authz)) {
-            ans = catena::exception_with_status("FromProto would not work for " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
-
-        // Valid case 1: Appending to the end.
-        } else if (index == Path::kEnd) {
-            *mSizeTracker_ += 1;
-            tSizeTracker_->push_back(str_length(memVal));
-        // Valid case 2: Inserting at an existing index.
-        } else {
-            tSizeTracker_->at(index) = str_length(memVal);
+        } else if (validFromProto(protoVal, &testVal, descriptor_, ans, authz)) {
+            // Valid case if validFromProto returns true.
+            // Valid case 1: Appending to the end.
+            if (index == Path::kEnd) {
+                *mSizeTracker_ += 1;
+                tSizeTracker_->push_back(str_length(memVal));
+            // Valid case 2: Inserting at an existing index.
+            } else {
+                tSizeTracker_->at(index) = str_length(memVal);
+            }
         }
 
         // If above was sucessful, finish by validating mSize and tSize

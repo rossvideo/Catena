@@ -74,11 +74,9 @@ bool Device::tryMultiSetValue (catena::MultiSetValuePayload src, catena::excepti
                     }
                     std::unique_ptr<IParam> param = getParam(path, ans, authz);
                     // Validating setValue operation.
-                    if (!param) {
+                    if (!param || !param->validateSetValue(setValuePayload.value(), index, authz, ans)) {
                         break;
-                    } else if (!param->validateSetValue(setValuePayload.value(), index, authz, ans)) {
-                        break;
-                    } 
+                    }
                 }
             } catch (const catena::exception_with_status& why) {
                 ans = catena::exception_with_status(why.what(), why.status);

@@ -95,6 +95,7 @@ class StructInfoTest : public ::testing::Test {
         EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(nullptr));
         EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(5));
         EXPECT_CALL(pd_, total_length()).WillRepeatedly(testing::Return(20));
+        EXPECT_CALL(pd_, getOid()).WillRepeatedly(testing::ReturnRef(oid));
         EXPECT_CALL(constraint_, isRange()).WillRepeatedly(testing::Return(false));
     }
     /*
@@ -160,6 +161,8 @@ class StructInfoTest : public ::testing::Test {
             }
         }
     }
+
+    std::string oid = "test_oid";
 
     catena::Value val_;
     MockParamDescriptor pd_, subpd1_, subpd2_;
