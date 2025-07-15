@@ -1,19 +1,20 @@
 // connections/REST
 #include <controllers/ExecuteCommand.h>
-#include <Status.h>
-#include <google/protobuf/util/json_util.h>
-#include <iostream>
 
 using catena::REST::ExecuteCommand;
-using catena::common::IParam;
-using catena::common::IParamDescriptor;
 
 // Initializes the object counter for ExecuteCommand to 0.
 int ExecuteCommand::objectCounter_ = 0;
 
 ExecuteCommand::ExecuteCommand(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
-    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms} {
+    socket_{socket}, context_{context}, dms_{dms} {
     objectId_ = objectCounter_++;
+    // Initializing the writer depending on if the response is stream or unary.
+    if (context.stream()) {
+        writer_ = std::make_unique<catena::REST::SSEWriter>(socket, context.origin());
+    } else {
+        writer_ = std::make_unique<catena::REST::SocketWriter>(socket, context.origin(), true);
+    }
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
 
@@ -57,7 +58,7 @@ void ExecuteCommand::proceed() {
             // If the command is not found, return an error
             if (command != nullptr) {
                 // Execute the command and write response if respond = true.
-                std::unique_ptr<IParamDescriptor::ICommandResponder> responder = command->executeCommand(val);
+                std::unique_ptr<CommandResponder> responder = command->executeCommand(val);
                 if (!responder) {
                     rc = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
                 } else {
@@ -65,7 +66,7 @@ void ExecuteCommand::proceed() {
                         writeConsole_(CallStatus::kWrite, socket_.is_open());
                         catena::CommandResponse res = responder->getNext();
                         if (respond) {
-                            writer_.sendResponse(rc, res);
+                            writer_->sendResponse(rc, res);
                         }
                     }
                 }
@@ -76,13 +77,11 @@ void ExecuteCommand::proceed() {
     } catch (...) {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
-    // Writing final code if respond = false or an error occurred.
-    if (rc.status != catena::StatusCode::OK || !respond) {
-        writer_.sendResponse(rc);
-    }
+    // empty msg signals unary to send response. Does nothing for stream.
+    writer_->sendResponse(rc);
 }
 
 void ExecuteCommand::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << "ExecuteCommand[" << objectId_ << "] finished\n";
+    DEBUG_LOG << "ExecuteCommand[" << objectId_ << "] finished\n";
 } 

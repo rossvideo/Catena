@@ -57,6 +57,7 @@
 
 // common
 #include <Status.h>
+#include <Logger.h>
 
 namespace catena {
 namespace gRPC {

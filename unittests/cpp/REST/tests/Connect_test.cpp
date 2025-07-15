@@ -50,6 +50,16 @@ using namespace catena::REST;
 
 class RESTConnectTest : public RESTEndpointTest {
 protected:
+
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RESTConnectTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
     RESTConnectTest() : RESTEndpointTest() {
         EXPECT_CALL(context_, detailLevel())
             .WillRepeatedly(testing::Return(catena::Device_DetailLevel::Device_DetailLevel_FULL));
@@ -190,7 +200,7 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByServer) {
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-    dm0_.valueSetByServer.emit(paramOid_, param.get());
+    dm0_.getValueSetByServer().emit(paramOid_, param.get());
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     catena::REST::Connect::shutdownSignal_.emit();
@@ -228,7 +238,7 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByClient) {
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-    dm0_.valueSetByClient.emit(paramOid_, param.get());
+    dm0_.getValueSetByClient().emit(paramOid_, param.get());
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     catena::REST::Connect::shutdownSignal_.emit();
@@ -262,7 +272,7 @@ TEST_F(RESTConnectTest, Connect_HandlesLanguage) {
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-    dm0_.languageAddedPushUpdate.emit(languagePack.get());
+    dm0_.getLanguageAddedPushUpdate().emit(languagePack.get());
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     catena::REST::Connect::shutdownSignal_.emit();
@@ -339,7 +349,7 @@ TEST_F(RESTConnectTest, Connect_HandlesWriterFailure) {
     clientSocket_.close();
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-    dm0_.valueSetByServer.emit(paramOid_, param.get());
+    dm0_.getValueSetByServer().emit(paramOid_, param.get());
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     EXPECT_FALSE(serverSocket_.is_open());

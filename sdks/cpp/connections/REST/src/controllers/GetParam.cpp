@@ -62,5 +62,5 @@ void GetParam::proceed() {
 
 void GetParam::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << "GetParam[" << objectId_ << "] finished\n";
+    DEBUG_LOG << "GetParam[" << objectId_ << "] finished\n";
 }

@@ -30,6 +30,7 @@
 
 // connections/gRPC
 #include <controllers/GetPopulatedSlots.h>
+#include <Logger.h>
 using catena::gRPC::GetPopulatedSlots;
 
 // Initializes the object counter for GetPopulatedSlots to 0.
@@ -48,13 +49,13 @@ GetPopulatedSlots::GetPopulatedSlots(ICatenaServiceImpl *service, SlotMap& dms, 
 
 // Manages gRPC command execution process using the state variable status.
 void GetPopulatedSlots::proceed( bool ok) {
-    std::cout << "GetPopulatedSlots::proceed[" << objectId_ << "]: "
+    DEBUG_LOG << "GetPopulatedSlots::proceed[" << objectId_ << "]: "
               << timeNow() << " status: " << static_cast<int>(status_)
-              << ", ok: " << std::boolalpha << ok << std::endl;
+              << ", ok: " << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        std::cout << "GetPopulatedSlots[" << objectId_ << "] cancelled\n";
+        DEBUG_LOG << "GetPopulatedSlots[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -92,7 +93,7 @@ void GetPopulatedSlots::proceed( bool ok) {
          * CatenaServiceImpl.
          */
         case CallStatus::kFinish:
-            std::cout << "GetPopulatedSlots[" << objectId_ << "] finished\n";
+            DEBUG_LOG << "GetPopulatedSlots[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

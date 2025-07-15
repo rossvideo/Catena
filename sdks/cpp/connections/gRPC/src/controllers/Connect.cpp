@@ -30,6 +30,7 @@
 
 // connections/gRPC
 #include <controllers/Connect.h>
+#include <Logger.h>
 using catena::gRPC::Connect;
 using catena::common::ILanguagePack;
 
@@ -51,17 +52,17 @@ catena::gRPC::Connect::Connect(ICatenaServiceImpl *service, SlotMap& dms, bool o
 
 // Manages gRPC command execution process using the state variable status.
 void catena::gRPC::Connect::proceed(bool ok) {
-    std::cout << "Connect proceed[" << objectId_ << "]: " << timeNow()
+    DEBUG_LOG << "Connect proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: "
-                << std::boolalpha << ok << std::endl;
+                << std::boolalpha << ok;
 
     /**
      * The newest connect object (the one that has not yet been attached to a
      * client request) will send shutdown signal to cancel all open connections
      */
     if (!ok && status_ != CallStatus::kFinish) {
-        std::cout << "Connect[" << objectId_ << "] cancelled\n";
-        std::cout << "Cancelling all open connections" << std::endl;
+        DEBUG_LOG << "Connect[" << objectId_ << "] cancelled";
+        DEBUG_LOG << "Cancelling all open connections";
         shutdownSignal_.emit();
         status_ = CallStatus::kFinish;
     }
@@ -100,15 +101,15 @@ void catena::gRPC::Connect::proceed(bool ok) {
                 for (auto [slot, dm] : dms_) {
                     if (dm) {
                         // Waiting for a value set by server to be sent to execute code.
-                        valueSetByServerIds_[slot] = dm->valueSetByServer.connect([this, slot](const std::string& oid, const IParam* p){
+                        valueSetByServerIds_[slot] = dm->getValueSetByServer().connect([this, slot](const std::string& oid, const IParam* p){
                             updateResponse_(oid, p, slot);
                         });
                         // Waiting for a value set by client to be sent to execute code.
-                        valueSetByClientIds_[slot] = dm->valueSetByClient.connect([this, slot](const std::string& oid, const IParam* p){
+                        valueSetByClientIds_[slot] = dm->getValueSetByClient().connect([this, slot](const std::string& oid, const IParam* p){
                             updateResponse_(oid, p, slot);
                         });
                         // Waiting for a language to be added to execute code.
-                        languageAddedIds_[slot] = dm->languageAddedPushUpdate.connect([this, slot](const ILanguagePack* l) {
+                        languageAddedIds_[slot] = dm->getLanguageAddedPushUpdate().connect([this, slot](const ILanguagePack* l) {
                             updateResponse_(l, slot);
                         });
                         // Send client a empty update with slot of the device
@@ -136,7 +137,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
             // If connect was cancelled finish the process.
             if (context_.IsCancelled()) {
                 status_ = CallStatus::kFinish;
-                std::cout << "Connection[" << objectId_ << "] cancelled\n";
+                DEBUG_LOG << "Connection[" << objectId_ << "] cancelled";
                 writer_.Finish(Status::CANCELLED, this);
                 break;
             // Send the client an update with the slot of the device.
@@ -149,7 +150,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
          * kFinish: Ends the connection.
          */
         case CallStatus::kFinish:
-            std::cout << "Connect[" << objectId_ << "] finished\n";
+            DEBUG_LOG << "Connect[" << objectId_ << "] finished";
             // Disconnecting all initialized listeners.
             if (shutdownSignalId_ != 0) {
                 shutdownSignal_.disconnect(shutdownSignalId_);
@@ -157,13 +158,13 @@ void catena::gRPC::Connect::proceed(bool ok) {
             for (auto [slot, dm] : dms_) {
                 if (dm) {
                     if (valueSetByClientIds_.contains(slot)) {
-                        dm->valueSetByClient.disconnect(valueSetByClientIds_[slot]);
+                        dm->getValueSetByClient().disconnect(valueSetByClientIds_[slot]);
                     }
                     if (valueSetByServerIds_.contains(slot)) {
-                        dm->valueSetByServer.disconnect(valueSetByServerIds_[slot]);
+                        dm->getValueSetByServer().disconnect(valueSetByServerIds_[slot]);
                     }
                     if (languageAddedIds_.contains(slot)) {
-                        dm->languageAddedPushUpdate.disconnect(languageAddedIds_[slot]);
+                        dm->getLanguageAddedPushUpdate().disconnect(languageAddedIds_[slot]);
                     }
                 }
             }

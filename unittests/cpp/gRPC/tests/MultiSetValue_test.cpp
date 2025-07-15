@@ -47,6 +47,15 @@ using namespace catena::gRPC;
 // Fixture
 class gRPCMultiSetValueTests : public GRPCTest {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("gRPCMultiSetValueTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
     /*
      * Creates a MultiSetValue handler object.
      */

@@ -23,11 +23,21 @@ jobs:
                   tar -xvf pandoc-3.1.2-linux-amd64.tar.gz
                   sudo mv pandoc-3.1.2/bin/pandoc /usr/local/bin/
 
+            - name: Install and Build glog
+              run: |
+                if [ ! -d "$HOME/.local/lib/glog" ]; then
+                  cd ~
+                  echo "Install and Build glog"
+                  sudo apt-get install -y libgoogle-glog-dev
+                else
+                  echo "glog already installed, skipping build"
+                fi
+
             - name: Make a build directory, run CMake and Ninja to build Doxygen files
               run: |
                   mkdir -p build/cpp
                   cd build/cpp
-                  cmake -DONLY_DOCS=ON -G Ninja -B ~/work/Catena/Catena/build/cpp -S ~/work/Catena/Catena/sdks/cpp
+                  cmake -DONLY_DOCS=ON -G Ninja -DGLOG_LOGGING_DIR=${HOME}/Catena/logs -B ~/work/Catena/Catena/build/cpp -S ~/work/Catena/Catena/sdks/cpp
                   ninja doxygen
 
             # Copy Doxygen files to a "doxygen" subdirectory for GitHub Pages

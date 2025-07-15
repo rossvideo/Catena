@@ -33,7 +33,8 @@ target_link_libraries(${This}
         pthread	
     PRIVATE	
         ${GTEST_BOTH_LIBRARIES}	
-        GTest::GTest	
+        glog::glog
+        GTest::GTest
         GTest::Main	
         GTest::gmock	
         GTest::gmock_main	

@@ -50,7 +50,17 @@ using namespace catena::gRPC;
 // Fixture
 class gRPCConnectTests : public GRPCTest {
   protected:
-    gRPCConnectTests() { expRc_ = catena::exception_with_status("Cancelled on the server side", catena::StatusCode::CANCELLED); }
+    gRPCConnectTests() {
+        expRc_ = catena::exception_with_status("Cancelled on the server side", catena::StatusCode::CANCELLED);
+        // dm0_ signals
+        EXPECT_CALL(dm0_, getValueSetByClient()).WillRepeatedly(testing::ReturnRef(valueSetByClient0));
+        EXPECT_CALL(dm0_, getValueSetByServer()).WillRepeatedly(testing::ReturnRef(valueSetByServer0));
+        EXPECT_CALL(dm0_, getLanguageAddedPushUpdate()).WillRepeatedly(testing::ReturnRef(languageAddedPushUpdate0));
+        // dm1_ signals
+        EXPECT_CALL(dm1_, getValueSetByClient()).WillRepeatedly(testing::ReturnRef(valueSetByClient1));
+        EXPECT_CALL(dm1_, getValueSetByServer()).WillRepeatedly(testing::ReturnRef(valueSetByServer1));
+        EXPECT_CALL(dm1_, getLanguageAddedPushUpdate()).WillRepeatedly(testing::ReturnRef(languageAddedPushUpdate1));
+    }
     
     /*
      * Creates an Connect handler object.
@@ -220,6 +230,10 @@ class gRPCConnectTests : public GRPCTest {
     MockSubscriptionManager subManager;
     std::unique_ptr<StreamReader> streamReader_ = nullptr;
 
+    // Test signals.
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByClient0, valueSetByClient1;
+    vdk::signal<void(const ILanguagePack*)> languageAddedPushUpdate0, languageAddedPushUpdate1;
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByServer0, valueSetByServer1;
 };
 
 /*
@@ -268,9 +282,9 @@ TEST_F(gRPCConnectTests, Connect_ValueSetByClient) {
     streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
     streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
     streamReader_->Await();
-    dm0_.valueSetByClient.emit("oid0", &param0);
+    dm0_.getValueSetByClient().emit("oid0", &param0);
     streamReader_->Await();
-    dm1_.valueSetByClient.emit("oid1", &param1);
+    dm1_.getValueSetByClient().emit("oid1", &param1);
     streamReader_->Await();
     testRPC();
 }
@@ -301,9 +315,9 @@ TEST_F(gRPCConnectTests, Connect_ValueSetByServer) {
     streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
     streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
     streamReader_->Await();
-    dm0_.valueSetByServer.emit("oid0", &param0);
+    dm0_.getValueSetByServer().emit("oid0", &param0);
     streamReader_->Await();
-    dm1_.valueSetByServer.emit("oid1", &param1);
+    dm1_.getValueSetByServer().emit("oid1", &param1);
     streamReader_->Await();
     testRPC();
 }
@@ -328,9 +342,9 @@ TEST_F(gRPCConnectTests, Connect_LanguageAddedPushUpdate) {
     streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
     streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
     streamReader_->Await();
-    dm0_.languageAddedPushUpdate.emit(&languagePack0);
+    dm0_.getLanguageAddedPushUpdate().emit(&languagePack0);
     streamReader_->Await();
-    dm1_.languageAddedPushUpdate.emit(&languagePack1);
+    dm1_.getLanguageAddedPushUpdate().emit(&languagePack1);
     streamReader_->Await();
     testRPC();
 }
@@ -375,11 +389,11 @@ TEST_F(gRPCConnectTests, Connect_AuthzValid) {
     streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
     streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
     streamReader_->Await();
-    dm0_.valueSetByClient.emit("oid0", &param0);
+    dm0_.getValueSetByClient().emit("oid0", &param0);
     streamReader_->Await();
-    dm0_.valueSetByServer.emit("oid0", &param0);
+    dm0_.getValueSetByServer().emit("oid0", &param0);
     streamReader_->Await();
-    dm0_.languageAddedPushUpdate.emit(&languagePack0);
+    dm0_.getLanguageAddedPushUpdate().emit(&languagePack0);
     streamReader_->Await();
     testRPC();
 }

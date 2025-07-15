@@ -68,6 +68,7 @@
 #include <chrono>
 #include <signal.h>
 #include <functional>
+#include <Logger.h>
 
 using grpc::Server;
 using catena::gRPC::CatenaServiceImpl;
@@ -83,7 +84,7 @@ std::atomic<bool> counterLoop = true;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        std::cout << "Caught signal " << sig << ", shutting down" << std::endl;
+        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
         fibLoop = false;
         counterLoop = false;
         if (globalServer != nullptr) {
@@ -139,12 +140,12 @@ void defineCommands() {
                         {
                         std::lock_guard lg(dm.mutex());
                         fibParam.get() = next;
-                        dm.valueSetByServer.emit("/number_example", &fibParam);
+                        dm.getValueSetByServer().emit("/number_example", &fibParam);
                         }
                     }
                 });
 
-                std::cout << "Fibonacci sequence start" << std::endl;;
+                DEBUG_LOG << "Fibonacci sequence start";
                 response.mutable_no_response();
             }
             co_return response;
@@ -162,7 +163,7 @@ void defineCommands() {
                 fibLoop = false;
                 fibThread->join();
                 fibThread = nullptr;
-                std::cout << "Fibonacci sequence stop" << std::endl;
+                DEBUG_LOG << "Fibonacci sequence stop";
                 response.mutable_no_response();
             } else {
                 response.mutable_exception()->set_type("Invalid Command");
@@ -183,7 +184,7 @@ void defineCommands() {
             if (intParam) {
                 auto& fibParam = *dynamic_cast<ParamWithValue<int32_t>*>(intParam.get());
                 fibParam.get() = value.int32_value();
-                dm.valueSetByServer.emit("/number_example", &fibParam);
+                dm.getValueSetByServer().emit("/number_example", &fibParam);
                 response.mutable_no_response();
             } else {
                 response.mutable_exception()->set_type("Invalid Command");
@@ -214,7 +215,7 @@ void defineCommands() {
                     randomNum = std::round(randomNum * 1000) / 1000;
                     randomArray.push_back(randomNum);
                 }
-                std::cout << "Randomized float array" << std::endl;
+                DEBUG_LOG << "Randomized float array";
                 response.mutable_no_response();
             }
             
@@ -230,30 +231,30 @@ void defineCommands() {
             catena::exception_with_status err{"", catena::StatusCode::OK};
             catena::CommandResponse response;
             // Locating
-            std::cout << "Locating tape..." << std::endl;
+            DEBUG_LOG << "Locating tape...";
             response.mutable_response()->set_string_value("Locating tape...");
             co_yield response;
             std::this_thread::sleep_for(std::chrono::seconds(2));
             // Loading
-            std::cout << "Tape found, loading..." << std::endl;
+            DEBUG_LOG << "Tape found, loading...";
             response.Clear();
             response.mutable_response()->set_string_value("Tape found, loading...");
             co_yield response;
             std::this_thread::sleep_for(std::chrono::seconds(2));
             // Seeking
-            std::cout << "Tape loaded, seeking..." << std::endl;
+            DEBUG_LOG << "Tape loaded, seeking...";
             response.Clear();
             response.mutable_response()->set_string_value("Tape loaded, seeking...");
             co_yield response;
             std::this_thread::sleep_for(std::chrono::seconds(2));
             // Reading
-            std::cout << "File loaded, reading..." << std::endl;
+            DEBUG_LOG << "File loaded, reading...";
             response.Clear();
             response.mutable_response()->set_string_value("File loaded, reading...");
             co_yield response;
             std::this_thread::sleep_for(std::chrono::seconds(2));
             // Done
-            std::cout << "File loaded." << std::endl;
+            DEBUG_LOG << "File loaded.";
             response.Clear();
             response.mutable_response()->set_string_value("File loaded.");
             co_return response;
@@ -281,8 +282,8 @@ void startCounter() {
             if (counter.get()++ >= 200) {
                 counter.get() = 0; // Reset counter to 0 when it reaches 200
             }
-            std::cout << counter.getOid() << " set to " << counter.get() << '\n';
-            dm.valueSetByServer.emit("/counter", &counter);
+            DEBUG_LOG << counter.getOid() << " set to " << counter.get();
+            dm.getValueSetByServer().emit("/counter", &counter);
         }
     }
 }
@@ -312,7 +313,7 @@ void RunRPCServer(std::string addr)
 
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
-        std::cout << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms) << '\n';
+        DEBUG_LOG << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
 
         globalServer = server.get();
 
@@ -331,12 +332,14 @@ void RunRPCServer(std::string addr)
         cq_thread.join();
 
     } catch (std::exception &why) {
-        std::cerr << "Problem: " << why.what() << '\n';
+        LOG(ERROR) << "Problem: " << why.what();
     }
 }
 
 int main(int argc, char* argv[])
 {
+    Logger::StartLogging(argc, argv);
+
     std::string addr;
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
@@ -348,5 +351,8 @@ int main(int argc, char* argv[])
 
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
+    
+    // Shutdown Google Logging
+    google::ShutdownGoogleLogging();
     return 0;
 }

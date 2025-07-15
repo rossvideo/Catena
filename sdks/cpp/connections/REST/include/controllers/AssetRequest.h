@@ -58,6 +58,8 @@
 // Standard library
 #include <filesystem>
 
+#include <Logger.h>
+
 namespace catena {
 namespace REST {
 
@@ -98,10 +100,35 @@ class AssetRequest : public ICallData {
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
       return new AssetRequest(socket, context, dms);
     }
-    
-
 
   private:
+    /**
+     * @brief Compresses the input data using the specified window bits.
+     * @param input The input data to compress.
+     * @param windowBits The window bits to use for compression.
+     */
+    void compress(std::vector<uint8_t>& input, int windowBits);
+
+    /**
+     * @brief Compresses the input data using deflate compression.
+     * @param input The input data to compress.
+     */
+    void deflate_compress(std::vector<uint8_t>& input);
+
+    /**
+     * @brief Compresses the input data using gzip compression.
+     * @param input The input data to compress.
+     */
+    void gzip_compress(std::vector<uint8_t>& input);
+
+    /**
+     * @brief Gets the last write time of the file.
+     * @param path The path to the file.
+     * @param out_time The output time.
+     * @return True if the last write time is valid, false otherwise.
+     */
+    bool get_last_write_time(const std::string& path, std::time_t& out_time);
+    
     /**
      * @brief Writes the current state of the request to the console.
      * 
@@ -109,10 +136,9 @@ class AssetRequest : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << "AssetRequest::proceed[" << objectId_ << "]: "
+      DEBUG_LOG << "AssetRequest::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
-                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
-                << std::endl;
+                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok;
     }
 
     /**

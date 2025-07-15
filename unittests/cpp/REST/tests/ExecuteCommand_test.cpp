@@ -49,6 +49,16 @@ using namespace catena::REST;
 // Fixture
 class RESTExecuteCommandTests : public RESTEndpointTest {
   protected:
+
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RESTExecuteCommandTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
     /*
      * Sets default expectations for hasField("respond").
      */
@@ -112,7 +122,12 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
                 ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
             }
         }
-        EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, jsonBodies));
+        // Response format based on stream or unary.
+        if (stream_) {
+            EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, jsonBodies));
+        } else {
+            EXPECT_EQ(readResponse(), expectedResponse(expRc_, jsonBodies));
+        }
     }
 
     // in variables
@@ -265,7 +280,139 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_RespondFalse) {
 }
 
 /*
- * TEST 7 - ExecuteCommand returns a CommandResponse no response with authz
+ * TEST 7 - ExecuteCommand returns two CommandResponse responses.
+ */
+TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamResponse) {
+    initPayload(0, "test_command", "test_value", true);
+    expResponse("test_response_1");
+    expResponse("test_response_2");
+    // Remaking with stream enabled.
+    stream_ = true;
+    endpoint_.reset(makeOne());
+    // Setting expectations
+    EXPECT_CALL(dm0_, getCommand(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+            // Making sure the correct values were passed in.
+            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            status = catena::exception_with_status(expRc_.what(), expRc_.status);
+            return std::move(mockCommand_);
+        }));
+    EXPECT_CALL(*mockCommand_, executeCommand(testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](const catena::Value& value) {
+            // Making sure the correct values were passed in.
+            EXPECT_EQ(value.SerializeAsString(), inVal_.SerializeAsString());
+            return std::move(mockResponder_);
+        }));
+    EXPECT_CALL(*mockResponder_, getNext()).Times(2)
+        .WillOnce(testing::Return(expVals_[0]))
+        .WillOnce(testing::Return(expVals_[1]));
+    EXPECT_CALL(*mockResponder_, hasMore()).Times(3)
+        .WillOnce(testing::Return(true))
+        .WillOnce(testing::Return(true))
+        .WillOnce(testing::Return(false));
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 8 - ExecuteCommand returns a CommandResponse no response.
+ */
+TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamNoResponse) {
+    initPayload(0, "test_command", "test_value", true);
+    expNoResponse();
+    // Remaking with stream enabled.
+    stream_ = true;
+    endpoint_.reset(makeOne());
+    // Setting expectations
+    EXPECT_CALL(dm0_, getCommand(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+            // Making sure the correct values were passed in.
+            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            status = catena::exception_with_status(expRc_.what(), expRc_.status);
+            return std::move(mockCommand_);
+        }));
+    EXPECT_CALL(*mockCommand_, executeCommand(testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](const catena::Value& value) {
+            // Making sure the correct values were passed in.
+            EXPECT_EQ(value.SerializeAsString(), inVal_.SerializeAsString());
+            return std::move(mockResponder_);
+        }));
+    EXPECT_CALL(*mockResponder_, getNext()).Times(1).WillOnce(testing::Return(expVals_[0]));
+    EXPECT_CALL(*mockResponder_, hasMore()).Times(2)
+        .WillOnce(testing::Return(true))
+        .WillOnce(testing::Return(false));
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 9 - ExecuteCommand returns a CommandResponse exception.
+ */
+TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamException) {
+    initPayload(0, "test_command", "test_value", true);
+    expException("test_exception_type", "test_exception_details");
+    // Remaking with stream enabled.
+    stream_ = true;
+    endpoint_.reset(makeOne());
+    // Setting expectations
+    EXPECT_CALL(dm0_, getCommand(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+            // Making sure the correct values were passed in.
+            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            status = catena::exception_with_status(expRc_.what(), expRc_.status);
+            return std::move(mockCommand_);
+        }));
+    EXPECT_CALL(*mockCommand_, executeCommand(testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](const catena::Value& value) {
+            // Making sure the correct values were passed in.
+            EXPECT_EQ(value.SerializeAsString(), inVal_.SerializeAsString());
+            return std::move(mockResponder_);
+        }));
+    EXPECT_CALL(*mockResponder_, getNext()).Times(1).WillOnce(testing::Return(expVals_[0]));
+    EXPECT_CALL(*mockResponder_, hasMore()).Times(2)
+        .WillOnce(testing::Return(true))
+        .WillOnce(testing::Return(false));
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 10 - ExecuteCommand returns no response (respond = false).
+ */
+TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamRespondFalse) {
+    initPayload(0, "test_command", "test_value", false);
+    expResponse("test_response_1");
+    expResponse("test_response_2");
+    // Remaking with stream enabled.
+    stream_ = true;
+    endpoint_.reset(makeOne());
+    // Mocking kProcess functions
+    EXPECT_CALL(dm0_, getCommand(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+            // Making sure the correct values were passed in.
+            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            status = catena::exception_with_status(expRc_.what(), expRc_.status);
+            return std::move(mockCommand_);
+        }));
+    EXPECT_CALL(*mockCommand_, executeCommand(testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](const catena::Value& value) {
+            // Making sure the correct values were passed in.
+            EXPECT_EQ(value.SerializeAsString(), inVal_.SerializeAsString());
+            return std::move(mockResponder_);
+        }));
+    EXPECT_CALL(*mockResponder_, getNext()).Times(2)
+        .WillOnce(testing::Return(expVals_[0]))
+        .WillOnce(testing::Return(expVals_[1]));
+    EXPECT_CALL(*mockResponder_, hasMore()).Times(3)
+        .WillOnce(testing::Return(true))
+        .WillOnce(testing::Return(true))
+        .WillOnce(testing::Return(false));
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 11 - ExecuteCommand returns a CommandResponse no response with authz
  *          enabled.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzValid) {
@@ -306,7 +453,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzValid) {
 }
 
 /*
- * TEST 8 - ExecuteCommand fails from invalid JWS token.
+ * TEST 12 - ExecuteCommand fails from invalid JWS token.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzInvalid) { 
     expRc_ = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
@@ -320,7 +467,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzInvalid) {
 }
 
 /*
- * TEST 9 - No device in the specified slot.
+ * TEST 13 - No device in the specified slot.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
     initPayload(dms_.size(), "test_command", "test_value", true);
@@ -333,7 +480,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
 }
 
 /*
- * TEST 10 - ExecuteCommand fails to parse the json body.
+ * TEST 14 - ExecuteCommand fails to parse the json body.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_InvalidJsonBody) {
     expRc_ = catena::exception_with_status("Failed to parse JSON body", catena::StatusCode::INVALID_ARGUMENT);
@@ -345,7 +492,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_InvalidJsonBody) {
 }
 
 /*
- * TEST 11 - getCommand does not find a command.
+ * TEST 15 - getCommand does not find a command.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
     expRc_ = catena::exception_with_status("Command not found", catena::StatusCode::INVALID_ARGUMENT);
@@ -360,7 +507,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
 }
 
 /*
- * TEST 12 - getCommand throws a catena::exception_with_status.
+ * TEST 16 - getCommand throws a catena::exception_with_status.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
     expRc_ = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
@@ -375,7 +522,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
 }
 
 /*
- * TEST 13 - getCommand throws an std::runtime error.
+ * TEST 17 - getCommand throws an std::runtime error.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -387,7 +534,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandThrowUnknown) {
 }
 
 /*
- * TEST 14 - executeCommand returns a nullptr.
+ * TEST 18 - executeCommand returns a nullptr.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
     expRc_ = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
@@ -406,7 +553,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
 }
 
 /*
- * TEST 15 - executeCommand throws a catena::exception_with_status.
+ * TEST 19 - executeCommand throws a catena::exception_with_status.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
     expRc_ = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
@@ -426,7 +573,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
 }
 
 /*
- * TEST 16 - executeCommand returns an std::runtime_error.
+ * TEST 20 - executeCommand returns an std::runtime_error.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -443,7 +590,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
 }
 
 /*
- * TEST 17 - getNext throws a catena::exception_with_status.
+ * TEST 21 - getNext throws a catena::exception_with_status.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
     expRc_ = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
@@ -469,7 +616,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
 }
 
 /*
- * TEST 18 - getNext throws a std::runtime_error.
+ * TEST 22 - getNext throws a std::runtime_error.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);

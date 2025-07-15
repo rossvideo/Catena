@@ -17,7 +17,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -388,20 +388,26 @@ class IDevice {
      * @brief signal emitted when a value is set by the client.
      * Intended recipient is the business logic.
      */
-    vdk::signal<void(const std::string&, const IParam*)> valueSetByClient;
+    virtual vdk::signal<void(const std::string&, const IParam*)>& getValueSetByClient() = 0;
 
     /**
      * @brief signal emitted when a language pack is added to the device.
      * Intended recipient is the business logic.
      */
-    vdk::signal<void(const ILanguagePack*)> languageAddedPushUpdate;
+    virtual vdk::signal<void(const ILanguagePack*)>& getLanguageAddedPushUpdate() = 0;
 
     /**
      * @brief signal emitted when a value is set by the server, or business
      * logic.
      * Intended recipient is the connection manager.
      */
-    vdk::signal<void(const std::string&, const IParam*)> valueSetByServer;
+    virtual vdk::signal<void(const std::string&, const IParam*)>& getValueSetByServer() = 0;
+
+    /**
+     * @brief signal emitted when an asset request is made.
+     * Intended recipient is the business logic.
+     */
+    virtual vdk::signal<void(const std::string&)>& getAssetRequest() = 0;
 };
 
 using SlotMap = std::unordered_map<uint32_t, IDevice*>;
