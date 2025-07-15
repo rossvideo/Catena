@@ -16,7 +16,7 @@ if [ "$clean" = true ]; then
   echo "Build directory cleaned."
 fi
 
-ninja -j20
+ninja -j16
 # Check for -V argument
 verbose=false
 for arg in "$@"; do
