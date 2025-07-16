@@ -56,11 +56,9 @@ void GetParam::proceed() {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
 
-    // Finishing by writing answer to client.
+    // Finishing by writing answer to client and writing the final status to the console.
     writer_.sendResponse(rc, ans);
-}
 
-void GetParam::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     DEBUG_LOG << "GetParam[" << objectId_ << "] finished\n";
 }
