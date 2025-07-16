@@ -5,7 +5,7 @@
 #endif
 
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,12 +37,13 @@
 /**
  * @brief Handles Path objects used to uniquely identify and access OIDs
  * @file Path.h
- * @copyright Copyright © 2023 Ross Video Ltd
+ * @copyright Copyright © 2025 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
  */
 
 /**
- * @example path.cpp demonstrates use of a variety of json-pointers that are useful with catena models.
+ * @example path.cpp demonstrates use of a variety of json-pointers that are
+ * useful with catena models.
  */
 
 #include <iostream>
@@ -106,7 +107,8 @@ class Path {
      *
      * @param path an escaped json-pointer,
      * i.e. '/' replaced by "~1" and '~' by "~0"
-     * @throw catena::exception_with_status INVALID_ARGUMENT if path is not a valid json-pointer
+     * @throw catena::exception_with_status INVALID_ARGUMENT if path is not a
+     * valid json-pointer
      */
     explicit Path(const std::string& jptr);
 
@@ -139,18 +141,21 @@ class Path {
     inline bool empty() const { return frontIdx_ >= segments_.size(); }
 
     /**
-     * @return true if the front of the path is a string, false if it's an Index or empty.
+     * @return true if the front of the path is a string, false if it's an
+     * Index or empty.
      */
     bool front_is_string() const;
 
     /**
-     * @return true if the front of the path is an Index, false if it's a string or empty.
+     * @return true if the front of the path is an Index, false if it's a
+     * string or empty.
      */
     bool front_is_index() const;
 
     /**
      * @return front of Path as a string.
-     * @throws catena::exception_with_status if path is empty or front is not a string.
+     * @throws catena::exception_with_status if path is empty or front is not a
+     * string.
      * @code
      * // recommended usage
      * std::string oid = p.front_is_string() ? p.front_as_string() : "";
@@ -161,7 +166,8 @@ class Path {
 
     /**
      * @return front of path as an Index.
-     * @throws catena::exception_with_status if path is empty or front is not an Index.
+     * @throws catena::exception_with_status if path is empty or front is not an
+     * Index.
      * @code
      * // recommended usage
      * Path::Index idx = p.front_is_index() ? p.front_as_index() : Path::kError;
@@ -171,18 +177,21 @@ class Path {
     Index front_as_index() const;
 
     /**
-     * @return true if the back of the path is a string, false if it's an Index or empty.
+     * @return true if the back of the path is a string, false if it's an Index
+     * or empty.
      */
     bool back_is_string() const;
 
     /**
-     * @return true if the back of the path is an Index, false if it's a string or empty.
+     * @return true if the back of the path is an Index, false if it's a string
+     * or empty.
      */
     bool back_is_index() const;
 
     /**
      * @return back of Path as a string.
-     * @throws catena::exception_with_status if path is empty or back is not a string.
+     * @throws catena::exception_with_status if path is empty or back is not a
+     * string.
      * @code
      * // recommended usage
      * std::string oid = p.back_is_string() ? p.back_as_string() : "";
@@ -193,7 +202,8 @@ class Path {
 
     /**
      * @return back of path as an Index.
-     * @throws catena::exception_with_status if path is empty or back is not an Index.
+     * @throws catena::exception_with_status if path is empty or back is not an
+     * Index.
      * @code
      * // recommended usage
      * Path::Index idx = p.back_is_index() ? p.back_as_index() : Path::kError;
@@ -204,7 +214,8 @@ class Path {
 
     /**
      * @brief return a string representation of the Path
-     * @param leading_slash if true, include leading '/' in output (defaults to false)
+     * @param leading_slash if true, include leading '/' in output (defaults to
+     * false)
      * @return std::string the path as a string
      * 
      * any popped segments are not included in the returned string.
@@ -212,16 +223,18 @@ class Path {
     std::string toString(bool leading_slash = false) const;
 
     /**
-     * @brief return a fully qualified, albeit escaped oid
+     * @brief return a fully qualified oid
      * @return std::string
      * 
-     * The fully qualified oid is rooted at the device and includes all popped segments.
+     * The fully qualified oid is rooted at the device and includes all
+     * segments popped from the front.
      */
     std::string fqoid() const;
 
     /**
      * @brief pop the front of the path.
-     * Decreases the length of the path by 1 unless the path is already empty in which case it does nothing.
+     * Decreases the length of the path by 1 unless the path is already empty
+     * in which case it does nothing.
      */
     void pop() noexcept;
 
@@ -275,6 +288,14 @@ class Path {
     using Segments = std::vector<Segment>;
     Segments segments_{}; /**< the path split into its components */
     std::size_t frontIdx_{0}; /**< index of current front of path */
+
+    /**
+     * @brief Returns a string representation of the Path
+     * @param leading_slash if true, include leading '/' in output
+     * @param startIdx index of the segment to start the path from
+     * @return std::string the path as a string
+     */
+    std::string toString(bool leading_slash, std::size_t startIdx) const;
 
     /**
      * @brief replace / and ~ characters with ~1 & ~0

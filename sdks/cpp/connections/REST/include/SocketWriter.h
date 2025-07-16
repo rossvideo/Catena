@@ -41,26 +41,11 @@
 // connections/REST
 #include "interface/ISocketWriter.h"
 
-// boost
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
-using boost::asio::ip::tcp;
-
-// protobuf interface
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
-
-// common
-#include <Status.h>
-#include <utils.h>
-
 namespace catena {
 namespace REST {
 
 /**
  * @brief Helper class used to write a unary response to a socket using boost.
- * 
- * This writer buffers the response until a call to finish() is made.
  */
 class SocketWriter : public ISocketWriter {
   public:
@@ -73,9 +58,13 @@ class SocketWriter : public ISocketWriter {
     SocketWriter(tcp::socket& socket, const std::string& origin = "*", bool buffer = false) : socket_{socket}, origin_{origin}, buffer_{buffer} {}
 
     /**
-     * @brief Finishes writing the HTTP response.
-     * @param msg The protobuf message to write (if status is OK)
-     * @param err The error status to finish with. If status is OK, writes the message, otherwise writes the error.
+     * @brief Writes a HTTP response to the socket.
+     * 
+     * If the message is being buffered, a call to this function with an empty
+     * message will flush the response. 
+     * 
+     * @param msg The protobuf message to write (if status is OK).
+     * @param err The error status to of the response.
      */
     void sendResponse(const catena::exception_with_status& err, const google::protobuf::Message& msg = catena::Empty()) override;
 
@@ -112,9 +101,12 @@ class SSEWriter : public ISocketWriter {
     SSEWriter(tcp::socket& socket, const std::string& origin = "*") : socket_{socket}, origin_{origin}, headers_sent_{false} {}
 
     /**
-     * @brief Sends a response as a Server-Sent Event.
+     * @brief Writes a Server-Sent Event HTTP response.
      * @param msg The protobuf message to write as JSON.
-     * @param err The error status to finish with.
+     * @param err The error status of the response.
+     * 
+     * Due to the nature of Server-Sent Events, only the first err status sent
+     * with the response.
      */
     void sendResponse(const catena::exception_with_status& err, const google::protobuf::Message& msg = catena::Empty()) override;
 
@@ -128,7 +120,7 @@ class SSEWriter : public ISocketWriter {
      */
     std::string origin_;
     /**
-     * @brief Whether the headers have been sent.
+     * @brief Flag indicating whether the headers have been sent.
      */
     bool headers_sent_;
 };

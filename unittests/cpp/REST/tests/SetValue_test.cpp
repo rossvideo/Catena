@@ -101,15 +101,7 @@ TEST_F(RESTSetValueTests, SetValue_Create) {
 }
 
 /* 
- * TEST 2 - Writing to console with SetValue finish().
- */
-TEST_F(RESTSetValueTests, SetValue_Finish) {
-    endpoint_->finish();
-    ASSERT_TRUE(MockConsole_.str().find("SetValue[1] finished\n") != std::string::npos);
-}
-
-/* 
- * TEST 3 - Normal case for SetValue toMulti_().
+ * TEST 2 - Normal case for SetValue toMulti_().
  */
 TEST_F(RESTSetValueTests, SetValue_Normal) {
     initPayload(0, "/test_oid", "test_value");
@@ -128,7 +120,7 @@ TEST_F(RESTSetValueTests, SetValue_Normal) {
 }
 
 /* 
- * TEST 4 - SetValue toMulti_() fails to parse the JSON.
+ * TEST 3 - SetValue toMulti_() fails to parse the JSON.
  */
 TEST_F(RESTSetValueTests, SetValue_FailParse) {
     expRc_ = catena::exception_with_status("Failed to convert JSON to protobuf", catena::StatusCode::INVALID_ARGUMENT);

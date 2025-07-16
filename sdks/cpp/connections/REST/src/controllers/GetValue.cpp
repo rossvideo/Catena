@@ -46,9 +46,8 @@ void GetValue::proceed() {
 
     // Finishing by writing answer to client.
     writer_.sendResponse(rc, ans);
-}
 
-void GetValue::finish() {
+    // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     DEBUG_LOG << "GetValue[" << objectId_ << "] finished\n";
 }
