@@ -73,14 +73,28 @@ inline void setupMockParam(MockParam* param, const std::string& oid, const IPara
  */
 inline std::string getJwsToken(const std::string& scope) {
     static const std::unordered_map<std::string, std::string> testTokens = {
-        {Scopes().getForwardMap().at(Scopes_e::kMonitor),        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIiwiaWF0IjoxNTE2MjM5MDIyfQ.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ"},
-        {Scopes().getForwardMap().at(Scopes_e::kOperate),        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6b3AiLCJpYXQiOjE1MTYyMzkwMjJ9.lduNvr6tEaLFeIYR4bH5tC55WUSDBEe5PFz9rvGRD3o"},
-        {Scopes().getForwardMap().at(Scopes_e::kConfig),         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6Y2ZnIiwiaWF0IjoxNTE2MjM5MDIyfQ.n1dZJ01l8z4urxFUsSbUoaSJgflK828BHSLcxqTxOf4"},
-        {Scopes().getForwardMap().at(Scopes_e::kAdmin),          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6YWRtIiwiaWF0IjoxNTE2MjM5MDIyfQ.nqkypNl8hTMWC8zF1aIA_CvsfoOdbZrYpr9JN4T4sDs"},
-        {Scopes().getForwardMap().at(Scopes_e::kMonitor) + ":w", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uOnciLCJpYXQiOjE1MTYyMzkwMjJ9.QTHN7uqmk_jR2nVumyee3gMki-47tKOm_R0jnhT8Tpk"},
-        {Scopes().getForwardMap().at(Scopes_e::kOperate) + ":w", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6b3A6dyIsImlhdCI6MTUxNjIzOTAyMn0.SNndYRi4apWLZfp-BoosQtmDDNFInVcMCMuh7djz-QI"},
-        {Scopes().getForwardMap().at(Scopes_e::kConfig)  + ":w", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6Y2ZnOnciLCJpYXQiOjE1MTYyMzkwMjJ9.ty50rEHLJUlseD_6bj7KrmCm9NXVwHjbTAv1u392HCs"},
-        {Scopes().getForwardMap().at(Scopes_e::kAdmin)   + ":w", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6YWRtOnciLCJpYXQiOjE1MTYyMzkwMjJ9.WrWmmNhw3EZ6AzZAytgZbvb_9NFL3_YtSSsZibW1P0w"}
+        {Scopes().getForwardMap().at(Scopes_e::kMonitor),        
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIiwiaWF0IjoxNTE2MjM5MDIyfQ.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ"},
+        {Scopes().getForwardMap().at(Scopes_e::kOperate),        
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6b3AiLCJpYXQiOjE1MTYyMzkwMjJ9.lduNvr6tEaLFeIYR4bH5tC55WUSDBEe5PFz9rvGRD3o"},    
+        {Scopes().getForwardMap().at(Scopes_e::kConfig),         
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6Y2ZnIiwiaWF0IjoxNTE2MjM5MDIyfQ.n1dZJ01l8z4urxFUsSbUoaSJgflK828BHSLcxqTxOf4"},
+        {Scopes().getForwardMap().at(Scopes_e::kAdmin),          
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6YWRtIiwiaWF0IjoxNTE2MjM5MDIyfQ.nqkypNl8hTMWC8zF1aIA_CvsfoOdbZrYpr9JN4T4sDs"},
+        {Scopes().getForwardMap().at(Scopes_e::kMonitor) + ":w", 
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uOnciLCJpYXQiOjE1MTYyMzkwMjJ9.QTHN7uqmk_jR2nVumyee3gMki-47tKOm_R0jnhT8Tpk"},
+        {Scopes().getForwardMap().at(Scopes_e::kOperate) + ":w", 
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6b3A6dyIsImlhdCI6MTUxNjIzOTAyMn0.SNndYRi4apWLZfp-BoosQtmDDNFInVcMCMuh7djz-QI"},
+        {Scopes().getForwardMap().at(Scopes_e::kConfig)  + ":w", 
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6Y2ZnOnciLCJpYXQiOjE1MTYyMzkwMjJ9.ty50rEHLJUlseD_6bj7KrmCm9NXVwHjbTAv1u392HCs"},     
+        {Scopes().getForwardMap().at(Scopes_e::kAdmin)   + ":w", 
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6YWRtOnciLCJpYXQiOjE1MTYyMzkwMjJ9.WrWmmNhw3EZ6AzZAytgZbvb_9NFL3_YtSSsZibW1P0w"},
+        // No scope.
+        {"", 
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"},
+        // Monitor and Operate Write Scope.
+        {"st2138:mon st2138:op:w", 
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIHN0MjEzODpvcDp3IiwiaWF0IjoxNTE2MjM5MDIyfQ.Z8upjHhZWKBlZ-yUcu7FFlJPby_C4jB9Bnk-DGxoQyM"}
     };
     
     auto it = testTokens.find(scope);

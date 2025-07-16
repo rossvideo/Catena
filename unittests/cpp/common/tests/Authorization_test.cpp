@@ -59,16 +59,17 @@ class AuthorizationTest : public ::testing::Test {
     }
 
     // Common test tokens
-    const std::vector<std::pair<std::string, std::string>> testTokens = {
-        {"st2138:mon", getJwsToken("st2138:mon")},
-        {"st2138:op", getJwsToken("st2138:op")},
-        {"st2138:cfg", getJwsToken("st2138:cfg")},
-        {"st2138:adm", getJwsToken("st2138:adm")},
-        {"st2138:mon:w", getJwsToken("st2138:mon:w")},
-        {"st2138:op:w", getJwsToken("st2138:op:w")},
-        {"st2138:cfg:w", getJwsToken("st2138:cfg:w")},
-        {"st2138:adm:w", getJwsToken("st2138:adm:w")}
-    };
+    const std::vector<std::pair<std::string, std::string>> testTokens = []() {
+        // Add all scopes from the map (excluding kUndefined)
+        std::vector<std::pair<std::string, std::string>> tokenPairs;
+        for (const auto& [scopeEnum, scopeStr] : Scopes().getForwardMap()) {
+            if (scopeEnum != Scopes_e::kUndefined) {
+                tokenPairs.emplace_back(scopeStr, getJwsToken(scopeStr));
+                tokenPairs.emplace_back(scopeStr + ":w", getJwsToken(scopeStr + ":w")); 
+            }
+        }
+        return tokenPairs;
+    }();
   
 };
 
@@ -178,10 +179,7 @@ TEST_F(AuthorizationTest, Authz_writeAuthz) {
  * TEST 6 - Testing authorizer with no scope.
  */
 TEST_F(AuthorizationTest, Authz_scopeNone) {
-    std::string noScope = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMj"
-                          "M0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2M"
-                          "jM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw"
-                          "5c";
+    std::string noScope = getJwsToken("");
     Authorizer* authz = nullptr;
     EXPECT_NO_THROW(authz = new Authorizer(noScope));
     MockParam param;
@@ -257,11 +255,7 @@ TEST_F(AuthorizationTest, Authz_disabled) {
  */
 TEST_F(AuthorizationTest, Authz_scopeMulti) {
     // This token has st2138:mon and st2138:op:w scopes.
-    std::string multiScopes = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOi"
-                              "IxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2Nvc"
-                              "GUiOiJzdDIxMzg6bW9uIHN0MjEzODpvcDp3IiwiaWF0Ijox"
-                              "NTE2MjM5MDIyfQ.Z8upjHhZWKBlZ-yUcu7FFlJPby_C4jB9"
-                              "Bnk-DGxoQyM";
+    std::string multiScopes = getJwsToken("st2138:mon st2138:op:w");
     Authorizer* authz = nullptr;
     EXPECT_NO_THROW(authz = new Authorizer(multiScopes));
     MockParam param;

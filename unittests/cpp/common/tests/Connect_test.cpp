@@ -85,8 +85,8 @@ class CommonConnectTest : public ::testing::Test {
     }
 
     // Common test data
-    std::string monitorToken = getJwsToken("st2138:mon");
-    std::string operatorToken = getJwsToken("st2138:op");
+    std::string monitorToken = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
+    std::string operatorToken = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kOperate));
     std::string testOid = "/test/param";
     MockDevice dm0_;
     MockDevice dm1_;

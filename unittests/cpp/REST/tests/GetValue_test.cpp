@@ -37,6 +37,7 @@
 
 // Test helpers
 #include "RESTTest.h"
+#include "CommonTestHelpers.h"
 
 // REST
 #include "controllers/GetValue.h"
@@ -59,6 +60,9 @@ class RESTGetValueTests : public RESTEndpointTest {
     RESTGetValueTests() : RESTEndpointTest() {
         // Default expectations for the device model 1 (should not be called).
         EXPECT_CALL(dm1_, getValue(testing::_, testing::_, testing::_)).Times(0);
+        
+        // Set up default JWS token for tests
+        jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor) + ":w");
     }
     /*
      * Creates a GetValue handler object.
@@ -125,18 +129,8 @@ TEST_F(RESTGetValueTests, GetValue_Normal) {
 TEST_F(RESTGetValueTests, GetValue_AuthzValid) {
     initPayload(0, "/test_oid");
     expVal_.set_string_value("test_value");
-    // Adding authorization mockToken metadata. This it a random RSA token.
     authzEnabled_ = true;
-    jwsToken_ = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIiOiIxMjM0NTY3"
-                "ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uOncgc"
-                "3QyMTM4Om9wOncgc3QyMTM4OmNmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MT"
-                "UxNjIzOTAyMiwibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dT"
-                "okrEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko9653v0khyUT4UK"
-                "eOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKHkWi4P3-CYWrwe-g6b4-a33Q"
-                "0k6tSGI1hGf2bA9cRYr-VyQ_T3RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEm"
-                "uIwNOVM3EcVEaLyISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg"
-                "_wbOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9MdvJH-cx1s1"
-                "46M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
+    jwsToken_ = catena::common::getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor) + ":w");
     // Setting expectations
     EXPECT_CALL(dm0_, getValue(fqoid_, testing::_, testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
