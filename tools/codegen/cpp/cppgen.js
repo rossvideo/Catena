@@ -117,7 +117,7 @@ class CppGen {
     this.menu();
     this.constraints();
     this.params();
-    this.commands();
+    // this.commands();
     this.finish();
   }
 

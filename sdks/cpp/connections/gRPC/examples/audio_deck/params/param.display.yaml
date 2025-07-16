@@ -1,0 +1,14 @@
+#
+# Display
+#
+
+type: STRUCT
+params:
+  file:
+    type: STRING
+
+  mode:
+    type: STRING
+
+  subtext:
+    type: STRING

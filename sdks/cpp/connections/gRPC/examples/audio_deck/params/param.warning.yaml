@@ -1,0 +1,16 @@
+#
+# Warning
+#
+
+type: STRUCT
+params:
+  COMP:
+    template_oid: /bool
+    type: INT32
+
+  CLIP:
+    type: INT32
+
+  Freq:
+    template_oid: /bool
+    type: INT32

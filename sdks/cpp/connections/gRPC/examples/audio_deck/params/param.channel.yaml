@@ -1,0 +1,36 @@
+#
+# Channel
+#
+
+type: STRUCT
+name: { display_strings: { en: Channel } }
+params:
+
+  signal:
+    type: FLOAT32
+  
+  volume:
+    type: FLOAT32
+
+  select:
+    template_oid: /bool
+    type: INT32
+
+  solo:
+    template_oid: /bool
+    type: INT32
+
+  mute:
+    template_oid: /bool
+    type: INT32
+  
+  warning:
+    import: { file: /params/param.warning.yaml }
+  
+  slider:
+    template_oid: /slider_ref
+    type: FLOAT32
+  
+  display:
+    template_oid: /display_ref
+    type: STRUCT

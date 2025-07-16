@@ -1,0 +1,13 @@
+#
+# Simple boolean implementation
+#
+
+type: INT32
+constraint:
+  type: INT_CHOICE
+  int32_choice:
+    choices:
+      - value: 0
+        name: { display_strings: { en: "False" } }
+      - value: 1
+        name: { display_strings: { en: "True" } }

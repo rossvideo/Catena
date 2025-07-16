@@ -1,0 +1,95 @@
+slot: 0
+multi_set_enabled: true
+detail_level: FULL
+access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
+default_scope: st2138:mon
+
+params:
+
+  bool: 
+    import: { file: /params/param.bool.yaml }
+
+  slider_ref:
+    import: { file: /params/param.slider.yaml }
+
+  display_ref:
+    import: { file: /params/param.display.yaml }
+
+  channel:
+    import: { file: /params/param.channel.yaml }
+  
+  slider_m:
+    template_oid: /slider_ref
+    type: FLOAT32
+    value: { float32_value: 0.0 }
+  
+  # select_m:
+  #   template_oid: /bool
+  #   type: INT32
+  #   value: { int32_value: 0 }
+  
+  # solo_m:
+  #   template_oid: /bool
+  #   type: INT32
+  #   value: { int32_value: 0 }
+  
+  # mute_m:
+  #   template_oid: /bool
+  #   type: INT32
+  #   value: { int32_value: 0 }
+
+  display:
+    template_oid: /display_ref
+    type: STRUCT
+    value:
+      struct_value:
+        fields:
+          file: { string_value: "display.txt" }
+          mode: { string_value: "normal" }
+          subtext: { string_value: "Audio Deck Display" }
+
+  channel_list:
+    type: STRUCT_ARRAY
+    template_oid: /channel
+    value:
+      struct_array_values:
+        struct_values:
+          - struct_value: # Channel 1
+              fields:
+                signal: { float32_value: 0.0 }
+                volume: { float32_value: 0.0 }
+                select: { int32_value: 0 }
+                solo: { int32_value: 0 }
+                mute: { int32_value: 0 }
+                warning:
+                  struct_value:
+                    fields:
+                      COMP: { int32_value: 0 }
+                      CLIP: { int32_value: 0 }
+                      Freq: { int32_value: 0 }
+                slider: { float32_value: 0.0 }
+                display:
+                  struct_value:
+                    fields:
+                      file: { string_value: "display.txt" }
+                      mode: { string_value: "normal" }
+                      subtext: { string_value: "Channel Display" }
+
+commands:
+  select_m:
+    template_oid: /bool
+    type: INT32
+    value: { int32_value: 0 }
+
+  # solo_m:
+  #   template_oid: /bool
+  #   type: INT32
+  #   value: { int32_value: 0 }
+
+  # mute_m:
+  #   template_oid: /bool
+  #   type: INT32
+  #   value: { int32_value: 0 }
+
+  # clear_m:
+  #   type: EMPTY
