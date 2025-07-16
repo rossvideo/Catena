@@ -7,6 +7,18 @@
   "default_scope": "st2138:mon",
   "language_packs": {},
   "params": {
+    "dashboard_UI": {
+      "type": "STRING",
+      "oid_aliases": ["0xFF0E"],
+      "read_only": true,
+      "value": { "string_value": "eo://AudioDeck.grid" }
+    },
+    "dashboard_icon": {
+      "type": "STRING",
+      "oid_aliases": ["0xFF0C"],
+      "read_only": true,
+      "value": { "string_value": "eo://catena_logo_16x16.png" }
+    },
     "eq": {
       "type": "STRUCT",
       "name": { "display_strings": { "en": "EQ" } },
@@ -14,22 +26,42 @@
         "response": {
           "type": "INT32",
           "name": { "display_strings": { "en": "Response" } },
-          "access_scope": "st2138:mon"
+          "access_scope": "st2138:mon",
+          "constraint": {
+            "type": "INT_RANGE",
+            "int32_range": {"min_value": 0, "max_value": 100, "step": 2}
+          },
+          "widget": "wheel"
         },
         "frequency": {
           "type": "FLOAT32",
           "name": { "display_strings": { "en": "Frequency" } },
-          "access_scope": "st2138:op"
+          "access_scope": "st2138:op",
+          "constraint": {
+            "type": "FLOAT_RANGE",
+            "float_range": {"min_value":0,  "max_value": 10.0, "step": 0.1}
+          },
+          "widget": "wheel"
         },
         "gain": {
           "type": "FLOAT32",
           "name": { "display_strings": { "en": "Gain" } },
-          "access_scope": "st2138:cfg"
+          "access_scope": "st2138:cfg",
+          "constraint": {
+            "type": "FLOAT_RANGE",
+            "float_range": {"min_value":0,  "max_value": 10.0, "step": 0.1}
+          },
+          "widget": "wheel"
         },
         "q_factor": {
           "type": "FLOAT32",
           "name": { "display_strings": { "en": "Q Factor" } },
-          "access_scope": "st2138:adm"
+          "access_scope": "st2138:adm",
+          "constraint": {
+            "type": "FLOAT_RANGE",
+            "float_range": {"min_value":0,  "max_value": 10.0, "step": 0.1}
+          },
+          "widget": "wheel"
         }
       }
     },
@@ -39,7 +71,13 @@
       "params": {
         "fader": {
           "type": "FLOAT32",
-          "name": { "display_strings": { "en": "Fader" } }
+          "name": { "display_strings": { "en": "Fader" } },
+          "constraint": {
+            "type": "FLOAT_RANGE",
+            "float_range": {"min_value":0,  "max_value": 1.00, "display_min":0, "display_max":1.00, "step": 0.01}
+          },
+          "precision": 3,
+          "widget": "fader"
         },
         "eq_list": {
           "type": "STRUCT_ARRAY",
@@ -78,6 +116,7 @@
       "type": "STRUCT_ARRAY",
       "name": { "display_strings": { "en": "Audio Deck" } },
       "template_oid": "/audio_channel",
+      "minimal_set": true,
       "value": {
         "struct_array_values": {
           "struct_values": [
@@ -91,8 +130,8 @@
                         {
                           "struct_value": {
                             "fields": {
-                              "response": {"int32_value": 1},
-                              "frequency": {"float32_value": 100},
+                              "response": {"int32_value": 10},
+                              "frequency": {"float32_value": 1},
                               "gain": {"float32_value": 0},
                               "q_factor": {"float32_value": 0}
                             }
@@ -101,8 +140,8 @@
                         {
                           "struct_value": {
                             "fields": {
-                              "response": {"int32_value": 2},
-                              "frequency": {"float32_value": 200},
+                              "response": {"int32_value": 20},
+                              "frequency": {"float32_value": 2},
                               "gain": {"float32_value": 0},
                               "q_factor": {"float32_value": 0}
                             }
@@ -124,8 +163,8 @@
                         {
                           "struct_value": {
                             "fields": {
-                              "response": {"int32_value": 3},
-                              "frequency": {"float32_value": 300},
+                              "response": {"int32_value": 30},
+                              "frequency": {"float32_value": 3},
                               "gain": {"float32_value": 0},
                               "q_factor": {"float32_value": 0}
                             }
@@ -134,8 +173,8 @@
                         {
                           "struct_value": {
                             "fields": {
-                              "response": {"int32_value": 4},
-                              "frequency": {"float32_value": 400},
+                              "response": {"int32_value": 40},
+                              "frequency": {"float32_value": 4},
                               "gain": {"float32_value": 0},
                               "q_factor": {"float32_value": 0}
                             }
@@ -157,8 +196,8 @@
                         {
                           "struct_value": {
                             "fields": {
-                              "response": {"int32_value": 5},
-                              "frequency": {"float32_value": 500},
+                              "response": {"int32_value": 50},
+                              "frequency": {"float32_value": 5},
                               "gain": {"float32_value": 0},
                               "q_factor": {"float32_value": 0}
                             }
@@ -167,8 +206,8 @@
                         {
                           "struct_value": {
                             "fields": {
-                              "response": {"int32_value": 6},
-                              "frequency": {"float32_value": 600},
+                              "response": {"int32_value": 60},
+                              "frequency": {"float32_value": 6},
                               "gain": {"float32_value": 0},
                               "q_factor": {"float32_value": 0}
                             }
@@ -190,8 +229,8 @@
                         {
                           "struct_value": {
                             "fields": {
-                              "response": {"int32_value": 7},
-                              "frequency": {"float32_value": 700},
+                              "response": {"int32_value": 70},
+                              "frequency": {"float32_value": 7},
                               "gain": {"float32_value": 0},
                               "q_factor": {"float32_value": 0}
                             }
@@ -200,8 +239,8 @@
                         {
                           "struct_value": {
                             "fields": {
-                              "response": {"int32_value": 8},
-                              "frequency": {"float32_value": 800},
+                              "response": {"int32_value": 80},
+                              "frequency": {"float32_value": 8},
                               "gain": {"float32_value": 0},
                               "q_factor": {"float32_value": 0}
                             }
