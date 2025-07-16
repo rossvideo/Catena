@@ -284,15 +284,15 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
                 .WillRepeatedly(::testing::ReturnRef(scope));
             
             if (fqoid == array_oid + "/0/" + element_param) {
-                setupMockParam(param.get(), fqoid, element_param0.descriptor.get());
+                setupMockParam(*param, fqoid, *element_param0.descriptor);
             } else if (fqoid == array_oid + "/1/" + element_param) {
-                setupMockParam(param.get(), fqoid, element_param1.descriptor.get());
+                setupMockParam(*param, fqoid, *element_param1.descriptor);
             } else if (fqoid == array_oid + "/0") {
-                setupMockParam(param.get(), fqoid, element0.descriptor.get());
+                setupMockParam(*param, fqoid, *element0.descriptor);
             } else if (fqoid == array_oid + "/1") {
-                setupMockParam(param.get(), fqoid, element1.descriptor.get());
+                setupMockParam(*param, fqoid, *element1.descriptor);
             } else if (fqoid == array_oid) {
-                setupMockParam(param.get(), array_oid, array_root.descriptor.get(), true, 2);
+                setupMockParam(*param, array_oid, *array_root.descriptor, true, 2);
             } else {
                 status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
                 return nullptr;
