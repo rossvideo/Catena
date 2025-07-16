@@ -152,15 +152,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_Create) {
 }
 
 /*
- * TEST 2 - Writing to console with GetParam finish().
- */
-TEST_F(RESTExecuteCommandTests, ExecuteCommand_Finish) {
-    endpoint_->finish();
-    ASSERT_TRUE(MockConsole_.str().find("ExecuteCommand[1] finished\n") != std::string::npos);
-}
-
-/*
- * TEST 3 - ExecuteCommand returns two CommandResponse responses.
+ * TEST 2 - ExecuteCommand returns two CommandResponse responses.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalResponse) {
     initPayload(0, "test_command", "test_value", true);
@@ -192,7 +184,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalResponse) {
 }
 
 /*
- * TEST 4 - ExecuteCommand returns a CommandResponse no response.
+ * TEST 3 - ExecuteCommand returns a CommandResponse no response.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalNoResponse) {
     initPayload(0, "test_command", "test_value", true);
@@ -220,7 +212,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalNoResponse) {
 }
 
 /*
- * TEST 5 - ExecuteCommand returns a CommandResponse exception.
+ * TEST 4 - ExecuteCommand returns a CommandResponse exception.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalException) {
     initPayload(0, "test_command", "test_value", true);
@@ -248,7 +240,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalException) {
 }
 
 /*
- * TEST 6 - ExecuteCommand returns no response (respond = false).
+ * TEST 5 - ExecuteCommand returns no response (respond = false).
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_RespondFalse) {
     initPayload(0, "test_command", "test_value", false);
@@ -280,7 +272,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_RespondFalse) {
 }
 
 /*
- * TEST 7 - ExecuteCommand returns two CommandResponse responses.
+ * TEST 6 - ExecuteCommand returns two CommandResponse responses.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamResponse) {
     initPayload(0, "test_command", "test_value", true);
@@ -315,7 +307,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamResponse) {
 }
 
 /*
- * TEST 8 - ExecuteCommand returns a CommandResponse no response.
+ * TEST 7 - ExecuteCommand returns a CommandResponse no response.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamNoResponse) {
     initPayload(0, "test_command", "test_value", true);
@@ -346,7 +338,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamNoResponse) {
 }
 
 /*
- * TEST 9 - ExecuteCommand returns a CommandResponse exception.
+ * TEST 8 - ExecuteCommand returns a CommandResponse exception.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamException) {
     initPayload(0, "test_command", "test_value", true);
@@ -377,7 +369,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamException) {
 }
 
 /*
- * TEST 10 - ExecuteCommand returns no response (respond = false).
+ * TEST 9 - ExecuteCommand returns no response (respond = false).
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamRespondFalse) {
     initPayload(0, "test_command", "test_value", false);
@@ -412,8 +404,8 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamRespondFalse) {
 }
 
 /*
- * TEST 11 - ExecuteCommand returns a CommandResponse no response with authz
- *          enabled.
+ * TEST 10 - ExecuteCommand returns a CommandResponse no response with authz
+ *           enabled.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzValid) {
     initPayload(0, "test_command", "test_value", true);
@@ -453,7 +445,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzValid) {
 }
 
 /*
- * TEST 12 - ExecuteCommand fails from invalid JWS token.
+ * TEST 11 - ExecuteCommand fails from invalid JWS token.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzInvalid) { 
     expRc_ = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
@@ -467,7 +459,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzInvalid) {
 }
 
 /*
- * TEST 13 - No device in the specified slot.
+ * TEST 12 - No device in the specified slot.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
     initPayload(dms_.size(), "test_command", "test_value", true);
@@ -480,7 +472,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
 }
 
 /*
- * TEST 14 - ExecuteCommand fails to parse the json body.
+ * TEST 13 - ExecuteCommand fails to parse the json body.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_InvalidJsonBody) {
     expRc_ = catena::exception_with_status("Failed to parse JSON body", catena::StatusCode::INVALID_ARGUMENT);
@@ -492,7 +484,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_InvalidJsonBody) {
 }
 
 /*
- * TEST 15 - getCommand does not find a command.
+ * TEST 14 - getCommand does not find a command.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
     expRc_ = catena::exception_with_status("Command not found", catena::StatusCode::INVALID_ARGUMENT);
@@ -507,7 +499,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
 }
 
 /*
- * TEST 16 - getCommand throws a catena::exception_with_status.
+ * TEST 15 - getCommand throws a catena::exception_with_status.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
     expRc_ = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
@@ -522,7 +514,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
 }
 
 /*
- * TEST 17 - getCommand throws an std::runtime error.
+ * TEST 16 - getCommand throws an std::runtime error.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -534,7 +526,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandThrowUnknown) {
 }
 
 /*
- * TEST 18 - executeCommand returns a nullptr.
+ * TEST 17 - executeCommand returns a nullptr.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
     expRc_ = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
@@ -553,7 +545,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
 }
 
 /*
- * TEST 19 - executeCommand throws a catena::exception_with_status.
+ * TEST 18 - executeCommand throws a catena::exception_with_status.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
     expRc_ = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
@@ -573,7 +565,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
 }
 
 /*
- * TEST 20 - executeCommand returns an std::runtime_error.
+ * TEST 19 - executeCommand returns an std::runtime_error.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -590,7 +582,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
 }
 
 /*
- * TEST 21 - getNext throws a catena::exception_with_status.
+ * TEST 20 - getNext throws a catena::exception_with_status.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
     expRc_ = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
@@ -616,7 +608,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
 }
 
 /*
- * TEST 22 - getNext throws a std::runtime_error.
+ * TEST 21 - getNext throws a std::runtime_error.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);

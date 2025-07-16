@@ -117,7 +117,7 @@ void RunRESTServer() {
         std::map<std::string, std::function<void(const std::string&, const IParam*)>> handlers;
         handlers["audio_deck"] = audioDeckUpdateHandler;
 
-        dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p) {
+        dm.getValueSetByClient().connect([&handlers](const std::string& oid, const IParam* p) {
             DEBUG_LOG << "signal received: " << oid << " has been changed by client";
 
             // make a copy of the path that we can safely pop segments from
@@ -126,7 +126,7 @@ void RunRESTServer() {
             jptr.pop();
 
             if (handlers.contains(front)) {
-                handlers[front](jptr.toString(), p);
+                handlers[front](jptr.toString(true), p);
             }
         });
         

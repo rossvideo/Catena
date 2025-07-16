@@ -68,9 +68,9 @@ class ISocketWriter {
     virtual ~ISocketWriter() = default;
 
     /**
-     * @brief Finishes writing the HTTP response.
+     * @brief Writes a HTTP response.
      * @param msg The protobuf message to write as JSON.
-     * @param err The error status to finish with.
+     * @param err The error status of the response.
      */
     virtual void sendResponse(const catena::exception_with_status& err, const google::protobuf::Message& msg = catena::Empty()) = 0;
 };
