@@ -132,9 +132,8 @@ void Subscriptions::proceed() {
 
     // Finishing by writing rc to client.
     writer_->sendResponse(rc);
-}
 
-void Subscriptions::finish() {
+    // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     DEBUG_LOG << context_.method() << " Subscriptions[" << objectId_ << "] finished\n";
 }
