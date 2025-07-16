@@ -101,16 +101,8 @@ TEST_F(RESTGetValueTests, GetValue_Create) {
     EXPECT_TRUE(endpoint_);
 }
 
-/* 
- * TEST 2 - Writing to console with GetValue finish().
- */
-TEST_F(RESTGetValueTests, GetValue_Finish) {
-    endpoint_->finish();
-    ASSERT_TRUE(MockConsole_.str().find("GetValue[1] finished\n") != std::string::npos);
-}
-
 /*
- * TEST 3 - Normal case for GetValue proceed().
+ * TEST 2 - Normal case for GetValue proceed().
  */
 TEST_F(RESTGetValueTests, GetValue_Normal) {
     initPayload(0, "/test_oid");
@@ -128,7 +120,7 @@ TEST_F(RESTGetValueTests, GetValue_Normal) {
 }
 
 /*
- * TEST 4 - GetValue with authz on and valid token.
+ * TEST 3 - GetValue with authz on and valid token.
  */
 TEST_F(RESTGetValueTests, GetValue_AuthzValid) {
     initPayload(0, "/test_oid");
@@ -158,7 +150,7 @@ TEST_F(RESTGetValueTests, GetValue_AuthzValid) {
 }
 
 /*
- * TEST 5 - GetValue with authz on and invalid token.
+ * TEST 4 - GetValue with authz on and invalid token.
  */
 TEST_F(RESTGetValueTests, GetValue_AuthzInvalid) {
     expRc_ = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
@@ -172,7 +164,7 @@ TEST_F(RESTGetValueTests, GetValue_AuthzInvalid) {
 }
 
 /*
- * TEST 6 - No device in the specified slot.
+ * TEST 5 - No device in the specified slot.
  */
 TEST_F(RESTGetValueTests, GetValue_ErrInvalidSlot) {
     initPayload(dms_.size(), "/test_oid");

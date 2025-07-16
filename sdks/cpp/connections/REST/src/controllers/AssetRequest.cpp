@@ -178,9 +178,8 @@ void AssetRequest::proceed() {
 
     //For now we are sending the whole file in one go
     DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] sent";
-}
 
-void AssetRequest::finish() {
+    // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fqoid() +" finished";
 }

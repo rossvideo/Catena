@@ -191,15 +191,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_create) {
 }
 
 /* 
- * TEST 0.2 - Writing to console with Subscriptions finish().
- */
-TEST_F(RESTSubscriptionsTests, Subscriptions_Finish) {
-    endpoint_->finish();
-    ASSERT_TRUE(MockConsole_.str().find("Subscriptions[1] finished\n") != std::string::npos);
-}
-
-/* 
- * TEST 0.3 - Subscriptions with a device which does not support them.
+ * TEST 0.2 - Subscriptions with a device which does not support them.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_NotSupported) {
     initPayload(0);
@@ -212,7 +204,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_NotSupported) {
 }
 
 /* 
- * TEST 0.4 - Subscriptions with an invalid token.
+ * TEST 0.3 - Subscriptions with an invalid token.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_AuthzInalid) {
     initPayload(0);
@@ -227,7 +219,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_AuthzInalid) {
 }
 
 /* 
- * TEST 0.5 - Subscriptions with an invalid method.
+ * TEST 0.4 - Subscriptions with an invalid method.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_BadMethod) {
     initPayload(0);
@@ -240,7 +232,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_BadMethod) {
 }
 
 /* 
- * TEST 0.6 - Subscriptions with an invalid slot.
+ * TEST 0.5 - Subscriptions with an invalid slot.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_InvalidSlot) {
     initPayload(dms_.size());
