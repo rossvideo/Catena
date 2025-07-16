@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abs id="_top" keepalive="false">
+   <table right="50" left="50" top="50" bottom="50">
+      <tr>
+         <label colspan="1" fill="both" name="Channel 0" rowspan="1" style="txt-align:center" weightx="1.0" weighty="0.2"/>
+         <label colspan="1" fill="both" name="Channel 1" rowspan="1" style="txt-align:center" weightx="1.0" weighty="1.0"/>
+         <label colspan="1" fill="both" name="Channel 2" rowspan="1" style="txt-align:center" weightx="1.0" weighty="1.0"/>
+         <label colspan="1" fill="both" name="Channel 3" rowspan="1" style="txt-align:center" weightx="1.0" weighty="1.0"/>
+      </tr>
+      <tr>
+         <table colspan="1" fill="both" rowspan="1" weightx="1.0" weighty="1.0">
+            <tr>
+               <label colspan="1" fill="both" name="Fader" rowspan="1" style="txt-align:south;" weightx="1.0" weighty="1.0"/>
+               <label colspan="2" fill="both" name="EQ 0" rowspan="1" style="txt-align:south;" weightx="1.0" weighty="1.0"/>
+               <label colspan="2" fill="both" name="EQ 1" rowspan="1" style="txt-align:south;" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <param colspan="1" expand="true" fill="both" oid="audio_deck/0/fader" rowspan="6" showlabel="false" weightx="1.0" weighty="1.0" widget="fader"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/0/eq_list/0/response" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/0/eq_list/1/response" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <label anchor="northeast" colspan="1" fill="both" name="Response:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/0/eq_list/0/response" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+               <label anchor="northeast" colspan="1" fill="both" name="Response:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/0/eq_list/1/response" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+            </tr>
+            <tr>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/0/eq_list/0/frequency" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/0/eq_list/1/frequency" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <label anchor="northeast" colspan="1" fill="both" name="Frequency:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/0/eq_list/0/frequency" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+               <label anchor="northeast" colspan="1" fill="both" name="Frequency:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/0/eq_list/1/frequency" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+            </tr>
+            <tr>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/0/eq_list/0/gain" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/0/eq_list/1/gain" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <label anchor="northeast" colspan="1" fill="both" name="Gain:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/0/eq_list/0/gain" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+               <label anchor="northeast" colspan="1" fill="both" name="Gain:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/0/eq_list/1/gain" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+            </tr>
+            <tr>
+               <param anchor="center" colspan="1" editable="false" expand="true" fill="both" oid="audio_deck/0/fader" rowspan="2" weightx="1.0" weighty="1.0" widget="label"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/0/eq_list/0/q_factor" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/0/eq_list/1/q_factor" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <label anchor="northeast" colspan="1" fill="both" name="Q Factor:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/0/eq_list/0/q_factor" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+               <label anchor="northeast" colspan="1" fill="both" name="Q Factor:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/0/eq_list/1/q_factor" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+            </tr>
+         </table>
+         <table colspan="1" fill="both" rowspan="1" weightx="1.0" weighty="1.0">
+            <tr>
+               <label colspan="1" fill="both" name="Fader" rowspan="1" style="txt-align:south;" weightx="1.0" weighty="1.0"/>
+               <label colspan="2" fill="both" name="EQ 0" rowspan="1" style="txt-align:south;" weightx="1.0" weighty="1.0"/>
+               <label colspan="2" fill="both" name="EQ 1" rowspan="1" style="txt-align:south;" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <param colspan="1" expand="true" fill="both" oid="audio_deck/1/fader" rowspan="6" showlabel="false" weightx="1.0" weighty="1.0" widget="fader"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/1/eq_list/0/response" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/1/eq_list/1/response" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <label anchor="northeast" colspan="1" fill="both" name="Response:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/1/eq_list/0/response" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+               <label anchor="northeast" colspan="1" fill="both" name="Response:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/1/eq_list/1/response" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+            </tr>
+            <tr>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/1/eq_list/0/frequency" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/1/eq_list/1/frequency" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <label anchor="northeast" colspan="1" fill="both" name="Frequency:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/1/eq_list/0/frequency" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+               <label anchor="northeast" colspan="1" fill="both" name="Frequency:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/1/eq_list/1/frequency" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+            </tr>
+            <tr>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/1/eq_list/0/gain" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/1/eq_list/1/gain" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <label anchor="northeast" colspan="1" fill="both" name="Gain:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/1/eq_list/0/gain" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+               <label anchor="northeast" colspan="1" fill="both" name="Gain:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/1/eq_list/1/gain" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+            </tr>
+            <tr>
+               <param anchor="north" colspan="1" editable="false" expand="true" fill="both" oid="audio_deck/1/fader" rowspan="2" weightx="1.0" weighty="1.0" widget="label"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/1/eq_list/0/q_factor" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/1/eq_list/1/q_factor" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <label anchor="northeast" colspan="1" fill="both" name="Q Factor:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/1/eq_list/0/q_factor" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+               <label anchor="northeast" colspan="1" fill="both" name="Q Factor:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/1/eq_list/1/q_factor" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+            </tr>
+         </table>
+         <table colspan="1" fill="both" rowspan="1" weightx="1.0" weighty="1.0">
+            <tr>
+               <label colspan="1" fill="both" name="Fader" rowspan="1" style="txt-align:south;" weightx="1.0" weighty="1.0"/>
+               <label colspan="2" fill="both" name="EQ 0" rowspan="1" style="txt-align:south;" weightx="1.0" weighty="1.0"/>
+               <label colspan="2" fill="both" name="EQ 1" rowspan="1" style="txt-align:south;" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <param colspan="1" expand="true" fill="both" oid="audio_deck/2/fader" rowspan="6" showlabel="false" weightx="1.0" weighty="1.0" widget="fader"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/2/eq_list/0/response" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/2/eq_list/1/response" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <label anchor="northeast" colspan="1" fill="both" name="Response:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/2/eq_list/0/response" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+               <label anchor="northeast" colspan="1" fill="both" name="Response:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/2/eq_list/1/response" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+            </tr>
+            <tr>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/2/eq_list/0/frequency" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/2/eq_list/1/frequency" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <label anchor="northeast" colspan="1" fill="both" name="Frequency:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/2/eq_list/0/frequency" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+               <label anchor="northeast" colspan="1" fill="both" name="Frequency:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/2/eq_list/1/frequency" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+            </tr>
+            <tr>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/2/eq_list/0/gain" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/2/eq_list/1/gain" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <label anchor="northeast" colspan="1" fill="both" name="Gain:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/2/eq_list/0/gain" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+               <label anchor="northeast" colspan="1" fill="both" name="Gain:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/2/eq_list/1/gain" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+            </tr>
+            <tr>
+               <param anchor="north" colspan="1" editable="false" expand="true" fill="both" oid="audio_deck/2/fader" rowspan="2" weightx="1.0" weighty="1.0" widget="label"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/2/eq_list/0/q_factor" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/2/eq_list/1/q_factor" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <label anchor="northeast" colspan="1" fill="both" name="Q Factor:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/2/eq_list/0/q_factor" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+               <label anchor="northeast" colspan="1" fill="both" name="Q Factor:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/2/eq_list/1/q_factor" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+            </tr>
+         </table>
+         <table colspan="1" fill="both" rowspan="1" weightx="1.0" weighty="1.0">
+            <tr>
+               <label colspan="1" fill="both" name="Fader" rowspan="1" style="txt-align:south;" weightx="1.0" weighty="1.0"/>
+               <label colspan="2" fill="both" name="EQ 0" rowspan="1" style="txt-align:south;" weightx="1.0" weighty="1.0"/>
+               <label colspan="2" fill="both" name="EQ 1" rowspan="1" style="txt-align:south;" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <param colspan="1" expand="true" fill="both" oid="audio_deck/3/fader" rowspan="6" showlabel="false" weightx="1.0" weighty="1.0" widget="fader"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/3/eq_list/0/response" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/3/eq_list/1/response" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <label anchor="northeast" colspan="1" fill="both" name="Response:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/3/eq_list/0/response" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+               <label anchor="northeast" colspan="1" fill="both" name="Response:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/3/eq_list/1/response" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+            </tr>
+            <tr>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/3/eq_list/0/frequency" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/3/eq_list/1/frequency" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <label anchor="northeast" colspan="1" fill="both" name="Frequency:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/3/eq_list/0/frequency" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+               <label anchor="northeast" colspan="1" fill="both" name="Frequency:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/3/eq_list/1/frequency" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+            </tr>
+            <tr>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/3/eq_list/0/gain" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/3/eq_list/1/gain" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <label anchor="northeast" colspan="1" fill="both" name="Gain:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/3/eq_list/0/gain" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+               <label anchor="northeast" colspan="1" fill="both" name="Gain:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/3/eq_list/1/gain" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+            </tr>
+            <tr>
+               <param anchor="north" colspan="1" editable="false" expand="true" fill="both" oid="audio_deck/3/fader" rowspan="2" weightx="1.0" weighty="1.0" widget="label"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/3/eq_list/0/q_factor" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+               <param colspan="2" expand="false" fill="both" oid="audio_deck/3/eq_list/1/q_factor" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <label anchor="northeast" colspan="1" fill="both" name="Q Factor:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/3/eq_list/0/q_factor" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+               <label anchor="northeast" colspan="1" fill="both" name="Q Factor:" rowspan="1" style="txt-align:east;" weightx="1.0" weighty="1.0"/>
+               <param anchor="northwest" colspan="1" expand="true" fill="both" oid="audio_deck/3/eq_list/1/q_factor" rowspan="1" weightx="1.0" weighty="1.0" widget="label"/>
+            </tr>
+         </table>
+      </tr>
+      <tr>
+         <label colspan="4" fill="both" name="" rowspan="1" style="bg-u:eo://catena_logo.png;" weightx="1.0" weighty="10"/>
+      </tr>
+   </table>
+</abs>
