@@ -69,7 +69,18 @@ protected:
             .WillRepeatedly(testing::ReturnRef(userAgent_));
         EXPECT_CALL(context_, hasField("force_connection"))
             .WillRepeatedly(testing::Return(false));
+        // dm0_ signals
+        EXPECT_CALL(dm0_, getValueSetByClient()).WillRepeatedly(testing::ReturnRef(valueSetByClient0));
+        EXPECT_CALL(dm0_, getValueSetByServer()).WillRepeatedly(testing::ReturnRef(valueSetByServer0));
+        EXPECT_CALL(dm0_, getLanguageAddedPushUpdate()).WillRepeatedly(testing::ReturnRef(languageAddedPushUpdate0));
+        // dm1_ signals
+        EXPECT_CALL(dm1_, getValueSetByClient()).WillRepeatedly(testing::ReturnRef(valueSetByClient1));
+        EXPECT_CALL(dm1_, getValueSetByServer()).WillRepeatedly(testing::ReturnRef(valueSetByServer1));
+        EXPECT_CALL(dm1_, getLanguageAddedPushUpdate()).WillRepeatedly(testing::ReturnRef(languageAddedPushUpdate1));
     }
+
+    // This is required to disconnect signals before deletion
+    ~RESTConnectTest() { endpoint_.reset(nullptr); }
 
     /*
      * Creates a Connect handler object.
@@ -124,6 +135,15 @@ protected:
     MockSubscriptionManager subManager_;
     std::string userAgent_ = "test_agent";
     std::string paramOid_ = "test_param";
+
+    // dm0_ test signals.
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByClient0;
+    vdk::signal<void(const ILanguagePack*)> languageAddedPushUpdate0;
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByServer0;
+    // dm1_ test signals.
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByClient1;
+    vdk::signal<void(const ILanguagePack*)> languageAddedPushUpdate1;
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByServer1;
 };
 
 // --- 0. INITIAL TESTS ---
