@@ -60,7 +60,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
      * The newest connect object (the one that has not yet been attached to a
      * client request) will send shutdown signal to cancel all open connections
      */
-    if (!ok && status_ != CallStatus::kFinish) {
+    if (!ok && status_ == CallStatus::kProcess) {
         DEBUG_LOG << "Connect[" << objectId_ << "] cancelled";
         DEBUG_LOG << "Cancelling all open connections";
         shutdownSignal_.emit();
@@ -84,7 +84,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
         case CallStatus::kProcess:
             // Cancels all open connections if shutdown signal is sent.
             shutdownSignalId_ = shutdownSignal_.connect([this](){
-                context_.TryCancel();
+                shutdown_ = true;
                 hasUpdate_ = true;
                 this->cv_.notify_one();
             });
@@ -134,18 +134,21 @@ void catena::gRPC::Connect::proceed(bool ok) {
             lock.lock();
             cv_.wait(lock, [this] { return hasUpdate_; });
             hasUpdate_ = false;
-            // If connect was cancelled finish the process.
-            if (context_.IsCancelled()) {
+            // If connect was cancelled set state to kFinish.
+            if (shutdown_ || context_.IsCancelled()) {
                 status_ = CallStatus::kFinish;
                 DEBUG_LOG << "Connection[" << objectId_ << "] cancelled";
-                writer_.Finish(Status::CANCELLED, this);
-                break;
-            // Send the client an update with the slot of the device.
-            } else {
-                writer_.Write(res_, this);
             }
-            lock.unlock();
-            break;
+            // Write to client if the context is not cancelled.
+            if (!context_.IsCancelled()) {
+                if (shutdown_) {
+                    writer_.Finish(Status::CANCELLED, this);
+                } else {
+                    writer_.Write(res_, this);
+                }
+                lock.unlock();
+                break; // Fall through if nothing was sent to the client.
+            }
         /**
          * kFinish: Ends the connection.
          */
@@ -184,5 +187,5 @@ void catena::gRPC::Connect::proceed(bool ok) {
 
 // Returns true if the connection has been cancelled.
 bool catena::gRPC::Connect::isCancelled() {
-    return context_.IsCancelled();
+    return context_.IsCancelled() || shutdown_;
 }

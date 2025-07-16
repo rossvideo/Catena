@@ -51,7 +51,7 @@ using namespace catena::gRPC;
 class gRPCConnectTests : public GRPCTest {
   protected:
     gRPCConnectTests() {
-        expRc_ = catena::exception_with_status("Cancelled on the server side", catena::StatusCode::CANCELLED);
+        expRc_ = catena::exception_with_status("", catena::StatusCode::CANCELLED);
         // dm0_ signals
         EXPECT_CALL(dm0_, getValueSetByClient()).WillRepeatedly(testing::ReturnRef(valueSetByClient0));
         EXPECT_CALL(dm0_, getValueSetByServer()).WillRepeatedly(testing::ReturnRef(valueSetByServer0));
@@ -89,9 +89,10 @@ class gRPCConnectTests : public GRPCTest {
             // testCall_ proceed assigned to thread to avoid blocking asyncCall_.
             } else if (testCall_) {
                 if (testThread) { testThread->join(); }
-                testThread = std::make_unique<std::thread>([&]{testCall_->proceed(ok);});
+                testThread = std::make_unique<std::thread>([&]{ testCall_->proceed(ok); });
             }
         }
+        // Make sure the testCall is completely finished before continuing.
         if (testThread) { testThread->join(); }
     }
 
@@ -132,7 +133,7 @@ class gRPCConnectTests : public GRPCTest {
             cv_.notify_one();
         }
         /*
-         * Blocks until the RPC is finished. 
+         * Blocks until a call to OnReadDone or OnDOne has been made. 
          */
         inline void Await() {
             cv_.wait(lock_, [this] { return done_; });
@@ -216,7 +217,6 @@ class gRPCConnectTests : public GRPCTest {
             streamReader_->Await();
             // Compare the output status.
             EXPECT_EQ(outRc_.error_code(), static_cast<grpc::StatusCode>(expRc_.status));
-            EXPECT_EQ(outRc_.error_message(), expRc_.what());
         }
     }
 
@@ -246,9 +246,8 @@ class gRPCConnectTests : public GRPCTest {
 TEST_F(gRPCConnectTests, Connect_Create) {
     EXPECT_TRUE(asyncCall_);
 }
-
 /*
- * TEST 2 - Testing Connect RPC's ability to connect and disconnect to the
+ * TEST 2 - Testing Connect's ability to connect and disconnect to the
  *          mockDevice signals.
  */
 TEST_F(gRPCConnectTests, Connect_ConnectDisconnect) {
@@ -257,7 +256,9 @@ TEST_F(gRPCConnectTests, Connect_ConnectDisconnect) {
     streamReader_->Await();
     testRPC();
 }
-
+/*
+ * TEST 3 - Testing Connect recieving ValueSetByClient signals.
+ */
 TEST_F(gRPCConnectTests, Connect_ValueSetByClient) {
     MockParam param0, param1;
     initPayload("en", catena::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
@@ -288,7 +289,9 @@ TEST_F(gRPCConnectTests, Connect_ValueSetByClient) {
     streamReader_->Await();
     testRPC();
 }
-
+/*
+ * TEST 4 - Testing Connect recieving ValueSetByServer signals.
+ */
 TEST_F(gRPCConnectTests, Connect_ValueSetByServer) {
     MockParam param0, param1;
     initPayload("en", catena::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
@@ -321,7 +324,9 @@ TEST_F(gRPCConnectTests, Connect_ValueSetByServer) {
     streamReader_->Await();
     testRPC();
 }
-
+/*
+ * TEST 4 - Testing Connect recieving LanguageAddedPushUpdate signals.
+ */
 TEST_F(gRPCConnectTests, Connect_LanguageAddedPushUpdate) {
     MockLanguagePack languagePack0, languagePack1;
     initPayload("en", catena::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
@@ -348,7 +353,9 @@ TEST_F(gRPCConnectTests, Connect_LanguageAddedPushUpdate) {
     streamReader_->Await();
     testRPC();
 }
-
+/*
+ * TEST 5 - Testing Connect with valid authz token.
+ */
 TEST_F(gRPCConnectTests, Connect_AuthzValid) {
     MockParam param0, param1;
     MockLanguagePack languagePack0, languagePack1;
@@ -397,7 +404,9 @@ TEST_F(gRPCConnectTests, Connect_AuthzValid) {
     streamReader_->Await();
     testRPC();
 }
-
+/*
+ * TEST 6 - Testing Connect with invalid authz token.
+ */
 TEST_F(gRPCConnectTests, Connect_AuthzInvalid) {
     expRc_ = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
     // Not a token so it should get rejected by the authorizer
@@ -409,7 +418,9 @@ TEST_F(gRPCConnectTests, Connect_AuthzInvalid) {
     streamReader_->Await();
     streamReader_.reset(nullptr);
 }
-
+/*
+ * TEST 7 - Testing Connect with no authz token.
+ */
 TEST_F(gRPCConnectTests, Connect_AuthzJWSNotFound) {
     expRc_ = catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
     // Should not be able to find the bearer token

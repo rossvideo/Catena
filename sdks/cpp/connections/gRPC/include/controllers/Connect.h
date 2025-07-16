@@ -136,6 +136,11 @@ class Connect : public CallData, public catena::common::Connect {
      * @brief ID of the shutdown signal for the Connect object
     */
     unsigned int shutdownSignalId_ = 0;
+    /**
+     * @brief A flag indicating whether a signal from shutdownSignal_ has been
+     * recieved.
+     */
+    bool shutdown_ = false;
 };
 
 }; // namespace gRPC
