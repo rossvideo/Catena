@@ -411,7 +411,6 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamRespondFalse) {
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzValid) {
     initPayload(0, "test_command", "test_value", true);
     expNoResponse();
-    // Adding authorization mockToken metadata. This it a random RSA token
     authzEnabled_ = true;
     jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
     // Setting expectations

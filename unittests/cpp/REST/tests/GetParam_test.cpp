@@ -147,7 +147,6 @@ TEST_F(RESTGetParamTests, GetParam_Normal) {
 TEST_F(RESTGetParamTests, GetParam_AuthzValid) {
     initPayload(0, "/test_oid");
     initExpVal("/test_oid", "test_value", "test_alias", "Test Param");
-    // Adding authorization mockToken metadata. This it a random RSA token.
     authzEnabled_ = true;
     jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
     // Setting expectations
