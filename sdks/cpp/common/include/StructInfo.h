@@ -154,27 +154,27 @@ inline std::array<const char*, 0> alternativeNames{};
  * @tparam T the type of the value
  */
 template <typename T>
-void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz);
+catena::exception_with_status toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz);
 
 /**
- * toProto specialization to serialize an entire array of structured data to
- * protobuf
+ * Free standing method to validate a call to fromProto before making it.
  * 
- * enabled if T is a vector of CatenaStruct
+ * generic template declaration
  * 
  * @tparam T the type of the value
  */
-template <CatenaStructArray T>
-void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
-    using structType = T::value_type;
-    auto* dstArray = dst.mutable_struct_array_values();
-    
-    for (const auto& item : *src) {
-        catena::Value elemValue;
-        toProto(elemValue, &item, pd, authz);
-        *dstArray->add_struct_values() = *elemValue.mutable_struct_value();
-    }
-}
+template <typename T>
+bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const Authorizer& authz);
+
+/**
+ * Free standing method to deserialize a value from protobuf
+ * 
+ * generic template declaration
+ * 
+ * @tparam T the type of the value
+ */
+template <typename T>
+catena::exception_with_status fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz);
 
 /**
  * toProto specialization to serialize a single struct value to protobuf.
@@ -186,94 +186,74 @@ void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const
  * @tparam T the type of the value
  */
 template <CatenaStruct T>
-void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
-    
+catena::exception_with_status toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    // Must have read authorization
+    if (!authz.readAuthz(pd)) {
+        rc = catena::exception_with_status("Not authorized to read param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
+    } else {
+        dst.clear_struct_value();
+        auto fields = StructInfo<T>::fields; // get tuple of FieldInfo for this struct type
+        auto* dstFields = dst.mutable_struct_value()->mutable_fields();
+
+        // lambda function to call toProto for the given field if it is authorized
+        auto readField = [&](const auto& field) {
+            if (rc.status == catena::StatusCode::OK) {
+                IParamDescriptor& subParam = pd.getSubParam(field.name);
+                catena::Value* newFieldValue = &(*dstFields)[field.name];
+
+                /**
+                 * &(src->*(field.memberPtr)) will pass the address of the
+                 * corresponding field in src to the toProto function.
+                 * 
+                 * the correct specializtion of toProto will be called based on the
+                 * type of the field memberPtr. 
+                 */
+                rc = toProto(*newFieldValue, &(src->*(field.memberPtr)), subParam, authz);
+            }
+        };
+
+        // call readField for each field in the struct
+        std::apply([&](auto... field) {
+            (readField(field), ...);
+        }, fields);
+    }
+    // Return an empty struct if the serialization failed
+    if (rc.status != catena::StatusCode::OK) {
+        dst.clear_struct_value();
+    }
+    return rc;
+}
+
+template <CatenaStruct T>
+bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const Authorizer& authz) {
     auto fields = StructInfo<T>::fields; // get tuple of FieldInfo for this struct type
-    auto* dstFields = dst.mutable_struct_value()->mutable_fields();
-
-    // lambda function to call toProto for the given field if it is authorized
-    auto readField = [&](const auto& field) {
-        IParamDescriptor& subParam = pd.getSubParam(field.name);
-        if (authz.readAuthz(subParam)) {
-            catena::Value* newFieldValue = &(*dstFields)[field.name];
-
-            /**
-             * &(src->*(field.memberPtr)) will pass the address of the
-             * corresponding field in src to the toProto function.
-             * 
-             * the correct specializtion of toProto will be called based on the
-             * type of the field memberPtr. 
-             */
-            toProto(*newFieldValue, &(src->*(field.memberPtr)), subParam, authz);
-        }
-    };
-
-    // call readField for each field in the struct
-    std::apply([&](auto... field) {
-        (readField(field), ...);
-    }, fields);
-}
-
-template <IsVariantArray T>
-void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
-    for (const auto& item : *src) {
-        catena::Value elemValue;
-        toProto(elemValue, &item, pd, authz);
-        *dst.mutable_struct_variant_array_values()->add_struct_variants() = *elemValue.mutable_struct_variant_value();
+    // Must have write authorization
+    if (!authz.writeAuthz(pd)) {
+        rc = catena::exception_with_status("Not authorized to write to param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
+    // Must have correct type
+    } else if (!src.has_struct_value()) {
+        rc = catena::exception_with_status("Type mismatch between value and struct " + pd.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+    } else {
+        auto& srcFields = src.struct_value().fields();
+        // lambda function to call validFromProto for the given field
+        auto testWriteField = [&](const auto& field) {
+            IParamDescriptor& subParam = pd.getSubParam(field.name);
+            if (rc.status == catena::StatusCode::OK) {
+                // Must contain all the field
+                if (!srcFields.contains(field.name)) {
+                    rc = catena::exception_with_status("Missing field " + std::string(field.name) + " from " + pd.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+                } else {
+                    validFromProto(srcFields.at(field.name), &(dst->*(field.memberPtr)), subParam, rc, authz);
+                }
+            }
+        };
+        // All sub params must also be valid.
+        std::apply([&](auto... field) {
+            (testWriteField(field), ...);
+        }, fields);
     }
-}
-
-template <meta::IsVariant T>
-void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
-    std::string variantType = alternativeNames<T>[src->index()];
-    IParamDescriptor& subParam = pd.getSubParam(variantType);
-    std::visit([&](auto& arg) {
-        catena::Value elemValue;
-        toProto(elemValue, &arg, subParam, authz);
-        catena::StructVariantValue* structVariant = dst.mutable_struct_variant_value();
-        structVariant->set_struct_variant_type(variantType);
-        *structVariant->mutable_value() = elemValue;
-    }, *src);
-}
-
-/**
- * Free standing method to deserialize a value from protobuf
- * 
- * generic template declaration
- * 
- * @tparam T the type of the value
- */
-template <typename T>
-void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz);
-
-/**
- * fromProto specialization to deserialize an entire array of structured data
- * from protobuf
- * 
- * enabled if T is a vector of struct with isCatenaStruct defined
- * 
- * @tparam T the type of the value
- */
-template <CatenaStructArray T>
-void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
-    using structType = T::value_type;
-    // src is not an array so it cannot be deserialized into an array
-    if (src.has_struct_array_values()) {
-        auto& srcArray = src.struct_array_values().struct_values();
-        dst->clear(); // empty the destination vector
-    
-        // Right now from proto is able to append any number of values to the
-        // vector
-        // Do we want to keep this behavior?
-
-        // iterate over each element in the src array and call fromProto for each
-        for (int i = 0; i < srcArray.size(); ++i) {
-            catena::Value item;
-            *item.mutable_struct_value() = srcArray.Get(i);
-            structType& elemValue = dst->emplace_back();
-            fromProto(item, &elemValue, pd, authz);
-        }
-    }
+    return rc.status == catena::StatusCode::OK;
 }
 
 /**
@@ -286,26 +266,23 @@ void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, con
  * @tparam T the type of the value
  */
 template <CatenaStruct T>
-void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
-    auto fields = StructInfo<T>::fields; // get tuple of FieldInfo for this struct type
-    // src is not a struct so it cannot be deserialized into a struct
-    if (src.has_struct_value()) {
+catena::exception_with_status fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    if (validFromProto(src, dst, pd, rc, authz)) {
+        auto fields = StructInfo<T>::fields; // get tuple of FieldInfo for this struct type
         auto& srcFields = src.struct_value().fields();
 
         // lambda function to call fromProto for the given field if it is authorized
         auto writeField = [&](const auto& field) {
             IParamDescriptor& subParam = pd.getSubParam(field.name);
-            // Only update if authorized and field is in the src.
-            if (authz.writeAuthz(subParam) && srcFields.contains(field.name)) {
-                /**
-                 * &(dst->*(field.memberPtr)) will pass the address of the
-                 * corresponding value field in dst to the fromProto function.
-                 * 
-                 * the correct specialization of fromProto will be called based on
-                 * the type of the field memberPtr.
-                 */
-                fromProto(srcFields.at(field.name), &(dst->*(field.memberPtr)), subParam, authz);
-            }            
+            /**
+             * &(dst->*(field.memberPtr)) will pass the address of the
+             * corresponding value field in dst to the fromProto function.
+             * 
+             * the correct specialization of fromProto will be called based on
+             * the type of the field memberPtr.
+             */
+            fromProto(srcFields.at(field.name), &(dst->*(field.memberPtr)), subParam, authz);
         };
 
         // call writeField for each field in the dst struct
@@ -315,24 +292,93 @@ void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, con
             (writeField(field), ...);
         }, fields);
     }
+    return rc;
 }
 
-template <IsVariantArray T>
-void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
-    using VariantType = T::value_type;
-    // src is not an array so it cannot be deserialized into an array
-    if (src.has_struct_variant_array_values()) {
-        auto& srcArray = src.struct_variant_array_values().struct_variants();
-        dst->clear(); // empty the destination vector
+/**
+ * toProto specialization to serialize an entire array of structured data to
+ * protobuf
+ * 
+ * enabled if T is a vector of CatenaStruct
+ * 
+ * @tparam T the type of the value
+ */
+template <CatenaStructArray T>
+catena::exception_with_status toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    // Must have read authorization
+    if (!authz.readAuthz(pd)) {
+        rc = catena::exception_with_status("Not authorized to read param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
+    } else {
+        dst.clear_struct_array_values();
+        using structType = T::value_type;
+        auto* dstArray = dst.mutable_struct_array_values();
+        
+        for (const auto& item : *src) {
+            catena::Value elemValue;
+            rc = toProto(elemValue, &item, pd, authz);
+            *dstArray->add_struct_values() = *elemValue.mutable_struct_value();
+            if (rc.status != catena::StatusCode::OK) { break; }
+        }
+    }
+    // Return an empty array if the serialization failed
+    if (rc.status != catena::StatusCode::OK) {
+        dst.clear_struct_array_values();
+    }
+    return rc;
+}
 
+template <CatenaStructArray T>
+bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const Authorizer& authz) {
+    using structType = T::value_type;
+    // Must have write authorization
+    if (!authz.writeAuthz(pd)) {
+        rc = catena::exception_with_status("Not authorized to write to param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
+    // Must have correct type
+    } else if (!src.has_struct_array_values()) {
+        rc = catena::exception_with_status("Type mismatch between value and struct array " + pd.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+    // Must not exceed max length.
+    } else if (src.struct_array_values().struct_values_size() > pd.max_length()) {
+        rc = catena::exception_with_status("Param " + pd.getOid() + " exceeds maximum capacity", catena::StatusCode::OUT_OF_RANGE);
+    } else {
+        auto& srcArray = src.struct_array_values().struct_values();
+        structType testStruct; // Empty struct for testing sub params.
+        // All members must also be valid.
+        for (int i = 0; i < srcArray.size(); ++i) {
+            catena::Value item;
+            *item.mutable_struct_value() = srcArray.Get(i);
+            if (!validFromProto(item, &testStruct, pd, rc, authz)) {
+                break;
+            }
+        }
+    }
+    return rc.status == catena::StatusCode::OK;
+}
+
+/**
+ * fromProto specialization to deserialize an entire array of structured data
+ * from protobuf
+ * 
+ * enabled if T is a vector of struct with isCatenaStruct defined
+ * 
+ * @tparam T the type of the value
+ */
+template <CatenaStructArray T>
+catena::exception_with_status fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    if (validFromProto(src, dst, pd, rc, authz)) {
+        using structType = T::value_type;
+        auto& srcArray = src.struct_array_values().struct_values();
+        dst->clear(); // empty the destination vector
         // iterate over each element in the src array and call fromProto for each
         for (int i = 0; i < srcArray.size(); ++i) {
             catena::Value item;
-            *item.mutable_struct_variant_value() = srcArray.Get(i);
-            VariantType& elemValue = dst->emplace_back();
+            *item.mutable_struct_value() = srcArray.Get(i);
+            structType& elemValue = dst->emplace_back();
             fromProto(item, &elemValue, pd, authz);
         }
     }
+    return rc;
 }
 
 /**
@@ -376,9 +422,66 @@ void _changeType(V& variant, const std::size_t newTypeIndex) {
 }
 
 template <meta::IsVariant T>
-void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
-    // src is not a variant so it cannot be deserialized into a variant
-    if (src.has_struct_variant_value()) {
+catena::exception_with_status toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    // Must have read authorization
+    if (!authz.readAuthz(pd)) {
+        rc = catena::exception_with_status("Not authorized to read param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
+    } else {
+        dst.clear_struct_variant_value();
+        std::string variantType = alternativeNames<T>[src->index()];
+        IParamDescriptor& subParam = pd.getSubParam(variantType);
+        std::visit([&](auto& arg) {
+            if (rc.status == catena::StatusCode::OK) {
+                catena::Value elemValue;
+                rc = toProto(elemValue, &arg, subParam, authz);
+                catena::StructVariantValue* structVariant = dst.mutable_struct_variant_value();
+                structVariant->set_struct_variant_type(variantType);
+                *structVariant->mutable_value() = elemValue;
+            }
+        }, *src);
+    }
+    // Return an empty array if the serialization failed
+    if (rc.status != catena::StatusCode::OK) {
+        dst.clear_struct_variant_value();
+    }
+    return rc;
+}
+
+template <meta::IsVariant T>
+bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const Authorizer& authz) {
+    // Must have write authorization
+    if (!authz.writeAuthz(pd)) {
+        rc = catena::exception_with_status("Not authorized to write to param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
+    // Must have correct type
+    } else if (!src.has_struct_variant_value()) {
+        rc = catena::exception_with_status("Type mismatch between value and variant struct " + pd.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+    } else {
+        const catena::StructVariantValue& srcVariant = src.struct_variant_value();
+        std::string variantType = srcVariant.struct_variant_type();
+        std::size_t typeIndex = _findTypeIndex(variantType, alternativeNames<T>);
+        // Must have valid variant type
+        if (typeIndex >= alternativeNames<T>.size()) {
+            rc = catena::exception_with_status(pd.getOid() + " does not contain variant " + variantType, catena::StatusCode::INVALID_ARGUMENT);
+        } else {
+            T testVariant;
+            _changeType<T, 0>(testVariant, typeIndex);
+            // All sub params must also be valid.
+            IParamDescriptor& subParam= pd.getSubParam(variantType);
+            std::visit([&](auto& arg) {
+                if (rc.status == catena::StatusCode::OK) {
+                    validFromProto(srcVariant.value(), &arg, subParam, rc, authz);
+                }
+            }, testVariant); 
+        }
+    }
+    return rc.status == catena::StatusCode::OK;
+}
+
+template <meta::IsVariant T>
+catena::exception_with_status fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    if (validFromProto(src, dst, pd, rc, authz)) {
         const catena::StructVariantValue& srcVariant = src.struct_variant_value();
         std::string variantType = srcVariant.struct_variant_type();
         
@@ -395,6 +498,75 @@ void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, con
             }, *dst); 
         }
     }
+    return rc;
+}
+
+template <IsVariantArray T>
+catena::exception_with_status toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    // Must have read authorization
+    if (!authz.readAuthz(pd)) {
+        rc = catena::exception_with_status("Not authorized to read param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
+    } else {
+        dst.clear_struct_variant_array_values();
+        for (const auto& item : *src) {
+            catena::Value elemValue;
+            rc = toProto(elemValue, &item, pd, authz);
+            *dst.mutable_struct_variant_array_values()->add_struct_variants() = *elemValue.mutable_struct_variant_value();
+            if (rc.status != catena::StatusCode::OK) { break; }
+        }
+    }
+    // Return an empty array if the serialization failed
+    if (rc.status != catena::StatusCode::OK) {
+        dst.clear_struct_variant_array_values();
+    }
+    return rc;
+}
+
+template <IsVariantArray T>
+bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const Authorizer& authz) {
+    using VariantType = T::value_type;
+    // Must have write authorization
+    if (!authz.writeAuthz(pd)) {
+        rc = catena::exception_with_status("Not authorized to write to param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
+    // Must have correct type
+    } else if (!src.has_struct_variant_array_values()) {
+        rc = catena::exception_with_status("Type mismatch between value and variant struct array " + pd.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+    // Must not exceed max length
+    } else if (src.struct_variant_array_values().struct_variants_size() > pd.max_length()) {
+        rc = catena::exception_with_status("Param " + pd.getOid() + " exceeds maximum capacity", catena::StatusCode::OUT_OF_RANGE);
+    } else {
+        auto& srcArray = src.struct_variant_array_values().struct_variants();
+        // All members must also be valid.
+        for (int i = 0; i < srcArray.size(); ++i) {
+            VariantType testStruct; // Empty struct for testing.
+            catena::Value item;
+            *item.mutable_struct_variant_value() = srcArray.Get(i);
+            if (!validFromProto(item, &testStruct, pd, rc, authz)) {
+                break;
+            }
+        }
+    }
+    return rc.status == catena::StatusCode::OK;
+}
+
+template <IsVariantArray T>
+catena::exception_with_status fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    if (validFromProto(src, dst, pd, rc, authz)) {
+        using VariantType = T::value_type;
+        auto& srcArray = src.struct_variant_array_values().struct_variants();
+        dst->clear(); // empty the destination vector
+
+        // iterate over each element in the src array and call fromProto for each
+        for (int i = 0; i < srcArray.size(); ++i) {
+            catena::Value item;
+            *item.mutable_struct_variant_value() = srcArray.Get(i);
+            VariantType& elemValue = dst->emplace_back();
+            fromProto(item, &elemValue, pd, authz);
+        }
+    }
+    return rc;
 }
 
 }  // namespace common
