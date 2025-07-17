@@ -204,7 +204,8 @@
                   "external_object_request",
                   "structs_with_authz",
                   "structs_with_authz_yaml",
-                  "use_commands"
+                  "use_commands",
+                  "one_of_everything"
                 ],
       "default": "status_update"
     },
@@ -247,7 +248,8 @@
         "status_update_REST_JSON",
         "use_commands_REST",
         "use_menus_REST",
-        "structs_with_authz_REST"
+        "structs_with_authz_REST",
+        "one_of_everything_REST"
       ],
       "default": "status_update_REST"
     }
