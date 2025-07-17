@@ -138,7 +138,7 @@ void ParamInfoRequest::proceed() {
                             }
                             // Recursively traverse all children of the top-level parameter
                             ParamInfoVisitor visitor(*dm, *authz, responses_, *this);
-                            ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), *dm, visitor);
+                            ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), *dm, visitor, *authz);
                         }
                     }
                 }
@@ -168,7 +168,7 @@ void ParamInfoRequest::proceed() {
                         // If recursive is true, collect all parameter info recursively through visitor pattern
                         if (recursive_) {
                             ParamInfoVisitor visitor(*dm, *authz, responses_, *this);
-                            ParamVisitor::traverseParams(param.get(), context_.fqoid(), *dm, visitor);
+                            ParamVisitor::traverseParams(param.get(), context_.fqoid(), *dm, visitor, *authz);
                         }
                     }
                 }

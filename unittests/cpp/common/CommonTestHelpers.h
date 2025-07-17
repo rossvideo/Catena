@@ -14,7 +14,7 @@
  * 3. Neither the name of the copyright holder nor the names of its
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -52,16 +52,23 @@ namespace common {
  * @param descriptor The descriptor to return
  * @param isArray Whether this is an array type (defaults to false)
  * @param size The array size if it's an array type (defaults to 0)
+ * @param scope The scope to return (defaults to monitor)
  */
-inline void setupMockParam(MockParam* param, const std::string& oid, const IParamDescriptor& descriptor, bool isArray = false, uint32_t size = 0) {
-    EXPECT_CALL(*param, getOid())
+inline void setupMockParam(MockParam& param, const std::string& oid, MockParamDescriptor& descriptor, bool isArray = false, uint32_t size = 0, const std::string& scope = Scopes().getForwardMap().at(Scopes_e::kMonitor)) {
+    EXPECT_CALL(param, getOid())
         .WillRepeatedly(::testing::ReturnRef(oid));
-    EXPECT_CALL(*param, getDescriptor())
+    EXPECT_CALL(param, getDescriptor())
         .WillRepeatedly(::testing::ReturnRef(descriptor));
-    EXPECT_CALL(*param, isArrayType())
+    EXPECT_CALL(param, isArrayType())
         .WillRepeatedly(::testing::Return(isArray));
+    EXPECT_CALL(param, getScope())
+        .WillRepeatedly(::testing::ReturnRef(scope));
+    EXPECT_CALL(descriptor, isCommand())
+        .WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(descriptor, minimalSet())
+        .WillRepeatedly(::testing::Return(true));
     if (isArray) {
-        EXPECT_CALL(*param, size())
+        EXPECT_CALL(param, size())
             .WillRepeatedly(::testing::Return(size));
     }
 }
@@ -71,7 +78,9 @@ class ParamHierarchyBuilder {
 public:
     struct DescriptorInfo {
         std::shared_ptr<MockParamDescriptor> descriptor;
-        std::unordered_map<std::string, IParamDescriptor*> subParams;
+        std::shared_ptr<std::unordered_map<std::string, IParamDescriptor*>> subParams;
+        std::string oid;
+        DescriptorInfo() : subParams(std::make_shared<std::unordered_map<std::string, IParamDescriptor*>>()) {}
     };
 
     /**
@@ -81,11 +90,12 @@ public:
      */
     static DescriptorInfo createDescriptor(const std::string& oid) {
         DescriptorInfo info;
+        info.oid = oid; 
         info.descriptor = std::make_shared<MockParamDescriptor>();
         EXPECT_CALL(*info.descriptor, getOid())
-            .WillRepeatedly(::testing::ReturnRef(oid));
+            .WillRepeatedly(::testing::ReturnRef(info.oid)); 
         EXPECT_CALL(*info.descriptor, getAllSubParams())
-            .WillRepeatedly(::testing::ReturnRef(info.subParams));
+            .WillRepeatedly(::testing::ReturnRef(*info.subParams));
         return info;
     }
 
@@ -96,7 +106,7 @@ public:
      * @param child The child descriptor
      */
     static void addChild(DescriptorInfo& parent, const std::string& name, DescriptorInfo& child) {
-        parent.subParams[name] = child.descriptor.get();
+        parent.subParams->emplace(name, child.descriptor.get());
     }
 };
 

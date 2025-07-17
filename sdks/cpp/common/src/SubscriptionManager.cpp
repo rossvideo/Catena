@@ -67,19 +67,19 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
     // Add all sub params case.
     } else if (wildcard && param) {
         SubscriptionVisitor visitor(dmSubscriptions);
-        ParamVisitor::traverseParams(param.get(), baseOid, dm, visitor);
+        ParamVisitor::traverseParams(param.get(), baseOid, dm, visitor, authz);
 
     // Add all params case.
     } else if (wildcard && oid == "/*") {
         std::vector<std::unique_ptr<IParam>> allParams;
         {
             std::lock_guard lg(dm.mutex());
-            allParams = dm.getTopLevelParams(rc);
+            allParams = dm.getTopLevelParams(rc, authz);
         }
         for (auto& param : allParams) {
             if (authz.readAuthz(*param)) {
                 SubscriptionVisitor visitor(dmSubscriptions);
-                ParamVisitor::traverseParams(param.get(), "/" + param->getOid(), dm, visitor);
+                ParamVisitor::traverseParams(param.get(), "/" + param->getOid(), dm, visitor, authz);
             }
         }
     }

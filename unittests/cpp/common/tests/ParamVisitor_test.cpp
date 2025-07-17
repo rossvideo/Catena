@@ -52,6 +52,8 @@ using namespace catena::common;
 
 class ParamVisitorTest : public ::testing::Test {
 protected:
+    ParamVisitorTest() : authz_(jwsToken_) {}
+    
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
         Logger::StartLogging("ParamVisitorTest");
@@ -97,6 +99,11 @@ protected:
             .WillRepeatedly(::testing::ReturnRef(test_descriptor));
         EXPECT_CALL(*mockParam, isArrayType())
             .WillRepeatedly(::testing::Return(false));
+        
+        // Set up default behavior for getScope to avoid uninteresting mock warnings
+        static const std::string scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
+        EXPECT_CALL(*mockParam, getScope())
+            .WillRepeatedly(::testing::ReturnRef(scope));
     }
 
     std::unique_ptr<MockDevice> device;
@@ -105,13 +112,15 @@ protected:
     std::unordered_map<std::string, IParamDescriptor*> empty_SubParams;
     std::string test_oid = "/test/param";
     std::string array_oid = "/test/array";
+    std::string jwsToken_ = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uOncgc3QyMTM4Om9wOncgc3QyMTM4OmNmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MTUxNjIzOTAyMiwibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dTokrEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko9653v0khyUT4UKeOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKHkWi4P3-CYWrwe-g6b4-a33Q0k6tSGI1hGf2bA9cRYr-VyQ_T3RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEmuIwNOVM3EcVEaLyISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg_wbOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9MdvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
+    catena::common::Authorizer authz_;
 };
 
 // Test visiting a single parameter
 TEST_F(ParamVisitorTest, VisitSingleParam) {
     MockParamVisitor visitor;
     EXPECT_CALL(test_descriptor, getAllSubParams).Times(1).WillOnce(::testing::ReturnRef(empty_SubParams));
-    ParamVisitor::traverseParams(mockParam.get(), "/test/param", *device, visitor);
+    ParamVisitor::traverseParams(mockParam.get(), "/test/param", *device, visitor, authz_);
     
     EXPECT_EQ(visitor.visitedPaths.size(), 1);
     EXPECT_EQ(visitor.visitedPaths[0], "/test/param");
@@ -142,12 +151,16 @@ TEST_F(ParamVisitorTest, VisitArrayParam) {
                 .WillRepeatedly(::testing::Return(false));
             EXPECT_CALL(*param, getOid())
                 .WillRepeatedly(::testing::ReturnRef(fqoid));
+            static const std::string scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
+            EXPECT_CALL(*param, getScope())
+                .WillRepeatedly(::testing::ReturnRef(scope));
+            
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return param;
         }));
 
     MockParamVisitor visitor;
-    ParamVisitor::traverseParams(mockParam.get(), array_oid, *device, visitor);
+    ParamVisitor::traverseParams(mockParam.get(), array_oid, *device, visitor, authz_);
     
     EXPECT_EQ(visitor.visitedPaths.size(), 4);  // Array + 3 elements
     EXPECT_EQ(visitor.visitedPaths[0], array_oid);
@@ -189,6 +202,11 @@ TEST_F(ParamVisitorTest, VisitNestedParams) {
         .WillRepeatedly(::testing::Invoke([parent, nested, nested2, full_nested_oid, full_nested2_oid](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
             auto param = std::make_unique<MockParam>();
             
+            // Set up getScope for authorization (same for all params in this test)
+            static const std::string scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
+            EXPECT_CALL(*param, getScope())
+                .WillRepeatedly(::testing::ReturnRef(scope));
+            
             if (fqoid == full_nested2_oid) {
                 // Return nested2 param
                 EXPECT_CALL(*param, getOid())
@@ -219,7 +237,7 @@ TEST_F(ParamVisitorTest, VisitNestedParams) {
         }));
 
     MockParamVisitor visitor;
-    ParamVisitor::traverseParams(mockParam.get(), parent_oid, *device, visitor);
+    ParamVisitor::traverseParams(mockParam.get(), parent_oid, *device, visitor, authz_);
     
     EXPECT_EQ(visitor.visitedPaths.size(), 3);
     EXPECT_EQ(visitor.visitedPaths[0], parent_oid);  // First path should be parent
@@ -230,8 +248,6 @@ TEST_F(ParamVisitorTest, VisitNestedParams) {
 
 //Test visiting a parameter with array elements
 TEST_F(ParamVisitorTest, VisitArrayElements) {
-    DEBUG_LOG << "\n=== VisitArrayElements test started ===";
-
     // Set up mock param to be an array type
     std::string array_oid = "/test/array";
     std::string element_param = "param";  // Parameter name for array elements
@@ -262,18 +278,22 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
         .WillRepeatedly(::testing::Invoke([array_root, element0, element1, element_param0, element_param1, array_oid, element_param](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
             auto param = std::make_unique<MockParam>();
             
+            // Set up getScope for authorization (same for all params in this test)
+            static const std::string scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
+            EXPECT_CALL(*param, getScope())
+                .WillRepeatedly(::testing::ReturnRef(scope));
+            
             if (fqoid == array_oid + "/0/" + element_param) {
-                setupMockParam(param.get(), fqoid, *element_param0.descriptor);
+                setupMockParam(*param, fqoid, *element_param0.descriptor);
             } else if (fqoid == array_oid + "/1/" + element_param) {
-                setupMockParam(param.get(), fqoid, *element_param1.descriptor);
+                setupMockParam(*param, fqoid, *element_param1.descriptor);
             } else if (fqoid == array_oid + "/0") {
-                setupMockParam(param.get(), fqoid, *element0.descriptor);
+                setupMockParam(*param, fqoid, *element0.descriptor);
             } else if (fqoid == array_oid + "/1") {
-                setupMockParam(param.get(), fqoid, *element1.descriptor);
+                setupMockParam(*param, fqoid, *element1.descriptor);
             } else if (fqoid == array_oid) {
-                setupMockParam(param.get(), array_oid, *array_root.descriptor, true, 2);
+                setupMockParam(*param, array_oid, *array_root.descriptor, true, 2);
             } else {
-                DEBUG_LOG << "DEBUG TEST: Rejecting invalid path: " << fqoid;
                 status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
                 return nullptr;
             }
@@ -282,27 +302,15 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
         }));
 
     MockParamVisitor visitor;
-    ParamVisitor::traverseParams(mockParam.get(), array_oid, *device, visitor);
+    ParamVisitor::traverseParams(mockParam.get(), array_oid, *device, visitor, authz_);
     
-    DEBUG_LOG << "\nDEBUG: Visited paths:";
-    for (size_t i = 0; i < visitor.visitedPaths.size(); ++i) {
-        DEBUG_LOG << "  " << i << ": " << visitor.visitedPaths[i];
-    }
-    
-    DEBUG_LOG << "\nDEBUG: Visited arrays:";
-    for (size_t i = 0; i < visitor.visitedArrays.size(); ++i) {
-        DEBUG_LOG << "  " << i << ": path=" << visitor.visitedArrays[i].first 
-                  << ", length=" << visitor.visitedArrays[i].second;
-    }
-    
-    EXPECT_EQ(visitor.visitedPaths.size(), 5);  // Root + 2 array elements + 2 element params
-    EXPECT_EQ(visitor.visitedPaths[0], array_oid);  // First path should be array root
-    EXPECT_EQ(visitor.visitedPaths[1], array_oid + "/0");  // Second path should be first element
-    EXPECT_EQ(visitor.visitedPaths[2], array_oid + "/0/" + element_param);  // Third path should be first element's param
-    EXPECT_EQ(visitor.visitedPaths[3], array_oid + "/1");  // Fourth path should be second element
-    EXPECT_EQ(visitor.visitedPaths[4], array_oid + "/1/" + element_param);  // Fifth path should be second element's param
-    EXPECT_EQ(visitor.visitedArrays.size(), 1);  // Should have one array visit
-    EXPECT_EQ(visitor.visitedArrays[0].first, array_oid);  // Array path
-    EXPECT_EQ(visitor.visitedArrays[0].second, 2);  // Array length
-    DEBUG_LOG << "\n=== VisitArrayElements test completed ===";
+    EXPECT_EQ(visitor.visitedPaths.size(), 5); 
+    EXPECT_EQ(visitor.visitedPaths[0], array_oid); 
+    EXPECT_EQ(visitor.visitedPaths[1], array_oid + "/0"); 
+    EXPECT_EQ(visitor.visitedPaths[2], array_oid + "/0/" + element_param);
+    EXPECT_EQ(visitor.visitedPaths[3], array_oid + "/1"); 
+    EXPECT_EQ(visitor.visitedPaths[4], array_oid + "/1/" + element_param); 
+    EXPECT_EQ(visitor.visitedArrays.size(), 1); 
+    EXPECT_EQ(visitor.visitedArrays[0].first, array_oid); 
+    EXPECT_EQ(visitor.visitedArrays[0].second, 2);  
 } 
