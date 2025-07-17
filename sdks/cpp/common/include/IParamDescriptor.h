@@ -209,9 +209,13 @@ class IParamDescriptor {
     virtual const std::unordered_map<std::string, IParamDescriptor*>& getAllSubParams() const = 0;
 
     /**
-     * @brief get a constraint by oid
+     * @brief get a constraint
      */
     virtual const catena::common::IConstraint* getConstraint() const = 0;
+    /**
+     * @brief sets a constraint
+     */
+    virtual void defineConstraint(const catena::common::IConstraint* constraint) = 0;
 
     /**
      * @brief CommandResponder is a coroutine that allows commands to return

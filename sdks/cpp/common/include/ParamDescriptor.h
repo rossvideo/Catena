@@ -266,10 +266,17 @@ class ParamDescriptor : public IParamDescriptor {
     }
 
     /**
-     * @brief get a constraint by oid
+     * @brief get a constraint
      */
     const catena::common::IConstraint* getConstraint() const override {
       return constraint_;
+    }
+
+    /*
+     * @brief Set a constraint
+     */
+    void defineConstraint(const catena::common::IConstraint* constraint) override {
+      constraint = constraint;
     }
 
     /**

@@ -71,8 +71,12 @@ params:
         struct_values:
           - struct_value: # Channel 1
               fields:
-                signal: { float32_value: 0.0 }
-                volume: { float32_value: 0.0 }
+                data:
+                  struct_value:
+                    fields:
+                      signal: { float32_value: 0.0 }
+                      volume: { float32_value: 0.0 }
+                      name: { string_value: "Channel 1" }
                 select: { int32_value: 0 }
                 solo: { int32_value: 0 }
                 mute: { int32_value: 0 }
@@ -89,6 +93,175 @@ params:
                       file: { string_value: "display.txt" }
                       mode: { string_value: "normal" }
                       subtext: { string_value: "Channel Display" }
+          - struct_value: # Channel 2
+              fields:
+                data:
+                  struct_value:
+                    fields:
+                      signal: { float32_value: 0.0 }
+                      volume: { float32_value: 0.0 }
+                      name: { string_value: "Channel 2" }
+                select: { int32_value: 0 }
+                solo: { int32_value: 0 }
+                mute: { int32_value: 0 }
+                warning:
+                  struct_value:
+                    fields:
+                      COMP: { int32_value: 0 }
+                      CLIP: { int32_value: 0 }
+                      Freq: { int32_value: 0 }
+                slider: { float32_value: 0.0 }
+                display:
+                  struct_value:
+                    fields:
+                      file: { string_value: "display.txt" }
+                      mode: { string_value: "normal" }
+                      subtext: { string_value: "Channel Display" }
+          - struct_value: # Channel 3
+              fields:
+                data:
+                  struct_value:
+                    fields:
+                      signal: { float32_value: 0.0 }
+                      volume: { float32_value: 0.0 }
+                      name: { string_value: "Channel 3" }
+                select: { int32_value: 0 }
+                solo: { int32_value: 0 }
+                mute: { int32_value: 0 }
+                warning:
+                  struct_value:
+                    fields:
+                      COMP: { int32_value: 0 }
+                      CLIP: { int32_value: 0 }
+                      Freq: { int32_value: 0 }
+                slider: { float32_value: 0.0 }
+                display:
+                  struct_value:
+                    fields:
+                      file: { string_value: "display.txt" }
+                      mode: { string_value: "normal" }
+                      subtext: { string_value: "Channel Display" }
+          - struct_value: # Channel 4
+              fields:
+                data:
+                  struct_value:
+                    fields:
+                      signal: { float32_value: 0.0 }
+                      volume: { float32_value: 0.0 }
+                      name: { string_value: "Channel 4" }
+                select: { int32_value: 0 }
+                solo: { int32_value: 0 }
+                mute: { int32_value: 0 }
+                warning:
+                  struct_value:
+                    fields:
+                      COMP: { int32_value: 0 }
+                      CLIP: { int32_value: 0 }
+                      Freq: { int32_value: 0 }
+                slider: { float32_value: 0.0 }
+                display:
+                  struct_value:
+                    fields:
+                      file: { string_value: "display.txt" }
+                      mode: { string_value: "normal" }
+                      subtext: { string_value: "Channel Display" }
+          - struct_value: # Channel 5
+              fields:
+                data:
+                  struct_value:
+                    fields:
+                      signal: { float32_value: 0.0 }
+                      volume: { float32_value: 0.0 }
+                      name: { string_value: "Channel 5" }
+                select: { int32_value: 0 }
+                solo: { int32_value: 0 }
+                mute: { int32_value: 0 }
+                warning:
+                  struct_value:
+                    fields:
+                      COMP: { int32_value: 0 }
+                      CLIP: { int32_value: 0 }
+                      Freq: { int32_value: 0 }
+                slider: { float32_value: 0.0 }
+                display:
+                  struct_value:
+                    fields:
+                      file: { string_value: "display.txt" }
+                      mode: { string_value: "normal" }
+                      subtext: { string_value: "Channel Display" }
+          - struct_value: # Channel 6
+              fields:
+                data:
+                  struct_value:
+                    fields:
+                      signal: { float32_value: 0.0 }
+                      volume: { float32_value: 0.0 }
+                      name: { string_value: "Channel 6" }
+                select: { int32_value: 0 }
+                solo: { int32_value: 0 }
+                mute: { int32_value: 0 }
+                warning:
+                  struct_value:
+                    fields:
+                      COMP: { int32_value: 0 }
+                      CLIP: { int32_value: 0 }
+                      Freq: { int32_value: 0 }
+                slider: { float32_value: 0.0 }
+                display:
+                  struct_value:
+                    fields:
+                      file: { string_value: "display.txt" }
+                      mode: { string_value: "normal" }
+                      subtext: { string_value: "Channel Display" }
+          - struct_value: # Channel 7
+              fields:
+                data:
+                  struct_value:
+                    fields:
+                      signal: { float32_value: 0.0 }
+                      volume: { float32_value: 0.0 }
+                      name: { string_value: "Channel 7" }
+                select: { int32_value: 0 }
+                solo: { int32_value: 0 }
+                mute: { int32_value: 0 }
+                warning:
+                  struct_value:
+                    fields:
+                      COMP: { int32_value: 0 }
+                      CLIP: { int32_value: 0 }
+                      Freq: { int32_value: 0 }
+                slider: { float32_value: 0.0 }
+                display:
+                  struct_value:
+                    fields:
+                      file: { string_value: "display.txt" }
+                      mode: { string_value: "normal" }
+                      subtext: { string_value: "Channel Display" }
+          - struct_value: # Channel 8
+              fields:
+                data:
+                  struct_value:
+                    fields:
+                      signal: { float32_value: 0.0 }
+                      volume: { float32_value: 0.0 }
+                      name: { string_value: "Channel 8" }
+                select: { int32_value: 0 }
+                solo: { int32_value: 0 }
+                mute: { int32_value: 0 }
+                warning:
+                  struct_value:
+                    fields:
+                      COMP: { int32_value: 0 }
+                      CLIP: { int32_value: 0 }
+                      Freq: { int32_value: 0 }
+                slider: { float32_value: 0.0 }
+                display:
+                  struct_value:
+                    fields:
+                      file: { string_value: "display.txt" }
+                      mode: { string_value: "normal" }
+                      subtext: { string_value: "Channel Display" }
+          
 
 commands:
   select:

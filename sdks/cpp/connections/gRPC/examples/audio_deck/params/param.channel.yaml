@@ -6,11 +6,18 @@ type: STRUCT
 name: { display_strings: { en: Channel } }
 params:
 
-  signal:
-    type: FLOAT32
+  data:
+    type: STRUCT
+    params:
+
+      signal:
+        type: FLOAT32
   
-  volume:
-    type: FLOAT32
+      volume:
+        type: FLOAT32
+
+      name:
+        type: STRING
 
   select:
     template_oid: /bool

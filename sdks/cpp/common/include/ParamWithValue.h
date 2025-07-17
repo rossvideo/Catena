@@ -625,10 +625,17 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     /**
-     * @brief get a constraint by oid
+     * @brief get a constraint
      */
     const catena::common::IConstraint* getConstraint() const override {
         return descriptor_.getConstraint();
+    }
+
+    /**
+     * @brief sets a constraint
+     */
+    void defineConstraint(const catena::common::IConstraint* constraint) override {
+       descriptor_.defineConstraint(constraint);
     }
 
     /**

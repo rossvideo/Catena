@@ -166,6 +166,10 @@ class IParam {
     virtual const IConstraint* getConstraint() const = 0;
 
     /**
+     * @brief sets a constraint
+     */
+    virtual void defineConstraint(const catena::common::IConstraint* constraint) = 0;
+    /**
      * @brief get the parameter access scope
      */
     virtual const std::string& getScope() const = 0;
