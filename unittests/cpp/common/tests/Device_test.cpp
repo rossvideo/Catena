@@ -46,6 +46,7 @@
 #include <mocks/MockParamDescriptor.h>
 #include <mocks/MockConstraint.h>
 #include <mocks/MockMenuGroup.h>
+#include <mocks/MockMenu.h>
 #include <CommonTestHelpers.h>
 
 using namespace catena::common;
@@ -689,7 +690,7 @@ TEST_F(DeviceTest, CommitMultiSetValue_RegularParamsSuccess) {
 // --- Get Language Tests ---
 
 // 3.1: Success Case - Language Pack Get
-TEST_F(DeviceTest, LanguagePack_Get_Success) {
+TEST_F(DeviceTest, LanguagePack_Get) {
     // Test getting a shipped language pack (English)
     Device::ComponentLanguagePack pack;
     auto result = device_->getLanguagePack("en", pack);
@@ -760,7 +761,7 @@ TEST_F(DeviceTest, LanguagePack_Get_UnknownError) {
 // --- Add Language Tests ---
 
 // 3.6: Success Case - Language Pack Add
-TEST_F(DeviceTest, LanguagePack_Add_Success) {
+TEST_F(DeviceTest, LanguagePack_Add) {
     // Create a language pack payload for a new language
     catena::AddLanguagePayload payload;
     payload.set_id("es");
@@ -813,7 +814,7 @@ TEST_F(DeviceTest, LanguagePack_Add_NoOverwrite) {
 // --- Remove Language Tests ---
 
 // 3.10: Success Case - Language Pack Removal
-TEST_F(DeviceTest, LanguagePack_Remove_Success) {
+TEST_F(DeviceTest, LanguagePack_Remove) {
     // First add a language pack that can be removed
     catena::AddLanguagePayload payload;
     payload.set_id("es");
@@ -989,7 +990,7 @@ TEST_F(DeviceTest, GetParam_NonStringFrontElement) {
 // --- Get Top Level Params Tests ---
 
 // 4.8: Success Case - Get Top Level Params
-TEST_F(DeviceTest, GetTopLevelParams_Success) {
+TEST_F(DeviceTest, GetTopLevelParams) {
     // Create a single mock parameter that requires admin authorization
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
@@ -1044,7 +1045,7 @@ TEST_F(DeviceTest, GetTopLevelParams_Exception) {
 // --- Get Command Tests ---
 
 // 4.10: Success Case - Get Command with Valid Path
-TEST_F(DeviceTest, GetCommand_Success) {
+TEST_F(DeviceTest, GetCommand) {
     // Create a mock command and add it to the device
     auto mockCommand = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
@@ -1490,11 +1491,453 @@ TEST_F(DeviceTest, Language_ToProtoEmpty) {
 
 // ==== 6. Device Serializer Tests ====
 
+// 6.1: Success Case - Test Get Device Serializer with Parameters
+TEST_F(DeviceTest, GetDeviceSerializer_Parameters) {
+    // Create mock parameters and add them to the device
+    auto mockParam1 = std::make_shared<MockParam>();
+    auto mockParam2 = std::make_shared<MockParam>();
+    auto mockDescriptor1 = std::make_shared<MockParamDescriptor>();
+    auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(*mockParam1, "/param1", *mockDescriptor1, false, 0, adminScope);
+    setupMockParam(*mockParam2, "/param2", *mockDescriptor2, false, 0, adminScope);
+    
+    // Set up expectations for descriptors
+    EXPECT_CALL(*mockDescriptor1, minimalSet())
+        .WillRepeatedly(testing::Return(false));
+    EXPECT_CALL(*mockDescriptor2, minimalSet())
+        .WillRepeatedly(testing::Return(false));
+    
+    // Set up expectations for toProto calls
+    EXPECT_CALL(*mockParam1, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            param.set_type(catena::ParamType::INT32);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    EXPECT_CALL(*mockParam2, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            param.set_type(catena::ParamType::STRING);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    
+    device_->addItem("param1", mockParam1.get());
+    device_->addItem("param2", mockParam2.get());
+    
+    // Create empty subscribed OIDs set - FULL detail level should include all components
+    std::set<std::string> subscribedOids = {};
+    
+    // Get device serializer and test coroutine behavior
+    auto serializer = device_->getDeviceSerializer(*adminAuthz_, subscribedOids, catena::Device_DetailLevel_FULL, false);
+    
+    // Test that we can iterate through components
+    int componentCount = 0;
+    while (serializer.hasMore()) {
+        auto component = serializer.getNext();
+        componentCount++;
+        
+        // First component should be device info
+        if (componentCount == 1) {
+            EXPECT_TRUE(component.has_device());
+            EXPECT_EQ(component.device().slot(), 1);
+        }
+    }
+    
+    // Should have: device info (1) + language packs from SetUp (2) + parameters (2) = 5
+    EXPECT_EQ(componentCount, 5);
+}
+
+// 6.2: Success Case - Test Get Device Serializer with Commands
+TEST_F(DeviceTest, GetDeviceSerializer_Commands) {
+    // Create mock commands and add them to the device
+    auto mockCommand1 = std::make_shared<MockParam>();
+    auto mockCommand2 = std::make_shared<MockParam>();
+    auto mockDescriptor1 = std::make_shared<MockParamDescriptor>();
+    auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(*mockCommand1, "/command1", *mockDescriptor1, false, 0, adminScope);
+    setupMockParam(*mockCommand2, "/command2", *mockDescriptor2, false, 0, adminScope);
+    
+    // Override isCommand to return true for commands
+    EXPECT_CALL(*mockDescriptor1, isCommand())
+        .WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(*mockDescriptor2, isCommand())
+        .WillRepeatedly(testing::Return(true));
+    
+    // Set up expectations for toProto calls
+    EXPECT_CALL(*mockCommand1, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            param.set_type(catena::ParamType::INT32);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    EXPECT_CALL(*mockCommand2, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            param.set_type(catena::ParamType::STRING);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    
+    device_->addItem("command1", mockCommand1.get());
+    device_->addItem("command2", mockCommand2.get());
+    
+    // Create empty subscribed OIDs set (not needed for COMMANDS mode)
+    std::set<std::string> subscribedOids = {};
+    
+    // Get device serializer with COMMANDS detail level
+    auto serializer = device_->getDeviceSerializer(*adminAuthz_, subscribedOids, catena::Device_DetailLevel_COMMANDS, false);
+    
+    // Test that we can iterate through components
+    int componentCount = 0;
+    bool foundCommands = false;
+    
+    while (serializer.hasMore()) {
+        auto component = serializer.getNext();
+        componentCount++;
+        
+        // Check for command components
+        if (component.has_command()) {
+            foundCommands = true;
+            EXPECT_TRUE(component.command().oid() == "command1" || component.command().oid() == "command2");
+        }
+    }
+    
+    // Should have: device info (1) + commands (2) = 3
+    EXPECT_EQ(componentCount, 3);
+    EXPECT_TRUE(foundCommands);
+}
+
+// 6.3: Success Case - Test Get Device Serializer with Subscriptions
+TEST_F(DeviceTest, GetDeviceSerializer_Subscriptions) {
+    // Create mock parameters and add them to the device
+    auto mockSubscribedParam = std::make_shared<MockParam>();
+    auto mockUnsubscribedParam = std::make_shared<MockParam>();
+    auto mockWildcardParam = std::make_shared<MockParam>();
+    auto mockDescriptor1 = std::make_shared<MockParamDescriptor>();
+    auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
+    auto mockDescriptor3 = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(*mockSubscribedParam, "/subscribedParam", *mockDescriptor1, false, 0, adminScope);
+    setupMockParam(*mockUnsubscribedParam, "/unsubscribedParam", *mockDescriptor2, false, 0, adminScope);
+    setupMockParam(*mockWildcardParam, "/wildcardParam", *mockDescriptor3, false, 0, adminScope);
+    
+    // Set up expectations for descriptors
+    EXPECT_CALL(*mockDescriptor1, minimalSet())
+        .WillRepeatedly(testing::Return(false));
+    EXPECT_CALL(*mockDescriptor2, minimalSet())
+        .WillRepeatedly(testing::Return(false));
+    EXPECT_CALL(*mockDescriptor3, minimalSet())
+        .WillRepeatedly(testing::Return(false));
+    
+    // Set up expectations for toProto calls - subscribed and wildcard params should be called
+    EXPECT_CALL(*mockSubscribedParam, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            param.set_type(catena::ParamType::INT32);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    EXPECT_CALL(*mockWildcardParam, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            param.set_type(catena::ParamType::STRING);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    EXPECT_CALL(*mockUnsubscribedParam, toProto(testing::An<catena::Param&>(), testing::_))
+        .Times(0); // Should not be called
+    
+    device_->addItem("subscribedParam", mockSubscribedParam.get());
+    device_->addItem("unsubscribedParam", mockUnsubscribedParam.get());
+    device_->addItem("wildcardParam", mockWildcardParam.get());
+    
+    // Create subscribed OIDs set with exact match and wildcard match
+    std::set<std::string> subscribedOids = {"/subscribedParam", "/wildcard*"};
+    
+    // Get device serializer with SUBSCRIPTIONS detail level
+    auto serializer = device_->getDeviceSerializer(*adminAuthz_, subscribedOids, catena::Device_DetailLevel_SUBSCRIPTIONS, false);
+    
+    // Test that we can iterate through components
+    int componentCount = 0;
+    bool foundSubscribedParam = false;
+    bool foundWildcardParam = false;
+    bool foundUnsubscribedParam = false;
+    
+    while (serializer.hasMore()) {
+        auto component = serializer.getNext();
+        componentCount++;
+        
+        // Check for parameters
+        if (component.has_param()) {
+            if (component.param().oid() == "subscribedParam") {
+                foundSubscribedParam = true;
+            } else if (component.param().oid() == "wildcardParam") {
+                foundWildcardParam = true;
+            } else if (component.param().oid() == "unsubscribedParam") {
+                foundUnsubscribedParam = true;
+            }
+        }
+    }
+    
+    // Should have: device info (1) + subscribed parameter (1) + wildcard parameter (1) = 3
+    EXPECT_EQ(componentCount, 3);
+    EXPECT_TRUE(foundSubscribedParam);
+    EXPECT_TRUE(foundWildcardParam);
+    EXPECT_FALSE(foundUnsubscribedParam);
+}
+
+// 6.4: Success Case - Test Get Device Serializer with Menus
+TEST_F(DeviceTest, GetDeviceSerializer_Menus) {
+    // Create mock menu groups and add them to the device
+    auto mockMenuGroup = std::make_shared<MockMenuGroup>();
+    auto mockMenu = std::make_unique<MockMenu>();
+    
+    // Set up expectations for menu toProto
+    EXPECT_CALL(*mockMenu, toProto(testing::An<catena::Menu&>()))
+        .WillOnce(testing::Invoke([](catena::Menu& menu) {
+            auto* name = menu.mutable_name();
+            name->mutable_display_strings()->insert({"en", "Test Menu"});
+        }));
+    
+    // Set up expectations for menu group
+    static std::unordered_map<std::string, std::unique_ptr<IMenu>> menuMap;
+    menuMap.clear();
+    menuMap["testMenu"] = std::move(mockMenu);
+    EXPECT_CALL(*mockMenuGroup, menus())
+        .WillRepeatedly(testing::Return(&menuMap));
+    
+    device_->addItem("menuGroup", mockMenuGroup.get());
+    
+    // Create empty subscribed OIDs set - FULL detail level should include all components
+    std::set<std::string> subscribedOids = {};
+    
+    // Get device serializer with FULL detail level
+    auto serializer = device_->getDeviceSerializer(*adminAuthz_, subscribedOids, catena::Device_DetailLevel_FULL, false);
+    
+    // Test that we can iterate through components
+    int componentCount = 0;
+    bool foundMenu = false;
+    
+    while (serializer.hasMore()) {
+        auto component = serializer.getNext();
+        componentCount++;
+        
+        // Check for menu component
+        if (component.has_menu()) {
+            foundMenu = true;
+            EXPECT_EQ(component.menu().oid(), "menuGroup/testMenu");
+        }
+    }
+    
+    // Should have: device info (1) + menu (1) + language packs from SetUp (2) = 4
+    EXPECT_EQ(componentCount, 4);
+    EXPECT_TRUE(foundMenu);
+}
+
+// 6.5: Success Case - Test Get Device Serializer with Language Packs
+TEST_F(DeviceTest, GetDeviceSerializer_LanguagePacks) {
+    // Create empty subscribed OIDs set - language packs should be included in FULL detail level
+    std::set<std::string> subscribedOids = {};
+    
+    // Get device serializer with FULL detail level
+    auto serializer = device_->getDeviceSerializer(*adminAuthz_, subscribedOids, catena::Device_DetailLevel_FULL, false);
+    
+    // Test that we can iterate through components
+    int componentCount = 0;
+    bool foundEnglish = false;
+    bool foundFrench = false;
+    
+    while (serializer.hasMore()) {
+        auto component = serializer.getNext();
+        componentCount++;
+        
+        // Check for language pack components
+        if (component.has_language_pack()) {
+            if (component.language_pack().language() == "en") {
+                foundEnglish = true;
+            } else if (component.language_pack().language() == "fr") {
+                foundFrench = true;
+            }
+        }
+    }
+    
+    // Should have: device info (1) + language packs (2) = 3
+    EXPECT_EQ(componentCount, 3);
+    EXPECT_TRUE(foundEnglish);
+    EXPECT_TRUE(foundFrench);
+}
+
+// 6.6: Success Case - Test Get Device Serializer with Constraints
+TEST_F(DeviceTest, GetDeviceSerializer_Constraints) {
+    // Create mock constraints and add them to the device
+    auto mockConstraint = std::make_shared<MockConstraint>();
+    
+    // Set up expectations for constraint toProto
+    EXPECT_CALL(*mockConstraint, toProto(testing::An<catena::Constraint&>()))
+        .WillOnce(testing::Invoke([](catena::Constraint& constraint) {
+            constraint.set_ref_oid("testConstraint");
+        }));
+    
+    device_->addItem("testConstraint", mockConstraint.get());
+    
+    // Create empty subscribed OIDs set - FULL detail level should include all components
+    std::set<std::string> subscribedOids = {};
+    
+    // Get device serializer with FULL detail level
+    auto serializer = device_->getDeviceSerializer(*adminAuthz_, subscribedOids, catena::Device_DetailLevel_FULL, false);
+    
+    // Test that we can iterate through components
+    int componentCount = 0;
+    bool foundConstraint = false;
+    
+    while (serializer.hasMore()) {
+        auto component = serializer.getNext();
+        componentCount++;
+        
+        // Check for constraint component
+        if (component.has_shared_constraint()) {
+            foundConstraint = true;
+            EXPECT_EQ(component.shared_constraint().oid(), "testConstraint");
+        }
+    }
+    
+    // Should have: device info (1) + constraint (1) + language packs from SetUp (2) = 4
+    EXPECT_EQ(componentCount, 4);
+    EXPECT_TRUE(foundConstraint);
+}
+
+// 6.7: Success Case - Test Get Device Serializer with Authorization Filtering
+TEST_F(DeviceTest, GetDeviceSerializer_AuthorizationFiltering) {
+    // Create mock parameters with different authorization requirements
+    auto mockAuthorizedParam = std::make_shared<MockParam>();
+    auto mockUnauthorizedParam = std::make_shared<MockParam>();
+    auto mockDescriptor1 = std::make_shared<MockParamDescriptor>();
+    auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - authorized param allows monitor access, unauthorized param requires admin
+    static const std::string monitorScope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(*mockAuthorizedParam, "/authorizedParam", *mockDescriptor1, false, 0, monitorScope);
+    setupMockParam(*mockUnauthorizedParam, "/unauthorizedParam", *mockDescriptor2, false, 0, adminScope);
+    
+    // Set up expectations for descriptors
+    EXPECT_CALL(*mockDescriptor1, minimalSet())
+        .WillRepeatedly(testing::Return(false));
+    EXPECT_CALL(*mockDescriptor2, minimalSet())
+        .WillRepeatedly(testing::Return(false));
+    
+    // Only the authorized param should be serialized with monitor authorization
+    EXPECT_CALL(*mockAuthorizedParam, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            param.set_type(catena::ParamType::INT32);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    EXPECT_CALL(*mockUnauthorizedParam, toProto(testing::An<catena::Param&>(), testing::_))
+        .Times(0); // Should not be called
+    
+    device_->addItem("authorizedParam", mockAuthorizedParam.get());
+    device_->addItem("unauthorizedParam", mockUnauthorizedParam.get());
+    
+    // Create empty subscribed OIDs set - FULL detail level should include all components
+    std::set<std::string> subscribedOids = {};
+    
+    // Get device serializer with monitor authorization
+    auto serializer = device_->getDeviceSerializer(*monitorAuthz_, subscribedOids, catena::Device_DetailLevel_FULL, false);
+    
+    // Test that we can iterate through components
+    int componentCount = 0;
+    bool foundAuthorizedParam = false;
+    bool foundUnauthorizedParam = false;
+    
+    while (serializer.hasMore()) {
+        auto component = serializer.getNext();
+        componentCount++;
+        
+        // Check for parameters
+        if (component.has_param()) {
+            if (component.param().oid() == "authorizedParam") {
+                foundAuthorizedParam = true;
+            } else if (component.param().oid() == "unauthorizedParam") {
+                foundUnauthorizedParam = true;
+            }
+        }
+    }
+    
+    // Should have: device info (1) + authorized parameter (1) + language packs from SetUp (2) = 4
+    EXPECT_EQ(componentCount, 4);
+    EXPECT_TRUE(foundAuthorizedParam);
+    EXPECT_FALSE(foundUnauthorizedParam);
+}
+
+// 6.8: Success Case - Test Get Device Serializer with Minimal Set Filtering
+TEST_F(DeviceTest, GetDeviceSerializer_MinimalSetFiltering) {
+    // Create mock parameters with different minimal set characteristics
+    auto mockRegularParam = std::make_shared<MockParam>();
+    auto mockMinimalParam = std::make_shared<MockParam>();
+    auto mockDescriptor1 = std::make_shared<MockParamDescriptor>();
+    auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(*mockRegularParam, "/regularParam", *mockDescriptor1, false, 0, adminScope);
+    setupMockParam(*mockMinimalParam, "/minimalParam", *mockDescriptor2, false, 0, adminScope);
+    
+    // Set up expectations for descriptors
+    EXPECT_CALL(*mockDescriptor1, minimalSet())
+        .WillRepeatedly(testing::Return(false));
+    EXPECT_CALL(*mockDescriptor2, minimalSet())
+        .WillRepeatedly(testing::Return(true));
+    
+    // Both params should be serialized in FULL mode
+    EXPECT_CALL(*mockRegularParam, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            param.set_type(catena::ParamType::INT32);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    EXPECT_CALL(*mockMinimalParam, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            param.set_type(catena::ParamType::STRING);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    
+    device_->addItem("regularParam", mockRegularParam.get());
+    device_->addItem("minimalParam", mockMinimalParam.get());
+    
+    // Create empty subscribed OIDs set - FULL detail level should include all components
+    std::set<std::string> subscribedOids = {};
+    
+    // Get device serializer with FULL detail level
+    auto serializer = device_->getDeviceSerializer(*adminAuthz_, subscribedOids, catena::Device_DetailLevel_FULL, false);
+    
+    // Test that we can iterate through components
+    int componentCount = 0;
+    bool foundRegularParam = false;
+    bool foundMinimalParam = false;
+    
+    while (serializer.hasMore()) {
+        auto component = serializer.getNext();
+        componentCount++;
+        
+        // Check for parameters
+        if (component.has_param()) {
+            if (component.param().oid() == "regularParam") {
+                foundRegularParam = true;
+            } else if (component.param().oid() == "minimalParam") {
+                foundMinimalParam = true;
+            }
+        }
+    }
+    
+    // Should have: device info (1) + regular param (1) + minimal param (1) + language packs from SetUp (2) = 5
+    EXPECT_EQ(componentCount, 5);
+    EXPECT_TRUE(foundRegularParam);
+    EXPECT_TRUE(foundMinimalParam);
+}
+
 // ==== 7. Helper Function Tests ====
 
 // 7.1: Success Case - Test Get Next method
 TEST_F(DeviceTest, GetNext) {
-    // Create a simple serializer to test getNext
+    // Create a simple serializer to test getNext with FULL detail level
     std::set<std::string> subscribedOids = {};
     auto serializer = device_->getComponentSerializer(*adminAuthz_, subscribedOids, catena::Device_DetailLevel_FULL, false);
     
@@ -1511,14 +1954,15 @@ TEST_F(DeviceTest, GetNext) {
         componentCount++;
     }
     
-    // Should have at least the device component plus language packs from SetUp
-    EXPECT_GE(componentCount, 2);
+    // Should only have 2 language packs from SetUp
+    // Note: The device component is returned at the end (in getDeviceSerializer)
+    EXPECT_EQ(componentCount, 2);
 }
 
 // 7.2: Success Case - Test Get Component Serializer factory method
-TEST_F(DeviceTest, GetComponentSerializer_Success) {
-    // Create subscribed OIDs set
-    std::set<std::string> subscribedOids = {"/param1", "/param2"};
+TEST_F(DeviceTest, GetComponentSerializer) {
+    // Create empty subscribed OIDs set - FULL detail level should include all components
+    std::set<std::string> subscribedOids = {};
     //Test shallow copy
     auto serializer0 = device_->getComponentSerializer(*adminAuthz_, subscribedOids, catena::Device_DetailLevel_FULL, true);
     EXPECT_NE(serializer0, nullptr);
@@ -1537,7 +1981,7 @@ TEST_F(DeviceTest, GetComponentSerializer_Success) {
     EXPECT_NE(serializer5, nullptr);
 }
 
-// 7.3 - Test shouldSendParam functionality
+// 7.3 - Success Case - shouldSendParam functionality
 TEST_F(DeviceTest, ShouldSendParam) {
     // Create mock parameters with different characteristics
     auto mockParam = std::make_shared<MockParam>();
