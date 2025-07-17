@@ -39,6 +39,7 @@
 #include "RESTTest.h"
 #include "MockParam.h"
 #include "MockSubscriptionManager.h"
+#include "CommonTestHelpers.h"
 
 // REST
 #include "controllers/Subscriptions.h"
@@ -76,6 +77,9 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
                 EXPECT_EQ(&dm, &dm0_);
                 return std::set<std::string>(oids_.begin(), oids_.end());
             }));
+        
+        // Set up default JWS token for tests
+        jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
         // Default expectations for each test param.
         for (size_t i = 0; i < oids_.size(); ++i) {
             // Initializing test parameters and their expected responses_.
@@ -274,16 +278,6 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETStream) {
 TEST_F(RESTSubscriptionsTests, Subscriptions_GETAuthzValid) {
     initPayload(0);
     authzEnabled_ = true;
-    jwsToken_ = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIiOiIxMjM0NTY3"
-                "ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uOncgc"
-                "3QyMTM4Om9wOncgc3QyMTM4OmNmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MT"
-                "UxNjIzOTAyMiwibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dT"
-                "okrEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko9653v0khyUT4UK"
-                "eOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKHkWi4P3-CYWrwe-g6b4-a33Q"
-                "0k6tSGI1hGf2bA9cRYr-VyQ_T3RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEm"
-                "uIwNOVM3EcVEaLyISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg"
-                "_wbOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9MdvJH-cx1s1"
-                "46M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
     // Calling proceed and testing the output
     testCall();
 }
@@ -440,17 +434,9 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTNormal) {
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAuthzValid) {
     method_ = Method_PUT;
     initPayload(0, {"param1", "param2"}, {"param1", "param2"});
+    // Adding authorization mockToken metadata.
     authzEnabled_ = true;
-    jwsToken_ = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIiOiIxMjM0NTY3"
-                "ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uOncgc"
-                "3QyMTM4Om9wOncgc3QyMTM4OmNmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MT"
-                "UxNjIzOTAyMiwibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dT"
-                "okrEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko9653v0khyUT4UK"
-                "eOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKHkWi4P3-CYWrwe-g6b4-a33Q"
-                "0k6tSGI1hGf2bA9cRYr-VyQ_T3RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEm"
-                "uIwNOVM3EcVEaLyISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg"
-                "_wbOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9MdvJH-cx1s1"
-                "46M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
+    jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
     // Calling proceed and testing the output
     testCall();
 }

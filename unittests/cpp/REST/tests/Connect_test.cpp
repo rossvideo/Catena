@@ -41,6 +41,7 @@
 #include "MockSubscriptionManager.h"
 #include "MockParam.h"
 #include "MockLanguagePack.h"
+#include "CommonTestHelpers.h"
 
 // REST
 #include "controllers/Connect.h"
@@ -77,6 +78,9 @@ protected:
         EXPECT_CALL(dm1_, getValueSetByClient()).WillRepeatedly(testing::ReturnRef(valueSetByClient1));
         EXPECT_CALL(dm1_, getValueSetByServer()).WillRepeatedly(testing::ReturnRef(valueSetByServer1));
         EXPECT_CALL(dm1_, getLanguageAddedPushUpdate()).WillRepeatedly(testing::ReturnRef(languageAddedPushUpdate1));
+        
+        // Set up default JWS token for tests
+        jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
     }
 
     // This is required to disconnect signals before deletion
@@ -165,9 +169,6 @@ TEST_F(RESTConnectTest, Connect_HandlesAuthzError) {
 
 // Test 0.3: Test authorized connection
 TEST_F(RESTConnectTest, Connect_HandlesValidAuthz) {
-    jwsToken_ = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkw"
-                "IiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIiwiaWF0I"
-                "joxNTE2MjM5MDIyfQ.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ";
     authzEnabled_ = true;
 
     std::string slotJson = buildSlotResponse();
@@ -187,9 +188,6 @@ TEST_F(RESTConnectTest, Connect_HandlesValidAuthz) {
 
 // Test 1.1: Test value set by server signal
 TEST_F(RESTConnectTest, Connect_HandlesValueSetByServer) {
-    jwsToken_ = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkw"
-                "IiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIiwiaWF0I"
-                "joxNTE2MjM5MDIyfQ.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ";
     authzEnabled_ = true;
 
     auto param = std::make_unique<MockParam>();
@@ -223,9 +221,6 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByServer) {
 
 // Test 1.2: Test value set by client signal
 TEST_F(RESTConnectTest, Connect_HandlesValueSetByClient) {
-    jwsToken_ = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkw"
-                "IiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIiwiaWF0I"
-                "joxNTE2MjM5MDIyfQ.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ";
     authzEnabled_ = true;
 
     auto param = std::make_unique<MockParam>();
@@ -259,9 +254,6 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByClient) {
 
 // Test 1.3: Test language signal
 TEST_F(RESTConnectTest, Connect_HandlesLanguage) {
-    jwsToken_ = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkw"
-                "IiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIiwiaWF0I"
-                "joxNTE2MjM5MDIyfQ.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ";
     authzEnabled_ = true;
 
     auto languagePack = std::make_unique<MockLanguagePack>();
@@ -330,9 +322,6 @@ TEST_F(RESTConnectTest, Connect_HandlesUnknownException) {
 
 // Test 3.4: Test socket close during response sending with writer failure
 TEST_F(RESTConnectTest, Connect_HandlesWriterFailure) {
-    jwsToken_ = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkw"
-                "IiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIiwiaWF0I"
-                "joxNTE2MjM5MDIyfQ.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ";
     authzEnabled_ = true;
 
     auto param = std::make_unique<MockParam>();

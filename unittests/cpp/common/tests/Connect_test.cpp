@@ -33,6 +33,7 @@
 #include "MockParam.h"
 #include "MockParamDescriptor.h"
 #include "MockLanguagePack.h"
+#include "CommonTestHelpers.h"
 #include <rpc/Connect.h>
 #include <iostream>
 #include <Logger.h>
@@ -84,14 +85,8 @@ class CommonConnectTest : public ::testing::Test {
     }
 
     // Common test data
-    std::string monitorToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiO"
-                               "iIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2N"
-                               "vcGUiOiJzdDIxMzg6bW9uIiwiaWF0IjoxNTE2MjM5MDIyf"
-                               "Q.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ";
-    std::string operatorToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIi"
-                                "OiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic"
-                                "2NvcGUiOiJzdDIxMzg6b3AiLCJpYXQiOjE1MTYyMzkwMj"
-                                "J9.lduNvr6tEaLFeIYR4bH5tC55WUSDBEe5PFz9rvGRD3o";
+    std::string monitorToken = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
+    std::string operatorToken = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kOperate));
     std::string testOid = "/test/param";
     MockDevice dm0_;
     MockDevice dm1_;
@@ -134,23 +129,23 @@ class CommonConnectTest : public ::testing::Test {
     }
 
     // Helper method to setup mock param
-    void setupMockParam(MockParam* param, const std::string& oid, const MockParamDescriptor& descriptor) {
+    void setupMockParam(MockParam& param, const std::string& oid, const MockParamDescriptor& descriptor) {
         // Setup mock param expectations
-        EXPECT_CALL(*param, getOid())
+        EXPECT_CALL(param, getOid())
             .WillRepeatedly(::testing::Invoke([&oid]() {
                 return std::ref(oid);
             }));
-        EXPECT_CALL(*param, getDescriptor())
+        EXPECT_CALL(param, getDescriptor())
             .WillRepeatedly(::testing::Invoke([&descriptor]() {
                 return std::ref(descriptor);
             }));
-        EXPECT_CALL(*param, isArrayType())
+        EXPECT_CALL(param, isArrayType())
             .WillRepeatedly(::testing::Invoke([]() {
                 return false;
             }));
 
         // Setup common expectations
-        setupCommonExpectations(*param, descriptor);
+        setupCommonExpectations(param, descriptor);
     }
 
     // Helper method to setup language pack test data
@@ -178,7 +173,7 @@ TEST_F(CommonConnectTest, updateResponseReadAuthzFails) {
     MockParam param;
     MockParamDescriptor descriptor;
     setupCommonExpectations(param, descriptor);
-    setupMockParam(&param, testOid, descriptor);
+    setupMockParam(param, testOid, descriptor);
     connect->initAuthz_(operatorToken, true);  // Using operator token which won't have the right scope
     
     // Setup param to require monitor scope
@@ -202,7 +197,7 @@ TEST_F(CommonConnectTest, updateResponseAuthzOff) {
     MockParam param;
     MockParamDescriptor descriptor;
     setupCommonExpectations(param, descriptor);
-    setupMockParam(&param, testOid, descriptor);
+    setupMockParam(param, testOid, descriptor);
 
     // Test authorization disabled - should allow update
     connect->initAuthz_("", false);
@@ -222,7 +217,7 @@ TEST_F(CommonConnectTest, updateResponseAuthzOnFails) {
     MockParam param;
     MockParamDescriptor descriptor;
     setupCommonExpectations(param, descriptor);
-    setupMockParam(&param, testOid, descriptor);
+    setupMockParam(param, testOid, descriptor);
     connect->initAuthz_(monitorToken, true);
 
     EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
@@ -241,7 +236,7 @@ TEST_F(CommonConnectTest, updateResponseAuthzOnSucceeds) {
     MockParam param;
     MockParamDescriptor descriptor;
     setupCommonExpectations(param, descriptor);
-    setupMockParam(&param, testOid, descriptor);
+    setupMockParam(param, testOid, descriptor);
     connect->initAuthz_(monitorToken, true);
 
     EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
@@ -299,7 +294,7 @@ TEST_F(CommonConnectTest, updateResponseCancelled) {
     MockParam param;
     MockParamDescriptor descriptor;
     setupCommonExpectations(param, descriptor);
-    setupMockParam(&param, testOid, descriptor);
+    setupMockParam(param, testOid, descriptor);
 
     // Set cancelled to true
     connect->setCancelled(true);
@@ -332,7 +327,7 @@ TEST_F(CommonConnectTest, updateResponseLODFull) {
     MockParam param;
     MockParamDescriptor descriptor;
     setupCommonExpectations(param, descriptor);
-    setupMockParam(&param, testOid, descriptor);
+    setupMockParam(param, testOid, descriptor);
     connect->detailLevel_ = catena::Device_DetailLevel_FULL;
     connect->initAuthz_(monitorToken, true);
 
@@ -368,7 +363,7 @@ TEST_F(CommonConnectTest, updateResponseLODMinimalwMinimalSet) {
     MockParam param;
     MockParamDescriptor descriptor;
     setupCommonExpectations(param, descriptor);
-    setupMockParam(&param, testOid, descriptor);
+    setupMockParam(param, testOid, descriptor);
     connect->detailLevel_ = catena::Device_DetailLevel_MINIMAL;
     connect->initAuthz_(monitorToken, true);
 
@@ -399,7 +394,7 @@ TEST_F(CommonConnectTest, updateResponseLODMinimalNoMinimalSet) {
     MockParam param;
     MockParamDescriptor descriptor;
     setupCommonExpectations(param, descriptor);
-    setupMockParam(&param, testOid, descriptor);
+    setupMockParam(param, testOid, descriptor);
     connect->detailLevel_ = catena::Device_DetailLevel_MINIMAL;
     connect->initAuthz_(monitorToken, true);
 
@@ -425,7 +420,7 @@ TEST_F(CommonConnectTest, updateResponseLODSubscriptionsSubscribedOid) {
     MockParam param;
     MockParamDescriptor descriptor;
     setupCommonExpectations(param, descriptor);
-    setupMockParam(&param, testOid, descriptor);
+    setupMockParam(param, testOid, descriptor);
     connect->detailLevel_ = catena::Device_DetailLevel_SUBSCRIPTIONS;
     connect->initAuthz_(monitorToken, true);
 
@@ -459,7 +454,7 @@ TEST_F(CommonConnectTest, updateResponseLODSubscriptionsUnsubscribedOid) {
     MockParam param;
     MockParamDescriptor descriptor;
     setupCommonExpectations(param, descriptor);
-    setupMockParam(&param, testOid, descriptor);
+    setupMockParam(param, testOid, descriptor);
     connect->detailLevel_ = catena::Device_DetailLevel_SUBSCRIPTIONS;
     connect->initAuthz_(monitorToken, true);
 
@@ -484,7 +479,7 @@ TEST_F(CommonConnectTest, updateResponseLODCommandsCommandParam) {
     MockParam param;
     MockParamDescriptor descriptor;
     setupCommonExpectations(param, descriptor);
-    setupMockParam(&param, testOid, descriptor);
+    setupMockParam(param, testOid, descriptor);
     connect->detailLevel_ = catena::Device_DetailLevel_COMMANDS;
     connect->initAuthz_(monitorToken, true);
 
@@ -518,7 +513,7 @@ TEST_F(CommonConnectTest, updateResponseLODCommandsNonCommandParam) {
     MockParam param;
     MockParamDescriptor descriptor;
     setupCommonExpectations(param, descriptor);
-    setupMockParam(&param, testOid, descriptor);
+    setupMockParam(param, testOid, descriptor);
     connect->detailLevel_ = catena::Device_DetailLevel_COMMANDS;
     connect->initAuthz_(monitorToken, true);
 
@@ -546,7 +541,7 @@ TEST_F(CommonConnectTest, updateResponseLODNone) {
     MockParam param;
     MockParamDescriptor descriptor;
     setupCommonExpectations(param, descriptor);
-    setupMockParam(&param, testOid, descriptor);
+    setupMockParam(param, testOid, descriptor);
     connect->detailLevel_ = catena::Device_DetailLevel_NONE;
     connect->initAuthz_(monitorToken, true);
 
@@ -572,7 +567,7 @@ TEST_F(CommonConnectTest, updateResponseLODUnset) {
     MockParam param;
     MockParamDescriptor descriptor;
     setupCommonExpectations(param, descriptor);
-    setupMockParam(&param, testOid, descriptor);
+    setupMockParam(param, testOid, descriptor);
     connect->detailLevel_ = catena::Device_DetailLevel_UNSET;
 
     // Initialize authorization with monitor token
@@ -601,7 +596,7 @@ TEST_F(CommonConnectTest, updateResponseExceptionParamToProto) {
     MockParam param;
     MockParamDescriptor descriptor;
     setupCommonExpectations(param, descriptor);
-    setupMockParam(&param, testOid, descriptor);
+    setupMockParam(param, testOid, descriptor);
     connect->detailLevel_ = catena::Device_DetailLevel_FULL;
     connect->initAuthz_(monitorToken, true);
 
