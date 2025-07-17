@@ -395,12 +395,11 @@ class Device : public IDevice {
      * @param item the item to be added
      */
     void addItem(const std::string& key, IParam* item) override {
-        // if (item->getDescriptor().isCommand()) {
-        //     commands_[key] = item;
-        // } else {
-        //     params_[key] = item;
-        // }
-        params_[key] = item;
+        if (item->getDescriptor().isCommand()) {
+            commands_[key] = item;
+        } else {
+            params_[key] = item;
+        }
     }
     /**
      * @brief add an item to one of the collections owned by the device.

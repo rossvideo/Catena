@@ -103,8 +103,8 @@ void defineCommands() {
      * Starts a thread which updates the number_example parameter with the next
      * number of the Fibonacci sequence every second.
      */
-    fibStart->defineCommand([](catena::Value value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([value]() -> ParamDescriptor::CommandResponder {
+    fibStart->defineCommand([](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value) -> ParamDescriptor::CommandResponder {
             catena::exception_with_status err{"", catena::StatusCode::OK};
             catena::CommandResponse response;
             std::unique_ptr<IParam> intParam = dm.getParam("/number_example", err);
@@ -148,8 +148,8 @@ void defineCommands() {
     // This stops the looping thread in the fib_start command above.
     std::unique_ptr<IParam> fibStop = dm.getCommand("/fib_stop", err);
     assert(fibStop != nullptr);
-    fibStop->defineCommand([](catena::Value value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([value]() -> ParamDescriptor::CommandResponder {
+    fibStop->defineCommand([](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value) -> ParamDescriptor::CommandResponder {
             catena::exception_with_status err{"", catena::StatusCode::OK};
             catena::CommandResponse response;
             if (fibThread) {
@@ -163,14 +163,14 @@ void defineCommands() {
                 response.mutable_exception()->set_details("Already stopped");
             }
             co_return response;
-        }());
+        }(value));
     });
 
     // This sets the value of number_example.
     std::unique_ptr<IParam> fibSet = dm.getCommand("/fib_set", err);
     assert(fibSet != nullptr);
-    fibSet->defineCommand([](catena::Value value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([value]() -> ParamDescriptor::CommandResponder {
+    fibSet->defineCommand([](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value) -> ParamDescriptor::CommandResponder {
             catena::exception_with_status err{"", catena::StatusCode::OK};
             catena::CommandResponse response;
             std::unique_ptr<IParam> intParam = dm.getParam("/number_example", err);
@@ -184,14 +184,14 @@ void defineCommands() {
                 response.mutable_exception()->set_details("/number_example not found");
             }
             co_return response;
-        }());
+        }(value));
     });
 
     // This fills float_array with 128 random floats rounded to 3 decimal places.
     std::unique_ptr<IParam> randomize = dm.getCommand("/randomize", err);
     assert(randomize != nullptr);
-    randomize->defineCommand([](catena::Value value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([value]() -> ParamDescriptor::CommandResponder {
+    randomize->defineCommand([](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value) -> ParamDescriptor::CommandResponder {
             catena::exception_with_status err{"", catena::StatusCode::OK};
             catena::CommandResponse response;
             std::unique_ptr<IParam> floatArray = dm.getParam("/float_array", err);
@@ -213,14 +213,14 @@ void defineCommands() {
             }
             
             co_return response;
-        }());
+        }(value));
     });
 
     // This simulates a tape bot and returns a stream of responses.
     std::unique_ptr<IParam> tapeBot = dm.getCommand("/tape_bot", err);
     assert(tapeBot != nullptr);
-    tapeBot->defineCommand([](catena::Value value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([value]() -> ParamDescriptor::CommandResponder {
+    tapeBot->defineCommand([](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value) -> ParamDescriptor::CommandResponder {
             catena::exception_with_status err{"", catena::StatusCode::OK};
             catena::CommandResponse response;
             // Locating
@@ -251,7 +251,7 @@ void defineCommands() {
             response.Clear();
             response.mutable_response()->set_string_value("File loaded.");
             co_return response;
-        }());
+        }(value));
     });
 }
 

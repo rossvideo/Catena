@@ -66,8 +66,8 @@ class MockParamDescriptor : public IParamDescriptor {
     MOCK_METHOD(IParamDescriptor&, getSubParam, (const std::string& oid), (const, override));
     MOCK_METHOD((const std::unordered_map<std::string, IParamDescriptor*>&), getAllSubParams, (), (const, override));
     MOCK_METHOD(const catena::common::IConstraint*, getConstraint, (), (const, override));
-    MOCK_METHOD(void, defineCommand, (std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl), (override));
-    MOCK_METHOD(std::unique_ptr<ICommandResponder>, executeCommand, (catena::Value value), (override));
+    MOCK_METHOD(void, defineCommand, (std::function<std::unique_ptr<ICommandResponder>(const catena::Value&)> commandImpl), (override));
+    MOCK_METHOD(std::unique_ptr<ICommandResponder>, executeCommand, (const catena::Value value&), (override));
     MOCK_METHOD(bool, isCommand, (), (const, override));
 };
 

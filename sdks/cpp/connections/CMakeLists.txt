@@ -27,7 +27,7 @@ if (gRPC_enabled)
 endif()
 
 if (REST_enabled)
-    add_subdirectory("REST")
+    # add_subdirectory("REST")
 endif()
 
 # optionally make docker images
