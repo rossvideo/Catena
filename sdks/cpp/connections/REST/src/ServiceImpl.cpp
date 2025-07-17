@@ -111,7 +111,6 @@ void CatenaServiceImpl::run() {
                     } else if (router_.canMake(requestKey)) {
                         std::unique_ptr<ICallData> request = router_.makeProduct(requestKey, socket, context, dms_);
                         request->proceed();
-                        request->finish();
                     // ERROR
                     } else { 
                         rc = catena::exception_with_status("Request " + requestKey + " does not exist", catena::StatusCode::UNIMPLEMENTED);

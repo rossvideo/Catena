@@ -90,15 +90,7 @@ TEST_F(RESTLanguagesTests, Languages_Create) {
 }
 
 /* 
- * TEST 0.2 - Writing to console with Languages finish().
- */
-TEST_F(RESTLanguagesTests, Languages_Finish) {
-    endpoint_->finish();
-    ASSERT_TRUE(MockConsole_.str().find("Languages[1] finished\n") != std::string::npos);
-}
-
-/* 
- * TEST 0.3 - Languages proceed() with an invalid method.
+ * TEST 0.2 - Languages proceed() with an invalid method.
  */
 TEST_F(RESTLanguagesTests, Languages_BadMethod) {
     expRc_ = catena::exception_with_status("Bad method", catena::StatusCode::UNIMPLEMENTED);

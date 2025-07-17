@@ -57,6 +57,15 @@ get:
         $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
       example: "image.png"
 
+    - name: compression
+      in: query
+      required: false
+      description: The compression method to use. If not provided, the asset will be sent uncompressed.
+      schema:
+        type: string
+        enum: [UNCOMPRESSED, GZIP, DEFLATE]
+      example: "UNCOMPRESSED"
+
   tags:
     - Assets
     
@@ -68,12 +77,18 @@ get:
         application/json:
           schema:
             example: {
-                data: [
-                  {ExternalObjectPayload},
-                  {ExternalObjectPayload}
-                ]
+              "cachable": true,
+              "payload": {
+                "metadata": {
+                  "size": "13",
+                  "last-modified": "Fri Apr 8 12:00:00 2025",
+                  "filename": "asset.png"
+                },
+                "digest": "h654h654y564yh543",
+                "payloadEncoding": "GZIP",
+                "payload": "payloadString"
               }
-      # ExternalObjectPayload doesn't yet have a schema, todo!
+            }
           
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'

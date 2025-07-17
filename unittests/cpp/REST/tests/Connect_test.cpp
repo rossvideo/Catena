@@ -69,7 +69,18 @@ protected:
             .WillRepeatedly(testing::ReturnRef(userAgent_));
         EXPECT_CALL(context_, hasField("force_connection"))
             .WillRepeatedly(testing::Return(false));
+        // dm0_ signals
+        EXPECT_CALL(dm0_, getValueSetByClient()).WillRepeatedly(testing::ReturnRef(valueSetByClient0));
+        EXPECT_CALL(dm0_, getValueSetByServer()).WillRepeatedly(testing::ReturnRef(valueSetByServer0));
+        EXPECT_CALL(dm0_, getLanguageAddedPushUpdate()).WillRepeatedly(testing::ReturnRef(languageAddedPushUpdate0));
+        // dm1_ signals
+        EXPECT_CALL(dm1_, getValueSetByClient()).WillRepeatedly(testing::ReturnRef(valueSetByClient1));
+        EXPECT_CALL(dm1_, getValueSetByServer()).WillRepeatedly(testing::ReturnRef(valueSetByServer1));
+        EXPECT_CALL(dm1_, getLanguageAddedPushUpdate()).WillRepeatedly(testing::ReturnRef(languageAddedPushUpdate1));
     }
+
+    // This is required to disconnect signals before deletion
+    ~RESTConnectTest() { endpoint_.reset(nullptr); }
 
     /*
      * Creates a Connect handler object.
@@ -124,6 +135,15 @@ protected:
     MockSubscriptionManager subManager_;
     std::string userAgent_ = "test_agent";
     std::string paramOid_ = "test_param";
+
+    // dm0_ test signals.
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByClient0;
+    vdk::signal<void(const ILanguagePack*)> languageAddedPushUpdate0;
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByServer0;
+    // dm1_ test signals.
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByClient1;
+    vdk::signal<void(const ILanguagePack*)> languageAddedPushUpdate1;
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByServer1;
 };
 
 // --- 0. INITIAL TESTS ---
@@ -131,12 +151,6 @@ protected:
 // Test 0.1: Test constructor initialization
 TEST_F(RESTConnectTest, Connect_Create) {
     ASSERT_TRUE(endpoint_);
-}
-
-// Test 2.1: Test finish behaviour with no active signal handlers
-TEST_F(RESTConnectTest, Connect_FinishClosesConnection) {
-    EXPECT_NO_THROW(endpoint_->finish());
-    ASSERT_TRUE(MockConsole_.str().find("Connect[1] finished\n") != std::string::npos);
 }
 
 // Test 0.2: Test unauthorized connection
@@ -167,8 +181,6 @@ TEST_F(RESTConnectTest, Connect_HandlesValidAuthz) {
     proceed_thread.join();
 
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, {slotJson}));
-
-    endpoint_->finish();
 }
 
 // --- 1. SIGNAL TESTS ---
@@ -200,15 +212,13 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByServer) {
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-    dm0_.valueSetByServer.emit(paramOid_, param.get());
+    dm0_.getValueSetByServer().emit(paramOid_, param.get());
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     catena::REST::Connect::shutdownSignal_.emit();
     proceed_thread.join();
 
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, {slotJson, updateJson}));
-
-    endpoint_->finish();
 }
 
 // Test 1.2: Test value set by client signal
@@ -238,15 +248,13 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByClient) {
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-    dm0_.valueSetByClient.emit(paramOid_, param.get());
+    dm0_.getValueSetByClient().emit(paramOid_, param.get());
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     catena::REST::Connect::shutdownSignal_.emit();
     proceed_thread.join();
 
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, {slotJson, updateJson}));
-
-    endpoint_->finish();
 }
 
 // Test 1.3: Test language signal
@@ -272,15 +280,13 @@ TEST_F(RESTConnectTest, Connect_HandlesLanguage) {
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-    dm0_.languageAddedPushUpdate.emit(languagePack.get());
+    dm0_.getLanguageAddedPushUpdate().emit(languagePack.get());
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     catena::REST::Connect::shutdownSignal_.emit();
     proceed_thread.join();
 
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, {slotJson, updateJson}));
-
-    endpoint_->finish();
 }
 
 // --- 3. EXCEPTION TESTS ---
@@ -349,7 +355,7 @@ TEST_F(RESTConnectTest, Connect_HandlesWriterFailure) {
     clientSocket_.close();
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-    dm0_.valueSetByServer.emit(paramOid_, param.get());
+    dm0_.getValueSetByServer().emit(paramOid_, param.get());
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
     EXPECT_FALSE(serverSocket_.is_open());

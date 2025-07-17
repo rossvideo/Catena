@@ -49,22 +49,34 @@ bool Device::tryMultiSetValue (catena::MultiSetValuePayload src, catena::excepti
     if (src.values_size() > 1 && !multi_set_enabled_) {
         ans = catena::exception_with_status("Multi-set is disabled for the device in slot " + std::to_string(slot_), catena::StatusCode::PERMISSION_DENIED);
     } else {
+        std::vector<std::string> affectedOids;
+
         // Looping through and validating set value requests.
         for (const catena::SetValuePayload& setValuePayload : src.values()) {
             try {
-                // Getting param, or parent param if the final segment is an index.
-                Path path(setValuePayload.oid());
-                Path::Index index = Path::kNone;
-                if (path.back_is_index()) {
-                    index = path.back_as_index();
-                    path.popBack();
+                // First validate no overlapping actions.
+                for (const auto& oid : affectedOids) {
+                    if (!(oid.ends_with("/-") && (setValuePayload.oid().ends_with("/-"))) &&
+                       (oid.starts_with(setValuePayload.oid()) || setValuePayload.oid().starts_with(oid))) {
+                        ans = catena::exception_with_status("Overlapping actions for " + oid + " and " + setValuePayload.oid(), catena::StatusCode::INVALID_ARGUMENT);
+                        break;
+                    }
                 }
-                std::unique_ptr<IParam> param = getParam(path, ans, authz);
-                // Validating serValue operation.
-                if (!param) {
-                    break;
-                } else if (!param->validateSetValue(setValuePayload.value(), index, authz, ans)) {
-                    break;
+                // Then ensure the request will go through if fromProto is called.
+                if (ans.status == catena::StatusCode::OK) {
+                    affectedOids.push_back(setValuePayload.oid());
+                    // Getting param, or parent param if the final segment is an index.
+                    Path path(setValuePayload.oid());
+                    Path::Index index = Path::kNone;
+                    if (path.back_is_index()) {
+                        index = path.back_as_index();
+                        path.popBack();
+                    }
+                    std::unique_ptr<IParam> param = getParam(path, ans, authz);
+                    // Validating setValue operation.
+                    if (!param || !param->validateSetValue(setValuePayload.value(), index, authz, ans)) {
+                        break;
+                    }
                 }
             } catch (const catena::exception_with_status& why) {
                 ans = catena::exception_with_status(why.what(), why.status);
@@ -72,11 +84,11 @@ bool Device::tryMultiSetValue (catena::MultiSetValuePayload src, catena::excepti
             }
         }
         // Resetting trackers regardless of whether something went wrong or not.
-        for (const catena::SetValuePayload& setValuePayload : src.values()) {
+        for (const std::string& oid : affectedOids) {
             // Creating another exception_with_status as to not overwrite ans.
             catena::exception_with_status status{"", catena::StatusCode::OK};
             // Resetting param's trackers, or parent param's if back is index.
-            Path path(setValuePayload.oid());
+            Path path(oid);
             if (path.back_is_index()) { path.popBack(); }
             std::unique_ptr<IParam> param = getParam(path, status, authz);
             if (param) { param->resetValidate(); }
@@ -148,7 +160,7 @@ catena::exception_with_status Device::getValue (const std::string& jptr, catena:
         catena::common::Path path(jptr);
         if (path.back_is_index() && path.back_as_index() == catena::common::Path::kEnd) {
             // Index is "-"
-            ans = catena::exception_with_status("Index out of bounds in path " + jptr, catena::StatusCode::OUT_OF_RANGE);
+            ans = catena::exception_with_status("Index out - of bounds in path " + jptr, catena::StatusCode::OUT_OF_RANGE);
         } else {
             std::unique_ptr<IParam> param = getParam(path, ans, authz);
             // we expect this to be a parameter name

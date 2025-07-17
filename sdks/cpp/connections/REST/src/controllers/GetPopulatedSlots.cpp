@@ -24,9 +24,8 @@ void GetPopulatedSlots::proceed() {
     }
     // Writing response.
     writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), slotList);
-}
 
-void GetPopulatedSlots::finish() {
+    // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     DEBUG_LOG << "GetPopulatedSlots[" << objectId_ << "] finished\n";
 }

@@ -84,7 +84,6 @@ class ParamWithValue : public catena::common::IParam {
         } else {
             dev.addItem(descriptor.getOid(), this);
         }
-        initializeTracker_(value_.get());
     }
 
     /**
@@ -93,9 +92,7 @@ class ParamWithValue : public catena::common::IParam {
     ParamWithValue(
         T& value,
         IParamDescriptor& descriptor
-    ) : value_{value}, descriptor_{descriptor} {
-        initializeTracker_(value_.get());
-    }
+    ) : value_{value}, descriptor_{descriptor} {}
 
     /**
      * @brief Construct a new ParamWithValue object without adding it to device
@@ -118,9 +115,7 @@ class ParamWithValue : public catena::common::IParam {
         const FieldInfo<FieldType, ParentType>& field, 
         ParentType& parentValue,
         IParamDescriptor& parentDescriptor
-    ) : descriptor_{parentDescriptor.getSubParam(field.name)}, value_{(parentValue.*(field.memberPtr))} {
-        initializeTracker_(value_.get());
-    }
+    ) : descriptor_{parentDescriptor.getSubParam(field.name)}, value_{(parentValue.*(field.memberPtr))} {}
 
     /**
      * @brief ParamWithValue can not be copied directly
@@ -165,13 +160,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param clientScope the client scope
      */
     catena::exception_with_status toProto(catena::Value& value, Authorizer& authz) const override {
-        catena::exception_with_status ans{"", catena::StatusCode::OK};
-        if (!authz.readAuthz(*this)) {
-            ans = catena::exception_with_status("Not authorized to read param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
-        } else {
-            catena::common::toProto<T>(value, &value_.get(), descriptor_, authz);
-        }
-        return ans;
+        return catena::common::toProto<T>(value, &value_.get(), descriptor_, authz);
     }
 
     /**
@@ -181,14 +170,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param clientScope the client scope
      */
     catena::exception_with_status toProto(catena::Param& param, Authorizer& authz) const override {
-        catena::exception_with_status ans{"", catena::StatusCode::OK};
-        if (!authz.readAuthz(*this)) {
-            return catena::exception_with_status("Not authorized to read param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
-        } else {
-            descriptor_.toProto(param, authz);
-            catena::common::toProto<T>(*param.mutable_value(), &value_.get(), descriptor_, authz);
-        }
-        return ans;
+        return catena::common::toProto<T>(*param.mutable_value(), &value_.get(), descriptor_, authz);
     }
 
     /**
@@ -214,16 +196,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param clientScope the client scope
      */
     catena::exception_with_status fromProto(const catena::Value& value, Authorizer& authz) override {
-        catena::exception_with_status ans{"", catena::StatusCode::OK};
-        if (!authz.readAuthz(*this)) {
-            ans = catena::exception_with_status("Not authorized to read param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
-        }
-        else if (!authz.writeAuthz(*this)) {
-            ans = catena::exception_with_status("Not authorized to write to param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
-        } else {
-            catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
-        }
-        return ans;
+        return catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
     }
 
     /**
@@ -499,7 +472,7 @@ class ParamWithValue : public catena::common::IParam {
 
         if (oidIndex >= value.size() || oidIndex == catena::common::Path::kEnd) {
             // If index is out of bounds, return nullptr
-            status = catena::exception_with_status("Index out of bounds in path " + oid.fqoid(), catena::StatusCode::OUT_OF_RANGE);
+            status = catena::exception_with_status("Index " + std::to_string(oidIndex) + " out of bounds in path " + oid.fqoid(), catena::StatusCode::OUT_OF_RANGE);
             return nullptr;
         }
 
@@ -673,160 +646,150 @@ class ParamWithValue : public catena::common::IParam {
      */
     std::size_t str_length(const U& value) const { return 0; }
     std::size_t str_length(const std::string& value) const { return value.length(); }
-    // Tracker initializers. One overload for each case.
-    /**
-     * @brief Default initializeTracker_(). Sets mSizeTracker to length of value
-     * if it's a string
-     * @returns catena::exception_with_status OK.
-     */
-    template<typename U>
-    catena::exception_with_status initializeTracker_(const U& value) {
-        catena::exception_with_status ans{"OK", catena::StatusCode::OK};
-        try {
-            // 0 unless value is a string.
-            *mSizeTracker_ = str_length(value);
-        } catch (...) {
-            ans = catena::exception_with_status("Could not initialize tracker for " + descriptor_.getOid(), catena::StatusCode::INTERNAL);
-        }
-        return ans;
-    }
-    /**
-     * @brief std::vector overload of initializeTracker_(). Sets mSizeTracker to
-     * the number of elements in arrayValue and tSizeTracker to the total
-     * length of all values in arrayValue if arrayValue is a string array.
-     * @param arrayValue The param's vector value.
-     * @returns catena::exception_with_status.
-     */
-    template<meta::IsVector U>
-    catena::exception_with_status initializeTracker_(const U& arrayValue) {
-        catena::exception_with_status ans{"OK", catena::StatusCode::OK};
-        try {
-            *mSizeTracker_ = arrayValue.size();
-            // STRING_ARRAY only functionality.
-            if (descriptor_.type() == catena::ParamType::STRING_ARRAY) {
-                // Initializing/clearing the tSizeTracker.
-                if (!tSizeTracker_) {
-                    tSizeTracker_ = std::make_shared<TSizeTracker>();
-                } else {
-                    tSizeTracker_->clear();
-                }
-                // Setting mSizeTracker and tSizeTracker.
-                for (auto& value : arrayValue) {
-                    tSizeTracker_->push_back(str_length(value));
-                }
-            }
-        } catch (...) {
-            ans = catena::exception_with_status("Could not initialize tracker for " + descriptor_.getOid(), catena::StatusCode::INTERNAL);
-        }
-        return ans;
-    }
-
     // Tracker updaters. One overload for each case.
     /**
-     * @brief Default set value overload of updateTracker_. Makes a call to
-     * initializeTracker_ requirements are met.
-     * @param oldValue The paramWithValue's existing value.
-     * @param newValue The value to replace oldValue with. Must be the same
-     * type as oldValude.
+     * @brief Default overload of validateSetValue_ used in cases where type(U) ==
+     * type(V).
+     * @param oldVal The paramWithValue's existing value.
+     * @param newVal The value to replace oldVal with.
+     * @param protoVal The protobuf value newVal was taken from.
      * @param index The index to insert the value at. Must be Path::kNone.
+     * @param authz The authorizer object for checking write permissions.
      * @returns catena::exception_with_status.
      */
     template<typename U, typename V>
-    catena::exception_with_status updateTracker_(U& oldValue, const V& newValue, Path::Index index) {
+    catena::exception_with_status validateSetValue_(U& oldVal, const V& newVal, const catena::Value& protoVal, Path::Index index, Authorizer& authz) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
         // Index cannot be defined.
         if (index != Path::kNone) {
             ans = catena::exception_with_status("Index not applicable to setValue for param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
-        // newValue must be the same type at oldValue.
-        } else if (!std::is_same<U, V>::value) {
-            ans = catena::exception_with_status("Type mismatch between setValue and param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
-        // Calling initializeTracker_ if valid input.
-        } else {
-            ans = initializeTracker_(newValue);
+        // newVal must pass all validation checks in validFromProto.
+        } else if (validFromProto(protoVal, &oldVal, descriptor_, ans, authz)) {
+            // Valid case if validFromProto returns true.
+            mSizeTracker_ = std::make_shared<std::size_t>(str_length(newVal));
         }
+
+         // If above was sucessful, finish by validating mSize
+        if (ans.status == catena::StatusCode::OK && *mSizeTracker_ > descriptor_.max_length()) {
+            // String cannot exceed max_length().
+            ans = catena::exception_with_status("Param " + descriptor_.getOid() + " exceeds maximum capacity", catena::StatusCode::OUT_OF_RANGE);
+        }
+
         return ans;
     }
     /**
-     * @brief Insert/append value to array overload of updateTracker_, updates
-     * mSizeTracker accordingly, and tSizeTracker if string array.
-     * @param arrayValue The paramWithValue's existing array.
-     * @param value The value to insert/append. Must be the same type as
-     * arrayValue's contents.
+     * @brief Insert/append value to array overload of validateSetValue_.
+     * @param arrayVal The paramWithValue's existing array value.
+     * @param memVal The value to insert/append.
+     * @param protoVal The protobuf value memVal was taken from.
      * @param index The index to insert the value at. Cannot be Path::kNone and
      * must be within bounds.
+     * @param authz The authorizer object for checking write permissions.
      * @returns catena::exception_with_status.
      */
     template<typename U, typename V> requires (!meta::IsVector<V>)
-    catena::exception_with_status updateTracker_(std::vector<U>& arrayValue, const V& value, Path::Index index) {
+    catena::exception_with_status validateSetValue_(std::vector<U>& arrayVal, const V& memVal, const catena::Value& protoVal, Path::Index index, Authorizer& authz) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
+        // Initializing mSizeTracker_ and tSizeTracker if they're not already.
+        if (!mSizeTracker_) {
+            mSizeTracker_ = std::make_shared<std::size_t>(arrayVal.size());
+            tSizeTracker_ = std::make_shared<TSizeTracker>();
+            for (auto& memVal : arrayVal) {
+                tSizeTracker_->push_back(str_length(memVal));
+            }
+        }
+
+        U testVal; // testVal for validFromProto() routing.
         // Index must be specified.
         if (index == Path::kNone) {
             ans = catena::exception_with_status("Index not specified in SetValue call to " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
-        // Value must be the same type as what's stored in the array.
-        } else if (!std::is_same<U, V>::value) {
-            ans = catena::exception_with_status("Type mismatch between setValue and param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
         // Index must be within bounds.
-        } else if (index >= *mSizeTracker_ && index != Path::kEnd) {
-            ans = catena::exception_with_status("Index out of bounds of array " + descriptor_.getOid(), catena::StatusCode::OUT_OF_RANGE);
-        // Case 1: Appending to the end.
-        } else if (index == Path::kEnd) {
-            *mSizeTracker_ += 1;
-            if (descriptor_.type() == catena::ParamType::STRING_ARRAY) {
-                tSizeTracker_->push_back(str_length(value));
+        } else if (index != Path::kEnd && index >= *mSizeTracker_) {
+            ans = catena::exception_with_status("Index " + std::to_string(index) + " out of bounds of array " + descriptor_.getOid(), catena::StatusCode::OUT_OF_RANGE);
+        // memVal must pass all validation checks in validFromProto.
+        } else if (validFromProto(protoVal, &testVal, descriptor_, ans, authz)) {
+            // Valid case if validFromProto returns true.
+            // Valid case 1: Appending to the end.
+            if (index == Path::kEnd) {
+                *mSizeTracker_ += 1;
+                tSizeTracker_->push_back(str_length(memVal));
+            // Valid case 2: Inserting at an existing index.
+            } else {
+                tSizeTracker_->at(index) = str_length(memVal);
             }
-        // Case 2: Inserting (do nothing unless string array).
-        } else if (descriptor_.type() == catena::ParamType::STRING_ARRAY) {
-            tSizeTracker_->at(index) = str_length(value);
         }
+
+        // If above was sucessful, finish by validating mSize and tSize
+        if (ans.status == catena::StatusCode::OK) {
+            // Array cannot exceed max_length().
+            if (*mSizeTracker_ > descriptor_.max_length()) {
+                ans = catena::exception_with_status("Param " + descriptor_.getOid() + " exceeds maximum capacity", catena::StatusCode::OUT_OF_RANGE);
+            // Sum of strings in array cannot exceed total_length().
+            } else {
+                std::size_t totalLength = 0;
+                for (std::size_t length : *tSizeTracker_) {
+                    totalLength += length;
+                }
+                if (totalLength > descriptor_.total_length()) {
+                    ans = catena::exception_with_status("String array param " + descriptor_.getOid() + " exceeds total length", catena::StatusCode::OUT_OF_RANGE);
+                }
+            }
+        }
+
         return ans;
     }
     using Kind = catena::Value::KindCase;
     /**
-     * @brief A map to help routing to the updateTracker_ functions above.
+     * @brief A map to help routing to the validateSetValue_ functions above.
      * Protobuf is great in that you need to use a seperate function to get
      * each different type of value.
      * @param key The value's kind_case().
-     * @param value The value we want passed into updateTracker_.
-     * @param index The index to update (or nullptr if none).
+     * @param protoVal The protobuf value object we want passed into
+     * validateSetValue_.
+     * @param index The index to update (or Path::kNone if none).
+     * @param authz The authorizer object for checking kWrite permissions.
      * @returns catena::exception_with_status.
      */
-    const std::unordered_map<Kind, std::function<catena::exception_with_status(const catena::Value&, Path::Index)>> updateTrackerMap_ {
-        {Kind::kInt32Value, [this](const catena::Value& value, Path::Index index) {
-            return this->updateTracker_(this->get(), value.int32_value(), index);
+    const std::unordered_map<Kind, std::function<catena::exception_with_status(const catena::Value&, Path::Index, Authorizer&)>> validateSetValueMap_ {
+        {Kind::kInt32Value, [this](const catena::Value& protoVal, Path::Index index, Authorizer& authz) {
+            return this->validateSetValue_(this->get(), protoVal.int32_value(), protoVal, index, authz);
         }},
-        {Kind::kFloat32Value, [this](const catena::Value& value, Path::Index index) {
-            return this->updateTracker_(this->get(), value.float32_value(), index);
+        {Kind::kFloat32Value, [this](const catena::Value& protoVal, Path::Index index, Authorizer& authz) {
+            return this->validateSetValue_(this->get(), protoVal.float32_value(), protoVal, index, authz);
         }},
-        {Kind::kStringValue, [this](const catena::Value& value, Path::Index index) {
-            return this->updateTracker_(this->get(), value.string_value(), index);
+        {Kind::kStringValue, [this](const catena::Value& protoVal, Path::Index index, Authorizer& authz) {
+            return this->validateSetValue_(this->get(), protoVal.string_value(), protoVal, index, authz);
         }},
-        {Kind::kStructValue, [this](const catena::Value& value, Path::Index index) {
-            return this->updateTracker_(this->get(), value.struct_value(), index);
+        {Kind::kStructValue, [this](const catena::Value& protoVal, Path::Index index, Authorizer& authz) {
+            return this->validateSetValue_(this->get(), protoVal.struct_value(), protoVal, index, authz);
         }},
-        {Kind::kInt32ArrayValues, [this](const catena::Value& value, Path::Index index) {
-            auto ints = value.int32_array_values().ints();
+        {Kind::kStructVariantValue, [this](const catena::Value& protoVal, Path::Index index, Authorizer& authz) {
+            return this->validateSetValue_(this->get(), protoVal.struct_variant_value(), protoVal, index, authz);
+        }},
+        {Kind::kInt32ArrayValues, [this](const catena::Value& protoVal, Path::Index index, Authorizer& authz) {
+            auto ints = protoVal.int32_array_values().ints();
             auto protoVector = std::vector<int>(ints.begin(), ints.end());
-            return this->updateTracker_(this->get(), protoVector, index);
+            return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }},
-        {Kind::kFloat32ArrayValues, [this](const catena::Value& value, Path::Index index) {
-            auto floats = value.float32_array_values().floats();
+        {Kind::kFloat32ArrayValues, [this](const catena::Value& protoVal, Path::Index index, Authorizer& authz) {
+            auto floats = protoVal.float32_array_values().floats();
             auto protoVector = std::vector<float>(floats.begin(), floats.end());
-            return this->updateTracker_(this->get(), protoVector, index);
+            return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }},
-        {Kind::kStringArrayValues, [this](const catena::Value& value, Path::Index index) {
-            auto strings = value.string_array_values().strings();
+        {Kind::kStringArrayValues, [this](const catena::Value& protoVal, Path::Index index, Authorizer& authz) {
+            auto strings = protoVal.string_array_values().strings();
             auto protoVector = std::vector<std::string>(strings.begin(), strings.end());
-            return this->updateTracker_(this->get(), protoVector, index);
+            return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }},
-        {Kind::kStructArrayValues, [this](const catena::Value& value, Path::Index index) {
-            auto structs = value.struct_array_values().struct_values();
+        {Kind::kStructArrayValues, [this](const catena::Value& protoVal, Path::Index index, Authorizer& authz) {
+            auto structs = protoVal.struct_array_values().struct_values();
             auto protoVector = std::vector<catena::StructValue>(structs.begin(), structs.end());
-            return this->updateTracker_(this->get(), protoVector, index);
+            return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }},
-        {Kind::kStructVariantArrayValues, [this](const catena::Value& value, Path::Index index) {
-            auto structs = value.struct_variant_array_values().struct_variants();
+        {Kind::kStructVariantArrayValues, [this](const catena::Value& protoVal, Path::Index index, Authorizer& authz) {
+            auto structs = protoVal.struct_variant_array_values().struct_variants();
             auto protoVector = std::vector<catena::StructVariantValue>(structs.begin(), structs.end());
-            return this->updateTracker_(this->get(), protoVector, index);
+            return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }}
     };
 
@@ -839,33 +802,9 @@ class ParamWithValue : public catena::common::IParam {
      * @returns true if valid.
      */
     bool validateSetValue(const catena::Value& value, Path::Index index, Authorizer& authz, catena::exception_with_status& ans) override {
-        // Checking read permissions.
-        if (!authz.readAuthz(*this)) {
-            ans = catena::exception_with_status("Not authorized to read the param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
-        }
-        // Checking write permissions.
-        else if (!authz.writeAuthz(*this)) {
-            ans = catena::exception_with_status("Not authorized to write to param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
-        // Currently: If unimplemented ignore.
-        } else if (updateTrackerMap_.contains(value.kind_case())) {
+        if (validateSetValueMap_.contains(value.kind_case())) {
             // Updating trackers.
-            ans = updateTrackerMap_.at(value.kind_case())(value, index);
-            // If the above was successful, check mSize and tSize.
-            if (ans.status == catena::StatusCode::OK) {
-                // Validating max length.
-                if (*mSizeTracker_ > descriptor_.max_length()) {
-                    ans = catena::exception_with_status("Param " + descriptor_.getOid() + " exceeds maximum capacity", catena::StatusCode::OUT_OF_RANGE);
-                // Validating total length if applicable.
-                } else if (tSizeTracker_) {
-                    std::size_t totalLength = 0;
-                    for (std::size_t length : *tSizeTracker_) {
-                        totalLength += length;
-                    }
-                    if (totalLength > descriptor_.total_length()) {
-                        ans = catena::exception_with_status("String array param " + descriptor_.getOid() + " exceeds total length", catena::StatusCode::OUT_OF_RANGE);
-                    }
-                }
-            }
+            ans = validateSetValueMap_.at(value.kind_case())(value, index, authz);
         }
         return ans.status == catena::StatusCode::OK;
     }
@@ -874,10 +813,8 @@ class ParamWithValue : public catena::common::IParam {
      */
     void resetValidate() override {
         // Resetting the trackers.
-        std::shared_ptr<std::size_t> mSizeTracker_ = std::make_shared<std::size_t>(0);
-        std::shared_ptr<TSizeTracker> tSizeTracker_ = nullptr;
-        // Reinitializing the trackers with the param's actual value.
-        initializeTracker_(value_.get());
+        mSizeTracker_ = nullptr;
+        tSizeTracker_ = nullptr;
     }
 
   private:
@@ -890,7 +827,7 @@ class ParamWithValue : public catena::common::IParam {
      * Shared ptr is used as the tracker must be shared between the parent and
      * all copies.
      */
-    std::shared_ptr<std::size_t> mSizeTracker_ = std::make_shared<std::size_t>(0);
+    std::shared_ptr<std::size_t> mSizeTracker_ = nullptr;
     /**
      * @brief A vector used to keep track of the string length at each index
      * of a string array. For all other types, this should be a nullptr.
