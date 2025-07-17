@@ -123,7 +123,7 @@ TEST_F(DeviceTest, TryMultiSetValue_SingleValueSuccess) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam.get(), "/param1", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/param1", *mockDescriptor, false, 0, adminScope);
     
     // Set up basic expectations for copy() - return mocks that validate successfully
     EXPECT_CALL(*mockParam, copy())
@@ -171,8 +171,8 @@ TEST_F(DeviceTest, TryMultiSetValue_MultipleValuesSuccess) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam1.get(), "/param1", mockDescriptor1.get(), false, 0, adminScope);
-    setupMockParam(mockParam2.get(), "/param2", mockDescriptor2.get(), false, 0, adminScope);
+    setupMockParam(*mockParam1, "/param1", *mockDescriptor1, false, 0, adminScope);
+    setupMockParam(*mockParam2, "/param2", *mockDescriptor2, false, 0, adminScope);
     
     // Set up basic expectations for copy() - return mocks that validate successfully
     EXPECT_CALL(*mockParam1, copy())
@@ -309,8 +309,8 @@ TEST_F(DeviceTest, TryMultiSetValue_ValidationFailure) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam1.get(), "/param1", mockDescriptor1.get(), false, 0, adminScope);
-    setupMockParam(mockParam2.get(), "/param2", mockDescriptor2.get(), false, 0, adminScope);
+    setupMockParam(*mockParam1, "/param1", *mockDescriptor1, false, 0, adminScope);
+    setupMockParam(*mockParam2, "/param2", *mockDescriptor2, false, 0, adminScope);
     
     // Set up expectations for getParam calls - first should fail validation, second should not be called for validation
     EXPECT_CALL(*mockParam1, copy())
@@ -374,7 +374,7 @@ TEST_F(DeviceTest, TryMultiSetValue_CatenaException) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam.get(), "/param1", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/param1", *mockDescriptor, false, 0, adminScope);
     
     // Set up expectations for copy() - throw a catena exception during first copy, second copy for reset
     EXPECT_CALL(*mockParam, copy())
@@ -417,7 +417,7 @@ TEST_F(DeviceTest, CommitMultiSetValue_SingleValueSuccess) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam.get(), "/param1", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/param1", *mockDescriptor, false, 0, adminScope);
     
     // Set up expectations for copy() - return mocks that handle fromProto and resetValidate
     EXPECT_CALL(*mockParam, copy())
@@ -462,8 +462,8 @@ TEST_F(DeviceTest, CommitMultiSetValue_RegularParamsSuccess) {
     auto mockRegularParam1 = std::make_shared<MockParam>();
     auto mockRegularParam2 = std::make_shared<MockParam>();
     
-    setupMockParam(mockRegularParam1.get(), "/param1", regularParam1.descriptor.get(), false, 0, adminScope);
-    setupMockParam(mockRegularParam2.get(), "/param2", regularParam2.descriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockRegularParam1, "/param1", *regularParam1.descriptor, false, 0, adminScope);
+    setupMockParam(*mockRegularParam2, "/param2", *regularParam2.descriptor, false, 0, adminScope);
     
     // Set up expectations for regular parameters (direct path access)
     EXPECT_CALL(*mockRegularParam1, copy())
@@ -494,7 +494,7 @@ TEST_F(DeviceTest, CommitMultiSetValue_RegularParamsSuccess) {
     
     // Track signal emissions
     std::vector<std::pair<std::string, const IParam*>> signalEmissions;
-    auto signalConnection = device_->valueSetByClient.connect(
+    auto signalConnection = device_->getValueSetByClient().connect(
         [&signalEmissions](const std::string& oid, const IParam* param) {
             signalEmissions.emplace_back(oid, param);
         }
@@ -548,8 +548,8 @@ TEST_F(DeviceTest, CommitMultiSetValue_RegularParamsSuccess) {
 //     auto mockParentParam = std::make_unique<MockParam>();
 //     auto mockArrayElement = std::make_unique<MockParam>();
     
-//     setupMockParam(mockParentParam.get(), "/parentParam", parentParam.descriptor.get(), true, 5, adminScope); // Array with 5 elements
-//     setupMockParam(mockArrayElement.get(), "/parentParam/3", parentParam.descriptor.get(), false, 0, adminScope);
+//     setupMockParam(*mockParentParam, "/parentParam", parentParam.*descriptor, true, 5, adminScope); // Array with 5 elements
+//     setupMockParam(*mockArrayElement, "/parentParam/3", parentParam.*descriptor, false, 0, adminScope);
     
 //     // Create the chain of mock parameters
 //     auto mockParentCopy = std::make_unique<MockParam>();
@@ -565,7 +565,7 @@ TEST_F(DeviceTest, CommitMultiSetValue_RegularParamsSuccess) {
 //     EXPECT_CALL(*mockParentCopy, getParam(testing::_, testing::_, testing::_))
 //         .WillOnce(testing::Invoke([&mockArrayElement](catena::common::Path& path, catena::common::Authorizer&, catena::exception_with_status& status) {
 //             status = catena::exception_with_status("", catena::StatusCode::OK);
-//             return std::unique_ptr<IParam>(mockArrayElement.get());
+//             return std::unique_ptr<IParam>(*mockArrayElement);
 //         }));
     
 //     // Set up expectations for array element (the actual target)
@@ -624,8 +624,8 @@ TEST_F(DeviceTest, CommitMultiSetValue_RegularParamsSuccess) {
 //     auto mockParentParam = std::make_unique<MockParam>();
 //     auto mockAppendedElement = std::make_unique<MockParam>();
     
-//     setupMockParam(mockParentParam.get(), "/parentParam", parentParam.descriptor.get(), true, 5, adminScope); // Array with 5 elements
-//     setupMockParam(mockAppendedElement.get(), "/parentParam/5", parentParam.descriptor.get(), false, 0, adminScope);
+//     setupMockParam(*mockParentParam, "/parentParam", parentParam.*descriptor, true, 5, adminScope); // Array with 5 elements
+//     setupMockParam(*mockAppendedElement, "/parentParam/5", parentParam.*descriptor, false, 0, adminScope);
     
 //     // Set up expectations for parent parameter to handle append operations
 //     EXPECT_CALL(*mockParentParam, copy())
@@ -880,7 +880,7 @@ TEST_F(DeviceTest, GetParam_String_Success) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam.get(), "/testParam", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope);
     
     EXPECT_CALL(*mockParam, copy())
         .WillOnce(testing::Return(std::make_unique<MockParam>()));
@@ -923,7 +923,7 @@ TEST_F(DeviceTest, GetParam_String_NotAuthorized) {
     
     // Set up authorization - parameter requires admin scope but monitor token only has st2138:mon
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam.get(), "/restrictedParam", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/restrictedParam", *mockDescriptor, false, 0, adminScope);
     
     // copy() should not be called since authorization will fail
     EXPECT_CALL(*mockParam, copy())
@@ -957,7 +957,7 @@ TEST_F(DeviceTest, GetParam_String_InternalError) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam.get(), "/errorParam", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/errorParam", *mockDescriptor, false, 0, adminScope);
     
     EXPECT_CALL(*mockParam, copy())
         .WillOnce(testing::Invoke([]() -> std::unique_ptr<IParam> {
@@ -982,7 +982,7 @@ TEST_F(DeviceTest, GetParam_String_UnknownError) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam.get(), "/unknownErrorParam", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/unknownErrorParam", *mockDescriptor, false, 0, adminScope);
     
     EXPECT_CALL(*mockParam, copy())
         .WillOnce(testing::Invoke([]() -> std::unique_ptr<IParam> {
@@ -1009,7 +1009,7 @@ TEST_F(DeviceTest, GetParam_Path_Success) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam.get(), "/testParam", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope);
     
     EXPECT_CALL(*mockParam, copy())
         .WillOnce(testing::Return(std::make_unique<MockParam>()));
@@ -1055,7 +1055,7 @@ TEST_F(DeviceTest, GetParam_Path_NotAuthorized) {
     
     // Set up authorization - parameter requires admin scope but monitor token only has st2138:mon
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam.get(), "/restrictedParam", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/restrictedParam", *mockDescriptor, false, 0, adminScope);
     
     // copy() should not be called since authorization will fail
     EXPECT_CALL(*mockParam, copy())
@@ -1093,7 +1093,7 @@ TEST_F(DeviceTest, GetParam_Path_SubPath) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam.get(), "/parentParam", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/parentParam", *mockDescriptor, false, 0, adminScope);
     
     EXPECT_CALL(*mockParam, getParam(testing::_, testing::_, testing::_))
         .WillOnce(testing::Return(std::move(mockSubParam)));
@@ -1121,8 +1121,8 @@ TEST_F(DeviceTest, GetTopLevelParams_Success) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam1.get(), "/param1", mockDescriptor1.get(), false, 0, adminScope);
-    setupMockParam(mockParam2.get(), "/param2", mockDescriptor2.get(), false, 0, adminScope);
+    setupMockParam(*mockParam1, "/param1", *mockDescriptor1, false, 0, adminScope);
+    setupMockParam(*mockParam2, "/param2", *mockDescriptor2, false, 0, adminScope);
     
     EXPECT_CALL(*mockParam1, copy())
         .WillOnce(testing::Return(std::make_unique<MockParam>()));
@@ -1151,8 +1151,8 @@ TEST_F(DeviceTest, GetTopLevelParams_AuthorizationFiltering) {
     // Set up authorization - param1 allows monitor access, param2 requires admin
     static const std::string monitorScope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam1.get(), "/authorizedParam", mockDescriptor1.get(), false, 0, monitorScope);
-    setupMockParam(mockParam2.get(), "/restrictedParam", mockDescriptor2.get(), false, 0, adminScope);
+    setupMockParam(*mockParam1, "/authorizedParam", *mockDescriptor1, false, 0, monitorScope);
+    setupMockParam(*mockParam2, "/restrictedParam", *mockDescriptor2, false, 0, adminScope);
     
     EXPECT_CALL(*mockParam1, copy())
         .WillOnce(testing::Return(std::make_unique<MockParam>()));
@@ -1177,7 +1177,7 @@ TEST_F(DeviceTest, GetTopLevelParams_Exception) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam.get(), "/exceptionParam", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/exceptionParam", *mockDescriptor, false, 0, adminScope);
     
     EXPECT_CALL(*mockParam, copy())
         .WillOnce(testing::Invoke([]() -> std::unique_ptr<IParam> {
@@ -1204,7 +1204,7 @@ TEST_F(DeviceTest, GetCommand_Success) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockCommand.get(), "/testCommand", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockCommand, "/testCommand", *mockDescriptor, false, 0, adminScope);
     
     // Setup expectations for command
     EXPECT_CALL(*mockDescriptor, isCommand())
@@ -1250,7 +1250,7 @@ TEST_F(DeviceTest, GetCommand_SubCommandsUnimplemented) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockCommand.get(), "/testCommand", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockCommand, "/testCommand", *mockDescriptor, false, 0, adminScope);
     
     // Setup expectations for command
     EXPECT_CALL(*mockDescriptor, isCommand())
@@ -1297,7 +1297,7 @@ TEST_F(DeviceTest, GetCommand_Exception) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockCommand.get(), "/exceptionCommand", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockCommand, "/exceptionCommand", *mockDescriptor, false, 0, adminScope);
     
     // Setup expectations for command
     EXPECT_CALL(*mockDescriptor, isCommand())
@@ -1366,8 +1366,8 @@ TEST_F(DeviceTest, Device_ToProtoParams) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam1.get(), "/param1", mockDescriptor1.get(), false, 0, adminScope);
-    setupMockParam(mockParam2.get(), "/param2", mockDescriptor2.get(), false, 0, adminScope);
+    setupMockParam(*mockParam1, "/param1", *mockDescriptor1, false, 0, adminScope);
+    setupMockParam(*mockParam2, "/param2", *mockDescriptor2, false, 0, adminScope);
     
     // Set up expectations for shouldSendParam and toProto calls
     EXPECT_CALL(*mockParam1, getDescriptor())
@@ -1410,8 +1410,8 @@ TEST_F(DeviceTest, Device_ToProtoCommands) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockCommand1.get(), "/command1", mockDescriptor1.get(), false, 0, adminScope);
-    setupMockParam(mockCommand2.get(), "/command2", mockDescriptor2.get(), false, 0, adminScope);
+    setupMockParam(*mockCommand1, "/command1", *mockDescriptor1, false, 0, adminScope);
+    setupMockParam(*mockCommand2, "/command2", *mockDescriptor2, false, 0, adminScope);
     
     // Set up expectations for shouldSendParam and toProto calls
     EXPECT_CALL(*mockCommand1, getDescriptor())
@@ -1575,8 +1575,8 @@ TEST_F(DeviceTest, Device_ToProtoAuthFiltering) {
     // Set up authorization - authorized param allows monitor access, unauthorized param requires admin
     static const std::string monitorScope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockAuthorizedParam.get(), "/authorizedParam", mockDescriptor1.get(), false, 0, monitorScope);
-    setupMockParam(mockUnauthorizedParam.get(), "/unauthorizedParam", mockDescriptor2.get(), false, 0, adminScope);
+    setupMockParam(*mockAuthorizedParam, "/authorizedParam", *mockDescriptor1, false, 0, monitorScope);
+    setupMockParam(*mockUnauthorizedParam, "/unauthorizedParam", *mockDescriptor2, false, 0, adminScope);
     
     // Set up expectations for shouldSendParam and toProto calls
     EXPECT_CALL(*mockAuthorizedParam, getDescriptor())
@@ -1618,8 +1618,8 @@ TEST_F(DeviceTest, Device_ToProtoMixedContent) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam.get(), "/testParam", mockDescriptor1.get(), false, 0, adminScope);
-    setupMockParam(mockCommand.get(), "/testCommand", mockDescriptor2.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor1, false, 0, adminScope);
+    setupMockParam(*mockCommand, "/testCommand", *mockDescriptor2, false, 0, adminScope);
     
     // Set up expectations
     EXPECT_CALL(*mockParam, getDescriptor())
@@ -1731,7 +1731,7 @@ TEST_F(DeviceTest, Device_ToProtoParamSerializationException) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam.get(), "/exceptionParam", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/exceptionParam", *mockDescriptor, false, 0, adminScope);
     
     EXPECT_CALL(*mockParam, getDescriptor())
         .WillRepeatedly(testing::ReturnRef(*mockDescriptor));
@@ -1820,7 +1820,7 @@ TEST_F(DeviceTest, Device_ToProtoDifferentDetailLevels) {
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
     
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam.get(), "/testParam", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope);
     
     EXPECT_CALL(*mockParam, getDescriptor())
         .WillRepeatedly(testing::ReturnRef(*mockDescriptor));
@@ -1868,8 +1868,8 @@ TEST_F(DeviceTest, GetComponentSerializer_FullDetailLevel) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam1.get(), "/param1", mockDescriptor1.get(), false, 0, adminScope);
-    setupMockParam(mockParam2.get(), "/param2", mockDescriptor2.get(), false, 0, adminScope);
+    setupMockParam(*mockParam1, "/param1", *mockDescriptor1, false, 0, adminScope);
+    setupMockParam(*mockParam2, "/param2", *mockDescriptor2, false, 0, adminScope);
     
     device_->addItem("param1", mockParam1.get());
     device_->addItem("param2", mockParam2.get());
@@ -1894,8 +1894,8 @@ TEST_F(DeviceTest, GetComponentSerializer_CommandsDetailLevel) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockCommand1.get(), "/command1", mockDescriptor1.get(), false, 0, adminScope);
-    setupMockParam(mockCommand2.get(), "/command2", mockDescriptor2.get(), false, 0, adminScope);
+    setupMockParam(*mockCommand1, "/command1", *mockDescriptor1, false, 0, adminScope);
+    setupMockParam(*mockCommand2, "/command2", *mockDescriptor2, false, 0, adminScope);
     
     // Override isCommand to return true for commands
     EXPECT_CALL(*mockDescriptor1, isCommand())
@@ -1929,7 +1929,7 @@ TEST_F(DeviceTest, GetComponentSerializer_SubscriptionsDetailLevel) {
     EXPECT_CALL(*mockDescriptor, minimalSet())
         .WillRepeatedly(testing::Return(false));
     
-    setupMockParam(mockParam.get(), "/subscribedParam", mockDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/subscribedParam", *mockDescriptor, false, 0, adminScope);
     
     device_->addItem("subscribedParam", mockParam.get());
     
@@ -1984,8 +1984,8 @@ TEST_F(DeviceTest, GetNext_MultipleComponents) {
     EXPECT_CALL(*mockDescriptor2, minimalSet())
         .WillRepeatedly(testing::Return(false));
     
-    setupMockParam(mockParam1.get(), "/param1", mockDescriptor1.get(), false, 0, adminScope);
-    setupMockParam(mockParam2.get(), "/param2", mockDescriptor2.get(), false, 0, adminScope);
+    setupMockParam(*mockParam1, "/param1", *mockDescriptor1, false, 0, adminScope);
+    setupMockParam(*mockParam2, "/param2", *mockDescriptor2, false, 0, adminScope);
     
     // Set up expectations for toProto calls
     EXPECT_CALL(*mockParam1, toProto(testing::An<catena::Param&>(), testing::_))
@@ -2094,8 +2094,8 @@ TEST_F(DeviceTest, GetNext_SubscriptionsFiltering) {
     EXPECT_CALL(*mockDescriptor2, minimalSet())
         .WillRepeatedly(testing::Return(false));
     
-    setupMockParam(mockSubscribedParam.get(), "/subscribedParam", mockDescriptor1.get(), false, 0, adminScope);
-    setupMockParam(mockUnsubscribedParam.get(), "/unsubscribedParam", mockDescriptor2.get(), false, 0, adminScope);
+    setupMockParam(*mockSubscribedParam, "/subscribedParam", *mockDescriptor1, false, 0, adminScope);
+    setupMockParam(*mockUnsubscribedParam, "/unsubscribedParam", *mockDescriptor2, false, 0, adminScope);
     
     // Set up expectations for toProto calls - only subscribed param should be called
     EXPECT_CALL(*mockSubscribedParam, toProto(testing::An<catena::Param&>(), testing::_))
@@ -2152,8 +2152,8 @@ TEST_F(DeviceTest, GetNext_CommandsOnly) {
     EXPECT_CALL(*mockDescriptor2, minimalSet())
         .WillRepeatedly(testing::Return(false));
     
-    setupMockParam(mockCommand1.get(), "/command1", mockDescriptor1.get(), false, 0, adminScope);
-    setupMockParam(mockCommand2.get(), "/command2", mockDescriptor2.get(), false, 0, adminScope);
+    setupMockParam(*mockCommand1, "/command1", *mockDescriptor1, false, 0, adminScope);
+    setupMockParam(*mockCommand2, "/command2", *mockDescriptor2, false, 0, adminScope);
     
     // Override isCommand to return true for commands
     EXPECT_CALL(*mockDescriptor1, isCommand())
@@ -2286,9 +2286,9 @@ TEST_F(DeviceTest, ShouldSendParam_FullDetailLevel) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam.get(), "/testParam", mockDescriptor.get(), false, 0, adminScope);
-    setupMockParam(mockCommand.get(), "/testCommand", mockCommandDescriptor.get(), false, 0, adminScope);
-    setupMockParam(mockMinimalParam.get(), "/minimalParam", mockMinimalDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockCommand, "/testCommand", *mockCommandDescriptor, false, 0, adminScope);
+    setupMockParam(*mockMinimalParam, "/minimalParam", *mockMinimalDescriptor, false, 0, adminScope);
     
     // Set up expectations for descriptors
     EXPECT_CALL(*mockDescriptor, minimalSet())
@@ -2326,9 +2326,9 @@ TEST_F(DeviceTest, ShouldSendParam_CommandsDetailLevel) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(mockParam.get(), "/testParam", mockDescriptor.get(), false, 0, adminScope);
-    setupMockParam(mockCommand.get(), "/testCommand", mockCommandDescriptor.get(), false, 0, adminScope);
-    setupMockParam(mockMinimalParam.get(), "/minimalParam", mockMinimalDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockCommand, "/testCommand", *mockCommandDescriptor, false, 0, adminScope);
+    setupMockParam(*mockMinimalParam, "/minimalParam", *mockMinimalDescriptor, false, 0, adminScope);
     
     // Set up expectations for descriptors
     EXPECT_CALL(*mockDescriptor, minimalSet())
@@ -2378,9 +2378,9 @@ TEST_F(DeviceTest, ShouldSendParam_MinimalDetailLevel) {
         .WillRepeatedly(testing::Return(true));
     
     // Set up mock parameters
-    setupMockParam(mockParam.get(), "/testParam", mockDescriptor.get(), false, 0, adminScope);
-    setupMockParam(mockCommand.get(), "/testCommand", mockCommandDescriptor.get(), false, 0, adminScope);
-    setupMockParam(mockMinimalParam.get(), "/minimalParam", mockMinimalDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockCommand, "/testCommand", *mockCommandDescriptor, false, 0, adminScope);
+    setupMockParam(*mockMinimalParam, "/minimalParam", *mockMinimalDescriptor, false, 0, adminScope);
     
     // Test that only minimal parameters should be sent in MINIMAL detail level
     EXPECT_FALSE(minimalDevice->shouldSendParam(*mockParam, false, *adminAuthz_));
@@ -2422,9 +2422,9 @@ TEST_F(DeviceTest, ShouldSendParam_SubscriptionsDetailLevel) {
         .WillRepeatedly(testing::Return(true));
     
     // Set up mock parameters
-    setupMockParam(mockParam.get(), "/testParam", mockDescriptor.get(), false, 0, adminScope);
-    setupMockParam(mockCommand.get(), "/testCommand", mockCommandDescriptor.get(), false, 0, adminScope);
-    setupMockParam(mockMinimalParam.get(), "/minimalParam", mockMinimalDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockCommand, "/testCommand", *mockCommandDescriptor, false, 0, adminScope);
+    setupMockParam(*mockMinimalParam, "/minimalParam", *mockMinimalDescriptor, false, 0, adminScope);
     
     // Test that minimal parameters and subscribed parameters should be sent in SUBSCRIPTIONS detail level
     EXPECT_FALSE(subscriptionsDevice->shouldSendParam(*mockParam, false, *adminAuthz_)); // Not minimal, not subscribed
@@ -2468,9 +2468,9 @@ TEST_F(DeviceTest, ShouldSendParam_NoneDetailLevel) {
         .WillRepeatedly(testing::Return(true));
     
     // Set up mock parameters
-    setupMockParam(mockParam.get(), "/testParam", mockDescriptor.get(), false, 0, adminScope);
-    setupMockParam(mockCommand.get(), "/testCommand", mockCommandDescriptor.get(), false, 0, adminScope);
-    setupMockParam(mockMinimalParam.get(), "/minimalParam", mockMinimalDescriptor.get(), false, 0, adminScope);
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockCommand, "/testCommand", *mockCommandDescriptor, false, 0, adminScope);
+    setupMockParam(*mockMinimalParam, "/minimalParam", *mockMinimalDescriptor, false, 0, adminScope);
     
     // Test that all parameters should be sent in NONE detail level (if authorized)
     EXPECT_TRUE(noneDevice->shouldSendParam(*mockParam, false, *adminAuthz_));

@@ -68,7 +68,7 @@ inline void setupMockParam(MockParam& param, const std::string& oid, MockParamDe
             .WillRepeatedly(::testing::Return(size));
     }
     // Set default isCommand for params to be false
-    EXPECT_CALL(*descriptor, isCommand())
+    EXPECT_CALL(descriptor, isCommand())
         .WillRepeatedly(::testing::Return(false));
 
 }
