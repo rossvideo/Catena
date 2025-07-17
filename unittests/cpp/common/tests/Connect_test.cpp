@@ -33,6 +33,7 @@
 #include "MockParam.h"
 #include "MockParamDescriptor.h"
 #include "MockLanguagePack.h"
+#include "CommonTestHelpers.h"
 #include <rpc/Connect.h>
 #include <iostream>
 #include <Logger.h>
@@ -84,14 +85,8 @@ class CommonConnectTest : public ::testing::Test {
     }
 
     // Common test data
-    std::string monitorToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiO"
-                               "iIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2N"
-                               "vcGUiOiJzdDIxMzg6bW9uIiwiaWF0IjoxNTE2MjM5MDIyf"
-                               "Q.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ";
-    std::string operatorToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIi"
-                                "OiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic"
-                                "2NvcGUiOiJzdDIxMzg6b3AiLCJpYXQiOjE1MTYyMzkwMj"
-                                "J9.lduNvr6tEaLFeIYR4bH5tC55WUSDBEe5PFz9rvGRD3o";
+    std::string monitorToken = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
+    std::string operatorToken = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kOperate));
     std::string testOid = "/test/param";
     MockDevice dm0_;
     MockDevice dm1_;
