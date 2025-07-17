@@ -8,6 +8,7 @@ include_directories(${GTEST_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(mocks)
 include_directories(${CATENA_UNITTESTS_DIR}/cpp/common/mocks)
+include_directories(${CATENA_UNITTESTS_DIR}/cpp/common)
 
 set(SOURCES 	
     tests/AddLanguage_test.cpp

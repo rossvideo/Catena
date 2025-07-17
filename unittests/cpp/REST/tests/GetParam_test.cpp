@@ -38,6 +38,7 @@
 // Test helpers
 #include "RESTTest.h"
 #include "MockParam.h"
+#include "CommonTestHelpers.h"
 
 // REST
 #include "controllers/GetParam.h"
@@ -146,18 +147,9 @@ TEST_F(RESTGetParamTests, GetParam_Normal) {
 TEST_F(RESTGetParamTests, GetParam_AuthzValid) {
     initPayload(0, "/test_oid");
     initExpVal("/test_oid", "test_value", "test_alias", "Test Param");
-    // Adding authorization mockToken metadata. This it a random RSA token.
+    // Adding authorization mockToken metadata.
     authzEnabled_ = true;
-    jwsToken_ = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIiOiIxMjM0NTY3"
-                "ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uOncgc"
-                "3QyMTM4Om9wOncgc3QyMTM4OmNmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MT"
-                "UxNjIzOTAyMiwibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dT"
-                "okrEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko9653v0khyUT4UK"
-                "eOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKHkWi4P3-CYWrwe-g6b4-a33Q"
-                "0k6tSGI1hGf2bA9cRYr-VyQ_T3RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEm"
-                "uIwNOVM3EcVEaLyISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg"
-                "_wbOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9MdvJH-cx1s1"
-                "46M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
+    jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
     // Setting expectations
     EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(1).WillOnce(testing::Invoke(
         [this](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
