@@ -44,12 +44,8 @@
 #include <string>
 #include <map>
 
-// Forward declarations
-namespace catena {
-namespace common {
-class MockParam;
-} // namespace common
-} // namespace catena
+#include "MockParamDescriptor.h"
+#include "MockParam.h"
 
 namespace catena {
 namespace REST {
@@ -83,37 +79,35 @@ inline void setupParamInfo(catena::ParamInfoResponse& response, const ParamInfo&
 
 /**
  * @brief Sets up a mock parameter to return a ParamInfoResponse
- *        Also sets up getDescriptor, isArrayType, and size for array types if descriptor is provided.
+ *        Also sets up getDescriptor, isArrayType, and size for array types.
  */
-inline void setupMockParam(catena::common::MockParam* mockParam, const ParamInfo& info, const catena::common::IParamDescriptor* descriptor = nullptr) {
-    EXPECT_CALL(*mockParam, getOid())
+inline void setupMockParam(catena::common::MockParam& mockParam, const ParamInfo& info, const catena::common::MockParamDescriptor& descriptor) {
+    EXPECT_CALL(mockParam, getOid())
         .WillRepeatedly(::testing::ReturnRef(info.oid));
 
-    // Set up getDescriptor if provided
-    if (descriptor) {
-        EXPECT_CALL(*mockParam, getDescriptor())
-            .WillRepeatedly(::testing::ReturnRef(*descriptor));
-    }
+    // Set up getDescriptor
+    EXPECT_CALL(mockParam, getDescriptor())
+        .WillRepeatedly(::testing::ReturnRef(descriptor));
 
     // Set up getScope for authorization checks (default to monitor scope)
     static const std::string scope = catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kMonitor);
-    EXPECT_CALL(*mockParam, getScope())
+    EXPECT_CALL(mockParam, getScope())
         .WillRepeatedly(::testing::ReturnRef(scope));
 
     // Set up isArrayType and size if array_length > 0
     if (info.array_length > 0) {
-        EXPECT_CALL(*mockParam, isArrayType())
+        EXPECT_CALL(mockParam, isArrayType())
             .WillRepeatedly(::testing::Return(true));
-        EXPECT_CALL(*mockParam, size())
+        EXPECT_CALL(mockParam, size())
             .WillRepeatedly(::testing::Return(info.array_length));
     } else {
-        EXPECT_CALL(*mockParam, isArrayType())
+        EXPECT_CALL(mockParam, isArrayType())
             .WillRepeatedly(::testing::Return(false));
     }
 
     // Only expect toProto if status indicates success (HTTP status < 300)
     if (catena::REST::codeMap_.at(info.status).first < 300) {
-        EXPECT_CALL(*mockParam, toProto(::testing::An<catena::ParamInfoResponse&>(), ::testing::_))
+        EXPECT_CALL(mockParam, toProto(::testing::An<catena::ParamInfoResponse&>(), ::testing::_))
             .WillRepeatedly(::testing::Invoke([info](catena::ParamInfoResponse& response, catena::common::Authorizer&) {
                 setupParamInfo(response, info);
                 return catena::exception_with_status("", catena::StatusCode::OK);
