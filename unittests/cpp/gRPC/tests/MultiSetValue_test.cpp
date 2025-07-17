@@ -150,7 +150,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_AuthzValid) {
     expRc_ = catena::exception_with_status("", catena::StatusCode::OK);
     // Adding authorization mockToken metadata.
     authzEnabled_ = true;
-    std::string mockToken = catena::common::getJwsToken("st2138:mon:w st2138:op:w st2138:cfg:w st2138:adm:w");
+    std::string mockToken = getJwsToken("st2138:mon:w st2138:op:w st2138:cfg:w st2138:adm:w");
     clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
     // Setting expectations
     EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)

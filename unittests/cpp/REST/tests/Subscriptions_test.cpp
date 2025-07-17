@@ -434,6 +434,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTNormal) {
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAuthzValid) {
     method_ = Method_PUT;
     initPayload(0, {"param1", "param2"}, {"param1", "param2"});
+    // Adding authorization mockToken metadata.
     authzEnabled_ = true;
     jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
     // Calling proceed and testing the output

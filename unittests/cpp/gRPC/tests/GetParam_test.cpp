@@ -156,7 +156,7 @@ TEST_F(gRPCGetParamTests, GetParam_AuthzValid) {
     initexpVal_("/test_oid", "test_value", "test_alias", "Test Param");
     // Adding authorization mockToken metadata.
     authzEnabled_ = true;
-    std::string mockToken = catena::common::getJwsToken("st2138:mon:w st2138:op:w st2138:cfg:w st2138:adm:w");
+    std::string mockToken = getJwsToken("st2138:mon:w st2138:op:w st2138:cfg:w st2138:adm:w");
     clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
     // Setting expectations
     EXPECT_CALL(dm0_, getParam(inVal_.oid(), ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Invoke(

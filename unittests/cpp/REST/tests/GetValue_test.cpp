@@ -129,8 +129,9 @@ TEST_F(RESTGetValueTests, GetValue_Normal) {
 TEST_F(RESTGetValueTests, GetValue_AuthzValid) {
     initPayload(0, "/test_oid");
     expVal_.set_string_value("test_value");
+    // Adding authorization mockToken metadata.
     authzEnabled_ = true;
-    jwsToken_ = catena::common::getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor) + ":w");
+    jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor) + ":w");
     // Setting expectations
     EXPECT_CALL(dm0_, getValue(fqoid_, testing::_, testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {

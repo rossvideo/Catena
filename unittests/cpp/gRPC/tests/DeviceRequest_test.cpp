@@ -267,7 +267,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzValid) {
     initExpVal(1);
     // Adding authorization mockToken metadata.
     authzEnabled_ = true;
-    std::string mockToken = catena::common::getJwsToken("st2138:mon:w st2138:op:w st2138:cfg:w st2138:adm:w");
+    std::string mockToken = getJwsToken("st2138:mon:w st2138:op:w st2138:cfg:w st2138:adm:w");
     clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
     // Setting expectations
     EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, inVal_.detail_level(), true)).Times(1)

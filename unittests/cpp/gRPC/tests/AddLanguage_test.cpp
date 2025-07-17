@@ -139,7 +139,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_AuthzValid) {
     initPayload(0, "en", "English", {{"greeting", "Hello"}});
     // Adding authorization mockToken metadata
     authzEnabled_ = true;
-    std::string mockToken = catena::common::getJwsToken("st2138:mon:w st2138:op:w st2138:cfg:w st2138:adm:w");
+    std::string mockToken = getJwsToken("st2138:mon:w st2138:op:w st2138:cfg:w st2138:adm:w");
     clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(1)

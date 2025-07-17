@@ -149,7 +149,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_InvalidSlot) {
 
 // Test 0.4: Authorization test with valid token
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_AuthzValid) {
-    // Use a valid JWT token with monitor scope
+    // Use a valid JWS token with monitor scope
     jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
     authzEnabled_ = true;
     

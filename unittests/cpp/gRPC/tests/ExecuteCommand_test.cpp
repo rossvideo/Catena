@@ -328,7 +328,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzValid) {
     expNoResponse();
     // Adding authorization mockToken metadata.
     authzEnabled_ = true;
-    std::string mockToken = catena::common::getJwsToken("st2138:mon:w st2138:op:w st2138:cfg:w st2138:adm:w");
+    std::string mockToken = getJwsToken("st2138:mon:w st2138:op:w st2138:cfg:w st2138:adm:w");
     clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
