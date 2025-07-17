@@ -117,7 +117,7 @@ class CppGen {
     this.menu();
     this.constraints();
     this.params();
-    // this.commands();
+    this.commands();
     this.finish();
   }
 
@@ -357,24 +357,24 @@ class CppGen {
    * generate the code to instantiate the commands
    */
   commands() {
-    if (!"commands" in this.device.desc) {
-      return;
-    }
-    for (let oid in this.device.desc.commands) {
-      // add the command to the device
-      let command = this.device.commands[oid] = new Param(oid, this.device.desc.commands[oid], this.device.namespace, this.device, undefined, true);
+    if ("commands" in this.device.desc) {
+      for (let oid in this.device.desc.commands) {
+        // add the command to the device
+        let command = this.device.commands[oid] = new Param(oid, this.device.desc.commands[oid], this.device.namespace, this.device, undefined, true);
 
-      // define the command in the header file
-      if (command.hasTypeInfo()) {
-        this.writeTypeInfo(command);
-      }
+        // define the command in the header file
+        if (command.hasTypeInfo()) {
+          this.writeTypeInfo(command);
+        }
 
-      // initialize the command in the body file
-      if (command.hasValue()) {
-        bloc(command.initializeValue());
+        // initialize the command in the body file
+        if (command.hasValue()) {
+          bloc(command.initializeValue());
+        }
+
+        this.writeConstraintsAndDescriptors(command);
+        bloc(command.initializeParamWithValue());
       }
-      this.writeConstraintsAndDescriptors(command);
-      bloc(command.initializeParamWithValue());
     }
   }
 

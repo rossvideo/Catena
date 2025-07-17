@@ -239,7 +239,7 @@ class Param {
       if (!this.hasTypeInfo()) {
         throw new Error(`${this.type} type can not have subparams`);
       }
-      for (let oid in desc.params) {
+      for (let oid in desc.commands) {
         let subParamNamespace = this.isVariantType() ? `${this.namespace}::_${this.oid}` : `${this.namespace}::${initialCap(this.oid)}`;
         this.subParams[oid] = new Param(oid, desc.params[oid], `${subParamNamespace}`, device, this, true);
       }
@@ -484,7 +484,7 @@ class Param {
    * @returns the string to initialize the ParamWithValue object
    */
   initializeParamWithValue() {
-    let valueVar = this.oid;
+    let valueVar = this.hasValue() ? this.oid : `catena::common::EmptyValue()`;
     return `catena::common::ParamWithValue<${this.objectNamespaceType()}> ` +
            `_${this.oid}Param(${valueVar}, _${this.oid}Descriptor, dm, ${this.isCommand});`;
   }
