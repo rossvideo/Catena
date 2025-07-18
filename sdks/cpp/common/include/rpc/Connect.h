@@ -69,7 +69,7 @@ class Connect : public IConnect {
     
     uint8_t priority() const override { return priority_; }
 
-    const system_clock::time_point& age() const override {  }
+    const system_clock::time_point& age() const override { return age_; }
 
     bool operator<(const IConnect& otherConnection) override {
         return priority_ < otherConnection.priority() ||
