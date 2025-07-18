@@ -30,20 +30,21 @@
 
 // connections/gRPC
 #include <controllers/MultiSetValue.h>
+#include <Logger.h>
 using catena::gRPC::MultiSetValue;
 
 // Initializes the object counter for SetValue to 0.
 int MultiSetValue::objectCounter_ = 0;
 
-MultiSetValue::MultiSetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : MultiSetValue(service, dm, ok, objectCounter_++) {
+MultiSetValue::MultiSetValue(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+    : MultiSetValue(service, dms, ok, objectCounter_++) {
     typeName = "MultiSetValue";
     service_->registerItem(this);
     proceed(ok);
 }
 
-MultiSetValue::MultiSetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok, int objectId)
-    : CallData(service), dm_{dm}, objectId_(objectId), responder_(&context_),
+MultiSetValue::MultiSetValue(ICatenaServiceImpl *service, SlotMap& dms, bool ok, int objectId)
+    : CallData(service), dms_{dms}, objectId_(objectId), responder_(&context_),
     status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {}
 
 void MultiSetValue::request_() {
@@ -51,17 +52,17 @@ void MultiSetValue::request_() {
 }
 
 void MultiSetValue::create_(bool ok) {
-    new MultiSetValue(service_, dm_, ok);
+    new MultiSetValue(service_, dms_, ok);
 }
 
 void MultiSetValue::proceed(bool ok) { 
-    std::cout << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
+    DEBUG_LOG << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: "
-                << std::boolalpha << ok << std::endl;
+                << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        std::cout << typeName << "[" << objectId_ << "] cancelled\n";
+        DEBUG_LOG << typeName << "[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
     
@@ -85,26 +86,36 @@ void MultiSetValue::proceed(bool ok) {
             { // rc scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             try {
+                IDevice* dm = nullptr;
                 // Convert to MultiSetValuePayload if not already.
                 toMulti_();
-                /**
-                 * Creating authorization object depending on client scopes.
-                 * Shared ptr to maintain lifetime of object. Raw ptr ensures
-                 * kAUthzDisabled is not deleted when out of scope.
-                 */
-                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
-                catena::common::Authorizer* authz;
-                if (service_->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken_());
-                    authz = sharedAuthz.get();
-                } else {
-                    authz = &catena::common::Authorizer::kAuthzDisabled;
+                // Getting device at specified slot.
+                if (dms_.contains(reqs_.slot())) {
+                    dm = dms_.at(reqs_.slot());
                 }
-                // Locking device and setting value(s).
-                std::lock_guard lg(dm_.mutex());
-                // Trying and commiting the multiSetValue.
-                if (dm_.tryMultiSetValue(reqs_, rc, *authz)) {
-                    rc = dm_.commitMultiSetValue(reqs_, *authz);
+                // Making sure the device exists.
+                if (!dm) {
+                    rc = catena::exception_with_status("device not found in slot " + std::to_string(reqs_.slot()), catena::StatusCode::NOT_FOUND);
+                } else {
+                    /**
+                     * Creating authorization object depending on client scopes.
+                     * Shared ptr to maintain lifetime of object. Raw ptr ensures
+                     * kAUthzDisabled is not deleted when out of scope.
+                     */
+                    std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+                    catena::common::Authorizer* authz;
+                    if (service_->authorizationEnabled()) {
+                        sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken_());
+                        authz = sharedAuthz.get();
+                    } else {
+                        authz = &catena::common::Authorizer::kAuthzDisabled;
+                    }
+                    // Locking device and setting value(s).
+                    std::lock_guard lg(dm->mutex());
+                    // Trying and commiting the multiSetValue.
+                    if (dm->tryMultiSetValue(reqs_, rc, *authz)) {
+                        rc = dm->commitMultiSetValue(reqs_, *authz);
+                    }
                 }
             // ERROR
             } catch (catena::exception_with_status& err) {
@@ -126,7 +137,7 @@ void MultiSetValue::proceed(bool ok) {
          * CatenaServiceImpl.
          */
         case CallStatus::kFinish:
-            std::cout << typeName << "[" << objectId_ << "] finished\n";
+            DEBUG_LOG << typeName << "[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

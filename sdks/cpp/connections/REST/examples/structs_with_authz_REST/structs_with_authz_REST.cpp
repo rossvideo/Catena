@@ -62,6 +62,7 @@
 #include <chrono>
 #include <signal.h>
 #include <functional>
+#include <Logger.h>
 
 using namespace catena::common;
 
@@ -71,7 +72,7 @@ std::atomic<bool> globalLoop = true;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        std::cout << "Caught signal " << sig << ", shutting down" << std::endl;
+        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
         globalLoop = false;
         if (globalApi != nullptr) {
             globalApi->Shutdown();
@@ -84,13 +85,13 @@ void handle_signal(int sig) {
 void audioDeckUpdateHandler(const std::string& jptr, const IParam* p) {
     Path oid(jptr);
     if(oid.empty()){
-        std::cout << "*** Whole struct array was updated" << '\n';
+        DEBUG_LOG << "*** Whole struct array was updated";
     } else{
         std::size_t index = oid.front_as_index();
         if (index == Path::kEnd) {
-            std::cout << "*** Index is \"-\", new element added to struct array" << '\n';
+            DEBUG_LOG << "*** Index is \"-\", new element added to struct array";
         } else {
-            std::cout << "*** audio_channel[" << index << "] was updated" << '\n';
+            DEBUG_LOG << "*** audio_channel[" << index << "] was updated";
         }
     }
 }
@@ -108,16 +109,16 @@ void RunRESTServer() {
         uint16_t port = absl::GetFlag(FLAGS_port);
         
         // Creating and running the REST service.
-        catena::REST::CatenaServiceImpl api(dm, EOPath, authorization, port);
+        catena::REST::CatenaServiceImpl api({&dm}, EOPath, authorization, port);
         globalApi = &api;
-        std::cout << "API Version: " << api.version() << std::endl;
-        std::cout << "REST on 0.0.0.0:" << port << std::endl;
+        DEBUG_LOG << "API Version: " << api.version();
+        DEBUG_LOG << "REST on 0.0.0.0:" << port;
         
         std::map<std::string, std::function<void(const std::string&, const IParam*)>> handlers;
         handlers["audio_deck"] = audioDeckUpdateHandler;
 
-        dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p) {
-            std::cout << "signal received: " << oid << " has been changed by client" << '\n';
+        dm.getValueSetByClient().connect([&handlers](const std::string& oid, const IParam* p) {
+            DEBUG_LOG << "signal received: " << oid << " has been changed by client";
 
             // make a copy of the path that we can safely pop segments from
             Path jptr(oid); 
@@ -125,21 +126,26 @@ void RunRESTServer() {
             jptr.pop();
 
             if (handlers.contains(front)) {
-                handlers[front](jptr.toString(), p);
+                handlers[front](jptr.toString(true), p);
             }
         });
         
         api.run();
     } catch (std::exception &why) {
-        std::cerr << "Problem: " << why.what() << '\n';
+        LOG(ERROR) << "Problem: " << why.what();
     }
 }
 
 int main(int argc, char* argv[]) {
+    Logger::StartLogging(argc, argv);
+
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
     
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
+    
+    // Shutdown Google Logging
+    google::ShutdownGoogleLogging();
     return 0;
 } 

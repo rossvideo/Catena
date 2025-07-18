@@ -10,7 +10,7 @@ SocketReader::SocketReader(catena::common::ISubscriptionManager& subscriptionMan
 
 void SocketReader::read(tcp::socket& socket, bool authz, const std::string& version) {
     // Resetting variables.
-    method_ = "";
+    method_ = catena::REST::Method_NONE;
     slot_ = 0;
     endpoint_ = "";
     fqoid_ = "";
@@ -30,9 +30,17 @@ void SocketReader::read(tcp::socket& socket, bool authz, const std::string& vers
     std::string header;
     std::getline(header_stream, header);
     std::string url, httpVersion;
-    std::istringstream(header) >> method_ >> url >> httpVersion;
-    url_view u(url);
+    std::string methodStr;
+    std::istringstream(header) >> methodStr >> url >> httpVersion;
 
+    // Converting method to enum.
+    auto& methodMap = RESTMethodMap().getReverseMap();
+    if (methodMap.contains(methodStr)) {
+        method_ = methodMap.at(methodStr);
+    }
+
+    // Parsing url
+    url_view u(url);
     try {
         std::vector<std::string> path;
         catena::split(path, u.path(), "/");
@@ -114,7 +122,7 @@ void SocketReader::read(tcp::socket& socket, bool authz, const std::string& vers
     }
     // Setting detail level to NONE if not set.
     if (detailLevel_ == Device_DetailLevel_UNSET) {
-        detailLevel_ = catena::Device_DetailLevel_NONE;
+        detailLevel_ = Device_DetailLevel_NONE;
     }
 }
 

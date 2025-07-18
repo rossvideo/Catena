@@ -6,14 +6,14 @@ using catena::REST::MultiSetValue;
 // Initializes the object counter for MultiSetValue to 0.
 int MultiSetValue::objectCounter_ = 0;
 
-MultiSetValue::MultiSetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
-    MultiSetValue(socket, context, dm, objectCounter_++) {
+MultiSetValue::MultiSetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    MultiSetValue(socket, context, dms, objectCounter_++) {
     typeName_ = "Multi";
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
 
-MultiSetValue::MultiSetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm, int objectId) :
-    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm}, objectId_{objectId} {}
+MultiSetValue::MultiSetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms, int objectId) :
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms}, objectId_{objectId} {}
 
 bool MultiSetValue::toMulti_() {
     absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &reqs_);
@@ -26,8 +26,18 @@ void MultiSetValue::proceed() {
 
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     try {
+        IDevice* dm = nullptr;
+        // Getting device at specified slot.
+        if (dms_.contains(context_.slot())) {
+            dm = dms_.at(context_.slot());
+        }
+
+        // Making sure the device exists.
+        if (!dm) {
+            rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+
         // Converting to MultiSetValuePayload.
-        if (toMulti_()) {
+        } else if (toMulti_()) {
             // Setting up authorizer.
             std::shared_ptr<catena::common::Authorizer> sharedAuthz;
             catena::common::Authorizer* authz;
@@ -39,9 +49,9 @@ void MultiSetValue::proceed() {
             }
             // Trying and commiting the multiSetValue.
             {
-            std::lock_guard lg(dm_.mutex());
-            if (dm_.tryMultiSetValue(reqs_, rc, *authz)) {
-                rc = dm_.commitMultiSetValue(reqs_, *authz);
+            std::lock_guard lg(dm->mutex());
+            if (dm->tryMultiSetValue(reqs_, rc, *authz)) {
+                rc = dm->commitMultiSetValue(reqs_, *authz);
             }
             }
         } else {
@@ -55,9 +65,8 @@ void MultiSetValue::proceed() {
     }
     // Writing response.
     writer_.sendResponse(rc);
-}
 
-void MultiSetValue::finish() {
+    // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << typeName_ << "SetValue[" << objectId_ << "] finished\n";
+    DEBUG_LOG << typeName_ << "SetValue[" << objectId_ << "] finished\n";
 }

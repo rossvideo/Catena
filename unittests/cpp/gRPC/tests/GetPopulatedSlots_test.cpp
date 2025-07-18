@@ -31,20 +31,9 @@
 /**
  * @brief This file is for testing the GetPopulatedSlots.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/28
+ * @date 25/06/18
  * @copyright Copyright © 2025 Ross Video Ltd
  */
-
-// gtest
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-// std
-#include <string>
-
-// protobuf
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
 
 // Test helpers
 #include "GRPCTest.h"
@@ -57,8 +46,20 @@ using namespace catena::gRPC;
 
 // Fixture
 class gRPCGetPopulatedSlotsTests : public GRPCTest {
-  public:
-    gRPCGetPopulatedSlotsTests() : GRPCTest() {}
+  protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("gRPCGetPopulatedSlotsTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
+    /*
+     * Creates a GetPopulatedSlots handler object.
+     */
+    void makeOne() override { new GetPopulatedSlots(&service_, dms_, true); }
 
     /* 
      * Makes an async RPC to the MockServer and waits for a response before
@@ -66,25 +67,25 @@ class gRPCGetPopulatedSlotsTests : public GRPCTest {
      */
     void testRPC() {
         // Sending async RPC.
-        mockServer.client->async()->GetPopulatedSlots(&clientContext, &inVal, &outVal, [this](grpc::Status status){
-            outRc = status;
-            done = true;
-            cv.notify_one();
+        client_->async()->GetPopulatedSlots(&clientContext_, &inVal_, &outVal_, [this](grpc::Status status){
+            outRc_ = status;
+            done_ = true;
+            cv_.notify_one();
         });
-        cv.wait(lock, [this] { return done; });
+        cv_.wait(lock_, [this] { return done_; });
         // Comparing the results.
-        EXPECT_EQ(outVal.SerializeAsString(), expVal.SerializeAsString());
-        EXPECT_EQ(outRc.error_code(), expRc.error_code());
-        EXPECT_EQ(outRc.error_message(), expRc.error_message());
+        EXPECT_EQ(outVal_.SerializeAsString(), expVal_.SerializeAsString());
+        EXPECT_EQ(outRc_.error_code(), static_cast<grpc::StatusCode>(expRc_.status));
+        EXPECT_EQ(outRc_.error_message(), expRc_.what());
+        // Make sure another GetPopulatedSlots handler was created.
+        EXPECT_TRUE(asyncCall_) << "Async handler was not created during runtime";
     }
 
-    catena::Empty inVal;
-    catena::SlotList outVal;
-    grpc::Status outRc;
+    // in/out val
+    catena::Empty inVal_;
+    catena::SlotList outVal_;
     // Expected variables
-    catena::SlotList expVal;
-    grpc::Status expRc;
-    uint32_t testSlot = 1;
+    catena::SlotList expVal_;
 };
 
 /*
@@ -94,30 +95,18 @@ class gRPCGetPopulatedSlotsTests : public GRPCTest {
  * 
  * TEST 1 - Creating a GetPopulatedSlots object.
  */
-TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_create) {
+TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_Create) {
     // Creating getPopulatedSlots object.
-    new GetPopulatedSlots(mockServer.service, *mockServer.dm, true);
-    EXPECT_FALSE(mockServer.testCall);
-    EXPECT_TRUE(mockServer.asyncCall);
+    EXPECT_TRUE(asyncCall_);
 }
 
 /*
  * TEST 2 - Normal case for GetPopulatedSlots proceed().
  */
-TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_proceedNormal) {
-    new GetPopulatedSlots(mockServer.service, *mockServer.dm, true);
-
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-    expVal.add_slots(testSlot);
-
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.dm, slot()).Times(1).WillOnce(::testing::Return(testSlot));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
+TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_Normal) {
+    for (auto [slot, dm]: dms_) {
+        expVal_.add_slots(slot);
+    }
     // Sending the RPC and comparing the results.
     testRPC();
 }

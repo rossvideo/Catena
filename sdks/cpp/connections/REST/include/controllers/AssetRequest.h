@@ -58,6 +58,8 @@
 // Standard library
 #include <filesystem>
 
+#include <Logger.h>
+
 namespace catena {
 namespace REST {
 
@@ -68,39 +70,60 @@ class AssetRequest : public ICallData {
   public:
     // Specifying which Device to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the GetParam controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to get the parameter from.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    AssetRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    AssetRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief GetParam's main process.
      */
     void proceed() override;
     
     /**
-     * @brief Finishes the AssetRequest process.
-     */
-    void finish() override;
-    
-    /**
      * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new AssetRequest(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new AssetRequest(socket, context, dms);
     }
-    
-
 
   private:
+    /**
+     * @brief Compresses the input data using the specified window bits.
+     * @param input The input data to compress.
+     * @param windowBits The window bits to use for compression.
+     */
+    void compress(std::vector<uint8_t>& input, int windowBits);
+
+    /**
+     * @brief Compresses the input data using deflate compression.
+     * @param input The input data to compress.
+     */
+    void deflate_compress(std::vector<uint8_t>& input);
+
+    /**
+     * @brief Compresses the input data using gzip compression.
+     * @param input The input data to compress.
+     */
+    void gzip_compress(std::vector<uint8_t>& input);
+
+    /**
+     * @brief Gets the last write time of the file.
+     * @param path The path to the file.
+     * @param out_time The output time.
+     * @return True if the last write time is valid, false otherwise.
+     */
+    bool get_last_write_time(const std::string& path, std::time_t& out_time);
+    
     /**
      * @brief Writes the current state of the request to the console.
      * 
@@ -108,10 +131,9 @@ class AssetRequest : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << "AssetRequest::proceed[" << objectId_ << "]: "
+      DEBUG_LOG << "AssetRequest::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
-                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
-                << std::endl;
+                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok;
     }
 
     /**
@@ -148,9 +170,9 @@ class AssetRequest : public ICallData {
      */
     SocketWriter writer_;
     /**
-     * @brief The device to set values of.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 
     /**
      * @brief ID of the object

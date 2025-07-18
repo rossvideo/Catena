@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -30,36 +30,44 @@
 
 // connections/gRPC
 #include <ServiceImpl.h>
+#include <Logger.h>
 using catena::gRPC::CatenaServiceImpl;
 
 // Defining the port flag from SharedFlags.h
 ABSL_FLAG(uint16_t, port, 6254, "Catena gRPC service port");
 
-CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, IDevice& dm, std::string& EOPath, bool authz)
-        : cq_{cq}, 
-          dm_{dm}, 
-          EOPath_{EOPath}, 
-          authorizationEnabled_{authz},
-          subscriptionManager_{std::make_unique<catena::common::SubscriptionManager>()} {}
+CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, std::vector<IDevice*> dms, std::string& EOPath, bool authz)
+    : cq_{cq},
+      EOPath_{EOPath}, 
+      authorizationEnabled_{authz} {
+    // Adding dms to slotMap.
+    for (auto dm : dms) {
+        if (dms_.contains(dm->slot())) {
+            throw std::runtime_error("Device with slot " + std::to_string(dm->slot()) + " already exists in the map.");
+        } else {
+            dms_[dm->slot()] = dm;
+        }
+    }
+}
 
 /**
  * Creates the CallData objects for each gRPC command.
  */
 void CatenaServiceImpl::init() {
-    new catena::gRPC::GetPopulatedSlots(this, dm_, true);
-    new catena::gRPC::GetValue(this, dm_, true);
-    new catena::gRPC::SetValue(this, dm_, true);
-    new catena::gRPC::MultiSetValue(this, dm_, true);
-    new catena::gRPC::Connect(this, dm_, true);
-    new catena::gRPC::DeviceRequest(this, dm_, true);
-    new catena::gRPC::ExternalObjectRequest(this, dm_, true);
-    new catena::gRPC::BasicParamInfoRequest(this, dm_, true);
-    new catena::gRPC::GetParam(this, dm_, true);
-    new catena::gRPC::ExecuteCommand(this, dm_, true);
-    new catena::gRPC::AddLanguage(this, dm_, true);
-    new catena::gRPC::ListLanguages(this, dm_, true);
-    new catena::gRPC::LanguagePackRequest(this, dm_, true);
-    new catena::gRPC::UpdateSubscriptions(this, dm_, true);
+    new catena::gRPC::GetPopulatedSlots(this, dms_, true);
+    new catena::gRPC::GetValue(this, dms_, true);
+    new catena::gRPC::SetValue(this, dms_, true);
+    new catena::gRPC::MultiSetValue(this, dms_, true);
+    new catena::gRPC::Connect(this, dms_, true);
+    new catena::gRPC::DeviceRequest(this, dms_, true);
+    new catena::gRPC::ExternalObjectRequest(this, dms_, true);
+    new catena::gRPC::ParamInfoRequest(this, dms_, true);
+    new catena::gRPC::GetParam(this, dms_, true);
+    new catena::gRPC::ExecuteCommand(this, dms_, true);
+    new catena::gRPC::AddLanguage(this, dms_, true);
+    new catena::gRPC::ListLanguages(this, dms_, true);
+    new catena::gRPC::LanguagePackRequest(this, dms_, true);
+    new catena::gRPC::UpdateSubscriptions(this, dms_, true);
 }
 
 // Initializing the shutdown signal for all open connections.
@@ -69,7 +77,7 @@ vdk::signal<void()> catena::gRPC::Connect::shutdownSignal_;
 void CatenaServiceImpl::processEvents() {
     void *tag;
     bool ok;
-    std::cout << "Start processing events\n";
+    DEBUG_LOG << "Start processing events\n";
     while (true) {
         gpr_timespec deadline =
             gpr_time_add(gpr_now(GPR_CLOCK_REALTIME), gpr_time_from_seconds(1, GPR_TIMESPAN));
@@ -103,5 +111,5 @@ void CatenaServiceImpl::deregisterItem(ICallData *cd) {
     if (it != registry_.end()) {
         registry_.erase(it);
     }
-    std::cout << "Active RPCs remaining: " << registry_.size() << '\n';
+    DEBUG_LOG << "Active RPCs remaining: " << registry_.size() << '\n';
 }

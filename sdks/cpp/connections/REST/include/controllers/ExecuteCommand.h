@@ -42,39 +42,43 @@
 #include <SocketWriter.h>
 #include "interface/ICallData.h"
 
+// Protobuf
+#include <google/protobuf/util/json_util.h>
+
 // common
 #include <Device.h>
 #include <IParam.h>
+#include <Status.h>
 #include <rpc/TimeNow.h>
 
 // boost
 #include <boost/asio.hpp>
 using boost::asio::ip::tcp;
 
+#include <Logger.h>
+
 namespace catena {
 namespace REST {
-
-using catena::common::IParam;
-using catena::common::IDevice;
-using catena::common::timeNow;
 
 /**
  * @brief ICallData class for the ExecuteCommand REST controller.
  */
 class ExecuteCommand : public ICallData {
   public:
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-        return new ExecuteCommand(socket, context, dm);
-    }
+    // Specifying which Device and IParam to use (defaults to catena::...)
+    using IDevice = catena::common::IDevice;
+    using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
+    using CommandResponder = catena::common::IParamDescriptor::ICommandResponder;
 
     /**
      * @brief Constructor for the ExecuteCommand controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to execute the command on.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    ExecuteCommand(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    ExecuteCommand(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     
     /**
      * @brief ExecuteCommand's main process.
@@ -82,22 +86,15 @@ class ExecuteCommand : public ICallData {
     void proceed() override;
     
     /**
-     * @brief Finishes the ExecuteCommand process
-     */
-    void finish() override;
-    
-    /**
      * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The SocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
-      return new ExecuteCommand(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new ExecuteCommand(socket, context, dms);
     }
-    
-
 
   private:
       /**
@@ -106,9 +103,9 @@ class ExecuteCommand : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << "ExecuteCommand::proceed[" << objectId_ << "]: "
-                << timeNow() << " status: "<< static_cast<int>(status)
-                <<", ok: "<< std::boolalpha << ok << std::endl;
+      DEBUG_LOG << "ExecuteCommand::proceed[" << objectId_ << "]: "
+                << catena::common::timeNow() << " status: "<< static_cast<int>(status)
+                <<", ok: "<< std::boolalpha << ok;
     }
     /**
      * @brief The number of ExecuteCommand objects created.
@@ -125,15 +122,15 @@ class ExecuteCommand : public ICallData {
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    SSEWriter writer_;
+    std::unique_ptr<ISocketWriter> writer_ = nullptr;
     /**
      * @brief The ISocketReader object.
      */
     ISocketReader& context_;
     /**
-     * @brief The device to connect to.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 };
 
 } // namespace REST

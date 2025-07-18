@@ -156,8 +156,8 @@
       "args": [
         "--static_root", "${workspaceFolder}/sdks/cpp/connections/REST/examples/${input:pickRestService}/static",
         //  "--secure_comms", "tls", // Unsure if this is functional
-        "--authz",
-        "--port=6254"
+        //"--authz",
+        //"--port=6254"
       ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/${env:BUILD_TARGET}",
@@ -204,7 +204,8 @@
                   "external_object_request",
                   "structs_with_authz",
                   "structs_with_authz_yaml",
-                  "use_commands"
+                  "use_commands",
+                  "one_of_everything"
                 ],
       "default": "status_update"
     },
@@ -212,12 +213,16 @@
       "id": "pickExample",
       "description": "Select example to run",
       "type": "pickString",
-      "options": ["common/examples/hello_world/hello_world",
-                  "common/examples/use_structs/use_structs",
-                  "common/examples/use_templates/use_templates",
+      "options": ["common/examples/enum_decorator/enum_decorator",
+                  "common/examples/factory/factory",
+                  "common/examples/hello_world/hello_world",
+                  "common/examples/import_params/import_params",
+                  "common/examples/path/path",
                   "common/examples/use_constraints/use_constraints",
                   "common/examples/use_struct_arrays/use_struct_arrays",
-                  "common/examples/use_variants/use_variants",
+                  "common/examples/use_structs/use_structs",
+                  "common/examples/use_templates/use_templates",
+                  "common/examples/use_variants/use_variants"
                 ],
       "default": "common/examples/hello_world/hello_world"
     },
@@ -243,7 +248,8 @@
         "status_update_REST_JSON",
         "use_commands_REST",
         "use_menus_REST",
-        "structs_with_authz_REST"
+        "structs_with_authz_REST",
+        "one_of_everything_REST"
       ],
       "default": "status_update_REST"
     }

@@ -31,7 +31,8 @@
 /**
  * @brief A parent class for gRPC test fixtures.
  * @author christian.twarogn@rossvideo.com
- * @date 16/06/25
+ * @author benjamin.whitten@rossvideo.com
+ * @date 25/06/18
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -44,75 +45,135 @@
 // std
 #include <string>
 
+#include "MockDevice.h"
+#include "MockServiceImpl.h"
+#include "interface/ICallData.h"
+
 // protobuf
 #include <interface/device.pb.h>
 #include <interface/service.grpc.pb.h>
 #include <google/protobuf/util/json_util.h>
+#include <grpcpp/grpcpp.h>
 
 // common
 #include <Status.h>
+#include <Logger.h>
 
-// boost
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
-using boost::asio::ip::tcp;
-
-// gRPC
-#include "MockServer.h"
-
-using namespace catena::gRPC;
+namespace catena {
+namespace gRPC {
 
 /*
  * GRPCTest class inherited by test fixtures to provide functions for
  * writing, reading, and verifying requests and responses.
  */
-class GRPCTest  : public ::testing::Test {
+class GRPCTest : public ::testing::Test {
   protected:
     /*
-     * Sets up expectations for the creation of a new CallData obj.
+     * Virtual function which creates a single CallData object for the test.
+     */
+    virtual void makeOne() = 0;
+
+    /*
+     * Creates a gRPC server and redirects cout before each test.
      */
     void SetUp() override {
-        mockServer.start();
         // Redirecting cout to a stringstream for testing.
-        oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-        // We can always assume that a new CallData obj is created.
-        // Either from initialization or kProceed.
-        mockServer.expNew();
+        oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
+        
+        // Creating the gRPC server.
+        builder_.AddListeningPort(serverAddr_, grpc::InsecureServerCredentials());
+        cq_ = builder_.AddCompletionQueue();
+        builder_.RegisterService(&service_);
+        server_ = builder_.BuildAndStart();
+
+        // Creating the gRPC client.
+        channel_ = grpc::CreateChannel(serverAddr_, grpc::InsecureChannelCredentials());
+        client_ = catena::CatenaService::NewStub(channel_);
+
+        // Setting common expected values for the mock service.
+        EXPECT_CALL(service_, registerItem(::testing::_)).WillRepeatedly(::testing::Invoke([this](ICallData* cd) {
+            asyncCall_.reset(cd);
+        }));
+        EXPECT_CALL(service_, cq()).WillRepeatedly(::testing::Return(cq_.get()));
+        EXPECT_CALL(service_, deregisterItem(::testing::_)).WillRepeatedly(::testing::Invoke([this](ICallData* cd) {
+            testCall_.reset(nullptr);
+        }));
+        EXPECT_CALL(dm0_, mutex()).WillRepeatedly(::testing::ReturnRef(mtx0_));
+        EXPECT_CALL(dm0_, slot()).WillRepeatedly(::testing::Return(0));
+        EXPECT_CALL(dm1_, mutex()).WillRepeatedly(::testing::ReturnRef(mtx1_));
+        EXPECT_CALL(dm1_, slot()).WillRepeatedly(::testing::Return(1));
+        EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(::testing::Invoke([this](){ return authzEnabled_; }));
+
+        // Deploying cq handler on a thread.
+        cqthread_ = std::make_unique<std::thread>([&]() {
+            void* ignored_tag;
+            bool ok;
+            while (cq_->Next(&ignored_tag, &ok)) {
+                if (!testCall_) {
+                    testCall_.swap(asyncCall_);
+                }
+                if (testCall_) {
+                    testCall_->proceed(ok);
+                }
+            }
+        });
+
+        // Creating the CallData object for testing.
+        makeOne();
     }
 
     /*
-     * Restores cout after each test.
+     * Shuts down the gRPC server and restores cout after each test.
      */
     void TearDown() override {
-        std::cout.rdbuf(oldCout);
-
-        // Redirecting cout to a stringstream for testing.
-        std::stringstream MockConsole;
-        std::streambuf* oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-        // Destroying the server.
-        //TODO: GET NUM TIMES MAYBE
-        EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).WillRepeatedly(::testing::Invoke([this]() {
-            delete this->mockServer.testCall;
-            this->mockServer.testCall = nullptr;
-        }));
-        mockServer.shutdown();
+        // Cleaning up the server.
+        server_->Shutdown();
+        // Cleaning the cq
+        cq_->Shutdown();
+        cqthread_->join();
+        // Make sure the calldata objects were destroyed.
+        ASSERT_FALSE(testCall_) << "Failed to deregister handler";
+        ASSERT_FALSE(asyncCall_) << "Failed to deregister handler";
         // Restoring cout
-        std::cout.rdbuf(oldCout);
+        std::cout.rdbuf(oldCout_);
     }
 
-    // Console variables
-    std::stringstream MockConsole;
-    std::streambuf* oldCout;
-    // Client variables.
-    grpc::ClientContext clientContext;
-    bool done = false;
-    std::condition_variable cv;
-    std::mutex cv_mtx;
-    std::unique_lock<std::mutex> lock{cv_mtx};
-    grpc::Status outRc;
-    // Expected variables
-    catena::Empty expVal;
-    grpc::Status expRc;
+    // Cout variables
+    std::stringstream MockConsole_;
+    std::streambuf* oldCout_;
 
-    MockServer mockServer;
+    // Expected variables
+    catena::exception_with_status expRc_{"", catena::StatusCode::OK};
+
+    // Address used for gRPC tests.
+    std::string serverAddr_ = "0.0.0.0:50051";
+    // Server and service variables.
+    grpc::ServerBuilder builder_;
+    std::unique_ptr<grpc::Server> server_ = nullptr;
+    MockServiceImpl service_;
+    std::mutex mtx0_;
+    std::mutex mtx1_;
+    MockDevice dm0_;
+    MockDevice dm1_;
+    SlotMap dms_ = {{0, &dm0_}, {1, &dm1_}};
+    bool authzEnabled_ = false;
+    // Completion queue variables.
+    std::unique_ptr<grpc::ServerCompletionQueue> cq_ = nullptr;
+    std::unique_ptr<std::thread> cqthread_ = nullptr;
+    bool ok_ = true;
+    // Client variables.
+    std::shared_ptr<grpc::Channel> channel_ = nullptr;
+    std::unique_ptr<catena::CatenaService::Stub> client_ = nullptr;
+    grpc::ClientContext clientContext_;
+    bool done_ = false;
+    std::condition_variable cv_;
+    std::mutex cv_mtx_;
+    std::unique_lock<std::mutex> lock_{cv_mtx_};
+    grpc::Status outRc_;
+    // gRPC test variables.
+    std::unique_ptr<ICallData> testCall_ = nullptr;
+    std::unique_ptr<ICallData> asyncCall_ = nullptr;
 };
+
+} // namespace gRPC
+} // namespace catena

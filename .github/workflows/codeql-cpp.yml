@@ -110,6 +110,16 @@ jobs:
           echo "gtest already installed, skipping build"
         fi
 
+    - name: Install and Build glog
+      run: |
+        if [ ! -d "$HOME/.local/lib/glog" ]; then
+          cd ~
+          echo "Install and Build glog"
+          sudo apt-get install -y libgoogle-glog-dev
+        else
+          echo "glog already installed, skipping build"
+        fi
+
     # Cache jwt-cpp dependencies
     - name: Cache jwt-cpp dependencies
       uses: actions/cache@v3
@@ -173,10 +183,21 @@ jobs:
         cd ./work/Catena/Catena/
         mkdir -p build/cpp
         cd build/cpp
-        cmake -DUNIT_TESTING=OFF -DBUILD_DOC=OFF -DCONNECTIONS=gRPC -DCATENA_MODEL="lite" -G Ninja -B ~/work/Catena/Catena/build/cpp -S ~/work/Catena/Catena/sdks/cpp
+        cmake -DUNIT_TESTING=OFF -DBUILD_DOC=OFF -DCONNECTIONS=gRPC -DCATENA_MODEL="lite" -G Ninja -DGLOG_LOGGING_DIR=${HOME}/Catena/logs -B ~/work/Catena/Catena/build/cpp -S ~/work/Catena/Catena/sdks/cpp
         ninja
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
+
+    - name: Upload error and fatal logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: error-logs
+        path: |
+          logs/*error*.log
+          logs/*fatal*.log
+        if-no-files-found: ignore
+        retention-days: 1

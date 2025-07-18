@@ -29,43 +29,28 @@
  */
 
 /**
- * @brief A collection of mock classes used across the REST tests.
- * @author benjamin.whitten@rossvideo.com
+ * @brief Mock implementation for the IParam class.
  * @author zuhayr.sarker@rossvideo.com
- * @date 25/05/13
+ * @date 25/06/26
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
 
 #include <gmock/gmock.h>
-#include <IDevice.h>
 #include <IParam.h>
-#include <IParamDescriptor.h>
-#include <Status.h>
-#include <Authorization.h>
 
 namespace catena {
 namespace common {
 
+// Mock implementation for the IParam class.
 class MockParam : public IParam {
-public:
-    MockParam() = default;
-    virtual ~MockParam() = default;
-
-    // Explicitly declare move semantics
-    MockParam(MockParam&&) = default;
-    MockParam& operator=(MockParam&&) = default;
-
-    // Explicitly delete copy semantics
-    MockParam(const MockParam&) = delete;
-    MockParam& operator=(const MockParam&) = delete;
-
+  public:
     MOCK_METHOD(std::unique_ptr<IParam>, copy, (), (const, override));
     MOCK_METHOD(catena::exception_with_status, toProto, (catena::Value& dst, Authorizer& authz), (const, override));
     MOCK_METHOD(catena::exception_with_status, fromProto, (const catena::Value& src, Authorizer& authz), (override));
     MOCK_METHOD(catena::exception_with_status, toProto, (catena::Param& param, Authorizer& authz), (const, override));
-    MOCK_METHOD(catena::exception_with_status, toProto, (catena::BasicParamInfoResponse& paramInfo, Authorizer& authz), (const, override));
+    MOCK_METHOD(catena::exception_with_status, toProto, (catena::ParamInfoResponse& paramInfo, Authorizer& authz), (const, override));
     MOCK_METHOD(ParamType, type, (), (const, override));
     MOCK_METHOD(const std::string&, getOid, (), (const, override));
     MOCK_METHOD(void, setOid, (const std::string& oid), (override));

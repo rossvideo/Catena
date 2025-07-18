@@ -26,7 +26,7 @@
         },
 
         {
-            "label": "Generate Coverage",
+            "label": "Generate Coverage Report",
             "type": "shell",
             "command": "cd ${workspaceFolder} && ./scripts/run_coverage.sh",
             "group": {
@@ -36,7 +36,7 @@
             "problemMatcher": []
         },
         {
-            "label": "Generate Coverage with HTML",
+            "label": "Generate Coverage Report with HTML Server",
             "type": "shell",
             "command": "cd ${workspaceFolder} && ./scripts/run_coverage.sh --html && cd coverage && echo 'Starting server...' && echo 'Coverage report available at: http://0.0.0.0:8000/index.html' && echo 'Press Ctrl+C to stop the server' && python3 -m http.server 8000",
             "group": {
@@ -53,9 +53,20 @@
             "isBackground": true
         },
         {
+            "label": "Generate Clean Coverage Report (Rebuild)",
+            "type": "shell",
+            // This triggers a rebuild on coverage
+            "command": "cd ${workspaceFolder} && ./scripts/run_coverage.sh --clean",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "Run Ninja",
             "type": "shell",
-            "command": "cd ${workspaceFolder}/${env:BUILD_TARGET} && ninja",
+            "command": "cd ${workspaceFolder}/${env:BUILD_TARGET} && ninja -j16",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -78,12 +89,40 @@
             //    - Install prefix set to /usr/local/.local
             //    - Coverage flags set for C++ and C
             // 4. Run ninja to build the project
-            "command": "if [ -f ${workspaceFolder}/${env:BUILD_TARGET}/build.ninja ]; then (cd ${workspaceFolder}/${env:BUILD_TARGET} && ninja clean); fi && if [ ! -d ${workspaceFolder}/${env:BUILD_TARGET} ]; then mkdir -p ${workspaceFolder}/${env:BUILD_TARGET}; fi && cmake -G Ninja -DCMAKE_BUILD_TYPE=${env:CMAKE_BUILD_TYPE} -DCONNECTIONS=${env:CONNECTIONS} -DCMAKE_CXX_FLAGS=\"--coverage\" -DCMAKE_C_FLAGS=\"--coverage\" -DCMAKE_EXE_LINKER_FLAGS=\"--coverage\" -DCMAKE_INSTALL_PREFIX=/usr/local/.local -B ${workspaceFolder}/${env:BUILD_TARGET} ${workspaceFolder}/sdks/cpp && cd ${workspaceFolder}/${env:BUILD_TARGET} && ninja",
+            "command": "if [ -f ${workspaceFolder}/${env:BUILD_TARGET}/build.ninja ]; then (cd ${workspaceFolder}/${env:BUILD_TARGET} && ninja clean); fi && if [ ! -d ${workspaceFolder}/${env:BUILD_TARGET} ]; then mkdir -p ${workspaceFolder}/${env:BUILD_TARGET}; fi && cmake -G Ninja -DCMAKE_BUILD_TYPE=${env:CMAKE_BUILD_TYPE} -DCONNECTIONS=${env:CONNECTIONS} -DCMAKE_CXX_FLAGS=\"--coverage\" -DCMAKE_C_FLAGS=\"--coverage\" -DCMAKE_EXE_LINKER_FLAGS=\"--coverage\" -DCMAKE_INSTALL_PREFIX=/usr/local/.local -B ${workspaceFolder}/${env:BUILD_TARGET} ${workspaceFolder}/sdks/cpp && cd ${workspaceFolder}/${env:BUILD_TARGET} && ninja -j16",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Clean Coverage Files",
+            "type": "shell",
+            // Removes coverage files and devcontainer artifact build directory
+            "command": "cd ${workspaceFolder} && if [ -d coverage ]; then rm -rf coverage; fi && if [ -d sdks/cpp/build ]; then rm -rf sdks/cpp/build; fi && sudo find . -type f \\( -name \"*.gcov\" -o -name \"*.gcda\" -o -name \"*.gcno\" \\) -delete",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Fresh Build with HTML Coverage Report",
+            "type": "shell",
+            "command": "", // The actual "command" is the set of processes below
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [],
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Clean Coverage Files",
+                "Fresh Build",
+                "Generate Clean Coverage Report (Rebuild)",
+                "Generate Coverage Report with HTML Server"
+            ]
         }
     ],
     "version": "2.0.0"

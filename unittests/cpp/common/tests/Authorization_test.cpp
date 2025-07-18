@@ -39,20 +39,41 @@
 #include "MockParamDescriptor.h"
 #include "Authorization.h"
 #include "Enums.h"
+#include "CommonTestHelpers.h"
+#include <Logger.h>
+
+// gtest
+#include <gtest/gtest.h>
 
 using namespace catena::common;
 
-// A collection of valid tokens with one scope each.
-const std::unordered_map<std::string, std::string> testTokens {
-    {Scopes().getForwardMap().at(Scopes_e::kMonitor),        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIiwiaWF0IjoxNTE2MjM5MDIyfQ.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ"},
-    {Scopes().getForwardMap().at(Scopes_e::kOperate),        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6b3AiLCJpYXQiOjE1MTYyMzkwMjJ9.lduNvr6tEaLFeIYR4bH5tC55WUSDBEe5PFz9rvGRD3o"},
-    {Scopes().getForwardMap().at(Scopes_e::kConfig),         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6Y2ZnIiwiaWF0IjoxNTE2MjM5MDIyfQ.n1dZJ01l8z4urxFUsSbUoaSJgflK828BHSLcxqTxOf4"},
-    {Scopes().getForwardMap().at(Scopes_e::kAdmin),          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6YWRtIiwiaWF0IjoxNTE2MjM5MDIyfQ.nqkypNl8hTMWC8zF1aIA_CvsfoOdbZrYpr9JN4T4sDs"},
-    {Scopes().getForwardMap().at(Scopes_e::kMonitor) + ":w", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uOnciLCJpYXQiOjE1MTYyMzkwMjJ9.QTHN7uqmk_jR2nVumyee3gMki-47tKOm_R0jnhT8Tpk"},
-    {Scopes().getForwardMap().at(Scopes_e::kOperate) + ":w", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6b3A6dyIsImlhdCI6MTUxNjIzOTAyMn0.SNndYRi4apWLZfp-BoosQtmDDNFInVcMCMuh7djz-QI"},
-    {Scopes().getForwardMap().at(Scopes_e::kConfig)  + ":w", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6Y2ZnOnciLCJpYXQiOjE1MTYyMzkwMjJ9.ty50rEHLJUlseD_6bj7KrmCm9NXVwHjbTAv1u392HCs"},
-    {Scopes().getForwardMap().at(Scopes_e::kAdmin)   + ":w", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6YWRtOnciLCJpYXQiOjE1MTYyMzkwMjJ9.WrWmmNhw3EZ6AzZAytgZbvb_9NFL3_YtSSsZibW1P0w"}
+class AuthorizationTest : public ::testing::Test {
+  protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("AuthorizationTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
+    // Common test tokens
+    const std::vector<std::pair<std::string, std::string>> testTokens = []() {
+        // Add all scopes from the map (excluding kUndefined)
+        std::vector<std::pair<std::string, std::string>> tokenPairs;
+        for (const auto& [scopeEnum, scopeStr] : Scopes().getForwardMap()) {
+            if (scopeEnum != Scopes_e::kUndefined) {
+                tokenPairs.emplace_back(scopeStr, getJwsToken(scopeStr));
+                tokenPairs.emplace_back(scopeStr + ":w", getJwsToken(scopeStr + ":w")); 
+            }
+        }
+        return tokenPairs;
+    }();
+  
 };
+
+
 
 /*
  * ============================================================================
@@ -61,9 +82,9 @@ const std::unordered_map<std::string, std::string> testTokens {
  * 
  * TEST 1 - Creating an authorizer object with a valid JWS token.
  */
-TEST(AuthorizationTests, Authz_createValid) {
+TEST_F(AuthorizationTest, Authz_createValid) {
     // Valid tokens.
-    for (auto& [currentScope, currentToken] : testTokens) {
+    for (const auto& [currentScope, currentToken] : testTokens) {
         EXPECT_NO_THROW(Authorizer authz(currentToken));
     }
 }
@@ -71,7 +92,7 @@ TEST(AuthorizationTests, Authz_createValid) {
 /* 
  * TEST 2 - Failing to create an authorizer object with a invalid JWS token.
  */
-TEST(AuthorizationTests, Authz_createInvalid) {
+TEST_F(AuthorizationTest, Authz_createInvalid) {
     // Invalid token.
     std::string invalid_token = "This is not a valid token";
     EXPECT_THROW(Authorizer authz(invalid_token), catena::exception_with_status);
@@ -80,8 +101,8 @@ TEST(AuthorizationTests, Authz_createInvalid) {
 /* 
  * TEST 3 - Testing hasAuthz().
  */
-TEST(AuthorizationTests, Authz_hasAuthz) {   
-    for (auto& [currentScope, currentToken] : testTokens) {
+TEST_F(AuthorizationTest, Authz_hasAuthz) {   
+    for (const auto& [currentScope, currentToken] : testTokens) {
         Authorizer* authz = nullptr;
         EXPECT_NO_THROW(authz = new Authorizer(currentToken));
         // Testing hasAuthz.
@@ -101,10 +122,10 @@ TEST(AuthorizationTests, Authz_hasAuthz) {
 /* 
  * TEST 4 - Testing readAuthz().
  */
-TEST(AuthorizationTests, Authz_readAuthz) {
+TEST_F(AuthorizationTest, Authz_readAuthz) {
     MockParam param;
     MockParamDescriptor pd;
-    for (auto& [currentScope, currentToken] : testTokens) {
+    for (const auto& [currentScope, currentToken] : testTokens) {
         Authorizer* authz = nullptr;
         EXPECT_NO_THROW(authz = new Authorizer(currentToken));
         // Testing readAuthz(param).
@@ -126,10 +147,10 @@ TEST(AuthorizationTests, Authz_readAuthz) {
 /* 
  * TEST 5 - Testing writeAuthz().
  */
-TEST(AuthorizationTests, Authz_writeAuthz) {
+TEST_F(AuthorizationTest, Authz_writeAuthz) {
     MockParam param;
     MockParamDescriptor pd;
-    for (auto& [currentScope, currentToken] : testTokens) {
+    for (const auto& [currentScope, currentToken] : testTokens) {
         Authorizer* authz = nullptr;
         EXPECT_NO_THROW(authz = new Authorizer(currentToken));
         // Testing writeAuthz(param).
@@ -157,11 +178,8 @@ TEST(AuthorizationTests, Authz_writeAuthz) {
 /* 
  * TEST 6 - Testing authorizer with no scope.
  */
-TEST(AuthorizationTests, Authz_scopeNone) {
-    std::string noScope = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMj"
-                          "M0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2M"
-                          "jM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw"
-                          "5c";
+TEST_F(AuthorizationTest, Authz_scopeNone) {
+    std::string noScope = getJwsToken("");
     Authorizer* authz = nullptr;
     EXPECT_NO_THROW(authz = new Authorizer(noScope));
     MockParam param;
@@ -197,7 +215,7 @@ TEST(AuthorizationTests, Authz_scopeNone) {
 /* 
  * TEST 7 - Testing kAuthzDisabled.
  */
-TEST(AuthorizationTests, Authz_disabled) {
+TEST_F(AuthorizationTest, Authz_disabled) {
     Authorizer* authz = &Authorizer::kAuthzDisabled;
     MockParam param;
     MockParamDescriptor pd;
@@ -235,13 +253,9 @@ TEST(AuthorizationTests, Authz_disabled) {
 /* 
  * TEST 8 - Testing authorizer with multiple scopes.
  */
-TEST(AuthorizationTests, Authz_scopeMulti) {
+TEST_F(AuthorizationTest, Authz_scopeMulti) {
     // This token has st2138:mon and st2138:op:w scopes.
-    std::string multiScopes = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOi"
-                              "IxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2Nvc"
-                              "GUiOiJzdDIxMzg6bW9uIHN0MjEzODpvcDp3IiwiaWF0Ijox"
-                              "NTE2MjM5MDIyfQ.Z8upjHhZWKBlZ-yUcu7FFlJPby_C4jB9"
-                              "Bnk-DGxoQyM";
+    std::string multiScopes = getJwsToken("st2138:mon st2138:op:w");
     Authorizer* authz = nullptr;
     EXPECT_NO_THROW(authz = new Authorizer(multiScopes));
     MockParam param;

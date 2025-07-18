@@ -35,28 +35,31 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
- // gtest
-#include <gtest/gtest.h>
-
-// std
-#include <string>
-
-// protobuf
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
+// common
+#include <Logger.h>
 
 // Test helpers
 #include "RESTTest.h"
 
 // REST
 #include "SocketWriter.h"
+
 using namespace catena::REST;
 
 // Fixture
-class RESTSocketWriterTests : public ::testing::Test, public RESTTest {
+class RESTSocketWriterTests : public testing::Test, public RESTTest {
   protected:
-    RESTSocketWriterTests() : RESTTest(&serverSocket, &clientSocket) {
-        origin = "test-origin.com";
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RESTSocketWriterTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+    
+    RESTSocketWriterTests() : RESTTest(&serverSocket_, &clientSocket_) {
+        origin_ = "test-origin.com";
     }
   
     void SetUp() override { /* Setup code here */ }
@@ -77,11 +80,11 @@ TEST_F(RESTSocketWriterTests, SocketWriter_Write200) {
     catena::Value msg;
     msg.set_string_value("Test string");
 
-    // Initializing SocketWriter with serverSocket and writing message.
-    SocketWriter writer(serverSocket, origin);
+    // Initializing SocketWriter with serverSocket_ and writing message.
+    SocketWriter writer(serverSocket_, origin_);
     writer.sendResponse(rc, msg);
 
-    // Reading from clientSocket and checking the response.
+    // Reading from clientSocket_ and checking the response.
     std::string jsonBody;
     google::protobuf::util::JsonPrintOptions options; // Default options
     auto status = google::protobuf::util::MessageToJsonString(msg, &jsonBody, options);
@@ -96,11 +99,11 @@ TEST_F(RESTSocketWriterTests, SocketWriter_Write204) {
     catena::exception_with_status rc("", catena::StatusCode::NO_CONTENT);
     catena::Empty emptyMsg = catena::Empty();
 
-    // Initializing SocketWriter with serverSocket and writing message.
-    SocketWriter writer(serverSocket, origin);
+    // Initializing SocketWriter with serverSocket_ and writing message.
+    SocketWriter writer(serverSocket_, origin_);
     writer.sendResponse(rc, emptyMsg);
 
-    // Reading from clientSocket and checking the response.
+    // Reading from clientSocket_ and checking the response.
     EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
@@ -113,11 +116,11 @@ TEST_F(RESTSocketWriterTests, SocketWriter_WriteErr) {
     catena::Value msg;
     msg.set_string_value("Test string");
 
-    // Initializing SocketWriter with serverSocket and writing message.
-    SocketWriter writer(serverSocket, origin);
+    // Initializing SocketWriter with serverSocket_ and writing message.
+    SocketWriter writer(serverSocket_, origin_);
     writer.sendResponse(rc, msg);
 
-    // Reading from clientSocket and checking the response.
+    // Reading from clientSocket_ and checking the response.
     EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
@@ -134,8 +137,8 @@ TEST_F(RESTSocketWriterTests, SocketWriter_Buffer200) {
     std::string expJson = "";
     google::protobuf::util::JsonPrintOptions options; // Default options
 
-    // Initializing SocketWriter with serverSocket and writing messages.
-    SocketWriter writer(serverSocket, origin, true);
+    // Initializing SocketWriter with serverSocket_ and writing messages.
+    SocketWriter writer(serverSocket_, origin_, true);
     for (const auto& msg : msgs) {
         writer.sendResponse(rc, msg);
         // Adding to expected response.
@@ -151,7 +154,7 @@ TEST_F(RESTSocketWriterTests, SocketWriter_Buffer200) {
     // Writing an empty message to flush response.
     writer.sendResponse(rc);
 
-    // Reading from clientSocket and checking the response.
+    // Reading from clientSocket_ and checking the response.
     EXPECT_EQ(readResponse(), expectedResponse(rc, expJson));
 }
 
@@ -162,11 +165,11 @@ TEST_F(RESTSocketWriterTests, SocketWriter_BufferErrBegin) {
     // msg variables.
     catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     
-    // Initializing SocketWriter with serverSocket and writing error.
-    SocketWriter writer(serverSocket, origin, true);
+    // Initializing SocketWriter with serverSocket_ and writing error.
+    SocketWriter writer(serverSocket_, origin_, true);
     writer.sendResponse(rc);
 
-    // Reading from clientSocket and checking the response.
+    // Reading from clientSocket_ and checking the response.
     EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
@@ -181,15 +184,15 @@ TEST_F(RESTSocketWriterTests, SocketWriter_BufferErrEnd) {
     msgs[1].set_string_value("test-string-2");
     msgs[2].set_string_value("test-string-3");
 
-    // Initializing SocketWriter with serverSocket and writing messages.
-    SocketWriter writer(serverSocket, origin, true);
+    // Initializing SocketWriter with serverSocket_ and writing messages.
+    SocketWriter writer(serverSocket_, origin_, true);
     for (const auto& msg : msgs) {
         writer.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), msg);
     }
     // Writing error.
     writer.sendResponse(rc);
 
-    // Reading from clientSocket and checking the response.
+    // Reading from clientSocket_ and checking the response.
     EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
@@ -211,15 +214,15 @@ TEST_F(RESTSocketWriterTests, SSEWriter_Write200) {
         "{\"int32Value\":5}",
     };
 
-    // Initializing SSEWriter with serverSocket and writing messages.
-    SSEWriter writer(serverSocket, origin);
+    // Initializing SSEWriter with serverSocket_ and writing messages.
+    SSEWriter writer(serverSocket_, origin_);
     for (std::string msgJson : msgs) {
         catena::Value msg;
         auto status = google::protobuf::util::JsonStringToMessage(absl::string_view(msgJson), &msg);
         writer.sendResponse(rc, msg);
     }
 
-    // Reading from clientSocket and checking the response.
+    // Reading from clientSocket_ and checking the response.
     EXPECT_EQ(readResponse(), expectedSSEResponse(rc, msgs));
 }
 
@@ -232,11 +235,11 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteEmpty) {
     std::vector<std::string> msgs = {};
     catena::Empty emptyMsg = catena::Empty();
 
-    // Initializing SSEWriter with serverSocket and writing messages.
-    SSEWriter writer(serverSocket, origin);
+    // Initializing SSEWriter with serverSocket_ and writing messages.
+    SSEWriter writer(serverSocket_, origin_);
     writer.sendResponse(rc, emptyMsg);
 
-    // Reading from clientSocket and checking the response.
+    // Reading from clientSocket_ and checking the response.
     EXPECT_EQ(readResponse(), expectedSSEResponse(rc, msgs));
 }
 
@@ -252,8 +255,8 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteEmptyEnd) {
     };
     catena::Empty emptyMsg = catena::Empty();
 
-    // Initializing SSEWriter with serverSocket and writing messages.
-    SSEWriter writer(serverSocket, origin);
+    // Initializing SSEWriter with serverSocket_ and writing messages.
+    SSEWriter writer(serverSocket_, origin_);
     for (std::string msgJson : msgs) {
         catena::Value msg;
         auto status = google::protobuf::util::JsonStringToMessage(absl::string_view(msgJson), &msg);
@@ -261,7 +264,7 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteEmptyEnd) {
     }
     writer.sendResponse(rc, emptyMsg);
 
-    // Reading from clientSocket and checking the response.
+    // Reading from clientSocket_ and checking the response.
     EXPECT_EQ(readResponse(), expectedSSEResponse(rc, msgs));
 }
 
@@ -273,11 +276,11 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteErrBegin) {
     catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     catena::Empty emptyMsg = catena::Empty();
 
-    // Initializing SSEWriter with serverSocket and writing error.
-    SSEWriter writer(serverSocket, origin);
+    // Initializing SSEWriter with serverSocket_ and writing error.
+    SSEWriter writer(serverSocket_, origin_);
     writer.sendResponse(rc);
 
-    // Reading from clientSocket and checking the response.
+    // Reading from clientSocket_ and checking the response.
     EXPECT_EQ(readResponse(), expectedSSEResponse(rc));
 }
 
@@ -294,8 +297,8 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteErrEnd) {
     catena::exception_with_status err("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     catena::Empty emptyMsg = catena::Empty();
 
-    // Initializing SSEWriter with serverSocket and writing messages.
-    SSEWriter writer(serverSocket, origin);
+    // Initializing SSEWriter with serverSocket_ and writing messages.
+    SSEWriter writer(serverSocket_, origin_);
     for (std::string msgJson : msgs) {
         catena::Value msg;
         auto status = google::protobuf::util::JsonStringToMessage(absl::string_view(msgJson), &msg);
@@ -303,6 +306,6 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteErrEnd) {
     }
     writer.sendResponse(rc, emptyMsg);
 
-    // Reading from clientSocket and checking the response.
+    // Reading from clientSocket_ and checking the response.
     EXPECT_EQ(readResponse(), expectedSSEResponse(rc, msgs));
 }

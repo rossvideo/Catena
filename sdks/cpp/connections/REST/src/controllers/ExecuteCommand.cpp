@@ -1,19 +1,20 @@
 // connections/REST
 #include <controllers/ExecuteCommand.h>
-#include <Status.h>
-#include <google/protobuf/util/json_util.h>
-#include <iostream>
 
 using catena::REST::ExecuteCommand;
-using catena::common::IParam;
-using catena::common::IParamDescriptor;
 
 // Initializes the object counter for ExecuteCommand to 0.
 int ExecuteCommand::objectCounter_ = 0;
 
-ExecuteCommand::ExecuteCommand(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
+ExecuteCommand::ExecuteCommand(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    socket_{socket}, context_{context}, dms_{dms} {
     objectId_ = objectCounter_++;
+    // Initializing the writer depending on if the response is stream or unary.
+    if (context.stream()) {
+        writer_ = std::make_unique<catena::REST::SSEWriter>(socket, context.origin());
+    } else {
+        writer_ = std::make_unique<catena::REST::SocketWriter>(socket, context.origin(), true);
+    }
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
 
@@ -24,9 +25,19 @@ void ExecuteCommand::proceed() {
     bool respond = context_.hasField("respond");
 
     try {
-        // Parse JSON body if not empty.
         catena::Value val;
-        if (!context_.jsonBody().empty()) {
+        IDevice* dm = nullptr;
+
+        // Getting device at specified slot.
+        if (dms_.contains(context_.slot())) {
+            dm = dms_.at(context_.slot());
+        }
+        // Making sure the device exists.
+        if (!dm) {
+            rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+
+        // Parse JSON body if not empty.
+        } else if (!context_.jsonBody().empty()) {
             auto status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &val);
             if (!status.ok()) {
                 rc = catena::exception_with_status("Failed to parse JSON body", catena::StatusCode::INVALID_ARGUMENT);
@@ -39,15 +50,15 @@ void ExecuteCommand::proceed() {
             std::unique_ptr<IParam> command = nullptr;
             if (context_.authorizationEnabled()) {
                 catena::common::Authorizer authz{context_.jwsToken()};
-                command = dm_.getCommand(context_.fqoid(), rc, authz);
+                command = dm->getCommand(context_.fqoid(), rc, authz);
             } else {
-                command = dm_.getCommand(context_.fqoid(), rc, catena::common::Authorizer::kAuthzDisabled);
+                command = dm->getCommand(context_.fqoid(), rc, catena::common::Authorizer::kAuthzDisabled);
             }
 
             // If the command is not found, return an error
             if (command != nullptr) {
                 // Execute the command and write response if respond = true.
-                std::unique_ptr<IParamDescriptor::ICommandResponder> responder = command->executeCommand(val);
+                std::unique_ptr<CommandResponder> responder = command->executeCommand(val);
                 if (!responder) {
                     rc = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
                 } else {
@@ -55,7 +66,7 @@ void ExecuteCommand::proceed() {
                         writeConsole_(CallStatus::kWrite, socket_.is_open());
                         catena::CommandResponse res = responder->getNext();
                         if (respond) {
-                            writer_.sendResponse(rc, res);
+                            writer_->sendResponse(rc, res);
                         }
                     }
                 }
@@ -66,13 +77,10 @@ void ExecuteCommand::proceed() {
     } catch (...) {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
-    // Writing final code if respond = false or an error occurred.
-    if (rc.status != catena::StatusCode::OK || !respond) {
-        writer_.sendResponse(rc);
-    }
-}
+    // empty msg signals unary to send response. Does nothing for stream.
+    writer_->sendResponse(rc);
 
-void ExecuteCommand::finish() {
+    // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << "ExecuteCommand[" << objectId_ << "] finished\n";
+    DEBUG_LOG << "ExecuteCommand[" << objectId_ << "] finished\n";
 } 

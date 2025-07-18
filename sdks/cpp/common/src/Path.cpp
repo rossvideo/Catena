@@ -1,19 +1,32 @@
-/** Copyright 2024 Ross Video Ltd
-
- Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
- 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
- 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
- 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
- INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
- INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-//
+/*
+ * Copyright 2025 Ross Video Ltd
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 
 //common
 #include <Path.h>
@@ -77,12 +90,14 @@ Path::Path(const std::string &jptr) : segments_{} {
             Segment seg;
             seg.emplace<Index>(kEnd);
             segments_.push_back(seg);
+        // GCOVR_EXCL_START
         } else {
             // this should never happen
             std::stringstream why;
             why << __PRETTY_FUNCTION__ << "\n'" << jptr << " is invalid json pointer";
             throw catena::exception_with_status(why.str(), catena::StatusCode::INVALID_ARGUMENT);
         }
+        // GCOVR_EXCL_STOP
     }
     frontIdx_ = 0;
 }
@@ -187,42 +202,32 @@ std::string Path::unescape_(const std::string &str) {
     return ans;
 }
 
-std::string Path::toString(bool leading_slash) const {
+std::string Path::toString(bool leading_slash, std::size_t startIdx) const {
     std::stringstream ans{""};
     bool first = true;
-    for (auto it = segments_.cbegin() + frontIdx_; it != segments_.cend(); ++it) {
+    for (auto it = segments_.cbegin() + startIdx; it != segments_.cend(); ++it) {
+        ans << (first && !leading_slash ? "" : "/");
         if (std::holds_alternative<Index>(*it)) {
             Index idx = std::get<Index>(*it);
             if (idx == kEnd) {
-                ans << (first && !leading_slash ? "" : "/") << "-";
+                ans << "-";
             } else {
-                ans << (first && !leading_slash ? "" : "/") << idx;
+                ans << idx;
             }
-        }
-        if (std::holds_alternative<std::string>(*it)) {
-            ans << (first && !leading_slash ? "" : "/") << std::get<std::string>(*it);
+        } else if (std::holds_alternative<std::string>(*it)) {
+            ans << std::get<std::string>(*it);
         }
         first = false;
     }
     return ans.str();
 }
 
+std::string Path::toString(bool leading_slash) const {
+    return toString(leading_slash, frontIdx_);
+}
+
 std::string Path::fqoid() const {
-    std::stringstream ans{""};
-    for (auto it = segments_.cbegin(); it != segments_.cend(); ++it) {
-        if (std::holds_alternative<Index>(*it)) {
-            Index idx = std::get<Index>(*it);
-            if (idx == kEnd) {
-                ans << "/-";
-            } else {
-                ans << "/" << idx;
-            }
-        }
-        if (std::holds_alternative<std::string>(*it)) {
-            ans << "/" << std::get<std::string>(*it);
-        }
-    }
-    return ans.str();
+    return toString(true, 0);
 }
 
 Path operator"" _path(const char *lit, std::size_t sz) {

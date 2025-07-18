@@ -31,20 +31,9 @@
 /**
  * @brief This file is for testing the ListLanguages.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/27
+ * @date 25/06/18
  * @copyright Copyright © 2025 Ross Video Ltd
  */
-
-// gtest
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-// std
-#include <string>
-
-// protobuf
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
 
 // Test helpers
 #include "GRPCTest.h"
@@ -57,8 +46,20 @@ using namespace catena::gRPC;
 
 // Fixture
 class gRPCListLanguagesTests : public GRPCTest {
-  public:
-    gRPCListLanguagesTests() : GRPCTest() {}
+  protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("gRPCListLanguagesTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
+    /*
+     * Creates a ListLanguages handler object.
+     */
+    void makeOne() override { new ListLanguages(&service_, dms_, true); }
 
     /* 
      * Makes an async RPC to the MockServer and waits for a response before
@@ -66,24 +67,25 @@ class gRPCListLanguagesTests : public GRPCTest {
      */
     void testRPC() {
         // Sending async RPC.
-        mockServer.client->async()->ListLanguages(&clientContext, &inVal, &outVal, [this](grpc::Status status){
-            outRc = status;
-            done = true;
-            cv.notify_one();
+        client_->async()->ListLanguages(&clientContext_, &inVal_, &outVal_, [this](grpc::Status status){
+            outRc_ = status;
+            done_ = true;
+            cv_.notify_one();
         });
-        cv.wait(lock, [this] { return done; });
+        cv_.wait(lock_, [this] { return done_; });
         // Comparing the results.
-        EXPECT_EQ(outVal.SerializeAsString(), expVal.SerializeAsString());
-        EXPECT_EQ(outRc.error_code(), expRc.error_code());
-        EXPECT_EQ(outRc.error_message(), expRc.error_message());
+        EXPECT_EQ(outVal_.SerializeAsString(), expVal_.SerializeAsString());
+        EXPECT_EQ(outRc_.error_code(), static_cast<grpc::StatusCode>(expRc_.status));
+        EXPECT_EQ(outRc_.error_message(), expRc_.what());
+        // Make sure another ListLanguages handler was created.
+        EXPECT_TRUE(asyncCall_) << "Async handler was not created during runtime";
     }
 
-    catena::Slot inVal;
-    catena::LanguageList outVal;
-    grpc::Status outRc;
+    // in/out val
+    catena::Slot inVal_;
+    catena::LanguageList outVal_;
     // Expected variables
-    catena::LanguageList expVal;
-    grpc::Status expRc;
+    catena::LanguageList expVal_;
 };
 
 /*
@@ -93,60 +95,51 @@ class gRPCListLanguagesTests : public GRPCTest {
  * 
  * TEST 1 - Creating a ListLanguages object.
  */
-TEST_F(gRPCListLanguagesTests, ListLanguages_create) {
-    // Creating listLanguages object.
-    new ListLanguages(mockServer.service, *mockServer.dm, true);
-    EXPECT_FALSE(mockServer.testCall);
-    EXPECT_TRUE(mockServer.asyncCall);
+TEST_F(gRPCListLanguagesTests, ListLanguages_Create) {
+    EXPECT_TRUE(asyncCall_);
 }
 
 /*
  * TEST 2 - Normal case for ListLanguages proceed().
  */
-TEST_F(gRPCListLanguagesTests, ListLanguages_proceedNormal) {
-    new ListLanguages(mockServer.service, *mockServer.dm, true);
-    
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-    *expVal.add_languages() = "en";
-    *expVal.add_languages() = "fr";
-    *expVal.add_languages() = "es";
-
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, toProto(::testing::An<catena::LanguageList&>())).Times(1)
+TEST_F(gRPCListLanguagesTests, ListLanguages_Normal) {
+    *expVal_.add_languages() = "en";
+    *expVal_.add_languages() = "fr";
+    *expVal_.add_languages() = "es";
+    // Setting expectations
+    EXPECT_CALL(dm0_, toProto(::testing::An<catena::LanguageList&>())).Times(1)
         .WillOnce(::testing::Invoke([this](catena::LanguageList &list){
-            list.CopyFrom(expVal);
+            list.CopyFrom(expVal_);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
-    // Sending the RPC and comparing the results.
+    EXPECT_CALL(dm1_, toProto(::testing::An<catena::LanguageList&>())).Times(0);
+    // Sending the RPC.
     testRPC();
 }
 
 /*
- * TEST 2 - Normal case for ListLanguages proceed().
+ * TEST 2 - No device in the specified slot.
  */
-TEST_F(gRPCListLanguagesTests, ListLanguages_proceedErr) {
-    new ListLanguages(mockServer.service, *mockServer.dm, true);
-    
-    catena::exception_with_status rc("unknown error", catena::StatusCode::UNKNOWN);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+TEST_F(gRPCListLanguagesTests, ListLanguages_ErrInvalidSlot) {
+    inVal_.set_slot(dms_.size());
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, toProto(::testing::An<catena::LanguageList&>())).Times(0);
+    EXPECT_CALL(dm1_, toProto(::testing::An<catena::LanguageList&>())).Times(0);
+    // Sending the RPC
+    testRPC();
+}
 
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, toProto(::testing::An<catena::LanguageList&>())).Times(1)
-        .WillOnce(::testing::Invoke([&rc](catena::LanguageList &list){
-            throw catena::exception_with_status(rc.what(), rc.status);
+/*
+ * TEST 3 - dm.toProto() throws a catena::exception_with_status.
+ */
+TEST_F(gRPCListLanguagesTests, ListLanguages_Err) {
+    expRc_ = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
+    // Setting expectations
+    EXPECT_CALL(dm0_, toProto(::testing::An<catena::LanguageList&>())).Times(1)
+        .WillOnce(::testing::Invoke([this](catena::LanguageList &list){
+            throw catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
-    // Sending the RPC and comparing the results.
+    EXPECT_CALL(dm1_, toProto(::testing::An<catena::LanguageList&>())).Times(0);
+    // Sending the RPC.
     testRPC();
 }

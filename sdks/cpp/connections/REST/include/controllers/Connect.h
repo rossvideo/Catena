@@ -57,6 +57,8 @@
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 
+#include <Logger.h>
+
 namespace catena {
 namespace REST {
 
@@ -68,34 +70,35 @@ class Connect : public ICallData, public catena::common::Connect {
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
+    using SignalMap = catena::common::SignalMap;
 
     /**
      * @brief Constructor for the Connect controller.
      *
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    Connect(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    Connect(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
+    /**
+     * @brief Destructor for the Connect controller.
+     */
+    virtual ~Connect();
     /**
      * @brief Connect's main process.
      */
     void proceed() override;
     
     /**
-     * @brief Finishes the Connect process.
-     */
-    void finish() override;
-    
-    /**
      * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new Connect(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new Connect(socket, context, dms);
     }
     
     /**
@@ -112,10 +115,9 @@ class Connect : public ICallData, public catena::common::Connect {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << "Connect::proceed[" << objectId_ << "]: "
+      DEBUG_LOG << "Connect::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
-                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
-                << std::endl;
+                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok;
     }
     /**
      * @brief Returns true if the request was cancelled.
@@ -142,17 +144,17 @@ class Connect : public ICallData, public catena::common::Connect {
      * @brief Id of operation waiting for valueSetByClient to be emitted.
      * Used when ending the connection.
      */
-    unsigned int valueSetByClientId_;
+    SignalMap valueSetByClientIds_;
     /**
      * @brief Id of operation waiting for valueSetByServer to be emitted.
      * Used when ending the connection.
      */
-    unsigned int valueSetByServerId_;
+    SignalMap valueSetByServerIds_;
     /**
      * @brief Id of operation waiting for languageAddedPushUpdate to be
      * emitted. Used when ending the connection.
      */
-    unsigned int languageAddedId_;
+    SignalMap languageAddedIds_;
     /**
      * @brief ID of the shutdown signal for the Connect object
     */

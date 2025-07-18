@@ -22,16 +22,25 @@ endif(gRPC_enabled)
 
 set(SOURCES 
     tests/utils_test.cpp
-    tests/subscription_manager_test.cpp
-    tests/param_visitor_test.cpp
+    tests/SubscriptionManager_test.cpp
+    tests/ParamVisitor_test.cpp
     tests/Authorization_test.cpp
     tests/Connect_test.cpp
+    tests/MenuGroup_test.cpp
+    tests/Menu_test.cpp
+    tests/StructInfo_test.cpp
+    tests/LanguagePack_test.cpp
+    tests/Path_test.cpp
+    tests/PolyglotText_test.cpp
+    tests/NamedChoiceConstraint_test.cpp
+    tests/RangeConstraint_test.cpp
 )
 
 add_executable(${This} ${SOURCES})
 
 target_link_libraries(${This} PRIVATE
     ${GTEST_BOTH_LIBRARIES}
+    glog::glog
     GTest::GTest
     GTest::Main
     GTest::gmock

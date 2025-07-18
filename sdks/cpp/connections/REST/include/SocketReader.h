@@ -59,8 +59,18 @@ using namespace boost::urls;
 namespace catena {
 namespace REST {
 
-// Forward declaration
-class CatenaServiceImpl;
+using RESTMethodMap = catena::patterns::EnumDecorator<RESTMethod>;
+template <>
+inline const RESTMethodMap::FwdMap RESTMethodMap::fwdMap_ = {
+  {catena::REST::Method_NONE,    "NONE"},
+  {catena::REST::Method_GET,     "GET"},
+  {catena::REST::Method_POST,    "POST"},
+  {catena::REST::Method_PUT,     "PUT"},
+  {catena::REST::Method_PATCH,   "PATCH"},
+  {catena::REST::Method_DELETE,  "DELETE"},
+  {catena::REST::Method_HEAD,    "HEAD"},
+  {catena::REST::Method_OPTIONS, "OPTIONS"}
+};
 
 /**
  * @brief Helper class used to read from a socket using boost.
@@ -83,7 +93,7 @@ class SocketReader : public ISocketReader {
     /**
      * @brief Returns the HTTP method of the request.
      */
-    const std::string& method() const override { return method_; }
+    RESTMethod method() const override { return method_; }
     /**
      * @brief Returns the REST endpoint of the request (/v1/GetValue, etc.)
      */
@@ -156,7 +166,7 @@ class SocketReader : public ISocketReader {
     /**
      * @brief The method of the request (GET, PUT, etc.).
      */
-    std::string method_ = "";
+    RESTMethod method_;
     /**
      * @brief The slot of the device to make the API call on.
      */

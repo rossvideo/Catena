@@ -17,7 +17,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -168,6 +168,13 @@ class IDevice {
     using ComponentLanguagePack = catena::DeviceComponent_ComponentLanguagePack;
 
     /**
+     * @brief Returns true if device has the specified language pack.
+     * @param languageId The language id of the language pack to check
+     * @return True if the device has the specified language pack.
+     */
+    virtual bool hasLanguage(const std::string& languageId) const = 0;
+
+    /**
      * @brief Adds a language pack to the device. Requires client to have
      * admin:w scope.
      * @param language The language to add to the device.
@@ -177,7 +184,17 @@ class IDevice {
      * Intention is for the AddLanguage RPCs / API calls to be serviced by this
      * method.
      */
-    virtual catena::exception_with_status addLanguage (catena::AddLanguagePayload& language, Authorizer& authz = Authorizer::kAuthzDisabled) = 0;
+    virtual catena::exception_with_status addLanguage(catena::AddLanguagePayload& language, Authorizer& authz = Authorizer::kAuthzDisabled) = 0;
+
+    /**
+     * @brief Removed a language pack from the device. Requires client to have
+     * admin:w scope. Fails if the language pack was shipped with the device.
+     * @param language The language to remove from the device.
+     * @param authz The authorizer object containing client's scopes.
+     * @return An exception_with_status with status set OK if successful,
+     * otherwise an error.
+     */
+    virtual catena::exception_with_status removeLanguage(const std::string& languageId, Authorizer& authz = Authorizer::kAuthzDisabled) = 0;
 
     /**
      * @brief Finds and returns a language pack based on languageId.
@@ -371,21 +388,30 @@ class IDevice {
      * @brief signal emitted when a value is set by the client.
      * Intended recipient is the business logic.
      */
-    vdk::signal<void(const std::string&, const IParam*)> valueSetByClient;
+    virtual vdk::signal<void(const std::string&, const IParam*)>& getValueSetByClient() = 0;
 
     /**
      * @brief signal emitted when a language pack is added to the device.
      * Intended recipient is the business logic.
      */
-    vdk::signal<void(const ILanguagePack*)> languageAddedPushUpdate;
+    virtual vdk::signal<void(const ILanguagePack*)>& getLanguageAddedPushUpdate() = 0;
 
     /**
      * @brief signal emitted when a value is set by the server, or business
      * logic.
      * Intended recipient is the connection manager.
      */
-    vdk::signal<void(const std::string&, const IParam*)> valueSetByServer;
+    virtual vdk::signal<void(const std::string&, const IParam*)>& getValueSetByServer() = 0;
+
+    /**
+     * @brief signal emitted when an asset request is made.
+     * Intended recipient is the business logic.
+     */
+    virtual vdk::signal<void(const std::string&)>& getAssetRequest() = 0;
 };
+
+using SlotMap = std::unordered_map<uint32_t, IDevice*>;
+using SignalMap = std::unordered_map<uint32_t, uint32_t>;
 
 }  // namespace common
 }  // namespace catena

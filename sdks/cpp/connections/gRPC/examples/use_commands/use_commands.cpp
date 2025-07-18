@@ -54,6 +54,7 @@
 #include <thread>
 #include <chrono>
 #include <signal.h>
+#include <Logger.h>
 
 using grpc::Server;
 using catena::gRPC::CatenaServiceImpl;
@@ -66,7 +67,7 @@ std::atomic<bool> globalLoop = true;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        std::cout << "Caught signal " << sig << ", shutting down" << std::endl;
+        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
         globalLoop = false;
         if (globalServer != nullptr) {
             globalServer->Shutdown();
@@ -99,12 +100,12 @@ void RunRPCServer(std::string addr)
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
         bool authz = absl::GetFlag(FLAGS_authz);
-        CatenaServiceImpl service(cq.get(), dm, EOPath, authz);
+        CatenaServiceImpl service(cq.get(), {&dm}, EOPath, authz);
 
         builder.RegisterService(&service);
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
-        std::cout << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms) << '\n';
+        DEBUG_LOG << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
 
         globalServer = server.get();
 
@@ -112,19 +113,19 @@ void RunRPCServer(std::string addr)
         std::thread cq_thread([&]() { service.processEvents(); });
 
         // Notifies the console when a value is set by the client.
-        uint32_t valueSetByClientId = dm.valueSetByClient.connect([](const std::string& oid, const IParam* p) {
-            std::cout << "*** signal received: " << oid << " has been changed by client" << '\n';
+        uint32_t valueSetByClientId = dm.getValueSetByClient().connect([](const std::string& oid, const IParam* p) {
+            DEBUG_LOG << "*** signal received: " << oid << " has been changed by client";
         });
 
         // wait for the server to shutdown and tidy up
         server->Wait();
-        dm.valueSetByClient.disconnect(valueSetByClientId);
+        dm.getValueSetByClient().disconnect(valueSetByClientId);
 
         cq->Shutdown();
         cq_thread.join();
 
     } catch (std::exception &why) {
-        std::cerr << "Problem: " << why.what() << '\n';
+        LOG(ERROR) << "Problem: " << why.what();
     }
 }
 
@@ -153,9 +154,9 @@ void defineCommands() {
                 {
                     std::lock_guard lg(dm.mutex());
                     state = "playing";
-                    dm.valueSetByServer.emit("/state", stateParam.get());
+                    dm.getValueSetByServer().emit("/state", stateParam.get());
                 }
-                std::cout << "video is " << state << "\n";
+                DEBUG_LOG << "video is " << state;
                 response.mutable_no_response();
             }
             co_return response;
@@ -179,9 +180,9 @@ void defineCommands() {
                 {
                     std::lock_guard lg(dm.mutex());
                     state = "paused";
-                    dm.valueSetByServer.emit("/state", stateParam.get());
+                    dm.getValueSetByServer().emit("/state", stateParam.get());
                 }
-                std::cout << "video is " << state << "\n";
+                DEBUG_LOG << "video is " << state;
                 response.mutable_no_response();
             }
             co_return response;
@@ -191,6 +192,8 @@ void defineCommands() {
 
 int main(int argc, char* argv[])
 {
+    Logger::StartLogging(argc, argv);
+
     std::string addr;
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
@@ -202,5 +205,8 @@ int main(int argc, char* argv[])
   
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
+    
+    // Shutdown Google Logging
+    google::ShutdownGoogleLogging();
     return 0;
 }

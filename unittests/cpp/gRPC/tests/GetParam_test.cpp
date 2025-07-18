@@ -31,23 +31,16 @@
 /**
  * @brief This file is for testing the GetParam.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/28
+ * @date 25/06/18
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-// gtest
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-// std
-#include <string>
-
-// protobuf
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
+// common
+#include <Logger.h>
 
 // Test helpers
 #include "GRPCTest.h"
+#include "CommonTestHelpers.h"
 #include "MockParam.h"
 
 // gRPC
@@ -59,16 +52,32 @@ using namespace catena::gRPC;
 // Fixture
 class gRPCGetParamTests : public GRPCTest {
   protected:
-    gRPCGetParamTests() : GRPCTest() {
-        // Setting up the inVal used across all tests.
-        inVal.set_slot(1);
-        inVal.set_oid("/test_oid");
-        // Setting up the test param.
-        // Just enough to tell its the same object.
-        testParam.set_type(catena::ParamType::STRING);
-        testParam.mutable_value()->set_string_value("test_value");
-        testParam.add_oid_aliases("test_alias");
-        (*testParam.mutable_name()->mutable_display_strings())["en"] = "Test Param";
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("gRPCGetParamTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+  
+    /*
+     * Creates a GetParam handler object.
+     */
+    void makeOne() override { new GetParam(&service_, dms_, true); }
+
+    void initPayload(uint32_t slot, const std::string& oid) {
+        inVal_.set_slot(slot);
+        inVal_.set_oid(oid);
+    }
+
+    void initexpVal_(const std::string& oid, const std::string& value, const std::string& alias, const std::string& enName) {
+        expVal_.set_oid(oid);
+        auto param = expVal_.mutable_param();
+        param->set_type(catena::ParamType::STRING);
+        param->mutable_value()->set_string_value(value);
+        param->add_oid_aliases(alias);
+        (*param->mutable_name()->mutable_display_strings())["en"] = enName;
     }
 
     /* 
@@ -77,25 +86,27 @@ class gRPCGetParamTests : public GRPCTest {
      */
     void testRPC() {
         // Sending async RPC.
-        mockServer.client->async()->GetParam(&clientContext, &inVal, &outVal, [this](grpc::Status status){
-            outRc = status;
-            done = true;
-            cv.notify_one();
+        client_->async()->GetParam(&clientContext_, &inVal_, &outVal_, [this](grpc::Status status){
+            outRc_ = status;
+            done_ = true;
+            cv_.notify_one();
         });
-        cv.wait(lock, [this] { return done; });
+        cv_.wait(lock_, [this] { return done_; });
         // Comparing the results.
-        EXPECT_EQ(outVal.SerializeAsString(), expVal.SerializeAsString());
-        EXPECT_EQ(outRc.error_code(), expRc.error_code());
-        EXPECT_EQ(outRc.error_message(), expRc.error_message());
+        EXPECT_EQ(outVal_.SerializeAsString(), expVal_.SerializeAsString());
+        EXPECT_EQ(outRc_.error_code(), static_cast<grpc::StatusCode>(expRc_.status));
+        EXPECT_EQ(outRc_.error_message(), expRc_.what());
+        // Make sure another GetParam handler was created.
+        EXPECT_TRUE(asyncCall_) << "Async handler was not created during runtime";
     }
 
-    catena::GetParamPayload inVal;
-    catena::DeviceComponent_ComponentParam outVal;
-    grpc::Status outRc;
+    // In/out val
+    catena::GetParamPayload inVal_;
+    catena::DeviceComponent_ComponentParam outVal_;
     // Expected variables
-    catena::Param testParam;
-    catena::DeviceComponent_ComponentParam expVal;
-    grpc::Status expRc;
+    catena::DeviceComponent_ComponentParam expVal_;
+
+    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
 };
 
 /*
@@ -107,46 +118,32 @@ class gRPCGetParamTests : public GRPCTest {
  */
 TEST_F(gRPCGetParamTests, GetParam_create) {
     // Creating getParam object.
-    new GetParam(mockServer.service, *mockServer.dm, true);
-    EXPECT_FALSE(mockServer.testCall);
-    EXPECT_TRUE(mockServer.asyncCall);
+    EXPECT_TRUE(asyncCall_);
 }
 
 /*
  * TEST 2 - Normal case for GetParam proceed().
  */
-TEST_F(gRPCGetParamTests, GetParam_proceed) {
-    new GetParam(mockServer.service, *mockServer.dm, true);
-    
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-    expVal.set_oid(inVal.oid());
-    expVal.mutable_param()->CopyFrom(testParam);
-    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
-
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, getParam(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &mockParam, &rc](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
+TEST_F(gRPCGetParamTests, GetParam_Normal) {
+    initPayload(0, "/test_oid");
+    initexpVal_("/test_oid", "test_value", "test_alias", "Test Param");
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(inVal_.oid(), ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+        [this](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
-            EXPECT_EQ(&authz, &Authorizer::kAuthzDisabled);
-            status = catena::exception_with_status(rc.what(), rc.status);
+            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockParam);
         }));
-    EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(expVal.oid()));
-    EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::Param &param, catena::common::Authorizer &authz)  {
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(expVal_.oid()));
+    EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1).WillOnce(::testing::Invoke(
+        [this](catena::Param &param, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
-            EXPECT_EQ(&authz, &Authorizer::kAuthzDisabled);
-            param.CopyFrom(testParam);
-            return catena::exception_with_status(rc.what(), rc.status);
+            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            param.CopyFrom(expVal_.param());
+            return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
     // Sending the RPC.
     testRPC();
 }
@@ -154,52 +151,30 @@ TEST_F(gRPCGetParamTests, GetParam_proceed) {
 /*
  * TEST 3 - GetParam with authz on and valid token.
  */
-TEST_F(gRPCGetParamTests, GetParam_proceedAuthzValid) {
-    new GetParam(mockServer.service, *mockServer.dm, true);
-    
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-    expVal.set_oid(inVal.oid());
-    expVal.mutable_param()->CopyFrom(testParam);
-    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
-    // Adding authorization mockToken metadata. This it a random RSA token.
-    std::string mockToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIi"
-                            "OiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2Nvc"
-                            "GUiOiJzdDIxMzg6bW9uOncgc3QyMTM4Om9wOncgc3QyMTM4Om"
-                            "NmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MTUxNjIzOTAyMiw"
-                            "ibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dTo"
-                            "krEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko965"
-                            "3v0khyUT4UKeOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKH"
-                            "kWi4P3-CYWrwe-g6b4-a33Q0k6tSGI1hGf2bA9cRYr-VyQ_T3"
-                            "RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEmuIwNOVM3EcVEaL"
-                            "yISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg_w"
-                            "bOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9M"
-                            "dvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
-    clientContext.AddMetadata("authorization", "Bearer " + mockToken);
-
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, getParam(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &mockParam, &rc](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
+TEST_F(gRPCGetParamTests, GetParam_AuthzValid) {
+    initPayload(0, "/test_oid");
+    initexpVal_("/test_oid", "test_value", "test_alias", "Test Param");
+    // Adding authorization mockToken metadata.
+    authzEnabled_ = true;
+    std::string mockToken = getJwsToken("st2138:mon:w st2138:op:w st2138:cfg:w st2138:adm:w");
+    clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(inVal_.oid(), ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Invoke(
+        [this](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
-            EXPECT_FALSE(&authz == &Authorizer::kAuthzDisabled);
-            status = catena::exception_with_status(rc.what(), rc.status);
+            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockParam);
         }));
-    EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(expVal.oid()));
-    EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::Param &param, catena::common::Authorizer &authz)  {
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(expVal_.oid()));
+    EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1).WillOnce(::testing::Invoke(
+        [this](catena::Param &param, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
-            EXPECT_FALSE(&authz == &Authorizer::kAuthzDisabled);
-            param.CopyFrom(testParam);
-            return catena::exception_with_status(rc.what(), rc.status);
+            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            param.CopyFrom(expVal_.param());
+            return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
     // Sending the RPC.
     testRPC();
 }
@@ -207,21 +182,14 @@ TEST_F(gRPCGetParamTests, GetParam_proceedAuthzValid) {
 /*
  * TEST 4 - GetParam with authz on and invalid token.
  */
-TEST_F(gRPCGetParamTests, GetParam_proceedAuthzInvalid) {
-    new GetParam(mockServer.service, *mockServer.dm, true);
-    
-    catena::exception_with_status rc("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+TEST_F(gRPCGetParamTests, GetParam_AuthzInvalid) {
+    expRc_ = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
     // Not a token so it should get rejected by the authorizer.
-    clientContext.AddMetadata("authorization", "Bearer THIS SHOULD NOT PARSE");
-
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
+    authzEnabled_ = true;
+    clientContext_.AddMetadata("authorization", "Bearer THIS SHOULD NOT PARSE");
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }
@@ -229,192 +197,129 @@ TEST_F(gRPCGetParamTests, GetParam_proceedAuthzInvalid) {
 /*
  * TEST 5 - GetParam with authz on and invalid token.
  */
-TEST_F(gRPCGetParamTests, GetParam_proceedAuthzJWSNotFound) {
-    new GetParam(mockServer.service, *mockServer.dm, true);
-    
-    catena::exception_with_status rc("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+TEST_F(gRPCGetParamTests, GetParam_AuthzJWSNotFound) {
+    expRc_ = catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
     // Should not be able to find the bearer token.
-    clientContext.AddMetadata("authorization", "NOT A BEARER TOKEN");
-
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
+    authzEnabled_ = true;
+    clientContext_.AddMetadata("authorization", "NOT A BEARER TOKEN");
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }
 
 /*
- * TEST 6 - dm.getParam() returns a catena::exception_with_status.
+ * TEST 6 - No device in the specified slot.
  */
-TEST_F(gRPCGetParamTests, GetParam_proceedErrGetParamReturnCatena) {
-    new GetParam(mockServer.service, *mockServer.dm, true);
-    
-    catena::exception_with_status rc("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+TEST_F(gRPCGetParamTests, GetParam_ErrInvalidSlot) {
+    initPayload(dms_.size(), "/test_oid");
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC.
+    testRPC();
+}
+
+/*
+ * TEST 7 - dm.getParam() returns a catena::exception_with_status.
+ */
+TEST_F(gRPCGetParamTests, GetParam_ErrGetParamReturnCatena) {
+    expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
+    initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, getParam(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([&rc](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
-            status = catena::exception_with_status(rc.what(), rc.status);
+    EXPECT_CALL(dm0_, getParam(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
+            status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return nullptr;
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }
 
 /*
- * TEST 7 - dm.getParam() throws a catena::exception_with_status.
+ * TEST 8 - dm.getParam() throws a catena::exception_with_status.
  */
-TEST_F(gRPCGetParamTests, GetParam_proceedErrGetParamThrowCatena) {
-    new GetParam(mockServer.service, *mockServer.dm, true);
-    
-    catena::exception_with_status rc("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+TEST_F(gRPCGetParamTests, GetParam_ErrGetParamThrowCatena) {
+    expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
+    initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, getParam(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([&rc](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
-            throw catena::exception_with_status(rc.what(), rc.status);
+    EXPECT_CALL(dm0_, getParam(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
+            throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return nullptr;
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }
 
 /*
- * TEST 8 - dm.getParam() throws a std::runtime_exception.
+ * TEST 9 - dm.getParam() throws a std::runtime_exception.
  */
-TEST_F(gRPCGetParamTests, GetParam_proceedErrGetParamThrowUnknown) {
-    new GetParam(mockServer.service, *mockServer.dm, true);
-    
-    catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+TEST_F(gRPCGetParamTests, GetParam_ErrGetParamThrowUnknown) {
+    expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
+    initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, getParam(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([&rc](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
-            throw std::runtime_error(rc.what());
-            return nullptr;
-        }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
+    EXPECT_CALL(dm0_, getParam(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }
 
 /*
- * TEST 9 - param->toProto() returns a catena::exception_with_status.
+ * TEST 10 - param->toProto() returns a catena::exception_with_status.
  */
-TEST_F(gRPCGetParamTests, GetParam_proceedErrToProtoReturnCatena) {
-    new GetParam(mockServer.service, *mockServer.dm, true);
-    
-    catena::exception_with_status rc("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
-
+TEST_F(gRPCGetParamTests, GetParam_ErrToProtoReturnCatena) {
+    expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
+    initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, getParam(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([&mockParam, &rc](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
-            status = catena::exception_with_status("", catena::StatusCode::OK);
-            return std::move(mockParam);
-        }));
-    EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(expVal.oid()));
+    EXPECT_CALL(dm0_, getParam(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](){ return std::move(mockParam); }));
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(*mockParam, getOid()).WillRepeatedly(::testing::ReturnRef(expVal_.oid()));
     EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Return(catena::exception_with_status(rc.what(), rc.status)));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
+        .WillOnce(::testing::Return(catena::exception_with_status(expRc_.what(), expRc_.status)));
     // Sending the RPC.
     testRPC();
 }
 
 /*
- * TEST 10 - param->toProto() throws a catena::exception_with_status.
+ * TEST 11 - param->toProto() throws a catena::exception_with_status.
  */
-TEST_F(gRPCGetParamTests, GetParam_proceedErrToProtoThrowCatena) {
-    new GetParam(mockServer.service, *mockServer.dm, true);
-
-    catena::exception_with_status rc("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
-
+TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowCatena) {
+    expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
+    initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, getParam(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([&mockParam, &rc](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
-            status = catena::exception_with_status("", catena::StatusCode::OK);
-            return std::move(mockParam);
-        }));
-    EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(expVal.oid()));
+    EXPECT_CALL(dm0_, getParam(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](){ return std::move(mockParam); }));
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(*mockParam, getOid()).WillRepeatedly(::testing::ReturnRef(expVal_.oid()));
     EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::Param &param, catena::common::Authorizer &authz)  {
-            throw catena::exception_with_status(rc.what(), rc.status);
+        .WillOnce(::testing::Invoke([this](catena::Param &param, catena::common::Authorizer &authz)  {
+            throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
     // Sending the RPC.
     testRPC();
 }
 
 /*
- * TEST 11 - param->toProto() throws a std::runtime_exception.
+ * TEST 12 - param->toProto() throws a std::runtime_exception.
  */
-TEST_F(gRPCGetParamTests, GetParam_proceedErrToProtoThrowUnknown) {
-    new GetParam(mockServer.service, *mockServer.dm, true);
-    
-    catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
-
+TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowUnknown) {
+    expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
+    initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, getParam(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([&mockParam, &rc](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
-            status = catena::exception_with_status("", catena::StatusCode::OK);
-            return std::move(mockParam);
-        }));
-    EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(expVal.oid()));
+    EXPECT_CALL(dm0_, getParam(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](){ return std::move(mockParam); }));
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(*mockParam, getOid()).WillRepeatedly(::testing::ReturnRef(expVal_.oid()));
     EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::Param &param, catena::common::Authorizer &authz)  {
-            throw std::runtime_error(rc.what());
-            return catena::exception_with_status("", catena::StatusCode::OK);
-        }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
+        .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
     // Sending the RPC.
     testRPC();
 }

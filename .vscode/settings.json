@@ -137,7 +137,18 @@
         "coroutine": "cpp",
         "future": "cpp",
         "print": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "csignal": "cpp",
+        "*.tcc": "cpp",
+        "charconv": "cpp",
+        "cinttypes": "cpp",
+        "codecvt": "cpp",
+        "condition_variable": "cpp",
+        "source_location": "cpp",
+        "format": "cpp",
+        "shared_mutex": "cpp",
+        "span": "cpp",
+        "typeindex": "cpp"
     },
     "java.compile.nullAnalysis.mode": "disabled"
 }

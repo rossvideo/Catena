@@ -89,6 +89,10 @@ class ICatenaServiceImpl : public catena::CatenaService::AsyncService {
      */
     virtual const std::string& EOPath() = 0;
     /**
+     * @brief Returns the size of the registry.
+     */
+    virtual uint32_t registrySize() const = 0;
+    /**
      * @brief Registers a CallData object into the registry
      * @param cd The CallData object to register
      */

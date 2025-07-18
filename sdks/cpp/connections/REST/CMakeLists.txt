@@ -29,6 +29,7 @@ set(target catena_connections_REST)
 set(REST_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 find_package(Boost 1.81 REQUIRED COMPONENTS system date_time url)
+find_package(ZLIB REQUIRED)
 
 set(sources
     "src/ServiceImpl.cpp"
@@ -43,10 +44,9 @@ set(sources
     "src/controllers/MultiSetValue.cpp"
     "src/controllers/SetValue.cpp"
     "src/controllers/GetParam.cpp"
-    "src/controllers/AddLanguage.cpp"
-    "src/controllers/LanguagePackRequest.cpp"
-    "src/controllers/ListLanguages.cpp"
-    "src/controllers/BasicParamInfoRequest.cpp"
+    "src/controllers/LanguagePack.cpp"
+    "src/controllers/Languages.cpp"
+    "src/controllers/ParamInfoRequest.cpp"
     "src/controllers/Subscriptions.cpp"
 )
 
@@ -77,6 +77,7 @@ target_link_libraries(${target}
         jwt-cpp::jwt-cpp
         catena_proto_common
         absl::flags_parse
+        ZLIB::ZLIB
 )
 
 target_compile_features(${target} PUBLIC cxx_std_20)

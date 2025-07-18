@@ -34,7 +34,6 @@ set(sources
     "src/StructInfo.cpp"
     "src/PolyglotText.cpp"
     "src/LanguagePack.cpp"
-    "src/PicklistConstraint.cpp"
     "src/Menu.cpp"
     "src/MenuGroup.cpp"
     "src/ParamVisitor.cpp"

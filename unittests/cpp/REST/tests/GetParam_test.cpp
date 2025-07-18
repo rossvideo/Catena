@@ -35,59 +35,74 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-// gtest
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-// std
-#include <string>
-
-// protobuf
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
-
 // Test helpers
 #include "RESTTest.h"
-#include "MockSocketReader.h"
 #include "MockParam.h"
-#include "MockDevice.h"
+#include "CommonTestHelpers.h"
 
 // REST
 #include "controllers/GetParam.h"
-#include "SocketWriter.h"
 
 using namespace catena::common;
 using namespace catena::REST;
 
 // Fixture
-class RESTGetParamTests : public ::testing::Test, public RESTTest {
+class RESTGetParamTests : public RESTEndpointTest {
   protected:
-    RESTGetParamTests() : RESTTest(&serverSocket, &clientSocket) {}
 
-    void SetUp() override {
-        // Redirecting cout to a stringstream for testing.
-        oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-
-        // Creating getParam object.
-        EXPECT_CALL(context, origin()).Times(1).WillOnce(::testing::ReturnRef(origin));
-        getParam = GetParam::makeOne(serverSocket, context, dm);
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RESTGetParamTest");
     }
 
-    void TearDown() override {
-        std::cout.rdbuf(oldCout); // Restoring cout
-        // Cleanup code here
-        if (getParam) {
-            delete getParam;
-        }
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
     }
     
-    std::stringstream MockConsole;
-    std::streambuf* oldCout;
-    
-    MockSocketReader context;
-    std::mutex mockMtx;
-    MockDevice dm;
-    catena::REST::ICallData* getParam = nullptr;
+    RESTGetParamTests() : RESTEndpointTest() {
+        // Default expectations for the device model 1 (should not be called).
+        EXPECT_CALL(dm1_, getParam(testing::An<const std::string&>(), testing::_, testing::_)).Times(0);
+    }
+    /*
+     * Creates a GetParam handler object.
+     */
+    ICallData* makeOne() override { return GetParam::makeOne(serverSocket_, context_, dms_); }
+
+    /*
+     * Streamlines the creation of endpoint input. 
+     */
+    void initPayload(uint32_t slot, const std::string& oid) {
+        slot_ = slot;
+        fqoid_ = oid;
+    }
+
+    /*
+     * Streamlines the creation of the expected output ComponentParam. 
+     */
+    void initExpVal(const std::string& oid, const std::string& value, const std::string& alias, const std::string& enName) {
+        expVal_.set_oid(oid);
+        auto param = expVal_.mutable_param();
+        param->set_type(catena::ParamType::STRING);
+        param->mutable_value()->set_string_value(value);
+        param->add_oid_aliases(alias);
+        (*param->mutable_name()->mutable_display_strings())["en"] = enName;
+        auto status = google::protobuf::util::MessageToJsonString(expVal_, &expJson_);
+        ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
+    }
+
+    /*
+     * Calls proceed and tests the response.
+     */
+    void testCall() {
+        endpoint_->proceed();
+        EXPECT_EQ(readResponse(), expectedResponse(expRc_, expJson_));
+    }
+
+    // Expected variables
+    catena::DeviceComponent_ComponentParam expVal_;
+    std::string expJson_ = "";
+
+    std::unique_ptr<MockParam> mockParam_ = std::make_unique<MockParam>();
 };
 
 /*
@@ -95,329 +110,224 @@ class RESTGetParamTests : public ::testing::Test, public RESTTest {
  *                               GetParam tests
  * ============================================================================
  * 
- * TEST 1 - Creating a GetParam object with makeOne.
+ * TEST 1 - Creating a GetParam object.
  */
-TEST_F(RESTGetParamTests, GetParam_create) {
-    // Making sure getParam is created from the SetUp step.
-    ASSERT_TRUE(getParam);
+TEST_F(RESTGetParamTests, GetParam_Create) {
+    EXPECT_TRUE(endpoint_);
 }
-
 /*
  * TEST 2 - Normal case for GetParam proceed().
  */
-TEST_F(RESTGetParamTests, GetParam_proceedNormal) {
-    // Setting up the returnVal to test with.
-    catena::DeviceComponent_ComponentParam returnVal;
-    std::string jsonBody = "{\"oid\":\"/test_oid\",\"param\":{}}";
-    google::protobuf::util::JsonPrintOptions options; // Default options
-    auto status = google::protobuf::util::JsonStringToMessage(absl::string_view(jsonBody), &returnVal);
-    // Other variables.
-    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-
-    // Defining mock functions
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMtx));
-    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(returnVal.oid()));
-    // Defining Device.getParam()
-    EXPECT_CALL(dm, getParam(returnVal.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([&mockParam, &rc](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz)
-        -> std::unique_ptr<IParam> {
-            status = catena::exception_with_status("", catena::StatusCode::OK);
-            return std::move(mockParam);
+TEST_F(RESTGetParamTests, GetParam_Normal) {
+    initPayload(0, "/test_oid");
+    initExpVal("/test_oid", "test_value", "test_alias", "Test Param");
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).WillRepeatedly(testing::Invoke(
+        [this](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
+            // Checking that function gets correct inputs.
+            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            status = catena::exception_with_status(expRc_.what(), expRc_.status);
+            return std::move(mockParam_);
         }));
-    // Defining param->toProto()
-    EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(returnVal.oid()));
-    EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([&returnVal, &rc](catena::Param &param, catena::common::Authorizer &authz)
-        -> catena::exception_with_status {
-            param.CopyFrom(returnVal.param());
-            return catena::exception_with_status("", catena::StatusCode::OK);
+    EXPECT_CALL(*mockParam_, getOid()).Times(1).WillOnce(testing::ReturnRef(fqoid_));
+    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1).WillOnce(testing::Invoke(
+        [this](catena::Param &param, catena::common::Authorizer &authz) {
+            // Checking that function gets correct inputs.
+            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            param.CopyFrom(expVal_.param());
+            return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
-    
-    // Calling proceed() and checking written response.
-    getParam->proceed();
-
-    jsonBody = "";
-    status = google::protobuf::util::MessageToJsonString(returnVal, &jsonBody, options);
-    EXPECT_EQ(readResponse(), expectedResponse(rc, jsonBody));
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /*
  * TEST 3 - GetParam with authz on and valid token.
  */
-TEST_F(RESTGetParamTests, GetParam_proceedAuthzValid) {
-    // Setting up the returnVal to test with.
-    catena::DeviceComponent_ComponentParam returnVal;
-    std::string jsonBody = "{\"oid\":\"/test_oid\",\"param\":{}}";
-    google::protobuf::util::JsonPrintOptions options; // Default options
-    auto status = google::protobuf::util::JsonStringToMessage(absl::string_view(jsonBody), &returnVal);
-    // Other variables.
-    /* Authz just tests for a properly encrypted token, proxy handles authz.
-     * This is a random RSA token I made jwt.io it is not a security risk I
-     * swear. */
-    std::string mockToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIi"
-                            "OiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2Nvc"
-                            "GUiOiJzdDIxMzg6bW9uOncgc3QyMTM4Om9wOncgc3QyMTM4Om"
-                            "NmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MTUxNjIzOTAyMiw"
-                            "ibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dTo"
-                            "krEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko965"
-                            "3v0khyUT4UKeOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKH"
-                            "kWi4P3-CYWrwe-g6b4-a33Q0k6tSGI1hGf2bA9cRYr-VyQ_T3"
-                            "RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEmuIwNOVM3EcVEaL"
-                            "yISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg_w"
-                            "bOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9M"
-                            "dvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
-    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-
-    // Defining mock functions
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(true));
-    EXPECT_CALL(context, jwsToken()).Times(1).WillOnce(::testing::ReturnRef(mockToken));
-    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMtx));
-    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(returnVal.oid()));
-    // Defining Device.getParam()
-    EXPECT_CALL(dm, getParam(returnVal.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([&mockParam, &rc](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz)
-        -> std::unique_ptr<IParam> {
-            status = catena::exception_with_status("", catena::StatusCode::OK);
-            return std::move(mockParam);
+TEST_F(RESTGetParamTests, GetParam_AuthzValid) {
+    initPayload(0, "/test_oid");
+    initExpVal("/test_oid", "test_value", "test_alias", "Test Param");
+    // Adding authorization mockToken metadata.
+    authzEnabled_ = true;
+    jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(1).WillOnce(testing::Invoke(
+        [this](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
+            // Checking that function gets correct inputs.
+            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            status = catena::exception_with_status(expRc_.what(), expRc_.status);
+            return std::move(mockParam_);
         }));
-    // Defining param->toProto()
-    EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(returnVal.oid()));
-    EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([&returnVal, &rc](catena::Param &param, catena::common::Authorizer &authz)
-        -> catena::exception_with_status {
-            param.CopyFrom(returnVal.param());
-            return catena::exception_with_status("", catena::StatusCode::OK);
+    EXPECT_CALL(*mockParam_, getOid()).Times(1).WillOnce(testing::ReturnRef(fqoid_));
+    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1).WillOnce(testing::Invoke(
+        [this](catena::Param &param, catena::common::Authorizer &authz) {
+            // Checking that function gets correct inputs.
+            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            param.CopyFrom(expVal_.param());
+            return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
-    
-    // Calling proceed() and checking written response.
-    getParam->proceed();
-
-    jsonBody = "";
-    status = google::protobuf::util::MessageToJsonString(returnVal, &jsonBody, options);
-    EXPECT_EQ(readResponse(), expectedResponse(rc, jsonBody));
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /*
  * TEST 4 - GetParam with authz on and invalid token.
  */
-TEST_F(RESTGetParamTests, GetParam_proceedAuthzInvalid) {
+TEST_F(RESTGetParamTests, GetParam_AuthzInvalid) {
+    expRc_ = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
     // Not a token so it should get rejected by the authorizer.
-    std::string mockToken = "THIS SHOULD NOT PARSE";
-    // Test status
-    catena::exception_with_status rc("", catena::StatusCode::UNAUTHENTICATED);
-
-    // Defining mock functions
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(true));
-    EXPECT_CALL(context, jwsToken()).Times(1).WillOnce(::testing::ReturnRef(mockToken));
-    
-    // Calling proceed() and checking written response.
-    getParam->proceed();
-
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
+    authzEnabled_ = true;
+    jwsToken_ = "THIS SHOULD NOT PARSE";
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(0);
+    EXPECT_CALL(*mockParam_, getOid()).Times(0);
+    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /*
- * TEST 5 - dm.getParam() returns a catena::exception_with_status.
+ * TEST 5 - No device in the specified slot.
  */
-TEST_F(RESTGetParamTests, GetParam_getParamErrReturnCatena) {
-    // Test status
-    catena::exception_with_status rc("", catena::StatusCode::INVALID_ARGUMENT);
-    std::string mockOid = "/test_oid";
+TEST_F(RESTGetParamTests, GetParam_ErrInvalidSlot) {
+    initPayload(dms_.size(), "/test_oid");
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
 
-    // Defining mock functions
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMtx));
-    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockOid));
-    // Defining Device.getParam()
-    EXPECT_CALL(dm, getParam(mockOid, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([&rc](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz)
-        -> std::unique_ptr<IParam> {
-            status = catena::exception_with_status(rc.what(), rc.status);
+/*
+ * TEST 6 - dm.getParam() returns a catena::exception_with_status.
+ */
+TEST_F(RESTGetParamTests, GetParam_ErrGetParamReturnCatena) {
+    expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
+    initPayload(0, "/test_oid");
+    // Mocking kProcess and kFinish functions
+    EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
+            status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return nullptr;
         }));
-    
-    // Calling proceed() and checking written response.
-    getParam->proceed();
-
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
+    EXPECT_CALL(*mockParam_, getOid()).Times(0);
+    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /*
- * TEST 6 - dm.getParam() throws a catena::exception_with_status.
+ * TEST 7 - dm.getParam() throws a catena::exception_with_status.
  */
-TEST_F(RESTGetParamTests, GetParam_getParamErrThrowCatena) {
-    // Test status
-    catena::exception_with_status rc("", catena::StatusCode::INVALID_ARGUMENT);
-    std::string mockOid = "/test_oid";
-
-    // Defining mock functions
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMtx));
-    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockOid));
-    // Defining Device.getParam()
-    EXPECT_CALL(dm, getParam(mockOid, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([&rc](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz)
-        -> std::unique_ptr<IParam> {
-            throw catena::exception_with_status(rc.what(), rc.status);
+TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowCatena) {
+    expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
+    initPayload(0, "/test_oid");
+    // Mocking kProcess and kFinish functions
+    EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
+            throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return nullptr;
         }));
-    
-    // Calling proceed() and checking written response.
-    getParam->proceed();
-
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
+    EXPECT_CALL(*mockParam_, getOid()).Times(0);
+    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /*
- * TEST 7 - dm.getParam() throws an std::runtime_error.
+ * TEST 8 - dm.getParam() throws a std::runtime_exception.
  */
-TEST_F(RESTGetParamTests, GetParam_getParamErrThrowUnknown) {
-    // Test status
-    catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
-    std::string mockOid = "/test_oid";
-
-    // Defining mock functions
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMtx));
-    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockOid));
-    // Defining Device.getParam()
-    EXPECT_CALL(dm, getParam(mockOid, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Throw(std::runtime_error("Unknown error")));
-    
-    // Calling proceed() and checking written response.
-    getParam->proceed();
-
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
+TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowStd) {
+    expRc_ = catena::exception_with_status("Std error", catena::StatusCode::INTERNAL);
+    initPayload(0, "/test_oid");
+    // Mocking kProcess and kFinish functions
+    EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Throw(std::runtime_error(expRc_.what())));
+    EXPECT_CALL(*mockParam_, getOid()).Times(0);
+    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /*
- * TEST 8 - param->toProto() returns a catena::exception_with_status.
+ * TEST 9 - dm.getParam() throws an unknown error.
  */
-TEST_F(RESTGetParamTests, GetParam_toProtoErrReturnCatena) {
-    // Other variables.
-    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
-    catena::exception_with_status rc("", catena::StatusCode::INVALID_ARGUMENT);
-    std::string mockOid = "/test_oid";
+TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowUnknown) {
+    expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
+    initPayload(0, "/test_oid");
+    // Mocking kProcess and kFinish functions
+    EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Throw(0));
+    EXPECT_CALL(*mockParam_, getOid()).Times(0);
+    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
 
-    // Defining mock functions
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMtx));
-    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockOid));
-    // Defining Device.getParam()
-    EXPECT_CALL(dm, getParam(mockOid, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([&mockParam, &rc](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz)
-        -> std::unique_ptr<IParam> {
-            status = catena::exception_with_status("", catena::StatusCode::OK);
-            return std::move(mockParam);
+/*
+ * TEST 10 - param->toProto() returns a catena::exception_with_status.
+ */
+TEST_F(RESTGetParamTests, GetParam_ErrToProtoReturnCatena) {
+    expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
+    initPayload(0, "/test_oid");
+    // Mocking kProcess and kFinish functions
+    EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](){ return std::move(mockParam_); }));
+    EXPECT_CALL(*mockParam_, getOid()).WillRepeatedly(testing::ReturnRef(fqoid_));
+    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Return(catena::exception_with_status(expRc_.what(), expRc_.status)));
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 11 - param->toProto() throws a catena::exception_with_status.
+ */
+TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowCatena) {
+    expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
+    initPayload(0, "/test_oid");
+    // Mocking kProcess and kFinish functions
+    EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](){ return std::move(mockParam_); }));
+    EXPECT_CALL(*mockParam_, getOid()).WillRepeatedly(testing::ReturnRef(fqoid_));
+    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::Param &param, catena::common::Authorizer &authz)  {
+            throw catena::exception_with_status(expRc_.what(), expRc_.status);
+            return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    // Defining param->toProto()
-    EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(mockOid));
-    EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Return(catena::exception_with_status(rc.what(), rc.status)));
-    
-    // Calling proceed() and checking written response.
-    getParam->proceed();
-
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /*
- * TEST 9 - param->toProto() throws a catena::exception_with_status.
+ * TEST 12 - param->toProto() throws a std::runtime_exception.
  */
-TEST_F(RESTGetParamTests, GetParam_toProtoErrThrowCatena) {
-    // Other variables.
-    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
-    catena::exception_with_status rc("", catena::StatusCode::INVALID_ARGUMENT);
-    std::string mockOid = "/test_oid";
-
-    // Defining mock functions
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMtx));
-    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockOid));
-    // Defining Device.getParam()
-    EXPECT_CALL(dm, getParam(mockOid, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([&mockParam, &rc](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz)
-        -> std::unique_ptr<IParam> {
-            status = catena::exception_with_status("", catena::StatusCode::OK);
-            return std::move(mockParam);
-        }));
-    // Defining param->toProto()
-    EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(mockOid));
-    EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([&rc](catena::Param &param, catena::common::Authorizer &authz)
-        -> catena::exception_with_status {
-            throw catena::exception_with_status(rc.what(), rc.status);
-        }));
-    
-    // Calling proceed() and checking written response.
-    getParam->proceed();
-
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
+TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowStd) {
+    expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
+    initPayload(0, "/test_oid");
+    // Mocking kProcess and kFinish functions
+    EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](){ return std::move(mockParam_); }));
+    EXPECT_CALL(*mockParam_, getOid()).WillRepeatedly(testing::ReturnRef(fqoid_));
+    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Throw(std::runtime_error(expRc_.what())));
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /*
- * TEST 10 - param->toProto() throws an std::runtime_error.
+ * TEST 13 - param->toProto() throws an unknown error.
  */
-TEST_F(RESTGetParamTests, GetParam_toProtoErrThrowUnknown) {
-    // Other variables.
-    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
-    catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
-    std::string mockOid = "/test_oid";
-
-    // Defining mock functions
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMtx));
-    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockOid));
-    // Defining Device.getParam()
-    EXPECT_CALL(dm, getParam(mockOid, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([&mockParam, &rc](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz)
-        -> std::unique_ptr<IParam> {
-            status = catena::exception_with_status("", catena::StatusCode::OK);
-            return std::move(mockParam);
-        }));
-    // Defining param->toProto()
-    EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(mockOid));
-    EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Throw(std::runtime_error("Unknown error")));
-    
-    // Calling proceed() and checking written response.
-    getParam->proceed();
-
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
-}
-
-/*
- * TEST 11 - dm.getParam() throws a non-standard exception.
- */
-TEST_F(RESTGetParamTests, GetParam_getParamErrThrowUnknownType) {
-    // Test status
-    catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
-    std::string mockOid = "/test_oid";
-
-    // Defining mock functions
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMtx));
-    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockOid));
-    // Defining Device.getParam() to throw a non-std exception (e.g., int)
-    EXPECT_CALL(dm, getParam(mockOid, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([](const std::string&, catena::exception_with_status&, catena::common::Authorizer&) -> std::unique_ptr<IParam> {
-            throw 42; // Throw an int to trigger catch(...)
-            return nullptr;
-        }));
-
-    // Calling proceed() and checking written response.
-    getParam->proceed();
-
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
-}
-
-/*
- * TEST 12 - Writing to console with GetParam finish().
- */
-TEST_F(RESTGetParamTests, GetParam_finish) {
-    // Calling finish and expecting the console output.
-    getParam->finish();
-    ASSERT_TRUE(MockConsole.str().find("GetParam[11] finished\n") != std::string::npos);
+TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowUnknown) {
+    expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
+    initPayload(0, "/test_oid");
+    // Mocking kProcess and kFinish functions
+    EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](){ return std::move(mockParam_); }));
+    EXPECT_CALL(*mockParam_, getOid()).WillRepeatedly(testing::ReturnRef(fqoid_));
+    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Throw(0));
+    // Calling proceed and testing the output
+    testCall();
 }

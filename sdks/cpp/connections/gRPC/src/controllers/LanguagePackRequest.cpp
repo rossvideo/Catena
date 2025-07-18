@@ -30,26 +30,27 @@
 
 // connections/gRPC
 #include <controllers/LanguagePackRequest.h>
+#include <Logger.h>
 using catena::gRPC::LanguagePackRequest;
 
 // Initializes the object counter for LanguagePackRequest to 0.
 int LanguagePackRequest::objectCounter_ = 0;
 
-LanguagePackRequest::LanguagePackRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : CallData(service), dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+LanguagePackRequest::LanguagePackRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+    : CallData(service), dms_{dms}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service_->registerItem(this);
     proceed(ok);
 }
 
 void LanguagePackRequest::proceed(bool ok) {
-    std::cout << "LanguagePackRequest::proceed[" << objectId_ << "]: "
+    DEBUG_LOG << "LanguagePackRequest::proceed[" << objectId_ << "]: "
               << timeNow() << " status: " << static_cast<int>(status_)
-              << ", ok: " << std::boolalpha << ok << std::endl;
+              << ", ok: " << std::boolalpha << ok;
     
     // If the process is cancelled, finish the process
     if (!ok) {
-        std::cout << "LanguagePackRequest[" << objectId_ << "] cancelled\n";
+        DEBUG_LOG << "LanguagePackRequest[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -68,16 +69,28 @@ void LanguagePackRequest::proceed(bool ok) {
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
-            new LanguagePackRequest(service_, dm_, ok);
+            new LanguagePackRequest(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
             { // rc scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             catena::DeviceComponent_ComponentLanguagePack ans;
-            // Getting and returning the requested language.
+            IDevice* dm = nullptr;
             try {
-                std::lock_guard lg(dm_.mutex());
-                rc = dm_.getLanguagePack(req_.language(), ans);
-                status_ = CallStatus::kFinish;
+                // Getting device at specified slot.
+                if (dms_.contains(req_.slot())) {
+                    dm = dms_.at(req_.slot());
+                }
+
+                // Making sure the device exists.
+                if (!dm) {
+                    rc = catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
+
+                // Getting and returning the requested language.
+                } else {
+                    std::lock_guard lg(dm->mutex());
+                    rc = dm->getLanguagePack(req_.language(), ans);
+                    status_ = CallStatus::kFinish;
+                }
             } catch (...) { // Error, end process.
                 rc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
             }
@@ -95,7 +108,7 @@ void LanguagePackRequest::proceed(bool ok) {
          * CatenaServiceImpl.
          */
         case CallStatus::kFinish:
-            std::cout << "LanguagePackRequest[" << objectId_ << "] finished\n";
+            DEBUG_LOG << "LanguagePackRequest[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

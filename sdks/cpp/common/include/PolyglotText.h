@@ -40,46 +40,52 @@
 // common
 #include <IPolyglotText.h>
 
-// protobuf interface
-#include <interface/language.pb.h>
-
-#include <string>
-#include <unordered_map>
-#include <initializer_list>
-
 namespace catena {
 namespace common {
 
-
 /**
- * @brief Implementation of multilingual text handling with serialization support.
+ * @brief Implementation of multilingual text handling with serialization
+ * support.
  *
- * Provides an implementation of the IPolyglotText interface. Manages multilingual display 
- * strings stored as language-to-text mappings and supports serialization into protocol buffers. 
+ * Provides an implementation of the IPolyglotText interface. Manages
+ * multilingual display strings stored as language-to-text mappings and
+ * supports serialization into protocol buffers. 
  */
-
 class PolyglotText : public IPolyglotText {
   public:
-    using DisplayStrings = std::unordered_map<std::string, std::string>;
-
-  public:
-    PolyglotText(const DisplayStrings& display_strings) : display_strings_(display_strings) {}
+    // Constructors
     PolyglotText() = default;
+    /**
+     * @brief Constructor from a display strings map
+     * @param display_strings The map of language codes to display strings.
+     */
+    PolyglotText(const DisplayStrings& display_strings)
+      : display_strings_(display_strings) {}
+    /**
+     * @brief Constructor from initializer list
+     * @param list An initializer list of pairs of language codes and display
+     * strings.
+     */
+    PolyglotText(ListInitializer list)
+      : display_strings_(list.begin(), list.end()) {}
+
     PolyglotText(PolyglotText&&) = default;
     PolyglotText& operator=(PolyglotText&&) = default;
     virtual ~PolyglotText() = default;
 
-    // Constructor from initializer list
-    PolyglotText(ListInitializer list)
-      : display_strings_(list.begin(), list.end()) {}
-
-
-    void toProto(google::protobuf::MessageLite& dst) const override;
-
+    /**
+     * @brief Serializes the multilingual text into a protobuf message.
+     * @param dst The destination protobuf object.
+     */
+    void toProto(catena::PolyglotText& dst) const override;
+    /**
+     * @brief Returns the unordered map of multilingual text.
+     */
     inline const DisplayStrings& displayStrings() const override { return display_strings_; }
 
   private:
     DisplayStrings display_strings_;
 };
+
 }  // namespace common
 }  // namespace catena

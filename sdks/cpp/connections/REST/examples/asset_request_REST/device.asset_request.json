@@ -1,8 +1,15 @@
 {
-  "slot": 1,
+  "slot": 0,
   "multi_set_enabled": true,
   "detail_level": "FULL",
   "access_scopes": ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
   "default_scope": "st2138:op",
-  "subscriptions": true
+  "subscriptions": true,
+  "params": {
+    "assets": {
+      "type": "STRING_ARRAY",
+      "name": { "display_strings": { "en": "Assets", "es": "Assets", "fr": "Assets" } },
+      "value": { "string_array_values": { "strings": [] } }
+    }
+  }
 }

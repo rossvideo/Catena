@@ -29,10 +29,9 @@
  */
 
 /**
- * @brief A collection of mock classes used across the REST tests.
+ * @brief Mock implementation for the ISocketReader class.
  * @author benjamin.whitten@rossvideo.com
- * @author zuhayr.sarker@rossvideo.com
- * @date 25/05/13
+ * @date 25/06/26
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -40,16 +39,15 @@
 
 #include <gmock/gmock.h>
 #include <interface/ISocketReader.h>
-#include <ISubscriptionManager.h>
-#include <IDevice.h>
 
-using namespace catena::REST;
+namespace catena {
+namespace REST {
 
-// Mocking the ISocketReader interface
+// Mock implementation for the ISocketReader class.
 class MockSocketReader : public ISocketReader {
   public:
     MOCK_METHOD(void, read, (tcp::socket& socket, bool authz, const std::string& version), (override));
-    MOCK_METHOD(const std::string&, method, (), (const, override));
+    MOCK_METHOD(RESTMethod, method, (), (const, override));
     MOCK_METHOD(const std::string&, endpoint, (), (const, override));
     MOCK_METHOD(uint32_t, slot, (), (const, override));
     MOCK_METHOD(const std::string&, fqoid, (), (const, override));
@@ -63,4 +61,7 @@ class MockSocketReader : public ISocketReader {
     MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
     MOCK_METHOD(bool, stream, (), (const, override));
     MOCK_METHOD(const std::string&, EOPath, (), (const, override));
-}; 
+};
+
+} // namespace REST
+} // namespace catena

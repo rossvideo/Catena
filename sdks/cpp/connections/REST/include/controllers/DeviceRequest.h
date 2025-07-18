@@ -55,6 +55,8 @@
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 
+#include <Logger.h>
+
 namespace catena {
 namespace REST {
 
@@ -66,34 +68,30 @@ class DeviceRequest : public ICallData {
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the DeviceRequest controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to get information from.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    DeviceRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    DeviceRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief DeviceRequest's main process.
      */
     void proceed() override;
     
     /**
-     * @brief Finishes the DeviceRequest process.
-     */
-    void finish() override;
-    
-    /**
      * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new DeviceRequest(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new DeviceRequest(socket, context, dms);
     }
     
 
@@ -105,10 +103,9 @@ class DeviceRequest : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << "DeviceRequest::proceed[" << objectId_ << "]: "
+      DEBUG_LOG << "DeviceRequest::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
-                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
-                << std::endl;
+                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok;
     }
     /**
      * @brief The socket to write the response stream to.
@@ -123,9 +120,9 @@ class DeviceRequest : public ICallData {
      */
     std::unique_ptr<ISocketWriter> writer_ = nullptr;
     /**
-     * @brief The device to get components from.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 
     /**
      * @brief A list of the subscribed oids to return.

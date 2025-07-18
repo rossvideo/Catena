@@ -29,26 +29,21 @@
  */
 
 /**
- * @brief A collection of mock classes used across the REST tests.
+ * @brief Mock implementation for the IParamDescriptor class.
  * @author benjamin.whitten@rossvideo.com
- * @author zuhayr.sarker@rossvideo.com
- * @date 25/05/13
+ * @date 25/06/26
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
 
 #include <gmock/gmock.h>
-#include <IDevice.h>
-#include <IParam.h>
 #include <IParamDescriptor.h>
-#include <Status.h>
-#include <Authorization.h>
 
 namespace catena {
 namespace common {
 
-//Mock implementation of ParamDescriptor for testing
+// Mock implementation for the IParamDescriptor class.
 class MockParamDescriptor : public IParamDescriptor {
   public:
     MOCK_METHOD(ParamType, type, (), (const, override));
@@ -65,7 +60,7 @@ class MockParamDescriptor : public IParamDescriptor {
     MOCK_METHOD(uint32_t, max_length, (), (const, override));
     MOCK_METHOD(std::size_t, total_length, (), (const, override));
     MOCK_METHOD(void, toProto, (catena::Param& param, Authorizer& authz), (const, override));
-    MOCK_METHOD(void, toProto, (catena::BasicParamInfo& paramInfo, Authorizer& authz), (const, override));
+    MOCK_METHOD(void, toProto, (catena::ParamInfo& paramInfo, Authorizer& authz), (const, override));
     MOCK_METHOD(const std::string&, name, (const std::string& language), (const, override));
     MOCK_METHOD(void, addSubParam, (const std::string& oid, IParamDescriptor* item), (override));
     MOCK_METHOD(IParamDescriptor&, getSubParam, (const std::string& oid), (const, override));

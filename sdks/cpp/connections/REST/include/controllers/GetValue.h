@@ -55,6 +55,8 @@
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 
+#include <Logger.h>
+
 namespace catena {
 namespace REST {
 
@@ -66,34 +68,30 @@ class GetValue : public ICallData {
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
+    using SlotMap = catena::common::SlotMap;
 
     /**
      * @brief Constructor for the GetValue controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to get the value from.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    GetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    GetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief GetValue's main process.
      */
     void proceed() override;
     
     /**
-     * @brief Finishes the GetValue process.
-     */
-    void finish() override;
-    
-    /**
      * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
-     * @param dm The device to connect to.
+     * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-      return new GetValue(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new GetValue(socket, context, dms);
     }
     
     
@@ -105,10 +103,9 @@ class GetValue : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << "GetValue::proceed[" << objectId_ << "]: "
+      DEBUG_LOG << "GetValue::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
-                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
-                << std::endl;
+                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok;
     }
     /**
      * @brief The socket to write the response to.
@@ -123,9 +120,9 @@ class GetValue : public ICallData {
      */
     SocketWriter writer_;
     /**
-     * @brief The device to set values of.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
 
     /**
      * @brief ID of the GetValue object

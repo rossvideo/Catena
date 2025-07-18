@@ -58,10 +58,10 @@ class MultiSetValue : public CallData {
      * gRPC. Calls proceed() once initialized.
      *
      * @param service - Pointer to the parent CatenaServiceImpl.
-     * @param dm - Address of the device to get the value from.
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok - Flag to check if the command was successfully executed.
      */ 
-    MultiSetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    MultiSetValue(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
     /**
      * @brief Manages the steps of the SetValue and MultiSetValue gRPC
      * commands through the state variable status.
@@ -77,11 +77,11 @@ class MultiSetValue : public CallData {
      * Helper function to allow reuse of proceed().
      *
      * @param service Pointer to the parent CatenaServiceImpl.
-     * @param dm Address of the device to get the value from.
+     * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok Flag to check if the command was successfully executed.
      * @param objectId objectCounter_ + 1
      */ 
-    MultiSetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok, int objectId);
+    MultiSetValue(ICatenaServiceImpl *service, SlotMap& dms, bool ok, int objectId);
     /**
      * @brief Requests Multi Set Value from the system and sets the
      * request to the MultiSetValuePayload.
@@ -95,8 +95,6 @@ class MultiSetValue : public CallData {
      *   
      * Helper function to allow reuse of proceed().
      *
-     * @param service Pointer to the parent CatenaServiceImpl.
-     * @param dm Address of the device to get the value from.
      * @param ok Flag to check if the command was successfully executed.
      */ 
     virtual void create_(bool ok);
@@ -130,9 +128,9 @@ class MultiSetValue : public CallData {
      */
     CallStatus status_;
     /**
-     * @brief The device containing the value to set.
+     * @brief A map of slots to ptrs to their corresponding device.
      */
-    IDevice& dm_;
+    SlotMap& dms_;
     /**
      * The status of the transaction for use in responder.finish functions.
      */

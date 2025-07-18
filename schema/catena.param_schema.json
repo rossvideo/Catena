@@ -642,11 +642,7 @@
             "struct_values": {
               "type": "array",
               "items": {
-                "properties": {
-                  "fields": {
-                    "$ref": "#/$defs/struct_fields"
-                  }
-                }
+                "$ref": "#/$defs/struct_value"
               }
             },
             "additionalItems": false
@@ -678,7 +674,7 @@
     },
     "struct_value": {
       "title": "STRUCT",
-      "description": "Wrapper round the struct_fields schema.",
+      "description": "Defines STRUCT as a type.",
       "type": "object",
       "$comment": "pattern properties must be same regex as for oid",
       "properties": {
@@ -686,57 +682,45 @@
           "type": "object",
           "properties": {
             "fields": {
-              "$ref": "#/$defs/struct_fields"
+              "struct_fields": {
+                "title": "struct definition",
+                "description": "holds struct data fields",
+                "type": "object",
+                "patternProperties": {
+                  "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/$defs/float32_value"
+                      },
+                      {
+                        "$ref": "#/$defs/int32_value"
+                      },
+                      {
+                        "$ref": "#/$defs/string_value"
+                      },
+                      {
+                        "$ref": "#/$defs/struct_value"
+                      },
+                      {
+                        "$ref": "#/$defs/int32_array_values"
+                      },
+                      {
+                        "$ref": "#/$defs/float32_array_values"
+                      },
+                      {
+                        "$ref": "#/$defs/string_array_values"
+                      },
+                      {
+                        "$ref": "#/$defs/struct_array_values"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
             }
           },
           "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    "struct_fields": {
-      "title": "struct definition",
-      "description": "holds struct data fields",
-      "type": "object",
-      "patternProperties": {
-        "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
-          "$ref": "#/$defs/field_value"
-        }
-      },
-      "additionalProperties": false
-    },
-    "field_value": {
-      "title": "Struct Field Value",
-      "description": "holds struct data field",
-      "type": "object",
-      "properties": {
-        "value": {
-          "oneOf": [
-            {
-              "$ref": "#/$defs/float32_value"
-            },
-            {
-              "$ref": "#/$defs/int32_value"
-            },
-            {
-              "$ref": "#/$defs/string_value"
-            },
-            {
-              "$ref": "#/$defs/struct_value"
-            },
-            {
-              "$ref": "#/$defs/int32_array_values"
-            },
-            {
-              "$ref": "#/$defs/float32_array_values"
-            },
-            {
-              "$ref": "#/$defs/string_array_values"
-            },
-            {
-              "$ref": "#/$defs/struct_array_values"
-            }
-          ]
         }
       },
       "additionalProperties": false
@@ -784,20 +768,14 @@
       "oneOf": [{ "required": ["url"] }, { "required": ["file"] }],
       "additionalProperties": false
     },
-    "basic_param_info": {
-      "title": "Basic Param Info",
+    "param_info": {
+      "title": "Param Info",
       "description": "Summary information about a parameter",
       "type": "object",
       "properties": {
-        "oid": {
-          "$ref": "#/$defs/oid"
-        },
-        "name": {
-          "$ref": "#/$defs/polyglot_text"
-        },
-        "type": {
-          "$ref": "#/$defs/param_type"
-        }
+        "oid": { "$ref": "#/$defs/oid" },
+        "name": { "$ref": "#/$defs/polyglot_text" },
+        "type": { "$ref": "#/$defs/param_type" }
       },
       "$comment": "not having oid as required is correct because this schema is used in 2 places - param which would be duplicative, and as a message payload where it's needed",
       "additionalProperties": false

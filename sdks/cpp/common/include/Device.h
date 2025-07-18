@@ -203,6 +203,13 @@ class Device : public IDevice {
     using ComponentLanguagePack = catena::DeviceComponent_ComponentLanguagePack;
 
     /**
+     * @brief Returns true if device has the specified language pack.
+     * @param languageId The language id of the language pack to check
+     * @return True if the device has the specified language pack.
+     */
+    bool hasLanguage(const std::string& languageId) const override { return language_packs_.contains(languageId); }
+
+    /**
      * @brief Adds a language pack to the device. Requires client to have
      * admin:w scope.
      * @param language The language to add to the device.
@@ -212,7 +219,17 @@ class Device : public IDevice {
      * Intention is for the AddLanguage RPCs / API calls to be serviced by this
      * method.
      */
-    catena::exception_with_status addLanguage (catena::AddLanguagePayload& language, Authorizer& authz = Authorizer::kAuthzDisabled) override;
+    catena::exception_with_status addLanguage(catena::AddLanguagePayload& language, Authorizer& authz = Authorizer::kAuthzDisabled) override;
+
+    /**
+     * @brief Removed a language pack from the device. Requires client to have
+     * admin:w scope. Fails if the language pack was shipped with the device.
+     * @param language The language to remove from the device.
+     * @param authz The authorizer object containing client's scopes.
+     * @return An exception_with_status with status set OK if successful,
+     * otherwise an error.
+     */
+    catena::exception_with_status removeLanguage(const std::string& languageId, Authorizer& authz = Authorizer::kAuthzDisabled) override;
 
     /**
      * @brief Finds and returns a language pack based on languageId.
@@ -526,7 +543,58 @@ class Device : public IDevice {
      */
     bool shouldSendParam(const IParam& param, bool is_subscribed, Authorizer& authz) const override;
 
+    /**
+     * @brief get the signal emitted when a value is set by the client.
+     * @return the signal
+     */
+    vdk::signal<void(const std::string&, const IParam*)>& getValueSetByClient() override { return valueSetByClient; }
+
+    /**
+     * @brief get the signal emitted when a language pack is added to the device.
+     * @return the signal
+     */
+    vdk::signal<void(const ILanguagePack*)>& getLanguageAddedPushUpdate() override { return languageAddedPushUpdate; }
+
+    /**
+     * @brief get the signal emitted when a value is set by the server, or business
+     * logic.
+     * @return the signal
+     */
+    vdk::signal<void(const std::string&, const IParam*)>& getValueSetByServer() override { return valueSetByServer; }
+    
+    /**
+     * @brief get the asset request signal
+     * @return the signal
+     */
+    vdk::signal<void(const std::string&)>& getAssetRequest() override { return assetRequest; }
+
   private:
+
+    /**
+     * @brief signal emitted when a value is set by the client.
+     * Intended recipient is the business logic.
+     */
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByClient;
+
+    /**
+     * @brief signal emitted when a language pack is added to the device.
+     * Intended recipient is the business logic.
+     */
+    vdk::signal<void(const ILanguagePack*)> languageAddedPushUpdate;
+
+    /**
+     * @brief signal emitted when a value is set by the server, or business
+     * logic.
+     * Intended recipient is the connection manager.
+     */
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByServer;
+
+    /**
+     * @brief signal emitted when an asset request is made.
+     * Intended recipient is the business logic.
+     */
+    vdk::signal<void(const std::string&)> assetRequest;
+
     uint32_t slot_;
     Device_DetailLevel detail_level_;
     std::unordered_map<std::string, catena::common::IConstraint*> constraints_;

@@ -33,6 +33,7 @@
 
  // connections/gRPC
 #include <controllers/ExternalObjectRequest.h>
+#include <Logger.h>
 using catena::gRPC::ExternalObjectRequest;
 
 // type aliases
@@ -53,8 +54,8 @@ int ExternalObjectRequest::objectCounter_ = 0;
  * Constructor which initializes and registers the current
  * ExternalObjectRequest object, then starts the process
  */
-ExternalObjectRequest::ExternalObjectRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : CallData(service), dm_{dm}, writer_(&context_),
+ExternalObjectRequest::ExternalObjectRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+    : CallData(service), dms_{dms}, writer_(&context_),
     status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);
     objectId_ = objectCounter_++;
@@ -66,13 +67,12 @@ ExternalObjectRequest::ExternalObjectRequest(ICatenaServiceImpl *service, IDevic
  * handling errors and responses accordingly 
  */
 void ExternalObjectRequest::proceed(bool ok) {
-    std::cout << "ExternalObjectRequest proceed[" << objectId_ << "]: " << timeNow()
-                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                << std::endl;
+    DEBUG_LOG << "ExternalObjectRequest proceed[" << objectId_ << "]: " << timeNow()
+                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok;
     
     // If the process is cancelled, finish the process
     if (!ok) {
-        std::cout << "ExternalObjectRequest[" << objectId_ << "] cancelled\n";
+        DEBUG_LOG << "ExternalObjectRequest[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -93,7 +93,7 @@ void ExternalObjectRequest::proceed(bool ok) {
          * and transitioning to kRead
          */
         case CallStatus::kProcess:
-            new ExternalObjectRequest(service_, dm_, ok);  // to serve other clients
+            new ExternalObjectRequest(service_, dms_, ok);  // to serve other clients
             context_.AsyncNotifyWhenDone(this);
             status_ = CallStatus::kWrite;
             // fall thru to start writing
@@ -104,13 +104,13 @@ void ExternalObjectRequest::proceed(bool ok) {
          */
         case CallStatus::kWrite:
             try {
-                std::cout << "sending external object " << req_.oid() <<"\n";
+                DEBUG_LOG << "sending external object " << req_.oid() <<"\n";
                 std::string path = service_->EOPath();
                 path.append(req_.oid());
 
                 // Check if the file exists
                 if (!std::filesystem::exists(path)) {
-                    std::cout << "ExternalObjectRequest[" << objectId_ << "] file not found\n";
+                    DEBUG_LOG << "ExternalObjectRequest[" << objectId_ << "] file not found";
                     if(req_.oid()[0] != '/'){
                         std::stringstream why;
                         why << __PRETTY_FUNCTION__ << "\nfile '" << req_.oid() << "' not found. HINT: Make sure oid starts with '/' prefix.";
@@ -130,7 +130,7 @@ void ExternalObjectRequest::proceed(bool ok) {
                 //obj.mutable_payload()->set_meta(file.);
 
                 //For now we are sending the whole file in one go
-                std::cout << "ExternalObjectRequest[" << objectId_ << "] sent\n";
+                DEBUG_LOG << "ExternalObjectRequest[" << objectId_ << "] sent";
                 status_ = CallStatus::kPostWrite; 
                 writer_.Write(obj, this);
             // Exception occured, finish the process
@@ -155,7 +155,7 @@ void ExternalObjectRequest::proceed(bool ok) {
          * the process
          */
         case CallStatus::kFinish:
-            std::cout << "ExternalObjectRequest[" << objectId_ << "] finished\n";
+            DEBUG_LOG << "ExternalObjectRequest[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
 

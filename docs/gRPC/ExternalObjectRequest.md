@@ -10,6 +10,7 @@ Gets an external object from the service.
 message ExternalObjectRequestPayload {
   uint32 slot = 1; // Uniquely identifies the device at node scope.
   string oid = 2;  // ID of external object being requested
+  uint32 encoding = 3; 
 }
 ```
 
@@ -48,6 +49,6 @@ message DataPayload {
 
 <div style="text-align: center">
 
-[Next Page: BasicParamInfoRequest](BasicParamInfoRequest.html)
+[Next Page: ParamInfoRequest](ParamInfoRequest.html)
 
 </div>

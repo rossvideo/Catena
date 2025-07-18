@@ -9,7 +9,7 @@ The following gRPCs are currently supported by the Catena gRPC service implement
 - [GetPopulatedSlots](GetPopulatedSlots.html)
 - [ExecuteCommand](ExecuteCommand.html)
 - [ExternalObjectRequest](ExternalObjectRequest.html)
-- [BasicParamInfoRequest](BasicParamInfoRequest.html)
+- [ParamInfoRequest](ParamInfoRequest.html)
 - [SetValue](SetValue.html)
 - [GetValue](GetValue.html)
 - [MultiSetValue](MultiSetValue.html)

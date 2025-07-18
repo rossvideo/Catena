@@ -30,6 +30,7 @@
 
 // connections/gRPC
 #include <controllers/GetPopulatedSlots.h>
+#include <Logger.h>
 using catena::gRPC::GetPopulatedSlots;
 
 // Initializes the object counter for GetPopulatedSlots to 0.
@@ -39,8 +40,8 @@ int GetPopulatedSlots::objectCounter_ = 0;
  * Constructor which initializes and registers the current GetPopulatedSlots
  * object, then starts the process.
  */
-GetPopulatedSlots::GetPopulatedSlots(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : CallData(service), dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+GetPopulatedSlots::GetPopulatedSlots(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+    : CallData(service), dms_{dms}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service_->registerItem(this);
     proceed(ok);
@@ -48,13 +49,13 @@ GetPopulatedSlots::GetPopulatedSlots(ICatenaServiceImpl *service, IDevice& dm, b
 
 // Manages gRPC command execution process using the state variable status.
 void GetPopulatedSlots::proceed( bool ok) {
-    std::cout << "GetPopulatedSlots::proceed[" << objectId_ << "]: "
+    DEBUG_LOG << "GetPopulatedSlots::proceed[" << objectId_ << "]: "
               << timeNow() << " status: " << static_cast<int>(status_)
-              << ", ok: " << std::boolalpha << ok << std::endl;
+              << ", ok: " << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        std::cout << "GetPopulatedSlots[" << objectId_ << "] cancelled\n";
+        DEBUG_LOG << "GetPopulatedSlots[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -74,10 +75,15 @@ void GetPopulatedSlots::proceed( bool ok) {
         case CallStatus::kProcess:
             {
                 // Used to serve other clients while processing.
-                new GetPopulatedSlots(service_, dm_, ok);
+                new GetPopulatedSlots(service_, dms_, ok);
                 context_.AsyncNotifyWhenDone(this);
                 catena::SlotList ans;
-                ans.add_slots(dm_.slot());
+                for (auto [slot, dm] : dms_) {
+                    // If a devices exists at the slot, add it to the response.
+                    if (dm) {
+                        ans.add_slots(slot);
+                    }
+                }
                 status_ = CallStatus::kFinish;
                 responder_.Finish(ans, Status::OK, this);
             }
@@ -87,7 +93,7 @@ void GetPopulatedSlots::proceed( bool ok) {
          * CatenaServiceImpl.
          */
         case CallStatus::kFinish:
-            std::cout << "GetPopulatedSlots[" << objectId_ << "] finished\n";
+            DEBUG_LOG << "GetPopulatedSlots[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

@@ -1,22 +1,11 @@
 
-slot: 1
+slot: 0
 multi_set_enabled: true
 detail_level: FULL
 access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
 default_scope: st2138:mon
 
 params:
-  test_struct:
-    type: STRUCT
-    value:
-      struct_value:
-        fields:
-          int_field: { value: { int32_value: 42 } }
-          float_field: { value: { float32_value: 3.14 } }
-          string_field: { value: { string_value: "Hello" } }
-      
-
-
   number_example: 
     type: INT32
     value: { int32_value: 0 }

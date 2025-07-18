@@ -35,19 +35,15 @@ using catena::REST::Subscriptions;
 // Initializes the object counter for Subscriptions to 0.
 int Subscriptions::objectCounter_ = 0;
 
-Subscriptions::Subscriptions(tcp::socket& socket, ISocketReader& context, IDevice& dm)
-    : socket_(socket), context_(context), dm_(dm) {
+Subscriptions::Subscriptions(tcp::socket& socket, ISocketReader& context, SlotMap& dms)
+    : socket_(socket), context_(context), dms_(dms) {
     
-    // GET
-    if (context.method() == "GET") {
-        if (context.stream()) {
-            writer_ = std::make_unique<SSEWriter>(socket_, context_.origin());
-        } else {
-            writer_ = std::make_unique<SocketWriter>(socket_, context_.origin(), true);
-        }
-    // PUT
+    // GET (stream)
+    if (context.method() == Method_GET && context.stream()) {
+        writer_ = std::make_unique<SSEWriter>(socket_, context_.origin());
+    // GET (no stream) or PUT
     } else {
-        writer_ = std::make_unique<SocketWriter>(socket_, context_.origin());
+        writer_ = std::make_unique<SocketWriter>(socket_, context_.origin(), true);
     }
 
     objectId_ = objectCounter_++;
@@ -60,7 +56,21 @@ void Subscriptions::proceed() {
     catena::exception_with_status supressErr{"", catena::StatusCode::OK};
 
     try {
-        if (dm_.subscriptions()) {
+        IDevice* dm = nullptr;
+        // Getting device at specified slot.
+        if (dms_.contains(context_.slot())) {
+            dm = dms_.at(context_.slot());
+        }
+
+        // Making sure the device exists.
+        if (!dm) {
+            rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+
+        // Making sure the device supports subscriptions.
+        } else if (!dm->subscriptions()) {
+            rc = catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::FAILED_PRECONDITION);
+        
+        } else {
             // Creating authorizer.
             catena::common::Authorizer* authz = nullptr;
             std::shared_ptr<catena::common::Authorizer> sharedAuthz;
@@ -72,12 +82,12 @@ void Subscriptions::proceed() {
             }
 
             // GET/subscriptions - Get and write all subscribed OIDs.
-            if (context_.method() == "GET") {
-                auto subbedOids = context_.getSubscriptionManager().getAllSubscribedOids(dm_);
+            if (context_.method() == Method_GET) {
+                auto subbedOids = context_.getSubscriptionManager().getAllSubscribedOids(*dm);
                 for (auto oid : subbedOids) {
                     supressErr = catena::exception_with_status{"", catena::StatusCode::OK};
                     catena::DeviceComponent_ComponentParam res;
-                    auto param = dm_.getParam(oid, supressErr, *authz);
+                    auto param = dm->getParam(oid, supressErr, *authz);
                     // Converting to proto.
                     if (param) {
                         res.set_oid(param->getOid());
@@ -91,30 +101,27 @@ void Subscriptions::proceed() {
                 }
 
             // PUT/subscriptions - Add/remove subscriptions.
-            } else if (context_.method() == "PUT") {
+            } else if (context_.method() == Method_PUT) {
                 // Parsing JSON body.
                 catena::UpdateSubscriptionsPayload req;
                 absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &req);
                 if (!status.ok()) {
                     rc = catena::exception_with_status("Failed to parse JSON Body", catena::StatusCode::INVALID_ARGUMENT);
-            
                 } else {
-                    // Processing removed OIDs
-                    for (const auto& oid : req.removed_oids()) {
-                        context_.getSubscriptionManager().removeSubscription(oid, dm_, supressErr);
-                    }
-                    // Processing added OIDs
+                    // Process added OIDs
                     for (const auto& oid : req.added_oids()) {
-                        context_.getSubscriptionManager().addSubscription(oid, dm_, supressErr, *authz);
+                        context_.getSubscriptionManager().addSubscription(oid, *dm, supressErr, *authz);
+                    }
+                    // Process removed OIDs
+                    for (const auto& oid : req.removed_oids()) {
+                        context_.getSubscriptionManager().removeSubscription(oid, *dm, supressErr);
                     }
                 }
-
+                
             // Invalid method.
             } else {
-                rc = catena::exception_with_status("", catena::StatusCode::INVALID_ARGUMENT);
+                rc = catena::exception_with_status("", catena::StatusCode::UNIMPLEMENTED);
             }
-        } else {
-            rc = catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::FAILED_PRECONDITION);
         }
     // ERROR
     } catch (const catena::exception_with_status& err) {
@@ -125,9 +132,8 @@ void Subscriptions::proceed() {
 
     // Finishing by writing rc to client.
     writer_->sendResponse(rc);
-}
 
-void Subscriptions::finish() {
+    // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << context_.method() << " Subscriptions[" << objectId_ << "] finished\n";
+    DEBUG_LOG << context_.method() << " Subscriptions[" << objectId_ << "] finished\n";
 }
