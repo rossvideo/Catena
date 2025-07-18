@@ -52,6 +52,7 @@
 
 #include <string>
 #include <condition_variable>
+#include <chrono>
 
 namespace catena {
 namespace common {
@@ -64,6 +65,22 @@ namespace common {
  * @todo Implement subscriptionManager.
  */
 class Connect : public IConnect {
+  public:
+    
+    uint8_t priority() const override { return priority_; }
+
+    const system_clock::time_point& age() const override {  }
+
+    bool operator<(const IConnect& otherConnection) override {
+        bool isLess = false;
+        if (priority_ != otherConnection.priority()) {
+            isLess = priority_ < otherConnection.priority();
+        } else if (age_ != otherConnection.age()) {
+            isLess = age_ < otherConnection.age();
+        }
+        return isLess;
+    }
+
   protected:
     /**
      * @brief Constructor
@@ -79,8 +96,8 @@ class Connect : public IConnect {
     Connect(SlotMap& dms, ISubscriptionManager& subscriptionManager) : 
         dms_{dms}, 
         subscriptionManager_{subscriptionManager},
-        detailLevel_{catena::Device_DetailLevel_UNSET} {
-    }
+        detailLevel_{catena::Device_DetailLevel_UNSET},
+        age_{std::chrono::system_clock::now()} {}
     /**
      * @brief Connect does not have copy semantics
      */
@@ -196,10 +213,45 @@ class Connect : public IConnect {
         if (authz) {
             sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
             authz_ = sharedAuthz_.get();
+            // Setting up their connection priority.
+            for (auto [val, scope] : Scopes().getForwardMap()) {
+                if (authz_->hasAuthz(scope)) {
+                    priority_ = 4 * (static_cast<uint8_t>(val));
+                    if (authz_->hasAuthz(scope + ":w")) { priority_ += 1; };
+                }
+            }
         } else {
             authz_ = &catena::common::Authorizer::kAuthzDisabled;
         }
+        if (forceConnection_) {
+            priority_ += 2;
+        }
     }
+
+    /**
+     * mon = 0
+     * mon:w
+     * mon:f
+     * mon:w:f
+     * op
+     * op:w
+     * op:f
+     * op:w:f
+     * cfg
+     * cfg:w
+     * cfg:f
+     * cfg:w:f
+     * adm
+     * adm:w
+     * adm:f
+     * adm:w:f = 15
+     */
+
+    // = (scope - 1) * 4 + 1 (if write) + 2 (if force)
+
+    uint8_t priority_ = 0;
+
+    system_clock::time_point age_;
 
     /**
      * @brief Shared ptr to maintain ownership of authorizer.

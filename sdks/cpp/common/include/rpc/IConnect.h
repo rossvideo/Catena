@@ -43,6 +43,9 @@
 #include <interface/device.pb.h>
 // Std
 #include <string>
+#include <chrono>
+
+using std::chrono::system_clock;
 
 namespace catena {
 namespace common {
@@ -51,6 +54,14 @@ namespace common {
  * @brief Interface class for Connect RPCs
  */
 class IConnect {
+  public:
+    
+    virtual uint8_t priority() const = 0;
+
+    virtual const system_clock::time_point& age() const = 0;
+
+    virtual bool operator<(const IConnect& otherConnection) = 0;
+  
   protected:
     IConnect() = default;
     IConnect(const IConnect&) = default;
