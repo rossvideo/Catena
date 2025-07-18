@@ -82,50 +82,57 @@ void catena::gRPC::Connect::proceed(bool ok) {
          * kFinish and notifying the responder once finished.
          */
         case CallStatus::kProcess:
+            // Cancels all open connections if shutdown signal is sent.
+            shutdownSignalId_ = shutdownSignal_.connect([this](){
+                context_.TryCancel();
+                hasUpdate_ = true;
+                this->cv_.notify_one();
+            });
             // Used to serve other clients while processing.
             new Connect(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
+
+            { // rc scope
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
             try {
-                catena::exception_with_status rc{"", catena::StatusCode::OK};
-                initAuthz_(jwsToken_(), service_->authorizationEnabled());
-                // Cancels all open connections if shutdown signal is sent.
-                shutdownSignalId_ = shutdownSignal_.connect([this](){
-                    context_.TryCancel();
-                    hasUpdate_ = true;
-                    this->cv_.notify_one();
-                });
-
-                // Set detail level from request
+                // Initialize authz and add connection to the priority queue.
                 detailLevel_ = req_.detail_level();
-
-                // Connecting to each device in dms_.
-                for (auto [slot, dm] : dms_) {
-                    if (dm) {
-                        // Waiting for a value set by server to be sent to execute code.
-                        valueSetByServerIds_[slot] = dm->getValueSetByServer().connect([this, slot](const std::string& oid, const IParam* p){
-                            updateResponse_(oid, p, slot);
-                        });
-                        // Waiting for a value set by client to be sent to execute code.
-                        valueSetByClientIds_[slot] = dm->getValueSetByClient().connect([this, slot](const std::string& oid, const IParam* p){
-                            updateResponse_(oid, p, slot);
-                        });
-                        // Waiting for a language to be added to execute code.
-                        languageAddedIds_[slot] = dm->getLanguageAddedPushUpdate().connect([this, slot](const ILanguagePack* l) {
-                            updateResponse_(l, slot);
-                        });
-                        // Send client a empty update with slot of the device
-                        catena::PushUpdates populatedSlots;
-                        populatedSlots.set_slot(slot);
-                        writer_.Write(populatedSlots, this);
+                initAuthz_(jwsToken_(), service_->authorizationEnabled());
+                if (service_->registerConnection(this)) {
+                    // Connecting to each device in dms_.
+                    catena::PushUpdates populatedSlots;
+                    for (auto [slot, dm] : dms_) {
+                        if (dm) {
+                            // Waiting for a value set by server to be sent to execute code.
+                            valueSetByServerIds_[slot] = dm->getValueSetByServer().connect([this, slot](const std::string& oid, const IParam* p){
+                                updateResponse_(oid, p, slot);
+                            });
+                            // Waiting for a value set by client to be sent to execute code.
+                            valueSetByClientIds_[slot] = dm->getValueSetByClient().connect([this, slot](const std::string& oid, const IParam* p){
+                                updateResponse_(oid, p, slot);
+                            });
+                            // Waiting for a language to be added to execute code.
+                            languageAddedIds_[slot] = dm->getLanguageAddedPushUpdate().connect([this, slot](const ILanguagePack* l) {
+                                updateResponse_(l, slot);
+                            });
+                            populatedSlots.mutable_slots_added()->add_slots(slot);
+                        }
                     }
+                    // Write update with connected slots to the client.
+                    status_ = CallStatus::kWrite;
+                    writer_.Write(populatedSlots, this);
+                // Failed to register connection.
+                } else {
+                    rc = catena::exception_with_status("Too many connections to service", catena::StatusCode::RESOURCE_EXHAUSTED);
                 }
-
-                status_ = CallStatus::kWrite;
-
-            } catch (catena::exception_with_status& rc) {
+            } catch (catena::exception_with_status& err) {
+                rc = catena::exception_with_status(err.what(), err.status);
+            }
+            // If above failed, finish the RPC.
+            if (rc.status != catena::StatusCode::OK) {
                 status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(static_cast<grpc::StatusCode>(rc.status), rc.what());
-                writer_.Finish(errorStatus, this);
+                writer_.Finish(grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+            }
             }
             break;
         /**
@@ -168,6 +175,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
                     }
                 }
             }
+            service_->deregisterConnection(this);
             service_->deregisterItem(this);
             break;
         // default: Error, end process.

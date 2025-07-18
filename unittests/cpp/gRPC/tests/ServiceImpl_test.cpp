@@ -82,7 +82,7 @@ class gRPCServiceImplTests : public testing::Test {
         // Creating the gRPC server.
         builder_.AddListeningPort(serverAddr_, grpc::InsecureServerCredentials());
         cq_ = builder_.AddCompletionQueue();
-        service_.reset(new CatenaServiceImpl(cq_.get(), {&dm_}, EOPath_, authzEnabled_));
+        service_.reset(new CatenaServiceImpl(cq_.get(), {&dm_}, EOPath_, authzEnabled_, 16));
         builder_.RegisterService(service_.get());
         server_ = builder_.BuildAndStart();
         service_->init();
@@ -159,6 +159,6 @@ TEST(gRPCServiceImplTests_NoFixture, ServiceImpl_CreateDuplicateSlot) {
     EXPECT_CALL(dm1, slot()).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(dm2, slot()).WillRepeatedly(testing::Return(0));
     // Creating a service with a duplicate slot.
-    EXPECT_THROW(CatenaServiceImpl(nullptr, {&dm1, &dm2}, EOPath, false), std::runtime_error)
+    EXPECT_THROW(CatenaServiceImpl(nullptr, {&dm1, &dm2}, EOPath, false, 16), std::runtime_error)
         << "Creating a service with two devices sharing a slot should throw an error.";
 }

@@ -36,10 +36,11 @@ using catena::gRPC::CatenaServiceImpl;
 // Defining the port flag from SharedFlags.h
 ABSL_FLAG(uint16_t, port, 6254, "Catena gRPC service port");
 
-CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, std::vector<IDevice*> dms, std::string& EOPath, bool authz)
+CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, std::vector<IDevice*> dms, std::string& EOPath, bool authz, uint32_t maxConnections)
     : cq_{cq},
       EOPath_{EOPath}, 
-      authorizationEnabled_{authz} {
+      authorizationEnabled_{authz},
+      maxConnections_{maxConnections} {
     // Adding dms to slotMap.
     for (auto dm : dms) {
         if (dms_.contains(dm->slot())) {
@@ -95,6 +96,26 @@ void CatenaServiceImpl::processEvents() {
                 break;
         }
     }
+}
+
+bool CatenaServiceImpl::registerConnection(catena::common::IConnect* cd) {
+    bool ans = false;
+    std::lock_guard<std::mutex> lock(registryMutex_);
+    if (connectionQueue_.size() < maxConnections_) {
+        connectionQueue_.push_back(cd);
+        ans = true;
+    }
+    return ans;
+}
+
+void CatenaServiceImpl::deregisterConnection(catena::common::IConnect* cd) {
+    std::lock_guard<std::mutex> lock(registryMutex_);
+    auto it = std::find_if(connectionQueue_.begin(), connectionQueue_.end(),
+                           [cd](const catena::common::IConnect* i) { return i == cd; });
+    if (it != connectionQueue_.end()) {
+        connectionQueue_.erase(it);
+    }
+    DEBUG_LOG << "Connected users remaining: " << connectionQueue_.size() << '\n';
 }
 
 //Registers current CallData object into the registry
