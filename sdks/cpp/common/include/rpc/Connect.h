@@ -72,13 +72,8 @@ class Connect : public IConnect {
     const system_clock::time_point& age() const override {  }
 
     bool operator<(const IConnect& otherConnection) override {
-        bool isLess = false;
-        if (priority_ != otherConnection.priority()) {
-            isLess = priority_ < otherConnection.priority();
-        } else if (age_ != otherConnection.age()) {
-            isLess = age_ < otherConnection.age();
-        }
-        return isLess;
+        return priority_ < otherConnection.priority() ||
+               (priority_ == otherConnection.priority() && age_ < otherConnection.age());
     }
 
   protected:
