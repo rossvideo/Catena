@@ -238,9 +238,12 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IDevice</b> ()=de
 <tr class="memitem:aa365bd7809bfe119412de8869f11b500" id="r_aa365bd7809bfe119412de8869f11b500"><td class="memItemLeft" align="right" valign="top">virtual vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#aa365bd7809bfe119412de8869f11b500">getValueSetByServer</a> ()=0</td></tr>
 <tr class="memdesc:aa365bd7809bfe119412de8869f11b500"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a value is set by the server, or business logic. Intended recipient is the connection manager.  <br /></td></tr>
 <tr class="separator:aa365bd7809bfe119412de8869f11b500"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4d383890acfe1fb7f22a2d4341672d94" id="r_a4d383890acfe1fb7f22a2d4341672d94"><td class="memItemLeft" align="right" valign="top">virtual vdk::signal&lt; void(const std::string &amp;)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a4d383890acfe1fb7f22a2d4341672d94">getAssetRequest</a> ()=0</td></tr>
-<tr class="memdesc:a4d383890acfe1fb7f22a2d4341672d94"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when an asset request is made. Intended recipient is the business logic.  <br /></td></tr>
-<tr class="separator:a4d383890acfe1fb7f22a2d4341672d94"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2be39aacca8e57a1d2c3606ecf2b2a99" id="r_a2be39aacca8e57a1d2c3606ecf2b2a99"><td class="memItemLeft" align="right" valign="top">virtual vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a2be39aacca8e57a1d2c3606ecf2b2a99">getDownloadAssetRequest</a> ()=0</td></tr>
+<tr class="memdesc:a2be39aacca8e57a1d2c3606ecf2b2a99"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a download asset request is made. Intended recipient is the business logic.  <br /></td></tr>
+<tr class="separator:a2be39aacca8e57a1d2c3606ecf2b2a99"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a444410bfc60b929d1bd30a5d22061085" id="r_a444410bfc60b929d1bd30a5d22061085"><td class="memItemLeft" align="right" valign="top">virtual vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a444410bfc60b929d1bd30a5d22061085">getUploadAssetRequest</a> ()=0</td></tr>
+<tr class="memdesc:a444410bfc60b929d1bd30a5d22061085"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when an upload asset request is made. Intended recipient is the business logic.  <br /></td></tr>
+<tr class="separator:a444410bfc60b929d1bd30a5d22061085"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface class for <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a>. </p>
@@ -656,35 +659,6 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="a4d383890acfe1fb7f22a2d4341672d94" name="a4d383890acfe1fb7f22a2d4341672d94"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4d383890acfe1fb7f22a2d4341672d94">&#9670;&#160;</a></span>getAssetRequest()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual vdk::signal&lt; void(const std::string &amp;)&gt; &amp; catena::common::IDevice::getAssetRequest </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>signal emitted when an asset request is made. Intended recipient is the business logic. </p>
-
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#ae3951fab597be8f5175bc623fb0405e9">catena::common::Device</a>.</p>
-
-</div>
-</div>
 <a id="accf44b99feeb6eb71ea40c2e151890a5" name="accf44b99feeb6eb71ea40c2e151890a5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#accf44b99feeb6eb71ea40c2e151890a5">&#9670;&#160;</a></span>getCommand()</h2>
 
@@ -829,6 +803,35 @@ Here is the caller graph for this function:</div>
 <p>Returns the device's default scope. </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#ab52d0101133233dcdb54d381675a24e9">catena::common::Device</a>.</p>
+
+</div>
+</div>
+<a id="a2be39aacca8e57a1d2c3606ecf2b2a99" name="a2be39aacca8e57a1d2c3606ecf2b2a99"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2be39aacca8e57a1d2c3606ecf2b2a99">&#9670;&#160;</a></span>getDownloadAssetRequest()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> *)&gt; &amp; catena::common::IDevice::getDownloadAssetRequest </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>signal emitted when a download asset request is made. Intended recipient is the business logic. </p>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#ac567dc85f9e8e92db5a0a49708a57289">catena::common::Device</a>.</p>
 
 </div>
 </div>
@@ -1066,6 +1069,35 @@ Here is the caller graph for this function:</div>
 <dl class="section return"><dt>Returns</dt><dd>a vector of unique pointers to the parameters </dd></dl>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#a811b91c8189eac1ba945956129e3b8d7">catena::common::Device</a>.</p>
+
+</div>
+</div>
+<a id="a444410bfc60b929d1bd30a5d22061085" name="a444410bfc60b929d1bd30a5d22061085"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a444410bfc60b929d1bd30a5d22061085">&#9670;&#160;</a></span>getUploadAssetRequest()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> *)&gt; &amp; catena::common::IDevice::getUploadAssetRequest </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>signal emitted when an upload asset request is made. Intended recipient is the business logic. </p>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#a0ee6003196e094215a2518daef59d957">catena::common::Device</a>.</p>
 
 </div>
 </div>

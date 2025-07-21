@@ -262,9 +262,12 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~Device</b> ()=def
 <tr class="memitem:ac7d2618b26fdf77883c88a5583e0eb26" id="r_ac7d2618b26fdf77883c88a5583e0eb26"><td class="memItemLeft" align="right" valign="top">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ac7d2618b26fdf77883c88a5583e0eb26">getValueSetByServer</a> () override</td></tr>
 <tr class="memdesc:ac7d2618b26fdf77883c88a5583e0eb26"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the signal emitted when a value is set by the server, or business logic.  <br /></td></tr>
 <tr class="separator:ac7d2618b26fdf77883c88a5583e0eb26"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae3951fab597be8f5175bc623fb0405e9" id="r_ae3951fab597be8f5175bc623fb0405e9"><td class="memItemLeft" align="right" valign="top">vdk::signal&lt; void(const std::string &amp;)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ae3951fab597be8f5175bc623fb0405e9">getAssetRequest</a> () override</td></tr>
-<tr class="memdesc:ae3951fab597be8f5175bc623fb0405e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the asset request signal  <br /></td></tr>
-<tr class="separator:ae3951fab597be8f5175bc623fb0405e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac567dc85f9e8e92db5a0a49708a57289" id="r_ac567dc85f9e8e92db5a0a49708a57289"><td class="memItemLeft" align="right" valign="top">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ac567dc85f9e8e92db5a0a49708a57289">getDownloadAssetRequest</a> () override</td></tr>
+<tr class="memdesc:ac567dc85f9e8e92db5a0a49708a57289"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the asset request signal  <br /></td></tr>
+<tr class="separator:ac567dc85f9e8e92db5a0a49708a57289"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ee6003196e094215a2518daef59d957" id="r_a0ee6003196e094215a2518daef59d957"><td class="memItemLeft" align="right" valign="top">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a0ee6003196e094215a2518daef59d957">getUploadAssetRequest</a> () override</td></tr>
+<tr class="memdesc:a0ee6003196e094215a2518daef59d957"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the upload asset request signal  <br /></td></tr>
+<tr class="separator:a0ee6003196e094215a2518daef59d957"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classcatena_1_1common_1_1IDevice"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classcatena_1_1common_1_1IDevice')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a></td></tr>
 <tr class="memitem:ac71fc03628cf95184ea9f4c0bd761a65 inherit pub_methods_classcatena_1_1common_1_1IDevice" id="r_ac71fc03628cf95184ea9f4c0bd761a65"><td class="memItemLeft" align="right" valign="top">
 &#160;</td><td class="memItemRight" valign="bottom"><b>IDevice</b> ()=default</td></tr>
@@ -713,36 +716,6 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="ae3951fab597be8f5175bc623fb0405e9" name="ae3951fab597be8f5175bc623fb0405e9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae3951fab597be8f5175bc623fb0405e9">&#9670;&#160;</a></span>getAssetRequest()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">vdk::signal&lt; void(const std::string &amp;)&gt; &amp; catena::common::Device::getAssetRequest </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>get the asset request signal </p>
-<dl class="section return"><dt>Returns</dt><dd>the signal </dd></dl>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a4d383890acfe1fb7f22a2d4341672d94">catena::common::IDevice</a>.</p>
-
-</div>
-</div>
 <a id="ad8bd07b2ced46650127f0bb2e238c1b9" name="ad8bd07b2ced46650127f0bb2e238c1b9"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad8bd07b2ced46650127f0bb2e238c1b9">&#9670;&#160;</a></span>getCommand()</h2>
 
@@ -938,6 +911,36 @@ Here is the caller graph for this function:</div>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="ac567dc85f9e8e92db5a0a49708a57289" name="ac567dc85f9e8e92db5a0a49708a57289"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac567dc85f9e8e92db5a0a49708a57289">&#9670;&#160;</a></span>getDownloadAssetRequest()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> *)&gt; &amp; catena::common::Device::getDownloadAssetRequest </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>get the asset request signal </p>
+<dl class="section return"><dt>Returns</dt><dd>the signal </dd></dl>
+
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a2be39aacca8e57a1d2c3606ecf2b2a99">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
@@ -1209,6 +1212,36 @@ template&lt;typename TAG &gt; </div>
 <dl class="section return"><dt>Returns</dt><dd>a vector of unique pointers to the parameters </dd></dl>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a01f5486b4a592d4592585ed218e4f11d">catena::common::IDevice</a>.</p>
+
+</div>
+</div>
+<a id="a0ee6003196e094215a2518daef59d957" name="a0ee6003196e094215a2518daef59d957"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0ee6003196e094215a2518daef59d957">&#9670;&#160;</a></span>getUploadAssetRequest()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> *)&gt; &amp; catena::common::Device::getUploadAssetRequest </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>get the upload asset request signal </p>
+<dl class="section return"><dt>Returns</dt><dd>the signal </dd></dl>
+
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a444410bfc60b929d1bd30a5d22061085">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
