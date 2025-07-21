@@ -45,14 +45,14 @@ get:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameters to get info for
+      description: The slot of the device model containing the parameter to get the value of
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
    
     - name: fqoid
       in: path
       required: true
-      description: Fully qualified OID of the parameter to get info for
+      description: Fully qualified OID of the parameter to get the value of
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
       default: ""
@@ -112,14 +112,14 @@ put:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameters to get info for
+      description: The slot of the device model containing the parameters to set the value of
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
   
     - name: fqoid
       in: path
       required: true
-      description: Fully qualified OID of the parameter to get info for
+      description: Fully qualified OID of the parameter to set the value of
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
       default: ""
