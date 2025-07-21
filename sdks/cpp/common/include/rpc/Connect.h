@@ -81,7 +81,7 @@ class Connect : public IConnect {
     /**
      * @brief Returns true if this has less prioirty than otherConnection.
      */
-    bool operator<(const IConnect& otherConnection) override {
+    bool operator<(const IConnect& otherConnection) const override {
         return priority_ < otherConnection.priority() ||
                (priority_ == otherConnection.priority() && age_ >= otherConnection.age());
     }

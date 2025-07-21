@@ -70,7 +70,7 @@ class IConnect {
     /**
      * @brief Returns true if this has less prioirty than otherConnection.
      */
-    virtual bool operator<(const IConnect& otherConnection) = 0;
+    virtual bool operator<(const IConnect& otherConnection) const = 0;
     /**
      * @brief Forcefully shuts down the connection.
      */
