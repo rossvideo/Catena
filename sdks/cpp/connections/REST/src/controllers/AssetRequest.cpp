@@ -94,6 +94,31 @@ bool AssetRequest::get_last_write_time(const std::string& path, std::time_t& out
     return false;
 }
 
+void AssetRequest::extractPayload(const std::string& filePath) {
+    std::vector<uint8_t> file_data(context_.jsonBody().begin(), context_.jsonBody().end());
+
+    // Decompress if needed
+    if (context_.fields("compression") == "GZIP") {
+        DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] decompressing GZIP";
+        gzip_decompress(file_data);
+    } else if (context_.fields("compression") == "DEFLATE") {
+        DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] decompressing DEFLATE";
+        deflate_decompress(file_data);
+    }
+
+    // Ensure destination directory exists
+    std::filesystem::create_directories(std::filesystem::path(filePath).parent_path());
+
+    // Save to file
+    std::ofstream file(filePath, std::ios::binary);
+    if (!file.is_open()) {
+        std::string error = "AssetRequest[" + std::to_string(objectId_) + "] failed to open file for writing: " + filePath;
+        throw catena::exception_with_status(error, catena::StatusCode::INTERNAL);
+    }
+    file.write(reinterpret_cast<const char*>(file_data.data()), file_data.size());
+    file.close();
+}
+
 void AssetRequest::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
 
@@ -217,7 +242,7 @@ void AssetRequest::proceed() {
             if (!(authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kOperate))
                     || authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kConfig))
                     || authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kAdmin)))) {
-                throw catena::exception_with_status("Not authorized to upload asset", catena::StatusCode::PERMISSION_DENIED);
+                throw catena::exception_with_status("Not authorized to POST asset", catena::StatusCode::PERMISSION_DENIED);
             }
 
             //examine authz if has write access in BL
@@ -228,29 +253,7 @@ void AssetRequest::proceed() {
             std::string filePath = context_.EOPath();
             filePath.append(context_.fqoid());
         
-            // Extract the payload
-            std::vector<uint8_t> file_data(context_.jsonBody().begin(), context_.jsonBody().end());
-        
-            // Decompress if needed
-            if (context_.fields("compression") == "GZIP") {
-                DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] decompressing GZIP";
-                gzip_decompress(file_data);
-            } else if (context_.fields("compression") == "DEFLATE") {
-                DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] decompressing DEFLATE";
-                deflate_decompress(file_data);
-            }
-        
-            // Ensure destination directory exists
-            std::filesystem::create_directories(std::filesystem::path(filePath).parent_path());
-        
-            // Save to file
-            std::ofstream file(filePath, std::ios::binary);
-            if (!file.is_open()) {
-                std::string error = "AssetRequest[" + std::to_string(objectId_) + "] failed to open file for writing: " + filePath;
-                throw catena::exception_with_status(error, catena::StatusCode::INTERNAL);
-            }
-            file.write(reinterpret_cast<const char*>(file_data.data()), file_data.size());
-            file.close();
+            extractPayload(filePath);
         
             DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] wrote file: " + filePath;
         
@@ -260,7 +263,38 @@ void AssetRequest::proceed() {
         
         // PUT/asset
         else if (context_.method() == Method_PUT) {
-            // TODO: Implement PUT/asset
+            DEBUG_LOG << "receiving asset: " << context_.fqoid();
+
+            //Check if the user has write authorization in any scope other than monitoring
+            //either authz have to be disabled or have write access to any scope other than monitor
+            //TODO: move to BL
+            if (!(authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kOperate))
+                    || authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kConfig))
+                    || authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kAdmin)))) {
+                throw catena::exception_with_status("Not authorized to PUT asset", catena::StatusCode::PERMISSION_DENIED);
+            }
+
+            //examine authz if has write access in BL
+            //if not, dont post
+            //TODO: hook up business logic to handle asset upload
+            dm->getUploadAssetRequest().emit(context_.fqoid(), authz);
+
+            std::string filePath = context_.EOPath();
+            filePath.append(context_.fqoid());
+
+            // Check if the file exists
+            if (!std::filesystem::exists(filePath)) {
+                std::string notFound = "file: " + filePath + " not found";
+                DEBUG_LOG << notFound;
+                throw catena::exception_with_status(notFound, catena::StatusCode::NOT_FOUND);
+            }
+        
+            extractPayload(filePath);
+        
+            DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] wrote file: " + filePath;
+        
+            // Set result status to OK
+            rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
         }
         
         // DELETE/asset
