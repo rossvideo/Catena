@@ -68,6 +68,8 @@ using catena::REST::SocketReader;
 using catena::REST::SocketWriter;
 using catena::REST::SSEWriter;
 
+using namespace catena::common;
+
 namespace catena {
 /**
  * @brief Namespace for classes relating to handling REST API requests.
@@ -77,13 +79,7 @@ namespace REST {
 /**
  * @brief Implements Catena REST API request handlers.
  */
-class CatenaServiceImpl : public catena::REST::IServiceImpl {
-
-  // Specifying which Device and IParam to use (defaults to catena::...)
-  using IDevice = catena::common::IDevice;
-  using IParam = catena::common::IParam;
-  using SlotMap = catena::common::SlotMap;
-
+class CatenaServiceImpl : public catena::REST::ICatenaServiceImpl {
   public:
     /**
      * @brief Constructor for the REST API.
@@ -109,16 +105,31 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      */
     void Shutdown() override;
     /**
-     * @brief Returns true if authorization is enabled.
+     * @brief Flag to set authorization as enabled or disabled
      */
-    bool authorizationEnabled() override { return authorizationEnabled_; };
+    inline bool authorizationEnabled() const override { return authorizationEnabled_; }
+    /**
+     * @brief Get the subscription manager
+     * @return Reference to the subscription manager
+     */
+    inline catena::common::ISubscriptionManager& subscriptionManager() override { return subscriptionManager_; }
+    /**
+     * @brief Returns the EOPath.
+     */
+    const std::string& EOPath() override { return EOPath_; }
+    /**
+     * @brief Regesters a Connect CallData object into the Connection priority queue.
+     * @param cd The Connect CallData object to register.
+     * @return TRUE if successfully registered, FALSE otherwise
+     */
+    bool registerConnection(catena::common::IConnect* cd) override;
+    /**
+     * @brief Deregisters a Connect CallData object into the Connection priority queue.
+     * @param cd The Connect CallData object to deregister.
+     */
+    void deregisterConnection(catena::common::IConnect* cd) override;
 
   private:
-    /**
-     * @brief The subscription manager for handling parameter subscriptions
-     */
-    catena::common::SubscriptionManager subscriptionManager_;
-
     /**
      * @brief Returns true if port_ is already in use.
      * 
@@ -147,11 +158,11 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      * 
      * Devices are global objects so raw ptrs should be safe.
      */
-    catena::common::SlotMap dms_;
+    SlotMap dms_;
     /**
      * @brief The path to the external object
      */
-    std::string& EOPath_;
+    std::string& EOPath_; 
     /**
      * @brief Flag to enable authorization
      */
@@ -161,17 +172,57 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      */
     bool shutdown_ = false;
     /**
-     * @brief Counter used to track number of active requests. Run() does not
-     * return until this is 0.
+     * @brief The subscription manager for handling parameter subscriptions
      */
-    uint32_t activeRequests_ = 0;
+    catena::common::SubscriptionManager subscriptionManager_;
     /**
-     * @brief Mutex for activeRequests_ counter to avoid collisions.
+     * @brief Mutex to protect the connectionQueue 
      */
+    std::mutex connectionMutex_;
+    /**
+     * @brief The priority queue for Connect CallData objects.
+     * 
+     * Not an actual priority queue object since individual access is required
+     * for deregistering old connections.
+     */
+    std::vector<catena::common::IConnect*> connectionQueue_;
+    /**
+     * @brief The maximum number of connections allowed to the service.
+     */
+    uint32_t maxConnections_;
+
+    uint32_t activeRequests_ = 0;
+
     std::mutex activeRequestMutex_;
+     /**
+     * @brief Returns the size of the registry.
+     */
+    uint32_t registrySize() const override { return registry_.size(); }
+    /**
+     * @brief Registers a CallData object into the registry
+     * @param cd The CallData object to register
+     */
+    void registerItem(ICallData *cd) override;
+    /**
+     * @brief Deregisters a CallData object from registry
+     * @param cd The CallData object to deregister
+     */
+    void deregisterItem(ICallData *cd) override;
+    // Aliases for special vectors and unique_ptrs.
+    using Registry = std::vector<std::unique_ptr<ICallData>>;
+    using RegistryItem = std::unique_ptr<ICallData>;
+    /**
+     * @brief The registry of CallData objects
+     */
+    Registry registry_;
+    /**
+     * @brief Mutex to protect the registry 
+     */
+    std::mutex registryMutex_;
 
     using Router = catena::patterns::GenericFactory<catena::REST::ICallData,
                                                     std::string,
+                                                    ICatenaServiceImpl*,
                                                     tcp::socket&,
                                                     ISocketReader&,
                                                     SlotMap&>;

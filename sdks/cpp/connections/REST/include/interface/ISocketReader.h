@@ -133,16 +133,6 @@ class ISocketReader {
      * @brief Returns true if the client wants a stream response.
      */
     virtual bool stream() const = 0;
-
-    /**
-     * @brief Returns the path to the external object.
-     */
-    virtual const std::string& EOPath() const = 0;
-
-    /**
-     * @brief Returns a reference to the subscription manager
-     */
-    virtual catena::common::ISubscriptionManager& getSubscriptionManager() = 0;
 };
  
 }; // Namespace REST

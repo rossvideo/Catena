@@ -56,6 +56,7 @@
 #include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
+#include "interface/IServiceImpl.h"
 
 #include <Logger.h>
 
@@ -76,11 +77,12 @@ class Connect : public ICallData, public catena::common::Connect {
     /**
      * @brief Constructor for the Connect controller.
      *
+     * @param service Pointer to the parent CatenaServiceImpl.
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    Connect(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
+    Connect(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief Destructor for the Connect controller.
      */
@@ -97,8 +99,8 @@ class Connect : public ICallData, public catena::common::Connect {
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
-      return new Connect(socket, context, dms);
+    static ICallData* makeOne(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new Connect(service, socket, context, dms);
     }
     
     /**
@@ -137,6 +139,10 @@ class Connect : public ICallData, public catena::common::Connect {
      */
     ISocketReader& context_;
     /**
+     * @brief Pointer to the CatenaServiceImpl.
+     */
+    ICatenaServiceImpl *service_;
+    /**
      * @brief The mutex to for locking the object while writing
      */
     std::mutex mtx_;
@@ -159,10 +165,6 @@ class Connect : public ICallData, public catena::common::Connect {
      * @brief ID of the shutdown signal for the Connect object
     */
     unsigned int shutdownSignalId_;
-    /**
-     * @brief Flag to indicate when the shutdown signal has been recieved.
-     */
-    bool shutdown_;
     
     /**
      * @brief ID of the Connect object

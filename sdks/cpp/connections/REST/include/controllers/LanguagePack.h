@@ -53,6 +53,7 @@
 #include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
+#include "interface/IServiceImpl.h"
 
 #include <Logger.h>
 
@@ -71,11 +72,12 @@ class LanguagePack : public ICallData {
     /**
      * @brief Constructor for the LanguagePack controller.
      *
+     * @param service Pointer to the parent CatenaServiceImpl.
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    LanguagePack(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
+    LanguagePack(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief LanguagePack's main processes.
      */
@@ -83,13 +85,14 @@ class LanguagePack : public ICallData {
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     * 
+     *
+     * @param service Pointer to the parent CatenaServiceImpl.
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
-      return new LanguagePack(socket, context, dms);
+    static ICallData* makeOne(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new LanguagePack(service, socket, context, dms);
     }
     
 
@@ -122,6 +125,10 @@ class LanguagePack : public ICallData {
      * @brief A map of slots to ptrs to their corresponding device.
      */
     SlotMap& dms_;
+    /**
+     * @brief Pointer to the CatenaServiceImpl.
+     */
+    ICatenaServiceImpl *service_;
 
     /**
      * @brief ID of the LanguagePack object

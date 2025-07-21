@@ -76,7 +76,7 @@ CatenaServiceImpl::CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOP
 }
 
 // Initializing the shutdown signal for all open connections.
-vdk::signal<void()> Connect::shutdownSignal_;
+vdk::signal<void()> catena::REST::Connect::shutdownSignal_;
 
 void CatenaServiceImpl::run() {
     // TLS handled by Envoyproxy
@@ -96,9 +96,8 @@ void CatenaServiceImpl::run() {
             if (!shutdown_) {
                 try {
                     // Reading from the socket.
-                    SocketReader context(subscriptionManager_, EOPath_);
+                    SocketReader context;
                     context.read(socket, authorizationEnabled_, version_);
-                    //TODO: remove v1 from the request key when the router options are updated
                     std::string requestKey = RESTMethodMap().getForwardMap().at(context.method()) + context.endpoint();
                     // Returning empty response with options to the client if required.
                     if (context.method() == Method_OPTIONS) {
@@ -109,7 +108,7 @@ void CatenaServiceImpl::run() {
                         SocketWriter(socket, context.origin()).sendResponse(rc);
                     // Otherwise routing to request.
                     } else if (router_.canMake(requestKey)) {
-                        std::unique_ptr<ICallData> request = router_.makeProduct(requestKey, socket, context, dms_);
+                        std::unique_ptr<ICallData> request = router_.makeProduct(requestKey, this, socket, context, dms_);
                         request->proceed();
                     // ERROR
                     } else { 
@@ -166,6 +165,55 @@ void CatenaServiceImpl::Shutdown() {
     tcp::socket dummySocket(io_context_);
     dummySocket.connect(tcp::endpoint(tcp::v4(), port_));
 };
+
+bool CatenaServiceImpl::registerConnection(catena::common::IConnect* cd) {
+    bool canAdd = false;
+    std::lock_guard<std::mutex> lock(connectionMutex_);
+    // Find the index to insert the new connection based on priority.
+    auto it = std::find_if(connectionQueue_.begin(), connectionQueue_.end(),
+        [cd](const catena::common::IConnect* connection) { return *cd < *connection; });
+    // Based on the iterator, determine if we can add the connection.
+    if (connectionQueue_.size() >= maxConnections_) {
+        if (it != connectionQueue_.begin()) {
+            // Forcefully shutting down lowest priority connection.
+            connectionQueue_.front()->shutdown();
+            canAdd = true;
+        }
+    } else {
+        canAdd = true;
+    }
+    // Adding the connection if possible.
+    if (canAdd) {
+        connectionQueue_.insert(it, cd);
+    }
+    return canAdd;
+}
+
+void CatenaServiceImpl::deregisterConnection(catena::common::IConnect* cd) {
+    std::lock_guard<std::mutex> lock(connectionMutex_);
+    auto it = std::find_if(connectionQueue_.begin(), connectionQueue_.end(),
+                           [cd](const catena::common::IConnect* i) { return i == cd; });
+    if (it != connectionQueue_.end()) {
+        connectionQueue_.erase(it);
+    }
+    DEBUG_LOG << "Connected users remaining: " << connectionQueue_.size() << '\n';
+}
+//Registers current CallData object into the registry
+void CatenaServiceImpl::registerItem(ICallData *cd) {
+    std::lock_guard<std::mutex> lock(registryMutex_);
+    this->registry_.push_back(RegistryItem(cd));
+}
+
+//Deregisters current CallData object from the registry
+void CatenaServiceImpl::deregisterItem(ICallData *cd) {
+    std::lock_guard<std::mutex> lock(registryMutex_);
+    auto it = std::find_if(registry_.begin(), registry_.end(),
+                            [cd](const RegistryItem &i) { return i.get() == cd; });
+    if (it != registry_.end()) {
+        registry_.erase(it);
+    }
+    DEBUG_LOG << "Active RPCs remaining: " << registry_.size() << '\n';
+}
 
 // (UNUSED)
 // GCOVR_EXCL_START

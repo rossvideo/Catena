@@ -41,6 +41,7 @@
 #include "interface/ISocketReader.h"
 #include <SocketWriter.h>
 #include "interface/ICallData.h"
+#include "interface/IServiceImpl.h"
 
 // Protobuf
 #include <google/protobuf/util/json_util.h>
@@ -74,11 +75,12 @@ class ExecuteCommand : public ICallData {
     /**
      * @brief Constructor for the ExecuteCommand controller.
      *
+     * @param service Pointer to the parent CatenaServiceImpl.
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    ExecuteCommand(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
+    ExecuteCommand(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     
     /**
      * @brief ExecuteCommand's main process.
@@ -92,8 +94,8 @@ class ExecuteCommand : public ICallData {
      * @param context The SocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
-      return new ExecuteCommand(socket, context, dms);
+    static ICallData* makeOne(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new ExecuteCommand(service, socket, context, dms);
     }
 
   private:
@@ -131,6 +133,10 @@ class ExecuteCommand : public ICallData {
      * @brief A map of slots to ptrs to their corresponding device.
      */
     SlotMap& dms_;
+    /**
+     * @brief Pointer to the CatenaServiceImpl.
+     */
+    ICatenaServiceImpl *service_;
 };
 
 } // namespace REST

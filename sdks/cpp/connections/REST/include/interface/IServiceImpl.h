@@ -29,7 +29,7 @@
 */
 
 /**
- * @file IServiceImpl.h
+ * @file ICatenaServiceImpl.h
  * @brief Interface for the REST API implementation
  * @author Benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2024 Ross Video Ltd
@@ -42,6 +42,11 @@
 #include <vdk/signals.h>
 #include <IParam.h>
 #include <IDevice.h>
+#include <ISubscriptionManager.h>
+#include <rpc/IConnect.h>
+
+// REST
+#include "interface/ICallData.h"
 
 // boost
 #include <boost/asio.hpp>
@@ -53,25 +58,22 @@ using boost::asio::ip::tcp;
 #include <iostream>
 #include <regex>
 
+using namespace catena::common;
+
 namespace catena {
 namespace REST {
 
 /**
  * @brief Interface for the REST::CatenaServiceImpl class
  */
-class IServiceImpl {
-
-  // Specifying which Device and IParam to use (defaults to catena::...)
-  using IDevice = catena::common::IDevice;
-  using IParam = catena::common::IParam;
-
+class ICatenaServiceImpl {
   public:
-    IServiceImpl() = default;
-    IServiceImpl(const IServiceImpl&) = delete;
-    IServiceImpl& operator=(const IServiceImpl&) = delete;
-    IServiceImpl(IServiceImpl&&) = delete;
-    IServiceImpl& operator=(IServiceImpl&&) = delete;
-    virtual ~IServiceImpl() = default;
+    ICatenaServiceImpl() = default;
+    ICatenaServiceImpl(const ICatenaServiceImpl&) = delete;
+    ICatenaServiceImpl& operator=(const ICatenaServiceImpl&) = delete;
+    ICatenaServiceImpl(ICatenaServiceImpl&&) = delete;
+    ICatenaServiceImpl& operator=(ICatenaServiceImpl&&) = delete;
+    virtual ~ICatenaServiceImpl() = default;
 
     /**
      * @brief Returns the API's version.
@@ -87,10 +89,44 @@ class IServiceImpl {
      */
     virtual void Shutdown() = 0;
     /**
-     * @brief Returns true if authorization is enabled.
+     * @brief Flag to set authorization as enabled or disabled
      */
-    virtual bool authorizationEnabled() = 0;
-    
+    virtual inline bool authorizationEnabled() const = 0;
+    /**
+     * @brief Get the subscription manager
+     * @return Reference to the subscription manager
+     */
+    virtual inline ISubscriptionManager& subscriptionManager() = 0;
+    /**
+     * @brief Returns the EOPath.
+     */
+    virtual const std::string& EOPath() = 0;
+    /**
+     * @brief Regesters a Connect CallData object into the Connection priority queue.
+     * @param cd The Connect CallData object to register.
+     * @return TRUE if successfully registered, FALSE otherwise.
+     */
+    virtual bool registerConnection(catena::common::IConnect* cd) = 0;
+    /**
+     * @brief Deregisters a Connect CallData object into the Connection priority queue.
+     * @param cd The Connect CallData object to deregister.
+     */
+    virtual void deregisterConnection(catena::common::IConnect* cd) = 0;
+    /**
+     * @brief Returns the size of the registry.
+     */
+    virtual uint32_t registrySize() const = 0;
+    /**
+     * @brief Registers a CallData object into the registry
+     * @param cd The CallData object to register
+     */
+    virtual void registerItem(ICallData *cd) = 0;
+    /**
+     * @brief Deregisters a CallData object from registry
+     * @param cd The CallData object to deregister
+     */
+    virtual void deregisterItem(ICallData *cd) = 0;
+
   private:
     /**
      * @brief Returns true if port_ is already in use.

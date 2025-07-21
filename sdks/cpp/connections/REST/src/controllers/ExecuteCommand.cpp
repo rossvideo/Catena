@@ -6,8 +6,8 @@ using catena::REST::ExecuteCommand;
 // Initializes the object counter for ExecuteCommand to 0.
 int ExecuteCommand::objectCounter_ = 0;
 
-ExecuteCommand::ExecuteCommand(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
-    socket_{socket}, context_{context}, dms_{dms} {
+ExecuteCommand::ExecuteCommand(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    service_{service}, socket_{socket}, context_{context}, dms_{dms} {
     objectId_ = objectCounter_++;
     // Initializing the writer depending on if the response is stream or unary.
     if (context.stream()) {

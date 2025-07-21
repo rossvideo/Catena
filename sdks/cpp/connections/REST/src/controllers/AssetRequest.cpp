@@ -9,8 +9,8 @@ using catena::REST::AssetRequest;
 // Initializes the object counter for GetParam to 0.
 int AssetRequest::objectCounter_ = 0;
 
-AssetRequest::AssetRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
-    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms} {
+AssetRequest::AssetRequest(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    service_{service}, socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }

@@ -2,12 +2,6 @@
 #include <SocketReader.h>
 using catena::REST::SocketReader;
 
-namespace catena {
-namespace REST {
-
-SocketReader::SocketReader(catena::common::ISubscriptionManager& subscriptionManager, const std::string& EOPath) 
-    : subscriptionManager_(subscriptionManager), EOPath_(EOPath) {}
-
 void SocketReader::read(tcp::socket& socket, bool authz, const std::string& version) {
     // Resetting variables.
     method_ = catena::REST::Method_NONE;
@@ -125,6 +119,3 @@ void SocketReader::read(tcp::socket& socket, bool authz, const std::string& vers
         detailLevel_ = Device_DetailLevel_NONE;
     }
 }
-
-}; // Namespace REST
-}; // Namespace catena

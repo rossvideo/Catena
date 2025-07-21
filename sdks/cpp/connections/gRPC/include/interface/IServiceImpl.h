@@ -38,7 +38,7 @@
 #pragma once
 
 // common
-#include <SubscriptionManager.h>
+#include <ISubscriptionManager.h>
 #include <rpc/IConnect.h>
 
 // gRPC/interface

@@ -79,10 +79,8 @@ class SocketReader : public ISocketReader {
   public:
     /**
      * @brief Constructor for the SocketReader class.
-     * @param subscriptionManager The subscription manager to use.
-     * @param EOPath The path to external objects
      */
-    SocketReader(catena::common::ISubscriptionManager& subscriptionManager, const std::string& EOPath = "");
+    SocketReader() = default;
     /**
      * @brief Populates variables using information read from the inputted
      * socket.
@@ -144,23 +142,13 @@ class SocketReader : public ISocketReader {
      */
     const std::string& jsonBody() const override { return jsonBody_; }
     /**
-     * @brief Returns a reference to the subscription manager
-     */
-    catena::common::ISubscriptionManager& getSubscriptionManager() override { return subscriptionManager_; }
-
-    /**
      * @brief Returns true if authorization is enabled.
      */
     bool authorizationEnabled() const override { return authorizationEnabled_; };
     /**
      * @brief Returns true if the client wants a stream response.
      */
-    bool stream() const override { return stream_; }
-
-    /**
-     * @brief Returns the path to the external object.
-     */
-    const std::string& EOPath() const override { return EOPath_; }  
+    bool stream() const override { return stream_; } 
 
   private:
     /**
@@ -200,10 +188,6 @@ class SocketReader : public ISocketReader {
      */
     std::string jsonBody_ = "";
     /**
-     * @brief The subscription manager for handling parameter subscriptions
-     */
-    catena::common::ISubscriptionManager& subscriptionManager_;
-    /**
      * @brief A map of fields queried from the URL.
      */
     std::unordered_map<std::string, std::string> fields_;
@@ -216,10 +200,6 @@ class SocketReader : public ISocketReader {
      * @brief True if authorization is enabled.
      */
     bool authorizationEnabled_ = false;
-    /**
-     * @brief The path to the external object.
-     */
-    std::string EOPath_ = ""; 
 };
 
 }; // Namespace REST
