@@ -404,10 +404,17 @@ class IDevice {
     virtual vdk::signal<void(const std::string&, const IParam*)>& getValueSetByServer() = 0;
 
     /**
-     * @brief signal emitted when an asset request is made.
+     * @brief signal emitted when a download asset request is made.
      * Intended recipient is the business logic.
      */
-    virtual vdk::signal<void(const std::string&)>& getAssetRequest() = 0;
+    virtual vdk::signal<void(const std::string&, const Authorizer*)>& getDownloadAssetRequest() = 0;
+
+    /**
+     * @brief signal emitted when an upload asset request is made.
+     * Intended recipient is the business logic.
+     */
+    virtual vdk::signal<void(const std::string&, const Authorizer*)>& getUploadAssetRequest() = 0;
+
 };
 
 using SlotMap = std::unordered_map<uint32_t, IDevice*>;

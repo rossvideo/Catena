@@ -81,7 +81,8 @@ class MockDevice : public IDevice {
     MOCK_METHOD(vdk::signal<void(const std::string&, const IParam*)>&, getValueSetByClient, (), (override));
     MOCK_METHOD(vdk::signal<void(const ILanguagePack*)>&, getLanguageAddedPushUpdate, (), (override));
     MOCK_METHOD(vdk::signal<void(const std::string&, const IParam*)>&, getValueSetByServer, (), (override));
-    MOCK_METHOD(vdk::signal<void(const std::string&)>&, getAssetRequest, (), (override));
+    MOCK_METHOD(vdk::signal<void(const std::string&, const Authorizer*)>&, getDownloadAssetRequest, (), (override));
+    MOCK_METHOD(vdk::signal<void(const std::string&, const Authorizer*)>&, getUploadAssetRequest, (), (override));
 };
 
 } // namespace common

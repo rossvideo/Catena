@@ -120,6 +120,25 @@ class AssetRequest : public ICallData {
     void gzip_compress(std::vector<uint8_t>& input);
 
     /**
+     * @brief Decompresses the input data using the specified window bits.
+     * @param input The input data to decompress.
+     * @param windowBits The window bits to use for decompression.
+     */
+    void decompress(std::vector<uint8_t>& input, int windowBits);
+
+    /**
+     * @brief Decompresses the input data using deflate compression.
+     * @param input The input data to decompress.
+     */
+    void deflate_decompress(std::vector<uint8_t>& input);
+    
+    /**
+     * @brief Decompresses the input data using gzip compression.
+     * @param input The input data to decompress.
+     */
+    void gzip_decompress(std::vector<uint8_t>& input);
+
+    /**
      * @brief Gets the last write time of the file.
      * @param path The path to the file.
      * @param out_time The output time.
