@@ -64,9 +64,9 @@ class IConnect {
      */
     virtual uint32_t priority() const = 0;
     /**
-     * @brief Returns the creation time.
+     * @brief Returns the object Id.
      */
-    virtual const system_clock::time_point& age() const = 0;
+    virtual uint32_t objectId() const = 0;
     /**
      * @brief Returns true if this has less prioirty than otherConnection.
      */

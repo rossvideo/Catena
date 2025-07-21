@@ -47,7 +47,7 @@ namespace common {
 class MockConnect : public IConnect {
   public:
     MOCK_METHOD(uint32_t, priority, (), (const, override));
-    MOCK_METHOD(const system_clock::time_point&, age, (), (const, override));
+    MOCK_METHOD(uint32_t, objectId, (), (const, override));
     MOCK_METHOD(void, shutdown, (), (override));
     MOCK_METHOD(bool, isCancelled, (), (override));
     MOCK_METHOD(void, updateResponse_, (const std::string& oid, const IParam* p, uint32_t slot), (override));

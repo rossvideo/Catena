@@ -52,7 +52,6 @@
 
 #include <string>
 #include <condition_variable>
-#include <chrono>
 
 namespace catena {
 namespace common {
@@ -75,15 +74,15 @@ class Connect : public IConnect {
      */
     uint32_t priority() const override { return priority_; }
     /**
-     * @brief Returns the creation time.
+     * @brief Returns the object Id.
      */
-    const system_clock::time_point& age() const override { return age_; }
+    uint32_t objectId() const override { return objectId_; }
     /**
      * @brief Returns true if this has less prioirty than otherConnection.
      */
     bool operator<(const IConnect& otherConnection) const override {
         return priority_ < otherConnection.priority() ||
-               (priority_ == otherConnection.priority() && age_ >= otherConnection.age());
+               (priority_ == otherConnection.priority() && objectId_ >= otherConnection.objectId());
     }
     /**
      * @brief Forcefully shuts down the connection.
@@ -109,8 +108,7 @@ class Connect : public IConnect {
     Connect(SlotMap& dms, ISubscriptionManager& subscriptionManager) : 
         dms_{dms}, 
         subscriptionManager_{subscriptionManager},
-        detailLevel_{catena::Device_DetailLevel_UNSET},
-        age_{std::chrono::system_clock::now()} {}
+        detailLevel_{catena::Device_DetailLevel_UNSET} {}
     /**
      * @brief Connect does not have copy semantics
      */
@@ -252,10 +250,6 @@ class Connect : public IConnect {
      */
     uint32_t priority_ = 0;
     /**
-     * @brief The connection's time of creation.
-     */
-    system_clock::time_point age_;
-    /**
      * @brief Shared ptr to maintain ownership of authorizer.
      */
     std::shared_ptr<catena::common::Authorizer> sharedAuthz_;
@@ -307,6 +301,10 @@ class Connect : public IConnect {
      * @brief Flag indicating whether to shut down the connection.
      */
     bool shutdown_ = false;
+    /**
+     * @brief ID of the Connect object
+     */
+    uint32_t objectId_ = 0;
 };
 
 }; // common

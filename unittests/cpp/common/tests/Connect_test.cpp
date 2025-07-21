@@ -48,6 +48,7 @@ class TestConnect : public Connect {
     
     bool isCancelled() override { return shutdown_; }
     void forceConnection(bool forceConnection) { forceConnection_ = forceConnection; }
+    void objectId(uint32_t id) { objectId_ = id; }
 
     // Expose protected methods for testing
     using Connect::updateResponse_;
@@ -315,7 +316,9 @@ TEST_F(CommonConnectTest, PriorityAuthzOn) {
 // Test 1.9: Testing connection comparison based on priority and age
 TEST_F(CommonConnectTest, Compare) {
     // Creating a second connect obj for comparison.
+    connect->objectId(0);
     TestConnect otherConnect(dms_, subscriptionManager);
+    otherConnect.objectId(1);  // Set a different object ID for comparison
     // Higher priority connection should be greater than lower priority connection
     connect->initAuthz_(getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor)), true);
     otherConnect.initAuthz_(getJwsToken(Scopes().getForwardMap().at(Scopes_e::kOperate)), true);

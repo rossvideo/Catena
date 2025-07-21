@@ -102,10 +102,6 @@ class Connect : public CallData, public catena::common::Connect {
      */
     std::mutex mtx_;
     /**
-     * @brief ID of the Connect object
-     */
-    int objectId_;
-    /**
      * @brief The total # of Connect objects.
      */
     static int objectCounter_;
