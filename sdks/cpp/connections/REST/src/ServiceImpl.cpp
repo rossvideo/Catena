@@ -59,6 +59,7 @@ CatenaServiceImpl::CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOP
         router_.addProduct("GET",                 DeviceRequest::makeOne);
         router_.addProduct("POST/command",        ExecuteCommand::makeOne);
         router_.addProduct("GET/asset",           AssetRequest::makeOne);
+        router_.addProduct("POST/asset",          AssetRequest::makeOne);
         router_.addProduct("GET/devices",         GetPopulatedSlots::makeOne);
         router_.addProduct("GET/value",           GetValue::makeOne);
         router_.addProduct("PUT/values",          MultiSetValue::makeOne);

@@ -566,7 +566,13 @@ class Device : public IDevice {
      * @brief get the asset request signal
      * @return the signal
      */
-    vdk::signal<void(const std::string&)>& getAssetRequest() override { return assetRequest; }
+     vdk::signal<void(const std::string&, const Authorizer*)>& getDownloadAssetRequest() override { return downloadAssetRequest; } 
+
+     /**
+      * @brief get the upload asset request signal
+      * @return the signal
+      */
+     vdk::signal<void(const std::string&, const Authorizer*)>& getUploadAssetRequest() override { return uploadAssetRequest; }
 
   private:
 
@@ -590,10 +596,16 @@ class Device : public IDevice {
     vdk::signal<void(const std::string&, const IParam*)> valueSetByServer;
 
     /**
-     * @brief signal emitted when an asset request is made.
+     * @brief signal emitted when a download asset request is made.
      * Intended recipient is the business logic.
      */
-    vdk::signal<void(const std::string&)> assetRequest;
+    vdk::signal<void(const std::string&, const Authorizer*)> downloadAssetRequest;
+
+    /**
+     * @brief signal emitted when an upload asset request is made.
+     * Intended recipient is the business logic.
+     */
+    vdk::signal<void(const std::string&, const Authorizer*)> uploadAssetRequest;
 
     uint32_t slot_;
     Device_DetailLevel detail_level_;
