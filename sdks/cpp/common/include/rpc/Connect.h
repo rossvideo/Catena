@@ -136,7 +136,7 @@ class Connect : public IConnect {
                 hasUpdate_ = true;
                 cv_.notify_one();
 
-            } else if (authz_ == &catena::common::Authorizer::kAuthzDisabled || authz_->readAuthz(*p)) {
+            } else if (authz_->readAuthz(*p)) {
                 // Map of detail levels to their update logic
                 const std::unordered_map<catena::Device_DetailLevel, std::function<bool()>> detailLevelMap {
                     {catena::Device_DetailLevel_FULL, [&]() {
@@ -193,8 +193,7 @@ class Connect : public IConnect {
             if (isCancelled()){
                 hasUpdate_ = true;
                 cv_.notify_one();
-            } else if (authz_ == &catena::common::Authorizer::kAuthzDisabled
-                || authz_->hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
+            } else if (authz_->readAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
                 // Updating res_'s device_component and pushing update.
                 res_.Clear();
                 res_.set_slot(slot);

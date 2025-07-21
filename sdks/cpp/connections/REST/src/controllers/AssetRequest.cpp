@@ -127,7 +127,7 @@ void AssetRequest::proceed() {
         else if (context_.method() == Method_GET) {
             // Locking device and parsing object data.
             DEBUG_LOG << "sending asset: " << context_.fqoid();
-            std::string path = context_.EOPath();
+            std::string path = service_->EOPath();
             path.append(context_.fqoid());
 
             //check for any read access
@@ -225,7 +225,7 @@ void AssetRequest::proceed() {
             //TODO: hook up business logic to handle asset upload
             dm->getUploadAssetRequest().emit(context_.fqoid(), authz);
 
-            std::string filePath = context_.EOPath();
+            std::string filePath = service_->EOPath();
             filePath.append(context_.fqoid());
         
             // Extract the payload
