@@ -89,6 +89,7 @@ using grpc::ServerCompletionQueue;
 
 using catena::common::IDevice;
 using catena::common::IParam;
+using catena::common::IConnect;
 
 namespace catena {
 namespace gRPC {
@@ -197,9 +198,14 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      */
     catena::common::SubscriptionManager subscriptionManager_;
     /**
+     * @brief Mutex to protect the connectionQueue 
+     */
+    std::mutex connectionMutex_;
+    /**
      * @brief The priority queue for Connect CallData objects.
      * 
-     * Vector for the time being.
+     * Not an actual priority queue object since individual access is required
+     * for deregistering old connections.
      */
     std::vector<catena::common::IConnect*> connectionQueue_;
     /**

@@ -66,15 +66,33 @@ namespace common {
  */
 class Connect : public IConnect {
   public:
-    
-    uint8_t priority() const override { return priority_; }
-
+    /**
+     * @brief Descructor
+     */
+    virtual ~Connect() = default;
+    /**
+     * @brief Returns the connection's priority.
+     */
+    uint32_t priority() const override { return priority_; }
+    /**
+     * @brief Returns the creation time.
+     */
     const system_clock::time_point& age() const override { return age_; }
-
+    /**
+     * @brief Returns true if this has less prioirty than otherConnection.
+     */
     bool operator<(const IConnect& otherConnection) override {
         return priority_ < otherConnection.priority() ||
-               (priority_ == otherConnection.priority() && age_ < otherConnection.age());
+               (priority_ == otherConnection.priority() && age_ >= otherConnection.age());
     }
+    /**
+     * @brief Forcefully shuts down the connection.
+     */
+    void shutdown() override {
+        shutdown_ = true;
+        hasUpdate_ = true;
+        cv_.notify_one();
+    };
 
   protected:
     /**
@@ -103,10 +121,6 @@ class Connect : public IConnect {
      */
     Connect(Connect&&) = delete;
     Connect& operator=(Connect&&) = delete;
-    /**
-     * @brief Destructor
-     */
-    ~Connect() = default;
 
     // IConnect::IsCanceled to be defined by the derived class
 
@@ -181,26 +195,27 @@ class Connect : public IConnect {
             if (isCancelled()){
                 hasUpdate_ = true;
                 cv_.notify_one();
-                return;
+            } else if (authz_ == &catena::common::Authorizer::kAuthzDisabled
+                || authz_->hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
+                // Updating res_'s device_component and pushing update.
+                res_.Clear();
+                res_.set_slot(slot);
+                auto pack = res_.mutable_device_component()->mutable_language_pack();
+                l->toProto(*pack->mutable_language_pack());
+                hasUpdate_ = true;
+                cv_.notify_one();
             }
-            // Returning if authorization is enabled and the client does not have monitor scope.
-            if (authz_ != &catena::common::Authorizer::kAuthzDisabled
-                && !authz_->hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
-                return;
-            }
-            // Updating res_'s device_component and pushing update.
-            res_.set_slot(slot);
-            auto pack = res_.mutable_device_component()->mutable_language_pack();
-            l->toProto(*pack->mutable_language_pack());
-            hasUpdate_ = true;
-            cv_.notify_one();
         } catch(catena::exception_with_status& why){
             // if an error is thrown, no update is pushed to the client
         }
     }
 
     /**
-     * @brief Sets up the authorizer object with the jwsToken.
+     * @brief Sets up the authorizer object with the jwsToken and calculates
+     * connection priority.
+     * 
+     * priority_ = scope * 2 + write + (adm:w && forceConnection)
+     * 
      * @param jwsToken The jwsToken to use for authorization.
      * @param authz true if authorization is enabled, false otherwise.
      */
@@ -209,45 +224,37 @@ class Connect : public IConnect {
             sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
             authz_ = sharedAuthz_.get();
             // Setting up their connection priority.
-            for (auto [val, scope] : Scopes().getForwardMap()) {
+            for (uint32_t i = static_cast<uint32_t>(Scopes_e::kAdmin); i >= static_cast<uint32_t>(Scopes_e::kMonitor); i -= 1) {
+                auto scope = Scopes().getForwardMap().at(static_cast<Scopes_e>(i));
+                // Read authz
                 if (authz_->hasAuthz(scope)) {
-                    priority_ = 4 * (static_cast<uint8_t>(val));
-                    if (authz_->hasAuthz(scope + ":w")) { priority_ += 1; };
+                    priority_ = 2 * i;
+                    break;
+                // Write authz
+                } else if (authz_->hasAuthz(scope + ":w")) {
+                    priority_ = 2 * i + 1;
+                    if (forceConnection_ && static_cast<Scopes_e>(i) == Scopes_e::kAdmin) {
+                        priority_ += 1; // forceConnection adds 1 to admin:w priority
+                    }
+                    break;
                 }
             }
+            std::cout<<"Priority: "<<priority_<<std::endl;
         } else {
             authz_ = &catena::common::Authorizer::kAuthzDisabled;
-        }
-        if (forceConnection_) {
-            priority_ += 2;
         }
     }
 
     /**
-     * mon = 0
-     * mon:w
-     * mon:f
-     * mon:w:f
-     * op
-     * op:w
-     * op:f
-     * op:w:f
-     * cfg
-     * cfg:w
-     * cfg:f
-     * cfg:w:f
-     * adm
-     * adm:w
-     * adm:f
-     * adm:w:f = 15
+     * @brief The priority of the connection.
+     * 
+     * priority_ = scope * 2 + write + (adm:w && forceConnection)
      */
-
-    // = (scope - 1) * 4 + 1 (if write) + 2 (if force)
-
-    uint8_t priority_ = 0;
-
+    uint32_t priority_ = 0;
+    /**
+     * @brief The connection's time of creation.
+     */
     system_clock::time_point age_;
-
     /**
      * @brief Shared ptr to maintain ownership of authorizer.
      */
@@ -296,6 +303,10 @@ class Connect : public IConnect {
      * No idea what this is used for and if its even needed here.
      */
     bool forceConnection_;
+    /**
+     * @brief Flag indicating whether to shut down the connection.
+     */
+    bool shutdown_ = false;
 };
 
 }; // common

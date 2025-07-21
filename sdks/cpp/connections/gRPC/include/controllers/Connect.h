@@ -55,8 +55,8 @@ namespace catena {
 namespace gRPC {
 
 /**
-* @brief CallData class for the Connect RPC
-*/
+ * @brief CallData class for the Connect RPC
+ */
 class Connect : public CallData, public catena::common::Connect {
   public:
     /**
@@ -77,7 +77,6 @@ class Connect : public CallData, public catena::common::Connect {
      * @param ok - Flag to check if the command was successfully executed.
      */
     void proceed(bool ok) override;
-
     /**
      * @brief Returns true if the connection has been cancelled.
      * 

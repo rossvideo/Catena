@@ -99,17 +99,30 @@ void CatenaServiceImpl::processEvents() {
 }
 
 bool CatenaServiceImpl::registerConnection(catena::common::IConnect* cd) {
-    bool ans = false;
-    std::lock_guard<std::mutex> lock(registryMutex_);
-    if (connectionQueue_.size() < maxConnections_) {
-        connectionQueue_.push_back(cd);
-        ans = true;
+    bool canAdd = false;
+    std::lock_guard<std::mutex> lock(connectionMutex_);
+    // Find the index to insert the new connection based on priority.
+    auto it = std::find_if(connectionQueue_.begin(), connectionQueue_.end(),
+        [cd](const catena::common::IConnect* connection) { return *cd < *connection; });
+    // Based on the iterator, determine if we can add the connection.
+    if (connectionQueue_.size() >= maxConnections_) {
+        if (it != connectionQueue_.begin()) {
+            // Forcefully shutting down lowest priority connection.
+            connectionQueue_.front()->shutdown();
+            canAdd = true;
+        }
+    } else {
+        canAdd = true;
     }
-    return ans;
+    // Adding the connection if possible.
+    if (canAdd) {
+        connectionQueue_.insert(it, cd);
+    }
+    return canAdd;
 }
 
 void CatenaServiceImpl::deregisterConnection(catena::common::IConnect* cd) {
-    std::lock_guard<std::mutex> lock(registryMutex_);
+    std::lock_guard<std::mutex> lock(connectionMutex_);
     auto it = std::find_if(connectionQueue_.begin(), connectionQueue_.end(),
                            [cd](const catena::common::IConnect* i) { return i == cd; });
     if (it != connectionQueue_.end()) {
