@@ -89,7 +89,7 @@ class CatenaServiceImpl : public catena::REST::ICatenaServiceImpl {
      * @param authz Flag to enable authorization.
      * @param port The port to listen on. Default is 443.
      */
-    explicit CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOPath, bool authz = false, uint16_t port = 443);
+    explicit CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOPath, bool authz = false, uint16_t port = 443, uint32_t maxConnections = 16);
 
     /**
      * @brief Returns the API's version.

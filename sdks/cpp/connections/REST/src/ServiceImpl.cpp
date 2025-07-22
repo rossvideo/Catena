@@ -35,13 +35,14 @@ void expandEnvVariables(std::string &str) {
 }
 // GCOVR_EXCL_STOP
 
-CatenaServiceImpl::CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOPath, bool authz, uint16_t port)
+CatenaServiceImpl::CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOPath, bool authz, uint16_t port, uint32_t maxConnections)
     : version_{"v1"},
       EOPath_{EOPath},
       port_{port},
       authorizationEnabled_{authz},
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
-      router_{Router::getInstance()} {
+      router_{Router::getInstance()},
+      maxConnections_{maxConnections} {
 
     if (authorizationEnabled_) { DEBUG_LOG <<"Authorization enabled."; }
     // Adding dms to slotMap.
