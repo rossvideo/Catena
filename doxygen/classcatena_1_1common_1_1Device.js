@@ -18,7 +18,6 @@ var classcatena_1_1common_1_1Device =
     [ "getCommand", "classcatena_1_1common_1_1Device.html#ad8bd07b2ced46650127f0bb2e238c1b9", null ],
     [ "getComponentSerializer", "classcatena_1_1common_1_1Device.html#ae707cba9c53ad81f345d056b16414c1c", null ],
     [ "getDefaultScope", "classcatena_1_1common_1_1Device.html#ab52d0101133233dcdb54d381675a24e9", null ],
-    [ "getDeleteAssetRequest", "classcatena_1_1common_1_1Device.html#af702d6a407c83bdec8aa4d9cb510aaa5", null ],
     [ "getDeviceSerializer", "classcatena_1_1common_1_1Device.html#a3b6295c039a7456cbde189190e50ab65", null ],
     [ "getDownloadAssetRequest", "classcatena_1_1common_1_1Device.html#ac567dc85f9e8e92db5a0a49708a57289", null ],
     [ "getItem", "classcatena_1_1common_1_1Device.html#a9d9cf30564eb05af4aecafb88457e020", null ],

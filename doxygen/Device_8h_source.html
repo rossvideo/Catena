@@ -347,42 +347,40 @@ $(document).ready(function(){initNavTree('Device_8h_source.html',''); initResiza
 <div class="line"><a id="l00570" name="l00570"></a><span class="lineno">  570</span> </div>
 <div class="line"><a id="l00575" name="l00575"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Device.html#a0ee6003196e094215a2518daef59d957">  575</a></span>     vdk::signal&lt;void(<span class="keyword">const</span> std::string&amp;, <span class="keyword">const</span> <a class="code hl_class" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a>*)&gt;&amp; <a class="code hl_function" href="classcatena_1_1common_1_1Device.html#a0ee6003196e094215a2518daef59d957">getUploadAssetRequest</a>()<span class="keyword"> override </span>{ <span class="keywordflow">return</span> uploadAssetRequest; }</div>
 <div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span> </div>
-<div class="line"><a id="l00581" name="l00581"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Device.html#af702d6a407c83bdec8aa4d9cb510aaa5">  581</a></span>     vdk::signal&lt;void(<span class="keyword">const</span> std::string&amp;, <span class="keyword">const</span> <a class="code hl_class" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a>*)&gt;&amp; <a class="code hl_function" href="classcatena_1_1common_1_1Device.html#af702d6a407c83bdec8aa4d9cb510aaa5">getDeleteAssetRequest</a>()<span class="keyword"> override </span>{ <span class="keywordflow">return</span> deleteAssetRequest; }</div>
-<div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span> </div>
-<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span>    vdk::signal&lt;void(<span class="keyword">const</span> std::string&amp;, <span class="keyword">const</span> <a class="code hl_class" href="classcatena_1_1common_1_1IParam.html">IParam</a>*)&gt; valueSetByClient;</div>
-<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span> </div>
-<div class="line"><a id="l00594" name="l00594"></a><span class="lineno">  594</span>    vdk::signal&lt;void(<span class="keyword">const</span> <a class="code hl_class" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a>*)&gt; languageAddedPushUpdate;</div>
-<div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span> </div>
-<div class="line"><a id="l00601" name="l00601"></a><span class="lineno">  601</span>    vdk::signal&lt;void(<span class="keyword">const</span> std::string&amp;, <span class="keyword">const</span> <a class="code hl_class" href="classcatena_1_1common_1_1IParam.html">IParam</a>*)&gt; valueSetByServer;</div>
-<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span> </div>
-<div class="line"><a id="l00607" name="l00607"></a><span class="lineno">  607</span>    vdk::signal&lt;void(<span class="keyword">const</span> std::string&amp;, <span class="keyword">const</span> <a class="code hl_class" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a>*)&gt; downloadAssetRequest;</div>
-<div class="line"><a id="l00608" name="l00608"></a><span class="lineno">  608</span> </div>
-<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span>    vdk::signal&lt;void(<span class="keyword">const</span> std::string&amp;, <span class="keyword">const</span> <a class="code hl_class" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a>*)&gt; uploadAssetRequest;</div>
-<div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span>    vdk::signal&lt;void(<span class="keyword">const</span> std::string&amp;, <span class="keyword">const</span> <a class="code hl_class" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a>*)&gt; deleteAssetRequest;</div>
-<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span> </div>
-<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span>    uint32_t slot_;</div>
-<div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span>    Device_DetailLevel detail_level_;</div>
-<div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span>    std::unordered_map&lt;std::string, catena::common::IConstraint*&gt; constraints_;</div>
-<div class="line"><a id="l00623" name="l00623"></a><span class="lineno">  623</span>    std::unordered_map&lt;std::string, IParam*&gt; params_;</div>
-<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span>    std::unordered_map&lt;std::string, common::IMenuGroup*&gt; menu_groups_;</div>
-<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span>    std::unordered_map&lt;std::string, IParam*&gt; commands_;</div>
-<div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span>    std::unordered_map&lt;std::string, common::ILanguagePack*&gt; language_packs_;</div>
-<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span>    <span class="comment">// Required to maintain ownership of added language packs.</span></div>
-<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span>    std::unordered_map&lt;std::string, std::shared_ptr&lt;common::ILanguagePack&gt;&gt; added_packs_;</div>
-<div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span>    std::vector&lt;std::string&gt; access_scopes_;</div>
-<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span>    std::string default_scope_;</div>
-<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span>    <span class="keywordtype">bool</span> multi_set_enabled_;</div>
-<div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span>    <span class="keywordtype">bool</span> subscriptions_;</div>
-<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span>    uint32_t default_max_length_ = 0;</div>
-<div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span>    uint32_t default_total_length_ = 0;</div>
-<div class="line"><a id="l00635" name="l00635"></a><span class="lineno">  635</span> </div>
-<div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span>    <span class="keyword">mutable</span> std::mutex mutex_;</div>
-<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span> </div>
-<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span>};</div>
+<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span> </div>
+<div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span>    vdk::signal&lt;void(<span class="keyword">const</span> std::string&amp;, <span class="keyword">const</span> <a class="code hl_class" href="classcatena_1_1common_1_1IParam.html">IParam</a>*)&gt; valueSetByClient;</div>
+<div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span> </div>
+<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span>    vdk::signal&lt;void(<span class="keyword">const</span> <a class="code hl_class" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a>*)&gt; languageAddedPushUpdate;</div>
+<div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span> </div>
+<div class="line"><a id="l00596" name="l00596"></a><span class="lineno">  596</span>    vdk::signal&lt;void(<span class="keyword">const</span> std::string&amp;, <span class="keyword">const</span> <a class="code hl_class" href="classcatena_1_1common_1_1IParam.html">IParam</a>*)&gt; valueSetByServer;</div>
+<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span> </div>
+<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span>    vdk::signal&lt;void(<span class="keyword">const</span> std::string&amp;, <span class="keyword">const</span> <a class="code hl_class" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a>*)&gt; downloadAssetRequest;</div>
+<div class="line"><a id="l00603" name="l00603"></a><span class="lineno">  603</span> </div>
+<div class="line"><a id="l00608" name="l00608"></a><span class="lineno">  608</span>    vdk::signal&lt;void(<span class="keyword">const</span> std::string&amp;, <span class="keyword">const</span> <a class="code hl_class" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a>*)&gt; uploadAssetRequest;</div>
+<div class="line"><a id="l00609" name="l00609"></a><span class="lineno">  609</span> </div>
+<div class="line"><a id="l00610" name="l00610"></a><span class="lineno">  610</span>    uint32_t slot_;</div>
+<div class="line"><a id="l00611" name="l00611"></a><span class="lineno">  611</span>    Device_DetailLevel detail_level_;</div>
+<div class="line"><a id="l00612" name="l00612"></a><span class="lineno">  612</span>    std::unordered_map&lt;std::string, catena::common::IConstraint*&gt; constraints_;</div>
+<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span>    std::unordered_map&lt;std::string, IParam*&gt; params_;</div>
+<div class="line"><a id="l00614" name="l00614"></a><span class="lineno">  614</span>    std::unordered_map&lt;std::string, common::IMenuGroup*&gt; menu_groups_;</div>
+<div class="line"><a id="l00615" name="l00615"></a><span class="lineno">  615</span>    std::unordered_map&lt;std::string, IParam*&gt; commands_;</div>
+<div class="line"><a id="l00616" name="l00616"></a><span class="lineno">  616</span>    std::unordered_map&lt;std::string, common::ILanguagePack*&gt; language_packs_;</div>
+<div class="line"><a id="l00617" name="l00617"></a><span class="lineno">  617</span>    <span class="comment">// Required to maintain ownership of added language packs.</span></div>
+<div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span>    std::unordered_map&lt;std::string, std::shared_ptr&lt;common::ILanguagePack&gt;&gt; added_packs_;</div>
+<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span>    std::vector&lt;std::string&gt; access_scopes_;</div>
+<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span>    std::string default_scope_;</div>
+<div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span>    <span class="keywordtype">bool</span> multi_set_enabled_;</div>
+<div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span>    <span class="keywordtype">bool</span> subscriptions_;</div>
+<div class="line"><a id="l00623" name="l00623"></a><span class="lineno">  623</span>    uint32_t default_max_length_ = 0;</div>
+<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span>    uint32_t default_total_length_ = 0;</div>
+<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span> </div>
+<div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span>    <span class="keyword">mutable</span> std::mutex mutex_;</div>
+<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span> </div>
+<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span>};</div>
 </div>
-<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span>}  <span class="comment">// namespace common</span></div>
-<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span>}  <span class="comment">// namespace catena</span></div>
+<div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span>}  <span class="comment">// namespace common</span></div>
+<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span>}  <span class="comment">// namespace catena</span></div>
 <div class="ttc" id="aAuthorization_8h_html"><div class="ttname"><a href="Authorization_8h.html">Authorization.h</a></div><div class="ttdoc">Class for handling authorization information.</div></div>
 <div class="ttc" id="aEnums_8h_html"><div class="ttname"><a href="Enums_8h.html">Enums.h</a></div><div class="ttdoc">tools for using EnumDecorators.</div></div>
 <div class="ttc" id="aIDevice_8h_html"><div class="ttname"><a href="IDevice_8h.html">IDevice.h</a></div><div class="ttdoc">Interface for device.</div></div>
@@ -441,7 +439,6 @@ $(document).ready(function(){initNavTree('Device_8h_source.html',''); initResiza
 <div class="ttc" id="aclasscatena_1_1common_1_1Device_html_aed9cdca4901c4e5eee7a046bd238187a"><div class="ttname"><a href="classcatena_1_1common_1_1Device.html#aed9cdca4901c4e5eee7a046bd238187a">catena::common::Device::addItem</a></div><div class="ttdeci">void addItem(const std::string &amp;key, IConstraint *item) override</div><div class="ttdoc">add an item to one of the collections owned by the device. Overload for constraints.</div><div class="ttdef"><b>Definition</b> Device.h:410</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1Device_html_af15d6bed42fc196d4e46c3aa8de39b73"><div class="ttname"><a href="classcatena_1_1common_1_1Device.html#af15d6bed42fc196d4e46c3aa8de39b73">catena::common::Device::addLanguage</a></div><div class="ttdeci">catena::exception_with_status addLanguage(catena::AddLanguagePayload &amp;language, Authorizer &amp;authz=Authorizer::kAuthzDisabled) override</div><div class="ttdoc">Adds a language pack to the device. Requires client to have admin:w scope.</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1Device_html_af6e255366e3ee77a6fdd573e1669e956"><div class="ttname"><a href="classcatena_1_1common_1_1Device.html#af6e255366e3ee77a6fdd573e1669e956">catena::common::Device::detail_level</a></div><div class="ttdeci">void detail_level(const DetailLevel_e detail_level) override</div><div class="ttdoc">set the detail level of the device</div><div class="ttdef"><b>Definition</b> Device.h:131</div></div>
-<div class="ttc" id="aclasscatena_1_1common_1_1Device_html_af702d6a407c83bdec8aa4d9cb510aaa5"><div class="ttname"><a href="classcatena_1_1common_1_1Device.html#af702d6a407c83bdec8aa4d9cb510aaa5">catena::common::Device::getDeleteAssetRequest</a></div><div class="ttdeci">vdk::signal&lt; void(const std::string &amp;, const Authorizer *)&gt; &amp; getDeleteAssetRequest() override</div><div class="ttdoc">get the delete asset request signal</div><div class="ttdef"><b>Definition</b> Device.h:581</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1Device_html_af7658a6d3922612c9e4f38b7f847d89a"><div class="ttname"><a href="classcatena_1_1common_1_1Device.html#af7658a6d3922612c9e4f38b7f847d89a">catena::common::Device::slot</a></div><div class="ttdeci">uint32_t slot() const override</div><div class="ttdoc">get the slot number of the device</div><div class="ttdef"><b>Definition</b> Device.h:120</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1Device_html_afca445ccc7d023e325c408afc852f9a1"><div class="ttname"><a href="classcatena_1_1common_1_1Device.html#afca445ccc7d023e325c408afc852f9a1">catena::common::Device::mutex</a></div><div class="ttdeci">std::mutex &amp; mutex() override</div><div class="ttdoc">Returns the device's mutex.</div><div class="ttdef"><b>Definition</b> Device.h:125</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1IConstraint_html"><div class="ttname"><a href="classcatena_1_1common_1_1IConstraint.html">catena::common::IConstraint</a></div><div class="ttdoc">Interface for constraints.</div><div class="ttdef"><b>Definition</b> IConstraint.h:52</div></div>

@@ -2,7 +2,7 @@ var searchData=
 [
   ['s_20with_20docker_0',['Setting up Catena Service(s) with Docker',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md15',1,'']]],
   ['satisfied_1',['satisfied',['../classcatena_1_1common_1_1RangeConstraint.html#a3eac7c6a90d9d83b0101b30793007f26',1,'catena::common::RangeConstraint::satisfied()'],['../classcatena_1_1common_1_1NamedChoiceConstraint.html#ab1e9dafaea9c2de1b4423eb1adf4d2e3',1,'catena::common::NamedChoiceConstraint::satisfied()'],['../classcatena_1_1common_1_1IConstraint.html#a1632e09ef25e3ae15703b3d43f9c2e19',1,'catena::common::IConstraint::satisfied()']]],
-  ['scopes_2',['Scopes',['../classcatena_1_1common_1_1Authorizer.html#ae9960a775fac6bc42d22559e2f764eda',1,'catena::common::Authorizer']]],
+  ['scopes_2',['Scopes',['../classcatena_1_1common_1_1Authorizer.html#ac85aba10c8562afe86b7b57690c5ed63',1,'catena::common::Authorizer']]],
   ['scopes_5fe_3',['Scopes_e',['../namespacecatena_1_1common.html#a52e17ef3ce00a51e608afb060211e3a8',1,'catena::common']]],
   ['sdk_4',['sdk',['../index.html',1,'Catena C++ SDK'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html',1,'Using Docker With The Catena C++ SDK']]],
   ['segment_5',['Segment',['../classcatena_1_1common_1_1Path.html#a9e26c035ad5b8f72b56c9e55d140e170',1,'catena::common::Path']]],
