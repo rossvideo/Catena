@@ -23,7 +23,7 @@ set(SOURCES
     tests/GetParam_test.cpp
     tests/ParamInfoRequest_test.cpp
     tests/Subscriptions_test.cpp
-    # tests/Connect_test.cpp
+    tests/Connect_test.cpp
     tests/ExecuteCommand_test.cpp
     tests/DeviceRequest_test.cpp
     tests/ServiceImpl_test.cpp
