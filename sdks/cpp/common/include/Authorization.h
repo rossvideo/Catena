@@ -168,7 +168,7 @@ class Authorizer {
      * @param scope The scope to check for authorization
      * @return true if the client has the specified authorization
      */
-    bool hasAuthz(const std::string& scope) const;
+    bool hasAuthz_(const std::string& scope) const;
     /**
      * @brief Client scopes extracted from a valid JWS token.
      */

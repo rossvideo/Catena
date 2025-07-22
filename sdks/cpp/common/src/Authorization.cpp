@@ -56,7 +56,7 @@ Authorizer::Authorizer(const std::string& JWSToken) {
     }
 }
 
-bool Authorizer::hasAuthz(const std::string& scope) const {
+bool Authorizer::hasAuthz_(const std::string& scope) const {
     // no authorization required or scope found in client scopes.
     return this == &kAuthzDisabled || clientScopes_.contains(scope);
 }
@@ -65,7 +65,7 @@ bool Authorizer::hasAuthz(const std::string& scope) const {
  * Check if the client has write authorization
  */
 bool Authorizer::writeAuthz(const std::string& scope) const {
-    return hasAuthz(scope + ":w");
+    return hasAuthz_(scope + ":w");
 }
 
 bool Authorizer::writeAuthz(const IParam& param) const {
@@ -80,7 +80,7 @@ bool Authorizer::writeAuthz(const IParamDescriptor& pd) const {
  * Check if the client has read authorization
  */
 bool Authorizer::readAuthz(const std::string& scope) const {
-    return hasAuthz(scope) || writeAuthz(scope);
+    return hasAuthz_(scope) || writeAuthz(scope);
 }
 
 bool Authorizer::readAuthz(const IParam& param) const {
