@@ -547,75 +547,75 @@ class Device : public IDevice {
      * @brief get the signal emitted when a value is set by the client.
      * @return the signal
      */
-    vdk::signal<void(const std::string&, const IParam*)>& getValueSetByClient() override { return valueSetByClient; }
+    vdk::signal<void(const std::string&, const IParam*)>& getValueSetByClient() override { return valueSetByClient_; }
 
     /**
      * @brief get the signal emitted when a language pack is added to the device.
      * @return the signal
      */
-    vdk::signal<void(const ILanguagePack*)>& getLanguageAddedPushUpdate() override { return languageAddedPushUpdate; }
+    vdk::signal<void(const ILanguagePack*)>& getLanguageAddedPushUpdate() override { return languageAddedPushUpdate_; }
 
     /**
      * @brief get the signal emitted when a value is set by the server, or business
      * logic.
      * @return the signal
      */
-    vdk::signal<void(const std::string&, const IParam*)>& getValueSetByServer() override { return valueSetByServer; }
+    vdk::signal<void(const std::string&, const IParam*)>& getValueSetByServer() override { return valueSetByServer_; }
     
     /**
      * @brief get the asset request signal
      * @return the signal
      */
-     vdk::signal<void(const std::string&, const Authorizer*)>& getDownloadAssetRequest() override { return downloadAssetRequest; } 
+     vdk::signal<void(const std::string&, const Authorizer*)>& getDownloadAssetRequest() override { return downloadAssetRequest_; } 
 
      /**
       * @brief get the upload asset request signal
       * @return the signal
       */
-     vdk::signal<void(const std::string&, const Authorizer*)>& getUploadAssetRequest() override { return uploadAssetRequest; }
+     vdk::signal<void(const std::string&, const Authorizer*)>& getUploadAssetRequest() override { return uploadAssetRequest_; }
 
     /**
      * @brief get the delete asset request signal
      * @return the signal
      */
-     vdk::signal<void(const std::string&, const Authorizer*)>& getDeleteAssetRequest() override { return deleteAssetRequest; }
+     vdk::signal<void(const std::string&, const Authorizer*)>& getDeleteAssetRequest() override { return deleteAssetRequest_; }
   private:
 
     /**
      * @brief signal emitted when a value is set by the client.
      * Intended recipient is the business logic.
      */
-    vdk::signal<void(const std::string&, const IParam*)> valueSetByClient;
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByClient_;
 
     /**
      * @brief signal emitted when a language pack is added to the device.
      * Intended recipient is the business logic.
      */
-    vdk::signal<void(const ILanguagePack*)> languageAddedPushUpdate;
+    vdk::signal<void(const ILanguagePack*)> languageAddedPushUpdate_;
 
     /**
      * @brief signal emitted when a value is set by the server, or business
      * logic.
      * Intended recipient is the connection manager.
      */
-    vdk::signal<void(const std::string&, const IParam*)> valueSetByServer;
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByServer_;
 
     /**
      * @brief signal emitted when a download asset request is made.
      * Intended recipient is the business logic.
      */
-    vdk::signal<void(const std::string&, const Authorizer*)> downloadAssetRequest;
+    vdk::signal<void(const std::string&, const Authorizer*)> downloadAssetRequest_;
 
     /**
      * @brief signal emitted when an upload asset request is made.
      * Intended recipient is the business logic.
      */
-    vdk::signal<void(const std::string&, const Authorizer*)> uploadAssetRequest;
+    vdk::signal<void(const std::string&, const Authorizer*)> uploadAssetRequest_;
     /**
      * @brief signal emitted when a delete asset request is made.
      * Intended recipient is the business logic.
      */
-    vdk::signal<void(const std::string&, const Authorizer*)> deleteAssetRequest;
+    vdk::signal<void(const std::string&, const Authorizer*)> deleteAssetRequest_;
 
     uint32_t slot_;
     Device_DetailLevel detail_level_;
