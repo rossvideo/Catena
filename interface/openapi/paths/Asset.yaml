@@ -36,7 +36,7 @@
 #
 
 get:
-  summary: GET an asset without streaming
+  summary: Get an asset without streaming
   operationId: GetAssetRequest
 
   # default security is read-only 
@@ -106,7 +106,7 @@ get:
       $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
 
 post:
-  summary: POST an asset
+  summary: Upload an asset
   operationId: UploadAssetRequest
 
   # Admin, Operator or Configure scope with write access is required.
@@ -175,7 +175,7 @@ post:
       $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
 
 put:
-  summary: PUT an asset
+  summary: Overwrite an asset
   operationId: PutAssetRequest
 
   # Admin, Operator or Configure scope with write access is required.

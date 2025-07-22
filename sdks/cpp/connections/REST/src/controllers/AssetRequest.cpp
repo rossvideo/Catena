@@ -252,6 +252,14 @@ void AssetRequest::proceed() {
 
             std::string filePath = context_.EOPath();
             filePath.append(context_.fqoid());
+
+            // Check if the file exists
+            // Placeholder till BL hook is implemented
+            if (std::filesystem::exists(filePath)) {
+                std::string found = "file: " + filePath + " already exists";
+                DEBUG_LOG << found;
+                throw catena::exception_with_status(found, catena::StatusCode::ALREADY_EXISTS);
+            }
         
             extractPayload(filePath);
         
@@ -283,6 +291,7 @@ void AssetRequest::proceed() {
             filePath.append(context_.fqoid());
 
             // Check if the file exists
+            // Placeholder till BL hook is implemented
             if (!std::filesystem::exists(filePath)) {
                 std::string notFound = "file: " + filePath + " not found";
                 DEBUG_LOG << notFound;
