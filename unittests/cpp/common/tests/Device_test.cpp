@@ -321,91 +321,28 @@ TEST_F(DeviceTest, TryMultiSetValue_OverlappingOids) {
     EXPECT_EQ(std::string(status.what()), "Overlapping actions for /param1 and /param1");
 }
 
-
-// I can't get this test to work and I don't know why, so I will come back to it later.
-// // 1.5: Error Case - Multi-Set Value with Validation Failure
-// TEST_F(DeviceTest, TryMultiSetValue_ValidationFailure) {
-//     // Create mock parameters manually
-//     auto mockParam1 = std::make_shared<MockParam>();
-//     auto mockParam2 = std::make_shared<MockParam>();
-//     auto mockDescriptor1 = std::make_shared<MockParamDescriptor>();
-//     auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
+// 1.5: Error Case - Multi-Set Value with Validation Failure
+TEST_F(DeviceTest, TryMultiSetValue_ValidationFailure) {
+    // Create mock parameters using the helper function with validation failure
+    auto mockParam1 = createMultiSetMockParam("/param1", "Validation failed");
     
-//     // Store them to keep alive
-//     mockParams_.push_back(mockParam1);
-//     mockParams_.push_back(mockParam2);
-//     mockDescriptors_.push_back(mockDescriptor1);
-//     mockDescriptors_.push_back(mockDescriptor2);
+    device_->addItem("param1", mockParam1.get());
     
-//     // Set up authorization - admin token has st2138:adm:w scope
-//     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-//     setupMockParam(*mockParam1, "/param1", *mockDescriptor1, false, 0, adminScope);
-//     setupMockParam(*mockParam2, "/param2", *mockDescriptor2, false, 0, adminScope);
+    catena::MultiSetValuePayload payload;
     
-//     // Set up getDescriptor expectations
-//     EXPECT_CALL(*mockParam1, getDescriptor())
-//         .WillRepeatedly(testing::ReturnRef(*mockDescriptor1));
-//     EXPECT_CALL(*mockParam2, getDescriptor())
-//         .WillRepeatedly(testing::ReturnRef(*mockDescriptor2));
+    // First value - should fail validation
+    auto* setValue1 = payload.add_values();
+    setValue1->set_oid("/param1");
+    auto* value1 = setValue1->mutable_value();
+    value1->set_int32_value(42);
     
-//     // Set up copy expectations that return new mock parameters
-//     EXPECT_CALL(*mockParam1, copy())
-//         .WillRepeatedly(testing::Invoke([]() {
-//             auto mock = std::make_unique<MockParam>();
-//             // Set up basic expectations for the copied mock
-//             EXPECT_CALL(*mock, getDescriptor())
-//                 .WillRepeatedly(testing::ReturnRef(*mockDescriptor1));
-//             EXPECT_CALL(*mock, getScope())
-//                 .WillRepeatedly(testing::ReturnRef(adminScope));
-//             EXPECT_CALL(*mock, validateSetValue(testing::_, testing::_, testing::_, testing::_))
-//                 .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, catena::common::Authorizer&, catena::exception_with_status& status) -> bool {
-//                     status = catena::exception_with_status("Validation failed", catena::StatusCode::INVALID_ARGUMENT);
-//                     return false;
-//                 }));
-//             return std::unique_ptr<IParam>(std::move(mock));
-//         }));
-//     EXPECT_CALL(*mockParam2, copy())
-//         .WillRepeatedly(testing::Invoke([]() {
-//             auto mock = std::make_unique<MockParam>();
-//             // Set up basic expectations for the copied mock
-//             EXPECT_CALL(*mock, getDescriptor())
-//                 .WillRepeatedly(testing::ReturnRef(*mockDescriptor2));
-//             EXPECT_CALL(*mock, getScope())
-//                 .WillRepeatedly(testing::ReturnRef(adminScope));
-//             EXPECT_CALL(*mock, validateSetValue(testing::_, testing::_, testing::_, testing::_))
-//                 .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, catena::common::Authorizer&, catena::exception_with_status& status) -> bool {
-//                     status = catena::exception_with_status("", catena::StatusCode::OK);
-//                     return true;
-//                 }));
-//             return std::unique_ptr<IParam>(std::move(mock));
-//         }));
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    bool result = device_->tryMultiSetValue(payload, status, *adminAuthz_);
     
-
-     
-//     device_->addItem("param1", mockParam1.get());
-//     device_->addItem("param2", mockParam2.get());
-    
-//     catena::MultiSetValuePayload payload;
-    
-//     // First value - should fail validation
-//     auto* setValue1 = payload.add_values();
-//     setValue1->set_oid("/param1");
-//     auto* value1 = setValue1->mutable_value();
-//     value1->set_int32_value(42);
-    
-//     // Second value - should pass validation
-//     auto* setValue2 = payload.add_values();
-//     setValue2->set_oid("/param2");
-//     auto* value2 = setValue2->mutable_value();
-//     value2->set_string_value("test");
-    
-//     catena::exception_with_status status{"", catena::StatusCode::OK};
-//     bool result = device_->tryMultiSetValue(payload, status, *adminAuthz_);
-    
-//     EXPECT_FALSE(result);
-//     EXPECT_EQ(status.status, catena::StatusCode::INVALID_ARGUMENT);
-//     EXPECT_EQ(std::string(status.what()), "Validation failed");
-// }
+    EXPECT_FALSE(result);
+    EXPECT_EQ(status.status, catena::StatusCode::INVALID_ARGUMENT);
+    EXPECT_EQ(std::string(status.what()), "Validation failed");
+}
 
 // 1.6: Error Case - Multi-Set Value with Catena Exception
 TEST_F(DeviceTest, TryMultiSetValue_CatenaException) {
@@ -628,154 +565,150 @@ TEST_F(DeviceTest, CommitMultiSetValue_RegularParamsSuccess) {
     EXPECT_NE(signalEmissions[1].second, nullptr);
 }
 
-// Neither of these tests work correctly.
+// 1.9: Success Case - Test commitMultiSetValue with array indexed access
+TEST_F(DeviceTest, CommitMultiSetValue_ArrayIndexedAccessSuccess) {
+    // Create parameter hierarchy using the helper
+    auto arrayParam = ParamHierarchyBuilder::createDescriptor("/arrayParam");
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    
+    // Create mock parameters with proper descriptors
+    auto mockArrayParam = std::make_shared<MockParam>();
+    auto mockElementParam = std::make_shared<MockParam>();
+    
+    // Store them to keep alive
+    mockParams_.push_back(mockArrayParam);
+    mockParams_.push_back(mockElementParam);
+    
+    // Set up array parameter (isArray = true, size = 5)
+    setupMockParam(*mockArrayParam, "/arrayParam", *arrayParam.descriptor, true, 5, adminScope);
+    setupMockParam(*mockElementParam, "/arrayParam/3", *arrayParam.descriptor, false, 0, adminScope);
+    
+    // Set up expectations for array parameter copy
+    EXPECT_CALL(*mockArrayParam, copy())
+        .WillOnce(testing::Invoke([]() { 
+            auto mock = std::make_unique<MockParam>();
+            // Set up expectations for the copied mock to handle array element access
+            EXPECT_CALL(*mock, getParam(testing::_, testing::_, testing::_))
+                .WillOnce(testing::Invoke([](catena::common::Path& path, catena::common::Authorizer&, catena::exception_with_status& status) {
+                    status = catena::exception_with_status("", catena::StatusCode::OK);
+                    auto elementMock = std::make_unique<MockParam>();
+                    EXPECT_CALL(*elementMock, fromProto(testing::_, testing::_))
+                        .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Authorizer&) {
+                            return catena::exception_with_status("", catena::StatusCode::OK);
+                        }));
+                    return std::unique_ptr<IParam>(std::move(elementMock));
+                }));
+            EXPECT_CALL(*mock, resetValidate())
+                .Times(1);
+            return mock;
+        }));
+    
+    device_->addItem("arrayParam", mockArrayParam.get());
+    
+    // Track signal emissions
+    std::vector<std::pair<std::string, const IParam*>> signalEmissions;
+    auto signalConnection = device_->getValueSetByClient().connect(
+        [&signalEmissions](const std::string& oid, const IParam* param) {
+            signalEmissions.emplace_back(oid, param);
+        }
+    );
+    
+    // Create a payload with array indexed access
+    catena::MultiSetValuePayload payload;
+    
+    // Value - indexed array element
+    auto* setValue = payload.add_values();
+    setValue->set_oid("/arrayParam/3");
+    auto* value = setValue->mutable_value();
+    value->set_int32_value(100);
+    
+    // Test the commit
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    status = device_->commitMultiSetValue(payload, *adminAuthz_);
+    
+    // Should succeed
+    EXPECT_EQ(status.status, catena::StatusCode::OK);
+    
+    // Should have emitted one signal for the array indexed access
+    EXPECT_EQ(signalEmissions.size(), 1);
+    
+    // Check signal emission
+    EXPECT_EQ(signalEmissions[0].first, "/arrayParam/3");
+    EXPECT_NE(signalEmissions[0].second, nullptr);
+}
 
-// // 1.9: Success Case - Test commitMultiSetValue with array indexed access
-// TEST_F(DeviceTest, CommitMultiSetValue_ArrayIndexedAccessSuccess) {
-//     // Create parameter hierarchy using the helper
-//     auto parentParam = ParamHierarchyBuilder::createDescriptor("/parentParam");
-//     auto arrayElementDescriptor = ParamHierarchyBuilder::createDescriptor("/parentParam/3/subParam");
+// 1.10: Success Case - Test commitMultiSetValue with array append operation
+TEST_F(DeviceTest, CommitMultiSetValue_ArrayAppendSuccess) {
+    // Create parameter hierarchy using the helper
+    auto arrayParam = ParamHierarchyBuilder::createDescriptor("/arrayParam");
     
-//     // Set up authorization - admin token has st2138:adm:w scope
-//     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
     
-//     // Create mock parameters with proper descriptors
-//     auto mockParentParam = std::make_unique<MockParam>();
-//     auto mockArrayElement = std::make_unique<MockParam>();
+    // Create mock parameters with proper descriptors
+    auto mockArrayParam = std::make_shared<MockParam>();
     
-//     setupMockParam(*mockParentParam, "/parentParam", parentParam.*descriptor, true, 5, adminScope); // Array with 5 elements
-//     setupMockParam(*mockArrayElement, "/parentParam/3", parentParam.*descriptor, false, 0, adminScope);
+    // Store them to keep alive
+    mockParams_.push_back(mockArrayParam);
     
-//     // Create the chain of mock parameters
-//     auto mockParentCopy = std::make_unique<MockParam>();
-//     auto mockLeafParam = std::make_unique<MockParam>();
+    // Set up array parameter (isArray = true, size = 5)
+    setupMockParam(*mockArrayParam, "/arrayParam", *arrayParam.descriptor, true, 5, adminScope);
     
-//     // Set up expectations for parent parameter copy
-//     EXPECT_CALL(*mockParentParam, copy())
-//         .WillOnce(testing::Invoke([&mockParentCopy]() {
-//             return std::move(mockParentCopy);
-//         }));
+    // Set up expectations for array parameter copy
+    EXPECT_CALL(*mockArrayParam, copy())
+        .WillOnce(testing::Invoke([]() { 
+            auto mock = std::make_unique<MockParam>();
+            // Set up expectations for the copied mock to handle array append operation
+            EXPECT_CALL(*mock, addBack(testing::_, testing::_))
+                .WillOnce(testing::Invoke([](catena::common::Authorizer&, catena::exception_with_status& status) {
+                    status = catena::exception_with_status("", catena::StatusCode::OK);
+                    auto appendedMock = std::make_unique<MockParam>();
+                    EXPECT_CALL(*appendedMock, fromProto(testing::_, testing::_))
+                        .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Authorizer&) {
+                            return catena::exception_with_status("", catena::StatusCode::OK);
+                        }));
+                    return std::unique_ptr<IParam>(std::move(appendedMock));
+                }));
+            EXPECT_CALL(*mock, resetValidate())
+                .Times(1);
+            return mock;
+        }));
     
-//     // Set up expectations for parent copy to handle array element access
-//     EXPECT_CALL(*mockParentCopy, getParam(testing::_, testing::_, testing::_))
-//         .WillOnce(testing::Invoke([&mockArrayElement](catena::common::Path& path, catena::common::Authorizer&, catena::exception_with_status& status) {
-//             status = catena::exception_with_status("", catena::StatusCode::OK);
-//             return std::unique_ptr<IParam>(*mockArrayElement);
-//         }));
+    device_->addItem("arrayParam", mockArrayParam.get());
     
-//     // Set up expectations for array element (the actual target)
-//     EXPECT_CALL(*mockArrayElement, fromProto(testing::_, testing::_))
-//         .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Authorizer&) {
-//             return catena::exception_with_status("", catena::StatusCode::OK);
-//         }));
+    // Track signal emissions
+    std::vector<std::pair<std::string, const IParam*>> signalEmissions;
+    auto signalConnection = device_->getValueSetByClient().connect(
+        [&signalEmissions](const std::string& oid, const IParam* param) {
+            signalEmissions.emplace_back(oid, param);
+        }
+    );
     
-//     // Set up expectations for resetValidate on the parent copy
-//     EXPECT_CALL(*mockParentCopy, resetValidate())
-//         .Times(1);
+    // Create a payload with array append operation
+    catena::MultiSetValuePayload payload;
     
-//     device_->addItem("parentParam", mockParentParam.get());
+    // Value - append new element to array
+    auto* setValue = payload.add_values();
+    setValue->set_oid("/arrayParam/-");
+    auto* value = setValue->mutable_value();
+    value->set_string_value("appended");
     
-//     // Track signal emissions
-//     std::vector<std::pair<std::string, const IParam*>> signalEmissions;
-//     auto signalConnection = device_->valueSetByClient.connect(
-//         [&signalEmissions](const std::string& oid, const IParam* param) {
-//             signalEmissions.emplace_back(oid, param);
-//         }
-//     );
+    // Test the commit
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    status = device_->commitMultiSetValue(payload, *adminAuthz_);
     
-//     // Create a payload with array indexed access
-//     catena::MultiSetValuePayload payload;
+    // Should succeed
+    EXPECT_EQ(status.status, catena::StatusCode::OK);
     
-//     // Value - sub-parameter of indexed array element
-//     auto* setValue = payload.add_values();
-//     setValue->set_oid("/parentParam/3/subParam");
-//     auto* value = setValue->mutable_value();
-//     value->set_int32_value(100);
+    // Should have emitted one signal for the array append operation
+    EXPECT_EQ(signalEmissions.size(), 1);
     
-//     // Test the commit
-//     catena::exception_with_status status{"", catena::StatusCode::OK};
-//     status = device_->commitMultiSetValue(payload, *adminAuthz_);
-    
-//     // Should succeed
-//     EXPECT_EQ(status.status, catena::StatusCode::OK);
-    
-//     // Should have emitted one signal for the array indexed access
-//     EXPECT_EQ(signalEmissions.size(), 1);
-    
-//     // Check signal emission
-//     EXPECT_EQ(signalEmissions[0].first, "/parentParam/3/subParam");
-//     EXPECT_NE(signalEmissions[0].second, nullptr);
-// }
-
-// // 1.10: Success Case - Test commitMultiSetValue with array append operation
-// TEST_F(DeviceTest, CommitMultiSetValue_ArrayAppendSuccess) {
-//     // Create parameter hierarchy using the helper
-//     auto parentParam = ParamHierarchyBuilder::createDescriptor("/parentParam");
-    
-//     // Set up authorization - admin token has st2138:adm:w scope
-//     static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    
-//     // Create mock parameters with proper descriptors
-//     auto mockParentParam = std::make_unique<MockParam>();
-//     auto mockAppendedElement = std::make_unique<MockParam>();
-    
-//     setupMockParam(*mockParentParam, "/parentParam", parentParam.*descriptor, true, 5, adminScope); // Array with 5 elements
-//     setupMockParam(*mockAppendedElement, "/parentParam/5", parentParam.*descriptor, false, 0, adminScope);
-    
-//     // Set up expectations for parent parameter to handle append operations
-//     EXPECT_CALL(*mockParentParam, copy())
-//         .WillOnce(testing::Invoke([&mockAppendedElement]() { 
-//             auto mock = std::make_unique<MockParam>();
-//             // For "/parentParam/-" - addBack should append a new element
-//             EXPECT_CALL(*mock, addBack(testing::_, testing::_))
-//                 .WillOnce(testing::Invoke([&mockAppendedElement](catena::common::Authorizer& authz, catena::exception_with_status& status) {
-//                     status = catena::exception_with_status("", catena::StatusCode::OK);
-//                     return std::move(mockAppendedElement);
-//                 }));
-//             EXPECT_CALL(*mock, resetValidate())
-//                 .Times(1);
-//             return mock;
-//         }));
-    
-//     // Set up expectations for appended element
-//     EXPECT_CALL(*mockAppendedElement, fromProto(testing::_, testing::_))
-//         .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Authorizer&) {
-//             return catena::exception_with_status("", catena::StatusCode::OK);
-//         }));
-    
-//     device_->addItem("parentParam", mockParentParam.get());
-    
-//     // Track signal emissions
-//     std::vector<std::pair<std::string, const IParam*>> signalEmissions;
-//     auto signalConnection = device_->valueSetByClient.connect(
-//         [&signalEmissions](const std::string& oid, const IParam* param) {
-//             signalEmissions.emplace_back(oid, param);
-//         }
-//     );
-    
-//     // Create a payload with array append operation
-//     catena::MultiSetValuePayload payload;
-    
-//     // Value - kEnd case (append new element to array)
-//     auto* setValue = payload.add_values();
-//     setValue->set_oid("/parentParam/-");
-//     auto* value = setValue->mutable_value();
-//     value->set_string_value("appended");
-    
-//     // Test the commit
-//     catena::exception_with_status status{"", catena::StatusCode::OK};
-//     status = device_->commitMultiSetValue(payload, *adminAuthz_);
-    
-//     // Should succeed
-//     EXPECT_EQ(status.status, catena::StatusCode::OK);
-    
-//     // Should have emitted one signal for the array append operation
-//     EXPECT_EQ(signalEmissions.size(), 1);
-    
-//     // Check signal emission
-//     EXPECT_EQ(signalEmissions[0].first, "/parentParam/-");
-//     EXPECT_NE(signalEmissions[0].second, nullptr);
-// }
+    // Check signal emission
+    EXPECT_EQ(signalEmissions[0].first, "/arrayParam/-");
+    EXPECT_NE(signalEmissions[0].second, nullptr);
+}
 
 // ======== 2. Set/Get Value Tests ========
 
