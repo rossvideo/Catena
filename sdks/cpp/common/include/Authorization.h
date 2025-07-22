@@ -133,6 +133,12 @@ class Authorizer {
     bool readAuthz(const IParamDescriptor& pd) const;
 
     /**
+     * @brief Check if the client has read authorization
+     * @return true if the client has read authorization
+     */
+    bool readAuthz(const std::string& scope) const;
+
+    /**
      * @brief Check if the client has write authorization
      * @return true if the client has write authorization
      */
@@ -143,6 +149,12 @@ class Authorizer {
      * @return true if the client has write authorization
      */
     bool writeAuthz(const IParamDescriptor& pd) const;
+
+    /**
+     * @brief Check if the client has write authorization
+     * @return true if the client has write authorization
+     */
+    bool writeAuthz(const std::string& scope) const;
 
 
   private:

@@ -75,7 +75,7 @@ put:
                 properties:
                   fqoid:
                     type: string
-                    description: Fully qualified OID of the parameter to get info for
+                    description: Fully qualified OID of the parameter to set the value of
                     schema: 
                       $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
                   value:

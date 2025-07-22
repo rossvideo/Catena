@@ -106,48 +106,75 @@ get:
       $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
 
 post:
-  summary: load an asset
-  operationId: LoadAsset
+  summary: Upload an asset
+  operationId: UploadAsset
 
   # Admin, Operator or Configure scope with write access is required.
   security:
-      - oauth2:
-        - st2138:adm:w
-      - oauth2:
-        - st2138:op:w
-      - oauth2:
-        - st2138:cfg:w
-
-  tags:
-    - Assets
+    - oauth2:
+      - st2138:adm:w
+    - oauth2:
+      - st2138:op:w
+    - oauth2:
+      - st2138:cfg:w
 
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model to get the value from 
+      description: The slot of the device model to upload the asset to
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
     - name: fqoid
       in: path
-      required: true  
-      description: The place to store the asset
+      required: true
+      description: The fully qualified object ID of the asset to upload
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
       example: "image.png"
 
+    - name: compression
+      in: query
+      required: false
+      description: The compression method to use. If not provided, the asset will be sent uncompressed.
+      schema:
+        type: string
+        enum: [UNCOMPRESSED, GZIP, DEFLATE]
+      example: "UNCOMPRESSED"
+
   requestBody:
     required: true
     content:
-      application/json:
+      application/octet-stream:
         schema:
-          $ref: "../../../schema/catena.device_schema.json#/$defs/external_object_payload"
+          type: string
+          format: binary
+        description: The raw or compressed binary asset data
 
+  tags:
+    - Assets
 
   responses:
-    "204":
-      description: Empty response - everything is OK
+    "200":
+      description: |
+        The server's response will be one or more 'ExternalObjectPayloads'.
+      content:
+        application/json:
+          schema:
+            example: {
+              "cachable": true,
+              "payload": {
+                "metadata": {
+                  "size": "13",
+                  "last-modified": "Fri Apr 8 12:00:00 2025",
+                  "filename": "asset.png"
+                },
+                "digest": "h654h654y564yh543",
+                "payloadEncoding": "GZIP",
+                "payload": "payloadString"
+              }
+            }
 
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'
