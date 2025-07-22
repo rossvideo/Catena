@@ -557,13 +557,13 @@ bool Device::shouldSendParam(const IParam& param, bool is_subscribed, Authorizer
 
     // First check authorization
     if (authz.readAuthz(param)) {
-            
+        if (casted_detail_level != static_cast<int>(catena::Device_DetailLevel_NONE)) {
             should_send = 
-                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_NONE)) ||
                 (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_MINIMAL) && param.getDescriptor().minimalSet()) ||
                 (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_FULL)) ||
                 (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_SUBSCRIPTIONS) && (param.getDescriptor().minimalSet() || is_subscribed)) ||
                 (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_COMMANDS) && param.getDescriptor().isCommand());
+        }
     }
 
     return should_send;

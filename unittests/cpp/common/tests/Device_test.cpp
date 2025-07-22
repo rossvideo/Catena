@@ -710,6 +710,43 @@ TEST_F(DeviceTest, CommitMultiSetValue_ArrayAppendSuccess) {
     EXPECT_NE(signalEmissions[0].second, nullptr);
 }
 
+// 1.11: Error Case - Test commitMultiSetValue with Catena exception
+TEST_F(DeviceTest, CommitMultiSetValue_CatenaException) {
+    // Create mock parameter
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Store them to keep alive
+    mockParams_.push_back(mockParam);
+    mockDescriptors_.push_back(mockDescriptor);
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(*mockParam, "/param1", *mockDescriptor, false, 0, adminScope);
+    
+    // Set up expectations for copy to throw exception
+    EXPECT_CALL(*mockParam, copy())
+        .WillOnce(testing::Invoke([]() -> std::unique_ptr<catena::common::IParam> { 
+            throw catena::exception_with_status("Test catena exception", catena::StatusCode::INTERNAL);
+        }));
+    
+    device_->addItem("param1", mockParam.get());
+    
+    catena::MultiSetValuePayload payload;
+    auto* setValue = payload.add_values();
+    setValue->set_oid("/param1");
+    auto* value = setValue->mutable_value();
+    value->set_int32_value(42);
+    
+    // Test the commit - should throw an exception
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    status = device_->commitMultiSetValue(payload, *adminAuthz_);
+    
+    // Should fail with internal error
+    EXPECT_EQ(status.status, catena::StatusCode::INTERNAL);
+    EXPECT_EQ(std::string(status.what()), "Test catena exception");
+}
+
 // ======== 2. Set/Get Value Tests ========
 
 // --- Set Value Tests ---
@@ -2312,11 +2349,29 @@ TEST_F(DeviceTest, ShouldSendParam) {
         .WillRepeatedly(testing::Return(true));
     
     // Test different detail levels with the same parameters
+    device_->detail_level(catena::Device_DetailLevel_FULL);
     EXPECT_TRUE(device_->shouldSendParam(*mockParam, false, *adminAuthz_));
     EXPECT_TRUE(device_->shouldSendParam(*mockCommand, false, *adminAuthz_));
     EXPECT_TRUE(device_->shouldSendParam(*mockMinimalParam, false, *adminAuthz_));
-    
-    // Test subscription filtering
-    EXPECT_TRUE(device_->shouldSendParam(*mockParam, true, *adminAuthz_)); // Subscribed
-    EXPECT_TRUE(device_->shouldSendParam(*mockCommand, true, *adminAuthz_)); // Subscribed
+
+    device_->detail_level(catena::Device_DetailLevel_COMMANDS);
+    EXPECT_FALSE(device_->shouldSendParam(*mockParam, false, *adminAuthz_)); // not a command
+    EXPECT_TRUE(device_->shouldSendParam(*mockCommand, false, *adminAuthz_)); // is a command
+    EXPECT_FALSE(device_->shouldSendParam(*mockMinimalParam, false, *adminAuthz_)); // not a command
+
+    device_->detail_level(catena::Device_DetailLevel_MINIMAL);
+    EXPECT_FALSE(device_->shouldSendParam(*mockParam, false, *adminAuthz_)); // not minimal
+    EXPECT_FALSE(device_->shouldSendParam(*mockCommand, false, *adminAuthz_)); // not minimal
+    EXPECT_TRUE(device_->shouldSendParam(*mockMinimalParam, false, *adminAuthz_)); // is minimal
+
+    device_->detail_level(catena::Device_DetailLevel_SUBSCRIPTIONS);
+    EXPECT_FALSE(device_->shouldSendParam(*mockParam, false, *adminAuthz_)); // not subscribed, not minimal
+    EXPECT_TRUE(device_->shouldSendParam(*mockParam, true, *adminAuthz_)); // subscribed
+    EXPECT_FALSE(device_->shouldSendParam(*mockCommand, false, *adminAuthz_)); // not subscribed, not minimal
+    EXPECT_TRUE(device_->shouldSendParam(*mockMinimalParam, false, *adminAuthz_)); // minimal set
+
+    device_->detail_level(catena::Device_DetailLevel_NONE);
+    EXPECT_FALSE(device_->shouldSendParam(*mockParam, false, *adminAuthz_))
+    EXPECT_FALSE(device_->shouldSendParam(*mockCommand, false, *adminAuthz_));
+    EXPECT_FALSE(device_->shouldSendParam(*mockMinimalParam, false, *adminAuthz_));
 }
