@@ -71,7 +71,7 @@ class Authorizer {
     /**
      * @brief The scopes of the object
      */
-    using Scopes = std::set<std::string>;
+    using ClientScopes = std::set<std::string>;
   public:
     /**
      * @brief Special Authorizer object that disables authorization
@@ -136,6 +136,13 @@ class Authorizer {
     bool readAuthz(const std::string& scope) const;
 
     /**
+     * @brief Check if the client has read authorization for a scope
+     * @param scope The scope to check for authorization
+     * @return true if the client has read authorization
+     */
+    bool readAuthz(const Scopes_e& scope) const;
+
+    /**
      * @brief Check if the client has write authorization for a param
      * @param param The param to check for authorization
      * @return true if the client has write authorization
@@ -157,6 +164,13 @@ class Authorizer {
      */
     bool writeAuthz(const std::string& scope) const;
 
+    /**
+     * @brief Check if the client has read authorization for a scope
+     * @param scope The scope to check for authorization
+     * @return true if the client has read authorization
+     */
+    bool writeAuthz(const Scopes_e& scope) const;
+
 
   private:
 	  /**
@@ -172,7 +186,7 @@ class Authorizer {
     /**
      * @brief Client scopes extracted from a valid JWS token.
      */
-  	Scopes clientScopes_;
+  	ClientScopes clientScopes_;
 };
 
 } // namespace common

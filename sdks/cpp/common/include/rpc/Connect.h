@@ -169,7 +169,7 @@ class Connect : public IConnect {
             if (isCancelled()){
                 hasUpdate_ = true;
                 cv_.notify_one();
-            } else if (authz_->readAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
+            } else if (authz_->readAuthz(Scopes_e::kMonitor)) {
                 // Updating res_'s device_component and pushing update.
                 res_.Clear();
                 res_.set_slot(slot);

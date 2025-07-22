@@ -68,6 +68,10 @@ bool Authorizer::writeAuthz(const std::string& scope) const {
     return hasAuthz_(scope + ":w");
 }
 
+bool Authorizer::writeAuthz(const Scopes_e& scope) const {
+    return writeAuthz(Scopes().getForwardMap().at(scope));
+}
+
 bool Authorizer::writeAuthz(const IParam& param) const {
     return !param.readOnly() && writeAuthz(param.getScope());
 }
@@ -81,6 +85,10 @@ bool Authorizer::writeAuthz(const IParamDescriptor& pd) const {
  */
 bool Authorizer::readAuthz(const std::string& scope) const {
     return hasAuthz_(scope) || writeAuthz(scope);
+}
+
+bool Authorizer::readAuthz(const Scopes_e& scope) const {
+    return readAuthz(Scopes().getForwardMap().at(scope));
 }
 
 bool Authorizer::readAuthz(const IParam& param) const {

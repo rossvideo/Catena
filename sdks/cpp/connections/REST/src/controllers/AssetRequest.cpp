@@ -157,7 +157,7 @@ void AssetRequest::proceed() {
 
             //check for any read access
             //TODO: move to BL
-            if (!(authz->readAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kOperate)))) {   
+            if (!(authz->readAuthz(catena::common::Scopes_e::kOperate))) {   
                 //do something that indicates that the user is not authorized to download the asset
                 throw catena::exception_with_status("Not authorized to download asset", catena::StatusCode::PERMISSION_DENIED);
             }
@@ -239,9 +239,9 @@ void AssetRequest::proceed() {
             //Check if the user has write authorization in any scope other than monitoring
             //either authz have to be disabled or have write access to any scope other than monitor
             //TODO: move to BL
-            if (!(authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kOperate))
-                    || authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kConfig))
-                    || authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kAdmin)))) {
+            if (!(authz->writeAuthz(catena::common::Scopes_e::kOperate)
+                    || authz->writeAuthz(catena::common::Scopes_e::kConfig)
+                    || authz->writeAuthz(catena::common::Scopes_e::kAdmin))) {
                 throw catena::exception_with_status("Not authorized to POST asset", catena::StatusCode::PERMISSION_DENIED);
             }
 
@@ -276,9 +276,9 @@ void AssetRequest::proceed() {
             //Check if the user has write authorization in any scope other than monitoring
             //either authz have to be disabled or have write access to any scope other than monitor
             //TODO: move to BL
-            if (!(authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kOperate))
-                    || authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kConfig))
-                    || authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kAdmin)))) {
+            if (!(authz->writeAuthz(catena::common::Scopes_e::kOperate)
+                    || authz->writeAuthz(catena::common::Scopes_e::kConfig)
+                    || authz->writeAuthz(catena::common::Scopes_e::kAdmin))) {
                 throw catena::exception_with_status("Not authorized to PUT asset", catena::StatusCode::PERMISSION_DENIED);
             }
 

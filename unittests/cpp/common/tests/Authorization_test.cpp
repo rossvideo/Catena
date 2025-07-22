@@ -117,14 +117,16 @@ TEST_F(AuthorizationTest, Authz_readAuthz) {
             EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
             // Authz has either scope or scope:w.
             if (currentScope.starts_with(scopeStr)) {
-                EXPECT_TRUE(authz->readAuthz(scopeStr))  << trueMsg;
-                EXPECT_TRUE(authz->readAuthz(param))     << trueMsg;
-                EXPECT_TRUE(authz->readAuthz(pd))        << trueMsg;
+                EXPECT_TRUE(authz->readAuthz(scopeEnum))  << trueMsg;
+                EXPECT_TRUE(authz->readAuthz(scopeStr))   << trueMsg;
+                EXPECT_TRUE(authz->readAuthz(param))      << trueMsg;
+                EXPECT_TRUE(authz->readAuthz(pd))         << trueMsg;
             // Authz does not have scope or scope:w.
             } else {
-                EXPECT_FALSE(authz->readAuthz(scopeStr)) << falseMsg;
-                EXPECT_FALSE(authz->readAuthz(param))    << falseMsg;
-                EXPECT_FALSE(authz->readAuthz(pd))       << falseMsg;
+                EXPECT_FALSE(authz->readAuthz(scopeEnum)) << falseMsg;
+                EXPECT_FALSE(authz->readAuthz(scopeStr))  << falseMsg;
+                EXPECT_FALSE(authz->readAuthz(param))     << falseMsg;
+                EXPECT_FALSE(authz->readAuthz(pd))        << falseMsg;
             }
         }
     }
@@ -137,7 +139,7 @@ TEST_F(AuthorizationTest, Authz_writeAuthz) {
     MockParam param;
     MockParamDescriptor pd;
     // Error messages.
-    std::string trueMsg  = "writeAuthz should be true when the authorizer have the scope.";
+    std::string trueMsg  = "writeAuthz should be true when the authorizer has the scope.";
     std::string falseMsg = "writeAuthz should be false when the authorizer does not have the scope.";
     std::string rOnlyMsg = "writeAuthz should be false when the param is readOnly";
     // Testing with tokens of each scope.
@@ -155,11 +157,13 @@ TEST_F(AuthorizationTest, Authz_writeAuthz) {
                 }
                 // Authz has either scope:w, depends on whether rOnly == true.
                 if (scopeStr + ":w" == currentScope) {
+                    EXPECT_TRUE(authz->writeAuthz(scopeEnum))   << trueMsg;
                     EXPECT_TRUE(authz->writeAuthz(scopeStr))    << trueMsg;
                     EXPECT_EQ(!rOnly, authz->writeAuthz(param)) << (rOnly ? rOnlyMsg: trueMsg);
                     EXPECT_EQ(!rOnly, authz->writeAuthz(pd))    << (rOnly ? rOnlyMsg: trueMsg);
                 // Authz does not have scope:w.
                 } else {
+                    EXPECT_FALSE(authz->writeAuthz(scopeEnum))  << falseMsg;
                     EXPECT_FALSE(authz->writeAuthz(scopeStr))   << falseMsg;
                     EXPECT_FALSE(authz->writeAuthz(param))      << falseMsg;
                     EXPECT_FALSE(authz->writeAuthz(pd))         << falseMsg;
@@ -175,22 +179,19 @@ TEST_F(AuthorizationTest, Authz_writeAuthz) {
 TEST_F(AuthorizationTest, Authz_scopeNone) {
     std::string noScope = getJwsToken("");
     // Error message.
-    std::string errMsg = "Authz should return false if the client does not have the specified scope.";
+    std::string errMsg = "Authz should return false if the authorizer does not have the specified scope.";
     std::unique_ptr<Authorizer> authz = nullptr;
     EXPECT_NO_THROW(authz = std::make_unique<Authorizer>(noScope));
     MockParam param;
     MockParamDescriptor pd;
-    // readAuthz() and writeAuthz() should always return false if client has no scopes.
-    for (auto& [scopeEnum, scopeStr]: Scopes().getForwardMap()) {
-        EXPECT_FALSE(authz->writeAuthz(scopeStr)) << errMsg;
-    }
     // readAuthz() should always return false if client has no scopes.
     for (auto& [scopeEnum, scopeStr]: Scopes().getForwardMap()) {
         EXPECT_CALL(param, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
         EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
-        EXPECT_FALSE(authz->readAuthz(scopeStr)) << errMsg;
-        EXPECT_FALSE(authz->readAuthz(param))    << errMsg;
-        EXPECT_FALSE(authz->readAuthz(pd))       << errMsg;
+        EXPECT_FALSE(authz->readAuthz(scopeEnum)) << errMsg;
+        EXPECT_FALSE(authz->readAuthz(scopeStr))  << errMsg;
+        EXPECT_FALSE(authz->readAuthz(param))     << errMsg;
+        EXPECT_FALSE(authz->readAuthz(pd))        << errMsg;
     }
     // writeAuthz() should always return false if client has no scopes.
     for (bool rOnly : {false, true}) {
@@ -201,9 +202,10 @@ TEST_F(AuthorizationTest, Authz_scopeNone) {
                 EXPECT_CALL(param, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
                 EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
             }
-            EXPECT_FALSE(authz->writeAuthz(scopeStr)) << errMsg;
-            EXPECT_FALSE(authz->writeAuthz(param))    << errMsg;
-            EXPECT_FALSE(authz->writeAuthz(pd))       << errMsg;
+            EXPECT_FALSE(authz->writeAuthz(scopeEnum)) << errMsg;
+            EXPECT_FALSE(authz->writeAuthz(scopeStr))  << errMsg;
+            EXPECT_FALSE(authz->writeAuthz(param))     << errMsg;
+            EXPECT_FALSE(authz->writeAuthz(pd))        << errMsg;
         }
     }
 }
@@ -222,25 +224,23 @@ TEST_F(AuthorizationTest, Authz_disabled) {
     for (auto& [scopeEnum, scopeStr]: Scopes().getForwardMap()) {
         EXPECT_CALL(param, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
         EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
-        EXPECT_TRUE(authz->readAuthz(scopeStr))  << "Authz should always return true if disabled.";
-        EXPECT_TRUE(authz->readAuthz(param));
-        EXPECT_TRUE(authz->readAuthz(pd));
+        EXPECT_TRUE(authz->readAuthz(scopeStr)) << trueMsg;
+        EXPECT_TRUE(authz->readAuthz(param))    << trueMsg;;
+        EXPECT_TRUE(authz->readAuthz(pd))       << trueMsg;;
     }
     // writeAuthz() should return true if the param is not read only.
     for (bool rOnly : {false, true}) {
         for (auto& [scopeEnum, scopeStr]: Scopes().getForwardMap()) {
             EXPECT_CALL(param, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
             EXPECT_CALL(pd, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
-            if (rOnly) {
-                EXPECT_FALSE(authz->writeAuthz(param)) << rOnlyMsg;
-                EXPECT_FALSE(authz->writeAuthz(pd))    << rOnlyMsg;
-            } else {
+            if (!rOnly) {
                 EXPECT_CALL(param, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
                 EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
-                EXPECT_TRUE(authz->writeAuthz(param)) << trueMsg;
-                EXPECT_TRUE(authz->writeAuthz(pd))    << trueMsg;
             }
-            EXPECT_TRUE(authz->writeAuthz(scopeStr))  << trueMsg;
+            EXPECT_TRUE(authz->writeAuthz(scopeEnum))   << trueMsg;
+            EXPECT_TRUE(authz->writeAuthz(scopeStr))    << trueMsg;
+            EXPECT_EQ(!rOnly, authz->writeAuthz(param)) << (rOnly ? rOnlyMsg : trueMsg);
+            EXPECT_EQ(!rOnly, authz->writeAuthz(pd))    << (rOnly ? rOnlyMsg : trueMsg);
         }
     }
 }
@@ -256,8 +256,8 @@ TEST_F(AuthorizationTest, Authz_scopeMulti) {
     MockParam param;
     MockParamDescriptor pd;
     // Error messages.
-    std::string trueMsg  = "writeAuthz should be true when the authorizer have the scope.";
-    std::string falseMsg = "writeAuthz should be false when the authorizer does not have the scope.";
+    std::string trueMsg  = "authz should be true when the authorizer has the scope.";
+    std::string falseMsg = "authz should be false when the authorizer does not have the scope.";
     std::string rOnlyMsg = "writeAuthz should be false when the param is readOnly";
     // readAuthz() should return true if the scope is op or mon.
     for (auto& [scopeEnum, scopeStr]: Scopes().getForwardMap()) {
@@ -267,10 +267,12 @@ TEST_F(AuthorizationTest, Authz_scopeMulti) {
             EXPECT_TRUE(authz->readAuthz(param))     << trueMsg;
             EXPECT_TRUE(authz->readAuthz(pd))        << trueMsg;
             EXPECT_TRUE(authz->readAuthz(scopeStr))  << trueMsg;
+            EXPECT_TRUE(authz->readAuthz(scopeEnum)) << trueMsg;
         } else {
-            EXPECT_FALSE(authz->readAuthz(param))    << falseMsg;
-            EXPECT_FALSE(authz->readAuthz(pd))       << falseMsg;
-            EXPECT_FALSE(authz->readAuthz(scopeStr)) << falseMsg;
+            EXPECT_FALSE(authz->readAuthz(param))     << falseMsg;
+            EXPECT_FALSE(authz->readAuthz(pd))        << falseMsg;
+            EXPECT_FALSE(authz->readAuthz(scopeStr))  << falseMsg;
+            EXPECT_FALSE(authz->readAuthz(scopeEnum)) << falseMsg;
         }
     }
     // writeAuthz() should return true if the scope is op and param is not read-only.
@@ -283,10 +285,12 @@ TEST_F(AuthorizationTest, Authz_scopeMulti) {
                 EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
             }
             if (scopeStr == Scopes().getForwardMap().at(Scopes_e::kOperate)) {
+                EXPECT_TRUE(authz->writeAuthz(scopeEnum))   << trueMsg;
                 EXPECT_TRUE(authz->writeAuthz(scopeStr))    << trueMsg;
                 EXPECT_EQ(!rOnly, authz->writeAuthz(param)) << (rOnly ? rOnlyMsg: trueMsg);
                 EXPECT_EQ(!rOnly, authz->writeAuthz(pd))    << (rOnly ? rOnlyMsg: trueMsg);
             } else {
+                EXPECT_FALSE(authz->writeAuthz(scopeEnum))  << falseMsg;
                 EXPECT_FALSE(authz->writeAuthz(scopeStr))   << falseMsg;
                 EXPECT_FALSE(authz->writeAuthz(param))      << falseMsg;
                 EXPECT_FALSE(authz->writeAuthz(pd))         << falseMsg;
