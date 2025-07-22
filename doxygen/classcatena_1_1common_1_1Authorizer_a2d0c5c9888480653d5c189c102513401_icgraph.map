@@ -1,10 +1,12 @@
 <map id="catena::common::Authorizer::readAuthz" name="catena::common::Authorizer::readAuthz">
-<area shape="rect" id="Node000001" title="Check if the client has read authorization." alt="" coords="264,87,471,127"/>
+<area shape="rect" id="Node000001" title="Check if the client has read authorization." alt="" coords="264,116,471,156"/>
 <area shape="rect" id="Node000002" href="$classcatena_1_1common_1_1ParamWithValue.html#a4604d117287412cc176b62113cd1578c" title="serialize the parameter descriptor to protobuf include both the descriptor and the value" alt="" coords="5,5,216,45"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="292,85,215,60,177,48,179,43,217,55,294,80"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="319,111,269,85,215,60,183,48,185,43,217,55,272,80,321,107"/>
 <area shape="rect" id="Node000003" href="$namespacecatena_1_1common.html#a0d090c6e5eca2b36cb8cd5577cbf46ab" title=" " alt="" coords="17,94,204,119"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="250,109,204,109,204,104,250,104"/>
-<area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1Connect.html#a8ff9c432f5f47f67746433d1827fd19d" title="Updates the response message with parameter values and handles authorization checks." alt="" coords="15,144,207,184"/>
-<area shape="poly" id="edge4_Node000001_Node000004" title=" " alt="" coords="264,132,201,147,200,141,263,127"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="250,125,204,120,204,115,251,120"/>
+<area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1Connect.html#a79a548ee8b6b66ed2b9b1dbb29bf77d1" title="Updates the response message with an ILanguagePack and handles authorization checks." alt="" coords="15,144,207,184"/>
+<area shape="poly" id="edge4_Node000001_Node000004" title=" " alt="" coords="251,151,207,156,207,151,250,146"/>
+<area shape="rect" id="Node000005" href="$classcatena_1_1common_1_1Connect.html#a8ff9c432f5f47f67746433d1827fd19d" title="Updates the response message with parameter values and handles authorization checks." alt="" coords="15,208,207,248"/>
+<area shape="poly" id="edge5_Node000001_Node000005" title=" " alt="" coords="307,164,217,199,181,211,179,205,215,193,305,159"/>
 <area shape="poly" id="edge3_Node000003_Node000003" title=" " alt="" coords="156,85,154,80,145,76,111,73,83,75,68,80,66,85,73,92,69,96,60,86,65,76,82,69,111,67,147,71,157,76,161,82"/>
 </map>
