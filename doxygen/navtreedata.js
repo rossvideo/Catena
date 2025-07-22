@@ -130,12 +130,12 @@ var NAVTREEINDEX =
 [
 "AddLanguage_8h.html",
 "classcatena_1_1REST_1_1CatenaServiceImpl.html",
-"classcatena_1_1common_1_1Connect.html#a758621bfebc66d9e0439e3b9484351c5",
-"classcatena_1_1common_1_1IMenuGroup.html",
-"classcatena_1_1common_1_1ParamDescriptor.html#a3b043f51cb65bf5642bf5965f7124cd4",
-"classcatena_1_1gRPC_1_1CatenaServiceImpl.html",
-"classcatena_1_1patterns_1_1EnumDecorator.html#ab106f593c1eb2ed17c7b742030c86e25",
-"namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a7f8f3a9415da86dce4ee44a26e5f6548"
+"classcatena_1_1common_1_1Authorizer.html#ade3a2e4c6ad8a30d1a2eb30ea5027f8f",
+"classcatena_1_1common_1_1IDevice.html#accf44b99feeb6eb71ea40c2e151890a5",
+"classcatena_1_1common_1_1MenuGroup.html#aae6d9fc2efc321e4489f02e2c24cec5c",
+"classcatena_1_1common_1_1RangeConstraint.html#a3eac7c6a90d9d83b0101b30793007f26",
+"classcatena_1_1gRPC_1_1SetValue.html",
+"md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md18"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
