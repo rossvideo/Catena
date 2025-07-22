@@ -135,6 +135,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a8292d69c0a12d9105ce24fccc3a3b935" id="r_a8292d69c0a12d9105ce24fccc3a3b935"><td class="memItemLeft" align="right" valign="top">virtual const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1gRPC_1_1ICatenaServiceImpl.html#a8292d69c0a12d9105ce24fccc3a3b935">EOPath</a> ()=0</td></tr>
 <tr class="memdesc:a8292d69c0a12d9105ce24fccc3a3b935"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the EOPath.  <br /></td></tr>
 <tr class="separator:a8292d69c0a12d9105ce24fccc3a3b935"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8be37765dcd68dfa8e1c59112f600a44" id="r_a8be37765dcd68dfa8e1c59112f600a44"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1gRPC_1_1ICatenaServiceImpl.html#a8be37765dcd68dfa8e1c59112f600a44">registerConnection</a> (<a class="el" href="classcatena_1_1common_1_1IConnect.html">catena::common::IConnect</a> *cd)=0</td></tr>
+<tr class="memdesc:a8be37765dcd68dfa8e1c59112f600a44"><td class="mdescLeft">&#160;</td><td class="mdescRight">Regesters a <a class="el" href="classcatena_1_1gRPC_1_1Connect.html" title="CallData class for the Connect RPC.">Connect</a> <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for the CallData classes which defines the jwsToken_ class.">CallData</a> object into the Connection priority queue.  <br /></td></tr>
+<tr class="separator:a8be37765dcd68dfa8e1c59112f600a44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acac1675edb1116cb2c02ba32743018a1" id="r_acac1675edb1116cb2c02ba32743018a1"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1gRPC_1_1ICatenaServiceImpl.html#acac1675edb1116cb2c02ba32743018a1">deregisterConnection</a> (<a class="el" href="classcatena_1_1common_1_1IConnect.html">catena::common::IConnect</a> *cd)=0</td></tr>
+<tr class="memdesc:acac1675edb1116cb2c02ba32743018a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deregisters a <a class="el" href="classcatena_1_1gRPC_1_1Connect.html" title="CallData class for the Connect RPC.">Connect</a> <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for the CallData classes which defines the jwsToken_ class.">CallData</a> object into the Connection priority queue.  <br /></td></tr>
+<tr class="separator:acac1675edb1116cb2c02ba32743018a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab974c35a6ff13c1cb8f3a109d92d599d" id="r_ab974c35a6ff13c1cb8f3a109d92d599d"><td class="memItemLeft" align="right" valign="top">virtual uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1gRPC_1_1ICatenaServiceImpl.html#ab974c35a6ff13c1cb8f3a109d92d599d">registrySize</a> () const =0</td></tr>
 <tr class="memdesc:ab974c35a6ff13c1cb8f3a109d92d599d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the size of the registry.  <br /></td></tr>
 <tr class="separator:ab974c35a6ff13c1cb8f3a109d92d599d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -208,6 +214,42 @@ Here is the caller graph for this function:</div>
 <p>Returns a pointer to the server's completion queue. </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1gRPC_1_1CatenaServiceImpl.html#aaf4beebf9697331f818971a1d5e00311">catena::gRPC::CatenaServiceImpl</a>.</p>
+
+</div>
+</div>
+<a id="acac1675edb1116cb2c02ba32743018a1" name="acac1675edb1116cb2c02ba32743018a1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acac1675edb1116cb2c02ba32743018a1">&#9670;&#160;</a></span>deregisterConnection()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void catena::gRPC::ICatenaServiceImpl::deregisterConnection </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IConnect.html">catena::common::IConnect</a> *&#160;</td>
+          <td class="paramname"><em>cd</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Deregisters a <a class="el" href="classcatena_1_1gRPC_1_1Connect.html" title="CallData class for the Connect RPC.">Connect</a> <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for the CallData classes which defines the jwsToken_ class.">CallData</a> object into the Connection priority queue. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cd</td><td>The <a class="el" href="classcatena_1_1gRPC_1_1Connect.html" title="CallData class for the Connect RPC.">Connect</a> <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for the CallData classes which defines the jwsToken_ class.">CallData</a> object to deregister. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Implemented in <a class="el" href="classcatena_1_1gRPC_1_1CatenaServiceImpl.html#a4961fb020ad73ffaa0a9413fc518377d">catena::gRPC::CatenaServiceImpl</a>.</p>
 
 </div>
 </div>
@@ -361,6 +403,43 @@ Here is the caller graph for this function:</div>
 <p>Processes events in the server's completion queue. </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1gRPC_1_1CatenaServiceImpl.html#a83508fd3de430d32677e1831a39aa8a7">catena::gRPC::CatenaServiceImpl</a>.</p>
+
+</div>
+</div>
+<a id="a8be37765dcd68dfa8e1c59112f600a44" name="a8be37765dcd68dfa8e1c59112f600a44"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8be37765dcd68dfa8e1c59112f600a44">&#9670;&#160;</a></span>registerConnection()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual bool catena::gRPC::ICatenaServiceImpl::registerConnection </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IConnect.html">catena::common::IConnect</a> *&#160;</td>
+          <td class="paramname"><em>cd</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Regesters a <a class="el" href="classcatena_1_1gRPC_1_1Connect.html" title="CallData class for the Connect RPC.">Connect</a> <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for the CallData classes which defines the jwsToken_ class.">CallData</a> object into the Connection priority queue. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cd</td><td>The <a class="el" href="classcatena_1_1gRPC_1_1Connect.html" title="CallData class for the Connect RPC.">Connect</a> <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for the CallData classes which defines the jwsToken_ class.">CallData</a> object to register. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>TRUE if successfully registered, FALSE otherwise. </dd></dl>
+
+<p>Implemented in <a class="el" href="classcatena_1_1gRPC_1_1CatenaServiceImpl.html#ae75c7a257fa79058910a0a9b9d604e63">catena::gRPC::CatenaServiceImpl</a>.</p>
 
 </div>
 </div>

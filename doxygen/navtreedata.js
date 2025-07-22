@@ -130,12 +130,12 @@ var NAVTREEINDEX =
 [
 "AddLanguage_8h.html",
 "classcatena_1_1REST_1_1CatenaServiceImpl.html",
-"classcatena_1_1common_1_1Connect.html#a758621bfebc66d9e0439e3b9484351c5",
-"classcatena_1_1common_1_1IMenuGroup.html#ab5ab36b7072f70b19193e675d9dde352",
-"classcatena_1_1common_1_1ParamDescriptor.html#a4e267cc819e31ca4b940d9cc60a022bb",
-"classcatena_1_1gRPC_1_1CatenaServiceImpl.html#a2b02f9563c3724a4e6bcb4363b68a2ee",
-"classcatena_1_1patterns_1_1EnumDecorator.html#abbc4dc6f40094261f65b35750c73ad58",
-"namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a9f21c5c424a73be49eb7d5182d3f6551"
+"classcatena_1_1common_1_1Authorizer.html#ade3a2e4c6ad8a30d1a2eb30ea5027f8f",
+"classcatena_1_1common_1_1IDevice.html#adaa519c4733f2b22d84d313e0965de28",
+"classcatena_1_1common_1_1MenuGroup.html#ad79bbd7ccb9e3a9d065880c480fd3dc9",
+"classcatena_1_1common_1_1RangeConstraint.html#a67b95ece6963e2186ce110931208db31",
+"classcatena_1_1gRPC_1_1UpdateSubscriptions.html",
+"md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md22"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
