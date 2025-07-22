@@ -245,7 +245,7 @@ put:
 
 delete:
   summary: Delete an asset
-  operationId: DeleteAsset
+  operationId: DeleteAssetRequest
 
   # Admin, Operator or Configure scope with write access is required.
   security:
@@ -261,26 +261,18 @@ delete:
   parameters:
     - name: slot
       in: path
-      required: true  
-      description: The slot of the device model to get the value from 
+      required: true
+      description: The slot of the device model to get the value from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
     - name: fqoid
-      in: path      
+      in: path
       required: true
-      description: The fully qualified object ID of the asset to delete
+      description: The fully qualified object ID of the asset to get
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
       example: "image.png"
-  
-  requestBody:
-    required: true
-    content:
-      application/json:
-        schema:
-          $ref: "../../../schema/catena.device_schema.json#/$defs/external_object_payload"
-          # external_object_payload schema definition  
 
   responses:
     "204":

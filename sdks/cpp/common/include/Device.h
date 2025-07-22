@@ -574,6 +574,11 @@ class Device : public IDevice {
       */
      vdk::signal<void(const std::string&, const Authorizer*)>& getUploadAssetRequest() override { return uploadAssetRequest; }
 
+    /**
+     * @brief get the delete asset request signal
+     * @return the signal
+     */
+     vdk::signal<void(const std::string&, const Authorizer*)>& getDeleteAssetRequest() override { return deleteAssetRequest; }
   private:
 
     /**
@@ -606,6 +611,11 @@ class Device : public IDevice {
      * Intended recipient is the business logic.
      */
     vdk::signal<void(const std::string&, const Authorizer*)> uploadAssetRequest;
+    /**
+     * @brief signal emitted when a delete asset request is made.
+     * Intended recipient is the business logic.
+     */
+    vdk::signal<void(const std::string&, const Authorizer*)> deleteAssetRequest;
 
     uint32_t slot_;
     Device_DetailLevel detail_level_;
