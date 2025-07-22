@@ -195,7 +195,7 @@ class Connect : public IConnect {
             if (isCancelled()){
                 hasUpdate_ = true;
                 cv_.notify_one();
-            } else if (authz_->readAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
+            } else if (authz_->readAuthz(Scopes_e::kMonitor)) {
                 // Updating res_'s device_component and pushing update.
                 res_.Clear();
                 res_.set_slot(slot);
@@ -225,17 +225,16 @@ class Connect : public IConnect {
             authz_ = sharedAuthz_.get();
             // Setting up their connection priority.
             for (uint32_t i = static_cast<uint32_t>(Scopes_e::kAdmin); i >= static_cast<uint32_t>(Scopes_e::kMonitor); i -= 1) {
-                auto scope = Scopes().getForwardMap().at(static_cast<Scopes_e>(i));
-                // Read authz
-                if (authz_->hasAuthz(scope)) {
-                    priority_ = 2 * i;
-                    break;
                 // Write authz
-                } else if (authz_->hasAuthz(scope + ":w")) {
+                if (authz_->writeAuthz(static_cast<Scopes_e>(i))) {
                     priority_ = 2 * i + 1;
                     if (forceConnection_ && static_cast<Scopes_e>(i) == Scopes_e::kAdmin) {
                         priority_ += 1; // forceConnection adds 1 to admin:w priority
                     }
+                    break;
+                // Read authz
+                } else if (authz_->readAuthz(static_cast<Scopes_e>(i))) {
+                    priority_ = 2 * i;
                     break;
                 }
             }
