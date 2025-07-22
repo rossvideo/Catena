@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the Connect.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/07/??
+ * @date 25/07/22
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -52,6 +52,8 @@ class gRPCConnectTests : public GRPCTest {
   protected:
     gRPCConnectTests() {
         expRc_ = catena::exception_with_status("", catena::StatusCode::CANCELLED);
+        EXPECT_CALL(service_, registerConnection(testing::_)).WillRepeatedly(testing::Return(true));
+        EXPECT_CALL(service_, deregisterConnection(testing::_)).WillRepeatedly(testing::Return());
         // dm0_ signals
         EXPECT_CALL(dm0_, getValueSetByClient()).WillRepeatedly(testing::ReturnRef(valueSetByClient0));
         EXPECT_CALL(dm0_, getValueSetByServer()).WillRepeatedly(testing::ReturnRef(valueSetByServer0));
@@ -251,6 +253,11 @@ TEST_F(gRPCConnectTests, Connect_Create) {
  *          mockDevice signals.
  */
 TEST_F(gRPCConnectTests, Connect_ConnectDisconnect) {
+    // Setting expectations.
+    EXPECT_CALL(service_, registerConnection(testing::_)).Times(1).WillOnce(testing::Return(true));
+    // Once for main call, once for the async call.
+    EXPECT_CALL(service_, deregisterConnection(testing::_)).Times(2).WillOnce(testing::Return());
+    // Making call
     streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
     streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
     streamReader_->Await();
@@ -426,6 +433,20 @@ TEST_F(gRPCConnectTests, Connect_AuthzJWSNotFound) {
     // Should not be able to find the bearer token
     authzEnabled_ = true;
     clientContext_.AddMetadata("authorization", "NOT A BEARER TOKEN");
+    // Making call
+    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
+    streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
+    streamReader_->Await();
+    streamReader_.reset(nullptr);
+}
+
+/*
+ * TEST 8 - Testing Connect failing to register with service.
+ */
+TEST_F(gRPCConnectTests, Connect_RegisterConnectionFailure) {
+    expRc_ = catena::exception_with_status("Too many connections to service", catena::StatusCode::RESOURCE_EXHAUSTED);
+    // Setting expectations
+    EXPECT_CALL(service_, registerConnection(testing::_)).WillOnce(testing::Return(false));
     // Making call
     streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
     streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
