@@ -21,10 +21,10 @@
 <!-- Node2 -->
 <g id="Node000002" class="node">
 <title>Node2</title>
-<g id="a_Node000002"><a xlink:href="classcatena_1_1common_1_1Authorizer.html#a888e960c8e58b0dc2674c05cf2085957" target="_top" xlink:title="Check if the client has the specified authorization.">
-<polygon fill="white" stroke="#666666" points="335,-126 180,-126 180,-96 335,-96 335,-126"/>
-<text text-anchor="start" x="188" y="-114" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::Authorizer</text>
-<text text-anchor="middle" x="257.5" y="-103" font-family="Helvetica,sans-Serif" font-size="10.00">::hasAuthz</text>
+<g id="a_Node000002"><a xlink:href="classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd" target="_top" xlink:title="Returns true if the call has been canceled.">
+<polygon fill="white" stroke="#666666" points="331,-126 184,-126 184,-96 331,-96 331,-126"/>
+<text text-anchor="start" x="192" y="-114" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IConnect</text>
+<text text-anchor="middle" x="257.5" y="-103" font-family="Helvetica,sans-Serif" font-size="10.00">::isCancelled</text>
 </a>
 </g>
 </g>
@@ -40,10 +40,10 @@
 <!-- Node3 -->
 <g id="Node000003" class="node">
 <title>Node3</title>
-<g id="a_Node000003"><a xlink:href="classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd" target="_top" xlink:title="Returns true if the call has been canceled.">
-<polygon fill="white" stroke="#666666" points="331,-78 184,-78 184,-48 331,-48 331,-78"/>
-<text text-anchor="start" x="192" y="-66" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IConnect</text>
-<text text-anchor="middle" x="257.5" y="-55" font-family="Helvetica,sans-Serif" font-size="10.00">::isCancelled</text>
+<g id="a_Node000003"><a xlink:href="classcatena_1_1common_1_1Authorizer.html#a2d0c5c9888480653d5c189c102513401" target="_top" xlink:title="Check if the client has read authorization.">
+<polygon fill="white" stroke="#666666" points="335,-78 180,-78 180,-48 335,-48 335,-78"/>
+<text text-anchor="start" x="188" y="-66" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::Authorizer</text>
+<text text-anchor="middle" x="257.5" y="-55" font-family="Helvetica,sans-Serif" font-size="10.00">::readAuthz</text>
 </a>
 </g>
 </g>
@@ -51,8 +51,8 @@
 <g id="edge2_Node000001_Node000003" class="edge">
 <title>Node1&#45;&gt;Node3</title>
 <g id="a_edge2_Node000001_Node000003"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M144.21,-63C153.85,-63 163.82,-63 173.65,-63"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="173.82,-66.5 183.82,-63 173.82,-59.5 173.82,-66.5"/>
+<path fill="none" stroke="#63b8ff" d="M144.21,-63C152.61,-63 161.25,-63 169.83,-63"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="169.86,-66.5 179.86,-63 169.86,-59.5 169.86,-66.5"/>
 </a>
 </g>
 </g>
