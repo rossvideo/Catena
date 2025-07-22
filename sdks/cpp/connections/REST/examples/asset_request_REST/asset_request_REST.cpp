@@ -82,7 +82,7 @@ void handle_signal(int sig) {
 
 void catenaAssetDownloadHandler(const std::string& fqoid, const Authorizer* authz) {
     //insert business logic here
-    DEBUG_LOG << "Asset fqoid: " << fqoid << " requested";
+    DEBUG_LOG << "Asset fqoid: " << fqoid << " get operation complete";
 }
 
 void catenaAssetUploadHandler(const std::string& fqoid, const Authorizer* authz) {
@@ -105,7 +105,32 @@ void catenaAssetUploadHandler(const std::string& fqoid, const Authorizer* authz)
         //let manager know that the assets list has changed
     }
 
-    DEBUG_LOG << "Asset fqoid: " << fqoid << " uploaded";
+    DEBUG_LOG << "Asset fqoid: " << fqoid << " upload operation complete";
+}
+
+void catenaAssetDeleteHandler(const std::string& fqoid, const Authorizer* authz) {
+    //update the assets list
+    //insert business logic here
+    //TODO: capability to check if asset exists and if has authz before deleting
+    catena::exception_with_status err{"", catena::StatusCode::OK};
+    std::unique_ptr<IParam> assets = dm.getParam("/assets", err);
+    if (assets == nullptr) {
+        throw err;
+    }
+
+    auto assetsList = dynamic_cast<ParamWithValue<std::vector<std::string>>*>(assets.get());
+    if (assetsList == nullptr) {
+        throw catena::exception_with_status("assets param is not a list", catena::StatusCode::INVALID_ARGUMENT);
+    }
+
+    if (std::find(assetsList->get().begin(), assetsList->get().end(), fqoid) != assetsList->get().end()) {
+        assetsList->get().erase(std::remove(assetsList->get().begin(), assetsList->get().end(), fqoid), assetsList->get().end());
+        //let manager know that the assets list has changed
+    } else {
+        throw catena::exception_with_status("Asset not found in the list", catena::StatusCode::NOT_FOUND);
+    }
+
+    DEBUG_LOG << "Asset fqoid: " << fqoid << " delete operation complete";
 }
 
 void RunRESTServer() {
@@ -128,6 +153,14 @@ void RunRESTServer() {
             catenaAssetUploadHandler(fqoid, authz);
         } catch (catena::exception_with_status& err) {
             DEBUG_LOG << "Asset upload failed: " << err.what();
+        }
+    });
+
+    dm.getDeleteAssetRequest().connect([](const std::string& fqoid, const Authorizer* authz) {
+        try {
+            catenaAssetDeleteHandler(fqoid, authz);
+        } catch (catena::exception_with_status& err) {
+            DEBUG_LOG << "Asset delete failed: " << err.what();
         }
     });
 
