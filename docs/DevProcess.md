@@ -32,7 +32,7 @@ bool globalLoop;
 //
 // construction of dm not shown
 //
-dm.valueSetByClient.connect([](const std::string& oid, const IParam* p) {
+dm.valueSetByClient_.connect([](const std::string& oid, const IParam* p) {
     auto value = p.get();
     DEBUG_LOG << "Client set " << p.oid() << " to: " << value << '\n';
     // a real service would do something with the value here

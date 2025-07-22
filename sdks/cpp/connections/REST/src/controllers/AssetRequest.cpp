@@ -308,7 +308,41 @@ void AssetRequest::proceed() {
         
         // DELETE/asset
         else if (context_.method() == Method_DELETE) {
-            // TODO: Implement DELETE/asset
+            DEBUG_LOG << "deleting asset: " << context_.fqoid();
+
+            //Check if the user has write authorization in any scope other than monitoring
+            //either authz have to be disabled or have write access to any scope other than monitor
+            //TODO: move to BL
+            if (!(authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kOperate))
+                    || authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kConfig))
+                    || authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kAdmin)))) {
+                throw catena::exception_with_status("Not authorized to PUT asset", catena::StatusCode::PERMISSION_DENIED);
+            }
+
+            //examine authz if has write access in BL
+            //if not, dont post
+            //TODO: hook up business logic to handle asset delete
+            dm->getDeleteAssetRequest().emit(context_.fqoid(), authz);
+
+            std::string filePath = context_.EOPath();
+            filePath.append(context_.fqoid());
+
+            // Check if the file exists
+            if (!std::filesystem::exists(filePath)) {
+                std::string notFound = "file: " + filePath + " not found";
+                DEBUG_LOG << notFound;
+                throw catena::exception_with_status(notFound, catena::StatusCode::NOT_FOUND);
+            }
+
+            // Delete the file
+            if (std::filesystem::remove(filePath)) {
+                DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] deleted file: " + filePath;
+                rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
+            } else {
+                std::string error = "AssetRequest[" + std::to_string(objectId_) + "] failed to delete file: " + filePath;
+                DEBUG_LOG << error;
+                throw catena::exception_with_status(error, catena::StatusCode::INTERNAL);
+            }
         }
         
         // ERROR
