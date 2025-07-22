@@ -63,7 +63,7 @@ class SetValue : public MultiSetValue {
     SetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief Creates a new rest object for use with GenericFactory.
-     *
+     * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.

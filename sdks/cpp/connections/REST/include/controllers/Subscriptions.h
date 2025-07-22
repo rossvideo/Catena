@@ -81,7 +81,7 @@ public:
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     *
+     * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.

@@ -105,7 +105,7 @@ class CatenaServiceImpl : public catena::REST::ICatenaServiceImpl {
      */
     void Shutdown() override;
     /**
-     * @brief Flag to set authorization as enabled or disabled
+     * @brief Returns true if authorization is enabled.
      */
     inline bool authorizationEnabled() const override { return authorizationEnabled_; }
     /**

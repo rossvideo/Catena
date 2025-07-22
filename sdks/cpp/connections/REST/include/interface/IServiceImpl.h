@@ -86,7 +86,7 @@ class ICatenaServiceImpl {
      */
     virtual void Shutdown() = 0;
     /**
-     * @brief Flag to set authorization as enabled or disabled
+     * @brief Returns true if authorization is enabled.
      */
     virtual inline bool authorizationEnabled() const = 0;
     /**

@@ -85,7 +85,7 @@ class DeviceRequest : public ICallData {
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     *
+     * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
@@ -123,7 +123,6 @@ class DeviceRequest : public ICallData {
      * @brief A map of slots to ptrs to their corresponding device.
      */
     SlotMap& dms_;
-    
 
     /**
      * @brief A list of the subscribed oids to return.
@@ -139,6 +138,7 @@ class DeviceRequest : public ICallData {
      * @brief Serializer for device.
      */
     std::unique_ptr<IDevice::IDeviceSerializer> serializer_ = nullptr;
+
     /**
      * @brief ID of the DeviceRequest object
      */

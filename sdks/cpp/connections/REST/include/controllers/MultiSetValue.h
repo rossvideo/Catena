@@ -85,7 +85,7 @@ class MultiSetValue : public ICallData {
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     *
+     * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
@@ -96,7 +96,6 @@ class MultiSetValue : public ICallData {
   protected:
     /**
      * @brief Constructor for child SetValue rest endpoints. Does not call proceed().
-     *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
