@@ -5,9 +5,9 @@ using catena::common::ILanguagePack;
 // Initializes the object counter for Connect to 0.
 int catena::REST::Connect::objectCounter_ = 0;
 
-catena::REST::Connect::Connect(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
-    service_{service}, socket_{socket}, writer_{socket, context.origin()}, context_{context},
-    catena::common::Connect(dms, service->subscriptionManager()) {
+catena::REST::Connect::Connect(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    socket_{socket}, writer_{socket, context.origin()}, context_{context},
+    catena::common::Connect(dms, context_.subscriptionManager()) {
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
 
@@ -27,7 +27,7 @@ catena::REST::Connect::~Connect() {
             }
         }
     }
-    service_->deregisterConnection(this);
+    context_.service()->deregisterConnection(this);
 }
 
 void catena::REST::Connect::proceed() {
@@ -42,7 +42,7 @@ void catena::REST::Connect::proceed() {
         userAgent_ = context_.fields("user_agent");
         forceConnection_ = context_.hasField("force_connection");
         initAuthz_(context_.jwsToken(), context_.authorizationEnabled());
-        if (service_->registerConnection(this)) {
+        if (context_.service()->registerConnection(this)) {
             // Connecting to each device in dms_.
             catena::PushUpdates populatedSlots;
             for (auto [slot, dm] : dms_) {

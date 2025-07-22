@@ -56,22 +56,20 @@ class SetValue : public MultiSetValue {
     /**
      * @brief Constructor for the SetValue controller.
      *
-     * @param service Pointer to the parent CatenaServiceImpl.
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    SetValue(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms);
+    SetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief Creates a new rest object for use with GenericFactory.
-     * 
-     * @param service Pointer to the parent CatenaServiceImpl.
+     *
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
-      return new SetValue(service, socket, context, dms);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new SetValue(socket, context, dms);
     }
   private:
     /**

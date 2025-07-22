@@ -48,8 +48,8 @@ using catena::common::IDevice;
 // Initializes the object counter for ParamInfoRequest to 0.
 int ParamInfoRequest::objectCounter_ = 0;
 
-ParamInfoRequest::ParamInfoRequest(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
-    service_{service}, socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms},
+ParamInfoRequest::ParamInfoRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms},
     rc_("", catena::StatusCode::OK), recursive_{false} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());

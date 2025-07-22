@@ -88,9 +88,9 @@ class CatenaServiceImpl : public catena::REST::ICatenaServiceImpl {
      * @param EOPath The path to the external object.
      * @param authz Flag to enable authorization.
      * @param port The port to listen on. Default is 443.
+     * @param maxConnections The maximum # of connections the service allows.
      */
     explicit CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOPath, bool authz = false, uint16_t port = 443, uint32_t maxConnections = 16);
-
     /**
      * @brief Returns the API's version.
      */
@@ -176,6 +176,15 @@ class CatenaServiceImpl : public catena::REST::ICatenaServiceImpl {
      */
     catena::common::SubscriptionManager subscriptionManager_;
     /**
+     * @brief The # of active requests. Increments after a socket is recieved
+     * and decrements once that request is finished.
+     */
+    uint32_t activeRequests_ = 0;
+    /**
+     * @brief Mutex to protect the activeRequests_ variable.
+     */
+    std::mutex activeRequestMutex_;
+    /**
      * @brief Mutex to protect the connectionQueue 
      */
     std::mutex connectionMutex_;
@@ -191,38 +200,8 @@ class CatenaServiceImpl : public catena::REST::ICatenaServiceImpl {
      */
     uint32_t maxConnections_;
 
-    uint32_t activeRequests_ = 0;
-
-    std::mutex activeRequestMutex_;
-     /**
-     * @brief Returns the size of the registry.
-     */
-    uint32_t registrySize() const override { return registry_.size(); }
-    /**
-     * @brief Registers a CallData object into the registry
-     * @param cd The CallData object to register
-     */
-    void registerItem(ICallData *cd) override;
-    /**
-     * @brief Deregisters a CallData object from registry
-     * @param cd The CallData object to deregister
-     */
-    void deregisterItem(ICallData *cd) override;
-    // Aliases for special vectors and unique_ptrs.
-    using Registry = std::vector<std::unique_ptr<ICallData>>;
-    using RegistryItem = std::unique_ptr<ICallData>;
-    /**
-     * @brief The registry of CallData objects
-     */
-    Registry registry_;
-    /**
-     * @brief Mutex to protect the registry 
-     */
-    std::mutex registryMutex_;
-
     using Router = catena::patterns::GenericFactory<catena::REST::ICallData,
                                                     std::string,
-                                                    ICatenaServiceImpl*,
                                                     tcp::socket&,
                                                     ISocketReader&,
                                                     SlotMap&>;

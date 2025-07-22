@@ -10,8 +10,8 @@ using catena::REST::AssetRequest;
 // Initializes the object counter for GetParam to 0.
 int AssetRequest::objectCounter_ = 0;
 
-AssetRequest::AssetRequest(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
-    service_{service}, socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms} {
+AssetRequest::AssetRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
@@ -127,7 +127,7 @@ void AssetRequest::proceed() {
         else if (context_.method() == Method_GET) {
             // Locking device and parsing object data.
             DEBUG_LOG << "sending asset: " << context_.fqoid();
-            std::string path = service_->EOPath();
+            std::string path = context_.EOPath();
             path.append(context_.fqoid());
 
             //check for any read access
@@ -225,7 +225,7 @@ void AssetRequest::proceed() {
             //TODO: hook up business logic to handle asset upload
             dm->getUploadAssetRequest().emit(context_.fqoid(), authz);
 
-            std::string filePath = service_->EOPath();
+            std::string filePath = context_.EOPath();
             filePath.append(context_.fqoid());
         
             // Extract the payload

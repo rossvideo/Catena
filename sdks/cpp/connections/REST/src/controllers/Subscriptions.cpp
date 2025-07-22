@@ -35,7 +35,7 @@ using catena::REST::Subscriptions;
 // Initializes the object counter for Subscriptions to 0.
 int Subscriptions::objectCounter_ = 0;
 
-Subscriptions::Subscriptions(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms)
+Subscriptions::Subscriptions(tcp::socket& socket, ISocketReader& context, SlotMap& dms)
     : socket_(socket), context_(context), dms_(dms) {
     
     // GET (stream)
@@ -83,7 +83,7 @@ void Subscriptions::proceed() {
 
             // GET/subscriptions - Get and write all subscribed OIDs.
             if (context_.method() == Method_GET) {
-                auto subbedOids = service_->subscriptionManager().getAllSubscribedOids(*dm);
+                auto subbedOids = context_.subscriptionManager().getAllSubscribedOids(*dm);
                 for (auto oid : subbedOids) {
                     supressErr = catena::exception_with_status{"", catena::StatusCode::OK};
                     catena::DeviceComponent_ComponentParam res;
@@ -110,11 +110,11 @@ void Subscriptions::proceed() {
                 } else {
                     // Process added OIDs
                     for (const auto& oid : req.added_oids()) {
-                        service_->subscriptionManager().addSubscription(oid, *dm, supressErr, *authz);
+                        context_.subscriptionManager().addSubscription(oid, *dm, supressErr, *authz);
                     }
                     // Process removed OIDs
                     for (const auto& oid : req.removed_oids()) {
-                        service_->subscriptionManager().removeSubscription(oid, *dm, supressErr);
+                        context_.subscriptionManager().removeSubscription(oid, *dm, supressErr);
                     }
                 }
                 

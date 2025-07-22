@@ -6,8 +6,8 @@ using catena::REST::Languages;
 // Initializes the object counter for Languages to 0.
 int Languages::objectCounter_ = 0;
 
-Languages::Languages(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
-    service_{service}, socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms} {
+Languages::Languages(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }

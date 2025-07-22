@@ -6,8 +6,8 @@ using catena::REST::DeviceRequest;
 // Initializes the object counter for Connect to 0.
 int DeviceRequest::objectCounter_ = 0;
 
-DeviceRequest::DeviceRequest(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
-    service_{service}, socket_{socket}, context_{context}, dms_{dms} {
+DeviceRequest::DeviceRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    socket_{socket}, context_{context}, dms_{dms} {
     objectId_ = objectCounter_++;
     // Initializing the writer depending on if the response is stream or unary.
     if (context.stream()) {
@@ -51,7 +51,7 @@ void DeviceRequest::proceed() {
 
             // Getting subscribed oids if dl == SUBSCRIPTIONS.
             if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
-                auto& subscriptionManager = service_->subscriptionManager();
+                auto& subscriptionManager = context_.subscriptionManager();
                 subscribedOids_ = subscriptionManager.getAllSubscribedOids(*dm);
             }
 

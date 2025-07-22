@@ -54,7 +54,6 @@
 #include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
-#include "interface/IServiceImpl.h"
 
 #include <Logger.h>
 
@@ -74,12 +73,11 @@ class MultiSetValue : public ICallData {
     /**
      * @brief Constructor for the MultiSetValue controller.
      *
-     * @param service Pointer to the parent CatenaServiceImpl.
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    MultiSetValue(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms);
+    MultiSetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief MultiSetValue's main process.
      */
@@ -87,26 +85,24 @@ class MultiSetValue : public ICallData {
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     * 
-     * @param service Pointer to the parent CatenaServiceImpl.
+     *
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
-      return new MultiSetValue(service, socket, context, dms);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new MultiSetValue(socket, context, dms);
     }
   protected:
     /**
      * @brief Constructor for child SetValue rest endpoints. Does not call proceed().
-     * 
-     * @param service Pointer to the parent CatenaServiceImpl.
+     *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
      * @param objectId The object's unique id.
      */
-    MultiSetValue(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms, int objectId);
+    MultiSetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms, int objectId);
     /**
      * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.
      * @returns True if successful.
@@ -140,10 +136,6 @@ class MultiSetValue : public ICallData {
      * @brief A map of slots to ptrs to their corresponding device.
      */
     SlotMap& dms_;
-    /**
-     * @brief Pointer to the CatenaServiceImpl.
-     */
-    ICatenaServiceImpl *service_;
 
     /**
      * @brief The MultiSetValuePayload from the request.

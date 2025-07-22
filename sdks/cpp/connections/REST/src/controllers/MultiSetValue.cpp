@@ -6,14 +6,14 @@ using catena::REST::MultiSetValue;
 // Initializes the object counter for MultiSetValue to 0.
 int MultiSetValue::objectCounter_ = 0;
 
-MultiSetValue::MultiSetValue(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
-    MultiSetValue(service, socket, context, dms, objectCounter_++) {
+MultiSetValue::MultiSetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    MultiSetValue(socket, context, dms, objectCounter_++) {
     typeName_ = "Multi";
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
 
-MultiSetValue::MultiSetValue(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms, int objectId) :
-    service_{service}, socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms}, objectId_{objectId} {}
+MultiSetValue::MultiSetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms, int objectId) :
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms}, objectId_{objectId} {}
 
 bool MultiSetValue::toMulti_() {
     absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &reqs_);

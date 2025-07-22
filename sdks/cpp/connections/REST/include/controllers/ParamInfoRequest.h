@@ -48,7 +48,6 @@
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 #include <IDevice.h>
-#include "interface/IServiceImpl.h"
 
 // common
 #include <ParamVisitor.h>
@@ -77,12 +76,11 @@ class ParamInfoRequest : public ICallData {
     /**
      * @brief Constructor for the ParamInfoRequest controller.
      *
-     * @param service Pointer to the parent CatenaServiceImpl.
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    ParamInfoRequest(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms);
+    ParamInfoRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     
     /**
      * @brief ParamInfoRequest's main process.
@@ -91,14 +89,13 @@ class ParamInfoRequest : public ICallData {
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     * 
-     * @param service Pointer to the parent CatenaServiceImpl.
+     *
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
-      return new ParamInfoRequest(service, socket, context, dms);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new ParamInfoRequest(socket, context, dms);
     }
     
     
@@ -151,11 +148,6 @@ class ParamInfoRequest : public ICallData {
      * @brief A map of slots to ptrs to their corresponding device.
      */
     SlotMap& dms_;
-
-    /**
-     * @brief Pointer to the CatenaServiceImpl.
-     */
-    ICatenaServiceImpl *service_;
 
     /**
      * @brief Whether to recursively get parameter info.

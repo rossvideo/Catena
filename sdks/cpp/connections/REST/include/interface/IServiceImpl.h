@@ -45,9 +45,6 @@
 #include <ISubscriptionManager.h>
 #include <rpc/IConnect.h>
 
-// REST
-#include "interface/ICallData.h"
-
 // boost
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
@@ -112,20 +109,6 @@ class ICatenaServiceImpl {
      * @param cd The Connect CallData object to deregister.
      */
     virtual void deregisterConnection(catena::common::IConnect* cd) = 0;
-    /**
-     * @brief Returns the size of the registry.
-     */
-    virtual uint32_t registrySize() const = 0;
-    /**
-     * @brief Registers a CallData object into the registry
-     * @param cd The CallData object to register
-     */
-    virtual void registerItem(ICallData *cd) = 0;
-    /**
-     * @brief Deregisters a CallData object from registry
-     * @param cd The CallData object to deregister
-     */
-    virtual void deregisterItem(ICallData *cd) = 0;
 
   private:
     /**

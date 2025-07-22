@@ -6,8 +6,8 @@ using catena::REST::GetValue;
 // Initializes the object counter for GetValue to 0.
 int GetValue::objectCounter_ = 0;
 
-GetValue::GetValue(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
-    service_{service}, socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms} {
+GetValue::GetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }

@@ -46,6 +46,7 @@
 
 // connections/REST
 #include "interface/ISocketReader.h"
+#include "interface/IServiceImpl.h"
 
 // boost
 #include <boost/asio.hpp>
@@ -80,14 +81,13 @@ class SocketReader : public ISocketReader {
     /**
      * @brief Constructor for the SocketReader class.
      */
-    SocketReader() = default;
+    SocketReader(ICatenaServiceImpl* service) {};
     /**
      * @brief Populates variables using information read from the inputted
      * socket.
      * @param socket The socket to read from.
-     * @param authz Flag to indicate if authorization is enabled.
      */
-    void read(tcp::socket& socket, bool authz = false, const std::string& version = "v1") override;
+    void read(tcp::socket& socket) override;
     /**
      * @brief Returns the HTTP method of the request.
      */
@@ -142,13 +142,27 @@ class SocketReader : public ISocketReader {
      */
     const std::string& jsonBody() const override { return jsonBody_; }
     /**
-     * @brief Returns true if authorization is enabled.
-     */
-    bool authorizationEnabled() const override { return authorizationEnabled_; };
-    /**
      * @brief Returns true if the client wants a stream response.
      */
     bool stream() const override { return stream_; } 
+
+    /**
+     * @brief Returns a pointer to the CatenaServiceImpl
+     */
+    ICatenaServiceImpl* service() const override { return service_; }
+    /**
+     * @brief Returns true if authorization is enabled.
+     */
+    bool authorizationEnabled() const override { return service_->authorizationEnabled(); }
+    /**
+     * @brief Returns the path to the external object.
+     */
+    const std::string& EOPath() const override { return service_->EOPath();}
+    /**
+     * @brief Returns a reference to the subscription manager
+     */
+    catena::common::ISubscriptionManager& subscriptionManager() { return service_->subscriptionManager(); }
+
 
   private:
     /**
@@ -197,9 +211,9 @@ class SocketReader : public ISocketReader {
      */
     std::string fieldNotFound = "";
     /**
-     * @brief True if authorization is enabled.
+     * @brief Pointer to the CatenaServiceImpl
      */
-    bool authorizationEnabled_ = false;
+    ICatenaServiceImpl* service_ = nullptr;
 };
 
 }; // Namespace REST

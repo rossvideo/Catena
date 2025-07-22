@@ -54,7 +54,6 @@
 #include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
-#include "interface/IServiceImpl.h"
 
 #include <Logger.h>
 
@@ -74,12 +73,11 @@ class DeviceRequest : public ICallData {
     /**
      * @brief Constructor for the DeviceRequest controller.
      *
-     * @param service Pointer to the parent CatenaServiceImpl.
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
-    DeviceRequest(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms);
+    DeviceRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
      * @brief DeviceRequest's main process.
      */
@@ -87,14 +85,13 @@ class DeviceRequest : public ICallData {
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     * 
-     * @param service Pointer to the parent CatenaServiceImpl.
+     *
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
-    static ICallData* makeOne(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
-      return new DeviceRequest(service, socket, context, dms);
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
+      return new DeviceRequest(socket, context, dms);
     }
     
 
@@ -126,10 +123,7 @@ class DeviceRequest : public ICallData {
      * @brief A map of slots to ptrs to their corresponding device.
      */
     SlotMap& dms_;
-    /**
-     * @brief Pointer to the CatenaServiceImpl.
-     */
-    ICatenaServiceImpl *service_;
+    
 
     /**
      * @brief A list of the subscribed oids to return.
@@ -145,7 +139,6 @@ class DeviceRequest : public ICallData {
      * @brief Serializer for device.
      */
     std::unique_ptr<IDevice::IDeviceSerializer> serializer_ = nullptr;
-
     /**
      * @brief ID of the DeviceRequest object
      */

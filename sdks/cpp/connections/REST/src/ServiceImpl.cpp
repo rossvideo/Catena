@@ -98,8 +98,8 @@ void CatenaServiceImpl::run() {
             if (!shutdown_) {
                 try {
                     // Reading from the socket.
-                    SocketReader context;
-                    context.read(socket, authorizationEnabled_, version_);
+                    SocketReader context(this);
+                    context.read(socket);
                     std::string requestKey = RESTMethodMap().getForwardMap().at(context.method()) + context.endpoint();
                     // Returning empty response with options to the client if required.
                     if (context.method() == Method_OPTIONS) {
@@ -110,7 +110,7 @@ void CatenaServiceImpl::run() {
                         SocketWriter(socket, context.origin()).sendResponse(rc);
                     // Otherwise routing to request.
                     } else if (router_.canMake(requestKey)) {
-                        std::unique_ptr<ICallData> request = router_.makeProduct(requestKey, this, socket, context, dms_);
+                        std::unique_ptr<ICallData> request = router_.makeProduct(requestKey, socket, context, dms_);
                         request->proceed();
                     // ERROR
                     } else { 
@@ -199,22 +199,6 @@ void CatenaServiceImpl::deregisterConnection(catena::common::IConnect* cd) {
         connectionQueue_.erase(it);
     }
     DEBUG_LOG << "Connected users remaining: " << connectionQueue_.size() << '\n';
-}
-//Registers current CallData object into the registry
-void CatenaServiceImpl::registerItem(ICallData *cd) {
-    std::lock_guard<std::mutex> lock(registryMutex_);
-    this->registry_.push_back(RegistryItem(cd));
-}
-
-//Deregisters current CallData object from the registry
-void CatenaServiceImpl::deregisterItem(ICallData *cd) {
-    std::lock_guard<std::mutex> lock(registryMutex_);
-    auto it = std::find_if(registry_.begin(), registry_.end(),
-                            [cd](const RegistryItem &i) { return i.get() == cd; });
-    if (it != registry_.end()) {
-        registry_.erase(it);
-    }
-    DEBUG_LOG << "Active RPCs remaining: " << registry_.size() << '\n';
 }
 
 // (UNUSED)

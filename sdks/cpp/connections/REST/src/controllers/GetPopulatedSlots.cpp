@@ -6,8 +6,8 @@ using catena::REST::GetPopulatedSlots;
 // Initializes the object counter for GetPopulatedSlots to 0.
 int GetPopulatedSlots::objectCounter_ = 0;
 
-GetPopulatedSlots::GetPopulatedSlots(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
-    service_{service}, socket_{socket}, writer_{socket, context.origin()}, dms_{dms} {
+GetPopulatedSlots::GetPopulatedSlots(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    socket_{socket}, writer_{socket, context.origin()}, dms_{dms} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }

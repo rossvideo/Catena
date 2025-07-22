@@ -2,7 +2,7 @@
 #include <SocketReader.h>
 using catena::REST::SocketReader;
 
-void SocketReader::read(tcp::socket& socket, bool authz, const std::string& version) {
+void SocketReader::read(tcp::socket& socket) {
     // Resetting variables.
     method_ = catena::REST::Method_NONE;
     slot_ = 0;
@@ -13,7 +13,6 @@ void SocketReader::read(tcp::socket& socket, bool authz, const std::string& vers
     detailLevel_ = Device_DetailLevel_UNSET;
     jwsToken_ = "";
     jsonBody_ = "";
-    authorizationEnabled_ = authz;
 
     // Reading from the socket.
     boost::asio::streambuf buffer;
@@ -39,7 +38,7 @@ void SocketReader::read(tcp::socket& socket, bool authz, const std::string& vers
         std::vector<std::string> path;
         catena::split(path, u.path(), "/");
         // Checking the url starts with "st2138-api/v1/"
-        if (path.size() >= 4 && path[1] == "st2138-api" && path[2] == version) {
+        if (path.size() >= 4 && path[1] == "st2138-api" && path[2] == service_->version()) {
             try {
                 slot_ = std::stoi(path[3]);
             } catch(...) {
@@ -78,12 +77,11 @@ void SocketReader::read(tcp::socket& socket, bool authz, const std::string& vers
     // Looping through headers to retrieve JWS token and json body len.
     std::size_t contentLength = 0;
     while(std::getline(header_stream, header) && header != "\r") {
-        // authz=false once found to avoid further str comparisons.
-        if (authz && jwsToken_.empty() && header.starts_with("Authorization: Bearer ")) {
+        // Getting jwsToken.
+        if (service_->authorizationEnabled() && jwsToken_.empty() && header.starts_with("Authorization: Bearer ")) {
             jwsToken_ = header.substr(std::string("Authorization: Bearer ").length());
             // Removing newline.
             jwsToken_.erase(jwsToken_.length() - 1);
-            authz = false;
         }
         // Getting origin
         else if (origin_.empty() && header.starts_with("Origin: ")) {

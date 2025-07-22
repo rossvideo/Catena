@@ -6,8 +6,8 @@ using catena::REST::LanguagePack;
 // Initializes the object counter for LanguagePack to 0.
 int LanguagePack::objectCounter_ = 0;
 
-LanguagePack::LanguagePack(ICatenaServiceImpl *service, tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
-    service_{service}, socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms} {
+LanguagePack::LanguagePack(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
