@@ -206,7 +206,7 @@ catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& l
     auto& name = language.language_pack().name();
     auto& id = language.id();
     // Admin scope required.
-    if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kAdmin) + ":w")) {
+    if (!authz.writeAuthz(Scopes().getForwardMap().at(Scopes_e::kAdmin))) {
         ans = catena::exception_with_status("Not authorized to add language", catena::StatusCode::PERMISSION_DENIED);
     // Making sure LanguagePack is properly formatted.
     } else if (name.empty() || id.empty()) {
@@ -228,7 +228,7 @@ catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& l
 catena::exception_with_status Device::removeLanguage(const std::string& languageId, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     // Admin scope required.
-    if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kAdmin) + ":w")) {
+    if (!authz.writeAuthz(Scopes().getForwardMap().at(Scopes_e::kAdmin))) {
         ans = catena::exception_with_status("Not authorized to delete language", catena::StatusCode::PERMISSION_DENIED);
     // Cannot change shipped language packs.
     } else if (language_packs_.contains(languageId) && !added_packs_.contains(languageId)) {

@@ -169,19 +169,15 @@ class Connect : public IConnect {
             if (isCancelled()){
                 hasUpdate_ = true;
                 cv_.notify_one();
-                return;
+            } else if (authz_->readAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
+                // Updating res_'s device_component and pushing update.
+                res_.Clear();
+                res_.set_slot(slot);
+                auto pack = res_.mutable_device_component()->mutable_language_pack();
+                l->toProto(*pack->mutable_language_pack());
+                hasUpdate_ = true;
+                cv_.notify_one();
             }
-            // Returning if authorization is enabled and the client does not have monitor scope.
-            if (authz_ != &catena::common::Authorizer::kAuthzDisabled
-                && !authz_->hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
-                return;
-            }
-            // Updating res_'s device_component and pushing update.
-            res_.set_slot(slot);
-            auto pack = res_.mutable_device_component()->mutable_language_pack();
-            l->toProto(*pack->mutable_language_pack());
-            hasUpdate_ = true;
-            cv_.notify_one();
         } catch(catena::exception_with_status& why){
             // if an error is thrown, no update is pushed to the client
         }
