@@ -236,7 +236,6 @@ class Connect : public IConnect {
                     break;
                 }
             }
-            std::cout<<"Priority: "<<priority_<<std::endl;
         } else {
             authz_ = &catena::common::Authorizer::kAuthzDisabled;
         }

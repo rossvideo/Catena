@@ -8,6 +8,7 @@ int catena::REST::Connect::objectCounter_ = 0;
 catena::REST::Connect::Connect(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context},
     catena::common::Connect(dms, context.subscriptionManager()) {
+    objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
 
