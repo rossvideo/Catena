@@ -89,6 +89,7 @@ using grpc::ServerCompletionQueue;
 
 using catena::common::IDevice;
 using catena::common::IParam;
+using catena::common::IConnect;
 
 namespace catena {
 namespace gRPC {
@@ -104,8 +105,9 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      * @param dms A map of slots to ptrs to their corresponding device.
      * @param EOPath The path to the external object.
      * @param authz Flag to enable authorization.
+     * @param maxConnections The maximum number of connections allowed to the service.
      */
-    CatenaServiceImpl(ServerCompletionQueue* cq, std::vector<IDevice*> dms, std::string& EOPath, bool authz);  
+    CatenaServiceImpl(ServerCompletionQueue* cq, std::vector<IDevice*> dms, std::string& EOPath, bool authz, uint32_t maxConnections);  
     /**
      * @brief Creates the CallData objects for each gRPC command.
      */
@@ -135,6 +137,17 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      * @brief Returns the EOPath.
      */
     const std::string& EOPath() override { return EOPath_; }
+    /**
+     * @brief Regesters a Connect CallData object into the Connection priority queue.
+     * @param cd The Connect CallData object to register.
+     * @return TRUE if successfully registered, FALSE otherwise
+     */
+    bool registerConnection(catena::common::IConnect* cd) override;
+    /**
+     * @brief Deregisters a Connect CallData object into the Connection priority queue.
+     * @param cd The Connect CallData object to deregister.
+     */
+    void deregisterConnection(catena::common::IConnect* cd) override;
     /**
      * @brief Returns the size of the registry.
      */
@@ -184,6 +197,21 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      * @brief The subscription manager for handling parameter subscriptions
      */
     catena::common::SubscriptionManager subscriptionManager_;
+    /**
+     * @brief Mutex to protect the connectionQueue 
+     */
+    std::mutex connectionMutex_;
+    /**
+     * @brief The priority queue for Connect CallData objects.
+     * 
+     * Not an actual priority queue object since individual access is required
+     * for deregistering old connections.
+     */
+    std::vector<catena::common::IConnect*> connectionQueue_;
+    /**
+     * @brief The maximum number of connections allowed to the service.
+     */
+    uint32_t maxConnections_;
 };
 
 }; // namespace gRPC

@@ -43,8 +43,10 @@
 using boost::asio::ip::tcp;
 
 //common
-#include <SubscriptionManager.h>
 #include <ISubscriptionManager.h>
+
+//REST
+#include "interface/IServiceImpl.h"
 
 #include <string>
 #include <unordered_map>
@@ -76,9 +78,8 @@ class ISocketReader {
      * @brief Populates variables using information read from the inputted
      * socket.
      * @param socket The socket to read from.
-     * @param authz Flag to indicate if authorization is enabled.
      */
-    virtual void read(tcp::socket& socket, bool authz = false, const std::string& version = "v1") = 0;
+    virtual void read(tcp::socket& socket) = 0;
     /**
      * @brief Returns the HTTP method of the request.
      */
@@ -124,27 +125,28 @@ class ISocketReader {
      * @brief Returns the json body of the request, which may be empty.
      */
     virtual const std::string& jsonBody() const = 0;
-
-    /**
-     * @brief Returns true if authorization is enabled.
-     */
-    virtual bool authorizationEnabled() const = 0;
     /**
      * @brief Returns true if the client wants a stream response.
      */
     virtual bool stream() const = 0;
 
     /**
+     * @brief Returns a pointer to the CatenaServiceImpl
+     */
+    virtual ICatenaServiceImpl* service() = 0;
+    /**
+     * @brief Returns true if authorization is enabled.
+     */
+    virtual bool authorizationEnabled() const = 0;
+    /**
      * @brief Returns the path to the external object.
      */
     virtual const std::string& EOPath() const = 0;
-
     /**
      * @brief Returns a reference to the subscription manager
      */
-    virtual catena::common::ISubscriptionManager& getSubscriptionManager() = 0;
+    virtual catena::common::ISubscriptionManager& subscriptionManager() = 0;
 };
  
 }; // Namespace REST
 }; // Namespace catena
- 

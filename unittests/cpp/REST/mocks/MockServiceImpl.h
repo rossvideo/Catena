@@ -29,40 +29,33 @@
  */
 
 /**
- * @brief Mock implementation for the ISocketReader class.
+ * @brief Mock implementation for the REST ICatenaServiceImpl class.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/26
+ * @date 25/07/22
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
 
 #include <gmock/gmock.h>
-#include <interface/ISocketReader.h>
+#include <interface/IServiceImpl.h>
+
+using namespace catena::common;
 
 namespace catena {
 namespace REST {
 
-// Mock implementation for the ISocketReader class.
-class MockSocketReader : public ISocketReader {
+// Mock implementation for the REST ICatenaServiceImpl class.
+class MockServiceImpl : public ICatenaServiceImpl {
   public:
-    MOCK_METHOD(void, read, (tcp::socket& socket), (override));
-    MOCK_METHOD(RESTMethod, method, (), (const, override));
-    MOCK_METHOD(const std::string&, endpoint, (), (const, override));
-    MOCK_METHOD(uint32_t, slot, (), (const, override));
-    MOCK_METHOD(const std::string&, fqoid, (), (const, override));
-    MOCK_METHOD(bool, hasField, (const std::string& key), (const, override));
-    MOCK_METHOD(const std::string&, fields, (const std::string& key), (const, override));
-    MOCK_METHOD(const std::string&, jwsToken, (), (const, override));
-    MOCK_METHOD(const std::string&, origin, (), (const, override));
-    MOCK_METHOD(catena::Device_DetailLevel, detailLevel, (), (const, override));
-    MOCK_METHOD(const std::string&, jsonBody, (), (const, override));
-    MOCK_METHOD(bool, stream, (), (const, override));
-    MOCK_METHOD(ICatenaServiceImpl*, service, (), (override));
+    MOCK_METHOD(const std::string&, version, (), (const, override));
+    MOCK_METHOD(void, run, (), (override));
+    MOCK_METHOD(void, Shutdown, (), (override));
     MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
-    MOCK_METHOD(const std::string&, EOPath, (), (const, override));
-    MOCK_METHOD(catena::common::ISubscriptionManager&, subscriptionManager, (), (override));
-
+    MOCK_METHOD(ISubscriptionManager&, subscriptionManager, (), (override));
+    MOCK_METHOD(const std::string&, EOPath, (), (override));
+    MOCK_METHOD(bool, registerConnection, (catena::common::IConnect* cd), (override));
+    MOCK_METHOD(void, deregisterConnection, (catena::common::IConnect* cd), (override));
 };
 
 } // namespace REST

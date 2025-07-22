@@ -46,8 +46,9 @@ class TestConnect : public Connect {
     TestConnect(SlotMap& dms, ISubscriptionManager& subscriptionManager) 
         : Connect(dms, subscriptionManager) {}
     
-    bool isCancelled() override { return cancelled_; }
-    void setCancelled(bool cancelled) { cancelled_ = cancelled; }
+    bool isCancelled() override { return shutdown_; }
+    void forceConnection(bool forceConnection) { forceConnection_ = forceConnection; }
+    void objectId(uint32_t id) { objectId_ = id; }
 
     // Expose protected methods for testing
     using Connect::updateResponse_;
@@ -57,9 +58,6 @@ class TestConnect : public Connect {
     // Expose state for verification
     bool hasUpdate() const { return hasUpdate_; }
     const catena::PushUpdates& getResponse() const { return res_; }
-
-  private:
-    bool cancelled_ = false;
 };
 
 // Fixture
@@ -285,6 +283,50 @@ TEST_F(CommonConnectTest, updateResponseLanguagePackAuthzOnSucceeds) {
     EXPECT_TRUE(connect->hasUpdate());
 }
 
+// Test 1.7: EXPECT EQ - Priority should be 0 if authz is off.
+TEST_F(CommonConnectTest, PriorityAuthzOff) {
+    // Test authorization disabled - priority should be 0
+    connect->initAuthz_(monitorToken, false);
+    EXPECT_EQ(connect->priority(), 0);
+}
+
+// Test 1.8: EXPECT EQ - Priority should not be 0 if authz is on.
+TEST_F(CommonConnectTest, PriorityAuthzOn) {
+    // No scopes
+    connect->initAuthz_(getJwsToken(""), true);
+    EXPECT_EQ(connect->priority(), 0);
+    // Read/write scopes w and without force connection
+    for (uint32_t i = 1; i <= static_cast<uint32_t>(Scopes_e::kAdmin); i += 1) {
+        for (bool fc : {false, true}) {
+            connect->forceConnection(fc);
+            // Read scope
+            connect->initAuthz_(getJwsToken(Scopes().getForwardMap().at(static_cast<Scopes_e>(i))), true);
+            EXPECT_EQ(connect->priority(), 2 * i);
+            // Write scope
+            connect->initAuthz_(getJwsToken(Scopes().getForwardMap().at(static_cast<Scopes_e>(i)) + ":w"), true);
+            if (!fc || static_cast<Scopes_e>(i) != Scopes_e::kAdmin) {
+                EXPECT_EQ(connect->priority(), 2 * i + 1);
+            } else {
+                EXPECT_EQ(connect->priority(), 2 * i + 2);  // Admin with force connection gets highest priority
+            }
+        }
+    }
+}
+
+// Test 1.9: Testing connection comparison based on priority and age
+TEST_F(CommonConnectTest, Compare) {
+    // Creating a second connect obj for comparison.
+    connect->objectId(0);
+    TestConnect otherConnect(dms_, subscriptionManager);
+    otherConnect.objectId(1);  // Set a different object ID for comparison
+    // Higher priority connection should be greater than lower priority connection
+    connect->initAuthz_(getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor)), true);
+    otherConnect.initAuthz_(getJwsToken(Scopes().getForwardMap().at(Scopes_e::kOperate)), true);
+    EXPECT_TRUE(*connect < otherConnect) << "Connect with Monitor scope should be less than Connection with Operate scope";
+    // If scopes are the same, older connection should be larger than newer connection
+    otherConnect.initAuthz_(getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor)), true);
+    EXPECT_FALSE(*connect < otherConnect) << "Older connection should have higher priority than newer connection";
+}
 
 // == 2. Cancellation Tests ==
 
@@ -296,8 +338,8 @@ TEST_F(CommonConnectTest, updateResponseCancelled) {
     setupCommonExpectations(param, descriptor);
     setupMockParam(param, testOid, descriptor);
 
-    // Set cancelled to true
-    connect->setCancelled(true);
+    // Set shutdown to true
+    connect->shutdown();
 
     // Setup param toProto to succeed (but it shouldn't be called)
     EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
@@ -312,8 +354,8 @@ TEST_F(CommonConnectTest, updateResponseLanguagePackCancelled) {
     // Setup test data
     auto languagePack = setupLanguagePack();
     
-    // Set cancelled to true
-    connect->setCancelled(true);
+    // Set shutdown to true
+    connect->shutdown();
     
     connect->updateResponse_(languagePack.get(), 0);
     EXPECT_TRUE(connect->hasUpdate());  // Should be true even though we didn't set language pack data

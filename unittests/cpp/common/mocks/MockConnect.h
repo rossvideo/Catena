@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief Mock implementation for the ISocketReader class.
+ * @brief Mock implementation for the IConnect class.
  * @author benjamin.whitten@rossvideo.com
  * @date 25/06/26
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -38,32 +38,27 @@
 #pragma once
 
 #include <gmock/gmock.h>
-#include <interface/ISocketReader.h>
+#include "rpc/IConnect.h"
 
 namespace catena {
-namespace REST {
+namespace common {
 
-// Mock implementation for the ISocketReader class.
-class MockSocketReader : public ISocketReader {
+// Mock implementation for the IConnect class.
+class MockConnect : public IConnect {
   public:
-    MOCK_METHOD(void, read, (tcp::socket& socket), (override));
-    MOCK_METHOD(RESTMethod, method, (), (const, override));
-    MOCK_METHOD(const std::string&, endpoint, (), (const, override));
-    MOCK_METHOD(uint32_t, slot, (), (const, override));
-    MOCK_METHOD(const std::string&, fqoid, (), (const, override));
-    MOCK_METHOD(bool, hasField, (const std::string& key), (const, override));
-    MOCK_METHOD(const std::string&, fields, (const std::string& key), (const, override));
-    MOCK_METHOD(const std::string&, jwsToken, (), (const, override));
-    MOCK_METHOD(const std::string&, origin, (), (const, override));
-    MOCK_METHOD(catena::Device_DetailLevel, detailLevel, (), (const, override));
-    MOCK_METHOD(const std::string&, jsonBody, (), (const, override));
-    MOCK_METHOD(bool, stream, (), (const, override));
-    MOCK_METHOD(ICatenaServiceImpl*, service, (), (override));
-    MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
-    MOCK_METHOD(const std::string&, EOPath, (), (const, override));
-    MOCK_METHOD(catena::common::ISubscriptionManager&, subscriptionManager, (), (override));
+    MOCK_METHOD(uint32_t, priority, (), (const, override));
+    MOCK_METHOD(uint32_t, objectId, (), (const, override));
+    MOCK_METHOD(void, shutdown, (), (override));
+    MOCK_METHOD(bool, isCancelled, (), (override));
+    MOCK_METHOD(void, updateResponse_, (const std::string& oid, const IParam* p, uint32_t slot), (override));
+    MOCK_METHOD(void, updateResponse_, (const ILanguagePack* l, uint32_t slot), (override));
+    MOCK_METHOD(void, initAuthz_, (const std::string& jwsToken, bool authz), (override));
 
+    MOCK_METHOD(bool, lessThan, (const IConnect& otherConnection), (const));
+    bool operator<(const IConnect& otherConnection) const override {
+        return lessThan(otherConnection);
+    }
 };
 
-} // namespace REST
+} // namespace common
 } // namespace catena

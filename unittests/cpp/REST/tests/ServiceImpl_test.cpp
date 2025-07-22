@@ -44,6 +44,7 @@
 
 // mock classes
 #include "MockDevice.h"
+#include "MockConnect.h"
 
 // REST
 #include "ServiceImpl.h"
@@ -68,7 +69,7 @@ class RESTServiceImplTests : public testing::Test {
     void SetUp() override {
         oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
         EXPECT_CALL(dm_, slot()).WillRepeatedly(testing::Return(0));
-        service_.reset(new CatenaServiceImpl({&dm_}, EOPath_, authzEnabled_, port_));
+        service_.reset(new CatenaServiceImpl({&dm_}, EOPath_, authzEnabled_, port_, 1));
     }
 
     /*
@@ -129,7 +130,7 @@ TEST_F(RESTServiceImplTests, ServiceImpl_CreateDuplicateSlot) {
     MockDevice dm2;
     EXPECT_CALL(dm2, slot()).WillRepeatedly(testing::Return(0));
     // Creating a service with a duplicate slot.
-    EXPECT_THROW(CatenaServiceImpl({&dm_, &dm2}, EOPath_, authzEnabled_, port_ + 2), std::runtime_error)
+    EXPECT_THROW(CatenaServiceImpl({&dm_, &dm2}, EOPath_, authzEnabled_, port_ + 2, 1), std::runtime_error)
         << "Creating a service with two devices sharing a slot should throw an error.";
 }
 
@@ -198,4 +199,28 @@ TEST_F(RESTServiceImplTests, ServiceImpl_Router) {
     // Shutting down the service.
     service_->Shutdown();
     run_thread.join();
+}
+
+/*
+ * TEST 5 - Test serviceImpl's ability to register and derigister connections.
+ */
+TEST_F(RESTServiceImplTests, ServiceImpl_ManageConnections) {
+    // Mocking 2 connecitons with A < B.
+    MockConnect connectionA, connectionB;
+    bool shutdownA = false;
+    bool shutdownB = false;
+    EXPECT_CALL(connectionA, shutdown()).WillRepeatedly(testing::Invoke([&shutdownA]() { shutdownA = true; }));
+    EXPECT_CALL(connectionA, lessThan(testing::_)).WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(connectionB, shutdown()).WillRepeatedly(testing::Invoke([&shutdownB]() { shutdownB = true; }));
+    EXPECT_CALL(connectionB, lessThan(testing::_)).WillRepeatedly(testing::Return(false));
+    // Registering connection A.
+    EXPECT_TRUE(service_->registerConnection(&connectionA)) << "Service should be able to register a connection.";
+    // Setting connection B to higher prioirity and registering.
+    EXPECT_TRUE(service_->registerConnection(&connectionB)) << "Service should be able to register a higher priority connection.";
+    EXPECT_TRUE(shutdownA) << "Lower priority connections should be shutdown when a higher priority connection is registered.";
+    service_->deregisterConnection(&connectionA);
+    // Trying to re-add connection A should fail.
+    EXPECT_FALSE(service_->registerConnection(&connectionA)) << "Service should not be able to register a lower priority connection";
+    EXPECT_FALSE(shutdownB) << "Higher priority connection should not be shutdown when a lower priority connection tries to connect.";
+    service_->deregisterConnection(&connectionB);
 }
