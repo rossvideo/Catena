@@ -48,7 +48,7 @@
 <script type="application/ecmascript">
 var viewWidth = 541;
 var viewHeight = 56;
-var sectionId = 'dynsection-2';
+var sectionId = 'dynsection-3';
 </script>
 <script type="application/ecmascript" xlink:href="svg.min.js"/>
 <svg id="graph" class="graph">
@@ -57,7 +57,7 @@ var sectionId = 'dynsection-2';
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:title="Check if the client has write authorization for a param.">
+<g id="a_Node000001"><a xlink:title="Check if the client has write authorization.">
 <polygon fill="#999999" stroke="#666666" points="533,-30 378,-30 378,0 533,0 533,-30"/>
 <text text-anchor="start" x="386" y="-18" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::Authorizer</text>
 <text text-anchor="middle" x="455.5" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">::writeAuthz</text>
