@@ -244,6 +244,9 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IDevice</b> ()=de
 <tr class="memitem:a444410bfc60b929d1bd30a5d22061085" id="r_a444410bfc60b929d1bd30a5d22061085"><td class="memItemLeft" align="right" valign="top">virtual vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a444410bfc60b929d1bd30a5d22061085">getUploadAssetRequest</a> ()=0</td></tr>
 <tr class="memdesc:a444410bfc60b929d1bd30a5d22061085"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when an upload asset request is made. Intended recipient is the business logic.  <br /></td></tr>
 <tr class="separator:a444410bfc60b929d1bd30a5d22061085"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a010ef2405cded568eea254d049d6ebec" id="r_a010ef2405cded568eea254d049d6ebec"><td class="memItemLeft" align="right" valign="top">virtual vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a010ef2405cded568eea254d049d6ebec">getDeleteAssetRequest</a> ()=0</td></tr>
+<tr class="memdesc:a010ef2405cded568eea254d049d6ebec"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a delete asset request is made. Intended recipient is the business logic.  <br /></td></tr>
+<tr class="separator:a010ef2405cded568eea254d049d6ebec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface class for <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a>. </p>
@@ -803,6 +806,35 @@ Here is the caller graph for this function:</div>
 <p>Returns the device's default scope. </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#ab52d0101133233dcdb54d381675a24e9">catena::common::Device</a>.</p>
+
+</div>
+</div>
+<a id="a010ef2405cded568eea254d049d6ebec" name="a010ef2405cded568eea254d049d6ebec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a010ef2405cded568eea254d049d6ebec">&#9670;&#160;</a></span>getDeleteAssetRequest()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> *)&gt; &amp; catena::common::IDevice::getDeleteAssetRequest </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>signal emitted when a delete asset request is made. Intended recipient is the business logic. </p>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#af702d6a407c83bdec8aa4d9cb510aaa5">catena::common::Device</a>.</p>
 
 </div>
 </div>
