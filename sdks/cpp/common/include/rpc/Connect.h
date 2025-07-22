@@ -47,6 +47,7 @@
 #include <Authorization.h>
 #include <ISubscriptionManager.h>
 #include "IConnect.h"
+#include <Logger.h>
 
 #include <interface/device.pb.h>
 
@@ -178,6 +179,7 @@ class Connect : public IConnect {
             }
         } catch(catena::exception_with_status& why) {
             // if an error is thrown, no update is pushed to the client
+            DEBUG_LOG << "Failed to send SetValue update: " << why.what();
         }
     }
     
@@ -204,6 +206,7 @@ class Connect : public IConnect {
             }
         } catch(catena::exception_with_status& why){
             // if an error is thrown, no update is pushed to the client
+            DEBUG_LOG << "Failed to send language pack update: " << why.what();
         }
     }
 
@@ -292,7 +295,7 @@ class Connect : public IConnect {
     /**
      * @brief Flag to force a connection.
      * 
-     * No idea what this is used for and if its even needed here.
+     * Only applicable if client has admin:w scope.
      */
     bool forceConnection_;
     /**
