@@ -22,8 +22,8 @@ endif(gRPC_enabled)
 
 set(SOURCES 
     tests/utils_test.cpp
-    tests/subscription_manager_test.cpp
-    tests/param_visitor_test.cpp
+    tests/SubscriptionManager_test.cpp
+    tests/ParamVisitor_test.cpp
     tests/Authorization_test.cpp
     tests/Connect_test.cpp
     tests/MenuGroup_test.cpp

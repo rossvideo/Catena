@@ -40,6 +40,7 @@
 #include "RESTTest.h"
 #include "MockDeviceSerializer.h"
 #include "MockSubscriptionManager.h"
+#include "CommonTestHelpers.h"
 
 // REST
 #include "controllers/DeviceRequest.h"
@@ -67,6 +68,9 @@ class RESTDeviceRequestTests : public RESTEndpointTest {
         EXPECT_CALL(context_, detailLevel()).WillRepeatedly(testing::Return(catena::Device_DetailLevel_FULL));
         // Default expectations for the device model 1 (should not be called).
         EXPECT_CALL(dm1_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
+        
+        // Set up default JWS token for tests
+        jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
     }
 
     /*
@@ -185,16 +189,6 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Stream) {
 
 // Test 1.3: Test proceed with authz enabled and a valid token.
 TEST_F(RESTDeviceRequestTests, DeviceRequest_AuthzValid) {
-    jwsToken_ = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIiOiIxMjM0NTY3"
-                "ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uOncgc"
-                "3QyMTM4Om9wOncgc3QyMTM4OmNmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MT"
-                "UxNjIzOTAyMiwibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dT"
-                "okrEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko9653v0khyUT4UK"
-                "eOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKHkWi4P3-CYWrwe-g6b4-a33Q"
-                "0k6tSGI1hGf2bA9cRYr-VyQ_T3RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEm"
-                "uIwNOVM3EcVEaLyISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg"
-                "_wbOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9MdvJH-cx1s1"
-                "46M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
     authzEnabled_ = true;
     // Set up expectation for getComponentSerializer to return a working serializer
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(1)

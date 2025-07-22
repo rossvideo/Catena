@@ -81,6 +81,10 @@ bool Authorizer::readAuthz(const IParamDescriptor& pd) const {
     return hasAuthz(scope) || hasAuthz(scope + ":w");
 }
 
+bool Authorizer::readAuthz(const std::string& scope) const {
+    return hasAuthz(scope) || hasAuthz(scope + ":w");
+}
+
 /**
  * @brief Check if the client has write authorization
  * @return true if the client has write authorization
@@ -101,4 +105,8 @@ bool Authorizer::writeAuthz(const IParamDescriptor& pd) const {
 
     const std::string scope = pd.getScope() + ":w";
     return hasAuthz(scope);
+}
+
+bool Authorizer::writeAuthz(const std::string& scope) const {
+    return hasAuthz(scope + ":w");
 }
