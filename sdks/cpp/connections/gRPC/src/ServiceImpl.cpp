@@ -109,6 +109,7 @@ bool CatenaServiceImpl::registerConnection(catena::common::IConnect* cd) {
         if (it != connectionQueue_.begin()) {
             // Forcefully shutting down lowest priority connection.
             connectionQueue_.front()->shutdown();
+            connectionQueue_.erase(connectionQueue_.begin());
             canAdd = true;
         }
     } else {
