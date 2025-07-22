@@ -58,9 +58,6 @@ var hierarchy =
       [ "catena::REST::ParamInfoRequest", "classcatena_1_1REST_1_1ParamInfoRequest.html", null ],
       [ "catena::REST::Subscriptions", "classcatena_1_1REST_1_1Subscriptions.html", null ]
     ] ],
-    [ "catena::REST::ICatenaServiceImpl", "classcatena_1_1REST_1_1ICatenaServiceImpl.html", [
-      [ "catena::REST::CatenaServiceImpl", "classcatena_1_1REST_1_1CatenaServiceImpl.html", null ]
-    ] ],
     [ "catena::common::IParamDescriptor::ICommandResponder", "classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html", [
       [ "catena::common::ParamDescriptor::CommandResponder", "classcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder.html", null ]
     ] ],
@@ -100,6 +97,9 @@ var hierarchy =
     ] ],
     [ "catena::common::IPolyglotText", "classcatena_1_1common_1_1IPolyglotText.html", [
       [ "catena::common::PolyglotText", "classcatena_1_1common_1_1PolyglotText.html", null ]
+    ] ],
+    [ "catena::REST::IServiceImpl", "classcatena_1_1REST_1_1IServiceImpl.html", [
+      [ "catena::REST::CatenaServiceImpl", "classcatena_1_1REST_1_1CatenaServiceImpl.html", null ]
     ] ],
     [ "catena::REST::ISocketReader", "classcatena_1_1REST_1_1ISocketReader.html", [
       [ "catena::REST::SocketReader", "classcatena_1_1REST_1_1SocketReader.html", null ]

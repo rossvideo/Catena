@@ -111,10 +111,10 @@ Collaboration diagram for catena::common::Authorizer:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-types" name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:ae9960a775fac6bc42d22559e2f764eda" id="r_ae9960a775fac6bc42d22559e2f764eda"><td class="memItemLeft" align="right" valign="top"><a id="ae9960a775fac6bc42d22559e2f764eda" name="ae9960a775fac6bc42d22559e2f764eda"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>Scopes</b> = std::vector&lt; std::string &gt;</td></tr>
-<tr class="memdesc:ae9960a775fac6bc42d22559e2f764eda"><td class="mdescLeft">&#160;</td><td class="mdescRight">The scopes of the object. <br /></td></tr>
-<tr class="separator:ae9960a775fac6bc42d22559e2f764eda"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86759837f2874d0628775cc2d833b262" id="r_a86759837f2874d0628775cc2d833b262"><td class="memItemLeft" align="right" valign="top"><a id="a86759837f2874d0628775cc2d833b262" name="a86759837f2874d0628775cc2d833b262"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>ClientScopes</b> = std::set&lt; std::string &gt;</td></tr>
+<tr class="memdesc:a86759837f2874d0628775cc2d833b262"><td class="mdescLeft">&#160;</td><td class="mdescRight">The scopes of the object. <br /></td></tr>
+<tr class="separator:a86759837f2874d0628775cc2d833b262"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -141,27 +141,30 @@ Public Member Functions</h2></td></tr>
 virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~Authorizer</b> ()=default</td></tr>
 <tr class="memdesc:a09c54e470cc936a3fad2e2bef92ca384"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy the <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> object. <br /></td></tr>
 <tr class="separator:a09c54e470cc936a3fad2e2bef92ca384"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a888e960c8e58b0dc2674c05cf2085957" id="r_a888e960c8e58b0dc2674c05cf2085957"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a888e960c8e58b0dc2674c05cf2085957">hasAuthz</a> (const std::string &amp;scope) const</td></tr>
-<tr class="memdesc:a888e960c8e58b0dc2674c05cf2085957"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has the specified authorization.  <br /></td></tr>
-<tr class="separator:a888e960c8e58b0dc2674c05cf2085957"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2d0c5c9888480653d5c189c102513401" id="r_a2d0c5c9888480653d5c189c102513401"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a2d0c5c9888480653d5c189c102513401">readAuthz</a> (const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &amp;param) const</td></tr>
-<tr class="memdesc:a2d0c5c9888480653d5c189c102513401"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has read authorization.  <br /></td></tr>
+<tr class="memdesc:a2d0c5c9888480653d5c189c102513401"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has read authorization for a param.  <br /></td></tr>
 <tr class="separator:a2d0c5c9888480653d5c189c102513401"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8c658a3367f9391fa04b73af262a61bb" id="r_a8c658a3367f9391fa04b73af262a61bb"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a8c658a3367f9391fa04b73af262a61bb">readAuthz</a> (const <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;pd) const</td></tr>
-<tr class="memdesc:a8c658a3367f9391fa04b73af262a61bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has read authorization.  <br /></td></tr>
+<tr class="memdesc:a8c658a3367f9391fa04b73af262a61bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has read authorization for a param descriptor.  <br /></td></tr>
 <tr class="separator:a8c658a3367f9391fa04b73af262a61bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1ea1fbeb81d8adab6df20fc2768c0daa" id="r_a1ea1fbeb81d8adab6df20fc2768c0daa"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a1ea1fbeb81d8adab6df20fc2768c0daa">readAuthz</a> (const std::string &amp;scope) const</td></tr>
-<tr class="memdesc:a1ea1fbeb81d8adab6df20fc2768c0daa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has read authorization.  <br /></td></tr>
+<tr class="memdesc:a1ea1fbeb81d8adab6df20fc2768c0daa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has read authorization for a scope.  <br /></td></tr>
 <tr class="separator:a1ea1fbeb81d8adab6df20fc2768c0daa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ade3a2e4c6ad8a30d1a2eb30ea5027f8f" id="r_ade3a2e4c6ad8a30d1a2eb30ea5027f8f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Authorizer.html#ade3a2e4c6ad8a30d1a2eb30ea5027f8f">readAuthz</a> (const <a class="el" href="namespacecatena_1_1common.html#a52e17ef3ce00a51e608afb060211e3a8">Scopes_e</a> &amp;scope) const</td></tr>
+<tr class="memdesc:ade3a2e4c6ad8a30d1a2eb30ea5027f8f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has read authorization for a scope.  <br /></td></tr>
+<tr class="separator:ade3a2e4c6ad8a30d1a2eb30ea5027f8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a31559d61f0d8fba890111f7a470863f1" id="r_a31559d61f0d8fba890111f7a470863f1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a31559d61f0d8fba890111f7a470863f1">writeAuthz</a> (const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &amp;param) const</td></tr>
-<tr class="memdesc:a31559d61f0d8fba890111f7a470863f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has write authorization.  <br /></td></tr>
+<tr class="memdesc:a31559d61f0d8fba890111f7a470863f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has write authorization for a param.  <br /></td></tr>
 <tr class="separator:a31559d61f0d8fba890111f7a470863f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a649d47b35113457176ffcc7fe5e4ab9b" id="r_a649d47b35113457176ffcc7fe5e4ab9b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a649d47b35113457176ffcc7fe5e4ab9b">writeAuthz</a> (const <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;pd) const</td></tr>
-<tr class="memdesc:a649d47b35113457176ffcc7fe5e4ab9b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has write authorization.  <br /></td></tr>
+<tr class="memdesc:a649d47b35113457176ffcc7fe5e4ab9b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has write authorization for a param descriptor.  <br /></td></tr>
 <tr class="separator:a649d47b35113457176ffcc7fe5e4ab9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab19bcb55751747361cf62af134c68e79" id="r_ab19bcb55751747361cf62af134c68e79"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Authorizer.html#ab19bcb55751747361cf62af134c68e79">writeAuthz</a> (const std::string &amp;scope) const</td></tr>
-<tr class="memdesc:ab19bcb55751747361cf62af134c68e79"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has write authorization.  <br /></td></tr>
+<tr class="memdesc:ab19bcb55751747361cf62af134c68e79"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has write authorization for a scope.  <br /></td></tr>
 <tr class="separator:ab19bcb55751747361cf62af134c68e79"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a015039592f149f620d2d5c9117228ddb" id="r_a015039592f149f620d2d5c9117228ddb"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a015039592f149f620d2d5c9117228ddb">writeAuthz</a> (const <a class="el" href="namespacecatena_1_1common.html#a52e17ef3ce00a51e608afb060211e3a8">Scopes_e</a> &amp;scope) const</td></tr>
+<tr class="memdesc:a015039592f149f620d2d5c9117228ddb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has read authorization for a scope.  <br /></td></tr>
+<tr class="separator:a015039592f149f620d2d5c9117228ddb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
@@ -206,34 +209,8 @@ static <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer<
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a888e960c8e58b0dc2674c05cf2085957" name="a888e960c8e58b0dc2674c05cf2085957"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a888e960c8e58b0dc2674c05cf2085957">&#9670;&#160;</a></span>hasAuthz()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool catena::common::Authorizer::hasAuthz </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>scope</em></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Check if the client has the specified authorization. </p>
-<dl class="section return"><dt>Returns</dt><dd>true if the client has the specified authorization </dd></dl>
-<div class="dynheader">
-Here is the caller graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Authorizer_a888e960c8e58b0dc2674c05cf2085957_icgraph.svg" width="458" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
-</div>
-
-</div>
-</div>
 <a id="a2d0c5c9888480653d5c189c102513401" name="a2d0c5c9888480653d5c189c102513401"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2d0c5c9888480653d5c189c102513401">&#9670;&#160;</a></span>readAuthz() <span class="overload">[1/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a2d0c5c9888480653d5c189c102513401">&#9670;&#160;</a></span>readAuthz() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -248,7 +225,13 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>Check if the client has read authorization. </p>
+<p>Check if the client has read authorization for a param. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">param</td><td>The param to check for authorization </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the client has read authorization </dd></dl>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -259,7 +242,7 @@ Here is the caller graph for this function:</div>
 </div>
 </div>
 <a id="a8c658a3367f9391fa04b73af262a61bb" name="a8c658a3367f9391fa04b73af262a61bb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8c658a3367f9391fa04b73af262a61bb">&#9670;&#160;</a></span>readAuthz() <span class="overload">[2/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a8c658a3367f9391fa04b73af262a61bb">&#9670;&#160;</a></span>readAuthz() <span class="overload">[2/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -274,13 +257,46 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>Check if the client has read authorization. </p>
+<p>Check if the client has read authorization for a param descriptor. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">pd</td><td>The param descriptor to check for authorization </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true if the client has read authorization </dd></dl>
+
+</div>
+</div>
+<a id="ade3a2e4c6ad8a30d1a2eb30ea5027f8f" name="ade3a2e4c6ad8a30d1a2eb30ea5027f8f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ade3a2e4c6ad8a30d1a2eb30ea5027f8f">&#9670;&#160;</a></span>readAuthz() <span class="overload">[3/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool catena::common::Authorizer::readAuthz </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="namespacecatena_1_1common.html#a52e17ef3ce00a51e608afb060211e3a8">Scopes_e</a> &amp;&#160;</td>
+          <td class="paramname"><em>scope</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Check if the client has read authorization for a scope. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">scope</td><td>The scope to check for authorization </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the client has read authorization </dd></dl>
 
 </div>
 </div>
 <a id="a1ea1fbeb81d8adab6df20fc2768c0daa" name="a1ea1fbeb81d8adab6df20fc2768c0daa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1ea1fbeb81d8adab6df20fc2768c0daa">&#9670;&#160;</a></span>readAuthz() <span class="overload">[3/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a1ea1fbeb81d8adab6df20fc2768c0daa">&#9670;&#160;</a></span>readAuthz() <span class="overload">[4/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -295,13 +311,19 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>Check if the client has read authorization. </p>
+<p>Check if the client has read authorization for a scope. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">scope</td><td>The scope to check for authorization </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the client has read authorization </dd></dl>
 
 </div>
 </div>
 <a id="a31559d61f0d8fba890111f7a470863f1" name="a31559d61f0d8fba890111f7a470863f1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a31559d61f0d8fba890111f7a470863f1">&#9670;&#160;</a></span>writeAuthz() <span class="overload">[1/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a31559d61f0d8fba890111f7a470863f1">&#9670;&#160;</a></span>writeAuthz() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -316,7 +338,13 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>Check if the client has write authorization. </p>
+<p>Check if the client has write authorization for a param. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">param</td><td>The param to check for authorization </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the client has write authorization </dd></dl>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -327,7 +355,7 @@ Here is the caller graph for this function:</div>
 </div>
 </div>
 <a id="a649d47b35113457176ffcc7fe5e4ab9b" name="a649d47b35113457176ffcc7fe5e4ab9b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a649d47b35113457176ffcc7fe5e4ab9b">&#9670;&#160;</a></span>writeAuthz() <span class="overload">[2/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a649d47b35113457176ffcc7fe5e4ab9b">&#9670;&#160;</a></span>writeAuthz() <span class="overload">[2/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -342,13 +370,46 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>Check if the client has write authorization. </p>
+<p>Check if the client has write authorization for a param descriptor. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">pd</td><td>The param descriptor to check for authorization </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the client has write authorization </dd></dl>
 
 </div>
 </div>
+<a id="a015039592f149f620d2d5c9117228ddb" name="a015039592f149f620d2d5c9117228ddb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a015039592f149f620d2d5c9117228ddb">&#9670;&#160;</a></span>writeAuthz() <span class="overload">[3/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool catena::common::Authorizer::writeAuthz </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="namespacecatena_1_1common.html#a52e17ef3ce00a51e608afb060211e3a8">Scopes_e</a> &amp;&#160;</td>
+          <td class="paramname"><em>scope</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Check if the client has read authorization for a scope. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">scope</td><td>The scope to check for authorization </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true if the client has read authorization </dd></dl>
+
+</div>
+</div>
 <a id="ab19bcb55751747361cf62af134c68e79" name="ab19bcb55751747361cf62af134c68e79"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab19bcb55751747361cf62af134c68e79">&#9670;&#160;</a></span>writeAuthz() <span class="overload">[3/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ab19bcb55751747361cf62af134c68e79">&#9670;&#160;</a></span>writeAuthz() <span class="overload">[4/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -363,7 +424,13 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>Check if the client has write authorization. </p>
+<p>Check if the client has write authorization for a scope. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">scope</td><td>The scope to check for authorization </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the client has write authorization </dd></dl>
 
 </div>
