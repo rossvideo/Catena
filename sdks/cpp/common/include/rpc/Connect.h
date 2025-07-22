@@ -47,6 +47,7 @@
 #include <Authorization.h>
 #include <ISubscriptionManager.h>
 #include "IConnect.h"
+#include <Logger.h>
 
 #include <interface/device.pb.h>
 
@@ -178,6 +179,7 @@ class Connect : public IConnect {
             }
         } catch(catena::exception_with_status& why) {
             // if an error is thrown, no update is pushed to the client
+            DEBUG_LOG << "Failed to send SetValue update: " << why.what();
         }
     }
     
@@ -193,7 +195,7 @@ class Connect : public IConnect {
             if (isCancelled()){
                 hasUpdate_ = true;
                 cv_.notify_one();
-            } else if (authz_->readAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
+            } else if (authz_->readAuthz(Scopes_e::kMonitor)) {
                 // Updating res_'s device_component and pushing update.
                 res_.Clear();
                 res_.set_slot(slot);
@@ -204,6 +206,7 @@ class Connect : public IConnect {
             }
         } catch(catena::exception_with_status& why){
             // if an error is thrown, no update is pushed to the client
+            DEBUG_LOG << "Failed to send language pack update: " << why.what();
         }
     }
 
@@ -220,18 +223,18 @@ class Connect : public IConnect {
         if (authz) {
             sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
             authz_ = sharedAuthz_.get();
+            // Throw error for non-admin clients trying to force a connection.
+            if (forceConnection_ && !authz_->writeAuthz(Scopes_e::kAdmin)) {
+                throw catena::exception_with_status("adm:w scope required to force a connection", catena::StatusCode::PERMISSION_DENIED);
+            }
             // Setting up their connection priority.
-            for (uint32_t i = static_cast<uint32_t>(Scopes_e::kAdmin); i >= static_cast<uint32_t>(Scopes_e::kMonitor); i -= 1) {
-                auto scope = Scopes().getForwardMap().at(static_cast<Scopes_e>(i));
-                // Read authz
-                if (authz_->hasAuthz(scope)) {
-                    priority_ = 2 * i;
-                    break;
-                // Write authz
-                } else if (authz_->hasAuthz(scope + ":w")) {
-                    priority_ = 2 * i + 1;
-                    if (forceConnection_ && static_cast<Scopes_e>(i) == Scopes_e::kAdmin) {
-                        priority_ += 1; // forceConnection adds 1 to admin:w priority
+            for (uint32_t i = static_cast<uint32_t>(Scopes_e::kAdmin); i >= static_cast<uint32_t>(Scopes_e::kMonitor); i -= 1) {             
+                // Client has read
+                if (authz_->readAuthz(static_cast<Scopes_e>(i))) {
+                    priority_ = 2 * i + forceConnection_;
+                    // Also has write
+                    if (authz_->writeAuthz(static_cast<Scopes_e>(i))) {
+                        priority_ += 1;
                     }
                     break;
                 }
@@ -292,7 +295,7 @@ class Connect : public IConnect {
     /**
      * @brief Flag to force a connection.
      * 
-     * No idea what this is used for and if its even needed here.
+     * Only applicable if client has admin:w scope.
      */
     bool forceConnection_;
     /**
