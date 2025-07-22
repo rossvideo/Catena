@@ -46,7 +46,7 @@ Authorizer::Authorizer(const std::string& JWSToken) {
                 std::string scopeClaim = it->second.get<std::string>();
                 std::istringstream iss(scopeClaim);
                 while (std::getline(iss, scopeClaim, ' ')) {
-                    clientScopes_.push_back(scopeClaim);
+                    clientScopes_.insert(scopeClaim);
                 }
             }
         }
@@ -56,57 +56,45 @@ Authorizer::Authorizer(const std::string& JWSToken) {
     }
 }
 
-bool Authorizer::hasAuthz(const std::string& scope) const {
-    if (this == &kAuthzDisabled) {
-        return true; // no authorization required
-    }
-
-    if (std::find(clientScopes_.begin(), clientScopes_.end(), scope) == clientScopes_.end()) {
-        return false;
-    }
-    return true;
+bool Authorizer::hasAuthz_(const std::string& scope) const {
+    // no authorization required or scope found in client scopes.
+    return this == &kAuthzDisabled || clientScopes_.contains(scope);
 }
 
 /**
- * @brief Check if the client has read authorization
- * @return true if the client has read authorization
+ * Check if the client has write authorization
  */
-bool Authorizer::readAuthz(const IParam& param) const {
-    const std::string& scope = param.getScope();
-    return hasAuthz(scope) || hasAuthz(scope + ":w");
+bool Authorizer::writeAuthz(const std::string& scope) const {
+    return hasAuthz_(scope + ":w");
 }
 
-bool Authorizer::readAuthz(const IParamDescriptor& pd) const {
-    const std::string& scope = pd.getScope();
-    return hasAuthz(scope) || hasAuthz(scope + ":w");
+bool Authorizer::writeAuthz(const Scopes_e& scope) const {
+    return writeAuthz(Scopes().getForwardMap().at(scope));
 }
 
-bool Authorizer::readAuthz(const std::string& scope) const {
-    return hasAuthz(scope) || hasAuthz(scope + ":w");
-}
-
-/**
- * @brief Check if the client has write authorization
- * @return true if the client has write authorization
- */
 bool Authorizer::writeAuthz(const IParam& param) const {
-    if (param.readOnly()) {
-        return false;
-    }
-
-    const std::string scope = param.getScope() + ":w";
-    return hasAuthz(scope);
+    return !param.readOnly() && writeAuthz(param.getScope());
 }
 
 bool Authorizer::writeAuthz(const IParamDescriptor& pd) const {
-    if (pd.readOnly()) {
-        return false;
-    }
-
-    const std::string scope = pd.getScope() + ":w";
-    return hasAuthz(scope);
+    return !pd.readOnly() && writeAuthz(pd.getScope());
 }
 
-bool Authorizer::writeAuthz(const std::string& scope) const {
-    return hasAuthz(scope + ":w");
+/*
+ * Check if the client has read authorization
+ */
+bool Authorizer::readAuthz(const std::string& scope) const {
+    return hasAuthz_(scope) || writeAuthz(scope);
+}
+
+bool Authorizer::readAuthz(const Scopes_e& scope) const {
+    return readAuthz(Scopes().getForwardMap().at(scope));
+}
+
+bool Authorizer::readAuthz(const IParam& param) const {
+    return readAuthz(param.getScope());
+}
+
+bool Authorizer::readAuthz(const IParamDescriptor& pd) const {
+    return readAuthz(pd.getScope());
 }
