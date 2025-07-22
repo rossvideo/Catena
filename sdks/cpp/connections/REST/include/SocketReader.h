@@ -80,8 +80,9 @@ class SocketReader : public ISocketReader {
   public:
     /**
      * @brief Constructor for the SocketReader class.
+     * @param service Pointer to the CatenaServiceImpl.
      */
-    SocketReader(ICatenaServiceImpl* service) {};
+    SocketReader(ICatenaServiceImpl* service) : service_(service) {};
     /**
      * @brief Populates variables using information read from the inputted
      * socket.
@@ -149,7 +150,7 @@ class SocketReader : public ISocketReader {
     /**
      * @brief Returns a pointer to the CatenaServiceImpl
      */
-    ICatenaServiceImpl* service() const override { return service_; }
+    ICatenaServiceImpl* service() override { return service_; }
     /**
      * @brief Returns true if authorization is enabled.
      */

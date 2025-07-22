@@ -94,7 +94,7 @@ class CatenaServiceImpl : public catena::REST::ICatenaServiceImpl {
     /**
      * @brief Returns the API's version.
      */
-    std::string version() const override { return version_; }
+    const std::string& version() const override { return version_; }
     /**
      * @brief Starts the API.
      */
@@ -112,7 +112,7 @@ class CatenaServiceImpl : public catena::REST::ICatenaServiceImpl {
      * @brief Get the subscription manager
      * @return Reference to the subscription manager
      */
-    inline catena::common::ISubscriptionManager& subscriptionManager() override { return subscriptionManager_; }
+    inline ISubscriptionManager& subscriptionManager() override { return subscriptionManager_; }
     /**
      * @brief Returns the EOPath.
      */
@@ -135,7 +135,7 @@ class CatenaServiceImpl : public catena::REST::ICatenaServiceImpl {
      * 
      * Currently unused.
      */
-    bool is_port_in_use_() const override;
+    bool is_port_in_use_() const;
 
     /**
      * @brief Provides io functionality for tcp::sockets used in requests.

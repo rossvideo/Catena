@@ -133,7 +133,7 @@ class ISocketReader {
     /**
      * @brief Returns a pointer to the CatenaServiceImpl
      */
-    virtual ICatenaServiceImpl* service() const = 0;
+    virtual ICatenaServiceImpl* service() = 0;
     /**
      * @brief Returns true if authorization is enabled.
      */

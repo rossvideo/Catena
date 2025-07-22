@@ -64,7 +64,7 @@ protected:
     RESTConnectTest() : RESTEndpointTest() {
         EXPECT_CALL(context_, detailLevel())
             .WillRepeatedly(testing::Return(catena::Device_DetailLevel::Device_DetailLevel_FULL));
-        EXPECT_CALL(context_, getSubscriptionManager())
+        EXPECT_CALL(context_, subscriptionManager())
             .WillRepeatedly(testing::ReturnRef(subManager_));
         EXPECT_CALL(context_, fields("user_agent"))
             .WillRepeatedly(testing::ReturnRef(userAgent_));

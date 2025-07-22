@@ -64,7 +64,7 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
      */
     RESTSubscriptionsTests() : RESTEndpointTest() {
         // Default expectations for context_.
-        EXPECT_CALL(context_, getSubscriptionManager()).WillRepeatedly(testing::ReturnRef(subManager_));
+        EXPECT_CALL(context_, subscriptionManager()).WillRepeatedly(testing::ReturnRef(subManager_));
         // Default expectations for device model.
         EXPECT_CALL(dm0_, subscriptions()).WillRepeatedly(testing::Return(true));
         // Default expectations for device model 1 (do not call).
@@ -202,7 +202,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_NotSupported) {
     expRc_ = catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::FAILED_PRECONDITION);
     // Setting expectations.
     EXPECT_CALL(dm0_, subscriptions()).WillOnce(testing::Return(false));
-    EXPECT_CALL(context_, getSubscriptionManager()).Times(0); // Should not call.
+    EXPECT_CALL(context_, subscriptionManager()).Times(0); // Should not call.
     // Calling proceed and testing the output
     testCall();
 }
@@ -217,7 +217,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_AuthzInalid) {
     jwsToken_ = "Invalid token";
     // Setting expectations.
     EXPECT_CALL(dm0_, getParam(testing::An<const std::string&>(), testing::_, testing::_)).Times(0);
-    EXPECT_CALL(context_, getSubscriptionManager()).Times(0); // Should not call.
+    EXPECT_CALL(context_, subscriptionManager()).Times(0); // Should not call.
     // Calling proceed and testing the output
     testCall();
 }
@@ -230,7 +230,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_BadMethod) {
     expRc_ = catena::exception_with_status("Bad method", catena::StatusCode::UNIMPLEMENTED);
     method_ = Method_NONE;
     // Setting expectations.
-    EXPECT_CALL(context_, getSubscriptionManager()).Times(0); // Should not call.
+    EXPECT_CALL(context_, subscriptionManager()).Times(0); // Should not call.
     // Calling proceed and testing the output
     testCall();
 }
@@ -242,7 +242,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_InvalidSlot) {
     initPayload(dms_.size());
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
     // Setting expectations.
-    EXPECT_CALL(context_, getSubscriptionManager()).Times(0); // Should not call.
+    EXPECT_CALL(context_, subscriptionManager()).Times(0); // Should not call.
     // Calling proceed and testing the output
     testCall();
 }

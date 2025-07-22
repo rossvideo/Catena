@@ -75,7 +75,7 @@ class ICatenaServiceImpl {
     /**
      * @brief Returns the API's version.
      */
-    virtual std::string version() const = 0;
+    virtual const std::string& version() const = 0;
     /**
      * @brief Starts the API.
      */
@@ -109,12 +109,6 @@ class ICatenaServiceImpl {
      * @param cd The Connect CallData object to deregister.
      */
     virtual void deregisterConnection(catena::common::IConnect* cd) = 0;
-
-  private:
-    /**
-     * @brief Returns true if port_ is already in use.
-     */
-    virtual bool is_port_in_use_() const = 0;
 };
 
 };  // namespace REST
