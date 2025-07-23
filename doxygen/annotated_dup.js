@@ -92,7 +92,7 @@ var annotated_dup =
         [ "GetPopulatedSlots", "classcatena_1_1REST_1_1GetPopulatedSlots.html", "classcatena_1_1REST_1_1GetPopulatedSlots" ],
         [ "GetValue", "classcatena_1_1REST_1_1GetValue.html", "classcatena_1_1REST_1_1GetValue" ],
         [ "ICallData", "classcatena_1_1REST_1_1ICallData.html", "classcatena_1_1REST_1_1ICallData" ],
-        [ "ICatenaServiceImpl", "classcatena_1_1REST_1_1ICatenaServiceImpl.html", "classcatena_1_1REST_1_1ICatenaServiceImpl" ],
+        [ "IServiceImpl", "classcatena_1_1REST_1_1IServiceImpl.html", "classcatena_1_1REST_1_1IServiceImpl" ],
         [ "ISocketReader", "classcatena_1_1REST_1_1ISocketReader.html", "classcatena_1_1REST_1_1ISocketReader" ],
         [ "ISocketWriter", "classcatena_1_1REST_1_1ISocketWriter.html", "classcatena_1_1REST_1_1ISocketWriter" ],
         [ "LanguagePack", "classcatena_1_1REST_1_1LanguagePack.html", "classcatena_1_1REST_1_1LanguagePack" ],
