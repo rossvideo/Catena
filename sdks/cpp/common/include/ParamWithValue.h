@@ -170,7 +170,12 @@ class ParamWithValue : public catena::common::IParam {
      * @param clientScope the client scope
      */
     catena::exception_with_status toProto(catena::Param& param, Authorizer& authz) const override {
-        return catena::common::toProto<T>(*param.mutable_value(), &value_.get(), descriptor_, authz);
+        // toProto checks authz.
+        catena::exception_with_status rc = catena::common::toProto<T>(*param.mutable_value(), &value_.get(), descriptor_, authz);
+        if (rc.status == catena::StatusCode::OK) {
+            descriptor_.toProto(param, authz);
+        }
+        return rc;
     }
 
     /**
