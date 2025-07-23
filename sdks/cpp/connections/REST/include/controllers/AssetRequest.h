@@ -142,6 +142,11 @@ class AssetRequest : public ICallData {
      * @return True if the last write time is valid, false otherwise.
      */
     bool get_last_write_time(const std::string& path, std::time_t& out_time);
+
+    /**
+     * @brief Extracts the payload from the context and decompresses it if needed.
+     */
+    void extractPayload(const std::string& filePath);
     
     /**
      * @brief Writes the current state of the request to the console.

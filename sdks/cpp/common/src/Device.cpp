@@ -124,7 +124,7 @@ catena::exception_with_status Device::commitMultiSetValue (catena::MultiSetValue
             }
             // Setting value and emitting signal.
             ans = param->fromProto(setValuePayload.value(), authz);
-            valueSetByClient.emit(setValuePayload.oid(), param.get());
+            valueSetByClient_.emit(setValuePayload.oid(), param.get());
             // Resetting trackers to match new value.
             if (parent) { parent->resetValidate();
             } else { param->resetValidate(); }
@@ -206,7 +206,7 @@ catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& l
     auto& name = language.language_pack().name();
     auto& id = language.id();
     // Admin scope required.
-    if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kAdmin) + ":w")) {
+    if (!authz.writeAuthz(Scopes_e::kAdmin)) {
         ans = catena::exception_with_status("Not authorized to add language", catena::StatusCode::PERMISSION_DENIED);
     // Making sure LanguagePack is properly formatted.
     } else if (name.empty() || id.empty()) {
@@ -220,7 +220,7 @@ catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& l
         added_packs_[id] = std::make_shared<LanguagePack>(id, name, LanguagePack::ListInitializer{}, *this);
         language_packs_[id]->fromProto(language.language_pack());      
         // Pushing update to connect gRPC.
-        languageAddedPushUpdate.emit(language_packs_[id]);
+        languageAddedPushUpdate_.emit(language_packs_[id]);
     }
     return ans;
 }
@@ -228,7 +228,7 @@ catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& l
 catena::exception_with_status Device::removeLanguage(const std::string& languageId, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     // Admin scope required.
-    if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kAdmin) + ":w")) {
+    if (!authz.writeAuthz(Scopes_e::kAdmin)) {
         ans = catena::exception_with_status("Not authorized to delete language", catena::StatusCode::PERMISSION_DENIED);
     // Cannot change shipped language packs.
     } else if (language_packs_.contains(languageId) && !added_packs_.contains(languageId)) {
