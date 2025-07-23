@@ -4,13 +4,8 @@ on:
   create:
     branches:
       - '*-merge-[0-9]+' 
-  push:
-    branches:
-      - '855-*'
-
 
 jobs:
-
   update_version_file:
     if: github.actor != 'github-actions'
     runs-on: ubuntu-latest
@@ -88,17 +83,17 @@ jobs:
         run: |
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
           echo "$BRANCH_NAME to merge in main"
-          # gh pr create --base main --head "$BRANCH_NAME" \
-          #   --title "Merge $BRANCH_NAME into main" \
-          #   --body "Automated PR from workflow."
+          gh pr create --base main --head "$BRANCH_NAME" \
+            --title "Merge $BRANCH_NAME into main" \
+            --body "Automated PR from workflow."
 
       - name: Create PR to develop
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
-          echo "$BRANCH_NAME to merge in main"
-          # gh pr create --base develop --head "$BRANCH_NAME" \
-          #   --title "Merge $BRANCH_NAME into develop" \
-          #   --body "Automated PR from workflow."
+          echo "$BRANCH_NAME to merge in dev"
+          gh pr create --base develop --head "$BRANCH_NAME" \
+            --title "Merge $BRANCH_NAME into develop" \
+            --body "Automated PR from workflow."
 
