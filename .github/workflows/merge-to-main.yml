@@ -18,10 +18,11 @@ jobs:
       - name: Generate new version number
         run: |
           # Get the latest tag or default to "cpp-v0.0.0"
-          TAG=$(git describe --tags --match "cpp-*" --abbrev=0 2>/dev/null || echo "cpp-v0.0.0")
-          echo "Latest tag: $TAG"
+          TEXT_FILE="$(cat sdks/cpp/VERSION.txt)"
 
-          VERSION=${TAG#cpp-}
+          echo "Last Version: $TEXT_FILE"
+
+          VERSION=${TEXT_FILE#cpp-}
 
           VERSION_PART=$(echo "$VERSION" | cut -d'-' -f1)
 
@@ -38,9 +39,10 @@ jobs:
           echo "Commit count: $COMMIT_COUNT"
 
           NEW_VERSION="cpp-v$MAJOR.$MINOR.$PATCH-$COMMIT_COUNT"
+          echo "Generated new version number: $NEW_VERSION"
 
           echo "VERSION=${NEW_VERSION}" >> $GITHUB_ENV
-          echo "Generated new version number: $NEW_VERSION"
+          
 
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
@@ -49,7 +51,6 @@ jobs:
 
           git add sdks/cpp/VERSION.txt
           git commit -m "update the version to ${NEW_VERSION}"
-          git tag -a ${NEW_VERSION} -m "Version ${NEW_VERSION}"
           git push
 
       - name: merge main in for safty
