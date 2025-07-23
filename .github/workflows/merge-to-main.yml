@@ -1,0 +1,105 @@
+name: Run on Merge Branch Creation
+
+on:
+  create:
+    branches:
+      - '*-merge-[0-9]+' 
+
+jobs:
+  update_version_file:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate new version number
+        run: |
+          # Get the latest tag or default to "cpp-v0.0.0"
+          TEXT_FILE="$(cat sdks/cpp/VERSION.txt)"
+
+          echo "Last Version: $TEXT_FILE"
+
+          VERSION=${TEXT_FILE#cpp-}
+
+          VERSION_PART=$(echo "$VERSION" | cut -d'-' -f1)
+
+          VERSION_PART=${VERSION_PART#v}
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_PART"
+          echo "Current version: $MAJOR.$MINOR.$PATCH"
+
+          PATCH=$((PATCH + 1))
+
+          result=$(git rev-list --left-right --count origin/main...origin/develop)
+          COMMIT_COUNT=$(echo "$result"| cut -f1)
+          ahead=$(echo "$result" | cut -f2)
+          echo "Commit count: $COMMIT_COUNT"
+
+          NEW_VERSION="cpp-v$MAJOR.$MINOR.$PATCH-$COMMIT_COUNT"
+          echo "Generated new version number: $NEW_VERSION"
+
+          echo "VERSION=${NEW_VERSION}" >> $GITHUB_ENV
+          
+
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+          echo "${NEW_VERSION}-$(date +%s)" > sdks/cpp/VERSION.txt
+
+          git add sdks/cpp/VERSION.txt
+          git commit -m "update the version to ${NEW_VERSION}"
+          git push
+
+      - name: merge main in for safty
+        run: |
+          if ! git merge --no-edit origin/main; then
+            echo "❌ Merge conflict detected when merging main into ${GITHUB_REF#refs/heads/}"
+            git merge --abort
+            exit 1
+          fi
+
+  create_prs:
+    needs: update_version_file
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Authenticate GitHub CLI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh auth setup-git
+
+      - name: Create PR to main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          echo "$BRANCH_NAME to merge in main"
+          gh pr create --base main --head "$BRANCH_NAME" \
+            --title "Merge $BRANCH_NAME into main" \
+            --body "Automated PR from workflow." \
+            --reviewer NR-RV,abrown-RV
+
+      - name: Create PR to develop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          echo "$BRANCH_NAME to merge in dev"
+          gh pr create --base develop --head "$BRANCH_NAME" \
+            --title "Merge $BRANCH_NAME into develop" \
+            --body "Automated PR from workflow." \
+            --reviewer NR-RV,abrown-RV
+
