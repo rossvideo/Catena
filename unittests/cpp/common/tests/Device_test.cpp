@@ -53,6 +53,12 @@ using namespace catena::common;
 
 class DeviceTest : public ::testing::Test {
 protected:
+
+    DeviceTest() 
+        : adminScope_(Scopes().getForwardMap().at(Scopes_e::kAdmin))
+        , monitorScope_(Scopes().getForwardMap().at(Scopes_e::kMonitor)) {
+    }
+    
     void SetUp() override {
         // Create a device with basic parameters
         device_ = std::make_unique<Device>(
@@ -88,14 +94,13 @@ protected:
             *device_
         );
         
-        // Add a minimal set parameter to the device (always included regardless of subscription)
+        // Add a minimal set parameter to the device
         auto minimalSetParam = std::make_shared<MockParam>();
         auto minimalSetDescriptor = std::make_shared<MockParamDescriptor>();
-        mockDescriptors_.push_back(minimalSetDescriptor);
         mockParams_.push_back(minimalSetParam);
+        mockDescriptors_.push_back(minimalSetDescriptor);
         
-        static const std::string monitorScope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
-        setupMockParam(*minimalSetParam, "/minimalSetParam", *minimalSetDescriptor, false, 0, monitorScope);
+        setupMockParam(*minimalSetParam, "/minimalSetParam", *minimalSetDescriptor, false, 0, monitorScope_);
         EXPECT_CALL(*minimalSetDescriptor, minimalSet())
             .WillRepeatedly(testing::Return(true));
         EXPECT_CALL(*minimalSetParam, getDescriptor())
@@ -112,6 +117,7 @@ protected:
         adminAuthz_ = std::make_unique<Authorizer>(adminToken);
         std::string monitorToken = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
         monitorAuthz_ = std::make_unique<Authorizer>(monitorToken);
+
     }
 
     std::unique_ptr<Device> device_;
@@ -119,6 +125,10 @@ protected:
     std::unique_ptr<Authorizer> monitorAuthz_;
     std::shared_ptr<LanguagePack> englishPack_;
     std::shared_ptr<LanguagePack> frenchPack_;
+    
+    // Common authorization scopes
+    const std::string adminScope_;
+    const std::string monitorScope_;
     
     // Store params and descriptors to keep them alive
     std::vector<std::shared_ptr<MockParam>> mockParams_;
@@ -128,11 +138,10 @@ protected:
     std::shared_ptr<MockParam> createMultiSetMockParam(const std::string& oid, const std::string& errorMsg = "") {
         auto mockParam = std::make_shared<MockParam>();
         auto mockDescriptor = std::make_shared<MockParamDescriptor>();
-        mockDescriptors_.push_back(mockDescriptor);
         mockParams_.push_back(mockParam);
+        mockDescriptors_.push_back(mockDescriptor);
         
-        static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-        setupMockParam(*mockParam, oid, *mockDescriptor, false, 0, adminScope);
+        setupMockParam(*mockParam, oid, *mockDescriptor, false, 0, adminScope_);
         
         EXPECT_CALL(*mockParam, getDescriptor())
             .WillRepeatedly(testing::ReturnRef(*mockDescriptor));
@@ -172,11 +181,10 @@ protected:
     std::shared_ptr<MockParam> createGetValueMockParam(const std::string& oid, const std::string& returnValue = "", int returnInt = 0, const std::string& errorMsg = "", bool throwException = false) {
         auto mockParam = std::make_shared<MockParam>();
         auto mockDescriptor = std::make_shared<MockParamDescriptor>();
-        mockDescriptors_.push_back(mockDescriptor);
         mockParams_.push_back(mockParam);
+        mockDescriptors_.push_back(mockDescriptor);
         
-        static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-        setupMockParam(*mockParam, oid, *mockDescriptor, false, 0, adminScope);
+        setupMockParam(*mockParam, oid, *mockDescriptor, false, 0, adminScope_);
         
         EXPECT_CALL(*mockParam, getDescriptor())
             .WillRepeatedly(testing::ReturnRef(*mockDescriptor));
@@ -212,6 +220,36 @@ protected:
         
         return mockParam;
     }
+    
+    // Helper struct to represent a multi-set payload 
+    struct MultiSetPayloadValue {
+        std::string oid;
+        std::string stringValue;
+        int intValue;
+        bool isString;
+        
+        MultiSetPayloadValue(const std::string& oid, int intValue) : oid(oid), intValue(intValue), isString(false) {}
+        MultiSetPayloadValue(const std::string& oid, const std::string& stringValue) : oid(oid), stringValue(stringValue), isString(true) {}
+    };
+    
+    // Helper function to create a MultiSetValuePayload from a vector of values
+    catena::MultiSetValuePayload createMultiSetPayload(const std::vector<MultiSetPayloadValue>& values) {
+        catena::MultiSetValuePayload payload;
+        
+        for (const auto& val : values) {
+            auto* setValue = payload.add_values();
+            setValue->set_oid(val.oid);
+            auto* value = setValue->mutable_value();
+            
+            if (val.isString) {
+                value->set_string_value(val.stringValue);
+            } else {
+                value->set_int32_value(val.intValue);
+            }
+        }
+        
+        return payload;
+    }
 
 };
 
@@ -234,11 +272,7 @@ TEST_F(DeviceTest, TryMultiSetValue_SingleValue) {
     auto mockParam = createMultiSetMockParam("/param1");
     device_->addItem("param1", mockParam.get());
     
-    catena::MultiSetValuePayload payload;
-    auto* setValue = payload.add_values();
-    setValue->set_oid("/param1");
-    auto* value = setValue->mutable_value();
-    value->set_int32_value(42);
+    auto payload = createMultiSetPayload({{"/param1", 42}});
     
     catena::exception_with_status status{"", catena::StatusCode::OK};
     bool result = device_->tryMultiSetValue(payload, status, *adminAuthz_);
@@ -255,19 +289,10 @@ TEST_F(DeviceTest, TryMultiSetValue_MultipleParams) {
     device_->addItem("param1", mockParam1.get());
     device_->addItem("param2", mockParam2.get());
     
-    catena::MultiSetValuePayload payload;
-    
-    // First value - with path ending in index
-    auto* setValue1 = payload.add_values();
-    setValue1->set_oid("/param1/3");
-    auto* value1 = setValue1->mutable_value();
-    value1->set_int32_value(42);
-    
-    // Second value - regular path
-    auto* setValue2 = payload.add_values();
-    setValue2->set_oid("/param2");
-    auto* value2 = setValue2->mutable_value();
-    value2->set_string_value("test");
+    auto payload = createMultiSetPayload({
+        {"/param1/3", 42},
+        {"/param2", "test"}
+    });
     
     catena::exception_with_status status{"", catena::StatusCode::OK};
     bool result = device_->tryMultiSetValue(payload, status, *adminAuthz_);
@@ -288,20 +313,11 @@ TEST_F(DeviceTest, TryMultiSetValue_MultiSetDisabled) {
         true   // subscriptions
     );
     
-    catena::MultiSetValuePayload payload;
-    
-    // First value
-    auto* setValue1 = payload.add_values();
-    setValue1->set_oid("/param1");
-    auto* value1 = setValue1->mutable_value();
-    value1->set_int32_value(42);
-    
-    // Second value
-    auto* setValue2 = payload.add_values();
-    setValue2->set_oid("/param2");
-    auto* value2 = setValue2->mutable_value();
-    value2->set_string_value("test");
-    
+    auto payload = createMultiSetPayload({
+        {"/param1", 42},
+        {"/param2", "test"}
+    });
+
     catena::exception_with_status status{"", catena::StatusCode::OK};
     bool result = deviceDisabled->tryMultiSetValue(payload, status, *adminAuthz_);
     
@@ -315,19 +331,10 @@ TEST_F(DeviceTest, TryMultiSetValue_OverlappingOids) {
     auto mockParam1 = createMultiSetMockParam("/param1");
     device_->addItem("param1", mockParam1.get());
     
-    catena::MultiSetValuePayload payload;
-    
-    // First value - parent path
-    auto* setValue1 = payload.add_values();
-    setValue1->set_oid("/param1");
-    auto* value1 = setValue1->mutable_value();
-    value1->set_int32_value(42);
-    
-    // Second value - same path (exact overlap)
-    auto* setValue2 = payload.add_values();
-    setValue2->set_oid("/param1");
-    auto* value2 = setValue2->mutable_value();
-    value2->set_string_value("test");
+    auto payload = createMultiSetPayload({
+        {"/param1", 42},
+        {"/param1", "test"}
+    });
     
     catena::exception_with_status status{"", catena::StatusCode::OK};
     bool result = device_->tryMultiSetValue(payload, status, *adminAuthz_);
@@ -342,11 +349,9 @@ TEST_F(DeviceTest, TryMultiSetValue_CatenaException) {
     auto mockParam = createMultiSetMockParam("/param1", "Test catena exception");
     device_->addItem("param1", mockParam.get());
     
-    catena::MultiSetValuePayload payload;
-    auto* setValue = payload.add_values();
-    setValue->set_oid("/param1");
-    auto* value = setValue->mutable_value();
-    value->set_int32_value(42);
+    auto payload = createMultiSetPayload({
+        {"/param1", 42}
+    });
     
     catena::exception_with_status status{"", catena::StatusCode::OK};
     bool result = device_->tryMultiSetValue(payload, status, *adminAuthz_);
@@ -358,7 +363,7 @@ TEST_F(DeviceTest, TryMultiSetValue_CatenaException) {
 
 // 1.6: Error Case - Multi-Set Value with Empty Payload
 TEST_F(DeviceTest, TryMultiSetValue_EmptyPayload) {
-    catena::MultiSetValuePayload payload;
+    auto payload = createMultiSetPayload({});
     
     catena::exception_with_status status{"", catena::StatusCode::OK};
     bool result = device_->tryMultiSetValue(payload, status, *adminAuthz_);
@@ -373,12 +378,8 @@ TEST_F(DeviceTest, TryMultiSetValue_AuthFailure) {
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
     
-    mockParams_.push_back(mockParam);
-    mockDescriptors_.push_back(mockDescriptor);
-    
     // Set up authorization - admin token has st2138:adm:w scope
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockParam, "/param1", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockParam, "/param1", *mockDescriptor, false, 0, adminScope_);
     
     // Set up getDescriptor expectation
     EXPECT_CALL(*mockParam, getDescriptor())
@@ -386,11 +387,9 @@ TEST_F(DeviceTest, TryMultiSetValue_AuthFailure) {
 
     device_->addItem("param1", mockParam.get());
     
-    catena::MultiSetValuePayload payload;
-    auto* setValue = payload.add_values();
-    setValue->set_oid("/param1");
-    auto* value = setValue->mutable_value();
-    value->set_int32_value(42);
+    auto payload = createMultiSetPayload({
+        {"/param1", 42}
+    });
     
     catena::exception_with_status status{"", catena::StatusCode::OK};
     bool result = device_->tryMultiSetValue(payload, status, *monitorAuthz_);
@@ -407,19 +406,10 @@ TEST_F(DeviceTest, TryMultiSetValue_ValidationFailure) {
     device_->addItem("param1", mockParam1.get());
     device_->addItem("param2", mockParam2.get());
     
-    catena::MultiSetValuePayload payload;
-    
-    // First value - should validate successfully
-    auto* setValue1 = payload.add_values();
-    setValue1->set_oid("/param1");
-    auto* value1 = setValue1->mutable_value();
-    value1->set_int32_value(42);
-    
-    // Second value - should fail validation (causing entire operation to fail)
-    auto* setValue2 = payload.add_values();
-    setValue2->set_oid("/param2");
-    auto* value2 = setValue2->mutable_value();
-    value2->set_string_value("test");
+    auto payload = createMultiSetPayload({
+        {"/param1", 42},
+        {"/param2", "test"}
+    });
     
     catena::exception_with_status status{"", catena::StatusCode::OK};
     bool result = device_->tryMultiSetValue(payload, status, *adminAuthz_);
@@ -438,8 +428,7 @@ TEST_F(DeviceTest, CommitMultiSetValue_SingleValue) {
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
     
     // Set up authorization - admin token has st2138:adm:w scope
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockParam, "/param1", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockParam, "/param1", *mockDescriptor, false, 0, adminScope_);
     
     // Set up expectations for copy() - return mocks that handle fromProto and resetValidate
     EXPECT_CALL(*mockParam, copy())
@@ -457,11 +446,9 @@ TEST_F(DeviceTest, CommitMultiSetValue_SingleValue) {
     device_->addItem("param1", mockParam.get());
     
     // Create a payload with single value
-    catena::MultiSetValuePayload payload;
-    auto* setValue = payload.add_values();
-    setValue->set_oid("/param1");
-    auto* value = setValue->mutable_value();
-    value->set_int32_value(42);
+    auto payload = createMultiSetPayload({
+        {"/param1", 42}
+    });
     
     // Test the commit
     catena::exception_with_status status{"", catena::StatusCode::OK};
@@ -473,19 +460,14 @@ TEST_F(DeviceTest, CommitMultiSetValue_SingleValue) {
 
 // 1.10: Success Case - Test commitMultiSetValue with regular parameters
 TEST_F(DeviceTest, CommitMultiSetValue_RegularParams) {
-    // Create parameter hierarchy using the helper
-    auto regularParam1 = ParamHierarchyBuilder::createDescriptor("/param1");
-    auto regularParam2 = ParamHierarchyBuilder::createDescriptor("/param2");
-    
-    // Set up authorization - admin token has st2138:adm:w scope
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    
-    // Create mock parameters with proper descriptors
+    // Create mock parameters for regular parameters
     auto mockRegularParam1 = std::make_shared<MockParam>();
     auto mockRegularParam2 = std::make_shared<MockParam>();
+    auto mockDescriptor1 = std::make_shared<MockParamDescriptor>();
+    auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
     
-    setupMockParam(*mockRegularParam1, "/param1", *regularParam1.descriptor, false, 0, adminScope);
-    setupMockParam(*mockRegularParam2, "/param2", *regularParam2.descriptor, false, 0, adminScope);
+    setupMockParam(*mockRegularParam1, "/param1", *mockDescriptor1, false, 0, adminScope_);
+    setupMockParam(*mockRegularParam2, "/param2", *mockDescriptor2, false, 0, adminScope_);
     
     // Set up expectations for regular parameters (direct path access)
     EXPECT_CALL(*mockRegularParam1, copy())
@@ -523,19 +505,10 @@ TEST_F(DeviceTest, CommitMultiSetValue_RegularParams) {
     );
     
     // Create a payload with regular parameters
-    catena::MultiSetValuePayload payload;
-    
-    // First value - regular path with int value
-    auto* setValue1 = payload.add_values();
-    setValue1->set_oid("/param1");
-    auto* value1 = setValue1->mutable_value();
-    value1->set_int32_value(42);
-    
-    // Second value - regular path with string value
-    auto* setValue2 = payload.add_values();
-    setValue2->set_oid("/param2");
-    auto* value2 = setValue2->mutable_value();
-    value2->set_string_value("test");
+    auto payload = createMultiSetPayload({
+        {"/param1", 42},
+        {"/param2", "test"}
+    });
     
     // Test the commit
     catena::exception_with_status status{"", catena::StatusCode::OK};
@@ -558,17 +531,13 @@ TEST_F(DeviceTest, CommitMultiSetValue_RegularParams) {
 // 1.11: Success Case - Test commitMultiSetValue with array append operation (addBack)
 TEST_F(DeviceTest, CommitMultiSetValue_ArrayAppend) {
     // Create parameter hierarchy using the helper
-    auto arrayParam = ParamHierarchyBuilder::createDescriptor("/arrayParam");
-    
-    // Set up authorization - admin token has st2138:adm:w scope
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    auto arrayParamDescInfo = ParamHierarchyBuilder::createDescriptor("/arrayParam");
     
     // Create mock parameters with proper descriptors
     auto mockArrayParam = std::make_shared<MockParam>();
-    mockParams_.push_back(mockArrayParam);
     
     // Set up array parameter (isArray = true, size = 5)
-    setupMockParam(*mockArrayParam, "/arrayParam", *arrayParam.descriptor, true, 5, adminScope);
+    setupMockParam(*mockArrayParam, "/arrayParam", *arrayParamDescInfo.descriptor, true, 5, adminScope_);
     
     // Set up expectations for array parameter copy
     EXPECT_CALL(*mockArrayParam, copy())
@@ -601,13 +570,9 @@ TEST_F(DeviceTest, CommitMultiSetValue_ArrayAppend) {
     );
     
     // Create a payload with array append operation
-    catena::MultiSetValuePayload payload;
-    
-    // Value - append new element to array
-    auto* setValue = payload.add_values();
-    setValue->set_oid("/arrayParam/-");
-    auto* value = setValue->mutable_value();
-    value->set_string_value("appended");
+    auto payload = createMultiSetPayload({
+        {"/arrayParam/-", "appended"}
+    });
     
     // Test the commit
     catena::exception_with_status status{"", catena::StatusCode::OK};
@@ -627,20 +592,15 @@ TEST_F(DeviceTest, CommitMultiSetValue_ArrayAppend) {
 // 1.12: Success Case - Test commitMultiSetValue with array parameters (indexed access)
 TEST_F(DeviceTest, CommitMultiSetValue_ArrayParams) {
     // Create parameter hierarchy using the helper
-    auto arrayParam = ParamHierarchyBuilder::createDescriptor("/arrayParam");
-    
-    // Set up authorization - admin token has st2138:adm:w scope
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    auto arrayParamDescInfo = ParamHierarchyBuilder::createDescriptor("/arrayParam");
     
     // Create mock parameters with proper descriptors
     auto mockArrayParam = std::make_shared<MockParam>();
     auto mockElementParam = std::make_shared<MockParam>();
-    mockParams_.push_back(mockArrayParam);
-    mockParams_.push_back(mockElementParam);
     
     // Set up array parameter (isArray = true, size = 5)
-    setupMockParam(*mockArrayParam, "/arrayParam", *arrayParam.descriptor, true, 5, adminScope);
-    setupMockParam(*mockElementParam, "/arrayParam/3", *arrayParam.descriptor, false, 0, adminScope);
+    setupMockParam(*mockArrayParam, "/arrayParam", *arrayParamDescInfo.descriptor, true, 5, adminScope_);
+    setupMockParam(*mockElementParam, "/arrayParam/3", *arrayParamDescInfo.descriptor, false, 0, adminScope_);
     
     // Set up expectations for array parameter copy
     EXPECT_CALL(*mockArrayParam, copy())
@@ -673,13 +633,9 @@ TEST_F(DeviceTest, CommitMultiSetValue_ArrayParams) {
     );
     
     // Create a payload with array indexed access
-    catena::MultiSetValuePayload payload;
-    
-    // Value - indexed array element
-    auto* setValue = payload.add_values();
-    setValue->set_oid("/arrayParam/3");
-    auto* value = setValue->mutable_value();
-    value->set_int32_value(100);
+    auto payload = createMultiSetPayload({
+        {"/arrayParam/3", 100}
+    });
     
     // Test the commit
     catena::exception_with_status status{"", catena::StatusCode::OK};
@@ -701,12 +657,7 @@ TEST_F(DeviceTest, CommitMultiSetValue_CatenaException) {
     // Create mock parameter
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
-    mockParams_.push_back(mockParam);
-    mockDescriptors_.push_back(mockDescriptor);
-    
-    // Set up authorization - admin token has st2138:adm:w scope
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockParam, "/param1", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockParam, "/param1", *mockDescriptor, false, 0, adminScope_);
     
     // Set up expectations for copy to throw exception
     EXPECT_CALL(*mockParam, copy())
@@ -716,11 +667,9 @@ TEST_F(DeviceTest, CommitMultiSetValue_CatenaException) {
     
     device_->addItem("param1", mockParam.get());
     
-    catena::MultiSetValuePayload payload;
-    auto* setValue = payload.add_values();
-    setValue->set_oid("/param1");
-    auto* value = setValue->mutable_value();
-    value->set_int32_value(42);
+    auto payload = createMultiSetPayload({
+        {"/param1", 42}
+    });
     
     // Test the commit - should throw an exception
     catena::exception_with_status status{"", catena::StatusCode::OK};
@@ -740,11 +689,7 @@ TEST_F(DeviceTest, SetValue_String) {
     // Create a mock parameter that accepts string values
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
-    mockDescriptors_.push_back(mockDescriptor);
-    mockParams_.push_back(mockParam);
-    
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockParam, "/setParam", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockParam, "/setParam", *mockDescriptor, false, 0, adminScope_);
     
     EXPECT_CALL(*mockParam, getDescriptor())
         .WillRepeatedly(testing::ReturnRef(*mockDescriptor));
@@ -797,11 +742,7 @@ TEST_F(DeviceTest, SetValue_Integer) {
     // Create a mock parameter that accepts integer values
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
-    mockDescriptors_.push_back(mockDescriptor);
-    mockParams_.push_back(mockParam);
-    
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockParam, "/intSetParam", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockParam, "/intSetParam", *mockDescriptor, false, 0, adminScope_);
     
     EXPECT_CALL(*mockParam, getDescriptor())
         .WillRepeatedly(testing::ReturnRef(*mockDescriptor));
@@ -854,11 +795,7 @@ TEST_F(DeviceTest, SetValue_ValidationFailed) {
     // Create a mock parameter that fails validation
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
-    mockDescriptors_.push_back(mockDescriptor);
-    mockParams_.push_back(mockParam);
-    
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockParam, "/invalidParam", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockParam, "/invalidParam", *mockDescriptor, false, 0, adminScope_);
     
     EXPECT_CALL(*mockParam, getDescriptor())
         .WillRepeatedly(testing::ReturnRef(*mockDescriptor));
@@ -982,11 +919,7 @@ TEST_F(DeviceTest, GetValue_UnknownException) {
     // Create a mock parameter that throws unknown exception
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
-    mockDescriptors_.push_back(mockDescriptor);
-    mockParams_.push_back(mockParam);
-    
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockParam, "/unknownParam", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockParam, "/unknownParam", *mockDescriptor, false, 0, adminScope_);
     
     EXPECT_CALL(*mockParam, getDescriptor())
         .WillRepeatedly(testing::ReturnRef(*mockDescriptor));
@@ -1186,10 +1119,7 @@ TEST_F(DeviceTest, GetParam_StringSuccess) {
     // Create a mock parameter and add it to the device
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
-    
-    // Set up authorization - admin token has st2138:adm:w scope
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope_);
     
     EXPECT_CALL(*mockParam, copy())
         .WillOnce(testing::Return(std::make_unique<MockParam>()));
@@ -1209,10 +1139,7 @@ TEST_F(DeviceTest, GetParam_PathSuccess) {
     // Create a mock parameter and add it to the device
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
-    
-    // Set up authorization - admin token has st2138:adm:w scope
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope_);
     
     EXPECT_CALL(*mockParam, copy())
         .WillOnce(testing::Return(std::make_unique<MockParam>()));
@@ -1234,10 +1161,7 @@ TEST_F(DeviceTest, GetParam_SubPath) {
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
     auto mockSubParam = std::make_unique<MockParam>();
-    
-    // Set up authorization - admin token has st2138:adm:w scope
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockParam, "/parentParam", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockParam, "/parentParam", *mockDescriptor, false, 0, adminScope_);
     
     EXPECT_CALL(*mockParam, getParam(testing::_, testing::_, testing::_))
         .WillOnce(testing::Return(std::move(mockSubParam)));
@@ -1280,10 +1204,7 @@ TEST_F(DeviceTest, GetParam_NotAuthorized) {
     // Create a mock parameter that requires specific authorization
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
-    
-    // Set up authorization - parameter requires admin scope but monitor token only has st2138:mon
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockParam, "/restrictedParam", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockParam, "/restrictedParam", *mockDescriptor, false, 0, adminScope_);
     
     // copy() should not be called since authorization will fail
     EXPECT_CALL(*mockParam, copy())
@@ -1319,10 +1240,7 @@ TEST_F(DeviceTest, GetTopLevelParams) {
     // Create a single mock parameter that requires admin authorization
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
-    
-    // Set up param with admin scope
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockParam, "/adminParam", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockParam, "/adminParam", *mockDescriptor, false, 0, adminScope_);
     EXPECT_CALL(*mockParam, copy())
         .WillOnce(testing::Return(std::make_unique<MockParam>()));
     device_->addItem("adminParam", mockParam.get());
@@ -1347,11 +1265,7 @@ TEST_F(DeviceTest, GetTopLevelParams_Exception) {
     // Create a mock parameter that throws an exception during processing
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
-    
-    // Set up authorization - admin token has st2138:adm:w scope
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockParam, "/exceptionParam", *mockDescriptor, false, 0, adminScope);
-    
+    setupMockParam(*mockParam, "/exceptionParam", *mockDescriptor, false, 0, adminScope_);
     EXPECT_CALL(*mockParam, copy())
         .WillOnce(testing::Invoke([]() -> std::unique_ptr<IParam> {
             throw catena::exception_with_status("Test exception", catena::StatusCode::INTERNAL);
@@ -1374,10 +1288,7 @@ TEST_F(DeviceTest, GetCommand) {
     // Create a mock command and add it to the device
     auto mockCommand = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
-    
-    // Set up authorization - admin token has st2138:adm:w scope
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockCommand, "/testCommand", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockCommand, "/testCommand", *mockDescriptor, false, 0, adminScope_);
     
     // Setup expectations for command
     EXPECT_CALL(*mockDescriptor, isCommand())
@@ -1420,10 +1331,7 @@ TEST_F(DeviceTest, GetCommand_SubCommandsUnimplemented) {
     // Create a mock command and add it to the device
     auto mockCommand = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
-    
-    // Set up authorization - admin token has st2138:adm:w scope
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockCommand, "/testCommand", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockCommand, "/testCommand", *mockDescriptor, false, 0, adminScope_);
     
     // Setup expectations for command
     EXPECT_CALL(*mockDescriptor, isCommand())
@@ -1467,10 +1375,7 @@ TEST_F(DeviceTest, GetCommand_Exception) {
     // Create a mock command that throws an exception
     auto mockCommand = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
-    
-    // Set up authorization - admin token has st2138:adm:w scope
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockCommand, "/exceptionCommand", *mockDescriptor, false, 0, adminScope);
+    setupMockParam(*mockCommand, "/exceptionCommand", *mockDescriptor, false, 0, adminScope_);
     
     // Setup expectations for command
     EXPECT_CALL(*mockDescriptor, isCommand())
@@ -1538,10 +1443,8 @@ TEST_F(DeviceTest, Device_ToProtoParams) {
     auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
     
     // Set up authorization - authorized param allows monitor access, unauthorized param requires admin
-    static const std::string monitorScope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockAuthorizedParam, "/authorizedParam", *mockDescriptor1, false, 0, monitorScope);
-    setupMockParam(*mockUnauthorizedParam, "/unauthorizedParam", *mockDescriptor2, false, 0, adminScope);
+    setupMockParam(*mockAuthorizedParam, "/authorizedParam", *mockDescriptor1, false, 0, monitorScope_);
+    setupMockParam(*mockUnauthorizedParam, "/unauthorizedParam", *mockDescriptor2, false, 0, adminScope_);
     
     // Set up expectations for shouldSendParam and toProto calls
     EXPECT_CALL(*mockAuthorizedParam, getDescriptor())
@@ -1580,10 +1483,8 @@ TEST_F(DeviceTest, Device_ToProtoCommands) {
     auto mockDescriptor1 = std::make_shared<MockParamDescriptor>();
     auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
     
-    // Set up authorization - admin token has st2138:adm:w scope
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockCommand1, "/command1", *mockDescriptor1, false, 0, adminScope);
-    setupMockParam(*mockCommand2, "/command2", *mockDescriptor2, false, 0, adminScope);
+    setupMockParam(*mockCommand1, "/command1", *mockDescriptor1, false, 0, adminScope_);
+    setupMockParam(*mockCommand2, "/command2", *mockDescriptor2, false, 0, adminScope_);
     
     // Set up expectations for shouldSendParam and toProto calls
     EXPECT_CALL(*mockCommand1, getDescriptor())
@@ -1825,10 +1726,8 @@ TEST_F(DeviceTest, GetDeviceSerializer_Parameters) {
     auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
     
     // Set up authorization - authorized param allows monitor access, unauthorized param requires admin
-    static const std::string monitorScope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockAuthorizedParam, "/authorizedParam", *mockDescriptor1, false, 0, monitorScope);
-    setupMockParam(*mockUnauthorizedParam, "/unauthorizedParam", *mockDescriptor2, false, 0, adminScope);
+    setupMockParam(*mockAuthorizedParam, "/authorizedParam", *mockDescriptor1, false, 0, monitorScope_);
+    setupMockParam(*mockUnauthorizedParam, "/unauthorizedParam", *mockDescriptor2, false, 0, adminScope_);
     
     // Set up expectations for descriptors
     EXPECT_CALL(*mockDescriptor1, minimalSet())
@@ -1872,13 +1771,10 @@ TEST_F(DeviceTest, GetDeviceSerializer_Parameters) {
         
         // Check for parameters
         if (component.has_param()) {
-            if (component.param().oid() == "authorizedParam") {
-                foundAuthorizedParam = true;
-            } else if (component.param().oid() == "unauthorizedParam") {
-                foundUnauthorizedParam = true;
-            } else if (component.param().oid() == "minimalSetParam") {
-                foundMinimalSetParam = true;
-            }
+            const std::string& oid = component.param().oid();
+            foundAuthorizedParam |= (oid == "authorizedParam");
+            foundUnauthorizedParam |= (oid == "unauthorizedParam");
+            foundMinimalSetParam |= (oid == "minimalSetParam");
         }
     }
     
@@ -1898,10 +1794,8 @@ TEST_F(DeviceTest, GetDeviceSerializer_Commands) {
     auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
     
     // Set up authorization - authorized command allows monitor access, unauthorized command requires admin
-    static const std::string monitorScope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockAuthorizedCommand, "/authorizedCommand", *mockDescriptor1, false, 0, monitorScope);
-    setupMockParam(*mockUnauthorizedCommand, "/unauthorizedCommand", *mockDescriptor2, false, 0, adminScope);
+    setupMockParam(*mockAuthorizedCommand, "/authorizedCommand", *mockDescriptor1, false, 0, monitorScope_);
+    setupMockParam(*mockUnauthorizedCommand, "/unauthorizedCommand", *mockDescriptor2, false, 0, adminScope_);
     
     // Override isCommand to return true for commands
     EXPECT_CALL(*mockDescriptor1, isCommand())
@@ -1945,11 +1839,9 @@ TEST_F(DeviceTest, GetDeviceSerializer_Commands) {
         
         // Check for command components
         if (component.has_command()) {
-            if (component.command().oid() == "authorizedCommand") {
-                foundAuthorizedCommand = true;
-            } else if (component.command().oid() == "unauthorizedCommand") {
-                foundUnauthorizedCommand = true;
-            }
+            const std::string& oid = component.command().oid();
+            foundAuthorizedCommand |= (oid == "authorizedCommand");
+            foundUnauthorizedCommand |= (oid == "unauthorizedCommand");
         }
         
         // Check for minimal set parameter (should be included in all modes)
@@ -1976,11 +1868,9 @@ TEST_F(DeviceTest, GetDeviceSerializer_Subscriptions) {
     auto mockDescriptor3 = std::make_shared<MockParamDescriptor>();
     
     // Set up authorization - authorized params allow monitor access, unauthorized params require admin
-    static const std::string monitorScope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
-    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
-    setupMockParam(*mockAuthorizedSubscribedParam, "/authorizedSubscribedParam", *mockDescriptor1, false, 0, monitorScope);
-    setupMockParam(*mockUnauthorizedSubscribedParam, "/unauthorizedSubscribedParam", *mockDescriptor2, false, 0, adminScope);
-    setupMockParam(*mockAuthorizedUnsubscribedParam, "/authorizedUnsubscribedParam", *mockDescriptor3, false, 0, monitorScope);
+    setupMockParam(*mockAuthorizedSubscribedParam, "/authorizedSubscribedParam", *mockDescriptor1, false, 0, monitorScope_);
+    setupMockParam(*mockUnauthorizedSubscribedParam, "/unauthorizedSubscribedParam", *mockDescriptor2, false, 0, adminScope_);
+    setupMockParam(*mockAuthorizedUnsubscribedParam, "/authorizedUnsubscribedParam", *mockDescriptor3, false, 0, monitorScope_);
     
     // Set up expectations for descriptors (all non-minimal set)
     EXPECT_CALL(*mockDescriptor1, minimalSet())
@@ -1991,7 +1881,6 @@ TEST_F(DeviceTest, GetDeviceSerializer_Subscriptions) {
         .WillRepeatedly(testing::Return(false));
     
     // Set up expectations for toProto calls
-    // Only authorized subscribed param should be called (minimal set param is already in fixture)
     EXPECT_CALL(*mockAuthorizedSubscribedParam, toProto(testing::An<catena::Param&>(), testing::_))
         .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
             param.set_type(catena::ParamType::INT32);
@@ -2031,15 +1920,11 @@ TEST_F(DeviceTest, GetDeviceSerializer_Subscriptions) {
         
         // Check for parameters
         if (component.has_param()) {
-            if (component.param().oid() == "authorizedSubscribedParam") {
-                foundAuthorizedSubscribedParam = true;
-            } else if (component.param().oid() == "unauthorizedSubscribedParam") {
-                foundUnauthorizedSubscribedParam = true;
-            } else if (component.param().oid() == "authorizedUnsubscribedParam") {
-                foundAuthorizedUnsubscribedParam = true;
-            } else if (component.param().oid() == "minimalSetParam") {
-                foundMinimalSetParam = true;
-            }
+            const std::string& oid = component.param().oid();
+            foundAuthorizedSubscribedParam |= (oid == "authorizedSubscribedParam");
+            foundUnauthorizedSubscribedParam |= (oid == "unauthorizedSubscribedParam");
+            foundAuthorizedUnsubscribedParam |= (oid == "authorizedUnsubscribedParam");
+            foundMinimalSetParam |= (oid == "minimalSetParam");
         }
     }
     
@@ -2118,11 +2003,9 @@ TEST_F(DeviceTest, GetDeviceSerializer_LanguagePacks) {
         
         // Check for language pack components
         if (component.has_language_pack()) {
-            if (component.language_pack().language() == "en") {
-                foundEnglish = true;
-            } else if (component.language_pack().language() == "fr") {
-                foundFrench = true;
-            }
+            const std::string& language = component.language_pack().language();
+            foundEnglish |= (language == "en");
+            foundFrench |= (language == "fr");
         }
     }
     
@@ -2228,9 +2111,8 @@ TEST_F(DeviceTest, ShouldSendParam) {
     auto mockCommandDescriptor = std::make_shared<MockParamDescriptor>();
     
     // Set up authorization - use monitor scope for monitor authorization
-    static const std::string monitorScope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
-    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, monitorScope);
-    setupMockParam(*mockCommand, "/testCommand", *mockCommandDescriptor, false, 0, monitorScope);
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, monitorScope_);
+    setupMockParam(*mockCommand, "/testCommand", *mockCommandDescriptor, false, 0, monitorScope_);
     
     // Set up expectations for descriptors
     EXPECT_CALL(*mockDescriptor, minimalSet())
