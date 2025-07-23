@@ -54,7 +54,7 @@ jobs:
 
           git add sdks/cpp/VERSION.txt
           git commit -m "update the version to ${NEW_VERSION}"
-          # git push
+          git push
           
 
 
