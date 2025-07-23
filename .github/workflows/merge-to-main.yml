@@ -1,0 +1,61 @@
+name: Run on Merge Branch Creation
+
+on:
+  create:
+    branches:
+      - '*-merge-[0-9]+' 
+  push:
+    branches:
+      - '855-*'
+
+
+jobs:
+
+  update_vershion_file:
+    if: github.actor != 'github-actions'
+    needs: check-conditions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate new version number
+        run: |
+          # Get the latest tag or default to "cpp-v0.0.0"
+          TAG=$(git describe --tags --match "cpp-*" --abbrev=0 2>/dev/null || echo "cpp-v0.0.0")
+          echo "Latest tag: $TAG"
+
+          VERSION=${TAG#cpp-}
+
+          VERSION_PART=$(echo "$VERSION" | cut -d'-' -f1)
+
+          VERSION_PART=${VERSION_PART#v}
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_PART"
+          echo "Current version: $MAJOR.$MINOR.$PATCH"
+
+          PATCH=$((PATCH + 1))
+
+          result=$(git rev-list --left-right --count origin/main...origin/develop)
+          COMMIT_COUNT=$(echo "$result"| cut -f1)
+          ahead=$(echo "$result" | cut -f2)
+          echo "Commit count: $COMMIT_COUNT"
+
+          NEW_VERSION="cpp-v$MAJOR.$MINOR.$PATCH-$COMMIT_COUNT"
+
+          echo "VERSION=${NEW_VERSION}" >> $GITHUB_ENV
+          echo "Generated new version number: $NEW_VERSION"
+
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+          echo "${NEW_VERSION}-$(date +%s)" > sdks/cpp/VERSION.txt
+
+          git add sdks/cpp/VERSION.txt
+          git commit -m "update the version to ${NEW_VERSION}"
+          # git push
+          
+
+
