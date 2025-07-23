@@ -55,7 +55,12 @@ jobs:
 
       - name: merge main in for safty
         run: |
-          git merge origin/main
+          if ! git merge --no-edit origin/main; then
+            echo "❌ Merge conflict detected when merging main into ${GITHUB_REF#refs/heads/}"
+            git merge --abort
+            exit 1
+          fi
+
       
   create_prs:
     if: github.actor != 'github-actions'
