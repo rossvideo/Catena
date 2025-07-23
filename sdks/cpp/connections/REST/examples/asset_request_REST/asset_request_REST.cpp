@@ -138,6 +138,15 @@ void RunRESTServer() {
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
     signal(SIGKILL, handle_signal);
+    std::map<std::string, std::function<void(const std::string&)>> handlers;
+
+    // this is the "receiving end" of the asset request example
+    dm.getAssetRequest().connect([&handlers](const std::string& fqoid) {
+        if (handlers.contains(fqoid)) {
+            handlers[fqoid](fqoid);
+        }
+    });
+    handlers["/catena_logo.png"] = catenaLogoHandler;
 
     // this is the "receiving end" of the asset request example
     dm.getDownloadAssetRequest().connect([](const std::string& fqoid, const Authorizer* authz) {
