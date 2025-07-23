@@ -18,7 +18,7 @@ jobs:
             echo "✅ Valid branch"
             echo "valid=true" >> $GITHUB_OUTPUT
           else
-            echo "❌ not a Nerge to Main"
+            echo "❌ not a Merge to Main"
             echo "valid=false" >> $GITHUB_OUTPUT
           fi
   
