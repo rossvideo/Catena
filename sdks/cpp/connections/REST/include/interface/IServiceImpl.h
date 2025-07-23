@@ -29,7 +29,7 @@
 */
 
 /**
- * @file ICatenaServiceImpl.h
+ * @file IServiceImpl.h
  * @brief Interface for the REST API implementation
  * @author Benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2024 Ross Video Ltd
