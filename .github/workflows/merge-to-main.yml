@@ -89,7 +89,8 @@ jobs:
           echo "$BRANCH_NAME to merge in main"
           gh pr create --base main --head "$BRANCH_NAME" \
             --title "Merge $BRANCH_NAME into main" \
-            --body "Automated PR from workflow."
+            --body "Automated PR from workflow." \
+            --reviewer NR-RV,abrown-RV
 
       - name: Create PR to develop
         env:
@@ -99,5 +100,6 @@ jobs:
           echo "$BRANCH_NAME to merge in dev"
           gh pr create --base develop --head "$BRANCH_NAME" \
             --title "Merge $BRANCH_NAME into develop" \
-            --body "Automated PR from workflow."
+            --body "Automated PR from workflow." \
+            --reviewer NR-RV,abrown-RV
 
