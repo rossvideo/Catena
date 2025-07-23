@@ -455,7 +455,7 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
     }
 
     if (dl != catena::Device_DetailLevel_NONE) {
-        // // Helper function to check if an OID is subscribed
+        // Helper function to check if an OID is subscribed
         auto isSubscribed = [&subscribedOids, dl, this](const std::string& paramName) {
             if (dl != catena::Device_DetailLevel_SUBSCRIPTIONS) {
                 return true;
