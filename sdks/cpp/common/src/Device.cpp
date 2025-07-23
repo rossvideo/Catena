@@ -466,10 +466,6 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
                 if (paramName == oid) {
                     isSubscribed = true;
                 }
-                // Check for wildcard match (ends with *)
-                if (!oid.empty() && oid.back() == '*' && paramName.find(oid.substr(0, oid.size() - 1)) == 0) {
-                    isSubscribed = true;
-                }
             }
             return isSubscribed;
         };
