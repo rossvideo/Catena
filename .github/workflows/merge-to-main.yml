@@ -11,7 +11,7 @@ on:
 
 jobs:
 
-  update_vershion_file:
+  update_version_file:
     if: github.actor != 'github-actions'
     runs-on: ubuntu-latest
     steps:
