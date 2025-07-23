@@ -245,7 +245,11 @@ class ParamDescriptor : public IParamDescriptor {
      * @param item the item to be added
      */
     void addSubParam(const std::string& oid, IParamDescriptor* item) override {
-      subParams_[oid] = item;
+      if (!item) {
+        throw std::runtime_error("Cannot add a null sub parameter to ParamDescriptor");
+      } else {
+        subParams_[oid] = item;
+      }
     }
 
     /**
@@ -253,6 +257,9 @@ class ParamDescriptor : public IParamDescriptor {
      * @return ParamDescriptor of the sub parameter
      */
     IParamDescriptor& getSubParam(const std::string& oid) const override {
+      if (!subParams_.contains(oid)) {
+        throw std::runtime_error("Sub parameter with oid '" + oid + "' not found in ParamDescriptor");
+      }
       return *subParams_.at(oid);
     }
 
