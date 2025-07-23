@@ -432,15 +432,14 @@ catena::DeviceComponent Device::DeviceSerializer::getNext() {
 }
 
 std::unique_ptr<Device::IDeviceSerializer> Device::getComponentSerializer(Authorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow) const {
-    return std::make_unique<Device::DeviceSerializer>(getDeviceSerializer(authz, subscribedOids, dl, shallow));
-}
-
-Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow) const {
     // Sanitizing if trying to use SUBSCRIPTIONS mode with subscriptions disabled
     if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS && !subscriptions_) {
         throw catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::INVALID_ARGUMENT);
     }
-    
+    return std::make_unique<Device::DeviceSerializer>(getDeviceSerializer(authz, subscribedOids, dl, shallow));
+}
+
+Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow) const {
     catena::DeviceComponent component{};
 
     // Send basic device information first

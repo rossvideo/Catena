@@ -1936,7 +1936,37 @@ TEST_F(DeviceTest, GetDeviceSerializer_Subscriptions) {
     EXPECT_TRUE(foundMinimalSetParam);             // Minimal set (always included in subscriptions mode)
 }
 
-// 6.4: Success Case - Get Device Serializer with Menus
+// 6.4: Error Case - Get Device Serializer with Subscriptions Disabled
+TEST_F(DeviceTest, GetDeviceSerializer_SubscriptionsDisabled) {
+    // Create a device with subscriptions disabled
+    auto deviceDisabled = std::make_unique<Device>(
+        1,  // slot
+        catena::Device_DetailLevel_FULL,  // detail_level
+        std::vector<std::string>{"admin"},  // access_scopes
+        "admin",  // default_scope
+        true,  // multi_set_enabled
+        false   // subscriptions - DISABLED
+    );
+    
+    // Create empty subscribed OIDs set
+    std::set<std::string> subscribedOids = {};
+    
+    // Should throw exception when trying to get serializer with SUBSCRIPTIONS detail level
+    EXPECT_THROW({
+        auto serializer = deviceDisabled->getComponentSerializer(*adminAuthz_, subscribedOids, catena::Device_DetailLevel_SUBSCRIPTIONS, false);
+    }, catena::exception_with_status);
+    
+    // Test the specific exception message and status
+    try {
+        auto serializer = deviceDisabled->getComponentSerializer(*adminAuthz_, subscribedOids, catena::Device_DetailLevel_SUBSCRIPTIONS, false);
+        FAIL() << "Expected exception was not thrown";
+    } catch (const catena::exception_with_status& e) {
+        EXPECT_EQ(e.status, catena::StatusCode::INVALID_ARGUMENT);
+        EXPECT_EQ(std::string(e.what()), "Subscriptions are not enabled for this device");
+    }
+}
+
+// 6.5: Success Case - Get Device Serializer with Menus
 TEST_F(DeviceTest, GetDeviceSerializer_Menus) {
     // Create mock menu groups and add them to the device
     auto mockMenuGroup = std::make_shared<MockMenuGroup>();
@@ -1984,7 +2014,7 @@ TEST_F(DeviceTest, GetDeviceSerializer_Menus) {
     EXPECT_TRUE(foundMenu);
 }
 
-// 6.5: Success Case - Get Device Serializer with Language Packs
+// 6.6: Success Case - Get Device Serializer with Language Packs
 TEST_F(DeviceTest, GetDeviceSerializer_LanguagePacks) {
     // Create empty subscribed OIDs set - language packs should be included in FULL detail level
     std::set<std::string> subscribedOids = {};
@@ -2015,7 +2045,7 @@ TEST_F(DeviceTest, GetDeviceSerializer_LanguagePacks) {
     EXPECT_TRUE(foundFrench);
 }
 
-// 6.6: Success Case - Get Device Serializer with Constraints
+// 6.7: Success Case - Get Device Serializer with Constraints
 TEST_F(DeviceTest, GetDeviceSerializer_Constraints) {
     // Create mock constraints and add them to the device
     auto mockConstraint = std::make_shared<MockConstraint>();
