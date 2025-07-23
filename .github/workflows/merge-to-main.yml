@@ -7,7 +7,6 @@ on:
 
 jobs:
   update_version_file:
-    if: github.actor != 'github-actions'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -61,9 +60,7 @@ jobs:
             exit 1
           fi
 
-      
   create_prs:
-    if: github.actor != 'github-actions'
     needs: update_version_file
     runs-on: ubuntu-latest
     permissions:
