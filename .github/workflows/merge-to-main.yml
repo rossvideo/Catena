@@ -1,12 +1,29 @@
-name: Run on Merge Branch Creation
+name: merge to main
 
 on:
-  create:
-    branches:
-      - '*-merge-[0-9]+' 
+  create
 
 jobs:
+  check-conditions:
+    runs-on: ubuntu-latest
+    outputs:
+      valid_branch: ${{ steps.check.outputs.valid }}
+    steps:
+      - name: Check branch pattern
+        id: check
+        run: |
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          echo "Branch: $BRANCH"
+          if [[ "$BRANCH" =~ ^.*-merge-[0-9]{8}$ ]]; then
+            echo "✅ Valid branch"
+            echo "valid=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ not a Nerge to Main"
+            echo "valid=false" >> $GITHUB_OUTPUT
+          fi
+  
   update_version_file:
+    if: needs.check-conditions.outputs.valid_branch == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -61,6 +78,7 @@ jobs:
           fi
 
   create_prs:
+    if: needs.check-conditions.outputs.valid_branch == 'true'
     needs: update_version_file
     runs-on: ubuntu-latest
     permissions:
