@@ -241,7 +241,7 @@ class IParamDescriptor {
      * The passed function will be executed when executeCommand is called on this param object.
      * If this is not a command parameter, an exception will be thrown.
      */
-    virtual void defineCommand(std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl) = 0;
+    virtual void defineCommand(std::function<std::unique_ptr<ICommandResponder>(const catena::Value&)> commandImpl) = 0;
 
     /**
      * @brief execute the command
@@ -251,7 +251,7 @@ class IParamDescriptor {
      * if executeCommand is called for a command that has not been defined, then the returned
      * command response will be an exception with type UNIMPLEMENTED
      */
-    virtual std::unique_ptr<ICommandResponder> executeCommand(catena::Value value) = 0;
+    virtual std::unique_ptr<ICommandResponder> executeCommand(const catena::Value& value) = 0;
 
     /**
      * @brief return true if this is a command parameter

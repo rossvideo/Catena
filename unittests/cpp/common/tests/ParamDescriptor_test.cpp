@@ -55,10 +55,11 @@ class ParamDescriptorTest : public ::testing::Test {
     }
 
     void create() {
+        IConstraint* constraintPtr = hasConstraint ? &constraint : nullptr;
         IParamDescriptor* parentPtr = hasParent ? &parent : nullptr;
         pd = std::make_unique<ParamDescriptor>(
             type, oidAliases, PolyglotText::ListInitializer{{"en", "name"}, {"fr", "nom"}},
-            widget, scope, readOnly, oid, templateOid, &constraint, isCommand,
+            widget, scope, readOnly, oid, templateOid, constraintPtr, isCommand,
             dm, maxLength, totalLength, minimalSet, parentPtr
         );
     }
@@ -73,8 +74,9 @@ class ParamDescriptorTest : public ::testing::Test {
     bool readOnly = true;
     std::string oid = "oid";
     std::string templateOid = "template_oid";
+    bool hasConstraint = true;
     MockConstraint constraint;
-    bool isCommand = true;
+    bool isCommand = false;
     MockDevice dm;
     uint32_t maxLength = 16;
     std::size_t totalLength = 16;
@@ -194,25 +196,116 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ParamInfoToProto) {
 TEST_F(ParamDescriptorTest, ParamDescriptor_ParamToProto) {
     // Adding sub parameters.
     MockParamDescriptor subPd1, subPd2;
-    pd->addSubParam("sub_oid1", &subPd1);
-    pd->addSubParam("sub_oid2", &subPd2);
+    std::string subOid1 = "sub_oid1", subOid2 = "sub_oid2";
+    pd->addSubParam(subOid1, &subPd1);
+    pd->addSubParam(subOid2, &subPd2);
     // Setting expectations.
-    
-    catena::Param param;
     std::string constraintOid = "constraint_oid";
-    EXPECT_CALL(constraint, isShared()).Times(1).WillOnce(testing::Return(true));
+    EXPECT_CALL(constraint, isShared()).Times(2)
+        .WillOnce(testing::Return(true))   // Shared constraint on first test.
+        .WillOnce(testing::Return(false)); // Unique constraint on second test.
     EXPECT_CALL(constraint, getOid()).Times(1).WillOnce(testing::ReturnRef(constraintOid));
+    EXPECT_CALL(constraint, toProto(testing::_)).Times(1)
+        .WillOnce(testing::Invoke([](catena::Constraint &constraint){
+            constraint.set_ref_oid("constraint_oid");
+        }));
+
+    EXPECT_CALL(subPd1, getScope()).Times(1).WillOnce(testing::ReturnRef(scope));
+    EXPECT_CALL(subPd1, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([&subOid1](catena::Param& param, Authorizer& authz) {
+            param.add_oid_aliases(subOid1);
+        }));
+    EXPECT_CALL(subPd2, getScope()).Times(1).WillOnce(testing::ReturnRef(scope));
+    EXPECT_CALL(subPd2, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([&subOid2](catena::Param& param, Authorizer& authz) {
+            param.add_oid_aliases(subOid2);
+        }));
+    // Calling toProto and checking the result.
+    catena::Param param;
     pd->toProto(param, Authorizer::kAuthzDisabled);
     EXPECT_EQ(param.type(), type);
     EXPECT_EQ(param.read_only(), readOnly);
     EXPECT_EQ(param.widget(), widget);
     EXPECT_EQ(param.minimal_set(), minimalSet);
     // Oid aliases
-    EXPECT_EQ(param.oid_aliases_size(), readOnly);
+    EXPECT_EQ(param.oid_aliases_size(), oidAliases.size());
     for (uint32_t i = 0; i < oidAliases.size(); ++i) {
         EXPECT_EQ(param.oid_aliases()[i], oidAliases[i]);
     }
+    // Sub params
+    EXPECT_EQ(param.params_size(), 2);
+    EXPECT_EQ(param.params().at(subOid1).oid_aliases()[0], subOid1);
+    EXPECT_EQ(param.params().at(subOid2).oid_aliases()[0], subOid2);
     // Constraint
-    EXPECT_EQ(param.constraint().ref_oid(), constraintOid);
+    EXPECT_EQ(param.constraint().ref_oid(), constraintOid) << "Shared constraint should set ref_oid";
+    // Unique constraint.
+    param.Clear();
+    create();
+    pd->toProto(param, Authorizer::kAuthzDisabled);
+    EXPECT_EQ(param.constraint().ref_oid(), constraintOid) << "Unique constraint toProto should set ref_oid";
+    // No constraint
+    param.Clear();
+    hasConstraint = false;
+    create();
+    pd->toProto(param, Authorizer::kAuthzDisabled);
+    EXPECT_FALSE(param.has_constraint()) << "Param should not have a constraint";
+}
 
+TEST_F(ParamDescriptorTest, ParamDescriptor_ExecuteCommand) {
+    catena::Value input;
+    auto responder = pd->executeCommand(input);
+    auto response = responder->getNext();
+    EXPECT_TRUE(response.has_exception());
+    EXPECT_EQ(response.exception().type(), "UNIMPLEMENTED");
+}
+
+TEST_F(ParamDescriptorTest, ParamDescriptor_DefineCommand) {    
+    { // isCommand = false
+    EXPECT_THROW(pd->defineCommand([](catena::Value value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([value]() -> ParamDescriptor::CommandResponder {
+            catena::CommandResponse response;
+            co_return response;
+        }());
+    });, std::runtime_error);
+    
+    catena::Value input;
+    auto responder = pd->executeCommand(input);
+    auto response = responder->getNext();
+    EXPECT_TRUE(response.has_exception());
+    EXPECT_EQ(response.exception().type(), "UNIMPLEMENTED");
+    }
+    { // isCommand = true
+    isCommand = true;
+    create();
+
+    catena::Value input;
+    input.set_string_value("Test input");
+
+    std::vector<std::string> returnVals = {"Command response 1", "Command response 2"};
+
+    pd->defineCommand([](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value) -> ParamDescriptor::CommandResponder {
+            EXPECT_EQ(value.string_value(), "Test input");
+            catena::CommandResponse response;
+
+            response.mutable_response()->set_string_value("Command response 1");
+            co_yield response;
+
+            response.Clear();
+            response.mutable_response()->set_string_value("Command response 2");
+            co_return response;
+        }(value));
+    });
+    auto responder = pd->executeCommand(input);
+
+    catena::CommandResponse response;
+    for (auto returnVal : returnVals) {
+        EXPECT_TRUE(responder->hasMore());
+        response = responder->getNext();
+        EXPECT_TRUE(response.has_response());
+        EXPECT_EQ(response.response().string_value(), returnVal);
+    }
+
+    EXPECT_FALSE(responder->hasMore());
+    }
 }
