@@ -13,7 +13,6 @@ jobs:
 
   update_vershion_file:
     if: github.actor != 'github-actions'
-    needs: check-conditions
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
