@@ -133,28 +133,27 @@ $(document).ready(function(){initNavTree('TimeNow_8h_source.html',''); initResiz
 <div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span><span class="comment">// std</span></div>
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="preprocessor">#include &lt;string&gt;</span></div>
 <div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span><span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span><span class="preprocessor">#include &lt;chrono&gt;</span></div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacecatena.html">catena</a> {</div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="keyword">namespace </span>common {</div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
-<div class="foldopen" id="foldopen00051" data-start="{" data-end="}">
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="namespacecatena_1_1common.html#aaf7051c03c402f50294ffebece8d0cfb">   51</a></span><span class="keyword">inline</span> std::string <a class="code hl_function" href="namespacecatena_1_1common.html#aaf7051c03c402f50294ffebece8d0cfb">timeNow</a>() {</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    std::stringstream ss;</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <span class="keyword">auto</span> now = std::chrono::system_clock::now();</div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <span class="keyword">auto</span> now_micros = std::chrono::time_point_cast&lt;std::chrono::microseconds&gt;(now);</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    <span class="keyword">auto</span> epoch = now_micros.time_since_epoch();</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    <span class="keyword">auto</span> micros = std::chrono::duration_cast&lt;std::chrono::microseconds&gt;(epoch);</div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    <span class="keyword">auto</span> now_c = std::chrono::system_clock::to_time_t(now);</div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    ss &lt;&lt; std::put_time(std::localtime(&amp;now_c), <span class="stringliteral">&quot;%F %T&quot;</span>) &lt;&lt; <span class="charliteral">&#39;.&#39;</span> &lt;&lt; std::setw(6) &lt;&lt; std::setfill(<span class="charliteral">&#39;0&#39;</span>)</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>       &lt;&lt; micros.count() % 1000000;</div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    <span class="keywordflow">return</span> ss.str();</div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>}</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacecatena.html">catena</a> {</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="keyword">namespace </span>common {</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span> </div>
+<div class="foldopen" id="foldopen00050" data-start="{" data-end="}">
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno"><a class="line" href="namespacecatena_1_1common.html#aaf7051c03c402f50294ffebece8d0cfb">   50</a></span><span class="keyword">inline</span> std::string <a class="code hl_function" href="namespacecatena_1_1common.html#aaf7051c03c402f50294ffebece8d0cfb">timeNow</a>() {</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    std::stringstream ss;</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <span class="keyword">auto</span> now = std::chrono::system_clock::now();</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <span class="keyword">auto</span> now_micros = std::chrono::time_point_cast&lt;std::chrono::microseconds&gt;(now);</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <span class="keyword">auto</span> epoch = now_micros.time_since_epoch();</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    <span class="keyword">auto</span> micros = std::chrono::duration_cast&lt;std::chrono::microseconds&gt;(epoch);</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    <span class="keyword">auto</span> now_c = std::chrono::system_clock::to_time_t(now);</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    ss &lt;&lt; std::put_time(std::localtime(&amp;now_c), <span class="stringliteral">&quot;%F %T&quot;</span>) &lt;&lt; <span class="charliteral">&#39;.&#39;</span> &lt;&lt; std::setw(6) &lt;&lt; std::setfill(<span class="charliteral">&#39;0&#39;</span>)</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>       &lt;&lt; micros.count() % 1000000;</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    <span class="keywordflow">return</span> ss.str();</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>}</div>
 </div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span> </div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>} <span class="comment">// namespace common</span></div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>} <span class="comment">// namespace catena</span></div>
-<div class="ttc" id="anamespacecatena_1_1common_html_aaf7051c03c402f50294ffebece8d0cfb"><div class="ttname"><a href="namespacecatena_1_1common.html#aaf7051c03c402f50294ffebece8d0cfb">catena::common::timeNow</a></div><div class="ttdeci">std::string timeNow()</div><div class="ttdoc">Returns the current time as a string including microseconds.</div><div class="ttdef"><b>Definition</b> TimeNow.h:51</div></div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>} <span class="comment">// namespace common</span></div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>} <span class="comment">// namespace catena</span></div>
+<div class="ttc" id="anamespacecatena_1_1common_html_aaf7051c03c402f50294ffebece8d0cfb"><div class="ttname"><a href="namespacecatena_1_1common.html#aaf7051c03c402f50294ffebece8d0cfb">catena::common::timeNow</a></div><div class="ttdeci">std::string timeNow()</div><div class="ttdoc">Returns the current time as a string including microseconds.</div><div class="ttdef"><b>Definition</b> TimeNow.h:50</div></div>
 <div class="ttc" id="anamespacecatena_html"><div class="ttname"><a href="namespacecatena.html">catena</a></div><div class="ttdoc">top level namespace for Catena. Functionality at this scope includes the protoc generated classes....</div><div class="ttdef"><b>Definition</b> Authorization.h:59</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
