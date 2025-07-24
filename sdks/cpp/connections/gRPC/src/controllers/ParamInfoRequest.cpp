@@ -119,6 +119,10 @@ void ParamInfoRequest::proceed(bool ok) {
                         writer_.Write(responses_[0], this);  //Write the first response
                         writer_lock_.unlock();
                         break;  
+                    } else if (rc.status != catena::StatusCode::OK) {
+                        throw catena::exception_with_status(rc.what(), rc.status);
+                    } else {
+                        throw catena::exception_with_status("No top-level parameters found", catena::StatusCode::NOT_FOUND);
                     }
 
                 // Mode 2: Get a specific parameter and its children
@@ -155,8 +159,10 @@ void ParamInfoRequest::proceed(bool ok) {
                         writer_.Write(responses_[0], this); //Write the first response
                         writer_lock_.unlock();
                         break;
-                    } else {
+                    } else if (rc.status != catena::StatusCode::OK) {
                         throw catena::exception_with_status(rc.what(), rc.status);
+                    } else {
+                        throw catena::exception_with_status("Parameter not found: " + req_.oid_prefix(), catena::StatusCode::NOT_FOUND);
                     }
 
                 // Mode 3: Get ALL parameters recursively
@@ -194,8 +200,10 @@ void ParamInfoRequest::proceed(bool ok) {
                         writer_.Write(responses_[0], this);  //Write the first response
                         writer_lock_.unlock();
                         break;  
-                    } else {
+                    } else if (rc.status != catena::StatusCode::OK) {
                         throw catena::exception_with_status(rc.what(), rc.status);
+                    } else {
+                        throw catena::exception_with_status("No top-level parameters found", catena::StatusCode::NOT_FOUND);
                     }
                 }
 

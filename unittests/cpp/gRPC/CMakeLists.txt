@@ -20,6 +20,7 @@ set(SOURCES
     tests/LanguagePackRequest_test.cpp
     tests/ListLanguages_test.cpp
     tests/MultiSetValue_test.cpp
+    tests/ParamInfoRequest_test.cpp
     tests/SetValue_test.cpp
     tests/ServiceImpl_test.cpp
 )	
