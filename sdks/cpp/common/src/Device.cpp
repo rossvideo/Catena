@@ -247,8 +247,18 @@ catena::exception_with_status Device::removeLanguage(const std::string& language
 
 std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) const {
     // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
-    catena::common::Path path(fqoid);
-    return getParam(path, status, authz);
+    std::unique_ptr<IParam> result = nullptr;
+    try {
+        catena::common::Path path(fqoid);
+        result = getParam(path, status, authz);
+    } catch (const catena::exception_with_status& why) {
+        status = catena::exception_with_status(why.what(), why.status);
+    } catch (const std::exception& e) {
+        status = catena::exception_with_status(e.what(), catena::StatusCode::INTERNAL);
+    } catch (...) {
+        status = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
+    }
+    return result;
 }
 
 std::unique_ptr<IParam> Device::getParam(catena::common::Path& path, catena::exception_with_status& status, Authorizer& authz) const {

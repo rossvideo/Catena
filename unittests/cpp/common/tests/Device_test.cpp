@@ -1114,6 +1114,8 @@ TEST_F(DeviceTest, LanguagePack_Remove_NotFound) {
 
 // ======== 4. Param/Command Tests ========
 
+// --- Get Param String Tests ---
+
 // 4.1: Success Case - Get Param with Valid String Path
 TEST_F(DeviceTest, GetParam_StringSuccess) {
     // Create a mock parameter and add it to the device
@@ -1134,8 +1136,89 @@ TEST_F(DeviceTest, GetParam_StringSuccess) {
     EXPECT_NE(result, nullptr);
 }
 
-// 4.2: Success Case - Get Param with Valid Path Object
-TEST_F(DeviceTest, GetParam_PathSuccess) {
+// 4.2: Error Case - Test Get Param with Empty String Path
+TEST_F(DeviceTest, GetParam_String_EmptyPath) {
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto result = device_->getParam("", status, *adminAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::INVALID_ARGUMENT);
+    EXPECT_EQ(std::string(status.what()), "Invalid json pointer ");
+    EXPECT_EQ(result, nullptr);
+}
+
+// 4.3: Error Case - Test Get Param with Invalid String Path
+TEST_F(DeviceTest, GetParam_String_InvalidPath) {
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto result = device_->getParam("/invalid/path", status, *adminAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::NOT_FOUND);
+    EXPECT_EQ(std::string(status.what()), "Param /invalid/path does not exist");
+    EXPECT_EQ(result, nullptr);
+}
+
+// 4.4: Error Case - Test Get Param with Invalid Json Pointer (String)
+TEST_F(DeviceTest, GetParam_String_InvalidJsonPointer) {
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto result = device_->getParam("/invalid[", status, *adminAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::INVALID_ARGUMENT);
+    EXPECT_EQ(result, nullptr);
+}
+
+// 4.5: Error Case - Test Get Param Internal Error (String)
+TEST_F(DeviceTest, GetParam_String_InternalError) {
+    // Create a mock parameter that throws std::exception
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(*mockParam, "/errorParam", *mockDescriptor, false, 0, adminScope);
+    
+    EXPECT_CALL(*mockParam, copy())
+        .WillOnce(testing::Invoke([]() -> std::unique_ptr<IParam> {
+            throw std::runtime_error("Internal error in copy");
+        }));
+    
+    device_->addItem("errorParam", mockParam.get());
+    
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto result = device_->getParam("/errorParam", status, *adminAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::INTERNAL);
+    EXPECT_EQ(std::string(status.what()), "Internal error in copy");
+    EXPECT_EQ(result, nullptr);
+}
+
+// 4.6: Error Case - Test Get Param Unknown Error (String)
+TEST_F(DeviceTest, GetParam_String_UnknownError) {
+    // Create a mock parameter that throws unknown exception
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    static const std::string adminScope = Scopes().getForwardMap().at(Scopes_e::kAdmin);
+    setupMockParam(*mockParam, "/unknownErrorParam", *mockDescriptor, false, 0, adminScope);
+    
+    EXPECT_CALL(*mockParam, copy())
+        .WillOnce(testing::Invoke([]() -> std::unique_ptr<IParam> {
+            throw 42; // Throw an int (unknown exception type)
+        }));
+    
+    device_->addItem("unknownErrorParam", mockParam.get());
+    
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto result = device_->getParam("/unknownErrorParam", status, *adminAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::UNKNOWN);
+    EXPECT_EQ(std::string(status.what()), "Unknown error");
+    EXPECT_EQ(result, nullptr);
+}
+
+// --- Get Param Path Tests ---
+
+// 4.7: Success Case - Get Param with Valid Path Object (Path)
+TEST_F(DeviceTest, GetParam_Path) {
     // Create a mock parameter and add it to the device
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
@@ -1155,7 +1238,7 @@ TEST_F(DeviceTest, GetParam_PathSuccess) {
     EXPECT_NE(result, nullptr);
 }
 
-// 4.3: Success Case - Get Param with Sub-path
+// 4.8: Success Case - Get Param with Sub-path (Path)
 TEST_F(DeviceTest, GetParam_SubPath) {
     // Create a mock parameter that supports sub-parameters
     auto mockParam = std::make_shared<MockParam>();
@@ -1177,8 +1260,8 @@ TEST_F(DeviceTest, GetParam_SubPath) {
     EXPECT_NE(result, nullptr);
 }
 
-// 4.4: Error Case - Get Param with Invalid Json Pointer
-TEST_F(DeviceTest, GetParam_InvalidJsonPointer) {
+// 4.9: Error Case - Get Param with Invalid Json Pointer (Path)
+TEST_F(DeviceTest, GetParam_Path_InvalidJsonPointer) {
     catena::exception_with_status status{"", catena::StatusCode::OK};
     catena::common::Path path(""); // Tests both empty and invalid json pointer
     auto result = device_->getParam(path, status, *adminAuthz_);
@@ -1188,8 +1271,8 @@ TEST_F(DeviceTest, GetParam_InvalidJsonPointer) {
     EXPECT_EQ(result, nullptr);
 }
 
-// 4.5: Error Case - Get Param with Path Not Found
-TEST_F(DeviceTest, GetParam_PathNotFound) {
+// 4.10: Error Case - Get Param with Path Not Found
+TEST_F(DeviceTest, GetParam_Path_NotFound) {
     catena::exception_with_status status{"", catena::StatusCode::OK};
     catena::common::Path path("/invalid/path");
     auto result = device_->getParam(path, status, *adminAuthz_);
@@ -1199,8 +1282,8 @@ TEST_F(DeviceTest, GetParam_PathNotFound) {
     EXPECT_EQ(result, nullptr);
 }
 
-// 4.6: Error Case - Get Param Not Authorized
-TEST_F(DeviceTest, GetParam_NotAuthorized) {
+// 4.11: Error Case - Get Param Not Authorized (Path)
+TEST_F(DeviceTest, GetParam_Path_NotAuthorized) {
     // Create a mock parameter that requires specific authorization
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
@@ -1222,8 +1305,8 @@ TEST_F(DeviceTest, GetParam_NotAuthorized) {
     EXPECT_EQ(result, nullptr);
 }
 
-// 4.7: Error Case - Get Param with Non-String Front Element
-TEST_F(DeviceTest, GetParam_NonStringFrontElement) {
+// 4.12: Error Case - Get Param with Non-String Front Element (Path)
+TEST_F(DeviceTest, GetParam_Path_NonStringFrontElement) {
     catena::exception_with_status status{"", catena::StatusCode::OK};
     catena::common::Path path("/123"); // Path with numeric front element
     auto result = device_->getParam(path, status, *adminAuthz_);
@@ -1235,7 +1318,7 @@ TEST_F(DeviceTest, GetParam_NonStringFrontElement) {
 
 // --- Get Top Level Params Tests ---
 
-// 4.8: Success Case - Get Top Level Params
+// 4.13: Success Case - Get Top Level Params
 TEST_F(DeviceTest, GetTopLevelParams) {
     // Create a single mock parameter that requires admin authorization
     auto mockParam = std::make_shared<MockParam>();
@@ -1260,7 +1343,7 @@ TEST_F(DeviceTest, GetTopLevelParams) {
     EXPECT_EQ(result.size(), 1); // The admin param should be returned
 }
 
-// 4.9: Error Case - Get Top Level Params with Exception
+// 4.14: Error Case - Get Top Level Params with Exception
 TEST_F(DeviceTest, GetTopLevelParams_Exception) {
     // Create a mock parameter that throws an exception during processing
     auto mockParam = std::make_shared<MockParam>();
@@ -1283,7 +1366,7 @@ TEST_F(DeviceTest, GetTopLevelParams_Exception) {
 
 // --- Get Command Tests ---
 
-// 4.10: Success Case - Get Command with Valid Path
+// 4.15: Success Case - Get Command with Valid Path
 TEST_F(DeviceTest, GetCommand) {
     // Create a mock command and add it to the device
     auto mockCommand = std::make_shared<MockParam>();
@@ -1306,7 +1389,7 @@ TEST_F(DeviceTest, GetCommand) {
     EXPECT_NE(result, nullptr);
 }
 
-// 4.11: Error Case - Get Command with Empty Path
+// 4.16: Error Case - Get Command with Empty Path
 TEST_F(DeviceTest, GetCommand_EmptyPath) {
     catena::exception_with_status status{"", catena::StatusCode::OK};
     auto result = device_->getCommand("", status, *adminAuthz_);
@@ -1316,7 +1399,7 @@ TEST_F(DeviceTest, GetCommand_EmptyPath) {
     EXPECT_EQ(result, nullptr);
 }
 
-// 4.12: Error Case - Get Command Not Found
+// 4.17: Error Case - Get Command Not Found
 TEST_F(DeviceTest, GetCommand_NotFound) {
     catena::exception_with_status status{"", catena::StatusCode::OK};
     auto result = device_->getCommand("/nonexistentCommand", status, *adminAuthz_);
@@ -1326,7 +1409,7 @@ TEST_F(DeviceTest, GetCommand_NotFound) {
     EXPECT_EQ(result, nullptr);
 }
 
-// 4.13: Error Case - Get Command with Sub-commands (Unimplemented)
+// 4.18: Error Case - Get Command with Sub-commands (Unimplemented)
 TEST_F(DeviceTest, GetCommand_SubCommandsUnimplemented) {
     // Create a mock command and add it to the device
     auto mockCommand = std::make_shared<MockParam>();
@@ -1351,7 +1434,7 @@ TEST_F(DeviceTest, GetCommand_SubCommandsUnimplemented) {
     EXPECT_EQ(result, nullptr);
 }
 
-// 4.14: Error Case - Get Command with Invalid Json Pointer
+// 4.19: Error Case - Get Command with Invalid Json Pointer
 TEST_F(DeviceTest, GetCommand_InvalidJsonPointer) {
     catena::exception_with_status status{"", catena::StatusCode::OK};
     auto result = device_->getCommand("/invalid[", status, *adminAuthz_);
@@ -1360,7 +1443,7 @@ TEST_F(DeviceTest, GetCommand_InvalidJsonPointer) {
     EXPECT_EQ(result, nullptr);
 }
 
-// 4.15: Error Case - Get Command with Non-String Front Element
+// 4.20: Error Case - Get Command with Non-String Front Element
 TEST_F(DeviceTest, GetCommand_NonStringFrontElement) {
     catena::exception_with_status status{"", catena::StatusCode::OK};
     auto result = device_->getCommand("/123", status, *adminAuthz_);
@@ -1370,7 +1453,7 @@ TEST_F(DeviceTest, GetCommand_NonStringFrontElement) {
     EXPECT_EQ(result, nullptr);
 }
 
-// 4.16: Error Case - Get Command with Exception
+// 4.21: Error Case - Get Command with Exception
 TEST_F(DeviceTest, GetCommand_Exception) {
     // Create a mock command that throws an exception
     auto mockCommand = std::make_shared<MockParam>();
