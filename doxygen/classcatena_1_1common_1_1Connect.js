@@ -1,15 +1,11 @@
 var classcatena_1_1common_1_1Connect =
 [
-    [ "~Connect", "classcatena_1_1common_1_1Connect.html#a1fa4c47904353be364d9930b22f2d3c8", null ],
     [ "Connect", "classcatena_1_1common_1_1Connect.html#a86b2bc07e6ff84fe3b86dcdfca117d28", null ],
     [ "Connect", "classcatena_1_1common_1_1Connect.html#a3515b58f8533b18b9b3f9151ade3fea9", null ],
     [ "Connect", "classcatena_1_1common_1_1Connect.html#aaa137c0fa7a8e9914734e516a0036dcb", null ],
     [ "Connect", "classcatena_1_1common_1_1Connect.html#a456e6a4492e1d42e5971c7d4b01bbb69", null ],
+    [ "~Connect", "classcatena_1_1common_1_1Connect.html#afa1a5e9a2bce4cac9a6c362f66eacdb2", null ],
     [ "initAuthz_", "classcatena_1_1common_1_1Connect.html#aa0040e4b363a858cdee334dd1e36d904", null ],
-    [ "objectId", "classcatena_1_1common_1_1Connect.html#aeffedba07f664d4ec3640c499cde7e10", null ],
-    [ "operator<", "classcatena_1_1common_1_1Connect.html#a626ddb1d15f4f911fae7cdbf8723f940", null ],
-    [ "priority", "classcatena_1_1common_1_1Connect.html#a246e000e06395a4f87706c17fc24ae27", null ],
-    [ "shutdown", "classcatena_1_1common_1_1Connect.html#a01c7fc640c14b76dd1756d3fb2cad62d", null ],
     [ "updateResponse_", "classcatena_1_1common_1_1Connect.html#a79a548ee8b6b66ed2b9b1dbb29bf77d1", null ],
     [ "updateResponse_", "classcatena_1_1common_1_1Connect.html#a8ff9c432f5f47f67746433d1827fd19d", null ],
     [ "authz_", "classcatena_1_1common_1_1Connect.html#aa8bc272574ef3b115d24b7ad925013d6", null ],
@@ -19,11 +15,8 @@ var classcatena_1_1common_1_1Connect =
     [ "forceConnection_", "classcatena_1_1common_1_1Connect.html#a4755edff6106c38156a0fcc3e00dde50", null ],
     [ "hasUpdate_", "classcatena_1_1common_1_1Connect.html#aeb08058009d6f93da96fc9c72ba6c99c", null ],
     [ "language_", "classcatena_1_1common_1_1Connect.html#a017fd071366adf86a7e0d90c64aa10d2", null ],
-    [ "objectId_", "classcatena_1_1common_1_1Connect.html#aaf087489151d65442a43ceed5f57fe6b", null ],
-    [ "priority_", "classcatena_1_1common_1_1Connect.html#a346fb16e73abcd5c674159d0f39b386b", null ],
     [ "res_", "classcatena_1_1common_1_1Connect.html#a758621bfebc66d9e0439e3b9484351c5", null ],
     [ "sharedAuthz_", "classcatena_1_1common_1_1Connect.html#a156de209700b42ce94bfa322e16138e2", null ],
-    [ "shutdown_", "classcatena_1_1common_1_1Connect.html#a4a50ec64dddf9389f8ae62744db3198c", null ],
     [ "subscriptionManager_", "classcatena_1_1common_1_1Connect.html#a1d1530db5d58c723f6067e5090e43db9", null ],
     [ "userAgent_", "classcatena_1_1common_1_1Connect.html#af65f3d8646574a41942a3f68106a8a2f", null ]
 ];

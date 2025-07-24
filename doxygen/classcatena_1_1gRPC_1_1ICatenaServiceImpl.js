@@ -1,7 +1,6 @@
 var classcatena_1_1gRPC_1_1ICatenaServiceImpl =
 [
     [ "authorizationEnabled", "classcatena_1_1gRPC_1_1ICatenaServiceImpl.html#a1e02069ec4dc9ee17dea568e0ff0d85b", null ],
-    [ "connectionQueue", "classcatena_1_1gRPC_1_1ICatenaServiceImpl.html#a86755a81883593466279abdded6132f2", null ],
     [ "cq", "classcatena_1_1gRPC_1_1ICatenaServiceImpl.html#a8802bf51599ebb12a04c3be8db9b75de", null ],
     [ "deregisterItem", "classcatena_1_1gRPC_1_1ICatenaServiceImpl.html#afe8cddee80c9e9aaa9fac23fee584978", null ],
     [ "EOPath", "classcatena_1_1gRPC_1_1ICatenaServiceImpl.html#a8292d69c0a12d9105ce24fccc3a3b935", null ],
