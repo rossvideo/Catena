@@ -43,6 +43,9 @@
 
 using namespace catena::common;
 
+/**
+ * TEST 1 - Testing ConnectionQueue registerConnection and deregisterConnection.
+ */
 TEST(ConnectionQueueTests, ConnectionQueue_ManageConnections) {
     // Initializing connectionQueue with maxConnections = 1.
     ConnectionQueue connectionQueue{1};
