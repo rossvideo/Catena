@@ -48,7 +48,7 @@ namespace catena {
 namespace common {
 
 /**
- * @brief Implements a queue which manages IConnect objects based on priority.
+ * @brief Implements a priority queue which manages IConnect objects.
  */
 class ConnectionQueue : public IConnectionQueue {
   public:
@@ -61,6 +61,9 @@ class ConnectionQueue : public IConnectionQueue {
     /**
      * @brief Regesters a Connect CallData object into the Connection priority
      * queue.
+     * 
+     * If the queue is full, the lowest priority connection will be shutdown.
+     * 
      * @param cd The Connect CallData object to register.
      * @return TRUE if successfully registered, FALSE otherwise
      */
