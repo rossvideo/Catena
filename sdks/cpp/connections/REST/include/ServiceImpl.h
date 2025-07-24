@@ -68,6 +68,8 @@ using catena::REST::SocketReader;
 using catena::REST::SocketWriter;
 using catena::REST::SSEWriter;
 
+using namespace catena::common;
+
 namespace catena {
 /**
  * @brief Namespace for classes relating to handling REST API requests.
@@ -75,15 +77,36 @@ namespace catena {
 namespace REST {
 
 /**
+ * @brief Config object for the CatenaServiceImpl to streamline creation.
+ */
+class ServiceConfig {
+  public:
+    /**
+     * @brief A map of slots to ptrs to their corresponding device.
+     */
+    std::vector<IDevice*> dms = {};
+    /**
+     * @brief The path to the external object.
+     */
+    std::string EOPath = "";
+    /**
+     * @brief Flag to enable authorization.
+     */
+    bool authz = false;
+    /**
+     * @brief The port to listen on.
+     */
+    uint16_t port = 443;
+    /**
+     * @brief The maximum number of connections allowed to the service.
+     */
+    uint32_t maxConnections = 16;
+};
+
+/**
  * @brief Implements Catena REST API request handlers.
  */
 class CatenaServiceImpl : public catena::REST::IServiceImpl {
-
-  // Specifying which Device and IParam to use (defaults to catena::...)
-  using IDevice = catena::common::IDevice;
-  using IParam = catena::common::IParam;
-  using SlotMap = catena::common::SlotMap;
-
   public:
     /**
      * @brief Constructor for the REST API.
@@ -93,7 +116,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      * @param authz Flag to enable authorization.
      * @param port The port to listen on. Default is 443.
      */
-    explicit CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOPath, bool authz = false, uint16_t port = 443);
+    CatenaServiceImpl(const ServiceConfig& config = ServiceConfig());
 
     /**
      * @brief Returns the API's version.
@@ -151,7 +174,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
     /**
      * @brief The path to the external object
      */
-    std::string& EOPath_;
+    std::string EOPath_;
     /**
      * @brief Flag to enable authorization
      */

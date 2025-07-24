@@ -68,7 +68,12 @@ class RESTServiceImplTests : public testing::Test {
     void SetUp() override {
         oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
         EXPECT_CALL(dm_, slot()).WillRepeatedly(testing::Return(0));
-        service_.reset(new CatenaServiceImpl({&dm_}, EOPath_, authzEnabled_, port_));
+        ServiceConfig config;
+        config.dms.push_back(&dm_);
+        config.EOPath = EOPath_;
+        config.authz = authzEnabled_;
+        config.port = port_;
+        service_.reset(new CatenaServiceImpl(config));
     }
 
     /*
@@ -126,11 +131,16 @@ TEST_F(RESTServiceImplTests, ServiceImpl_Create) {
  * TEST 2 - Creating a REST CatenaServiceImpl.
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_CreateDuplicateSlot) {
-    MockDevice dm2;
+    // Creating a new device and adding it to the config.
+    ServiceConfig config;
+    MockDevice dm1, dm2;
+    EXPECT_CALL(dm1, slot()).WillRepeatedly(testing::Return(0));
+    config.dms.push_back(&dm1);
     EXPECT_CALL(dm2, slot()).WillRepeatedly(testing::Return(0));
+    config.dms.push_back(&dm2);
+    config.port = port_ + 2;
     // Creating a service with a duplicate slot.
-    EXPECT_THROW(CatenaServiceImpl({&dm_, &dm2}, EOPath_, authzEnabled_, port_ + 2), std::runtime_error)
-        << "Creating a service with two devices sharing a slot should throw an error.";
+    EXPECT_THROW(CatenaServiceImpl newService{config}, std::runtime_error) << "Creating a service with two devices sharing a slot should throw an error.";
 }
 
 /*

@@ -66,8 +66,10 @@
 #include <Logger.h>
 
 using namespace catena::common;
+using catena::REST::ServiceConfig;
+using catena::REST::CatenaServiceImpl;
 
-catena::REST::CatenaServiceImpl *globalApi = nullptr;
+CatenaServiceImpl *globalApi = nullptr;
 std::atomic<bool> globalLoop = true;
 
 // handle SIGINT
@@ -163,16 +165,18 @@ void RunRESTServer() {
     signal(SIGKILL, handle_signal);
 
     try {
-        // Getting flags.
-        std::string EOPath = absl::GetFlag(FLAGS_static_root);
-        bool authorization = absl::GetFlag(FLAGS_authz);
-        uint16_t port = absl::GetFlag(FLAGS_port);
+       // Setting config.
+        ServiceConfig config;
+        config.dms.push_back(&dm);
+        config.EOPath = absl::GetFlag(FLAGS_static_root);
+        config.authz = absl::GetFlag(FLAGS_authz);
+        config.port = absl::GetFlag(FLAGS_port);
         
         // Creating and running the REST service.
-        catena::REST::CatenaServiceImpl api({&dm}, EOPath, authorization, port);
+        CatenaServiceImpl api(config);
         globalApi = &api;
         DEBUG_LOG << "API Version: " << api.version();
-        DEBUG_LOG << "REST on 0.0.0.0:" << port;
+        DEBUG_LOG << "REST on 0.0.0.0:" << config.port;
         
         std::thread counterLoop(statusUpdateExample);
 

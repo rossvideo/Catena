@@ -94,6 +94,33 @@ namespace catena {
 namespace gRPC {
 
 /**
+ * @brief Config object for the CatenaServiceImpl to streamline creation.
+ */
+class ServiceConfig {
+  public:
+    /**
+     * @brief The completion queue for the server.
+     */
+    ServerCompletionQueue* cq = nullptr;
+    /**
+     * @brief A map of slots to ptrs to their corresponding device.
+     */
+    std::vector<IDevice*> dms = {};
+    /**
+     * @brief The path to the external object.
+     */
+    std::string EOPath = "";
+    /**
+     * @brief Flag to enable authorization.
+     */
+    bool authz = false;
+    /**
+     * @brief The maximum number of connections allowed to the service.
+     */
+    uint32_t maxConnections = 16;
+};
+
+/**
  * @brief Implements Catena gRPC request handlers.
  */
 class CatenaServiceImpl : public ICatenaServiceImpl {
@@ -105,7 +132,7 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      * @param EOPath The path to the external object.
      * @param authz Flag to enable authorization.
      */
-    CatenaServiceImpl(ServerCompletionQueue* cq, std::vector<IDevice*> dms, std::string& EOPath, bool authz);  
+    CatenaServiceImpl(const ServiceConfig& config = ServiceConfig());
     /**
      * @brief Creates the CallData objects for each gRPC command.
      */
@@ -175,7 +202,7 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
     /**
      * @brief The path to the external object
      */
-    std::string& EOPath_; 
+    std::string EOPath_; 
     /**
      * @brief Flag to enable authorization
      */
