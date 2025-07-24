@@ -1146,13 +1146,13 @@ TEST_F(DeviceTest, GetParam_String_EmptyPath) {
     EXPECT_EQ(result, nullptr);
 }
 
-// 4.3: Error Case - Test Get Param with Invalid String Path
-TEST_F(DeviceTest, GetParam_String_InvalidPath) {
+// 4.3: Error Case - Test Get Param with String Path/Param Not Found
+TEST_F(DeviceTest, GetParam_String_NotFound) {
     catena::exception_with_status status{"", catena::StatusCode::OK};
-    auto result = device_->getParam("/invalid/path", status, *adminAuthz_);
+    auto result = device_->getParam("/nonexistentParam", status, *adminAuthz_);
     
     EXPECT_EQ(status.status, catena::StatusCode::NOT_FOUND);
-    EXPECT_EQ(std::string(status.what()), "Param /invalid/path does not exist");
+    EXPECT_EQ(std::string(status.what()), "Param /nonexistentParam does not exist");
     EXPECT_EQ(result, nullptr);
 }
 
