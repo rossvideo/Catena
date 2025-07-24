@@ -50,10 +50,15 @@ using namespace catena::common;
 
 class ParamDescriptorTest : public ::testing::Test {
   protected:
+    /*
+     * Initializes pd with default values used in most tests.
+     */
     void SetUp() override {
         create();
     }
-
+    /*
+     * Initializes pd using member values.
+     */
     void create() {
         IConstraint* constraintPtr = hasConstraint ? &constraint : nullptr;
         IParamDescriptor* parentPtr = hasParent ? &parent : nullptr;
@@ -74,17 +79,20 @@ class ParamDescriptorTest : public ::testing::Test {
     bool readOnly = true;
     std::string oid = "oid";
     std::string templateOid = "template_oid";
-    bool hasConstraint = true;
+    bool hasConstraint = true; // If false, nullptr will be passed into pd as the constraint.
     MockConstraint constraint;
     bool isCommand = false;
     MockDevice dm;
     uint32_t maxLength = 16;
     std::size_t totalLength = 16;
     bool minimalSet = true;
-    bool hasParent = false;
+    bool hasParent = false; // If false, nullptr will be passed into pd as the parent.
     MockParamDescriptor parent;
 };
 
+/*
+ * TEST 1 - Testing ParamDescriptor Constructor with and without parent param.
+ */
 TEST_F(ParamDescriptorTest, ParamDescriptor_Create) {
     // Test creation without parent.
     EXPECT_TRUE(pd) << "Failed to create ParamDescriptor without parent";
@@ -98,7 +106,9 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_Create) {
     create();
     EXPECT_TRUE(pd) << "Failed to create ParamDescriptor with parent";
 }
-
+/*
+ * TEST 2 - Testing ParamDescriptor Getters.
+ */
 TEST_F(ParamDescriptorTest, ParamDescriptor_Getters) {
     EXPECT_EQ(type, pd->type());
     EXPECT_EQ(name, pd->name());
@@ -113,7 +123,9 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_Getters) {
     EXPECT_EQ(&constraint, pd->getConstraint());
     EXPECT_EQ(isCommand, pd->isCommand());
 }
-
+/*
+ * TEST 3 - Testing ParamDescriptor GetScope().
+ */
 TEST_F(ParamDescriptorTest, ParamDescriptor_GetScope) {
     // Test scope with no parent
     EXPECT_EQ(scope, pd->getScope());
@@ -132,11 +144,13 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_GetScope) {
     create();
     EXPECT_EQ(parentScope, pd->getScope()) << "Should return parent's scope when scope is empty and there is a parent";
 }
-
+/*
+ * TEST 4 - Testing ParamDescriptor max_length() and total_length().
+ */
 TEST_F(ParamDescriptorTest, ParamDescriptor_GetLengthConstraints) {
-    EXPECT_EQ(maxLength, pd->max_length());
-    EXPECT_EQ(totalLength, pd->total_length());
-    // Reset to test default value
+    EXPECT_EQ(maxLength, pd->max_length())     << "max_length should return the param's max_length value when >0";
+    EXPECT_EQ(totalLength, pd->total_length()) << "total_length should return the param's total_length value when >0";
+    // Resetting to test with default lengths from device.
     maxLength = 0;
     totalLength = 0;
     uint32_t defaultMaxLength = 1024;
@@ -144,10 +158,12 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_GetLengthConstraints) {
     EXPECT_CALL(dm, default_max_length()).Times(1).WillOnce(testing::Return(defaultMaxLength));
     EXPECT_CALL(dm, default_total_length()).Times(1).WillOnce(testing::Return(defaultTotalLength));
     create();
-    EXPECT_EQ(defaultMaxLength, pd->max_length());
-    EXPECT_EQ(defaultTotalLength, pd->total_length());
+    EXPECT_EQ(defaultMaxLength, pd->max_length())     << "max_length should return the device's max_length value when set to 0";
+    EXPECT_EQ(defaultTotalLength, pd->total_length()) << "total_length should return the device's total_length value when set to 0";
 }
-
+/*
+ * TEST 5 - Testing ParamDescriptor Setters.
+ */
 TEST_F(ParamDescriptorTest, ParamDescriptor_Setters) {
     // setOid(...)
     std::string newOid = "new_oid";
@@ -160,8 +176,11 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_Setters) {
     pd->setMinimalSet(!minimalSet);
     EXPECT_EQ(!minimalSet, pd->minimalSet());
 }
-
+/*
+ * TEST 6 - Testing ParamDescriptor SubParam functions.
+ */
 TEST_F(ParamDescriptorTest, ParamDescriptor_SubParams) {
+    // Test params.
     MockParamDescriptor subPd1, subPd2;
     std::string subOid1 = "sub_oid1", subOid2 = "sub_oid2", subOid3 = "sub_oid3";
     // Adding sub parameters.
@@ -169,18 +188,20 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_SubParams) {
     pd->addSubParam(subOid2, &subPd2);
     EXPECT_THROW(pd->addSubParam(subOid3, nullptr), std::runtime_error) << "Should not add nullptr to sub params";
     // Getting sub parameters individually.
-    EXPECT_EQ(&subPd1, &pd->getSubParam(subOid1));
-    EXPECT_EQ(&subPd2, &pd->getSubParam(subOid2));
+    EXPECT_EQ(&subPd1, &pd->getSubParam(subOid1)) << "Should return the added sub param \"subOid1\"";
+    EXPECT_EQ(&subPd2, &pd->getSubParam(subOid2)) << "Should return the added sub param \"subOid2\"";
     EXPECT_THROW(pd->getSubParam(subOid3), std::runtime_error) << "Should throw error for non-existent sub param";
     // Getting all sub parameters.
     auto subParams = pd->getAllSubParams();
-    EXPECT_TRUE(subParams.contains(subOid1));
+    EXPECT_TRUE(subParams.contains(subOid1))  << "SubParams should include added sub param \"subOid1\"";
     EXPECT_EQ(&subPd1, subParams[subOid1]);
-    EXPECT_TRUE(subParams.contains(subOid2));
+    EXPECT_TRUE(subParams.contains(subOid2))  << "SubParams should include added sub param \"subOid2\"";
     EXPECT_EQ(&subPd2, subParams[subOid2]);
     EXPECT_FALSE(subParams.contains(subOid3)) << "Should not contain non-existent sub param";
 }
-
+/*
+ * TEST 7 - Testing ParamDescriptor toProto with ParamInfo object.
+ */
 TEST_F(ParamDescriptorTest, ParamDescriptor_ParamInfoToProto) {
     catena::ParamInfo paramInfo;
     pd->toProto(paramInfo, Authorizer::kAuthzDisabled);
@@ -192,7 +213,9 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ParamInfoToProto) {
         EXPECT_EQ(paramInfo.name().display_strings().at(lang), str);
     }
 }
-
+/*
+ * TEST 8 - Testing ParamDescriptor toProto with Param object.
+ */
 TEST_F(ParamDescriptorTest, ParamDescriptor_ParamToProto) {
     // Adding sub parameters.
     MockParamDescriptor subPd1, subPd2;
@@ -236,76 +259,106 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ParamToProto) {
     EXPECT_EQ(param.params_size(), 2);
     EXPECT_EQ(param.params().at(subOid1).oid_aliases()[0], subOid1);
     EXPECT_EQ(param.params().at(subOid2).oid_aliases()[0], subOid2);
-    // Constraint
+    // Shared constraint
     EXPECT_EQ(param.constraint().ref_oid(), constraintOid) << "Shared constraint should set ref_oid";
-    // Unique constraint.
+    // Resetting and testing with unique constraint.
     param.Clear();
     create();
     pd->toProto(param, Authorizer::kAuthzDisabled);
     EXPECT_EQ(param.constraint().ref_oid(), constraintOid) << "Unique constraint toProto should set ref_oid";
-    // No constraint
+    // Resetting and testing with no constraint
     param.Clear();
     hasConstraint = false;
     create();
     pd->toProto(param, Authorizer::kAuthzDisabled);
     EXPECT_FALSE(param.has_constraint()) << "Param should not have a constraint";
 }
-
+/*
+ * TEST 9 - Testing ParamDescriptor ExecuteCommand default command definition.
+ */
 TEST_F(ParamDescriptorTest, ParamDescriptor_ExecuteCommand) {
     catena::Value input;
     auto responder = pd->executeCommand(input);
     auto response = responder->getNext();
-    EXPECT_TRUE(response.has_exception());
+    EXPECT_TRUE(response.has_exception()) << "Default command definition should return an \"UNIMPLEMENTED\" exception.";
     EXPECT_EQ(response.exception().type(), "UNIMPLEMENTED");
 }
-
+/*
+ * TEST 10 - Testing ParamDescriptor DefineCommand.
+ */
 TEST_F(ParamDescriptorTest, ParamDescriptor_DefineCommand) {    
-    { // isCommand = false
-    EXPECT_THROW(pd->defineCommand([](catena::Value value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([value]() -> ParamDescriptor::CommandResponder {
+    {
+    // Calling defineCommand with non-command parameter.
+    EXPECT_THROW(pd->defineCommand([](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value) -> ParamDescriptor::CommandResponder {
             catena::CommandResponse response;
             co_return response;
-        }());
-    });, std::runtime_error);
-    
+        }(value));
+    });, std::runtime_error) << "defineCommand() should throw an error if the param isCommand == False";
+    // Testing response
     catena::Value input;
     auto responder = pd->executeCommand(input);
     auto response = responder->getNext();
-    EXPECT_TRUE(response.has_exception());
+    EXPECT_TRUE(response.has_exception()) << "Non-command param should retain the default command definition.";
     EXPECT_EQ(response.exception().type(), "UNIMPLEMENTED");
     }
-    { // isCommand = true
+    {
+    // Creating command ParamDescriptor.
     isCommand = true;
     create();
-
-    catena::Value input;
-    input.set_string_value("Test input");
-
-    std::vector<std::string> returnVals = {"Command response 1", "Command response 2"};
-
+    // Defining command and executing.
     pd->defineCommand([](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
         return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value) -> ParamDescriptor::CommandResponder {
-            EXPECT_EQ(value.string_value(), "Test input");
+            EXPECT_EQ(value.string_value(), "Test input") << "Input value not passed correctly to command.";
             catena::CommandResponse response;
-
+            // Response #1
             response.mutable_response()->set_string_value("Command response 1");
             co_yield response;
-
+            // Response #2
             response.Clear();
             response.mutable_response()->set_string_value("Command response 2");
             co_return response;
         }(value));
     });
+    catena::Value input;
+    input.set_string_value("Test input");
     auto responder = pd->executeCommand(input);
-
+    // Testing response.
     catena::CommandResponse response;
-    for (auto returnVal : returnVals) {
-        EXPECT_TRUE(responder->hasMore());
+    for (auto returnVal : {"Command response 1", "Command response 2"}) {
+        EXPECT_TRUE(responder->hasMore())    << "Responder should have 2 responses.";
         response = responder->getNext();
-        EXPECT_TRUE(response.has_response());
+        EXPECT_TRUE(response.has_response()) << "After a valid call to getNext() responder should have a response.";
         EXPECT_EQ(response.response().string_value(), returnVal);
     }
-
-    EXPECT_FALSE(responder->hasMore());
+    EXPECT_FALSE(responder->hasMore())    << "Calls to hasMore() after all responses should return false.";
+    response = responder->getNext();
+    EXPECT_FALSE(response.has_response()) << "Calls to getNext() after all responses should not return a response.";
     }
+}
+/*
+ * TEST 10 - Testing ParamDescriptor CommandResponded when an error is thrown.
+ */
+TEST_F(ParamDescriptorTest, ParamDescriptor_CommandErrUnhandled) {    
+    // Creating command ParamDescriptor.
+    isCommand = true;
+    create();
+    // Defining command that throws an error and executing.
+    pd->defineCommand([](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value) -> ParamDescriptor::CommandResponder {
+            throw std::runtime_error("Test error");
+
+            catena::CommandResponse response;
+            response.mutable_response()->set_string_value("Error should be thrown before recieving a response.");
+            co_return response;
+        }(value));
+    });
+    catena::Value input;
+    auto responder = pd->executeCommand(input);
+    // Testing response.
+    catena::CommandResponse response;
+    EXPECT_TRUE(responder->hasMore())                                 << "Responder should have at least 1 response.";
+    EXPECT_THROW(response = responder->getNext(), std::runtime_error) << "Responder should rethrow error when command execution fails";
+    EXPECT_FALSE(responder->hasMore())                                << "Responder should not have any more responses after an error.";
+    EXPECT_FALSE(response.has_response())                             << "Response should not have a response after an error.";
 }
