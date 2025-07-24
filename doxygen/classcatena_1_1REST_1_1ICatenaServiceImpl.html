@@ -139,12 +139,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a899bf595577f99bebacc2cadebc8c326" id="r_a899bf595577f99bebacc2cadebc8c326"><td class="memItemLeft" align="right" valign="top">virtual const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html#a899bf595577f99bebacc2cadebc8c326">EOPath</a> ()=0</td></tr>
 <tr class="memdesc:a899bf595577f99bebacc2cadebc8c326"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the EOPath.  <br /></td></tr>
 <tr class="separator:a899bf595577f99bebacc2cadebc8c326"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aac6530f779ddf8990dc93f40dfc8a42f" id="r_aac6530f779ddf8990dc93f40dfc8a42f"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html#aac6530f779ddf8990dc93f40dfc8a42f">registerConnection</a> (<a class="el" href="classcatena_1_1common_1_1IConnect.html">catena::common::IConnect</a> *cd)=0</td></tr>
-<tr class="memdesc:aac6530f779ddf8990dc93f40dfc8a42f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Regesters a <a class="el" href="classcatena_1_1REST_1_1Connect.html" title="ICallData class for the Connect REST controller.">Connect</a> CallData object into the Connection priority queue.  <br /></td></tr>
-<tr class="separator:aac6530f779ddf8990dc93f40dfc8a42f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a39f0b94eb38f09aa39614f4fbb7ae3cf" id="r_a39f0b94eb38f09aa39614f4fbb7ae3cf"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html#a39f0b94eb38f09aa39614f4fbb7ae3cf">deregisterConnection</a> (<a class="el" href="classcatena_1_1common_1_1IConnect.html">catena::common::IConnect</a> *cd)=0</td></tr>
-<tr class="memdesc:a39f0b94eb38f09aa39614f4fbb7ae3cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deregisters a <a class="el" href="classcatena_1_1REST_1_1Connect.html" title="ICallData class for the Connect REST controller.">Connect</a> CallData object into the Connection priority queue.  <br /></td></tr>
-<tr class="separator:a39f0b94eb38f09aa39614f4fbb7ae3cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5e84f39b5b0bcffbde6bd48b57f4777" id="r_af5e84f39b5b0bcffbde6bd48b57f4777"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html">IConnectionQueue</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html#af5e84f39b5b0bcffbde6bd48b57f4777">connectionQueue</a> ()=0</td></tr>
+<tr class="memdesc:af5e84f39b5b0bcffbde6bd48b57f4777"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the ConnectionQueue object.  <br /></td></tr>
+<tr class="separator:af5e84f39b5b0bcffbde6bd48b57f4777"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface for the <a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html" title="Implements Catena REST API request handlers.">REST::CatenaServiceImpl</a> class. </p>
@@ -183,8 +180,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="a39f0b94eb38f09aa39614f4fbb7ae3cf" name="a39f0b94eb38f09aa39614f4fbb7ae3cf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a39f0b94eb38f09aa39614f4fbb7ae3cf">&#9670;&#160;</a></span>deregisterConnection()</h2>
+<a id="af5e84f39b5b0bcffbde6bd48b57f4777" name="af5e84f39b5b0bcffbde6bd48b57f4777"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af5e84f39b5b0bcffbde6bd48b57f4777">&#9670;&#160;</a></span>connectionQueue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -193,10 +190,9 @@ Here is the caller graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual void catena::REST::ICatenaServiceImpl::deregisterConnection </td>
+          <td class="memname">virtual <a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html">IConnectionQueue</a> &amp; catena::REST::ICatenaServiceImpl::connectionQueue </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IConnect.html">catena::common::IConnect</a> *&#160;</td>
-          <td class="paramname"><em>cd</em></td><td>)</td>
+          <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -207,15 +203,14 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Deregisters a <a class="el" href="classcatena_1_1REST_1_1Connect.html" title="ICallData class for the Connect REST controller.">Connect</a> CallData object into the Connection priority queue. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">cd</td><td>The <a class="el" href="classcatena_1_1REST_1_1Connect.html" title="ICallData class for the Connect REST controller.">Connect</a> CallData object to deregister. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Returns the ConnectionQueue object. </p>
 
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a7d27b3d5e26f7cf874419176d2f578c1">catena::REST::CatenaServiceImpl</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a7916b3ef247e71cf46c90931dfe0e9c6">catena::REST::CatenaServiceImpl</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1ICatenaServiceImpl_af5e84f39b5b0bcffbde6bd48b57f4777_icgraph.svg" width="474" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
 
 </div>
 </div>
@@ -250,43 +245,6 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1ICatenaServiceImpl_a899bf595577f99bebacc2cadebc8c326_icgraph.svg" width="474" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
-
-</div>
-</div>
-<a id="aac6530f779ddf8990dc93f40dfc8a42f" name="aac6530f779ddf8990dc93f40dfc8a42f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aac6530f779ddf8990dc93f40dfc8a42f">&#9670;&#160;</a></span>registerConnection()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual bool catena::REST::ICatenaServiceImpl::registerConnection </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IConnect.html">catena::common::IConnect</a> *&#160;</td>
-          <td class="paramname"><em>cd</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Regesters a <a class="el" href="classcatena_1_1REST_1_1Connect.html" title="ICallData class for the Connect REST controller.">Connect</a> CallData object into the Connection priority queue. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">cd</td><td>The <a class="el" href="classcatena_1_1REST_1_1Connect.html" title="ICallData class for the Connect REST controller.">Connect</a> CallData object to register. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>TRUE if successfully registered, FALSE otherwise. </dd></dl>
-
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a05670242165feac39a22b9204273cfb9">catena::REST::CatenaServiceImpl</a>.</p>
 
 </div>
 </div>

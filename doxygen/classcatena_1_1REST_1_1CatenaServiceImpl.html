@@ -135,12 +135,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:acb484f27aba3d72b3a25818c2610c91d" id="r_acb484f27aba3d72b3a25818c2610c91d"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html#acb484f27aba3d72b3a25818c2610c91d">EOPath</a> () override</td></tr>
 <tr class="memdesc:acb484f27aba3d72b3a25818c2610c91d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the EOPath.  <br /></td></tr>
 <tr class="separator:acb484f27aba3d72b3a25818c2610c91d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a05670242165feac39a22b9204273cfb9" id="r_a05670242165feac39a22b9204273cfb9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a05670242165feac39a22b9204273cfb9">registerConnection</a> (<a class="el" href="classcatena_1_1common_1_1IConnect.html">catena::common::IConnect</a> *cd) override</td></tr>
-<tr class="memdesc:a05670242165feac39a22b9204273cfb9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Regesters a <a class="el" href="classcatena_1_1REST_1_1Connect.html" title="ICallData class for the Connect REST controller.">Connect</a> CallData object into the Connection priority queue.  <br /></td></tr>
-<tr class="separator:a05670242165feac39a22b9204273cfb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7d27b3d5e26f7cf874419176d2f578c1" id="r_a7d27b3d5e26f7cf874419176d2f578c1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a7d27b3d5e26f7cf874419176d2f578c1">deregisterConnection</a> (<a class="el" href="classcatena_1_1common_1_1IConnect.html">catena::common::IConnect</a> *cd) override</td></tr>
-<tr class="memdesc:a7d27b3d5e26f7cf874419176d2f578c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deregisters a <a class="el" href="classcatena_1_1REST_1_1Connect.html" title="ICallData class for the Connect REST controller.">Connect</a> CallData object into the Connection priority queue.  <br /></td></tr>
-<tr class="separator:a7d27b3d5e26f7cf874419176d2f578c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7916b3ef247e71cf46c90931dfe0e9c6" id="r_a7916b3ef247e71cf46c90931dfe0e9c6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html">IConnectionQueue</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a7916b3ef247e71cf46c90931dfe0e9c6">connectionQueue</a> () override</td></tr>
+<tr class="memdesc:a7916b3ef247e71cf46c90931dfe0e9c6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the ConnectionQueue object.  <br /></td></tr>
+<tr class="separator:a7916b3ef247e71cf46c90931dfe0e9c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classcatena_1_1REST_1_1ICatenaServiceImpl"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classcatena_1_1REST_1_1ICatenaServiceImpl')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html">catena::REST::ICatenaServiceImpl</a></td></tr>
 <tr class="memitem:aa77c018225e510c6fb769c32ce526256 inherit pub_methods_classcatena_1_1REST_1_1ICatenaServiceImpl" id="r_aa77c018225e510c6fb769c32ce526256"><td class="memItemLeft" align="right" valign="top">
 &#160;</td><td class="memItemRight" valign="bottom"><b>ICatenaServiceImpl</b> (const <a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html">ICatenaServiceImpl</a> &amp;)=delete</td></tr>
@@ -254,8 +251,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a7d27b3d5e26f7cf874419176d2f578c1" name="a7d27b3d5e26f7cf874419176d2f578c1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7d27b3d5e26f7cf874419176d2f578c1">&#9670;&#160;</a></span>deregisterConnection()</h2>
+<a id="a7916b3ef247e71cf46c90931dfe0e9c6" name="a7916b3ef247e71cf46c90931dfe0e9c6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7916b3ef247e71cf46c90931dfe0e9c6">&#9670;&#160;</a></span>connectionQueue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -264,29 +261,22 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void catena::REST::CatenaServiceImpl::deregisterConnection </td>
+          <td class="memname"><a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html">IConnectionQueue</a> &amp; catena::REST::CatenaServiceImpl::connectionQueue </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IConnect.html">catena::common::IConnect</a> *&#160;</td>
-          <td class="paramname"><em>cd</em></td><td>)</td>
+          <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Deregisters a <a class="el" href="classcatena_1_1REST_1_1Connect.html" title="ICallData class for the Connect REST controller.">Connect</a> CallData object into the Connection priority queue. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">cd</td><td>The <a class="el" href="classcatena_1_1REST_1_1Connect.html" title="ICallData class for the Connect REST controller.">Connect</a> CallData object to deregister. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Returns the ConnectionQueue object. </p>
 
-<p>Implements <a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html#a39f0b94eb38f09aa39614f4fbb7ae3cf">catena::REST::ICatenaServiceImpl</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html#af5e84f39b5b0bcffbde6bd48b57f4777">catena::REST::ICatenaServiceImpl</a>.</p>
 
 </div>
 </div>
@@ -316,43 +306,6 @@ Public Member Functions</h2></td></tr>
 <p>Returns the EOPath. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html#a899bf595577f99bebacc2cadebc8c326">catena::REST::ICatenaServiceImpl</a>.</p>
-
-</div>
-</div>
-<a id="a05670242165feac39a22b9204273cfb9" name="a05670242165feac39a22b9204273cfb9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a05670242165feac39a22b9204273cfb9">&#9670;&#160;</a></span>registerConnection()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool catena::REST::CatenaServiceImpl::registerConnection </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IConnect.html">catena::common::IConnect</a> *&#160;</td>
-          <td class="paramname"><em>cd</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Regesters a <a class="el" href="classcatena_1_1REST_1_1Connect.html" title="ICallData class for the Connect REST controller.">Connect</a> CallData object into the Connection priority queue. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">cd</td><td>The <a class="el" href="classcatena_1_1REST_1_1Connect.html" title="ICallData class for the Connect REST controller.">Connect</a> CallData object to register. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>TRUE if successfully registered, FALSE otherwise </dd></dl>
-
-<p>Implements <a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html#aac6530f779ddf8990dc93f40dfc8a42f">catena::REST::ICatenaServiceImpl</a>.</p>
 
 </div>
 </div>

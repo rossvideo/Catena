@@ -1,6 +1,7 @@
 var classcatena_1_1REST_1_1ISocketReader =
 [
     [ "authorizationEnabled", "classcatena_1_1REST_1_1ISocketReader.html#a0f8e7c0c63daa9870a48ce65c7e579a1", null ],
+    [ "connectionQueue", "classcatena_1_1REST_1_1ISocketReader.html#a8ef7e54d83b6d1f95bf80797ab230411", null ],
     [ "detailLevel", "classcatena_1_1REST_1_1ISocketReader.html#a73e5c7392324c163c6053c62594738dd", null ],
     [ "endpoint", "classcatena_1_1REST_1_1ISocketReader.html#a2b576f2353e31997d1def492e6bf76a2", null ],
     [ "EOPath", "classcatena_1_1REST_1_1ISocketReader.html#a2f5c47bbccfa97b9333eab154844ea84", null ],

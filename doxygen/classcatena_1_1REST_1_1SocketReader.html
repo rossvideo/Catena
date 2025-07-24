@@ -162,9 +162,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a01e040f166589c9c4f26b0bc94cb9bb1" id="r_a01e040f166589c9c4f26b0bc94cb9bb1"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a01e040f166589c9c4f26b0bc94cb9bb1">EOPath</a> () const override</td></tr>
 <tr class="memdesc:a01e040f166589c9c4f26b0bc94cb9bb1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the path to the external object.  <br /></td></tr>
 <tr class="separator:a01e040f166589c9c4f26b0bc94cb9bb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac04540c580159cca26601a6296a00755" id="r_ac04540c580159cca26601a6296a00755"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html">catena::common::ISubscriptionManager</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#ac04540c580159cca26601a6296a00755">subscriptionManager</a> ()</td></tr>
-<tr class="memdesc:ac04540c580159cca26601a6296a00755"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a reference to the subscription manager.  <br /></td></tr>
-<tr class="separator:ac04540c580159cca26601a6296a00755"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a975d62ff80dea964b72ba6c02ee66d27" id="r_a975d62ff80dea964b72ba6c02ee66d27"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html">catena::common::IConnectionQueue</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a975d62ff80dea964b72ba6c02ee66d27">connectionQueue</a> () override</td></tr>
+<tr class="memdesc:a975d62ff80dea964b72ba6c02ee66d27"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the ConnectionQueue object.  <br /></td></tr>
+<tr class="separator:a975d62ff80dea964b72ba6c02ee66d27"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab5edbce738e945acf8e9ec25239a6a02" id="r_ab5edbce738e945acf8e9ec25239a6a02"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html">catena::common::ISubscriptionManager</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#ab5edbce738e945acf8e9ec25239a6a02">subscriptionManager</a> () override</td></tr>
+<tr class="memdesc:ab5edbce738e945acf8e9ec25239a6a02"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a reference to the subscription manager.  <br /></td></tr>
+<tr class="separator:ab5edbce738e945acf8e9ec25239a6a02"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classcatena_1_1REST_1_1ISocketReader"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classcatena_1_1REST_1_1ISocketReader')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">catena::REST::ISocketReader</a></td></tr>
 <tr class="memitem:a7303b75aaf4212c50164ef24037f7b8f inherit pub_methods_classcatena_1_1REST_1_1ISocketReader" id="r_a7303b75aaf4212c50164ef24037f7b8f"><td class="memItemLeft" align="right" valign="top">
 &#160;</td><td class="memItemRight" valign="bottom"><b>ISocketReader</b> (const <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;)=default</td></tr>
@@ -249,6 +252,42 @@ Public Member Functions</h2></td></tr>
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1SocketReader_a62c9b62d7b47d7d7d709e1304c130204_cgraph.svg" width="474" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+
+</div>
+</div>
+<a id="a975d62ff80dea964b72ba6c02ee66d27" name="a975d62ff80dea964b72ba6c02ee66d27"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a975d62ff80dea964b72ba6c02ee66d27">&#9670;&#160;</a></span>connectionQueue()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html">catena::common::IConnectionQueue</a> &amp; catena::REST::SocketReader::connectionQueue </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns the ConnectionQueue object. </p>
+
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a8ef7e54d83b6d1f95bf80797ab230411">catena::REST::ISocketReader</a>.</p>
+
+<p class="reference">References <a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html#af5e84f39b5b0bcffbde6bd48b57f4777">catena::REST::ICatenaServiceImpl::connectionQueue()</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1SocketReader_a975d62ff80dea964b72ba6c02ee66d27_cgraph.svg" width="474" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
@@ -687,8 +726,8 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
-<a id="ac04540c580159cca26601a6296a00755" name="ac04540c580159cca26601a6296a00755"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac04540c580159cca26601a6296a00755">&#9670;&#160;</a></span>subscriptionManager()</h2>
+<a id="ab5edbce738e945acf8e9ec25239a6a02" name="ab5edbce738e945acf8e9ec25239a6a02"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab5edbce738e945acf8e9ec25239a6a02">&#9670;&#160;</a></span>subscriptionManager()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -705,7 +744,7 @@ Here is the call graph for this function:</div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -718,7 +757,7 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1SocketReader_ac04540c580159cca26601a6296a00755_cgraph.svg" width="474" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1SocketReader_ab5edbce738e945acf8e9ec25239a6a02_cgraph.svg" width="474" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>

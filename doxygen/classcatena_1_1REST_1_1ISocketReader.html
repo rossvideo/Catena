@@ -166,6 +166,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a2f5c47bbccfa97b9333eab154844ea84" id="r_a2f5c47bbccfa97b9333eab154844ea84"><td class="memItemLeft" align="right" valign="top">virtual const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a2f5c47bbccfa97b9333eab154844ea84">EOPath</a> () const =0</td></tr>
 <tr class="memdesc:a2f5c47bbccfa97b9333eab154844ea84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the path to the external object.  <br /></td></tr>
 <tr class="separator:a2f5c47bbccfa97b9333eab154844ea84"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8ef7e54d83b6d1f95bf80797ab230411" id="r_a8ef7e54d83b6d1f95bf80797ab230411"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html">catena::common::IConnectionQueue</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a8ef7e54d83b6d1f95bf80797ab230411">connectionQueue</a> ()=0</td></tr>
+<tr class="memdesc:a8ef7e54d83b6d1f95bf80797ab230411"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the ConnectionQueue object.  <br /></td></tr>
+<tr class="separator:a8ef7e54d83b6d1f95bf80797ab230411"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab66c129769bb29be59a6c0e04fbf287d" id="r_ab66c129769bb29be59a6c0e04fbf287d"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html">catena::common::ISubscriptionManager</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#ab66c129769bb29be59a6c0e04fbf287d">subscriptionManager</a> ()=0</td></tr>
 <tr class="memdesc:ab66c129769bb29be59a6c0e04fbf287d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a reference to the subscription manager.  <br /></td></tr>
 <tr class="separator:ab66c129769bb29be59a6c0e04fbf287d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -200,6 +203,35 @@ Public Member Functions</h2></td></tr>
 <p>Returns true if authorization is enabled. </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a62c9b62d7b47d7d7d709e1304c130204">catena::REST::SocketReader</a>.</p>
+
+</div>
+</div>
+<a id="a8ef7e54d83b6d1f95bf80797ab230411" name="a8ef7e54d83b6d1f95bf80797ab230411"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8ef7e54d83b6d1f95bf80797ab230411">&#9670;&#160;</a></span>connectionQueue()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual <a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html">catena::common::IConnectionQueue</a> &amp; catena::REST::ISocketReader::connectionQueue </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns the ConnectionQueue object. </p>
+
+<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a975d62ff80dea964b72ba6c02ee66d27">catena::REST::SocketReader</a>.</p>
 
 </div>
 </div>
@@ -655,7 +687,7 @@ Public Member Functions</h2></td></tr>
 
 <p>Returns a reference to the subscription manager. </p>
 
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketReader.html#ac04540c580159cca26601a6296a00755">catena::REST::SocketReader</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketReader.html#ab5edbce738e945acf8e9ec25239a6a02">catena::REST::SocketReader</a>.</p>
 
 </div>
 </div>
