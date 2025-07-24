@@ -6,6 +6,16 @@
 <!-- Title: catena::common::IParamDescriptor::defineCommand Pages: 1 -->
 <svg width="390pt" height="38pt"
  viewBox="0.00 0.00 390.00 38.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<svg id="main" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" onload="init(evt)">
+<style type="text/css"><![CDATA[
+.node, .edge {opacity: 0.7;}
+.node.selected, .edge.selected {opacity: 1;}
+.edge:hover path { stroke: red; }
+.edge:hover polygon { stroke: red; fill: red; }
+]]></style>
+<script type="application/ecmascript" xlink:href="svg.min.js"/>
+<svg id="graph" class="graph">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 34)">
 <title>catena::common::IParamDescriptor::defineCommand</title>
 <!-- Node1 -->
@@ -21,7 +31,7 @@
 <!-- Node2 -->
 <g id="Node000002" class="node">
 <title>Node2</title>
-<g id="a_Node000002"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#ab34bf2ddcb69261faa8a91e9210462bc" target="_top" xlink:title="define the command implementation">
+<g id="a_Node000002"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#a9aff72ff83ca4655a9dde696beaa180c" target="_top" xlink:title="define the command implementation">
 <polygon fill="white" stroke="#666666" points="158,-30 0,-30 0,0 158,0 158,-30"/>
 <text text-anchor="start" x="8" y="-18" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::ParamWith</text>
 <text text-anchor="middle" x="79" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">Value::defineCommand</text>
@@ -38,4 +48,19 @@
 </g>
 </g>
 </g>
+</svg>
+</svg>
+
+<style type='text/css'>
+<![CDATA[
+[data-mouse-over-selected='false'] { opacity: 0.7; }
+[data-mouse-over-selected='true']  { opacity: 1.0; }
+]]>
+</style>
+<script type="application/ecmascript"><![CDATA[
+document.addEventListener('DOMContentLoaded', (event) => {
+  highlightEdges();
+  highlightAdjacentNodes();
+});
+]]></script>
 </svg>

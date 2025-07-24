@@ -114,12 +114,12 @@ Collaboration diagram for catena::REST::SocketReader:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a56b142a36d84d4cc51625a8a455131e4" id="r_a56b142a36d84d4cc51625a8a455131e4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a56b142a36d84d4cc51625a8a455131e4">SocketReader</a> (<a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html">catena::common::ISubscriptionManager</a> &amp;subscriptionManager, const std::string &amp;<a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a01e040f166589c9c4f26b0bc94cb9bb1">EOPath</a>=&quot;&quot;)</td></tr>
-<tr class="memdesc:a56b142a36d84d4cc51625a8a455131e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1REST_1_1SocketReader.html" title="Helper class used to read from a socket using boost.">SocketReader</a> class.  <br /></td></tr>
-<tr class="separator:a56b142a36d84d4cc51625a8a455131e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a706a463ec32c41305a1c8da137a7ce70" id="r_a706a463ec32c41305a1c8da137a7ce70"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a706a463ec32c41305a1c8da137a7ce70">read</a> (tcp::socket &amp;socket, bool authz=false, const std::string &amp;version=&quot;v1&quot;) override</td></tr>
-<tr class="memdesc:a706a463ec32c41305a1c8da137a7ce70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Populates variables using information read from the inputted socket.  <br /></td></tr>
-<tr class="separator:a706a463ec32c41305a1c8da137a7ce70"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af761ced87c444fdda0915767e52d6be4" id="r_af761ced87c444fdda0915767e52d6be4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#af761ced87c444fdda0915767e52d6be4">SocketReader</a> (<a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html">ICatenaServiceImpl</a> *<a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a15a8f38653938f39da40d2e035f37d78">service</a>)</td></tr>
+<tr class="memdesc:af761ced87c444fdda0915767e52d6be4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1REST_1_1SocketReader.html" title="Helper class used to read from a socket using boost.">SocketReader</a> class.  <br /></td></tr>
+<tr class="separator:af761ced87c444fdda0915767e52d6be4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a3de487f64c2717545da55ec979cba3" id="r_a6a3de487f64c2717545da55ec979cba3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a6a3de487f64c2717545da55ec979cba3">read</a> (tcp::socket &amp;socket) override</td></tr>
+<tr class="memdesc:a6a3de487f64c2717545da55ec979cba3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Populates variables using information read from the inputted socket.  <br /></td></tr>
+<tr class="separator:a6a3de487f64c2717545da55ec979cba3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a240084c7a4f8fd879ffdc850efca6e70" id="r_a240084c7a4f8fd879ffdc850efca6e70"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacecatena_1_1REST.html#a41324383cc28492c334974a51fe45b54">RESTMethod</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a240084c7a4f8fd879ffdc850efca6e70">method</a> () const override</td></tr>
 <tr class="memdesc:a240084c7a4f8fd879ffdc850efca6e70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the HTTP method of the request.  <br /></td></tr>
 <tr class="separator:a240084c7a4f8fd879ffdc850efca6e70"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -150,18 +150,21 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a0b4655c8cf81045dd065ec6d1dca661f" id="r_a0b4655c8cf81045dd065ec6d1dca661f"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a0b4655c8cf81045dd065ec6d1dca661f">jsonBody</a> () const override</td></tr>
 <tr class="memdesc:a0b4655c8cf81045dd065ec6d1dca661f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the json body of the request, which may be empty.  <br /></td></tr>
 <tr class="separator:a0b4655c8cf81045dd065ec6d1dca661f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aabbd3d3f520c27d3e7bc579a60d331eb" id="r_aabbd3d3f520c27d3e7bc579a60d331eb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html">catena::common::ISubscriptionManager</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#aabbd3d3f520c27d3e7bc579a60d331eb">getSubscriptionManager</a> () override</td></tr>
-<tr class="memdesc:aabbd3d3f520c27d3e7bc579a60d331eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a reference to the subscription manager.  <br /></td></tr>
-<tr class="separator:aabbd3d3f520c27d3e7bc579a60d331eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a62c9b62d7b47d7d7d709e1304c130204" id="r_a62c9b62d7b47d7d7d709e1304c130204"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a62c9b62d7b47d7d7d709e1304c130204">authorizationEnabled</a> () const override</td></tr>
-<tr class="memdesc:a62c9b62d7b47d7d7d709e1304c130204"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if authorization is enabled.  <br /></td></tr>
-<tr class="separator:a62c9b62d7b47d7d7d709e1304c130204"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab8e5d7003da0cf636e385a81a72a41cb" id="r_ab8e5d7003da0cf636e385a81a72a41cb"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#ab8e5d7003da0cf636e385a81a72a41cb">stream</a> () const override</td></tr>
 <tr class="memdesc:ab8e5d7003da0cf636e385a81a72a41cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if the client wants a stream response.  <br /></td></tr>
 <tr class="separator:ab8e5d7003da0cf636e385a81a72a41cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15a8f38653938f39da40d2e035f37d78" id="r_a15a8f38653938f39da40d2e035f37d78"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html">ICatenaServiceImpl</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a15a8f38653938f39da40d2e035f37d78">service</a> () override</td></tr>
+<tr class="memdesc:a15a8f38653938f39da40d2e035f37d78"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a pointer to the <a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html" title="Implements Catena REST API request handlers.">CatenaServiceImpl</a>.  <br /></td></tr>
+<tr class="separator:a15a8f38653938f39da40d2e035f37d78"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a62c9b62d7b47d7d7d709e1304c130204" id="r_a62c9b62d7b47d7d7d709e1304c130204"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a62c9b62d7b47d7d7d709e1304c130204">authorizationEnabled</a> () const override</td></tr>
+<tr class="memdesc:a62c9b62d7b47d7d7d709e1304c130204"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if authorization is enabled.  <br /></td></tr>
+<tr class="separator:a62c9b62d7b47d7d7d709e1304c130204"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01e040f166589c9c4f26b0bc94cb9bb1" id="r_a01e040f166589c9c4f26b0bc94cb9bb1"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a01e040f166589c9c4f26b0bc94cb9bb1">EOPath</a> () const override</td></tr>
 <tr class="memdesc:a01e040f166589c9c4f26b0bc94cb9bb1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the path to the external object.  <br /></td></tr>
 <tr class="separator:a01e040f166589c9c4f26b0bc94cb9bb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac04540c580159cca26601a6296a00755" id="r_ac04540c580159cca26601a6296a00755"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html">catena::common::ISubscriptionManager</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#ac04540c580159cca26601a6296a00755">subscriptionManager</a> ()</td></tr>
+<tr class="memdesc:ac04540c580159cca26601a6296a00755"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a reference to the subscription manager.  <br /></td></tr>
+<tr class="separator:ac04540c580159cca26601a6296a00755"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classcatena_1_1REST_1_1ISocketReader"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classcatena_1_1REST_1_1ISocketReader')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">catena::REST::ISocketReader</a></td></tr>
 <tr class="memitem:a7303b75aaf4212c50164ef24037f7b8f inherit pub_methods_classcatena_1_1REST_1_1ISocketReader" id="r_a7303b75aaf4212c50164ef24037f7b8f"><td class="memItemLeft" align="right" valign="top">
 &#160;</td><td class="memItemRight" valign="bottom"><b>ISocketReader</b> (const <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;)=default</td></tr>
@@ -179,37 +182,34 @@ Public Member Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Helper class used to read from a socket using boost. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a56b142a36d84d4cc51625a8a455131e4" name="a56b142a36d84d4cc51625a8a455131e4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a56b142a36d84d4cc51625a8a455131e4">&#9670;&#160;</a></span>SocketReader()</h2>
+<a id="af761ced87c444fdda0915767e52d6be4" name="af761ced87c444fdda0915767e52d6be4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af761ced87c444fdda0915767e52d6be4">&#9670;&#160;</a></span>SocketReader()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">catena::REST::SocketReader::SocketReader </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html">catena::common::ISubscriptionManager</a> &amp;&#160;</td>
-          <td class="paramname"><em>subscriptionManager</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html">ICatenaServiceImpl</a> *&#160;</td>
+          <td class="paramname"><em>service</em></td><td>)</td>
           <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>EOPath</em> = <code>&quot;&quot;</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 <p>Constructor for the <a class="el" href="classcatena_1_1REST_1_1SocketReader.html" title="Helper class used to read from a socket using boost.">SocketReader</a> class. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">subscriptionManager</td><td>The subscription manager to use. </td></tr>
-    <tr><td class="paramname">EOPath</td><td>The path to external objects </td></tr>
+    <tr><td class="paramname">service</td><td>Pointer to the <a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html" title="Implements Catena REST API request handlers.">CatenaServiceImpl</a>. </td></tr>
   </table>
   </dd>
 </dl>
@@ -243,6 +243,13 @@ Public Member Functions</h2></td></tr>
 <p>Returns true if authorization is enabled. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a0f8e7c0c63daa9870a48ce65c7e579a1">catena::REST::ISocketReader</a>.</p>
+
+<p class="reference">References <a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html#a9be4099229421c0cb9500d25679875eb">catena::REST::ICatenaServiceImpl::authorizationEnabled()</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1SocketReader_a62c9b62d7b47d7d7d709e1304c130204_cgraph.svg" width="474" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
 
 </div>
 </div>
@@ -331,6 +338,13 @@ Public Member Functions</h2></td></tr>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a2f5c47bbccfa97b9333eab154844ea84">catena::REST::ISocketReader</a>.</p>
 
+<p class="reference">References <a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html#a899bf595577f99bebacc2cadebc8c326">catena::REST::ICatenaServiceImpl::EOPath()</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1SocketReader_a01e040f166589c9c4f26b0bc94cb9bb1_cgraph.svg" width="474" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+
 </div>
 </div>
 <a id="a326879171d92d4af9a1f773fc1e9cb81" name="a326879171d92d4af9a1f773fc1e9cb81"></a>
@@ -395,35 +409,6 @@ Public Member Functions</h2></td></tr>
 <p>Returns the fqoid of the asset to make the API call on. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a00e9d4a1d6faf69234a06bd31f1ea784">catena::REST::ISocketReader</a>.</p>
-
-</div>
-</div>
-<a id="aabbd3d3f520c27d3e7bc579a60d331eb" name="aabbd3d3f520c27d3e7bc579a60d331eb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aabbd3d3f520c27d3e7bc579a60d331eb">&#9670;&#160;</a></span>getSubscriptionManager()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html">catena::common::ISubscriptionManager</a> &amp; catena::REST::SocketReader::getSubscriptionManager </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Returns a reference to the subscription manager. </p>
-
-<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a8422aa3d6bb25b6f5d52a28a822c24de">catena::REST::ISocketReader</a>.</p>
 
 </div>
 </div>
@@ -579,8 +564,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a706a463ec32c41305a1c8da137a7ce70" name="a706a463ec32c41305a1c8da137a7ce70"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a706a463ec32c41305a1c8da137a7ce70">&#9670;&#160;</a></span>read()</h2>
+<a id="a6a3de487f64c2717545da55ec979cba3" name="a6a3de487f64c2717545da55ec979cba3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6a3de487f64c2717545da55ec979cba3">&#9670;&#160;</a></span>read()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -592,24 +577,8 @@ Public Member Functions</h2></td></tr>
           <td class="memname">void catena::REST::SocketReader::read </td>
           <td>(</td>
           <td class="paramtype">tcp::socket &amp;&#160;</td>
-          <td class="paramname"><em>socket</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramname"><em>socket</em></td><td>)</td>
           <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>authz</em> = <code>false</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>version</em> = <code>&quot;v1&quot;</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -623,12 +592,40 @@ Public Member Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">socket</td><td>The socket to read from. </td></tr>
-    <tr><td class="paramname">authz</td><td>Flag to indicate if authorization is enabled. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a5ac83c85296cc1ef23d62dd51a409802">catena::REST::ISocketReader</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a4f7f98c4a24dc291fc762f3e5d82e6a0">catena::REST::ISocketReader</a>.</p>
+
+</div>
+</div>
+<a id="a15a8f38653938f39da40d2e035f37d78" name="a15a8f38653938f39da40d2e035f37d78"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a15a8f38653938f39da40d2e035f37d78">&#9670;&#160;</a></span>service()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html">ICatenaServiceImpl</a> * catena::REST::SocketReader::service </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns a pointer to the <a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html" title="Implements Catena REST API request handlers.">CatenaServiceImpl</a>. </p>
+
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#adc58454bb7b52a53a5ee2ad34d571e17">catena::REST::ISocketReader</a>.</p>
 
 </div>
 </div>
@@ -687,6 +684,42 @@ Public Member Functions</h2></td></tr>
 <p>Returns true if the client wants a stream response. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#afa2b511fab5a7b26754671a12d6225e1">catena::REST::ISocketReader</a>.</p>
+
+</div>
+</div>
+<a id="ac04540c580159cca26601a6296a00755" name="ac04540c580159cca26601a6296a00755"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac04540c580159cca26601a6296a00755">&#9670;&#160;</a></span>subscriptionManager()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html">catena::common::ISubscriptionManager</a> &amp; catena::REST::SocketReader::subscriptionManager </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns a reference to the subscription manager. </p>
+
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#ab66c129769bb29be59a6c0e04fbf287d">catena::REST::ISocketReader</a>.</p>
+
+<p class="reference">References <a class="el" href="classcatena_1_1REST_1_1ICatenaServiceImpl.html#a519b675e886d814d85e00ae19dc43d15">catena::REST::ICatenaServiceImpl::subscriptionManager()</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1SocketReader_ac04540c580159cca26601a6296a00755_cgraph.svg" width="474" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
 
 </div>
 </div>
