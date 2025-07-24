@@ -156,8 +156,8 @@ class ParamWithValue : public catena::common::IParam {
 
     /**
      * @brief serialize the parameter value to protobuf if authorized
-     * @param value the protobuf value to serialize to
-     * @param clientScope the client scope
+     * @param value the protobuf object to serialize to
+     * @param authz the authorizer object containing the client's scopes
      */
     catena::exception_with_status toProto(catena::Value& value, Authorizer& authz) const override {
         return catena::common::toProto<T>(value, &value_.get(), descriptor_, authz);
@@ -165,12 +165,17 @@ class ParamWithValue : public catena::common::IParam {
 
     /**
      * @brief serialize the parameter descriptor to protobuf
-     * include both the descriptor and the value
-     * @param param the protobuf value to serialize to
-     * @param clientScope the client scope
+     * includes both the descriptor and the value
+     * @param param the protobuf object to serialize to
+     * @param authz the authorizer object containing the client's scopes
      */
     catena::exception_with_status toProto(catena::Param& param, Authorizer& authz) const override {
-        return catena::common::toProto<T>(*param.mutable_value(), &value_.get(), descriptor_, authz);
+        // toProto checks authz.
+        catena::exception_with_status rc = catena::common::toProto<T>(*param.mutable_value(), &value_.get(), descriptor_, authz);
+        if (rc.status == catena::StatusCode::OK) {
+            descriptor_.toProto(param, authz);
+        }
+        return rc;
     }
 
     /**
