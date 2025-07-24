@@ -48,6 +48,17 @@ namespace common {
  */
 class IConnectionQueue {
   public:
+    IConnectionQueue() = default;
+    virtual ~IConnectionQueue() = default;
+
+    /**
+     * @brief IConnectionQueue does not have move or copy semantics
+     */
+    IConnectionQueue& operator=(IConnectionQueue&&) = delete;
+    IConnectionQueue(IConnectionQueue&&) = delete;
+    IConnectionQueue(const IConnectionQueue&) = delete;
+    IConnectionQueue& operator=(const IConnectionQueue&) = delete;
+
     /**
      * @brief Regesters a Connect CallData object into the Connection priority queue.
      * @param cd The Connect CallData object to register.
