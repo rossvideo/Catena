@@ -40,7 +40,7 @@ CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, std::vector<IDev
     : cq_{cq},
       EOPath_{EOPath}, 
       authorizationEnabled_{authz},
-      maxConnections_{maxConnections} {
+      connectionQueue_{maxConnections} {
     // Adding dms to slotMap.
     for (auto dm : dms) {
         if (dms_.contains(dm->slot())) {
@@ -96,40 +96,6 @@ void CatenaServiceImpl::processEvents() {
                 break;
         }
     }
-}
-
-bool CatenaServiceImpl::registerConnection(catena::common::IConnect* cd) {
-    bool canAdd = false;
-    std::lock_guard<std::mutex> lock(connectionMutex_);
-    // Find the index to insert the new connection based on priority.
-    auto it = std::find_if(connectionQueue_.begin(), connectionQueue_.end(),
-        [cd](const catena::common::IConnect* connection) { return *cd < *connection; });
-    // Based on the iterator, determine if we can add the connection.
-    if (connectionQueue_.size() >= maxConnections_) {
-        if (it != connectionQueue_.begin()) {
-            // Forcefully shutting down lowest priority connection.
-            connectionQueue_.front()->shutdown();
-            connectionQueue_.erase(connectionQueue_.begin());
-            canAdd = true;
-        }
-    } else {
-        canAdd = true;
-    }
-    // Adding the connection if possible.
-    if (canAdd) {
-        connectionQueue_.insert(it, cd);
-    }
-    return canAdd;
-}
-
-void CatenaServiceImpl::deregisterConnection(catena::common::IConnect* cd) {
-    std::lock_guard<std::mutex> lock(connectionMutex_);
-    auto it = std::find_if(connectionQueue_.begin(), connectionQueue_.end(),
-                           [cd](const catena::common::IConnect* i) { return i == cd; });
-    if (it != connectionQueue_.end()) {
-        connectionQueue_.erase(it);
-    }
-    DEBUG_LOG << "Connected users remaining: " << connectionQueue_.size() << '\n';
 }
 
 //Registers current CallData object into the registry

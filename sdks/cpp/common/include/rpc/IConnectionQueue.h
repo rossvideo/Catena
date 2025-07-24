@@ -29,37 +29,37 @@
  */
 
 /**
- * @brief Mock implementation for the gRPC ICatenaServiceImpl class.
- * @author benjamin.whitten@rossvideo.com
- * @date 25/06/26
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @file IConnectionQueue.h
+ * @brief Pure virtual class for the ConnectionQueue object.
+ * @author Ben Whitten (benjamin.whitten@rossvideo.com)
+ * @copyright Copyright (c) 2025 Ross Video
  */
 
 #pragma once
 
-#include <gmock/gmock.h>
-#include <interface/IServiceImpl.h>
-
-using namespace catena::common;
+// common
+#include "IConnect.h"
 
 namespace catena {
-namespace gRPC {
+namespace common {
 
-// Mock implementation for the gRPC ICatenaServiceImpl class.
-class MockServiceImpl : public ICatenaServiceImpl {
+/**
+ * @brief Interface class for the ConnectionQueue object.
+ */
+class IConnectionQueue {
   public:
-    MOCK_METHOD(void, init, (), (override));
-    MOCK_METHOD(void, processEvents, (), (override));
-    MOCK_METHOD(void, shutdownServer, (), (override));
-    MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
-    MOCK_METHOD(ISubscriptionManager&, getSubscriptionManager, (), (override));
-    MOCK_METHOD(grpc::ServerCompletionQueue*, cq, (), (override));
-    MOCK_METHOD(const std::string&, EOPath, (), (override));
-    MOCK_METHOD(IConnectionQueue&, connectionQueue, (), (override));
-    MOCK_METHOD(uint32_t, registrySize, (), (const, override));
-    MOCK_METHOD(void, registerItem, (ICallData* cd), (override));
-    MOCK_METHOD(void, deregisterItem, (ICallData* cd), (override));
+    /**
+     * @brief Regesters a Connect CallData object into the Connection priority queue.
+     * @param cd The Connect CallData object to register.
+     * @return TRUE if successfully registered, FALSE otherwise
+     */
+    virtual bool registerConnection(IConnect* cd) = 0;
+    /**
+     * @brief Deregisters a Connect CallData object into the Connection priority queue.
+     * @param cd The Connect CallData object to deregister.
+     */
+    virtual void deregisterConnection(const IConnect* cd) = 0;
 };
 
-} // namespace gRPC
+} // namespace common
 } // namespace catena

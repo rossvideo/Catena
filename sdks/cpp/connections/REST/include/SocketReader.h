@@ -160,9 +160,13 @@ class SocketReader : public ISocketReader {
      */
     const std::string& EOPath() const override { return service_->EOPath();}
     /**
+     * @brief Returns the ConnectionQueue object.
+     */
+    catena::common::IConnectionQueue& connectionQueue() override { return service_->connectionQueue(); }
+    /**
      * @brief Returns a reference to the subscription manager
      */
-    catena::common::ISubscriptionManager& subscriptionManager() { return service_->subscriptionManager(); }
+    catena::common::ISubscriptionManager& subscriptionManager() override { return service_->subscriptionManager(); }
 
 
   private:

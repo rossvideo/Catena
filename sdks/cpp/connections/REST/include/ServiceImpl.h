@@ -47,6 +47,7 @@
 #include <Enums.h>
 #include <SubscriptionManager.h>
 #include <SharedFlags.h>
+#include <rpc/ConnectionQueue.h>
 
 // REST
 #include <interface/IServiceImpl.h>
@@ -118,16 +119,9 @@ class CatenaServiceImpl : public catena::REST::ICatenaServiceImpl {
      */
     const std::string& EOPath() override { return EOPath_; }
     /**
-     * @brief Regesters a Connect CallData object into the Connection priority queue.
-     * @param cd The Connect CallData object to register.
-     * @return TRUE if successfully registered, FALSE otherwise
+     * @brief Returns the ConnectionQueue object.
      */
-    bool registerConnection(catena::common::IConnect* cd) override;
-    /**
-     * @brief Deregisters a Connect CallData object into the Connection priority queue.
-     * @param cd The Connect CallData object to deregister.
-     */
-    void deregisterConnection(catena::common::IConnect* cd) override;
+    IConnectionQueue& connectionQueue() override { return connectionQueue_; };
 
   private:
     /**
@@ -185,20 +179,9 @@ class CatenaServiceImpl : public catena::REST::ICatenaServiceImpl {
      */
     std::mutex activeRequestMutex_;
     /**
-     * @brief Mutex to protect the connectionQueue 
+     * @brief The connectionQueue object for managing connections to the service
      */
-    std::mutex connectionMutex_;
-    /**
-     * @brief The priority queue for Connect CallData objects.
-     * 
-     * Not an actual priority queue object since individual access is required
-     * for deregistering old connections.
-     */
-    std::vector<catena::common::IConnect*> connectionQueue_;
-    /**
-     * @brief The maximum number of connections allowed to the service.
-     */
-    uint32_t maxConnections_;
+    ConnectionQueue connectionQueue_;
 
     using Router = catena::patterns::GenericFactory<catena::REST::ICallData,
                                                     std::string,

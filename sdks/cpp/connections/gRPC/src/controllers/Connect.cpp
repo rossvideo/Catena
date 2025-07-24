@@ -95,7 +95,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
                 detailLevel_ = req_.detail_level();
                 forceConnection_ = req_.force_connection();
                 initAuthz_(jwsToken_(), service_->authorizationEnabled());
-                if (service_->registerConnection(this)) {
+                if (service_->connectionQueue().registerConnection(this)) {
                     // Connecting to each device in dms_.
                     catena::PushUpdates populatedSlots;
                     for (auto [slot, dm] : dms_) {
@@ -178,7 +178,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
                     }
                 }
             }
-            service_->deregisterConnection(this);
+            service_->connectionQueue().deregisterConnection(this);
             service_->deregisterItem(this);
             break;
         /*

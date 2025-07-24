@@ -42,7 +42,7 @@ CatenaServiceImpl::CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOP
       authorizationEnabled_{authz},
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
       router_{Router::getInstance()},
-      maxConnections_{maxConnections} {
+      connectionQueue_{maxConnections} {
 
     if (authorizationEnabled_) { DEBUG_LOG <<"Authorization enabled."; }
     // Adding dms to slotMap.
@@ -169,40 +169,6 @@ void CatenaServiceImpl::Shutdown() {
     tcp::socket dummySocket(io_context_);
     dummySocket.connect(tcp::endpoint(tcp::v4(), port_));
 };
-
-bool CatenaServiceImpl::registerConnection(catena::common::IConnect* cd) {
-    bool canAdd = false;
-    std::lock_guard<std::mutex> lock(connectionMutex_);
-    // Find the index to insert the new connection based on priority.
-    auto it = std::find_if(connectionQueue_.begin(), connectionQueue_.end(),
-        [cd](const catena::common::IConnect* connection) { return *cd < *connection; });
-    // Based on the iterator, determine if we can add the connection.
-    if (connectionQueue_.size() >= maxConnections_) {
-        if (it != connectionQueue_.begin()) {
-            // Forcefully shutting down lowest priority connection.
-            connectionQueue_.front()->shutdown();
-            connectionQueue_.erase(connectionQueue_.begin());
-            canAdd = true;
-        }
-    } else {
-        canAdd = true;
-    }
-    // Adding the connection if possible.
-    if (canAdd) {
-        connectionQueue_.insert(it, cd);
-    }
-    return canAdd;
-}
-
-void CatenaServiceImpl::deregisterConnection(catena::common::IConnect* cd) {
-    std::lock_guard<std::mutex> lock(connectionMutex_);
-    auto it = std::find_if(connectionQueue_.begin(), connectionQueue_.end(),
-                           [cd](const catena::common::IConnect* i) { return i == cd; });
-    if (it != connectionQueue_.end()) {
-        connectionQueue_.erase(it);
-    }
-    DEBUG_LOG << "Connected users remaining: " << connectionQueue_.size() << '\n';
-}
 
 // (UNUSED)
 // GCOVR_EXCL_START

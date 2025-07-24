@@ -67,6 +67,7 @@
 #include <Authorization.h>
 #include <SharedFlags.h>
 #include <SubscriptionManager.h>
+#include <rpc/ConnectionQueue.h>
 
 // std
 #include <iostream>
@@ -138,16 +139,9 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      */
     const std::string& EOPath() override { return EOPath_; }
     /**
-     * @brief Regesters a Connect CallData object into the Connection priority queue.
-     * @param cd The Connect CallData object to register.
-     * @return TRUE if successfully registered, FALSE otherwise
+     * @brief Returns the ConnectionQueue object.
      */
-    bool registerConnection(catena::common::IConnect* cd) override;
-    /**
-     * @brief Deregisters a Connect CallData object into the Connection priority queue.
-     * @param cd The Connect CallData object to deregister.
-     */
-    void deregisterConnection(catena::common::IConnect* cd) override;
+    IConnectionQueue& connectionQueue() override { return connectionQueue_; };
     /**
      * @brief Returns the size of the registry.
      */
@@ -198,20 +192,9 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      */
     catena::common::SubscriptionManager subscriptionManager_;
     /**
-     * @brief Mutex to protect the connectionQueue 
+     * @brief The connectionQueue object for managing connections to the service
      */
-    std::mutex connectionMutex_;
-    /**
-     * @brief The priority queue for Connect CallData objects.
-     * 
-     * Not an actual priority queue object since individual access is required
-     * for deregistering old connections.
-     */
-    std::vector<catena::common::IConnect*> connectionQueue_;
-    /**
-     * @brief The maximum number of connections allowed to the service.
-     */
-    uint32_t maxConnections_;
+    ConnectionQueue connectionQueue_;
 };
 
 }; // namespace gRPC

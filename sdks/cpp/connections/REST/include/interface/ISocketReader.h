@@ -44,6 +44,7 @@ using boost::asio::ip::tcp;
 
 //common
 #include <ISubscriptionManager.h>
+#include <rpc/IConnectionQueue.h>
 
 //REST
 #include "interface/IServiceImpl.h"
@@ -142,6 +143,10 @@ class ISocketReader {
      * @brief Returns the path to the external object.
      */
     virtual const std::string& EOPath() const = 0;
+    /**
+     * @brief Returns the ConnectionQueue object.
+     */
+    virtual catena::common::IConnectionQueue& connectionQueue() = 0;
     /**
      * @brief Returns a reference to the subscription manager
      */

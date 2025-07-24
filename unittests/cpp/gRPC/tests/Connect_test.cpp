@@ -39,6 +39,7 @@
 #include "MockParam.h"
 #include "MockSubscriptionManager.h"
 #include "MockLanguagePack.h"
+#include "MockConnectionQueue.h"
 #include "GRPCTest.h"
 
 // gRPC
@@ -52,8 +53,9 @@ class gRPCConnectTests : public GRPCTest {
   protected:
     gRPCConnectTests() {
         expRc_ = catena::exception_with_status("", catena::StatusCode::CANCELLED);
-        EXPECT_CALL(service_, registerConnection(testing::_)).WillRepeatedly(testing::Return(true));
-        EXPECT_CALL(service_, deregisterConnection(testing::_)).WillRepeatedly(testing::Return());
+        EXPECT_CALL(service_, connectionQueue()).WillRepeatedly(testing::ReturnRef(connectionQueue_));
+        EXPECT_CALL(connectionQueue_, registerConnection(testing::_)).WillRepeatedly(testing::Return(true));
+        EXPECT_CALL(connectionQueue_, deregisterConnection(testing::_)).WillRepeatedly(testing::Return());
         // dm0_ signals
         EXPECT_CALL(dm0_, getValueSetByClient()).WillRepeatedly(testing::ReturnRef(valueSetByClient0));
         EXPECT_CALL(dm0_, getValueSetByServer()).WillRepeatedly(testing::ReturnRef(valueSetByServer0));
@@ -68,7 +70,7 @@ class gRPCConnectTests : public GRPCTest {
      * Creates an Connect handler object.
      */
     void makeOne() override {
-        EXPECT_CALL(service_, getSubscriptionManager()).WillRepeatedly(testing::ReturnRef(subManager));
+        EXPECT_CALL(service_, getSubscriptionManager()).WillRepeatedly(testing::ReturnRef(subManager_));
         new catena::gRPC::Connect(&service_, dms_, true);
     }
     /*
@@ -229,7 +231,8 @@ class gRPCConnectTests : public GRPCTest {
     std::vector<catena::PushUpdates> expVals_;
     bool respond_ = false;
 
-    MockSubscriptionManager subManager;
+    MockSubscriptionManager subManager_;
+    MockConnectionQueue connectionQueue_;
     std::unique_ptr<StreamReader> streamReader_ = nullptr;
 
     // Test signals.
@@ -254,9 +257,9 @@ TEST_F(gRPCConnectTests, Connect_Create) {
  */
 TEST_F(gRPCConnectTests, Connect_ConnectDisconnect) {
     // Setting expectations.
-    EXPECT_CALL(service_, registerConnection(testing::_)).Times(1).WillOnce(testing::Return(true));
+    EXPECT_CALL(connectionQueue_, registerConnection(testing::_)).Times(1).WillOnce(testing::Return(true));
     // Once for main call, once for the async call.
-    EXPECT_CALL(service_, deregisterConnection(testing::_)).Times(2).WillOnce(testing::Return());
+    EXPECT_CALL(connectionQueue_, deregisterConnection(testing::_)).Times(2).WillOnce(testing::Return());
     // Making call
     streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
     streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
@@ -446,7 +449,7 @@ TEST_F(gRPCConnectTests, Connect_AuthzJWSNotFound) {
 TEST_F(gRPCConnectTests, Connect_RegisterConnectionFailure) {
     expRc_ = catena::exception_with_status("Too many connections to service", catena::StatusCode::RESOURCE_EXHAUSTED);
     // Setting expectations
-    EXPECT_CALL(service_, registerConnection(testing::_)).WillOnce(testing::Return(false));
+    EXPECT_CALL(connectionQueue_, registerConnection(testing::_)).WillOnce(testing::Return(false));
     // Making call
     streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
     streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);

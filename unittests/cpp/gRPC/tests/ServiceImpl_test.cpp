@@ -143,37 +143,15 @@ TEST_F(gRPCServiceImplTests, ServiceImpl_CreateDestroy) {
     ASSERT_TRUE(service_);
     EXPECT_EQ(service_->authorizationEnabled(), authzEnabled_);
     EXPECT_EQ(service_->EOPath(), EOPath_);
+    EXPECT_NO_THROW(service_->getSubscriptionManager());
+    EXPECT_NO_THROW(service_->connectionQueue());
     // Give it time to set up and timeout once.
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     service_->shutdownServer(); // Does nothing.
 }
 
 /*
- * TEST 2 - Test serviceImpl's ability to register and derigister connections.
- */
-TEST_F(gRPCServiceImplTests, ServiceImpl_ManageConnections) {
-    // Mocking 2 connecitons with A < B.
-    MockConnect connectionA, connectionB;
-    bool shutdownA = false;
-    bool shutdownB = false;
-    EXPECT_CALL(connectionA, shutdown()).WillRepeatedly(testing::Invoke([&shutdownA]() { shutdownA = true; }));
-    EXPECT_CALL(connectionA, lessThan(testing::_)).WillRepeatedly(testing::Return(true));
-    EXPECT_CALL(connectionB, shutdown()).WillRepeatedly(testing::Invoke([&shutdownB]() { shutdownB = true; }));
-    EXPECT_CALL(connectionB, lessThan(testing::_)).WillRepeatedly(testing::Return(false));
-    // Registering connection A.
-    EXPECT_TRUE(service_->registerConnection(&connectionA)) << "Service should be able to register a connection.";
-    // Setting connection B to higher prioirity and registering.
-    EXPECT_TRUE(service_->registerConnection(&connectionB)) << "Service should be able to register a higher priority connection.";
-    EXPECT_TRUE(shutdownA) << "Lower priority connections should be shutdown when a higher priority connection is registered.";
-    service_->deregisterConnection(&connectionA);
-    // Trying to re-add connection A should fail.
-    EXPECT_FALSE(service_->registerConnection(&connectionA)) << "Service should not be able to register a lower priority connection";
-    EXPECT_FALSE(shutdownB) << "Higher priority connection should not be shutdown when a lower priority connection tries to connect.";
-    service_->deregisterConnection(&connectionB);
-}
-
-/*
- * TEST 3 - Creating a REST CatenaServiceImpl.
+ * TEST 2 - Creating a REST CatenaServiceImpl.
  *
  * This is not under the fixture because setting up a gRPC server is time
  * consuming and not needed.

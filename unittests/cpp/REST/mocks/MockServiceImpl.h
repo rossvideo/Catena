@@ -54,8 +54,7 @@ class MockServiceImpl : public ICatenaServiceImpl {
     MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
     MOCK_METHOD(ISubscriptionManager&, subscriptionManager, (), (override));
     MOCK_METHOD(const std::string&, EOPath, (), (override));
-    MOCK_METHOD(bool, registerConnection, (catena::common::IConnect* cd), (override));
-    MOCK_METHOD(void, deregisterConnection, (catena::common::IConnect* cd), (override));
+    MOCK_METHOD(IConnectionQueue&, connectionQueue, (), (override));
 };
 
 } // namespace REST

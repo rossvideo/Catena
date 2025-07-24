@@ -41,7 +41,7 @@
 #include "MockSubscriptionManager.h"
 #include "MockParam.h"
 #include "MockLanguagePack.h"
-#include "MockServiceImpl.h"
+#include "MockConnectionQueue.h"
 #include "CommonTestHelpers.h"
 
 // REST
@@ -72,9 +72,9 @@ protected:
         EXPECT_CALL(context_, hasField("force_connection"))
             .WillRepeatedly(testing::Return(false));
         // Connection registration and deregistration
-        EXPECT_CALL(context_, service()).WillRepeatedly(testing::Return(&service_));
-        EXPECT_CALL(service_, registerConnection(testing::_)).WillRepeatedly(testing::Return(true)); // Should always call
-        EXPECT_CALL(service_, deregisterConnection(testing::_)).Times(1).WillOnce(testing::Return()); // Should always call
+        EXPECT_CALL(context_, connectionQueue()).WillRepeatedly(testing::ReturnRef(connectionQueue_));
+        EXPECT_CALL(connectionQueue_, registerConnection(testing::_)).WillRepeatedly(testing::Return(true)); // Should always call
+        EXPECT_CALL(connectionQueue_, deregisterConnection(testing::_)).Times(1).WillOnce(testing::Return()); // Should always call
         // dm0_ signals
         EXPECT_CALL(dm0_, getValueSetByClient()).WillRepeatedly(testing::ReturnRef(valueSetByClient0));
         EXPECT_CALL(dm0_, getValueSetByServer()).WillRepeatedly(testing::ReturnRef(valueSetByServer0));
@@ -142,7 +142,7 @@ protected:
     }
 
     MockSubscriptionManager subManager_;
-    MockServiceImpl service_;
+    MockConnectionQueue connectionQueue_;
     std::string userAgent_ = "test_agent";
     std::string paramOid_ = "test_param";
 
@@ -292,7 +292,7 @@ TEST_F(RESTConnectTest, Connect_HandlesLanguage) {
 // Test 3.1: Test registration failure
 TEST_F(RESTConnectTest, Connect_RegisterConnectionFailure) {
     expRc_ = catena::exception_with_status("Too many connections to service", catena::StatusCode::RESOURCE_EXHAUSTED);
-    EXPECT_CALL(service_, registerConnection(testing::_)).WillOnce(testing::Return(false));
+    EXPECT_CALL(connectionQueue_, registerConnection(testing::_)).WillOnce(testing::Return(false));
 
     // Run proceed() in a separate thread since it blocks
     std::thread proceed_thread([this]() {

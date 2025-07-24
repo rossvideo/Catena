@@ -39,7 +39,7 @@
 
 // common
 #include <ISubscriptionManager.h>
-#include <rpc/IConnect.h>
+#include <rpc/IConnectionQueue.h>
 
 // gRPC/interface
 #include "ICallData.h"
@@ -90,16 +90,9 @@ class ICatenaServiceImpl : public catena::CatenaService::AsyncService {
      */
     virtual const std::string& EOPath() = 0;
     /**
-     * @brief Regesters a Connect CallData object into the Connection priority queue.
-     * @param cd The Connect CallData object to register.
-     * @return TRUE if successfully registered, FALSE otherwise.
+     * @brief Returns the ConnectionQueue object.
      */
-    virtual bool registerConnection(catena::common::IConnect* cd) = 0;
-    /**
-     * @brief Deregisters a Connect CallData object into the Connection priority queue.
-     * @param cd The Connect CallData object to deregister.
-     */
-    virtual void deregisterConnection(catena::common::IConnect* cd) = 0;
+    virtual IConnectionQueue& connectionQueue() = 0;
     /**
      * @brief Returns the size of the registry.
      */

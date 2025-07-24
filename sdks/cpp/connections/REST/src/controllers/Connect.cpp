@@ -28,7 +28,7 @@ catena::REST::Connect::~Connect() {
             }
         }
     }
-    context_.service()->deregisterConnection(this);
+    context_.connectionQueue().deregisterConnection(this);
 }
 
 void catena::REST::Connect::proceed() {
@@ -43,7 +43,7 @@ void catena::REST::Connect::proceed() {
         userAgent_ = context_.fields("user_agent");
         forceConnection_ = context_.hasField("force_connection");
         initAuthz_(context_.jwsToken(), context_.authorizationEnabled());
-        if (context_.service()->registerConnection(this)) {
+        if (context_.connectionQueue().registerConnection(this)) {
             // Connecting to each device in dms_.
             catena::PushUpdates populatedSlots;
             for (auto [slot, dm] : dms_) {
