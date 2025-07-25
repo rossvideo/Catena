@@ -131,9 +131,9 @@
                           "struct_value": {
                             "fields": {
                               "response": {"int32_value": 10},
-                              "frequency": {"float32_value": 1},
-                              "gain": {"float32_value": 0},
-                              "q_factor": {"float32_value": 0}
+                              "frequency": {"float32_value": 0.8},
+                              "gain": {"float32_value": 2.5},
+                              "q_factor": {"float32_value": 8.4}
                             }
                           }
                         },
@@ -141,9 +141,9 @@
                           "struct_value": {
                             "fields": {
                               "response": {"int32_value": 20},
-                              "frequency": {"float32_value": 2},
-                              "gain": {"float32_value": 0},
-                              "q_factor": {"float32_value": 0}
+                              "frequency": {"float32_value": 4.7},
+                              "gain": {"float32_value": 3.7},
+                              "q_factor": {"float32_value": 5.6}
                             }
                           }
                         }
@@ -164,9 +164,9 @@
                           "struct_value": {
                             "fields": {
                               "response": {"int32_value": 30},
-                              "frequency": {"float32_value": 3},
-                              "gain": {"float32_value": 0},
-                              "q_factor": {"float32_value": 0}
+                              "frequency": {"float32_value": 0.8},
+                              "gain": {"float32_value": 2.5},
+                              "q_factor": {"float32_value": 9.3}
                             }
                           }
                         },
@@ -174,9 +174,9 @@
                           "struct_value": {
                             "fields": {
                               "response": {"int32_value": 40},
-                              "frequency": {"float32_value": 4},
-                              "gain": {"float32_value": 0},
-                              "q_factor": {"float32_value": 0}
+                              "frequency": {"float32_value": 1.9},
+                              "gain": {"float32_value": 0.5},
+                              "q_factor": {"float32_value": 1.2}
                             }
                           }
                         }
@@ -197,9 +197,9 @@
                           "struct_value": {
                             "fields": {
                               "response": {"int32_value": 50},
-                              "frequency": {"float32_value": 5},
-                              "gain": {"float32_value": 0},
-                              "q_factor": {"float32_value": 0}
+                              "frequency": {"float32_value": 1.1},
+                              "gain": {"float32_value": 3.8},
+                              "q_factor": {"float32_value": 0.9}
                             }
                           }
                         },
@@ -207,9 +207,9 @@
                           "struct_value": {
                             "fields": {
                               "response": {"int32_value": 60},
-                              "frequency": {"float32_value": 6},
-                              "gain": {"float32_value": 0},
-                              "q_factor": {"float32_value": 0}
+                              "frequency": {"float32_value": 4.2},
+                              "gain": {"float32_value": 4.6},
+                              "q_factor": {"float32_value": 0.3}
                             }
                           }
                         }
@@ -230,9 +230,9 @@
                           "struct_value": {
                             "fields": {
                               "response": {"int32_value": 70},
-                              "frequency": {"float32_value": 7},
-                              "gain": {"float32_value": 0},
-                              "q_factor": {"float32_value": 0}
+                              "frequency": {"float32_value": 1.4},
+                              "gain": {"float32_value": 4.5},
+                              "q_factor": {"float32_value": 0.1}
                             }
                           }
                         },
@@ -240,9 +240,9 @@
                           "struct_value": {
                             "fields": {
                               "response": {"int32_value": 80},
-                              "frequency": {"float32_value": 8},
-                              "gain": {"float32_value": 0},
-                              "q_factor": {"float32_value": 0}
+                              "frequency": {"float32_value": 6.1},
+                              "gain": {"float32_value": 4.8},
+                              "q_factor": {"float32_value": 9.9}
                             }
                           }
                         }
@@ -255,6 +255,154 @@
           ]
         }
       }
+    },
+    "eq_graph_0":{
+      "type": "STRING",
+      "name": { "display_strings": { "en": "EQ Graph 0"}},
+      "widget": "eq_graph",
+      "constraint": {
+        "type": "STRING_STRING_CHOICE",
+        "string_string_choice": {
+          "choices": [
+            {
+              "name": { "display_strings": { "en": "audio_deck.0.eq_list.0.frequency" }},
+              "value": "1.f"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.0.eq_list.0.gain" }},
+              "value": "1.g"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.0.eq_list.0.q_factor" }},
+              "value": "1.q"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.0.eq_list.1.frequency" }},
+              "value": "2.f"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.0.eq_list.1.gain" }},
+              "value": "2.g"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.0.eq_list.1.q_factor" }},
+              "value": "2.q"
+            }
+          ]
+        }
+      },
+      "value": { "string_value": "" }
+    },
+    "eq_graph_1":{
+      "type": "STRING",
+      "name": { "display_strings": { "en": "EQ Graph 1"}},
+      "widget": "eq_graph",
+      "constraint": {
+        "type": "STRING_STRING_CHOICE",
+        "string_string_choice": {
+          "choices": [
+            {
+              "name": { "display_strings": { "en": "audio_deck.1.eq_list.0.frequency" }},
+              "value": "1.f"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.1.eq_list.0.gain" }},
+              "value": "1.g"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.1.eq_list.0.q_factor" }},
+              "value": "1.q"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.1.eq_list.1.frequency" }},
+              "value": "2.f"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.1.eq_list.1.gain" }},
+              "value": "2.g"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.1.eq_list.1.q_factor" }},
+              "value": "2.q"
+            }
+          ]
+        }
+      },
+      "value": { "string_value": "" }
+    },
+    "eq_graph_2": {
+      "type": "STRING",
+      "name": { "display_strings": { "en": "EQ Graph 2"}},
+      "widget": "eq_graph",
+      "constraint": {
+        "type": "STRING_STRING_CHOICE",
+        "string_string_choice": {
+          "choices": [
+            {
+              "name": { "display_strings": { "en": "audio_deck.2.eq_list.0.frequency" }},
+              "value": "1.f"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.2.eq_list.0.gain" }},
+              "value": "1.g"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.2.eq_list.0.q_factor" }},
+              "value": "1.q"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.2.eq_list.1.frequency" }},
+              "value": "2.f"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.2.eq_list.1.gain" }},
+              "value": "2.g"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.2.eq_list.1.q_factor" }},
+              "value": "2.q"
+            }
+          ]
+        }
+      },
+      "value": { "string_value": "" }
+    },
+    "eq_graph_3": {
+      "type": "STRING",
+      "name": { "display_strings": { "en": "EQ Graph 3"}},
+      "widget": "eq_graph",
+      "constraint": {
+        "type": "STRING_STRING_CHOICE",
+        "string_string_choice": {
+          "choices": [
+            {
+              "name": { "display_strings": { "en": "audio_deck.3.eq_list.0.frequency" }},
+              "value": "1.f"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.3.eq_list.0.gain" }},
+              "value": "1.g"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.3.eq_list.0.q_factor" }},
+              "value": "1.q"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.3.eq_list.1.frequency" }},
+              "value": "2.f"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.3.eq_list.1.gain" }},
+              "value": "2.g"
+            },
+            {
+              "name": { "display_strings": { "en": "audio_deck.3.eq_list.1.q_factor" }},
+              "value": "2.q"
+            }
+          ]
+        }
+      },
+      "value": { "string_value": "" }
     },
     "effect_settings": {
       "type": "STRUCT_VARIANT",
