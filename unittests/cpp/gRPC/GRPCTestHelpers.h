@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief Helper functions for gRPC API tests
+ * @brief Helper functions for gRPC tests
  * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
  * @date 2025-07-24
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -70,8 +70,7 @@ inline void setupParamInfo(catena::ParamInfoResponse& response, const ParamInfo&
     response.mutable_info()->set_oid(info.oid);
     response.mutable_info()->set_type(info.type);
     if (info.array_length > 0) {
-        // Note: set_array_length might not exist in the protobuf, so we'll skip this for now
-        // response.set_array_length(info.array_length);
+        response.set_array_length(info.array_length);
     }
 }
 

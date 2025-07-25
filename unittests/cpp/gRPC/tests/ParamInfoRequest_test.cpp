@@ -354,4 +354,244 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsThrow) {
     testRPC();
 }
 
+// == MODE 2 TESTS: Get all top-level parameters with recursion ==
+
+// 2.1: Success Case - Get top-level parameters with recursion and deep nesting
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithDeepNesting) {
+    // Define parameter info structs first
+    ParamInfo level1_info{.oid = "level1", .type = catena::ParamType::STRING};
+    ParamInfo level2_info{.oid = "level2", .type = catena::ParamType::STRING};
+    ParamInfo level3_info{.oid = "level3", .type = catena::ParamType::STRING};
+
+    // Create parameter hierarchy using ParamHierarchyBuilder
+    auto level1Desc = ParamHierarchyBuilder::createDescriptor("/" + level1_info.oid);
+    auto level2Desc = ParamHierarchyBuilder::createDescriptor("/" + level1_info.oid + "/" + level2_info.oid);
+    auto level3Desc = ParamHierarchyBuilder::createDescriptor("/" + level1_info.oid + "/" + level2_info.oid + "/" + level3_info.oid);
+
+    // Add children to hierarchy
+    ParamHierarchyBuilder::addChild(level1Desc, level2_info.oid, level2Desc);
+    ParamHierarchyBuilder::addChild(level2Desc, level3_info.oid, level3Desc);
+
+    // Set up OID expectations for each descriptor
+    std::string level1Oid = "/" + level1_info.oid;
+    std::string level2Oid = level1Oid + "/" + level2_info.oid;
+    std::string level3Oid = level2Oid + "/" + level3_info.oid;
+    EXPECT_CALL(*level1Desc.descriptor, getOid()).WillRepeatedly(testing::ReturnRef(level1Oid));
+    EXPECT_CALL(*level2Desc.descriptor, getOid()).WillRepeatedly(testing::ReturnRef(level2Oid));
+    EXPECT_CALL(*level3Desc.descriptor, getOid()).WillRepeatedly(testing::ReturnRef(level3Oid));
+
+    // Create ParamInfo structs
+    ParamInfo level1_info_struct{level1_info.oid, level1_info.type};
+    ParamInfo level2_info_struct{level2_info.oid, level2_info.type};
+    ParamInfo level3_info_struct{level3_info.oid, level3_info.type};
+
+    auto level1 = std::make_unique<MockParam>();
+    setupMockParam(*level1, level1_info_struct, *level1Desc.descriptor);
+
+    auto level2 = std::make_unique<MockParam>();
+    setupMockParam(*level2, level2_info_struct, *level2Desc.descriptor);
+
+    auto level3 = std::make_unique<MockParam>();
+    setupMockParam(*level3, level3_info_struct, *level3Desc.descriptor);
+
+    // Setup top-level params
+    std::vector<std::unique_ptr<IParam>> top_level_params;
+    top_level_params.push_back(std::move(level1));
+
+    // Enable recursion by setting it in the request payload
+    initPayload(0, "", true);
+
+    // Setup mock expectations
+    EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
+        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return std::move(top_level_params);
+        }));
+
+    // Setup mock expectations for getParam to handle child traversal
+    EXPECT_CALL(dm0_, getParam(testing::An<const std::string&>(), testing::An<catena::exception_with_status&>(), testing::An<Authorizer&>()))
+        .WillRepeatedly(testing::Invoke(
+            [&level2, &level3, level2Desc, level3Desc]
+            (const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
+                std::string level2Oid = level2Desc.descriptor->getOid();
+                std::string level3Oid = level3Desc.descriptor->getOid();
+                if (fqoid == level2Oid) {
+                    status = catena::exception_with_status("", catena::StatusCode::OK);
+                    return std::move(level2);
+                } else if (fqoid == level3Oid) {
+                    status = catena::exception_with_status("", catena::StatusCode::OK);
+                    return std::move(level3);
+                }
+                status = catena::exception_with_status("Parameter not found", catena::StatusCode::NOT_FOUND);
+                return nullptr;
+            }
+        ));
+
+    testRPC();
+}
+
+// 2.2: Success Case - Get top-level parameters with recursion and arrays
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursionAndArrays) {
+    // Define parameter info
+    ParamInfo parent_info{
+        .oid = "parent",
+        .type = catena::ParamType::STRING_ARRAY,
+        .array_length = 5
+    };
+    ParamInfo arrayChild_info{
+        .oid = "array_child",
+        .type = catena::ParamType::STRING_ARRAY,
+        .array_length = 3
+    };
+
+    // Build hierarchy using ParamHierarchyBuilder
+    std::string parentOid = "/" + parent_info.oid;
+    std::string childOid = parentOid + "/" + arrayChild_info.oid;
+    auto parentDesc = ParamHierarchyBuilder::createDescriptor(parentOid);
+    auto childDesc = ParamHierarchyBuilder::createDescriptor(childOid);
+    ParamHierarchyBuilder::addChild(parentDesc, arrayChild_info.oid, childDesc);
+
+    // Set up OID expectations for descriptors
+    EXPECT_CALL(*parentDesc.descriptor, getOid()).WillRepeatedly(testing::ReturnRef(parentOid));
+    EXPECT_CALL(*childDesc.descriptor, getOid()).WillRepeatedly(testing::ReturnRef(childOid));
+
+    // Create mock params using helpers
+    auto parentParam = std::make_unique<MockParam>();
+    setupMockParam(*parentParam, parent_info, *parentDesc.descriptor);
+
+    auto arrayChild = std::make_unique<MockParam>();
+    setupMockParam(*arrayChild, arrayChild_info, *childDesc.descriptor);
+
+    // Set up top-level params
+    std::vector<std::unique_ptr<IParam>> top_level_params;
+    top_level_params.push_back(std::move(parentParam));
+
+    // Enable recursion by setting it in the request payload
+    initPayload(0, "", true);
+
+    // Setup mock expectations for getTopLevelParams
+    EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
+        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return std::move(top_level_params);
+        }));
+
+    // Setup mock expectations for getParam to handle child traversal
+    EXPECT_CALL(dm0_, getParam(testing::An<const std::string&>(), testing::An<catena::exception_with_status&>(), testing::An<Authorizer&>()))
+        .WillRepeatedly(testing::Invoke([this, &arrayChild, childOid, arrayChild_info, childDesc]
+            (const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
+                if (fqoid == childOid) {
+                    status = catena::exception_with_status("", catena::StatusCode::OK);
+                    return std::move(arrayChild);
+                }
+                status = catena::exception_with_status("Parameter not found", catena::StatusCode::NOT_FOUND);
+                return nullptr;
+            }));
+
+    testRPC();
+}
+
+// 2.3: Error Case - Get top-level parameters with recursion and error in child processing
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursionError) {
+    expRc_ = catena::exception_with_status("Error processing child parameter", catena::StatusCode::INTERNAL);
+
+    // Define parameter info
+    ParamInfo parent_info{
+        .oid = "parent",
+        .type = catena::ParamType::STRING
+    };
+    ParamInfo errorChild_info{
+        .oid = "error_child",
+        .type = catena::ParamType::STRING,
+        .status = catena::StatusCode::INTERNAL
+    };
+
+    // Build hierarchy using ParamHierarchyBuilder
+    std::string parentOid = "/" + parent_info.oid;
+    std::string childOid = parentOid + "/" + errorChild_info.oid;
+    auto parentDesc = ParamHierarchyBuilder::createDescriptor(parentOid);
+    auto childDesc = ParamHierarchyBuilder::createDescriptor(childOid);
+    ParamHierarchyBuilder::addChild(parentDesc, errorChild_info.oid, childDesc);
+
+    // Set up OID expectations for descriptors
+    EXPECT_CALL(*parentDesc.descriptor, getOid()).WillRepeatedly(testing::ReturnRef(parentOid));
+    EXPECT_CALL(*childDesc.descriptor, getOid()).WillRepeatedly(testing::ReturnRef(childOid));
+
+    // Create ParamInfo structs
+    ParamInfo parent_info_struct{parent_info.oid, parent_info.type};
+    ParamInfo error_child_info_struct{errorChild_info.oid, errorChild_info.type};
+
+    auto parentParam = std::make_unique<MockParam>();
+    setupMockParam(*parentParam, parent_info_struct, *parentDesc.descriptor);
+
+    // For the error child, set up a param that throws in toProto
+    auto errorChild = std::make_unique<MockParam>();
+    setupMockParam(*errorChild, error_child_info_struct, *childDesc.descriptor);
+    EXPECT_CALL(*errorChild, toProto(testing::An<catena::ParamInfoResponse&>(), testing::An<catena::common::Authorizer&>()))
+        .WillOnce(testing::Invoke([](catena::ParamInfoResponse&, catena::common::Authorizer&) -> catena::exception_with_status {
+            throw catena::exception_with_status("Error processing child parameter", catena::StatusCode::INTERNAL);
+        }));
+
+    // Set up top-level params
+    std::vector<std::unique_ptr<IParam>> top_level_params;
+    top_level_params.push_back(std::move(parentParam));
+
+    // Enable recursion by setting it in the request payload
+    initPayload(0, "", true);
+
+    // Setup mock expectations for getTopLevelParams
+    EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
+        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return std::move(top_level_params);
+        }));
+
+    // Setup mock expectations for getParam to handle child traversal
+    EXPECT_CALL(dm0_, getParam(testing::An<const std::string&>(), testing::An<catena::exception_with_status&>(), testing::An<Authorizer&>()))
+        .WillRepeatedly(testing::Invoke([&errorChild, childOid]
+            (const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
+                if (fqoid == childOid) {
+                    status = catena::exception_with_status("", catena::StatusCode::OK);
+                    return std::move(errorChild);
+                }
+                status = catena::exception_with_status("Parameter not found", catena::StatusCode::NOT_FOUND);
+                return nullptr;
+            }));
+
+    testRPC();
+}
+
+// Test 2.4: Get top-level parameters with error status from getTopLevelParams
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithErrorStatus) {
+    expRc_ = catena::exception_with_status("Error getting parameters", catena::StatusCode::INTERNAL);
+
+    // Enable recursion by setting it in the request payload
+    initPayload(0, "", true);
+
+    // Setup mock expectations
+    EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
+        .WillOnce(testing::Invoke([](catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("Error getting parameters", catena::StatusCode::INTERNAL);
+            return std::vector<std::unique_ptr<IParam>>();
+        }));
+
+    testRPC();
+}
+
+// Test 2.5: Get top-level parameters with empty list and recursion
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithEmptyListAndRecursion) {
+    expRc_ = catena::exception_with_status("No top-level parameters found", catena::StatusCode::NOT_FOUND);
+
+    // Enable recursion by setting it in the request payload
+    initPayload(0, "", true);
+
+    // Setup mock expectations
+    EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
+        .WillOnce(testing::Invoke([](catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return std::vector<std::unique_ptr<IParam>>();
+        }));
+
+    testRPC();
+}
 
