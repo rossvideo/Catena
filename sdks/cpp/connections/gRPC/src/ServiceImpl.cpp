@@ -39,7 +39,8 @@ ABSL_FLAG(uint16_t, port, 6254, "Catena gRPC service port");
 CatenaServiceImpl::CatenaServiceImpl(const ServiceConfig& config)
     : cq_{config.cq},
       EOPath_{config.EOPath}, 
-      authorizationEnabled_{config.authz} {
+      authorizationEnabled_{config.authz},
+      connectionQueue_{config.maxConnections} {
     // Make sure the completion queue is not a nullptr.
     if (!cq_) {
         throw std::runtime_error("Completion queue cannot be a nullptr.");

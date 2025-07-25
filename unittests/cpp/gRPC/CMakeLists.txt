@@ -22,6 +22,7 @@ set(SOURCES
     tests/MultiSetValue_test.cpp
     tests/SetValue_test.cpp
     tests/ServiceImpl_test.cpp
+    tests/Connect_test.cpp
 )	
 
 add_executable(${This} ${SOURCES})	

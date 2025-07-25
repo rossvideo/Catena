@@ -171,6 +171,7 @@ void RunRESTServer() {
         config.EOPath = absl::GetFlag(FLAGS_static_root);
         config.authz = absl::GetFlag(FLAGS_authz);
         config.port = absl::GetFlag(FLAGS_port);
+        config.maxConnections = absl::GetFlag(FLAGS_max_connections);
         
         // Creating and running the REST service.
         CatenaServiceImpl api(config);

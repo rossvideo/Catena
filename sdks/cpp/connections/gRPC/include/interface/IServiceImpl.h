@@ -38,7 +38,8 @@
 #pragma once
 
 // common
-#include <SubscriptionManager.h>
+#include <ISubscriptionManager.h>
+#include <rpc/IConnectionQueue.h>
 
 // gRPC/interface
 #include "ICallData.h"
@@ -88,6 +89,10 @@ class ICatenaServiceImpl : public catena::CatenaService::AsyncService {
      * @brief Returns the EOPath.
      */
     virtual const std::string& EOPath() = 0;
+    /**
+     * @brief Returns the ConnectionQueue object.
+     */
+    virtual IConnectionQueue& connectionQueue() = 0;
     /**
      * @brief Returns the size of the registry.
      */

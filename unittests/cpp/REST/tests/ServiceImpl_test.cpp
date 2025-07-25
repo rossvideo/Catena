@@ -44,6 +44,7 @@
 
 // mock classes
 #include "MockDevice.h"
+#include "MockConnect.h"
 
 // REST
 #include "ServiceImpl.h"
@@ -125,6 +126,8 @@ TEST_F(RESTServiceImplTests, ServiceImpl_Create) {
     ASSERT_TRUE(service_);
     EXPECT_EQ(service_->authorizationEnabled(), authzEnabled_);
     EXPECT_EQ(service_->version(), "v1");
+    EXPECT_NO_THROW(service_->subscriptionManager());
+    EXPECT_NO_THROW(service_->connectionQueue());
 }
 
 /*

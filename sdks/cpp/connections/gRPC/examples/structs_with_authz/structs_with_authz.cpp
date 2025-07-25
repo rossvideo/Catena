@@ -121,6 +121,7 @@ void RunRPCServer(std::string addr)
         config.dms.push_back(&dm);
         config.EOPath = absl::GetFlag(FLAGS_static_root);
         config.authz = absl::GetFlag(FLAGS_authz);
+        config.maxConnections = absl::GetFlag(FLAGS_max_connections);
         CatenaServiceImpl service(config);
 
         builder.RegisterService(&service);

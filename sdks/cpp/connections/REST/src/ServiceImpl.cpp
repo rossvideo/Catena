@@ -41,7 +41,8 @@ CatenaServiceImpl::CatenaServiceImpl(const ServiceConfig& config)
       port_{config.port},
       authorizationEnabled_{config.authz},
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), config.port)},
-      router_{Router::getInstance()} {
+      router_{Router::getInstance()},
+      connectionQueue_{config.maxConnections} {
 
     if (authorizationEnabled_) { DEBUG_LOG <<"Authorization enabled."; }
     // Adding dms to slotMap.
@@ -99,9 +100,8 @@ void CatenaServiceImpl::run() {
             if (!shutdown_) {
                 try {
                     // Reading from the socket.
-                    SocketReader context(subscriptionManager_, EOPath_);
-                    context.read(socket, authorizationEnabled_, version_);
-                    //TODO: remove v1 from the request key when the router options are updated
+                    SocketReader context(this);
+                    context.read(socket);
                     std::string requestKey = RESTMethodMap().getForwardMap().at(context.method()) + context.endpoint();
                     // Returning empty response with options to the client if required.
                     if (context.method() == Method_OPTIONS) {

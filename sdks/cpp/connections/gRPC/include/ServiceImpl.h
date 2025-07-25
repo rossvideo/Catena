@@ -67,6 +67,7 @@
 #include <Authorization.h>
 #include <SharedFlags.h>
 #include <SubscriptionManager.h>
+#include <rpc/ConnectionQueue.h>
 
 // std
 #include <iostream>
@@ -89,6 +90,7 @@ using grpc::ServerCompletionQueue;
 
 using catena::common::IDevice;
 using catena::common::IParam;
+using catena::common::IConnect;
 
 namespace catena {
 namespace gRPC {
@@ -131,6 +133,7 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      * @param dms A map of slots to ptrs to their corresponding device.
      * @param EOPath The path to the external object.
      * @param authz Flag to enable authorization.
+     * @param maxConnections The maximum number of connections allowed to the service.
      */
     CatenaServiceImpl(const ServiceConfig& config = ServiceConfig());
     /**
@@ -162,6 +165,10 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      * @brief Returns the EOPath.
      */
     const std::string& EOPath() override { return EOPath_; }
+    /**
+     * @brief Returns the ConnectionQueue object.
+     */
+    IConnectionQueue& connectionQueue() override { return connectionQueue_; };
     /**
      * @brief Returns the size of the registry.
      */
@@ -211,6 +218,10 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      * @brief The subscription manager for handling parameter subscriptions
      */
     catena::common::SubscriptionManager subscriptionManager_;
+    /**
+     * @brief The connectionQueue object for managing connections to the service
+     */
+    ConnectionQueue connectionQueue_;
 };
 
 }; // namespace gRPC

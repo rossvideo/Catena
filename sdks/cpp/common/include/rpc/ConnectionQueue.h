@@ -29,8 +29,8 @@
  */
 
 /**
- * @file IConnect.h
- * @brief Interface for Connect.h
+ * @file ConnectionQueue.h
+ * @brief Implements the ConnectionQueue class.
  * @author Ben Whitten (benjamin.whitten@rossvideo.com)
  * @copyright Copyright (c) 2025 Ross Video
  */
@@ -38,72 +38,60 @@
 #pragma once
 
 // common
-#include <IParam.h>
-// Proto
-#include <interface/device.pb.h>
-// Std
-#include <string>
-#include <chrono>
+#include "IConnectionQueue.h"
 
-using std::chrono::system_clock;
+// std
+#include <vector>
+#include <mutex>
 
 namespace catena {
 namespace common {
- 
+
 /**
- * @brief Interface class for Connect RPCs
+ * @brief Implements a priority queue which manages IConnect objects.
  */
-class IConnect {
+class ConnectionQueue : public IConnectionQueue {
   public:
     /**
-     * @brief Descructor
+     * @brief Constructor.
+     * @param maxConnections The maximum number of connections allowed in the
+     * queue.
      */
-    virtual ~IConnect() = default;
+    ConnectionQueue(uint32_t maxConnections) : maxConnections_(maxConnections) {}
     /**
-     * @brief Returns the connection's priority.
-     */
-    virtual uint32_t priority() const = 0;
-    /**
-     * @brief Returns the object Id.
-     */
-    virtual uint32_t objectId() const = 0;
-    /**
-     * @brief Returns true if this has less prioirty than otherConnection.
-     */
-    virtual bool operator<(const IConnect& otherConnection) const = 0;
-    /**
-     * @brief Forcefully shuts down the connection.
-     */
-    virtual void shutdown() = 0;
-  
-  protected:
-    /**
-     * @brief Returns true if the call has been canceled.
-     */
-    virtual inline bool isCancelled() = 0;
-    /**
-     * @brief Updates the response message with parameter values and handles 
-     * authorization checks.
+     * @brief Regesters a Connect CallData object into the Connection priority
+     * queue.
      * 
-     * @param oid - The OID of the value to update
-     * @param p - The parameter to update
-     */
-    virtual void updateResponse_(const std::string& oid, const IParam* p, uint32_t slot) = 0;
-    /**
-     * @brief Updates the response message with a ILanguagePack and
-     * handles authorization checks.
+     * If the queue is full, the lowest priority connection will be shutdown.
      * 
-     * @param l The added ILanguagePack emitted by device.
+     * @param cd The Connect CallData object to register.
+     * @return TRUE if successfully registered, FALSE otherwise
      */
-    virtual void updateResponse_(const ILanguagePack* l, uint32_t slot) = 0;
+    bool registerConnection(IConnect* cd) override;
     /**
-     * @brief Sets up the authorizer object with the jwsToken.
-     * @param jwsToken The jwsToken to use for authorization.
-     * @param authz true if authorization is enabled, false otherwise.
+     * @brief Deregisters a Connect CallData object into the Connection
+     * priority queue.
+     * @param cd The Connect CallData object to deregister.
      */
-    virtual void initAuthz_(const std::string& jwsToken, bool authz = false) = 0;
+    void deregisterConnection(const IConnect* cd) override;
+
+  private:
+    /**
+     * @brief The maximum number of connections allowed in the queue.
+     */
+    uint32_t maxConnections_;
+    /**
+     * @brief Mutex to protect the connectionQueue 
+     */
+    std::mutex mtx_;
+    /**
+     * @brief The priority queue for Connect CallData objects.
+     * 
+     * Not an actual priority queue object since individual access is required
+     * for deregistering old connections.
+     */
+    std::vector<IConnect*> connectionQueue_;
 };
- 
-}; // common
-}; // catena
- 
+
+} // namespace common
+} // namespace catena
