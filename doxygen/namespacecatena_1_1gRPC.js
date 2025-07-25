@@ -2,6 +2,7 @@ var namespacecatena_1_1gRPC =
 [
     [ "AddLanguage", "classcatena_1_1gRPC_1_1AddLanguage.html", "classcatena_1_1gRPC_1_1AddLanguage" ],
     [ "CallData", "classcatena_1_1gRPC_1_1CallData.html", "classcatena_1_1gRPC_1_1CallData" ],
+    [ "CatenaServiceImpl", "classcatena_1_1gRPC_1_1CatenaServiceImpl.html", "classcatena_1_1gRPC_1_1CatenaServiceImpl" ],
     [ "Connect", "classcatena_1_1gRPC_1_1Connect.html", "classcatena_1_1gRPC_1_1Connect" ],
     [ "DeviceRequest", "classcatena_1_1gRPC_1_1DeviceRequest.html", "classcatena_1_1gRPC_1_1DeviceRequest" ],
     [ "ExecuteCommand", "classcatena_1_1gRPC_1_1ExecuteCommand.html", "classcatena_1_1gRPC_1_1ExecuteCommand" ],
@@ -10,7 +11,7 @@ var namespacecatena_1_1gRPC =
     [ "GetPopulatedSlots", "classcatena_1_1gRPC_1_1GetPopulatedSlots.html", "classcatena_1_1gRPC_1_1GetPopulatedSlots" ],
     [ "GetValue", "classcatena_1_1gRPC_1_1GetValue.html", "classcatena_1_1gRPC_1_1GetValue" ],
     [ "ICallData", "classcatena_1_1gRPC_1_1ICallData.html", "classcatena_1_1gRPC_1_1ICallData" ],
-    [ "IServiceImpl", "classcatena_1_1gRPC_1_1IServiceImpl.html", "classcatena_1_1gRPC_1_1IServiceImpl" ],
+    [ "ICatenaServiceImpl", "classcatena_1_1gRPC_1_1ICatenaServiceImpl.html", "classcatena_1_1gRPC_1_1ICatenaServiceImpl" ],
     [ "JWTAuthMetadataProcessor", "classcatena_1_1gRPC_1_1JWTAuthMetadataProcessor.html", null ],
     [ "LanguagePackRequest", "classcatena_1_1gRPC_1_1LanguagePackRequest.html", "classcatena_1_1gRPC_1_1LanguagePackRequest" ],
     [ "ListLanguages", "classcatena_1_1gRPC_1_1ListLanguages.html", "classcatena_1_1gRPC_1_1ListLanguages" ],
@@ -18,7 +19,7 @@ var namespacecatena_1_1gRPC =
     [ "ParamInfoRequest", "classcatena_1_1gRPC_1_1ParamInfoRequest.html", "classcatena_1_1gRPC_1_1ParamInfoRequest" ],
     [ "PeerInfo", "classcatena_1_1gRPC_1_1PeerInfo.html", "classcatena_1_1gRPC_1_1PeerInfo" ],
     [ "PeerManager", "classcatena_1_1gRPC_1_1PeerManager.html", "classcatena_1_1gRPC_1_1PeerManager" ],
-    [ "ServiceImpl", "classcatena_1_1gRPC_1_1ServiceImpl.html", "classcatena_1_1gRPC_1_1ServiceImpl" ],
+    [ "ServiceConfig", "structcatena_1_1gRPC_1_1ServiceConfig.html", "structcatena_1_1gRPC_1_1ServiceConfig" ],
     [ "SetValue", "classcatena_1_1gRPC_1_1SetValue.html", "classcatena_1_1gRPC_1_1SetValue" ],
     [ "UpdateSubscriptions", "classcatena_1_1gRPC_1_1UpdateSubscriptions.html", "classcatena_1_1gRPC_1_1UpdateSubscriptions" ],
     [ "CallStatus", "namespacecatena_1_1gRPC.html#a27aee93775bf0dcce2e1fa3afe6d1982", [
