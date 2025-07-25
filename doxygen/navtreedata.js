@@ -129,13 +129,13 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "AddLanguage_8h.html",
-"classcatena_1_1REST_1_1CatenaServiceImpl.html",
-"classcatena_1_1common_1_1Connect.html#a156de209700b42ce94bfa322e16138e2",
-"classcatena_1_1common_1_1ILanguagePack.html#a3e6a4f733927ce286195246e666f8c9f",
-"classcatena_1_1common_1_1NamedChoiceConstraint.html#afd18f2b92cd389d887a82523faa3686f",
-"classcatena_1_1gRPC_1_1AddLanguage.html#a69d4c47066d33bd5d18aea939fccb151",
-"classcatena_1_1patterns_1_1EnumDecorator.html",
-"md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md46"
+"classcatena_1_1REST_1_1AssetRequest.html",
+"classcatena_1_1common_1_1Authorizer.html#a86759837f2874d0628775cc2d833b262",
+"classcatena_1_1common_1_1IDevice.html#a920052e325112f24cea8686d8d30b45c",
+"classcatena_1_1common_1_1Menu.html#ab42fd8e8d1665b3408d6b9b5491cfec4",
+"classcatena_1_1common_1_1Path.html#aff66461b7b6ecc1b22bd81ff54090b35",
+"classcatena_1_1gRPC_1_1PeerManager.html#a1bfff0f8e615ac6ce48db0057918b458",
+"index.html#autotoc_md1"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
