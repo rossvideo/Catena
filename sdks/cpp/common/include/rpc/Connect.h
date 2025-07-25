@@ -47,6 +47,7 @@
 #include <Authorization.h>
 #include <ISubscriptionManager.h>
 #include "IConnect.h"
+#include <Logger.h>
 
 #include <interface/device.pb.h>
 
@@ -64,6 +65,35 @@ namespace common {
  * @todo Implement subscriptionManager.
  */
 class Connect : public IConnect {
+  public:
+    /**
+     * @brief Descructor
+     */
+    virtual ~Connect() = default;
+    /**
+     * @brief Returns the connection's priority.
+     */
+    uint32_t priority() const override { return priority_; }
+    /**
+     * @brief Returns the object Id.
+     */
+    uint32_t objectId() const override { return objectId_; }
+    /**
+     * @brief Returns true if this has less prioirty than otherConnection.
+     */
+    bool operator<(const IConnect& otherConnection) const override {
+        return priority_ < otherConnection.priority() ||
+               (priority_ == otherConnection.priority() && objectId_ >= otherConnection.objectId());
+    }
+    /**
+     * @brief Forcefully shuts down the connection.
+     */
+    void shutdown() override {
+        shutdown_ = true;
+        hasUpdate_ = true;
+        cv_.notify_one();
+    };
+
   protected:
     /**
      * @brief Constructor
@@ -79,8 +109,7 @@ class Connect : public IConnect {
     Connect(SlotMap& dms, ISubscriptionManager& subscriptionManager) : 
         dms_{dms}, 
         subscriptionManager_{subscriptionManager},
-        detailLevel_{catena::Device_DetailLevel_UNSET} {
-    }
+        detailLevel_{catena::Device_DetailLevel_UNSET} {}
     /**
      * @brief Connect does not have copy semantics
      */
@@ -91,10 +120,6 @@ class Connect : public IConnect {
      */
     Connect(Connect&&) = delete;
     Connect& operator=(Connect&&) = delete;
-    /**
-     * @brief Destructor
-     */
-    ~Connect() = default;
 
     // IConnect::IsCanceled to be defined by the derived class
 
@@ -112,7 +137,7 @@ class Connect : public IConnect {
                 hasUpdate_ = true;
                 cv_.notify_one();
 
-            } else if (authz_ == &catena::common::Authorizer::kAuthzDisabled || authz_->readAuthz(*p)) {
+            } else if (authz_->readAuthz(*p)) {
                 // Map of detail levels to their update logic
                 const std::unordered_map<catena::Device_DetailLevel, std::function<bool()>> detailLevelMap {
                     {catena::Device_DetailLevel_FULL, [&]() {
@@ -154,6 +179,7 @@ class Connect : public IConnect {
             }
         } catch(catena::exception_with_status& why) {
             // if an error is thrown, no update is pushed to the client
+            DEBUG_LOG << "Failed to send SetValue update: " << why.what();
         }
     }
     
@@ -180,11 +206,16 @@ class Connect : public IConnect {
             }
         } catch(catena::exception_with_status& why){
             // if an error is thrown, no update is pushed to the client
+            DEBUG_LOG << "Failed to send language pack update: " << why.what();
         }
     }
 
     /**
-     * @brief Sets up the authorizer object with the jwsToken.
+     * @brief Sets up the authorizer object with the jwsToken and calculates
+     * connection priority.
+     * 
+     * priority_ = scope * 2 + write + (adm:w && forceConnection)
+     * 
      * @param jwsToken The jwsToken to use for authorization.
      * @param authz true if authorization is enabled, false otherwise.
      */
@@ -192,11 +223,33 @@ class Connect : public IConnect {
         if (authz) {
             sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
             authz_ = sharedAuthz_.get();
+            // Throw error for non-admin clients trying to force a connection.
+            if (forceConnection_ && !authz_->writeAuthz(Scopes_e::kAdmin)) {
+                throw catena::exception_with_status("adm:w scope required to force a connection", catena::StatusCode::PERMISSION_DENIED);
+            }
+            // Setting up their connection priority.
+            for (uint32_t i = static_cast<uint32_t>(Scopes_e::kAdmin); i >= static_cast<uint32_t>(Scopes_e::kMonitor); i -= 1) {             
+                // Client has read
+                if (authz_->readAuthz(static_cast<Scopes_e>(i))) {
+                    priority_ = 2 * i + forceConnection_;
+                    // Also has write
+                    if (authz_->writeAuthz(static_cast<Scopes_e>(i))) {
+                        priority_ += 1;
+                    }
+                    break;
+                }
+            }
         } else {
             authz_ = &catena::common::Authorizer::kAuthzDisabled;
         }
     }
 
+    /**
+     * @brief The priority of the connection.
+     * 
+     * priority_ = scope * 2 + write + (adm:w && forceConnection)
+     */
+    uint32_t priority_ = 0;
     /**
      * @brief Shared ptr to maintain ownership of authorizer.
      */
@@ -242,9 +295,17 @@ class Connect : public IConnect {
     /**
      * @brief Flag to force a connection.
      * 
-     * No idea what this is used for and if its even needed here.
+     * Only applicable if client has admin:w scope.
      */
     bool forceConnection_;
+    /**
+     * @brief Flag indicating whether to shut down the connection.
+     */
+    bool shutdown_ = false;
+    /**
+     * @brief ID of the Connect object
+     */
+    uint32_t objectId_ = 0;
 };
 
 }; // common

@@ -44,6 +44,7 @@
 
 // mock classes
 #include "MockDevice.h"
+#include "MockConnect.h"
 
 // REST
 #include "ServiceImpl.h"
@@ -68,7 +69,7 @@ class RESTServiceImplTests : public testing::Test {
     void SetUp() override {
         oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
         EXPECT_CALL(dm_, slot()).WillRepeatedly(testing::Return(0));
-        service_.reset(new CatenaServiceImpl({&dm_}, EOPath_, authzEnabled_, port_));
+        service_.reset(new CatenaServiceImpl({&dm_}, EOPath_, authzEnabled_, port_, 1));
     }
 
     /*
@@ -120,6 +121,8 @@ TEST_F(RESTServiceImplTests, ServiceImpl_Create) {
     ASSERT_TRUE(service_);
     EXPECT_EQ(service_->authorizationEnabled(), authzEnabled_);
     EXPECT_EQ(service_->version(), "v1");
+    EXPECT_NO_THROW(service_->subscriptionManager());
+    EXPECT_NO_THROW(service_->connectionQueue());
 }
 
 /*
@@ -129,7 +132,7 @@ TEST_F(RESTServiceImplTests, ServiceImpl_CreateDuplicateSlot) {
     MockDevice dm2;
     EXPECT_CALL(dm2, slot()).WillRepeatedly(testing::Return(0));
     // Creating a service with a duplicate slot.
-    EXPECT_THROW(CatenaServiceImpl({&dm_, &dm2}, EOPath_, authzEnabled_, port_ + 2), std::runtime_error)
+    EXPECT_THROW(CatenaServiceImpl({&dm_, &dm2}, EOPath_, authzEnabled_, port_ + 2, 1), std::runtime_error)
         << "Creating a service with two devices sharing a slot should throw an error.";
 }
 

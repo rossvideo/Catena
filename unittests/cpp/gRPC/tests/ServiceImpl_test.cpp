@@ -43,6 +43,7 @@
 #include <string>
 
 #include "MockDevice.h"
+#include "MockConnect.h"
 #include "MockServiceImpl.h"
 
 // protobuf
@@ -82,7 +83,7 @@ class gRPCServiceImplTests : public testing::Test {
         // Creating the gRPC server.
         builder_.AddListeningPort(serverAddr_, grpc::InsecureServerCredentials());
         cq_ = builder_.AddCompletionQueue();
-        service_.reset(new CatenaServiceImpl(cq_.get(), {&dm_}, EOPath_, authzEnabled_));
+        service_.reset(new CatenaServiceImpl(cq_.get(), {&dm_}, EOPath_, authzEnabled_, 1));
         builder_.RegisterService(service_.get());
         server_ = builder_.BuildAndStart();
         service_->init();
@@ -142,6 +143,8 @@ TEST_F(gRPCServiceImplTests, ServiceImpl_CreateDestroy) {
     ASSERT_TRUE(service_);
     EXPECT_EQ(service_->authorizationEnabled(), authzEnabled_);
     EXPECT_EQ(service_->EOPath(), EOPath_);
+    EXPECT_NO_THROW(service_->getSubscriptionManager());
+    EXPECT_NO_THROW(service_->connectionQueue());
     // Give it time to set up and timeout once.
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     service_->shutdownServer(); // Does nothing.
@@ -159,6 +162,6 @@ TEST(gRPCServiceImplTests_NoFixture, ServiceImpl_CreateDuplicateSlot) {
     EXPECT_CALL(dm1, slot()).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(dm2, slot()).WillRepeatedly(testing::Return(0));
     // Creating a service with a duplicate slot.
-    EXPECT_THROW(CatenaServiceImpl(nullptr, {&dm1, &dm2}, EOPath, false), std::runtime_error)
+    EXPECT_THROW(CatenaServiceImpl(nullptr, {&dm1, &dm2}, EOPath, false, 16), std::runtime_error)
         << "Creating a service with two devices sharing a slot should throw an error.";
 }
