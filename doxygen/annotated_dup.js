@@ -60,7 +60,6 @@ var annotated_dup =
         [ "ParamInfoRequest", "classcatena_1_1gRPC_1_1ParamInfoRequest.html", "classcatena_1_1gRPC_1_1ParamInfoRequest" ],
         [ "PeerInfo", "classcatena_1_1gRPC_1_1PeerInfo.html", "classcatena_1_1gRPC_1_1PeerInfo" ],
         [ "PeerManager", "classcatena_1_1gRPC_1_1PeerManager.html", "classcatena_1_1gRPC_1_1PeerManager" ],
-        [ "ServiceConfig", "structcatena_1_1gRPC_1_1ServiceConfig.html", "structcatena_1_1gRPC_1_1ServiceConfig" ],
         [ "SetValue", "classcatena_1_1gRPC_1_1SetValue.html", "classcatena_1_1gRPC_1_1SetValue" ],
         [ "UpdateSubscriptions", "classcatena_1_1gRPC_1_1UpdateSubscriptions.html", "classcatena_1_1gRPC_1_1UpdateSubscriptions" ]
       ] ],
@@ -102,7 +101,6 @@ var annotated_dup =
         [ "Languages", "classcatena_1_1REST_1_1Languages.html", "classcatena_1_1REST_1_1Languages" ],
         [ "MultiSetValue", "classcatena_1_1REST_1_1MultiSetValue.html", "classcatena_1_1REST_1_1MultiSetValue" ],
         [ "ParamInfoRequest", "classcatena_1_1REST_1_1ParamInfoRequest.html", "classcatena_1_1REST_1_1ParamInfoRequest" ],
-        [ "ServiceConfig", "structcatena_1_1REST_1_1ServiceConfig.html", "structcatena_1_1REST_1_1ServiceConfig" ],
         [ "SetValue", "classcatena_1_1REST_1_1SetValue.html", "classcatena_1_1REST_1_1SetValue" ],
         [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html", "classcatena_1_1REST_1_1SocketReader" ],
         [ "SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", "classcatena_1_1REST_1_1SocketWriter" ],

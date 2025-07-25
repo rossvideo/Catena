@@ -1,6 +1,10 @@
 var searchData=
 [
-  ['reqs_5f_0',['reqs_',['../classcatena_1_1gRPC_1_1MultiSetValue.html#a82a4078029cbc8cc7a40d94dce40d647',1,'catena::gRPC::MultiSetValue::reqs_'],['../classcatena_1_1REST_1_1MultiSetValue.html#aa5dac8fba316dc5395ec25acb853696a',1,'catena::REST::MultiSetValue::reqs_']]],
-  ['res_5f_1',['res_',['../classcatena_1_1common_1_1Connect.html#a758621bfebc66d9e0439e3b9484351c5',1,'catena::common::Connect::res_'],['../classcatena_1_1gRPC_1_1MultiSetValue.html#abf62968395f3d69b7459830b8af88356',1,'catena::gRPC::MultiSetValue::res_']]],
-  ['responder_5f_2',['responder_',['../classcatena_1_1gRPC_1_1MultiSetValue.html#ac9d1a7499050191ae56e0715f5d350ee',1,'catena::gRPC::MultiSetValue']]]
+  ['service_5f_0',['service_',['../classcatena_1_1gRPC_1_1CallData.html#a2bc531135e40b2b9b3fdb321ea805c15',1,'catena::gRPC::CallData']]],
+  ['sharedauthz_5f_1',['sharedAuthz_',['../classcatena_1_1common_1_1Connect.html#a156de209700b42ce94bfa322e16138e2',1,'catena::common::Connect']]],
+  ['shutdown_5f_2',['shutdown_',['../classcatena_1_1common_1_1Connect.html#a4a50ec64dddf9389f8ae62744db3198c',1,'catena::common::Connect']]],
+  ['shutdownsignal_5f_3',['shutdownSignal_',['../classcatena_1_1REST_1_1Connect.html#aa6c71bc5cd0c431bd3f7f9d36e2184bd',1,'catena::REST::Connect']]],
+  ['socket_5f_4',['socket_',['../classcatena_1_1REST_1_1MultiSetValue.html#a3e6d07f28f3a9b154cf5d84d34b490e6',1,'catena::REST::MultiSetValue']]],
+  ['status_5f_5',['status_',['../classcatena_1_1gRPC_1_1MultiSetValue.html#abb5fcdad869d257437a88a0b686c9a66',1,'catena::gRPC::MultiSetValue']]],
+  ['subscriptionmanager_5f_6',['subscriptionManager_',['../classcatena_1_1common_1_1Connect.html#a1d1530db5d58c723f6067e5090e43db9',1,'catena::common::Connect']]]
 ];

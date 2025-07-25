@@ -114,9 +114,9 @@ Collaboration diagram for catena::REST::CatenaServiceImpl:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a76995e185bf4fd8b99ac2e9915653bfe" id="r_a76995e185bf4fd8b99ac2e9915653bfe"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a76995e185bf4fd8b99ac2e9915653bfe">CatenaServiceImpl</a> (const <a class="el" href="structcatena_1_1REST_1_1ServiceConfig.html">ServiceConfig</a> &amp;config=<a class="el" href="structcatena_1_1REST_1_1ServiceConfig.html">ServiceConfig</a>{})</td></tr>
-<tr class="memdesc:a76995e185bf4fd8b99ac2e9915653bfe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> API.  <br /></td></tr>
-<tr class="separator:a76995e185bf4fd8b99ac2e9915653bfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f9599e4a5840ef2fbe854fd9c90e034" id="r_a9f9599e4a5840ef2fbe854fd9c90e034"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a9f9599e4a5840ef2fbe854fd9c90e034">CatenaServiceImpl</a> (std::vector&lt; <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> * &gt; dms, std::string &amp;<a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html#acb484f27aba3d72b3a25818c2610c91d">EOPath</a>, bool authz=false, uint16_t port=443, uint32_t maxConnections=16)</td></tr>
+<tr class="memdesc:a9f9599e4a5840ef2fbe854fd9c90e034"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> API.  <br /></td></tr>
+<tr class="separator:a9f9599e4a5840ef2fbe854fd9c90e034"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7aff5495a5d951cc802b6729b1f44f21" id="r_a7aff5495a5d951cc802b6729b1f44f21"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a7aff5495a5d951cc802b6729b1f44f21">version</a> () const override</td></tr>
 <tr class="memdesc:a7aff5495a5d951cc802b6729b1f44f21"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the API's version.  <br /></td></tr>
 <tr class="separator:a7aff5495a5d951cc802b6729b1f44f21"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -155,27 +155,66 @@ Public Member Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Implements Catena <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> API request handlers. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a76995e185bf4fd8b99ac2e9915653bfe" name="a76995e185bf4fd8b99ac2e9915653bfe"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a76995e185bf4fd8b99ac2e9915653bfe">&#9670;&#160;</a></span>CatenaServiceImpl()</h2>
+<a id="a9f9599e4a5840ef2fbe854fd9c90e034" name="a9f9599e4a5840ef2fbe854fd9c90e034"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9f9599e4a5840ef2fbe854fd9c90e034">&#9670;&#160;</a></span>CatenaServiceImpl()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">catena::REST::CatenaServiceImpl::CatenaServiceImpl </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structcatena_1_1REST_1_1ServiceConfig.html">ServiceConfig</a> &amp;&#160;</td>
-          <td class="paramname"><em>config</em> = <code><a class="el" href="structcatena_1_1REST_1_1ServiceConfig.html">ServiceConfig</a>{}</code></td><td>)</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> * &gt;&#160;</td>
+          <td class="paramname"><em>dms</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">std::string &amp;&#160;</td>
+          <td class="paramname"><em>EOPath</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>authz</em> = <code>false</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>port</em> = <code>443</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>maxConnections</em> = <code>16</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">explicit</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 <p>Constructor for the <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> API. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">dm</td><td>The device to implement Catena services to. </td></tr>
-    <tr><td class="paramname">config</td><td>The service config object containing the necessary parameters. </td></tr>
+    <tr><td class="paramname">EOPath</td><td>The path to the external object. </td></tr>
+    <tr><td class="paramname">authz</td><td>Flag to enable authorization. </td></tr>
+    <tr><td class="paramname">port</td><td>The port to listen on. Default is 443. </td></tr>
+    <tr><td class="paramname">maxConnections</td><td>The maximum # of connections the service allows. </td></tr>
   </table>
   </dd>
 </dl>

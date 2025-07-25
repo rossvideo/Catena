@@ -179,6 +179,9 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IParamDescriptor<
 <tr class="memitem:ab0ec2ac672593f7081169d083379bee3" id="r_ab0ec2ac672593f7081169d083379bee3"><td class="memItemLeft" align="right" valign="top">virtual std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ab0ec2ac672593f7081169d083379bee3">total_length</a> () const =0</td></tr>
 <tr class="memdesc:ab0ec2ac672593f7081169d083379bee3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the total length of the string_array parameter. If max length is not set in the .JSON file, then the default value of 1024 is used. The default value can also be configured with the command line argument "--default_max_length=#".  <br /></td></tr>
 <tr class="separator:ab0ec2ac672593f7081169d083379bee3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a935abbdfb9a028dde34cfe1ab15ae5c6" id="r_a935abbdfb9a028dde34cfe1ab15ae5c6"><td class="memItemLeft" align="right" valign="top">virtual uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a935abbdfb9a028dde34cfe1ab15ae5c6">precision</a> () const =0</td></tr>
+<tr class="memdesc:a935abbdfb9a028dde34cfe1ab15ae5c6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the precision of the parameter.  <br /></td></tr>
+<tr class="separator:a935abbdfb9a028dde34cfe1ab15ae5c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2d37e2fb40c62467aafcac8d76d8bebb" id="r_a2d37e2fb40c62467aafcac8d76d8bebb"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a2d37e2fb40c62467aafcac8d76d8bebb">toProto</a> (catena::Param &amp;param, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const =0</td></tr>
 <tr class="memdesc:a2d37e2fb40c62467aafcac8d76d8bebb"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize param meta data in to protobuf message  <br /></td></tr>
 <tr class="separator:a2d37e2fb40c62467aafcac8d76d8bebb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -714,6 +717,35 @@ Here is the caller graph for this function:</div>
 <dl class="section return"><dt>Returns</dt><dd>the name in the specified language, or an empty string if the language is not found </dd></dl>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a157db36f837904b8fd93db03c24e0a80">catena::common::ParamDescriptor</a>.</p>
+
+</div>
+</div>
+<a id="a935abbdfb9a028dde34cfe1ab15ae5c6" name="a935abbdfb9a028dde34cfe1ab15ae5c6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a935abbdfb9a028dde34cfe1ab15ae5c6">&#9670;&#160;</a></span>precision()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual uint32_t catena::common::IParamDescriptor::precision </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns the precision of the parameter. </p>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#abb84c36c54f3fd4b7305b76fa05f4ca4">catena::common::ParamDescriptor</a>.</p>
 
 </div>
 </div>
