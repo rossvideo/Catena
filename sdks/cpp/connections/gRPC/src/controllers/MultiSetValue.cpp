@@ -36,14 +36,14 @@ using catena::gRPC::MultiSetValue;
 // Initializes the object counter for SetValue to 0.
 int MultiSetValue::objectCounter_ = 0;
 
-MultiSetValue::MultiSetValue(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+MultiSetValue::MultiSetValue(IServiceImpl *service, SlotMap& dms, bool ok)
     : MultiSetValue(service, dms, ok, objectCounter_++) {
     typeName = "MultiSetValue";
     service_->registerItem(this);
     proceed(ok);
 }
 
-MultiSetValue::MultiSetValue(ICatenaServiceImpl *service, SlotMap& dms, bool ok, int objectId)
+MultiSetValue::MultiSetValue(IServiceImpl *service, SlotMap& dms, bool ok, int objectId)
     : CallData(service), dms_{dms}, objectId_(objectId), responder_(&context_),
     status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {}
 
@@ -134,7 +134,7 @@ void MultiSetValue::proceed(bool ok) {
             break;
         /**
          * kFinish: Final step of gRPC is the deregister the item from
-         * CatenaServiceImpl.
+         * ServiceImpl.
          */
         case CallStatus::kFinish:
             DEBUG_LOG << typeName << "[" << objectId_ << "] finished";

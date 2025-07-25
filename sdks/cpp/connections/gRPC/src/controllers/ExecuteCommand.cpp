@@ -40,7 +40,7 @@ int ExecuteCommand::objectCounter_ = 0;
  * Constructor which initializes and registers the current ExecuteCommand
  * object, then starts the process
  */
-ExecuteCommand::ExecuteCommand(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+ExecuteCommand::ExecuteCommand(IServiceImpl *service, SlotMap& dms, bool ok)
     : CallData(service), dms_{dms}, writer_(&context_),
       status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);

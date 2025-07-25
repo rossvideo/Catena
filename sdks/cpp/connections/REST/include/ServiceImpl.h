@@ -43,7 +43,7 @@
 #include <vdk/signals.h>
 #include <patterns/GenericFactory.h>
 #include <IParam.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 #include <Enums.h>
 #include <SubscriptionManager.h>
 #include <SharedFlags.h>
@@ -80,7 +80,7 @@ namespace REST {
 /**
  * @brief Implements Catena REST API request handlers.
  */
-class CatenaServiceImpl : public catena::REST::ICatenaServiceImpl {
+class ServiceImpl : public catena::REST::IServiceImpl {
   public:
     /**
      * @brief Constructor for the REST API.
@@ -91,7 +91,7 @@ class CatenaServiceImpl : public catena::REST::ICatenaServiceImpl {
      * @param port The port to listen on. Default is 443.
      * @param maxConnections The maximum # of connections the service allows.
      */
-    explicit CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOPath, bool authz = false, uint16_t port = 443, uint32_t maxConnections = 16);
+    explicit ServiceImpl(std::vector<IDevice*> dms, std::string& EOPath, bool authz = false, uint16_t port = 443, uint32_t maxConnections = 16);
     /**
      * @brief Returns the API's version.
      */

@@ -64,12 +64,12 @@
 #include <Logger.h>
 
 
-using catena::REST::CatenaServiceImpl;
+using catena::REST::ServiceImpl;
 
 using namespace catena::common;
 
 
-CatenaServiceImpl *globalApi = nullptr;
+ServiceImpl *globalApi = nullptr;
 std::atomic<bool> fibLoop = false;
 std::unique_ptr<std::thread> fibThread = nullptr;
 std::atomic<bool> counterLoop = true;
@@ -295,7 +295,7 @@ void RunRESTServer() {
         uint32_t maxConnections = absl::GetFlag(FLAGS_max_connections);
 
         // Creating and running the REST service.
-        CatenaServiceImpl api({&dm}, EOPath, authorization, port, maxConnections);
+        ServiceImpl api({&dm}, EOPath, authorization, port, maxConnections);
         globalApi = &api;
         DEBUG_LOG << "API Version: " << api.version();
         DEBUG_LOG << "REST on 0.0.0.0:" << port;

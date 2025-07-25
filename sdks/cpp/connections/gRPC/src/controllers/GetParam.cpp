@@ -40,7 +40,7 @@ int GetParam::objectCounter_ = 0;
  * then starts the process.
  */
 
-GetParam::GetParam(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+GetParam::GetParam(IServiceImpl *service, SlotMap& dms, bool ok)
     : CallData(service), dms_{dms}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);
@@ -134,7 +134,7 @@ void GetParam::proceed( bool ok) {
 
         /*
          * kFinish: Final step of gRPC is to deregister the item from
-         * CatenaServiceImpl.
+         * ServiceImpl.
          */
         case CallStatus::kFinish:
             DEBUG_LOG << "GetParam[" << objectId_ << "] finished";

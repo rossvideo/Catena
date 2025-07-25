@@ -38,7 +38,7 @@
  */
 
 // common
-#include <Authorization.h>
+#include <Authorizer.h>
 #include <Path.h>
 #include <IParam.h>
 #include <ILanguagePack.h>

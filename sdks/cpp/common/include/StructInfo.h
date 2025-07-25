@@ -42,7 +42,7 @@
 #include <meta/Typelist.h>
 #include <meta/IsVector.h>
 #include <meta/Variant.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 
 // protobuf interface
 #include <interface/param.pb.h>

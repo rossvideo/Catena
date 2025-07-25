@@ -43,7 +43,7 @@
 #include <IDevice.h>
 #include <IParam.h>
 #include <Status.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 #include <SubscriptionManager.h>
 #include <Logger.h>
 

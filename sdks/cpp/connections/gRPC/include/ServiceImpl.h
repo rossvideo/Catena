@@ -64,7 +64,7 @@
 #include <vdk/signals.h>
 #include <IParam.h>
 #include <IDevice.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 #include <SharedFlags.h>
 #include <SubscriptionManager.h>
 #include <rpc/ConnectionQueue.h>
@@ -98,17 +98,17 @@ namespace gRPC {
 /**
  * @brief Implements Catena gRPC request handlers.
  */
-class CatenaServiceImpl : public ICatenaServiceImpl {
+class ServiceImpl : public IServiceImpl {
   public:
     /**
-     * @brief Constructor for the CatenaServiceImpl class.
+     * @brief Constructor for the ServiceImpl class.
      * @param cq The completion queue for the server.
      * @param dms A map of slots to ptrs to their corresponding device.
      * @param EOPath The path to the external object.
      * @param authz Flag to enable authorization.
      * @param maxConnections The maximum number of connections allowed to the service.
      */
-    CatenaServiceImpl(ServerCompletionQueue* cq, std::vector<IDevice*> dms, std::string& EOPath, bool authz, uint32_t maxConnections);  
+    ServiceImpl(ServerCompletionQueue* cq, std::vector<IDevice*> dms, std::string& EOPath, bool authz, uint32_t maxConnections);  
     /**
      * @brief Creates the CallData objects for each gRPC command.
      */

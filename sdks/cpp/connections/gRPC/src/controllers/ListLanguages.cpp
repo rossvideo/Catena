@@ -36,7 +36,7 @@ using catena::gRPC::ListLanguages;
 // Initializes the object counter for SetValue to 0.
 int ListLanguages::objectCounter_ = 0;
 
-ListLanguages::ListLanguages(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+ListLanguages::ListLanguages(IServiceImpl *service, SlotMap& dms, bool ok)
     : CallData(service), dms_{dms}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service_->registerItem(this);
@@ -101,7 +101,7 @@ void ListLanguages::proceed(bool ok) {
             break;
         /**
          * kFinish: Final step of gRPC is the deregister the item from
-         * CatenaServiceImpl.
+         * ServiceImpl.
          */
         case CallStatus::kFinish:
             DEBUG_LOG << "ListLanguages[" << objectId_ << "] finished";

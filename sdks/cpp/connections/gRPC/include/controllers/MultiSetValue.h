@@ -57,16 +57,16 @@ class MultiSetValue : public CallData {
      * @brief Constructor for the CallData class of the MultiSetValue
      * gRPC. Calls proceed() once initialized.
      *
-     * @param service - Pointer to the parent CatenaServiceImpl.
+     * @param service - Pointer to the parent ServiceImpl.
      * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok - Flag to check if the command was successfully executed.
      */ 
-    MultiSetValue(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
+    MultiSetValue(IServiceImpl *service, SlotMap& dms, bool ok);
     /**
      * @brief Manages the steps of the SetValue and MultiSetValue gRPC
      * commands through the state variable status.
      *
-     * @param service - Pointer to the parent CatenaServiceImpl.
+     * @param service - Pointer to the parent ServiceImpl.
      * @param ok - Flag to check if the command was successfully executed.
      */
     void proceed(bool ok) override;
@@ -76,12 +76,12 @@ class MultiSetValue : public CallData {
      *   
      * Helper function to allow reuse of proceed().
      *
-     * @param service Pointer to the parent CatenaServiceImpl.
+     * @param service Pointer to the parent ServiceImpl.
      * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok Flag to check if the command was successfully executed.
      * @param objectId objectCounter_ + 1
      */ 
-    MultiSetValue(ICatenaServiceImpl *service, SlotMap& dms, bool ok, int objectId);
+    MultiSetValue(IServiceImpl *service, SlotMap& dms, bool ok, int objectId);
     /**
      * @brief Requests Multi Set Value from the system and sets the
      * request to the MultiSetValuePayload.

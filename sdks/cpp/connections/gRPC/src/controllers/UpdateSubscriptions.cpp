@@ -35,7 +35,7 @@ using catena::gRPC::UpdateSubscriptions;
 
 int UpdateSubscriptions::objectCounter_ = 0;
 
-UpdateSubscriptions::UpdateSubscriptions(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+UpdateSubscriptions::UpdateSubscriptions(IServiceImpl *service, SlotMap& dms, bool ok)
     : CallData(service), dms_{dms}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);
