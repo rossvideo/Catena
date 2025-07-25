@@ -196,9 +196,15 @@ void ParamInfoRequest::proceed(bool ok) {
                 grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
                 writer_.Finish(errorStatus, this);
                 break;
+            } catch (const std::exception& e) {
+                status_ = CallStatus::kFinish;
+                grpc::Status errorStatus(grpc::StatusCode::UNKNOWN, 
+                    "Failed due to unknown error in ParamInfoRequest: " + std::string(e.what()));
+                writer_.Finish(errorStatus, this);
+                break;
             } catch (...) {
                 status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(grpc::StatusCode::INTERNAL, 
+                grpc::Status errorStatus(grpc::StatusCode::UNKNOWN, 
                     "Failed due to unknown error in ParamInfoRequest");
                 writer_.Finish(errorStatus, this);
                 break;

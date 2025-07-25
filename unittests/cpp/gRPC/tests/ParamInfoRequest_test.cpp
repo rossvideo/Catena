@@ -561,7 +561,7 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursio
     testRPC();
 }
 
-// Test 2.4: Get top-level parameters with error status from getTopLevelParams
+// 2.4: Error Case - Get top-level parameters with error status from getTopLevelParams
 TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithErrorStatus) {
     expRc_ = catena::exception_with_status("Error getting parameters", catena::StatusCode::INTERNAL);
 
@@ -578,7 +578,7 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithErrorSta
     testRPC();
 }
 
-// Test 2.5: Get top-level parameters with empty list and recursion
+// 2.5: Error Case - Get top-level parameters with empty list and recursion
 TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithEmptyListAndRecursion) {
     expRc_ = catena::exception_with_status("No top-level parameters found", catena::StatusCode::NOT_FOUND);
 
@@ -595,3 +595,159 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithEmptyLis
     testRPC();
 }
 
+// == MODE 3 TESTS: Get a specific parameter and its children if recursive ==
+
+// 3.1: Success Case - Get specific parameter without recursion
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_proceedSpecificParam) {
+    expRc_ = catena::exception_with_status("", catena::StatusCode::OK);
+    std::string fqoid = "mockOid";
+
+    // Setup mock parameter with our helper
+    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
+    ParamInfo paramInfo{
+        .oid = fqoid,
+        .type = catena::ParamType::STRING_ARRAY,
+        .array_length = 5
+    };
+    auto desc = ParamHierarchyBuilder::createDescriptor("/" + paramInfo.oid);
+    setupMockParam(*mockParam, paramInfo, *desc.descriptor);
+
+    // Add expectations for array type and size to trigger array length update logic
+    EXPECT_CALL(*mockParam, isArrayType()).WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(*mockParam, size()).WillRepeatedly(testing::Return(5));
+
+    // Setup mock expectations for mode 2 (specific parameter)
+    EXPECT_CALL(dm0_, getParam(fqoid, testing::_, testing::_))
+        .WillOnce(testing::Invoke(
+            [&mockParam](const std::string&, catena::exception_with_status& status, Authorizer&) {
+                status = catena::exception_with_status("", catena::StatusCode::OK);
+                return std::move(mockParam);
+            }
+        ));
+    
+    // Request specific parameter
+    initPayload(0, fqoid, false);
+    testRPC();
+}
+
+// 3.2: Success Case - Get specific parameter with recursion
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getSpecificParamWithRecursion) {
+    expRc_ = catena::exception_with_status("", catena::StatusCode::OK);
+    std::string fqoid = "mockOid";
+    
+    // Create parameter hierarchy using ParamHierarchyBuilder
+    auto mockDesc = ParamHierarchyBuilder::createDescriptor("/" + fqoid);
+    std::string mockOidWSlash = "/" + fqoid;
+    EXPECT_CALL(*mockDesc.descriptor, getOid()).WillRepeatedly(testing::ReturnRef(mockOidWSlash));
+    
+    // Setup mock parameter with our helper
+    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
+    ParamInfo paramInfo{
+        .oid = fqoid,
+        .type = catena::ParamType::STRING
+    };
+    setupMockParam(*mockParam, paramInfo, *mockDesc.descriptor);
+
+    // Request specific parameter with recursion
+    initPayload(0, fqoid, true);
+
+    // Setup mock expectations
+    EXPECT_CALL(dm0_, getParam(fqoid, testing::_, testing::_))
+        .WillOnce(testing::Invoke(
+            [&mockParam](const std::string&, catena::exception_with_status& status, Authorizer&) {
+                status = catena::exception_with_status("", catena::StatusCode::OK);
+                return std::move(mockParam);
+            }
+        ));
+
+    testRPC();
+}
+
+// 3.3: Error Case - parameter not found
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_parameterNotFound) {
+    expRc_ = catena::exception_with_status("Parameter not found: missing_param", catena::StatusCode::NOT_FOUND);
+    std::string fqoid = "missing_param";
+
+    // Request specific parameter
+    initPayload(0, fqoid, false);
+
+    // Setup mock expectations
+    EXPECT_CALL(dm0_, getParam(fqoid, testing::_, testing::_))
+        .WillOnce(testing::Invoke([](const std::string&, catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return nullptr;
+        }));
+
+    testRPC();
+}
+
+// 3.4: Error Case - catena exception in getParam
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_catenaExceptionInGetParam) {
+    expRc_ = catena::exception_with_status("Error processing parameter", catena::StatusCode::INTERNAL);
+    std::string fqoid = "test_param";
+
+    // Request specific parameter
+    initPayload(0, fqoid, false);
+
+    // Setup mock expectations
+    EXPECT_CALL(dm0_, getParam(fqoid, testing::_, testing::_))
+        .WillOnce(testing::Invoke([](const std::string&, catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("Error processing parameter", catena::StatusCode::INTERNAL);
+            return nullptr;
+        }));
+
+    testRPC();
+}
+
+// == SECTION 4 TESTS: Catch blocks at the end of proceed() ==
+
+// 4.1: Error Case - catena exception in proceed()
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_catchCatenaException) {
+    expRc_ = catena::exception_with_status("Test catena exception", catena::StatusCode::INTERNAL);
+    std::string fqoid = "test_param";
+    
+    // Request specific parameter
+    initPayload(0, fqoid, false);
+
+    // Setup mock expectations to trigger an exception during proceed()
+    EXPECT_CALL(dm0_, getParam(fqoid, testing::_, testing::_))
+        .WillOnce(testing::Invoke([](const std::string&, catena::exception_with_status&, Authorizer&) -> std::unique_ptr<IParam> {
+            throw catena::exception_with_status("Test catena exception", catena::StatusCode::INTERNAL);
+        }));
+
+    testRPC();
+}
+
+// 4.2: Error Case - std::exception in proceed()
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_catchStdException) {
+    expRc_ = catena::exception_with_status("Failed due to unknown error in ParamInfoRequest: Test std exception", catena::StatusCode::UNKNOWN);
+    std::string fqoid = "test_param";
+    
+    // Request specific parameter
+    initPayload(0, fqoid, false);
+
+    // Setup mock expectations to trigger a std::exception during proceed()
+    EXPECT_CALL(dm0_, getParam(fqoid, testing::_, testing::_))
+        .WillOnce(testing::Invoke([](const std::string&, catena::exception_with_status&, Authorizer&) -> std::unique_ptr<IParam> {
+            throw std::runtime_error("Test std exception");
+        }));
+
+    testRPC();
+}
+
+// 4.3: Error Case - unknown exception in proceed()
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_catchUnknownException) {
+    expRc_ = catena::exception_with_status("Failed due to unknown error in ParamInfoRequest", catena::StatusCode::UNKNOWN);
+    std::string fqoid = "test_param";
+    
+    // Request specific parameter
+    initPayload(0, fqoid, false);
+
+    // Setup mock expectations to trigger an unknown exception during proceed()
+    EXPECT_CALL(dm0_, getParam(fqoid, testing::_, testing::_))
+        .WillOnce(testing::Invoke([](const std::string&, catena::exception_with_status&, Authorizer&) -> std::unique_ptr<IParam> {
+            throw 42; // Throw an int
+        }));
+
+    testRPC();
+}
