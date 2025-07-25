@@ -75,9 +75,9 @@
 <!-- Node5 -->
 <g id="Node000005" class="node">
 <title>Node5</title>
-<g id="a_Node000005"><a xlink:href="classcatena_1_1gRPC_1_1ICatenaServiceImpl.html" target="_top" xlink:title="Interface class for the gRPC API Implementation.">
-<polygon fill="white" stroke="#666666" points="436,-162 254,-162 254,-143 436,-143 436,-162"/>
-<text text-anchor="middle" x="345" y="-150" font-family="Helvetica,sans-Serif" font-size="10.00">catena::gRPC::ICatenaServiceImpl</text>
+<g id="a_Node000005"><a xlink:href="classcatena_1_1gRPC_1_1IServiceImpl.html" target="_top" xlink:title="Interface class for the gRPC API Implementation.">
+<polygon fill="white" stroke="#666666" points="402,-162 254,-162 254,-143 402,-143 402,-162"/>
+<text text-anchor="middle" x="328" y="-150" font-family="Helvetica,sans-Serif" font-size="10.00">catena::gRPC::IServiceImpl</text>
 </a>
 </g>
 </g>
@@ -85,19 +85,19 @@
 <g id="edge4_Node000002_Node000005" class="edge">
 <title>Node5&#45;&gt;Node2</title>
 <g id="a_edge4_Node000002_Node000005"><a xlink:title=" ">
-<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M317.09,-138.74C286.48,-124.74 238.2,-102.67 211.79,-90.59"/>
-<polygon fill="#9a32cd" stroke="#9a32cd" points="315.81,-142 326.36,-142.98 318.72,-135.64 315.81,-142"/>
+<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M302.51,-138.37C275.29,-124.36 232.94,-102.56 209.69,-90.59"/>
+<polygon fill="#9a32cd" stroke="#9a32cd" points="300.95,-141.51 311.45,-142.98 304.16,-135.29 300.95,-141.51"/>
 </a>
 </g>
-<text text-anchor="middle" x="305" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> service_</text>
+<text text-anchor="middle" x="295" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> service_</text>
 </g>
 <!-- Node6 -->
 <g id="Node000006" class="node">
 <title>Node6</title>
 <g id="a_Node000006"><a xlink:title=" ">
-<polygon fill="white" stroke="#bfbfbf" points="408,-229 282,-229 282,-199 408,-199 408,-229"/>
-<text text-anchor="start" x="290" y="-217" font-family="Helvetica,sans-Serif" font-size="10.00">catena::CatenaService</text>
-<text text-anchor="middle" x="345" y="-206" font-family="Helvetica,sans-Serif" font-size="10.00">::AsyncService</text>
+<polygon fill="white" stroke="#bfbfbf" points="391,-229 265,-229 265,-199 391,-199 391,-229"/>
+<text text-anchor="start" x="273" y="-217" font-family="Helvetica,sans-Serif" font-size="10.00">catena::CatenaService</text>
+<text text-anchor="middle" x="328" y="-206" font-family="Helvetica,sans-Serif" font-size="10.00">::AsyncService</text>
 </a>
 </g>
 </g>
@@ -105,8 +105,8 @@
 <g id="edge5_Node000005_Node000006" class="edge">
 <title>Node6&#45;&gt;Node5</title>
 <g id="a_edge5_Node000005_Node000006"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M345,-188.79C345,-179.36 345,-169.15 345,-162.16"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="341.5,-188.9 345,-198.9 348.5,-188.9 341.5,-188.9"/>
+<path fill="none" stroke="#63b8ff" d="M328,-188.79C328,-179.36 328,-169.15 328,-162.16"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="324.5,-188.9 328,-198.9 331.5,-188.9 324.5,-188.9"/>
 </a>
 </g>
 </g>
