@@ -211,7 +211,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Subscriptions) {
     MockSubscriptionManager mockSubManager;
     // Set up expectations for subscription mode
     EXPECT_CALL(context_, detailLevel()).WillOnce(testing::Return(catena::Device_DetailLevel_SUBSCRIPTIONS));
-    EXPECT_CALL(context_, getSubscriptionManager()).Times(1)
+    EXPECT_CALL(context_, subscriptionManager()).Times(1)
         .WillOnce(testing::ReturnRef(mockSubManager));
     EXPECT_CALL(mockSubManager, getAllSubscribedOids(testing::Ref(dm0_))).Times(1)
         .WillOnce(testing::Return(expectedSubscribedOids));

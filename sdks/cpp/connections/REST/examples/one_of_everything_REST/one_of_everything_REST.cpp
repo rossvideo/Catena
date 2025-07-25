@@ -292,9 +292,10 @@ void RunRESTServer() {
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
         bool authorization = absl::GetFlag(FLAGS_authz);
         uint16_t port = absl::GetFlag(FLAGS_port);
+        uint32_t maxConnections = absl::GetFlag(FLAGS_max_connections);
 
         // Creating and running the REST service.
-        CatenaServiceImpl api({&dm}, EOPath, authorization, port);
+        CatenaServiceImpl api({&dm}, EOPath, authorization, port, maxConnections);
         globalApi = &api;
         DEBUG_LOG << "API Version: " << api.version();
         DEBUG_LOG << "REST on 0.0.0.0:" << port;

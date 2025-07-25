@@ -74,6 +74,24 @@ class GRPCTest : public ::testing::Test {
     virtual void makeOne() = 0;
 
     /*
+     * Processes events in the server's completion queue.
+     * 
+     * Virtual so that it can be overridden in derived classes if needed.
+     */
+    virtual void processEvents() {
+        void* ignored_tag;
+        bool ok;
+        while (cq_->Next(&ignored_tag, &ok)) {
+            if (!testCall_) {
+                testCall_.swap(asyncCall_);
+            }
+            if (testCall_) {
+                testCall_->proceed(ok);
+            }
+        }
+    }
+    
+    /*
      * Creates a gRPC server and redirects cout before each test.
      */
     void SetUp() override {
@@ -105,18 +123,7 @@ class GRPCTest : public ::testing::Test {
         EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(::testing::Invoke([this](){ return authzEnabled_; }));
 
         // Deploying cq handler on a thread.
-        cqthread_ = std::make_unique<std::thread>([&]() {
-            void* ignored_tag;
-            bool ok;
-            while (cq_->Next(&ignored_tag, &ok)) {
-                if (!testCall_) {
-                    testCall_.swap(asyncCall_);
-                }
-                if (testCall_) {
-                    testCall_->proceed(ok);
-                }
-            }
-        });
+        cqthread_ = std::make_unique<std::thread>([&]{processEvents();});
 
         // Creating the CallData object for testing.
         makeOne();

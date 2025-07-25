@@ -41,6 +41,7 @@
 
 // Test helpers
 #include "RESTTest.h"
+#include "MockServiceImpl.h"
 
 // REST
 #include "SocketReader.h"
@@ -65,8 +66,13 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
     // Writes a request to a socket to later be read by the SocketReader.
     void SetUp() override {
         origin_ = "test_origin";
+        // Setting up expectations for the mock service.
+        EXPECT_CALL(service_, subscriptionManager()).WillRepeatedly(testing::ReturnRef(sm));
+        EXPECT_CALL(service_, EOPath()).WillRepeatedly(testing::ReturnRef(EOPath));
+        EXPECT_CALL(service_, version()).WillRepeatedly(testing::ReturnRef(version));
         // Making sure the reader properly adds the subscriptions manager.
-        EXPECT_EQ(&socketReader.getSubscriptionManager(), &sm);
+        EXPECT_EQ(socketReader.service(), &service_);
+        EXPECT_EQ(&socketReader.subscriptionManager(), &sm);
         EXPECT_EQ(socketReader.EOPath(), EOPath);
     }
   
@@ -84,10 +90,12 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
                   catena::Device_DetailLevel detailLevel,
                   std::string language,
                   std::string jsonBody) {
+        // Setting up expectations for the mock service.
+        EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(authz));
         // Writing the request to the socket and reading.
         writeRequest(method, slot, endpoint, fqoid, stream, fields,
                      jwsToken, origin, detailLevel, language, jsonBody);
-        socketReader.read(serverSocket_, authz);
+        socketReader.read(serverSocket_);
         // Validating the results.
         if (!authz) { jwsToken = ""; }
         if (detailLevel ==  catena::Device_DetailLevel_UNSET) {
@@ -114,13 +122,18 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
     // Variables to test on creation.
     catena::common::SubscriptionManager sm;
     std::string EOPath = "/test/eo/path";
+    std::string version = "v1";
+
+    // Mock service implementation.
+    MockServiceImpl service_;
+
     // The SocketReader object.
-    SocketReader socketReader{sm, EOPath};
+    SocketReader socketReader{&service_};
 };
 
 /*
  * ============================================================================
- *                             SSEWriter tests
+ *                            SocketReader tests
  * ============================================================================
  * 
  * TEST 1 - Initializing the SocketReader with subscriptionManager.

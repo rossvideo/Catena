@@ -35,6 +35,7 @@ set(SOURCES
     tests/NamedChoiceConstraint_test.cpp
     tests/RangeConstraint_test.cpp
     tests/ParamDescriptor_test.cpp
+    tests/ConnectionQueue_test.cpp
 )
 
 add_executable(${This} ${SOURCES})

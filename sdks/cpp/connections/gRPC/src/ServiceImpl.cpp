@@ -36,10 +36,11 @@ using catena::gRPC::CatenaServiceImpl;
 // Defining the port flag from SharedFlags.h
 ABSL_FLAG(uint16_t, port, 6254, "Catena gRPC service port");
 
-CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, std::vector<IDevice*> dms, std::string& EOPath, bool authz)
+CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, std::vector<IDevice*> dms, std::string& EOPath, bool authz, uint32_t maxConnections)
     : cq_{cq},
       EOPath_{EOPath}, 
-      authorizationEnabled_{authz} {
+      authorizationEnabled_{authz},
+      connectionQueue_{maxConnections} {
     // Adding dms to slotMap.
     for (auto dm : dms) {
         if (dms_.contains(dm->slot())) {
