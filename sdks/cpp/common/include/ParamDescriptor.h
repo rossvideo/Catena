@@ -100,13 +100,17 @@ class ParamDescriptor : public IParamDescriptor {
      * @param oid_aliases the parameter's oid aliases
      * @param name the parameter's name
      * @param widget the parameter's widget
+     * @param scope the parameter's access scope
      * @param read_only the parameter's read-only status
      * @param oid the parameter's oid
      * @param template_oid the parameter's template oid
      * @param constraint the parameter's constraint
      * @param isCommand the parameter's command status
-     * @param minimalSet the parameter's minimal set status
      * @param dm the device that the parameter belongs to
+     * @param max_length the parameter's maximum length
+     * @param total_length the parameter's total length
+     * @param precision the number of decimal places to display for floats
+     * @param minimalSet the parameter's minimal set status
      * @param parent the parent parameter
      */
     ParamDescriptor(
