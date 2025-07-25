@@ -47,6 +47,7 @@
 #include <Enums.h>
 #include <SubscriptionManager.h>
 #include <SharedFlags.h>
+#include <rpc/ConnectionQueue.h>
 
 // REST
 #include <interface/IServiceImpl.h>
@@ -68,6 +69,8 @@ using catena::REST::SocketReader;
 using catena::REST::SocketWriter;
 using catena::REST::SSEWriter;
 
+using namespace catena::common;
+
 namespace catena {
 /**
  * @brief Namespace for classes relating to handling REST API requests.
@@ -77,13 +80,7 @@ namespace REST {
 /**
  * @brief Implements Catena REST API request handlers.
  */
-class CatenaServiceImpl : public catena::REST::IServiceImpl {
-
-  // Specifying which Device and IParam to use (defaults to catena::...)
-  using IDevice = catena::common::IDevice;
-  using IParam = catena::common::IParam;
-  using SlotMap = catena::common::SlotMap;
-
+class CatenaServiceImpl : public catena::REST::ICatenaServiceImpl {
   public:
     /**
      * @brief Constructor for the REST API.
@@ -92,13 +89,13 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      * @param EOPath The path to the external object.
      * @param authz Flag to enable authorization.
      * @param port The port to listen on. Default is 443.
+     * @param maxConnections The maximum # of connections the service allows.
      */
-    explicit CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOPath, bool authz = false, uint16_t port = 443);
-
+    explicit CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOPath, bool authz = false, uint16_t port = 443, uint32_t maxConnections = 16);
     /**
      * @brief Returns the API's version.
      */
-    std::string version() const override { return version_; }
+    const std::string& version() const override { return version_; }
     /**
      * @brief Starts the API.
      */
@@ -111,20 +108,28 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
     /**
      * @brief Returns true if authorization is enabled.
      */
-    bool authorizationEnabled() override { return authorizationEnabled_; };
+    inline bool authorizationEnabled() const override { return authorizationEnabled_; }
+    /**
+     * @brief Get the subscription manager
+     * @return Reference to the subscription manager
+     */
+    inline ISubscriptionManager& subscriptionManager() override { return subscriptionManager_; }
+    /**
+     * @brief Returns the EOPath.
+     */
+    const std::string& EOPath() override { return EOPath_; }
+    /**
+     * @brief Returns the ConnectionQueue object.
+     */
+    IConnectionQueue& connectionQueue() override { return connectionQueue_; };
 
   private:
-    /**
-     * @brief The subscription manager for handling parameter subscriptions
-     */
-    catena::common::SubscriptionManager subscriptionManager_;
-
     /**
      * @brief Returns true if port_ is already in use.
      * 
      * Currently unused.
      */
-    bool is_port_in_use_() const override;
+    bool is_port_in_use_() const;
 
     /**
      * @brief Provides io functionality for tcp::sockets used in requests.
@@ -147,11 +152,11 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      * 
      * Devices are global objects so raw ptrs should be safe.
      */
-    catena::common::SlotMap dms_;
+    SlotMap dms_;
     /**
      * @brief The path to the external object
      */
-    std::string& EOPath_;
+    std::string& EOPath_; 
     /**
      * @brief Flag to enable authorization
      */
@@ -161,14 +166,22 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      */
     bool shutdown_ = false;
     /**
-     * @brief Counter used to track number of active requests. Run() does not
-     * return until this is 0.
+     * @brief The subscription manager for handling parameter subscriptions
+     */
+    catena::common::SubscriptionManager subscriptionManager_;
+    /**
+     * @brief The # of active requests. Increments after a socket is recieved
+     * and decrements once that request is finished.
      */
     uint32_t activeRequests_ = 0;
     /**
-     * @brief Mutex for activeRequests_ counter to avoid collisions.
+     * @brief Mutex to protect the activeRequests_ variable.
      */
     std::mutex activeRequestMutex_;
+    /**
+     * @brief The connectionQueue object for managing connections to the service
+     */
+    ConnectionQueue connectionQueue_;
 
     using Router = catena::patterns::GenericFactory<catena::REST::ICallData,
                                                     std::string,
