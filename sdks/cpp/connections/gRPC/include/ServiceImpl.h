@@ -97,29 +97,30 @@ namespace gRPC {
 
 /**
  * @brief Config object for the CatenaServiceImpl to streamline creation.
+ * 
+ * The cq field is required for CatenaServiceImpl to function properly.
  */
-class ServiceConfig {
-  public:
-    /**
-     * @brief The completion queue for the server.
-     */
-    ServerCompletionQueue* cq = nullptr;
-    /**
-     * @brief A map of slots to ptrs to their corresponding device.
-     */
-    std::vector<IDevice*> dms = {};
-    /**
-     * @brief The path to the external object.
-     */
-    std::string EOPath = "";
-    /**
-     * @brief Flag to enable authorization.
-     */
-    bool authz = false;
-    /**
-     * @brief The maximum number of connections allowed to the service.
-     */
-    uint32_t maxConnections = 16;
+struct ServiceConfig {
+  /**
+   * @brief The completion queue for the server.
+   */
+  ServerCompletionQueue* cq = nullptr;
+  /**
+   * @brief A map of slots to ptrs to their corresponding device.
+   */
+  std::vector<IDevice*> dms = {};
+  /**
+   * @brief The path to the external object.
+   */
+  std::string EOPath = "";
+  /**
+   * @brief Flag to enable authorization.
+   */
+  bool authz = false;
+  /**
+   * @brief The maximum number of connections allowed to the service.
+   */
+  uint32_t maxConnections = 16;
 };
 
 /**
@@ -129,13 +130,10 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
   public:
     /**
      * @brief Constructor for the CatenaServiceImpl class.
-     * @param cq The completion queue for the server.
-     * @param dms A map of slots to ptrs to their corresponding device.
-     * @param EOPath The path to the external object.
-     * @param authz Flag to enable authorization.
-     * @param maxConnections The maximum number of connections allowed to the service.
+     * @param config The service config object containing the necessary
+     * parameters.
      */
-    CatenaServiceImpl(const ServiceConfig& config = ServiceConfig());
+    CatenaServiceImpl(const ServiceConfig& config = ServiceConfig{});
     /**
      * @brief Creates the CallData objects for each gRPC command.
      */

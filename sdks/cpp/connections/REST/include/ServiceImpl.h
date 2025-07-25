@@ -80,28 +80,27 @@ namespace REST {
 /**
  * @brief Config object for the CatenaServiceImpl to streamline creation.
  */
-class ServiceConfig {
-  public:
-    /**
-     * @brief A map of slots to ptrs to their corresponding device.
-     */
-    std::vector<IDevice*> dms = {};
-    /**
-     * @brief The path to the external object.
-     */
-    std::string EOPath = "";
-    /**
-     * @brief Flag to enable authorization.
-     */
-    bool authz = false;
-    /**
-     * @brief The port to listen on.
-     */
-    uint16_t port = 443;
-    /**
-     * @brief The maximum number of connections allowed to the service.
-     */
-    uint32_t maxConnections = 16;
+struct ServiceConfig {
+  /**
+   * @brief A map of slots to ptrs to their corresponding device.
+   */
+  std::vector<IDevice*> dms = {};
+  /**
+   * @brief The path to the external object.
+   */
+  std::string EOPath = "";
+  /**
+   * @brief Flag to enable authorization.
+   */
+  bool authz = false;
+  /**
+   * @brief The port to listen on.
+   */
+  uint16_t port = 443;
+  /**
+   * @brief The maximum number of connections allowed to the service.
+   */
+  uint32_t maxConnections = 16;
 };
 
 /**
@@ -113,12 +112,10 @@ class CatenaServiceImpl : public catena::REST::ICatenaServiceImpl {
      * @brief Constructor for the REST API.
      * 
      * @param dm The device to implement Catena services to.
-     * @param EOPath The path to the external object.
-     * @param authz Flag to enable authorization.
-     * @param port The port to listen on. Default is 443.
-     * @param maxConnections The maximum # of connections the service allows.
+     * @param config The service config object containing the necessary
+     * parameters.
      */
-    CatenaServiceImpl(const ServiceConfig& config = ServiceConfig());
+    CatenaServiceImpl(const ServiceConfig& config = ServiceConfig{});
 
     /**
      * @brief Returns the API's version.
