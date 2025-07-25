@@ -215,12 +215,12 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~ParamDescriptor</
 <tr class="memitem:a82f28c8094816bb002621ccb19386d96" id="r_a82f28c8094816bb002621ccb19386d96"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classcatena_1_1common_1_1IConstraint.html">catena::common::IConstraint</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a82f28c8094816bb002621ccb19386d96">getConstraint</a> () const override</td></tr>
 <tr class="memdesc:a82f28c8094816bb002621ccb19386d96"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a constraint by oid  <br /></td></tr>
 <tr class="separator:a82f28c8094816bb002621ccb19386d96"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a68362878ee51288be48a6f5cdc71aa82" id="r_a68362878ee51288be48a6f5cdc71aa82"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a68362878ee51288be48a6f5cdc71aa82">defineCommand</a> (std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt;(const catena::Value &amp;)&gt; commandImpl) override</td></tr>
-<tr class="memdesc:a68362878ee51288be48a6f5cdc71aa82"><td class="mdescLeft">&#160;</td><td class="mdescRight">define the command implementation  <br /></td></tr>
-<tr class="separator:a68362878ee51288be48a6f5cdc71aa82"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a050c81ccedb8144a21e7a25e497dfd15" id="r_a050c81ccedb8144a21e7a25e497dfd15"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a050c81ccedb8144a21e7a25e497dfd15">executeCommand</a> (const catena::Value &amp;value) override</td></tr>
-<tr class="memdesc:a050c81ccedb8144a21e7a25e497dfd15"><td class="mdescLeft">&#160;</td><td class="mdescRight">execute the command  <br /></td></tr>
-<tr class="separator:a050c81ccedb8144a21e7a25e497dfd15"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aabfdc70cffeeb1e83b992c3cd4bbc2de" id="r_aabfdc70cffeeb1e83b992c3cd4bbc2de"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#aabfdc70cffeeb1e83b992c3cd4bbc2de">defineCommand</a> (std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt;(catena::Value)&gt; commandImpl) override</td></tr>
+<tr class="memdesc:aabfdc70cffeeb1e83b992c3cd4bbc2de"><td class="mdescLeft">&#160;</td><td class="mdescRight">define the command implementation  <br /></td></tr>
+<tr class="separator:aabfdc70cffeeb1e83b992c3cd4bbc2de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ade95adaad7bbfc7e553086f0342d6d0c" id="r_ade95adaad7bbfc7e553086f0342d6d0c"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#ade95adaad7bbfc7e553086f0342d6d0c">executeCommand</a> (catena::Value value) override</td></tr>
+<tr class="memdesc:ade95adaad7bbfc7e553086f0342d6d0c"><td class="mdescLeft">&#160;</td><td class="mdescRight">execute the command  <br /></td></tr>
+<tr class="separator:ade95adaad7bbfc7e553086f0342d6d0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a71e3b0347b9c41f60333c1e796ed1f66" id="r_a71e3b0347b9c41f60333c1e796ed1f66"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a71e3b0347b9c41f60333c1e796ed1f66">isCommand</a> () const override</td></tr>
 <tr class="memdesc:a71e3b0347b9c41f60333c1e796ed1f66"><td class="mdescLeft">&#160;</td><td class="mdescRight">return true if this is a command parameter  <br /></td></tr>
 <tr class="separator:a71e3b0347b9c41f60333c1e796ed1f66"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -447,8 +447,8 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
-<a id="a68362878ee51288be48a6f5cdc71aa82" name="a68362878ee51288be48a6f5cdc71aa82"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a68362878ee51288be48a6f5cdc71aa82">&#9670;&#160;</a></span>defineCommand()</h2>
+<a id="aabfdc70cffeeb1e83b992c3cd4bbc2de" name="aabfdc70cffeeb1e83b992c3cd4bbc2de"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aabfdc70cffeeb1e83b992c3cd4bbc2de">&#9670;&#160;</a></span>defineCommand()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -459,7 +459,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">void catena::common::ParamDescriptor::defineCommand </td>
           <td>(</td>
-          <td class="paramtype">std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt;(const catena::Value &amp;)&gt;&#160;</td>
+          <td class="paramtype">std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt;(catena::Value)&gt;&#160;</td>
           <td class="paramname"><em>commandImpl</em></td><td>)</td>
           <td></td>
         </tr>
@@ -480,12 +480,12 @@ Here is the call graph for this function:</div>
 </dl>
 <p>The passed function will be executed when executeCommand is called on this param object. If this is not a command parameter, an exception will be thrown. </p>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a72a6a3de31505714ffd91ef90d1ffc96">catena::common::IParamDescriptor</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ada5f851f25172c7354ee5c1481088501">catena::common::IParamDescriptor</a>.</p>
 
 </div>
 </div>
-<a id="a050c81ccedb8144a21e7a25e497dfd15" name="a050c81ccedb8144a21e7a25e497dfd15"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a050c81ccedb8144a21e7a25e497dfd15">&#9670;&#160;</a></span>executeCommand()</h2>
+<a id="ade95adaad7bbfc7e553086f0342d6d0c" name="ade95adaad7bbfc7e553086f0342d6d0c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ade95adaad7bbfc7e553086f0342d6d0c">&#9670;&#160;</a></span>executeCommand()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -496,7 +496,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt; catena::common::ParamDescriptor::executeCommand </td>
           <td>(</td>
-          <td class="paramtype">const catena::Value &amp;&#160;</td>
+          <td class="paramtype">catena::Value&#160;</td>
           <td class="paramname"><em>value</em></td><td>)</td>
           <td></td>
         </tr>
@@ -518,7 +518,7 @@ Here is the call graph for this function:</div>
 <dl class="section return"><dt>Returns</dt><dd>the responser from the command implementation</dd></dl>
 <p>if executeCommand is called for a command that has not been defined, then the returned command response will be an exception with type UNIMPLEMENTED </p>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a065310761a946bff2a9e14ae0b3f895f">catena::common::IParamDescriptor</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#aa895e32b34b8f077e13e609fde61e8da">catena::common::IParamDescriptor</a>.</p>
 
 </div>
 </div>
