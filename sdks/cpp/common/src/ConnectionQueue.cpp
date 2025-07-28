@@ -35,7 +35,7 @@
 using catena::common::ConnectionQueue;
 
 bool ConnectionQueue::registerConnection(IConnect* cd) {
-    bool canAdd = false;
+    bool added = false;
     std::lock_guard<std::mutex> lock(mtx_);
     // Find the index to insert the new connection based on priority.
     auto it = std::find_if(connectionQueue_.begin(), connectionQueue_.end(),
@@ -44,18 +44,16 @@ bool ConnectionQueue::registerConnection(IConnect* cd) {
     if (connectionQueue_.size() >= maxConnections_) {
         if (it != connectionQueue_.begin()) {
             // Forcefully shutting down lowest priority connection.
+            connectionQueue_.insert(it, cd);
             connectionQueue_.front()->shutdown();
             connectionQueue_.erase(connectionQueue_.begin());
-            canAdd = true;
+            added = true;
         }
     } else {
-        canAdd = true;
-    }
-    // Adding the connection if possible.
-    if (canAdd) {
         connectionQueue_.insert(it, cd);
+        added = true;
     }
-    return canAdd;
+    return added;
 }
 
 void ConnectionQueue::deregisterConnection(const IConnect* cd) {

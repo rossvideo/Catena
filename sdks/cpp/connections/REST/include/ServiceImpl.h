@@ -80,27 +80,89 @@ namespace REST {
 /**
  * @brief Config object for the ServiceImpl to streamline creation.
  */
-struct ServiceConfig {
-  /**
-   * @brief A map of slots to ptrs to their corresponding device.
-   */
-  std::vector<IDevice*> dms = {};
-  /**
-   * @brief The path to the external object.
-   */
-  std::string EOPath = "";
-  /**
-   * @brief Flag to enable authorization.
-   */
-  bool authz = false;
-  /**
-   * @brief The port to listen on.
-   */
-  uint16_t port = 443;
-  /**
-   * @brief The maximum number of connections allowed to the service.
-   */
-  uint32_t maxConnections = 16;
+class ServiceConfig {
+  public:
+    /**
+     * @brief Sets EOPath, authz, port, and maxConnections via command line
+     * flags.
+     */
+    ServiceConfig& set_flags() {
+      EOPath = absl::GetFlag(FLAGS_static_root);
+      authz = absl::GetFlag(FLAGS_authz);
+      port = absl::GetFlag(FLAGS_port);
+      maxConnections = absl::GetFlag(FLAGS_max_connections);
+      return *this;
+    }
+    /**
+     * @brief Sets the vector of Device pointers.
+     * @param dms A vector of Device pointers.
+     */
+    ServiceConfig& set_dms(std::vector<IDevice*> dms) {
+      this->dms = std::move(dms);
+      return *this;
+    }
+    /**
+     * @brief Adds a Device pointers.
+     * @param dm The Device pointer to add.
+     */
+    ServiceConfig& add_dm(IDevice* dm) {
+      this->dms.push_back(dm);
+      return *this;
+    }
+    /**
+     * @brief Sets the external object path.
+     * @param EOPath The external object path.
+     */
+    ServiceConfig& set_EOPath(const std::string& EOPath) {
+      this->EOPath = EOPath;
+      return *this;
+    }
+    /**
+     * @brief Sets the authz flag.
+     * @param authz True if authz is enabled, False otherwise.
+     */
+    ServiceConfig& set_authz(bool authz) {
+      this->authz = authz;
+      return *this;
+    }
+    /**
+     * @brief Sets the port number.
+     * @param port The port number.
+     */
+    ServiceConfig& set_port(uint16_t port) {
+      this->port = port;
+      return *this;
+    }
+    /**
+     * @brief Sets the maximum number of connections allowed to the service.
+     * @param maxConnections The maximum number of connections allowed to the
+     * service.
+     */
+    ServiceConfig& set_maxConnections(uint32_t maxConnections) {
+      this->maxConnections = maxConnections;
+      return *this;
+    }
+
+    /**
+     * @brief A map of slots to ptrs to their corresponding device.
+     */
+    std::vector<IDevice*> dms = {};
+    /**
+     * @brief The path to the external object.
+     */
+    std::string EOPath = "";
+    /**
+     * @brief Flag to enable authorization.
+     */
+    bool authz = false;
+    /**
+     * @brief The port to listen on.
+     */
+    uint16_t port = 443;
+    /**
+     * @brief The maximum number of connections allowed to the service.
+     */
+    uint32_t maxConnections = 16;
 };
 
 /**

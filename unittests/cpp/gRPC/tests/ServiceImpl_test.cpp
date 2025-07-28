@@ -83,11 +83,12 @@ class gRPCServiceImplTests : public testing::Test {
         // Creating the gRPC server.
         builder_.AddListeningPort(serverAddr_, grpc::InsecureServerCredentials());
         cq_ = builder_.AddCompletionQueue();
-        ServiceConfig config;
-        config.cq = cq_.get();
-        config.dms.push_back(&dm_);
-        config.EOPath = EOPath_;
-        config.authz = authzEnabled_;
+        ServiceConfig config = ServiceConfig()
+            .set_EOPath(EOPath_)
+            .set_authz(authzEnabled_)
+            .set_maxConnections(1)
+            .set_cq(cq_.get())
+            .add_dm(&dm_);
         service_.reset(new ServiceImpl(config));
         builder_.RegisterService(service_.get());
         server_ = builder_.BuildAndStart();
@@ -142,7 +143,32 @@ class gRPCServiceImplTests : public testing::Test {
 };
 
 /*
- * TEST 1 - Test creation and destruction of the service implementation.
+ * TEST 1 - Test ServiceConfig set_flags()
+ */
+TEST(gRPCServiceConfigTests, ServiceConfig_SetFlags) {
+    ServiceConfig config;
+    // Testing SetFlags.
+    config.set_flags();
+    EXPECT_EQ(config.EOPath, absl::GetFlag(FLAGS_static_root));
+    EXPECT_EQ(config.authz, absl::GetFlag(FLAGS_authz));
+    EXPECT_EQ(config.maxConnections, absl::GetFlag(FLAGS_max_connections));
+}
+
+/*
+ * TEST 2 - Test ServiceConfig set_dms() and add_dm()
+ */
+TEST(gRPCServiceConfigTests, ServiceConfig_SetDms) {
+    MockDevice dm1, dm2, dm3;
+    ServiceConfig config;
+    // Testing SetFlags.
+    config.set_dms({&dm1, &dm2});
+    EXPECT_EQ(config.dms, (std::vector<IDevice*>{&dm1, &dm2}));
+    config.add_dm(&dm3);
+    EXPECT_EQ(config.dms, (std::vector<IDevice*>{&dm1, &dm2, &dm3}));
+}
+
+/*
+ * TEST 3 - Test creation and destruction of the service implementation.
  */
 TEST_F(gRPCServiceImplTests, ServiceImpl_CreateDestroy) {
     ASSERT_TRUE(service_);
@@ -156,7 +182,7 @@ TEST_F(gRPCServiceImplTests, ServiceImpl_CreateDestroy) {
 }
 
 /*
- * TEST 2 - Creating a REST ServiceImpl with no completion queue.
+ * TEST 4 - Creating a REST ServiceImpl with no completion queue.
  *
  * This is not under the fixture because setting up a gRPC server is time
  * consuming and not needed.
@@ -167,7 +193,7 @@ TEST(gRPCServiceImplTests_NoFixture, ServiceImpl_CreateNoCQ) {
 }
 
 /*
- * TEST 3 - Creating a REST ServiceImpl with two devices sharing a slot.
+ * TEST 5 - Creating a REST ServiceImpl with two devices sharing a slot.
  *
  * This is not under the fixture because setting up a gRPC server is time
  * consuming and not needed.

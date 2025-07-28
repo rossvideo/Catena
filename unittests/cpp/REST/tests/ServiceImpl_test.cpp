@@ -69,11 +69,12 @@ class RESTServiceImplTests : public testing::Test {
     void SetUp() override {
         oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
         EXPECT_CALL(dm_, slot()).WillRepeatedly(testing::Return(0));
-        ServiceConfig config;
-        config.dms.push_back(&dm_);
-        config.EOPath = EOPath_;
-        config.authz = authzEnabled_;
-        config.port = port_;
+        ServiceConfig config = ServiceConfig()
+            .add_dm(&dm_)
+            .set_EOPath(EOPath_)
+            .set_authz(authzEnabled_)
+            .set_maxConnections(1)
+            .set_port(port_);
         service_.reset(new ServiceImpl(config));
     }
 
@@ -120,7 +121,33 @@ class RESTServiceImplTests : public testing::Test {
 };
 
 /*
- * TEST 1 - Creating a REST ServiceImpl.
+ * TEST 1 - Test ServiceConfig set_flags()
+ */
+TEST(RESTServiceConfigTests, ServiceConfig_SetFlags) {
+    ServiceConfig config;
+    // Testing SetFlags.
+    config.set_flags();
+    EXPECT_EQ(config.EOPath, absl::GetFlag(FLAGS_static_root));
+    EXPECT_EQ(config.authz, absl::GetFlag(FLAGS_authz));
+    EXPECT_EQ(config.maxConnections, absl::GetFlag(FLAGS_max_connections));
+    EXPECT_EQ(config.port, absl::GetFlag(FLAGS_port));
+}
+
+/*
+ * TEST 2 - Test ServiceConfig set_dms() and add_dm()
+ */
+TEST(RESTServiceConfigTests, ServiceConfig_SetDms) {
+    MockDevice dm1, dm2, dm3;
+    ServiceConfig config;
+    // Testing SetFlags.
+    config.set_dms({&dm1, &dm2});
+    EXPECT_EQ(config.dms, (std::vector<IDevice*>{&dm1, &dm2}));
+    config.add_dm(&dm3);
+    EXPECT_EQ(config.dms, (std::vector<IDevice*>{&dm1, &dm2, &dm3}));
+}
+
+/*
+ * TEST 3 - Creating a REST ServiceImpl.
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_Create) {
     ASSERT_TRUE(service_);
@@ -131,7 +158,7 @@ TEST_F(RESTServiceImplTests, ServiceImpl_Create) {
 }
 
 /*
- * TEST 2 - Creating a REST ServiceImpl.
+ * TEST 4 - Creating a REST ServiceImpl.
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_CreateDuplicateSlot) {
     // Creating a new device and adding it to the config.
@@ -147,7 +174,7 @@ TEST_F(RESTServiceImplTests, ServiceImpl_CreateDuplicateSlot) {
 }
 
 /*
- * TEST 3 - Running and shutting down the REST ServiceImpl.
+ * TEST 5 - Running and shutting down the REST ServiceImpl.
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_RunAndShutdown) {
     // Starting the service.
@@ -161,7 +188,7 @@ TEST_F(RESTServiceImplTests, ServiceImpl_RunAndShutdown) {
 }
 
 /*
- * TEST 4 - Testing the service's router against all valid endpoints. 
+ * TEST 6 - Testing the service's router against all valid endpoints. 
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_Router) {
     // Starting the service.

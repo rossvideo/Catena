@@ -100,27 +100,86 @@ namespace gRPC {
  * 
  * The cq field is required for ServiceImpl to function properly.
  */
-struct ServiceConfig {
-  /**
-   * @brief The completion queue for the server.
-   */
-  ServerCompletionQueue* cq = nullptr;
-  /**
-   * @brief A map of slots to ptrs to their corresponding device.
-   */
-  std::vector<IDevice*> dms = {};
-  /**
-   * @brief The path to the external object.
-   */
-  std::string EOPath = "";
-  /**
-   * @brief Flag to enable authorization.
-   */
-  bool authz = false;
-  /**
-   * @brief The maximum number of connections allowed to the service.
-   */
-  uint32_t maxConnections = 16;
+class ServiceConfig {
+  public:
+    /**
+     * @brief Sets EOPath, authz, and maxConnections via command line flags.
+     */
+    ServiceConfig& set_flags() {
+      EOPath = absl::GetFlag(FLAGS_static_root);
+      authz = absl::GetFlag(FLAGS_authz);
+      maxConnections = absl::GetFlag(FLAGS_max_connections);
+      return *this;
+    }
+    /**
+     * @brief Sets the completion queue.
+     * @param cq A pointer to the completion queue
+     */
+    ServiceConfig& set_cq(ServerCompletionQueue* cq) {
+      this->cq = cq;
+      return *this;
+    }
+    /**
+     * @brief Sets the vector of Device pointers.
+     * @param dms A vector of Device pointers.
+     */
+    ServiceConfig& set_dms(std::vector<IDevice*> dms) {
+      this->dms = std::move(dms);
+      return *this;
+    }
+    /**
+     * @brief Adds a Device pointers.
+     * @param dm The Device pointer to add.
+     */
+    ServiceConfig& add_dm(IDevice* dm) {
+      this->dms.push_back(dm);
+      return *this;
+    }
+    /**
+     * @brief Sets the external object path.
+     * @param EOPath The external object path.
+     */
+    ServiceConfig& set_EOPath(const std::string& EOPath) {
+      this->EOPath = EOPath;
+      return *this;
+    }
+    /**
+     * @brief Sets the authz flag.
+     * @param authz True if authz is enabled, False otherwise.
+     */
+    ServiceConfig& set_authz(bool authz) {
+      this->authz = authz;
+      return *this;
+    }
+    /**
+     * @brief Sets the maximum number of connections allowed to the service.
+     * @param maxConnections The maximum number of connections allowed to the
+     * service.
+     */
+    ServiceConfig& set_maxConnections(uint32_t maxConnections) {
+      this->maxConnections = maxConnections;
+      return *this;
+    }
+    /**
+     * @brief The completion queue for the server.
+     */
+    ServerCompletionQueue* cq = nullptr;
+    /**
+     * @brief A map of slots to ptrs to their corresponding device.
+     */
+    std::vector<IDevice*> dms = {};
+    /**
+     * @brief The path to the external object.
+     */
+    std::string EOPath = "";
+    /**
+     * @brief Flag to enable authorization.
+     */
+    bool authz = false;
+    /**
+     * @brief The maximum number of connections allowed to the service.
+     */
+    uint32_t maxConnections = 16;
 };
 
 /**

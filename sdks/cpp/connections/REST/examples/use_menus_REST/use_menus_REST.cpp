@@ -124,12 +124,9 @@ void RunRESTServer() {
 
     try {
         // Setting config.
-        ServiceConfig config;
-        config.dms.push_back(&dm);
-        config.EOPath = absl::GetFlag(FLAGS_static_root);
-        config.authz = absl::GetFlag(FLAGS_authz);
-        config.port = absl::GetFlag(FLAGS_port);
-        config.maxConnections = absl::GetFlag(FLAGS_max_connections);
+        ServiceConfig config = ServiceConfig()
+            .set_flags()
+            .add_dm(&dm);
         
         // Creating and running the REST service.
         ServiceImpl api(config);

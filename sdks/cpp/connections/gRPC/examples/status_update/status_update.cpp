@@ -186,12 +186,10 @@ void RunRPCServer(std::string addr)
 
         builder.AddListeningPort(addr, catena::gRPC::getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
-        ServiceConfig config;
-        config.cq = cq.get();
-        config.dms.push_back(&dm);
-        config.EOPath = absl::GetFlag(FLAGS_static_root);
-        config.authz = absl::GetFlag(FLAGS_authz);
-        config.maxConnections = absl::GetFlag(FLAGS_max_connections);
+        ServiceConfig config = ServiceConfig()
+            .set_flags()
+            .set_cq(cq.get())
+            .add_dm(&dm);
         ServiceImpl service(config);
 
         // Updating device's default max array length.
