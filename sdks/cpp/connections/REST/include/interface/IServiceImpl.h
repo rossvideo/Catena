@@ -61,16 +61,16 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief Interface for the REST::CatenaServiceImpl class
+ * @brief Interface for the REST::ServiceImpl class
  */
-class ICatenaServiceImpl {
+class IServiceImpl {
   public:
-    ICatenaServiceImpl() = default;
-    ICatenaServiceImpl(const ICatenaServiceImpl&) = delete;
-    ICatenaServiceImpl& operator=(const ICatenaServiceImpl&) = delete;
-    ICatenaServiceImpl(ICatenaServiceImpl&&) = delete;
-    ICatenaServiceImpl& operator=(ICatenaServiceImpl&&) = delete;
-    virtual ~ICatenaServiceImpl() = default;
+    IServiceImpl() = default;
+    IServiceImpl(const IServiceImpl&) = delete;
+    IServiceImpl& operator=(const IServiceImpl&) = delete;
+    IServiceImpl(IServiceImpl&&) = delete;
+    IServiceImpl& operator=(IServiceImpl&&) = delete;
+    virtual ~IServiceImpl() = default;
 
     /**
      * @brief Returns the API's version.

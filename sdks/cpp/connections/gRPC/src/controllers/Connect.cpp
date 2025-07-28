@@ -41,7 +41,7 @@ int catena::gRPC::Connect::objectCounter_ = 0;
  * Constructor which initializes and registers the current Connect object, 
  * then starts the process.
  */
-catena::gRPC::Connect::Connect(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+catena::gRPC::Connect::Connect(IServiceImpl *service, SlotMap& dms, bool ok)
     : CallData(service), writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish}, 
         catena::common::Connect(dms, service->getSubscriptionManager()) {

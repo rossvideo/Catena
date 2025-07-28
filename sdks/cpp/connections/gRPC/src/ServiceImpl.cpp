@@ -31,12 +31,12 @@
 // connections/gRPC
 #include <ServiceImpl.h>
 #include <Logger.h>
-using catena::gRPC::CatenaServiceImpl;
+using catena::gRPC::ServiceImpl;
 
 // Defining the port flag from SharedFlags.h
 ABSL_FLAG(uint16_t, port, 6254, "Catena gRPC service port");
 
-CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, std::vector<IDevice*> dms, std::string& EOPath, bool authz, uint32_t maxConnections)
+ServiceImpl::ServiceImpl(ServerCompletionQueue *cq, std::vector<IDevice*> dms, std::string& EOPath, bool authz, uint32_t maxConnections)
     : cq_{cq},
       EOPath_{EOPath}, 
       authorizationEnabled_{authz},
@@ -54,7 +54,7 @@ CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, std::vector<IDev
 /**
  * Creates the CallData objects for each gRPC command.
  */
-void CatenaServiceImpl::init() {
+void ServiceImpl::init() {
     new catena::gRPC::GetPopulatedSlots(this, dms_, true);
     new catena::gRPC::GetValue(this, dms_, true);
     new catena::gRPC::SetValue(this, dms_, true);
@@ -75,7 +75,7 @@ void CatenaServiceImpl::init() {
 vdk::signal<void()> catena::gRPC::Connect::shutdownSignal_;
 
 // Processes events in the server's completion queue.
-void CatenaServiceImpl::processEvents() {
+void ServiceImpl::processEvents() {
     void *tag;
     bool ok;
     DEBUG_LOG << "Start processing events\n";
@@ -99,13 +99,13 @@ void CatenaServiceImpl::processEvents() {
 }
 
 //Registers current CallData object into the registry
-void CatenaServiceImpl::registerItem(ICallData *cd) {
+void ServiceImpl::registerItem(ICallData *cd) {
     std::lock_guard<std::mutex> lock(registryMutex_);
     this->registry_.push_back(RegistryItem(cd));
 }
 
 //Deregisters current CallData object from the registry
-void CatenaServiceImpl::deregisterItem(ICallData *cd) {
+void ServiceImpl::deregisterItem(ICallData *cd) {
     std::lock_guard<std::mutex> lock(registryMutex_);
     auto it = std::find_if(registry_.begin(), registry_.end(),
                             [cd](const RegistryItem &i) { return i.get() == cd; });

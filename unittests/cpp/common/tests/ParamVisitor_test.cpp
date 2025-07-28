@@ -44,7 +44,7 @@
 #include <IDevice.h>
 #include <IParam.h>
 #include <Status.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 #include <ParamVisitor.h>
 #include <Logger.h>
 

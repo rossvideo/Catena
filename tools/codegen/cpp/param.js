@@ -146,6 +146,9 @@ class Descriptor {
       total_length: () => {
         return ("total_length" in desc) ? `${desc.total_length}` : "0";
       },
+      precision: () => {
+        return ("precision" in desc) ? `${desc.precision}` : "2";
+      },
       minimal_set: () => {
         return ("minimal_set" in desc) ? `${desc.minimal_set}` : "false";
       }
