@@ -35,13 +35,14 @@ void expandEnvVariables(std::string &str) {
 }
 // GCOVR_EXCL_STOP
 
-CatenaServiceImpl::CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOPath, bool authz, uint16_t port)
+CatenaServiceImpl::CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOPath, bool authz, uint16_t port, uint32_t maxConnections)
     : version_{"v1"},
       EOPath_{EOPath},
       port_{port},
       authorizationEnabled_{authz},
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
-      router_{Router::getInstance()} {
+      router_{Router::getInstance()},
+      connectionQueue_{maxConnections} {
 
     if (authorizationEnabled_) { DEBUG_LOG <<"Authorization enabled."; }
     // Adding dms to slotMap.
@@ -79,7 +80,7 @@ CatenaServiceImpl::CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOP
 }
 
 // Initializing the shutdown signal for all open connections.
-vdk::signal<void()> Connect::shutdownSignal_;
+vdk::signal<void()> catena::REST::Connect::shutdownSignal_;
 
 void CatenaServiceImpl::run() {
     // TLS handled by Envoyproxy
@@ -99,9 +100,8 @@ void CatenaServiceImpl::run() {
             if (!shutdown_) {
                 try {
                     // Reading from the socket.
-                    SocketReader context(subscriptionManager_, EOPath_);
-                    context.read(socket, authorizationEnabled_, version_);
-                    //TODO: remove v1 from the request key when the router options are updated
+                    SocketReader context(this);
+                    context.read(socket);
                     std::string requestKey = RESTMethodMap().getForwardMap().at(context.method()) + context.endpoint();
                     // Returning empty response with options to the client if required.
                     if (context.method() == Method_OPTIONS) {

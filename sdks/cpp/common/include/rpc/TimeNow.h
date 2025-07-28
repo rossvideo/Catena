@@ -40,6 +40,7 @@
 // std
 #include <string>
 #include <iostream>
+#include <chrono>
 
 namespace catena {
 namespace common {

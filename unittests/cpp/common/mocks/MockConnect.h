@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief Mock implementation for the gRPC ICatenaServiceImpl class.
+ * @brief Mock implementation for the IConnect class.
  * @author benjamin.whitten@rossvideo.com
  * @date 25/06/26
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -38,28 +38,27 @@
 #pragma once
 
 #include <gmock/gmock.h>
-#include <interface/IServiceImpl.h>
-
-using namespace catena::common;
+#include "rpc/IConnect.h"
 
 namespace catena {
-namespace gRPC {
+namespace common {
 
-// Mock implementation for the gRPC ICatenaServiceImpl class.
-class MockServiceImpl : public ICatenaServiceImpl {
+// Mock implementation for the IConnect class.
+class MockConnect : public IConnect {
   public:
-    MOCK_METHOD(void, init, (), (override));
-    MOCK_METHOD(void, processEvents, (), (override));
-    MOCK_METHOD(void, shutdownServer, (), (override));
-    MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
-    MOCK_METHOD(ISubscriptionManager&, getSubscriptionManager, (), (override));
-    MOCK_METHOD(grpc::ServerCompletionQueue*, cq, (), (override));
-    MOCK_METHOD(const std::string&, EOPath, (), (override));
-    MOCK_METHOD(IConnectionQueue&, connectionQueue, (), (override));
-    MOCK_METHOD(uint32_t, registrySize, (), (const, override));
-    MOCK_METHOD(void, registerItem, (ICallData* cd), (override));
-    MOCK_METHOD(void, deregisterItem, (ICallData* cd), (override));
+    MOCK_METHOD(uint32_t, priority, (), (const, override));
+    MOCK_METHOD(uint32_t, objectId, (), (const, override));
+    MOCK_METHOD(void, shutdown, (), (override));
+    MOCK_METHOD(bool, isCancelled, (), (override));
+    MOCK_METHOD(void, updateResponse_, (const std::string& oid, const IParam* p, uint32_t slot), (override));
+    MOCK_METHOD(void, updateResponse_, (const ILanguagePack* l, uint32_t slot), (override));
+    MOCK_METHOD(void, initAuthz_, (const std::string& jwsToken, bool authz), (override));
+
+    MOCK_METHOD(bool, lessThan, (const IConnect& otherConnection), (const));
+    bool operator<(const IConnect& otherConnection) const override {
+        return lessThan(otherConnection);
+    }
 };
 
-} // namespace gRPC
+} // namespace common
 } // namespace catena

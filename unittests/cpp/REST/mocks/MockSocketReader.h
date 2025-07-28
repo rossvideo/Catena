@@ -46,7 +46,7 @@ namespace REST {
 // Mock implementation for the ISocketReader class.
 class MockSocketReader : public ISocketReader {
   public:
-    MOCK_METHOD(void, read, (tcp::socket& socket, bool authz, const std::string& version), (override));
+    MOCK_METHOD(void, read, (tcp::socket& socket), (override));
     MOCK_METHOD(RESTMethod, method, (), (const, override));
     MOCK_METHOD(const std::string&, endpoint, (), (const, override));
     MOCK_METHOD(uint32_t, slot, (), (const, override));
@@ -57,10 +57,13 @@ class MockSocketReader : public ISocketReader {
     MOCK_METHOD(const std::string&, origin, (), (const, override));
     MOCK_METHOD(catena::Device_DetailLevel, detailLevel, (), (const, override));
     MOCK_METHOD(const std::string&, jsonBody, (), (const, override));
-    MOCK_METHOD(catena::common::ISubscriptionManager&, getSubscriptionManager, (), (override));
-    MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
     MOCK_METHOD(bool, stream, (), (const, override));
+    MOCK_METHOD(ICatenaServiceImpl*, service, (), (override));
+    MOCK_METHOD(IConnectionQueue&, connectionQueue, (), (override));
+    MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
     MOCK_METHOD(const std::string&, EOPath, (), (const, override));
+    MOCK_METHOD(catena::common::ISubscriptionManager&, subscriptionManager, (), (override));
+
 };
 
 } // namespace REST
