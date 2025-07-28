@@ -77,6 +77,7 @@ protected:
         inVal_.set_oid_prefix(oid_prefix);
         inVal_.set_recursive(recursive);
     }
+
     void initExpVals(uint32_t expNum = 0) {
         if (expNum > 6 ) { expNum = 6; }
         switch (expNum) {
@@ -90,50 +91,8 @@ protected:
      * This is a test class which makes an async RPC to the MockServer on
      * construction and returns the streamed-back response.
      */
-    class StreamReader : public grpc::ClientReadReactor<catena::ParamInfoResponse> {
-        public:
-            StreamReader(std::vector<catena::ParamInfoResponse>* outVals, grpc::Status* outRc_)
-                : outVals_(outVals), outRc_(outRc_) {}
-            /*
-             * This function makes an async RPC to the MockServer.
-             */
-            void MakeCall(catena::CatenaService::Stub* client, grpc::ClientContext* clientContext_, const catena::ParamInfoRequestPayload* inVal_) {
-                // Sending async RPC.
-                client->async()->ParamInfoRequest(clientContext_, inVal_, this);
-                StartRead(&outVal_);
-                StartCall();
-            }
-            /*
-             * Triggers when a read is done_ and adds output to outVals_.
-             */
-            void OnReadDone(bool ok) override {
-                if (ok) {
-                    outVals_->emplace_back(outVal_);
-                    StartRead(&outVal_);
-                }
-            }
-            /*
-             * Triggers when the RPC is finished and notifies Await().
-             */
-            void OnDone(const grpc::Status& status) override {
-                *outRc_ = status;
-                done_ = true;
-                cv_.notify_one();
-            }
-            /*
-             * Waits for the RPC to finish.
-             */
-            inline void Await() { cv_.wait(lock_, [this] { return done_; }); }
-
-          private:
-            std::vector<catena::ParamInfoResponse>* outVals_;
-            grpc::Status* outRc_;
-            catena::ParamInfoResponse outVal_;
-            bool done_ = false;
-            std::condition_variable cv_;
-            std::mutex cv_mtx_;
-            std::unique_lock<std::mutex> lock_{cv_mtx_};
-    };
+    using StreamReader = catena::gRPC::test::StreamReader<catena::ParamInfoResponse, catena::ParamInfoRequestPayload, 
+        std::function<void(grpc::ClientContext*, const catena::ParamInfoRequestPayload*, grpc::ClientReadReactor<catena::ParamInfoResponse>*)>>;
 
     /* 
      * Makes an async RPC to the MockServer and waits for a response before
@@ -143,7 +102,9 @@ protected:
         // Creating the stream reader.
         StreamReader reader(&outVals_, &outRc_);
         // Making the RPC call.
-        reader.MakeCall(client_.get(), &clientContext_, &inVal_);
+        reader.MakeCall(&clientContext_, &inVal_, [this](auto ctx, auto payload, auto reactor) {
+            client_->async()->ParamInfoRequest(ctx, payload, reactor);
+        });
         // Waiting for the RPC to finish.
         reader.Await();
         // Comparing the results.
@@ -156,7 +117,6 @@ protected:
     // In/out val
     catena::ParamInfoRequestPayload inVal_;
     std::vector<catena::ParamInfoResponse> outVals_;
-    std::vector<catena::ParamInfoResponse> expVals_;
 };
 
 // 0.0: Preliminary test: Creating a ParamInfoRequest object
@@ -167,7 +127,6 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_Create) {
 // 0.1: Success Case - Authorization test with valid token
 TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_AuthzValid) {
     initPayload(0, "/mockOid", true);
-    initExpVals(1);
     // Use a valid JWS token with monitor scope
     authzEnabled_ = true;
     std::string mockToken = getJwsToken("st2138:mon:w st2138:op:w st2138:cfg:w st2138:adm:w");

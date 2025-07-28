@@ -52,6 +52,81 @@ namespace test {
 
 /*
  * ============================================================================
+ *                        Generic StreamReader Template
+ * ============================================================================
+ */
+
+/**
+ * @brief Generic template for ClientReadReactor that can be used across different test files
+ * @tparam ResponseType The type of response being streamed
+ * @tparam PayloadType The type of request payload
+ * @tparam MakeCallFunc Function type for making the async call
+ */
+template<typename ResponseType, typename PayloadType, typename MakeCallFunc>
+class StreamReader : public grpc::ClientReadReactor<ResponseType> {
+public:
+    StreamReader(std::vector<ResponseType>* outVals, grpc::Status* outRc, bool perReadAwait = false)
+        : outVals_(outVals), outRc_(outRc), perReadAwait_(perReadAwait) {}
+    
+    /**
+     * @brief Makes an async RPC call to the server
+     * @param clientContext The client context
+     * @param payload The request payload
+     * @param makeCallFunc Function to make the specific async call
+     */
+    void MakeCall(grpc::ClientContext* clientContext, const PayloadType* payload, MakeCallFunc makeCallFunc) {
+        // Sending async RPC
+        makeCallFunc(clientContext, payload, this);
+        this->StartRead(&outVal_);
+        this->StartCall();
+    }
+    
+    /**
+     * @brief Called when a read is done and adds output to outVals_
+     */
+    void OnReadDone(bool ok) override {
+        if (ok) {
+            outVals_->emplace_back(outVal_);
+            if (perReadAwait_) {
+                done_ = true;
+                cv_.notify_one();
+            }
+            this->StartRead(&outVal_);
+        }
+    }
+    
+    /**
+     * @brief Called when the RPC is finished and notifies Await()
+     */
+    void OnDone(const grpc::Status& status) override {
+        *outRc_ = status;
+        done_ = true;
+        cv_.notify_one();
+    }
+    
+    /**
+     * @brief Blocks until the RPC is finished
+     */
+    inline void Await() { 
+        cv_.wait(lock_, [this] { return done_; }); 
+        done_ = false;
+    }
+
+private:
+    // Pointers to the output variables
+    grpc::Status* outRc_;
+    std::vector<ResponseType>* outVals_;
+    
+    ResponseType outVal_;
+    bool done_ = false;
+    bool perReadAwait_ = false;
+    std::condition_variable cv_;
+    std::mutex cv_mtx_;
+    std::unique_lock<std::mutex> lock_{cv_mtx_};
+};
+
+/*
+ * ============================================================================
  *                        ParamInfoRequest Helpers
  * ============================================================================
  */
