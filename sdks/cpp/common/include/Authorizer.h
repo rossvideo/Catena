@@ -31,7 +31,7 @@
  */
 
 /**
- * @file Authorization.h
+ * @file Authorizer.h
  * @brief Class for handling authorization information
  * @author John R. Naylor john.naylor@rossvideo.com
  * @author John Danen

@@ -40,7 +40,7 @@ int DeviceRequest::objectCounter_ = 0;
  * Constructor which initializes and registers the current DeviceRequest
  * object, then starts the process
  */
-DeviceRequest::DeviceRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+DeviceRequest::DeviceRequest(IServiceImpl *service, SlotMap& dms, bool ok)
     : CallData(service), dms_{dms}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);

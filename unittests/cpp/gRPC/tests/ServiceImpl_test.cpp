@@ -88,7 +88,7 @@ class gRPCServiceImplTests : public testing::Test {
         config.dms.push_back(&dm_);
         config.EOPath = EOPath_;
         config.authz = authzEnabled_;
-        service_.reset(new CatenaServiceImpl(config));
+        service_.reset(new ServiceImpl(config));
         builder_.RegisterService(service_.get());
         server_ = builder_.BuildAndStart();
         service_->init();
@@ -123,7 +123,7 @@ class gRPCServiceImplTests : public testing::Test {
     // Server and service variables.
     grpc::ServerBuilder builder_;
     std::unique_ptr<grpc::Server> server_ = nullptr;
-    std::unique_ptr<CatenaServiceImpl> service_ = nullptr;
+    std::unique_ptr<ServiceImpl> service_ = nullptr;
     MockDevice dm_;
     // Completion queue variables.
     std::unique_ptr<grpc::ServerCompletionQueue> cq_ = nullptr;
@@ -156,18 +156,18 @@ TEST_F(gRPCServiceImplTests, ServiceImpl_CreateDestroy) {
 }
 
 /*
- * TEST 2 - Creating a REST CatenaServiceImpl with no completion queue.
+ * TEST 2 - Creating a REST ServiceImpl with no completion queue.
  *
  * This is not under the fixture because setting up a gRPC server is time
  * consuming and not needed.
  */
 TEST(gRPCServiceImplTests_NoFixture, ServiceImpl_CreateNoCQ) {
     // Creating a service with a no cq.
-    EXPECT_THROW(CatenaServiceImpl(), std::runtime_error) << "Creating a service with cq = nullptr should throw an error.";
+    EXPECT_THROW(ServiceImpl(), std::runtime_error) << "Creating a service with cq = nullptr should throw an error.";
 }
 
 /*
- * TEST 3 - Creating a REST CatenaServiceImpl with two devices sharing a slot.
+ * TEST 3 - Creating a REST ServiceImpl with two devices sharing a slot.
  *
  * This is not under the fixture because setting up a gRPC server is time
  * consuming and not needed.
@@ -186,5 +186,5 @@ TEST(gRPCServiceImplTests_NoFixture, ServiceImpl_CreateDuplicateSlot) {
     EXPECT_CALL(dm2, slot()).WillRepeatedly(testing::Return(0));
     config.dms.push_back(&dm2);
     // Creating a service with a duplicate slot.
-    EXPECT_THROW(CatenaServiceImpl(config), std::runtime_error) << "Creating a service with two devices sharing a slot should throw an error.";
+    EXPECT_THROW(ServiceImpl(config), std::runtime_error) << "Creating a service with two devices sharing a slot should throw an error.";
 }

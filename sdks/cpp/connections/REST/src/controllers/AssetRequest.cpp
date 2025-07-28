@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <zlib.h>
 #include <sys/stat.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 using catena::REST::AssetRequest;
 
 // Initializes the object counter for GetParam to 0.

@@ -64,7 +64,7 @@
 #include <vdk/signals.h>
 #include <IParam.h>
 #include <IDevice.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 #include <SharedFlags.h>
 #include <SubscriptionManager.h>
 #include <rpc/ConnectionQueue.h>
@@ -96,9 +96,9 @@ namespace catena {
 namespace gRPC {
 
 /**
- * @brief Config object for the CatenaServiceImpl to streamline creation.
+ * @brief Config object for the ServiceImpl to streamline creation.
  * 
- * The cq field is required for CatenaServiceImpl to function properly.
+ * The cq field is required for ServiceImpl to function properly.
  */
 struct ServiceConfig {
   /**
@@ -126,14 +126,14 @@ struct ServiceConfig {
 /**
  * @brief Implements Catena gRPC request handlers.
  */
-class CatenaServiceImpl : public ICatenaServiceImpl {
+class ServiceImpl : public IServiceImpl {
   public:
     /**
-     * @brief Constructor for the CatenaServiceImpl class.
+     * @brief Constructor for the ServiceImpl class.
      * @param config The service config object containing the necessary
      * parameters.
      */
-    CatenaServiceImpl(const ServiceConfig& config = ServiceConfig{});
+    ServiceImpl(const ServiceConfig& config = ServiceConfig{});
     /**
      * @brief Creates the CallData objects for each gRPC command.
      */

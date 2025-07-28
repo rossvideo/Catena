@@ -58,7 +58,7 @@ class MockSocketReader : public ISocketReader {
     MOCK_METHOD(catena::Device_DetailLevel, detailLevel, (), (const, override));
     MOCK_METHOD(const std::string&, jsonBody, (), (const, override));
     MOCK_METHOD(bool, stream, (), (const, override));
-    MOCK_METHOD(ICatenaServiceImpl*, service, (), (override));
+    MOCK_METHOD(IServiceImpl*, service, (), (override));
     MOCK_METHOD(IConnectionQueue&, connectionQueue, (), (override));
     MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
     MOCK_METHOD(const std::string&, EOPath, (), (const, override));

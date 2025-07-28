@@ -49,7 +49,7 @@
 #include <IDevice.h>
 #include <ILanguagePack.h>
 #include <utils.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 #include <SubscriptionManager.h>
 
 // Connections/REST

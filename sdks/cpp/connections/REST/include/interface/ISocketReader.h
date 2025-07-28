@@ -132,9 +132,9 @@ class ISocketReader {
     virtual bool stream() const = 0;
 
     /**
-     * @brief Returns a pointer to the CatenaServiceImpl
+     * @brief Returns a pointer to the ServiceImpl
      */
-    virtual ICatenaServiceImpl* service() = 0;
+    virtual IServiceImpl* service() = 0;
     /**
      * @brief Returns true if authorization is enabled.
      */

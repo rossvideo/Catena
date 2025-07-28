@@ -43,7 +43,7 @@
 #include <vdk/signals.h>
 #include <patterns/GenericFactory.h>
 #include <IParam.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 #include <Enums.h>
 #include <SubscriptionManager.h>
 #include <SharedFlags.h>
@@ -78,7 +78,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief Config object for the CatenaServiceImpl to streamline creation.
+ * @brief Config object for the ServiceImpl to streamline creation.
  */
 struct ServiceConfig {
   /**
@@ -106,7 +106,7 @@ struct ServiceConfig {
 /**
  * @brief Implements Catena REST API request handlers.
  */
-class CatenaServiceImpl : public catena::REST::ICatenaServiceImpl {
+class ServiceImpl : public catena::REST::IServiceImpl {
   public:
     /**
      * @brief Constructor for the REST API.
@@ -115,7 +115,7 @@ class CatenaServiceImpl : public catena::REST::ICatenaServiceImpl {
      * @param config The service config object containing the necessary
      * parameters.
      */
-    CatenaServiceImpl(const ServiceConfig& config = ServiceConfig{});
+    ServiceImpl(const ServiceConfig& config = ServiceConfig{});
 
     /**
      * @brief Returns the API's version.

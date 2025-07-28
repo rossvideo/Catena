@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This file is for testing the Authorization.cpp file.
+ * @brief This file is for testing the Authorizer.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @date 25/05/20
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -37,7 +37,7 @@
 
 #include "MockParam.h"
 #include "MockParamDescriptor.h"
-#include "Authorization.h"
+#include "Authorizer.h"
 #include "Enums.h"
 #include "CommonTestHelpers.h"
 #include <Logger.h>

@@ -58,7 +58,7 @@ class ExecuteCommand : public CallData {
      * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok flag to check if command was successfully executed 
      */
-    ExecuteCommand(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
+    ExecuteCommand(IServiceImpl *service, SlotMap& dms, bool ok);
     /**
      * @brief Manages gRPC command execution through a state machine
      *

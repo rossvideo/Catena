@@ -54,7 +54,7 @@ int ExternalObjectRequest::objectCounter_ = 0;
  * Constructor which initializes and registers the current
  * ExternalObjectRequest object, then starts the process
  */
-ExternalObjectRequest::ExternalObjectRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+ExternalObjectRequest::ExternalObjectRequest(IServiceImpl *service, SlotMap& dms, bool ok)
     : CallData(service), dms_{dms}, writer_(&context_),
     status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);

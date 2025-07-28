@@ -80,9 +80,9 @@ class SocketReader : public ISocketReader {
   public:
     /**
      * @brief Constructor for the SocketReader class.
-     * @param service Pointer to the CatenaServiceImpl.
+     * @param service Pointer to the ServiceImpl.
      */
-    SocketReader(ICatenaServiceImpl* service) : service_(service) {};
+    SocketReader(IServiceImpl* service) : service_(service) {};
     /**
      * @brief Populates variables using information read from the inputted
      * socket.
@@ -148,9 +148,9 @@ class SocketReader : public ISocketReader {
     bool stream() const override { return stream_; } 
 
     /**
-     * @brief Returns a pointer to the CatenaServiceImpl
+     * @brief Returns a pointer to the ServiceImpl
      */
-    ICatenaServiceImpl* service() override { return service_; }
+    IServiceImpl* service() override { return service_; }
     /**
      * @brief Returns true if authorization is enabled.
      */
@@ -216,9 +216,9 @@ class SocketReader : public ISocketReader {
      */
     std::string fieldNotFound = "";
     /**
-     * @brief Pointer to the CatenaServiceImpl
+     * @brief Pointer to the ServiceImpl
      */
-    ICatenaServiceImpl* service_ = nullptr;
+    IServiceImpl* service_ = nullptr;
 };
 
 }; // Namespace REST

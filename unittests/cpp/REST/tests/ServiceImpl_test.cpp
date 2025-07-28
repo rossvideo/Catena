@@ -74,7 +74,7 @@ class RESTServiceImplTests : public testing::Test {
         config.EOPath = EOPath_;
         config.authz = authzEnabled_;
         config.port = port_;
-        service_.reset(new CatenaServiceImpl(config));
+        service_.reset(new ServiceImpl(config));
     }
 
     /*
@@ -105,7 +105,7 @@ class RESTServiceImplTests : public testing::Test {
         return std::string(std::istreambuf_iterator<char>(response_stream), std::istreambuf_iterator<char>());
     }
 
-    std::unique_ptr<CatenaServiceImpl> service_ = nullptr;
+    std::unique_ptr<ServiceImpl> service_ = nullptr;
 
     // Cout variables
     std::stringstream MockConsole_;
@@ -120,7 +120,7 @@ class RESTServiceImplTests : public testing::Test {
 };
 
 /*
- * TEST 1 - Creating a REST CatenaServiceImpl.
+ * TEST 1 - Creating a REST ServiceImpl.
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_Create) {
     ASSERT_TRUE(service_);
@@ -131,7 +131,7 @@ TEST_F(RESTServiceImplTests, ServiceImpl_Create) {
 }
 
 /*
- * TEST 2 - Creating a REST CatenaServiceImpl.
+ * TEST 2 - Creating a REST ServiceImpl.
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_CreateDuplicateSlot) {
     // Creating a new device and adding it to the config.
@@ -143,11 +143,11 @@ TEST_F(RESTServiceImplTests, ServiceImpl_CreateDuplicateSlot) {
     config.dms.push_back(&dm2);
     config.port = port_ + 2;
     // Creating a service with a duplicate slot.
-    EXPECT_THROW(CatenaServiceImpl newService{config}, std::runtime_error) << "Creating a service with two devices sharing a slot should throw an error.";
+    EXPECT_THROW(ServiceImpl newService{config}, std::runtime_error) << "Creating a service with two devices sharing a slot should throw an error.";
 }
 
 /*
- * TEST 3 - Running and shutting down the REST CatenaServiceImpl.
+ * TEST 3 - Running and shutting down the REST ServiceImpl.
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_RunAndShutdown) {
     // Starting the service.
