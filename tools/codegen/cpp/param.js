@@ -307,7 +307,7 @@ class Param {
    * 
    * @returns the c++ type of the param's value as a string
    */
-  objectType() { // <----- Here This 
+  objectType() {
     if (!this.hasTypeInfo()) {
       return typeArg(this.type);
     }
@@ -528,7 +528,7 @@ class Param {
   getFieldInfoTypes() {
     let subParamArr = Object.values(this.subParams);
     let mappedArr = subParamArr.map((subParam) => {
-      return `FieldInfo<${subParam.objectNamespaceType()}, ${this.objectType()}>`; // <-- Here
+      return `FieldInfo<${subParam.objectNamespaceType()}, ${this.objectType()}>`;
     });
     return mappedArr.join(", ");
   }
