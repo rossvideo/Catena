@@ -36,7 +36,7 @@ using catena::gRPC::LanguagePackRequest;
 // Initializes the object counter for LanguagePackRequest to 0.
 int LanguagePackRequest::objectCounter_ = 0;
 
-LanguagePackRequest::LanguagePackRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+LanguagePackRequest::LanguagePackRequest(IServiceImpl *service, SlotMap& dms, bool ok)
     : CallData(service), dms_{dms}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service_->registerItem(this);
@@ -105,7 +105,7 @@ void LanguagePackRequest::proceed(bool ok) {
             break;
         /**
          * kFinish: Final step of gRPC is the deregister the item from
-         * CatenaServiceImpl.
+         * ServiceImpl.
          */
         case CallStatus::kFinish:
             DEBUG_LOG << "LanguagePackRequest[" << objectId_ << "] finished";

@@ -47,7 +47,7 @@
 #include <IParam.h>
 #include <IDevice.h>
 #include <utils.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 #include <Enums.h>
 
 // Connections/REST

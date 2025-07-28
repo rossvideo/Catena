@@ -47,7 +47,7 @@
 #include <IDevice.h>
 #include <StructInfo.h>
 #include <PolyglotText.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 
 // protobuf interface
 #include <interface/param.pb.h>

@@ -45,7 +45,7 @@
 #include <IParam.h>
 #include <ParamVisitor.h>
 #include <ISubscriptionManager.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 
 // std
 #include <set>

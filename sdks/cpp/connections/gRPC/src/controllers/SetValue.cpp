@@ -35,7 +35,7 @@ using catena::gRPC::SetValue;
 // Initializes the object counter for SetValue to 0.
 int SetValue::objectCounter_ = 0;
 
-SetValue::SetValue(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+SetValue::SetValue(IServiceImpl *service, SlotMap& dms, bool ok)
     : MultiSetValue(service, dms, ok, objectCounter_++) {
     typeName = "SetValue";
     service_->registerItem(this);

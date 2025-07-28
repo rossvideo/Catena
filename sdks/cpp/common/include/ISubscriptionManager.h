@@ -42,7 +42,7 @@
 #include <string>
 #include <IDevice.h>
 #include <IParam.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 
 namespace catena {
 namespace common {
