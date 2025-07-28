@@ -1,14 +1,15 @@
 var searchData=
 [
-  ['setvalue_0',['setvalue',['../classcatena_1_1gRPC_1_1SetValue.html',1,'catena::gRPC::SetValue'],['../classcatena_1_1REST_1_1SetValue.html',1,'catena::REST::SetValue']]],
-  ['singleton_1',['Singleton',['../classcatena_1_1patterns_1_1Singleton.html',1,'catena::patterns']]],
-  ['singleton_3c_20functory_3c_20k_2c_20r_2c_20ms_2e_2e_2e_20_3e_20_3e_2',['Singleton&lt; Functory&lt; K, R, Ms... &gt; &gt;',['../classcatena_1_1patterns_1_1Singleton.html',1,'catena::patterns']]],
-  ['singleton_3c_20genericfactory_3c_20p_2c_20k_2c_20ms_2e_2e_2e_20_3e_20_3e_3',['Singleton&lt; GenericFactory&lt; P, K, Ms... &gt; &gt;',['../classcatena_1_1patterns_1_1Singleton.html',1,'catena::patterns']]],
-  ['singleton_3c_20peermanager_20_3e_4',['Singleton&lt; PeerManager &gt;',['../classcatena_1_1patterns_1_1Singleton.html',1,'catena::patterns']]],
-  ['socketreader_5',['SocketReader',['../classcatena_1_1REST_1_1SocketReader.html',1,'catena::REST']]],
-  ['socketwriter_6',['SocketWriter',['../classcatena_1_1REST_1_1SocketWriter.html',1,'catena::REST']]],
-  ['ssewriter_7',['SSEWriter',['../classcatena_1_1REST_1_1SSEWriter.html',1,'catena::REST']]],
-  ['structinfo_8',['StructInfo',['../structcatena_1_1common_1_1StructInfo.html',1,'catena::common']]],
-  ['subscriptionmanager_9',['SubscriptionManager',['../classcatena_1_1common_1_1SubscriptionManager.html',1,'catena::common']]],
-  ['subscriptions_10',['Subscriptions',['../classcatena_1_1REST_1_1Subscriptions.html',1,'catena::REST']]]
+  ['serviceimpl_0',['serviceimpl',['../classcatena_1_1gRPC_1_1ServiceImpl.html',1,'catena::gRPC::ServiceImpl'],['../classcatena_1_1REST_1_1ServiceImpl.html',1,'catena::REST::ServiceImpl']]],
+  ['setvalue_1',['setvalue',['../classcatena_1_1gRPC_1_1SetValue.html',1,'catena::gRPC::SetValue'],['../classcatena_1_1REST_1_1SetValue.html',1,'catena::REST::SetValue']]],
+  ['singleton_2',['Singleton',['../classcatena_1_1patterns_1_1Singleton.html',1,'catena::patterns']]],
+  ['singleton_3c_20functory_3c_20k_2c_20r_2c_20ms_2e_2e_2e_20_3e_20_3e_3',['Singleton&lt; Functory&lt; K, R, Ms... &gt; &gt;',['../classcatena_1_1patterns_1_1Singleton.html',1,'catena::patterns']]],
+  ['singleton_3c_20genericfactory_3c_20p_2c_20k_2c_20ms_2e_2e_2e_20_3e_20_3e_4',['Singleton&lt; GenericFactory&lt; P, K, Ms... &gt; &gt;',['../classcatena_1_1patterns_1_1Singleton.html',1,'catena::patterns']]],
+  ['singleton_3c_20peermanager_20_3e_5',['Singleton&lt; PeerManager &gt;',['../classcatena_1_1patterns_1_1Singleton.html',1,'catena::patterns']]],
+  ['socketreader_6',['SocketReader',['../classcatena_1_1REST_1_1SocketReader.html',1,'catena::REST']]],
+  ['socketwriter_7',['SocketWriter',['../classcatena_1_1REST_1_1SocketWriter.html',1,'catena::REST']]],
+  ['ssewriter_8',['SSEWriter',['../classcatena_1_1REST_1_1SSEWriter.html',1,'catena::REST']]],
+  ['structinfo_9',['StructInfo',['../structcatena_1_1common_1_1StructInfo.html',1,'catena::common']]],
+  ['subscriptionmanager_10',['SubscriptionManager',['../classcatena_1_1common_1_1SubscriptionManager.html',1,'catena::common']]],
+  ['subscriptions_11',['Subscriptions',['../classcatena_1_1REST_1_1Subscriptions.html',1,'catena::REST']]]
 ];

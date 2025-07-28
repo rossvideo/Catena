@@ -1,7 +1,6 @@
 var namespacecatena_1_1REST =
 [
     [ "AssetRequest", "classcatena_1_1REST_1_1AssetRequest.html", "classcatena_1_1REST_1_1AssetRequest" ],
-    [ "CatenaServiceImpl", "classcatena_1_1REST_1_1CatenaServiceImpl.html", "classcatena_1_1REST_1_1CatenaServiceImpl" ],
     [ "Connect", "classcatena_1_1REST_1_1Connect.html", "classcatena_1_1REST_1_1Connect" ],
     [ "DeviceRequest", "classcatena_1_1REST_1_1DeviceRequest.html", "classcatena_1_1REST_1_1DeviceRequest" ],
     [ "ExecuteCommand", "classcatena_1_1REST_1_1ExecuteCommand.html", "classcatena_1_1REST_1_1ExecuteCommand" ],
@@ -9,13 +8,14 @@ var namespacecatena_1_1REST =
     [ "GetPopulatedSlots", "classcatena_1_1REST_1_1GetPopulatedSlots.html", "classcatena_1_1REST_1_1GetPopulatedSlots" ],
     [ "GetValue", "classcatena_1_1REST_1_1GetValue.html", "classcatena_1_1REST_1_1GetValue" ],
     [ "ICallData", "classcatena_1_1REST_1_1ICallData.html", "classcatena_1_1REST_1_1ICallData" ],
-    [ "ICatenaServiceImpl", "classcatena_1_1REST_1_1ICatenaServiceImpl.html", "classcatena_1_1REST_1_1ICatenaServiceImpl" ],
+    [ "IServiceImpl", "classcatena_1_1REST_1_1IServiceImpl.html", "classcatena_1_1REST_1_1IServiceImpl" ],
     [ "ISocketReader", "classcatena_1_1REST_1_1ISocketReader.html", "classcatena_1_1REST_1_1ISocketReader" ],
     [ "ISocketWriter", "classcatena_1_1REST_1_1ISocketWriter.html", "classcatena_1_1REST_1_1ISocketWriter" ],
     [ "LanguagePack", "classcatena_1_1REST_1_1LanguagePack.html", "classcatena_1_1REST_1_1LanguagePack" ],
     [ "Languages", "classcatena_1_1REST_1_1Languages.html", "classcatena_1_1REST_1_1Languages" ],
     [ "MultiSetValue", "classcatena_1_1REST_1_1MultiSetValue.html", "classcatena_1_1REST_1_1MultiSetValue" ],
     [ "ParamInfoRequest", "classcatena_1_1REST_1_1ParamInfoRequest.html", "classcatena_1_1REST_1_1ParamInfoRequest" ],
+    [ "ServiceImpl", "classcatena_1_1REST_1_1ServiceImpl.html", "classcatena_1_1REST_1_1ServiceImpl" ],
     [ "SetValue", "classcatena_1_1REST_1_1SetValue.html", "classcatena_1_1REST_1_1SetValue" ],
     [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html", "classcatena_1_1REST_1_1SocketReader" ],
     [ "SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", "classcatena_1_1REST_1_1SocketWriter" ],
