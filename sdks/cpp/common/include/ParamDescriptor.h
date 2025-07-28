@@ -100,13 +100,17 @@ class ParamDescriptor : public IParamDescriptor {
      * @param oid_aliases the parameter's oid aliases
      * @param name the parameter's name
      * @param widget the parameter's widget
+     * @param scope the parameter's access scope
      * @param read_only the parameter's read-only status
      * @param oid the parameter's oid
      * @param template_oid the parameter's template oid
      * @param constraint the parameter's constraint
      * @param isCommand the parameter's command status
-     * @param minimalSet the parameter's minimal set status
      * @param dm the device that the parameter belongs to
+     * @param max_length the parameter's maximum length
+     * @param total_length the parameter's total length
+     * @param precision the number of decimal places to display for floats
+     * @param minimalSet the parameter's minimal set status
      * @param parent the parent parameter
      */
     ParamDescriptor(
@@ -123,13 +127,14 @@ class ParamDescriptor : public IParamDescriptor {
       IDevice& dm,
       uint32_t max_length,
       std::size_t total_length,
+      uint32_t precision,
       bool minimal_set,
       IParamDescriptor* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget},
         scope_{scope}, read_only_{read_only}, template_oid_{template_oid},
         constraint_{constraint}, isCommand_{isCommand}, dev_{dm},
         max_length_{max_length}, total_length_{total_length},
-        minimal_set_{minimal_set}, parent_{parent} {
+        precision_{precision}, minimal_set_{minimal_set}, parent_{parent} {
       setOid(oid);
       if (parent_ != nullptr) {
         parent_->addSubParam(oid, this);
@@ -208,6 +213,11 @@ class ParamDescriptor : public IParamDescriptor {
      * @returns total_length_
      */
     std::size_t total_length() const override;
+
+    /**
+     * @brief Returns the precision of the parameter.
+     */
+    uint32_t precision() const override { return precision_; };
 
     /**
      * @brief serialize param meta data in to protobuf message
@@ -405,6 +415,7 @@ class ParamDescriptor : public IParamDescriptor {
     common::IConstraint* constraint_;
     uint32_t max_length_;
     std::size_t total_length_;
+    uint32_t precision_;
     
     std::string oid_;
     std::string template_oid_;
