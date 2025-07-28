@@ -78,14 +78,7 @@ protected:
         inVal_.set_recursive(recursive);
     }
 
-    void initExpVals(uint32_t expNum = 0) {
-        if (expNum > 6 ) { expNum = 6; }
-        switch (expNum) {
-            case 1:
-                expVals_.emplace(expVals_.begin(), catena::ParamInfoResponse());
-                expVals_.begin()->mutable_info()->set_oid("mockOid");
-        }
-    }
+
 
     /*
      * This is a test class which makes an async RPC to the MockServer on
@@ -112,11 +105,21 @@ protected:
         EXPECT_EQ(outRc_.error_message(), expRc_.what());
         // Make sure another ParamInfoRequest handler was created.
         EXPECT_TRUE(asyncCall_) << "Async handler was not created during runtime";
+        
+        // Validate response content if we have expected responses
+        if (!expVals_.empty()) {
+            ASSERT_EQ(outVals_.size(), expVals_.size()) << "Expected " << expVals_.size() << " responses, got " << outVals_.size();
+            for (size_t i = 0; i < outVals_.size(); i++) {
+                EXPECT_EQ(outVals_[i].SerializeAsString(), expVals_[i].SerializeAsString()) 
+                    << "Response " << i << " does not match expected";
+            }
+        }
     }
 
     // In/out val
     catena::ParamInfoRequestPayload inVal_;
     std::vector<catena::ParamInfoResponse> outVals_;
+    std::vector<catena::ParamInfoResponse> expVals_;
 };
 
 // 0.0: Preliminary test: Creating a ParamInfoRequest object
@@ -140,6 +143,12 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_AuthzValid) {
     };
     auto desc = ParamHierarchyBuilder::createDescriptor("/" + param_info.oid);
     setupMockParam(*param, param_info, *desc.descriptor);
+
+    // Set up expected response
+    expVals_.clear();
+    expVals_.emplace_back();
+    expVals_.back().mutable_info()->set_oid("mockOid");
+    expVals_.back().mutable_info()->set_type(catena::ParamType::STRING);
 
     EXPECT_CALL(dm0_, getParam(testing::An<const std::string&>(), testing::_, testing::_))
        .WillRepeatedly(testing::Invoke([&param](const std::string&, catena::exception_with_status &status, catena::common::Authorizer &) {
@@ -194,6 +203,15 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParams) {
     top_level_params.push_back(std::move(param1));
     top_level_params.push_back(std::move(param2));
 
+    // Set up expected responses
+    expVals_.clear();
+    expVals_.emplace_back();
+    expVals_.back().mutable_info()->set_oid("param1");
+    expVals_.back().mutable_info()->set_type(catena::ParamType::STRING);
+    expVals_.emplace_back();
+    expVals_.back().mutable_info()->set_oid("param2");
+    expVals_.back().mutable_info()->set_type(catena::ParamType::STRING);
+
     // Setup mock expectations
     EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
         .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, Authorizer&) -> std::vector<std::unique_ptr<IParam>> {
@@ -243,6 +261,13 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithArray) {
     auto arrayParam = std::make_unique<MockParam>();
     setupMockParam(*arrayParam, arrayParamInfo, *desc.descriptor);
     top_level_params.push_back(std::move(arrayParam));
+
+    // Set up expected responses
+    expVals_.clear();
+    expVals_.emplace_back();
+    expVals_.back().mutable_info()->set_oid("array_param");
+    expVals_.back().mutable_info()->set_type(catena::ParamType::STRING_ARRAY);
+    expVals_.back().set_array_length(5);
 
     // Setup mock expectations
     EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
@@ -360,6 +385,18 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithDeepNest
     // Enable recursion by setting it in the request payload
     initPayload(0, "", true);
 
+    // Set up expected responses
+    expVals_.clear();
+    expVals_.emplace_back();
+    expVals_.back().mutable_info()->set_oid("level1");
+    expVals_.back().mutable_info()->set_type(catena::ParamType::STRING);
+    expVals_.emplace_back();
+    expVals_.back().mutable_info()->set_oid("level2");
+    expVals_.back().mutable_info()->set_type(catena::ParamType::STRING);
+    expVals_.emplace_back();
+    expVals_.back().mutable_info()->set_oid("level3");
+    expVals_.back().mutable_info()->set_type(catena::ParamType::STRING);
+
     // Setup mock expectations
     EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
         .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, Authorizer&) {
@@ -427,6 +464,17 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursio
 
     // Enable recursion by setting it in the request payload
     initPayload(0, "", true);
+
+    // Set up expected responses
+    expVals_.clear();
+    expVals_.emplace_back();
+    expVals_.back().mutable_info()->set_oid("parent");
+    expVals_.back().mutable_info()->set_type(catena::ParamType::STRING_ARRAY);
+    expVals_.back().set_array_length(5);
+    expVals_.emplace_back();
+    expVals_.back().mutable_info()->set_oid("array_child");
+    expVals_.back().mutable_info()->set_type(catena::ParamType::STRING_ARRAY);
+    expVals_.back().set_array_length(3);
 
     // Setup mock expectations for getTopLevelParams
     EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
@@ -586,6 +634,14 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_proceedSpecificParam) {
     
     // Request specific parameter
     initPayload(0, fqoid, false);
+    
+    // Set up expected responses
+    expVals_.clear();
+    expVals_.emplace_back();
+    expVals_.back().mutable_info()->set_oid("mockOid");
+    expVals_.back().mutable_info()->set_type(catena::ParamType::STRING_ARRAY);
+    expVals_.back().set_array_length(5);
+    
     testRPC();
 }
 
@@ -609,6 +665,12 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getSpecificParamWithRecursion
 
     // Request specific parameter with recursion
     initPayload(0, fqoid, true);
+
+    // Set up expected responses
+    expVals_.clear();
+    expVals_.emplace_back();
+    expVals_.back().mutable_info()->set_oid("mockOid");
+    expVals_.back().mutable_info()->set_type(catena::ParamType::STRING);
 
     // Setup mock expectations
     EXPECT_CALL(dm0_, getParam(fqoid, testing::_, testing::_))
