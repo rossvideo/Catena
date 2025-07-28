@@ -37,7 +37,7 @@
 
 #include <gtest/gtest.h>
 #include <Device.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 #include <Status.h>
 #include <LanguagePack.h>
 #include <interface/device.pb.h>
