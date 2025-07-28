@@ -21,6 +21,7 @@ var classcatena_1_1common_1_1IParamDescriptor =
     [ "name", "classcatena_1_1common_1_1IParamDescriptor.html#ad8dc2523dba79b5f6f24486e0fe5ec51", null ],
     [ "operator=", "classcatena_1_1common_1_1IParamDescriptor.html#a42cfc389d10cb32fbe6608d6fa0f12cc", null ],
     [ "operator=", "classcatena_1_1common_1_1IParamDescriptor.html#ac6474988a891d1b2208b3ec42df9fca5", null ],
+    [ "precision", "classcatena_1_1common_1_1IParamDescriptor.html#a935abbdfb9a028dde34cfe1ab15ae5c6", null ],
     [ "readOnly", "classcatena_1_1common_1_1IParamDescriptor.html#a021b52cf996466aa058a6d05c460e32c", null ],
     [ "readOnly", "classcatena_1_1common_1_1IParamDescriptor.html#ab5a2bcbf52d7c442ae8ab4b3069cc125", null ],
     [ "setMinimalSet", "classcatena_1_1common_1_1IParamDescriptor.html#a557f3d1d5685af9f21a4735c547d54f5", null ],
