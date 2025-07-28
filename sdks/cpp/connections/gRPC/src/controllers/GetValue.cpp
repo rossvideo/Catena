@@ -40,7 +40,7 @@ int GetValue::objectCounter_ = 0;
  * Constructor which initializes and registers the current GetValue object, 
  * then starts the process.
  */
-GetValue::GetValue(ICatenaServiceImpl *service, SlotMap& dms, bool ok) : CallData(service), dms_{dms}, responder_(&context_), 
+GetValue::GetValue(IServiceImpl *service, SlotMap& dms, bool ok) : CallData(service), dms_{dms}, responder_(&context_), 
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service_->registerItem(this);
@@ -128,7 +128,7 @@ void GetValue::proceed( bool ok) {
         break;
         /**
          * kFinish: Final step of gRPC is to deregister the item from
-         * CatenaServiceImpl.
+         * ServiceImpl.
          */
         case CallStatus::kFinish:
             DEBUG_LOG << "GetValue[" << objectId_ << "] finished";

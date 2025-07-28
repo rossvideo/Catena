@@ -62,11 +62,11 @@
 #include <signal.h>
 #include <functional>
 #include <Logger.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 
 using namespace catena::common;
 
-catena::REST::CatenaServiceImpl *globalApi = nullptr;
+catena::REST::ServiceImpl *globalApi = nullptr;
 
 // handle SIGINT
 void handle_signal(int sig) {
@@ -172,7 +172,7 @@ void RunRESTServer() {
         uint32_t maxConnections = absl::GetFlag(FLAGS_max_connections);
         
         // Creating and running the REST service.
-        catena::REST::CatenaServiceImpl api({&dm}, EOPath, authorization, port, maxConnections);
+        catena::REST::ServiceImpl api({&dm}, EOPath, authorization, port, maxConnections);
         globalApi = &api;
         DEBUG_LOG << "API Version: " << api.version();
         DEBUG_LOG << "REST on 0.0.0.0:" << port;

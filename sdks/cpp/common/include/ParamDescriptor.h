@@ -44,7 +44,7 @@
 #include <PolyglotText.h>
 #include <IParamDescriptor.h>
 #include <IDevice.h>
-#include <Authorization.h>  
+#include <Authorizer.h>  
 
 #include <vector>
 #include <string>

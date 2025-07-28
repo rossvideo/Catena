@@ -63,17 +63,17 @@ class Connect : public CallData, public catena::common::Connect {
      * @brief Constructor for the CallData class of the Connect gRPC.
      * Calls proceed() once initialized.
      *
-     * @param service - Pointer to the parent CatenaServiceImpl.
+     * @param service - Pointer to the parent ServiceImpl.
      * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok - Flag to check if the command was successfully executed.
      */ 
-    Connect(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
+    Connect(IServiceImpl *service, SlotMap& dms, bool ok);
     /**
      * @brief Manages the steps of the Connect gRPC command
      * through the state variable status. Returns the value of the
      * parameter specified by the user.
      *
-     * @param service - Pointer to the parent CatenaServiceImpl.
+     * @param service - Pointer to the parent ServiceImpl.
      * @param ok - Flag to check if the command was successfully executed.
      */
     void proceed(bool ok) override;

@@ -36,7 +36,7 @@ using catena::gRPC::AddLanguage;
 // Initializes the object counter for AddLanguage to 0.
 int AddLanguage::objectCounter_ = 0;
 
-AddLanguage::AddLanguage(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+AddLanguage::AddLanguage(IServiceImpl *service, SlotMap& dms, bool ok)
     : CallData(service), dms_{dms}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service_->registerItem(this);
@@ -116,7 +116,7 @@ void AddLanguage::proceed(bool ok) {
             break;
         /**
          * kFinish: Final step of gRPC is the deregister the item from
-         * CatenaServiceImpl.
+         * ServiceImpl.
          */
         case CallStatus::kFinish:
             DEBUG_LOG << "AddLanguage[" << objectId_ << "] finished";

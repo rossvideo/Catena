@@ -57,7 +57,7 @@
 using grpc::Server;
 
 using namespace catena::common;
-using catena::gRPC::CatenaServiceImpl;
+using catena::gRPC::ServiceImpl;
 
 Server *globalServer = nullptr;
 std::atomic<bool> globalLoop = true;
@@ -115,7 +115,7 @@ void RunRPCServer(std::string addr)
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
         bool authz = absl::GetFlag(FLAGS_authz);
         uint32_t maxConnections = absl::GetFlag(FLAGS_max_connections);
-        CatenaServiceImpl service(cq.get(), {&dm}, EOPath, authz, maxConnections);
+        ServiceImpl service(cq.get(), {&dm}, EOPath, authz, maxConnections);
 
         builder.RegisterService(&service);
 

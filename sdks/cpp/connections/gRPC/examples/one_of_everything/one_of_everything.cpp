@@ -71,7 +71,7 @@
 #include <Logger.h>
 
 using grpc::Server;
-using catena::gRPC::CatenaServiceImpl;
+using catena::gRPC::ServiceImpl;
 
 using namespace catena::common;
 
@@ -305,7 +305,7 @@ void RunRPCServer(std::string addr)
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
         bool authz = absl::GetFlag(FLAGS_authz);
         uint32_t maxConnections = absl::GetFlag(FLAGS_max_connections);
-        CatenaServiceImpl service(cq.get(), {&dm}, EOPath, authz, maxConnections);
+        ServiceImpl service(cq.get(), {&dm}, EOPath, authz, maxConnections);
 
         // Updating device's default max array length.
         dm.set_default_max_length(absl::GetFlag(FLAGS_default_max_array_size));
