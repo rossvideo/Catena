@@ -47,7 +47,7 @@ using namespace catena::common;
 bool Device::tryMultiSetValue (catena::MultiSetValuePayload src, catena::exception_with_status& ans, Authorizer& authz) {
     // Making sure multi set is enabled.
     if (src.values_size() > 1 && !multi_set_enabled_) {
-        ans = catena::exception_with_status("Multi-set is disabled for the device in slot " + slot_, catena::StatusCode::PERMISSION_DENIED);
+        ans = catena::exception_with_status("Multi-set is disabled for the device in slot " + std::to_string(slot_), catena::StatusCode::PERMISSION_DENIED);
     } else {
         std::vector<std::string> affectedOids;
 
@@ -442,15 +442,14 @@ catena::DeviceComponent Device::DeviceSerializer::getNext() {
 }
 
 std::unique_ptr<Device::IDeviceSerializer> Device::getComponentSerializer(Authorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow) const {
-    return std::make_unique<Device::DeviceSerializer>(getDeviceSerializer(authz, subscribedOids, dl, shallow));
-}
-
-Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow) const {
     // Sanitizing if trying to use SUBSCRIPTIONS mode with subscriptions disabled
     if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS && !subscriptions_) {
         throw catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::INVALID_ARGUMENT);
     }
-    
+    return std::make_unique<Device::DeviceSerializer>(getDeviceSerializer(authz, subscribedOids, dl, shallow));
+}
+
+Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow) const {
     catena::DeviceComponent component{};
 
     // Send basic device information first
@@ -465,66 +464,39 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
     }
 
     if (dl != catena::Device_DetailLevel_NONE) {
-        // // Helper function to check if an OID is subscribed
-        auto isSubscribed = [&subscribedOids, dl, this](const std::string& paramName) {
-            if (dl != catena::Device_DetailLevel_SUBSCRIPTIONS) {
-                return true;
-            } else {
-                // Check each subscription for exact or wildcard matches
-                for (const auto& subscribedOid : subscribedOids) {
-                    // Remove leading slash
-                    std::string oid = subscribedOid.substr(1);
-                    // Check for exact match.
-                    if (paramName == oid) {
-                        return true;
-                    }
-                    // Check for wildcard match (ends with *)
-                    if (!oid.empty() && oid.back() == '*' && paramName.find(oid.substr(0, oid.size() - 1)) == 0) {
-                        return true;
-                    }
-                }
-            }
-            return false;
+        // Helper function to check if an OID is subscribed
+        auto isSubscribed = [&subscribedOids](const std::string& paramName) {
+            return subscribedOids.contains("/" + paramName);
         };
 
-        // // Only send non-minimal items in FULL mode or if explicitly subscribed in SUBSCRIPTION mode
-        if (dl == catena::Device_DetailLevel_FULL || 
-            dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
-            
+        // Only send non-minimal items in FULL mode
+        if (dl == catena::Device_DetailLevel_FULL) {
             // Send menus
             for (const auto& [groupGame, menuGroup] : menu_groups_) {
                 for (const auto& [name, menu] : *menuGroup->menus()) {
                     std::string oid = groupGame + "/" + name;
-                    if (isSubscribed(oid)) {
-                        co_yield component;
-                        component.Clear();
-                        ::catena::Menu* dstMenu = component.mutable_menu()->mutable_menu();
-                        menu->toProto(*dstMenu);
-                        component.mutable_menu()->set_oid(oid);
-                    }
+                    co_yield component;
+                    component.Clear();
+                    ::catena::Menu* dstMenu = component.mutable_menu()->mutable_menu();
+                    menu->toProto(*dstMenu);
+                    component.mutable_menu()->set_oid(oid);
                 }
             }
-
             // Send language packs
             for (const auto& [language, languagePack] : language_packs_) {
-                if (isSubscribed(language)) {
-                    co_yield component;
-                    component.Clear();
-                    ::catena::LanguagePack* dstPack = component.mutable_language_pack()->mutable_language_pack();
-                    languagePack->toProto(*dstPack);
-                    component.mutable_language_pack()->set_language(language);
-                }
+                co_yield component;
+                component.Clear();
+                ::catena::LanguagePack* dstPack = component.mutable_language_pack()->mutable_language_pack();
+                languagePack->toProto(*dstPack);
+                component.mutable_language_pack()->set_language(language);
             }
-
             // Send constraints
             for (const auto& [name, constraint] : constraints_) {
-                if (isSubscribed(name)) {
-                    co_yield component;
-                    component.Clear();
-                    ::catena::Constraint* dstConstraint = component.mutable_shared_constraint()->mutable_constraint();
-                    constraint->toProto(*dstConstraint);
-                    component.mutable_shared_constraint()->set_oid(name);
-                }
+                co_yield component;
+                component.Clear();
+                ::catena::Constraint* dstConstraint = component.mutable_shared_constraint()->mutable_constraint();
+                constraint->toProto(*dstConstraint);
+                component.mutable_shared_constraint()->set_oid(name);
             }
         }
 
@@ -567,13 +539,13 @@ bool Device::shouldSendParam(const IParam& param, bool is_subscribed, Authorizer
 
     // First check authorization
     if (authz.readAuthz(param)) {
-            
+        if (casted_detail_level != static_cast<int>(catena::Device_DetailLevel_NONE)) {
             should_send = 
-                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_NONE)) ||
                 (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_MINIMAL) && param.getDescriptor().minimalSet()) ||
                 (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_FULL)) ||
                 (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_SUBSCRIPTIONS) && (param.getDescriptor().minimalSet() || is_subscribed)) ||
                 (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_COMMANDS) && param.getDescriptor().isCommand());
+        }
     }
 
     return should_send;
