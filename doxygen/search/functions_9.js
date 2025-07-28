@@ -1,7 +1,7 @@
 var searchData=
 [
   ['idevice_0',['IDevice',['../classcatena_1_1common_1_1IDevice.html#ac71fc03628cf95184ea9f4c0bd761a65',1,'catena::common::IDevice']]],
-  ['init_1',['init',['../classcatena_1_1gRPC_1_1IServiceImpl.html#a2c1f29753c40c3a128407f02e639c8ad',1,'catena::gRPC::IServiceImpl::init()'],['../classcatena_1_1gRPC_1_1ServiceImpl.html#a737ffec77173ac773fe044c060781f0b',1,'catena::gRPC::ServiceImpl::init()']]],
+  ['init_1',['init',['../classcatena_1_1gRPC_1_1ICatenaServiceImpl.html#ac9251728c70d03cb52e2396b47688189',1,'catena::gRPC::ICatenaServiceImpl::init()'],['../classcatena_1_1gRPC_1_1CatenaServiceImpl.html#ad3900e792aeac053792435323e2f9d15',1,'catena::gRPC::CatenaServiceImpl::init()']]],
   ['initauthz_5f_2',['initauthz_',['../classcatena_1_1common_1_1Connect.html#aa0040e4b363a858cdee334dd1e36d904',1,'catena::common::Connect::initAuthz_()'],['../classcatena_1_1common_1_1IConnect.html#a02ef98650e356794414eb781a552fddb',1,'catena::common::IConnect::initAuthz_()']]],
   ['initial_5fsuspend_3',['initial_suspend',['../structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a167543a006ad9001a8f5bed5c1fd57b0',1,'catena::common::Device::DeviceSerializer::promise_type::initial_suspend()'],['../structcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder_1_1promise__type.html#a824694519e694746d3f626dd8abfc27c',1,'catena::common::ParamDescriptor::CommandResponder::promise_type::initial_suspend()']]],
   ['iparam_4',['IParam',['../classcatena_1_1common_1_1IParam.html#a6c58f51d423fb45ec1f4886fd193d35e',1,'catena::common::IParam']]],

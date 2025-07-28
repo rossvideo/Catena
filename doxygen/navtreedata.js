@@ -134,7 +134,7 @@ var NAVTREEINDEX =
 "classcatena_1_1common_1_1IDevice.html#a920052e325112f24cea8686d8d30b45c",
 "classcatena_1_1common_1_1Menu.html#a92f75a134a8b21becadb3f6a1c7ebea8",
 "classcatena_1_1common_1_1Path.html#aee8036a35a13fe883796c8dabfdfb2f0",
-"classcatena_1_1gRPC_1_1ServiceImpl.html#a45a6e98301237b4660867d71da68a3c6",
+"classcatena_1_1gRPC_1_1PeerManager.html",
 "hello_world_8cpp-example.html"
 ];
 

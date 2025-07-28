@@ -139,9 +139,9 @@ var sectionId = 'dynsection-1';
 <!-- Node6 -->
 <g id="Node000006" class="node">
 <title>Node6</title>
-<g id="a_Node000006"><a xlink:href="classcatena_1_1gRPC_1_1IServiceImpl.html" target="_top" xlink:title="Interface class for the gRPC API Implementation.">
-<polygon fill="white" stroke="#666666" points="402,-218 254,-218 254,-199 402,-199 402,-218"/>
-<text text-anchor="middle" x="328" y="-206" font-family="Helvetica,sans-Serif" font-size="10.00">catena::gRPC::IServiceImpl</text>
+<g id="a_Node000006"><a xlink:href="classcatena_1_1gRPC_1_1ICatenaServiceImpl.html" target="_top" xlink:title="Interface class for the gRPC API Implementation.">
+<polygon fill="white" stroke="#666666" points="436,-218 254,-218 254,-199 436,-199 436,-218"/>
+<text text-anchor="middle" x="345" y="-206" font-family="Helvetica,sans-Serif" font-size="10.00">catena::gRPC::ICatenaServiceImpl</text>
 </a>
 </g>
 </g>
@@ -149,19 +149,19 @@ var sectionId = 'dynsection-1';
 <g id="edge5_Node000003_Node000006" class="edge">
 <title>Node6&#45;&gt;Node3</title>
 <g id="a_edge5_Node000003_Node000006"><a xlink:title=" ">
-<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M302.51,-194.37C275.29,-180.36 232.94,-158.56 209.69,-146.59"/>
-<polygon fill="#9a32cd" stroke="#9a32cd" points="300.95,-197.51 311.45,-198.98 304.16,-191.29 300.95,-197.51"/>
+<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M317.09,-194.74C286.48,-180.74 238.2,-158.67 211.79,-146.59"/>
+<polygon fill="#9a32cd" stroke="#9a32cd" points="315.81,-198 326.36,-198.98 318.72,-191.64 315.81,-198"/>
 </a>
 </g>
-<text text-anchor="middle" x="295" y="-173" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> service_</text>
+<text text-anchor="middle" x="305" y="-173" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> service_</text>
 </g>
 <!-- Node7 -->
 <g id="Node000007" class="node">
 <title>Node7</title>
 <g id="a_Node000007"><a xlink:title=" ">
-<polygon fill="white" stroke="#bfbfbf" points="391,-285 265,-285 265,-255 391,-255 391,-285"/>
-<text text-anchor="start" x="273" y="-273" font-family="Helvetica,sans-Serif" font-size="10.00">catena::CatenaService</text>
-<text text-anchor="middle" x="328" y="-262" font-family="Helvetica,sans-Serif" font-size="10.00">::AsyncService</text>
+<polygon fill="white" stroke="#bfbfbf" points="408,-285 282,-285 282,-255 408,-255 408,-285"/>
+<text text-anchor="start" x="290" y="-273" font-family="Helvetica,sans-Serif" font-size="10.00">catena::CatenaService</text>
+<text text-anchor="middle" x="345" y="-262" font-family="Helvetica,sans-Serif" font-size="10.00">::AsyncService</text>
 </a>
 </g>
 </g>
@@ -169,8 +169,8 @@ var sectionId = 'dynsection-1';
 <g id="edge6_Node000006_Node000007" class="edge">
 <title>Node7&#45;&gt;Node6</title>
 <g id="a_edge6_Node000006_Node000007"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M328,-244.79C328,-235.36 328,-225.15 328,-218.16"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="324.5,-244.9 328,-254.9 331.5,-244.9 324.5,-244.9"/>
+<path fill="none" stroke="#63b8ff" d="M345,-244.79C345,-235.36 345,-225.15 345,-218.16"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="341.5,-244.9 345,-254.9 348.5,-244.9 341.5,-244.9"/>
 </a>
 </g>
 </g>
