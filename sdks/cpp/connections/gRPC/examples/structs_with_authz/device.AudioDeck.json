@@ -39,7 +39,7 @@
           "access_scope": "st2138:op",
           "constraint": {
             "type": "FLOAT_RANGE",
-            "float_range": {"min_value":0,  "max_value": 10.0, "step": 0.1}
+            "float_range": {"min_value":20, "display_min": 20,  "max_value": 20000, "display_max": 20000, "step": 1.0}
           },
           "widget": "wheel"
         },
