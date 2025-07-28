@@ -34,7 +34,9 @@ set(SOURCES
     tests/PolyglotText_test.cpp
     tests/NamedChoiceConstraint_test.cpp
     tests/RangeConstraint_test.cpp
+    tests/Device_test.cpp
     tests/ConnectionQueue_test.cpp
+
 )
 
 add_executable(${This} ${SOURCES})
