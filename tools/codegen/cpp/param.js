@@ -307,18 +307,19 @@ class Param {
    * 
    * @returns the c++ type of the param's value as a string
    */
-  objectType() {
+  objectType() { // <----- Here This 
     if (!this.hasTypeInfo()) {
       return typeArg(this.type);
     }
-    if (this.isTemplated()) {
-      if (this.isArrayType() && !this.template_param.isArrayType()) {
-        return `${initialCap(this.oid)}`;
-      } else {
-        return this.template_param.objectType();
-      }
-    } else {
+    // Not templated returns param
+    if (!this.isTemplated()) {
       return `${initialCap(this.oid)}`;
+    // Non-array template also returns param
+    } else if (this.isArrayType() && !this.template_param.isArrayType()) {
+      return `${initialCap(this.oid)}`;
+    // Array template returns template_param
+    } else {
+      return this.template_param.objectType();
     }
   }
 
@@ -330,14 +331,15 @@ class Param {
     if (!this.hasTypeInfo()) {
       return typeArg(this.type);
     }
-    if (this.isTemplated()) {
-      if (this.isArrayType() && !this.template_param.isArrayType()) {
-        return `${this.namespace}::${initialCap(this.oid)}`;
-      } else {
-        return this.template_param.objectNamespaceType();
-      }
-    } else {
+    // Not templated returns namespace::param
+    if (!this.isTemplated()) {
       return `${this.namespace}::${initialCap(this.oid)}`;
+    // Non-array template also returns namespace::param
+    } else if (this.isArrayType() && !this.template_param.isArrayType()) {
+      return `${this.namespace}::${initialCap(this.oid)}`;
+    // Array template returns namespace::template_param
+    } else {
+      return this.template_param.objectNamespaceType();
     }
   }
 
@@ -350,13 +352,36 @@ class Param {
     if (!this.isArrayType()) {
       throw new Error(`${this.type} type does not have an element type`);
     }
-
+    // Not templated returns param_elem
     if (!this.isTemplated()) {
       return `${this.objectType()}_elem`;
-    } else if (!this.template_param.isArrayType()) {
-      return `${this.template_param.objectNamespaceType()}`;
-    } else {
+    // Array template returns template_param_elem
+    } else if (this.template_param.isArrayType()) {
       return this.template_param.elementType();
+    // Non-array template returns template_param
+    } else {
+      return `${this.template_param.objectNamespaceType()}`;
+    }
+  }
+
+  /**
+   * @returns the c++ type of an element of an array type param with its full
+   * namespace as a string
+   * @throws if the param is not an array type
+   */
+  elementNamespaceType() {
+    if (!this.isArrayType()) {
+      throw new Error(`${this.type} type does not have an element type`);
+    }
+    // Not templated returns namespace::param_elem
+    if (!this.isTemplated()) {
+      return `${this.namespace}::${this.elementType()}`;
+    // Array template also returns namespace::param_elem
+    } else if (this.template_param.isArrayType()) {
+      return `${this.namespace}::${this.elementType()}`;
+    // Non-array template returns namespace::template_param
+    } else {
+      return this.template_param.objectNamespaceType();
     }
   }
 
@@ -503,7 +528,7 @@ class Param {
   getFieldInfoTypes() {
     let subParamArr = Object.values(this.subParams);
     let mappedArr = subParamArr.map((subParam) => {
-      return `FieldInfo<${subParam.objectNamespaceType()}, ${this.objectType()}>`;
+      return `FieldInfo<${subParam.objectNamespaceType()}, ${this.objectType()}>`; // <-- Here
     });
     return mappedArr.join(", ");
   }
