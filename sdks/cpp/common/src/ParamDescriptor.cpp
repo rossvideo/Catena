@@ -87,20 +87,22 @@ void ParamDescriptor::toProto(catena::ParamInfo &paramInfo, Authorizer& authz) c
 }
 
 const std::string& ParamDescriptor::name(const std::string& language) const { 
+    static const std::string empty;
+    const std::string* foundName = &empty;
     if (name_.displayStrings().contains(language)) {
-        return name_.displayStrings().at(language);
-    } else {
-        static const std::string empty;
-        return empty;
+        foundName = &name_.displayStrings().at(language);
     }
+    return *foundName;
 }
 
 const std::string& ParamDescriptor::getScope() const {
-    if (!scope_.empty()) {
-        return scope_;
-    } else if (parent_) {
-        return parent_->getScope();
-    } else {
-        return dev_.get().getDefaultScope();
+    const std::string* foundScope = &scope_;
+    if (foundScope->empty()) {
+        if (parent_) {
+            foundScope = &parent_->getScope();
+        } else {
+            foundScope = &dev_.get().getDefaultScope();
+        }
     }
+    return *foundScope;
 }

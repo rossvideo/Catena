@@ -75,7 +75,7 @@ class ConnectionQueue : public IConnectionQueue {
      */
     void deregisterConnection(const IConnect* cd) override;
 
-  private:
+  protected:
     /**
      * @brief The maximum number of connections allowed in the queue.
      */
