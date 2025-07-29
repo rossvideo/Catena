@@ -37,7 +37,7 @@
 
 // Test helpers
 #include "GRPCTest.h"
-#include "GRPCTestHelpers.h"
+#include "StreamReader.h"
 #include "CommonTestHelpers.h"
 
 // gRPC

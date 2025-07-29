@@ -41,7 +41,7 @@
 #include "MockLanguagePack.h"
 #include "MockConnectionQueue.h"
 #include "GRPCTest.h"
-#include "GRPCTestHelpers.h"
+#include "StreamReader.h"
 
 // gRPC
 #include "controllers/Connect.h"

@@ -70,15 +70,14 @@ void ParamInfoRequest::proceed(bool ok) {
             std::unique_ptr<IParam> param;
             std::shared_ptr<Authorizer> sharedAuthz;
             Authorizer* authz;
-            IDevice* dm = nullptr;
             
             try {
                 // Getting device at specified slot.
                 if (dms_.contains(req_.slot())) {
-                    dm = dms_.at(req_.slot());
+                    dm_ = dms_.at(req_.slot());
                 }
                 // Making sure the device exists.
-                if (!dm) {
+                if (!dm_) {
                     rc = catena::exception_with_status("Device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
                 } else {
                     if (service_->authorizationEnabled()) {
@@ -91,16 +90,13 @@ void ParamInfoRequest::proceed(bool ok) {
                     // Mode 1: Get all top-level parameters
                     if (req_.oid_prefix().empty() && !req_.recursive()) {
                         std::vector<std::unique_ptr<IParam>> top_level_params;
-                        {
-                            std::lock_guard lg(dm->mutex());
-                            top_level_params = dm->getTopLevelParams(rc, *authz);
-                        }
+                        std::lock_guard lg(dm_->mutex());
+                        top_level_params = dm_->getTopLevelParams(rc, *authz);
                         if (rc.status == catena::StatusCode::OK) {
                             if (top_level_params.empty()) {
                                 rc = catena::exception_with_status("No top-level parameters found", catena::StatusCode::NOT_FOUND);
                             } else {
-                                // Success case - process parameters
-                                std::lock_guard lg(dm->mutex());                    
+                                // Success case - process parameters               
                                 responses_.clear();  
                                 // Process each top-level parameter
                                 for (auto& top_level_param : top_level_params) {
@@ -114,27 +110,18 @@ void ParamInfoRequest::proceed(bool ok) {
                                         }
                                     }   
                                 }                        
-                                // Begin writing responses back to the client
-                                writer_lock_.lock();
-                                status_ = CallStatus::kWrite;
-                                writer_.Write(responses_[0], this);  //Write the first response
-                                writer_lock_.unlock();
-                                break;  
                             }
                         }
                     // Mode 2: Get ALL parameters recursively
                     } else if (req_.oid_prefix().empty() && req_.recursive()) {
                         std::vector<std::unique_ptr<IParam>> top_level_params;
-                        {
-                            std::lock_guard lg(dm->mutex());
-                            top_level_params = dm->getTopLevelParams(rc, *authz);
-                        }
+                        std::lock_guard lg(dm_->mutex());
+                        top_level_params = dm_->getTopLevelParams(rc, *authz);
                         if (rc.status == catena::StatusCode::OK) {
                             if (top_level_params.empty()) {
                                 rc = catena::exception_with_status("No top-level parameters found", catena::StatusCode::NOT_FOUND);
                             } else {
-                                // Success case - process parameters recursively
-                                std::lock_guard lg(dm->mutex());                     
+                                // Success case - process parameters recursively                  
                                 responses_.clear();  
                                 // Process each top-level parameter recursively
                                 for (auto& top_level_param : top_level_params) {
@@ -148,23 +135,15 @@ void ParamInfoRequest::proceed(bool ok) {
                                         }
                                     }
                                     // Collect all parameter info recursively through visitor pattern
-                                    ParamInfoVisitor visitor(*dm, *authz, responses_, *this);
-                                    ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), *dm, visitor, *authz);
+                                    ParamInfoVisitor visitor(*dm_, *authz, responses_, *this);
+                                    ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), *dm_, visitor, *authz);
                                 }                        
-                                // Begin writing responses back to the client
-                                writer_lock_.lock();
-                                status_ = CallStatus::kWrite;
-                                writer_.Write(responses_[0], this);  //Write the first response
-                                writer_lock_.unlock();
-                                break;  
                             }
                         }
                     // Mode 3: Get a specific parameter and its children
                     } else if (!req_.oid_prefix().empty()) { 
-                        {
-                            std::lock_guard lg(dm->mutex());
-                            param = dm->getParam(req_.oid_prefix(), rc, *authz);
-                        }
+                        std::lock_guard lg(dm_->mutex());
+                        param = dm_->getParam(req_.oid_prefix(), rc, *authz);
                         if (rc.status == catena::StatusCode::OK) {
                             if (!param) {
                                 rc = catena::exception_with_status("Parameter not found: " + req_.oid_prefix(), catena::StatusCode::NOT_FOUND);
@@ -183,15 +162,9 @@ void ParamInfoRequest::proceed(bool ok) {
                                 }                        
                                 // If recursive is true, collect all parameter info recursively through visitor pattern
                                 if (req_.recursive()) {
-                                    ParamInfoVisitor visitor(*dm, *authz, responses_, *this);
-                                    ParamVisitor::traverseParams(param.get(), req_.oid_prefix(), *dm, visitor, *authz);
+                                    ParamInfoVisitor visitor(*dm_, *authz, responses_, *this);
+                                    ParamVisitor::traverseParams(param.get(), req_.oid_prefix(), *dm_, visitor, *authz);
                                 }
-                                // Begin writing responses back to the client
-                                writer_lock_.lock();
-                                status_ = CallStatus::kWrite;
-                                writer_.Write(responses_[0], this); //Write the first response
-                                writer_lock_.unlock();
-                                break;
                             }
                         }
                     }
@@ -208,23 +181,30 @@ void ParamInfoRequest::proceed(bool ok) {
             if (rc.status != catena::StatusCode::OK) {
                 status_ = CallStatus::kFinish;
                 writer_.Finish(grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+                break;
+            } else{
+                // Fall through to write the first response
+                status_ = CallStatus::kWrite;
             }
             } // rc scope
-            break;
 
         case CallStatus::kWrite:
-            { // response scope
-                // Write responses sequentially until we're done
-                writer_lock_.lock(); //Lock the writer for writing
-                if (current_response_ >= responses_.size()-1) {
-                    status_ = CallStatus::kFinish; 
-                    writer_.Finish(Status::OK, this);
-                } else {
+            { // lock scope
+                std::lock_guard lg(dm_->mutex());
+                writer_.Write(responses_.at(current_response_), this);
+                // Check if we have more responses to write
+                if (current_response_ < responses_.size()-1) { 
                     current_response_++;
-                    writer_.Write(responses_.at(current_response_), this);
+                    status_ = CallStatus::kWrite;
+                } else { 
+                    status_ = CallStatus::kPostWrite; 
                 }
-                writer_lock_.unlock();
-            } // response scope
+            } // lock scope
+            break;
+
+        case CallStatus::kPostWrite:
+            status_ = CallStatus::kFinish;
+            writer_.Finish(Status::OK, this);
             break;
 
         case CallStatus::kFinish:
@@ -240,8 +220,6 @@ void ParamInfoRequest::proceed(bool ok) {
             // GCOVR_EXCL_STOP
     }
 }
-
-
 
 /** Updates the array_length field in the protobuf responses
  * for all responses that contain array_name in their OID

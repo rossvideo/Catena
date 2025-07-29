@@ -39,7 +39,7 @@
 #include "MockParam.h"
 #include "MockCommandResponder.h"
 #include "GRPCTest.h"
-#include "GRPCTestHelpers.h"
+#include "StreamReader.h"
 #include "CommonTestHelpers.h"
 
 // gRPC
