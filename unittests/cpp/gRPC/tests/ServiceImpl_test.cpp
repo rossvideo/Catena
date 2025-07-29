@@ -143,19 +143,7 @@ class gRPCServiceImplTests : public testing::Test {
 };
 
 /*
- * TEST 1 - Test ServiceConfig set_flags()
- */
-TEST(gRPCServiceConfigTests, ServiceConfig_SetFlags) {
-    ServiceConfig config;
-    // Testing SetFlags.
-    config.set_flags();
-    EXPECT_EQ(config.EOPath, absl::GetFlag(FLAGS_static_root));
-    EXPECT_EQ(config.authz, absl::GetFlag(FLAGS_authz));
-    EXPECT_EQ(config.maxConnections, absl::GetFlag(FLAGS_max_connections));
-}
-
-/*
- * TEST 2 - Test ServiceConfig set_dms() and add_dm()
+ * TEST 1 - Test ServiceConfig set_dms() and add_dm()
  */
 TEST(gRPCServiceConfigTests, ServiceConfig_SetDms) {
     MockDevice dm1, dm2, dm3;
@@ -168,7 +156,7 @@ TEST(gRPCServiceConfigTests, ServiceConfig_SetDms) {
 }
 
 /*
- * TEST 3 - Test creation and destruction of the service implementation.
+ * TEST 2 - Test creation and destruction of the service implementation.
  */
 TEST_F(gRPCServiceImplTests, ServiceImpl_CreateDestroy) {
     ASSERT_TRUE(service_);
@@ -182,7 +170,7 @@ TEST_F(gRPCServiceImplTests, ServiceImpl_CreateDestroy) {
 }
 
 /*
- * TEST 4 - Creating a REST ServiceImpl with no completion queue.
+ * TEST 3 - Creating a REST ServiceImpl with no completion queue.
  *
  * This is not under the fixture because setting up a gRPC server is time
  * consuming and not needed.
@@ -193,7 +181,7 @@ TEST(gRPCServiceImplTests_NoFixture, ServiceImpl_CreateNoCQ) {
 }
 
 /*
- * TEST 5 - Creating a REST ServiceImpl with two devices sharing a slot.
+ * TEST 4 - Creating a REST ServiceImpl with two devices sharing a slot.
  *
  * This is not under the fixture because setting up a gRPC server is time
  * consuming and not needed.
@@ -202,7 +190,7 @@ TEST(gRPCServiceImplTests_NoFixture, ServiceImpl_CreateDuplicateSlot) {
     ServiceConfig config;
     // Adding completion queue
     grpc::ServerBuilder builder;
-    // builder.AddListeningPort("0.0.0.0:50051", grpc::InsecureServerCredentials());
+    builder.AddListeningPort("0.0.0.0:50051", grpc::InsecureServerCredentials());
     auto cq = builder.AddCompletionQueue();
     config.cq = cq.get();
     // Adding devices
@@ -212,5 +200,5 @@ TEST(gRPCServiceImplTests_NoFixture, ServiceImpl_CreateDuplicateSlot) {
     EXPECT_CALL(dm2, slot()).WillRepeatedly(testing::Return(0));
     config.dms.push_back(&dm2);
     // Creating a service with a duplicate slot.
-    EXPECT_THROW(ServiceImpl(config), std::runtime_error) << "Creating a service with two devices sharing a slot should throw an error.";
+    EXPECT_THROW(ServiceImpl service = ServiceImpl{config}, std::runtime_error) << "Creating a service with two devices sharing a slot should throw an error.";
 }

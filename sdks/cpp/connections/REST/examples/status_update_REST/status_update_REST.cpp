@@ -167,7 +167,10 @@ void RunRESTServer() {
     try {
         // Setting config.
         ServiceConfig config = ServiceConfig()
-            .set_flags()
+            .set_EOPath(absl::GetFlag(FLAGS_static_root))
+            .set_authz(absl::GetFlag(FLAGS_authz))
+            .set_port(absl::GetFlag(FLAGS_port))
+            .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
             .add_dm(&dm);
         
         // Creating and running the REST service.

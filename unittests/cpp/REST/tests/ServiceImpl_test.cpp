@@ -121,20 +121,7 @@ class RESTServiceImplTests : public testing::Test {
 };
 
 /*
- * TEST 1 - Test ServiceConfig set_flags()
- */
-TEST(RESTServiceConfigTests, ServiceConfig_SetFlags) {
-    ServiceConfig config;
-    // Testing SetFlags.
-    config.set_flags();
-    EXPECT_EQ(config.EOPath, absl::GetFlag(FLAGS_static_root));
-    EXPECT_EQ(config.authz, absl::GetFlag(FLAGS_authz));
-    EXPECT_EQ(config.maxConnections, absl::GetFlag(FLAGS_max_connections));
-    EXPECT_EQ(config.port, absl::GetFlag(FLAGS_port));
-}
-
-/*
- * TEST 2 - Test ServiceConfig set_dms() and add_dm()
+ * TEST 1 - Test ServiceConfig set_dms() and add_dm()
  */
 TEST(RESTServiceConfigTests, ServiceConfig_SetDms) {
     MockDevice dm1, dm2, dm3;
@@ -147,7 +134,7 @@ TEST(RESTServiceConfigTests, ServiceConfig_SetDms) {
 }
 
 /*
- * TEST 3 - Creating a REST ServiceImpl.
+ * TEST 2 - Creating a REST ServiceImpl.
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_Create) {
     ASSERT_TRUE(service_);
@@ -158,7 +145,7 @@ TEST_F(RESTServiceImplTests, ServiceImpl_Create) {
 }
 
 /*
- * TEST 4 - Creating a REST ServiceImpl.
+ * TEST 3 - Creating a REST ServiceImpl.
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_CreateDuplicateSlot) {
     // Creating a new device and adding it to the config.
@@ -174,7 +161,7 @@ TEST_F(RESTServiceImplTests, ServiceImpl_CreateDuplicateSlot) {
 }
 
 /*
- * TEST 5 - Running and shutting down the REST ServiceImpl.
+ * TEST 4 - Running and shutting down the REST ServiceImpl.
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_RunAndShutdown) {
     // Starting the service.
@@ -188,7 +175,7 @@ TEST_F(RESTServiceImplTests, ServiceImpl_RunAndShutdown) {
 }
 
 /*
- * TEST 6 - Testing the service's router against all valid endpoints. 
+ * TEST 5 - Testing the service's router against all valid endpoints. 
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_Router) {
     // Starting the service.
@@ -204,9 +191,9 @@ TEST_F(RESTServiceImplTests, ServiceImpl_Router) {
         {Method_GET,     ""              },
         {Method_POST,    "/command"      },
         {Method_GET,     "/asset"        },
-        // {Method_POST,    "/asset"        },
-        // {Method_PUT,     "/asset"        }, Not implemented atm
-        // {Method_DELETE,  "/asset"        },
+        {Method_POST,    "/asset"        },
+        {Method_PUT,     "/asset"        },
+        {Method_DELETE,  "/asset"        },
         {Method_GET,     "/param-info"   },
         {Method_GET,     "/value"        },
         {Method_PUT,     "/value"        },

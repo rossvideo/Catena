@@ -83,17 +83,6 @@ namespace REST {
 class ServiceConfig {
   public:
     /**
-     * @brief Sets EOPath, authz, port, and maxConnections via command line
-     * flags.
-     */
-    ServiceConfig& set_flags() {
-      EOPath = absl::GetFlag(FLAGS_static_root);
-      authz = absl::GetFlag(FLAGS_authz);
-      port = absl::GetFlag(FLAGS_port);
-      maxConnections = absl::GetFlag(FLAGS_max_connections);
-      return *this;
-    }
-    /**
      * @brief Sets the vector of Device pointers.
      * @param dms A vector of Device pointers.
      */

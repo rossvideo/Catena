@@ -103,15 +103,6 @@ namespace gRPC {
 class ServiceConfig {
   public:
     /**
-     * @brief Sets EOPath, authz, and maxConnections via command line flags.
-     */
-    ServiceConfig& set_flags() {
-      EOPath = absl::GetFlag(FLAGS_static_root);
-      authz = absl::GetFlag(FLAGS_authz);
-      maxConnections = absl::GetFlag(FLAGS_max_connections);
-      return *this;
-    }
-    /**
      * @brief Sets the completion queue.
      * @param cq A pointer to the completion queue
      */
