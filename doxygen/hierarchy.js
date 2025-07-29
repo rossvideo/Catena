@@ -132,8 +132,6 @@ var hierarchy =
     [ "std::runtime_error", null, [
       [ "catena::exception_with_status", "structcatena_1_1exception__with__status.html", null ]
     ] ],
-    [ "catena::gRPC::ServiceConfig", "classcatena_1_1gRPC_1_1ServiceConfig.html", null ],
-    [ "catena::REST::ServiceConfig", "classcatena_1_1REST_1_1ServiceConfig.html", null ],
     [ "catena::patterns::Singleton< T >", "classcatena_1_1patterns_1_1Singleton.html", null ],
     [ "catena::patterns::Singleton< Functory< K, R, Ms... > >", "classcatena_1_1patterns_1_1Singleton.html", [
       [ "catena::patterns::Functory< K, R, Ms >", "classcatena_1_1patterns_1_1Functory.html", null ]
