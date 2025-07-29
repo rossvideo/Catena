@@ -15,6 +15,7 @@ var namespacecatena_1_1REST =
     [ "Languages", "classcatena_1_1REST_1_1Languages.html", "classcatena_1_1REST_1_1Languages" ],
     [ "MultiSetValue", "classcatena_1_1REST_1_1MultiSetValue.html", "classcatena_1_1REST_1_1MultiSetValue" ],
     [ "ParamInfoRequest", "classcatena_1_1REST_1_1ParamInfoRequest.html", "classcatena_1_1REST_1_1ParamInfoRequest" ],
+    [ "ServiceConfig", "classcatena_1_1REST_1_1ServiceConfig.html", "classcatena_1_1REST_1_1ServiceConfig" ],
     [ "ServiceImpl", "classcatena_1_1REST_1_1ServiceImpl.html", "classcatena_1_1REST_1_1ServiceImpl" ],
     [ "SetValue", "classcatena_1_1REST_1_1SetValue.html", "classcatena_1_1REST_1_1SetValue" ],
     [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html", "classcatena_1_1REST_1_1SocketReader" ],

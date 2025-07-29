@@ -92,6 +92,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1ConnectionQue
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="classcatena_1_1common_1_1ConnectionQueue-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">catena::common::ConnectionQueue Class Reference</div></div>
 </div><!--header-->
@@ -137,6 +138,20 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a4fffbd5355a0da18baecfca1b1a673d1 inherit pub_methods_classcatena_1_1common_1_1IConnectionQueue" id="r_a4fffbd5355a0da18baecfca1b1a673d1"><td class="memItemLeft" align="right" valign="top">
 <a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html">IConnectionQueue</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html">IConnectionQueue</a> &amp;)=delete</td></tr>
 <tr class="separator:a4fffbd5355a0da18baecfca1b1a673d1 inherit pub_methods_classcatena_1_1common_1_1IConnectionQueue"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
+Protected Attributes</h2></td></tr>
+<tr class="memitem:adbf915e13c4fa3d836ab22fa83f9bd78" id="r_adbf915e13c4fa3d836ab22fa83f9bd78"><td class="memItemLeft" align="right" valign="top"><a id="adbf915e13c4fa3d836ab22fa83f9bd78" name="adbf915e13c4fa3d836ab22fa83f9bd78"></a>
+uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>maxConnections_</b></td></tr>
+<tr class="memdesc:adbf915e13c4fa3d836ab22fa83f9bd78"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of connections allowed in the queue. <br /></td></tr>
+<tr class="separator:adbf915e13c4fa3d836ab22fa83f9bd78"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acdba3120b856ddb9830811fc152b4ef1" id="r_acdba3120b856ddb9830811fc152b4ef1"><td class="memItemLeft" align="right" valign="top"><a id="acdba3120b856ddb9830811fc152b4ef1" name="acdba3120b856ddb9830811fc152b4ef1"></a>
+std::mutex&#160;</td><td class="memItemRight" valign="bottom"><b>mtx_</b></td></tr>
+<tr class="memdesc:acdba3120b856ddb9830811fc152b4ef1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Mutex to protect the connectionQueue. <br /></td></tr>
+<tr class="separator:acdba3120b856ddb9830811fc152b4ef1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9eafe8447ba5507dc49ba0110b96266a" id="r_a9eafe8447ba5507dc49ba0110b96266a"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classcatena_1_1common_1_1IConnect.html">IConnect</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ConnectionQueue.html#a9eafe8447ba5507dc49ba0110b96266a">connectionQueue_</a></td></tr>
+<tr class="memdesc:a9eafe8447ba5507dc49ba0110b96266a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The priority queue for <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> CallData objects.  <br /></td></tr>
+<tr class="separator:a9eafe8447ba5507dc49ba0110b96266a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Implements a priority queue which manages <a class="el" href="classcatena_1_1common_1_1IConnect.html" title="Interface class for Connect RPCs.">IConnect</a> objects. </p>
@@ -247,6 +262,32 @@ Public Member Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>TRUE if successfully registered, FALSE otherwise </dd></dl>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html#a45432af9cafbf393c8249b4800cea9ee">catena::common::IConnectionQueue</a>.</p>
+
+</div>
+</div>
+<h2 class="groupheader">Member Data Documentation</h2>
+<a id="a9eafe8447ba5507dc49ba0110b96266a" name="a9eafe8447ba5507dc49ba0110b96266a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9eafe8447ba5507dc49ba0110b96266a">&#9670;&#160;</a></span>connectionQueue_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;<a class="el" href="classcatena_1_1common_1_1IConnect.html">IConnect</a>*&gt; catena::common::ConnectionQueue::connectionQueue_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>The priority queue for <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> CallData objects. </p>
+<p>Not an actual priority queue object since individual access is required for deregistering old connections. </p>
 
 </div>
 </div>
