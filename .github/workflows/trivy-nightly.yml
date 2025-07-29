@@ -25,13 +25,15 @@ jobs:
         run: |
           echo "Trivy scan completed. Results are in trivy-results.sarif"
           if [ -f trivy-results.sarif ]; then
-            echo "Results file exists."
+            echo "------------------- Results file content:"
+            echo "$(cat trivy-results.sarif)"
+            echo "------------------- End of results file content."
           else
-            echo "Results file does not exist."
+            echo "------------------- Results file does not exist."
             exit 1
           fi
       - name: Upload SARIF results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-results.sarif
           category: 'Trivy Scan Results'
