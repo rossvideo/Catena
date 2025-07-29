@@ -4,7 +4,6 @@ var classcatena_1_1REST_1_1ServiceConfig =
     [ "set_authz", "classcatena_1_1REST_1_1ServiceConfig.html#a7138a694d04bb46b3aa3bc69f5da377c", null ],
     [ "set_dms", "classcatena_1_1REST_1_1ServiceConfig.html#ac448fdee001cfd32f370937d1e2f9f17", null ],
     [ "set_EOPath", "classcatena_1_1REST_1_1ServiceConfig.html#ae8bc147f8a1639410ef7120ec7c2460c", null ],
-    [ "set_flags", "classcatena_1_1REST_1_1ServiceConfig.html#a04fb14cedb860a8a9bf1ebd553c7c8dc", null ],
     [ "set_maxConnections", "classcatena_1_1REST_1_1ServiceConfig.html#a0a038524abd21cb4eed83b3d6f24cf2a", null ],
     [ "set_port", "classcatena_1_1REST_1_1ServiceConfig.html#ae48e709861a697063a26db2ca1834533", null ],
     [ "authz", "classcatena_1_1REST_1_1ServiceConfig.html#a6b6d10f438bc31fac168eee45822010c", null ],
