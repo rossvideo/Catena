@@ -40,10 +40,9 @@ jobs:
         run: |
           ./scripts/run_coverage.sh -c --html -v
         
-      - name: Upload coverage report
-        uses: github/codeql-action/upload-coverage@v3
+      - name: Upload code coverage for ref branch
+        uses: actions/upload-artifact@v3
         with:
-          coverage_file: 'coverage/coverage.xml'
-          format: 'cobertura'
-          category: 'Unit Tests Coverage'
+          name: ref-lcov.info
+          path: ./coverage/coverage.info
       
