@@ -18,6 +18,7 @@ var namespacecatena_1_1gRPC =
     [ "ParamInfoRequest", "classcatena_1_1gRPC_1_1ParamInfoRequest.html", "classcatena_1_1gRPC_1_1ParamInfoRequest" ],
     [ "PeerInfo", "classcatena_1_1gRPC_1_1PeerInfo.html", "classcatena_1_1gRPC_1_1PeerInfo" ],
     [ "PeerManager", "classcatena_1_1gRPC_1_1PeerManager.html", "classcatena_1_1gRPC_1_1PeerManager" ],
+    [ "ServiceConfig", "classcatena_1_1gRPC_1_1ServiceConfig.html", "classcatena_1_1gRPC_1_1ServiceConfig" ],
     [ "ServiceImpl", "classcatena_1_1gRPC_1_1ServiceImpl.html", "classcatena_1_1gRPC_1_1ServiceImpl" ],
     [ "SetValue", "classcatena_1_1gRPC_1_1SetValue.html", "classcatena_1_1gRPC_1_1SetValue" ],
     [ "UpdateSubscriptions", "classcatena_1_1gRPC_1_1UpdateSubscriptions.html", "classcatena_1_1gRPC_1_1UpdateSubscriptions" ],
