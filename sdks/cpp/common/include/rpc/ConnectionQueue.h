@@ -57,7 +57,9 @@ class ConnectionQueue : public IConnectionQueue {
      * @param maxConnections The maximum number of connections allowed in the
      * queue.
      */
-    ConnectionQueue(uint32_t maxConnections) : maxConnections_(maxConnections) {}
+    ConnectionQueue(uint32_t maxConnections) : maxConnections_(maxConnections) {
+      std::cout<<"Max Connections: "<<maxConnections_<<std::endl;
+    }
     /**
      * @brief Regesters a Connect CallData object into the Connection priority
      * queue.

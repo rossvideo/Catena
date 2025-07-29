@@ -48,6 +48,7 @@ function(cmake_catena_grpc_common)
     # link against the gRPC interface
     target_link_libraries(${target} PUBLIC ${GRPC_TARGET})
     target_compile_features(${target} PUBLIC cxx_std_20)
+    target_compile_definitions(${target} PRIVATE DEFAULT_MAX_CONNECTIONS)
 
     # add dependencies
     add_dependencies(${target} ${GRPC_TARGET})

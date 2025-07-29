@@ -22,6 +22,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(COMMON C CXX)
 
+set(DEFAULT_MAX_CONNECTIONS 16 CACHE STRING "Default max connections")
+
 set(target catena_common)
 
 set(sources 
