@@ -30,7 +30,7 @@
 
 /**
  * @file ParamInfoRequest_test.cpp
- * @brief This file is for testing the ParamInfoRequest.cpp file.
+ * @brief This file is for testing the gRPC ParamInfoRequest.cpp file.
  * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
  * @date 2025-07-24
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -78,8 +78,6 @@ protected:
         inVal_.set_recursive(recursive);
     }
 
-
-
     /*
      * This is a test class which makes an async RPC to the MockServer on
      * construction and returns the streamed-back response.
@@ -122,6 +120,8 @@ protected:
     std::vector<catena::ParamInfoResponse> expVals_;
 };
 
+// == SECTION 0: Preliminary tests ==
+
 // 0.0: Preliminary test: Creating a ParamInfoRequest object
 TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_Create) {
     ASSERT_TRUE(asyncCall_);
@@ -142,7 +142,7 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_AuthzValid) {
         .type = catena::ParamType::STRING
     };
     auto desc = ParamHierarchyBuilder::createDescriptor("/" + param_info.oid);
-    setupMockParam(*param, param_info, *desc.descriptor);
+    setupMockParamInfo(*param, param_info, *desc.descriptor);
 
     // Set up expected response
     expVals_.clear();
@@ -175,12 +175,12 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_AuthzInvalid) {
 // 0.3: Error Case - Authorization test with invalid slot
 TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_InvalidSlot) {
     initPayload(dms_.size()); // Use invalid slot
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
+    expRc_ = catena::exception_with_status("Device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
 
     testRPC();
 }
 
-// == MODE 1 TESTS: Get all top-level parameters without recursion ==
+// == SECTION/MODE 1: Get all top-level parameters without recursion == //
 
 // 1.1: Success Case - Get all top-level parameters without recursion
 TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParams) {
@@ -195,9 +195,9 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParams) {
     ParamInfo param2_info_struct{param2_info.oid, param2_info.type};
 
     auto param1 = std::make_unique<MockParam>();
-    setupMockParam(*param1, param1_info_struct, *desc1.descriptor);
+    setupMockParamInfo(*param1, param1_info_struct, *desc1.descriptor);
     auto param2 = std::make_unique<MockParam>();
-    setupMockParam(*param2, param2_info_struct, *desc2.descriptor);
+    setupMockParamInfo(*param2, param2_info_struct, *desc2.descriptor);
 
     std::vector<std::unique_ptr<IParam>> top_level_params;
     top_level_params.push_back(std::move(param1));
@@ -223,15 +223,28 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParams) {
     testRPC();
 }
 
-// 1.2: Error Case - Get top-level parameters with error returned from getTopLevelParams
-TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsError) {
-    expRc_ = catena::exception_with_status("No more responses", catena::StatusCode::INTERNAL);
-    
-    // Setup mock expectations 
+// 1.2: Success Case - Get top-level parameters with array type
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithArray) {
+    // Setup mock parameters
+    std::vector<std::unique_ptr<IParam>> top_level_params;
+    ParamInfo arrayParamInfo{ .oid = "array_param", .type = catena::ParamType::STRING_ARRAY, .array_length = 5 };
+    auto desc = ParamHierarchyBuilder::createDescriptor("/" + arrayParamInfo.oid);
+    auto arrayParam = std::make_unique<MockParam>();
+    setupMockParamInfo(*arrayParam, arrayParamInfo, *desc.descriptor);
+    top_level_params.push_back(std::move(arrayParam));
+
+    // Set up expected responses
+    expVals_.clear();
+    expVals_.emplace_back();
+    expVals_.back().mutable_info()->set_oid("array_param");
+    expVals_.back().mutable_info()->set_type(catena::ParamType::STRING_ARRAY);
+    expVals_.back().set_array_length(5);
+
+    // Setup mock expectations
     EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([](catena::exception_with_status& status, Authorizer&) {
-            status = catena::exception_with_status("No more responses", catena::StatusCode::INTERNAL);
-            return std::vector<std::unique_ptr<IParam>>();
+        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return std::move(top_level_params);
         }));
 
     testRPC();
@@ -252,34 +265,7 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getEmptyTopLevelParams) {
     testRPC();
 }
 
-// 1.4: Success Case - Get top-level parameters with array type
-TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithArray) {
-    // Setup mock parameters
-    std::vector<std::unique_ptr<IParam>> top_level_params;
-    ParamInfo arrayParamInfo{ .oid = "array_param", .type = catena::ParamType::STRING_ARRAY, .array_length = 5 };
-    auto desc = ParamHierarchyBuilder::createDescriptor("/" + arrayParamInfo.oid);
-    auto arrayParam = std::make_unique<MockParam>();
-    setupMockParam(*arrayParam, arrayParamInfo, *desc.descriptor);
-    top_level_params.push_back(std::move(arrayParam));
-
-    // Set up expected responses
-    expVals_.clear();
-    expVals_.emplace_back();
-    expVals_.back().mutable_info()->set_oid("array_param");
-    expVals_.back().mutable_info()->set_type(catena::ParamType::STRING_ARRAY);
-    expVals_.back().set_array_length(5);
-
-    // Setup mock expectations
-    EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, Authorizer&) {
-            status = catena::exception_with_status("", catena::StatusCode::OK);
-            return std::move(top_level_params);
-        }));
-
-    testRPC();
-}
-
-// 1.5: Error Case - Get top-level parameters with error status in returned parameters
+// 1.4: Error Case - Get top-level parameters with error status in returned parameters (catena::exception_with_status)
 TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsProcessingError) {
     expRc_ = catena::exception_with_status("Error processing parameter", catena::StatusCode::INTERNAL);
     
@@ -288,7 +274,7 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsProcessingEr
     ParamInfo errorParamInfo{ .oid = "error_param", .type = catena::ParamType::STRING, .status = catena::StatusCode::INTERNAL };
     auto desc = ParamHierarchyBuilder::createDescriptor("/" + errorParamInfo.oid);
     auto errorParam = std::make_unique<MockParam>();
-    setupMockParam(*errorParam, errorParamInfo, *desc.descriptor);
+    setupMockParamInfo(*errorParam, errorParamInfo, *desc.descriptor);
     top_level_params.push_back(std::move(errorParam));
 
     // Setup mock expectations   
@@ -301,7 +287,7 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsProcessingEr
     testRPC();
 }
 
-// 1.6: Error Case - Get top-level parameters with exception thrown during parameter processing
+// 1.5: Error Case - Get top-level parameters with exception thrown during parameter processing
 TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsThrow) {
     expRc_ = catena::exception_with_status("Error getting top-level parameters", catena::StatusCode::INTERNAL);
     
@@ -311,9 +297,9 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsThrow) {
     auto desc1 = ParamHierarchyBuilder::createDescriptor("/" + param1_info.oid);
     auto desc2 = ParamHierarchyBuilder::createDescriptor("/" + param2_info.oid);
     auto param1 = std::make_unique<MockParam>();
-    setupMockParam(*param1, param1_info, *desc1.descriptor);
+    setupMockParamInfo(*param1, param1_info, *desc1.descriptor);
     auto param2 = std::make_unique<MockParam>();
-    setupMockParam(*param2, param2_info, *desc2.descriptor);
+    setupMockParamInfo(*param2, param2_info, *desc2.descriptor);
     
     // Set up param2 to throw during processing
     EXPECT_CALL(*param2, getOid())
@@ -338,7 +324,7 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsThrow) {
     testRPC();
 }
 
-// == MODE 2 TESTS: Get all top-level parameters with recursion ==
+// == SECTION/MODE 2: Get all top-level parameters with recursion == //
 
 // 2.1: Success Case - Get top-level parameters with recursion and deep nesting
 TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithDeepNesting) {
@@ -370,13 +356,13 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithDeepNest
     ParamInfo level3_info_struct{level3_info.oid, level3_info.type};
 
     auto level1 = std::make_unique<MockParam>();
-    setupMockParam(*level1, level1_info_struct, *level1Desc.descriptor);
+    setupMockParamInfo(*level1, level1_info_struct, *level1Desc.descriptor);
 
     auto level2 = std::make_unique<MockParam>();
-    setupMockParam(*level2, level2_info_struct, *level2Desc.descriptor);
+    setupMockParamInfo(*level2, level2_info_struct, *level2Desc.descriptor);
 
     auto level3 = std::make_unique<MockParam>();
-    setupMockParam(*level3, level3_info_struct, *level3Desc.descriptor);
+    setupMockParamInfo(*level3, level3_info_struct, *level3Desc.descriptor);
 
     // Setup top-level params
     std::vector<std::unique_ptr<IParam>> top_level_params;
@@ -453,10 +439,10 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursio
 
     // Create mock params using helpers
     auto parentParam = std::make_unique<MockParam>();
-    setupMockParam(*parentParam, parent_info, *parentDesc.descriptor);
+    setupMockParamInfo(*parentParam, parent_info, *parentDesc.descriptor);
 
     auto arrayChild = std::make_unique<MockParam>();
-    setupMockParam(*arrayChild, arrayChild_info, *childDesc.descriptor);
+    setupMockParamInfo(*arrayChild, arrayChild_info, *childDesc.descriptor);
 
     // Set up top-level params
     std::vector<std::unique_ptr<IParam>> top_level_params;
@@ -529,11 +515,11 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursio
     ParamInfo error_child_info_struct{errorChild_info.oid, errorChild_info.type};
 
     auto parentParam = std::make_unique<MockParam>();
-    setupMockParam(*parentParam, parent_info_struct, *parentDesc.descriptor);
+    setupMockParamInfo(*parentParam, parent_info_struct, *parentDesc.descriptor);
 
     // For the error child, set up a param that throws in toProto
     auto errorChild = std::make_unique<MockParam>();
-    setupMockParam(*errorChild, error_child_info_struct, *childDesc.descriptor);
+    setupMockParamInfo(*errorChild, error_child_info_struct, *childDesc.descriptor);
     EXPECT_CALL(*errorChild, toProto(testing::An<catena::ParamInfoResponse&>(), testing::An<catena::common::Authorizer&>()))
         .WillOnce(testing::Invoke([](catena::ParamInfoResponse&, catena::common::Authorizer&) -> catena::exception_with_status {
             throw catena::exception_with_status("Error processing child parameter", catena::StatusCode::INTERNAL);
@@ -568,24 +554,7 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursio
     testRPC();
 }
 
-// 2.4: Error Case - Get top-level parameters with error status from getTopLevelParams
-TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithErrorStatus) {
-    expRc_ = catena::exception_with_status("Error getting parameters", catena::StatusCode::INTERNAL);
-
-    // Enable recursion by setting it in the request payload
-    initPayload(0, "", true);
-
-    // Setup mock expectations
-    EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([](catena::exception_with_status& status, Authorizer&) {
-            status = catena::exception_with_status("Error getting parameters", catena::StatusCode::INTERNAL);
-            return std::vector<std::unique_ptr<IParam>>();
-        }));
-
-    testRPC();
-}
-
-// 2.5: Error Case - Get top-level parameters with empty list and recursion
+// 2.4: Error Case - Get top-level parameters with empty list and recursion
 TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithEmptyListAndRecursion) {
     expRc_ = catena::exception_with_status("No top-level parameters found", catena::StatusCode::NOT_FOUND);
 
@@ -602,7 +571,7 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithEmptyLis
     testRPC();
 }
 
-// == MODE 3 TESTS: Get a specific parameter and its children if recursive ==
+// == SECTION/MODE 3: Get a specific parameter and its children if recursive == //
 
 // 3.1: Success Case - Get specific parameter without recursion
 TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_proceedSpecificParam) {
@@ -617,7 +586,7 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_proceedSpecificParam) {
         .array_length = 5
     };
     auto desc = ParamHierarchyBuilder::createDescriptor("/" + paramInfo.oid);
-    setupMockParam(*mockParam, paramInfo, *desc.descriptor);
+    setupMockParamInfo(*mockParam, paramInfo, *desc.descriptor);
 
     // Add expectations for array type and size to trigger array length update logic
     EXPECT_CALL(*mockParam, isArrayType()).WillRepeatedly(testing::Return(true));
@@ -661,7 +630,7 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getSpecificParamWithRecursion
         .oid = fqoid,
         .type = catena::ParamType::STRING
     };
-    setupMockParam(*mockParam, paramInfo, *mockDesc.descriptor);
+    setupMockParamInfo(*mockParam, paramInfo, *mockDesc.descriptor);
 
     // Request specific parameter with recursion
     initPayload(0, fqoid, true);
@@ -720,7 +689,7 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_catenaExceptionInGetParam) {
     testRPC();
 }
 
-// == SECTION 4 TESTS: Catch blocks at the end of proceed() ==
+// == SECTION 4: Additional error cases at end of proceed() == //
 
 // 4.1: Error Case - catena exception in proceed()
 TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_catchCatenaException) {

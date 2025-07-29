@@ -79,7 +79,7 @@ void ParamInfoRequest::proceed(bool ok) {
                 }
                 // Making sure the device exists.
                 if (!dm) {
-                    rc = catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
+                    rc = catena::exception_with_status("Device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
                 } else {
                     if (service_->authorizationEnabled()) {
                         sharedAuthz = std::make_shared<Authorizer>(jwsToken_());

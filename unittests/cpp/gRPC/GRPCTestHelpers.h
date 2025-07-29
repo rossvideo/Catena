@@ -153,7 +153,7 @@ inline void setupParamInfo(catena::ParamInfoResponse& response, const ParamInfo&
  * @brief Sets up a mock parameter to return a ParamInfoResponse
  *        Also sets up getDescriptor, isArrayType, and size for array types.
  */
-inline void setupMockParam(catena::common::MockParam& mockParam, const ParamInfo& info, const catena::common::MockParamDescriptor& descriptor) {
+inline void setupMockParamInfo(catena::common::MockParam& mockParam, const ParamInfo& info, const catena::common::MockParamDescriptor& descriptor) {
     EXPECT_CALL(mockParam, getOid())
         .WillRepeatedly(::testing::ReturnRef(info.oid));
 
