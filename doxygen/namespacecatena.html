@@ -179,12 +179,6 @@ Functions</h2></td></tr>
 <tr class="memitem:a72711cdba4d85a76051ad05cd6c582fb" id="r_a72711cdba4d85a76051ad05cd6c582fb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena.html#a72711cdba4d85a76051ad05cd6c582fb">split</a> (std::vector&lt; std::string &gt; &amp;out, const std::string &amp;str, const std::string &amp;delim)</td></tr>
 <tr class="memdesc:a72711cdba4d85a76051ad05cd6c582fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Splits a string int a vector of strings based on a delimiter.  <br /></td></tr>
 <tr class="separator:a72711cdba4d85a76051ad05cd6c582fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a56164747bca7e12ecf100596921c3f5b" id="r_a56164747bca7e12ecf100596921c3f5b"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena.html#a56164747bca7e12ecf100596921c3f5b">to_base64</a> (const std::string &amp;binary)</td></tr>
-<tr class="memdesc:a56164747bca7e12ecf100596921c3f5b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts a binary string to a base64 encoded string.  <br /></td></tr>
-<tr class="separator:a56164747bca7e12ecf100596921c3f5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aad27d3bb1ed2bbaa2ceca7a06d0a04fd" id="r_aad27d3bb1ed2bbaa2ceca7a06d0a04fd"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena.html#aad27d3bb1ed2bbaa2ceca7a06d0a04fd">from_base64</a> (const std::string &amp;encoded)</td></tr>
-<tr class="memdesc:aad27d3bb1ed2bbaa2ceca7a06d0a04fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts a base64 encoded string to a binary string.  <br /></td></tr>
-<tr class="separator:aad27d3bb1ed2bbaa2ceca7a06d0a04fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>top level namespace for Catena. Functionality at this scope includes the protoc generated classes. Most everything else is in child namespaces such as common, meta, etc. </p>
@@ -275,33 +269,6 @@ Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="aad27d3bb1ed2bbaa2ceca7a06d0a04fd" name="aad27d3bb1ed2bbaa2ceca7a06d0a04fd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aad27d3bb1ed2bbaa2ceca7a06d0a04fd">&#9670;&#160;</a></span>from_base64()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::string catena::from_base64 </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>encoded</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Converts a base64 encoded string to a binary string. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">encoded</td><td>The base64 encoded string to decode. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The decoded binary string. </dd></dl>
-
-</div>
-</div>
 <a id="a274b596fd164b9f6c1ec6dfe8c278efc" name="a274b596fd164b9f6c1ec6dfe8c278efc"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a274b596fd164b9f6c1ec6dfe8c278efc">&#9670;&#160;</a></span>readFile()</h2>
 
@@ -417,33 +384,6 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-
-</div>
-</div>
-<a id="a56164747bca7e12ecf100596921c3f5b" name="a56164747bca7e12ecf100596921c3f5b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a56164747bca7e12ecf100596921c3f5b">&#9670;&#160;</a></span>to_base64()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::string catena::to_base64 </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>binary</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Converts a binary string to a base64 encoded string. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">binary</td><td>The binary string to encode. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The base64 encoded string. </dd></dl>
 
 </div>
 </div>

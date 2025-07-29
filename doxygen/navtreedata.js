@@ -136,7 +136,7 @@ var NAVTREEINDEX =
 "classcatena_1_1common_1_1Path.html#a51e9261c2c4b79fafc6cae0c105b7e4c",
 "classcatena_1_1gRPC_1_1PeerInfo.html#ade7a22ac2ed97ea2bc2af6727edaa0bc",
 "functions_func_p.html",
-"structcatena_1_1common_1_1ParamTag.html"
+"structcatena_1_1common_1_1StructInfo.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
