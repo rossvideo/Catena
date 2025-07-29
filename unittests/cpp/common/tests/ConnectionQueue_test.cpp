@@ -43,7 +43,7 @@
 
 using namespace catena::common;
 
-/**
+/*
  * TEST 1 - Testing ConnectionQueue registerConnection and deregisterConnection.
  */
 TEST(ConnectionQueueTests, ConnectionQueue_ManageConnections) {
@@ -69,3 +69,12 @@ TEST(ConnectionQueueTests, ConnectionQueue_ManageConnections) {
     connectionQueue.deregisterConnection(&connectionB);
 }
 
+/*
+ * TEST 2 - Testing adding a nullptr to ConnectionQueue.
+ */
+TEST(ConnectionQueueTests, ConnectionQueue_AddNullConnection) {
+    // Initializing connectionQueue with maxConnections = 1.
+    ConnectionQueue connectionQueue{1};
+    // Adding a nullptr.
+    EXPECT_THROW(connectionQueue.registerConnection(nullptr), catena::exception_with_status) << "Registering a nullptr should throw an exception.";
+}

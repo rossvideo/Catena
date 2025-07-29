@@ -36,22 +36,29 @@ using catena::common::ConnectionQueue;
 
 bool ConnectionQueue::registerConnection(IConnect* cd) {
     bool added = false;
-    std::lock_guard<std::mutex> lock(mtx_);
-    // Find the index to insert the new connection based on priority.
-    auto it = std::find_if(connectionQueue_.begin(), connectionQueue_.end(),
-        [cd](const IConnect* connection) { return *cd < *connection; });
-    // Based on the iterator, determine if we can add the connection.
-    if (connectionQueue_.size() >= maxConnections_) {
-        if (it != connectionQueue_.begin()) {
-            // Forcefully shutting down lowest priority connection.
+    if (!cd) {
+        throw catena::exception_with_status("Cannot add nullptr to connection queue", catena::StatusCode::INVALID_ARGUMENT);
+    } else {
+        std::lock_guard<std::mutex> lock(mtx_);
+        // Find the index to insert the new connection based on priority.
+        auto it = std::find_if(connectionQueue_.begin(), connectionQueue_.end(),
+            [cd](const IConnect* connection) {
+                assert(connection);
+                return *cd < *connection;
+            });
+        // Based on the iterator, determine if we can add the connection.
+        if (connectionQueue_.size() >= maxConnections_) {
+            if (it != connectionQueue_.begin()) {
+                // Forcefully shutting down lowest priority connection.
+                connectionQueue_.insert(it, cd);
+                connectionQueue_.front()->shutdown();
+                connectionQueue_.erase(connectionQueue_.begin());
+                added = true;
+            }
+        } else {
             connectionQueue_.insert(it, cd);
-            connectionQueue_.front()->shutdown();
-            connectionQueue_.erase(connectionQueue_.begin());
             added = true;
         }
-    } else {
-        connectionQueue_.insert(it, cd);
-        added = true;
     }
     return added;
 }
