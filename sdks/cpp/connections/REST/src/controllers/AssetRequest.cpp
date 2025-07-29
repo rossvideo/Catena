@@ -16,11 +16,22 @@ AssetRequest::AssetRequest(tcp::socket& socket, ISocketReader& context, SlotMap&
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
 
+std::string AssetRequest::payloadEncodingToString(catena::DataPayload::PayloadEncoding encoding) {
+    switch (encoding) {
+        case catena::DataPayload::DEFLATE:
+            return "DEFLATE";
+        case catena::DataPayload::GZIP:
+            return "GZIP";
+        default:
+            return "UNCOMPRESSED";
+    }
+}
+
 // Compress using zlib (deflate)
 void AssetRequest::compress(std::vector<uint8_t>& input, int windowBits) {
     z_stream zs{};
     if (deflateInit2_(&zs, Z_BEST_COMPRESSION, Z_DEFLATED, windowBits, 8, Z_DEFAULT_STRATEGY, ZLIB_VERSION, sizeof(z_stream)) != Z_OK) {
-        throw std::runtime_error("Failed to initialize compression");
+        throw catena::exception_with_status("Failed to initialize compression", catena::StatusCode::INTERNAL);
     }
 
     zs.next_in = reinterpret_cast<Bytef*>(const_cast<uint8_t*>(input.data()));
@@ -34,7 +45,7 @@ void AssetRequest::compress(std::vector<uint8_t>& input, int windowBits) {
 
     if (deflate(&zs, Z_FINISH) != Z_STREAM_END) {
         deflateEnd(&zs);
-        throw std::runtime_error("Compression failed");
+        throw catena::exception_with_status("Compression failed", catena::StatusCode::INTERNAL);
     }
 
     output.resize(zs.total_out);
@@ -54,7 +65,7 @@ void AssetRequest::gzip_compress(std::vector<uint8_t>& input) {
 void AssetRequest::decompress(std::vector<uint8_t>& input, int windowBits) {
     z_stream zs{};
     if (inflateInit2_(&zs, windowBits, ZLIB_VERSION, sizeof(z_stream)) != Z_OK) {
-        throw std::runtime_error("Failed to initialize decompression");
+        throw catena::exception_with_status("Failed to initialize decompression", catena::StatusCode::INTERNAL);
     }
 
     zs.next_in = reinterpret_cast<Bytef*>(const_cast<uint8_t*>(input.data()));
@@ -68,7 +79,7 @@ void AssetRequest::decompress(std::vector<uint8_t>& input, int windowBits) {
 
     if (inflate(&zs, Z_FINISH) != Z_STREAM_END) {
         inflateEnd(&zs);
-        throw std::runtime_error("Decompression failed");
+        throw catena::exception_with_status("Decompression failed", catena::StatusCode::INTERNAL);
     }
 
     output.resize(zs.total_out);
@@ -95,19 +106,17 @@ bool AssetRequest::get_last_write_time(const std::string& path, std::time_t& out
 }
 
 void AssetRequest::extractPayload(const std::string& filePath) {
+    auto s = context_.jsonBody();
     std::vector<uint8_t> file_data(context_.jsonBody().begin(), context_.jsonBody().end());
 
     // Decompress if needed
-    if (context_.fields("compression") == "GZIP") {
+    if (context_.hasField("compression") && context_.fields("compression") == "GZIP") {
         DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] decompressing GZIP";
         gzip_decompress(file_data);
-    } else if (context_.fields("compression") == "DEFLATE") {
+    } else if (context_.hasField("compression") && context_.fields("compression") == "DEFLATE") {
         DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] decompressing DEFLATE";
         deflate_decompress(file_data);
     }
-
-    // Ensure destination directory exists
-    std::filesystem::create_directories(std::filesystem::path(filePath).parent_path());
 
     // Save to file
     std::ofstream file(filePath, std::ios::binary);
@@ -122,7 +131,6 @@ void AssetRequest::extractPayload(const std::string& filePath) {
 void AssetRequest::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
 
-    catena::DeviceComponent_ComponentParam ans;
     catena::exception_with_status rc("", catena::StatusCode::OK);
     catena::ExternalObjectPayload obj;
     std::shared_ptr<catena::common::Authorizer> sharedAuthz;
@@ -135,7 +143,7 @@ void AssetRequest::proceed() {
             dm = dms_.at(context_.slot());
         }
 
-        if (context_.method() != Method_GET && context_.authorizationEnabled()) {
+        if (context_.authorizationEnabled()) {
             // Authorizer throws an error if invalid jws token so no need to handle rc.
             sharedAuthz = std::make_shared<catena::common::Authorizer>(context_.jwsToken());
             authz = sharedAuthz.get();
@@ -157,7 +165,11 @@ void AssetRequest::proceed() {
 
             //check for any read access
             //TODO: move to BL
-            if (!(authz->readAuthz(catena::common::Scopes_e::kOperate))) {   
+            bool check = authz->readAuthz(catena::common::Scopes_e::kMonitor);
+            if (!(authz->readAuthz(catena::common::Scopes_e::kOperate)
+                    || authz->readAuthz(catena::common::Scopes_e::kConfig)
+                    || authz->readAuthz(catena::common::Scopes_e::kAdmin)
+                    || authz->readAuthz(catena::common::Scopes_e::kMonitor))) {
                 //do something that indicates that the user is not authorized to download the asset
                 throw catena::exception_with_status("Not authorized to download asset", catena::StatusCode::PERMISSION_DENIED);
             }
@@ -177,18 +189,13 @@ void AssetRequest::proceed() {
             }
             std::vector<uint8_t> file_data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
-            if (file_data.empty()) {
-                std::string error = "AssetRequest[" + std::to_string(objectId_) + "] file is empty: " + context_.fqoid() + "\n";
-                throw catena::exception_with_status(error, catena::StatusCode::INVALID_ARGUMENT);
-            }
-
             // Set the payload encoding and compress the data accordingly
-            if (context_.fields("compression") == "GZIP") {
+            if (context_.hasField("compression") && context_.fields("compression") == "GZIP") {
                 DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] using GZIP compression";
                 obj.mutable_payload()->set_payload_encoding(catena::DataPayload::GZIP);
                 gzip_compress(file_data);
 
-            } else if (context_.fields("compression") == "DEFLATE") {
+            } else if (context_.hasField("compression") && context_.fields("compression") == "DEFLATE") {
                 DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] using DEFLATE compression";
                 obj.mutable_payload()->set_payload_encoding(catena::DataPayload::DEFLATE);
                 deflate_compress(file_data);
@@ -197,6 +204,7 @@ void AssetRequest::proceed() {
                 DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] using UNCOMPRESSED compression";
                 obj.mutable_payload()->set_payload_encoding(catena::DataPayload::UNCOMPRESSED);
             }
+
             obj.mutable_payload()->set_payload(file_data.data(), file_data.size());
             
             //Set cacheable
@@ -351,9 +359,6 @@ void AssetRequest::proceed() {
         }
     } catch (catena::exception_with_status& err) {
         rc = catena::exception_with_status(err.what(), err.status);
-    } catch (const std::filesystem::filesystem_error& e) {
-        std::string error = "AssetRequest[" + std::to_string(objectId_) + "] filesystem error: " + std::string(e.what()) + "\n";
-        rc = catena::exception_with_status(error, catena::StatusCode::INTERNAL);
     } catch (const std::exception& e) {
         std::string error = "AssetRequest[" + std::to_string(objectId_) + "] error: " + std::string(e.what()) + "\n";
         rc = catena::exception_with_status(error, catena::StatusCode::INTERNAL);
