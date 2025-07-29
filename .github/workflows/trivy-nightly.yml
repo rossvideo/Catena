@@ -5,8 +5,8 @@ on:
       - test_trivy_pipeline
 
 jobs:
-  build:
-    name: Build
+  Trivy:
+    name: Trivy vulnerability scanner
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
@@ -28,3 +28,22 @@ jobs:
         with:
           sarif_file: trivy-results.sarif
           category: 'Trivy Scan Results'
+  
+  Coverage_report:
+    name: Get unit tests coverage report
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run unit tests
+        run: |
+          ./scripts/run_coverage.sh -c --html -v
+        
+      - name: Upload coverage report
+        uses: github/codeql-action/upload-coverage@v3
+        with:
+          coverage_file: 'coverage/coverage.xml'
+          format: 'cobertura'
+          category: 'Unit Tests Coverage'
+      
