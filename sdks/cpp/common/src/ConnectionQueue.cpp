@@ -33,6 +33,12 @@
 #include <Logger.h>
 
 using catena::common::ConnectionQueue;
+using catena::common::IConnect;
+
+std::vector<const IConnect*> ConnectionQueue::get() {
+    std::lock_guard<std::mutex> lock(mtx_);
+    return std::vector<const IConnect*>{connectionQueue_.begin(), connectionQueue_.end()};
+}
 
 bool ConnectionQueue::registerConnection(IConnect* cd) {
     bool added = false;

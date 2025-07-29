@@ -59,13 +59,15 @@ TEST(ConnectionQueueTests, ConnectionQueue_ManageConnections) {
     EXPECT_CALL(connectionB, lessThan(testing::_)).WillRepeatedly(testing::Return(false));
     // Registering connection A.
     EXPECT_TRUE(connectionQueue.registerConnection(&connectionA)) << "ConnectionQueue should be able to register a connection.";
+    EXPECT_EQ(connectionQueue.get(), std::vector<const IConnect*>{&connectionA}) << "A should be registered after registerConnection(A) returns true";
     // Setting connection B to higher prioirity and registering.
     EXPECT_TRUE(connectionQueue.registerConnection(&connectionB)) << "ConnectionQueue should be able to register a higher priority connection.";
     EXPECT_TRUE(shutdownA) << "Lower priority connections should be shutdown when a higher priority connection is registered.";
-    connectionQueue.deregisterConnection(&connectionA);
+    EXPECT_EQ(connectionQueue.get(), std::vector<const IConnect*>{&connectionB}) << "B should be registered and A deregistered after registerConnection(B) returns true";
     // Trying to re-add connection A should fail.
     EXPECT_FALSE(connectionQueue.registerConnection(&connectionA)) << "ConnectionQueue should not be able to register a lower priority connection";
     EXPECT_FALSE(shutdownB) << "Higher priority connection should not be shutdown when a lower priority connection tries to connect.";
+    EXPECT_EQ(connectionQueue.get(), std::vector<const IConnect*>{&connectionB}) << "A should not be registered after registerConnection(A) returns false";
     connectionQueue.deregisterConnection(&connectionB);
 }
 

@@ -59,6 +59,10 @@ class ConnectionQueue : public IConnectionQueue {
      */
     ConnectionQueue(uint32_t maxConnections) : maxConnections_(maxConnections) {}
     /**
+     * @brief Returns a copy of the internal connection queue.
+     */
+    std::vector<const IConnect*> get() override;
+    /**
      * @brief Regesters a Connect CallData object into the Connection priority
      * queue.
      * 

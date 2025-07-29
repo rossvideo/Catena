@@ -46,6 +46,7 @@ namespace common {
 // Mock implementation for the IConnectionQueue class.
 class MockConnectionQueue : public IConnectionQueue {
   public:
+    MOCK_METHOD(std::vector<const IConnect*>, get, (), (override));
     MOCK_METHOD(bool, registerConnection, (IConnect* cd), (override));
     MOCK_METHOD(void, deregisterConnection, (const IConnect* cd), (override));
 };
