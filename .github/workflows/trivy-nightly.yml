@@ -41,7 +41,7 @@ jobs:
           ./scripts/run_coverage.sh -c --html -v
         
       - name: Upload code coverage for ref branch
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ref-lcov.info
           path: ./coverage/coverage.info
