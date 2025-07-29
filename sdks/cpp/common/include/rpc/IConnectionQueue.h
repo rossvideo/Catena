@@ -60,10 +60,6 @@ class IConnectionQueue {
     IConnectionQueue& operator=(const IConnectionQueue&) = delete;
 
     /**
-     * @brief Returns a copy of the internal connection queue.
-     */
-    virtual std::vector<const IConnect*> get() = 0;
-    /**
      * @brief Regesters a Connect CallData object into the Connection priority queue.
      * @param cd The Connect CallData object to register.
      * @return TRUE if successfully registered, FALSE otherwise
