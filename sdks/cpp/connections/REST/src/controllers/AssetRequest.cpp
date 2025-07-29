@@ -110,10 +110,10 @@ void AssetRequest::extractPayload(const std::string& filePath) {
     std::vector<uint8_t> file_data(context_.jsonBody().begin(), context_.jsonBody().end());
 
     // Decompress if needed
-    if (context_.hasField("compression") && context_.fields("compression") == "GZIP") {
+    if (context_.fields("compression") == "GZIP") {
         DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] decompressing GZIP";
         gzip_decompress(file_data);
-    } else if (context_.hasField("compression") && context_.fields("compression") == "DEFLATE") {
+    } else if (context_.fields("compression") == "DEFLATE") {
         DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] decompressing DEFLATE";
         deflate_decompress(file_data);
     }
@@ -165,7 +165,6 @@ void AssetRequest::proceed() {
 
             //check for any read access
             //TODO: move to BL
-            bool check = authz->readAuthz(catena::common::Scopes_e::kMonitor);
             if (!(authz->readAuthz(catena::common::Scopes_e::kOperate)
                     || authz->readAuthz(catena::common::Scopes_e::kConfig)
                     || authz->readAuthz(catena::common::Scopes_e::kAdmin)
@@ -190,12 +189,12 @@ void AssetRequest::proceed() {
             std::vector<uint8_t> file_data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
             // Set the payload encoding and compress the data accordingly
-            if (context_.hasField("compression") && context_.fields("compression") == "GZIP") {
+            if (context_.fields("compression") == "GZIP") {
                 DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] using GZIP compression";
                 obj.mutable_payload()->set_payload_encoding(catena::DataPayload::GZIP);
                 gzip_compress(file_data);
 
-            } else if (context_.hasField("compression") && context_.fields("compression") == "DEFLATE") {
+            } else if (context_.fields("compression") == "DEFLATE") {
                 DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] using DEFLATE compression";
                 obj.mutable_payload()->set_payload_encoding(catena::DataPayload::DEFLATE);
                 deflate_compress(file_data);

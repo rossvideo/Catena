@@ -344,6 +344,10 @@ TEST_F(RESTAssetRequestTests, PUTAssetRequest_Exists) {
     jsonBody_ = catena::from_base64(payloadUncompressed_);
     jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kOperate) + ":w");
 
+    std::string compressionString = AssetRequest::payloadEncodingToString(catena::DataPayload::UNCOMPRESSED);
+    ON_CALL(context_, hasField("compression")).WillByDefault(::testing::Return(true));
+    ON_CALL(context_, fields("compression")).WillByDefault(::testing::ReturnRef(compressionString));
+
     // Setting the expected response
     expRc_ = catena::exception_with_status("file: " + fqoid_ + " exists, overwriting with PUT", catena::StatusCode::NO_CONTENT);
 
@@ -503,6 +507,10 @@ TEST_F(RESTAssetRequestTests, DecompressSucceed) {
 TEST_F(RESTAssetRequestTests, ExtractPayloadDNE) {
     //establish expectations
     fqoid_ = "/empty_file";
+
+    std::string compressionString = AssetRequest::payloadEncodingToString(catena::DataPayload::UNCOMPRESSED);
+    ON_CALL(context_, hasField("compression")).WillByDefault(::testing::Return(true));
+    ON_CALL(context_, fields("compression")).WillByDefault(::testing::ReturnRef(compressionString));
 
     //extract the payload from non existant file
     try {
