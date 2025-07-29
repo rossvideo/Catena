@@ -266,7 +266,7 @@ class ParamWithValue : public catena::common::IParam {
      * @brief define the command implementation
      * @param commandImpl a function that takes a Value and returns a CommandResponder
      */ 
-    void defineCommand(std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(catena::Value)> commandImpl) {
+    void defineCommand(std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(const catena::Value&)> commandImpl) {
         descriptor_.defineCommand(commandImpl);
     }
 
