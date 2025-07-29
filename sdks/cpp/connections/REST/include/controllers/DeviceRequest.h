@@ -48,7 +48,7 @@
 #include <IParam.h>
 #include <IDevice.h>
 #include <utils.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 
 // Connections/REST
 #include "interface/ISocketReader.h"

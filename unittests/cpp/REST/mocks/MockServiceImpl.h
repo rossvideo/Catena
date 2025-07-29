@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief Mock implementation for the REST ICatenaServiceImpl class.
+ * @brief Mock implementation for the REST IServiceImpl class.
  * @author benjamin.whitten@rossvideo.com
  * @date 25/07/22
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -45,8 +45,8 @@ using namespace catena::common;
 namespace catena {
 namespace REST {
 
-// Mock implementation for the REST ICatenaServiceImpl class.
-class MockServiceImpl : public ICatenaServiceImpl {
+// Mock implementation for the REST IServiceImpl class.
+class MockServiceImpl : public IServiceImpl {
   public:
     MOCK_METHOD(const std::string&, version, (), (const, override));
     MOCK_METHOD(void, run, (), (override));

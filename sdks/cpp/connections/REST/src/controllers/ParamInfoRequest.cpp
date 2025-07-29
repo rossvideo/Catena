@@ -34,7 +34,7 @@ using catena::REST::ParamInfoRequest;
 
 // common
 #include <Tags.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 #include <ParamVisitor.h>
 
 // type aliases

@@ -61,7 +61,7 @@ class DeviceRequest : public CallData {
      * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok flag to check if request is successful 
      */
-    DeviceRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
+    DeviceRequest(IServiceImpl *service, SlotMap& dms, bool ok);
     /**
      * @brief Manages gRPC request through a state machine
      *

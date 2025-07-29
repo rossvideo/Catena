@@ -66,8 +66,10 @@
 #include <Logger.h>
 
 using namespace catena::common;
+using catena::REST::ServiceConfig;
+using catena::REST::ServiceImpl;
 
-catena::REST::CatenaServiceImpl *globalApi = nullptr;
+ServiceImpl *globalApi = nullptr;
 std::atomic<bool> globalLoop = true;
 
 // handle SIGINT
@@ -121,17 +123,19 @@ void RunRESTServer() {
     signal(SIGKILL, handle_signal);
 
     try {
-        // Getting flags.
-        std::string EOPath = absl::GetFlag(FLAGS_static_root);
-        bool authorization = absl::GetFlag(FLAGS_authz);
-        uint16_t port = absl::GetFlag(FLAGS_port);
-        uint32_t maxConnections = absl::GetFlag(FLAGS_max_connections);
+        // Setting config.
+        ServiceConfig config = ServiceConfig()
+            .set_EOPath(absl::GetFlag(FLAGS_static_root))
+            .set_authz(absl::GetFlag(FLAGS_authz))
+            .set_port(absl::GetFlag(FLAGS_port))
+            .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
+            .add_dm(&dm);
         
         // Creating and running the REST service.
-        catena::REST::CatenaServiceImpl api({&dm}, EOPath, authorization, port, maxConnections);
+        ServiceImpl api(config);
         globalApi = &api;
         DEBUG_LOG << "API Version: " << api.version();
-        DEBUG_LOG << "REST on 0.0.0.0:" << port;
+        DEBUG_LOG << "REST on 0.0.0.0:" << config.port;
         
         std::thread counterLoop(statusUpdateExample);
 

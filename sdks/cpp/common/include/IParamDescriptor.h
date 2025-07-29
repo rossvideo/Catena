@@ -159,6 +159,11 @@ class IParamDescriptor {
     virtual std::size_t total_length() const = 0;
 
     /**
+     * @brief Returns the precision of the parameter.
+     */
+    virtual uint32_t precision() const = 0;
+
+    /**
      * @brief serialize param meta data in to protobuf message
      * @param param the protobuf message to serialize to
      * @param authz the authorization information

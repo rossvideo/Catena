@@ -65,7 +65,7 @@ class ParamDescriptorTest : public ::testing::Test {
         pd = std::make_unique<ParamDescriptor>(
             type, oidAliases, PolyglotText::ListInitializer{{"en", "name"}, {"fr", "nom"}},
             widget, scope, readOnly, oid, templateOid, constraintPtr, isCommand,
-            dm, maxLength, totalLength, minimalSet, parentPtr
+            dm, maxLength, totalLength, precision, minimalSet, parentPtr
         );
     }
 
@@ -85,6 +85,7 @@ class ParamDescriptorTest : public ::testing::Test {
     MockDevice dm;
     uint32_t maxLength = 16;
     std::size_t totalLength = 16;
+    uint32_t precision = 2;
     bool minimalSet = true;
     bool hasParent = false; // If false, nullptr will be passed into pd as the parent.
     MockParamDescriptor parent;
@@ -119,6 +120,7 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_Getters) {
     EXPECT_EQ(!templateOid.empty(), pd->hasTemplateOid());
     EXPECT_EQ(templateOid, pd->templateOid());
     EXPECT_EQ(readOnly, pd->readOnly());
+    EXPECT_EQ(precision, pd->precision());
     EXPECT_EQ(minimalSet, pd->minimalSet());
     EXPECT_EQ(&constraint, pd->getConstraint());
     EXPECT_EQ(isCommand, pd->isCommand());

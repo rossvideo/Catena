@@ -24,7 +24,7 @@ set(SOURCES
     tests/utils_test.cpp
     tests/SubscriptionManager_test.cpp
     tests/ParamVisitor_test.cpp
-    tests/Authorization_test.cpp
+    tests/Authorizer_test.cpp
     tests/Connect_test.cpp
     tests/MenuGroup_test.cpp
     tests/Menu_test.cpp
@@ -35,7 +35,9 @@ set(SOURCES
     tests/NamedChoiceConstraint_test.cpp
     tests/RangeConstraint_test.cpp
     tests/ParamDescriptor_test.cpp
+    tests/Device_test.cpp
     tests/ConnectionQueue_test.cpp
+
 )
 
 add_executable(${This} ${SOURCES})
