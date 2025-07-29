@@ -58,7 +58,7 @@ class ExternalObjectRequest : public CallData {
      * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok flag to check if request is successful 
      */
-    ExternalObjectRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
+    ExternalObjectRequest(IServiceImpl *service, SlotMap& dms, bool ok);
     /**
      * @brief Destrutor for ExternalObjectRequest, although it isn't used.
      */

@@ -73,7 +73,7 @@ class CallData : public ICallData {
     /**
      * @brief CallData constructor which initializes service_.
      */
-    CallData(ICatenaServiceImpl *service): service_(service) {}
+    CallData(IServiceImpl *service): service_(service) {}
     /**
      * @brief Extracts the JWS Bearer token from the server context's
      * client metadata.
@@ -107,9 +107,9 @@ class CallData : public ICallData {
      */
     ServerContext context_;
     /**
-     * @brief Pointer to CatenaServiceImpl
+     * @brief Pointer to ServiceImpl
      */
-    ICatenaServiceImpl* service_;
+    IServiceImpl* service_;
 };
 
 };

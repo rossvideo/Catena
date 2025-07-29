@@ -40,7 +40,7 @@ int GetPopulatedSlots::objectCounter_ = 0;
  * Constructor which initializes and registers the current GetPopulatedSlots
  * object, then starts the process.
  */
-GetPopulatedSlots::GetPopulatedSlots(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+GetPopulatedSlots::GetPopulatedSlots(IServiceImpl *service, SlotMap& dms, bool ok)
     : CallData(service), dms_{dms}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service_->registerItem(this);
@@ -90,7 +90,7 @@ void GetPopulatedSlots::proceed( bool ok) {
         break;
         /**
          * kFinish: Final step of gRPC is the deregister the item from
-         * CatenaServiceImpl.
+         * ServiceImpl.
          */
         case CallStatus::kFinish:
             DEBUG_LOG << "GetPopulatedSlots[" << objectId_ << "] finished";

@@ -35,7 +35,7 @@ using catena::gRPC::ParamInfoRequest;
 
 int ParamInfoRequest::objectCounter_ = 0;
 
-ParamInfoRequest::ParamInfoRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+ParamInfoRequest::ParamInfoRequest(IServiceImpl *service, SlotMap& dms, bool ok)
     : CallData(service), dms_{dms}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);

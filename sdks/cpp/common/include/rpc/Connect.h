@@ -44,7 +44,7 @@
 #include <vdk/signals.h>
 #include <IParam.h>
 #include <IDevice.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 #include <ISubscriptionManager.h>
 #include "IConnect.h"
 #include <Logger.h>

@@ -28,7 +28,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Authorization.h>
+#include <Authorizer.h>
 
 using catena::common::Authorizer;
 

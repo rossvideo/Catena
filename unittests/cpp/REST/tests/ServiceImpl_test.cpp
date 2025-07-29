@@ -69,7 +69,7 @@ class RESTServiceImplTests : public testing::Test {
     void SetUp() override {
         oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
         EXPECT_CALL(dm_, slot()).WillRepeatedly(testing::Return(0));
-        service_.reset(new CatenaServiceImpl({&dm_}, EOPath_, authzEnabled_, port_, 1));
+        service_.reset(new ServiceImpl({&dm_}, EOPath_, authzEnabled_, port_, 1));
     }
 
     /*
@@ -100,7 +100,7 @@ class RESTServiceImplTests : public testing::Test {
         return std::string(std::istreambuf_iterator<char>(response_stream), std::istreambuf_iterator<char>());
     }
 
-    std::unique_ptr<CatenaServiceImpl> service_ = nullptr;
+    std::unique_ptr<ServiceImpl> service_ = nullptr;
 
     // Cout variables
     std::stringstream MockConsole_;
@@ -115,7 +115,7 @@ class RESTServiceImplTests : public testing::Test {
 };
 
 /*
- * TEST 1 - Creating a REST CatenaServiceImpl.
+ * TEST 1 - Creating a REST ServiceImpl.
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_Create) {
     ASSERT_TRUE(service_);
@@ -126,18 +126,18 @@ TEST_F(RESTServiceImplTests, ServiceImpl_Create) {
 }
 
 /*
- * TEST 2 - Creating a REST CatenaServiceImpl.
+ * TEST 2 - Creating a REST ServiceImpl.
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_CreateDuplicateSlot) {
     MockDevice dm2;
     EXPECT_CALL(dm2, slot()).WillRepeatedly(testing::Return(0));
     // Creating a service with a duplicate slot.
-    EXPECT_THROW(CatenaServiceImpl({&dm_, &dm2}, EOPath_, authzEnabled_, port_ + 2, 1), std::runtime_error)
+    EXPECT_THROW(ServiceImpl({&dm_, &dm2}, EOPath_, authzEnabled_, port_ + 2, 1), std::runtime_error)
         << "Creating a service with two devices sharing a slot should throw an error.";
 }
 
 /*
- * TEST 3 - Running and shutting down the REST CatenaServiceImpl.
+ * TEST 3 - Running and shutting down the REST ServiceImpl.
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_RunAndShutdown) {
     // Starting the service.
