@@ -122,6 +122,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a4fffbd5355a0da18baecfca1b1a673d1" id="r_a4fffbd5355a0da18baecfca1b1a673d1"><td class="memItemLeft" align="right" valign="top"><a id="a4fffbd5355a0da18baecfca1b1a673d1" name="a4fffbd5355a0da18baecfca1b1a673d1"></a>
 <a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html">IConnectionQueue</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html">IConnectionQueue</a> &amp;)=delete</td></tr>
 <tr class="separator:a4fffbd5355a0da18baecfca1b1a673d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aebfb5ccf7b7dcff4ad4acbe28074c55a" id="r_aebfb5ccf7b7dcff4ad4acbe28074c55a"><td class="memItemLeft" align="right" valign="top">virtual std::vector&lt; const <a class="el" href="classcatena_1_1common_1_1IConnect.html">IConnect</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html#aebfb5ccf7b7dcff4ad4acbe28074c55a">get</a> ()=0</td></tr>
+<tr class="memdesc:aebfb5ccf7b7dcff4ad4acbe28074c55a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a copy of the internal connection queue.  <br /></td></tr>
+<tr class="separator:aebfb5ccf7b7dcff4ad4acbe28074c55a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a45432af9cafbf393c8249b4800cea9ee" id="r_a45432af9cafbf393c8249b4800cea9ee"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html#a45432af9cafbf393c8249b4800cea9ee">registerConnection</a> (<a class="el" href="classcatena_1_1common_1_1IConnect.html">IConnect</a> *cd)=0</td></tr>
 <tr class="memdesc:a45432af9cafbf393c8249b4800cea9ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Regesters a <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> CallData object into the Connection priority queue.  <br /></td></tr>
 <tr class="separator:a45432af9cafbf393c8249b4800cea9ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -165,6 +168,35 @@ Public Member Functions</h2></td></tr>
 </dl>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ConnectionQueue.html#acdcc0a76f830386831968f3d80184911">catena::common::ConnectionQueue</a>.</p>
+
+</div>
+</div>
+<a id="aebfb5ccf7b7dcff4ad4acbe28074c55a" name="aebfb5ccf7b7dcff4ad4acbe28074c55a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aebfb5ccf7b7dcff4ad4acbe28074c55a">&#9670;&#160;</a></span>get()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual std::vector&lt; const <a class="el" href="classcatena_1_1common_1_1IConnect.html">IConnect</a> * &gt; catena::common::IConnectionQueue::get </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns a copy of the internal connection queue. </p>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ConnectionQueue.html#a53caad4d1d42c931db8fba7235d8ff0b">catena::common::ConnectionQueue</a>.</p>
 
 </div>
 </div>
