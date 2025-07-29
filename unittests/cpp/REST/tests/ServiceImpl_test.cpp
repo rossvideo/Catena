@@ -69,7 +69,13 @@ class RESTServiceImplTests : public testing::Test {
     void SetUp() override {
         oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
         EXPECT_CALL(dm_, slot()).WillRepeatedly(testing::Return(0));
-        service_.reset(new ServiceImpl({&dm_}, EOPath_, authzEnabled_, port_, 1));
+        ServiceConfig config = ServiceConfig()
+            .add_dm(&dm_)
+            .set_EOPath(EOPath_)
+            .set_authz(authzEnabled_)
+            .set_maxConnections(1)
+            .set_port(port_);
+        service_.reset(new ServiceImpl(config));
     }
 
     /*
@@ -115,7 +121,20 @@ class RESTServiceImplTests : public testing::Test {
 };
 
 /*
- * TEST 1 - Creating a REST ServiceImpl.
+ * TEST 1 - Test ServiceConfig set_dms() and add_dm()
+ */
+TEST(RESTServiceConfigTests, ServiceConfig_SetDms) {
+    MockDevice dm1, dm2, dm3;
+    ServiceConfig config;
+    // Testing SetFlags.
+    config.set_dms({&dm1, &dm2});
+    EXPECT_EQ(config.dms, (std::vector<IDevice*>{&dm1, &dm2}));
+    config.add_dm(&dm3);
+    EXPECT_EQ(config.dms, (std::vector<IDevice*>{&dm1, &dm2, &dm3}));
+}
+
+/*
+ * TEST 2 - Creating a REST ServiceImpl.
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_Create) {
     ASSERT_TRUE(service_);
@@ -126,18 +145,23 @@ TEST_F(RESTServiceImplTests, ServiceImpl_Create) {
 }
 
 /*
- * TEST 2 - Creating a REST ServiceImpl.
+ * TEST 3 - Creating a REST ServiceImpl.
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_CreateDuplicateSlot) {
-    MockDevice dm2;
+    // Creating a new device and adding it to the config.
+    ServiceConfig config;
+    MockDevice dm1, dm2;
+    EXPECT_CALL(dm1, slot()).WillRepeatedly(testing::Return(0));
+    config.dms.push_back(&dm1);
     EXPECT_CALL(dm2, slot()).WillRepeatedly(testing::Return(0));
+    config.dms.push_back(&dm2);
+    config.port = port_ + 2;
     // Creating a service with a duplicate slot.
-    EXPECT_THROW(ServiceImpl({&dm_, &dm2}, EOPath_, authzEnabled_, port_ + 2, 1), std::runtime_error)
-        << "Creating a service with two devices sharing a slot should throw an error.";
+    EXPECT_THROW(ServiceImpl newService{config}, std::runtime_error) << "Creating a service with two devices sharing a slot should throw an error.";
 }
 
 /*
- * TEST 3 - Running and shutting down the REST ServiceImpl.
+ * TEST 4 - Running and shutting down the REST ServiceImpl.
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_RunAndShutdown) {
     // Starting the service.
@@ -151,7 +175,7 @@ TEST_F(RESTServiceImplTests, ServiceImpl_RunAndShutdown) {
 }
 
 /*
- * TEST 4 - Testing the service's router against all valid endpoints. 
+ * TEST 5 - Testing the service's router against all valid endpoints. 
  */
 TEST_F(RESTServiceImplTests, ServiceImpl_Router) {
     // Starting the service.
@@ -167,9 +191,9 @@ TEST_F(RESTServiceImplTests, ServiceImpl_Router) {
         {Method_GET,     ""              },
         {Method_POST,    "/command"      },
         {Method_GET,     "/asset"        },
-        // {Method_POST,    "/asset"        },
-        // {Method_PUT,     "/asset"        }, Not implemented atm
-        // {Method_DELETE,  "/asset"        },
+        {Method_POST,    "/asset"        },
+        {Method_PUT,     "/asset"        },
+        {Method_DELETE,  "/asset"        },
         {Method_GET,     "/param-info"   },
         {Method_GET,     "/value"        },
         {Method_PUT,     "/value"        },
