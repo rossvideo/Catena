@@ -211,9 +211,9 @@ const T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> () c
 <tr class="memitem:a0bedb3aa28dd3e2ee0f3ca0daf585cd6" id="r_a0bedb3aa28dd3e2ee0f3ca0daf585cd6"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a0bedb3aa28dd3e2ee0f3ca0daf585cd6">getParam</a> (<a class="el" href="classcatena_1_1common_1_1Path.html">Path</a> &amp;oid, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status) override</td></tr>
 <tr class="memdesc:a0bedb3aa28dd3e2ee0f3ca0daf585cd6"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a child parameter by name  <br /></td></tr>
 <tr class="separator:a0bedb3aa28dd3e2ee0f3ca0daf585cd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab34bf2ddcb69261faa8a91e9210462bc" id="r_ab34bf2ddcb69261faa8a91e9210462bc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#ab34bf2ddcb69261faa8a91e9210462bc">defineCommand</a> (std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt;(const catena::Value &amp;)&gt; commandImpl)</td></tr>
-<tr class="memdesc:ab34bf2ddcb69261faa8a91e9210462bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">define the command implementation  <br /></td></tr>
-<tr class="separator:ab34bf2ddcb69261faa8a91e9210462bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9aff72ff83ca4655a9dde696beaa180c" id="r_a9aff72ff83ca4655a9dde696beaa180c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a9aff72ff83ca4655a9dde696beaa180c">defineCommand</a> (std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt;(catena::Value)&gt; commandImpl)</td></tr>
+<tr class="memdesc:a9aff72ff83ca4655a9dde696beaa180c"><td class="mdescLeft">&#160;</td><td class="mdescRight">define the command implementation  <br /></td></tr>
+<tr class="separator:a9aff72ff83ca4655a9dde696beaa180c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a802c94962512c276f4f28012a4b04d10" id="r_a802c94962512c276f4f28012a4b04d10"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a802c94962512c276f4f28012a4b04d10">executeCommand</a> (const catena::Value &amp;value) const override</td></tr>
 <tr class="memdesc:a802c94962512c276f4f28012a4b04d10"><td class="mdescLeft">&#160;</td><td class="mdescRight">execute the command for the parameter  <br /></td></tr>
 <tr class="separator:a802c94962512c276f4f28012a4b04d10"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -365,8 +365,8 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a id="ab34bf2ddcb69261faa8a91e9210462bc" name="ab34bf2ddcb69261faa8a91e9210462bc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab34bf2ddcb69261faa8a91e9210462bc">&#9670;&#160;</a></span>defineCommand()</h2>
+<a id="a9aff72ff83ca4655a9dde696beaa180c" name="a9aff72ff83ca4655a9dde696beaa180c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9aff72ff83ca4655a9dde696beaa180c">&#9670;&#160;</a></span>defineCommand()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -379,7 +379,7 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="memname">void <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a>&lt; T &gt;::defineCommand </td>
           <td>(</td>
-          <td class="paramtype">std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt;(const catena::Value &amp;)&gt;&#160;</td>
+          <td class="paramtype">std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt;(catena::Value)&gt;&#160;</td>
           <td class="paramname"><em>commandImpl</em></td><td>)</td>
           <td></td>
         </tr>
@@ -399,13 +399,13 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#a0154707d5a391b499a9c834b3471f1d2">catena::common::IParam</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#af3710b84c84cf4d68ec82044d4dbc532">catena::common::IParam</a>.</p>
 
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a72a6a3de31505714ffd91ef90d1ffc96">catena::common::IParamDescriptor::defineCommand()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ada5f851f25172c7354ee5c1481088501">catena::common::IParamDescriptor::defineCommand()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_ab34bf2ddcb69261faa8a91e9210462bc_cgraph.svg" width="520" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a9aff72ff83ca4655a9dde696beaa180c_cgraph.svg" width="520" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
@@ -447,7 +447,7 @@ template&lt;typename T &gt; </div>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#af643741278593143c06c154c93327952">catena::common::IParam</a>.</p>
 
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a065310761a946bff2a9e14ae0b3f895f">catena::common::IParamDescriptor::executeCommand()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#aa895e32b34b8f077e13e609fde61e8da">catena::common::IParamDescriptor::executeCommand()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
