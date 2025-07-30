@@ -59,6 +59,8 @@ void ParamInfoRequest::proceed() {
         std::shared_ptr<Authorizer> sharedAuthz;
         Authorizer* authz;
         IDevice* dm = nullptr;
+        // Get recursive from query parameters - presence alone means true
+        recursive_ = context_.hasField("recursive");
         // Getting device at specified slot.
         if (dms_.contains(context_.slot())) {
             dm = dms_.at(context_.slot());
@@ -68,11 +70,8 @@ void ParamInfoRequest::proceed() {
             rc_ = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
         // Making sure client is not using recursive with unary response.
         } else if (!context_.stream() && recursive_) {
-            rc_ = catena::exception_with_status("recursive parameter info request is not supported with unary response", catena::StatusCode::INVALID_ARGUMENT);
+            rc_ = catena::exception_with_status("Recursive parameter info request is not supported with unary response", catena::StatusCode::INVALID_ARGUMENT);
         } else {
-            // Get recursive from query parameters - presence alone means true
-            recursive_ = context_.hasField("recursive");
-
             // Handle authorization setup
             if (context_.authorizationEnabled()) {
                 sharedAuthz = std::make_shared<Authorizer>(context_.jwsToken());
@@ -181,11 +180,12 @@ void ParamInfoRequest::proceed() {
     }
 
     // Writing responses to the client.
-    if (!responses_.empty()) {
+    if (rc_.status == catena::StatusCode::OK && !responses_.empty()) {
         for (auto& response : responses_) {
             writer_->sendResponse(rc_, response);
         }
     }
+    // Required to send errors or flush unary response.
     writer_->sendResponse(rc_);
     
     // Writing the final status to the console.
