@@ -48,6 +48,7 @@
 #include <Path.h>
 #include <Enums.h>
 #include <IParam.h>
+#include <IParamDescriptor.h>
 #include <ILanguagePack.h>
 #include <Tags.h>  
 #include <Status.h>
@@ -403,6 +404,13 @@ class Device : public IDevice {
     }
     /**
      * @brief add an item to one of the collections owned by the device.
+     * Overload for param desriptors.
+     * @param key item's unique key
+     * @param item the item to be added
+     */
+    void addItem(const std::string& key, IParamDescriptor* item) override { descriptors_[key] = item; }
+    /**
+     * @brief add an item to one of the collections owned by the device.
      * Overload for constraints.
      * @param key item's unique key
      * @param item the item to be added
@@ -621,6 +629,7 @@ class Device : public IDevice {
     Device_DetailLevel detail_level_;
     std::unordered_map<std::string, catena::common::IConstraint*> constraints_;
     std::unordered_map<std::string, IParam*> params_;
+    std::unordered_map<std::string, IParamDescriptor*> descriptors_;
     std::unordered_map<std::string, common::IMenuGroup*> menu_groups_;
     std::unordered_map<std::string, IParam*> commands_;
     std::unordered_map<std::string, common::ILanguagePack*> language_packs_;

@@ -269,12 +269,13 @@ class CppGen {
         this.writeTypeInfo(param);
       }
 
+      // write param descriptors
+      this.writeConstraintsAndDescriptors(param);
+
       // initialize the param in the body file
       if (param.hasValue()) {
         // write param initial value
         bloc(param.initializeValue());
-        // write param descriptors
-        this.writeConstraintsAndDescriptors(param);
         // inititalize the ParamWithValue object
         bloc(param.initializeParamWithValue());
       }

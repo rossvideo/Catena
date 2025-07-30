@@ -136,8 +136,12 @@ class ParamDescriptor : public IParamDescriptor {
         max_length_{max_length}, total_length_{total_length},
         precision_{precision}, minimal_set_{minimal_set}, parent_{parent} {
       setOid(oid);
-      if (parent_ != nullptr) {
+      // If descriptor has a parent add as a subparam.
+      if (parent_) {
         parent_->addSubParam(oid, this);
+      // Otherwise add it as a top level param to device.
+      } else {
+        dm.addItem(oid, this);
       }
     }
 

@@ -41,6 +41,7 @@
 #include <Authorizer.h>
 #include <Path.h>
 #include <IParam.h>
+#include <IParamDescriptor.h>
 #include <ILanguagePack.h>
 #include <Status.h>
 #include <vdk/signals.h>
@@ -258,6 +259,13 @@ class IDevice {
      * @param item the item to be added
      */
     virtual void addItem(const std::string& key, IParam* item) = 0;
+    /**
+     * @brief add an item to one of the collections owned by the device.
+     * Overload for param desriptors.
+     * @param key item's unique key
+     * @param item the item to be added
+     */
+    virtual void addItem(const std::string& key, IParamDescriptor* item) = 0;
     /**
      * @brief add an item to one of the collections owned by the device.
      * Overload for constraints.
