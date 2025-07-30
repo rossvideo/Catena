@@ -27,6 +27,7 @@ set(SOURCES
     tests/ExecuteCommand_test.cpp
     tests/DeviceRequest_test.cpp
     tests/ServiceImpl_test.cpp
+    tests/AssetRequest_test.cpp
 )
 
 add_executable(${This} ${SOURCES})	
