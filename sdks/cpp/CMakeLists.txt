@@ -42,8 +42,6 @@ add_compile_definitions(GLOG_LOGGING_DIR="${GLOG_LOGGING_DIR}")
 add_compile_options(--coverage)
 add_link_options(--coverage)
 
-option(UNIT_TESTING "Build the unit tests" ON)
-
 # enable testing
 enable_testing()
 
@@ -143,8 +141,6 @@ foreach(conn ${CONNECTIONS})
     message(FATAL_ERROR "Error: '${conn}' is not a valid connection type. Allowed types are ${ALLOWED_CONNECTIONS}.")
   endif()
 endforeach()
-
-message(STATUS "UNIT_TESTING: ${UNIT_TESTING}")
 
 # create enabled flags for gRPC, REST and WSS to indicate which connections are enabled
 message(STATUS "Connections: ${CONNECTIONS}")
@@ -250,5 +246,9 @@ build_docs()
 
 if (UNIT_TESTING)
   set(CATENA_UNITTESTS_DIR $ENV{HOME}/Catena/unittests)
+
+  add_compile_definitions(CATENA_UNITTESTS_DIR="${CATENA_UNITTESTS_DIR}")
+  add_compile_definitions(UNIT_TESTING="${UNIT_TESTING}")
+
   add_subdirectory("${CATENA_UNITTESTS_DIR}/cpp/" $ENV{HOME}/Catena/$ENV{BUILD_TARGET}/unittests/)
 endif (UNIT_TESTING)

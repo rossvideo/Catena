@@ -161,6 +161,55 @@ class RESTTest {
     }
 
     /*
+     * Reads the full response from the readSocket_.
+     * This is useful for reading responses with a body that is larger than the
+     * buffer size.
+     *
+     * @returns the full response as a string.
+     * @throws boost::system::system_error if there is an error reading from the socket.
+     * @throws std::runtime_error if the response is malformed.
+     * @note This function reads the headers and the body of the response.
+    */
+    std::string readTotalResponse() {
+        boost::asio::streambuf buffer;
+        // 1. Read headers
+        boost::asio::read_until(*readSocket_, buffer, "\r\n\r\n");
+        std::istream response_stream(&buffer);
+        std::string headers, line;
+        while (std::getline(response_stream, line) && line != "\r") {
+            headers += line + "\n";
+        }
+        headers += "\r\n";
+
+        // 2. Find Content-Length
+        std::size_t content_length = 0;
+        std::istringstream header_stream(headers);
+        while (std::getline(header_stream, line)) {
+            if (line.find("Content-Length:") != std::string::npos) {
+                content_length = std::stoul(line.substr(line.find(":") + 1));
+                break;
+            }
+        }
+
+        // 3. Read the body
+        std::string body;
+        std::size_t already_read = buffer.size();
+        if (already_read > 0) {
+            std::vector<char> tmp(already_read);
+            buffer.sgetn(tmp.data(), already_read);
+            body.append(tmp.data(), already_read);
+        }
+        while (body.size() < content_length) {
+            char temp[4096];
+            std::size_t to_read = std::min(sizeof(temp), content_length - body.size());
+            std::size_t n = readSocket_->read_some(boost::asio::buffer(temp, to_read));
+            body.append(temp, n);
+        }
+
+        return headers + body;
+    }
+
+    /*
      * Returns what an expect response from SocketWriter should look like.
      */
     inline std::string expectedResponse(const catena::exception_with_status& rc, const std::string& jsonBody = "") {
