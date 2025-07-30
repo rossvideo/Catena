@@ -249,6 +249,6 @@ install(
 build_docs()
 
 if (UNIT_TESTING)
-  set(CATENA_UNITTESTS_DIR $ENV{HOME}/Catena/unittests)
+  set(CATENA_UNITTESTS_DIR ../unittests)
   add_subdirectory("${CATENA_UNITTESTS_DIR}/cpp/" $ENV{HOME}/Catena/$ENV{BUILD_TARGET}/unittests/)
 endif (UNIT_TESTING)
