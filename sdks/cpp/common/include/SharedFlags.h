@@ -39,10 +39,6 @@
 
 #pragma once
 
-#ifndef DEFAULT_MAX_CONNECTIONS
-#define DEFAULT_MAX_CONNECTIONS 16
-#endif
-
 #include <absl/flags/flag.h>
 
 /**
