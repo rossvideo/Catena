@@ -1,33 +1,3 @@
-name: unit tests cpp
-on:
-  branches:
-    - test_trivy_pipeline
-
-jobs:
-  cpp-unit-tests:
-    name: C++ Unit Tests
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: build project
-        run: |
-          cd build/cpp
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DCONNECTIONS=$CONNECTIONS -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage" -DCMAKE_EXE_LINKER_FLAGS="--coverage" -DCMAKE_INSTALL_PREFIX=/usr/local/.local -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE -DGLOG_LOGGING_DIR=${HOME}/Catena/logs -B ~/Catena/${BUILD_TARGET} ~/Catena/sdks/cpp  \
-          && ninja -j16
-      
-      - name: run tests
-        run: |
-          cd build/cpp
-          ctest --output-on-failure 
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        with:
-          name: cpp-unit-tests-results
 name: C++ Unit Tests
 
 on:
