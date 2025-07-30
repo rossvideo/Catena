@@ -111,6 +111,7 @@ protected:
                 return catena::exception_with_status("", catena::StatusCode::OK);
             }));
         device_->addItem("minimalSetParam", minimalSetParam.get());
+        device_->addItem("minimalSetParam", minimalSetDescriptor.get());
 
         // Using the admin/monitor tokens from CommonTestHelpers.h
         std::string adminToken = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kAdmin) + ":w");
@@ -1828,7 +1829,9 @@ TEST_F(DeviceTest, GetDeviceSerializer_Parameters) {
         .Times(0); // Should not be called
     
     device_->addItem("authorizedParam", mockAuthorizedParam.get());
+    device_->addItem("authorizedParam", mockDescriptor1.get());
     device_->addItem("unauthorizedParam", mockUnauthorizedParam.get());
+    device_->addItem("unauthorizedParam", mockDescriptor2.get());
     
     // Create empty subscribed OIDs set - FULL detail level should include all components
     std::set<std::string> subscribedOids = {};
@@ -1975,8 +1978,11 @@ TEST_F(DeviceTest, GetDeviceSerializer_Subscriptions) {
         .Times(0); // Should not be called - unsubscribed
     
     device_->addItem("authorizedSubscribedParam", mockAuthorizedSubscribedParam.get());
+    device_->addItem("authorizedSubscribedParam", mockDescriptor1.get());
     device_->addItem("unauthorizedSubscribedParam", mockUnauthorizedSubscribedParam.get());
+    device_->addItem("unauthorizedSubscribedParam", mockDescriptor2.get());
     device_->addItem("authorizedUnsubscribedParam", mockAuthorizedUnsubscribedParam.get());
+    device_->addItem("authorizedUnsubscribedParam", mockDescriptor3.get());
     
     // Create subscribed OIDs set with exact match
     std::set<std::string> subscribedOids = {"/authorizedSubscribedParam", "/unauthorizedSubscribedParam"};

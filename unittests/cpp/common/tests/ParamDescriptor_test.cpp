@@ -62,6 +62,7 @@ class ParamDescriptorTest : public ::testing::Test {
     void create() {
         IConstraint* constraintPtr = hasConstraint ? &constraint : nullptr;
         IParamDescriptor* parentPtr = hasParent ? &parent : nullptr;
+        EXPECT_CALL(dm, addItem(oid, testing::An<IParamDescriptor*>())).WillRepeatedly(testing::Invoke([]{}));
         pd = std::make_unique<ParamDescriptor>(
             type, oidAliases, PolyglotText::ListInitializer{{"en", "name"}, {"fr", "nom"}},
             widget, scope, readOnly, oid, templateOid, constraintPtr, isCommand,
