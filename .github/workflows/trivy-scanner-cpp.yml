@@ -1,8 +1,8 @@
-name: trivy-nightly
+name: trivy-scanner-cpp
 on:
-  push:
-    branches:
-      - test_trivy_pipeline
+  pull_request:
+    files:
+      - 'sdks/cpp/**'
 
 jobs:
   Trivy:
@@ -28,21 +28,3 @@ jobs:
         with:
           sarif_file: trivy-results.sarif
           category: 'Trivy Scan Results'
-  
-  Coverage_report:
-    name: Get unit tests coverage report
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run unit tests
-        run: |
-          ./scripts/run_coverage.sh -c --html -v
-        
-      - name: Upload code coverage for ref branch
-        uses: actions/upload-artifact@v4
-        with:
-          name: ref-lcov.info
-          path: ./coverage/coverage.info
-      
