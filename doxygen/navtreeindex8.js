@@ -1,5 +1,9 @@
 var NAVTREEINDEX8 =
 {
+"structcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder_1_1promise__type.html#a9c41b07e45ead9f65d71ea4fe2d1a7be":[10,0,0,0,28,0,0,4],
+"structcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder_1_1promise__type.html#a9c41b07e45ead9f65d71ea4fe2d1a7be":[8,0,0,0,28,0,0,4],
+"structcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder_1_1promise__type.html#acf50b862190ca82ab694f52243ce8e01":[8,0,0,0,28,0,0,1],
+"structcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder_1_1promise__type.html#acf50b862190ca82ab694f52243ce8e01":[10,0,0,0,28,0,0,1],
 "structcatena_1_1common_1_1ParamTag.html":[8,0,0,0,29],
 "structcatena_1_1common_1_1ParamTag.html":[10,0,0,0,29],
 "structcatena_1_1common_1_1StructInfo.html":[8,0,0,0,35],
