@@ -579,6 +579,13 @@ class Device : public IDevice {
      * @return the signal
      */
      vdk::signal<void(const std::string&, const Authorizer*)>& getDeleteAssetRequest() override { return deleteAssetRequest_; }
+
+    /**
+     * @brief Calculate the maximum number of possible subscriptions for device
+     * @param authz The authorizer to use for checking permissions
+     * @return The maximum number of possible subscriptions
+     */
+    uint32_t calculateMaxSubscriptions(Authorizer& authz) const override;
   private:
 
     /**

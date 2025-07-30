@@ -36,6 +36,8 @@
 #include <IParamDescriptor.h>
 #include <IMenuGroup.h> 
 #include <Menu.h>
+#include <ParamVisitor.h>
+#include <SubscriptionManager.h>
 
 #include <cassert>
 #include <sstream>
@@ -549,5 +551,37 @@ bool Device::shouldSendParam(const IParam& param, bool is_subscribed, Authorizer
     }
 
     return should_send;
+}
+
+uint32_t Device::calculateMaxSubscriptions(Authorizer& authz) const {
+    uint32_t totalCount = 0;
+    
+    // Count all top-level parameters and their children
+    for (const auto& [name, param] : params_) {
+        if (authz.readAuthz(*param)) {
+            // Count this parameter and all its children
+            class SubscriptionCounterVisitor : public IParamVisitor {
+            public:
+                SubscriptionCounterVisitor() : count_(0) {}
+                void visit(IParam* param, const std::string& path) override {
+                    // Skip array elements (paths ending with indices) to prevent invalid paths
+                    Path pathObj = Path(path);
+                    if (!pathObj.back_is_index()) {
+                        count_++;
+                    }
+                }
+                void visitArray(IParam* param, const std::string& path, uint32_t length) override {}
+                uint32_t getCount() const { return count_; }
+            private:
+                uint32_t count_;
+            };
+            
+            SubscriptionCounterVisitor visitor;
+            ParamVisitor::traverseParams(param, "/" + name, const_cast<Device&>(*this), visitor, authz);
+            totalCount += visitor.getCount();
+        }
+    }
+    
+    return totalCount;
 }
 

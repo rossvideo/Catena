@@ -66,6 +66,11 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
     // Writes a request to a socket to later be read by the SocketReader.
     void SetUp() override {
         origin_ = "test_origin";
+        
+        // Set up default behavior for calculateMaxSubscriptions
+        EXPECT_CALL(mockDevice_, calculateMaxSubscriptions(::testing::_))
+            .WillRepeatedly(::testing::Return(50));
+        
         // Setting up expectations for the mock service.
         EXPECT_CALL(service_, subscriptionManager()).WillRepeatedly(testing::ReturnRef(sm));
         EXPECT_CALL(service_, EOPath()).WillRepeatedly(testing::ReturnRef(EOPath));
@@ -120,7 +125,8 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
     }
 
     // Variables to test on creation.
-    catena::common::SubscriptionManager sm;
+    MockDevice mockDevice_;
+    catena::common::SubscriptionManager sm{mockDevice_, Authorizer::kAuthzDisabled};
     std::string EOPath = "/test/eo/path";
     std::string version = "v1";
 

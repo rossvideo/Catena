@@ -60,9 +60,11 @@ namespace common {
 class SubscriptionManager : public ISubscriptionManager {
   public:
     /**
-     * @brief Constructor
+     * @brief Constructor with device for calculating subscription limit
+     * @param device The device to calculate the maximum possible subscriptions for
+     * @param authz The authorizer to use for permission checking
      */
-    SubscriptionManager() = default;
+    explicit SubscriptionManager(const IDevice& device, Authorizer& authz);
 
     /**
      * @brief Add an OID subscription
@@ -109,11 +111,31 @@ class SubscriptionManager : public ISubscriptionManager {
      */
     bool isSubscribed(const std::string& oid, const IDevice& dm) override;
 
+
+
+    /**
+     * @brief Get the current number of subscriptions for a device
+     * @param dm The device model to use
+     * @return The current number of subscriptions
+     */
+    uint32_t getCurrentSubscriptionCount(const IDevice& dm) const override;
+
+    /**
+     * @brief Get the maximum number of subscriptions allowed per device
+     * @return The current limit
+     */
+    uint32_t getMaxSubscriptions() const override { return max_subscriptions_per_device_; }
+
   private:
     /**
      * @brief Mutex for subscription data access
      */
     mutable std::mutex mtx_;
+
+    /**
+     * @brief Maximum number of subscriptions allowed per device
+     */
+    uint32_t max_subscriptions_per_device_ = 0;
 
     /**
      * @brief Visitor class for collecting subscribed OIDs

@@ -98,6 +98,19 @@ class ISubscriptionManager {
      * @return true if the OID is already subscribed to
      */
     virtual bool isSubscribed(const std::string& oid, const IDevice& dm) = 0;
+
+    /**
+     * @brief Get the current number of subscriptions for a device
+     * @param dm The device model to use
+     * @return The current number of subscriptions
+     */
+    virtual uint32_t getCurrentSubscriptionCount(const IDevice& dm) const = 0;
+
+    /**
+     * @brief Get the maximum number of subscriptions allowed per device
+     * @return The current limit
+     */
+    virtual uint32_t getMaxSubscriptions() const = 0;
 };
 
 } // namespace common

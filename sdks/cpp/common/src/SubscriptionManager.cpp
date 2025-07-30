@@ -29,7 +29,14 @@
  */
 
 #include <SubscriptionManager.h>
+#include <ParamVisitor.h>
+#include <Path.h>
+#include <IParamVisitor.h>
 using catena::common::SubscriptionManager;
+
+SubscriptionManager::SubscriptionManager(const IDevice& device, Authorizer& authz) 
+    : max_subscriptions_per_device_(device.calculateMaxSubscriptions(authz)) {
+}
 
 // Add a subscription (unique or wildcard)
 bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc, Authorizer& authz) {
@@ -54,15 +61,34 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
         param = dm.getParam(baseOid, rc, authz);
     }
 
+    // Check subscription limits before adding
+    if (!wildcard) {
+        if (dmSubscriptions.contains(baseOid)) {
+            rc = catena::exception_with_status("Subscription already exists for OID: " + baseOid, catena::StatusCode::ALREADY_EXISTS);
+            return false;
+        }
+
+        uint32_t currentCount = dmSubscriptions.size();
+        uint32_t newSubscriptions = 1; // Single subscription
+        
+        // Check if adding this subscription would exceed the limit
+        if (currentCount + newSubscriptions > max_subscriptions_per_device_) {
+            rc = catena::exception_with_status(
+                "Subscription limit exceeded. Current: " + std::to_string(currentCount) + 
+                ", Requested: " + std::to_string(newSubscriptions) + 
+                ", Limit: " + std::to_string(max_subscriptions_per_device_), 
+                catena::StatusCode::RESOURCE_EXHAUSTED);
+            return false;
+        }
+    }
+    else {
+        // Wildcards are unimplemented for now.
+    }
+
     // Normal case.
     if (!wildcard && param) {
-        // Add the subscription if it doesn't already exist.
-        if (!dmSubscriptions.contains(baseOid)) {
-            dmSubscriptions.insert(baseOid);
-        // Subscription already exists.
-        } else {
-            rc = catena::exception_with_status("Subscription already exists for OID: " + baseOid, catena::StatusCode::ALREADY_EXISTS);
-        }
+        // Add the subscription (we already checked it doesn't exist)
+        dmSubscriptions.insert(baseOid);
     
     // Add all sub params case.
     } else if (wildcard && param) {
@@ -135,7 +161,18 @@ bool SubscriptionManager::isWildcard(const std::string& oid) {
     return oid.length() >= 2 && oid.substr(oid.length() - 2) == "/*";
 }
 
-bool SubscriptionManager:: isSubscribed(const std::string& oid, const IDevice& dm) {
+bool SubscriptionManager::isSubscribed(const std::string& oid, const IDevice& dm) {
     std::lock_guard sg(mtx_);
     return subscriptions_.contains(dm.slot()) && subscriptions_[dm.slot()].contains(oid);
+}
+
+
+
+uint32_t SubscriptionManager::getCurrentSubscriptionCount(const IDevice& dm) const {
+    std::lock_guard sg(mtx_);
+    auto it = subscriptions_.find(dm.slot());
+    if (it != subscriptions_.end()) {
+        return static_cast<uint32_t>(it->second.size());
+    }
+    return 0;
 }

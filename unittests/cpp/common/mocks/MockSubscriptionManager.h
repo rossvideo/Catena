@@ -51,6 +51,8 @@ class MockSubscriptionManager : public ISubscriptionManager {
     MOCK_METHOD(std::set<std::string>, getAllSubscribedOids, (const IDevice& dm), (override));
     MOCK_METHOD(bool, isWildcard, (const std::string& oid), (override));
     MOCK_METHOD(bool, isSubscribed, (const std::string& oid, const IDevice& dm), (override));
+    MOCK_METHOD(uint32_t, getCurrentSubscriptionCount, (const IDevice& dm), (const, override));
+    MOCK_METHOD(uint32_t, getMaxSubscriptions, (), (const, override));
 };
 
 } // namespace common

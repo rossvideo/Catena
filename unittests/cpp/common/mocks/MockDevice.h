@@ -84,6 +84,7 @@ class MockDevice : public IDevice {
     MOCK_METHOD(vdk::signal<void(const std::string&, const Authorizer*)>&, getDownloadAssetRequest, (), (override));
     MOCK_METHOD(vdk::signal<void(const std::string&, const Authorizer*)>&, getUploadAssetRequest, (), (override));
     MOCK_METHOD(vdk::signal<void(const std::string&, const Authorizer*)>&, getDeleteAssetRequest, (), (override));
+    MOCK_METHOD(uint32_t, calculateMaxSubscriptions, (Authorizer& authz), (const, override));
   };
 
 } // namespace common

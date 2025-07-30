@@ -63,9 +63,14 @@ protected:
     SubscriptionManagerTest() : authz_(jwsToken_) {}
     
     void SetUp() override {
-        manager = std::make_unique<SubscriptionManager>();
         device = std::make_unique<MockDevice>();
         mockParam = std::make_unique<MockParam>();
+        
+        // Set up default behavior for calculateMaxSubscriptions
+        EXPECT_CALL(*device, calculateMaxSubscriptions(::testing::_))
+            .WillRepeatedly(::testing::Return(50));
+        
+        manager = std::make_unique<SubscriptionManager>(*device, authz_);
         
         // Set up default mock behavior for device
         EXPECT_CALL(*device, getValue(::testing::_, ::testing::_, ::testing::_))

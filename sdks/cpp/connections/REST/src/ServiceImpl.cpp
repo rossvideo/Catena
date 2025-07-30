@@ -42,7 +42,8 @@ ServiceImpl::ServiceImpl(std::vector<IDevice*> dms, std::string& EOPath, bool au
       authorizationEnabled_{authz},
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
       router_{Router::getInstance()},
-      connectionQueue_{maxConnections} {
+      connectionQueue_{maxConnections},
+      subscriptionManager_(*dms[0], Authorizer::kAuthzDisabled) {
 
     if (authorizationEnabled_) { DEBUG_LOG <<"Authorization enabled."; }
     // Adding dms to slotMap.

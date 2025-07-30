@@ -40,7 +40,8 @@ ServiceImpl::ServiceImpl(ServerCompletionQueue *cq, std::vector<IDevice*> dms, s
     : cq_{cq},
       EOPath_{EOPath}, 
       authorizationEnabled_{authz},
-      connectionQueue_{maxConnections} {
+      connectionQueue_{maxConnections},
+      subscriptionManager_(*dms[0], Authorizer::kAuthzDisabled) {
     // Adding dms to slotMap.
     for (auto dm : dms) {
         if (dms_.contains(dm->slot())) {

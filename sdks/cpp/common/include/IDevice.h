@@ -419,6 +419,13 @@ class IDevice {
      * Intended recipient is the business logic.
      */
     virtual vdk::signal<void(const std::string&, const Authorizer*)>& getDeleteAssetRequest() = 0;
+
+    /**
+     * @brief Calculate the maximum number of possible subscriptions for device
+     * @param authz The authorizer to use for checking permissions
+     * @return The maximum number of possible subscriptions
+     */
+    virtual uint32_t calculateMaxSubscriptions(Authorizer& authz) const = 0;
 };
 
 using SlotMap = std::unordered_map<uint32_t, IDevice*>;
