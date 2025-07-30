@@ -104,10 +104,7 @@ class AssetRequest : public ICallData {
       return new AssetRequest(socket, context, dms);
     }
 
-#ifndef UNIT_TESTING
-  private:
-#endif
-
+  protected:
     /**
      * @brief Compresses the input data using the specified window bits.
      * @param input The input data to compress.
@@ -170,27 +167,6 @@ class AssetRequest : public ICallData {
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok;
     }
-
-    /**
-     * @brief Sets up authorization for the request
-     * @return Shared pointer to the authorizer, or nullptr if authorization is disabled
-     */
-    std::shared_ptr<catena::common::Authorizer> setupAuthorization_();
-
-    /**
-     * @brief Validates and constructs the file path
-     * @return Valid filesystem path to the requested asset
-     * @throws catena::exception_with_status if path is invalid or file not found
-     */
-    std::filesystem::path getValidatedFilePath_();
-
-    /**
-     * @brief Reads file data with size validation
-     * @param path Path to the file to read
-     * @return Vector containing the file data
-     * @throws catena::exception_with_status if file operations fail
-     */
-    std::vector<char> readFileData_(const std::filesystem::path& path);
 
     /**
      * @brief The socket to write the response to.
