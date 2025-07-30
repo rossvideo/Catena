@@ -28,3 +28,51 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: cpp-unit-tests-results
+name: C++ Unit Tests
+
+on:
+  push:
+    branches:
+      - test_trivy_pipeline
+
+jobs:
+  cpp-unit-tests:
+    name: C++ Unit Tests
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
+
+    env:
+      CMAKE_BUILD_TYPE: Debug
+      CONNECTIONS: gRPC;REST
+      BUILD_TARGET: build/cpp
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure and Build
+        run: |
+          mkdir -p ~/Catena/${BUILD_TARGET}
+          cmake -G Ninja \
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+            -DCONNECTIONS=${CONNECTIONS} \
+            -DCMAKE_CXX_FLAGS="--coverage" \
+            -DCMAKE_C_FLAGS="--coverage" \
+            -DCMAKE_EXE_LINKER_FLAGS="--coverage" \
+            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+            -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
+            -B ~/Catena/${BUILD_TARGET} \
+            -S ./sdks/cpp
+          ninja -C ~/Catena/${BUILD_TARGET} -j$(nproc)
+
+      - name: Run Tests
+        run: |
+          ctest --test-dir ~/Catena/${BUILD_TARGET} --output-on-failure
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: cpp-unit-tests-results
+          path: ~/Catena/${BUILD_TARGET}/Testing/Temporary/LastTest.log
