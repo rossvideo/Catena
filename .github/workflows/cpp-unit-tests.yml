@@ -22,9 +22,7 @@ jobs:
       - name: run tests
         run: |
           cd build/cpp
-          ctest --output-on-failure
-        results:
-          - name: cpp-unit-tests-results      
+          ctest --output-on-failure 
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
