@@ -39,10 +39,34 @@ jobs:
 
       - name: Run Tests
         run: |
-          ctest --test-dir ~/Catena/${BUILD_TARGET}
+          ctest --test-dir ~/Catena/${BUILD_TARGET} -V > test_results.log
+          # check if file contains "100% tests passed"
+          if grep -q "100% tests passed" test_results.log; then
+            echo "All tests passed!"
+          else
+            echo "Some tests failed."
+            exit 1
+          fi
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
           name: cpp-unit-tests-results
-          path: ~/Catena/${BUILD_TARGET}/Testing/Temporary/LastTest.log
+          path: test_results.log
+        if: failure()
+      
+      - name: run coverage report
+        run: |
+          gcovr --root ~/Catena --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' -e '(.+/)?examples/' --lcov=coverage/coverage.info --xml=coverage/coverage.xml
+      
+      - name: upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpp-coverage-report
+          path: coverage/coverage.xml
+
+      - name: Report coverage to GitHub PR
+        uses: romeovs/lcov-reporter-action@v0.2.16
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          lcov-file: coverage/coverage.info
