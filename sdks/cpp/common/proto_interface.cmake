@@ -48,7 +48,6 @@ function(cmake_catena_proto_common)
     # link against the protobuf interface
     target_link_libraries(${target} PUBLIC ${PROTO_TARGET})
     target_compile_features(${target} PUBLIC cxx_std_20)
-    target_compile_definitions(${target} PRIVATE DEFAULT_MAX_CONNECTIONS=${DEFAULT_MAX_CONNECTIONS})
 
     # add dependencies
     add_dependencies(${target} ${PROTO_TARGET})

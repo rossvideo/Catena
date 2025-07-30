@@ -39,6 +39,10 @@ if(NOT DEFINED GLOG_LOGGING_DIR)
 endif()
 add_compile_definitions(GLOG_LOGGING_DIR="${GLOG_LOGGING_DIR}")
 
+# Set the default max number of connections
+set(DEFAULT_MAX_CONNECTIONS 16 CACHE STRING "Default max connections")
+add_compile_definitions(DEFAULT_MAX_CONNECTIONS=${DEFAULT_MAX_CONNECTIONS})
+
 add_compile_options(--coverage)
 add_link_options(--coverage)
 
