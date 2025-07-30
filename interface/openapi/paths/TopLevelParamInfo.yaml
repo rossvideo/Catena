@@ -1,3 +1,4 @@
+#
 # Copyright 2025 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,22 +29,21 @@
 #
 
 #
-# OpenAPI documentation of the Catena REST API's param-info endpoint
+# OpenAPI documentation of the Catena REST API's streamed top-level param-info endpoint
 # Author: john.naylor@rossvideo.com
 # Author: benjamin.whitten@rossvideo.com
 # Author: zuhayr.sarker@rossvideo.com
-# Date: 25/06/09
+# Date: 25/06/19
 #
 
 get:
   summary: |
-    Gets information about a parameter within a device model. 
+    Gets information about all top-level parameters within a device model.
     Because this is a unary request, recursive queries are not supported.
-
-  operationId: ParamInfo
+  operationId: TopLevelParamInfo
 
   # default security is read-only
-
+  
   parameters:
     - name: slot
       in: path
@@ -51,14 +51,6 @@ get:
       description: The slot of the device model containing the parameters to get info for
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-   
-    - name: fqoid
-      in: path
-      required: true
-      description: Fully qualified OID of the parameter to get info for
-      schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-      default: ""
 
   tags:
     - Parameters
@@ -67,14 +59,16 @@ get:
   responses:
     "200":
       description: |
-        Returns information about the parameter specified by the fqoid.
+        Returns basic information about all top-level parameters in the device model.
+        The response is a sequence of stringified JSON objects, each containing information about a single parameter.
+        Each object in the response has the following structure:
         
       content:
-        application/json:
+        text/event-stream:
           schema:
-            $ref: "../../../schema/catena.param_schema.json#/$defs/param_info"
+            type: string
           
-          example:
+          example: |
             {
               "data": [
                 {
@@ -107,4 +101,4 @@ get:
       $ref: '../openapi.yaml#/components/responses/NotFound'
 
     "503":
-      $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
+      $ref: '../openapi.yaml#/components/responses/ServiceUnavailable' 
