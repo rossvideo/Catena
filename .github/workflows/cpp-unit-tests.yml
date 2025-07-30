@@ -6,7 +6,9 @@ on:
 jobs:
   cpp-unit-tests:
     name: C++ Unit Tests
-    runs-on: ghcr.io/rossvideo/catena-toolchain-cpp:latest
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
