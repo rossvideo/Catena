@@ -170,7 +170,7 @@ class ServiceConfig {
     /**
      * @brief The maximum number of connections allowed to the service.
      */
-    uint32_t maxConnections = 16;
+    uint32_t maxConnections = DEFAULT_MAX_CONNECTIONS;
 };
 
 /**
