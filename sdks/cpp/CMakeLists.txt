@@ -39,6 +39,10 @@ if(NOT DEFINED GLOG_LOGGING_DIR)
 endif()
 add_compile_definitions(GLOG_LOGGING_DIR="${GLOG_LOGGING_DIR}")
 
+# Set the default max number of connections
+set(DEFAULT_MAX_CONNECTIONS 16 CACHE STRING "Default max connections")
+add_compile_definitions(DEFAULT_MAX_CONNECTIONS=${DEFAULT_MAX_CONNECTIONS})
+
 add_compile_options(--coverage)
 add_link_options(--coverage)
 
@@ -248,7 +252,6 @@ if (UNIT_TESTING)
   set(CATENA_UNITTESTS_DIR $ENV{HOME}/Catena/unittests)
 
   add_compile_definitions(CATENA_UNITTESTS_DIR="${CATENA_UNITTESTS_DIR}")
-  add_compile_definitions(UNIT_TESTING="${UNIT_TESTING}")
 
   add_subdirectory("${CATENA_UNITTESTS_DIR}/cpp/" $ENV{HOME}/Catena/$ENV{BUILD_TARGET}/unittests/)
 endif (UNIT_TESTING)
