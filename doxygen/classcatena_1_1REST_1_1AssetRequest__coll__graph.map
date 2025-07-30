@@ -1,5 +1,11 @@
 <map id="catena::REST::AssetRequest" name="catena::REST::AssetRequest">
-<area shape="rect" id="Node000001" title="ICallData class for the GetParam REST controller." alt="" coords="5,79,208,104"/>
-<area shape="rect" id="Node000002" href="$classcatena_1_1REST_1_1ICallData.html" title="Interface class for REST API controllers." alt="" coords="19,5,194,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="109,44,109,79,104,79,104,44"/>
+<area shape="rect" id="Node000001" title="ICallData class for the GetParam REST controller." alt="" coords="206,168,409,193"/>
+<area shape="rect" id="Node000002" href="$classcatena_1_1REST_1_1ICallData.html" title="Interface class for REST API controllers." alt="" coords="5,80,180,105"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="136,108,279,165,278,170,134,113"/>
+<area shape="rect" id="Node000003" href="$classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class." alt="" coords="204,80,411,105"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="310,119,310,167,305,167,305,119"/>
+<area shape="rect" id="Node000004" href="$classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write a unary response to a socket using boost." alt="" coords="435,80,633,105"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="492,113,339,170,337,165,490,108"/>
+<area shape="rect" id="Node000005" href="$classcatena_1_1REST_1_1ISocketWriter.html" title="Interface for the SocketWriter classes." alt="" coords="433,5,635,31"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="537,45,537,80,531,80,531,45"/>
 </map>
