@@ -83,7 +83,3 @@ RUN mkdir -p ~/Catena/${BUILD_TARGET} \
 # cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCONNECTIONS='gRPC;REST' -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage" -DCMAKE_EXE_LINKER_FLAGS="--coverage"  -DCMAKE_INSTALL_PREFIX=/usr/local/.local ~/Catena/sdks/cpp
 RUN cd ~/Catena/ \
     && ./scripts/run_coverage.sh --html --verbose
-
-# ~/Catena/${BUILD_TARGET}/connections/gRPC/examples/status_update/status_update --static_root ../connections/gRPC/examples/status_update/static
-# #docker run -rm -v $(realpath ../):~/Catena -it catena-sdk
-VOLUME ["/home/${USER_NAME}/Catena"] 
