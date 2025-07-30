@@ -30,6 +30,8 @@
 
 namespace catena {
 
+constexpr static const char* base64_chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 /**
  * @brief reads a file into a std::string
  *
@@ -62,5 +64,21 @@ void subs(std::string &str, const std::string &seq, const std::string &rep);
  * @param delim in The character to split the string at.
  */
 void split(std::vector<std::string>& out, const std::string& str, const std::string& delim);
+
+/**
+ * @brief Converts a binary string to a base64 encoded string.
+ * 
+ * @param binary The binary string to encode.
+ * @return The base64 encoded string.
+ */
+std::string to_base64(const std::string& binary);
+
+/**
+ * @brief Converts a base64 encoded string to a binary string.
+ * 
+ * @param encoded The base64 encoded string to decode.
+ * @return The decoded binary string.
+ */
+std::string from_base64(const std::string& encoded);
 
 }  // namespace catena
