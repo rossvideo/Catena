@@ -249,6 +249,6 @@ install(
 build_docs()
 
 if (UNIT_TESTING)
-  set(CATENA_UNITTESTS_DIR ../unittests)
-  add_subdirectory("${CATENA_UNITTESTS_DIR}/cpp/" $ENV{HOME}/Catena/$ENV{BUILD_TARGET}/unittests/)
+  set(CATENA_UNITTESTS_DIR ${CMAKE_SOURCE_DIR}/../../unittests)
+  add_subdirectory("${CATENA_UNITTESTS_DIR}/cpp/" ${CMAKE_SOURCE_DIR}/../../$ENV{BUILD_TARGET}/unittests/)
 endif (UNIT_TESTING)
