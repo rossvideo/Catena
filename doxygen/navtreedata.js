@@ -130,13 +130,13 @@ var NAVTREEINDEX =
 [
 "AddLanguage_8h.html",
 "classcatena_1_1REST_1_1AssetRequest.html",
-"classcatena_1_1REST_1_1Subscriptions.html#af0be4c4ec9f61eed13edc4f1ec8b69a4",
-"classcatena_1_1common_1_1IDevice.html#a02c4d9fea9e09915d7f609510fdaf7c9",
-"classcatena_1_1common_1_1ISubscriptionManager.html#a86952cbef9d7428bfde4ec19b278a827",
-"classcatena_1_1common_1_1Path.html#a3e5a87a21b2a39d4cf877b8c9cbe7800",
-"classcatena_1_1gRPC_1_1PeerInfo.html#a9964e3db5c4ef5bdf7d561a5d82e6c3a",
-"functions_func_l.html",
-"structcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder_1_1promise__type.html#a9c41b07e45ead9f65d71ea4fe2d1a7be"
+"classcatena_1_1REST_1_1SocketReader.html#ac3c78ea250b9d57087297eead2bdb7e0",
+"classcatena_1_1common_1_1IConstraint.html#adad569de2d0ffb54aeec9422169c6052",
+"classcatena_1_1common_1_1IPolyglotText.html#acf66405d7671eec9e1ff29eab8850fb9",
+"classcatena_1_1common_1_1Path.html",
+"classcatena_1_1gRPC_1_1PeerInfo.html#a2bcd4465bd7ef2ed892492cbb3c81fdc",
+"functions_func.html",
+"structcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder_1_1promise__type.html#a00388cdb351a0c0f8fc1e1b29a8891d1"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
