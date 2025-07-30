@@ -57,16 +57,16 @@ jobs:
       
       - name: run coverage report
         run: |
-          gcovr --root ~/Catena --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' -e '(.+/)?examples/' --lcov=coverage/coverage.info --xml=coverage/coverage.xml
+          gcovr --root ~/Catena --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' -e '(.+/)?examples/' --lcov=coverage.info --xml=coverage.xml
       
       - name: upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: cpp-coverage-report
-          path: coverage/coverage.xml
+          path: coverage.xml
 
       - name: Report coverage to GitHub PR
         uses: romeovs/lcov-reporter-action@v0.2.16
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          lcov-file: coverage/coverage.info
+          lcov-file: coverage.info
