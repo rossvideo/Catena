@@ -88,6 +88,22 @@ params:
       es: "Ejemplo de Matriz de Cadenas", 
       ja: "文字列配列の例" } }
 
+  menu_button:
+    type: INT32
+    name: { display_strings: { en: "Menu Button" } }
+    widget: menu_popup
+    value:
+      int32_value: 0
+    constraint:
+      type: INT_CHOICE
+      int32_choice:
+        choices:
+          - value: 0
+            name: { display_strings: { en: "Popup Menu" } }
+              
+
+  # This is a struct reference imported from another file and used as a
+  # template oid for struct_example and struct_array.
   ref_struct:
     import: { file: /params/param.ref_struct.yaml }
 
