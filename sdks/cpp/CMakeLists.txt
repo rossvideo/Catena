@@ -250,5 +250,6 @@ build_docs()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(CATENA_UNITTESTS_DIR ${CMAKE_SOURCE_DIR}/../../unittests)
+  add_compile_definitions(CATENA_UNITTESTS_DIR="${CATENA_UNITTESTS_DIR}")
   add_subdirectory("${CATENA_UNITTESTS_DIR}/cpp/" ${CMAKE_SOURCE_DIR}/../../$ENV{BUILD_TARGET}/unittests/)
 endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
