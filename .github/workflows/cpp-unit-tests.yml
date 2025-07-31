@@ -6,8 +6,8 @@ on:
       - test_trivy_pipeline
 
 jobs:
-  cpp-unit-tests:
-    name: C++ Unit Tests
+  build:
+    name: Configure and Build
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
@@ -37,6 +37,35 @@ jobs:
             -S ./sdks/cpp
           ninja -C ~/Catena/${BUILD_TARGET} -j$(nproc)
 
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpp-build-artifacts
+          path: ~/Catena/build/cpp/
+          retention-days: 1
+
+  unit-tests:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
+    needs: build
+
+    env:
+      CMAKE_BUILD_TYPE: Debug
+      CONNECTIONS: gRPC;REST
+      BUILD_TARGET: build/cpp
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: cpp-build-artifacts
+          path: ~/Catena/build/cpp/
+
       - name: Run Tests
         run: |
           ctest --test-dir ~/Catena/${BUILD_TARGET} -V --rerun-failed > test_results.log
@@ -53,20 +82,70 @@ jobs:
         with:
           name: cpp-unit-tests-results
           path: test_results.log
+          retention-days: 7
         if: failure()
-      
-      - name: run coverage report
-        run: |
-          gcovr --root ~/Catena --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' -e '(.+/)?examples/' --lcov=coverage.info --xml=coverage.xml
-      
-      - name: upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: cpp-coverage-report
-          path: coverage.xml
 
-      - name: Report coverage to GitHub PR
-        uses: romeovs/lcov-reporter-action@v0.2.16
+  coverage:
+    name: Generate Coverage Report
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
+    needs: build
+
+    env:
+      CMAKE_BUILD_TYPE: Debug
+      CONNECTIONS: gRPC;REST
+      BUILD_TARGET: build/cpp
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          lcov-file: coverage.info
+          name: cpp-build-artifacts
+          path: ~/Catena/build/cpp/
+
+      - name: Run Tests for Coverage
+        run: |
+          ctest --test-dir ~/Catena/${BUILD_TARGET} -V
+
+      - name: Generate Coverage Report
+        run: |
+          gcovr --root ~/Catena --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' -e '(.+/)?examples/' --lcov=coverage.info --cobertura=coverage.xml
+
+      - name: Code Coverage Summary Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage.xml
+
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
+    needs: build
+
+    env:
+      CMAKE_BUILD_TYPE: Debug
+      CONNECTIONS: gRPC;REST
+      BUILD_TARGET: build/cpp
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: cpp-build-artifacts
+          path: ~/Catena/build/cpp/
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: cpp
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
