@@ -46,6 +46,8 @@ add_compile_definitions(DEFAULT_MAX_CONNECTIONS=${DEFAULT_MAX_CONNECTIONS})
 add_compile_options(--coverage)
 add_link_options(--coverage)
 
+option(UNIT_TESTING "Build the unit tests" ON)
+
 # enable testing
 enable_testing()
 
@@ -248,8 +250,8 @@ install(
 # Build the documentation with Doxygen
 build_docs()
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+if (UNIT_TESTING)
   set(CATENA_UNITTESTS_DIR ${CMAKE_SOURCE_DIR}/../../unittests)
   add_compile_definitions(CATENA_UNITTESTS_DIR="${CATENA_UNITTESTS_DIR}")
   add_subdirectory("${CATENA_UNITTESTS_DIR}/cpp/" ${CMAKE_SOURCE_DIR}/../../$ENV{BUILD_TARGET}/unittests/)
-endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+endif (UNIT_TESTING)
