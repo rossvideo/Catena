@@ -137,7 +137,7 @@ catena::exception_with_status Device::commitMultiSetValue (catena::MultiSetValue
         }
     }
     return ans;
-}
+} //GCOV_EXCL_LINE
 
 catena::exception_with_status Device::setValue (const std::string& jptr, catena::Value& src, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
@@ -179,7 +179,7 @@ catena::exception_with_status Device::getValue (const std::string& jptr, catena:
         ans = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
     return ans;
-}
+} //GCOV_EXCL_LINE
 
 catena::exception_with_status Device::getLanguagePack(const std::string& languageId, ComponentLanguagePack& pack) const {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
@@ -201,7 +201,7 @@ catena::exception_with_status Device::getLanguagePack(const std::string& languag
         ans = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
     return ans;
-}
+} //GCOV_EXCL_LINE
 
 catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& language, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
@@ -225,7 +225,7 @@ catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& l
         languageAddedPushUpdate_.emit(language_packs_[id]);
     }
     return ans;
-}
+} //GCOV_EXCL_LINE
 
 catena::exception_with_status Device::removeLanguage(const std::string& languageId, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
@@ -245,7 +245,7 @@ catena::exception_with_status Device::removeLanguage(const std::string& language
         // Push update???
     }
     return ans;
-}
+} //GCOV_EXCL_LINE
 
 std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) const {
     // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
@@ -261,7 +261,7 @@ std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::excep
         status = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
     return result;
-}
+} //GCOV_EXCL_LINE
 
 std::unique_ptr<IParam> Device::getParam(catena::common::Path& path, catena::exception_with_status& status, Authorizer& authz) const {
     if (path.empty()) {
@@ -321,7 +321,7 @@ std::vector<std::unique_ptr<IParam>> Device::getTopLevelParams(catena::exception
         status = catena::exception_with_status(why.what(), why.status);
     }
     return result;
-}
+} //GCOV_EXCL_LINE
 
 std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) const {
    // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
@@ -570,7 +570,6 @@ uint32_t Device::calculateMaxSubscriptions(Authorizer& authz) const {
                         count_++;
                     }
                 }
-                void visitArray(IParam* param, const std::string& path, uint32_t length) override {}
                 uint32_t getCount() const { return count_; }
             private:
                 uint32_t count_;

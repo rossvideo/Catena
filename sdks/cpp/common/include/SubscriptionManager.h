@@ -111,12 +111,6 @@ class SubscriptionManager : public ISubscriptionManager {
      */
     bool isSubscribed(const std::string& oid, const IDevice& dm) override;
 
-    /**
-     * @brief Get the maximum number of subscriptions allowed per device
-     * @return The current limit
-     */
-    uint32_t getMaxSubscriptions() const override { return max_subscriptions_per_device_; }
-
   private:
     /**
      * @brief Mutex for subscription data access
@@ -152,14 +146,6 @@ class SubscriptionManager : public ISubscriptionManager {
                 }
             }
             
-            /**
-             * @brief Visit an array
-             * @param param The array to visit
-             * @param path The path of the array
-             * @param length The length of the array
-             */
-            void visitArray(catena::common::IParam* param, const std::string& path, uint32_t length) override {}
-
         private:
             /**
              * @brief The vector of subscribed OIDs within the visitor

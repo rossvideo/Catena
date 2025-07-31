@@ -45,6 +45,7 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
     bool wildcard = isWildcard(oid);
     std::string baseOid;
     std::unique_ptr<IParam> param = nullptr;
+    bool added = false;
     // Getting set of subscriptions for the specified device.
     std::set<std::string>& dmSubscriptions = subscriptions_[dm.slot()];
 
@@ -61,68 +62,64 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
     if (!wildcard) {
         if (dmSubscriptions.contains(baseOid)) {
             rc = catena::exception_with_status("Subscription already exists for OID: " + baseOid, catena::StatusCode::ALREADY_EXISTS);
-            return false;
+            added = false;
         }
         if (param) {
             // Check if adding this subscription would exceed the limit
             if (dmSubscriptions.size() >= max_subscriptions_per_device_) {
                 rc = catena::exception_with_status("Subscription limit exceeded", catena::StatusCode::RESOURCE_EXHAUSTED);
-                return false;
+                added = false;
+            } else {
+                dmSubscriptions.insert(baseOid);
+                added = true;
             }
-            dmSubscriptions.insert(baseOid);
-        } else {
-            return false; // Parameter doesn't exist
         }
     }
     // Add wildcard subscription.
     else if (wildcard && param) {
         // Count potential subscriptions before adding them
         uint32_t newSubscriptions = countWildcardSubscriptions(param.get(), baseOid, dm, authz);
-        
         // Check if adding these subscriptions would exceed the limit
         uint32_t currentCount = dmSubscriptions.size();
         if (currentCount + newSubscriptions > max_subscriptions_per_device_) {
             rc = catena::exception_with_status("Subscription limit exceeded", catena::StatusCode::RESOURCE_EXHAUSTED);
-            return false;
-        }
-        
-        // Now add the actual subscriptions
-        SubscriptionVisitor visitor(dmSubscriptions);
-        ParamVisitor::traverseParams(param.get(), baseOid, dm, visitor, authz);   
-
-    } else if (wildcard && oid == "/*") {
-        // Add all params case.
+            added = false;
+        } else {
+            SubscriptionVisitor visitor(dmSubscriptions);
+            ParamVisitor::traverseParams(param.get(), baseOid, dm, visitor, authz);   
+            added = true;
+        }  
+    // Add all params case.
+    } else if (wildcard && oid == "/*") {  
         std::vector<std::unique_ptr<IParam>> allParams;
         {
             std::lock_guard lg(dm.mutex());
             allParams = dm.getTopLevelParams(rc, authz);
-        }
-        
+        }        
         // Count potential subscriptions before adding them
         uint32_t newSubscriptions = 0;
         for (auto& param : allParams) {
             if (authz.readAuthz(*param)) {
                 newSubscriptions += countWildcardSubscriptions(param.get(), "/" + param->getOid(), dm, authz);
             }
-        }
-        
+        }        
         // Check if adding these subscriptions would exceed the limit
         uint32_t currentCount = dmSubscriptions.size();
         if (currentCount + newSubscriptions > max_subscriptions_per_device_) {
             rc = catena::exception_with_status("Subscription limit exceeded", catena::StatusCode::RESOURCE_EXHAUSTED);
-            return false;
-        }
-        
-        // Now add the actual subscriptions
-        for (auto& param : allParams) {
-            if (authz.readAuthz(*param)) {
-                SubscriptionVisitor visitor(dmSubscriptions);
-                ParamVisitor::traverseParams(param.get(), "/" + param->getOid(), dm, visitor, authz);
+            added = false;
+        } else {
+            // Now add the actual subscriptions
+            for (auto& param : allParams) {
+                if (authz.readAuthz(*param)) {
+                    SubscriptionVisitor visitor(dmSubscriptions);
+                    ParamVisitor::traverseParams(param.get(), "/" + param->getOid(), dm, visitor, authz);
+                }
             }
-        }
+            added = true;
+        }          
     }
-
-    return rc.status == catena::StatusCode::OK;
+    return added && rc.status == catena::StatusCode::OK;
 }
 
 // Remove a subscription (either unique or wildcard)
@@ -191,7 +188,6 @@ uint32_t SubscriptionManager::countWildcardSubscriptions(IParam* param, const st
                     count_++;
                 }
             }
-            void visitArray(IParam* param, const std::string& path, uint32_t length) override {}
             uint32_t getCount() const { return count_; }
         private:
             uint32_t count_;
