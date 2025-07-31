@@ -33,6 +33,9 @@
             "url": "./schema/catena.param_schema.json"
         }
     ],
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}/${env:BUILD_TARGET}"
+    ],
     "yaml.schemas": {
         "./schema/catena.device_schema.json" : [
             "/example_device_models/device.*.yaml",

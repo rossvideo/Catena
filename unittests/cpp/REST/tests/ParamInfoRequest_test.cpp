@@ -152,12 +152,13 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_InvalidSlot) {
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_UnaryRecursionException) {
     expRc_ = catena::exception_with_status("Recursive parameter info request is not supported with unary response", catena::StatusCode::INVALID_ARGUMENT);
     stream_ = false;
+    endpoint_.reset(makeOne());
     EXPECT_CALL(context_, hasField("recursive")).WillOnce(testing::Return(true));
 
     endpoint_->proceed();
 
     // Match expected and actual responses
-    EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
+    EXPECT_EQ(readResponse(), expectedResponse(expRc_));
 }
 
 // Test 0.5: Authorization test with valid token
