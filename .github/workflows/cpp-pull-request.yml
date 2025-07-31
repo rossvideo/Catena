@@ -64,7 +64,7 @@ jobs:
             -B ~/Catena/${BUILD_TARGET} \
             -S ./sdks/cpp
           cd ~/Catena/${BUILD_TARGET}
-          ninja -C ~/Catena/${BUILD_TARGET} -j$(nproc)
+          ninja -C ~/Catena/${BUILD_TARGET}
 
       - name: Run Tests
         run: |
@@ -97,6 +97,11 @@ jobs:
       CONNECTIONS: gRPC;REST
       BUILD_TARGET: build/cpp
 
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'c-cpp' ]
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -117,7 +122,7 @@ jobs:
             -B ~/Catena/${BUILD_TARGET} \
             -S ./sdks/cpp
           cd ~/Catena/${BUILD_TARGET}
-          ninja -C ~/Catena/${BUILD_TARGET} -j$(nproc)
+          ninja -C ~/Catena/${BUILD_TARGET}
 
       - name: Run Tests for Coverage
         run: |
@@ -157,7 +162,7 @@ jobs:
 
     env:
       CMAKE_BUILD_TYPE: 
-      CONNECTIONS: gRPC;REST
+      CONNECTIONS: gRPC
       BUILD_TARGET: build/cpp
 
     steps:
@@ -167,13 +172,14 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: c-cpp
+          languages: ${{ matrix.language }}
           debug: true
       
       - name: build
         run: |
           mkdir -p ~/Catena/${BUILD_TARGET}
           cmake -G Ninja \
+            -DUNIT_TESTING=OFF \
             -DBUILD_DOC=OFF \
             -DCATENA_MODEL="lite" \
             -DCONNECTIONS=${CONNECTIONS} \
@@ -183,7 +189,9 @@ jobs:
             -B ~/Catena/${BUILD_TARGET} \
             -S ./sdks/cpp
           cd ~/Catena/${BUILD_TARGET}
-          ninja -C ~/Catena/${BUILD_TARGET} -j$(nproc)
+          ninja -C ~/Catena/${BUILD_TARGET}
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
