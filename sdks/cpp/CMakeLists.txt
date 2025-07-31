@@ -248,7 +248,7 @@ install(
 # Build the documentation with Doxygen
 build_docs()
 
-if (UNIT_TESTING)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(CATENA_UNITTESTS_DIR ${CMAKE_SOURCE_DIR}/../../unittests)
   add_subdirectory("${CATENA_UNITTESTS_DIR}/cpp/" ${CMAKE_SOURCE_DIR}/../../$ENV{BUILD_TARGET}/unittests/)
-endif (UNIT_TESTING)
+endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
