@@ -6,8 +6,8 @@ on:
       - test_trivy_pipeline
 
 jobs:
-  build:
-    name: Configure and Build
+  configure:
+    name: Configure
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
@@ -21,7 +21,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure and Build
+      - name: Configure
         run: |
           mkdir -p ~/Catena/${BUILD_TARGET}
           cmake -G Ninja \
@@ -35,7 +35,6 @@ jobs:
             -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
             -B ~/Catena/${BUILD_TARGET} \
             -S ./sdks/cpp
-          ninja -C ~/Catena/${BUILD_TARGET} -j$(nproc)
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
@@ -49,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
-    needs: build
+    needs: configure
 
     env:
       CMAKE_BUILD_TYPE: Debug
@@ -65,6 +64,11 @@ jobs:
         with:
           name: cpp-build-artifacts
           path: ~/Catena/build/cpp/
+      
+      - name: build
+        run: |
+          cd ~/Catena/${BUILD_TARGET}
+          ninja -C ~/Catena/${BUILD_TARGET} -j$(nproc)
 
       - name: Run Tests
         run: |
@@ -90,7 +94,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
-    needs: build
+    needs: configure
 
     env:
       CMAKE_BUILD_TYPE: Debug
@@ -106,6 +110,11 @@ jobs:
         with:
           name: cpp-build-artifacts
           path: ~/Catena/build/cpp/
+      
+      - name: build
+        run: |
+          cd ~/Catena/${BUILD_TARGET}
+          ninja -C ~/Catena/${BUILD_TARGET} -j$(nproc)
 
       - name: Run Tests for Coverage
         run: |
@@ -125,7 +134,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
-    needs: build
+    needs: configure
 
     env:
       CMAKE_BUILD_TYPE: Debug
@@ -141,6 +150,11 @@ jobs:
         with:
           name: cpp-build-artifacts
           path: ~/Catena/build/cpp/
+      
+      - name: build
+        run: |
+          cd ~/Catena/${BUILD_TARGET}
+          ninja -C ~/Catena/${BUILD_TARGET} -j$(nproc)
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
