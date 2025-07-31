@@ -39,7 +39,7 @@ jobs:
 
       - name: Run Tests
         run: |
-          ctest --test-dir ~/Catena/${BUILD_TARGET} -V > test_results.log
+          ctest --test-dir ~/Catena/${BUILD_TARGET} -V --rerun-failed > test_results.log
           # check if file contains "100% tests passed"
           if grep -q "100% tests passed" test_results.log; then
             echo "All tests passed!"
