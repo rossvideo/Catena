@@ -113,6 +113,13 @@ protected:
                 param.set_type(catena::ParamType::INT32);
                 return catena::exception_with_status("", catena::StatusCode::OK);
             }));
+        
+        // Set up copy expectation for the fixture parameter to avoid warnings in getTopLevelParams
+        EXPECT_CALL(*minimalSetParam, copy())
+            .WillRepeatedly(testing::Invoke([]() -> std::unique_ptr<IParam> {
+                return std::make_unique<MockParam>();
+            }));
+        
         device_->addItem("minimalSetParam", minimalSetParam.get());
 
         // Using the admin/monitor tokens from CommonTestHelpers.h
@@ -1326,16 +1333,20 @@ TEST_F(DeviceTest, GetTopLevelParams) {
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
     setupMockParam(*mockParam, "/adminParam", *mockDescriptor, false, 0, adminScope_);
+    
+    // For shallow copy, create a new mock parameter that reuses the existing descriptor
+    auto copiedMockParam = std::make_unique<MockParam>();
+    setupMockParam(*copiedMockParam, "/adminParam", *mockDescriptor, false, 0, adminScope_);
     EXPECT_CALL(*mockParam, copy())
-        .WillOnce(testing::Return(std::make_unique<MockParam>()));
+        .WillOnce(testing::Return(std::move(copiedMockParam)));
     device_->addItem("adminParam", mockParam.get());
     
-    // Test with monitor authorization (should get no params)
+    // Test with monitor authorization (should get the fixture param with monitor scope)
     catena::exception_with_status status{"", catena::StatusCode::OK};
     auto result = device_->getTopLevelParams(status, *monitorAuthz_);
     
     EXPECT_EQ(status.status, catena::StatusCode::OK);
-    EXPECT_EQ(result.size(), 0); // No params should be returned for monitor auth
+    EXPECT_EQ(result.size(), 1); // The fixture param with monitor scope should be returned
     
     // Test with admin authorization (should get the param)
     status = catena::exception_with_status{"", catena::StatusCode::OK};
@@ -2291,6 +2302,14 @@ TEST_F(DeviceTest, CalculateMaxSubscriptions) {
         .WillRepeatedly(testing::ReturnRef(empty_sub_params));
     EXPECT_CALL(*mockArrayDescriptor, getAllSubParams())
         .WillRepeatedly(testing::ReturnRef(empty_sub_params));
+    
+    // Set up array parameter to handle getParam calls for array elements during traversal
+    EXPECT_CALL(*mockArrayParam, getParam(testing::_, testing::_, testing::_))
+        .WillRepeatedly(testing::Invoke([](catena::common::Path& path, Authorizer& authz, catena::exception_with_status& status) -> std::unique_ptr<IParam> {
+            // Return nullptr for array element requests to avoid further traversal
+            status = catena::exception_with_status("", catena::StatusCode::NOT_FOUND);
+            return nullptr;
+        }));
     
     // Add parameters to the device
     device_->addItem("testParam1", mockParam1.get());
