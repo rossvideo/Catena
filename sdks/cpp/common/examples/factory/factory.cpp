@@ -195,11 +195,9 @@ UniDiDog::~ConcreteDog() {
   DEBUG_LOG << _breed << " arrrroooooo!";
 }
 
-int main() {
-  FLAGS_logtostderr = false;          // Keep logging to files
-  FLAGS_log_dir = GLOG_LOGGING_DIR;   // Set the log directory
-  google::InitGoogleLogging("factory");
-  
+int main (int argc, char** argv) {
+  Logger::StartLogging(argc, argv);
+
   try {
     // get instance of the Dog Factory
     Dog::Factory& df = Dog::Factory::getInstance();
@@ -224,6 +222,7 @@ int main() {
     (*jackRussell)();
     rabid->operator()();  // alternative syntax
 
+    std::cout<<std::endl;
     DEBUG_LOG << "Factory Test";
     // verify that the factory cannot make goldfish.
     try {
@@ -232,6 +231,7 @@ int main() {
       DEBUG_LOG << "Problem: " << why.what();
     }
 
+    std::cout<<std::endl;
     DEBUG_LOG << "Destructors here...";
   } catch (std::exception& why) {
     // something went wrong with the example, so exit with non-zero error code
