@@ -1,14 +1,10 @@
 name: C++ Code Analysis
 # this runs the workflow on PR and make sure that the code is tested and analyzed
 
-# on:
-#   pull_request:
-#     files:
-#       - 'sdks/cpp/**'
 on:
-  push:
-    branches:
-      - test_trivy_pipeline
+  pull_request:
+    files:
+      - 'sdks/cpp/**'
 
 jobs:
   Trivy:
