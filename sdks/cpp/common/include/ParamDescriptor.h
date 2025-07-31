@@ -255,7 +255,11 @@ class ParamDescriptor : public IParamDescriptor {
      * @param item the item to be added
      */
     void addSubParam(const std::string& oid, IParamDescriptor* item) override {
-      subParams_[oid] = item;
+      if (!item) {
+        throw std::runtime_error("Cannot add a null sub parameter to ParamDescriptor");
+      } else {
+        subParams_[oid] = item;
+      }
     }
 
     /**
@@ -263,6 +267,9 @@ class ParamDescriptor : public IParamDescriptor {
      * @return ParamDescriptor of the sub parameter
      */
     IParamDescriptor& getSubParam(const std::string& oid) const override {
+      if (!subParams_.contains(oid)) {
+        throw std::runtime_error("Sub parameter with oid '" + oid + "' not found in ParamDescriptor");
+      }
       return *subParams_.at(oid);
     }
 
@@ -378,7 +385,7 @@ class ParamDescriptor : public IParamDescriptor {
      * The passed function will be executed when executeCommand is called on this param object.
      * If this is not a command parameter, an exception will be thrown.
      */
-    void defineCommand(std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl) override {
+    void defineCommand(std::function<std::unique_ptr<ICommandResponder>(const catena::Value&)> commandImpl) override {
       if (!isCommand_) {
         throw std::runtime_error("Cannot define a command on a non-command parameter");
       }
@@ -393,7 +400,7 @@ class ParamDescriptor : public IParamDescriptor {
      * if executeCommand is called for a command that has not been defined, then the returned
      * command response will be an exception with type UNIMPLEMENTED
      */
-    std::unique_ptr<ICommandResponder> executeCommand(catena::Value value) override {
+    std::unique_ptr<ICommandResponder> executeCommand(const catena::Value& value) override {
       return commandImpl_(value);
     }
 
@@ -426,13 +433,13 @@ class ParamDescriptor : public IParamDescriptor {
     bool minimal_set_;
 
     // default command implementation
-    std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl_ = [](catena::Value value) -> std::unique_ptr<ICommandResponder> { 
-      return std::make_unique<CommandResponder>([value]() -> CommandResponder {
+    std::function<std::unique_ptr<ICommandResponder>(const catena::Value&)> commandImpl_ = [](const catena::Value& value) -> std::unique_ptr<ICommandResponder> { 
+      return std::make_unique<CommandResponder>([](const catena::Value& value) -> CommandResponder {
         catena::CommandResponse response;
         response.mutable_exception()->set_type("UNIMPLEMENTED");
         response.mutable_exception()->mutable_error_message()->mutable_display_strings()->insert({"en", "Command not implemented"});
         co_return response;
-      }());
+      }(value));
     };
 };
 

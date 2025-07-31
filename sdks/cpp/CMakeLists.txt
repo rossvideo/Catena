@@ -39,10 +39,12 @@ if(NOT DEFINED GLOG_LOGGING_DIR)
 endif()
 add_compile_definitions(GLOG_LOGGING_DIR="${GLOG_LOGGING_DIR}")
 
+# Set the default max number of connections
+set(DEFAULT_MAX_CONNECTIONS 16 CACHE STRING "Default max connections")
+add_compile_definitions(DEFAULT_MAX_CONNECTIONS=${DEFAULT_MAX_CONNECTIONS})
+
 add_compile_options(--coverage)
 add_link_options(--coverage)
-
-option(UNIT_TESTING "Build the unit tests" ON)
 
 # enable testing
 enable_testing()
@@ -143,8 +145,6 @@ foreach(conn ${CONNECTIONS})
     message(FATAL_ERROR "Error: '${conn}' is not a valid connection type. Allowed types are ${ALLOWED_CONNECTIONS}.")
   endif()
 endforeach()
-
-message(STATUS "UNIT_TESTING: ${UNIT_TESTING}")
 
 # create enabled flags for gRPC, REST and WSS to indicate which connections are enabled
 message(STATUS "Connections: ${CONNECTIONS}")

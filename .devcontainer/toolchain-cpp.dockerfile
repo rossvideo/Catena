@@ -30,7 +30,8 @@ RUN . /root/toolchain.env \
     curl=$CURL_VERSION \
     && npm install -g n \
     && apt-get install -y libgoogle-glog-dev \
-    && apt-get clean
+    && apt-get clean \
+    && rm -rf /var/cache/apt/archives/ /var/lib/apt/lists/*
 
 # Install gRPC
 RUN . /root/toolchain.env \
@@ -39,7 +40,9 @@ RUN . /root/toolchain.env \
     && mkdir -p /usr/local/grpc/cmake/build \
     && cd /usr/local/grpc/cmake/build \
     && cmake /usr/local/grpc -DCMAKE_BUILD_TYPE=Release -DgRPC_INSTALL=ON -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
-    && make -j4 install
+    && make -j4 install \
+    # Clean up gRPC source directory
+    && rm -rf /usr/local/grpc
 
 # Install jwt-cpp
 RUN . /root/toolchain.env \
@@ -47,7 +50,9 @@ RUN . /root/toolchain.env \
     && mkdir /usr/local/jwt-cpp/build \
     && cd /usr/local/jwt-cpp/build \
     && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/.local /usr/local/jwt-cpp \
-    && make && make install
+    && make && make install \
+    # Clean up jwt-cpp source directory
+    && rm -rf /usr/local/jwt-cpp
 
 # Install Google Test
 RUN cd /usr/src/gtest \
@@ -67,4 +72,6 @@ RUN . /root/toolchain.env \
 
 # Install Python and gcovr for coverage reports
 RUN sudo apt-get update && sudo apt-get install -y python3-pip \
-    && sudo pip3 install --no-cache-dir gcovr --break-system-packages
+    && sudo pip3 install --no-cache-dir gcovr --break-system-packages \
+    && sudo apt-get clean \
+    && sudo rm -rf /var/cache/apt/archives/ /var/lib/apt/lists/*
