@@ -179,6 +179,7 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;button value: &quot;</span> &lt;&lt; button; <span class="comment">// button value: 1</span></div>
 <div class="line"> </div>
 <div class="line"> </div>
+<div class="line">    std::cout&lt;&lt;std::endl;</div>
 <div class="line">    ip = dm.getParam(<span class="stringliteral">&quot;/odd_numbers&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
 <div class="line">        LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what();</div>
@@ -214,6 +215,7 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line">    DEBUG_LOG &lt;&lt; debugString; <span class="comment">// odd_numbers value: 7 9 1 3 9</span></div>
 <div class="line"> </div>
 <div class="line"> </div>
+<div class="line">    std::cout&lt;&lt;std::endl;</div>
 <div class="line">    ip = dm.getParam(<span class="stringliteral">&quot;/gain&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
 <div class="line">        LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what();</div>
@@ -253,6 +255,7 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line">    DEBUG_LOG &lt;&lt; debugString; <span class="comment">// volume value: 0.5 10.0 0.0 1.0 2.0 3.25 4.5 5.75</span></div>
 <div class="line"> </div>
 <div class="line"> </div>
+<div class="line">    std::cout&lt;&lt;std::endl;</div>
 <div class="line">    ip = dm.getParam(<span class="stringliteral">&quot;/display_size&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
 <div class="line">        LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what();</div>
@@ -271,6 +274,7 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;display_size value: &quot;</span> &lt;&lt; display_size;</div>
 <div class="line"> </div>
 <div class="line"> </div>
+<div class="line">    std::cout&lt;&lt;std::endl;</div>
 <div class="line">    ip = dm.getParam(<span class="stringliteral">&quot;/image&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
 <div class="line">        LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what();</div>
@@ -289,6 +293,7 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;image value: &quot;</span> &lt;&lt; image; <span class="comment">// image value: eo://bird.png</span></div>
 <div class="line"> </div>
 <div class="line"> </div>
+<div class="line">    std::cout&lt;&lt;std::endl;</div>
 <div class="line">    ip = dm.getParam(<span class="stringliteral">&quot;/button_array&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
 <div class="line">        LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what();</div>
@@ -301,15 +306,15 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line">    }</div>
 <div class="line">    DEBUG_LOG &lt;&lt; debugString; <span class="comment">// button_array initial value: 0 0 0 0</span></div>
 <div class="line"> </div>
-<div class="line">    std::vector&lt;int32_t&gt; arrayVal = {0, 1, -1, 2, 2, 1};</div>
+<div class="line">    std::vector&lt;int32_t&gt; arrayVal = {0, 1, 0, 0, 0, 1};</div>
 <div class="line">    value.mutable_int32_array_values()-&gt;mutable_ints()-&gt;Assign(arrayVal.begin(), arrayVal.end());</div>
 <div class="line">    dm.setValue(<span class="stringliteral">&quot;/button_array&quot;</span>, value);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;button_array set to 0 1 -1 2 2 1&quot;</span>;</div>
+<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;button_array set to 0 1 0 0 0 1&quot;</span>;</div>
 <div class="line">    debugString = <span class="stringliteral">&quot;button_array value: &quot;</span>;</div>
 <div class="line">    <span class="keywordflow">for</span> (<span class="keyword">auto</span>&amp; num : button_array) {</div>
 <div class="line">        debugString += std::to_string(num) + <span class="stringliteral">&quot; &quot;</span>;</div>
 <div class="line">    }</div>
-<div class="line">    DEBUG_LOG &lt;&lt; debugString; <span class="comment">// button_array value: 0 1 0 0 1</span></div>
+<div class="line">    DEBUG_LOG &lt;&lt; debugString; <span class="comment">// button_array value: 0 1 0 0 0 1</span></div>
 <div class="line"> </div>
 <div class="line">    <span class="keywordflow">return</span> EXIT_SUCCESS;</div>
 <div class="line">}</div>
@@ -349,8 +354,8 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line"><span class="comment">image value: eo://bird.png</span></div>
 <div class="line"><span class="comment"></span> </div>
 <div class="line"><span class="comment">button_array initial value: 0 0 0 0 </span></div>
-<div class="line"><span class="comment">button_array set to 0 1 -1 2 2 1</span></div>
-<div class="line"><span class="comment">button_array value: 0 1 0 0 1 </span></div>
+<div class="line"><span class="comment">button_array set to 0 1 0 0 0 1</span></div>
+<div class="line"><span class="comment">button_array value: 0 1 0 0 0 1</span></div>
 <div class="line"><span class="comment">*/</span></div>
 <div class="ttc" id="aDevice_8h_html"><div class="ttname"><a href="Device_8h.html">Device.h</a></div><div class="ttdoc">Device class definition.</div></div>
 <div class="ttc" id="aLogger_8h_html"><div class="ttname"><a href="Logger_8h.html">Logger.h</a></div><div class="ttdoc">Logger class.</div></div>
