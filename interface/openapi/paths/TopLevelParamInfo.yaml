@@ -64,9 +64,9 @@ get:
         Each object in the response has the following structure:
         
       content:
-        text/event-stream:
+        application/json:
           schema:
-            type: string
+            $ref: "../../../schema/catena.param_schema.json#/$defs/param_info"
           
           example: |
             {
