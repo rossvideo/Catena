@@ -252,7 +252,6 @@ if (UNIT_TESTING)
   set(CATENA_UNITTESTS_DIR $ENV{HOME}/Catena/unittests)
 
   add_compile_definitions(CATENA_UNITTESTS_DIR="${CATENA_UNITTESTS_DIR}")
-  add_compile_definitions(UNIT_TESTING="${UNIT_TESTING}")
 
   add_subdirectory("${CATENA_UNITTESTS_DIR}/cpp/" $ENV{HOME}/Catena/$ENV{BUILD_TARGET}/unittests/)
 endif (UNIT_TESTING)

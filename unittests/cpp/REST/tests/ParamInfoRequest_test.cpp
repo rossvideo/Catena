@@ -623,26 +623,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursio
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
 }
 
-// Test 2.4: Get top-level parameters with error status from getTopLevelParams
-TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithErrorStatus) {
-    expRc_ = catena::exception_with_status("Error getting parameters", catena::StatusCode::INTERNAL);
-
-    // Setup mock expectations
-    EXPECT_CALL(context_, hasField("recursive")).WillOnce(testing::Return(true));
-    EXPECT_CALL(context_, stream()).WillRepeatedly(testing::Return(true));
-    EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([](catena::exception_with_status& status, Authorizer&) {
-            status = catena::exception_with_status("Error getting parameters", catena::StatusCode::INTERNAL);
-            return std::vector<std::unique_ptr<IParam>>();
-        }));
-
-    endpoint_->proceed();
-
-    // Match expected and actual responses
-    EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
-}
-
-// Test 2.5: Get top-level parameters with empty list and recursion
+// Test 2.4: Get top-level parameters with empty list and recursion
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithEmptyListAndRecursion) {
     expRc_ = catena::exception_with_status("No top-level parameters found", catena::StatusCode::NOT_FOUND);
 

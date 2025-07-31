@@ -300,9 +300,10 @@ class CppGen {
       hloc(`};`, --hindent);
 
       // add StructInfo specialization to the buffer
+      let paramNamespace = param.isArrayType() ? param.elementNamespaceType() : param.objectNamespaceType();
       ploc(`template<>`);
-      ploc(`struct catena::common::StructInfo<${param.objectNamespaceType()}> {`, pindent++);
-      ploc(`using ${param.objectType()} = ${param.objectNamespaceType()};`, pindent);
+      ploc(`struct catena::common::StructInfo<${paramNamespace}> {`, pindent++);
+      ploc(`using ${param.objectType()} = ${paramNamespace};`, pindent);
       ploc(`using Type = std::tuple<${param.getFieldInfoTypes()}>;`, pindent);
       ploc(`static constexpr Type fields = {${param.getFieldInfoInit()}};`, pindent);
       ploc(`};`, --pindent);
