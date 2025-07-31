@@ -9,10 +9,10 @@ on:
   push:
     branches:
       - test_trivy_pipeline
-      
+
 jobs:
   Trivy:
-    name: Trivy vulnerability scanner
+    name: Trivy vulnerability scanner (45 seconds)
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
@@ -36,7 +36,7 @@ jobs:
           category: 'Trivy Scan Results'
 
   Unit-Tests:
-    name: Run Unit Tests
+    name: Run Unit Tests (9 minutes)
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
@@ -87,7 +87,7 @@ jobs:
         if: failure()
 
   Coverage:
-    name: Generate Coverage Report
+    name: Generate Coverage Report (9 minutes)
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
@@ -154,7 +154,7 @@ jobs:
       image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
 
     env:
-      CMAKE_BUILD_TYPE: Debug
+      CMAKE_BUILD_TYPE: 
       CONNECTIONS: gRPC;REST
       BUILD_TARGET: build/cpp
 
@@ -165,17 +165,15 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: cpp
+          languages: c-cpp
+          debug: true
       
       - name: build
         run: |
           mkdir -p ~/Catena/${BUILD_TARGET}
           cmake -G Ninja \
-            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+            -DBUILD_DOC=OFF \
             -DCONNECTIONS=${CONNECTIONS} \
-            -DCMAKE_CXX_FLAGS="--coverage" \
-            -DCMAKE_C_FLAGS="--coverage" \
-            -DCMAKE_EXE_LINKER_FLAGS="--coverage" \
             -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
             -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
