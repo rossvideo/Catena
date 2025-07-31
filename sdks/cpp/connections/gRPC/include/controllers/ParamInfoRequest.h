@@ -127,6 +127,11 @@ class ParamInfoRequest : public CallData {
     SlotMap& dms_;
     
     /**
+     * @brief The device for the current request.
+     */
+    IDevice* dm_{nullptr};
+    
+    /**
      * @brief The object's unique id.
      */
     int objectId_;

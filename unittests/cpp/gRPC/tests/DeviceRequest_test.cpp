@@ -37,6 +37,7 @@
 
 // Test helpers
 #include "GRPCTest.h"
+#include "StreamReader.h"
 #include "CommonTestHelpers.h"
 
 // gRPC
@@ -68,52 +69,8 @@ class gRPCDeviceRequestTests : public GRPCTest {
      * This is a test class which makes an async RPC to the MockServer on
      * construction and returns the streamed-back response.
      */
-    class StreamReader : public grpc::ClientReadReactor<catena::DeviceComponent> {
-        public:
-            StreamReader(std::vector<catena::DeviceComponent>* outVals, grpc::Status* outRc_)
-                : outVals_(outVals), outRc_(outRc_) {}
-            /*
-             * This function makes an async RPC to the MockServer.
-             */
-            void MakeCall(catena::CatenaService::Stub* client, grpc::ClientContext* clientContext_, const catena::DeviceRequestPayload* inVal_) {
-                // Sending async RPC.
-                client->async()->DeviceRequest(clientContext_, inVal_, this);
-                StartRead(&outVal_);
-                StartCall();
-            }
-            /*
-             * Triggers when a read is done_ and adds output to outVals_.
-             */
-            void OnReadDone(bool ok) override {
-                if (ok) {
-                    outVals_->emplace_back(outVal_);
-                    StartRead(&outVal_);
-                }
-            }
-            /*
-             * Triggers when the RPC is finished and notifies Await().
-             */
-            void OnDone(const grpc::Status& status) override {
-                *outRc_ = status;
-                done_ = true;
-                cv_.notify_one();
-            }
-            /*
-             * Blocks until the RPC is finished. 
-             */
-            inline void Await() { cv_.wait(lock_, [this] { return done_; }); }
-        
-          private:
-            // Pointers to the output variables.
-            grpc::Status* outRc_;
-            std::vector<catena::DeviceComponent>* outVals_;
-
-            catena::DeviceComponent outVal_;
-            bool done_ = false;
-            std::condition_variable cv_;
-            std::mutex cv_mtx_;
-            std::unique_lock<std::mutex> lock_{cv_mtx_};
-    };
+    using StreamReader = catena::gRPC::test::StreamReader<catena::DeviceComponent, catena::DeviceRequestPayload, 
+        std::function<void(grpc::ClientContext*, const catena::DeviceRequestPayload*, grpc::ClientReadReactor<catena::DeviceComponent>*)>>;
 
     /*
      * Helper function which initializes an DeviceRequestPayload object.
@@ -160,7 +117,9 @@ class gRPCDeviceRequestTests : public GRPCTest {
     void testRPC() {
         // Sending async RPC.
         StreamReader streamReader(&outVals_, &outRc_);
-        streamReader.MakeCall(client_.get(), &clientContext_, &inVal_);
+        streamReader.MakeCall(&clientContext_, &inVal_, [this](auto ctx, auto payload, auto reactor) {
+            client_->async()->DeviceRequest(ctx, payload, reactor);
+        });
         streamReader.Await();
         // Comparing the results.
         ASSERT_EQ(outVals_.size(), expVals_.size()) << "Output missing >= 1 DeviceComponents";

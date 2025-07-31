@@ -5,29 +5,7 @@ detail_level: FULL
 access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
 default_scope: st2138:mon
 language_packs: {}
-params: 
-  # Basic struct template used by arrays
-  eq: 
-    type: STRUCT
-    name: {display_strings: {en: EQ}}
-    params: 
-      response: 
-        type: INT32
-        name: {display_strings: {en: Response}}
-        access_scope: st2138:mon
-      frequency: 
-        type: FLOAT32
-        name: {display_strings: {en: Frequency}}
-        access_scope: st2138:op
-      gain: 
-        type: FLOAT32
-        name: {display_strings: {en: Gain}}
-        access_scope: st2138:cfg
-      q_factor: 
-        type: FLOAT32
-        name: {display_strings: {en: Q Factor}}
-        access_scope: st2138:adm
-
+params:
   # Template struct containing an array (STRUCT containing STRUCT_ARRAY)
   audio_channel: 
     type: STRUCT
@@ -40,7 +18,23 @@ params:
       eq_list: 
         type: STRUCT_ARRAY
         name: {display_strings: {en: EQ List}}
-        template_oid: /eq
+        params:
+          response: 
+            type: INT32
+            name: {display_strings: {en: Response}}
+            access_scope: st2138:mon
+          frequency: 
+            type: FLOAT32
+            name: {display_strings: {en: Frequency}}
+            access_scope: st2138:op
+          gain: 
+            type: FLOAT32
+            name: {display_strings: {en: Gain}}
+            access_scope: st2138:cfg
+          q_factor: 
+            type: FLOAT32
+            name: {display_strings: {en: Q Factor}}
+            access_scope: st2138:adm
         value: 
           struct_array_values: 
             struct_values:

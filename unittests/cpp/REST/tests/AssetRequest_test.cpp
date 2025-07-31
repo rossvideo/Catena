@@ -49,6 +49,23 @@
 using namespace catena::common;
 using namespace catena::REST;
 
+// Test class that implements AssetRequest for testing both interface and implementation
+class TestAssetRequest : public AssetRequest {
+  public:
+    TestAssetRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms) 
+        : AssetRequest(socket, context, dms) {}
+
+    // Expose protected methods for testing
+    using AssetRequest::compress;
+    using AssetRequest::deflate_compress;
+    using AssetRequest::gzip_compress; 
+    using AssetRequest::decompress;
+    using AssetRequest::deflate_decompress;
+    using AssetRequest::gzip_decompress; 
+    using AssetRequest::get_last_write_time;
+    using AssetRequest::extractPayload;
+};
+
 // Fixture
 class RESTAssetRequestTests : public RESTEndpointTest {
   protected:
@@ -456,7 +473,7 @@ TEST_F(RESTAssetRequestTests, CompressFailed) {
     
     // Execute the compress function and expect an exception
     try {
-        AssetRequest::compress(data, 100);
+        TestAssetRequest::compress(data, 100);
     } catch (const catena::exception_with_status& e) {
         EXPECT_EQ(e.status, catena::StatusCode::INTERNAL);
     }
@@ -470,7 +487,7 @@ TEST_F(RESTAssetRequestTests, CompressSucceed) {
     std::vector<uint8_t> data = {0x0, 0x1, 0x2, 0x3, 0x4}; // Example data that cannot be compressed
     std::vector<uint8_t> expectedData = {120, 218, 99, 96, 100, 98, 102, 1, 0, 0, 25, 0, 11}; // Example deflated data
     
-    AssetRequest::deflate_compress(data);
+    TestAssetRequest::deflate_compress(data);
 
     // Check if the data is compressed correctly
     EXPECT_EQ(data, expectedData);
@@ -483,7 +500,7 @@ TEST_F(RESTAssetRequestTests, DecompressFailed) {
     //establish expectations
     std::vector<uint8_t> data = {0x0, 0x1, 0x2, 0x3, 0x4}; // Example data that cannot be compressed
     try {
-        AssetRequest::decompress(data, 100);
+        TestAssetRequest::decompress(data, 100);
     } catch (const catena::exception_with_status& e) {
         EXPECT_EQ(e.status, catena::StatusCode::INTERNAL);
     }
@@ -497,7 +514,7 @@ TEST_F(RESTAssetRequestTests, DecompressSucceed) {
     std::vector<uint8_t> data = {120, 218, 99, 96, 100, 98, 102, 1, 0, 0, 25, 0, 11}; // Example deflated data
     std::vector<uint8_t> expectedData = {0x0, 0x1, 0x2, 0x3, 0x4}; // Example original data
     
-    AssetRequest::deflate_decompress(data);
+    TestAssetRequest::deflate_decompress(data);
 
     // Check if the data is decompressed correctly
     EXPECT_EQ(data, expectedData);
@@ -514,7 +531,7 @@ TEST_F(RESTAssetRequestTests, ExtractPayloadDNE) {
 
     //extract the payload from non existant file
     try {
-        static_cast<AssetRequest*>(endpoint_.release())->extractPayload(downloadFolder_ + fqoid_);
+        static_cast<TestAssetRequest*>(endpoint_.release())->extractPayload(downloadFolder_ + fqoid_);
     } catch (const catena::exception_with_status& e) {
         EXPECT_EQ(e.status, catena::StatusCode::NOT_FOUND);
     }
