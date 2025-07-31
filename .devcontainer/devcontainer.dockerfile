@@ -1,4 +1,4 @@
-FROM ghcr.io/rossvideo/catena-toolchain-cpp:latest
+FROM ghcr.io/rossvideo/catena-toolchain-cpp:latest AS base
 
 # Declare build arguments
 ARG USER_UID=1000
@@ -52,6 +52,20 @@ RUN sudo apt-get update
 #     && sudo systemctl enable containerd.service \
 #     && sudo service docker start
 
+# Set the working directory
+WORKDIR /home/${USER_NAME}/Catena
+
+# Install glog
+RUN sudo apt-get install -y libgoogle-glog-dev
+
+ENTRYPOINT ["/bin/sh", "-c", "/bin/bash"]
+
+FROM base AS devcontainer
+
+# nothing yet, but this is where we would add any additional devcontainer-specific setup
+# such as installing VS Code extensions or additional tools
+
+FROM base AS final
 
 # Clone Catena repository
 RUN mkdir -p ~/Catena \
@@ -61,9 +75,6 @@ RUN mkdir -p ~/Catena \
     && git pull origin develop \
     && git submodule update --init --recursive
 
-# Install glog
-RUN sudo apt-get install -y libgoogle-glog-dev
-
 # Build Catena
 RUN mkdir -p ~/Catena/${BUILD_TARGET} \
     && cd ~/Catena/${BUILD_TARGET} \
@@ -72,11 +83,3 @@ RUN mkdir -p ~/Catena/${BUILD_TARGET} \
 # cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCONNECTIONS='gRPC;REST' -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage" -DCMAKE_EXE_LINKER_FLAGS="--coverage"  -DCMAKE_INSTALL_PREFIX=/usr/local/.local ~/Catena/sdks/cpp
 RUN cd ~/Catena/ \
     && ./scripts/run_coverage.sh --html --verbose
-# Set the working directory
-WORKDIR /home/${USER_NAME}/Catena
-
-# ~/Catena/${BUILD_TARGET}/connections/gRPC/examples/status_update/status_update --static_root ../connections/gRPC/examples/status_update/static
-# #docker run -rm -v $(realpath ../):~/Catena -it catena-sdk
-VOLUME ["/home/${USER_NAME}/Catena"] 
-
-ENTRYPOINT ["/bin/sh", "-c", "/bin/bash"]
