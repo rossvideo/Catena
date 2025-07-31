@@ -843,3 +843,93 @@ TEST_F(SubscriptionManagerTest, Array_RemoveNonExistentSubscription) {
     auto oids = manager->getAllSubscribedOids(*device);
     EXPECT_EQ(oids.size(), 0);
 }
+
+// Test 4.7: Error case - Resource exhaustion with non-wildcard subscription
+TEST_F(SubscriptionManagerTest, ResourceExhaustion_NonWildcardSubscription) {
+    // Override the subscription limit to be very low
+    EXPECT_CALL(*device, calculateMaxSubscriptions(::testing::_))
+        .WillRepeatedly(::testing::Return(1));
+    
+    // Recreate manager with the new limit
+    manager = std::make_unique<SubscriptionManager>(*device, authz_);
+    
+    // First subscription should succeed
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    bool result = manager->addSubscription("/test1", *device, rc, authz_);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(rc.status, catena::StatusCode::OK);
+    
+    // Second subscription should fail with resource exhaustion
+    result = manager->addSubscription("/test2", *device, rc, authz_);
+    EXPECT_FALSE(result);
+    EXPECT_EQ(rc.status, catena::StatusCode::RESOURCE_EXHAUSTED);
+}
+
+// Test 4.8: Error case - Resource exhaustion with wildcard subscription
+TEST_F(SubscriptionManagerTest, ResourceExhaustion_WildcardSubscription) {
+    // Override the subscription limit to allow only 2 subscriptions
+    EXPECT_CALL(*device, calculateMaxSubscriptions(::testing::_))
+        .WillRepeatedly(::testing::Return(2));
+    
+    // Recreate manager with the new limit
+    manager = std::make_unique<SubscriptionManager>(*device, authz_);
+    
+    // Use the existing wildcard hierarchy which creates 9 subscriptions (exceeding our limit of 2)
+    EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke(
+            [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+                auto param = std::make_unique<MockParam>();
+                if (fqoid == "/test/*") {
+                    setupMockParam(*param, "/test", *wildcardDescriptors.at("/test").descriptor);
+                } else if (wildcardDescriptors.find(fqoid) != wildcardDescriptors.end()) {
+                    setupMockParam(*param, fqoid, *wildcardDescriptors.at(fqoid).descriptor);
+                } else {
+                    status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
+                    return nullptr;
+                }
+                status = catena::exception_with_status("", catena::StatusCode::OK);
+                return param;
+            }
+        ));
+    
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    bool result = manager->addSubscription("/test/*", *device, rc, authz_);
+    EXPECT_FALSE(result);
+    EXPECT_EQ(rc.status, catena::StatusCode::RESOURCE_EXHAUSTED);
+}
+
+// Test 4.9: Error case - Resource exhaustion with all params subscription
+TEST_F(SubscriptionManagerTest, ResourceExhaustion_AllParamsSubscription) {
+    // Override the subscription limit to allow only 1 subscription
+    EXPECT_CALL(*device, calculateMaxSubscriptions(::testing::_))
+        .WillRepeatedly(::testing::Return(1));
+    
+    // Recreate manager with the new limit
+    manager = std::make_unique<SubscriptionManager>(*device, authz_);
+    
+    // Set up test hierarchy using helper function (creates 2 parameters)
+    auto setup = setupAllParamsTestHierarchy();
+    
+    // Mock getTopLevelParams to return multiple parameters that would exceed the limit
+    EXPECT_CALL(*device, getTopLevelParams(::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke(
+            [&setup](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+                std::vector<std::unique_ptr<IParam>> params;
+                // Create new parameters with proper authorization setup
+                auto parentParam = std::make_unique<MockParam>();
+                setupMockParam(*parentParam, setup.parentOid, *setup.descriptors[setup.parentOid].descriptor);
+                auto subParam = std::make_unique<MockParam>();
+                setupMockParam(*subParam, setup.subOid, *setup.descriptors[setup.subOid].descriptor);
+                // Return both parameters (exceeding our limit of 1)
+                params.push_back(std::move(parentParam));
+                params.push_back(std::move(subParam));
+                status = catena::exception_with_status("", catena::StatusCode::OK);
+                return params;
+            }
+        ));
+    
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    bool result = manager->addSubscription("/*", *device, rc, authz_);
+    EXPECT_FALSE(result);
+    EXPECT_EQ(rc.status, catena::StatusCode::RESOURCE_EXHAUSTED);
+}

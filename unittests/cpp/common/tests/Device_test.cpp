@@ -103,6 +103,9 @@ protected:
         setupMockParam(*minimalSetParam, "/minimalSetParam", *minimalSetDescriptor, false, 0, monitorScope_);
         EXPECT_CALL(*minimalSetDescriptor, minimalSet())
             .WillRepeatedly(testing::Return(true));
+        static std::unordered_map<std::string, IParamDescriptor*> empty_sub_params;
+        EXPECT_CALL(*minimalSetDescriptor, getAllSubParams())
+            .WillRepeatedly(testing::ReturnRef(empty_sub_params));
         EXPECT_CALL(*minimalSetParam, getDescriptor())
             .WillRepeatedly(testing::ReturnRef(*minimalSetDescriptor));
         EXPECT_CALL(*minimalSetParam, toProto(testing::An<catena::Param&>(), testing::_))
@@ -133,7 +136,6 @@ protected:
     // Store params and descriptors to keep them alive
     std::vector<std::shared_ptr<MockParam>> mockParams_;
     std::vector<std::shared_ptr<MockParamDescriptor>> mockDescriptors_;
- 
     // Helper function for multi-set value tests
     std::shared_ptr<MockParam> createMultiSetMockParam(const std::string& oid, const std::string& errorMsg = "") {
         auto mockParam = std::make_shared<MockParam>();
@@ -2215,7 +2217,7 @@ TEST_F(DeviceTest, GetComponentSerializer) {
     EXPECT_NE(serializer5, nullptr);
 }
 
-// 7.3 - Success Case - shouldSendParam functionality
+// 7.3: Success Case - shouldSendParam functionality
 TEST_F(DeviceTest, ShouldSendParam) {
     // Create mock parameters with different characteristics
     auto mockParam = std::make_shared<MockParam>();
@@ -2256,4 +2258,54 @@ TEST_F(DeviceTest, ShouldSendParam) {
     EXPECT_FALSE(device_->shouldSendParam(*mockParam, false, *monitorAuthz_));
     EXPECT_FALSE(device_->shouldSendParam(*mockCommand, false, *monitorAuthz_));
     EXPECT_FALSE(device_->shouldSendParam(*mockParams_[0], false, *monitorAuthz_)); // fixture minimal set param
+}
+
+// 7.4: Success Case - calculateMaxSubscriptions functionality
+TEST_F(DeviceTest, CalculateMaxSubscriptions) {
+    // Create mock parameters with different characteristics
+    auto mockParam1 = std::make_shared<MockParam>();
+    auto mockDescriptor1 = std::make_shared<MockParamDescriptor>();
+    auto mockParam2 = std::make_shared<MockParam>();
+    auto mockDescriptor2 = std::make_shared<MockParamDescriptor>();
+    auto mockArrayParam = std::make_shared<MockParam>();
+    auto mockArrayDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Add to vectors to keep them alive (following existing pattern)
+    mockParams_.push_back(mockParam1);
+    mockParams_.push_back(mockParam2);
+    mockParams_.push_back(mockArrayParam);
+    mockDescriptors_.push_back(mockDescriptor1);
+    mockDescriptors_.push_back(mockDescriptor2);
+    mockDescriptors_.push_back(mockArrayDescriptor);
+
+    // Set up mock parameters: 2 simple params + 1 array param with 3 elements
+    setupMockParam(*mockParam1, "/testParam1", *mockDescriptor1, false, 0, adminScope_);
+    setupMockParam(*mockParam2, "/testParam2", *mockDescriptor2, false, 0, adminScope_);
+    setupMockParam(*mockArrayParam, "/testArray", *mockArrayDescriptor, true, 3, adminScope_);
+    
+    // Set up mock expectations for getAllSubParams to avoid the uninteresting mock warning
+    static std::unordered_map<std::string, IParamDescriptor*> empty_sub_params;
+    EXPECT_CALL(*mockDescriptor1, getAllSubParams())
+        .WillRepeatedly(testing::ReturnRef(empty_sub_params));
+    EXPECT_CALL(*mockDescriptor2, getAllSubParams())
+        .WillRepeatedly(testing::ReturnRef(empty_sub_params));
+    EXPECT_CALL(*mockArrayDescriptor, getAllSubParams())
+        .WillRepeatedly(testing::ReturnRef(empty_sub_params));
+    
+    // Add parameters to the device
+    device_->addItem("testParam1", mockParam1.get());
+    device_->addItem("testParam2", mockParam2.get());
+    device_->addItem("testArray", mockArrayParam.get());
+    
+    // Test with different authorization types - should count parameters based on authorization
+    uint32_t adminCount = device_->calculateMaxSubscriptions(*adminAuthz_);
+    uint32_t monitorCount = device_->calculateMaxSubscriptions(*monitorAuthz_);
+    uint32_t disabledCount = device_->calculateMaxSubscriptions(Authorizer::kAuthzDisabled);
+    
+    // Admin authorizer can read: 2 simple params + 1 array param (admin scope) = 3
+    EXPECT_EQ(adminCount, 3);    
+    // Monitor authorizer can read: 1 fixture param (monitor scope) = 1
+    EXPECT_EQ(monitorCount, 1);    
+    // Disabled authorizer can read everything: 1 fixture param + 2 simple params + 1 array param = 4
+    EXPECT_EQ(disabledCount, 4);
 }
