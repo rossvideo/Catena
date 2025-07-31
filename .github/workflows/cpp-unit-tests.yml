@@ -20,12 +20,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: cpp-build-artifacts
-          path: ~/Catena/build/cpp/
       
       - name: build
         run: |
