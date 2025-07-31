@@ -6,49 +6,11 @@ on:
       - test_trivy_pipeline
 
 jobs:
-  configure:
-    name: Configure
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
-
-    env:
-      CMAKE_BUILD_TYPE: Debug
-      CONNECTIONS: gRPC;REST
-      BUILD_TARGET: build/cpp
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Configure
-        run: |
-          mkdir -p ~/Catena/${BUILD_TARGET}
-          cmake -G Ninja \
-            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
-            -DCONNECTIONS=${CONNECTIONS} \
-            -DCMAKE_CXX_FLAGS="--coverage" \
-            -DCMAKE_C_FLAGS="--coverage" \
-            -DCMAKE_EXE_LINKER_FLAGS="--coverage" \
-            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
-            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
-            -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
-            -B ~/Catena/${BUILD_TARGET} \
-            -S ./sdks/cpp
-
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: cpp-build-artifacts
-          path: ~/Catena/build/cpp/
-          retention-days: 1
-
   unit-tests:
     name: Run Unit Tests
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
-    needs: configure
 
     env:
       CMAKE_BUILD_TYPE: Debug
@@ -67,6 +29,18 @@ jobs:
       
       - name: build
         run: |
+          mkdir -p ~/Catena/${BUILD_TARGET}
+          cmake -G Ninja \
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+            -DCONNECTIONS=${CONNECTIONS} \
+            -DCMAKE_CXX_FLAGS="--coverage" \
+            -DCMAKE_C_FLAGS="--coverage" \
+            -DCMAKE_EXE_LINKER_FLAGS="--coverage" \
+            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+            -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
+            -B ~/Catena/${BUILD_TARGET} \
+            -S ./sdks/cpp
           cd ~/Catena/${BUILD_TARGET}
           ninja -C ~/Catena/${BUILD_TARGET} -j$(nproc)
 
@@ -104,15 +78,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: cpp-build-artifacts
-          path: ~/Catena/build/cpp/
       
       - name: build
         run: |
+          mkdir -p ~/Catena/${BUILD_TARGET}
+          cmake -G Ninja \
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+            -DCONNECTIONS=${CONNECTIONS} \
+            -DCMAKE_CXX_FLAGS="--coverage" \
+            -DCMAKE_C_FLAGS="--coverage" \
+            -DCMAKE_EXE_LINKER_FLAGS="--coverage" \
+            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+            -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
+            -B ~/Catena/${BUILD_TARGET} \
+            -S ./sdks/cpp
           cd ~/Catena/${BUILD_TARGET}
           ninja -C ~/Catena/${BUILD_TARGET} -j$(nproc)
 
@@ -144,15 +124,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: cpp-build-artifacts
-          path: ~/Catena/build/cpp/
       
       - name: build
         run: |
+          mkdir -p ~/Catena/${BUILD_TARGET}
+          cmake -G Ninja \
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+            -DCONNECTIONS=${CONNECTIONS} \
+            -DCMAKE_CXX_FLAGS="--coverage" \
+            -DCMAKE_C_FLAGS="--coverage" \
+            -DCMAKE_EXE_LINKER_FLAGS="--coverage" \
+            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+            -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
+            -B ~/Catena/${BUILD_TARGET} \
+            -S ./sdks/cpp
           cd ~/Catena/${BUILD_TARGET}
           ninja -C ~/Catena/${BUILD_TARGET} -j$(nproc)
 
