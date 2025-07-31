@@ -173,6 +173,7 @@ jobs:
           mkdir -p ~/Catena/${BUILD_TARGET}
           cmake -G Ninja \
             -DBUILD_DOC=OFF \
+            -DCATENA_MODEL="lite" \
             -DCONNECTIONS=${CONNECTIONS} \
             -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
