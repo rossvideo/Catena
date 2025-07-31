@@ -51,6 +51,7 @@
 
 // common
 #include <ParamVisitor.h>
+#include <Authorizer.h>
 #include <rpc/TimeNow.h>
 
 #include <Logger.h>
@@ -58,6 +59,8 @@
 // Forward declarations
 using catena::common::IParam;
 using catena::common::IParamVisitor;
+using catena::common::ParamVisitor;
+using catena::common::Authorizer;
 using catena::common::timeNow;
 
 namespace catena {
@@ -135,9 +138,9 @@ class ParamInfoRequest : public ICallData {
     ISocketReader& context_;
     
     /**
-     * @brief The SSEWriter object for writing to socket_.
+     * @brief The SocketWriter object for writing to socket_.
      */
-    SSEWriter writer_;
+    std::unique_ptr<ISocketWriter> writer_ = nullptr;
     
     /**
      * @brief The error status
