@@ -1,9 +1,5 @@
 var NAVTREEINDEX8 =
 {
-"structcatena_1_1common_1_1MenuTag.html":[10,0,0,0,26],
-"structcatena_1_1common_1_1MenuTag.html":[8,0,0,0,26],
-"structcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder_1_1promise__type.html":[8,0,0,0,28,0,0],
-"structcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder_1_1promise__type.html":[10,0,0,0,28,0,0],
 "structcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder_1_1promise__type.html#a00388cdb351a0c0f8fc1e1b29a8891d1":[8,0,0,0,28,0,0,6],
 "structcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder_1_1promise__type.html#a00388cdb351a0c0f8fc1e1b29a8891d1":[10,0,0,0,28,0,0,6],
 "structcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder_1_1promise__type.html#a65ac3f86d08630057799235974c1ab0f":[8,0,0,0,28,0,0,5],

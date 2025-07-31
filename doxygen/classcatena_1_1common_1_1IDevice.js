@@ -8,7 +8,6 @@ var classcatena_1_1common_1_1IDevice =
     [ "addItem", "classcatena_1_1common_1_1IDevice.html#ae401f1411a74a5a3eea3a5bc7b895467", null ],
     [ "addItem", "classcatena_1_1common_1_1IDevice.html#a7b81cc24bb22768348f4324389450a99", null ],
     [ "addItem", "classcatena_1_1common_1_1IDevice.html#a25d3dd8acc104af89a99e88f33f6c01d", null ],
-    [ "addItem", "classcatena_1_1common_1_1IDevice.html#a405f5c23f725c603262f5f018cb95b65", null ],
     [ "addLanguage", "classcatena_1_1common_1_1IDevice.html#ac4b696a3becfd9f2d2f267e52258733a", null ],
     [ "commitMultiSetValue", "classcatena_1_1common_1_1IDevice.html#a704a4e34685ed75fada9dabb188a29aa", null ],
     [ "default_max_length", "classcatena_1_1common_1_1IDevice.html#a9517a43b5794942e40c6f832443d8533", null ],
