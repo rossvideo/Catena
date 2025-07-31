@@ -116,6 +116,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: cpp
       
       - name: build
         run: |
@@ -133,11 +138,6 @@ jobs:
             -S ./sdks/cpp
           cd ~/Catena/${BUILD_TARGET}
           ninja -C ~/Catena/${BUILD_TARGET} -j$(nproc)
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: cpp
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
