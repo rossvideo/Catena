@@ -96,11 +96,6 @@ jobs:
       CMAKE_BUILD_TYPE: Debug
       CONNECTIONS: gRPC;REST
       BUILD_TARGET: build/cpp
-
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'c-cpp' ]
     
     steps:
       - name: Checkout code
@@ -172,7 +167,7 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: ${{ matrix.language }}
+          languages: 'cpp'
           debug: true
       
       - name: build
