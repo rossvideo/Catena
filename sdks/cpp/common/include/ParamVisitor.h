@@ -78,7 +78,7 @@ class ParamVisitor : public IParamVisitor {
          * @param visitor The visitor to use
          * @param authz The authorizer to use
          */
-        static void traverseParams(IParam* param, const std::string& path, IDevice& device, IParamVisitor& visitor, Authorizer& authz);
+        static void traverseParams(IParam* param, const std::string& path, const IDevice& device, IParamVisitor& visitor, Authorizer& authz);
 };
 
 } // namespace common

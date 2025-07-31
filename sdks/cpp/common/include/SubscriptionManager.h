@@ -111,15 +111,6 @@ class SubscriptionManager : public ISubscriptionManager {
      */
     bool isSubscribed(const std::string& oid, const IDevice& dm) override;
 
-
-
-    /**
-     * @brief Get the current number of subscriptions for a device
-     * @param dm The device model to use
-     * @return The current number of subscriptions
-     */
-    uint32_t getCurrentSubscriptionCount(const IDevice& dm) const override;
-
     /**
      * @brief Get the maximum number of subscriptions allowed per device
      * @return The current limit
@@ -186,6 +177,16 @@ class SubscriptionManager : public ISubscriptionManager {
      * @param dm The device model to use for expanding wildcard subscriptions
      */
     void updateAllSubscribedOids_(IDevice& dm);
+    
+    /**
+     * @brief Count the number of subscriptions that would be created by a wildcard expansion
+     * @param param The parameter to start counting from
+     * @param path The path to the parameter
+     * @param dm The device model
+     * @param authz The authorizer for permission checking
+     * @return The number of parameters that would be subscribed to
+     */
+    uint32_t countWildcardSubscriptions(IParam* param, const std::string& path, IDevice& dm, Authorizer& authz);
 };
 
 } // namespace common

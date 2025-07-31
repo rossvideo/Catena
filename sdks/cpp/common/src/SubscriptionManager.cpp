@@ -49,11 +49,7 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
     std::set<std::string>& dmSubscriptions = subscriptions_[dm.slot()];
 
     // Getting base Oid if wildcard.
-    if (wildcard) {
-        baseOid = oid.substr(0, oid.length() - 2);
-    } else {
-        baseOid = oid;
-    }
+    baseOid = wildcard ? oid.substr(0, oid.length() - 2) : oid;
 
     // Making sure the oid exists unless client is subbing to all params.
     if (!wildcard || oid != "/*") {
@@ -61,47 +57,63 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
         param = dm.getParam(baseOid, rc, authz);
     }
 
-    // Check subscription limits before adding
+    // Add non-wildcard subscription.
     if (!wildcard) {
         if (dmSubscriptions.contains(baseOid)) {
             rc = catena::exception_with_status("Subscription already exists for OID: " + baseOid, catena::StatusCode::ALREADY_EXISTS);
             return false;
         }
-
-        uint32_t currentCount = dmSubscriptions.size();
-        uint32_t newSubscriptions = 1; // Single subscription
-        
-        // Check if adding this subscription would exceed the limit
-        if (currentCount + newSubscriptions > max_subscriptions_per_device_) {
-            rc = catena::exception_with_status(
-                "Subscription limit exceeded. Current: " + std::to_string(currentCount) + 
-                ", Requested: " + std::to_string(newSubscriptions) + 
-                ", Limit: " + std::to_string(max_subscriptions_per_device_), 
-                catena::StatusCode::RESOURCE_EXHAUSTED);
-            return false;
+        if (param) {
+            // Check if adding this subscription would exceed the limit
+            if (dmSubscriptions.size() >= max_subscriptions_per_device_) {
+                rc = catena::exception_with_status("Subscription limit exceeded", catena::StatusCode::RESOURCE_EXHAUSTED);
+                return false;
+            }
+            dmSubscriptions.insert(baseOid);
+        } else {
+            return false; // Parameter doesn't exist
         }
     }
-    else {
-        // Wildcards are unimplemented for now.
-    }
-
-    // Normal case.
-    if (!wildcard && param) {
-        // Add the subscription (we already checked it doesn't exist)
-        dmSubscriptions.insert(baseOid);
-    
-    // Add all sub params case.
-    } else if (wildcard && param) {
+    // Add wildcard subscription.
+    else if (wildcard && param) {
+        // Count potential subscriptions before adding them
+        uint32_t newSubscriptions = countWildcardSubscriptions(param.get(), baseOid, dm, authz);
+        
+        // Check if adding these subscriptions would exceed the limit
+        uint32_t currentCount = dmSubscriptions.size();
+        if (currentCount + newSubscriptions > max_subscriptions_per_device_) {
+            rc = catena::exception_with_status("Subscription limit exceeded", catena::StatusCode::RESOURCE_EXHAUSTED);
+            return false;
+        }
+        
+        // Now add the actual subscriptions
         SubscriptionVisitor visitor(dmSubscriptions);
-        ParamVisitor::traverseParams(param.get(), baseOid, dm, visitor, authz);
+        ParamVisitor::traverseParams(param.get(), baseOid, dm, visitor, authz);   
 
-    // Add all params case.
     } else if (wildcard && oid == "/*") {
+        // Add all params case.
         std::vector<std::unique_ptr<IParam>> allParams;
         {
             std::lock_guard lg(dm.mutex());
             allParams = dm.getTopLevelParams(rc, authz);
         }
+        
+        // Count potential subscriptions before adding them
+        uint32_t newSubscriptions = 0;
+        for (auto& param : allParams) {
+            if (authz.readAuthz(*param)) {
+                newSubscriptions += countWildcardSubscriptions(param.get(), "/" + param->getOid(), dm, authz);
+            }
+        }
+        
+        // Check if adding these subscriptions would exceed the limit
+        uint32_t currentCount = dmSubscriptions.size();
+        if (currentCount + newSubscriptions > max_subscriptions_per_device_) {
+            rc = catena::exception_with_status("Subscription limit exceeded", catena::StatusCode::RESOURCE_EXHAUSTED);
+            return false;
+        }
+        
+        // Now add the actual subscriptions
         for (auto& param : allParams) {
             if (authz.readAuthz(*param)) {
                 SubscriptionVisitor visitor(dmSubscriptions);
@@ -161,18 +173,31 @@ bool SubscriptionManager::isWildcard(const std::string& oid) {
     return oid.length() >= 2 && oid.substr(oid.length() - 2) == "/*";
 }
 
+// Returns true if the OID is subscribed to by the device
 bool SubscriptionManager::isSubscribed(const std::string& oid, const IDevice& dm) {
     std::lock_guard sg(mtx_);
     return subscriptions_.contains(dm.slot()) && subscriptions_[dm.slot()].contains(oid);
 }
 
-
-
-uint32_t SubscriptionManager::getCurrentSubscriptionCount(const IDevice& dm) const {
-    std::lock_guard sg(mtx_);
-    auto it = subscriptions_.find(dm.slot());
-    if (it != subscriptions_.end()) {
-        return static_cast<uint32_t>(it->second.size());
-    }
-    return 0;
+// Count the number of subscriptions that would be created by a wildcard expansion
+uint32_t SubscriptionManager::countWildcardSubscriptions(IParam* param, const std::string& path, IDevice& dm, Authorizer& authz) {
+    class WildcardCounterVisitor : public IParamVisitor {
+        public:
+            WildcardCounterVisitor() : count_(0) {}
+            void visit(IParam* param, const std::string& path) override {
+                // Skip array elements (paths ending with indices) to prevent invalid paths
+                Path pathObj = Path(path);
+                if (!pathObj.back_is_index()) {
+                    count_++;
+                }
+            }
+            void visitArray(IParam* param, const std::string& path, uint32_t length) override {}
+            uint32_t getCount() const { return count_; }
+        private:
+            uint32_t count_;
+    };
+    
+    WildcardCounterVisitor visitor;
+    ParamVisitor::traverseParams(param, path, dm, visitor, authz);
+    return visitor.getCount();
 }

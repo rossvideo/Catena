@@ -577,7 +577,7 @@ uint32_t Device::calculateMaxSubscriptions(Authorizer& authz) const {
             };
             
             SubscriptionCounterVisitor visitor;
-            ParamVisitor::traverseParams(param, "/" + name, const_cast<Device&>(*this), visitor, authz);
+            ParamVisitor::traverseParams(param, "/" + name, *this, visitor, authz);
             totalCount += visitor.getCount();
         }
     }
