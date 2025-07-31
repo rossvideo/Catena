@@ -153,7 +153,9 @@ $(document).ready(function(){initNavTree('path_8cpp-example.html',''); initResiz
 <div class="line">    }</div>
 <div class="line">}</div>
 <div class="line"> </div>
-<div class="line"><span class="keywordtype">int</span> main() {</div>
+<div class="line"><span class="keywordtype">int</span> main (<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span>** argv) {</div>
+<div class="line">    Logger::StartLogging(argc, argv);</div>
+<div class="line"> </div>
 <div class="line">    Path top_level_oid(<span class="stringliteral">&quot;/top_level_oid&quot;</span>);</div>
 <div class="line">    document(top_level_oid);</div>
 <div class="line"> </div>
@@ -168,15 +170,18 @@ $(document).ready(function(){initNavTree('path_8cpp-example.html',''); initResiz
 <div class="line">    document(struct_array);</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// The document method consumes the Path passed to it</span></div>
+<div class="line">    std::cout&lt;&lt;std::endl;</div>
 <div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;jptr should be empty&quot;</span>;</div>
 <div class="line">    document(struct_array);</div>
 <div class="line">    </div>
 <div class="line">    <span class="comment">// we can reverse this 2 ways - reverse the last pop operation</span></div>
+<div class="line">    std::cout&lt;&lt;std::endl;</div>
 <div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;jptr should have its last segment&quot;</span>;</div>
 <div class="line">    struct_array.unpop();</div>
 <div class="line">    document(struct_array);</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// or rewind to the very beginning</span></div>
+<div class="line">    std::cout&lt;&lt;std::endl;</div>
 <div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;jptr should be fully restored&quot;</span>;</div>
 <div class="line">    struct_array.rewind();</div>
 <div class="line">    document(struct_array);</div>
@@ -185,6 +190,7 @@ $(document).ready(function(){initNavTree('path_8cpp-example.html',''); initResiz
 <div class="line">    document(struct_array_element_field);</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// Adds a new segment to the Path</span></div>
+<div class="line">    std::cout&lt;&lt;std::endl;</div>
 <div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;jptr should have additional segment \&quot;grandChild\&quot;&quot;</span>;</div>
 <div class="line">    struct_array_element_field.rewind();</div>
 <div class="line">    struct_array_element_field.push_back(<span class="stringliteral">&quot;grandChild&quot;</span>);</div>
