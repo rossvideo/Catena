@@ -77,61 +77,7 @@ jobs:
           else
             echo "Some tests failed."
             echo "failed" > unit_test_status.txt
-            exit 1
           fi
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: unit-test-status
-          path: unit_test_status.txt
-          retention-days: 1
-        if: always()
-
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: cpp-unit-tests-results
-          path: test_results.log
-          retention-days: 4
-        if: failure()
-
-  Coverage:
-    name: Generate Coverage Report (9 minutes)
-    timeout-minutes: 11
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
-
-    env:
-      CMAKE_BUILD_TYPE: Debug
-      CONNECTIONS: gRPC;REST
-      BUILD_TARGET: build/cpp
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: build
-        run: |
-          mkdir -p ~/Catena/${BUILD_TARGET}
-          cmake -G Ninja \
-            -DBUILD_DOC=OFF \
-            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
-            -DCONNECTIONS=${CONNECTIONS} \
-            -DCMAKE_CXX_FLAGS="--coverage" \
-            -DCMAKE_C_FLAGS="--coverage" \
-            -DCMAKE_EXE_LINKER_FLAGS="--coverage" \
-            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
-            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
-            -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
-            -B ~/Catena/${BUILD_TARGET} \
-            -S ./sdks/cpp
-          cd ~/Catena/${BUILD_TARGET}
-          ninja -C ~/Catena/${BUILD_TARGET}
-
-      - name: Run Tests for Coverage
-        run: |
-          ctest --rerun-failed --test-dir ~/Catena/${BUILD_TARGET} -V
 
       - name: Generate Coverage Report
         run: |
@@ -150,6 +96,8 @@ jobs:
           badge: true
           badge-title: 'Catena C++ Coverage'
           format: markdown
+          hide_complexity: true
+          output: both
       
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
@@ -162,26 +110,41 @@ jobs:
             coverage.info
           retention-days: 60
 
-      - name: Download unit test status
-        uses: actions/download-artifact@v4
-        with:
-          name: unit-test-status
-
       - name: Read unit test status
         id: teststatus
         run: echo "status=$(cat unit_test_status.txt)" >> $GITHUB_OUTPUT
 
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test_results.log
+          retention-days: 4
+
+      - name: Build PR comment body
+        id: comment
+        run: |
+          if [ "${{ steps.teststatus.outputs.status }}" = "passed" ]; then
+            echo '### ✅ Unit Tests Status' >> comment-body.md
+            echo 'All the unit tests have passed.' >> comment-body.md
+          else
+            echo '### ❌ Unit Tests Status' >> comment-body.md
+            echo 'Some unit tests have failed.'>> comment-body.md
+                  echo '```' >> comment-body.md
+                  cat test_results.log >> comment-body.md
+                  echo '```' >> comment-body.md
+          fi
+
+          echo "" >> comment-body.md
+          echo '### 📈 Code Coverage Summary' >> comment-body.md
+          cat code-coverage-results.md >> comment-body.md
+          
       - name: Comment on PR with test and coverage results
         uses: peter-evans/create-or-update-comment@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            ### Unit Tests Status
-            **${{ steps.teststatus.outputs.status }}**
-
-            ### Code Coverage Summary
-            ${{ steps.coverage.outputs.markdown }}
+          body-path: comment-body.md
 
   CodeQL:
     name: CodeQL Analysis (15-30 minutes)
