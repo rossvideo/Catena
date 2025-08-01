@@ -17,3 +17,16 @@ constraint:
           fr: "Un", 
           es: "Uno", 
           ja: "一" } }
+      - value: 2
+        name: { display_strings: { 
+          en: "Two", 
+          fr: "Deux", 
+          es: "Dos", 
+          ja: "二" } }
+      - value: 3
+        name: { display_strings: { 
+          en: "Three", 
+          fr: "Trois", 
+          es: "Tres", 
+          ja: "三" } }
+widget: "radio-vertical"

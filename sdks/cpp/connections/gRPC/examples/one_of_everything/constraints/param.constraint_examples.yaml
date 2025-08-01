@@ -22,6 +22,9 @@ params:
   # STRING_CHOICE constraint example
   string_choice:
     import: { file: /constraints/param.string_choice.yaml }
+  # STRING_STRING_CHOICE constraint example
+  string_string_choice:
+    import: { file: /constraints/param.string_string_choice.yaml }
   # max_length example
   string_length:
     import: { file: /constraints/param.string_length.yaml }
@@ -40,6 +43,9 @@ params:
   # STRING_CHOICE constraint example with an array
   string_array_choice:
     import: { file: /constraints/param.string_array_choice.yaml }
+  # STRING_ARRAY_CHOICE constraint example with an array
+  string_string_array_choice:
+    import: { file: /constraints/param.string_string_array_choice.yaml }
   # max_length and total_length example with an array
   string_array_length:
     import: { file: /constraints/param.string_array_length.yaml }
@@ -51,6 +57,7 @@ value:
       # int32_alarm:{ int32_value: 0 }
       float32_range: { float32_value: 10.5 }
       string_choice: { string_value: "a" }
+      string_string_choice: { string_value: "<#FF0000>" }
       string_length: { string_value: "Hello worl" }
       int_array_range: { int32_array_values: { ints: [0, 2, 4, 6, 8, 10] } }
       int_array_choice: { int32_array_values: { ints: [0, 1, 0, 0, 1] } }
@@ -58,3 +65,4 @@ value:
       float_array_range: { float32_array_values: { floats: [11.5, 22.5, 33.5, 44.5] } }
       string_array_choice: { string_array_values: { strings: [a, b, a] } }
       string_array_length: { string_array_values: { strings: [a, b, c, d, e, f, g, h, i, j] } }
+      string_string_array_choice: { string_array_values: { strings: ["<#FF0000>", "<#00FF00>", "<#0000FF>"]  } }
