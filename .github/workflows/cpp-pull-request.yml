@@ -1,0 +1,216 @@
+name: C++ Code Analysis
+# this runs the workflow on PR and make sure that the code is tested and analyzed
+
+on:
+  push:
+    branches: ["develop"]
+    paths:
+      - 'sdks/cpp/**'
+      - 'unittests/cpp/**'
+  pull_request:
+    paths:
+      - 'sdks/cpp/**'
+      - 'unittests/cpp/**'
+      - '.github/workflows/cpp-pull-request.yml'
+
+jobs:
+  Trivy:
+    name: Trivy vulnerability scanner (25 seconds)
+    timeout-minutes: 2
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner in repo mode
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          skip-dirs: '.git,build,coverage,docs,sdks/java,unittests'
+          skip-files: 'pom.xml'
+
+      - name: Upload SARIF results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+          category: 'Trivy Scan Results'
+
+  Unit-Tests:
+    name: Run Unit Tests and coverage (11 minutes)
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
+
+    env:
+      CMAKE_BUILD_TYPE: Debug
+      CONNECTIONS: gRPC;REST
+      BUILD_TARGET: build/cpp
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: build
+        run: |
+          mkdir -p ~/Catena/${BUILD_TARGET}
+          cmake -G Ninja \
+            -DBUILD_DOC=OFF \
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+            -DCONNECTIONS=${CONNECTIONS} \
+            -DCMAKE_CXX_FLAGS="--coverage" \
+            -DCMAKE_C_FLAGS="--coverage" \
+            -DCMAKE_EXE_LINKER_FLAGS="--coverage" \
+            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+            -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
+            -B ~/Catena/${BUILD_TARGET} \
+            -S ./sdks/cpp
+          cd ~/Catena/${BUILD_TARGET}
+          ninja -C ~/Catena/${BUILD_TARGET}
+
+      - name: Run Tests
+        run: |
+          ctest --test-dir ~/Catena/${BUILD_TARGET} -V --rerun-failed > test_results.log
+          # check if file contains "100% tests passed"
+          if grep -q "100% tests passed" test_results.log; then
+            echo "All tests passed!"
+            echo "passed" > unit_test_status.txt
+          else
+            echo "Some tests failed."
+            echo "failed" > unit_test_status.txt
+          fi
+
+      - name: Generate Coverage Report
+        run: |
+          gcovr --root ~/Catena \
+          --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' -e '(.+/)?examples/' \
+          --lcov=coverage.info \
+          --cobertura=coverage.xml \
+          --html=index.html \
+          --html-details
+
+      - name: Code Coverage Summary Report
+        id: coverage
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage.xml
+          badge: true
+          format: markdown
+          hide_complexity: true
+          output: both
+      
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            index.html
+            index.css
+            coverage.xml
+            coverage.info
+          retention-days: 60
+
+      - name: Read unit test status
+        id: teststatus
+        run: echo "status=$(cat unit_test_status.txt)" >> $GITHUB_OUTPUT
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test_results.log
+          retention-days: 4
+
+      - name: Build PR comment body
+        if: github.event_name == 'pull_request'
+        id: comment
+        run: |
+          if [ "${{ steps.teststatus.outputs.status }}" = "passed" ]; then
+            echo '### ✅ Unit Tests Status' >> comment-body.md
+            echo ' ✅  All the unit tests have passed.' >> comment-body.md
+          else
+            echo '### ❌ Unit Tests Status' >> comment-body.md
+            echo ' ❌ Some unit tests have failed.'>> comment-body.md
+                  echo '```' >> comment-body.md
+                  cat test_results.log >> comment-body.md
+                  echo '```' >> comment-body.md
+          fi
+
+          echo "" >> comment-body.md
+          echo '### 📈 Code Coverage Summary' >> comment-body.md
+          cat code-coverage-results.md >> comment-body.md
+      
+      - name: Find Comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+
+      - name: Comment on PR with test and coverage results
+        if: steps.fc.outputs.comment-id == '' && github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: comment-body.md
+      
+      - name: Update PR comment with test and coverage results
+        if: steps.fc.outputs.comment-id != '' && github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: comment-body.md
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          edit-mode: replace
+          
+
+  CodeQL:
+    name: CodeQL Analysis (15-30 minutes)
+    timeout-minutes: 35
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
+
+    env:
+      CMAKE_BUILD_TYPE: 
+      CONNECTIONS: gRPC
+      BUILD_TARGET: build/cpp
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: 'cpp'
+          debug: true
+      
+      - name: build
+        run: |
+          mkdir -p ~/Catena/${BUILD_TARGET}
+          cmake -G Ninja \
+            -DUNIT_TESTING=OFF \
+            -DBUILD_DOC=OFF \
+            -DCATENA_MODEL="lite" \
+            -DCONNECTIONS=${CONNECTIONS} \
+            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+            -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
+            -B ~/Catena/${BUILD_TARGET} \
+            -S ./sdks/cpp
+          cd ~/Catena/${BUILD_TARGET}
+          ninja -C ~/Catena/${BUILD_TARGET}
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:cpp"
