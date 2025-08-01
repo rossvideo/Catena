@@ -46,6 +46,8 @@ add_compile_definitions(DEFAULT_MAX_CONNECTIONS=${DEFAULT_MAX_CONNECTIONS})
 add_compile_options(--coverage)
 add_link_options(--coverage)
 
+option(UNIT_TESTING "Build the unit tests" ON)
+
 # enable testing
 enable_testing()
 

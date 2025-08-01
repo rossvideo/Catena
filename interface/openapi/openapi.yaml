@@ -87,6 +87,9 @@ paths:
   /{slot}/param-info/{fqoid}/stream:
     $ref: './paths/ParamInfoStream.yaml'
 
+  /{slot}/param-info:
+    $ref: './paths/TopLevelParamInfo.yaml'
+
   /{slot}/param-info/stream:
     $ref: './paths/TopLevelParamInfoStream.yaml'
 

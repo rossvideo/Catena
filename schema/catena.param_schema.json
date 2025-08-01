@@ -819,8 +819,13 @@
           "$comment": "@todo complete the regex",
           "type": "string"
         },
-        "^(fr|fr-BE|fr-CA|fr-CF|fr-TD|fr-KM)": {
+        "^(fr|fr-BE|fr-CA|fr-CF|fr-TD|fr-KM)$": {
           "title": "French Language Group",
+          "$comment": "@todo complete the regex",
+          "type": "string"
+        },
+        "^(ja|ja-JP)$": {
+          "title": "Japanese Language Group",
           "$comment": "@todo complete the regex",
           "type": "string"
         }

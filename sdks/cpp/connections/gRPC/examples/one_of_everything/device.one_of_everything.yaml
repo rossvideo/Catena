@@ -1,4 +1,3 @@
-
 slot: 0
 multi_set_enabled: true
 detail_level: FULL
@@ -6,23 +5,46 @@ access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
 default_scope: st2138:mon
 
 params:
+  dashboard_UI:
+    type: STRING
+    oid_aliases: ["0xFF0E"]
+    read_only: true
+    value: { string_value: "eo://onedisplay.grid" }
+
+  dashboard_icon:
+    type: STRING
+    oid_aliases: ["0xFF0C"]
+    read_only: true
+    value: { string_value: "eo://catena_logo_16x16.png" }
+
   number_example: 
     type: INT32
     value: { int32_value: 0 }
-    name: { display_strings: { en: "Int Example" } }
+    name: { display_strings: { 
+      en: "Int Example", 
+      fr: "Exemple Entier", 
+      es: "Ejemplo Entero", 
+      ja: "整数の例" } }
     minimal_set: true
   
   counter: 
     type: INT32
     value: { int32_value: 0 }
-    name: { display_strings: { en: "Counter" } }
+    name: { display_strings: { 
+      en: "Counter", 
+      fr: "Compteur", 
+      es: "Contador", 
+      ja: "カウンター" } }
     minimal_set: true
   
-  # Imports the parameter from the file specified below.
   float_example:
     type: FLOAT32
     value: { float32_value: 0.0 }
-    name: { display_strings: { en: "Float Example" } }
+    name: { display_strings: { 
+      en: "Float Example", 
+      fr: "Exemple Flottant", 
+      es: "Ejemplo Flotante", 
+      ja: "浮動小数点の例" } }
     access_scope: st2138:op
     widget: default
     precision: 1
@@ -30,57 +52,83 @@ params:
   string_example:
     type: STRING
     value: { string_value: "Hello World" }
-    name: { display_strings: { en: "String Example" } }
+    name: { display_strings: { 
+      en: "String Example", 
+      fr: "Exemple Chaîne", 
+      es: "Ejemplo de Cadena", 
+      ja: "文字列の例" } }
     access_scope: st2138:cfg
 
   number_array:
     type: INT32_ARRAY
     value: { int32_array_values: { ints: [1, 2, 3, 4] } }
-    name: { display_strings: { en: "Int Array Example" } }
-  
-  # Imports the parameter from the file specified below.
+    name: { display_strings: { 
+      en: "Int Array Example", 
+      fr: "Exemple Tableau Entiers", 
+      es: "Ejemplo de Matriz de Enteros", 
+      ja: "整数配列の例" } }
+
   float_array:
     type: FLOAT32_ARRAY
     value: { float32_array_values: { floats: [1.1, 2.2, 3.3, 4.4] } }
-    name: { display_strings: { en: "Float Array Example" } }
+    name: { display_strings: { 
+      en: "Float Array Example", 
+      fr: "Exemple Tableau Flottants", 
+      es: "Ejemplo de Matriz Flotante", 
+      ja: "浮動小数点配列の例" } }
     max_length: 128
     precision: 3
 
   string_array:
     type: STRING_ARRAY
     value: { string_array_values: { strings: ["one", "two", "three", "four", "five"] } }
-    name: { display_strings: { en: "String Array Example" } }
+    name: { display_strings: { 
+      en: "String Array Example", 
+      fr: "Exemple Tableau Chaînes", 
+      es: "Ejemplo de Matriz de Cadenas", 
+      ja: "文字列配列の例" } }
 
-  # This is a struct reference imported from another file and used as a
-  # template oid for struct_example and struct_array.
   ref_struct:
     import: { file: /params/param.ref_struct.yaml }
 
-  # Imports the parameter from the file specified below.
   struct_example:
     import: { file: /params/param.struct_example.yaml }
 
-  # Imports the parameter from the file specified below.
   struct_array:
     import: { file: /params/param.struct_array.yaml }
 
-  # This is a struct param containing examples of various constraints.
   constraint_examples:
     import: { file: /constraints/param.constraint_examples.yaml }
 
 menu_groups:
   status:
-    name: { display_strings: { en: "Status" } }
+    name: { display_strings: { 
+      en: "Status", 
+      fr: "Statut", 
+      es: "Estado", 
+      ja: "ステータス" } }
     menus:
       product:
-        name: {display_strings: { en: "Product" } }
+        name: { display_strings: { 
+          en: "Product", 
+          fr: "Produit", 
+          es: "Producto", 
+          ja: "製品" } }
         param_oids:
           - /number_example
   config:
-    name: { display_strings: { en: "Config" } }
+    name: { display_strings: { 
+      en: "Config", 
+      fr: "Configuration", 
+      es: "Configuración", 
+      ja: "設定" } }
     menus:
       catena:
-        name: {display_strings: { en: "Catena" } }
+        name: { display_strings: { 
+          en: "Catena", 
+          fr: "Catena", 
+          es: "Catena", 
+          ja: "カテナ" } }
         param_oids:
           - /float_example
           - /string_example

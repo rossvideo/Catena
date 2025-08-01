@@ -1,4 +1,3 @@
-# INT_CHOICE constraint example with an array
 type: INT32_ARRAY
 value: { int32_array_values: { ints: [0, 1, 0, 0, 1] } }
 constraint:
@@ -6,6 +5,14 @@ constraint:
   int32_choice:
     choices:
       - value: 0
-        name: { display_strings: { en: "Zero" } }
+        name: { display_strings: { 
+          en: "Zero", 
+          fr: "Zéro", 
+          es: "Cero", 
+          ja: "ゼロ" } }
       - value: 1
-        name: { display_strings: { en: "One" } }
+        name: { display_strings: { 
+          en: "One", 
+          fr: "Un", 
+          es: "Uno", 
+          ja: "一" } }

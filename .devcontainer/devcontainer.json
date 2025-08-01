@@ -3,6 +3,7 @@
   "build": {
       "dockerfile": "devcontainer.dockerfile",
       "context": ".",
+      "target": "devcontainer",
       "args": {
         "USER_UID": "1000",  //export UID=$(id -u)
         "USER_GID": "1000",  //export GID=$(id -g)
