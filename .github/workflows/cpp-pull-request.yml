@@ -5,6 +5,7 @@ on:
   pull_request:
     files:
       - 'sdks/cpp/**'
+      - '.github/workflows/cpp-pull-request.yml'
 
 jobs:
   Trivy:
@@ -189,4 +190,4 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:${{matrix.language}}"
+          category: "/language:cpp"
