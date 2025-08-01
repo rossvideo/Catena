@@ -248,7 +248,7 @@ int main (int argc, char** argv) {
 /* Possible Output
 Dog Tests
 Labrador: can go forwards and backwards. bark 
-Jack Russell: can go forwards and backwards. bark bark bark bark 
+Jack Russell: can go forwards and backwards. bark bark bark bark
 Rabid dog: can only go forwards. bark bark bark bark bark bark bark bark 
 
 Factory Test
