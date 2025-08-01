@@ -2,7 +2,11 @@
 # Uses the struct from ref_struct.yaml as a template for the structs in its
 # array and specifies the value.
 type: STRUCT_ARRAY
-name: { display_strings: { en: "Struct Array Example" } }
+name: { display_strings: { 
+  en: "Struct Array Example", 
+  fr: "Exemple de Tableau de Structures", 
+  es: "Ejemplo de Arreglo de Estructuras", 
+  ja: "構造体配列の例" } }
 template_oid: /ref_struct
 access_scope: st2138:adm
 value:

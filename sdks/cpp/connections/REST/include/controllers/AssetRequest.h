@@ -80,6 +80,14 @@ class AssetRequest : public ICallData {
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     AssetRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
+
+    /**
+     * converts the PayloadEncoding enum to a string
+     * @param encoding The PayloadEncoding enum value to convert.
+     * @return The string representation of the PayloadEncoding.
+     */
+    static std::string payloadEncodingToString(catena::DataPayload::PayloadEncoding encoding);
+
     /**
      * @brief GetParam's main process.
      */
@@ -96,44 +104,44 @@ class AssetRequest : public ICallData {
       return new AssetRequest(socket, context, dms);
     }
 
-  private:
+  protected:
     /**
      * @brief Compresses the input data using the specified window bits.
      * @param input The input data to compress.
      * @param windowBits The window bits to use for compression.
      */
-    void compress(std::vector<uint8_t>& input, int windowBits);
+    static void compress(std::vector<uint8_t>& input, int windowBits);
 
     /**
      * @brief Compresses the input data using deflate compression.
      * @param input The input data to compress.
      */
-    void deflate_compress(std::vector<uint8_t>& input);
+    static void deflate_compress(std::vector<uint8_t>& input);
 
     /**
      * @brief Compresses the input data using gzip compression.
      * @param input The input data to compress.
      */
-    void gzip_compress(std::vector<uint8_t>& input);
+    static void gzip_compress(std::vector<uint8_t>& input);
 
     /**
      * @brief Decompresses the input data using the specified window bits.
      * @param input The input data to decompress.
      * @param windowBits The window bits to use for decompression.
      */
-    void decompress(std::vector<uint8_t>& input, int windowBits);
+    static void decompress(std::vector<uint8_t>& input, int windowBits);
 
     /**
      * @brief Decompresses the input data using deflate compression.
      * @param input The input data to decompress.
      */
-    void deflate_decompress(std::vector<uint8_t>& input);
+    static void deflate_decompress(std::vector<uint8_t>& input);
     
     /**
      * @brief Decompresses the input data using gzip compression.
      * @param input The input data to decompress.
      */
-    void gzip_decompress(std::vector<uint8_t>& input);
+    static void gzip_decompress(std::vector<uint8_t>& input);
 
     /**
      * @brief Gets the last write time of the file.
@@ -141,7 +149,7 @@ class AssetRequest : public ICallData {
      * @param out_time The output time.
      * @return True if the last write time is valid, false otherwise.
      */
-    bool get_last_write_time(const std::string& path, std::time_t& out_time);
+    static bool get_last_write_time(const std::string& path, std::time_t& out_time);
 
     /**
      * @brief Extracts the payload from the context and decompresses it if needed.
@@ -159,27 +167,6 @@ class AssetRequest : public ICallData {
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok;
     }
-
-    /**
-     * @brief Sets up authorization for the request
-     * @return Shared pointer to the authorizer, or nullptr if authorization is disabled
-     */
-    std::shared_ptr<catena::common::Authorizer> setupAuthorization_();
-
-    /**
-     * @brief Validates and constructs the file path
-     * @return Valid filesystem path to the requested asset
-     * @throws catena::exception_with_status if path is invalid or file not found
-     */
-    std::filesystem::path getValidatedFilePath_();
-
-    /**
-     * @brief Reads file data with size validation
-     * @param path Path to the file to read
-     * @return Vector containing the file data
-     * @throws catena::exception_with_status if file operations fail
-     */
-    std::vector<char> readFileData_(const std::filesystem::path& path);
 
     /**
      * @brief The socket to write the response to.

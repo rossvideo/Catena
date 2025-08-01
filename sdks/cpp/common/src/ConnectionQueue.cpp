@@ -33,29 +33,35 @@
 #include <Logger.h>
 
 using catena::common::ConnectionQueue;
+using catena::common::IConnect;
 
 bool ConnectionQueue::registerConnection(IConnect* cd) {
-    bool canAdd = false;
-    std::lock_guard<std::mutex> lock(mtx_);
-    // Find the index to insert the new connection based on priority.
-    auto it = std::find_if(connectionQueue_.begin(), connectionQueue_.end(),
-        [cd](const IConnect* connection) { return *cd < *connection; });
-    // Based on the iterator, determine if we can add the connection.
-    if (connectionQueue_.size() >= maxConnections_) {
-        if (it != connectionQueue_.begin()) {
-            // Forcefully shutting down lowest priority connection.
-            connectionQueue_.front()->shutdown();
-            connectionQueue_.erase(connectionQueue_.begin());
-            canAdd = true;
-        }
+    bool added = false;
+    if (!cd) {
+        throw catena::exception_with_status("Cannot add nullptr to connection queue", catena::StatusCode::INVALID_ARGUMENT);
     } else {
-        canAdd = true;
+        std::lock_guard<std::mutex> lock(mtx_);
+        // Find the index to insert the new connection based on priority.
+        auto it = std::find_if(connectionQueue_.begin(), connectionQueue_.end(),
+            [cd](const IConnect* connection) {
+                assert(connection);
+                return *cd < *connection;
+            });
+        // Based on the iterator, determine if we can add the connection.
+        if (connectionQueue_.size() >= maxConnections_) {
+            if (it != connectionQueue_.begin()) {
+                // Forcefully shutting down lowest priority connection.
+                connectionQueue_.insert(it, cd);
+                connectionQueue_.front()->shutdown();
+                connectionQueue_.erase(connectionQueue_.begin());
+                added = true;
+            }
+        } else {
+            connectionQueue_.insert(it, cd);
+            added = true;
+        }
     }
-    // Adding the connection if possible.
-    if (canAdd) {
-        connectionQueue_.insert(it, cd);
-    }
-    return canAdd;
+    return added;
 }
 
 void ConnectionQueue::deregisterConnection(const IConnect* cd) {

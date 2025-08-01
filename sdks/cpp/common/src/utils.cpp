@@ -23,7 +23,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-
+#include <cstring>
 
 std::string catena::readFile(std::filesystem::path path) {
     std::ifstream file(path, std::ios::in | std::ios::binary);  // lock the file
@@ -79,4 +79,43 @@ void catena::split(std::vector<std::string>& out, const std::string& str, const 
         }
     }
     out.emplace_back(str.substr(prev));  // write to the end of the input string
+}
+
+
+std::string catena::to_base64(const std::string& binary) {
+
+    std::string encoded;
+    int val = 0, valb = -6;
+    for (uint8_t c : binary) {
+        val = (val << 8) + c;
+        valb += 8;
+        while (valb >= 0) {
+            encoded.push_back(base64_chars[(val >> valb) & 0x3F]);
+            valb -= 6;
+        }
+    }
+    if (valb > -6) {
+        encoded.push_back(base64_chars[((val << 8) >> (valb + 8)) & 0x3F]);
+    }
+    while (encoded.size() % 4) {
+        encoded.push_back('=');
+    }
+    return encoded;
+}
+
+std::string catena::from_base64(const std::string& encoded) {
+    std::string decoded;
+    int val = 0, valb = -8;
+    for (unsigned char c : encoded) {
+        if (c == '=') break;
+        auto pos = strchr(base64_chars, c);
+        if (pos == nullptr) continue; // Skip invalid characters
+        val = (val << 6) + (pos - base64_chars);
+        valb += 6;
+        if (valb >= 0) {
+            decoded.push_back(char((val >> valb) & 0xFF));
+            valb -= 8;
+        }
+    }
+    return decoded;
 }

@@ -42,6 +42,7 @@
 #include "MockConnectionQueue.h"
 #include "GRPCTest.h"
 #include "Logger.h"
+#include "StreamReader.h"
 
 // gRPC
 #include "controllers/Connect.h"
@@ -114,60 +115,8 @@ class gRPCConnectTests : public GRPCTest {
      * This is a test class which makes an async RPC to the MockServer on
      * construction and compares the streamed-back response.
      */
-    class StreamReader : public grpc::ClientReadReactor<catena::PushUpdates> {
-      public:
-        StreamReader(std::vector<catena::PushUpdates>* outVals_, grpc::Status* outRc_, uint32_t reads = 1)
-            : outVals_(outVals_), outRc_(outRc_), reads_(reads) {}
-        /*
-         * This function makes an async RPC to the MockServer.
-         */
-        void MakeCall(catena::CatenaService::Stub* client, grpc::ClientContext* clientContext, const catena::ConnectPayload* inVal) {
-            // Sending async RPC.
-            client->async()->Connect(clientContext, inVal, this);
-            StartRead(&outVal_);
-            StartCall();
-        }
-        /*
-        * Triggers when a read is done_ and adds output to outVals_.
-        */
-        void OnReadDone(bool ok) override {
-            if (ok) {
-                outVals_->emplace_back(outVal_);
-                done_ = true;
-                cv_.notify_one();
-                StartRead(&outVal_);
-            }
-        }
-        /*
-         * Triggers when the RPC is finished and notifies Await().
-         */
-        void OnDone(const grpc::Status& status) override {
-            *outRc_ = status;
-            done_ = true;
-            cv_.notify_one();
-        }
-        /*
-         * Blocks until a call to OnReadDone or OnDOne has been made. 
-         */
-        inline void Await() {
-            cv_.wait(lock_, [this] { return done_; });
-            done_ = false;
-        }
-        
-      private:
-        // Pointers to the output variables.
-        grpc::Status* outRc_;
-        std::vector<catena::PushUpdates>* outVals_;
-
-        uint32_t reads_;
-        uint32_t current_ = 0;
-
-        catena::PushUpdates outVal_;
-        bool done_ = false;
-        std::condition_variable cv_;
-        std::mutex cv_mtx_;
-        std::unique_lock<std::mutex> lock_{cv_mtx_};
-    };
+    using StreamReader = catena::gRPC::test::StreamReader<catena::PushUpdates, catena::ConnectPayload, 
+        std::function<void(grpc::ClientContext*, const catena::ConnectPayload*, grpc::ClientReadReactor<catena::PushUpdates>*)>>;
 
     /*
      * Streamlines the creation of executeCommandPayloads. 
@@ -271,8 +220,10 @@ TEST_F(gRPCConnectTests, Connect_ConnectDisconnect) {
     // Once for main call, once for the async call.
     EXPECT_CALL(connectionQueue_, deregisterConnection(testing::_)).Times(2).WillOnce(testing::Return());
     // Making call
-    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
-    streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
+    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_, true);
+    streamReader_->MakeCall(&clientContext_, &inVal_, [this](auto ctx, auto payload, auto reactor) {
+        client_->async()->Connect(ctx, payload, reactor);
+    });
     streamReader_->Await();
     testRPC();
 }
@@ -300,8 +251,10 @@ TEST_F(gRPCConnectTests, Connect_ValueSetByClient) {
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
     // Making call
-    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
-    streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
+    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_, true);
+    streamReader_->MakeCall(&clientContext_, &inVal_, [this](auto ctx, auto payload, auto reactor) {
+        client_->async()->Connect(ctx, payload, reactor);
+    });
     streamReader_->Await();
     dm0_.getValueSetByClient().emit("oid0", &param0);
     streamReader_->Await();
@@ -335,8 +288,10 @@ TEST_F(gRPCConnectTests, Connect_ValueSetByServer) {
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
     // Making call
-    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
-    streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
+    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_, true);
+    streamReader_->MakeCall(&clientContext_, &inVal_, [this](auto ctx, auto payload, auto reactor) {
+        client_->async()->Connect(ctx, payload, reactor);
+    });
     streamReader_->Await();
     dm0_.getValueSetByServer().emit("oid0", &param0);
     streamReader_->Await();
@@ -364,8 +319,10 @@ TEST_F(gRPCConnectTests, Connect_LanguageAddedPushUpdate) {
             (*pack.mutable_words())["key1"] = "value1";
         }));
     // Making call
-    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
-    streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
+    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_, true);
+    streamReader_->MakeCall(&clientContext_, &inVal_, [this](auto ctx, auto payload, auto reactor) {
+        client_->async()->Connect(ctx, payload, reactor);
+    });
     streamReader_->Await();
     dm0_.getLanguageAddedPushUpdate().emit(&languagePack0);
     streamReader_->Await();
@@ -413,8 +370,10 @@ TEST_F(gRPCConnectTests, Connect_AuthzValid) {
             (*pack.mutable_words())["key0"] = "value0";
         }));
     // Making call
-    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
-    streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
+    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_, true);
+    streamReader_->MakeCall(&clientContext_, &inVal_, [this](auto ctx, auto payload, auto reactor) {
+        client_->async()->Connect(ctx, payload, reactor);
+    });
     streamReader_->Await();
     dm0_.getValueSetByClient().emit("oid0", &param0);
     streamReader_->Await();
@@ -433,8 +392,10 @@ TEST_F(gRPCConnectTests, Connect_AuthzInvalid) {
     authzEnabled_ = true;
     clientContext_.AddMetadata("authorization", "Bearer THIS SHOULD NOT PARSE");
     // Making call
-    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
-    streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
+    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_, true);
+    streamReader_->MakeCall(&clientContext_, &inVal_, [this](auto ctx, auto payload, auto reactor) {
+        client_->async()->Connect(ctx, payload, reactor);
+    });
     streamReader_->Await();
     streamReader_.reset(nullptr);
 }
@@ -447,8 +408,10 @@ TEST_F(gRPCConnectTests, Connect_AuthzJWSNotFound) {
     authzEnabled_ = true;
     clientContext_.AddMetadata("authorization", "NOT A BEARER TOKEN");
     // Making call
-    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
-    streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
+    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_, true);
+    streamReader_->MakeCall(&clientContext_, &inVal_, [this](auto ctx, auto payload, auto reactor) {
+        client_->async()->Connect(ctx, payload, reactor);
+    });
     streamReader_->Await();
     streamReader_.reset(nullptr);
 }
@@ -461,8 +424,10 @@ TEST_F(gRPCConnectTests, Connect_RegisterConnectionFailure) {
     // Setting expectations
     EXPECT_CALL(connectionQueue_, registerConnection(testing::_)).WillOnce(testing::Return(false));
     // Making call
-    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_);
-    streamReader_->MakeCall(client_.get(), &clientContext_, &inVal_);
+    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_, true);
+    streamReader_->MakeCall(&clientContext_, &inVal_, [this](auto ctx, auto payload, auto reactor) {
+        client_->async()->Connect(ctx, payload, reactor);
+    });
     streamReader_->Await();
     streamReader_.reset(nullptr);
 }

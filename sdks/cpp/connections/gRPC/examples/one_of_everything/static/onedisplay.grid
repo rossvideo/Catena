@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abs id="_top" keepalive="false">
+   <table  right="50" left="50" top="50" bottom="50">
+      <tr>
+         <label colspan="1" fill="both" rowspan="1" style="txt-align:center" weightx="1.0" weighty="0.2" name="Catena gRPC one of everythin DashBoard Demo"/>
+      </tr>
+      <tr>
+         <table colspan="1" fill="both" rowspan="1" weightx="1.0" weighty="1.0">
+            <tr> 
+               <param colspan="1" oid="counter" showlabel="true" fill="both" rowspan="1" widget="progress" />
+            </tr>
+            <tr><param colspan="1" oid="number_example" showlabel="true" fill="both" rowspan="1" widget="progress" /></tr>
+            <tr><param colspan="1" oid="float_example" showlabel="true" fill="both" rowspan="1" widget="progress" /></tr>
+            <tr><param colspan="1" oid="string_example" showlabel="true" fill="both" rowspan="1" widget="progress" /></tr>
+            <tr><param colspan="1" oid="number_array" showlabel="true" fill="both" rowspan="1" widget="progress" /></tr>
+            <tr><param colspan="1" oid="float_array" showlabel="true" fill="both" rowspan="1" widget="progress" /></tr>
+            <tr><param colspan="1" oid="string_array" showlabel="true" fill="both" rowspan="1" widget="progress" /></tr>
+         </table>
+      </tr>
+      
+   </table>
+         
+</abs>

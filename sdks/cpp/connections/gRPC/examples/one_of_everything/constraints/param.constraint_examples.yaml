@@ -1,7 +1,11 @@
 # This struct contains examples of each constraint type within it's nested
 # parameters.
 type: STRUCT
-name: { display_strings: { en: "Constraint Examples" } }
+name: { display_strings: { 
+  en: "Constraint Examples", 
+  fr: "Exemples de Contraintes", 
+  es: "Ejemplos de Restricciones", 
+  ja: "制約の例" } }
 params:
   # INT_RANGE constraint example
   int32_range:

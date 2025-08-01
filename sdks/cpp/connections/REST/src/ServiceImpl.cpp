@@ -35,19 +35,19 @@ void expandEnvVariables(std::string &str) {
 }
 // GCOVR_EXCL_STOP
 
-ServiceImpl::ServiceImpl(std::vector<IDevice*> dms, std::string& EOPath, bool authz, uint16_t port, uint32_t maxConnections)
+ServiceImpl::ServiceImpl(const ServiceConfig& config)
     : version_{"v1"},
-      EOPath_{EOPath},
-      port_{port},
-      authorizationEnabled_{authz},
-      acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
+      EOPath_{config.EOPath},
+      port_{config.port},
+      authorizationEnabled_{config.authz},
+      acceptor_{io_context_, tcp::endpoint(tcp::v4(), config.port)},
       router_{Router::getInstance()},
-      connectionQueue_{maxConnections},
-      subscriptionManager_(*dms[0], Authorizer::kAuthzDisabled) {
+      connectionQueue_{config.maxConnections},
+      subscriptionManager_(config.dms[0], Authorizer::kAuthzDisabled) {
 
     if (authorizationEnabled_) { DEBUG_LOG <<"Authorization enabled."; }
     // Adding dms to slotMap.
-    for (auto dm : dms) {
+    for (auto dm : config.dms) {
         if (dms_.contains(dm->slot())) {
             throw std::runtime_error("Device with slot " + std::to_string(dm->slot()) + " already exists in the map.");
         } else {
