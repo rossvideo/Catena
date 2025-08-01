@@ -8,7 +8,7 @@ on:
       - 'sdks/cpp/**'
       - 'unittests/cpp/**'
   pull_request:
-    files:
+    paths:
       - 'sdks/cpp/**'
       - 'unittests/cpp/**'
       - '.github/workflows/cpp-pull-request.yml'
