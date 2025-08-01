@@ -425,7 +425,7 @@ class IDevice {
      * @param authz The authorizer to use for checking permissions
      * @return The maximum number of possible subscriptions
      */
-    virtual uint32_t calculateMaxSubscriptions(Authorizer& authz) const = 0;
+    virtual uint32_t maxSubscriptions(Authorizer& authz) const = 0;
 };
 
 using SlotMap = std::unordered_map<uint32_t, IDevice*>;

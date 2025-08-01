@@ -118,10 +118,10 @@ class GRPCTest : public ::testing::Test {
         }));
         EXPECT_CALL(dm0_, mutex()).WillRepeatedly(::testing::ReturnRef(mtx0_));
         EXPECT_CALL(dm0_, slot()).WillRepeatedly(::testing::Return(0));
-        EXPECT_CALL(dm0_, calculateMaxSubscriptions(::testing::_)).WillRepeatedly(::testing::Return(50));
+        EXPECT_CALL(dm0_, maxSubscriptions(::testing::_)).WillRepeatedly(::testing::Return(50));
         EXPECT_CALL(dm1_, mutex()).WillRepeatedly(::testing::ReturnRef(mtx1_));
         EXPECT_CALL(dm1_, slot()).WillRepeatedly(::testing::Return(1));
-        EXPECT_CALL(dm1_, calculateMaxSubscriptions(::testing::_)).WillRepeatedly(::testing::Return(50));
+        EXPECT_CALL(dm1_, maxSubscriptions(::testing::_)).WillRepeatedly(::testing::Return(50));
         EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(::testing::Invoke([this](){ return authzEnabled_; }));
 
         // Deploying cq handler on a thread.

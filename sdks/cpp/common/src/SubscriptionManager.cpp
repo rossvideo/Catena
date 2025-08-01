@@ -35,7 +35,7 @@
 using catena::common::SubscriptionManager;
 
 SubscriptionManager::SubscriptionManager(const IDevice& device, Authorizer& authz) 
-    : max_subscriptions_per_device_(device.calculateMaxSubscriptions(authz)) {
+    : max_subscriptions_per_device_(device.maxSubscriptions(authz)) {
 }
 
 // Add a subscription (unique or wildcard)

@@ -2271,8 +2271,8 @@ TEST_F(DeviceTest, ShouldSendParam) {
     EXPECT_FALSE(device_->shouldSendParam(*mockParams_[0], false, *monitorAuthz_)); // fixture minimal set param
 }
 
-// 7.4: Success Case - calculateMaxSubscriptions functionality
-TEST_F(DeviceTest, CalculateMaxSubscriptions) {
+// 7.4: Success Case - maxSubscriptions functionality
+TEST_F(DeviceTest, maxSubscriptions) {
     // Create mock parameters with different characteristics
     auto mockParam1 = std::make_shared<MockParam>();
     auto mockDescriptor1 = std::make_shared<MockParamDescriptor>();
@@ -2317,9 +2317,9 @@ TEST_F(DeviceTest, CalculateMaxSubscriptions) {
     device_->addItem("testArray", mockArrayParam.get());
     
     // Test with different authorization types - should count parameters based on authorization
-    uint32_t adminCount = device_->calculateMaxSubscriptions(*adminAuthz_);
-    uint32_t monitorCount = device_->calculateMaxSubscriptions(*monitorAuthz_);
-    uint32_t disabledCount = device_->calculateMaxSubscriptions(Authorizer::kAuthzDisabled);
+    uint32_t adminCount = device_->maxSubscriptions(*adminAuthz_);
+    uint32_t monitorCount = device_->maxSubscriptions(*monitorAuthz_);
+    uint32_t disabledCount = device_->maxSubscriptions(Authorizer::kAuthzDisabled);
     
     // Admin authorizer can read: 2 simple params + 1 array param (admin scope) = 3
     EXPECT_EQ(adminCount, 3);    

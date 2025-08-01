@@ -161,9 +161,9 @@ TEST(gRPCServiceImplTests_NoFixture, ServiceImpl_CreateDuplicateSlot) {
     std::string EOPath = "/Test/EO/Path";
     EXPECT_CALL(dm1, slot()).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(dm2, slot()).WillRepeatedly(testing::Return(0));
-    // Set up expectations for calculateMaxSubscriptions to avoid GMock warnings
-    EXPECT_CALL(dm1, calculateMaxSubscriptions(testing::_)).WillRepeatedly(testing::Return(50));
-    EXPECT_CALL(dm2, calculateMaxSubscriptions(testing::_)).WillRepeatedly(testing::Return(50));
+    // Set up expectations for maxSubscriptions to avoid GMock warnings
+    EXPECT_CALL(dm1, maxSubscriptions(testing::_)).WillRepeatedly(testing::Return(50));
+    EXPECT_CALL(dm2, maxSubscriptions(testing::_)).WillRepeatedly(testing::Return(50));
     // Creating a service with a duplicate slot.
     EXPECT_THROW(ServiceImpl(nullptr, {&dm1, &dm2}, EOPath, false, 16), std::runtime_error)
         << "Creating a service with two devices sharing a slot should throw an error.";

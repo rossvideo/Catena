@@ -585,7 +585,7 @@ class Device : public IDevice {
      * @param authz The authorizer to use for checking permissions
      * @return The maximum number of possible subscriptions
      */
-    uint32_t calculateMaxSubscriptions(Authorizer& authz) const override;
+    uint32_t maxSubscriptions(Authorizer& authz) const override;
   private:
 
     /**

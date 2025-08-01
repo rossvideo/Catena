@@ -553,7 +553,7 @@ bool Device::shouldSendParam(const IParam& param, bool is_subscribed, Authorizer
     return should_send;
 }
 
-uint32_t Device::calculateMaxSubscriptions(Authorizer& authz) const {
+uint32_t Device::maxSubscriptions(Authorizer& authz) const {
     uint32_t totalCount = 0;
     
     // Count all top-level parameters and their children

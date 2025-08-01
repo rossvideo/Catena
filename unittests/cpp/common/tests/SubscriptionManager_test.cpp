@@ -66,8 +66,8 @@ protected:
         device = std::make_unique<MockDevice>();
         mockParam = std::make_unique<MockParam>();
         
-        // Set up default behavior for calculateMaxSubscriptions
-        EXPECT_CALL(*device, calculateMaxSubscriptions(::testing::_))
+        // Set up default behavior for maxSubscriptions
+        EXPECT_CALL(*device, maxSubscriptions(::testing::_))
             .WillRepeatedly(::testing::Return(50));
         
         manager = std::make_unique<SubscriptionManager>(*device, authz_);
@@ -847,7 +847,7 @@ TEST_F(SubscriptionManagerTest, Array_RemoveNonExistentSubscription) {
 // Test 4.7: Error case - Resource exhaustion with non-wildcard subscription
 TEST_F(SubscriptionManagerTest, ResourceExhaustion_NonWildcardSubscription) {
     // Override the subscription limit to be very low
-    EXPECT_CALL(*device, calculateMaxSubscriptions(::testing::_))
+    EXPECT_CALL(*device, maxSubscriptions(::testing::_))
         .WillRepeatedly(::testing::Return(1));
     
     // Recreate manager with the new limit
@@ -868,7 +868,7 @@ TEST_F(SubscriptionManagerTest, ResourceExhaustion_NonWildcardSubscription) {
 // Test 4.8: Error case - Resource exhaustion with wildcard subscription
 TEST_F(SubscriptionManagerTest, ResourceExhaustion_WildcardSubscription) {
     // Override the subscription limit to allow only 2 subscriptions
-    EXPECT_CALL(*device, calculateMaxSubscriptions(::testing::_))
+    EXPECT_CALL(*device, maxSubscriptions(::testing::_))
         .WillRepeatedly(::testing::Return(2));
     
     // Recreate manager with the new limit
@@ -901,7 +901,7 @@ TEST_F(SubscriptionManagerTest, ResourceExhaustion_WildcardSubscription) {
 // Test 4.9: Error case - Resource exhaustion with all params subscription
 TEST_F(SubscriptionManagerTest, ResourceExhaustion_AllParamsSubscription) {
     // Override the subscription limit to allow only 1 subscription
-    EXPECT_CALL(*device, calculateMaxSubscriptions(::testing::_))
+    EXPECT_CALL(*device, maxSubscriptions(::testing::_))
         .WillRepeatedly(::testing::Return(1));
     
     // Recreate manager with the new limit
