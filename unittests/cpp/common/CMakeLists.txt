@@ -37,7 +37,7 @@ set(SOURCES
     tests/ParamDescriptor_test.cpp
     tests/Device_test.cpp
     tests/ConnectionQueue_test.cpp
-
+    tests/ParamWithValue_test.cpp
 )
 
 add_executable(${This} ${SOURCES})

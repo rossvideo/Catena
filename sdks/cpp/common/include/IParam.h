@@ -61,7 +61,6 @@ class IParam {
 
     using Path = catena::common::Path;
 
-  public:
     IParam() = default;
     virtual ~IParam() = default;
 
