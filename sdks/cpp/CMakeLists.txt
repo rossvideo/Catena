@@ -33,10 +33,19 @@ get_filename_component(CATENA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.. ABSOLUT
 set(CATENA_CPP_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 find_package(glog REQUIRED)
+
 # Set default log directory if not provided
 if(NOT DEFINED GLOG_LOGGING_DIR)
-    set(GLOG_LOGGING_DIR "${CMAKE_CURRENT_BINARY_DIR}/logs")
+    set(GLOG_LOGGING_DIR "${CATENA_ROOT_DIR}/logs")
 endif()
+
+# If logs dir doesn't exist, create it
+if(NOT EXISTS "${GLOG_LOGGING_DIR}")
+    file(MAKE_DIRECTORY "${GLOG_LOGGING_DIR}")
+endif()
+message(STATUS "Using glog logging directory: ${GLOG_LOGGING_DIR}")
+
+# Add the glog logging directory to the compile definitions
 add_compile_definitions(GLOG_LOGGING_DIR="${GLOG_LOGGING_DIR}")
 
 # Set the default max number of connections
@@ -47,6 +56,7 @@ add_compile_options(--coverage)
 add_link_options(--coverage)
 
 option(UNIT_TESTING "Build the unit tests" ON)
+add_compile_definitions(UNIT_TESTING="${UNIT_TESTING}")
 
 # enable testing
 enable_testing()
