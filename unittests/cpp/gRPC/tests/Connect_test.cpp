@@ -41,6 +41,7 @@
 #include "MockLanguagePack.h"
 #include "MockConnectionQueue.h"
 #include "GRPCTest.h"
+#include "Logger.h"
 
 // gRPC
 #include "controllers/Connect.h"
@@ -51,6 +52,15 @@ using namespace catena::gRPC;
 // Fixture
 class gRPCConnectTests : public GRPCTest {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("gRPCConnectTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
     gRPCConnectTests() {
         expRc_ = catena::exception_with_status("", catena::StatusCode::CANCELLED);
         EXPECT_CALL(service_, connectionQueue()).WillRepeatedly(testing::ReturnRef(connectionQueue_));
