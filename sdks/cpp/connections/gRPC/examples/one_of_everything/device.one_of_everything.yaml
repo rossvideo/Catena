@@ -88,6 +88,30 @@ params:
       es: "Ejemplo de Matriz de Cadenas", 
       ja: "文字列配列の例" } }
 
+  menu_button:
+    type: INT32
+    name: { display_strings: { 
+        en: "Menu Button",
+        fr: "Bouton de Menu",
+        es: "Botón de Menú",
+        ja: "メニューボタン" } }
+    widget: menu_popup
+    value:
+      int32_value: 0
+    constraint:
+      type: INT_CHOICE
+      int32_choice:
+        choices:
+          - value: 0
+            name: { display_strings: { 
+                en: "Popup Menu", 
+                fr: "Menu Popup",
+                es: "Menú Emergente",
+                ja: "ポップアップメニュー" } }
+              
+
+  # This is a struct reference imported from another file and used as a
+  # template oid for struct_example and struct_array.
   ref_struct:
     import: { file: /params/param.ref_struct.yaml }
 
@@ -115,6 +139,7 @@ menu_groups:
           es: "Producto", 
           ja: "製品" } }
         param_oids:
+          - /counter
           - /number_example
   config:
     name: { display_strings: { 
@@ -132,7 +157,43 @@ menu_groups:
         param_oids:
           - /float_example
           - /string_example
-
+          - /number_array
+          - /float_array
+          - /string_array
+      struct_examples:
+        name: { display_strings: { 
+          en: "Struct Examples", 
+          fr: "Exemples de Structure", 
+          es: "Ejemplos de Estructura", 
+          ja: "構造体の例" } }
+        param_oids:
+          - /struct_example
+          - /struct_example/nested_struct
+          - /struct_array
+          - /struct_array/0/nested_struct
+          - /struct_array/1/nested_struct
+      constraint_examples:
+        name: { display_strings: { 
+          en: "Constraint Examples", 
+          fr: "Exemples de Contraintes", 
+          es: "Ejemplos de Restricciones", 
+          ja: "制約の例" } }
+        param_oids:
+          - /constraint_examples/int32_range
+          - /constraint_examples/int_array_range
+          - /constraint_examples/int32_choice
+          - /constraint_examples/int_array_choice
+          #- /constraint_examples/int32_alarm
+          #- /constraint_examples/int_array_alarm
+          - /constraint_examples/float32_range
+          - /constraint_examples/float_array_range
+          - /constraint_examples/string_choice
+          - /constraint_examples/string_array_choice
+          - /constraint_examples/string_string_choice
+          - /constraint_examples/string_string_array_choice
+          - /constraint_examples/string_length
+          - /constraint_examples/string_array_length
+      
 commands:
   fib_start:
     type: EMPTY

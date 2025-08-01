@@ -1,0 +1,27 @@
+# STRING_CHOICE constraint example with an array
+type: STRING
+value: { string_value: "<#FF0000>" } 
+constraint:
+  type: STRING_STRING_CHOICE
+  string_string_choice:
+    choices:
+      - name: { display_strings: {
+          en: "Red",
+          fr: "Rouge",
+          es: "Rojo",
+          ja: "赤" } }
+        value: "<#FF0000>"
+      - name: { display_strings: {
+          en: "Green",
+          fr: "Vert",
+          es: "Verde",
+          ja: "緑" } }
+        value: "<#00FF00>"
+      - name: { display_strings: {
+          en: "Blue",
+          fr: "Bleu",
+          es: "Azul",
+          ja: "青" } }
+        value: "<#0000FF>"
+    strict: true
+widget: combo_entry

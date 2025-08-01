@@ -6,13 +6,14 @@ constraint:
     choices:
       - value: 0
         name: { display_strings: { 
-          en: "Zero", 
-          fr: "Zéro", 
-          es: "Cero", 
-          ja: "ゼロ" } }
+          en: "Off", 
+          fr: "Arrêt", 
+          es: "Apagado", 
+          ja: "オフ" } }
       - value: 1
         name: { display_strings: { 
-          en: "One", 
-          fr: "Un", 
-          es: "Uno", 
-          ja: "一" } }
+          en: "On", 
+          fr: "Marche", 
+          es: "Encendido", 
+          ja: "オン" } }
+widget: button
