@@ -100,7 +100,7 @@ class ParamWithValueTest : public ::testing::Test {
  * 
  * 
  */
-using emptyParam = ParamWithValue<EmptyValue>;
+using EmptyParam = ParamWithValue<EmptyValue>;
 
 TEST_F(ParamWithValueTest, Empty_Create) {
     CreateTest<EmptyValue>(emptyValue);
@@ -110,6 +110,14 @@ TEST_F(ParamWithValueTest, Empty_Get) {
     GetValueTest<EmptyValue>(emptyValue);
 }
 
+TEST_F(ParamWithValueTest, Empty_Size) {
+    EmptyParam param(emptyValue, pd_);
+    EXPECT_EQ(param.size(), 0);
+}
+
+TEST_F(ParamWithValueTest, Empty_GetParam) {
+    ParamWithValue<EmptyValue> param(emptyValue, pd_);
+}
 
 
 /* ============================================================================
@@ -119,7 +127,7 @@ TEST_F(ParamWithValueTest, Empty_Get) {
  * 
  */
 
-using intParam = ParamWithValue<int32_t>;
+using IntParam = ParamWithValue<int32_t>;
 
 TEST_F(ParamWithValueTest, Int_Create) {
     int32_t value{0};
@@ -131,6 +139,12 @@ TEST_F(ParamWithValueTest, Int_Get) {
     GetValueTest<int32_t>(value);
 }
 
+TEST_F(ParamWithValueTest, Int_Size) {
+    int32_t value{0};
+    IntParam param(value, pd_);
+    EXPECT_EQ(param.size(), 0);
+}
+
 /* ============================================================================
  *                                   FLOAT
  * ============================================================================
@@ -138,7 +152,7 @@ TEST_F(ParamWithValueTest, Int_Get) {
  * 
  */
 
- using floatParam = ParamWithValue<float>;
+ using FloatParam = ParamWithValue<float>;
 
 TEST_F(ParamWithValueTest, Float_Create) {
     float value{0};
@@ -150,6 +164,12 @@ TEST_F(ParamWithValueTest, Float_Get) {
     GetValueTest<float>(value);
 }
 
+TEST_F(ParamWithValueTest, Float_Size) {
+    float value{0};
+    FloatParam param(value, pd_);
+    EXPECT_EQ(param.size(), 0);
+}
+
 /* ============================================================================
  *                                  STRING
  * ============================================================================
@@ -157,7 +177,7 @@ TEST_F(ParamWithValueTest, Float_Get) {
  * 
  */
 
-using stringParam = ParamWithValue<std::string>;
+using StringParam = ParamWithValue<std::string>;
 
 TEST_F(ParamWithValueTest, String_Create) {
     std::string value{"Hello World"};
@@ -169,6 +189,12 @@ TEST_F(ParamWithValueTest, String_Get) {
     GetValueTest<std::string>(value);
 }
 
+TEST_F(ParamWithValueTest, String_Size) {
+    std::string value{"Hello World"};
+    StringParam param(value, pd_);
+    EXPECT_EQ(param.size(), value.size());
+}
+
 
 /* ============================================================================
  *                                 INT ARRAY
@@ -177,7 +203,7 @@ TEST_F(ParamWithValueTest, String_Get) {
  * 
  */
 
-using intArrayParam = ParamWithValue<std::vector<int32_t>>;
+using IntArrayParam = ParamWithValue<std::vector<int32_t>>;
 
 TEST_F(ParamWithValueTest, IntArray_Create) {
     std::vector<int32_t> value{0, 1, 2};
@@ -189,6 +215,12 @@ TEST_F(ParamWithValueTest, IntArray_Get) {
     GetValueTest<std::vector<int32_t>>(value);
 }
 
+TEST_F(ParamWithValueTest, IntArray_Size) {
+    std::vector<int32_t> value{0, 1, 2};
+    IntArrayParam param(value, pd_);
+    EXPECT_EQ(param.size(), value.size());
+}
+
 
 /* ============================================================================
  *                                FLOAT ARRAY
@@ -197,7 +229,7 @@ TEST_F(ParamWithValueTest, IntArray_Get) {
  * 
  */
 
-using floatArrayParam = ParamWithValue<std::vector<float>>;
+using FloatArrayParam = ParamWithValue<std::vector<float>>;
 
 TEST_F(ParamWithValueTest, FloatArray_Create) {
     std::vector<float> value{0, 1, 2};
@@ -209,6 +241,12 @@ TEST_F(ParamWithValueTest, FloatArray_Get) {
     GetValueTest<std::vector<float>>(value);
 }
 
+TEST_F(ParamWithValueTest, FloatArray_Size) {
+    std::vector<float> value{0, 1, 2};
+    FloatArrayParam param(value, pd_);
+    EXPECT_EQ(param.size(), value.size());
+}
+
 
 /* ============================================================================
  *                               STRING ARRAY
@@ -216,7 +254,7 @@ TEST_F(ParamWithValueTest, FloatArray_Get) {
  * 
  * 
  */
-using stringArrayParam = ParamWithValue<std::vector<std::string>>;
+using StringArrayParam = ParamWithValue<std::vector<std::string>>;
 
 TEST_F(ParamWithValueTest, StringArray_Create) {
     std::vector<std::string> value{"Hello", "World"};
@@ -226,6 +264,12 @@ TEST_F(ParamWithValueTest, StringArray_Create) {
 TEST_F(ParamWithValueTest, StringArray_Get) {
     std::vector<std::string> value{"Hello", "World"};
     GetValueTest<std::vector<std::string>>(value);
+}
+
+TEST_F(ParamWithValueTest, StringArray_Size) {
+    std::vector<std::string> value{"Hello", "World"};
+    StringArrayParam param(value, pd_);
+    EXPECT_EQ(param.size(), value.size());
 }
 
 
@@ -281,7 +325,7 @@ TEST_F(ParamWithValueTest, StringArray_Get) {
   * TEST ? - Tests a number of functions that just forward to the descriptor.
   */
 TEST_F(ParamWithValueTest, DescriptorForwards) {
-    emptyParam param(emptyValue, pd_);
+    EmptyParam param(emptyValue, pd_);
     // param.getDescriptor()
     EXPECT_EQ(&param.getDescriptor(), &pd_);
     // param.type()
@@ -319,6 +363,28 @@ TEST_F(ParamWithValueTest, DescriptorForwards) {
     MockParamDescriptor subPd;
     EXPECT_CALL(pd_, addSubParam(subOid, &subPd)).Times(1).WillOnce(testing::Return());
     EXPECT_NO_THROW(param.addParam(subOid, &subPd););
+    // param.isArrayType()
+    for (auto [type, expected] : std::vector<std::pair<catena::ParamType, bool>>{
+        {catena::ParamType::UNDEFINED, false},
+        {catena::ParamType::EMPTY, false},
+        {catena::ParamType::INT32, false},
+        {catena::ParamType::FLOAT32, false},
+        {catena::ParamType::STRING, false},
+        {catena::ParamType::STRUCT, false},
+        {catena::ParamType::STRUCT_VARIANT, false},
+        {catena::ParamType::INT32_ARRAY, true},
+        {catena::ParamType::FLOAT32_ARRAY, true},
+        {catena::ParamType::STRING_ARRAY, true},
+        {catena::ParamType::BINARY, false},
+        {catena::ParamType::STRUCT_ARRAY, true},
+        {catena::ParamType::STRUCT_VARIANT_ARRAY, true},
+        {catena::ParamType::DATA, false}
+    }) {
+        MockParamDescriptor typeTestPd_;
+        EmptyParam typeTestParam(emptyValue, typeTestPd_);
+        EXPECT_CALL(typeTestPd_, type()).WillOnce(testing::Return(type));
+        EXPECT_EQ(typeTestParam.isArrayType(), expected);
+    }
     // param.getConstraint()
     MockConstraint testConstraint;
     EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(&testConstraint));
@@ -331,7 +397,7 @@ TEST_F(ParamWithValueTest, DescriptorForwards) {
 
 TEST_F(ParamWithValueTest, Copy) {
     int32_t value{0};
-    intParam param(value, pd_);
+    IntParam param(value, pd_);
     std::unique_ptr<IParam> paramCopy = nullptr;
     // Copying param and checking its values.
     EXPECT_NO_THROW(paramCopy = param.copy()) << "Failed to copy ParamWithValue using copy()";

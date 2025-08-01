@@ -268,7 +268,7 @@ class ParamWithValue : public catena::common::IParam {
      * @return The size of the array parameter, or 0 if the parameter is not an
      * array.
      */
-    uint32_t size() const override { return size_(value_.get()); }
+    std::size_t size() const override { return size_(value_.get()); }
 
     /**
      * @brief Adds an empty element to the end of an array parameter.
@@ -302,11 +302,12 @@ class ParamWithValue : public catena::common::IParam {
      * @return true if the parameter is an array type
      */
     bool isArrayType() const override {
-        return (type().value() == catena::ParamType::STRUCT_ARRAY ||
-                type().value() == catena::ParamType::INT32_ARRAY ||
-                type().value() == catena::ParamType::FLOAT32_ARRAY ||
-                type().value() == catena::ParamType::STRING_ARRAY ||
-                type().value() == catena::ParamType::STRUCT_VARIANT_ARRAY);
+        catena::ParamType paramType = type().value();
+        return (paramType == catena::ParamType::STRUCT_ARRAY ||
+                paramType == catena::ParamType::INT32_ARRAY ||
+                paramType == catena::ParamType::FLOAT32_ARRAY ||
+                paramType == catena::ParamType::STRING_ARRAY ||
+                paramType == catena::ParamType::STRUCT_VARIANT_ARRAY);
     }
 
     /**
@@ -349,23 +350,29 @@ class ParamWithValue : public catena::common::IParam {
 
   protected:
     /**
-     * @brief Gets the size of the array parameter.
+     * @brief Gets the size of the string/array parameter.
      * @return 0.
      * 
      * This generic template is used when the type is not a CatenaStructArray.
      * Since there is no .size() attribute, it only returns 0.
      */
     template <typename U>
-    uint32_t size_(U& value) const { return 0; }
-
+    std::size_t size_(const U& value) const { return 0; }
     /**
-     * @brief Gets the size of the array parameter.
+     * @brief Gets the size of the string/array parameter.
+     * @return The size of the string parameter.
+     * 
+     * This specialization is used when the type is a std::string.
+     */
+    std::size_t size_(const std::string& value) const { return value.length(); }
+    /**
+     * @brief Gets the size of the string/array parameter.
      * @return The size of the array parameter.
      * 
      * This specialization is used when the type is a CatenaStructArray.
      */
     template<meta::IsVector U>
-    uint32_t size_(U& value) const { return value.size(); }
+    std::size_t size_(const U& value) const { return value.size(); }
 
     /**
      * @brief Adds an empty element to the end of an array parameter.
@@ -482,32 +489,29 @@ class ParamWithValue : public catena::common::IParam {
     template<meta::IsVector U>
     std::unique_ptr<IParam> getParam_(Path& oid, U& value, Authorizer& authz, catena::exception_with_status& status) {
         using ElemType = U::value_type;
+        std::unique_ptr<IParam> returnParam = nullptr;
         if (!oid.front_is_index()) {
             status = catena::exception_with_status("Expected index in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
-            return nullptr;
-        }
-        size_t oidIndex = oid.front_as_index();
-        oid.pop();
 
-        if (oidIndex >= value.size() || oidIndex == catena::common::Path::kEnd) {
-            // If index is out of bounds, return nullptr
-            status = catena::exception_with_status("Index " + std::to_string(oidIndex) + " out of bounds in path " + oid.fqoid(), catena::StatusCode::OUT_OF_RANGE);
-            return nullptr;
-        }
-
-        if (oid.empty()) {
-            // we reached the end of the path, return the element
-            return std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
         } else {
-            if constexpr (CatenaStruct<ElemType> || meta::IsVariant<ElemType>) {
+            size_t oidIndex = oid.front_as_index();
+            oid.pop();
+            // If index is out of bounds, return nullptr
+            if (oidIndex >= value.size()) {
+                status = catena::exception_with_status("Index " + std::to_string(oidIndex) + " out of bounds in path " + oid.fqoid(), catena::StatusCode::OUT_OF_RANGE);
+            // we reached the end of the path, return the element
+            } else if (oid.empty()) {
+                returnParam = std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
+            // The path has more segments, keep recursing
+            } else if constexpr (CatenaStruct<ElemType> || meta::IsVariant<ElemType>) {
                 // The path has more segments, keep recursing
-                return ParamWithValue<ElemType>(value[oidIndex], descriptor_).getParam(oid, authz, status);
+                returnParam = ParamWithValue<ElemType>(value[oidIndex], descriptor_).getParam(oid, authz, status);
+            // This type is not a CatenaStructArray so it has no sub-params
             } else {
-                // This type is not a CatenaStructArray so it has no sub-params
                 status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::NOT_FOUND);
-                return nullptr;
             }
         }
+        return returnParam;
     }
 
     /**
@@ -634,13 +638,6 @@ class ParamWithValue : public catena::common::IParam {
         }
     }
 
-    template<typename U>
-    /**
-     * @brief Helper function to return length of value if it's a string.
-     * @returns The length of value if it's a string, or 0 otherwise.
-     */
-    std::size_t str_length(const U& value) const { return 0; }
-    std::size_t str_length(const std::string& value) const { return value.length(); }
     // Tracker updaters. One overload for each case.
     /**
      * @brief Default overload of validateSetValue_ used in cases where type(U) ==
@@ -661,7 +658,7 @@ class ParamWithValue : public catena::common::IParam {
         // newVal must pass all validation checks in validFromProto.
         } else if (validFromProto(protoVal, &oldVal, descriptor_, ans, authz)) {
             // Valid case if validFromProto returns true.
-            mSizeTracker_ = std::make_shared<std::size_t>(str_length(newVal));
+            mSizeTracker_ = std::make_shared<std::size_t>(size_(newVal));
         }
 
          // If above was sucessful, finish by validating mSize
@@ -690,7 +687,7 @@ class ParamWithValue : public catena::common::IParam {
             mSizeTracker_ = std::make_shared<std::size_t>(arrayVal.size());
             tSizeTracker_ = std::make_shared<TSizeTracker>();
             for (auto& memVal : arrayVal) {
-                tSizeTracker_->push_back(str_length(memVal));
+                tSizeTracker_->push_back(size_(memVal));
             }
         }
 
@@ -707,10 +704,10 @@ class ParamWithValue : public catena::common::IParam {
             // Valid case 1: Appending to the end.
             if (index == Path::kEnd) {
                 *mSizeTracker_ += 1;
-                tSizeTracker_->push_back(str_length(memVal));
+                tSizeTracker_->push_back(size_(memVal));
             // Valid case 2: Inserting at an existing index.
             } else {
-                tSizeTracker_->at(index) = str_length(memVal);
+                tSizeTracker_->at(index) = size_(memVal);
             }
         }
 
