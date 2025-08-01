@@ -130,10 +130,10 @@ jobs:
         run: |
           if [ "${{ steps.teststatus.outputs.status }}" = "passed" ]; then
             echo '### ✅ Unit Tests Status' >> comment-body.md
-            echo 'All the unit tests have passed.' >> comment-body.md
+            echo ' ✅  All the unit tests have passed.' >> comment-body.md
           else
             echo '### ❌ Unit Tests Status' >> comment-body.md
-            echo 'Some unit tests have failed.'>> comment-body.md
+            echo ' ❌ Some unit tests have failed.'>> comment-body.md
                   echo '```' >> comment-body.md
                   cat test_results.log >> comment-body.md
                   echo '```' >> comment-body.md
@@ -142,13 +142,32 @@ jobs:
           echo "" >> comment-body.md
           echo '### 📈 Code Coverage Summary' >> comment-body.md
           cat code-coverage-results.md >> comment-body.md
-          
+      
+      - name: Find Comment
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+
       - name: Comment on PR with test and coverage results
+        if: steps.fc.outputs.comment-id == ''
         uses: peter-evans/create-or-update-comment@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
           body-path: comment-body.md
+      
+      - name: Update PR comment with test and coverage results
+        if: steps.fc.outputs.comment-id != ''
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: comment-body.md
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          edit-mode: replace
+          
 
   CodeQL:
     name: CodeQL Analysis (15-30 minutes)
