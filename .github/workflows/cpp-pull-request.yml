@@ -41,7 +41,6 @@ jobs:
 
   Unit-Tests:
     name: Run Unit Tests and coverage (11 minutes)
-    if: github.event_name == 'pull_request'
     timeout-minutes: 15
     runs-on: ubuntu-latest
     container:
@@ -128,6 +127,7 @@ jobs:
           retention-days: 4
 
       - name: Build PR comment body
+        if: github.event_name == 'pull_request'
         id: comment
         run: |
           if [ "${{ steps.teststatus.outputs.status }}" = "passed" ]; then
@@ -146,6 +146,7 @@ jobs:
           cat code-coverage-results.md >> comment-body.md
       
       - name: Find Comment
+        if: github.event_name == 'pull_request'
         uses: peter-evans/find-comment@v3
         id: fc
         with:
@@ -153,7 +154,7 @@ jobs:
           comment-author: 'github-actions[bot]'
 
       - name: Comment on PR with test and coverage results
-        if: steps.fc.outputs.comment-id == ''
+        if: steps.fc.outputs.comment-id == '' && github.event_name == 'pull_request'
         uses: peter-evans/create-or-update-comment@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -161,7 +162,7 @@ jobs:
           body-path: comment-body.md
       
       - name: Update PR comment with test and coverage results
-        if: steps.fc.outputs.comment-id != ''
+        if: steps.fc.outputs.comment-id != '' && github.event_name == 'pull_request'
         uses: peter-evans/create-or-update-comment@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
