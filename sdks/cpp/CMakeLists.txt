@@ -56,7 +56,6 @@ add_compile_options(--coverage)
 add_link_options(--coverage)
 
 option(UNIT_TESTING "Build the unit tests" ON)
-add_compile_definitions(UNIT_TESTING="${UNIT_TESTING}")
 
 # enable testing
 enable_testing()
