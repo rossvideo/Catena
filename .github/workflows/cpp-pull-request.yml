@@ -73,10 +73,19 @@ jobs:
           # check if file contains "100% tests passed"
           if grep -q "100% tests passed" test_results.log; then
             echo "All tests passed!"
+            echo "passed" > unit_test_status.txt
           else
             echo "Some tests failed."
+            echo "failed" > unit_test_status.txt
             exit 1
           fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-status
+          path: unit_test_status.txt
+          retention-days: 1
+        if: always()
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
@@ -134,9 +143,13 @@ jobs:
           --html-details
 
       - name: Code Coverage Summary Report
+        id: coverage
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:
           filename: coverage.xml
+          badge: true
+          badge-title: 'Catena C++ Coverage'
+          format: markdown
       
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
@@ -149,8 +162,29 @@ jobs:
             coverage.info
           retention-days: 60
 
+      - name: Download unit test status
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-status
+
+      - name: Read unit test status
+        id: teststatus
+        run: echo "status=$(cat unit_test_status.txt)" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR with test and coverage results
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ### Unit Tests Status
+            **${{ steps.teststatus.outputs.status }}**
+
+            ### Code Coverage Summary
+            ${{ steps.coverage.outputs.markdown }}
+
   CodeQL:
-    name: CodeQL Analysis (30 minutes)
+    name: CodeQL Analysis (15-30 minutes)
     timeout-minutes: 35
     runs-on: ubuntu-latest
     container:
