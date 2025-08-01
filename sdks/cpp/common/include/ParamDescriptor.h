@@ -44,7 +44,7 @@
 #include <PolyglotText.h>
 #include <IParamDescriptor.h>
 #include <IDevice.h>
-#include <Authorizer.h>  
+#include <IAuthorizer.h>  
 
 #include <vector>
 #include <string>
@@ -53,7 +53,7 @@
 namespace catena {
 namespace common {
 
-class Authorizer; // forward declaration
+class IAuthorizer; // forward declaration
 class IDevice; // forward declaration
 
 /**
@@ -228,7 +228,7 @@ class ParamDescriptor : public IParamDescriptor {
      * with the information from the ParamDescriptor
      * 
      */
-    void toProto(catena::Param &param, Authorizer& authz) const override;
+    void toProto(catena::Param &param, IAuthorizer& authz) const override;
 
 
     /**
@@ -239,7 +239,7 @@ class ParamDescriptor : public IParamDescriptor {
      * this function will populate all non-value fields of the protobuf param message 
      * with the information from the ParamDescriptor
      */
-    void toProto(catena::ParamInfo &paramInfo, Authorizer& authz) const override;
+    void toProto(catena::ParamInfo &paramInfo, IAuthorizer& authz) const override;
 
     /**
      * @brief get the parameter name by language

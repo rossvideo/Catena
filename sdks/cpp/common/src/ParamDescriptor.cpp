@@ -41,7 +41,7 @@ std::size_t ParamDescriptor::total_length() const {
     return (total_length_ > 0) ? total_length_ : dev_.get().default_total_length();
 }
 
-void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {
+void ParamDescriptor::toProto(catena::Param &param, IAuthorizer& authz) const {
     
     param.set_type(type_);
     param.set_read_only(read_only_);
@@ -76,7 +76,7 @@ void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {
 }
 
 
-void ParamDescriptor::toProto(catena::ParamInfo &paramInfo, Authorizer& authz) const {
+void ParamDescriptor::toProto(catena::ParamInfo &paramInfo, IAuthorizer& authz) const {
     paramInfo.set_type(type_);
     paramInfo.set_oid(oid_);
     paramInfo.set_template_oid(template_oid_);

@@ -32,7 +32,7 @@
 using catena::common::SubscriptionManager;
 
 // Add a subscription (unique or wildcard)
-bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc, Authorizer& authz) {
+bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc, IAuthorizer& authz) {
     std::lock_guard sg(mtx_);
     rc = catena::exception_with_status{"", catena::StatusCode::OK};
     bool wildcard = isWildcard(oid);
