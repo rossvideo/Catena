@@ -6,9 +6,11 @@ on:
     branches: ["develop"]
     paths:
       - 'sdks/cpp/**'
+      - 'unittests/cpp/**'
   pull_request:
     files:
       - 'sdks/cpp/**'
+      - 'unittests/cpp/**'
       - '.github/workflows/cpp-pull-request.yml'
 
 jobs:
