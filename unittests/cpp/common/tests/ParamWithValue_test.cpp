@@ -38,6 +38,8 @@
 #include "ParamWithValue.h"
 
 #include "MockParamDescriptor.h"
+#include "MockDevice.h"
+#include "MockConstraint.h"
 
 // gtest
 #include <gtest/gtest.h>
@@ -50,9 +52,46 @@ class ParamWithValueTest : public ::testing::Test {
      * 
      */
     void SetUp() override {
-        
+        EXPECT_CALL(pd_, getOid()).WillRepeatedly(testing::ReturnRef(oid_));
     }
 
+    template <typename T>
+    void CreateTest(T& value) {
+        // Constructor (value, descriptor, device, isCommand)
+        EXPECT_CALL(dm_, addItem(oid_, testing::An<IParam*>())).Times(1)
+            .WillOnce(testing::Invoke([](std::string, IParam* param) {
+                EXPECT_TRUE(param) << "Nullptr added to dm_";
+            }));
+        EXPECT_NO_THROW(ParamWithValue<T>(value, pd_, dm_, false);)
+            << "Failed to create a ParamWithValue using constructor"
+            << "(value, descriptor, device, isCommand)";
+        // Constructor (value, descriptor)
+        EXPECT_NO_THROW(ParamWithValue<T>(value, pd_);)
+            << "Failed to create a ParamWithValue using constructor"
+            << "(value, descriptor)";
+        // Constructor (value, descriptor, mSizeTracker, tSizeTracker)
+        std::shared_ptr<std::size_t> mSizeTracker{0};
+        std::shared_ptr<ParamWithValue<EmptyValue>::TSizeTracker> tSizeTracker{};
+        EXPECT_NO_THROW(ParamWithValue<T>(value, pd_, mSizeTracker, tSizeTracker);)
+            << "Failed to create a ParamWithValue using constructor"
+            << "(value, descriptor, mSizeTracker, tSizeTracker)";
+    }
+
+    template <typename T>
+    void GetValueTest(T& value) {
+        ParamWithValue<T> param(value, pd_);
+        // Non-const
+        EXPECT_EQ(&param.get(), &value);
+        // Const
+        const ParamWithValue<T> constParam(value, pd_);
+        EXPECT_EQ(&constParam.get(), &value);
+        // getParamValue
+        EXPECT_EQ(&getParamValue<T>(&param), &value);
+    }
+
+    std::string oid_ = "test_oid";
+    MockParamDescriptor pd_;
+    MockDevice dm_;
 };
 
 /* ============================================================================
@@ -61,7 +100,15 @@ class ParamWithValueTest : public ::testing::Test {
  * 
  * 
  */
+using emptyParam = ParamWithValue<EmptyValue>;
 
+TEST_F(ParamWithValueTest, Empty_Create) {
+    CreateTest<EmptyValue>(emptyValue);
+}
+
+TEST_F(ParamWithValueTest, Empty_Get) {
+    GetValueTest<EmptyValue>(emptyValue);
+}
 
 
 
@@ -72,15 +119,56 @@ class ParamWithValueTest : public ::testing::Test {
  * 
  */
 
+using intParam = ParamWithValue<int32_t>;
 
+TEST_F(ParamWithValueTest, Int_Create) {
+    int32_t value{0};
+    CreateTest<int32_t>(value);
+}
 
+TEST_F(ParamWithValueTest, Int_Get) {
+    int32_t value{0};
+    GetValueTest<int32_t>(value);
+}
 
 /* ============================================================================
- *                                   STRING
+ *                                   FLOAT
  * ============================================================================
  * 
  * 
  */
+
+ using floatParam = ParamWithValue<float>;
+
+TEST_F(ParamWithValueTest, Float_Create) {
+    float value{0};
+    CreateTest<float>(value);
+}
+
+TEST_F(ParamWithValueTest, Float_Get) {
+    float value{0};
+    GetValueTest<float>(value);
+}
+
+/* ============================================================================
+ *                                  STRING
+ * ============================================================================
+ * 
+ * 
+ */
+
+using stringParam = ParamWithValue<std::string>;
+
+TEST_F(ParamWithValueTest, String_Create) {
+    std::string value{"Hello World"};
+    CreateTest<std::string>(value);
+}
+
+TEST_F(ParamWithValueTest, String_Get) {
+    std::string value{"Hello World"};
+    GetValueTest<std::string>(value);
+}
+
 
 /* ============================================================================
  *                                 INT ARRAY
@@ -89,6 +177,17 @@ class ParamWithValueTest : public ::testing::Test {
  * 
  */
 
+using intArrayParam = ParamWithValue<std::vector<int32_t>>;
+
+TEST_F(ParamWithValueTest, IntArray_Create) {
+    std::vector<int32_t> value{0, 1, 2};
+    CreateTest<std::vector<int32_t>>(value);
+}
+
+TEST_F(ParamWithValueTest, IntArray_Get) {
+    std::vector<int32_t> value{0, 1, 2};
+    GetValueTest<std::vector<int32_t>>(value);
+}
 
 
 /* ============================================================================
@@ -98,7 +197,17 @@ class ParamWithValueTest : public ::testing::Test {
  * 
  */
 
+using floatArrayParam = ParamWithValue<std::vector<float>>;
 
+TEST_F(ParamWithValueTest, FloatArray_Create) {
+    std::vector<float> value{0, 1, 2};
+    CreateTest<std::vector<float>>(value);
+}
+
+TEST_F(ParamWithValueTest, FloatArray_Get) {
+    std::vector<float> value{0, 1, 2};
+    GetValueTest<std::vector<float>>(value);
+}
 
 
 /* ============================================================================
@@ -107,6 +216,17 @@ class ParamWithValueTest : public ::testing::Test {
  * 
  * 
  */
+using stringArrayParam = ParamWithValue<std::vector<std::string>>;
+
+TEST_F(ParamWithValueTest, StringArray_Create) {
+    std::vector<std::string> value{"Hello", "World"};
+    CreateTest<std::vector<std::string>>(value);
+}
+
+TEST_F(ParamWithValueTest, StringArray_Get) {
+    std::vector<std::string> value{"Hello", "World"};
+    GetValueTest<std::vector<std::string>>(value);
+}
 
 
 
@@ -150,6 +270,72 @@ class ParamWithValueTest : public ::testing::Test {
 
 
 
+/* ============================================================================
+ *                                  GENERAL
+ * ============================================================================
+ * 
+ * 
+ */
 
+ /*
+  * TEST ? - Tests a number of functions that just forward to the descriptor.
+  */
+TEST_F(ParamWithValueTest, DescriptorForwards) {
+    emptyParam param(emptyValue, pd_);
+    // param.getDescriptor()
+    EXPECT_EQ(&param.getDescriptor(), &pd_);
+    // param.type()
+    EXPECT_CALL(pd_, type()).Times(1).WillOnce(testing::Return(catena::ParamType::EMPTY));
+    EXPECT_EQ(param.type().value(), catena::ParamType::EMPTY);
+    // param.getOid()
+    EXPECT_CALL(pd_, getOid()).Times(1).WillOnce(testing::ReturnRef(oid_));
+    EXPECT_EQ(param.getOid(), oid_);
+    // param.setOid()
+    std::string newOid = "new_oid";
+    EXPECT_CALL(pd_, setOid(newOid)).Times(1).WillOnce(testing::Return());
+    EXPECT_NO_THROW(param.setOid(newOid););
+    // param.readOnly()
+    EXPECT_CALL(pd_, readOnly()).Times(1).WillOnce(testing::Return(true));
+    EXPECT_TRUE(param.readOnly());
+    // param.readOnly(flag)
+    EXPECT_CALL(pd_, readOnly(false)).Times(1).WillOnce(testing::Return());
+    EXPECT_NO_THROW(param.readOnly(false););
+    // param.defineCommand()
+    EXPECT_CALL(pd_, defineCommand(testing::_)).Times(1).WillOnce(testing::Return());
+    EXPECT_NO_THROW(param.defineCommand(
+        [](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+            return nullptr;
+        }););
+    // param.executeCommand()
+    catena::Value testVal;
+    testVal.set_string_value("test");
+    EXPECT_CALL(pd_, executeCommand(testing::_)).Times(1).WillOnce(testing::Invoke([&testVal](catena::Value value){
+        EXPECT_EQ(value.string_value(), testVal.string_value());
+        return nullptr;
+    }));
+    EXPECT_FALSE(param.executeCommand(testVal));
+    // param.addParam()
+    std::string subOid = "sub_oid";
+    MockParamDescriptor subPd;
+    EXPECT_CALL(pd_, addSubParam(subOid, &subPd)).Times(1).WillOnce(testing::Return());
+    EXPECT_NO_THROW(param.addParam(subOid, &subPd););
+    // param.getConstraint()
+    MockConstraint testConstraint;
+    EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(&testConstraint));
+    EXPECT_EQ(param.getConstraint(), &testConstraint);
+    // param.getScope()
+    std::string testScope = "test_scope";
+    EXPECT_CALL(pd_, getScope()).Times(1).WillOnce(testing::ReturnRef(testScope));
+    EXPECT_EQ(param.getScope(), testScope);
+}
 
-
+TEST_F(ParamWithValueTest, Copy) {
+    int32_t value{0};
+    intParam param(value, pd_);
+    std::unique_ptr<IParam> paramCopy = nullptr;
+    // Copying param and checking its values.
+    EXPECT_NO_THROW(paramCopy = param.copy()) << "Failed to copy ParamWithValue using copy()";
+    ASSERT_TRUE(paramCopy) << "ParamWithValue copy is nullptr";
+    EXPECT_EQ(&getParamValue<int32_t>(paramCopy.get()), &param.get());
+    EXPECT_EQ(&paramCopy->getDescriptor(), &param.getDescriptor());
+}
