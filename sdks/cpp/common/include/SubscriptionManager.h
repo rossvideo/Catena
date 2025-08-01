@@ -172,7 +172,7 @@ class SubscriptionManager : public ISubscriptionManager {
      * @param authz The authorizer for permission checking
      * @return The number of parameters that would be subscribed to
      */
-    uint32_t countWildcardSubscriptions(IParam* param, const std::string& path, IDevice& dm, Authorizer& authz);
+    uint32_t countWildcards(IParam* param, const std::string& path, IDevice& dm, Authorizer& authz);
 };
 
 } // namespace common

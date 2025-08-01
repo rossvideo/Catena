@@ -78,7 +78,7 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
     // Add wildcard subscription.
     else if (wildcard && param) {
         // Count potential subscriptions before adding them
-        uint32_t newSubscriptions = countWildcardSubscriptions(param.get(), baseOid, dm, authz);
+        uint32_t newSubscriptions = countWildcards(param.get(), baseOid, dm, authz);
         // Check if adding these subscriptions would exceed the limit
         uint32_t currentCount = dmSubscriptions.size();
         if (currentCount + newSubscriptions > max_subscriptions_per_device_) {
@@ -100,7 +100,7 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
         uint32_t newSubscriptions = 0;
         for (auto& param : allParams) {
             if (authz.readAuthz(*param)) {
-                newSubscriptions += countWildcardSubscriptions(param.get(), "/" + param->getOid(), dm, authz);
+                newSubscriptions += countWildcards(param.get(), "/" + param->getOid(), dm, authz);
             }
         }        
         // Check if adding these subscriptions would exceed the limit
@@ -177,7 +177,7 @@ bool SubscriptionManager::isSubscribed(const std::string& oid, const IDevice& dm
 }
 
 // Count the number of subscriptions that would be created by a wildcard expansion
-uint32_t SubscriptionManager::countWildcardSubscriptions(IParam* param, const std::string& path, IDevice& dm, Authorizer& authz) {
+uint32_t SubscriptionManager::countWildcards(IParam* param, const std::string& path, IDevice& dm, Authorizer& authz) {
     class WildcardCounterVisitor : public IParamVisitor {
         public:
             WildcardCounterVisitor() : count_(0) {}
