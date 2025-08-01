@@ -25,7 +25,7 @@ name: "CodeQL-CPP"
 
 on:
   push:
-    branches: [ "develop", "main"]
+    branches: [ "main"]
     paths:
       - 'sdks/cpp/**'
       - 'unittests/cpp/**'

@@ -2,6 +2,10 @@ name: C++ Code Analysis
 # this runs the workflow on PR and make sure that the code is tested and analyzed
 
 on:
+  push:
+    branches: ["develop"]
+    paths:
+      - 'sdks/cpp/**'
   pull_request:
     files:
       - 'sdks/cpp/**'
@@ -34,8 +38,9 @@ jobs:
           category: 'Trivy Scan Results'
 
   Unit-Tests:
-    name: Run Unit Tests (9 minutes)
-    timeout-minutes: 11
+    name: Run Unit Tests and coverage (11 minutes)
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
@@ -94,7 +99,6 @@ jobs:
         with:
           filename: coverage.xml
           badge: true
-          badge-title: 'Catena C++ Coverage'
           format: markdown
           hide_complexity: true
           output: both
