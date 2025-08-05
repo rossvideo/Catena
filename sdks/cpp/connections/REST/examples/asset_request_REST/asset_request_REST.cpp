@@ -62,7 +62,7 @@
 #include <signal.h>
 #include <functional>
 #include <Logger.h>
-#include <Authorizer.h>
+#include <IAuthorizer.h>
 
 using namespace catena::common;
 using catena::REST::ServiceConfig;
@@ -82,12 +82,12 @@ void handle_signal(int sig) {
     t.join();
 }
 
-void catenaAssetDownloadHandler(const std::string& fqoid, const Authorizer* authz) {
+void catenaAssetDownloadHandler(const std::string& fqoid, const IAuthorizer* authz) {
     //insert business logic here
     DEBUG_LOG << "Asset fqoid: " << fqoid << " get operation complete";
 }
 
-void catenaAssetUploadHandler(const std::string& fqoid, const Authorizer* authz) {
+void catenaAssetUploadHandler(const std::string& fqoid, const IAuthorizer* authz) {
     //update the assets list
     //insert business logic here
     //TODO: capability to check if asset exists and if has authz before uploading
@@ -110,7 +110,7 @@ void catenaAssetUploadHandler(const std::string& fqoid, const Authorizer* authz)
     DEBUG_LOG << "Asset fqoid: " << fqoid << " upload operation complete";
 }
 
-void catenaAssetDeleteHandler(const std::string& fqoid, const Authorizer* authz) {
+void catenaAssetDeleteHandler(const std::string& fqoid, const IAuthorizer* authz) {
     //update the assets list
     //insert business logic here
     //TODO: capability to check if asset exists and if has authz before deleting
@@ -142,7 +142,7 @@ void RunRESTServer() {
     signal(SIGKILL, handle_signal);
 
     // this is the "receiving end" of the asset request example
-    dm.getDownloadAssetRequest().connect([](const std::string& fqoid, const Authorizer* authz) {
+    dm.getDownloadAssetRequest().connect([](const std::string& fqoid, const IAuthorizer* authz) {
         try {
             catenaAssetDownloadHandler(fqoid, authz);
         } catch (catena::exception_with_status& err) {
@@ -150,7 +150,7 @@ void RunRESTServer() {
         }
     });
 
-    dm.getUploadAssetRequest().connect([](const std::string& fqoid, const Authorizer* authz) {
+    dm.getUploadAssetRequest().connect([](const std::string& fqoid, const IAuthorizer* authz) {
         try {
             catenaAssetUploadHandler(fqoid, authz);
         } catch (catena::exception_with_status& err) {
@@ -158,7 +158,7 @@ void RunRESTServer() {
         }
     });
 
-    dm.getDeleteAssetRequest().connect([](const std::string& fqoid, const Authorizer* authz) {
+    dm.getDeleteAssetRequest().connect([](const std::string& fqoid, const IAuthorizer* authz) {
         try {
             catenaAssetDeleteHandler(fqoid, authz);
         } catch (catena::exception_with_status& err) {

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<borderlayout grow="center" top="0" left="0" bottom="0" right="0">
+   <abs anchor="north" height="80">
+      <param oid="menu_button" width="200" left="0" top="0" bottom="0"/>
+      <menu mid="0" width="200" left="200" top="0" bottom="0"/>
+   </abs>
+   <split name="Menu groups" orientation="horizontal" anchor="center">
+      <abs weight="0.3">
+         <summary top="0" height="80" left="0" right="0"/>
+         <menugroup mid="0" top="80" left="0" right="0" bottom="0"/>
+      </abs>
+      <menugroup mid="1"/>
+   </split>
+   <buttonbar anchor="south"/>
+</borderlayout>
+

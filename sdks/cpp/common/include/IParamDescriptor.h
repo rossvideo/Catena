@@ -48,7 +48,7 @@
 namespace catena {
 namespace common {
 
-class Authorizer; // forward declaration
+class IAuthorizer; // forward declaration
 
 /**
  * @brief ParamDescriptor provides information about a parameter
@@ -172,7 +172,7 @@ class IParamDescriptor {
      * with the information from the ParamDescriptor
      * 
      */
-    virtual void toProto(catena::Param &param, Authorizer& authz) const = 0;
+    virtual void toProto(catena::Param &param, const IAuthorizer& authz) const = 0;
 
 
     /**
@@ -183,7 +183,7 @@ class IParamDescriptor {
      * this function will populate all non-value fields of the protobuf param message 
      * with the information from the ParamDescriptor
      */
-    virtual void toProto(catena::ParamInfo &paramInfo, Authorizer& authz) const = 0;
+    virtual void toProto(catena::ParamInfo &paramInfo, const IAuthorizer& authz) const = 0;
 
     /**
      * @brief get the parameter name by language

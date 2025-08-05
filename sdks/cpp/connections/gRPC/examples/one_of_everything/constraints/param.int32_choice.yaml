@@ -6,6 +6,27 @@ constraint:
   int32_choice:
     choices:
       - value: 0
-        name: { display_strings: { en: "Zero" } }
+        name: { display_strings: { 
+          en: "Zero", 
+          fr: "Zéro", 
+          es: "Cero", 
+          ja: "ゼロ" } }
       - value: 1
-        name: { display_strings: { en: "One" } }
+        name: { display_strings: { 
+          en: "One", 
+          fr: "Un", 
+          es: "Uno", 
+          ja: "一" } }
+      - value: 2
+        name: { display_strings: { 
+          en: "Two", 
+          fr: "Deux", 
+          es: "Dos", 
+          ja: "二" } }
+      - value: 3
+        name: { display_strings: { 
+          en: "Three", 
+          fr: "Trois", 
+          es: "Tres", 
+          ja: "三" } }
+widget: "radio-vertical"

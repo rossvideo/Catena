@@ -29,8 +29,8 @@
  */
 
 /**
- * @brief Mock implementation for the ISubscriptionManager class.
- * @author zuhayr.sarker@rossvideo.com
+ * @brief Mock implementation for the IAuthorizer class.
+ * @author benjamin.whitten@rossvideo.com
  * @date 25/06/26
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -38,19 +38,22 @@
 #pragma once
 
 #include <gmock/gmock.h>
-#include <ISubscriptionManager.h>
+#include <IAuthorizer.h>
 
 namespace catena {
 namespace common {
 
-// Mock implementation for the ISubscriptionManager class.
-class MockSubscriptionManager : public ISubscriptionManager {
+// Mock implementation for the IAuthorizer class.
+class MockAuthorizer : public IAuthorizer {
   public:
-    MOCK_METHOD(bool, addSubscription, (const std::string& oid, IDevice& dm, exception_with_status& rc, const IAuthorizer& authz), (override));
-    MOCK_METHOD(bool, removeSubscription, (const std::string& oid, const IDevice& dm, exception_with_status& rc), (override));
-    MOCK_METHOD(std::set<std::string>, getAllSubscribedOids, (const IDevice& dm), (override));
-    MOCK_METHOD(bool, isWildcard, (const std::string& oid), (override));
-    MOCK_METHOD(bool, isSubscribed, (const std::string& oid, const IDevice& dm), (override));
+    MOCK_METHOD(bool, readAuthz, (const IParam& param), (const, override));
+    MOCK_METHOD(bool, readAuthz, (const IParamDescriptor& pd), (const, override));
+    MOCK_METHOD(bool, readAuthz, (const std::string& scope), (const, override));
+    MOCK_METHOD(bool, readAuthz, (const Scopes_e& scope), (const, override));
+    MOCK_METHOD(bool, writeAuthz, (const IParam& param), (const, override));
+    MOCK_METHOD(bool, writeAuthz, (const IParamDescriptor& pd), (const, override));
+    MOCK_METHOD(bool, writeAuthz, (const std::string& scope), (const, override));
+    MOCK_METHOD(bool, writeAuthz, (const Scopes_e& scope), (const, override));
 };
 
 } // namespace common

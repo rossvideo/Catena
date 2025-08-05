@@ -106,7 +106,7 @@ protected:
         EXPECT_CALL(*minimalSetParam, getDescriptor())
             .WillRepeatedly(testing::ReturnRef(*minimalSetDescriptor));
         EXPECT_CALL(*minimalSetParam, toProto(testing::An<catena::Param&>(), testing::_))
-            .WillRepeatedly(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+            .WillRepeatedly(testing::Invoke([](catena::Param& param, const IAuthorizer& authz) {
                 param.set_type(catena::ParamType::INT32);
                 return catena::exception_with_status("", catena::StatusCode::OK);
             }));
@@ -151,7 +151,7 @@ protected:
                 if (errorMsg.empty()) {
                     // Success case - no error message
                     EXPECT_CALL(*mock, validateSetValue(testing::_, testing::_, testing::_, testing::_))
-                        .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, catena::common::Authorizer&, catena::exception_with_status& status) {
+                        .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, const IAuthorizer&, catena::exception_with_status& status) {
                             status = catena::exception_with_status("", catena::StatusCode::OK);
                             return true;
                         }));
@@ -161,7 +161,7 @@ protected:
                 } else {
                     // Validation failure case - return false with error message
                     EXPECT_CALL(*mock, validateSetValue(testing::_, testing::_, testing::_, testing::_))
-                        .WillOnce(testing::Invoke([errorMsg](const catena::Value&, catena::common::Path::Index, catena::common::Authorizer&, catena::exception_with_status& status) {
+                        .WillOnce(testing::Invoke([errorMsg](const catena::Value&, catena::common::Path::Index, const IAuthorizer&, catena::exception_with_status& status) {
                             status = catena::exception_with_status(errorMsg, catena::StatusCode::INVALID_ARGUMENT);
                             return false;
                         }));
@@ -195,7 +195,7 @@ protected:
                 if (errorMsg.empty()) {
                     // Success case
                     EXPECT_CALL(*copiedMock, toProto(testing::Matcher<catena::Value&>(testing::_), testing::_))
-                        .WillOnce(testing::Invoke([returnValue, returnInt](catena::Value& dst, const catena::common::Authorizer&) {
+                        .WillOnce(testing::Invoke([returnValue, returnInt](catena::Value& dst, const IAuthorizer&) {
                             if (!returnValue.empty()) {
                                 dst.set_string_value(returnValue);
                             } else {
@@ -210,7 +210,7 @@ protected:
                 } else {
                     // Error case
                     EXPECT_CALL(*copiedMock, toProto(testing::Matcher<catena::Value&>(testing::_), testing::_))
-                        .WillOnce(testing::Invoke([errorMsg](catena::Value&, const catena::common::Authorizer&) {
+                        .WillOnce(testing::Invoke([errorMsg](catena::Value&, const IAuthorizer&) {
                             return catena::exception_with_status(errorMsg, catena::StatusCode::PERMISSION_DENIED);
                         }));
                 }
@@ -435,7 +435,7 @@ TEST_F(DeviceTest, CommitMultiSetValue_SingleValue) {
         .WillOnce(testing::Invoke([]() { 
             auto mock = std::make_unique<MockParam>();
             EXPECT_CALL(*mock, fromProto(testing::_, testing::_))
-                .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Authorizer&) {
+                .WillOnce(testing::Invoke([](const catena::Value&, const IAuthorizer&) {
                     return catena::exception_with_status("", catena::StatusCode::OK);
                 }));
             EXPECT_CALL(*mock, resetValidate())
@@ -474,7 +474,7 @@ TEST_F(DeviceTest, CommitMultiSetValue_RegularParams) {
         .WillOnce(testing::Invoke([]() { 
             auto mock = std::make_unique<MockParam>();
             EXPECT_CALL(*mock, fromProto(testing::_, testing::_))
-                .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Authorizer&) {
+                .WillOnce(testing::Invoke([](const catena::Value&, const IAuthorizer&) {
                     return catena::exception_with_status("", catena::StatusCode::OK);
                 }));
             EXPECT_CALL(*mock, resetValidate())
@@ -485,7 +485,7 @@ TEST_F(DeviceTest, CommitMultiSetValue_RegularParams) {
         .WillOnce(testing::Invoke([]() { 
             auto mock = std::make_unique<MockParam>();
             EXPECT_CALL(*mock, fromProto(testing::_, testing::_))
-                .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Authorizer&) {
+                .WillOnce(testing::Invoke([](const catena::Value&, const IAuthorizer&) {
                     return catena::exception_with_status("", catena::StatusCode::OK);
                 }));
             EXPECT_CALL(*mock, resetValidate())
@@ -545,11 +545,11 @@ TEST_F(DeviceTest, CommitMultiSetValue_ArrayAppend) {
             auto mock = std::make_unique<MockParam>();
             // Set up expectations for the copied mock to handle array append operation
             EXPECT_CALL(*mock, addBack(testing::_, testing::_))
-                .WillOnce(testing::Invoke([](catena::common::Authorizer&, catena::exception_with_status& status) {
+                .WillOnce(testing::Invoke([](const IAuthorizer&, catena::exception_with_status& status) {
                     status = catena::exception_with_status("", catena::StatusCode::OK);
                     auto appendedMock = std::make_unique<MockParam>();
                     EXPECT_CALL(*appendedMock, fromProto(testing::_, testing::_))
-                        .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Authorizer&) {
+                        .WillOnce(testing::Invoke([](const catena::Value&, const IAuthorizer&) {
                             return catena::exception_with_status("", catena::StatusCode::OK);
                         }));
                     return std::unique_ptr<IParam>(std::move(appendedMock));
@@ -608,11 +608,11 @@ TEST_F(DeviceTest, CommitMultiSetValue_ArrayParams) {
             auto mock = std::make_unique<MockParam>();
             // Set up expectations for the copied mock to handle array element access
             EXPECT_CALL(*mock, getParam(testing::_, testing::_, testing::_))
-                .WillOnce(testing::Invoke([](catena::common::Path& path, catena::common::Authorizer&, catena::exception_with_status& status) {
+                .WillOnce(testing::Invoke([](catena::common::Path& path, const IAuthorizer&, catena::exception_with_status& status) {
                     status = catena::exception_with_status("", catena::StatusCode::OK);
                     auto elementMock = std::make_unique<MockParam>();
                     EXPECT_CALL(*elementMock, fromProto(testing::_, testing::_))
-                        .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Authorizer&) {
+                        .WillOnce(testing::Invoke([](const catena::Value&, const IAuthorizer&) {
                             return catena::exception_with_status("", catena::StatusCode::OK);
                         }));
                     return std::unique_ptr<IParam>(std::move(elementMock));
@@ -700,7 +700,7 @@ TEST_F(DeviceTest, SetValue_String) {
             auto mock = std::make_unique<MockParam>();
             // First copy is for validation - expect validateSetValue
             EXPECT_CALL(*mock, validateSetValue(testing::_, testing::_, testing::_, testing::_))
-                .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, catena::common::Authorizer&, catena::exception_with_status& status) {
+                .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, const IAuthorizer&, catena::exception_with_status& status) {
                     status = catena::exception_with_status("", catena::StatusCode::OK);
                     return true;
                 }));
@@ -717,7 +717,7 @@ TEST_F(DeviceTest, SetValue_String) {
             auto mock = std::make_unique<MockParam>();
             // Third copy is for commit - expect fromProto and resetValidate
             EXPECT_CALL(*mock, fromProto(testing::_, testing::_))
-                .WillOnce(testing::Invoke([](const catena::Value&, const catena::common::Authorizer&) {
+                .WillOnce(testing::Invoke([](const catena::Value&, const IAuthorizer&) {
                     return catena::exception_with_status("", catena::StatusCode::OK);
                 }));
             EXPECT_CALL(*mock, resetValidate())
@@ -753,7 +753,7 @@ TEST_F(DeviceTest, SetValue_Integer) {
             auto mock = std::make_unique<MockParam>();
             // First copy is for validation - expect validateSetValue
             EXPECT_CALL(*mock, validateSetValue(testing::_, testing::_, testing::_, testing::_))
-                .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, catena::common::Authorizer&, catena::exception_with_status& status) {
+                .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, const IAuthorizer&, catena::exception_with_status& status) {
                     status = catena::exception_with_status("", catena::StatusCode::OK);
                     return true;
                 }));
@@ -770,7 +770,7 @@ TEST_F(DeviceTest, SetValue_Integer) {
             auto mock = std::make_unique<MockParam>();
             // Third copy is for commit - expect fromProto and resetValidate
             EXPECT_CALL(*mock, fromProto(testing::_, testing::_))
-                .WillOnce(testing::Invoke([](const catena::Value&, const catena::common::Authorizer&) {
+                .WillOnce(testing::Invoke([](const catena::Value&, const IAuthorizer&) {
                     return catena::exception_with_status("", catena::StatusCode::OK);
                 }));
             EXPECT_CALL(*mock, resetValidate())
@@ -806,7 +806,7 @@ TEST_F(DeviceTest, SetValue_ValidationFailed) {
             auto mock = std::make_unique<MockParam>();
             // First copy is for validation - expect validateSetValue to fail
             EXPECT_CALL(*mock, validateSetValue(testing::_, testing::_, testing::_, testing::_))
-                .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, catena::common::Authorizer&, catena::exception_with_status& status) {
+                .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, const IAuthorizer&, catena::exception_with_status& status) {
                     status = catena::exception_with_status("Validation failed", catena::StatusCode::INVALID_ARGUMENT);
                     return false;
                 }));
@@ -927,7 +927,7 @@ TEST_F(DeviceTest, GetValue_UnknownException) {
         .WillRepeatedly(testing::Invoke([]() { 
             auto copiedMock = std::make_unique<MockParam>();
             EXPECT_CALL(*copiedMock, toProto(testing::Matcher<catena::Value&>(testing::_), testing::_))
-                .WillOnce(testing::Invoke([](catena::Value&, const catena::common::Authorizer&) -> catena::exception_with_status {
+                .WillOnce(testing::Invoke([](catena::Value&, const IAuthorizer&) -> catena::exception_with_status {
                     throw 42; // Throw an int (unknown exception type)
                 }));
             return copiedMock;
@@ -1537,7 +1537,7 @@ TEST_F(DeviceTest, Device_ToProtoParams) {
     
     // Only the authorized param should be serialized with monitor authorization
     EXPECT_CALL(*mockAuthorizedParam, toProto(testing::An<catena::Param&>(), testing::_))
-        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+        .WillOnce(testing::Invoke([](catena::Param& param, const IAuthorizer& authz) {
             param.set_type(catena::ParamType::INT32);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -1582,12 +1582,12 @@ TEST_F(DeviceTest, Device_ToProtoCommands) {
         .WillRepeatedly(testing::Return(true));
     
     EXPECT_CALL(*mockCommand1, toProto(testing::An<catena::Param&>(), testing::_))
-        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+        .WillOnce(testing::Invoke([](catena::Param& param, const IAuthorizer& authz) {
             param.set_type(catena::ParamType::INT32);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
     EXPECT_CALL(*mockCommand2, toProto(testing::An<catena::Param&>(), testing::_))
-        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+        .WillOnce(testing::Invoke([](catena::Param& param, const IAuthorizer& authz) {
             param.set_type(catena::ParamType::STRING);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -1820,7 +1820,7 @@ TEST_F(DeviceTest, GetDeviceSerializer_Parameters) {
     
     // Only the authorized param should be serialized with monitor authorization
     EXPECT_CALL(*mockAuthorizedParam, toProto(testing::An<catena::Param&>(), testing::_))
-        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+        .WillOnce(testing::Invoke([](catena::Param& param, const IAuthorizer& authz) {
             param.set_type(catena::ParamType::INT32);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -1888,7 +1888,7 @@ TEST_F(DeviceTest, GetDeviceSerializer_Commands) {
     
     // Only the authorized command should be serialized with monitor authorization
     EXPECT_CALL(*mockAuthorizedCommand, toProto(testing::An<catena::Param&>(), testing::_))
-        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+        .WillOnce(testing::Invoke([](catena::Param& param, const IAuthorizer& authz) {
             param.set_type(catena::ParamType::INT32);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -1965,7 +1965,7 @@ TEST_F(DeviceTest, GetDeviceSerializer_Subscriptions) {
     
     // Set up expectations for toProto calls
     EXPECT_CALL(*mockAuthorizedSubscribedParam, toProto(testing::An<catena::Param&>(), testing::_))
-        .WillOnce(testing::Invoke([](catena::Param& param, Authorizer& authz) {
+        .WillOnce(testing::Invoke([](catena::Param& param, const IAuthorizer& authz) {
             param.set_type(catena::ParamType::INT32);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));

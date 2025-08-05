@@ -201,8 +201,8 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByServer) {
         .WillRepeatedly(testing::ReturnRef(paramOid_));
     EXPECT_CALL(*param, getScope())
         .WillRepeatedly(testing::ReturnRef(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
-    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<catena::common::Authorizer&>()))
-        .WillOnce(testing::Invoke([](catena::Value& value, catena::common::Authorizer&) {
+    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<const IAuthorizer&>()))
+        .WillOnce(testing::Invoke([](catena::Value& value, const IAuthorizer&) {
             value.set_string_value("test_value");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -234,8 +234,8 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByClient) {
         .WillRepeatedly(testing::ReturnRef(paramOid_));
     EXPECT_CALL(*param, getScope())
         .WillRepeatedly(testing::ReturnRef(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
-    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<catena::common::Authorizer&>()))
-        .WillOnce(testing::Invoke([](catena::Value& value, catena::common::Authorizer&) {
+    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<const IAuthorizer&>()))
+        .WillOnce(testing::Invoke([](catena::Value& value, const IAuthorizer&) {
             value.set_string_value("test_value");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -350,8 +350,8 @@ TEST_F(RESTConnectTest, Connect_HandlesWriterFailure) {
         .WillRepeatedly(testing::ReturnRef(paramOid_));
     EXPECT_CALL(*param, getScope())
         .WillRepeatedly(testing::ReturnRef(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
-    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<catena::common::Authorizer&>()))
-        .WillOnce(testing::Invoke([](catena::Value& value, catena::common::Authorizer&) {
+    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<const IAuthorizer&>()))
+        .WillOnce(testing::Invoke([](catena::Value& value, const IAuthorizer&) {
             value.set_string_value("test_value");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));

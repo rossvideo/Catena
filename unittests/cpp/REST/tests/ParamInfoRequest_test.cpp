@@ -181,7 +181,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_AuthzValid) {
     EXPECT_CALL(*param, isArrayType()).WillRepeatedly(testing::Return(false));
 
     EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_))
-       .WillRepeatedly(testing::Invoke([&param](const std::string&, catena::exception_with_status &status, catena::common::Authorizer &) {
+       .WillRepeatedly(testing::Invoke([&param](const std::string&, catena::exception_with_status &status, const IAuthorizer &) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(param);
         }));
@@ -219,7 +219,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsStream) {
 
     // Setup mock expectations
     EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, Authorizer&) -> std::vector<std::unique_ptr<IParam>> {
+        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, const IAuthorizer&) -> std::vector<std::unique_ptr<IParam>> {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(top_level_params);
         }));
@@ -261,7 +261,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsUnary) {
 
     // Setup mock expectations
     EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, Authorizer&) -> std::vector<std::unique_ptr<IParam>> {
+        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, const IAuthorizer&) -> std::vector<std::unique_ptr<IParam>> {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(top_level_params);
         }));
@@ -281,7 +281,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsError) {
     
     // Setup mock expectations 
     EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([](catena::exception_with_status& status, Authorizer&) {
+        .WillOnce(testing::Invoke([](catena::exception_with_status& status, const IAuthorizer&) {
             status = catena::exception_with_status("Error getting top-level parameters", catena::StatusCode::INTERNAL);
             return std::vector<std::unique_ptr<IParam>>();
         }));
@@ -298,7 +298,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getEmptyTopLevelParams) {
     
     // Setup mock expectations
     EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([](catena::exception_with_status& status, Authorizer&) {
+        .WillOnce(testing::Invoke([](catena::exception_with_status& status, const IAuthorizer&) {
             status = catena::exception_with_status("", catena::StatusCode::OK); 
             return std::vector<std::unique_ptr<IParam>>();  
         }));
@@ -321,7 +321,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithArray) {
 
     // Setup mock expectations
     EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, Authorizer&) {
+        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, const IAuthorizer&) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(top_level_params);
         }));
@@ -347,7 +347,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsProcessingEr
 
     // Setup mock expectations   
     EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, Authorizer&) {
+        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, const IAuthorizer&) {
             status = catena::exception_with_status("Error processing parameter", catena::StatusCode::INTERNAL);
             return std::move(top_level_params);
         }));
@@ -375,8 +375,8 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsThrow) {
     // Set up param2 to throw during processing
     EXPECT_CALL(*param2, getOid())
         .WillRepeatedly(testing::ReturnRef(param2_info.oid));
-    EXPECT_CALL(*param2, toProto(testing::An<catena::ParamInfoResponse&>(), testing::An<catena::common::Authorizer&>()))
-        .WillOnce(testing::Invoke([](catena::ParamInfoResponse&, catena::common::Authorizer&) -> catena::exception_with_status {
+    EXPECT_CALL(*param2, toProto(testing::An<catena::ParamInfoResponse&>(), testing::An<const IAuthorizer&>()))
+        .WillOnce(testing::Invoke([](catena::ParamInfoResponse&, const IAuthorizer&) -> catena::exception_with_status {
             throw catena::exception_with_status("Error getting top-level parameters", catena::StatusCode::INTERNAL);
             return catena::exception_with_status("", catena::StatusCode::OK);  // This line should never be reached
         }));
@@ -387,7 +387,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsThrow) {
 
     // Setup mock expectations
     EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, Authorizer&) {
+        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, const IAuthorizer&) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(top_level_params);
         }));
@@ -448,16 +448,16 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithDeepNest
 
     // Setup mock expectations
     EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, Authorizer&) {
+        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, const IAuthorizer&) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(top_level_params);
         }));
 
     // Setup mock expectations for getParam to handle child traversal
-    EXPECT_CALL(dm0_, getParam(testing::An<const std::string&>(), testing::An<catena::exception_with_status&>(), testing::An<Authorizer&>()))
+    EXPECT_CALL(dm0_, getParam(testing::An<const std::string&>(), testing::An<catena::exception_with_status&>(), testing::An<const IAuthorizer&>()))
         .WillRepeatedly(testing::Invoke(
             [&level2, &level3, level2Desc, level3Desc]
-            (const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
+            (const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer&) -> std::unique_ptr<IParam> {
                 std::string level2Oid = level2Desc.descriptor->getOid();
                 std::string level3Oid = level3Desc.descriptor->getOid();
                 if (fqoid == level2Oid) {
@@ -524,15 +524,15 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursio
 
     // Setup mock expectations for getTopLevelParams
     EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, Authorizer&) {
+        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, const IAuthorizer&) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(top_level_params);
         }));
 
     // Setup mock expectations for getParam to handle child traversal
-    EXPECT_CALL(dm0_, getParam(testing::An<const std::string&>(), testing::An<catena::exception_with_status&>(), testing::An<Authorizer&>()))
+    EXPECT_CALL(dm0_, getParam(testing::An<const std::string&>(), testing::An<catena::exception_with_status&>(), testing::An<const IAuthorizer&>()))
         .WillRepeatedly(testing::Invoke([this, &arrayChild, childOid, arrayChild_info, childDesc]
-            (const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
+            (const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer&) -> std::unique_ptr<IParam> {
                 if (fqoid == childOid) {
                     status = catena::exception_with_status("", catena::StatusCode::OK);
                     return std::move(arrayChild);
@@ -586,8 +586,8 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursio
     // For the error child, set up a param that throws in toProto
     auto errorChild = std::make_unique<MockParam>();
     catena::REST::test::setupMockParam(*errorChild, error_child_info_struct, *childDesc.descriptor);
-    EXPECT_CALL(*errorChild, toProto(testing::An<catena::ParamInfoResponse&>(), testing::An<catena::common::Authorizer&>()))
-        .WillOnce(testing::Invoke([](catena::ParamInfoResponse&, catena::common::Authorizer&) -> catena::exception_with_status {
+    EXPECT_CALL(*errorChild, toProto(testing::An<catena::ParamInfoResponse&>(), testing::An<const IAuthorizer&>()))
+        .WillOnce(testing::Invoke([](catena::ParamInfoResponse&, const IAuthorizer&) -> catena::exception_with_status {
             throw catena::exception_with_status("Error processing child parameter", catena::StatusCode::INTERNAL);
         }));
 
@@ -601,15 +601,15 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithRecursio
 
     // Setup mock expectations for getTopLevelParams
     EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, Authorizer&) {
+        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, const IAuthorizer&) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(top_level_params);
         }));
 
     // Setup mock expectations for getParam to handle child traversal
-    EXPECT_CALL(dm0_, getParam(testing::An<const std::string&>(), testing::An<catena::exception_with_status&>(), testing::An<Authorizer&>()))
+    EXPECT_CALL(dm0_, getParam(testing::An<const std::string&>(), testing::An<catena::exception_with_status&>(), testing::An<const IAuthorizer&>()))
         .WillRepeatedly(testing::Invoke([&errorChild, childOid]
-            (const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
+            (const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer&) -> std::unique_ptr<IParam> {
                 if (fqoid == childOid) {
                     status = catena::exception_with_status("", catena::StatusCode::OK);
                     return std::move(errorChild);
@@ -632,7 +632,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithEmptyLis
     EXPECT_CALL(context_, hasField("recursive")).WillOnce(testing::Return(true));
     stream_ = true;
     EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([](catena::exception_with_status& status, Authorizer&) {
+        .WillOnce(testing::Invoke([](catena::exception_with_status& status, const IAuthorizer&) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::vector<std::unique_ptr<IParam>>();
         }));
@@ -667,7 +667,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_proceedSpecificParam) {
     // Setup mock expectations for mode 2 (specific parameter)
     EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_))
         .WillOnce(testing::Invoke(
-            [&mockParam](const std::string&, catena::exception_with_status& status, Authorizer&) {
+            [&mockParam](const std::string&, catena::exception_with_status& status, const IAuthorizer&) {
                 status = catena::exception_with_status("", catena::StatusCode::OK);
                 return std::move(mockParam);
             }
@@ -702,7 +702,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getSpecificParamWithRecursion
     EXPECT_CALL(context_, hasField("recursive")).WillOnce(testing::Return(true));
     EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_))
         .WillOnce(testing::Invoke(
-            [&mockParam](const std::string&, catena::exception_with_status& status, Authorizer&) {
+            [&mockParam](const std::string&, catena::exception_with_status& status, const IAuthorizer&) {
                 status = catena::exception_with_status("", catena::StatusCode::OK);
                 return std::move(mockParam);
             }
@@ -722,7 +722,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_parameterNotFound) {
 
     // Setup mock expectations
     EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_))
-        .WillOnce(testing::Invoke([](const std::string&, catena::exception_with_status& status, Authorizer&) {
+        .WillOnce(testing::Invoke([](const std::string&, catena::exception_with_status& status, const IAuthorizer&) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return nullptr;
         }));
@@ -740,7 +740,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_catenaExceptionInGetParam) {
 
     // Setup mock expectations
     EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_))
-        .WillOnce(testing::Invoke([](const std::string&, catena::exception_with_status& status, Authorizer&) {
+        .WillOnce(testing::Invoke([](const std::string&, catena::exception_with_status& status, const IAuthorizer&) {
             status = catena::exception_with_status("Error processing parameter", catena::StatusCode::INTERNAL);
             return nullptr;
         }));
@@ -760,7 +760,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_catchCatenaException) {
     
     // Setup mock expectations to trigger an exception during proceed()
     EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_))
-        .WillOnce(testing::Invoke([](const std::string&, catena::exception_with_status&, Authorizer&) -> std::unique_ptr<IParam> {
+        .WillOnce(testing::Invoke([](const std::string&, catena::exception_with_status&, const IAuthorizer&) -> std::unique_ptr<IParam> {
             throw catena::exception_with_status("Test catena exception", catena::StatusCode::INTERNAL);
         }));
 
@@ -777,7 +777,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_catchStdException) {
     
     // Setup mock expectations to trigger a std::exception during proceed()
     EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_))
-        .WillOnce(testing::Invoke([](const std::string&, catena::exception_with_status&, Authorizer&) -> std::unique_ptr<IParam> {
+        .WillOnce(testing::Invoke([](const std::string&, catena::exception_with_status&, const IAuthorizer&) -> std::unique_ptr<IParam> {
             throw std::runtime_error("Test std exception");
         }));
 
@@ -794,7 +794,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_catchUnknownException) {
     
     // Setup mock expectations to trigger an unknown exception during proceed()
     EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_))
-        .WillOnce(testing::Invoke([](const std::string&, catena::exception_with_status&, Authorizer&) -> std::unique_ptr<IParam> {
+        .WillOnce(testing::Invoke([](const std::string&, catena::exception_with_status&, const IAuthorizer&) -> std::unique_ptr<IParam> {
             throw 42; // Throw an int
         }));
 
