@@ -273,7 +273,7 @@ TEST_F(ParamWithValueTest, Int_ValidateSetValue) {
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
 }
 
-TEST_F(ParamWithValueTest, Int_ValidateSetValueError) {
+TEST_F(ParamWithValueTest, Int_ValidateSetValue_Error) {
     int32_t value{0};
     IntParam param(value, pd_);
     catena::Value protoValue;
@@ -379,7 +379,7 @@ TEST_F(ParamWithValueTest, Float_ValidateSetValue) {
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
 }
 
-TEST_F(ParamWithValueTest, Float_ValidateSetValueError) {
+TEST_F(ParamWithValueTest, Float_ValidateSetValue_Error) {
     float value{0};
     FloatParam param(value, pd_);
     catena::Value protoValue;
@@ -485,7 +485,7 @@ TEST_F(ParamWithValueTest, String_ValidateSetValue) {
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
 }
 
-TEST_F(ParamWithValueTest, String_ValidateSetValueError) {
+TEST_F(ParamWithValueTest, String_ValidateSetValue_Error) {
     std::string value{""};
     StringParam param(value, pd_);
     catena::Value protoValue;
@@ -540,7 +540,7 @@ TEST_F(ParamWithValueTest, IntArray_GetParam) {
     EXPECT_EQ(getParamValue<int32_t>(foundParam.get()), value[0]);
 }
 
-TEST_F(ParamWithValueTest, IntArray_GetParamError) {
+TEST_F(ParamWithValueTest, IntArray_GetParam_Error) {
     std::vector<int32_t> value{0, 1, 2};
     IntArrayParam param(value, pd_);
     { // Front is not an index.
@@ -585,7 +585,7 @@ TEST_F(ParamWithValueTest, IntArray_AddBack) {
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
 }
 
-TEST_F(ParamWithValueTest, IntArray_AddBackError) {
+TEST_F(ParamWithValueTest, IntArray_AddBack_Error) {
     std::vector<int32_t> value{0, 1, 2};
     IntArrayParam param(value, pd_);
     { // Add exceeds max length
@@ -613,7 +613,7 @@ TEST_F(ParamWithValueTest, IntArray_PopBack) {
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
 }
 
-TEST_F(ParamWithValueTest, IntArray_PopBackError) {
+TEST_F(ParamWithValueTest, IntArray_PopBack_Error) {
     std::vector<int32_t> value{};
     IntArrayParam param(value, pd_);
     { // Empty array
@@ -656,7 +656,7 @@ TEST_F(ParamWithValueTest, IntArray_ValidateSetValue) {
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_)) << "Valid setting whole array";
 }
 
-TEST_F(ParamWithValueTest, IntArray_ValidateSetValueSingleElement) {
+TEST_F(ParamWithValueTest, IntArray_ValidateSetValue_SingleElement) {
     std::vector<int32_t> value{0, 1, 2};
     IntArrayParam param(value, pd_);
     catena::Value protoValue;
@@ -667,7 +667,7 @@ TEST_F(ParamWithValueTest, IntArray_ValidateSetValueSingleElement) {
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_)) << "Valid append value";
 }
 
-TEST_F(ParamWithValueTest, IntArray_ValidateSetValueError) {
+TEST_F(ParamWithValueTest, IntArray_ValidateSetValue_Error) {
     std::vector<int32_t> value{0, 1, 2};
     IntArrayParam param(value, pd_);
     catena::Value protoValue;
@@ -689,7 +689,7 @@ TEST_F(ParamWithValueTest, IntArray_ValidateSetValueError) {
         << "Should return OUT_OF_RANGE when the new value exceeds maxLength";
 }
 
-TEST_F(ParamWithValueTest, IntArray_ValidateSetValueSingleElementError) {
+TEST_F(ParamWithValueTest, IntArray_ValidateSetValue_SingleElementError) {
     std::vector<int32_t> value{0, 1, 2};
     IntArrayParam param(value, pd_);
     catena::Value protoValue;
@@ -754,7 +754,7 @@ TEST_F(ParamWithValueTest, FloatArray_GetParam) {
     EXPECT_EQ(getParamValue<float>(foundParam.get()), value[0]);
 }
 
-TEST_F(ParamWithValueTest, FloatArray_GetParamError) {
+TEST_F(ParamWithValueTest, FloatArray_GetParam_Error) {
     std::vector<float> value{0, 1, 2};
     FloatArrayParam param(value, pd_);
     { // Front is not an index.
@@ -799,7 +799,7 @@ TEST_F(ParamWithValueTest, FloatArray_AddBack) {
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
 }
 
-TEST_F(ParamWithValueTest, FloatArray_AddBackError) {
+TEST_F(ParamWithValueTest, FloatArray_AddBack_Error) {
     std::vector<float> value{0, 1, 2};
     FloatArrayParam param(value, pd_);
     { // Add exceeds max length
@@ -827,7 +827,7 @@ TEST_F(ParamWithValueTest, FloatArray_PopBack) {
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
 }
 
-TEST_F(ParamWithValueTest, FloatArray_PopBackError) {
+TEST_F(ParamWithValueTest, FloatArray_PopBack_Error) {
     std::vector<float> value{};
     FloatArrayParam param(value, pd_);
     { // Empty array
@@ -870,7 +870,7 @@ TEST_F(ParamWithValueTest, FloatArray_ValidateSetValue) {
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_)) << "Valid setting whole array";
 }
 
-TEST_F(ParamWithValueTest, FloatArray_ValidateSetValueSingleElement) {
+TEST_F(ParamWithValueTest, FloatArray_ValidateSetValue_SingleElement) {
     std::vector<float> value{0, 1, 2};
     FloatArrayParam param(value, pd_);
     catena::Value protoValue;
@@ -881,7 +881,7 @@ TEST_F(ParamWithValueTest, FloatArray_ValidateSetValueSingleElement) {
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_)) << "Valid append value";
 }
 
-TEST_F(ParamWithValueTest, FloatArray_ValidateSetValueError) {
+TEST_F(ParamWithValueTest, FloatArray_ValidateSetValue_Error) {
     std::vector<float> value{0, 1, 2};
     FloatArrayParam param(value, pd_);
     catena::Value protoValue;
@@ -903,7 +903,7 @@ TEST_F(ParamWithValueTest, FloatArray_ValidateSetValueError) {
         << "Should return OUT_OF_RANGE when the new value exceeds maxLength";
 }
 
-TEST_F(ParamWithValueTest, FloatArray_ValidateSetValueSingleElementError) {
+TEST_F(ParamWithValueTest, FloatArray_ValidateSetValue_SingleElementError) {
     std::vector<float> value{0, 1, 2};
     FloatArrayParam param(value, pd_);
     catena::Value protoValue;
@@ -968,7 +968,7 @@ TEST_F(ParamWithValueTest, StringArray_GetParam) {
     EXPECT_EQ(getParamValue<std::string>(foundParam.get()), value[0]);
 }
 
-TEST_F(ParamWithValueTest, StringArray_GetParamError) {
+TEST_F(ParamWithValueTest, StringArray_GetParam_Error) {
     std::vector<std::string> value{"Hello", "World"};
     StringArrayParam param(value, pd_);
     { // Front is not an index.
@@ -1013,7 +1013,7 @@ TEST_F(ParamWithValueTest, StringArray_AddBack) {
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
 }
 
-TEST_F(ParamWithValueTest, StringArray_AddBackError) {
+TEST_F(ParamWithValueTest, StringArray_AddBack_Error) {
     std::vector<std::string> value{"Hello", "World"};
     StringArrayParam param(value, pd_);
     { // Add exceeds max length
@@ -1041,7 +1041,7 @@ TEST_F(ParamWithValueTest, StringArray_PopBack) {
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
 }
 
-TEST_F(ParamWithValueTest, StringArray_PopBackError) {
+TEST_F(ParamWithValueTest, StringArray_PopBack_Error) {
     std::vector<std::string> value{};
     StringArrayParam param(value, pd_);
     { // Empty array
@@ -1084,7 +1084,7 @@ TEST_F(ParamWithValueTest, StringArray_ValidateSetValue) {
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_)) << "Valid setting whole array";
 }
 
-TEST_F(ParamWithValueTest, StringArray_ValidateSetValueSingleElement) {
+TEST_F(ParamWithValueTest, StringArray_ValidateSetValue_SingleElement) {
     std::vector<std::string> value{"Hello", "World"};
     StringArrayParam param(value, pd_);
     catena::Value protoValue;
@@ -1095,7 +1095,7 @@ TEST_F(ParamWithValueTest, StringArray_ValidateSetValueSingleElement) {
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_)) << "Valid append value";
 }
 
-TEST_F(ParamWithValueTest, StringArray_ValidateSetValueError) {
+TEST_F(ParamWithValueTest, StringArray_ValidateSetValue_Error) {
     std::vector<std::string> value{"Hello", "World"};
     StringArrayParam param(value, pd_);
     catena::Value protoValue;
@@ -1125,7 +1125,7 @@ TEST_F(ParamWithValueTest, StringArray_ValidateSetValueError) {
         << "Should return OUT_OF_RANGE when the new value exceeds totalLength";
 }
 
-TEST_F(ParamWithValueTest, StringArray_ValidateSetValueSingleElementError) {
+TEST_F(ParamWithValueTest, StringArray_ValidateSetValue_SingleElementError) {
     std::vector<std::string> value{"Hello", "World"};
     StringArrayParam param(value, pd_);
     catena::Value protoValue;
@@ -1298,7 +1298,7 @@ TEST_F(ParamWithValueTest, Copy) {
     EXPECT_EQ(&paramCopy->getDescriptor(), &param.getDescriptor());
 }
 
-TEST_F(ParamWithValueTest, ParamToProtoError) {
+TEST_F(ParamWithValueTest, ParamToProto_Error) {
     int32_t value{16};
     IntParam param(value, pd_);
     catena::Param outParam;
@@ -1327,7 +1327,7 @@ TEST_F(ParamWithValueTest, ParamInfoToProto) {
     EXPECT_EQ(oid_, paramInfo.info().oid());
 }
 
-TEST_F(ParamWithValueTest, ParamInfoToProtoError) {
+TEST_F(ParamWithValueTest, ParamInfoToProto_Error) {
     EmptyParam param(emptyValue, pd_);
     catena::ParamInfoResponse paramInfo;
     { // pd_.toProto throws an error

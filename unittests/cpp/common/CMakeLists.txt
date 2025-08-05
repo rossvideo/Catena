@@ -38,6 +38,7 @@ set(SOURCES
     tests/Device_test.cpp
     tests/ConnectionQueue_test.cpp
     tests/ParamWithValue_test.cpp
+    tests/ParamWithValue_test/StringArrayParam_test.cpp
 )
 
 add_executable(${This} ${SOURCES})
