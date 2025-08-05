@@ -407,17 +407,19 @@ class ParamWithValue : public catena::common::IParam {
     template<meta::IsVector U>
     std::unique_ptr<IParam> addBack_(U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
         using ElemType = U::value_type;
+        std::unique_ptr<IParam> returnParam = nullptr;
         auto oidIndex = value.size();
+        // Check writeAuthz.
         if (!authz.writeAuthz(*this)) {
             status = catena::exception_with_status("Not authorized to write to param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
-            return nullptr;
+        // Make sure add does not exceed max length constraint.
         } else if (oidIndex >= descriptor_.max_length()) {
             status = catena::exception_with_status("Array " + descriptor_.getOid() + " at maximum capacity", catena::StatusCode::OUT_OF_RANGE);
-            return nullptr;
         } else {
             value.push_back(ElemType());
-            return std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
+            returnParam = std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
         }
+        return returnParam;
     }
 
     /**
@@ -491,7 +493,7 @@ class ParamWithValue : public catena::common::IParam {
         using ElemType = U::value_type;
         std::unique_ptr<IParam> returnParam = nullptr;
         // Check read authz
-        if (!authz.readAuthz(descriptor_)) {
+        if (!authz.readAuthz(*this)) {
             status = catena::exception_with_status("Not authorized to read param " + oid.fqoid(), catena::StatusCode::PERMISSION_DENIED);
         // Make sure the front is an index
         } else if (!oid.front_is_index()) {

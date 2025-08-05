@@ -54,6 +54,15 @@ class ParamWithValueTest : public ::testing::Test {
      */
     void SetUp() override {
         EXPECT_CALL(pd_, getOid()).WillRepeatedly(testing::ReturnRef(oid_));
+        // Forwards calls to authz(Param) to authz(ParamDescriptor)
+        EXPECT_CALL(authz_, readAuthz(testing::An<const IParam&>()))
+            .WillRepeatedly(testing::Invoke([this](const IParam& p){
+                return authz_.readAuthz(p.getDescriptor());
+            }));
+        EXPECT_CALL(authz_, writeAuthz(testing::An<const IParam&>()))
+            .WillRepeatedly(testing::Invoke([this](const IParam& p){
+                return authz_.writeAuthz(p.getDescriptor());
+            }));
         // Authorizer has read and write authz by default
         EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillRepeatedly(testing::Return(true));
         EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillRepeatedly(testing::Return(true));
@@ -364,6 +373,59 @@ TEST_F(ParamWithValueTest, IntArray_GetParamError) {
     }
 }
 
+TEST_F(ParamWithValueTest, IntArray_AddBack) {
+    std::vector<int32_t> value{0, 1, 2};
+    IntArrayParam param(value, pd_);
+    EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(5));
+    auto addedParam = param.addBack(authz_, rc_);
+    EXPECT_TRUE(addedParam) << "Failed to add a value to array parameter";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+}
+
+TEST_F(ParamWithValueTest, IntArray_AddBackError) {
+    std::vector<int32_t> value{0, 1, 2};
+    IntArrayParam param(value, pd_);
+    { // Add exceeds max length
+    EXPECT_CALL(pd_, max_length()).WillOnce(testing::Return(3));
+    auto addedParam = param.addBack(authz_, rc_);
+    EXPECT_FALSE(addedParam) << "Added a value to array parameter at max length";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "addBack should return OUT_OF_RANGE if array is at max length";
+    }
+    { // Not authorized
+    EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
+    auto addedParam = param.addBack(authz_, rc_);
+    EXPECT_FALSE(addedParam) << "Added a value to array parameter without write authz";
+    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
+        << "addBack should return PERMISSION_DENIED if Authorizer does not have writeAuthz";
+    }
+}
+
+TEST_F(ParamWithValueTest, IntArray_PopBack) {
+    std::vector<int32_t> value{0, 1, 2};
+    IntArrayParam param(value, pd_);
+    rc_ = param.popBack(authz_);
+    value.pop_back();
+    EXPECT_EQ(param.get(), value);
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+}
+
+TEST_F(ParamWithValueTest, IntArray_PopBackError) {
+    std::vector<int32_t> value{};
+    IntArrayParam param(value, pd_);
+    { // Empty array
+    rc_ = param.popBack(authz_);
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "popBack should return OUT_OF_RANGE if array empty";
+    }
+    { // Not authorized
+    EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
+    rc_ = param.popBack(authz_);
+    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
+        << "popBack should return PERMISSION_DENNIED if Authorizer does not have writeAuthz";
+    }
+}
+
 /* ============================================================================
  *                                FLOAT ARRAY
  * ============================================================================
@@ -435,6 +497,59 @@ TEST_F(ParamWithValueTest, FloatArray_GetParamError) {
     }
 }
 
+TEST_F(ParamWithValueTest, FloatArray_AddBack) {
+    std::vector<float> value{0, 1, 2};
+    FloatArrayParam param(value, pd_);
+    EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(5));
+    auto addedParam = param.addBack(authz_, rc_);
+    EXPECT_TRUE(addedParam) << "Failed to add a value to array parameter";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+}
+
+TEST_F(ParamWithValueTest, FloatArray_AddBackError) {
+    std::vector<float> value{0, 1, 2};
+    FloatArrayParam param(value, pd_);
+    { // Add exceeds max length
+    EXPECT_CALL(pd_, max_length()).WillOnce(testing::Return(3));
+    auto addedParam = param.addBack(authz_, rc_);
+    EXPECT_FALSE(addedParam) << "Added a value to array parameter at max length";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "addBack should return OUT_OF_RANGE if array is at max length";
+    }
+    { // Not authorized
+    EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
+    auto addedParam = param.addBack(authz_, rc_);
+    EXPECT_FALSE(addedParam) << "Added a value to array parameter without write authz";
+    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
+        << "addBack should return PERMISSION_DENIED if Authorizer does not have writeAuthz";
+    }
+}
+
+TEST_F(ParamWithValueTest, FloatArray_PopBack) {
+    std::vector<float> value{0, 1, 2};
+    FloatArrayParam param(value, pd_);
+    rc_ = param.popBack(authz_);
+    value.pop_back();
+    EXPECT_EQ(param.get(), value);
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+}
+
+TEST_F(ParamWithValueTest, FloatArray_PopBackError) {
+    std::vector<float> value{};
+    FloatArrayParam param(value, pd_);
+    { // Empty array
+    rc_ = param.popBack(authz_);
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "popBack should return OUT_OF_RANGE if array empty";
+    }
+    { // Not authorized
+    EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
+    rc_ = param.popBack(authz_);
+    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
+        << "popBack should return PERMISSION_DENNIED if Authorizer does not have writeAuthz";
+    }
+}
+
 
 /* ============================================================================
  *                               STRING ARRAY
@@ -503,6 +618,59 @@ TEST_F(ParamWithValueTest, StringArray_GetParamError) {
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
         << "getParam should return PERMISSION_DENIED if Authorizer does not have readAuthz";
+    }
+}
+
+TEST_F(ParamWithValueTest, StringArray_AddBack) {
+    std::vector<std::string> value{"Hello", "World"};
+    StringArrayParam param(value, pd_);
+    EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(5));
+    auto addedParam = param.addBack(authz_, rc_);
+    EXPECT_TRUE(addedParam) << "Failed to add a value to array parameter";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+}
+
+TEST_F(ParamWithValueTest, StringArray_AddBackError) {
+    std::vector<std::string> value{"Hello", "World"};
+    StringArrayParam param(value, pd_);
+    { // Add exceeds max length
+    EXPECT_CALL(pd_, max_length()).WillOnce(testing::Return(2));
+    auto addedParam = param.addBack(authz_, rc_);
+    EXPECT_FALSE(addedParam) << "Added a value to array parameter at max length";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "addBack should return OUT_OF_RANGE if array is at max length";
+    }
+    { // Not authorized
+    EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
+    auto addedParam = param.addBack(authz_, rc_);
+    EXPECT_FALSE(addedParam) << "Added a value to array parameter without write authz";
+    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
+        << "addBack should return PERMISSION_DENIED if Authorizer does not have writeAuthz";
+    }
+}
+
+TEST_F(ParamWithValueTest, StringArray_PopBack) {
+    std::vector<std::string> value{"Hello", "World"};
+    StringArrayParam param(value, pd_);
+    rc_ = param.popBack(authz_);
+    value.pop_back();
+    EXPECT_EQ(param.get(), value);
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+}
+
+TEST_F(ParamWithValueTest, StringArray_PopBackError) {
+    std::vector<std::string> value{};
+    StringArrayParam param(value, pd_);
+    { // Empty array
+    rc_ = param.popBack(authz_);
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "popBack should return OUT_OF_RANGE if array empty";
+    }
+    { // Not authorized
+    EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
+    rc_ = param.popBack(authz_);
+    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
+        << "popBack should return PERMISSION_DENNIED if Authorizer does not have writeAuthz";
     }
 }
 
