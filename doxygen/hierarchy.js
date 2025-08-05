@@ -8,7 +8,6 @@ var hierarchy =
     [ "grpc::AuthMetadataProcessor", null, [
       [ "catena::gRPC::JWTAuthMetadataProcessor", "classcatena_1_1gRPC_1_1JWTAuthMetadataProcessor.html", null ]
     ] ],
-    [ "catena::common::Authorizer", "classcatena_1_1common_1_1Authorizer.html", null ],
     [ "catena::common::CommandTag", "structcatena_1_1common_1_1CommandTag.html", null ],
     [ "catena::common::ConstraintTag", "structcatena_1_1common_1_1ConstraintTag.html", null ],
     [ "catena::common::EmptyValue", "structcatena_1_1common_1_1EmptyValue.html", null ],
@@ -23,6 +22,9 @@ var hierarchy =
       [ "catena::meta::NthElementT< L, 0 >", "classcatena_1_1meta_1_1NthElementT_3_01L_00_010_01_4.html", null ]
     ] ],
     [ "catena::meta::FrontT< TypeList< Head, Tail... > >", "classcatena_1_1meta_1_1FrontT_3_01TypeList_3_01Head_00_01Tail_8_8_8_01_4_01_4.html", null ],
+    [ "catena::common::IAuthorizer", "classcatena_1_1common_1_1IAuthorizer.html", [
+      [ "catena::common::Authorizer", "classcatena_1_1common_1_1Authorizer.html", null ]
+    ] ],
     [ "catena::gRPC::ICallData", "classcatena_1_1gRPC_1_1ICallData.html", [
       [ "catena::gRPC::CallData", "classcatena_1_1gRPC_1_1CallData.html", [
         [ "catena::gRPC::AddLanguage", "classcatena_1_1gRPC_1_1AddLanguage.html", null ],

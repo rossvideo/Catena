@@ -7,6 +7,7 @@ var dir_182967fd2bbf5e595958d2ac00eb9d3f =
     [ "Device.h", "Device_8h.html", "Device_8h" ],
     [ "Enums.h", "Enums_8h.html", "Enums_8h" ],
     [ "Fake.h", "Fake_8h.html", "Fake_8h" ],
+    [ "IAuthorizer.h", "IAuthorizer_8h.html", "IAuthorizer_8h" ],
     [ "IConstraint.h", "IConstraint_8h.html", "IConstraint_8h" ],
     [ "IDevice.h", "IDevice_8h.html", "IDevice_8h" ],
     [ "ILanguagePack.h", "ILanguagePack_8h.html", "ILanguagePack_8h" ],

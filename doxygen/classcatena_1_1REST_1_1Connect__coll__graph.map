@@ -1,14 +1,16 @@
 <map id="catena::REST::Connect" name="catena::REST::Connect">
-<area shape="rect" id="Node000001" title="ICallData class for the Connect REST controller." alt="" coords="665,69,832,95"/>
-<area shape="rect" id="Node000002" href="$classcatena_1_1REST_1_1ICallData.html" title="Interface class for REST API controllers." alt="" coords="433,44,607,69"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="621,65,666,70,665,75,621,70"/>
-<area shape="rect" id="Node000003" href="$classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame..." alt="" coords="424,93,616,119"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="630,92,665,88,665,93,630,97"/>
-<area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1IConnect.html" title="Interface class for Connect RPCs." alt="" coords="19,5,215,31"/>
-<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="190,31,229,39,461,91,460,96,227,45,189,36"/>
-<area shape="rect" id="Node000005" href="$classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information." alt="" coords="13,93,220,119"/>
-<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="234,103,424,103,424,109,234,109"/>
-<area shape="poly" id="edge5_Node000005_Node000005" title=" " alt="" coords="76,79,88,70,117,67,140,69,154,75,158,85,151,95,147,92,153,84,151,79,139,74,117,72,90,75,80,84"/>
-<area shape="rect" id="Node000006" href="$classcatena_1_1common_1_1ISubscriptionManager.html" title="Interface for managing parameter subscriptions in Catena." alt="" coords="5,143,228,183"/>
-<area shape="poly" id="edge6_Node000003_Node000006" title=" " alt="" coords="242,145,400,123,446,116,446,121,400,129,242,151"/>
+<area shape="rect" id="Node000001" title="ICallData class for the Connect REST controller." alt="" coords="925,69,1092,95"/>
+<area shape="rect" id="Node000002" href="$classcatena_1_1REST_1_1ICallData.html" title="Interface class for REST API controllers." alt="" coords="693,44,867,69"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="881,65,926,70,925,75,881,70"/>
+<area shape="rect" id="Node000003" href="$classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame..." alt="" coords="684,93,876,119"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="890,92,925,88,925,93,890,97"/>
+<area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1IConnect.html" title="Interface class for Connect RPCs." alt="" coords="279,5,475,31"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="450,31,489,39,721,91,720,96,487,45,449,36"/>
+<area shape="rect" id="Node000005" href="$classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information." alt="" coords="273,93,480,119"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="494,103,684,103,684,109,494,109"/>
+<area shape="poly" id="edge6_Node000005_Node000005" title=" " alt="" coords="350,78,358,70,377,67,393,69,402,75,405,85,400,94,395,92,399,84,398,79,391,74,377,72,361,75,354,82"/>
+<area shape="rect" id="Node000006" href="$classcatena_1_1common_1_1IAuthorizer.html" title="Class for handling authorization information." alt="" coords="5,93,216,119"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="229,103,273,103,273,109,229,109"/>
+<area shape="rect" id="Node000007" href="$classcatena_1_1common_1_1ISubscriptionManager.html" title="Interface for managing parameter subscriptions in Catena." alt="" coords="265,143,488,183"/>
+<area shape="poly" id="edge7_Node000003_Node000007" title=" " alt="" coords="502,145,660,123,706,116,706,121,660,129,502,151"/>
 </map>

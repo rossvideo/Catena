@@ -1,22 +1,24 @@
 <map id="catena::gRPC::Connect" name="catena::gRPC::Connect">
-<area shape="rect" id="Node000001" title="CallData class for the Connect RPC." alt="" coords="883,137,1052,163"/>
-<area shape="rect" id="Node000002" href="$classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for the CallData classes which defines the jwsToken_ class." alt="" coords="651,95,823,120"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="820,120,899,135,898,140,819,125"/>
-<area shape="rect" id="Node000003" href="$classcatena_1_1gRPC_1_1ICallData.html" title="Interface class for gRPC CallData classes." alt="" coords="246,5,422,31"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="436,26,525,39,618,59,666,75,709,92,707,97,665,80,617,65,524,45,435,31"/>
-<area shape="rect" id="Node000004" title=" " alt="" coords="277,55,391,80"/>
-<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="405,72,652,96,651,102,405,77"/>
-<area shape="rect" id="Node000005" href="$classcatena_1_1gRPC_1_1IServiceImpl.html" title="Interface class for the gRPC API Implementation." alt="" coords="235,104,433,129"/>
-<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="447,112,617,109,651,108,651,113,617,114,447,118"/>
-<area shape="rect" id="Node000006" title=" " alt="" coords="5,97,173,137"/>
-<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="187,114,235,114,235,119,187,119"/>
-<area shape="rect" id="Node000007" href="$classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame..." alt="" coords="641,161,833,187"/>
-<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="847,160,882,156,883,161,847,165"/>
-<area shape="rect" id="Node000008" href="$classcatena_1_1common_1_1IConnect.html" title="Interface class for Connect RPCs." alt="" coords="236,153,432,179"/>
-<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="446,166,641,169,641,175,446,171"/>
-<area shape="rect" id="Node000009" href="$classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information." alt="" coords="231,241,437,267"/>
-<area shape="poly" id="edge8_Node000007_Node000009" title=" " alt="" coords="411,236,672,184,673,189,413,241"/>
-<area shape="poly" id="edge9_Node000009_Node000009" title=" " alt="" coords="307,226,315,218,334,215,350,217,360,223,362,233,357,242,353,240,357,232,355,227,348,222,334,220,318,223,311,230"/>
-<area shape="rect" id="Node000010" href="$classcatena_1_1common_1_1ISubscriptionManager.html" title="Interface for managing parameter subscriptions in Catena." alt="" coords="223,291,445,331"/>
-<area shape="poly" id="edge10_Node000007_Node000010" title=" " alt="" coords="458,288,537,269,616,242,672,214,717,185,720,189,675,218,618,247,539,274,459,293"/>
+<area shape="rect" id="Node000001" title="CallData class for the Connect RPC." alt="" coords="925,137,1095,163"/>
+<area shape="rect" id="Node000002" href="$classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for the CallData classes which defines the jwsToken_ class." alt="" coords="694,95,866,120"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="863,120,941,135,940,140,862,125"/>
+<area shape="rect" id="Node000003" href="$classcatena_1_1gRPC_1_1ICallData.html" title="Interface class for gRPC CallData classes." alt="" coords="289,5,465,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="479,26,568,39,661,59,709,75,751,92,749,97,707,80,659,65,567,45,478,31"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="319,55,434,80"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="448,72,694,96,694,102,447,77"/>
+<area shape="rect" id="Node000005" href="$classcatena_1_1gRPC_1_1IServiceImpl.html" title="Interface class for the gRPC API Implementation." alt="" coords="278,104,475,129"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="489,112,660,109,694,108,694,113,660,114,490,118"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="27,97,195,137"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="209,114,278,114,278,119,209,119"/>
+<area shape="rect" id="Node000007" href="$classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame..." alt="" coords="684,161,876,187"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="890,160,925,156,925,161,890,165"/>
+<area shape="rect" id="Node000008" href="$classcatena_1_1common_1_1IConnect.html" title="Interface class for Connect RPCs." alt="" coords="279,153,475,179"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="489,166,684,169,684,175,489,171"/>
+<area shape="rect" id="Node000009" href="$classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information." alt="" coords="273,241,480,267"/>
+<area shape="poly" id="edge8_Node000007_Node000009" title=" " alt="" coords="454,236,714,184,715,189,455,241"/>
+<area shape="poly" id="edge10_Node000009_Node000009" title=" " alt="" coords="350,226,358,218,377,215,393,217,402,223,405,233,400,242,395,240,399,232,398,227,391,222,377,220,361,223,354,230"/>
+<area shape="rect" id="Node000010" href="$classcatena_1_1common_1_1IAuthorizer.html" title="Class for handling authorization information." alt="" coords="5,241,216,267"/>
+<area shape="poly" id="edge9_Node000009_Node000010" title=" " alt="" coords="229,251,273,251,273,257,229,257"/>
+<area shape="rect" id="Node000011" href="$classcatena_1_1common_1_1ISubscriptionManager.html" title="Interface for managing parameter subscriptions in Catena." alt="" coords="265,291,488,331"/>
+<area shape="poly" id="edge11_Node000007_Node000011" title=" " alt="" coords="501,289,580,270,659,244,716,214,760,185,763,189,718,219,661,248,582,275,502,294"/>
 </map>
