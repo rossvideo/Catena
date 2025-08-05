@@ -490,9 +490,12 @@ class ParamWithValue : public catena::common::IParam {
     std::unique_ptr<IParam> getParam_(Path& oid, U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
         using ElemType = U::value_type;
         std::unique_ptr<IParam> returnParam = nullptr;
-        if (!oid.front_is_index()) {
+        // Check read authz
+        if (!authz.readAuthz(descriptor_)) {
+            status = catena::exception_with_status("Not authorized to read param " + oid.fqoid(), catena::StatusCode::PERMISSION_DENIED);
+        // Make sure the front is an index
+        } else if (!oid.front_is_index()) {
             status = catena::exception_with_status("Expected index in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
-
         } else {
             size_t oidIndex = oid.front_as_index();
             oid.pop();

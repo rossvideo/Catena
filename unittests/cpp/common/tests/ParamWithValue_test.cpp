@@ -40,6 +40,7 @@
 #include "MockParamDescriptor.h"
 #include "MockDevice.h"
 #include "MockConstraint.h"
+#include "MockAuthorizer.h"
 
 // gtest
 #include <gtest/gtest.h>
@@ -53,6 +54,9 @@ class ParamWithValueTest : public ::testing::Test {
      */
     void SetUp() override {
         EXPECT_CALL(pd_, getOid()).WillRepeatedly(testing::ReturnRef(oid_));
+        // Authorizer has read and write authz by default
+        EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillRepeatedly(testing::Return(true));
+        EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillRepeatedly(testing::Return(true));
     }
 
     template <typename T>
@@ -92,6 +96,7 @@ class ParamWithValueTest : public ::testing::Test {
     std::string oid_ = "test_oid";
     MockParamDescriptor pd_;
     MockDevice dm_;
+    MockAuthorizer authz_;
     catena::exception_with_status rc_{"", catena::StatusCode::OK};
 };
 
@@ -119,21 +124,22 @@ TEST_F(ParamWithValueTest, Empty_Size) {
 TEST_F(ParamWithValueTest, Empty_GetParam) {
     EmptyParam param(emptyValue, pd_);
     Path path = Path("/test/oid");
-    auto foundParam = param.getParam(path, Authorizer::kAuthzDisabled, rc_);
+    EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillRepeatedly(testing::Return(true));
+    auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 
 TEST_F(ParamWithValueTest, Empty_AddBack) {
     EmptyParam param(emptyValue, pd_);
-    auto addedParam = param.addBack(Authorizer::kAuthzDisabled, rc_);
+    auto addedParam = param.addBack(authz_, rc_);
     EXPECT_FALSE(addedParam) << "Added a value to non-array parameter";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 
 TEST_F(ParamWithValueTest, Empty_PopBack) {
     EmptyParam param(emptyValue, pd_);
-    rc_ = param.popBack(Authorizer::kAuthzDisabled);
+    rc_ = param.popBack(authz_);
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 
@@ -167,7 +173,7 @@ TEST_F(ParamWithValueTest, Int_GetParam) {
     int32_t value{0};
     IntParam param(value, pd_);
     Path path = Path("/test/oid");
-    auto foundParam = param.getParam(path, Authorizer::kAuthzDisabled, rc_);
+    auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
@@ -175,7 +181,7 @@ TEST_F(ParamWithValueTest, Int_GetParam) {
 TEST_F(ParamWithValueTest, Int_AddBack) {
     int32_t value{0};
     IntParam param(value, pd_);
-    auto addedParam = param.addBack(Authorizer::kAuthzDisabled, rc_);
+    auto addedParam = param.addBack(authz_, rc_);
     EXPECT_FALSE(addedParam) << "Added a value to non-array parameter";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
@@ -183,7 +189,7 @@ TEST_F(ParamWithValueTest, Int_AddBack) {
 TEST_F(ParamWithValueTest, Int_PopBack) {
     int32_t value{0};
     IntParam param(value, pd_);
-    rc_ = param.popBack(Authorizer::kAuthzDisabled);
+    rc_ = param.popBack(authz_);
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 
@@ -216,7 +222,7 @@ TEST_F(ParamWithValueTest, Float_GetParam) {
     float value{0};
     FloatParam param(value, pd_);
     Path path = Path("/test/oid");
-    auto foundParam = param.getParam(path, Authorizer::kAuthzDisabled, rc_);
+    auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
@@ -224,7 +230,7 @@ TEST_F(ParamWithValueTest, Float_GetParam) {
 TEST_F(ParamWithValueTest, Float_AddBack) {
     float value{0};
     FloatParam param(value, pd_);
-    auto addedParam = param.addBack(Authorizer::kAuthzDisabled, rc_);
+    auto addedParam = param.addBack(authz_, rc_);
     EXPECT_FALSE(addedParam) << "Added a value to non-array parameter";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
@@ -232,7 +238,7 @@ TEST_F(ParamWithValueTest, Float_AddBack) {
 TEST_F(ParamWithValueTest, Float_PopBack) {
     float value{0};
     FloatParam param(value, pd_);
-    rc_ = param.popBack(Authorizer::kAuthzDisabled);
+    rc_ = param.popBack(authz_);
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 
@@ -265,7 +271,7 @@ TEST_F(ParamWithValueTest, String_GetParam) {
     std::string value{"Hello World"};
     StringParam param(value, pd_);
     Path path = Path("/test/oid");
-    auto foundParam = param.getParam(path, Authorizer::kAuthzDisabled, rc_);
+    auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
@@ -273,7 +279,7 @@ TEST_F(ParamWithValueTest, String_GetParam) {
 TEST_F(ParamWithValueTest, String_AddBack) {
     std::string value{"Hello World"};
     StringParam param(value, pd_);
-    auto addedParam = param.addBack(Authorizer::kAuthzDisabled, rc_);
+    auto addedParam = param.addBack(authz_, rc_);
     EXPECT_FALSE(addedParam) << "Added a value to non-array parameter";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
@@ -281,7 +287,7 @@ TEST_F(ParamWithValueTest, String_AddBack) {
 TEST_F(ParamWithValueTest, String_PopBack) {
     std::string value{"Hello World"};
     StringParam param(value, pd_);
-    rc_ = param.popBack(Authorizer::kAuthzDisabled);
+    rc_ = param.popBack(authz_);
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 
@@ -316,7 +322,7 @@ TEST_F(ParamWithValueTest, IntArray_GetParam) {
     std::vector<int32_t> value{0, 1, 2};
     IntArrayParam param(value, pd_);
     Path path = Path("/0");
-    auto foundParam = param.getParam(path, Authorizer::kAuthzDisabled, rc_);
+    auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
     ASSERT_TRUE(foundParam) << "Did not find a parameter when one was expected";
     EXPECT_EQ(getParamValue<int32_t>(foundParam.get()), value[0]);
@@ -327,7 +333,7 @@ TEST_F(ParamWithValueTest, IntArray_GetParamError) {
     IntArrayParam param(value, pd_);
     { // Front is not an index.
     Path path = Path("/test/oid");
-    auto foundParam = param.getParam(path, Authorizer::kAuthzDisabled, rc_);
+    auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT)
         << "getParam should return INVALID_ARGUMENT if front of path is not an index";
@@ -335,7 +341,7 @@ TEST_F(ParamWithValueTest, IntArray_GetParamError) {
     rc_ = catena::exception_with_status{"", catena::StatusCode::OK}; // Reset status
     { // Index out of bounds
     Path path = Path("/" + std::to_string(value.size()));
-    auto foundParam = param.getParam(path, Authorizer::kAuthzDisabled, rc_);
+    auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
         << "getParam should return OUT_OF_RANGE if front of path is not an index";
@@ -343,10 +349,18 @@ TEST_F(ParamWithValueTest, IntArray_GetParamError) {
     rc_ = catena::exception_with_status{"", catena::StatusCode::OK}; // Reset status
     { // Param does not exist
     Path path = Path("/0/0");
-    auto foundParam = param.getParam(path, Authorizer::kAuthzDisabled, rc_);
+    auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::NOT_FOUND)
         << "getParam should return NOT_FOUND if attempting to retrieve a sub-parameter that does not exist";
+    }
+    { // Not authorized.
+    Path path = Path("/0");
+    EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
+    auto foundParam = param.getParam(path, authz_, rc_);
+    EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
+    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
+        << "getParam should return PERMISSION_DENIED if Authorizer does not have readAuthz";
     }
 }
 
@@ -379,7 +393,7 @@ TEST_F(ParamWithValueTest, FloatArray_GetParam) {
     std::vector<float> value{0, 1, 2};
     FloatArrayParam param(value, pd_);
     Path path = Path("/0");
-    auto foundParam = param.getParam(path, Authorizer::kAuthzDisabled, rc_);
+    auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
     ASSERT_TRUE(foundParam) << "Did not find a parameter when one was expected";
     EXPECT_EQ(getParamValue<float>(foundParam.get()), value[0]);
@@ -390,7 +404,7 @@ TEST_F(ParamWithValueTest, FloatArray_GetParamError) {
     FloatArrayParam param(value, pd_);
     { // Front is not an index.
     Path path = Path("/test/oid");
-    auto foundParam = param.getParam(path, Authorizer::kAuthzDisabled, rc_);
+    auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT)
         << "getParam should return INVALID_ARGUMENT if front of path is not an index";
@@ -398,7 +412,7 @@ TEST_F(ParamWithValueTest, FloatArray_GetParamError) {
     rc_ = catena::exception_with_status{"", catena::StatusCode::OK}; // Reset status
     { // Index out of bounds
     Path path = Path("/" + std::to_string(value.size()));
-    auto foundParam = param.getParam(path, Authorizer::kAuthzDisabled, rc_);
+    auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
         << "getParam should return OUT_OF_RANGE if front of path is not an index";
@@ -406,10 +420,18 @@ TEST_F(ParamWithValueTest, FloatArray_GetParamError) {
     rc_ = catena::exception_with_status{"", catena::StatusCode::OK}; // Reset status
     { // Param does not exist
     Path path = Path("/0/0");
-    auto foundParam = param.getParam(path, Authorizer::kAuthzDisabled, rc_);
+    auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::NOT_FOUND)
         << "getParam should return NOT_FOUND if attempting to retrieve a sub-parameter that does not exist";
+    }
+    { // Not authorized.
+    Path path = Path("/0");
+    EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
+    auto foundParam = param.getParam(path, authz_, rc_);
+    EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
+    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
+        << "getParam should return PERMISSION_DENIED if Authorizer does not have readAuthz";
     }
 }
 
@@ -442,7 +464,7 @@ TEST_F(ParamWithValueTest, StringArray_GetParam) {
     std::vector<std::string> value{"Hello", "World"};
     StringArrayParam param(value, pd_);
     Path path = Path("/0");
-    auto foundParam = param.getParam(path, Authorizer::kAuthzDisabled, rc_);
+    auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
     ASSERT_TRUE(foundParam) << "Did not find a parameter when one was expected";
     EXPECT_EQ(getParamValue<std::string>(foundParam.get()), value[0]);
@@ -453,7 +475,7 @@ TEST_F(ParamWithValueTest, StringArray_GetParamError) {
     StringArrayParam param(value, pd_);
     { // Front is not an index.
     Path path = Path("/test/oid");
-    auto foundParam = param.getParam(path, Authorizer::kAuthzDisabled, rc_);
+    auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT)
         << "getParam should return INVALID_ARGUMENT if front of path is not an index";
@@ -461,7 +483,7 @@ TEST_F(ParamWithValueTest, StringArray_GetParamError) {
     rc_ = catena::exception_with_status{"", catena::StatusCode::OK}; // Reset status
     { // Index out of bounds
     Path path = Path("/" + std::to_string(value.size()));
-    auto foundParam = param.getParam(path, Authorizer::kAuthzDisabled, rc_);
+    auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
         << "getParam should return OUT_OF_RANGE if front of path is not an index";
@@ -469,10 +491,18 @@ TEST_F(ParamWithValueTest, StringArray_GetParamError) {
     rc_ = catena::exception_with_status{"", catena::StatusCode::OK}; // Reset status
     { // Param does not exist
     Path path = Path("/0/0");
-    auto foundParam = param.getParam(path, Authorizer::kAuthzDisabled, rc_);
+    auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::NOT_FOUND)
         << "getParam should return NOT_FOUND if attempting to retrieve a sub-parameter that does not exist";
+    }
+    { // Not authorized.
+    Path path = Path("/0");
+    EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
+    auto foundParam = param.getParam(path, authz_, rc_);
+    EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
+    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
+        << "getParam should return PERMISSION_DENIED if Authorizer does not have readAuthz";
     }
 }
 
