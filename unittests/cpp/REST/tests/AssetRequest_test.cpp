@@ -174,9 +174,9 @@ class RESTAssetRequestTests : public RESTEndpointTest {
     }
 
     const std::string downloadFolder_ = std::string(CATENA_UNITTESTS_DIR) + "/cpp/static";
-    vdk::signal<void(const std::string&, const Authorizer*)> downloadAssetRequest_;
-    vdk::signal<void(const std::string&, const Authorizer*)> uploadAssetRequest_;
-    vdk::signal<void(const std::string&, const Authorizer*)> deleteAssetRequest_;
+    vdk::signal<void(const std::string&, const IAuthorizer*)> downloadAssetRequest_;
+    vdk::signal<void(const std::string&, const IAuthorizer*)> uploadAssetRequest_;
+    vdk::signal<void(const std::string&, const IAuthorizer*)> deleteAssetRequest_;
 
     std::string fileName_ = "catena_logo.png";
     std::string digestUncompressed_ = "ozr4w8IzziM294/wdLaHVVlUkVe75zQ+WtRot6+oXtk=";

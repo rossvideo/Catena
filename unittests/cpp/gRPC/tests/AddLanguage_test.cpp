@@ -120,10 +120,10 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_Normal) {
     initPayload(0, "en", "English", {{"greeting", "Hello"}});
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+        .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, const IAuthorizer& authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(language.SerializeAsString(), inVal_.SerializeAsString());
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             // Setting the output status and returning true.
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
@@ -143,10 +143,10 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_AuthzValid) {
     clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+        .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, const IAuthorizer& authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(language.SerializeAsString(), inVal_.SerializeAsString());
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             // Setting the output status and returning true.
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
@@ -192,7 +192,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrReturnCatena) {
     expRc_ = catena::exception_with_status("Language already exists", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
     EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+        .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, const IAuthorizer& authz) {
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
     EXPECT_CALL(dm1_, addLanguage(::testing::_, ::testing::_)).Times(0);
@@ -220,7 +220,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowCatena) {
     expRc_ = catena::exception_with_status("Language already exists", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
     EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+        .WillOnce(::testing::Invoke([this](catena::AddLanguagePayload &language, const IAuthorizer& authz) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));

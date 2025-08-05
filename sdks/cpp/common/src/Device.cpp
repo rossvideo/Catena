@@ -44,7 +44,7 @@
 
 using namespace catena::common;
 
-bool Device::tryMultiSetValue (catena::MultiSetValuePayload src, catena::exception_with_status& ans, Authorizer& authz) {
+bool Device::tryMultiSetValue (catena::MultiSetValuePayload src, catena::exception_with_status& ans, const IAuthorizer& authz) {
     // Making sure multi set is enabled.
     if (src.values_size() > 1 && !multi_set_enabled_) {
         ans = catena::exception_with_status("Multi-set is disabled for the device in slot " + std::to_string(slot_), catena::StatusCode::PERMISSION_DENIED);
@@ -98,7 +98,7 @@ bool Device::tryMultiSetValue (catena::MultiSetValuePayload src, catena::excepti
     return ans.status == catena::StatusCode::OK;
 }
 
-catena::exception_with_status Device::commitMultiSetValue (catena::MultiSetValuePayload src, Authorizer& authz) {
+catena::exception_with_status Device::commitMultiSetValue (catena::MultiSetValuePayload src, const IAuthorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     // Looping through and commiting all setValue operations.
     for (const catena::SetValuePayload& setValuePayload : src.values()) {
@@ -137,7 +137,7 @@ catena::exception_with_status Device::commitMultiSetValue (catena::MultiSetValue
     return ans;
 }
 
-catena::exception_with_status Device::setValue (const std::string& jptr, catena::Value& src, Authorizer& authz) {
+catena::exception_with_status Device::setValue (const std::string& jptr, catena::Value& src, const IAuthorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     catena::MultiSetValuePayload setValues;
     catena::SetValuePayload* setValuePayload = setValues.add_values();
@@ -149,7 +149,7 @@ catena::exception_with_status Device::setValue (const std::string& jptr, catena:
     return ans;
 }
 
-catena::exception_with_status Device::getValue (const std::string& jptr, catena::Value& dst, Authorizer& authz) const {
+catena::exception_with_status Device::getValue (const std::string& jptr, catena::Value& dst, const IAuthorizer& authz) const {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     /**
      * Converting to Path object to validate input (cant end with /-).
@@ -201,7 +201,7 @@ catena::exception_with_status Device::getLanguagePack(const std::string& languag
     return ans;
 }
 
-catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& language, Authorizer& authz) {
+catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& language, const IAuthorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     auto& name = language.language_pack().name();
     auto& id = language.id();
@@ -225,7 +225,7 @@ catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& l
     return ans;
 }
 
-catena::exception_with_status Device::removeLanguage(const std::string& languageId, Authorizer& authz) {
+catena::exception_with_status Device::removeLanguage(const std::string& languageId, const IAuthorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     // Admin scope required.
     if (!authz.writeAuthz(Scopes_e::kAdmin)) {
@@ -245,7 +245,7 @@ catena::exception_with_status Device::removeLanguage(const std::string& language
     return ans;
 }
 
-std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) const {
+std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz) const {
     // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
     std::unique_ptr<IParam> result = nullptr;
     try {
@@ -261,7 +261,7 @@ std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::excep
     return result;
 }
 
-std::unique_ptr<IParam> Device::getParam(catena::common::Path& path, catena::exception_with_status& status, Authorizer& authz) const {
+std::unique_ptr<IParam> Device::getParam(catena::common::Path& path, catena::exception_with_status& status, const IAuthorizer& authz) const {
     if (path.empty()) {
         status = catena::exception_with_status("Invalid json pointer " + path.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
         return nullptr;
@@ -301,7 +301,7 @@ std::unique_ptr<IParam> Device::getParam(catena::common::Path& path, catena::exc
     }
 }
 
-std::vector<std::unique_ptr<IParam>> Device::getTopLevelParams(catena::exception_with_status& status, Authorizer& authz) const {
+std::vector<std::unique_ptr<IParam>> Device::getTopLevelParams(catena::exception_with_status& status, const IAuthorizer& authz) const {
     std::vector<std::unique_ptr<IParam>> result;
     try {
         for (const auto& [name, param] : params_) {
@@ -321,7 +321,7 @@ std::vector<std::unique_ptr<IParam>> Device::getTopLevelParams(catena::exception
     return result;
 }
 
-std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) const {
+std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz) const {
    // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
     try {
         catena::common::Path path(fqoid);
@@ -352,7 +352,7 @@ std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exc
     }
 }
 
-void Device::toProto(::catena::Device& dst, Authorizer& authz, bool shallow) const {
+void Device::toProto(::catena::Device& dst, const IAuthorizer& authz, bool shallow) const {
     dst.set_slot(slot_);
     dst.set_detail_level(detail_level_);
     *dst.mutable_default_scope() = default_scope_;
@@ -441,7 +441,7 @@ catena::DeviceComponent Device::DeviceSerializer::getNext() {
     return std::move(handle_.promise().deviceMessage); 
 }
 
-std::unique_ptr<Device::IDeviceSerializer> Device::getComponentSerializer(Authorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow) const {
+std::unique_ptr<Device::IDeviceSerializer> Device::getComponentSerializer(const IAuthorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow) const {
     // Sanitizing if trying to use SUBSCRIPTIONS mode with subscriptions disabled
     if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS && !subscriptions_) {
         throw catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::INVALID_ARGUMENT);
@@ -449,7 +449,7 @@ std::unique_ptr<Device::IDeviceSerializer> Device::getComponentSerializer(Author
     return std::make_unique<Device::DeviceSerializer>(getDeviceSerializer(authz, subscribedOids, dl, shallow));
 }
 
-Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow) const {
+Device::DeviceSerializer Device::getDeviceSerializer(const IAuthorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow) const {
     catena::DeviceComponent component{};
 
     // Send basic device information first
@@ -531,7 +531,7 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
     co_return component;
 }
 
-bool Device::shouldSendParam(const IParam& param, bool is_subscribed, Authorizer& authz) const {
+bool Device::shouldSendParam(const IParam& param, bool is_subscribed, const IAuthorizer& authz) const {
     bool should_send = false;
 
     //Detail level casted to ints to avoid warnings about comparing enums on deprecated ASIO versions

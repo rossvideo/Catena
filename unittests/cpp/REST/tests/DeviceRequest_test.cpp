@@ -138,8 +138,8 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Normal) {
     initExpVal(3);
     // Set up expectation for getComponentSerializer to return a working serializer
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_))
-        .WillOnce(testing::Invoke([this](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+        .WillOnce(testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             EXPECT_EQ(dl, catena::Device_DetailLevel_FULL);
             EXPECT_TRUE(subscribedOids.empty());
             auto mockSerializer = std::make_unique<MockDeviceSerializer>();
@@ -167,8 +167,8 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Stream) {
     initExpVal(3);
     // Set up expectation for getComponentSerializer to return a working serializer
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_))
-        .WillOnce(testing::Invoke([this](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+        .WillOnce(testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             EXPECT_EQ(dl, catena::Device_DetailLevel_FULL);
             EXPECT_TRUE(subscribedOids.empty());
             auto mockSerializer = std::make_unique<MockDeviceSerializer>();
@@ -192,8 +192,8 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_AuthzValid) {
     authzEnabled_ = true;
     // Set up expectation for getComponentSerializer to return a working serializer
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+        .WillOnce(testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             EXPECT_EQ(dl, catena::Device_DetailLevel_FULL);
             EXPECT_TRUE(subscribedOids.empty());
             auto mockSerializer = std::make_unique<MockDeviceSerializer>();
@@ -217,7 +217,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Subscriptions) {
         .WillOnce(testing::Return(expectedSubscribedOids));
     // Set up expectation for getComponentSerializer to verify subscribed OIDs are passed
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([&expectedSubscribedOids](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+        .WillOnce(testing::Invoke([&expectedSubscribedOids](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
             EXPECT_EQ(subscribedOids, expectedSubscribedOids);
             EXPECT_EQ(dl, catena::Device_DetailLevel_SUBSCRIPTIONS);
             auto mockSerializer = std::make_unique<MockDeviceSerializer>();

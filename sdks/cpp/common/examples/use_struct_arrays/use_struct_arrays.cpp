@@ -49,6 +49,7 @@
 #include <Device.h>
 #include <ParamWithValue.h>
 #include <PolyglotText.h>
+#include <Authorizer.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
