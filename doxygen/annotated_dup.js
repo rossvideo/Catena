@@ -11,6 +11,7 @@ var annotated_dup =
         [ "EmptyValue", "structcatena_1_1common_1_1EmptyValue.html", null ],
         [ "FakeLock", "structcatena_1_1common_1_1FakeLock.html", null ],
         [ "FieldInfo", "structcatena_1_1common_1_1FieldInfo.html", null ],
+        [ "IAuthorizer", "classcatena_1_1common_1_1IAuthorizer.html", "classcatena_1_1common_1_1IAuthorizer" ],
         [ "IConnect", "classcatena_1_1common_1_1IConnect.html", "classcatena_1_1common_1_1IConnect" ],
         [ "IConnectionQueue", "classcatena_1_1common_1_1IConnectionQueue.html", "classcatena_1_1common_1_1IConnectionQueue" ],
         [ "IConstraint", "classcatena_1_1common_1_1IConstraint.html", "classcatena_1_1common_1_1IConstraint" ],

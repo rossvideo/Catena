@@ -133,6 +133,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcatena_1_1common_1_1FieldInfo.html">FieldInfo</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structcatena_1_1common_1_1FieldInfo.html" title="FieldInfo pairs the name of a field with the type information needed to access it.">FieldInfo</a> pairs the name of a field with the type information needed to access it.  <a href="structcatena_1_1common_1_1FieldInfo.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Class for handling authorization information.  <a href="classcatena_1_1common_1_1IAuthorizer.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html">IConnect</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interface class for <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> RPCs.  <a href="classcatena_1_1common_1_1IConnect.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -273,15 +276,15 @@ template&lt;typename T &gt; </td></tr>
 std::string&#160;</td><td class="memItemRight" valign="bottom"><b>timeNow</b> ()</td></tr>
 <tr class="memdesc:aaf7051c03c402f50294ffebece8d0cfb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the current time as a string including microseconds. <br /></td></tr>
 <tr class="separator:aaf7051c03c402f50294ffebece8d0cfb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d090c6e5eca2b36cb8cd5577cbf46ab" id="r_a0d090c6e5eca2b36cb8cd5577cbf46ab"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a0d090c6e5eca2b36cb8cd5577cbf46ab"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1common.html#a0d090c6e5eca2b36cb8cd5577cbf46ab">toProto</a> (catena::Value &amp;dst, const T *src, const <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;pd, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz)</td></tr>
-<tr class="separator:a0d090c6e5eca2b36cb8cd5577cbf46ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af1c59fbf2aa0f54f1e48eef6f3534241" id="r_af1c59fbf2aa0f54f1e48eef6f3534241"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:af1c59fbf2aa0f54f1e48eef6f3534241"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1common.html#af1c59fbf2aa0f54f1e48eef6f3534241">validFromProto</a> (const catena::Value &amp;src, const T *dst, const <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;pd, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;rc, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz)</td></tr>
-<tr class="separator:af1c59fbf2aa0f54f1e48eef6f3534241"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6d23bd61b79abba02698fa0c6e914895" id="r_a6d23bd61b79abba02698fa0c6e914895"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a6d23bd61b79abba02698fa0c6e914895"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1common.html#a6d23bd61b79abba02698fa0c6e914895">fromProto</a> (const catena::Value &amp;src, T *dst, const <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;pd, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz)</td></tr>
-<tr class="separator:a6d23bd61b79abba02698fa0c6e914895"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa45a6f4433e677dd49851d61bdee0350" id="r_aa45a6f4433e677dd49851d61bdee0350"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:aa45a6f4433e677dd49851d61bdee0350"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1common.html#aa45a6f4433e677dd49851d61bdee0350">toProto</a> (catena::Value &amp;dst, const T *src, const <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;pd, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz)</td></tr>
+<tr class="separator:aa45a6f4433e677dd49851d61bdee0350"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a846f2287f628fa1adeba439f9dc37fba" id="r_a846f2287f628fa1adeba439f9dc37fba"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a846f2287f628fa1adeba439f9dc37fba"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1common.html#a846f2287f628fa1adeba439f9dc37fba">validFromProto</a> (const catena::Value &amp;src, const T *dst, const <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;pd, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;rc, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz)</td></tr>
+<tr class="separator:a846f2287f628fa1adeba439f9dc37fba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ad5f48a946620a675877d2301531370" id="r_a5ad5f48a946620a675877d2301531370"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a5ad5f48a946620a675877d2301531370"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1common.html#a5ad5f48a946620a675877d2301531370">fromProto</a> (const catena::Value &amp;src, T *dst, const <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;pd, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz)</td></tr>
+<tr class="separator:a5ad5f48a946620a675877d2301531370"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:addddb371559a45d42994973db1a69f08" id="r_addddb371559a45d42994973db1a69f08"><td class="memTemplParams" colspan="2">template&lt;std::size_t size&gt; </td></tr>
 <tr class="memitem:addddb371559a45d42994973db1a69f08"><td class="memTemplItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1common.html#addddb371559a45d42994973db1a69f08">_findTypeIndex</a> (const std::string &amp;typeName, const std::array&lt; const char *, size &gt; &amp;typeNames)</td></tr>
 <tr class="memdesc:addddb371559a45d42994973db1a69f08"><td class="mdescLeft">&#160;</td><td class="mdescRight">helper function to find the index of a type in a list of type names  <br /></td></tr>
@@ -403,8 +406,8 @@ template&lt;std::size_t size&gt; </div>
 
 </div>
 </div>
-<a id="a6d23bd61b79abba02698fa0c6e914895" name="a6d23bd61b79abba02698fa0c6e914895"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6d23bd61b79abba02698fa0c6e914895">&#9670;&#160;</a></span>fromProto()</h2>
+<a id="a5ad5f48a946620a675877d2301531370" name="a5ad5f48a946620a675877d2301531370"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5ad5f48a946620a675877d2301531370">&#9670;&#160;</a></span>fromProto()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -432,7 +435,7 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em>&#160;</td>
         </tr>
         <tr>
@@ -472,22 +475,22 @@ template&lt;typename T &gt; </div>
 <p>&amp;(dst-&gt;*(field.memberPtr)) will pass the address of the corresponding value field in dst to the fromProto function.</p>
 <p>the correct specialization of fromProto will be called based on the type of the field memberPtr.</p>
 
-<p class="reference">References <a class="el" href="namespacecatena_1_1common.html#a6d23bd61b79abba02698fa0c6e914895">fromProto()</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a4ae36042fdac3f9b742f364b162e8cf5">catena::common::IParamDescriptor::getSubParam()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, and <a class="el" href="namespacecatena_1_1common.html#af1c59fbf2aa0f54f1e48eef6f3534241">validFromProto()</a>.</p>
+<p class="reference">References <a class="el" href="namespacecatena_1_1common.html#a5ad5f48a946620a675877d2301531370">fromProto()</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a4ae36042fdac3f9b742f364b162e8cf5">catena::common::IParamDescriptor::getSubParam()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, and <a class="el" href="namespacecatena_1_1common.html#a846f2287f628fa1adeba439f9dc37fba">validFromProto()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacecatena_1_1common_a6d23bd61b79abba02698fa0c6e914895_cgraph.svg" width="100%" height="437"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacecatena_1_1common_a5ad5f48a946620a675877d2301531370_cgraph.svg" width="100%" height="437"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacecatena_1_1common_a6d23bd61b79abba02698fa0c6e914895_icgraph.svg" width="215" height="60"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacecatena_1_1common_a5ad5f48a946620a675877d2301531370_icgraph.svg" width="215" height="60"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
 </div>
-<a id="a0d090c6e5eca2b36cb8cd5577cbf46ab" name="a0d090c6e5eca2b36cb8cd5577cbf46ab"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0d090c6e5eca2b36cb8cd5577cbf46ab">&#9670;&#160;</a></span>toProto()</h2>
+<a id="aa45a6f4433e677dd49851d61bdee0350" name="aa45a6f4433e677dd49851d61bdee0350"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa45a6f4433e677dd49851d61bdee0350">&#9670;&#160;</a></span>toProto()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -515,7 +518,7 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em>&#160;</td>
         </tr>
         <tr>
@@ -555,22 +558,22 @@ template&lt;typename T &gt; </div>
 <p>&amp;(src-&gt;*(field.memberPtr)) will pass the address of the corresponding field in src to the toProto function.</p>
 <p>the correct specializtion of toProto will be called based on the type of the field memberPtr.</p>
 
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a55ceeb3c4f8934314af7457b96becbc0">catena::common::IParamDescriptor::getOid()</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a4ae36042fdac3f9b742f364b162e8cf5">catena::common::IParamDescriptor::getSubParam()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ade1d7d4fd21e79ff2045feeb9425d923">catena::PERMISSION_DENIED</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a2d0c5c9888480653d5c189c102513401">catena::common::Authorizer::readAuthz()</a>, and <a class="el" href="namespacecatena_1_1common.html#a0d090c6e5eca2b36cb8cd5577cbf46ab">toProto()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a55ceeb3c4f8934314af7457b96becbc0">catena::common::IParamDescriptor::getOid()</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a4ae36042fdac3f9b742f364b162e8cf5">catena::common::IParamDescriptor::getSubParam()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ade1d7d4fd21e79ff2045feeb9425d923">catena::PERMISSION_DENIED</a>, <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html#acedeea5eadbebac67cb4e727c5dd762c">catena::common::IAuthorizer::readAuthz()</a>, and <a class="el" href="namespacecatena_1_1common.html#aa45a6f4433e677dd49851d61bdee0350">toProto()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacecatena_1_1common_a0d090c6e5eca2b36cb8cd5577cbf46ab_cgraph.svg" width="496" height="179"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacecatena_1_1common_aa45a6f4433e677dd49851d61bdee0350_cgraph.svg" width="496" height="179"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacecatena_1_1common_a0d090c6e5eca2b36cb8cd5577cbf46ab_icgraph.svg" width="198" height="60"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacecatena_1_1common_aa45a6f4433e677dd49851d61bdee0350_icgraph.svg" width="198" height="60"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
 </div>
-<a id="af1c59fbf2aa0f54f1e48eef6f3534241" name="af1c59fbf2aa0f54f1e48eef6f3534241"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af1c59fbf2aa0f54f1e48eef6f3534241">&#9670;&#160;</a></span>validFromProto()</h2>
+<a id="a846f2287f628fa1adeba439f9dc37fba" name="a846f2287f628fa1adeba439f9dc37fba"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a846f2287f628fa1adeba439f9dc37fba">&#9670;&#160;</a></span>validFromProto()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -604,7 +607,7 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em>&#160;</td>
         </tr>
         <tr>
@@ -623,16 +626,16 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a55ceeb3c4f8934314af7457b96becbc0">catena::common::IParamDescriptor::getOid()</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a4ae36042fdac3f9b742f364b162e8cf5">catena::common::IParamDescriptor::getSubParam()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ad1b5f6c215be9637e2cd1a34acef6454">catena::INVALID_ARGUMENT</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ade1d7d4fd21e79ff2045feeb9425d923">catena::PERMISSION_DENIED</a>, <a class="el" href="namespacecatena_1_1common.html#af1c59fbf2aa0f54f1e48eef6f3534241">validFromProto()</a>, and <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a31559d61f0d8fba890111f7a470863f1">catena::common::Authorizer::writeAuthz()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a55ceeb3c4f8934314af7457b96becbc0">catena::common::IParamDescriptor::getOid()</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a4ae36042fdac3f9b742f364b162e8cf5">catena::common::IParamDescriptor::getSubParam()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ad1b5f6c215be9637e2cd1a34acef6454">catena::INVALID_ARGUMENT</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ade1d7d4fd21e79ff2045feeb9425d923">catena::PERMISSION_DENIED</a>, <a class="el" href="namespacecatena_1_1common.html#a846f2287f628fa1adeba439f9dc37fba">validFromProto()</a>, and <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html#aa003125ec9889e9905cce4209b883ff4">catena::common::IAuthorizer::writeAuthz()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacecatena_1_1common_af1c59fbf2aa0f54f1e48eef6f3534241_cgraph.svg" width="514" height="179"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacecatena_1_1common_a846f2287f628fa1adeba439f9dc37fba_cgraph.svg" width="514" height="179"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacecatena_1_1common_af1c59fbf2aa0f54f1e48eef6f3534241_icgraph.svg" width="467" height="75"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacecatena_1_1common_a846f2287f628fa1adeba439f9dc37fba_icgraph.svg" width="467" height="75"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
