@@ -50,6 +50,7 @@
 #include <Device.h>
 #include <ParamWithValue.h>
 #include <PolyglotText.h>
+#include <Authorizer.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
@@ -113,7 +114,7 @@ int main (int argc, char** argv) {
         return EXIT_FAILURE;
     }
     use_variants::Coordinates_elem& coord = getParamValue<use_variants::Coordinates_elem>(ip.get());
-    std::cout<<std::endl;
+    DEBUG_LOG;
     DEBUG_LOG << "Coordinate/2: ";
     printCoordinate(coord);
 
@@ -129,7 +130,7 @@ int main (int argc, char** argv) {
     DEBUG_LOG << "Updated Coordinate/2: ";
     printCoordinate(coord);
 
-    std::cout<<std::endl;
+    DEBUG_LOG;
     ip = dm.getParam("/coordinates/0", err);
     if (!ip) {
         LOG(ERROR) << "Error: " << err.what();
@@ -149,7 +150,7 @@ int main (int argc, char** argv) {
     ip->toProto(value, Authorizer::kAuthzDisabled);
     DEBUG_LOG << value.DebugString();
     use_variants::Cartesian& cartesian = getParamValue<use_variants::Cartesian>(ip.get());
-    std::cout<<std::endl;
+    DEBUG_LOG;
     DEBUG_LOG << "Updated Coordinates/0/cartesian: ";
     printCoordinate(cartesian);
 

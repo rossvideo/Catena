@@ -44,6 +44,7 @@
 // common
 #include <IDevice.h>
 #include <rpc/TimeNow.h>
+#include <Authorizer.h>
 
 // Connections/REST
 #include "interface/ISocketReader.h"

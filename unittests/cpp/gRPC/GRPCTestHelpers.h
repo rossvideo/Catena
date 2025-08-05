@@ -105,7 +105,7 @@ inline void setupMockParamInfo(catena::common::MockParam& mockParam, const Param
     // Set up toProto for successful status
     if (info.status == catena::StatusCode::OK) {
         EXPECT_CALL(mockParam, toProto(::testing::An<catena::ParamInfoResponse&>(), ::testing::_))
-            .WillRepeatedly(::testing::Invoke([info](catena::ParamInfoResponse& response, catena::common::Authorizer&) {
+            .WillRepeatedly(::testing::Invoke([info](catena::ParamInfoResponse& response, const IAuthorizer&) {
                 setupParamInfo(response, info);
                 return catena::exception_with_status("", catena::StatusCode::OK);
             }));

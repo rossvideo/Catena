@@ -112,7 +112,7 @@ int main (int argc, char** argv) {
      * 
      * @todo enforce the step size
      */
-    std::cout<<std::endl;
+    DEBUG_LOG;
     ip = dm.getParam("/odd_numbers", err);
     if (ip == nullptr){
         LOG(ERROR) << "Error: " << err.what();
@@ -154,7 +154,7 @@ int main (int argc, char** argv) {
      * The basic_slider constraint is a FLOAT_RANGE constraint with a range of [0, 10]. This constraint
      * has a step size of 0.25, so the values will be constrained to multiples of 0.25.
      */
-    std::cout<<std::endl;
+    DEBUG_LOG;
     ip = dm.getParam("/gain", err);
     if (ip == nullptr){
         LOG(ERROR) << "Error: " << err.what();
@@ -200,7 +200,7 @@ int main (int argc, char** argv) {
      * This constraint has the strict flag set to true, which means that the value must be one of the choices or else the 
      * setValue request will be ignored.
      */
-    std::cout<<std::endl;
+    DEBUG_LOG;
     ip = dm.getParam("/display_size", err);
     if (ip == nullptr){
         LOG(ERROR) << "Error: " << err.what();
@@ -227,7 +227,7 @@ int main (int argc, char** argv) {
      * The strict flag is set to false, which means that the client can set the value to any string, even 
      * if it is not in the list of choices.
      */
-    std::cout<<std::endl;
+    DEBUG_LOG;
     ip = dm.getParam("/image", err);
     if (ip == nullptr){
         LOG(ERROR) << "Error: " << err.what();
@@ -254,7 +254,7 @@ int main (int argc, char** argv) {
      * setting any element in the button_array to a value other than 0 or 1 will cause the entire
      * value to remain the same.
      */
-    std::cout<<std::endl;
+    DEBUG_LOG;
     ip = dm.getParam("/button_array", err);
     if (ip == nullptr){
         LOG(ERROR) << "Error: " << err.what();

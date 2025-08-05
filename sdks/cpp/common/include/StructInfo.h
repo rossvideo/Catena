@@ -42,7 +42,7 @@
 #include <meta/Typelist.h>
 #include <meta/IsVector.h>
 #include <meta/Variant.h>
-#include <Authorizer.h>
+#include <IAuthorizer.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
@@ -154,7 +154,7 @@ inline std::array<const char*, 0> alternativeNames{};
  * @tparam T the type of the value
  */
 template <typename T>
-catena::exception_with_status toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz);
+catena::exception_with_status toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const IAuthorizer& authz);
 
 /**
  * Free standing method to validate a call to fromProto before making it.
@@ -164,7 +164,7 @@ catena::exception_with_status toProto(catena::Value& dst, const T* src, const IP
  * @tparam T the type of the value
  */
 template <typename T>
-bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const Authorizer& authz);
+bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz);
 
 /**
  * Free standing method to deserialize a value from protobuf
@@ -174,7 +174,7 @@ bool validFromProto(const catena::Value& src, const T* dst, const IParamDescript
  * @tparam T the type of the value
  */
 template <typename T>
-catena::exception_with_status fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz);
+catena::exception_with_status fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const IAuthorizer& authz);
 
 /**
  * toProto specialization to serialize a single struct value to protobuf.
@@ -186,7 +186,7 @@ catena::exception_with_status fromProto(const catena::Value& src, T* dst, const 
  * @tparam T the type of the value
  */
 template <CatenaStruct T>
-catena::exception_with_status toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
+catena::exception_with_status toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     // Must have read authorization
     if (!authz.readAuthz(pd)) {
@@ -226,7 +226,7 @@ catena::exception_with_status toProto(catena::Value& dst, const T* src, const IP
 }
 
 template <CatenaStruct T>
-bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const Authorizer& authz) {
+bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
     auto fields = StructInfo<T>::fields; // get tuple of FieldInfo for this struct type
     // Must have write authorization
     if (!authz.writeAuthz(pd)) {
@@ -266,7 +266,7 @@ bool validFromProto(const catena::Value& src, const T* dst, const IParamDescript
  * @tparam T the type of the value
  */
 template <CatenaStruct T>
-catena::exception_with_status fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
+catena::exception_with_status fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     if (validFromProto(src, dst, pd, rc, authz)) {
         auto fields = StructInfo<T>::fields; // get tuple of FieldInfo for this struct type
@@ -304,7 +304,7 @@ catena::exception_with_status fromProto(const catena::Value& src, T* dst, const 
  * @tparam T the type of the value
  */
 template <CatenaStructArray T>
-catena::exception_with_status toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
+catena::exception_with_status toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     // Must have read authorization
     if (!authz.readAuthz(pd)) {
@@ -329,7 +329,7 @@ catena::exception_with_status toProto(catena::Value& dst, const T* src, const IP
 }
 
 template <CatenaStructArray T>
-bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const Authorizer& authz) {
+bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
     using structType = T::value_type;
     // Must have write authorization
     if (!authz.writeAuthz(pd)) {
@@ -364,7 +364,7 @@ bool validFromProto(const catena::Value& src, const T* dst, const IParamDescript
  * @tparam T the type of the value
  */
 template <CatenaStructArray T>
-catena::exception_with_status fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
+catena::exception_with_status fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     if (validFromProto(src, dst, pd, rc, authz)) {
         using structType = T::value_type;
@@ -422,7 +422,7 @@ void _changeType(V& variant, const std::size_t newTypeIndex) {
 }
 
 template <meta::IsVariant T>
-catena::exception_with_status toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
+catena::exception_with_status toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     // Must have read authorization
     if (!authz.readAuthz(pd)) {
@@ -449,7 +449,7 @@ catena::exception_with_status toProto(catena::Value& dst, const T* src, const IP
 }
 
 template <meta::IsVariant T>
-bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const Authorizer& authz) {
+bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
     // Must have write authorization
     if (!authz.writeAuthz(pd)) {
         rc = catena::exception_with_status("Not authorized to write to param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
@@ -479,7 +479,7 @@ bool validFromProto(const catena::Value& src, const T* dst, const IParamDescript
 }
 
 template <meta::IsVariant T>
-catena::exception_with_status fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
+catena::exception_with_status fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     if (validFromProto(src, dst, pd, rc, authz)) {
         const catena::StructVariantValue& srcVariant = src.struct_variant_value();
@@ -502,7 +502,7 @@ catena::exception_with_status fromProto(const catena::Value& src, T* dst, const 
 }
 
 template <IsVariantArray T>
-catena::exception_with_status toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
+catena::exception_with_status toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     // Must have read authorization
     if (!authz.readAuthz(pd)) {
@@ -524,7 +524,7 @@ catena::exception_with_status toProto(catena::Value& dst, const T* src, const IP
 }
 
 template <IsVariantArray T>
-bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const Authorizer& authz) {
+bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
     using VariantType = T::value_type;
     // Must have write authorization
     if (!authz.writeAuthz(pd)) {
@@ -551,7 +551,7 @@ bool validFromProto(const catena::Value& src, const T* dst, const IParamDescript
 }
 
 template <IsVariantArray T>
-catena::exception_with_status fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
+catena::exception_with_status fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     if (validFromProto(src, dst, pd, rc, authz)) {
         using VariantType = T::value_type;

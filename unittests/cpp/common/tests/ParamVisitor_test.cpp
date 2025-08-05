@@ -69,7 +69,7 @@ protected:
         
         // Set up default mock behavior for device
         EXPECT_CALL(*device, getValue(::testing::_, ::testing::_, ::testing::_))
-            .WillRepeatedly(::testing::Invoke([](const std::string& jptr, catena::Value& value, Authorizer& authz) -> catena::exception_with_status {
+            .WillRepeatedly(::testing::Invoke([](const std::string& jptr, catena::Value& value, const IAuthorizer& authz) -> catena::exception_with_status {
                 return catena::exception_with_status("", catena::StatusCode::OK);
             }));
 
@@ -80,7 +80,7 @@ protected:
 
         // Set up default behavior for getParam
         EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
-            .WillRepeatedly(::testing::Invoke([this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+            .WillRepeatedly(::testing::Invoke([this](const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz) -> std::unique_ptr<IParam> {
                 auto param = std::make_unique<MockParam>();
                 EXPECT_CALL(*param, getDescriptor())
                     .WillRepeatedly(::testing::ReturnRef(test_descriptor));
@@ -143,7 +143,7 @@ TEST_F(ParamVisitorTest, VisitArrayParam) {
 
     // Set up device to return array elements with proper descriptor
     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
-        .WillRepeatedly(::testing::Invoke([this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+        .WillRepeatedly(::testing::Invoke([this](const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz) -> std::unique_ptr<IParam> {
             auto param = std::make_unique<MockParam>();
             EXPECT_CALL(*param, getDescriptor())
                 .WillRepeatedly(::testing::ReturnRef(test_descriptor));
@@ -199,7 +199,7 @@ TEST_F(ParamVisitorTest, VisitNestedParams) {
 
     // Set up device to return different params based on the path
     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
-        .WillRepeatedly(::testing::Invoke([parent, nested, nested2, full_nested_oid, full_nested2_oid](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+        .WillRepeatedly(::testing::Invoke([parent, nested, nested2, full_nested_oid, full_nested2_oid](const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz) -> std::unique_ptr<IParam> {
             auto param = std::make_unique<MockParam>();
             
             // Set up getScope for authorization (same for all params in this test)
@@ -275,7 +275,7 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
 
     // Set up device to return array elements with proper descriptors
     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
-        .WillRepeatedly(::testing::Invoke([array_root, element0, element1, element_param0, element_param1, array_oid, element_param](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+        .WillRepeatedly(::testing::Invoke([array_root, element0, element1, element_param0, element_param1, array_oid, element_param](const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz) -> std::unique_ptr<IParam> {
             auto param = std::make_unique<MockParam>();
             
             // Set up getScope for authorization (same for all params in this test)

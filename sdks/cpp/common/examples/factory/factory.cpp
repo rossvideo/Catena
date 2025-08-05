@@ -222,7 +222,7 @@ int main (int argc, char** argv) {
     (*jackRussell)();
     rabid->operator()();  // alternative syntax
 
-    std::cout<<std::endl;
+    DEBUG_LOG;
     DEBUG_LOG << "Factory Test";
     // verify that the factory cannot make goldfish.
     try {
@@ -231,7 +231,7 @@ int main (int argc, char** argv) {
       DEBUG_LOG << "Problem: " << why.what();
     }
 
-    std::cout<<std::endl;
+    DEBUG_LOG;
     DEBUG_LOG << "Destructors here...";
   } catch (std::exception& why) {
     // something went wrong with the example, so exit with non-zero error code

@@ -43,6 +43,7 @@
 
 // common
 #include <rpc/TimeNow.h>
+#include <Authorizer.h>
 
 // gRPC
 #include <grpcpp/grpcpp.h>
