@@ -36,6 +36,7 @@
  */
 
 #include "ParamWithValue.h"
+#include "StructInfo.h"
 
 #include "MockParamDescriptor.h"
 #include "MockDevice.h"
@@ -66,6 +67,10 @@ class ParamWithValueTest : public ::testing::Test {
         // Authorizer has read and write authz by default
         EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillRepeatedly(testing::Return(true));
         EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillRepeatedly(testing::Return(true));
+        // Some default values from paramDescriptor.
+        EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(nullptr));
+        EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(1000));
+        EXPECT_CALL(pd_, total_length()).WillRepeatedly(testing::Return(1000));
     }
 
     template <typename T>
@@ -152,6 +157,35 @@ TEST_F(ParamWithValueTest, Empty_PopBack) {
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 
+TEST_F(ParamWithValueTest, Empty_ParamToProto) {
+    EmptyParam param(emptyValue, pd_);
+    catena::Param outParam;
+    EXPECT_CALL(pd_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::Param& p, const IAuthorizer&) {
+            p.set_template_oid(oid_);
+        }));
+    rc_ = param.toProto(outParam, authz_);
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    EXPECT_EQ(oid_, outParam.template_oid());
+}
+
+TEST_F(ParamWithValueTest, Empty_FromProto) {
+    EmptyParam param(emptyValue, pd_);
+    catena::Value protoValue;
+    protoValue.empty_value();
+    rc_ = param.fromProto(protoValue, authz_);
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    EXPECT_EQ(&param.get(), &emptyValue);
+}
+
+TEST_F(ParamWithValueTest, Empty_ValidateSetValue) {
+    EmptyParam param(emptyValue, pd_);
+    catena::Value protoValue;
+    protoValue.empty_value();
+    EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_));
+    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
+}
+
 
 /* ============================================================================
  *                                  INT32_t
@@ -200,6 +234,63 @@ TEST_F(ParamWithValueTest, Int_PopBack) {
     IntParam param(value, pd_);
     rc_ = param.popBack(authz_);
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
+}
+
+TEST_F(ParamWithValueTest, Int_ParamToProto) {
+    int32_t value{16};
+    IntParam param(value, pd_);
+    int32_t outValue;
+    catena::Param outParam;
+    EXPECT_CALL(pd_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::Param& p, const IAuthorizer&) {
+            p.set_template_oid(oid_);
+        }));
+    rc_ = param.toProto(outParam, authz_);
+    ASSERT_TRUE(outParam.value().has_int32_value());
+    ASSERT_EQ(fromProto(outParam.value(), &outValue, pd_, authz_).status, catena::StatusCode::OK) << "fromProto failed, cannot compare results.";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    EXPECT_EQ(value, outValue);
+    EXPECT_EQ(oid_, outParam.template_oid());
+}
+
+TEST_F(ParamWithValueTest, Int_FromProto) {
+    int32_t value{0};
+    IntParam param(value, pd_);
+    int32_t newValue{16};
+    catena::Value protoValue;
+    protoValue.set_int32_value(newValue);
+    rc_ = param.fromProto(protoValue, authz_);
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    EXPECT_EQ(param.get(), newValue);
+}
+
+TEST_F(ParamWithValueTest, Int_ValidateSetValue) {
+    int32_t value{0};
+    IntParam param(value, pd_);
+    catena::Value protoValue;
+    protoValue.set_int32_value(16);
+    EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_));
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+}
+
+TEST_F(ParamWithValueTest, Int_ValidateSetValueError) {
+    int32_t value{0};
+    IntParam param(value, pd_);
+    catena::Value protoValue;
+    protoValue.set_int32_value(16);
+    { // Defined index w non-array
+    EXPECT_FALSE(param.validateSetValue(protoValue, 1, authz_, rc_))
+        << "ValidateSetValue should return false when index is defined for non-array param";
+    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT)
+        << "ValidateSetValue should return INVALID_ARGUMENT when index is defined for non-array param";
+    }
+    { // ValidFromProto error
+    EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
+    EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_))
+        << "ValidateSetValue should return false when validFromProto returns false";
+    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
+        << "In this case validFromProto should return PERMISSION_DENIED";
+    }
 }
 
 /* ============================================================================
@@ -251,6 +342,63 @@ TEST_F(ParamWithValueTest, Float_PopBack) {
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 
+TEST_F(ParamWithValueTest, Float_ParamToProto) {
+    float value{16};
+    FloatParam param(value, pd_);
+    float outValue;
+    catena::Param outParam;
+    EXPECT_CALL(pd_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::Param& p, const IAuthorizer&) {
+            p.set_template_oid(oid_);
+        }));
+    rc_ = param.toProto(outParam, authz_);
+    ASSERT_TRUE(outParam.value().has_float32_value());
+    ASSERT_EQ(fromProto(outParam.value(), &outValue, pd_, authz_).status, catena::StatusCode::OK) << "fromProto failed, cannot compare results.";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    EXPECT_EQ(value, outValue);
+    EXPECT_EQ(oid_, outParam.template_oid());
+}
+
+TEST_F(ParamWithValueTest, Float_FromProto) {
+    float value{0};
+    FloatParam param(value, pd_);
+    float newValue{16};
+    catena::Value protoValue;
+    protoValue.set_float32_value(newValue);
+    rc_ = param.fromProto(protoValue, authz_);
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    EXPECT_EQ(param.get(), newValue);
+}
+
+TEST_F(ParamWithValueTest, Float_ValidateSetValue) {
+    float value{0};
+    FloatParam param(value, pd_);
+    catena::Value protoValue;
+    protoValue.set_float32_value(16);
+    EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_));
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+}
+
+TEST_F(ParamWithValueTest, Float_ValidateSetValueError) {
+    float value{0};
+    FloatParam param(value, pd_);
+    catena::Value protoValue;
+    protoValue.set_float32_value(16);
+    { // Defined index w non-array
+    EXPECT_FALSE(param.validateSetValue(protoValue, 1, authz_, rc_))
+        << "ValidateSetValue should return false when index is defined for non-array param";
+    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT)
+        << "ValidateSetValue should return INVALID_ARGUMENT when index is defined for non-array param";
+    }
+    { // ValidFromProto error
+    EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
+    EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_))
+        << "ValidateSetValue should return false when validFromProto returns false";
+    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
+        << "In this case validFromProto should return PERMISSION_DENIED";
+    }
+}
+
 /* ============================================================================
  *                                  STRING
  * ============================================================================
@@ -300,7 +448,62 @@ TEST_F(ParamWithValueTest, String_PopBack) {
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 
+TEST_F(ParamWithValueTest, String_ParamToProto) {
+    std::string value{"Hello World"};
+    StringParam param(value, pd_);
+    std::string outValue;
+    catena::Param outParam;
+    EXPECT_CALL(pd_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::Param& p, const IAuthorizer&) {
+            p.set_template_oid(oid_);
+        }));
+    rc_ = param.toProto(outParam, authz_);
+    ASSERT_TRUE(outParam.value().has_string_value());
+    ASSERT_EQ(fromProto(outParam.value(), &outValue, pd_, authz_).status, catena::StatusCode::OK) << "fromProto failed, cannot compare results.";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    EXPECT_EQ(value, outValue);
+    EXPECT_EQ(oid_, outParam.template_oid());
+}
 
+TEST_F(ParamWithValueTest, String_FromProto) {
+    std::string value{""};
+    StringParam param(value, pd_);
+    std::string newValue{"Hello World"};
+    catena::Value protoValue;
+    protoValue.set_string_value(newValue);
+    rc_ = param.fromProto(protoValue, authz_);
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    EXPECT_EQ(param.get(), newValue);
+}
+
+TEST_F(ParamWithValueTest, String_ValidateSetValue) {
+    std::string value{""};
+    StringParam param(value, pd_);
+    catena::Value protoValue;
+    protoValue.set_string_value("Hello World");
+    EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_));
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+}
+
+TEST_F(ParamWithValueTest, String_ValidateSetValueError) {
+    std::string value{""};
+    StringParam param(value, pd_);
+    catena::Value protoValue;
+    protoValue.set_string_value("Hello World");
+    { // Defined index w non-array
+    EXPECT_FALSE(param.validateSetValue(protoValue, 1, authz_, rc_))
+        << "ValidateSetValue should return false when index is defined for non-array param";
+    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT)
+        << "ValidateSetValue should return INVALID_ARGUMENT when index is defined for non-array param";
+    }
+    { // New value exceeds maxLength / validFromProto error
+    EXPECT_CALL(pd_, max_length()).WillOnce(testing::Return(5));
+    EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_))
+        << "ValidateSetValue should return false valueFromProto returns false from string value exceeding max_length";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "ValidateSetValue should return OUT_OF_RANGE when the new string value exceeds max_length";
+    }
+}
 
 /* ============================================================================
  *                                 INT ARRAY
@@ -424,6 +627,96 @@ TEST_F(ParamWithValueTest, IntArray_PopBackError) {
     EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
         << "popBack should return PERMISSION_DENNIED if Authorizer does not have writeAuthz";
     }
+}
+
+TEST_F(ParamWithValueTest, IntArray_ParamToProto) {
+    std::vector<int32_t> value{0, 1, 2};
+    IntArrayParam param(value, pd_);
+    std::vector<int32_t> outValue{};
+    catena::Param outParam;
+    EXPECT_CALL(pd_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::Param& p, const IAuthorizer&) {
+            p.set_template_oid(oid_);
+        }));
+    rc_ = param.toProto(outParam, authz_);
+    ASSERT_TRUE(outParam.value().has_int32_array_values());
+    ASSERT_EQ(fromProto(outParam.value(), &outValue, pd_, authz_).status, catena::StatusCode::OK) << "fromProto failed, cannot compare results.";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    EXPECT_EQ(value, outValue);
+    EXPECT_EQ(oid_, outParam.template_oid());
+}
+
+TEST_F(ParamWithValueTest, IntArray_ValidateSetValue) {
+    std::vector<int32_t> value{0, 1, 2};
+    IntArrayParam param(value, pd_);
+    catena::Value protoValue;
+    for (uint32_t i : {0, 1, 2}) {
+        protoValue.mutable_int32_array_values()->add_ints(i);
+    }
+    EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_)) << "Valid setting whole array";
+}
+
+TEST_F(ParamWithValueTest, IntArray_ValidateSetValueSingleElement) {
+    std::vector<int32_t> value{0, 1, 2};
+    IntArrayParam param(value, pd_);
+    catena::Value protoValue;
+    protoValue.set_int32_value(3);
+    // Setting existing value.
+    EXPECT_TRUE(param.validateSetValue(protoValue, 0, authz_, rc_)) << "Valid set existing value";
+    // Appending to the end.
+    EXPECT_TRUE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_)) << "Valid append value";
+}
+
+TEST_F(ParamWithValueTest, IntArray_ValidateSetValueError) {
+    std::vector<int32_t> value{0, 1, 2};
+    IntArrayParam param(value, pd_);
+    catena::Value protoValue;
+    for (uint32_t i : {0, 1, 2, 3}) {
+        protoValue.mutable_int32_array_values()->add_ints(i);
+    }
+
+    // Defined index with non-single element set
+    EXPECT_FALSE(param.validateSetValue(protoValue, 1, authz_, rc_))
+        << "Should return false when index is defined for non-element setValue";
+    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT)
+        << "Should return INVALID_ARGUMENT when index is defined for non-element setValue";
+
+    // New value exceeds maxLength / validFromProto error
+    EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(value.size()));
+    EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_))
+        << "Should return false when the new value exceeds maxLength";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "Should return OUT_OF_RANGE when the new value exceeds maxLength";
+}
+
+TEST_F(ParamWithValueTest, IntArray_ValidateSetValueSingleElementError) {
+    std::vector<int32_t> value{0, 1, 2};
+    IntArrayParam param(value, pd_);
+    catena::Value protoValue;
+    protoValue.set_int32_value(3);
+    EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(5));
+
+    // Undefined index with single element set
+    EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_))
+        << "Should return false when the index is undefined for single element setValue";
+    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT)
+        << "Should return INVALID_ARGUMENT when the index is undefined for single element setValue";
+
+    // Defined index out of bounds
+    EXPECT_FALSE(param.validateSetValue(protoValue, value.size(), authz_, rc_))
+        << "Should return false when the index is out of bounds of the array";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "Should return OUT_OF_RANGE when the index is out of bounds of the array";
+
+    // Too many appends
+    EXPECT_TRUE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_))
+        << "value should be able to append at 2 elements";
+    EXPECT_TRUE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_))
+        << "value should be able to append at 2 elements";
+    EXPECT_FALSE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_))
+        << "Should return false when the array length exceeds max_length";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "Should return OUT_OF_RANGE when the array length exceeds max_length";
 }
 
 /* ============================================================================
@@ -550,6 +843,96 @@ TEST_F(ParamWithValueTest, FloatArray_PopBackError) {
     }
 }
 
+TEST_F(ParamWithValueTest, FloatArray_ParamToProto) {
+    std::vector<float> value{0, 1, 2};
+    FloatArrayParam param(value, pd_);
+    catena::Param outParam;
+    std::vector<float> outValue{};
+    EXPECT_CALL(pd_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::Param& p, const IAuthorizer&) {
+            p.set_template_oid(oid_);
+        }));
+    rc_ = param.toProto(outParam, authz_);
+    ASSERT_TRUE(outParam.value().has_float32_array_values());
+    ASSERT_EQ(fromProto(outParam.value(), &outValue, pd_, authz_).status, catena::StatusCode::OK) << "fromProto failed, cannot compare results.";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    EXPECT_EQ(value, outValue);
+    EXPECT_EQ(oid_, outParam.template_oid());
+}
+
+TEST_F(ParamWithValueTest, FloatArray_ValidateSetValue) {
+    std::vector<float> value{0, 1, 2};
+    FloatArrayParam param(value, pd_);
+    catena::Value protoValue;
+    for (float i : {0, 1, 2}) {
+        protoValue.mutable_float32_array_values()->add_floats(i);
+    }
+    EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_)) << "Valid setting whole array";
+}
+
+TEST_F(ParamWithValueTest, FloatArray_ValidateSetValueSingleElement) {
+    std::vector<float> value{0, 1, 2};
+    FloatArrayParam param(value, pd_);
+    catena::Value protoValue;
+    protoValue.set_float32_value(3);
+    // Setting existing value.
+    EXPECT_TRUE(param.validateSetValue(protoValue, 0, authz_, rc_)) << "Valid set existing value";
+    // Appending to the end.
+    EXPECT_TRUE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_)) << "Valid append value";
+}
+
+TEST_F(ParamWithValueTest, FloatArray_ValidateSetValueError) {
+    std::vector<float> value{0, 1, 2};
+    FloatArrayParam param(value, pd_);
+    catena::Value protoValue;
+    for (float i : {0, 1, 2, 3}) {
+        protoValue.mutable_float32_array_values()->add_floats(i);
+    }
+
+    // Defined index with non-single element set
+    EXPECT_FALSE(param.validateSetValue(protoValue, 1, authz_, rc_))
+        << "Should return false when index is defined for non-element setValue";
+    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT)
+        << "Should return INVALID_ARGUMENT when index is defined for non-element setValue";
+
+    // New value exceeds maxLength / validFromProto error
+    EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(value.size()));
+    EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_))
+        << "Should return false when the new value exceeds maxLength";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "Should return OUT_OF_RANGE when the new value exceeds maxLength";
+}
+
+TEST_F(ParamWithValueTest, FloatArray_ValidateSetValueSingleElementError) {
+    std::vector<float> value{0, 1, 2};
+    FloatArrayParam param(value, pd_);
+    catena::Value protoValue;
+    protoValue.set_float32_value(3);
+    EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(5));
+
+    // Undefined index with single element set
+    EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_))
+        << "Should return false when the index is undefined for single element setValue";
+    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT)
+        << "Should return INVALID_ARGUMENT when the index is undefined for single element setValue";
+
+    // Defined index out of bounds
+    EXPECT_FALSE(param.validateSetValue(protoValue, value.size(), authz_, rc_))
+        << "Should return false when the index is out of bounds of the array";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "Should return OUT_OF_RANGE when the index is out of bounds of the array";
+
+    // Too many appends
+    EXPECT_TRUE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_))
+        << "value should be able to append at 2 elements";
+    EXPECT_TRUE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_))
+        << "value should be able to append at 2 elements";
+    EXPECT_FALSE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_))
+        << "Should return false when the array length exceeds max_length";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "Should return OUT_OF_RANGE when the array length exceeds max_length";
+}
+
 
 /* ============================================================================
  *                               STRING ARRAY
@@ -672,6 +1055,115 @@ TEST_F(ParamWithValueTest, StringArray_PopBackError) {
     EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
         << "popBack should return PERMISSION_DENNIED if Authorizer does not have writeAuthz";
     }
+}
+
+TEST_F(ParamWithValueTest, StringArray_ParamToProto) {
+    std::vector<std::string> value{};
+    StringArrayParam param(value, pd_);
+    std::vector<std::string> outValue{};
+    catena::Param outParam;
+    EXPECT_CALL(pd_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::Param& p, const IAuthorizer&) {
+            p.set_template_oid(oid_);
+        }));
+    rc_ = param.toProto(outParam, authz_);
+    ASSERT_TRUE(outParam.value().has_string_array_values());
+    ASSERT_EQ(fromProto(outParam.value(), &outValue, pd_, authz_).status, catena::StatusCode::OK) << "fromProto failed, cannot compare results.";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    EXPECT_EQ(value, outValue);
+    EXPECT_EQ(oid_, outParam.template_oid());
+}
+
+TEST_F(ParamWithValueTest, StringArray_ValidateSetValue) {
+    std::vector<std::string> value{"Hello", "World"};
+    StringArrayParam param(value, pd_);
+    catena::Value protoValue;
+    for (std::string i : {"Hello", "World", "!"}) {
+        protoValue.mutable_string_array_values()->add_strings(i);
+    }
+    EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_)) << "Valid setting whole array";
+}
+
+TEST_F(ParamWithValueTest, StringArray_ValidateSetValueSingleElement) {
+    std::vector<std::string> value{"Hello", "World"};
+    StringArrayParam param(value, pd_);
+    catena::Value protoValue;
+    protoValue.set_string_value("Goodbye");
+    // Setting existing value.
+    EXPECT_TRUE(param.validateSetValue(protoValue, 0, authz_, rc_)) << "Valid set existing value";
+    // Appending to the end.
+    EXPECT_TRUE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_)) << "Valid append value";
+}
+
+TEST_F(ParamWithValueTest, StringArray_ValidateSetValueError) {
+    std::vector<std::string> value{"Hello", "World"};
+    StringArrayParam param(value, pd_);
+    catena::Value protoValue;
+    for (std::string i : {"Hello", "World", "Goodbye"}) {
+        protoValue.mutable_string_array_values()->add_strings(i);
+    }
+
+    // Defined index with non-single element set
+    EXPECT_FALSE(param.validateSetValue(protoValue, 1, authz_, rc_))
+        << "Should return false when index is defined for non-element setValue";
+    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT)
+        << "Should return INVALID_ARGUMENT when index is defined for non-element setValue";
+
+    // New value exceeds maxLength / validFromProto error
+    EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(value.size()));
+    EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_))
+        << "Should return false when the new value exceeds maxLength";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "Should return OUT_OF_RANGE when the new value exceeds maxLength";
+    
+    // New value exceeds totalLength / validFromProto error
+    EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(1000));
+    EXPECT_CALL(pd_, total_length()).WillRepeatedly(testing::Return(10));
+    EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_))
+        << "Should return false when the new value exceeds totalLength";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "Should return OUT_OF_RANGE when the new value exceeds totalLength";
+}
+
+TEST_F(ParamWithValueTest, StringArray_ValidateSetValueSingleElementError) {
+    std::vector<std::string> value{"Hello", "World"};
+    StringArrayParam param(value, pd_);
+    catena::Value protoValue;
+    protoValue.set_string_value("!");
+    EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(5));
+
+    // Undefined index with single element set
+    EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_))
+        << "Should return false when the index is undefined for single element setValue";
+    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT)
+        << "Should return INVALID_ARGUMENT when the index is undefined for single element setValue";
+
+    // Defined index out of bounds
+    EXPECT_FALSE(param.validateSetValue(protoValue, value.size(), authz_, rc_))
+        << "Should return false when the index is out of bounds of the array";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "Should return OUT_OF_RANGE when the index is out of bounds of the array";
+
+    // Too many appends
+    EXPECT_TRUE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_))
+        << "value should be able to append at 3 elements";
+    EXPECT_TRUE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_))
+        << "value should be able to append at 3 elements";
+    EXPECT_TRUE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_))
+        << "value should be able to append at 3 elements";
+    EXPECT_FALSE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_))
+        << "Should return false when the array length exceeds max_length";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "Should return OUT_OF_RANGE when the array length exceeds max_length";
+    
+    // Exceeds total_length
+    param.resetValidate();
+    protoValue.set_string_value("This is a long string");
+    EXPECT_CALL(pd_, total_length()).WillRepeatedly(testing::Return(15));
+    EXPECT_FALSE(param.validateSetValue(protoValue, 0, authz_, rc_))
+        << "Should return false when the array length exceeds total_length";
+    EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
+        << "Should return OUT_OF_RANGE when the array length exceeds total_length";
 }
 
 
@@ -804,4 +1296,47 @@ TEST_F(ParamWithValueTest, Copy) {
     ASSERT_TRUE(paramCopy) << "ParamWithValue copy is nullptr";
     EXPECT_EQ(&getParamValue<int32_t>(paramCopy.get()), &param.get());
     EXPECT_EQ(&paramCopy->getDescriptor(), &param.getDescriptor());
+}
+
+TEST_F(ParamWithValueTest, ParamToProtoError) {
+    int32_t value{16};
+    IntParam param(value, pd_);
+    catena::Param outParam;
+    { // pd_.toProto throws an error
+    EXPECT_CALL(pd_, toProto(testing::An<catena::Param&>(), testing::_)).WillOnce(testing::Throw(std::runtime_error("Test error")));
+    EXPECT_THROW(param.toProto(outParam, authz_), std::runtime_error);
+    }
+    { // No read authz
+    outParam.Clear();
+    EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
+    rc_ = param.toProto(outParam, authz_);
+    EXPECT_FALSE(outParam.value().has_int32_value());
+    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED);
+    }
+}
+
+TEST_F(ParamWithValueTest, ParamInfoToProto) {
+    EmptyParam param(emptyValue, pd_);
+    catena::ParamInfoResponse paramInfo;
+    EXPECT_CALL(pd_, toProto(testing::An<catena::ParamInfo&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](catena::ParamInfo& p, const IAuthorizer&) {
+            p.set_oid(oid_);
+        }));
+    rc_ = param.toProto(paramInfo, authz_);
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    EXPECT_EQ(oid_, paramInfo.info().oid());
+}
+
+TEST_F(ParamWithValueTest, ParamInfoToProtoError) {
+    EmptyParam param(emptyValue, pd_);
+    catena::ParamInfoResponse paramInfo;
+    { // pd_.toProto throws an error
+    EXPECT_CALL(pd_, toProto(testing::An<catena::ParamInfo&>(), testing::_)).WillOnce(testing::Throw(std::runtime_error("Test error")));
+    EXPECT_THROW(param.toProto(paramInfo, authz_), std::runtime_error);
+    }
+    { // No read authz
+    EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
+    rc_ = param.toProto(paramInfo, authz_);
+    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED);
+    }
 }

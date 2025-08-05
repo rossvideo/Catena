@@ -169,7 +169,7 @@ class ParamWithValue : public catena::common::IParam {
      */
     catena::exception_with_status toProto(catena::Param& param, const IAuthorizer& authz) const override {
         // toProto checks authz.
-        catena::exception_with_status rc = catena::common::toProto<T>(*param.mutable_value(), &value_.get(), descriptor_, authz);
+        catena::exception_with_status rc = toProto(*param.mutable_value(), authz);
         if (rc.status == catena::StatusCode::OK) {
             descriptor_.toProto(param, authz);
         }
@@ -337,6 +337,8 @@ class ParamWithValue : public catena::common::IParam {
         if (validateSetValueMap_.contains(value.kind_case())) {
             // Updating trackers.
             ans = validateSetValueMap_.at(value.kind_case())(value, index, authz);
+        } else {
+            ans = catena::exception_with_status("Type not supported with SetValue", catena::StatusCode::INVALID_ARGUMENT);
         }
         return ans.status == catena::StatusCode::OK;
     }
@@ -690,6 +692,8 @@ class ParamWithValue : public catena::common::IParam {
         // Initializing mSizeTracker_ and tSizeTracker if they're not already.
         if (!mSizeTracker_) {
             mSizeTracker_ = std::make_shared<std::size_t>(arrayVal.size());
+        }
+        if (!tSizeTracker_) {
             tSizeTracker_ = std::make_shared<TSizeTracker>();
             for (auto& memVal : arrayVal) {
                 tSizeTracker_->push_back(size_(memVal));

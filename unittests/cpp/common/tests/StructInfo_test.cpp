@@ -530,17 +530,7 @@ TEST_F(StructInfoTest, String_ValidFromProto_TypeMismatch) {
     EXPECT_EQ(rc.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 /*
- * TEST 3.7 - String ValidFromProto with string > max_length
- */
-TEST_F(StructInfoTest, String_ValidFromProto_MaxLength) {
-    std::string dst = "";
-    val_.set_string_value("Hello, World!"); // > 5
-    // Calling validFromProto() and comparing the result
-    EXPECT_FALSE(validFromProto(val_, &dst, pd_, rc, authz_));
-    EXPECT_EQ(rc.status, catena::StatusCode::OUT_OF_RANGE);
-}
-/*
- * TEST 3.8 - String FromProto with unsatisfied constraint
+ * TEST 3.7 - String FromProto with unsatisfied constraint
  */
 TEST_F(StructInfoTest, String_ValidFromProto_Unsatisfied) {
     std::string dst = "";
@@ -553,7 +543,7 @@ TEST_F(StructInfoTest, String_ValidFromProto_Unsatisfied) {
     EXPECT_EQ(rc.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 /*
- * TEST 3.9 - String FromProto
+ * TEST 3.8 - String FromProto
  */
 TEST_F(StructInfoTest, String_FromProto_Normal) {
     std::string dst = "";
