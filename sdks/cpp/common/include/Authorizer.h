@@ -87,7 +87,7 @@ class Authorizer : public IAuthorizer {
     Authorizer(const std::string& JWSToken);
 
     /**
-     * @brief Authorizer does not have copy semantics
+     * @brief Authorizer does not have copy semantics 
      */
     Authorizer(const Authorizer&) = delete;
     Authorizer& operator=(const Authorizer&) = delete;
