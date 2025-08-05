@@ -9,7 +9,6 @@ var namespacecatena_1_1common =
     [ "EmptyValue", "structcatena_1_1common_1_1EmptyValue.html", null ],
     [ "FakeLock", "structcatena_1_1common_1_1FakeLock.html", null ],
     [ "FieldInfo", "structcatena_1_1common_1_1FieldInfo.html", null ],
-    [ "IAuthorizer", "classcatena_1_1common_1_1IAuthorizer.html", "classcatena_1_1common_1_1IAuthorizer" ],
     [ "IConnect", "classcatena_1_1common_1_1IConnect.html", "classcatena_1_1common_1_1IConnect" ],
     [ "IConnectionQueue", "classcatena_1_1common_1_1IConnectionQueue.html", "classcatena_1_1common_1_1IConnectionQueue" ],
     [ "IConstraint", "classcatena_1_1common_1_1IConstraint.html", "classcatena_1_1common_1_1IConstraint" ],
@@ -50,10 +49,10 @@ var namespacecatena_1_1common =
     ] ],
     [ "_changeType", "namespacecatena_1_1common.html#a2f37737db27ab4b01982ea3514500fb0", null ],
     [ "_findTypeIndex", "namespacecatena_1_1common.html#addddb371559a45d42994973db1a69f08", null ],
-    [ "fromProto", "namespacecatena_1_1common.html#a5ad5f48a946620a675877d2301531370", null ],
+    [ "fromProto", "namespacecatena_1_1common.html#a6d23bd61b79abba02698fa0c6e914895", null ],
     [ "timeNow", "namespacecatena_1_1common.html#aaf7051c03c402f50294ffebece8d0cfb", null ],
-    [ "toProto", "namespacecatena_1_1common.html#aa45a6f4433e677dd49851d61bdee0350", null ],
-    [ "validFromProto", "namespacecatena_1_1common.html#a846f2287f628fa1adeba439f9dc37fba", null ],
+    [ "toProto", "namespacecatena_1_1common.html#a0d090c6e5eca2b36cb8cd5577cbf46ab", null ],
+    [ "validFromProto", "namespacecatena_1_1common.html#af1c59fbf2aa0f54f1e48eef6f3534241", null ],
     [ "alternativeNames", "namespacecatena_1_1common.html#a50a9d30ba7a22910857f12f13ed809cc", null ],
     [ "kDefaultMaxArrayLength", "namespacecatena_1_1common.html#a04d8e05178c122255bb9676c064c15a8", null ]
 ];

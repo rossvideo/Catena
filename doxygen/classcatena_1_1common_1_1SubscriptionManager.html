@@ -119,9 +119,9 @@ Public Member Functions</h2></td></tr>
 &#160;</td><td class="memItemRight" valign="bottom"><b>SubscriptionManager</b> ()=default</td></tr>
 <tr class="memdesc:a9efb56ebfe6712d9b08b71f0ff57350b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor. <br /></td></tr>
 <tr class="separator:a9efb56ebfe6712d9b08b71f0ff57350b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ee286ee5605702461141ffc55923c7d" id="r_a4ee286ee5605702461141ffc55923c7d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#a4ee286ee5605702461141ffc55923c7d">addSubscription</a> (const std::string &amp;oid, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm, <a class="el" href="structcatena_1_1exception__with__status.html">exception_with_status</a> &amp;rc, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) override</td></tr>
-<tr class="memdesc:a4ee286ee5605702461141ffc55923c7d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an OID subscription.  <br /></td></tr>
-<tr class="separator:a4ee286ee5605702461141ffc55923c7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a05ee1896dea3bc75589ef2769e25bc18" id="r_a05ee1896dea3bc75589ef2769e25bc18"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#a05ee1896dea3bc75589ef2769e25bc18">addSubscription</a> (const std::string &amp;oid, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm, <a class="el" href="structcatena_1_1exception__with__status.html">exception_with_status</a> &amp;rc, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) override</td></tr>
+<tr class="memdesc:a05ee1896dea3bc75589ef2769e25bc18"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an OID subscription.  <br /></td></tr>
+<tr class="separator:a05ee1896dea3bc75589ef2769e25bc18"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adc14f6286c38b836e0b9c33a3d92a2f3" id="r_adc14f6286c38b836e0b9c33a3d92a2f3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#adc14f6286c38b836e0b9c33a3d92a2f3">removeSubscription</a> (const std::string &amp;oid, const <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm, <a class="el" href="structcatena_1_1exception__with__status.html">exception_with_status</a> &amp;rc) override</td></tr>
 <tr class="memdesc:adc14f6286c38b836e0b9c33a3d92a2f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove an OID subscription.  <br /></td></tr>
 <tr class="separator:adc14f6286c38b836e0b9c33a3d92a2f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -138,8 +138,8 @@ Public Member Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class for managing parameter subscriptions in Catena. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a4ee286ee5605702461141ffc55923c7d" name="a4ee286ee5605702461141ffc55923c7d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4ee286ee5605702461141ffc55923c7d">&#9670;&#160;</a></span>addSubscription()</h2>
+<a id="a05ee1896dea3bc75589ef2769e25bc18" name="a05ee1896dea3bc75589ef2769e25bc18"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a05ee1896dea3bc75589ef2769e25bc18">&#9670;&#160;</a></span>addSubscription()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -168,7 +168,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em> = <code><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a></code>&#160;</td>
         </tr>
         <tr>
@@ -196,7 +196,7 @@ Public Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the subscription was added, false if it already existed </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#a4b490e6c81c73a0e84e4b165ac847e7a">catena::common::ISubscriptionManager</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#a86952cbef9d7428bfde4ec19b278a827">catena::common::ISubscriptionManager</a>.</p>
 
 </div>
 </div>

@@ -183,9 +183,9 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~Device</b> ()=def
 <tr class="memitem:a8d0f934f834a1bf8871ea5cecd70e64c" id="r_a8d0f934f834a1bf8871ea5cecd70e64c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a8d0f934f834a1bf8871ea5cecd70e64c">set_default_total_length</a> (const uint32_t <a class="el" href="classcatena_1_1common_1_1Device.html#a35f3faa9889a712105ae111fd374227b">default_total_length</a>) override</td></tr>
 <tr class="memdesc:a8d0f934f834a1bf8871ea5cecd70e64c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the default_total_length_ for this device's array params. If default_total_length &lt;= 0, then it reverts default_total_length_ to kDefaultMaxArrayLength.  <br /></td></tr>
 <tr class="separator:a8d0f934f834a1bf8871ea5cecd70e64c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a17d8d2d1f9fc959623167adf0e21f5ea" id="r_a17d8d2d1f9fc959623167adf0e21f5ea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a17d8d2d1f9fc959623167adf0e21f5ea">toProto</a> (::catena::Device &amp;dst, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz, bool shallow=true) const override</td></tr>
-<tr class="memdesc:a17d8d2d1f9fc959623167adf0e21f5ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a protobuf representation of the device.  <br /></td></tr>
-<tr class="separator:a17d8d2d1f9fc959623167adf0e21f5ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac5e6638e51d977c9a0d058c0fb1ba0a6" id="r_ac5e6638e51d977c9a0d058c0fb1ba0a6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ac5e6638e51d977c9a0d058c0fb1ba0a6">toProto</a> (::catena::Device &amp;dst, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, bool shallow=true) const override</td></tr>
+<tr class="memdesc:ac5e6638e51d977c9a0d058c0fb1ba0a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a protobuf representation of the device.  <br /></td></tr>
+<tr class="separator:ac5e6638e51d977c9a0d058c0fb1ba0a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad7afe28941fdea189389b0ca5f865676" id="r_ad7afe28941fdea189389b0ca5f865676"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ad7afe28941fdea189389b0ca5f865676">toProto</a> (::catena::LanguagePacks &amp;packs) const override</td></tr>
 <tr class="memdesc:ad7afe28941fdea189389b0ca5f865676"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a protobuf representation of the language packs.  <br /></td></tr>
 <tr class="separator:ad7afe28941fdea189389b0ca5f865676"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -195,21 +195,21 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~Device</b> ()=def
 <tr class="memitem:a42c79543c8d0cca71b17df91694f2fa9" id="r_a42c79543c8d0cca71b17df91694f2fa9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a42c79543c8d0cca71b17df91694f2fa9">hasLanguage</a> (const std::string &amp;languageId) const override</td></tr>
 <tr class="memdesc:a42c79543c8d0cca71b17df91694f2fa9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if device has the specified language pack.  <br /></td></tr>
 <tr class="separator:a42c79543c8d0cca71b17df91694f2fa9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6c7b878e6989c9a7e44dc62109c87835" id="r_a6c7b878e6989c9a7e44dc62109c87835"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a6c7b878e6989c9a7e44dc62109c87835">addLanguage</a> (catena::AddLanguagePayload &amp;language, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) override</td></tr>
-<tr class="memdesc:a6c7b878e6989c9a7e44dc62109c87835"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a language pack to the device. Requires client to have admin:w scope.  <br /></td></tr>
-<tr class="separator:a6c7b878e6989c9a7e44dc62109c87835"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab2291b513ae3f6d8950819a62617bf86" id="r_ab2291b513ae3f6d8950819a62617bf86"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ab2291b513ae3f6d8950819a62617bf86">removeLanguage</a> (const std::string &amp;languageId, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) override</td></tr>
-<tr class="memdesc:ab2291b513ae3f6d8950819a62617bf86"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removed a language pack from the device. Requires client to have admin:w scope. Fails if the language pack was shipped with the device.  <br /></td></tr>
-<tr class="separator:ab2291b513ae3f6d8950819a62617bf86"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af15d6bed42fc196d4e46c3aa8de39b73" id="r_af15d6bed42fc196d4e46c3aa8de39b73"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#af15d6bed42fc196d4e46c3aa8de39b73">addLanguage</a> (catena::AddLanguagePayload &amp;language, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) override</td></tr>
+<tr class="memdesc:af15d6bed42fc196d4e46c3aa8de39b73"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a language pack to the device. Requires client to have admin:w scope.  <br /></td></tr>
+<tr class="separator:af15d6bed42fc196d4e46c3aa8de39b73"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13aa99ab67c2fe98ac26b2d2f5326290" id="r_a13aa99ab67c2fe98ac26b2d2f5326290"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a13aa99ab67c2fe98ac26b2d2f5326290">removeLanguage</a> (const std::string &amp;languageId, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) override</td></tr>
+<tr class="memdesc:a13aa99ab67c2fe98ac26b2d2f5326290"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removed a language pack from the device. Requires client to have admin:w scope. Fails if the language pack was shipped with the device.  <br /></td></tr>
+<tr class="separator:a13aa99ab67c2fe98ac26b2d2f5326290"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf56f7bf11b8ab6ad93d04cd91ca0bdf" id="r_adf56f7bf11b8ab6ad93d04cd91ca0bdf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#adf56f7bf11b8ab6ad93d04cd91ca0bdf">getLanguagePack</a> (const std::string &amp;languageId, ComponentLanguagePack &amp;pack) const override</td></tr>
 <tr class="memdesc:adf56f7bf11b8ab6ad93d04cd91ca0bdf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finds and returns a language pack based on languageId.  <br /></td></tr>
 <tr class="separator:adf56f7bf11b8ab6ad93d04cd91ca0bdf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a73705a86199075d5e035427c848e7a81" id="r_a73705a86199075d5e035427c848e7a81"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a73705a86199075d5e035427c848e7a81">getComponentSerializer</a> (const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz, const std::set&lt; std::string &gt; &amp;subscribedOids, catena::Device_DetailLevel dl, bool shallow=false) const override</td></tr>
-<tr class="memdesc:a73705a86199075d5e035427c848e7a81"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a serializer for the device  <br /></td></tr>
-<tr class="separator:a73705a86199075d5e035427c848e7a81"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a30d58343dbf24f5b1da62dc9d0926d7c" id="r_a30d58343dbf24f5b1da62dc9d0926d7c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html">DeviceSerializer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a30d58343dbf24f5b1da62dc9d0926d7c">getDeviceSerializer</a> (const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz, const std::set&lt; std::string &gt; &amp;subscribedOids, catena::Device_DetailLevel dl, bool shallow=false) const</td></tr>
-<tr class="memdesc:a30d58343dbf24f5b1da62dc9d0926d7c"><td class="mdescLeft">&#160;</td><td class="mdescRight">This is a helper function for the shared <a class="el" href="classcatena_1_1common_1_1IDevice.html" title="Interface class for Device.">IDevice</a> function getComponentSerializer to return a <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html" title="DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This str...">DeviceSerializer</a> object. It can be used on its own if calling from a <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a> object.  <br /></td></tr>
-<tr class="separator:a30d58343dbf24f5b1da62dc9d0926d7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae707cba9c53ad81f345d056b16414c1c" id="r_ae707cba9c53ad81f345d056b16414c1c"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ae707cba9c53ad81f345d056b16414c1c">getComponentSerializer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, const std::set&lt; std::string &gt; &amp;subscribedOids, catena::Device_DetailLevel dl, bool shallow=false) const override</td></tr>
+<tr class="memdesc:ae707cba9c53ad81f345d056b16414c1c"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a serializer for the device  <br /></td></tr>
+<tr class="separator:ae707cba9c53ad81f345d056b16414c1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3b6295c039a7456cbde189190e50ab65" id="r_a3b6295c039a7456cbde189190e50ab65"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html">DeviceSerializer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a3b6295c039a7456cbde189190e50ab65">getDeviceSerializer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, const std::set&lt; std::string &gt; &amp;subscribedOids, catena::Device_DetailLevel dl, bool shallow=false) const</td></tr>
+<tr class="memdesc:a3b6295c039a7456cbde189190e50ab65"><td class="mdescLeft">&#160;</td><td class="mdescRight">This is a helper function for the shared <a class="el" href="classcatena_1_1common_1_1IDevice.html" title="Interface class for Device.">IDevice</a> function getComponentSerializer to return a <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html" title="DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This str...">DeviceSerializer</a> object. It can be used on its own if calling from a <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a> object.  <br /></td></tr>
+<tr class="separator:a3b6295c039a7456cbde189190e50ab65"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d2603a512258a9650f6f2d44e9d57ea" id="r_a5d2603a512258a9650f6f2d44e9d57ea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a5d2603a512258a9650f6f2d44e9d57ea">addItem</a> (const std::string &amp;key, <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *item) override</td></tr>
 <tr class="memdesc:a5d2603a512258a9650f6f2d44e9d57ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">add an item to one of the collections owned by the device. Overload for parameters and commands.  <br /></td></tr>
 <tr class="separator:a5d2603a512258a9650f6f2d44e9d57ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -226,33 +226,33 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~Device</b> ()=def
 <tr class="memitem:a9d9cf30564eb05af4aecafb88457e020"><td class="memTemplItemLeft" align="right" valign="top">TAG::type *&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a9d9cf30564eb05af4aecafb88457e020">getItem</a> (const std::string &amp;key) const</td></tr>
 <tr class="memdesc:a9d9cf30564eb05af4aecafb88457e020"><td class="mdescLeft">&#160;</td><td class="mdescRight">gets an item from one of the collections owned by the device  <br /></td></tr>
 <tr class="separator:a9d9cf30564eb05af4aecafb88457e020"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84df17325d91d659286c5d2d0db63c10" id="r_a84df17325d91d659286c5d2d0db63c10"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a84df17325d91d659286c5d2d0db63c10">getParam</a> (const std::string &amp;fqoid, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const override</td></tr>
-<tr class="memdesc:a84df17325d91d659286c5d2d0db63c10"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a parameter by oid with authorization  <br /></td></tr>
-<tr class="separator:a84df17325d91d659286c5d2d0db63c10"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af3302ee4d9f692322d3e7116069e23f8" id="r_af3302ee4d9f692322d3e7116069e23f8"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#af3302ee4d9f692322d3e7116069e23f8">getParam</a> (<a class="el" href="classcatena_1_1common_1_1Path.html">catena::common::Path</a> &amp;path, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const override</td></tr>
-<tr class="memdesc:af3302ee4d9f692322d3e7116069e23f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a parameter by oid with authorization  <br /></td></tr>
-<tr class="separator:af3302ee4d9f692322d3e7116069e23f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf68431e3c4430ab615f606567142edd" id="r_acf68431e3c4430ab615f606567142edd"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#acf68431e3c4430ab615f606567142edd">getTopLevelParams</a> (<a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const override</td></tr>
-<tr class="memdesc:acf68431e3c4430ab615f606567142edd"><td class="mdescLeft">&#160;</td><td class="mdescRight">get all top level parameters  <br /></td></tr>
-<tr class="separator:acf68431e3c4430ab615f606567142edd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa0b1abf5dc7aeea0f016c5af839e7654" id="r_aa0b1abf5dc7aeea0f016c5af839e7654"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#aa0b1abf5dc7aeea0f016c5af839e7654">getCommand</a> (const std::string &amp;fqoid, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const override</td></tr>
-<tr class="memdesc:aa0b1abf5dc7aeea0f016c5af839e7654"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a command by oid  <br /></td></tr>
-<tr class="separator:aa0b1abf5dc7aeea0f016c5af839e7654"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a51dfc1d0fcb3db854d36a195d86417e4" id="r_a51dfc1d0fcb3db854d36a195d86417e4"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a51dfc1d0fcb3db854d36a195d86417e4">tryMultiSetValue</a> (catena::MultiSetValuePayload src, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;ans, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) override</td></tr>
-<tr class="memdesc:a51dfc1d0fcb3db854d36a195d86417e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates each payload in a multiSetValuePayload without commit changes to param value_s.  <br /></td></tr>
-<tr class="separator:a51dfc1d0fcb3db854d36a195d86417e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11a46ad5d2ba63f97a3a47b314278a1a" id="r_a11a46ad5d2ba63f97a3a47b314278a1a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a11a46ad5d2ba63f97a3a47b314278a1a">commitMultiSetValue</a> (catena::MultiSetValuePayload src, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz) override</td></tr>
-<tr class="memdesc:a11a46ad5d2ba63f97a3a47b314278a1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the values of a device's parameter's using a MultiSetValuePayload. This function assumes that tryMultiSetValue is called at some point beforehand to validate the call.  <br /></td></tr>
-<tr class="separator:a11a46ad5d2ba63f97a3a47b314278a1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a22b63f3d9d3cc8ce6779acecf1e31166" id="r_a22b63f3d9d3cc8ce6779acecf1e31166"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a22b63f3d9d3cc8ce6779acecf1e31166">setValue</a> (const std::string &amp;jptr, catena::Value &amp;src, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) override</td></tr>
-<tr class="memdesc:a22b63f3d9d3cc8ce6779acecf1e31166"><td class="mdescLeft">&#160;</td><td class="mdescRight">deserialize a protobuf value object into the parameter value pointed to by jptr.  <br /></td></tr>
-<tr class="separator:a22b63f3d9d3cc8ce6779acecf1e31166"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a80069d9693d4390a0a5742bde72ad0fa" id="r_a80069d9693d4390a0a5742bde72ad0fa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a80069d9693d4390a0a5742bde72ad0fa">getValue</a> (const std::string &amp;jptr, catena::Value &amp;value, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const override</td></tr>
-<tr class="memdesc:a80069d9693d4390a0a5742bde72ad0fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter value to protobuf  <br /></td></tr>
-<tr class="separator:a80069d9693d4390a0a5742bde72ad0fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af5f40f541475501a826c99332131e180" id="r_af5f40f541475501a826c99332131e180"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#af5f40f541475501a826c99332131e180">shouldSendParam</a> (const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &amp;param, bool is_subscribed, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz) const override</td></tr>
-<tr class="memdesc:af5f40f541475501a826c99332131e180"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if a parameter should be sent based on detail level and authorization  <br /></td></tr>
-<tr class="separator:af5f40f541475501a826c99332131e180"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b73e46646b2472e2e5e9f645b47a327" id="r_a8b73e46646b2472e2e5e9f645b47a327"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a8b73e46646b2472e2e5e9f645b47a327">getParam</a> (const std::string &amp;fqoid, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const override</td></tr>
+<tr class="memdesc:a8b73e46646b2472e2e5e9f645b47a327"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a parameter by oid with authorization  <br /></td></tr>
+<tr class="separator:a8b73e46646b2472e2e5e9f645b47a327"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a458d34c0689273ee0b07819a4c075f7f" id="r_a458d34c0689273ee0b07819a4c075f7f"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a458d34c0689273ee0b07819a4c075f7f">getParam</a> (<a class="el" href="classcatena_1_1common_1_1Path.html">catena::common::Path</a> &amp;path, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const override</td></tr>
+<tr class="memdesc:a458d34c0689273ee0b07819a4c075f7f"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a parameter by oid with authorization  <br /></td></tr>
+<tr class="separator:a458d34c0689273ee0b07819a4c075f7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a811b91c8189eac1ba945956129e3b8d7" id="r_a811b91c8189eac1ba945956129e3b8d7"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a811b91c8189eac1ba945956129e3b8d7">getTopLevelParams</a> (<a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const override</td></tr>
+<tr class="memdesc:a811b91c8189eac1ba945956129e3b8d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">get all top level parameters  <br /></td></tr>
+<tr class="separator:a811b91c8189eac1ba945956129e3b8d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad8bd07b2ced46650127f0bb2e238c1b9" id="r_ad8bd07b2ced46650127f0bb2e238c1b9"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ad8bd07b2ced46650127f0bb2e238c1b9">getCommand</a> (const std::string &amp;fqoid, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const override</td></tr>
+<tr class="memdesc:ad8bd07b2ced46650127f0bb2e238c1b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a command by oid  <br /></td></tr>
+<tr class="separator:ad8bd07b2ced46650127f0bb2e238c1b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21129c2d45cec86ec0f0fab0ff40ca7d" id="r_a21129c2d45cec86ec0f0fab0ff40ca7d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a21129c2d45cec86ec0f0fab0ff40ca7d">tryMultiSetValue</a> (catena::MultiSetValuePayload src, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;ans, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) override</td></tr>
+<tr class="memdesc:a21129c2d45cec86ec0f0fab0ff40ca7d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates each payload in a multiSetValuePayload without commit changes to param value_s.  <br /></td></tr>
+<tr class="separator:a21129c2d45cec86ec0f0fab0ff40ca7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa2cfee44fa62bad649407133c88fc7cf" id="r_aa2cfee44fa62bad649407133c88fc7cf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#aa2cfee44fa62bad649407133c88fc7cf">commitMultiSetValue</a> (catena::MultiSetValuePayload src, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) override</td></tr>
+<tr class="memdesc:aa2cfee44fa62bad649407133c88fc7cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the values of a device's parameter's using a MultiSetValuePayload. This function assumes that tryMultiSetValue is called at some point beforehand to validate the call.  <br /></td></tr>
+<tr class="separator:aa2cfee44fa62bad649407133c88fc7cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03b2f75d6eba9d6fc1bcad9bed272c4d" id="r_a03b2f75d6eba9d6fc1bcad9bed272c4d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a03b2f75d6eba9d6fc1bcad9bed272c4d">setValue</a> (const std::string &amp;jptr, catena::Value &amp;src, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) override</td></tr>
+<tr class="memdesc:a03b2f75d6eba9d6fc1bcad9bed272c4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">deserialize a protobuf value object into the parameter value pointed to by jptr.  <br /></td></tr>
+<tr class="separator:a03b2f75d6eba9d6fc1bcad9bed272c4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd8593ef03bc63539bd551abee1b5537" id="r_abd8593ef03bc63539bd551abee1b5537"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#abd8593ef03bc63539bd551abee1b5537">getValue</a> (const std::string &amp;jptr, catena::Value &amp;value, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const override</td></tr>
+<tr class="memdesc:abd8593ef03bc63539bd551abee1b5537"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter value to protobuf  <br /></td></tr>
+<tr class="separator:abd8593ef03bc63539bd551abee1b5537"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a766e4d7496590f163280af23e1206718" id="r_a766e4d7496590f163280af23e1206718"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a766e4d7496590f163280af23e1206718">shouldSendParam</a> (const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &amp;param, bool is_subscribed, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const override</td></tr>
+<tr class="memdesc:a766e4d7496590f163280af23e1206718"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if a parameter should be sent based on detail level and authorization  <br /></td></tr>
+<tr class="separator:a766e4d7496590f163280af23e1206718"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adbae70c7d6b3db45356cd6e6cf0bca95" id="r_adbae70c7d6b3db45356cd6e6cf0bca95"><td class="memItemLeft" align="right" valign="top">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#adbae70c7d6b3db45356cd6e6cf0bca95">getValueSetByClient</a> () override</td></tr>
 <tr class="memdesc:adbae70c7d6b3db45356cd6e6cf0bca95"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the signal emitted when a value is set by the client.  <br /></td></tr>
 <tr class="separator:adbae70c7d6b3db45356cd6e6cf0bca95"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -262,15 +262,15 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~Device</b> ()=def
 <tr class="memitem:ac7d2618b26fdf77883c88a5583e0eb26" id="r_ac7d2618b26fdf77883c88a5583e0eb26"><td class="memItemLeft" align="right" valign="top">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ac7d2618b26fdf77883c88a5583e0eb26">getValueSetByServer</a> () override</td></tr>
 <tr class="memdesc:ac7d2618b26fdf77883c88a5583e0eb26"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the signal emitted when a value is set by the server, or business logic.  <br /></td></tr>
 <tr class="separator:ac7d2618b26fdf77883c88a5583e0eb26"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae10fb8f9f2e5c047363eed524213654a" id="r_ae10fb8f9f2e5c047363eed524213654a"><td class="memItemLeft" align="right" valign="top">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ae10fb8f9f2e5c047363eed524213654a">getDownloadAssetRequest</a> () override</td></tr>
-<tr class="memdesc:ae10fb8f9f2e5c047363eed524213654a"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the asset request signal  <br /></td></tr>
-<tr class="separator:ae10fb8f9f2e5c047363eed524213654a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a16e2bc1ec7a5785efba627b1a6ae6f63" id="r_a16e2bc1ec7a5785efba627b1a6ae6f63"><td class="memItemLeft" align="right" valign="top">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a16e2bc1ec7a5785efba627b1a6ae6f63">getUploadAssetRequest</a> () override</td></tr>
-<tr class="memdesc:a16e2bc1ec7a5785efba627b1a6ae6f63"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the upload asset request signal  <br /></td></tr>
-<tr class="separator:a16e2bc1ec7a5785efba627b1a6ae6f63"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a424d77b4acb46e8128d7a806946ca173" id="r_a424d77b4acb46e8128d7a806946ca173"><td class="memItemLeft" align="right" valign="top">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a424d77b4acb46e8128d7a806946ca173">getDeleteAssetRequest</a> () override</td></tr>
-<tr class="memdesc:a424d77b4acb46e8128d7a806946ca173"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the delete asset request signal  <br /></td></tr>
-<tr class="separator:a424d77b4acb46e8128d7a806946ca173"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac567dc85f9e8e92db5a0a49708a57289" id="r_ac567dc85f9e8e92db5a0a49708a57289"><td class="memItemLeft" align="right" valign="top">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ac567dc85f9e8e92db5a0a49708a57289">getDownloadAssetRequest</a> () override</td></tr>
+<tr class="memdesc:ac567dc85f9e8e92db5a0a49708a57289"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the asset request signal  <br /></td></tr>
+<tr class="separator:ac567dc85f9e8e92db5a0a49708a57289"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ee6003196e094215a2518daef59d957" id="r_a0ee6003196e094215a2518daef59d957"><td class="memItemLeft" align="right" valign="top">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a0ee6003196e094215a2518daef59d957">getUploadAssetRequest</a> () override</td></tr>
+<tr class="memdesc:a0ee6003196e094215a2518daef59d957"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the upload asset request signal  <br /></td></tr>
+<tr class="separator:a0ee6003196e094215a2518daef59d957"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af702d6a407c83bdec8aa4d9cb510aaa5" id="r_af702d6a407c83bdec8aa4d9cb510aaa5"><td class="memItemLeft" align="right" valign="top">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> *)&gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#af702d6a407c83bdec8aa4d9cb510aaa5">getDeleteAssetRequest</a> () override</td></tr>
+<tr class="memdesc:af702d6a407c83bdec8aa4d9cb510aaa5"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the delete asset request signal  <br /></td></tr>
+<tr class="separator:af702d6a407c83bdec8aa4d9cb510aaa5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classcatena_1_1common_1_1IDevice"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classcatena_1_1common_1_1IDevice')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a></td></tr>
 <tr class="memitem:ac71fc03628cf95184ea9f4c0bd761a65 inherit pub_methods_classcatena_1_1common_1_1IDevice" id="r_ac71fc03628cf95184ea9f4c0bd761a65"><td class="memItemLeft" align="right" valign="top">
 &#160;</td><td class="memItemRight" valign="bottom"><b>IDevice</b> ()=default</td></tr>
@@ -479,8 +479,8 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
-<a id="a6c7b878e6989c9a7e44dc62109c87835" name="a6c7b878e6989c9a7e44dc62109c87835"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6c7b878e6989c9a7e44dc62109c87835">&#9670;&#160;</a></span>addLanguage()</h2>
+<a id="af15d6bed42fc196d4e46c3aa8de39b73" name="af15d6bed42fc196d4e46c3aa8de39b73"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af15d6bed42fc196d4e46c3aa8de39b73">&#9670;&#160;</a></span>addLanguage()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -497,7 +497,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em> = <code><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a></code>&#160;</td>
         </tr>
         <tr>
@@ -523,12 +523,12 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error. Intention is for the AddLanguage RPCs / API calls to be serviced by this method. </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#afff332d9e5f99a55070199a46dc4fa80">catena::common::IDevice</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#ac4b696a3becfd9f2d2f267e52258733a">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
-<a id="a11a46ad5d2ba63f97a3a47b314278a1a" name="a11a46ad5d2ba63f97a3a47b314278a1a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a11a46ad5d2ba63f97a3a47b314278a1a">&#9670;&#160;</a></span>commitMultiSetValue()</h2>
+<a id="aa2cfee44fa62bad649407133c88fc7cf" name="aa2cfee44fa62bad649407133c88fc7cf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa2cfee44fa62bad649407133c88fc7cf">&#9670;&#160;</a></span>commitMultiSetValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -545,7 +545,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em>&#160;</td>
         </tr>
         <tr>
@@ -571,7 +571,7 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>an <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful. </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#aede2a4f989f6887a176f264c45ba92fe">catena::common::IDevice</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a704a4e34685ed75fada9dabb188a29aa">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
@@ -719,8 +719,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="aa0b1abf5dc7aeea0f016c5af839e7654" name="aa0b1abf5dc7aeea0f016c5af839e7654"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa0b1abf5dc7aeea0f016c5af839e7654">&#9670;&#160;</a></span>getCommand()</h2>
+<a id="ad8bd07b2ced46650127f0bb2e238c1b9" name="ad8bd07b2ced46650127f0bb2e238c1b9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad8bd07b2ced46650127f0bb2e238c1b9">&#9670;&#160;</a></span>getCommand()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -743,7 +743,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em> = <code><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a></code>&#160;</td>
         </tr>
         <tr>
@@ -771,12 +771,12 @@ Here is the caller graph for this function:</div>
 <dl class="section return"><dt>Returns</dt><dd>a unique pointer to the command, or nullptr if it does not exist </dd></dl>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000001">Todo:</a></b></dt><dd>add authorization checking </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#aca3936ff464604ebc99f9ffbdf72fdbd">catena::common::IDevice</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#accf44b99feeb6eb71ea40c2e151890a5">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
-<a id="a73705a86199075d5e035427c848e7a81" name="a73705a86199075d5e035427c848e7a81"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a73705a86199075d5e035427c848e7a81">&#9670;&#160;</a></span>getComponentSerializer()</h2>
+<a id="ae707cba9c53ad81f345d056b16414c1c" name="ae707cba9c53ad81f345d056b16414c1c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae707cba9c53ad81f345d056b16414c1c">&#9670;&#160;</a></span>getComponentSerializer()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -787,7 +787,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="memname">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &gt; catena::common::Device::getComponentSerializer </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em>, </td>
         </tr>
         <tr>
@@ -833,7 +833,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>a <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html" title="DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This str...">DeviceSerializer</a> object </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#aec60abbeaff227f041e5dad86799370a">catena::common::IDevice</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a02c4d9fea9e09915d7f609510fdaf7c9">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
@@ -866,8 +866,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="a424d77b4acb46e8128d7a806946ca173" name="a424d77b4acb46e8128d7a806946ca173"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a424d77b4acb46e8128d7a806946ca173">&#9670;&#160;</a></span>getDeleteAssetRequest()</h2>
+<a id="af702d6a407c83bdec8aa4d9cb510aaa5" name="af702d6a407c83bdec8aa4d9cb510aaa5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af702d6a407c83bdec8aa4d9cb510aaa5">&#9670;&#160;</a></span>getDeleteAssetRequest()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -876,7 +876,7 @@ Here is the caller graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> *)&gt; &amp; catena::common::Device::getDeleteAssetRequest </td>
+          <td class="memname">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> *)&gt; &amp; catena::common::Device::getDeleteAssetRequest </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -892,12 +892,12 @@ Here is the caller graph for this function:</div>
 <p>get the delete asset request signal </p>
 <dl class="section return"><dt>Returns</dt><dd>the signal </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a0dfde502768da0a1b420e0e92f828db9">catena::common::IDevice</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a010ef2405cded568eea254d049d6ebec">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
-<a id="a30d58343dbf24f5b1da62dc9d0926d7c" name="a30d58343dbf24f5b1da62dc9d0926d7c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a30d58343dbf24f5b1da62dc9d0926d7c">&#9670;&#160;</a></span>getDeviceSerializer()</h2>
+<a id="a3b6295c039a7456cbde189190e50ab65" name="a3b6295c039a7456cbde189190e50ab65"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3b6295c039a7456cbde189190e50ab65">&#9670;&#160;</a></span>getDeviceSerializer()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -905,7 +905,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="memname"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html">DeviceSerializer</a> catena::common::Device::getDeviceSerializer </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em>, </td>
         </tr>
         <tr>
@@ -947,8 +947,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="ae10fb8f9f2e5c047363eed524213654a" name="ae10fb8f9f2e5c047363eed524213654a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae10fb8f9f2e5c047363eed524213654a">&#9670;&#160;</a></span>getDownloadAssetRequest()</h2>
+<a id="ac567dc85f9e8e92db5a0a49708a57289" name="ac567dc85f9e8e92db5a0a49708a57289"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac567dc85f9e8e92db5a0a49708a57289">&#9670;&#160;</a></span>getDownloadAssetRequest()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -957,7 +957,7 @@ Here is the caller graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> *)&gt; &amp; catena::common::Device::getDownloadAssetRequest </td>
+          <td class="memname">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> *)&gt; &amp; catena::common::Device::getDownloadAssetRequest </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -973,7 +973,7 @@ Here is the caller graph for this function:</div>
 <p>get the asset request signal </p>
 <dl class="section return"><dt>Returns</dt><dd>the signal </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a3ebec7002712d66688554da63a6dac46">catena::common::IDevice</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a2be39aacca8e57a1d2c3606ecf2b2a99">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
@@ -1088,8 +1088,8 @@ template&lt;typename TAG &gt; </div>
 
 </div>
 </div>
-<a id="af3302ee4d9f692322d3e7116069e23f8" name="af3302ee4d9f692322d3e7116069e23f8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af3302ee4d9f692322d3e7116069e23f8">&#9670;&#160;</a></span>getParam() <span class="overload">[1/2]</span></h2>
+<a id="a458d34c0689273ee0b07819a4c075f7f" name="a458d34c0689273ee0b07819a4c075f7f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a458d34c0689273ee0b07819a4c075f7f">&#9670;&#160;</a></span>getParam() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1112,7 +1112,7 @@ template&lt;typename TAG &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em> = <code><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a></code>&#160;</td>
         </tr>
         <tr>
@@ -1132,7 +1132,7 @@ template&lt;typename TAG &gt; </div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">path</td><td>the full path to the parameter </td></tr>
-    <tr><td class="paramname">authz</td><td>The <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html" title="Class for handling authorization information.">IAuthorizer</a> to test read permission with. </td></tr>
+    <tr><td class="paramname">authz</td><td>The <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> to test read permission with. </td></tr>
     <tr><td class="paramname">status</td><td>will contain an error message if the parameter does not exist </td></tr>
   </table>
   </dd>
@@ -1140,12 +1140,12 @@ template&lt;typename TAG &gt; </div>
 <dl class="section return"><dt>Returns</dt><dd>a unique pointer to the parameter, or nullptr if it does not exist</dd></dl>
 <p>gets a parameter if it exists and the client is authorized to read it. </p>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a63fce3062f84819c4127f34ab13a7188">catena::common::IDevice</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a758a5060fde67304ed1a371318d38432">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
-<a id="a84df17325d91d659286c5d2d0db63c10" name="a84df17325d91d659286c5d2d0db63c10"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a84df17325d91d659286c5d2d0db63c10">&#9670;&#160;</a></span>getParam() <span class="overload">[2/2]</span></h2>
+<a id="a8b73e46646b2472e2e5e9f645b47a327" name="a8b73e46646b2472e2e5e9f645b47a327"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8b73e46646b2472e2e5e9f645b47a327">&#9670;&#160;</a></span>getParam() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1168,7 +1168,7 @@ template&lt;typename TAG &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em> = <code><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a></code>&#160;</td>
         </tr>
         <tr>
@@ -1188,7 +1188,7 @@ template&lt;typename TAG &gt; </div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">fqoid</td><td>the fully qualified oid of the parameter </td></tr>
-    <tr><td class="paramname">authz</td><td>The <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html" title="Class for handling authorization information.">IAuthorizer</a> to test read permission with. </td></tr>
+    <tr><td class="paramname">authz</td><td>The <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> to test read permission with. </td></tr>
     <tr><td class="paramname">status</td><td>will contain an error message if the parameter does not exist </td></tr>
   </table>
   </dd>
@@ -1196,12 +1196,12 @@ template&lt;typename TAG &gt; </div>
 <dl class="section return"><dt>Returns</dt><dd>a unique pointer to the parameter, or nullptr if it does not exist</dd></dl>
 <p>gets a parameter if it exists and the client is authorized to read it. </p>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#ae07a260a29eb3ad36ed96e81e6786958">catena::common::IDevice</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#ab32c92e2d64e1797dd4f20289d822158">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
-<a id="acf68431e3c4430ab615f606567142edd" name="acf68431e3c4430ab615f606567142edd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acf68431e3c4430ab615f606567142edd">&#9670;&#160;</a></span>getTopLevelParams()</h2>
+<a id="a811b91c8189eac1ba945956129e3b8d7" name="a811b91c8189eac1ba945956129e3b8d7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a811b91c8189eac1ba945956129e3b8d7">&#9670;&#160;</a></span>getTopLevelParams()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1218,7 +1218,7 @@ template&lt;typename TAG &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em> = <code><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a></code>&#160;</td>
         </tr>
         <tr>
@@ -1244,12 +1244,12 @@ template&lt;typename TAG &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>a vector of unique pointers to the parameters </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a23a8f7ff161df7b7de6d46bad7c7a774">catena::common::IDevice</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a01f5486b4a592d4592585ed218e4f11d">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
-<a id="a16e2bc1ec7a5785efba627b1a6ae6f63" name="a16e2bc1ec7a5785efba627b1a6ae6f63"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a16e2bc1ec7a5785efba627b1a6ae6f63">&#9670;&#160;</a></span>getUploadAssetRequest()</h2>
+<a id="a0ee6003196e094215a2518daef59d957" name="a0ee6003196e094215a2518daef59d957"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0ee6003196e094215a2518daef59d957">&#9670;&#160;</a></span>getUploadAssetRequest()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1258,7 +1258,7 @@ template&lt;typename TAG &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> *)&gt; &amp; catena::common::Device::getUploadAssetRequest </td>
+          <td class="memname">vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> *)&gt; &amp; catena::common::Device::getUploadAssetRequest </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -1274,12 +1274,12 @@ template&lt;typename TAG &gt; </div>
 <p>get the upload asset request signal </p>
 <dl class="section return"><dt>Returns</dt><dd>the signal </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a14c593315a6095a97db02af968c1ebf6">catena::common::IDevice</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a444410bfc60b929d1bd30a5d22061085">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
-<a id="a80069d9693d4390a0a5742bde72ad0fa" name="a80069d9693d4390a0a5742bde72ad0fa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a80069d9693d4390a0a5742bde72ad0fa">&#9670;&#160;</a></span>getValue()</h2>
+<a id="abd8593ef03bc63539bd551abee1b5537" name="abd8593ef03bc63539bd551abee1b5537"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abd8593ef03bc63539bd551abee1b5537">&#9670;&#160;</a></span>getValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1302,7 +1302,7 @@ template&lt;typename TAG &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em> = <code><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a></code>&#160;</td>
         </tr>
         <tr>
@@ -1323,13 +1323,13 @@ template&lt;typename TAG &gt; </div>
   <table class="params">
     <tr><td class="paramname">jptr</td><td>json pointer to the part of the device model to serialize. </td></tr>
     <tr><td class="paramname">dst</td><td>the protobuf value to serialize to. </td></tr>
-    <tr><td class="paramname">authz</td><td>The <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html" title="Class for handling authorization information.">IAuthorizer</a> to test read permission with. </td></tr>
+    <tr><td class="paramname">authz</td><td>The <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> to test read permission with. </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>an <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error. Intention is to for GetValue RPCs / API calls to be serviced by this method. </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a3273c045ed4f9d4e0aa135b763b57f63">catena::common::IDevice</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#afc52e8ece30cd01b428c6a14c855b5d3">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
@@ -1459,8 +1459,8 @@ template&lt;typename TAG &gt; </div>
 
 </div>
 </div>
-<a id="ab2291b513ae3f6d8950819a62617bf86" name="ab2291b513ae3f6d8950819a62617bf86"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab2291b513ae3f6d8950819a62617bf86">&#9670;&#160;</a></span>removeLanguage()</h2>
+<a id="a13aa99ab67c2fe98ac26b2d2f5326290" name="a13aa99ab67c2fe98ac26b2d2f5326290"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a13aa99ab67c2fe98ac26b2d2f5326290">&#9670;&#160;</a></span>removeLanguage()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1477,7 +1477,7 @@ template&lt;typename TAG &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em> = <code><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a></code>&#160;</td>
         </tr>
         <tr>
@@ -1503,7 +1503,7 @@ template&lt;typename TAG &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error. </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a2ed4c3efeb581d6f93423923122e525d">catena::common::IDevice</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#ae47e93d33564e6c9bc702dc9545da921">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
@@ -1593,8 +1593,8 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
-<a id="a22b63f3d9d3cc8ce6779acecf1e31166" name="a22b63f3d9d3cc8ce6779acecf1e31166"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a22b63f3d9d3cc8ce6779acecf1e31166">&#9670;&#160;</a></span>setValue()</h2>
+<a id="a03b2f75d6eba9d6fc1bcad9bed272c4d" name="a03b2f75d6eba9d6fc1bcad9bed272c4d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a03b2f75d6eba9d6fc1bcad9bed272c4d">&#9670;&#160;</a></span>setValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1617,7 +1617,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em> = <code><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a></code>&#160;</td>
         </tr>
         <tr>
@@ -1638,19 +1638,19 @@ Here is the call graph for this function:</div>
   <table class="params">
     <tr><td class="paramname">jptr</td><td>json pointer to the part of the device model to update. </td></tr>
     <tr><td class="paramname">src</td><td>the value to update the parameter with. </td></tr>
-    <tr><td class="paramname">authz</td><td>The <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html" title="Class for handling authorization information.">IAuthorizer</a> to test with. </td></tr>
+    <tr><td class="paramname">authz</td><td>The <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> to test with. </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>an <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error.</dd></dl>
-<p>This method essentially redirects the input values to <a class="el" href="classcatena_1_1common_1_1Device.html#a51dfc1d0fcb3db854d36a195d86417e4" title="Validates each payload in a multiSetValuePayload without commit changes to param value_s.">tryMultiSetValue()</a> and <a class="el" href="classcatena_1_1common_1_1Device.html#a11a46ad5d2ba63f97a3a47b314278a1a" title="Sets the values of a device&#39;s parameter&#39;s using a MultiSetValuePayload. This function assumes that tr...">commitMultiSetValue()</a>. It remains to support the old way of setting values. </p>
+<p>This method essentially redirects the input values to <a class="el" href="classcatena_1_1common_1_1Device.html#a21129c2d45cec86ec0f0fab0ff40ca7d" title="Validates each payload in a multiSetValuePayload without commit changes to param value_s.">tryMultiSetValue()</a> and <a class="el" href="classcatena_1_1common_1_1Device.html#aa2cfee44fa62bad649407133c88fc7cf" title="Sets the values of a device&#39;s parameter&#39;s using a MultiSetValuePayload. This function assumes that tr...">commitMultiSetValue()</a>. It remains to support the old way of setting values. </p>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#adf8224e39c66469fc5ffdc05ea56551e">catena::common::IDevice</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#ae77aa1916647939e782e1e7a9d6cd9c1">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
-<a id="af5f40f541475501a826c99332131e180" name="af5f40f541475501a826c99332131e180"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af5f40f541475501a826c99332131e180">&#9670;&#160;</a></span>shouldSendParam()</h2>
+<a id="a766e4d7496590f163280af23e1206718" name="a766e4d7496590f163280af23e1206718"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a766e4d7496590f163280af23e1206718">&#9670;&#160;</a></span>shouldSendParam()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1673,7 +1673,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em>&#160;</td>
         </tr>
         <tr>
@@ -1700,7 +1700,7 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the parameter should be sent, false otherwise </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a3c25d62226cbc0c0b04c5fbe42f95b08">catena::common::IDevice</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#af36964314a102e8d8a16931979f4c6d9">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
@@ -1812,8 +1812,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="a17d8d2d1f9fc959623167adf0e21f5ea" name="a17d8d2d1f9fc959623167adf0e21f5ea"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a17d8d2d1f9fc959623167adf0e21f5ea">&#9670;&#160;</a></span>toProto() <span class="overload">[1/3]</span></h2>
+<a id="ac5e6638e51d977c9a0d058c0fb1ba0a6" name="ac5e6638e51d977c9a0d058c0fb1ba0a6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac5e6638e51d977c9a0d058c0fb1ba0a6">&#9670;&#160;</a></span>toProto() <span class="overload">[1/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1830,7 +1830,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em>, </td>
         </tr>
         <tr>
@@ -1862,7 +1862,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <p>N.B. This method is not thread-safe. It is the caller's responsibility to ensure that the device is not modified while this method is running. This class provides a LockGuard helper class to make this easier. </p>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a1ee2baa96c32220f0e88d10ff3166376">catena::common::IDevice</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a1415587e6e966386507c825b3014bc6a">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
@@ -1938,8 +1938,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="a51dfc1d0fcb3db854d36a195d86417e4" name="a51dfc1d0fcb3db854d36a195d86417e4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a51dfc1d0fcb3db854d36a195d86417e4">&#9670;&#160;</a></span>tryMultiSetValue()</h2>
+<a id="a21129c2d45cec86ec0f0fab0ff40ca7d" name="a21129c2d45cec86ec0f0fab0ff40ca7d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a21129c2d45cec86ec0f0fab0ff40ca7d">&#9670;&#160;</a></span>tryMultiSetValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1962,7 +1962,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em> = <code><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a></code>&#160;</td>
         </tr>
         <tr>
@@ -1983,13 +1983,13 @@ Here is the caller graph for this function:</div>
   <table class="params">
     <tr><td class="paramname">src</td><td>The MultiSetValuePayload to validate. </td></tr>
     <tr><td class="paramname">ans</td><td>The <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> to return. </td></tr>
-    <tr><td class="paramname">authz</td><td>The <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html" title="Class for handling authorization information.">IAuthorizer</a> to test with. </td></tr>
+    <tr><td class="paramname">authz</td><td>The <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> to test with. </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the call is valid. </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a0b03b16221d9b644b9777c22f487864a">catena::common::IDevice</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#ab152733e66bbdf4e0486fb69956f0f91">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
