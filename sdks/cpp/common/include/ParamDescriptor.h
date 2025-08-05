@@ -228,7 +228,7 @@ class ParamDescriptor : public IParamDescriptor {
      * with the information from the ParamDescriptor
      * 
      */
-    void toProto(catena::Param &param, IAuthorizer& authz) const override;
+    void toProto(catena::Param &param, const IAuthorizer& authz) const override;
 
 
     /**
@@ -239,7 +239,7 @@ class ParamDescriptor : public IParamDescriptor {
      * this function will populate all non-value fields of the protobuf param message 
      * with the information from the ParamDescriptor
      */
-    void toProto(catena::ParamInfo &paramInfo, IAuthorizer& authz) const override;
+    void toProto(catena::ParamInfo &paramInfo, const IAuthorizer& authz) const override;
 
     /**
      * @brief get the parameter name by language

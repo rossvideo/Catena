@@ -45,6 +45,7 @@
 
 // common
 #include "StructInfo.h"
+#include "Authorizer.h"
 #include "Enums.h"
 
 using namespace catena::common;

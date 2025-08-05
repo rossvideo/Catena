@@ -151,7 +151,7 @@ class IDevice {
      * to ensure that the device is not modified while this method is running.
      * This class provides a LockGuard helper class to make this easier.
      */
-    virtual void toProto(::catena::Device& dst, IAuthorizer& authz, bool shallow = true) const = 0;
+    virtual void toProto(::catena::Device& dst, const IAuthorizer& authz, bool shallow = true) const = 0;
 
     /**
      * @brief Create a protobuf representation of the language packs.
@@ -184,7 +184,7 @@ class IDevice {
      * Intention is for the AddLanguage RPCs / API calls to be serviced by this
      * method.
      */
-    virtual catena::exception_with_status addLanguage(catena::AddLanguagePayload& language, IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
+    virtual catena::exception_with_status addLanguage(catena::AddLanguagePayload& language, const IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
 
     /**
      * @brief Removed a language pack from the device. Requires client to have
@@ -194,7 +194,7 @@ class IDevice {
      * @return An exception_with_status with status set OK if successful,
      * otherwise an error.
      */
-    virtual catena::exception_with_status removeLanguage(const std::string& languageId, IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
+    virtual catena::exception_with_status removeLanguage(const std::string& languageId, const IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
 
     /**
      * @brief Finds and returns a language pack based on languageId.
@@ -249,7 +249,7 @@ class IDevice {
      * the whole device will be returned in one message
      * @return a DeviceSerializer object
      */
-    virtual std::unique_ptr<IDeviceSerializer> getComponentSerializer(IAuthorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow = false) const = 0;
+    virtual std::unique_ptr<IDeviceSerializer> getComponentSerializer(const IAuthorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow = false) const = 0;
 
     /**
      * @brief add an item to one of the collections owned by the device.
@@ -291,7 +291,7 @@ class IDevice {
      * 
      * gets a parameter if it exists and the client is authorized to read it.
      */
-    virtual std::unique_ptr<IParam> getParam(const std::string& fqoid, catena::exception_with_status& status, IAuthorizer& authz = Authorizer::kAuthzDisabled) const = 0;
+    virtual std::unique_ptr<IParam> getParam(const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const = 0;
 
     /**
      * @brief get a parameter by oid with authorization
@@ -304,7 +304,7 @@ class IDevice {
      * 
      * gets a parameter if it exists and the client is authorized to read it.
      */
-    virtual std::unique_ptr<IParam> getParam(catena::common::Path& path, catena::exception_with_status& status, IAuthorizer& authz = Authorizer::kAuthzDisabled) const = 0;
+    virtual std::unique_ptr<IParam> getParam(catena::common::Path& path, catena::exception_with_status& status, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const = 0;
     
     /**
      * @brief get all top level parameters
@@ -312,7 +312,7 @@ class IDevice {
      * @param authz the authorizer object
      * @return a vector of unique pointers to the parameters
      */
-    virtual std::vector<std::unique_ptr<IParam>> getTopLevelParams(catena::exception_with_status& status, IAuthorizer& authz = Authorizer::kAuthzDisabled) const = 0;
+    virtual std::vector<std::unique_ptr<IParam>> getTopLevelParams(catena::exception_with_status& status, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const = 0;
 
     /**
      * @brief get a command by oid
@@ -323,7 +323,7 @@ class IDevice {
      * @return a unique pointer to the command, or nullptr if it does not exist
      * @todo add authorization checking
      */
-    virtual std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status, IAuthorizer& authz = Authorizer::kAuthzDisabled) const = 0;
+    virtual std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const = 0;
 
     /**
      * @brief Validates each payload in a multiSetValuePayload without commit
@@ -333,7 +333,7 @@ class IDevice {
      * @param authz The IAuthorizer to test with.
      * @returns true if the call is valid.
      */
-    virtual bool tryMultiSetValue (catena::MultiSetValuePayload src, catena::exception_with_status& ans, IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
+    virtual bool tryMultiSetValue (catena::MultiSetValuePayload src, catena::exception_with_status& ans, const IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
     
     /**
      * @brief Sets the values of a device's parameter's using a
@@ -344,7 +344,7 @@ class IDevice {
      * @param authz The Authroizer with the client's scopes.
      * @returns an exception_with_status with status set OK if successful.
      */
-    virtual catena::exception_with_status commitMultiSetValue (catena::MultiSetValuePayload src, IAuthorizer& authz) = 0;
+    virtual catena::exception_with_status commitMultiSetValue (catena::MultiSetValuePayload src, const IAuthorizer& authz) = 0;
 
     /**
      * @brief deserialize a protobuf value object into the parameter value
@@ -359,7 +359,7 @@ class IDevice {
      * and commitMultiSetValue().
      * It remains to support the old way of setting values.
      */
-    virtual catena::exception_with_status setValue (const std::string& jptr, catena::Value& src, IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
+    virtual catena::exception_with_status setValue (const std::string& jptr, catena::Value& src, const IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
 
     /**
      * @brief serialize the parameter value to protobuf
@@ -371,7 +371,7 @@ class IDevice {
      * Intention is to for GetValue RPCs / API calls to be serviced by this
      * method.
      */
-    virtual catena::exception_with_status getValue (const std::string& jptr, catena::Value& value, IAuthorizer& authz = Authorizer::kAuthzDisabled) const = 0;
+    virtual catena::exception_with_status getValue (const std::string& jptr, catena::Value& value, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const = 0;
 
     /**
      * @brief check if a parameter should be sent based on detail level and
@@ -382,7 +382,7 @@ class IDevice {
      * @param authz the authorizer object
      * @return true if the parameter should be sent, false otherwise
      */
-    virtual bool shouldSendParam(const IParam& param, bool is_subscribed, IAuthorizer& authz) const = 0;
+    virtual bool shouldSendParam(const IParam& param, bool is_subscribed, const IAuthorizer& authz) const = 0;
 
     /**
      * @brief signal emitted when a value is set by the client.

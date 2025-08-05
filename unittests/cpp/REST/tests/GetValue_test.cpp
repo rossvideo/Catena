@@ -113,9 +113,9 @@ TEST_F(RESTGetValueTests, GetValue_Normal) {
     expVal_.set_string_value("test_value");
     // Setting expectations
     EXPECT_CALL(dm0_, getValue(fqoid_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& jptr, catena::Value& value, const IAuthorizer& authz) {
             // Checking that function gets correct inputs.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             value.CopyFrom(expVal_);
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
@@ -134,9 +134,9 @@ TEST_F(RESTGetValueTests, GetValue_AuthzValid) {
     jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor) + ":w");
     // Setting expectations
     EXPECT_CALL(dm0_, getValue(fqoid_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& jptr, catena::Value& value, const IAuthorizer& authz) {
             // Checking that function gets correct inputs.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             value.CopyFrom(expVal_);
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
@@ -179,7 +179,7 @@ TEST_F(RESTGetValueTests, GetValue_ErrReturnCatena) {
     initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(dm0_, getValue(fqoid_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& jptr, catena::Value& value, const IAuthorizer& authz) {
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
     // Calling proceed and testing the output
@@ -194,7 +194,7 @@ TEST_F(RESTGetValueTests, GetValue_ErrThrowCatena) {
     initPayload(0, "/test_oid");
     // Setting expectations
     EXPECT_CALL(dm0_, getValue(fqoid_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& jptr, catena::Value& value, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& jptr, catena::Value& value, const IAuthorizer& authz) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));

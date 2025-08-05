@@ -60,8 +60,8 @@ class MockParamDescriptor : public IParamDescriptor {
     MOCK_METHOD(uint32_t, max_length, (), (const, override));
     MOCK_METHOD(std::size_t, total_length, (), (const, override));
     MOCK_METHOD(uint32_t, precision, (), (const, override));
-    MOCK_METHOD(void, toProto, (catena::Param& param, Authorizer& authz), (const, override));
-    MOCK_METHOD(void, toProto, (catena::ParamInfo& paramInfo, Authorizer& authz), (const, override));
+    MOCK_METHOD(void, toProto, (catena::Param& param, const IAuthorizer& authz), (const, override));
+    MOCK_METHOD(void, toProto, (catena::ParamInfo& paramInfo, const IAuthorizer& authz), (const, override));
     MOCK_METHOD(const std::string&, name, (const std::string& language), (const, override));
     MOCK_METHOD(void, addSubParam, (const std::string& oid, IParamDescriptor* item), (override));
     MOCK_METHOD(IParamDescriptor&, getSubParam, (const std::string& oid), (const, override));

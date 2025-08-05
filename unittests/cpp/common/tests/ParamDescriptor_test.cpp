@@ -237,12 +237,12 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ParamToProto) {
 
     EXPECT_CALL(subPd1, getScope()).Times(1).WillOnce(testing::ReturnRef(scope));
     EXPECT_CALL(subPd1, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([&subOid1](catena::Param& param, Authorizer& authz) {
+        .WillOnce(testing::Invoke([&subOid1](catena::Param& param, const IAuthorizer& authz) {
             param.add_oid_aliases(subOid1);
         }));
     EXPECT_CALL(subPd2, getScope()).Times(1).WillOnce(testing::ReturnRef(scope));
     EXPECT_CALL(subPd2, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([&subOid2](catena::Param& param, Authorizer& authz) {
+        .WillOnce(testing::Invoke([&subOid2](catena::Param& param, const IAuthorizer& authz) {
             param.add_oid_aliases(subOid2);
         }));
     // Calling toProto and checking the result.

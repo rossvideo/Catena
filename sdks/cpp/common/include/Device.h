@@ -186,7 +186,7 @@ class Device : public IDevice {
      * to ensure that the device is not modified while this method is running.
      * This class provides a LockGuard helper class to make this easier.
      */
-    void toProto(::catena::Device& dst, IAuthorizer& authz, bool shallow = true) const override;
+    void toProto(::catena::Device& dst, const IAuthorizer& authz, bool shallow = true) const override;
 
     /**
      * @brief Create a protobuf representation of the language packs.
@@ -219,7 +219,7 @@ class Device : public IDevice {
      * Intention is for the AddLanguage RPCs / API calls to be serviced by this
      * method.
      */
-    catena::exception_with_status addLanguage(catena::AddLanguagePayload& language, IAuthorizer& authz = Authorizer::kAuthzDisabled) override;
+    catena::exception_with_status addLanguage(catena::AddLanguagePayload& language, const IAuthorizer& authz = Authorizer::kAuthzDisabled) override;
 
     /**
      * @brief Removed a language pack from the device. Requires client to have
@@ -229,7 +229,7 @@ class Device : public IDevice {
      * @return An exception_with_status with status set OK if successful,
      * otherwise an error.
      */
-    catena::exception_with_status removeLanguage(const std::string& languageId, IAuthorizer& authz = Authorizer::kAuthzDisabled) override;
+    catena::exception_with_status removeLanguage(const std::string& languageId, const IAuthorizer& authz = Authorizer::kAuthzDisabled) override;
 
     /**
      * @brief Finds and returns a language pack based on languageId.
@@ -375,7 +375,7 @@ class Device : public IDevice {
      * the whole device will be returned in one message
      * @return a DeviceSerializer object
      */
-    std::unique_ptr<IDeviceSerializer> getComponentSerializer(IAuthorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow = false) const override;
+    std::unique_ptr<IDeviceSerializer> getComponentSerializer(const IAuthorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow = false) const override;
     /**
      * @brief This is a helper function for the shared IDevice function
      * getComponentSerializer to return a DeviceSerializer object. It can be
@@ -387,7 +387,7 @@ class Device : public IDevice {
      * @param shallow if true, the device will be returned in parts, otherwise
      * the whole device will be returned in one message
      */
-    DeviceSerializer getDeviceSerializer(IAuthorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow = false) const;
+    DeviceSerializer getDeviceSerializer(const IAuthorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow = false) const;
     /**
      * @brief add an item to one of the collections owned by the device.
      * Overload for parameters and commands.
@@ -449,7 +449,7 @@ class Device : public IDevice {
      * 
      * gets a parameter if it exists and the client is authorized to read it.
      */
-    std::unique_ptr<IParam> getParam(const std::string& fqoid, catena::exception_with_status& status, IAuthorizer& authz = Authorizer::kAuthzDisabled) const override;
+    std::unique_ptr<IParam> getParam(const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const override;
 
     /**
      * @brief get a parameter by oid with authorization
@@ -462,7 +462,7 @@ class Device : public IDevice {
      * 
      * gets a parameter if it exists and the client is authorized to read it.
      */
-    std::unique_ptr<IParam> getParam(catena::common::Path& path, catena::exception_with_status& status, IAuthorizer& authz = Authorizer::kAuthzDisabled) const override;
+    std::unique_ptr<IParam> getParam(catena::common::Path& path, catena::exception_with_status& status, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const override;
     
     /**
      * @brief get all top level parameters
@@ -470,7 +470,7 @@ class Device : public IDevice {
      * @param authz the authorizer object
      * @return a vector of unique pointers to the parameters
      */
-    std::vector<std::unique_ptr<IParam>> getTopLevelParams(catena::exception_with_status& status, IAuthorizer& authz = Authorizer::kAuthzDisabled) const override;
+    std::vector<std::unique_ptr<IParam>> getTopLevelParams(catena::exception_with_status& status, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const override;
 
 
     /**
@@ -482,7 +482,7 @@ class Device : public IDevice {
      * @return a unique pointer to the command, or nullptr if it does not exist
      * @todo add authorization checking
      */
-    std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status, IAuthorizer& authz = Authorizer::kAuthzDisabled) const override;
+    std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const override;
 
     /**
      * @brief Validates each payload in a multiSetValuePayload without commit
@@ -492,7 +492,7 @@ class Device : public IDevice {
      * @param authz The IAuthorizer to test with.
      * @returns true if the call is valid.
      */
-    bool tryMultiSetValue (catena::MultiSetValuePayload src, catena::exception_with_status& ans, IAuthorizer& authz = Authorizer::kAuthzDisabled) override;
+    bool tryMultiSetValue (catena::MultiSetValuePayload src, catena::exception_with_status& ans, const IAuthorizer& authz = Authorizer::kAuthzDisabled) override;
     
     /**
      * @brief Sets the values of a device's parameter's using a
@@ -503,7 +503,7 @@ class Device : public IDevice {
      * @param authz The Authroizer with the client's scopes.
      * @returns an exception_with_status with status set OK if successful.
      */
-    catena::exception_with_status commitMultiSetValue (catena::MultiSetValuePayload src, IAuthorizer& authz) override;
+    catena::exception_with_status commitMultiSetValue (catena::MultiSetValuePayload src, const IAuthorizer& authz) override;
 
     /**
      * @brief deserialize a protobuf value object into the parameter value
@@ -518,7 +518,7 @@ class Device : public IDevice {
      * and commitMultiSetValue().
      * It remains to support the old way of setting values.
      */
-    catena::exception_with_status setValue (const std::string& jptr, catena::Value& src, IAuthorizer& authz = Authorizer::kAuthzDisabled) override;
+    catena::exception_with_status setValue (const std::string& jptr, catena::Value& src, const IAuthorizer& authz = Authorizer::kAuthzDisabled) override;
 
     /**
      * @brief serialize the parameter value to protobuf
@@ -530,7 +530,7 @@ class Device : public IDevice {
      * Intention is to for GetValue RPCs / API calls to be serviced by this
      * method.
      */
-    catena::exception_with_status getValue (const std::string& jptr, catena::Value& value, IAuthorizer& authz = Authorizer::kAuthzDisabled) const override;
+    catena::exception_with_status getValue (const std::string& jptr, catena::Value& value, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const override;
 
     /**
      * @brief check if a parameter should be sent based on detail level and
@@ -541,7 +541,7 @@ class Device : public IDevice {
      * @param authz the authorizer object
      * @return true if the parameter should be sent, false otherwise
      */
-    bool shouldSendParam(const IParam& param, bool is_subscribed, IAuthorizer& authz) const override;
+    bool shouldSendParam(const IParam& param, bool is_subscribed, const IAuthorizer& authz) const override;
 
     /**
      * @brief get the signal emitted when a value is set by the client.

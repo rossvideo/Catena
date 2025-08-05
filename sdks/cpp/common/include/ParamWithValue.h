@@ -159,7 +159,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param value the protobuf object to serialize to
      * @param authz the authorizer object containing the client's scopes
      */
-    catena::exception_with_status toProto(catena::Value& value, IAuthorizer& authz) const override {
+    catena::exception_with_status toProto(catena::Value& value, const IAuthorizer& authz) const override {
         return catena::common::toProto<T>(value, &value_.get(), descriptor_, authz);
     }
 
@@ -169,7 +169,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param param the protobuf object to serialize to
      * @param authz the authorizer object containing the client's scopes
      */
-    catena::exception_with_status toProto(catena::Param& param, IAuthorizer& authz) const override {
+    catena::exception_with_status toProto(catena::Param& param, const IAuthorizer& authz) const override {
         // toProto checks authz.
         catena::exception_with_status rc = catena::common::toProto<T>(*param.mutable_value(), &value_.get(), descriptor_, authz);
         if (rc.status == catena::StatusCode::OK) {
@@ -184,7 +184,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param paramInfo the protobuf value to serialize to
      * @param authz the authorization information
      */
-    catena::exception_with_status toProto(catena::ParamInfoResponse& paramInfo, IAuthorizer& authz) const override {
+    catena::exception_with_status toProto(catena::ParamInfoResponse& paramInfo, const IAuthorizer& authz) const override {
         catena::exception_with_status ans{"", catena::StatusCode::OK};
         if (!authz.readAuthz(*this)) {
             ans = catena::exception_with_status("Not authorized to read param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
@@ -200,7 +200,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param value the protobuf value to deserialize from
      * @param clientScope the client scope
      */
-    catena::exception_with_status fromProto(const catena::Value& value, IAuthorizer& authz) override {
+    catena::exception_with_status fromProto(const catena::Value& value, const IAuthorizer& authz) override {
         return catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
     }
 
@@ -258,7 +258,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param oid the path to the child parameter
      * @return a unique pointer to the child parameter, or nullptr if it does not exist
      */
-    std::unique_ptr<IParam> getParam(Path& oid, IAuthorizer& authz, catena::exception_with_status& status) override {
+    std::unique_ptr<IParam> getParam(Path& oid, const IAuthorizer& authz, catena::exception_with_status& status) override {
         return getParam_(oid, value_.get(), authz, status);
     }
 
@@ -296,7 +296,7 @@ class ParamWithValue : public catena::common::IParam {
      * @return A unique ptr to the new element, or nullptr if the operation
      * failed.
      */
-    std::unique_ptr<IParam> addBack(IAuthorizer& authz, catena::exception_with_status& status) override {     
+    std::unique_ptr<IParam> addBack(const IAuthorizer& authz, catena::exception_with_status& status) override {     
         return addBack(value_.get(), authz, status);
     }
 
@@ -305,7 +305,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param authz The IAuthorizer to test write permissions with.
      * @return OK if succcessful, otherwise an error.
      */
-    catena::exception_with_status popBack(IAuthorizer& authz) override {
+    catena::exception_with_status popBack(const IAuthorizer& authz) override {
         return popBack(value_.get(), authz);
     }
 
@@ -366,7 +366,7 @@ class ParamWithValue : public catena::common::IParam {
      * Since you cant add to the back, it only returns nullptr.
      */
     template <typename U>
-    std::unique_ptr<IParam> addBack(U& value, IAuthorizer& authz, catena::exception_with_status& status) {
+    std::unique_ptr<IParam> addBack(U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
         status = catena::exception_with_status("Cannot add generic type to param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
         return nullptr;
     }
@@ -384,7 +384,7 @@ class ParamWithValue : public catena::common::IParam {
      * This specialization is used when the type is a CatenaStructArray.
      */
     template<meta::IsVector U>
-    std::unique_ptr<IParam> addBack(U& value, IAuthorizer& authz, catena::exception_with_status& status) {
+    std::unique_ptr<IParam> addBack(U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
         using ElemType = U::value_type;
         auto oidIndex = value.size();
         if (!authz.writeAuthz(*this)) {
@@ -410,7 +410,7 @@ class ParamWithValue : public catena::common::IParam {
      * Since you cant pop the back, it only returns an error.
      */
     template <typename U>
-    catena::exception_with_status popBack(U& value, IAuthorizer& authz) {
+    catena::exception_with_status popBack(U& value, const IAuthorizer& authz) {
         // This type is not a CatenaStruct or CatenaStructArray so it has no sub-params
         return catena::exception_with_status("Cannot pop generic type", catena::StatusCode::INVALID_ARGUMENT);
     }
@@ -425,7 +425,7 @@ class ParamWithValue : public catena::common::IParam {
      * This specialization is used when the type is a CatenaStructArray.
      */
     template<meta::IsVector U>
-    catena::exception_with_status popBack(U& value, IAuthorizer& authz) {
+    catena::exception_with_status popBack(U& value, const IAuthorizer& authz) {
         catena::exception_with_status ans = catena::exception_with_status("", catena::StatusCode::OK);
         if (!authz.writeAuthz(*this)) {
             ans = catena::exception_with_status("Not authorized to write to param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
@@ -449,7 +449,7 @@ class ParamWithValue : public catena::common::IParam {
      * 
      */
     template <typename U>
-    std::unique_ptr<IParam> getParam_(Path& oid, U& value, IAuthorizer& authz, catena::exception_with_status& status) {
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
         // This type is not a CatenaStruct or CatenaStructArray so it has no sub-params
         status = catena::exception_with_status("No sub-params for this generic type", catena::StatusCode::INVALID_ARGUMENT);
         return nullptr;
@@ -466,7 +466,7 @@ class ParamWithValue : public catena::common::IParam {
      * This function expects the front segment of the oid to be an index.
      */
     template<meta::IsVector U>
-    std::unique_ptr<IParam> getParam_(Path& oid, U& value, IAuthorizer& authz, catena::exception_with_status& status) {
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
         using ElemType = U::value_type;
         if (!oid.front_is_index()) {
             status = catena::exception_with_status("Expected index in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
@@ -507,7 +507,7 @@ class ParamWithValue : public catena::common::IParam {
      * This function expects the front segment of the oid to be a string.
      */
     template <CatenaStruct U>
-    std::unique_ptr<IParam> getParam_(Path& oid, U& value, IAuthorizer& authz, catena::exception_with_status& status) {
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
         if (!oid.front_is_string()) {
             status = catena::exception_with_status("Expected string in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
@@ -593,7 +593,7 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     template <meta::IsVariant U>
-    std::unique_ptr<IParam> getParam_(Path& oid, U& value, IAuthorizer& authz, catena::exception_with_status& status) {
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
         if (!oid.front_is_string()) {
             status = catena::exception_with_status("Expected string in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
@@ -663,7 +663,7 @@ class ParamWithValue : public catena::common::IParam {
      * @returns catena::exception_with_status.
      */
     template<typename U, typename V>
-    catena::exception_with_status validateSetValue_(U& oldVal, const V& newVal, const catena::Value& protoVal, Path::Index index, IAuthorizer& authz) {
+    catena::exception_with_status validateSetValue_(U& oldVal, const V& newVal, const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
         // Index cannot be defined.
         if (index != Path::kNone) {
@@ -693,7 +693,7 @@ class ParamWithValue : public catena::common::IParam {
      * @returns catena::exception_with_status.
      */
     template<typename U, typename V> requires (!meta::IsVector<V>)
-    catena::exception_with_status validateSetValue_(std::vector<U>& arrayVal, const V& memVal, const catena::Value& protoVal, Path::Index index, IAuthorizer& authz) {
+    catena::exception_with_status validateSetValue_(std::vector<U>& arrayVal, const V& memVal, const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
         // Initializing mSizeTracker_ and tSizeTracker if they're not already.
         if (!mSizeTracker_) {
@@ -755,43 +755,43 @@ class ParamWithValue : public catena::common::IParam {
      * @param authz The authorizer object for checking kWrite permissions.
      * @returns catena::exception_with_status.
      */
-    const std::unordered_map<Kind, std::function<catena::exception_with_status(const catena::Value&, Path::Index, IAuthorizer&)>> validateSetValueMap_ {
-        {Kind::kInt32Value, [this](const catena::Value& protoVal, Path::Index index, IAuthorizer& authz) {
+    const std::unordered_map<Kind, std::function<catena::exception_with_status(const catena::Value&, Path::Index, const IAuthorizer&)>> validateSetValueMap_ {
+        {Kind::kInt32Value, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             return this->validateSetValue_(this->get(), protoVal.int32_value(), protoVal, index, authz);
         }},
-        {Kind::kFloat32Value, [this](const catena::Value& protoVal, Path::Index index, IAuthorizer& authz) {
+        {Kind::kFloat32Value, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             return this->validateSetValue_(this->get(), protoVal.float32_value(), protoVal, index, authz);
         }},
-        {Kind::kStringValue, [this](const catena::Value& protoVal, Path::Index index, IAuthorizer& authz) {
+        {Kind::kStringValue, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             return this->validateSetValue_(this->get(), protoVal.string_value(), protoVal, index, authz);
         }},
-        {Kind::kStructValue, [this](const catena::Value& protoVal, Path::Index index, IAuthorizer& authz) {
+        {Kind::kStructValue, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             return this->validateSetValue_(this->get(), protoVal.struct_value(), protoVal, index, authz);
         }},
-        {Kind::kStructVariantValue, [this](const catena::Value& protoVal, Path::Index index, IAuthorizer& authz) {
+        {Kind::kStructVariantValue, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             return this->validateSetValue_(this->get(), protoVal.struct_variant_value(), protoVal, index, authz);
         }},
-        {Kind::kInt32ArrayValues, [this](const catena::Value& protoVal, Path::Index index, IAuthorizer& authz) {
+        {Kind::kInt32ArrayValues, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             auto ints = protoVal.int32_array_values().ints();
             auto protoVector = std::vector<int>(ints.begin(), ints.end());
             return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }},
-        {Kind::kFloat32ArrayValues, [this](const catena::Value& protoVal, Path::Index index, IAuthorizer& authz) {
+        {Kind::kFloat32ArrayValues, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             auto floats = protoVal.float32_array_values().floats();
             auto protoVector = std::vector<float>(floats.begin(), floats.end());
             return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }},
-        {Kind::kStringArrayValues, [this](const catena::Value& protoVal, Path::Index index, IAuthorizer& authz) {
+        {Kind::kStringArrayValues, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             auto strings = protoVal.string_array_values().strings();
             auto protoVector = std::vector<std::string>(strings.begin(), strings.end());
             return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }},
-        {Kind::kStructArrayValues, [this](const catena::Value& protoVal, Path::Index index, IAuthorizer& authz) {
+        {Kind::kStructArrayValues, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             auto structs = protoVal.struct_array_values().struct_values();
             auto protoVector = std::vector<catena::StructValue>(structs.begin(), structs.end());
             return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }},
-        {Kind::kStructVariantArrayValues, [this](const catena::Value& protoVal, Path::Index index, IAuthorizer& authz) {
+        {Kind::kStructVariantArrayValues, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             auto structs = protoVal.struct_variant_array_values().struct_variants();
             auto protoVector = std::vector<catena::StructVariantValue>(structs.begin(), structs.end());
             return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
@@ -806,7 +806,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param ans Catena::exception_with_status output.
      * @returns true if valid.
      */
-    bool validateSetValue(const catena::Value& value, Path::Index index, IAuthorizer& authz, catena::exception_with_status& ans) override {
+    bool validateSetValue(const catena::Value& value, Path::Index index, const IAuthorizer& authz, catena::exception_with_status& ans) override {
         if (validateSetValueMap_.contains(value.kind_case())) {
             // Updating trackers.
             ans = validateSetValueMap_.at(value.kind_case())(value, index, authz);

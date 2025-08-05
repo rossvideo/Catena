@@ -172,7 +172,7 @@ class IParamDescriptor {
      * with the information from the ParamDescriptor
      * 
      */
-    virtual void toProto(catena::Param &param, IAuthorizer& authz) const = 0;
+    virtual void toProto(catena::Param &param, const IAuthorizer& authz) const = 0;
 
 
     /**
@@ -183,7 +183,7 @@ class IParamDescriptor {
      * this function will populate all non-value fields of the protobuf param message 
      * with the information from the ParamDescriptor
      */
-    virtual void toProto(catena::ParamInfo &paramInfo, IAuthorizer& authz) const = 0;
+    virtual void toProto(catena::ParamInfo &paramInfo, const IAuthorizer& authz) const = 0;
 
     /**
      * @brief get the parameter name by language

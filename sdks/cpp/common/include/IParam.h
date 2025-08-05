@@ -84,26 +84,26 @@ class IParam {
      * @brief serialize the parameter value to protobuf
      * @param dst the protobuf value to serialize to
      */
-    virtual catena::exception_with_status toProto(catena::Value& dst, IAuthorizer& authz) const = 0;
+    virtual catena::exception_with_status toProto(catena::Value& dst, const IAuthorizer& authz) const = 0;
     
     /**
      * @brief deserialize the parameter value from protobuf
      * @param src the protobuf value to deserialize from
      * @note this method may constrain the source value and modify it
      */
-    virtual catena::exception_with_status fromProto(const catena::Value& src, IAuthorizer& authz) = 0;
+    virtual catena::exception_with_status fromProto(const catena::Value& src, const IAuthorizer& authz) = 0;
 
     /**
      * @brief serialize the parameter descriptor to protobuf
      * @param param the protobuf value to serialize to
      */
-    virtual catena::exception_with_status toProto(catena::Param& param, IAuthorizer& authz) const = 0;
+    virtual catena::exception_with_status toProto(catena::Param& param, const IAuthorizer& authz) const = 0;
 
     /**
      * @brief serialize the parameter descriptor to protobuf
      * @param paramInfo the protobuf value to serialize to
      */
-    virtual catena::exception_with_status toProto(catena::ParamInfoResponse& paramInfo, IAuthorizer& authz) const = 0;
+    virtual catena::exception_with_status toProto(catena::ParamInfoResponse& paramInfo, const IAuthorizer& authz) const = 0;
 
     /**
      * @brief return the type of the param
@@ -134,7 +134,7 @@ class IParam {
     /**
      * @brief get a child parameter by name
      */
-    virtual std::unique_ptr<IParam> getParam(Path& oid, IAuthorizer& authz, catena::exception_with_status& status) = 0;
+    virtual std::unique_ptr<IParam> getParam(Path& oid, const IAuthorizer& authz, catena::exception_with_status& status) = 0;
 
     /**
      * @brief Return the size of an array parameter.
@@ -151,14 +151,14 @@ class IParam {
      * @return A unique ptr to the new element, or nullptr if the operation
      * failed.
      */
-    virtual std::unique_ptr<IParam> addBack(IAuthorizer& authz, catena::exception_with_status& status) = 0;
+    virtual std::unique_ptr<IParam> addBack(const IAuthorizer& authz, catena::exception_with_status& status) = 0;
 
     /**
      * @brief Pop the back of an array parameter.
      * @param authz The IAuthorizer to test write permissions with.
      * @return OK if succcessful, otherwise an error.
      */
-    virtual catena::exception_with_status popBack(IAuthorizer& authz) = 0;
+    virtual catena::exception_with_status popBack(const IAuthorizer& authz) = 0;
 
     /**
      * @brief get a constraint by oid
@@ -198,7 +198,7 @@ class IParam {
      * @param ans Catena::exception_with_status output.
      * @returns true if valid.
      */
-    virtual bool validateSetValue(const catena::Value& value, Path::Index index, IAuthorizer& authz, catena::exception_with_status& ans) = 0;
+    virtual bool validateSetValue(const catena::Value& value, Path::Index index, const IAuthorizer& authz, catena::exception_with_status& ans) = 0;
     /**
      * @brief Resets any trackers that might have been changed in validateSetValue.
      */
