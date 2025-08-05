@@ -46,7 +46,6 @@
 
 // common
 #include "StructInfo.h"
-#include "Authorizer.h"
 #include "Enums.h"
 
 using namespace catena::common;
@@ -92,8 +91,6 @@ class StructInfoTest : public ::testing::Test {
     void SetUp() override {
         for (auto& pd : (std::vector<MockParamDescriptor*>){&pd_, &subpd1_, &subpd2_}) {
             EXPECT_CALL(*pd, getSubParam(testing::_)).WillRepeatedly(::testing::ReturnRef(*pd));
-            EXPECT_CALL(*pd, getScope()).WillRepeatedly(testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
-            EXPECT_CALL(*pd, readOnly()).WillRepeatedly(testing::Return(false));
             EXPECT_CALL(*pd, getConstraint()).WillRepeatedly(testing::Return(nullptr));
             EXPECT_CALL(*pd, max_length()).WillRepeatedly(testing::Return(5));
             EXPECT_CALL(*pd, total_length()).WillRepeatedly(testing::Return(20));
@@ -168,7 +165,6 @@ class StructInfoTest : public ::testing::Test {
     }
 
     std::string oid_ = "test_oid";
-    std::string validScope_ = "test_scope";
 
     catena::exception_with_status rc{"", catena::StatusCode::OK};
 
