@@ -120,11 +120,13 @@ jobs:
         run: echo "status=$(cat unit_test_status.txt)" >> $GITHUB_OUTPUT
 
       - name: Upload test results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: test_results.log
           retention-days: 4
+
 
       - name: Build PR comment body
         if: github.event_name == 'pull_request'
