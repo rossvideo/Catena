@@ -468,7 +468,18 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
         auto isSubscribed = [&subscribedOids](const std::string& paramName) {
             return subscribedOids.contains("/" + paramName);
         };
-
+        // Send commands in FULL and COMMANDS modes only
+        if (dl == catena::Device_DetailLevel_FULL || dl == catena::Device_DetailLevel_COMMANDS) {
+            for (const auto& [name, param] : commands_) {
+                if (authz.readAuthz(*param)) {
+                    co_yield component;
+                    component.Clear();
+                    ::catena::Param* dstParam = component.mutable_command()->mutable_param();
+                    param->toProto(*dstParam, authz);
+                    component.mutable_command()->set_oid(name);
+                }
+            }
+        }
         // Only send non-minimal items in FULL mode
         if (dl == catena::Device_DetailLevel_FULL) {
             // Send menus
@@ -499,8 +510,8 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
                 component.mutable_shared_constraint()->set_oid(name);
             }
         }
-
         // Send parameters if authorized, and either in the minimal set or if subscribed to
+        // Params are not sent in COMMANDS mode
         if (dl != catena::Device_DetailLevel_COMMANDS) {
             for (const auto& [name, param] : params_) {
                 if (authz.readAuthz(*param) &&
@@ -512,17 +523,6 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
                     ::catena::Param* dstParam = component.mutable_param()->mutable_param();
                     param->toProto(*dstParam, authz);
                     component.mutable_param()->set_oid(name);
-                }
-            }
-        // Send commands if authorized and in COMMANDS mode
-        } else {
-            for (const auto& [name, param] : commands_) {
-                if (authz.readAuthz(*param)) {
-                    co_yield component;
-                    component.Clear();
-                    ::catena::Param* dstParam = component.mutable_command()->mutable_param();
-                    param->toProto(*dstParam, authz);
-                    component.mutable_command()->set_oid(name);
                 }
             }
         }
