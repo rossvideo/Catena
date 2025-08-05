@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,112 +31,78 @@
  */
 
 /**
- * @file Authorizer.h
- * @brief Class for handling authorization information
- * @author John R. Naylor john.naylor@rossvideo.com
- * @author John Danen
- * @date 2024-09-18
+ * @file IAuthorizer.h
+ * @brief Interface for the Authorizer class
  * @author Ben Whitten benjamin.whitten@rossvideo.com
- * @author Zuhayr Sarker zuhayr.sarker@rossvideo.com
- * @date 2025-02-20
- * @copyright Copyright (c) 2024 Ross Video
+ * @date 25/08/01
+ * @copyright Copyright (c) 2025 Ross Video
  */
 
-// common
-#include <IAuthorizer.h>
+#include <IParam.h>
+#include <IParamDescriptor.h>
+#include <Enums.h>
 
-#include <jwt-cpp/jwt.h>
-#include <functional>
-#include <set>
-
-/**
- * @brief top level namespace for Catena. Functionality at this scope includes
- * the protoc generated classes.
- * Most everything else is in child namespaces such as common, meta, etc.
- */
 namespace catena {
-/**
- * @brief Functionality that can be shared between the different connection
- * management types
- */
 namespace common {
 
 /**
  * @brief Class for handling authorization information
  */
-class Authorizer : public IAuthorizer {
+class IAuthorizer {
   public:
-    /**
-     * @brief The scopes of the object
-     */
-    using ClientScopes = std::set<std::string>;
-    /**
-     * @brief Special Authorizer object that disables authorization
-     */
-    static Authorizer kAuthzDisabled;
+    IAuthorizer() = default;
 
     /**
-     * @brief Constructs a new Authorizer object by extracting client scopes
-     * from a JWS token.
-     * Authorizer expects the JWSToken to be valid. Authentication of the token
-     * is to be handled by the API gateway.
-     * @param JWSToken The JWS token to extract scopes from.
-     * @throw Throws an catena::exception_with_status UNAUTHENTICATED if the
-     * authorizer fails to decoded the JWS Token.
+     * @brief Authorizer does not have copy semantics
      */
-    Authorizer(const std::string& JWSToken);
-
-    /**
-     * @brief Authorizer does not have copy semantics 
-     */
-    Authorizer(const Authorizer&) = delete;
-    Authorizer& operator=(const Authorizer&) = delete;
+    IAuthorizer(const IAuthorizer&) = delete;
+    IAuthorizer& operator=(const IAuthorizer&) = delete;
 
     /**
      * @brief Authorizer has move semantics
      */
-    Authorizer(Authorizer&&) = default;
-    Authorizer& operator=(Authorizer&&) = default;
+    IAuthorizer(IAuthorizer&&) = default;
+    IAuthorizer& operator=(IAuthorizer&&) = default;
 
     /**
      * @brief Destroy the Authorizer object
      */
-    virtual ~Authorizer() = default;
+    virtual ~IAuthorizer() = default;
 
     /**
      * @brief Check if the client has read authorization for a param
      * @param param The param to check for authorization
      * @return true if the client has read authorization
      */
-    bool readAuthz(const IParam& param) const override;
+    virtual bool readAuthz(const IParam& param) const = 0;
 
     /**
      * @brief Check if the client has read authorization for a param descriptor
      * @param pd The param descriptor to check for authorization
      * @return true if the client has read authorization
      */
-    bool readAuthz(const IParamDescriptor& pd) const override;
+    virtual bool readAuthz(const IParamDescriptor& pd) const = 0;
 
     /**
      * @brief Check if the client has read authorization for a scope
      * @param scope The scope to check for authorization
      * @return true if the client has read authorization
      */
-    bool readAuthz(const std::string& scope) const override;
+    virtual bool readAuthz(const std::string& scope) const = 0;
 
     /**
      * @brief Check if the client has read authorization for a scope
      * @param scope The scope to check for authorization
      * @return true if the client has read authorization
      */
-    bool readAuthz(const Scopes_e& scope) const override;
+    virtual bool readAuthz(const Scopes_e& scope) const = 0;
 
     /**
      * @brief Check if the client has write authorization for a param
      * @param param The param to check for authorization
      * @return true if the client has write authorization
      */
-    bool writeAuthz(const IParam& param) const override;
+    virtual bool writeAuthz(const IParam& param) const = 0;
 
     /**
      * @brief Check if the client has write authorization for a param
@@ -144,38 +110,21 @@ class Authorizer : public IAuthorizer {
      * @param pd The param descriptor to check for authorization
      * @return true if the client has write authorization
      */
-    bool writeAuthz(const IParamDescriptor& pd) const override;
+    virtual bool writeAuthz(const IParamDescriptor& pd) const = 0;
 
     /**
      * @brief Check if the client has write authorization for a scope
      * @param scope The scope to check for authorization
      * @return true if the client has write authorization
      */
-    bool writeAuthz(const std::string& scope) const override;
+    virtual bool writeAuthz(const std::string& scope) const = 0;
 
     /**
      * @brief Check if the client has read authorization for a scope
      * @param scope The scope to check for authorization
      * @return true if the client has read authorization
      */
-    bool writeAuthz(const Scopes_e& scope) const override;
-
-
-  private:
-	  /**
-     * @brief Constructor for kAuthzDisabled authorizer. 
-     */
-    Authorizer() : clientScopes_{{""}} {}
-    /**
-     * @brief Check if the client has the specified authorization
-     * @param scope The scope to check for authorization
-     * @return true if the client has the specified authorization
-     */
-    bool hasAuthz_(const std::string& scope) const;
-    /**
-     * @brief Client scopes extracted from a valid JWS token.
-     */
-  	ClientScopes clientScopes_;
+    virtual bool writeAuthz(const Scopes_e& scope) const = 0;
 };
 
 } // namespace common

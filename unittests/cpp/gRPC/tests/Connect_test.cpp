@@ -228,15 +228,15 @@ TEST_F(gRPCConnectTests, Connect_ValueSetByClient) {
     // Setting expectations
     EXPECT_CALL(param0, getScope()).WillRepeatedly(testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
     EXPECT_CALL(param0, toProto(testing::An<catena::Value&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::Value& dst, Authorizer& authz) {
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+        .WillOnce(testing::Invoke([this](catena::Value& dst, const IAuthorizer& authz) {
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             dst.set_string_value("value0");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
     EXPECT_CALL(param1, getScope()).WillRepeatedly(testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
     EXPECT_CALL(param1, toProto(testing::An<catena::Value&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::Value& dst, Authorizer& authz) {
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+        .WillOnce(testing::Invoke([this](catena::Value& dst, const IAuthorizer& authz) {
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             dst.set_string_value("value1");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -264,16 +264,16 @@ TEST_F(gRPCConnectTests, Connect_ValueSetByServer) {
     EXPECT_CALL(param0, getScope()).WillRepeatedly(
         testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
     EXPECT_CALL(param0, toProto(testing::An<catena::Value&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::Value& dst, Authorizer& authz) {
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+        .WillOnce(testing::Invoke([this](catena::Value& dst, const IAuthorizer& authz) {
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             dst.set_string_value("value0");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
     EXPECT_CALL(param1, getScope()).WillRepeatedly(
         testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
     EXPECT_CALL(param1, toProto(testing::An<catena::Value&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::Value& dst, Authorizer& authz) {
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+        .WillOnce(testing::Invoke([this](catena::Value& dst, const IAuthorizer& authz) {
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             dst.set_string_value("value1");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -349,8 +349,8 @@ TEST_F(gRPCConnectTests, Connect_AuthzValid) {
     EXPECT_CALL(param0, getScope()).WillRepeatedly(
         testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
     EXPECT_CALL(param0, toProto(testing::An<catena::Value&>(), testing::_)).Times(2)
-        .WillRepeatedly(testing::Invoke([this](catena::Value& dst, Authorizer& authz) {
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+        .WillRepeatedly(testing::Invoke([this](catena::Value& dst, const IAuthorizer& authz) {
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             dst.set_string_value("value0");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));

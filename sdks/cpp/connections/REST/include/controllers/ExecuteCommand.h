@@ -50,6 +50,7 @@
 #include <IParam.h>
 #include <Status.h>
 #include <rpc/TimeNow.h>
+#include <Authorizer.h>
 
 // boost
 #include <boost/asio.hpp>

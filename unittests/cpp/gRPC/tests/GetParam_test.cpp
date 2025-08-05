@@ -129,18 +129,18 @@ TEST_F(gRPCGetParamTests, GetParam_Normal) {
     initexpVal_("/test_oid", "test_value", "test_alias", "Test Param");
     // Setting expectations
     EXPECT_CALL(dm0_, getParam(inVal_.oid(), ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
-        [this](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
+        [this](const std::string &fqoid, catena::exception_with_status &status, const IAuthorizer &authz) {
             // Checking that function gets correct inputs.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockParam);
         }));
     EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(expVal_.oid()));
     EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1).WillOnce(::testing::Invoke(
-        [this](catena::Param &param, catena::common::Authorizer &authz) {
+        [this](catena::Param &param, const IAuthorizer &authz) {
             // Checking that function gets correct inputs.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             param.CopyFrom(expVal_.param());
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
@@ -160,18 +160,18 @@ TEST_F(gRPCGetParamTests, GetParam_AuthzValid) {
     clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
     // Setting expectations
     EXPECT_CALL(dm0_, getParam(inVal_.oid(), ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Invoke(
-        [this](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
+        [this](const std::string &fqoid, catena::exception_with_status &status, const IAuthorizer &authz) {
             // Checking that function gets correct inputs.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockParam);
         }));
     EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(expVal_.oid()));
     EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1).WillOnce(::testing::Invoke(
-        [this](catena::Param &param, catena::common::Authorizer &authz) {
+        [this](catena::Param &param, const IAuthorizer &authz) {
             // Checking that function gets correct inputs.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             param.CopyFrom(expVal_.param());
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
@@ -230,7 +230,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrGetParamReturnCatena) {
     initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(dm0_, getParam(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
+        .WillOnce(::testing::Invoke([this](const std::string &fqoid, catena::exception_with_status &status, const IAuthorizer &authz) {
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return nullptr;
         }));
@@ -247,7 +247,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrGetParamThrowCatena) {
     initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(dm0_, getParam(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string &fqoid, catena::exception_with_status &status, catena::common::Authorizer &authz) {
+        .WillOnce(::testing::Invoke([this](const std::string &fqoid, catena::exception_with_status &status, const IAuthorizer &authz) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return nullptr;
         }));
@@ -299,7 +299,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowCatena) {
     EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(*mockParam, getOid()).WillRepeatedly(::testing::ReturnRef(expVal_.oid()));
     EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::Param &param, catena::common::Authorizer &authz)  {
+        .WillOnce(::testing::Invoke([this](catena::Param &param, const IAuthorizer &authz)  {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));

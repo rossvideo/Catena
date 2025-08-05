@@ -42,6 +42,7 @@
 #include "MockConstraint.h"
 #include "MockDevice.h"
 #include "MockParamDescriptor.h"
+#include "MockAuthorizer.h"
 
 // gtest
 #include <gtest/gtest.h>
@@ -55,6 +56,9 @@ class ParamDescriptorTest : public ::testing::Test {
      */
     void SetUp() override {
         create();
+        // authz_ by default has read and write authz for parent.
+        EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(parent)))).WillRepeatedly(testing::Return(true));
+        EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(parent)))).WillRepeatedly(testing::Return(true));
     }
     /*
      * Initializes pd using member values.
@@ -67,6 +71,9 @@ class ParamDescriptorTest : public ::testing::Test {
             widget, scope, readOnly, oid, templateOid, constraintPtr, isCommand,
             dm, maxLength, totalLength, precision, minimalSet, parentPtr
         );
+        // authz_ by default has read and write authz.
+        EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(*pd)))).WillRepeatedly(testing::Return(true));
+        EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(*pd)))).WillRepeatedly(testing::Return(true));
     }
 
     std::unique_ptr<ParamDescriptor> pd = nullptr;
@@ -89,6 +96,7 @@ class ParamDescriptorTest : public ::testing::Test {
     bool minimalSet = true;
     bool hasParent = false; // If false, nullptr will be passed into pd as the parent.
     MockParamDescriptor parent;
+    MockAuthorizer authz_;
 };
 
 /*
@@ -206,7 +214,7 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_SubParams) {
  */
 TEST_F(ParamDescriptorTest, ParamDescriptor_ParamInfoToProto) {
     catena::ParamInfo paramInfo;
-    pd->toProto(paramInfo, Authorizer::kAuthzDisabled);
+    pd->toProto(paramInfo, authz_);
     EXPECT_EQ(paramInfo.type(), type);
     EXPECT_EQ(paramInfo.oid(), oid);
     EXPECT_EQ(paramInfo.template_oid(), templateOid);
@@ -235,19 +243,19 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ParamToProto) {
             constraint.set_ref_oid("constraint_oid");
         }));
 
-    EXPECT_CALL(subPd1, getScope()).Times(1).WillOnce(testing::ReturnRef(scope));
+    EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(subPd1)))).WillRepeatedly(testing::Return(true));
     EXPECT_CALL(subPd1, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([&subOid1](catena::Param& param, Authorizer& authz) {
+        .WillOnce(testing::Invoke([&subOid1](catena::Param& param, const IAuthorizer& authz) {
             param.add_oid_aliases(subOid1);
         }));
-    EXPECT_CALL(subPd2, getScope()).Times(1).WillOnce(testing::ReturnRef(scope));
+    EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(subPd2)))).WillRepeatedly(testing::Return(true));
     EXPECT_CALL(subPd2, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([&subOid2](catena::Param& param, Authorizer& authz) {
+        .WillOnce(testing::Invoke([&subOid2](catena::Param& param, const IAuthorizer& authz) {
             param.add_oid_aliases(subOid2);
         }));
     // Calling toProto and checking the result.
     catena::Param param;
-    pd->toProto(param, Authorizer::kAuthzDisabled);
+    pd->toProto(param, authz_);
     EXPECT_EQ(param.type(), type);
     EXPECT_EQ(param.read_only(), readOnly);
     EXPECT_EQ(param.widget(), widget);
@@ -266,13 +274,13 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ParamToProto) {
     // Resetting and testing with unique constraint.
     param.Clear();
     create();
-    pd->toProto(param, Authorizer::kAuthzDisabled);
+    pd->toProto(param, authz_);
     EXPECT_EQ(param.constraint().ref_oid(), constraintOid) << "Unique constraint toProto should set ref_oid";
     // Resetting and testing with no constraint
     param.Clear();
     hasConstraint = false;
     create();
-    pd->toProto(param, Authorizer::kAuthzDisabled);
+    pd->toProto(param, authz_);
     EXPECT_FALSE(param.has_constraint()) << "Param should not have a constraint";
 }
 /*
