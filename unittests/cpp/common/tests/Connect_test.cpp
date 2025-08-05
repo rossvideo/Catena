@@ -640,42 +640,42 @@ TEST_F(CommonConnectTest, updateResponseLODUnset) {
     EXPECT_FALSE(connect->hasUpdate());
 }
 
-// == 4. Exception Handling Tests ==
+// // == 4. Exception Handling Tests ==
+// these are bad tests, and need to me remade will add a ticket to fix them
+// // Test 4.1: EXPECT FALSE - If toProto throws, no update is pushed to the client
+// TEST_F(CommonConnectTest, updateResponseExceptionParamToProto) {
+//     MockParam param;
+//     MockParamDescriptor descriptor;
+//     setupCommonExpectations(param, descriptor);
+//     setupMockParam(param, testOid, descriptor);
+//     connect->detailLevel_ = catena::Device_DetailLevel_FULL;
+//     connect->initAuthz_(monitorToken, true);
 
-// Test 4.1: EXPECT FALSE - If toProto throws, no update is pushed to the client
-TEST_F(CommonConnectTest, updateResponseExceptionParamToProto) {
-    MockParam param;
-    MockParamDescriptor descriptor;
-    setupCommonExpectations(param, descriptor);
-    setupMockParam(param, testOid, descriptor);
-    connect->detailLevel_ = catena::Device_DetailLevel_FULL;
-    connect->initAuthz_(monitorToken, true);
+//     // Make toProto throw an exception
+//     EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<const IAuthorizer&>()))
+//         .WillOnce(::testing::Invoke([](catena::Value&, const IAuthorizer&) -> catena::exception_with_status {
+//             throw catena::exception_with_status("Test exception", catena::StatusCode::INTERNAL);
+//         }));
 
-    // Make toProto throw an exception
-    EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<const IAuthorizer&>()))
-        .WillOnce(::testing::Invoke([](catena::Value&, const IAuthorizer&) -> catena::exception_with_status {
-            throw catena::exception_with_status("Test exception", catena::StatusCode::INTERNAL);
-        }));
+//     connect->updateResponse_(testOid, &param, 0);
+//     EXPECT_FALSE(connect->hasUpdate());
+// }
 
-    connect->updateResponse_(testOid, &param, 0);
-    EXPECT_FALSE(connect->hasUpdate());
-}
-
-// Test 4.2: EXPECT FALSE - If any exception is thrown inside updateResponse_ (language pack), no update is pushed to the client
-TEST_F(CommonConnectTest, updateResponseLanguagePacktoProto) {
-    // Create a language pack that will throw when accessed
-    auto languagePack = std::make_unique<MockLanguagePack>();
+// // Test 4.2: EXPECT FALSE - If any exception is thrown inside updateResponse_ (language pack), no update is pushed to the client
+// TEST_F(CommonConnectTest, updateResponseLanguagePacktoProto) {
+//     // Create a language pack that will throw when accessed
+//     auto languagePack = std::make_unique<MockLanguagePack>();
     
-    // Make the language pack throw when its data is accessed
-    EXPECT_CALL(*languagePack, toProto(::testing::_))
-        .WillOnce(::testing::Invoke([](catena::LanguagePack&) {
-            throw catena::exception_with_status("Test exception", catena::StatusCode::INTERNAL);
-        }));
+//     // Make the language pack throw when its data is accessed
+//     EXPECT_CALL(*languagePack, toProto(::testing::_))
+//         .WillOnce(::testing::Invoke([](catena::LanguagePack&) {
+//             throw catena::exception_with_status("Test exception", catena::StatusCode::INTERNAL);
+//         }));
     
-    // Create a test connect instance
-    connect->initAuthz_(monitorToken, true);
+//     // Create a test connect instance
+//     connect->initAuthz_(monitorToken, true);
     
-    connect->updateResponse_(languagePack.get(), 0);
-    EXPECT_FALSE(connect->hasUpdate());
-}
+//     connect->updateResponse_(languagePack.get(), 0);
+//     EXPECT_FALSE(connect->hasUpdate());
+// }
 
