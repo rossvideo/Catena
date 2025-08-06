@@ -131,12 +131,12 @@ var NAVTREEINDEX =
 "AddLanguage_8h.html",
 "classLogger.html",
 "classcatena_1_1REST_1_1SocketReader.html#ab8e5d7003da0cf636e385a81a72a41cb",
-"classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd",
-"classcatena_1_1common_1_1IParamDescriptor.html#aeab5f714f96cb2b9f62909a2c6faec93",
-"classcatena_1_1common_1_1ParamWithValue.html#aa429ba63f070f72f100ccc9ed3324150",
-"classcatena_1_1gRPC_1_1MultiSetValue.html#ac8ddac91678deea26c660acbfe463955",
-"dir_3f322110542f08349dbc1845d1df11bc.html",
-"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a928c7a442bcc3227e97920eb5a746fc3"
+"classcatena_1_1common_1_1IConnect.html#a13d36e283fe2780d001042aacca872c6",
+"classcatena_1_1common_1_1IParamDescriptor.html#ac434ca64d3939e3a38ca91c5f5c648eb",
+"classcatena_1_1common_1_1ParamWithValue.html#a802c94962512c276f4f28012a4b04d10",
+"classcatena_1_1gRPC_1_1MultiSetValue.html#a6eeca47844c3a095db7133bc54b69f09",
+"connections_2REST_2include_2controllers_2Connect_8h_source.html",
+"structcatena_1_1common_1_1CommandTag.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -94,6 +94,8 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1Authorizer.ht
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-attribs">Static Public Attributes</a> &#124;
+<a href="#pro-methods">Protected Member Functions</a> &#124;
+<a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="classcatena_1_1common_1_1Authorizer-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">catena::common::Authorizer Class Reference</div></div>
 </div><!--header-->
@@ -168,6 +170,9 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~Authorizer</b> ()
 <tr class="memitem:a9ee90ee9b51c82f76cc7d25d69b751e4" id="r_a9ee90ee9b51c82f76cc7d25d69b751e4"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a9ee90ee9b51c82f76cc7d25d69b751e4">writeAuthz</a> (const <a class="el" href="namespacecatena_1_1common.html#a52e17ef3ce00a51e608afb060211e3a8">Scopes_e</a> &amp;scope) const override</td></tr>
 <tr class="memdesc:a9ee90ee9b51c82f76cc7d25d69b751e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has read authorization for a scope.  <br /></td></tr>
 <tr class="separator:a9ee90ee9b51c82f76cc7d25d69b751e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a12d1b8d3e8aad63fa11fab251a39fb59" id="r_a12d1b8d3e8aad63fa11fab251a39fb59"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a12d1b8d3e8aad63fa11fab251a39fb59">isExpired</a> () const override</td></tr>
+<tr class="memdesc:a12d1b8d3e8aad63fa11fab251a39fb59"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if the JWS token is expired.  <br /></td></tr>
+<tr class="separator:a12d1b8d3e8aad63fa11fab251a39fb59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classcatena_1_1common_1_1IAuthorizer"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classcatena_1_1common_1_1IAuthorizer')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">catena::common::IAuthorizer</a></td></tr>
 <tr class="memitem:af8b046af68796ea679d6398b7ea1ef03 inherit pub_methods_classcatena_1_1common_1_1IAuthorizer" id="r_af8b046af68796ea679d6398b7ea1ef03"><td class="memItemLeft" align="right" valign="top">
 &#160;</td><td class="memItemRight" valign="bottom"><b>IAuthorizer</b> (const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;)=delete</td></tr>
@@ -194,6 +199,27 @@ Static Public Attributes</h2></td></tr>
 static <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a>&#160;</td><td class="memItemRight" valign="bottom"><b>kAuthzDisabled</b></td></tr>
 <tr class="memdesc:a6342ecbe639d7aeefe576755b5966703"><td class="mdescLeft">&#160;</td><td class="mdescRight">Special <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> object that disables authorization. <br /></td></tr>
 <tr class="separator:a6342ecbe639d7aeefe576755b5966703"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
+Protected Member Functions</h2></td></tr>
+<tr class="memitem:aa6701f5b8518a0e2be683fa3d9d0ab3b" id="r_aa6701f5b8518a0e2be683fa3d9d0ab3b"><td class="memItemLeft" align="right" valign="top"><a id="aa6701f5b8518a0e2be683fa3d9d0ab3b" name="aa6701f5b8518a0e2be683fa3d9d0ab3b"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Authorizer</b> ()</td></tr>
+<tr class="memdesc:aa6701f5b8518a0e2be683fa3d9d0ab3b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for kAuthzDisabled authorizer. <br /></td></tr>
+<tr class="separator:aa6701f5b8518a0e2be683fa3d9d0ab3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae9117e71cc39f2ac1b9c365cbb5201fe" id="r_ae9117e71cc39f2ac1b9c365cbb5201fe"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Authorizer.html#ae9117e71cc39f2ac1b9c365cbb5201fe">hasAuthz_</a> (const std::string &amp;scope) const</td></tr>
+<tr class="memdesc:ae9117e71cc39f2ac1b9c365cbb5201fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has the specified authorization.  <br /></td></tr>
+<tr class="separator:ae9117e71cc39f2ac1b9c365cbb5201fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
+Protected Attributes</h2></td></tr>
+<tr class="memitem:a925bf502dc95b468c8803b3402495877" id="r_a925bf502dc95b468c8803b3402495877"><td class="memItemLeft" align="right" valign="top"><a id="a925bf502dc95b468c8803b3402495877" name="a925bf502dc95b468c8803b3402495877"></a>
+uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>exp_</b> {0}</td></tr>
+<tr class="memdesc:a925bf502dc95b468c8803b3402495877"><td class="mdescLeft">&#160;</td><td class="mdescRight">The exp or expiry date field from the JWS token. 0 by default. <br /></td></tr>
+<tr class="separator:a925bf502dc95b468c8803b3402495877"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33d94430a2993f86028b3c2e863e160c" id="r_a33d94430a2993f86028b3c2e863e160c"><td class="memItemLeft" align="right" valign="top"><a id="a33d94430a2993f86028b3c2e863e160c" name="a33d94430a2993f86028b3c2e863e160c"></a>
+<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a86759837f2874d0628775cc2d833b262">ClientScopes</a>&#160;</td><td class="memItemRight" valign="bottom"><b>clientScopes_</b></td></tr>
+<tr class="memdesc:a33d94430a2993f86028b3c2e863e160c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Client scopes extracted from a valid JWS token. <br /></td></tr>
+<tr class="separator:a33d94430a2993f86028b3c2e863e160c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class for handling authorization information. </p>
@@ -231,6 +257,70 @@ static <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer<
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="ae9117e71cc39f2ac1b9c365cbb5201fe" name="ae9117e71cc39f2ac1b9c365cbb5201fe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae9117e71cc39f2ac1b9c365cbb5201fe">&#9670;&#160;</a></span>hasAuthz_()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool catena::common::Authorizer::hasAuthz_ </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>scope</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Check if the client has the specified authorization. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">scope</td><td>The scope to check for authorization </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true if the client has the specified authorization </dd></dl>
+
+</div>
+</div>
+<a id="a12d1b8d3e8aad63fa11fab251a39fb59" name="a12d1b8d3e8aad63fa11fab251a39fb59"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a12d1b8d3e8aad63fa11fab251a39fb59">&#9670;&#160;</a></span>isExpired()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool catena::common::Authorizer::isExpired </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns true if the JWS token is expired. </p>
+
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html#a550199326e5fe0c591f86c0f7ef40926">catena::common::IAuthorizer</a>.</p>
+
+</div>
+</div>
 <a id="ac66ff0d1ad2b482889d370fcec8abf65" name="ac66ff0d1ad2b482889d370fcec8abf65"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac66ff0d1ad2b482889d370fcec8abf65">&#9670;&#160;</a></span>readAuthz() <span class="overload">[1/4]</span></h2>
 

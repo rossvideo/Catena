@@ -1,5 +1,17 @@
 var NAVTREEINDEX7 =
 {
+"connections_2REST_2include_2controllers_2Connect_8h_source.html":[11,0,0,0,1,1,0,0,1],
+"connections_2REST_2include_2controllers_2LanguagePack_8h.html":[11,0,0,0,1,1,0,0,7],
+"connections_2REST_2include_2controllers_2LanguagePack_8h_source.html":[11,0,0,0,1,1,0,0,7],
+"connections_2gRPC_2include_2controllers_2Connect_8h.html":[11,0,0,0,1,0,0,0,1],
+"connections_2gRPC_2include_2controllers_2Connect_8h_source.html":[11,0,0,0,1,0,0,0,1],
+"deprecated.html":[7],
+"dir_01181b2e4bcbd5d200324c852c35719a.html":[11,0,0,0,1],
+"dir_0bcd5a6b0e4d30efc395921e20921952.html":[11,0,0,0,0,0,0],
+"dir_182967fd2bbf5e595958d2ac00eb9d3f.html":[11,0,0,0,0,0],
+"dir_1df3d5d21152550c6725e433ad08eccb.html":[11,0,0,0,1,1,0,1],
+"dir_1ee1c825a28454f120fade4d126590ba.html":[11,0,0],
+"dir_289adc1deaefeb3f2303b552e7e77922.html":[11,0,0,0,1,1,0],
 "dir_3f322110542f08349dbc1845d1df11bc.html":[11,0,0,0,0,0,2],
 "dir_467cfab7fe529c5f74c4e969b5759866.html":[11,0,0,0,1,0,0,0],
 "dir_499586737141bee5d3e434e54e79097b.html":[11,0,0,0,1,1],
@@ -237,17 +249,5 @@ var NAVTREEINDEX7 =
 "namespacemembers_vars.html":[8,1,2],
 "namespaces.html":[8,0],
 "pages.html":[],
-"path_8cpp-example.html":[12,2],
-"structcatena_1_1common_1_1CommandTag.html":[10,0,0,0,1],
-"structcatena_1_1common_1_1CommandTag.html":[8,0,0,0,1],
-"structcatena_1_1common_1_1ConstraintTag.html":[10,0,0,0,4],
-"structcatena_1_1common_1_1ConstraintTag.html":[8,0,0,0,4],
-"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html":[8,0,0,0,5,0,0],
-"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html":[10,0,0,0,5,0,0],
-"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a167543a006ad9001a8f5bed5c1fd57b0":[10,0,0,0,5,0,0,2],
-"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a167543a006ad9001a8f5bed5c1fd57b0":[8,0,0,0,5,0,0,2],
-"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a5c0d5feabe987fd42eaa2a8d420443bc":[10,0,0,0,5,0,0,1],
-"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a5c0d5feabe987fd42eaa2a8d420443bc":[8,0,0,0,5,0,0,1],
-"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a7fd6ffdcb1292ce82df205603f56d729":[8,0,0,0,5,0,0,5],
-"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a7fd6ffdcb1292ce82df205603f56d729":[10,0,0,0,5,0,0,5]
+"path_8cpp-example.html":[12,2]
 };
