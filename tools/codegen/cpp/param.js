@@ -503,9 +503,13 @@ class Param {
    * @returns the string to initialize the ParamWithValue object
    */
   initializeParamWithValue() {
-    let valueVar = this.isCommand ? "catena::common::emptyValue" : this.oid;
-    return `catena::common::ParamWithValue<${this.objectNamespaceType()}> ` +
-           `_${this.oid}Param(${valueVar}, _${this.oid}Descriptor, dm, ${this.isCommand});`;
+    if (!this.isCommand && this.hasValue())  {
+      return `catena::common::ParamWithValue<${this.objectNamespaceType()}> ` +
+           `_${this.oid}Param(${this.oid}, _${this.oid}Descriptor, dm, ${this.isCommand});`;
+    } else {
+      return `catena::common::ParamWithValue<catena::common::EmptyValue> ` +
+           `_${this.oid}Param(catena::common::emptyValue, _${this.oid}Descriptor, dm, ${this.isCommand});`;
+    }
   }
 
   /**
