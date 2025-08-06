@@ -112,6 +112,7 @@ int main (int argc, char** argv) {
      * 
      * @todo enforce the step size
      */
+    DEBUG_LOG;
     ip = dm.getParam("/odd_numbers", err);
     if (ip == nullptr){
         LOG(ERROR) << "Error: " << err.what();
@@ -153,6 +154,7 @@ int main (int argc, char** argv) {
      * The basic_slider constraint is a FLOAT_RANGE constraint with a range of [0, 10]. This constraint
      * has a step size of 0.25, so the values will be constrained to multiples of 0.25.
      */
+    DEBUG_LOG;
     ip = dm.getParam("/gain", err);
     if (ip == nullptr){
         LOG(ERROR) << "Error: " << err.what();
@@ -198,6 +200,7 @@ int main (int argc, char** argv) {
      * This constraint has the strict flag set to true, which means that the value must be one of the choices or else the 
      * setValue request will be ignored.
      */
+    DEBUG_LOG;
     ip = dm.getParam("/display_size", err);
     if (ip == nullptr){
         LOG(ERROR) << "Error: " << err.what();
@@ -224,6 +227,7 @@ int main (int argc, char** argv) {
      * The strict flag is set to false, which means that the client can set the value to any string, even 
      * if it is not in the list of choices.
      */
+    DEBUG_LOG;
     ip = dm.getParam("/image", err);
     if (ip == nullptr){
         LOG(ERROR) << "Error: " << err.what();
@@ -247,9 +251,10 @@ int main (int argc, char** argv) {
      * param inherits the constraint from the button param. This means that each element in the
      * button_array must be either 0 or 1.
      * 
-     * setting any element in the button_array to a value other than 0 or 1 will cause the value to be
-     * ignored for that element.
+     * setting any element in the button_array to a value other than 0 or 1 will cause the entire
+     * value to remain the same.
      */
+    DEBUG_LOG;
     ip = dm.getParam("/button_array", err);
     if (ip == nullptr){
         LOG(ERROR) << "Error: " << err.what();
@@ -266,15 +271,15 @@ int main (int argc, char** argv) {
      * If the incomming value has more elemnts than the button_array, the extra elements will be appended
      * to the end of the array only if they are valid values.
      */
-    std::vector<int32_t> arrayVal = {0, 1, -1, 2, 2, 1};
+    std::vector<int32_t> arrayVal = {0, 1, 0, 0, 0, 1};
     value.mutable_int32_array_values()->mutable_ints()->Assign(arrayVal.begin(), arrayVal.end());
     dm.setValue("/button_array", value);
-    DEBUG_LOG << "button_array set to 0 1 -1 2 2 1";
+    DEBUG_LOG << "button_array set to 0 1 0 0 0 1";
     debugString = "button_array value: ";
     for (auto& num : button_array) {
         debugString += std::to_string(num) + " ";
     }
-    DEBUG_LOG << debugString; // button_array value: 0 1 0 0 1
+    DEBUG_LOG << debugString; // button_array value: 0 1 0 0 0 1
 
     return EXIT_SUCCESS;
 }
@@ -314,6 +319,6 @@ image set to bird
 image value: eo://bird.png
 
 button_array initial value: 0 0 0 0 
-button_array set to 0 1 -1 2 2 1
-button_array value: 0 1 0 0 1 
+button_array set to 0 1 0 0 0 1
+button_array value: 0 1 0 0 0 1
 */

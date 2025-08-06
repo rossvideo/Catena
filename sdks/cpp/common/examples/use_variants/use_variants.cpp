@@ -114,6 +114,7 @@ int main (int argc, char** argv) {
         return EXIT_FAILURE;
     }
     use_variants::Coordinates_elem& coord = getParamValue<use_variants::Coordinates_elem>(ip.get());
+    DEBUG_LOG;
     DEBUG_LOG << "Coordinate/2: ";
     printCoordinate(coord);
 
@@ -129,6 +130,7 @@ int main (int argc, char** argv) {
     DEBUG_LOG << "Updated Coordinate/2: ";
     printCoordinate(coord);
 
+    DEBUG_LOG;
     ip = dm.getParam("/coordinates/0", err);
     if (!ip) {
         LOG(ERROR) << "Error: " << err.what();
@@ -148,6 +150,7 @@ int main (int argc, char** argv) {
     ip->toProto(value, Authorizer::kAuthzDisabled);
     DEBUG_LOG << value.DebugString();
     use_variants::Cartesian& cartesian = getParamValue<use_variants::Cartesian>(ip.get());
+    DEBUG_LOG;
     DEBUG_LOG << "Updated Coordinates/0/cartesian: ";
     printCoordinate(cartesian);
 
@@ -161,11 +164,15 @@ MessageLite at 0x7ffd86515610
 Updated Number:
 MessageLite at 0x7ffd86515610
 MessageLite at 0x7ffd86515700
-Coordinate/2: Spherical: 1, 90°, 180°
-Updated Coordinate/2: Cartesian: 5, 10, 15
+
+Coordinate/2:
+Spherical: 1, 90°, 180°
+Updated Coordinate/2:
+Cartesian: 5, 10, 15
 
 MessageLite at 0x7ffd865155d0
-
 MessageLite at 0x7ffd865155d0
-Updated Coordinates/0/cartesian: Cartesian: 1, 2, 42
+
+Updated Coordinates/0/cartesian:
+Cartesian: 1, 2, 42
 */

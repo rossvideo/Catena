@@ -97,6 +97,7 @@ int main (int argc, char** argv) {
      * departure param. Destination does not have a default value so its name is left empty and its location is
      * the default value defined in the location param.
      */
+    DEBUG_LOG;
     Plane_ticket new_plane_ticket;
     DEBUG_LOG << "Departure: " << new_plane_ticket.departure.name << " (" << locationToString(new_plane_ticket.departure.location) << ")";
     DEBUG_LOG << "Destination: " << new_plane_ticket.destination.name << " (" << locationToString(new_plane_ticket.destination.location) << ")";
