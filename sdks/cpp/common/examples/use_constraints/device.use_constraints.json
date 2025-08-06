@@ -85,6 +85,7 @@
       "value": {"float32_array_values": { "floats": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]} },
       "name": { "display_strings": { "en": "Audio Volume", "es": "Volumen de audio", "fr": "Volume audio" } },
       "widget": "fader",
+      "precision" : 2,
       "constraint": { "ref_oid": "basic_slider" }
     },
     "display_size": {
