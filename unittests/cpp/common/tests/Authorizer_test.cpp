@@ -47,16 +47,24 @@
 
 using namespace catena::common;
 
+/*
+ * Authorizer test class providing getters and setters for various
+ * protected members.
+ */
 class TestAuthorizer : public Authorizer {
   public:
+    // Constructs TestAuthorizer with a JWS token.
     TestAuthorizer(const std::string& jwsToken) : Authorizer(jwsToken) {}
+    // Constructs TestAuthorizer with no scopes or exp.
     TestAuthorizer() : Authorizer() {}
+    // Returns the expirty time.
     uint32_t exp() { return exp_; }
+    // Sets the expiry time.
     void exp(uint32_t newExpiry) { exp_ = newExpiry; }
+    // Returns the client scopes.
     ClientScopes& clientScopes() { return clientScopes_; }
-    void clientScopes(const ClientScopes& newScopes) {
-        clientScopes_ = newScopes;
-    }
+    // Sets the client scopes.
+    void clientScopes(const ClientScopes& newScopes) { clientScopes_ = newScopes; }
 };
 
 class AuthorizationTest : public ::testing::Test {
