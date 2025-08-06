@@ -498,20 +498,10 @@ Device::DeviceSerializer Device::getDeviceSerializer(const IAuthorizer& authz, c
                 constraint->toProto(*dstConstraint);
                 component.mutable_shared_constraint()->set_oid(name);
             }
-            //Send commands if authorized
-            for (const auto& [name, param] : commands_) {
-                if (authz.readAuthz(*param)) {
-                    co_yield component;
-                    component.Clear();
-                    ::catena::Param* dstParam = component.mutable_command()->mutable_param();
-                    param->toProto(*dstParam, authz);
-                    component.mutable_command()->set_oid(name);
-                }
-            }
         }
 
-        // Send commands if authorized and in COMMANDS mode
-        if (dl == catena::Device_DetailLevel_COMMANDS) {
+        // Send commands if authorized and in FULL or COMMANDS mode
+        if (dl == catena::Device_DetailLevel_FULL || dl == catena::Device_DetailLevel_COMMANDS) {
             for (const auto& [name, param] : commands_) {
                 if (authz.readAuthz(*param)) {
                     co_yield component;
@@ -523,7 +513,7 @@ Device::DeviceSerializer Device::getDeviceSerializer(const IAuthorizer& authz, c
             }
         }
         // Send parameters if authorized, and either in the minimal set or if subscribed to
-        else {
+        if (dl != catena::Device_DetailLevel_COMMANDS) {
             for (const auto& [name, param] : params_) {
                 if (authz.readAuthz(*param) &&
                     ((dl == catena::Device_DetailLevel_FULL) ||
