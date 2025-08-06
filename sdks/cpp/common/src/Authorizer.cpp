@@ -48,12 +48,20 @@ Authorizer::Authorizer(const std::string& JWSToken) {
                 while (std::getline(iss, scopeClaim, ' ')) {
                     clientScopes_.insert(scopeClaim);
                 }
+            // Extracting exp if present.
+            } else if (it->first == "exp") {
+                exp_ = it->second.get<double>();
             }
         }
     // Catch error.
     } catch (...) {
         throw catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
     }
+}
+
+bool Authorizer::isExpired() const {
+    auto now = std::chrono::system_clock::now();
+    return exp_ && exp_ < std::chrono::system_clock::to_time_t(now);
 }
 
 bool Authorizer::hasAuthz_(const std::string& scope) const {

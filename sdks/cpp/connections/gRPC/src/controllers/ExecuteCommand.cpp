@@ -92,14 +92,16 @@ void ExecuteCommand::proceed(bool ok) {
                 if (!dm) {
                     rc = catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
                 } else {
-                    std::unique_ptr<IParam> command = nullptr;
-                    // Getting the command.
+                    // Setting up authorizer object.
                     if (service_->authorizationEnabled()) {
-                        catena::common::Authorizer authz{jwsToken_()};
-                        command = dm->getCommand(req_.oid(), rc, authz);
+                        // Authorizer throws an error if invalid jws token so no need to handle rc.
+                        sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken_());
+                        authz_ = sharedAuthz_.get();
                     } else {
-                        command = dm->getCommand(req_.oid(), rc, catena::common::Authorizer::kAuthzDisabled);
+                        authz_ = &catena::common::Authorizer::kAuthzDisabled;
                     }
+                    // Getting the command.
+                    std::unique_ptr<IParam> command = dm->getCommand(req_.oid(), rc, *authz_);
                     // Executing the command if found.
                     if (command != nullptr) {
                         responder_ = command->executeCommand(req_.value());
@@ -132,6 +134,8 @@ void ExecuteCommand::proceed(bool ok) {
                 if (!responder_) {
                     // It should not be possible to get here
                     rc = catena::exception_with_status{"Illegal state", catena::StatusCode::INTERNAL};
+                } else if (authz_->isExpired()) {
+                    rc = catena::exception_with_status{"JWS token expired", catena::StatusCode::UNAUTHENTICATED};
                 } else {
                     // Getting the next component.
                     try {     

@@ -125,6 +125,11 @@ class IAuthorizer {
      * @return true if the client has read authorization
      */
     virtual bool writeAuthz(const Scopes_e& scope) const = 0;
+
+    /**
+     * @brief Returns true if the JWS token is expired.
+     */
+    virtual bool isExpired() const = 0;
 };
 
 } // namespace common

@@ -46,15 +46,17 @@ void ExecuteCommand::proceed() {
         
         // Continue if the jsonBody was successfully parsed.
         if (rc.status == catena::StatusCode::OK) {
-            // Get the command.
-            std::unique_ptr<IParam> command = nullptr;
+            // Setting up authorizer object.
+            std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+            catena::common::Authorizer* authz;
             if (context_.authorizationEnabled()) {
-                catena::common::Authorizer authz{context_.jwsToken()};
-                command = dm->getCommand(context_.fqoid(), rc, authz);
+                sharedAuthz = std::make_shared<catena::common::Authorizer>(context_.jwsToken());
+                authz = sharedAuthz.get();
             } else {
-                command = dm->getCommand(context_.fqoid(), rc, catena::common::Authorizer::kAuthzDisabled);
+                authz = &catena::common::Authorizer::kAuthzDisabled;
             }
-
+            // Getting the command.
+            std::unique_ptr<IParam> command = dm->getCommand(context_.fqoid(), rc, *authz);
             // If the command is not found, return an error
             if (command != nullptr) {
                 // Execute the command and write response if respond = true.
@@ -64,9 +66,16 @@ void ExecuteCommand::proceed() {
                 } else {
                     while (responder->hasMore()) {
                         writeConsole_(CallStatus::kWrite, socket_.is_open());
-                        catena::CommandResponse res = responder->getNext();
-                        if (respond) {
-                            writer_->sendResponse(rc, res);
+                        // Check if token is expired.
+                        if (authz->isExpired()) {
+                            rc = catena::exception_with_status{"JWS token expired", catena::StatusCode::UNAUTHENTICATED};
+                            break;
+                        // If not expired, get the next response.
+                        } else {
+                            catena::CommandResponse res = responder->getNext();
+                            if (respond) {
+                                writer_->sendResponse(rc, res);
+                            }
                         }
                     }
                 }
