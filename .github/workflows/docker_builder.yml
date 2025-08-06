@@ -145,6 +145,8 @@ jobs:
   build-examples:
     runs-on: ubuntu-latest
     # needs: build-and-push-toolchain-cpp
+    outputs:
+      examples: ${{ steps.generate-matrix.outputs.examples }}
     container:
       image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
       credentials:
@@ -169,68 +171,97 @@ jobs:
       - name: Build examples
         run: |
           mkdir -p ${WORKDIR}/${BUILD_TARGET}
-          cd ${WORKDIR}/${BUILD_TARGET} \
+          cd ${WORKDIR}/${BUILD_TARGET}
           pwd
           cmake -G Ninja -DCONNECTIONS=${CONNECTIONS} -DUNIT_TESTING=off \
             -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} \
             -DGLOG_LOGGING_DIR=${WORKDIR}/logs \
             -B ${WORKDIR}/${BUILD_TARGET} ${WORKDIR}/sdks/cpp
+          ninja
+          # copy the built examples to a directory for packaging
+          EXAMPLES_DIR=$WORKDIR/examples
+          mkdir -p $EXAMPLES_DIR
+          for CONN in ${CONNECTIONS//;/ }; do
+            echo "Building examples for connection: $CONN"
+            mkdir -p $EXAMPLES_DIR/$CONN
+            for EXAMPLE in connections/${CONN}/examples/*; do
+              # Skip CMakeFiles directories and *.cmake files
+              if [[ "$(basename "$EXAMPLE")" == "CMakeFiles" ]] || [[ "$EXAMPLE" == *.cmake ]]; then
+              continue
+              fi
+              echo "Grabbing example: $EXAMPLE"
+              EXAMPLE_NAME=$(basename "$EXAMPLE")
+              cp $EXAMPLE/$EXAMPLE_NAME $EXAMPLES_DIR/$CONN/$EXAMPLE_NAME
+            done
+          done
 
-
-
-  # build-and-push-examples:
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     BUILD_TARGET: build/cpp
-  #     CMAKE_INSTALL_PREFIX: /usr/local/.local
-  #     CONNECTIONS: gRPC;REST
-  #     WORKDIR: /app
-  #   container:
-  #     image: build-and-push-toolchain-cpp
-  #     credentials:
-  #       username: ${{ github.actor }}
-  #       password: ${{ secrets.GITHUB_TOKEN }}
-  #     volumes:
-  #       - ${{ github.workspace }}:/app # env context does not work here, that's really DUMB
-  #   permissions:
-  #     contents: read
-  #     packages: write
-  #     attestations: write
-
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-
-  #     - name: Log in to the Container registry
-  #       uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
-  #       with:
-  #         registry: ${{ env.REGISTRY }}
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Save examples as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: examples
+          path: ${{ github.workspace }}/examples
+          retention-days: 2
       
-  #     - name: Build examples
-  #       run: |
-  #         mkdir -p ${WORKDIR}/${BUILD_TARGET}
-  #         cd ${WORKDIR}/${BUILD_TARGET} \
-  #         cmake -G Ninja -DCONNECTIONS=${CONNECTIONS} -DUNIT_TESTING=off \
-  #           -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} \
-  #           -DGLOG_LOGGING_DIR=${WORKDIR}/logs \
-  #           -B ${WORKDIR}/${BUILD_TARGET} ${WORKDIR}/sdks/cpp
+      - name: Generate matrix for example builds
+        id: generate-matrix
+        run: |
+            EXAMPLES_JSON=$(find $WORKDIR/examples -type f -executable -printf '"%P",')
+            EXAMPLES_JSON="[${EXAMPLES_JSON%,}]"
+            echo "examples=${EXAMPLES_JSON}" >> $GITHUB_OUTPUT
 
-  #     - name: Build the docker images for each example
-  #       run: |
-  #         pwd
-  #         for CONN in ${CONNECTIONS//;/ }; do
-  #           echo "Building examples for connection: $CONN"
-  #           for EXAMPLE in connections/${CONN}/examples/*; do
-  #             # Skip CMakeFiles directories and *.cmake files
-  #             if [[ "$(basename "$EXAMPLE")" == "CMakeFiles" ]] || [[ "$EXAMPLE" == *.cmake ]]; then
-  #               continue
-  #             fi
-  #             echo "Building example: $EXAMPLE"
-  #             EXAMPLE_NAME=$(basename "$EXAMPLE")
-  #             TAG="$REGISTRY/rossvideo/catena:$CONN-$EXAMPLE_NAME"
-  #             EXAMPLE_PATH=$WORKDIR/$BUILD_TARGET/$EXAMPLE/$EXAMPLE_NAME
-  #             echo "docker build -t $TAG -f $WORKDIR/docker/example.dockerfile . --build-arg EXAMPLE=$EXAMPLE_PATH"
-  #           done
-  #         done
+  build-and-push-examples:
+    runs-on: ubuntu-latest
+    needs: build-examples
+    strategy:
+      matrix:
+        example: ${{ fromJson(needs.build-examples.outputs.examples) }}
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: docker
+
+      - name: Download examples
+        uses: actions/download-artifact@v4
+        with:
+          name: examples
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # This step uses [docker/metadata-action](https://github.com/docker/metadata-action#about) to extract tags and labels that will be applied to the specified image. The `id` "meta" allows the output of this step to be referenced in a subsequent step. The `images` value provides the base name for the tags and labels.
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.REGISTRY }}/rossvideo/catena-${{ matrix.example }}
+          labels: |
+            org.opencontainers.image.title=Catena ${{ matrix.example }}
+            org.opencontainers.image.description=Self contained example for Catena ${{ matrix.example }}
+            org.opencontainers.image.vendor=Ross Video
+
+      - name: Print stuff
+        run: |
+          echo "tags: ${{ steps.meta.outputs.tags }}"
+          echo "labels: ${{ steps.meta.outputs.labels }}"
+          find .
+      
+      - name: build image for ${{ matrix.example }}
+        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+        with:
+          context: .
+          file: docker/example.dockerfile
+          # push: true
+          build-args: |
+            EXAMPLE=./examples/${{ matrix.example }}
+            WORKDIR=${{ env.WORKDIR }}
+
