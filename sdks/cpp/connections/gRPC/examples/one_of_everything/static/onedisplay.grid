@@ -10,7 +10,18 @@
          <menugroup mid="0" top="80" left="0" right="0" bottom="0"/>
       </abs>
       <menugroup mid="1"/>
+      <table colspan="1" fill="both" rowspan="1" weightx="1.0" weighty="1.0">
+         <tr> 
+            <param colspan="1" oid="counter" showlabel="true" fill="both" rowspan="1" widget="progress" />
+         </tr>
+         <tr><param colspan="1" oid="number_example" showlabel="true" fill="both" rowspan="1" widget="text" /></tr>
+         <tr><param colspan="1" oid="float_example" showlabel="true" fill="both" rowspan="1" widget="level-meter" /></tr>
+         <tr><param colspan="1" oid="string_example" showlabel="true" fill="both" rowspan="1" widget="text-display" /></tr>
+         <tr><param colspan="1" oid="number_array" showlabel="true" fill="both" rowspan="1" widget="combo" /></tr>
+         <tr><param colspan="1" oid="float_array" showlabel="true" fill="both" rowspan="1" widget="level-array-horizontal" /></tr>
+         <tr><param colspan="1" oid="string_array" showlabel="true" fill="both" rowspan="1" widget="list" /></tr>
+      </table>
    </split>
    <buttonbar anchor="south"/>
+      
 </borderlayout>
-
