@@ -42,6 +42,7 @@
 #include "MockConnectionQueue.h"
 #include "GRPCTest.h"
 #include "StreamReader.h"
+#include "CommonTestHelpers.h"
 
 // gRPC
 #include "controllers/Connect.h"
@@ -332,18 +333,7 @@ TEST_F(gRPCConnectTests, Connect_AuthzValid) {
     expLanguage(0, "language0", {{"key0", "value0"}});
     // Adding authorization mockToken metadata. This it a random RSA token
     authzEnabled_ = true;
-    std::string mockToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIi"
-                            "OiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2Nvc"
-                            "GUiOiJzdDIxMzg6bW9uOncgc3QyMTM4Om9wOncgc3QyMTM4Om"
-                            "NmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MTUxNjIzOTAyMiw"
-                            "ibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dTo"
-                            "krEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko965"
-                            "3v0khyUT4UKeOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKH"
-                            "kWi4P3-CYWrwe-g6b4-a33Q0k6tSGI1hGf2bA9cRYr-VyQ_T3"
-                            "RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEmuIwNOVM3EcVEaL"
-                            "yISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg_w"
-                            "bOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9M"
-                            "dvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
+    std::string mockToken = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
     clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
     // Setting expectations
     EXPECT_CALL(param0, getScope()).WillRepeatedly(
@@ -404,6 +394,35 @@ TEST_F(gRPCConnectTests, Connect_AuthzJWSNotFound) {
     });
     streamReader_->Await();
     streamReader_.reset(nullptr);
+}
+/*
+ * TEST 7 - Testing Connect with an expired authz token.
+ */
+TEST_F(gRPCConnectTests, Connect_AuthzExpired) {
+    expRc_ = catena::exception_with_status("JWS bearer token expired", catena::StatusCode::UNAUTHENTICATED);
+    MockParam param0;
+    initPayload("en", catena::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
+    // Adding authorization mockToken metadata. This it a random RSA token
+    authzEnabled_ = true;
+    std::string mockToken = getJwsToken("expired");
+    clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
+    // Setting expectations
+    EXPECT_CALL(param0, getScope()).WillRepeatedly(
+        testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
+    EXPECT_CALL(param0, toProto(testing::An<catena::Value&>(), testing::_))
+        .WillRepeatedly(testing::Invoke([this](catena::Value& dst, const IAuthorizer& authz) {
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            dst.set_string_value("value0");
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    // Making call
+    streamReader_ = std::make_unique<StreamReader>(&outVals_, &outRc_, true);
+    streamReader_->MakeCall(&clientContext_, &inVal_, [this](auto ctx, auto payload, auto reactor) {
+        client_->async()->Connect(ctx, payload, reactor);
+    });
+    streamReader_->Await();
+    dm0_.getValueSetByClient().emit("oid0", &param0);
+    testRPC();
 }
 
 /*
