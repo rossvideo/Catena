@@ -9,6 +9,10 @@ on:
 # Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
 env:
   REGISTRY: ghcr.io
+  CMAKE_INSTALL_PREFIX: /usr/local/.local
+  CONNECTIONS: gRPC;REST
+  BUILD_TARGET: build/cpp
+  WORKDIR: /app
   
 
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
@@ -137,54 +141,96 @@ jobs:
   #         subject-name: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME}}
   #         subject-digest: ${{ steps.push.outputs.digest }}
   #         push-to-registry: true
-      
-  build-and-push-examples:
-    runs-on: ghcr.io/rossvideo/catena-toolchain-cpp:latest
+  
+  build-examples:
+    runs-on: ubuntu-latest
     # needs: build-and-push-toolchain-cpp
-    env:
-      BUILD_TARGET: build/cpp
-      CMAKE_INSTALL_PREFIX: /usr/local/.local
-      CONNECTIONS: gRPC;REST
-      WORKDIR: /app
+    container:
+      image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      volumes:
+        # env context does not work here, that's really DUMB
+        - ${{ github.workspace }}:/app
+      env:
+        BUILD_TARGET: build/cpp
+        CMAKE_INSTALL_PREFIX: /usr/local/.local
+        CONNECTIONS: gRPC;REST
+        WORKDIR: /app
+
     permissions:
       contents: read
-      packages: write
-      attestations: write
-
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Log in to the Container registry
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      
       - name: Build examples
         run: |
           mkdir -p ${WORKDIR}/${BUILD_TARGET}
           cd ${WORKDIR}/${BUILD_TARGET} \
+          pwd
           cmake -G Ninja -DCONNECTIONS=${CONNECTIONS} -DUNIT_TESTING=off \
             -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} \
             -DGLOG_LOGGING_DIR=${WORKDIR}/logs \
             -B ${WORKDIR}/${BUILD_TARGET} ${WORKDIR}/sdks/cpp
 
-      - name: Build the docker images for each example
-        run: |
-          pwd
-          for CONN in ${CONNECTIONS//;/ }; do
-            echo "Building examples for connection: $CONN"
-            for EXAMPLE in connections/${CONN}/examples/*; do
-              # Skip CMakeFiles directories and *.cmake files
-              if [[ "$(basename "$EXAMPLE")" == "CMakeFiles" ]] || [[ "$EXAMPLE" == *.cmake ]]; then
-                continue
-              fi
-              echo "Building example: $EXAMPLE"
-              EXAMPLE_NAME=$(basename "$EXAMPLE")
-              TAG="$REGISTRY/rossvideo/catena:$CONN-$EXAMPLE_NAME"
-              EXAMPLE_PATH=$WORKDIR/$BUILD_TARGET/$EXAMPLE/$EXAMPLE_NAME
-              echo "docker build -t $TAG -f $WORKDIR/docker/example.dockerfile . --build-arg EXAMPLE=$EXAMPLE_PATH"
-            done
-          done
+
+
+  # build-and-push-examples:
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     BUILD_TARGET: build/cpp
+  #     CMAKE_INSTALL_PREFIX: /usr/local/.local
+  #     CONNECTIONS: gRPC;REST
+  #     WORKDIR: /app
+  #   container:
+  #     image: build-and-push-toolchain-cpp
+  #     credentials:
+  #       username: ${{ github.actor }}
+  #       password: ${{ secrets.GITHUB_TOKEN }}
+  #     volumes:
+  #       - ${{ github.workspace }}:/app # env context does not work here, that's really DUMB
+  #   permissions:
+  #     contents: read
+  #     packages: write
+  #     attestations: write
+
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+
+  #     - name: Log in to the Container registry
+  #       uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+  #       with:
+  #         registry: ${{ env.REGISTRY }}
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
+      
+  #     - name: Build examples
+  #       run: |
+  #         mkdir -p ${WORKDIR}/${BUILD_TARGET}
+  #         cd ${WORKDIR}/${BUILD_TARGET} \
+  #         cmake -G Ninja -DCONNECTIONS=${CONNECTIONS} -DUNIT_TESTING=off \
+  #           -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} \
+  #           -DGLOG_LOGGING_DIR=${WORKDIR}/logs \
+  #           -B ${WORKDIR}/${BUILD_TARGET} ${WORKDIR}/sdks/cpp
+
+  #     - name: Build the docker images for each example
+  #       run: |
+  #         pwd
+  #         for CONN in ${CONNECTIONS//;/ }; do
+  #           echo "Building examples for connection: $CONN"
+  #           for EXAMPLE in connections/${CONN}/examples/*; do
+  #             # Skip CMakeFiles directories and *.cmake files
+  #             if [[ "$(basename "$EXAMPLE")" == "CMakeFiles" ]] || [[ "$EXAMPLE" == *.cmake ]]; then
+  #               continue
+  #             fi
+  #             echo "Building example: $EXAMPLE"
+  #             EXAMPLE_NAME=$(basename "$EXAMPLE")
+  #             TAG="$REGISTRY/rossvideo/catena:$CONN-$EXAMPLE_NAME"
+  #             EXAMPLE_PATH=$WORKDIR/$BUILD_TARGET/$EXAMPLE/$EXAMPLE_NAME
+  #             echo "docker build -t $TAG -f $WORKDIR/docker/example.dockerfile . --build-arg EXAMPLE=$EXAMPLE_PATH"
+  #           done
+  #         done
