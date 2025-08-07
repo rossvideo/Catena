@@ -43,6 +43,8 @@ using StringParam = ParamWithValue<std::string>;
 
 class ParamWithStringTest : public ParamTest<std::string> {
   protected:
+    catena::ParamType type() const override { return catena::ParamType::STRING; }
+
     std::string value_{"Hello World"};
 };
 
@@ -101,6 +103,7 @@ TEST_F(ParamWithStringTest, FromProto) {
     StringParam param(value_, pd_);
     std::string newValue{"Hello World"};
     catena::Value protoValue;
+    EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(catena::ParamType::STRING));
     protoValue.set_string_value(newValue);
     rc_ = param.fromProto(protoValue, authz_);
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);

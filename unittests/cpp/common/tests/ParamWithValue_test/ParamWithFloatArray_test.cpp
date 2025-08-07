@@ -45,6 +45,8 @@ using FloatArrayParam = ParamWithValue<FloatArray>;
 
 class ParamWithFloatArrayTest : public ParamTest<FloatArray> {
   protected:
+    catena::ParamType type() const override { return catena::ParamType::FLOAT32_ARRAY; }
+
     FloatArray value_{0, 1, 2};
 };
 

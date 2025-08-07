@@ -45,6 +45,8 @@ using StringArrayParam = ParamWithValue<StringArray>;
 
 class ParamWithStringArrayTest : public ParamTest<StringArray> {
   protected:
+    catena::ParamType type() const override { return catena::ParamType::STRING_ARRAY; }
+
     StringArray value_{"Hello", "World"};
 };
 

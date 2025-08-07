@@ -43,6 +43,8 @@ using FloatParam = ParamWithValue<float>;
 
 class ParamWithFloatTest : public ParamTest<float> {
   protected:
+    catena::ParamType type() const override { return catena::ParamType::FLOAT32; }
+
     float value_{16};
 };
 

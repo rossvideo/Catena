@@ -45,6 +45,8 @@ using IntArrayParam = ParamWithValue<IntArray>;
 
 class ParamWithIntArrayTest : public ParamTest<IntArray> {
   protected:
+    catena::ParamType type() const override { return catena::ParamType::INT32_ARRAY; }
+
     IntArray value_{0, 1, 2};
 };
 

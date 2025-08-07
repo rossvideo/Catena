@@ -41,7 +41,9 @@ using namespace catena::common;
 
 using EmptyParam = ParamWithValue<EmptyValue>;
 
-class ParamWithValueTest : public ParamTest<EmptyValue> {};
+class ParamWithValueTest : public ParamTest<EmptyValue> {
+    catena::ParamType type() const override { return catena::ParamType::EMPTY; }
+};
 
 TEST_F(ParamWithValueTest, Create) {
     CreateTest(emptyValue);

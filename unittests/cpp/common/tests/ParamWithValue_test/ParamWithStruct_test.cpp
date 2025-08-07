@@ -44,6 +44,8 @@ using StructParam = ParamWithValue<TestStruct1>;
 
 class ParamWithStructTest : public ParamTest<TestStruct1> {
   protected:
+    catena::ParamType type() const override { return catena::ParamType::STRUCT; }
+
     TestStruct1 value_{16, 32};
 };
 

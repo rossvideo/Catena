@@ -43,6 +43,8 @@ using IntParam = ParamWithValue<int32_t>;
 
 class ParamWithIntTest : public ParamTest<int32_t> {
   protected:
+    catena::ParamType type() const override { return catena::ParamType::INT32; }
+
     int32_t value_{16};
 };
 

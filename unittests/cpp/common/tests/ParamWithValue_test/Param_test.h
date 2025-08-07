@@ -54,6 +54,8 @@ using namespace catena::common;
 template <typename T>
 class ParamTest : public ::testing::Test {
   protected:
+    virtual catena::ParamType type() const = 0;
+
     /*
      * 
      */
@@ -75,6 +77,7 @@ class ParamTest : public ::testing::Test {
         EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(nullptr));
         EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(1000));
         EXPECT_CALL(pd_, total_length()).WillRepeatedly(testing::Return(1000));
+        EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(type()));
     }
 
     void CreateTest(T& value) {
