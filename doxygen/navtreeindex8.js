@@ -1,17 +1,5 @@
 var NAVTREEINDEX8 =
 {
-"structcatena_1_1common_1_1CommandTag.html":[10,0,0,0,1],
-"structcatena_1_1common_1_1CommandTag.html":[8,0,0,0,1],
-"structcatena_1_1common_1_1ConstraintTag.html":[10,0,0,0,4],
-"structcatena_1_1common_1_1ConstraintTag.html":[8,0,0,0,4],
-"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html":[8,0,0,0,5,0,0],
-"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html":[10,0,0,0,5,0,0],
-"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a167543a006ad9001a8f5bed5c1fd57b0":[10,0,0,0,5,0,0,2],
-"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a167543a006ad9001a8f5bed5c1fd57b0":[8,0,0,0,5,0,0,2],
-"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a5c0d5feabe987fd42eaa2a8d420443bc":[10,0,0,0,5,0,0,1],
-"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a5c0d5feabe987fd42eaa2a8d420443bc":[8,0,0,0,5,0,0,1],
-"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a7fd6ffdcb1292ce82df205603f56d729":[8,0,0,0,5,0,0,5],
-"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a7fd6ffdcb1292ce82df205603f56d729":[10,0,0,0,5,0,0,5],
 "structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a928c7a442bcc3227e97920eb5a746fc3":[10,0,0,0,5,0,0,3],
 "structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a928c7a442bcc3227e97920eb5a746fc3":[8,0,0,0,5,0,0,3],
 "structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#aa70a27bcc8076a7e1c6075922a13bbf2":[8,0,0,0,5,0,0,0],

@@ -5,9 +5,6 @@ var classcatena_1_1common_1_1Authorizer =
     [ "Authorizer", "classcatena_1_1common_1_1Authorizer.html#a2267ed3de4f1a48fbef629a7fbb0c20e", null ],
     [ "Authorizer", "classcatena_1_1common_1_1Authorizer.html#a7d76a2fb34559e3782dc84678462e67d", null ],
     [ "~Authorizer", "classcatena_1_1common_1_1Authorizer.html#a09c54e470cc936a3fad2e2bef92ca384", null ],
-    [ "Authorizer", "classcatena_1_1common_1_1Authorizer.html#aa6701f5b8518a0e2be683fa3d9d0ab3b", null ],
-    [ "hasAuthz_", "classcatena_1_1common_1_1Authorizer.html#ae9117e71cc39f2ac1b9c365cbb5201fe", null ],
-    [ "isExpired", "classcatena_1_1common_1_1Authorizer.html#a12d1b8d3e8aad63fa11fab251a39fb59", null ],
     [ "readAuthz", "classcatena_1_1common_1_1Authorizer.html#ac66ff0d1ad2b482889d370fcec8abf65", null ],
     [ "readAuthz", "classcatena_1_1common_1_1Authorizer.html#a901a97535bef9fc4f54d3a0ee602885a", null ],
     [ "readAuthz", "classcatena_1_1common_1_1Authorizer.html#acb85ff3e6653b2cb00bf2fbb5265db5f", null ],
@@ -15,7 +12,5 @@ var classcatena_1_1common_1_1Authorizer =
     [ "writeAuthz", "classcatena_1_1common_1_1Authorizer.html#acf4702d3219e78e76598e44cbb467232", null ],
     [ "writeAuthz", "classcatena_1_1common_1_1Authorizer.html#a38c251c4635be2909c5bb2bea2c0595b", null ],
     [ "writeAuthz", "classcatena_1_1common_1_1Authorizer.html#a9ee90ee9b51c82f76cc7d25d69b751e4", null ],
-    [ "writeAuthz", "classcatena_1_1common_1_1Authorizer.html#adbb5e8f186000cb1b91fed1bb9645a2e", null ],
-    [ "clientScopes_", "classcatena_1_1common_1_1Authorizer.html#a33d94430a2993f86028b3c2e863e160c", null ],
-    [ "exp_", "classcatena_1_1common_1_1Authorizer.html#a925bf502dc95b468c8803b3402495877", null ]
+    [ "writeAuthz", "classcatena_1_1common_1_1Authorizer.html#adbb5e8f186000cb1b91fed1bb9645a2e", null ]
 ];

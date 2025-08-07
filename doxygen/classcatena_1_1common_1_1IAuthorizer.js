@@ -3,7 +3,6 @@ var classcatena_1_1common_1_1IAuthorizer =
     [ "IAuthorizer", "classcatena_1_1common_1_1IAuthorizer.html#af8b046af68796ea679d6398b7ea1ef03", null ],
     [ "IAuthorizer", "classcatena_1_1common_1_1IAuthorizer.html#a7ba28068e93a069fc6cfe010cf21f7d2", null ],
     [ "~IAuthorizer", "classcatena_1_1common_1_1IAuthorizer.html#a740d3af2b18dcb294b1df9993f53279d", null ],
-    [ "isExpired", "classcatena_1_1common_1_1IAuthorizer.html#a550199326e5fe0c591f86c0f7ef40926", null ],
     [ "readAuthz", "classcatena_1_1common_1_1IAuthorizer.html#acedeea5eadbebac67cb4e727c5dd762c", null ],
     [ "readAuthz", "classcatena_1_1common_1_1IAuthorizer.html#a2a08e771a8f20dbb931e4a8b88d2a5c5", null ],
     [ "readAuthz", "classcatena_1_1common_1_1IAuthorizer.html#ab82bfeaa9a5e2f9e2325b71bf56c52c2", null ],

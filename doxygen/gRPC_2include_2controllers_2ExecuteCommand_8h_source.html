@@ -148,17 +148,14 @@ $(document).ready(function(){initNavTree('gRPC_2include_2controllers_2ExecuteCom
 <div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    ServerAsyncWriter&lt;catena::CommandResponse&gt; writer_;</div>
 <div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    <a class="code hl_enumeration" href="namespacecatena_1_1gRPC.html#a27aee93775bf0dcce2e1fa3afe6d1982">CallStatus</a> status_;</div>
 <div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    SlotMap&amp; dms_;</div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    std::shared_ptr&lt;catena::common::Authorizer&gt; sharedAuthz_;</div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    <a class="code hl_class" href="classcatena_1_1common_1_1Authorizer.html">catena::common::Authorizer</a>* authz_;</div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    <span class="keywordtype">int</span> objectId_;</div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;</div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>};</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    <span class="keywordtype">int</span> objectId_;</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>};</div>
 </div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span> </div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>}; <span class="comment">// namespace gRPC</span></div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>}; <span class="comment">// namespace catena</span></div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span> </div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>}; <span class="comment">// namespace gRPC</span></div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>}; <span class="comment">// namespace catena</span></div>
 <div class="ttc" id="aCallData_8h_html"><div class="ttname"><a href="CallData_8h.html">CallData.h</a></div><div class="ttdoc">Base class for gRPC CallData classes which defines getJWSToken_().</div></div>
-<div class="ttc" id="aclasscatena_1_1common_1_1Authorizer_html"><div class="ttname"><a href="classcatena_1_1common_1_1Authorizer.html">catena::common::Authorizer</a></div><div class="ttdoc">Class for handling authorization information.</div><div class="ttdef"><b>Definition</b> Authorizer.h:67</div></div>
 <div class="ttc" id="aclasscatena_1_1gRPC_1_1CallData_html"><div class="ttname"><a href="classcatena_1_1gRPC_1_1CallData.html">catena::gRPC::CallData</a></div><div class="ttdoc">Abstract base class for the CallData classes which defines the jwsToken_ class.</div><div class="ttdef"><b>Definition</b> CallData.h:72</div></div>
 <div class="ttc" id="aclasscatena_1_1gRPC_1_1ExecuteCommand_html"><div class="ttname"><a href="classcatena_1_1gRPC_1_1ExecuteCommand.html">catena::gRPC::ExecuteCommand</a></div><div class="ttdoc">CallData class for the ExecuteCommand RPC.</div><div class="ttdef"><b>Definition</b> ExecuteCommand.h:52</div></div>
 <div class="ttc" id="aclasscatena_1_1gRPC_1_1ExecuteCommand_html_a20404dadcba84fd96277052f061cdb1a"><div class="ttname"><a href="classcatena_1_1gRPC_1_1ExecuteCommand.html#a20404dadcba84fd96277052f061cdb1a">catena::gRPC::ExecuteCommand::proceed</a></div><div class="ttdeci">void proceed(bool ok) override</div><div class="ttdoc">Manages gRPC command execution through a state machine.</div></div>
