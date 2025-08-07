@@ -29,18 +29,20 @@
  */
 
 /**
- * @brief This file is for testing the <std::vector<std::string>>ParamWithValue
- * class.
+ * @brief This file is a parent fixture for testing the ParamWithValue class.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/07/31
+ * @date 25/08/07
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
 
+// common
 #include "ParamWithValue.h"
 #include "StructInfo.h"
+#include "Logger.h"
 
+// mocks
 #include "MockParamDescriptor.h"
 #include "MockDevice.h"
 #include "MockConstraint.h"
@@ -54,13 +56,27 @@ using namespace catena::common;
 template <typename T>
 class ParamTest : public ::testing::Test {
   protected:
+    /*
+     * Returns the value type of the parameter we are testing with.
+     */
     virtual catena::ParamType type() const = 0;
 
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("ParamWithValueTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
     /*
-     * 
+     * Sets up the mockAuthorizer and mockParamDescriptors with default
+     * behaviour.
      */
     void SetUp() override {
-        // Forwards calls to authz(Param) to authz(ParamDescriptor)
+        // Forwards calls to authz(Param) to authz(ParamDescriptor), which is
+        // not too far from it's actual implementation.
         EXPECT_CALL(authz_, readAuthz(testing::An<const IParam&>()))
             .WillRepeatedly(testing::Invoke([this](const IParam& p){
                 return authz_.readAuthz(p.getDescriptor());
@@ -70,7 +86,7 @@ class ParamTest : public ::testing::Test {
                 return authz_.writeAuthz(p.getDescriptor());
             }));
         for (auto* pd : {&pd_, &subpd1_, &subpd2_}) {
-            // Authorizer has read and write authz by default
+            // Authorizer has read and write authz for all params by default.
             EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(*pd)))).WillRepeatedly(testing::Return(true));
             EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(*pd)))).WillRepeatedly(testing::Return(true));
             // Some default values from paramDescriptor.
@@ -79,11 +95,24 @@ class ParamTest : public ::testing::Test {
             EXPECT_CALL(*pd, max_length()).WillRepeatedly(testing::Return(1000));
             EXPECT_CALL(*pd, total_length()).WillRepeatedly(testing::Return(1000));
             EXPECT_CALL(*pd, type()).WillRepeatedly(testing::Return(type()));
+            EXPECT_CALL(*pd, toProto(testing::An<catena::Param&>(), testing::_))
+                .WillRepeatedly(testing::Invoke([this](catena::Param& p, const IAuthorizer&) {
+                    p.set_template_oid(oid_);
+                }));
+            // Default paramDescriptor tree:
+            //  Any oid ending with 1 routes to subpd1_.
+            //  Any oid ending with 2 routes to subpd2_.
+            EXPECT_CALL(*pd, getSubParam("f1")).WillRepeatedly(testing::ReturnRef(subpd1_));
+            EXPECT_CALL(*pd, getSubParam("TestStruct1")).WillRepeatedly(testing::ReturnRef(subpd1_));
+            EXPECT_CALL(*pd, getSubParam("f2")).WillRepeatedly(testing::ReturnRef(subpd2_));
+            EXPECT_CALL(*pd, getSubParam("TestStruct1")).WillRepeatedly(testing::ReturnRef(subpd2_));
         }
-        EXPECT_CALL(pd_, getSubParam("f1")).WillRepeatedly(testing::ReturnRef(subpd1_));
-        EXPECT_CALL(pd_, getSubParam("f2")).WillRepeatedly(testing::ReturnRef(subpd2_));        
     }
 
+    /*
+     * Function which tests 3/4 of ParamWithValue's constructors.
+     * The last constructor is CatenaStruct specific.
+     */
     void CreateTest(T& value) {
         // Constructor (value, descriptor, device, isCommand)
         EXPECT_CALL(dm_, addItem(oid_, testing::An<IParam*>())).Times(1)
@@ -104,7 +133,9 @@ class ParamTest : public ::testing::Test {
             << "Failed to create a ParamWithValue using constructor"
             << "(value, descriptor, mSizeTracker, tSizeTracker)";
     }
-
+    /*
+     * Functions which tests all 3 of ParamWithValue's value getters.
+     */
     void GetValueTest(T& value) {
         ParamWithValue<T> param(value, pd_);
         // Non-const
@@ -119,7 +150,7 @@ class ParamTest : public ::testing::Test {
     MockParamDescriptor pd_, subpd1_, subpd2_;
     MockDevice dm_;
     MockAuthorizer authz_;
-    catena::exception_with_status rc_{"", catena::StatusCode::OK};
 
+    catena::exception_with_status rc_{"", catena::StatusCode::OK};
     std::string oid_ = "test_oid";
 };

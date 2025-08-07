@@ -457,6 +457,8 @@ TEST_F(StructInfoTest, String_ToProto_NoAuthz) {
 TEST_F(StructInfoTest, String_ValidFromProto_Normal) {
     std::string dst = "";
     val_.set_string_value("Hello");
+    // Setting expectations.
+    EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(catena::ParamType::STRING));
     // Calling validFromProto() and comparing the result
     EXPECT_TRUE(validFromProto(val_, &dst, pd_, rc, authz_));
 }
@@ -467,6 +469,7 @@ TEST_F(StructInfoTest, String_ValidFromProto_Constraint) {
     std::string dst = "";
     val_.set_string_value("Hello");
     // Setting expectations.
+    EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(catena::ParamType::STRING));
     EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, satisfied(testing::_)).WillRepeatedly(
         testing::Invoke([this](const catena::Value &src) {
@@ -504,6 +507,7 @@ TEST_F(StructInfoTest, String_ValidFromProto_Unsatisfied) {
     std::string dst = "";
     val_.set_string_value("Hello");
     // Setting expectations.
+    EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(catena::ParamType::STRING));
     EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, satisfied(testing::_)).WillRepeatedly(testing::Return(false));
     // Calling validFromProto() and comparing the result
@@ -516,6 +520,8 @@ TEST_F(StructInfoTest, String_ValidFromProto_Unsatisfied) {
 TEST_F(StructInfoTest, String_FromProto_Normal) {
     std::string dst = "";
     val_.set_string_value("Hello");
+    // Setting expectations.
+    EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(catena::ParamType::STRING));
     // Calling fromProto() and comparing the result
     rc = fromProto(val_, &dst, pd_, authz_);
     EXPECT_EQ(dst, val_.string_value());

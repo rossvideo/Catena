@@ -29,38 +29,51 @@
  */
 
 /**
- * @brief This file is for testing the <float>ParamWithValue class.
+ * @brief This file is for testing the <FLOAT>ParamWithValue class.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/07/31
+ * @date 25/08/07
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #include "Param_test.h"
 
 using namespace catena::common;
-
 using FloatParam = ParamWithValue<float>;
 
+// Fixture
 class ParamWithFloatTest : public ParamTest<float> {
   protected:
+    /*
+     * Returns the value type of the parameter we are testing with.
+     */
     catena::ParamType type() const override { return catena::ParamType::FLOAT32; }
 
     float value_{16};
 };
 
+/*
+ * TEST 1 - Testing <FLOAT>ParamWithValue constructors.
+ */
 TEST_F(ParamWithFloatTest, Create) {
     CreateTest(value_);
 }
-
+/*
+ * TEST 2 - Testing <FLOAT>ParamWithValue.get().
+ */
 TEST_F(ParamWithFloatTest, Get) {
     GetValueTest(value_);
 }
-
+/*
+ * TEST 3 - Testing <FLOAT>ParamWithValue.size().
+ */
 TEST_F(ParamWithFloatTest, Size) {
     FloatParam param(value_, pd_);
     EXPECT_EQ(param.size(), 0);
 }
-
+/*
+ * TEST 4 - Testing <FLOAT>ParamWithValue.getParam().
+ * FLOAT params have no sub-params and should return an error.
+ */
 TEST_F(ParamWithFloatTest, GetParam) {
     FloatParam param(value_, pd_);
     Path path = Path("/test/oid");
@@ -68,46 +81,53 @@ TEST_F(ParamWithFloatTest, GetParam) {
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
-
+/*
+ * TEST 5 - Testing <FLOAT>ParamWithValue.addBack().
+ * FLOAT params are not arrays, so this should return an error.
+ */
 TEST_F(ParamWithFloatTest, AddBack) {
     FloatParam param(value_, pd_);
     auto addedParam = param.addBack(authz_, rc_);
     EXPECT_FALSE(addedParam) << "Added a value to non-array parameter";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
-
+/*
+ * TEST 6 - Testing <FLOAT>ParamWithValue.popBack().
+ * FLOAT params are not arrays, so this should return an error.
+ */
 TEST_F(ParamWithFloatTest, PopBack) {
     FloatParam param(value_, pd_);
     rc_ = param.popBack(authz_);
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
-
+/*
+ * TEST 7 - Testing <FLOAT>ParamWithValue.toProto().
+ */
 TEST_F(ParamWithFloatTest, ParamToProto) {
     FloatParam param(value_, pd_);
-    float outValue;
-    catena::Param outParam;
-    EXPECT_CALL(pd_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::Param& p, const IAuthorizer&) {
-            p.set_template_oid(oid_);
-        }));
-    rc_ = param.toProto(outParam, authz_);
-    ASSERT_TRUE(outParam.value().has_float32_value());
-    ASSERT_EQ(fromProto(outParam.value(), &outValue, pd_, authz_).status, catena::StatusCode::OK) << "fromProto failed, cannot compare results.";
+    catena::Param protoParam;
+    rc_ = param.toProto(protoParam, authz_);
+    // Checking results.
+    ASSERT_TRUE(protoParam.value().has_float32_value());
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
-    EXPECT_EQ(value_, outValue);
-    EXPECT_EQ(oid_, outParam.template_oid());
+    EXPECT_EQ(value_, protoParam.value().float32_value());
+    EXPECT_EQ(oid_, protoParam.template_oid());
 }
-
+/*
+ * TEST 8 - Testing <FLOAT>ParamWithValue.fromProto().
+ */
 TEST_F(ParamWithFloatTest, FromProto) {
     FloatParam param(value_, pd_);
-    float newValue{16};
     catena::Value protoValue;
-    protoValue.set_float32_value(newValue);
+    protoValue.set_float32_value(32);
     rc_ = param.fromProto(protoValue, authz_);
+    // Checking results.
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
-    EXPECT_EQ(param.get(), newValue);
+    EXPECT_EQ(param.get(), protoValue.float32_value());
 }
-
+/*
+ * TEST 9 - Testing <FLOAT>ParamWithValue.ValidateSetValue().
+ */
 TEST_F(ParamWithFloatTest, ValidateSetValue) {
     FloatParam param(value_, pd_);
     catena::Value protoValue;
@@ -115,22 +135,25 @@ TEST_F(ParamWithFloatTest, ValidateSetValue) {
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_));
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
 }
-
+/*
+ * TEST 10 - Testing <FLOAT>ParamWithValue.ValidateSetValue() error handling.
+ * Two main error cases:
+ *  - Index is defined.
+ *  - validFromProto returns false.
+ */
 TEST_F(ParamWithFloatTest, ValidateSetValue_Error) {
     FloatParam param(value_, pd_);
     catena::Value protoValue;
     protoValue.set_float32_value(16);
-    { // Defined index w non-array
+    // Defined index w non-array
     EXPECT_FALSE(param.validateSetValue(protoValue, 1, authz_, rc_))
-        << "ValidateSetValue should return false when index is defined for non-array param";
+        << "ValidateSetValue should return false when index is defined for typeA -> typeA SetValue.";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT)
-        << "ValidateSetValue should return INVALID_ARGUMENT when index is defined for non-array param";
-    }
-    { // ValidFromProto error
+        << "ValidateSetValue should return INVALID_ARGUMENT when index is defined for typeA -> typeA SetValue.";
+    // ValidFromProto error (no authz)
     EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
     EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_))
-        << "ValidateSetValue should return false when validFromProto returns false";
+        << "ValidateSetValue should return false when validFromProto returns false.";
     EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
-        << "In this case validFromProto should return PERMISSION_DENIED";
-    }
+        << "In this case validFromProto should fail from incorrect authz.";
 }
