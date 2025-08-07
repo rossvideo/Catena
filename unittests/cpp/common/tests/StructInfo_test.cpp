@@ -45,43 +45,11 @@
 #include <mocks/MockAuthorizer.h>
 
 // common
-#include "StructInfo.h"
+#include "CommonTestHelpers.h"
 #include "Enums.h"
 
 using namespace catena::common;
 
-/*
- * A test CatenaStruct with two int fields.
- */
-struct TestStruct1 {
-    int32_t f1;
-    int32_t f2;
-    using isCatenaStruct = void;
-};
-template<>
-struct catena::common::StructInfo<TestStruct1> {
-    using Type = std::tuple<FieldInfo<int32_t, TestStruct1>, FieldInfo<int32_t, TestStruct1>>;
-    static constexpr Type fields = {{"f1", &TestStruct1::f1}, {"f2", &TestStruct1::f2}};
-};
-/*
- * A test CatenaStruct with two float fields.
- */
-struct TestStruct2 {
-    float f1;
-    float f2;
-    using isCatenaStruct = void;
-};
-template<>
-struct catena::common::StructInfo<TestStruct2> {
-    using Type = std::tuple<FieldInfo<float, TestStruct2>, FieldInfo<float, TestStruct2>>;
-    static constexpr Type fields = {{"f1", &TestStruct2::f1}, {"f2", &TestStruct2::f2}};
-};
-/*
- * A test CatenaStruct variant which can be a TestStruct1 or a TestStruct2.
- */
-using TestVariantStruct = std::variant<TestStruct1, TestStruct2>;
-template<>
-inline std::array<const char*, 2> catena::common::alternativeNames<TestVariantStruct>{"TestStruct1", "TestStruct2"};
 // Fixture
 class StructInfoTest : public ::testing::Test {
   protected:
