@@ -276,18 +276,17 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_RemoveOnly) {
     EXPECT_EQ(removedOids_, 2);
 }
 
-// 1.3: Success Case - UpdateSubscriptions normal case - simultaneous add and remove.
-// This may not work due to a concurrency issue.
-// TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_AddAndRemove) {
-//     initPayload(0, {"param1"}, {"param2"});
+//1.3: Success Case - UpdateSubscriptions normal case - simultaneous add and remove.
+TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_AddAndRemove) {
+    initPayload(0, {"param1"}, {"param2"});
     
-//     // Calling proceed and testing the output
-//     testRPC();
+    // Calling proceed and testing the output
+    testRPC();
     
-//     // Verify subscription operations were called
-//     EXPECT_EQ(addedOids_, 1);
-//     EXPECT_EQ(removedOids_, 1);
-// }
+    // Verify subscription operations were called
+    EXPECT_EQ(addedOids_, 1);
+    EXPECT_EQ(removedOids_, 1);
+}
 
 // 1.4: Success Case - UpdateSubscriptions with a valid token.
 TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_AuthzValid) {
