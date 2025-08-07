@@ -500,6 +500,18 @@ Device::DeviceSerializer Device::getDeviceSerializer(const IAuthorizer& authz, c
             }
         }
 
+        // Send commands if authorized and in FULL or COMMANDS mode
+        if (dl == catena::Device_DetailLevel_FULL || dl == catena::Device_DetailLevel_COMMANDS) {
+            for (const auto& [name, param] : commands_) {
+                if (authz.readAuthz(*param)) {
+                    co_yield component;
+                    component.Clear();
+                    ::catena::Param* dstParam = component.mutable_command()->mutable_param();
+                    param->toProto(*dstParam, authz);
+                    component.mutable_command()->set_oid(name);
+                }
+            }
+        }
         // Send parameters if authorized, and either in the minimal set or if subscribed to
         if (dl != catena::Device_DetailLevel_COMMANDS) {
             for (const auto& [name, param] : params_) {
@@ -512,17 +524,6 @@ Device::DeviceSerializer Device::getDeviceSerializer(const IAuthorizer& authz, c
                     ::catena::Param* dstParam = component.mutable_param()->mutable_param();
                     param->toProto(*dstParam, authz);
                     component.mutable_param()->set_oid(name);
-                }
-            }
-        // Send commands if authorized and in COMMANDS mode
-        } else {
-            for (const auto& [name, param] : commands_) {
-                if (authz.readAuthz(*param)) {
-                    co_yield component;
-                    component.Clear();
-                    ::catena::Param* dstParam = component.mutable_command()->mutable_param();
-                    param->toProto(*dstParam, authz);
-                    component.mutable_command()->set_oid(name);
                 }
             }
         }

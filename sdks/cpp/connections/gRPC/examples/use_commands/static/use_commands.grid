@@ -4,6 +4,29 @@
       <tr>
          <label name="Catena gRPC Use Commands Example"/>
       </tr>
-
+      <tr>
+         <param oid="state" showlabel="true" fill="both" width="200"/>
+      </tr>
+      <tr>
+         <button buttontype="push" height="75" left="600" name="play" top="0" width="235">
+            <task tasktype="ogscript">
+               params.executeCommand("play", null, null);
+            </task>
+         </button>
+      </tr>
+      <tr>
+         <button buttontype="push" height="75" left="600" name="pause" top="0" width="235">
+            <task tasktype="ogscript">
+               params.executeCommand("pause", null, null);
+            </task>
+         </button>
+      </tr>
+      <tr>
+         <button buttontype="push" height="75" left="600" name="load" top="0" width="235">
+            <task tasktype="ogscript">
+               params.executeCommand("load", null, null);
+            </task>
+         </button>
+      </tr>
    </table>
 </abs>
