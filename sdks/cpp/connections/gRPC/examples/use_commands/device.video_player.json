@@ -55,25 +55,104 @@
   },
   "commands": {
     "play": {
-      "type":"EMPTY"
+      "name": {"display_strings": {
+        "en": "Play",
+        "fr": "Lire",
+        "es": "Reproducir",
+        "ja": "再生"
+      }},
+      "type":"EMPTY",
+      "widget": "button"
     },
     "pause": {
+      "name": {"display_strings": {
+        "en": "Pause",
+        "fr": "Pause",
+        "es": "Pausa",
+        "ja": "一時停止"
+      }},
       "type":"EMPTY"
     },
     "stop": {
+      "name": {"display_strings": {
+        "en": "Stop",
+        "fr": "Arrêter",
+        "es": "Detener",
+        "ja": "停止"
+      }},
       "type":"EMPTY"
     },
     "rewind": {
+      "name": {"display_strings": {
+        "en": "Rewind",
+        "fr": "Rembobiner",
+        "es": "Rebobinar",
+        "ja": "巻き戻し"
+      }},
       "type": "EMPTY"
     },
     "fast_forward": {
+      "name": {"display_strings": {
+        "en": "Fast Forward",
+        "fr": "Avance rapide",
+        "es": "Avance rápido",
+        "ja": "早送り"
+      }},
       "type": "EMPTY"
     },
     "load": {
+      "name": {"display_strings": {
+        "en": "Load Video",
+        "fr": "Charger la vidéo",
+        "es": "Cargar video",
+        "ja": "ビデオを読み込む"
+      }},
+      "widget": "button",
       "type":"STRING"
     },
     "eject": {
       "type":"EMPTY"
+    }
+  },
+  "menu_groups": {
+    "status": {
+      "name": { "display_strings": {
+        "en": "Status",
+        "fr": "État",
+        "es": "Estado",
+        "ja": "ステータス"
+      }},
+      "menus": {
+        "state": {
+          "name": { "display_strings": {
+            "en": "State",
+            "fr": "État",
+            "es": "Estado",
+            "ja": "状態"
+          }},
+          "param_oids": ["/state"]
+        }
+      }
+    },
+    "config": {
+      "name": { "display_strings": {
+        "en": "Configuration",
+        "fr": "Configuration",
+        "es": "Configuración",
+        "ja": "設定"
+      }},
+      "menus": {
+        "commands": {
+          "name": { "display_strings": {
+            "en": "Commands",
+            "fr": "Commandes",
+            "es": "Comandos",
+            "ja": "コマンド"
+          }},
+          "param_oids": [],
+          "command_oids": ["/play", "/pause", "/stop", "/rewind", "/fast_forward", "/load", "/eject"]
+        }
+      }
     }
   }
 }
