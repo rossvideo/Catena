@@ -46,6 +46,8 @@ set(SOURCES
     tests/ParamWithValue_test/ParamWithStringArray_test.cpp
     tests/ParamWithValue_test/ParamWithStruct_test.cpp
     tests/ParamWithValue_test/ParamWithStructArray_test.cpp
+    tests/ParamWithValue_test/ParamWithVariant_test.cpp
+    tests/ParamWithValue_test/ParamWithVariantArray_test.cpp
 )
 
 add_executable(${This} ${SOURCES})
