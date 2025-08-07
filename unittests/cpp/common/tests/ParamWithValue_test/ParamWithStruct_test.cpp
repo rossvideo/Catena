@@ -186,8 +186,8 @@ TEST_F(ParamWithStructTest, FromProto) {
     fields->insert({"f2", f2});
     rc_ = param.fromProto(protoValue, authz_);
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
-    EXPECT_EQ(param.get().f1, protoValue.struct_value().fields().at("f1").int32_value());
-    EXPECT_EQ(param.get().f2, protoValue.struct_value().fields().at("f2").int32_value());
+    EXPECT_EQ(param.get().f1, f1.int32_value());
+    EXPECT_EQ(param.get().f2, f2.int32_value());
 }
 
 TEST_F(ParamWithStructTest, ValidateSetValue) {

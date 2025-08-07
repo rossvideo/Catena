@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This file is for testing the <std::vector<int32_t>>ParamWithValue
+ * @brief This file is for testing the <std::vector<CatenaStruct>>ParamWithValue
  * class.
  * @author benjamin.whitten@rossvideo.com
  * @date 25/07/31
@@ -37,43 +37,54 @@
  */
 
 #include "Param_test.h"
+#include "CommonTestHelpers.h"
 
 using namespace catena::common;
 
-using IntArray = std::vector<int32_t>;
-using IntArrayParam = ParamWithValue<IntArray>;
+using StructArray = std::vector<TestStruct1>;
+using StructArrayParam = ParamWithValue<StructArray>;
 
-class ParamWithIntArrayTest : public ParamTest<IntArray> {
+class ParamWithStructArrayTest : public ParamTest<StructArray> {
   protected:
-    catena::ParamType type() const override { return catena::ParamType::INT32_ARRAY; }
+    catena::ParamType type() const override { return catena::ParamType::STRUCT_ARRAY; }
 
-    IntArray value_{0, 1, 2};
+    StructArray value_{{1,2}, {3,4}, {5,6}};
 };
 
-TEST_F(ParamWithIntArrayTest, Create) {
+TEST_F(ParamWithStructArrayTest, Create) {
     CreateTest(value_);
 }
 
-TEST_F(ParamWithIntArrayTest, Get) {
+TEST_F(ParamWithStructArrayTest, Get) {
     GetValueTest(value_);
 }
 
-TEST_F(ParamWithIntArrayTest, Size) {
-    IntArrayParam param(value_, pd_);
+TEST_F(ParamWithStructArrayTest, Size) {
+    StructArrayParam param(value_, pd_);
     EXPECT_EQ(param.size(), value_.size());
 }
 
-TEST_F(ParamWithIntArrayTest, GetParam) {
-    IntArrayParam param(value_, pd_);
+TEST_F(ParamWithStructArrayTest, GetParam) {
+    StructArrayParam param(value_, pd_);
+    { // Top level
     Path path = Path("/0");
     auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    ASSERT_TRUE(foundParam) << "Did not find a parameter /0 when one was expected";
+    EXPECT_EQ(getParamValue<TestStruct1>(foundParam.get()).f1, value_[0].f1);
+    EXPECT_EQ(getParamValue<TestStruct1>(foundParam.get()).f2, value_[0].f2);
+    } // Nested
+    {
+    Path path = Path("/0/f1");
+    auto foundParam = param.getParam(path, authz_, rc_);
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
     ASSERT_TRUE(foundParam) << "Did not find a parameter when one was expected";
-    EXPECT_EQ(getParamValue<int32_t>(foundParam.get()), value_[0]);
+    EXPECT_EQ(getParamValue<int32_t>(foundParam.get()), value_[0].f1);
+    }
 }
 
-TEST_F(ParamWithIntArrayTest, GetParam_Error) {
-    IntArrayParam param(value_, pd_);
+TEST_F(ParamWithStructArrayTest, GetParam_Error) {
+    StructArrayParam param(value_, pd_);
     { // Front is not an index.
     Path path = Path("/test/oid");
     auto foundParam = param.getParam(path, authz_, rc_);
@@ -90,14 +101,6 @@ TEST_F(ParamWithIntArrayTest, GetParam_Error) {
         << "getParam should return OUT_OF_RANGE if the index is out of bounds";
     }
     rc_ = catena::exception_with_status{"", catena::StatusCode::OK}; // Reset status
-    { // Param does not exist
-    Path path = Path("/0/0");
-    auto foundParam = param.getParam(path, authz_, rc_);
-    EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
-    EXPECT_EQ(rc_.status, catena::StatusCode::NOT_FOUND)
-        << "getParam should return NOT_FOUND if attempting to retrieve a sub-parameter that does not exist";
-    }
-    rc_ = catena::exception_with_status{"", catena::StatusCode::OK}; // Reset status
     { // Not authorized.
     Path path = Path("/0");
     EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
@@ -108,16 +111,16 @@ TEST_F(ParamWithIntArrayTest, GetParam_Error) {
     }
 }
 
-TEST_F(ParamWithIntArrayTest, AddBack) {
-    IntArrayParam param(value_, pd_);
+TEST_F(ParamWithStructArrayTest, AddBack) {
+    StructArrayParam param(value_, pd_);
     EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(5));
     auto addedParam = param.addBack(authz_, rc_);
     EXPECT_TRUE(addedParam) << "Failed to add a value to array parameter";
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
 }
 
-TEST_F(ParamWithIntArrayTest, AddBack_Error) {
-    IntArrayParam param(value_, pd_);
+TEST_F(ParamWithStructArrayTest, AddBack_Error) {
+    StructArrayParam param(value_, pd_);
     { // Add exceeds max length
     EXPECT_CALL(pd_, max_length()).WillOnce(testing::Return(3));
     auto addedParam = param.addBack(authz_, rc_);
@@ -134,19 +137,20 @@ TEST_F(ParamWithIntArrayTest, AddBack_Error) {
     }
 }
 
-TEST_F(ParamWithIntArrayTest, PopBack) {
-    IntArrayParam param(value_, pd_);
-    IntArray valueCopy{value_.begin(), value_.end()};
+TEST_F(ParamWithStructArrayTest, PopBack) {
+    StructArrayParam param(value_, pd_);
+    StructArray valueCopy{value_.begin(), value_.end()};
     rc_ = param.popBack(authz_);
     valueCopy.pop_back();
-
-    EXPECT_EQ(param.get(), valueCopy);
+    ASSERT_EQ(param.get().size(), valueCopy.size());
+    EXPECT_EQ(param.get()[0].f1, valueCopy[0].f1);
+    EXPECT_EQ(param.get()[1].f1, valueCopy[1].f1);
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
 }
 
-TEST_F(ParamWithIntArrayTest, PopBack_Error) {
-    std::vector<int32_t> value{};
-    IntArrayParam param(value, pd_);
+TEST_F(ParamWithStructArrayTest, PopBack_Error) {
+    StructArray value{};
+    StructArrayParam param(value, pd_);
     { // Empty array
     rc_ = param.popBack(authz_);
     EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
@@ -160,59 +164,77 @@ TEST_F(ParamWithIntArrayTest, PopBack_Error) {
     }
 }
 
-TEST_F(ParamWithIntArrayTest, ParamToProto) {
-    IntArrayParam param(value_, pd_);
-    std::vector<int32_t> outValue{};
+TEST_F(ParamWithStructArrayTest, ParamToProto) {
+    StructArrayParam param(value_, pd_);
+    StructArray outValue{};
     catena::Param outParam;
     EXPECT_CALL(pd_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](catena::Param& p, const IAuthorizer&) {
             p.set_template_oid(oid_);
         }));
     rc_ = param.toProto(outParam, authz_);
-    ASSERT_TRUE(outParam.value().has_int32_array_values());
+    ASSERT_TRUE(outParam.value().has_struct_array_values());
     ASSERT_EQ(fromProto(outParam.value(), &outValue, pd_, authz_).status, catena::StatusCode::OK) << "fromProto failed, cannot compare results.";
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
-    EXPECT_EQ(value_, outValue);
     EXPECT_EQ(oid_, outParam.template_oid());
+    for (uint32_t i = 0; i < value_.size(); ++i) {
+        EXPECT_EQ(value_[i].f1, outValue[i].f1);
+        EXPECT_EQ(value_[i].f2, outValue[i].f2);
+    }
 }
 
-TEST_F(ParamWithIntArrayTest, FromProto) {
-    value_ = {};
-    IntArrayParam param(value_, pd_);
-    std::vector<int32_t> newValue{0, 1, 2};
-    catena::Value protoValue;
-    for (uint32_t i : newValue) {
-        protoValue.mutable_int32_array_values()->add_ints(i);
-    }
+TEST_F(ParamWithStructArrayTest, FromProto) {
+    value_ = StructArray{{0, 0}};
+    StructArrayParam param(value_, pd_);
+    catena::Value protoValue, s1, f1, f2;
+    f1.set_int32_value(16);
+    f2.set_int32_value(32);
+    auto fields = s1.mutable_struct_value()->mutable_fields();
+    fields->insert({"f1", f1});
+    fields->insert({"f2", f2});
+    protoValue.mutable_struct_array_values()->add_struct_values()->CopyFrom(s1.struct_value());
     rc_ = param.fromProto(protoValue, authz_);
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
-    EXPECT_EQ(param.get(), newValue);
+    EXPECT_EQ(param.get()[0].f1, f1.int32_value());
+    EXPECT_EQ(param.get()[0].f2, f2.int32_value());
 }
 
-TEST_F(ParamWithIntArrayTest, ValidateSetValue) {
-    IntArrayParam param(value_, pd_);
-    catena::Value protoValue;
-    for (uint32_t i : {0, 1, 2}) {
-        protoValue.mutable_int32_array_values()->add_ints(i);
-    }
+TEST_F(ParamWithStructArrayTest, ValidateSetValue) {
+    StructArrayParam param(value_, pd_);
+    catena::Value protoValue, s1, f1, f2;
+    f1.set_int32_value(16);
+    f2.set_int32_value(32);
+    auto fields = s1.mutable_struct_value()->mutable_fields();
+    fields->insert({"f1", f1});
+    fields->insert({"f2", f2});
+    protoValue.mutable_struct_array_values()->add_struct_values()->CopyFrom(s1.struct_value());
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_)) << "Valid setting whole array";
 }
 
-TEST_F(ParamWithIntArrayTest, ValidateSetValue_SingleElement) {
-    IntArrayParam param(value_, pd_);
-    catena::Value protoValue;
-    protoValue.set_int32_value(3);
+TEST_F(ParamWithStructArrayTest, ValidateSetValue_SingleElement) {
+    StructArrayParam param(value_, pd_);
+    catena::Value protoValue, f1, f2;
+    f1.set_int32_value(48);
+    f2.set_int32_value(64);
+    auto fields = protoValue.mutable_struct_value()->mutable_fields();
+    fields->insert({"f1", f1});
+    fields->insert({"f2", f2});
     // Setting existing value.
     EXPECT_TRUE(param.validateSetValue(protoValue, 0, authz_, rc_)) << "Valid set existing value";
     // Appending to the end.
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_)) << "Valid append value";
 }
 
-TEST_F(ParamWithIntArrayTest, ValidateSetValue_Error) {
-    IntArrayParam param(value_, pd_);
-    catena::Value protoValue;
-    for (uint32_t i : {0, 1, 2, 3}) {
-        protoValue.mutable_int32_array_values()->add_ints(i);
+TEST_F(ParamWithStructArrayTest, ValidateSetValue_Error) {
+    StructArrayParam param(value_, pd_);
+    catena::Value protoValue, s1, f1, f2;
+    f1.set_int32_value(16);
+    f2.set_int32_value(32);
+    auto fields = s1.mutable_struct_value()->mutable_fields();
+    fields->insert({"f1", f1});
+    fields->insert({"f2", f2});
+    for (uint32_t i = 0; i < value_.size() + 1; ++i) {
+        protoValue.mutable_struct_array_values()->add_struct_values()->CopyFrom(s1.struct_value());
     }
 
     // Defined index with non-single element set
@@ -229,10 +251,14 @@ TEST_F(ParamWithIntArrayTest, ValidateSetValue_Error) {
         << "Should return OUT_OF_RANGE when the new value exceeds maxLength";
 }
 
-TEST_F(ParamWithIntArrayTest, ValidateSetValue_SingleElementError) {
-    IntArrayParam param(value_, pd_);
-    catena::Value protoValue;
-    protoValue.set_int32_value(3);
+TEST_F(ParamWithStructArrayTest, ValidateSetValue_SingleElementError) {
+    StructArrayParam param(value_, pd_);
+    catena::Value protoValue, f1, f2;
+    f1.set_int32_value(48);
+    f2.set_int32_value(64);
+    auto fields = protoValue.mutable_struct_value()->mutable_fields();
+    fields->insert({"f1", f1});
+    fields->insert({"f2", f2});
     EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(5));
 
     // Undefined index with single element set
