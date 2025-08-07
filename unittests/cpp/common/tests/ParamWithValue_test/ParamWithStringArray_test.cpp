@@ -144,8 +144,7 @@ TEST_F(ParamWithStringArrayTest, AddBack) {
  *  - Not authorized
  */
 TEST_F(ParamWithStringArrayTest, AddBack_Error) {
-    std::vector<std::string> value{"Hello", "World"};
-    StringArrayParam param(value, pd_);
+    StringArrayParam param(value_, pd_);
     { // Add exceeds max length
     EXPECT_CALL(pd_, max_length()).WillOnce(testing::Return(2));
     auto addedParam = param.addBack(authz_, rc_);
@@ -216,12 +215,24 @@ TEST_F(ParamWithStringArrayTest, ToProto) {
     EXPECT_EQ(oid_, outParam.template_oid());
 }
 
+TEST_F(ParamWithStringArrayTest, FromProto) {
+    value_ = {};
+    StringArrayParam param(value_, pd_);
+    std::vector<std::string> newValue{"Hello", "World"};
+    catena::Value protoValue;
+    for (std::string& i : newValue) {
+        protoValue.mutable_string_array_values()->add_strings(i);
+    }
+    rc_ = param.fromProto(protoValue, authz_);
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    EXPECT_EQ(param.get(), newValue);
+}
+
 /**
  * TEST 11 - Testing <StringArray>ParamWithValue.validateSetValue()
  */
 TEST_F(ParamWithStringArrayTest, ValidateSetValue) {
-    std::vector<std::string> value{"Hello", "World"};
-    StringArrayParam param(value, pd_);
+    StringArrayParam param(value_, pd_);
     catena::Value protoValue;
     for (std::string i : {"Hello", "World", "!"}) {
         protoValue.mutable_string_array_values()->add_strings(i);
@@ -234,8 +245,7 @@ TEST_F(ParamWithStringArrayTest, ValidateSetValue) {
  * appending and setting a single element.
  */
 TEST_F(ParamWithStringArrayTest, ValidateSetValue_SingleElement) {
-    std::vector<std::string> value{"Hello", "World"};
-    StringArrayParam param(value, pd_);
+    StringArrayParam param(value_, pd_);
     catena::Value protoValue;
     protoValue.set_string_value("Goodbye");
     // Setting existing value.

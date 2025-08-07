@@ -175,6 +175,19 @@ TEST_F(ParamWithFloatArrayTest, ParamToProto) {
     EXPECT_EQ(oid_, outParam.template_oid());
 }
 
+TEST_F(ParamWithFloatArrayTest, FromProto) {
+    value_ = {};
+    FloatArrayParam param(value_, pd_);
+    std::vector<float> newValue{0, 1, 2};
+    catena::Value protoValue;
+    for (float& i : newValue) {
+        protoValue.mutable_float32_array_values()->add_floats(i);
+    }
+    rc_ = param.fromProto(protoValue, authz_);
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    EXPECT_EQ(param.get(), newValue);
+}
+
 TEST_F(ParamWithFloatArrayTest, ValidateSetValue) {
     FloatArrayParam param(value_, pd_);
     catena::Value protoValue;

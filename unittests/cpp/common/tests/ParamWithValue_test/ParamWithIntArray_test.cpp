@@ -177,6 +177,19 @@ TEST_F(ParamWithIntArrayTest, ParamToProto) {
     EXPECT_EQ(oid_, outParam.template_oid());
 }
 
+TEST_F(ParamWithIntArrayTest, FromProto) {
+    value_ = {};
+    IntArrayParam param(value_, pd_);
+    std::vector<int32_t> newValue{0, 1, 2};
+    catena::Value protoValue;
+    for (uint32_t i : newValue) {
+        protoValue.mutable_int32_array_values()->add_ints(i);
+    }
+    rc_ = param.fromProto(protoValue, authz_);
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    EXPECT_EQ(param.get(), newValue);
+}
+
 TEST_F(ParamWithIntArrayTest, ValidateSetValue) {
     IntArrayParam param(value_, pd_);
     catena::Value protoValue;

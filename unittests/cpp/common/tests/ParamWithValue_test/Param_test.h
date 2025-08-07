@@ -60,7 +60,6 @@ class ParamTest : public ::testing::Test {
      * 
      */
     void SetUp() override {
-        EXPECT_CALL(pd_, getOid()).WillRepeatedly(testing::ReturnRef(oid_));
         // Forwards calls to authz(Param) to authz(ParamDescriptor)
         EXPECT_CALL(authz_, readAuthz(testing::An<const IParam&>()))
             .WillRepeatedly(testing::Invoke([this](const IParam& p){
@@ -70,16 +69,19 @@ class ParamTest : public ::testing::Test {
             .WillRepeatedly(testing::Invoke([this](const IParam& p){
                 return authz_.writeAuthz(p.getDescriptor());
             }));
-        // Authorizer has read and write authz by default
         for (auto* pd : {&pd_, &subpd1_, &subpd2_}) {
+            // Authorizer has read and write authz by default
             EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(*pd)))).WillRepeatedly(testing::Return(true));
             EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(*pd)))).WillRepeatedly(testing::Return(true));
+            // Some default values from paramDescriptor.
+            EXPECT_CALL(*pd, getOid()).WillRepeatedly(testing::ReturnRef(oid_));
+            EXPECT_CALL(*pd, getConstraint()).WillRepeatedly(testing::Return(nullptr));
+            EXPECT_CALL(*pd, max_length()).WillRepeatedly(testing::Return(1000));
+            EXPECT_CALL(*pd, total_length()).WillRepeatedly(testing::Return(1000));
+            EXPECT_CALL(*pd, type()).WillRepeatedly(testing::Return(type()));
         }
-        // Some default values from paramDescriptor.
-        EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(nullptr));
-        EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(1000));
-        EXPECT_CALL(pd_, total_length()).WillRepeatedly(testing::Return(1000));
-        EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(type()));
+        EXPECT_CALL(pd_, getSubParam("f1")).WillRepeatedly(testing::ReturnRef(subpd1_));
+        EXPECT_CALL(pd_, getSubParam("f2")).WillRepeatedly(testing::ReturnRef(subpd2_));        
     }
 
     void CreateTest(T& value) {
