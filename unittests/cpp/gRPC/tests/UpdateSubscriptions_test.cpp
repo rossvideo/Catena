@@ -54,129 +54,132 @@ using namespace catena::common;
 using namespace catena::gRPC;
 using namespace catena::gRPC::test;
 
-// Typedef for the stream reader
-using UpdateSubscriptionsStreamReader = StreamReader<catena::DeviceComponent_ComponentParam, catena::UpdateSubscriptionsPayload, std::function<void(grpc::ClientContext*, const catena::UpdateSubscriptionsPayload*, grpc::ClientReadReactor<catena::DeviceComponent_ComponentParam>*)>>;
-
 class gRPCUpdateSubscriptionsTests : public GRPCTest {
-protected:
-    // Set up and tear down Google Logging
-    static void SetUpTestSuite() {
-        Logger::StartLogging("gRPCUpdateSubscriptionsTest");
-    }
+    protected:
+        /*
+        * This is a test class which makes an async RPC to the MockServer on
+        * construction and returns the streamed-back response.
+        */
+        using StreamReader = catena::gRPC::test::StreamReader<catena::DeviceComponent_ComponentParam, catena::UpdateSubscriptionsPayload, std::function<void(grpc::ClientContext*, const catena::UpdateSubscriptionsPayload*, grpc::ClientReadReactor<catena::DeviceComponent_ComponentParam>*)>>;
 
-    static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
-    }
-
-    /*
-     * Creates an UpdateSubscriptions handler object.
-     */
-    void makeOne() override { new UpdateSubscriptions(&service_, dms_, true); }
-
-    /*
-     * Reset counters before each test.
-     */
-    void SetUp() override {
-        GRPCTest::SetUp();
-        addedOids_ = 0;
-        removedOids_ = 0;
-        
-        // Set up default behavior for subscriptions to be enabled
-        EXPECT_CALL(dm0_, subscriptions()).WillRepeatedly(testing::Return(true));
-        EXPECT_CALL(dm1_, subscriptions()).WillRepeatedly(testing::Return(true));
-        
-        // Set up default behavior for subscription manager
-        EXPECT_CALL(service_, getSubscriptionManager()).WillRepeatedly(testing::ReturnRef(subManager_));
-        EXPECT_CALL(subManager_, getAllSubscribedOids(testing::Ref(dm0_))).WillRepeatedly(testing::Return(std::set<std::string>(testOids_.begin(), testOids_.end())));
-        
-        // Set up default expectations for subscription operations
-        for (const auto& oid : testOids_) {
-            EXPECT_CALL(subManager_, addSubscription(oid, testing::Ref(dm0_), testing::_, testing::_)).WillRepeatedly(testing::Invoke(
-                [this](const std::string& oid, catena::common::IDevice& dm, catena::exception_with_status& rc, const IAuthorizer& authz) -> bool {
-                    addedOids_++;
-                    rc = catena::exception_with_status("", catena::StatusCode::OK);
-                    return true;
-                }));
-            EXPECT_CALL(subManager_, removeSubscription(oid, testing::Ref(dm0_), testing::_)).WillRepeatedly(testing::Invoke(
-                [this](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc) -> bool {
-                    removedOids_++;
-                    rc = catena::exception_with_status("", catena::StatusCode::OK);
-                    return true;
-                }));
+        // Set up and tear down Google Logging
+        static void SetUpTestSuite() {
+            Logger::StartLogging("gRPCUpdateSubscriptionsTest");
         }
-        
-        // Set up default expectations for test parameters
-        for (size_t i = 0; i < testOids_.size(); ++i) {
-            // Create mock param for this OID
-            mockParams_.emplace_back(std::make_unique<MockParam>());
+
+        static void TearDownTestSuite() {
+            google::ShutdownGoogleLogging();
+        }
+
+        /*
+        * Creates an UpdateSubscriptions handler object.
+        */
+        void makeOne() override { new UpdateSubscriptions(&service_, dms_, true); }
+
+        /*
+        * Reset counters before each test.
+        */
+        void SetUp() override {
+            GRPCTest::SetUp();
+            addedOids_ = 0;
+            removedOids_ = 0;
             
-            // Set up getParam expectation
-            EXPECT_CALL(dm0_, getParam(testOids_[i], testing::_, testing::_)).WillRepeatedly(testing::Invoke(
-                [this, i](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) -> std::unique_ptr<IParam> {
-                    status = catena::exception_with_status("", catena::StatusCode::OK);
-                    return std::move(mockParams_[i]);
-                }));
+            // Set up default behavior for subscriptions to be enabled
+            EXPECT_CALL(dm0_, subscriptions()).WillRepeatedly(testing::Return(true));
+            EXPECT_CALL(dm1_, subscriptions()).WillRepeatedly(testing::Return(true));
             
-            // Set up getOid expectation
-            EXPECT_CALL(*mockParams_[i], getOid()).WillRepeatedly(testing::ReturnRefOfCopy(testOids_[i]));
+            // Set up default behavior for subscription manager
+            EXPECT_CALL(service_, getSubscriptionManager()).WillRepeatedly(testing::ReturnRef(subManager_));
+            EXPECT_CALL(subManager_, getAllSubscribedOids(testing::Ref(dm0_))).WillRepeatedly(testing::Return(std::set<std::string>(testOids_.begin(), testOids_.end())));
             
-            // Set up toProto expectation
-            EXPECT_CALL(*mockParams_[i], toProto(testing::An<catena::Param&>(), testing::_)).WillRepeatedly(testing::Invoke(
-                [this, i](catena::Param &param, const IAuthorizer &authz) -> catena::exception_with_status {
-                    param.set_type(catena::ParamType::STRING);
-                    param.mutable_value()->set_string_value("value" + std::to_string(i + 1));
-                    return catena::exception_with_status("", catena::StatusCode::OK);
-                }));
+            // Set up default expectations for subscription operations
+            for (const auto& oid : testOids_) {
+                EXPECT_CALL(subManager_, addSubscription(oid, testing::Ref(dm0_), testing::_, testing::_)).WillRepeatedly(testing::Invoke(
+                    [this](const std::string& oid, catena::common::IDevice& dm, catena::exception_with_status& rc, const IAuthorizer& authz) -> bool {
+                        addedOids_++;
+                        rc = catena::exception_with_status("", catena::StatusCode::OK);
+                        return true;
+                    }));
+                EXPECT_CALL(subManager_, removeSubscription(oid, testing::Ref(dm0_), testing::_)).WillRepeatedly(testing::Invoke(
+                    [this](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc) -> bool {
+                        removedOids_++;
+                        rc = catena::exception_with_status("", catena::StatusCode::OK);
+                        return true;
+                    }));
+            }
+            
+            // Set up default expectations for test parameters
+            for (size_t i = 0; i < testOids_.size(); ++i) {
+                // Create mock param for this OID
+                mockParams_.emplace_back(std::make_unique<MockParam>());
+                
+                // Set up getParam expectation
+                EXPECT_CALL(dm0_, getParam(testOids_[i], testing::_, testing::_)).WillRepeatedly(testing::Invoke(
+                    [this, i](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) -> std::unique_ptr<IParam> {
+                        status = catena::exception_with_status("", catena::StatusCode::OK);
+                        return std::move(mockParams_[i]);
+                    }));
+                
+                // Set up getOid expectation
+                EXPECT_CALL(*mockParams_[i], getOid()).WillRepeatedly(testing::ReturnRefOfCopy(testOids_[i]));
+                
+                // Set up toProto expectation
+                EXPECT_CALL(*mockParams_[i], toProto(testing::An<catena::Param&>(), testing::_)).WillRepeatedly(testing::Invoke(
+                    [this, i](catena::Param &param, const IAuthorizer &authz) -> catena::exception_with_status {
+                        param.set_type(catena::ParamType::STRING);
+                        param.mutable_value()->set_string_value("value" + std::to_string(i + 1));
+                        return catena::exception_with_status("", catena::StatusCode::OK);
+                    }));
+            }
         }
-    }
 
-    /*
-     * Helper function which initializes an UpdateSubscriptionsPayload object.
-     */
-    void initPayload(uint32_t slot, const std::vector<std::string>& addOids = {}, const std::vector<std::string>& remOids = {}) {
-        inVal_.set_slot(slot);
-        for (const auto& oid : addOids) {
-            inVal_.add_added_oids(oid);
+        /*
+        * Helper function which initializes an UpdateSubscriptionsPayload object.
+        */
+        void initPayload(uint32_t slot, const std::vector<std::string>& addOids = {}, const std::vector<std::string>& remOids = {}) {
+            inVal_.set_slot(slot);
+            for (const auto& oid : addOids) {
+                inVal_.add_added_oids(oid);
+            }
+            for (const auto& oid : remOids) {
+                inVal_.add_removed_oids(oid);
+            }
         }
-        for (const auto& oid : remOids) {
-            inVal_.add_removed_oids(oid);
+
+        /* 
+        * Makes an async RPC to the MockServer and waits for a response before
+        * comparing output.
+        */
+        void testRPC() {
+            // Creating the stream reader.
+            StreamReader reader(&outVals_, &outRc_);
+            // Making the RPC call.
+            reader.MakeCall(&clientContext_, &inVal_, [this](auto ctx, auto payload, auto reactor) {
+                client_->async()->UpdateSubscriptions(ctx, payload, reactor);
+            });
+            // Waiting for the RPC to finish.
+            reader.Await();
+            // Comparing the results.
+            EXPECT_EQ(outRc_.error_code(), static_cast<grpc::StatusCode>(expRc_.status));
+            EXPECT_EQ(outRc_.error_message(), expRc_.what());
+            // Make sure another UpdateSubscriptions handler was created.
+            EXPECT_TRUE(asyncCall_) << "Async handler was not created during runtime";
         }
-    }
 
-    /* 
-     * Makes an async RPC to the MockServer and waits for a response before
-     * comparing output.
-     */
-    void testRPC() {
-        // Creating the stream reader.
-        UpdateSubscriptionsStreamReader streamReader(&outVals_, &outRc_);
-        // Making the RPC call.
-        streamReader.MakeCall(&clientContext_, &inVal_, [this](auto ctx, auto payload, auto reactor) {
-            client_->async()->UpdateSubscriptions(ctx, payload, reactor);
-        });
-        // Waiting for the RPC to finish.
-        streamReader.Await();
-        // Comparing the results.
-        EXPECT_EQ(outRc_.error_code(), static_cast<grpc::StatusCode>(expRc_.status));
-        EXPECT_EQ(outRc_.error_message(), expRc_.what());
-        // Make sure another UpdateSubscriptions handler was created.
-        EXPECT_TRUE(asyncCall_) << "Async handler was not created during runtime";
-    }
-
-    // Input/Output values
-    catena::UpdateSubscriptionsPayload inVal_;
-    std::vector<catena::DeviceComponent_ComponentParam> outVals_;
-    
-    // Trackers for calls to add/remove subscriptions
-    uint32_t addedOids_ = 0;
-    uint32_t removedOids_ = 0;
-    
-    // Mock subscription manager
-    MockSubscriptionManager subManager_;
-    
-    // Test parameters
-    std::vector<std::string> testOids_{"param1", "param2", "errParam"};
-    std::vector<std::unique_ptr<MockParam>> mockParams_;
+        // Input/Output values
+        catena::UpdateSubscriptionsPayload inVal_;
+        std::vector<catena::DeviceComponent_ComponentParam> outVals_;
+        
+        // Trackers for calls to add/remove subscriptions
+        uint32_t addedOids_ = 0;
+        uint32_t removedOids_ = 0;
+        
+        // Mock subscription manager
+        MockSubscriptionManager subManager_;
+        
+        // Test parameters
+        std::vector<std::string> testOids_{"param1", "param2", "errParam"};
+        std::vector<std::unique_ptr<MockParam>> mockParams_;
 
 };
 
