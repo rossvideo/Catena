@@ -169,6 +169,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build examples
+        shell: bash
         run: |
           mkdir -p ${WORKDIR}/${BUILD_TARGET}
           cd ${WORKDIR}/${BUILD_TARGET}
@@ -208,6 +209,14 @@ jobs:
             EXAMPLES_JSON=$(find $WORKDIR/examples -type f -executable -printf '"%P",')
             EXAMPLES_JSON="[${EXAMPLES_JSON%,}]"
             echo "examples=${EXAMPLES_JSON}" >> $GITHUB_OUTPUT
+
+      - name: Print examples
+        run: |
+          echo "Examples found:"
+          echo "${{ steps.generate-matrix.outputs.examples }}"
+          find $WORKDIR/examples
+          ls -l $WORKDIR/examples
+          echo "Examples saved to artifact 'examples'"
 
   build-and-push-examples:
     runs-on: ubuntu-latest
