@@ -192,7 +192,7 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_create) {
     ASSERT_TRUE(asyncCall_);
 }
 
-// 0.1: Success Case - UpdateSubscriptions with a device which does not support subscriptions
+// 0.1: Error Case - UpdateSubscriptions with a device which does not support subscriptions
 TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_NotSupported) {
     initPayload(0, {"param1"}, {"param2"});
     expRc_ = catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::FAILED_PRECONDITION);
@@ -219,7 +219,7 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_InvalidSlot) {
 
 /*
  * ============================================================================
- *                              Normal Operation Tests
+ *                            1. Normal Operation Tests
  * ============================================================================
  * 
  */
@@ -303,7 +303,7 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_AuthzValid) {
 
 /*
  * ============================================================================
- *                              Error Handling Tests
+ *                             2. Error Handling Tests
  * ============================================================================
  * 
  */
@@ -404,7 +404,7 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_RemoveThrowUnknown) {
 
 /*
  * ============================================================================
- *                              Authorization Tests
+ *                      3. Additional Authorization Tests
  * ============================================================================
  * 
  */
