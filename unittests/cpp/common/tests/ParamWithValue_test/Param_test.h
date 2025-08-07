@@ -1,0 +1,118 @@
+/*
+ * Copyright 2025 Ross Video Ltd
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @brief This file is for testing the <std::vector<std::string>>ParamWithValue
+ * class.
+ * @author benjamin.whitten@rossvideo.com
+ * @date 25/07/31
+ * @copyright Copyright © 2025 Ross Video Ltd
+ */
+
+#pragma once
+
+#include "ParamWithValue.h"
+#include "StructInfo.h"
+
+#include "MockParamDescriptor.h"
+#include "MockDevice.h"
+#include "MockConstraint.h"
+#include "MockAuthorizer.h"
+
+// gtest
+#include <gtest/gtest.h>
+
+using namespace catena::common;
+
+template <typename T>
+class ParamTest : public ::testing::Test {
+  protected:
+    /*
+     * 
+     */
+    void SetUp() override {
+        EXPECT_CALL(pd_, getOid()).WillRepeatedly(testing::ReturnRef(oid_));
+        // Forwards calls to authz(Param) to authz(ParamDescriptor)
+        EXPECT_CALL(authz_, readAuthz(testing::An<const IParam&>()))
+            .WillRepeatedly(testing::Invoke([this](const IParam& p){
+                return authz_.readAuthz(p.getDescriptor());
+            }));
+        EXPECT_CALL(authz_, writeAuthz(testing::An<const IParam&>()))
+            .WillRepeatedly(testing::Invoke([this](const IParam& p){
+                return authz_.writeAuthz(p.getDescriptor());
+            }));
+        // Authorizer has read and write authz by default
+        EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillRepeatedly(testing::Return(true));
+        EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillRepeatedly(testing::Return(true));
+        // Some default values from paramDescriptor.
+        EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(nullptr));
+        EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(1000));
+        EXPECT_CALL(pd_, total_length()).WillRepeatedly(testing::Return(1000));
+    }
+
+    void CreateTest(T& value) {
+        // Constructor (value, descriptor, device, isCommand)
+        EXPECT_CALL(dm_, addItem(oid_, testing::An<IParam*>())).Times(1)
+            .WillOnce(testing::Invoke([](std::string, IParam* param) {
+                EXPECT_TRUE(param) << "Nullptr added to dm_";
+            }));
+        EXPECT_NO_THROW(ParamWithValue<T>(value, pd_, dm_, false);)
+            << "Failed to create a ParamWithValue using constructor"
+            << "(value, descriptor, device, isCommand)";
+        // Constructor (value, descriptor)
+        EXPECT_NO_THROW(ParamWithValue<T>(value, pd_);)
+            << "Failed to create a ParamWithValue using constructor"
+            << "(value, descriptor)";
+        // Constructor (value, descriptor, mSizeTracker, tSizeTracker)
+        std::shared_ptr<std::size_t> mSizeTracker{0};
+        std::shared_ptr<ParamWithValue<EmptyValue>::TSizeTracker> tSizeTracker{};
+        EXPECT_NO_THROW(ParamWithValue<T>(value, pd_, mSizeTracker, tSizeTracker);)
+            << "Failed to create a ParamWithValue using constructor"
+            << "(value, descriptor, mSizeTracker, tSizeTracker)";
+    }
+
+    void GetValueTest(T& value) {
+        ParamWithValue<T> param(value, pd_);
+        // Non-const
+        EXPECT_EQ(&param.get(), &value);
+        // Const
+        const ParamWithValue<T> constParam(value, pd_);
+        EXPECT_EQ(&constParam.get(), &value);
+        // getParamValue
+        EXPECT_EQ(&getParamValue<T>(&param), &value);
+    }
+
+    MockParamDescriptor pd_;
+    MockDevice dm_;
+    MockAuthorizer authz_;
+    catena::exception_with_status rc_{"", catena::StatusCode::OK};
+
+    std::string oid_ = "test_oid";
+};

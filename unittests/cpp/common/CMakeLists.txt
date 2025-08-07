@@ -37,8 +37,13 @@ set(SOURCES
     tests/ParamDescriptor_test.cpp
     tests/Device_test.cpp
     tests/ConnectionQueue_test.cpp
-    tests/ParamWithValue_test.cpp
-    tests/ParamWithValue_test/StringArrayParam_test.cpp
+    tests/ParamWithValue_test/ParamWithValue_test.cpp
+    tests/ParamWithValue_test/ParamWithInt_test.cpp
+    tests/ParamWithValue_test/ParamWithFloat_test.cpp
+    tests/ParamWithValue_test/ParamWithString_test.cpp
+    tests/ParamWithValue_test/ParamWithIntArray_test.cpp
+    tests/ParamWithValue_test/ParamWithFloatArray_test.cpp
+    tests/ParamWithValue_test/ParamWithStringArray_test.cpp
 )
 
 add_executable(${This} ${SOURCES})

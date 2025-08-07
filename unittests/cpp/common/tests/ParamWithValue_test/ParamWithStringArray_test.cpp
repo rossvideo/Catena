@@ -36,98 +36,36 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-#include "ParamWithValue.h"
-#include "StructInfo.h"
-
-#include "MockParamDescriptor.h"
-#include "MockDevice.h"
-#include "MockConstraint.h"
-#include "MockAuthorizer.h"
-
-// gtest
-#include <gtest/gtest.h>
+#include "Param_test.h"
 
 using namespace catena::common;
 
-class StringArrayParamTest : public ::testing::Test {
+using StringArray = std::vector<std::string>;
+using StringArrayParam = ParamWithValue<StringArray>;
+
+class ParamWithStringArrayTest : public ParamTest<StringArray> {
   protected:
-    /*
-     * 
-     */
-    void SetUp() override {
-        EXPECT_CALL(pd_, getOid()).WillRepeatedly(testing::ReturnRef(oid_));
-        // Forwards calls to authz(Param) to authz(ParamDescriptor)
-        EXPECT_CALL(authz_, readAuthz(testing::An<const IParam&>()))
-            .WillRepeatedly(testing::Invoke([this](const IParam& p){
-                return authz_.readAuthz(p.getDescriptor());
-            }));
-        EXPECT_CALL(authz_, writeAuthz(testing::An<const IParam&>()))
-            .WillRepeatedly(testing::Invoke([this](const IParam& p){
-                return authz_.writeAuthz(p.getDescriptor());
-            }));
-        // Authorizer has read and write authz by default
-        EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillRepeatedly(testing::Return(true));
-        EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillRepeatedly(testing::Return(true));
-        // Some default values from paramDescriptor.
-        EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(nullptr));
-        EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(1000));
-        EXPECT_CALL(pd_, total_length()).WillRepeatedly(testing::Return(1000));
-    }
-
-    using StringArray = std::vector<std::string>;
-    using StringArrayParam = ParamWithValue<StringArray>;
-
-    MockParamDescriptor pd_;
-    MockDevice dm_;
-    MockAuthorizer authz_;
-    catena::exception_with_status rc_{"", catena::StatusCode::OK};
-
-    std::string oid_ = "test_oid";
     StringArray value_{"Hello", "World"};
 };
 
 /**
  * TEST 1 - Testing <StringArray>ParamWithValue constructors
  */
-TEST_F(StringArrayParamTest, Create) {
-    // Constructor (value, descriptor, device, isCommand)
-    EXPECT_CALL(dm_, addItem(oid_, testing::An<IParam*>())).Times(1)
-        .WillOnce(testing::Invoke([](std::string, IParam* param) {
-            EXPECT_TRUE(param) << "Nullptr added to dm_";
-        }));
-    EXPECT_NO_THROW(StringArrayParam(value_, pd_, dm_, false);)
-        << "Failed to create a ParamWithValue using constructor"
-        << "(value, descriptor, device, isCommand)";
-    // Constructor (value, descriptor)
-    EXPECT_NO_THROW(StringArrayParam(value_, pd_);)
-        << "Failed to create a ParamWithValue using constructor"
-        << "(value, descriptor)";
-    // Constructor (value, descriptor, mSizeTracker, tSizeTracker)
-    std::shared_ptr<std::size_t> mSizeTracker{0};
-    std::shared_ptr<StringArrayParam::TSizeTracker> tSizeTracker{};
-    EXPECT_NO_THROW(StringArrayParam(value_, pd_, mSizeTracker, tSizeTracker);)
-        << "Failed to create a ParamWithValue using constructor"
-        << "(value, descriptor, mSizeTracker, tSizeTracker)";
+TEST_F(ParamWithStringArrayTest, Create) {
+    CreateTest(value_);
 }
 
 /**
  * TEST 2 - Testing <StringArray>ParamWithValue.get()
  */
-TEST_F(StringArrayParamTest, Get) {
-    StringArrayParam param(value_, pd_);
-    // Non-const
-    EXPECT_EQ(&param.get(), &value_);
-    // Const
-    const StringArrayParam constParam(value_, pd_);
-    EXPECT_EQ(&constParam.get(), &value_);
-    // getParamValue
-    EXPECT_EQ(&getParamValue<StringArray>(&param), &value_);
+TEST_F(ParamWithStringArrayTest, Get) {
+    GetValueTest(value_);
 }
 
 /**
  * TEST 3 - Testing <StringArray>ParamWithValue.size()
  */
-TEST_F(StringArrayParamTest, Size) {
+TEST_F(ParamWithStringArrayTest, Size) {
     StringArrayParam param(value_, pd_);
     EXPECT_EQ(param.size(), value_.size());
 }
@@ -135,7 +73,7 @@ TEST_F(StringArrayParamTest, Size) {
 /**
  * TEST 4 - Testing <StringArray>ParamWithValue.getParam()
  */
-TEST_F(StringArrayParamTest, GetParam) {
+TEST_F(ParamWithStringArrayTest, GetParam) {
     StringArrayParam param(value_, pd_);
     Path path = Path("/0");
     auto foundParam = param.getParam(path, authz_, rc_);
@@ -153,7 +91,7 @@ TEST_F(StringArrayParamTest, GetParam) {
  *  - Param does not exist
  *  - Not authorized
  */
-TEST_F(StringArrayParamTest, GetParam_Error) {
+TEST_F(ParamWithStringArrayTest, GetParam_Error) {
     StringArrayParam param(value_, pd_);
     { // Front is not an index.
     Path path = Path("/test/oid");
@@ -190,7 +128,7 @@ TEST_F(StringArrayParamTest, GetParam_Error) {
 /**
  * TEST 6 - Testing <StringArray>ParamWithValue.addBack()
  */
-TEST_F(StringArrayParamTest, AddBack) {
+TEST_F(ParamWithStringArrayTest, AddBack) {
     StringArrayParam param(value_, pd_);
     auto addedParam = param.addBack(authz_, rc_);
     EXPECT_TRUE(addedParam) << "Failed to add a value to array parameter";
@@ -203,7 +141,7 @@ TEST_F(StringArrayParamTest, AddBack) {
  *  - Array is at max length
  *  - Not authorized
  */
-TEST_F(StringArrayParamTest, AddBack_Error) {
+TEST_F(ParamWithStringArrayTest, AddBack_Error) {
     std::vector<std::string> value{"Hello", "World"};
     StringArrayParam param(value, pd_);
     { // Add exceeds max length
@@ -224,11 +162,13 @@ TEST_F(StringArrayParamTest, AddBack_Error) {
 /**
  * TEST 8 - Testing <StringArray>ParamWithValue.popBack().
  */
-TEST_F(StringArrayParamTest, PopBack) {
+TEST_F(ParamWithStringArrayTest, PopBack) {
     StringArrayParam param(value_, pd_);
+    StringArray valueCopy{value_.begin(), value_.end()};
     rc_ = param.popBack(authz_);
-    value_.pop_back();
-    EXPECT_EQ(param.get(), value_);
+    valueCopy.pop_back();
+
+    EXPECT_EQ(param.get(), valueCopy);
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
 }
 
@@ -239,7 +179,7 @@ TEST_F(StringArrayParamTest, PopBack) {
  *  - Array is empty
  *  - Not authorized
  */
-TEST_F(StringArrayParamTest, PopBack_Error) {
+TEST_F(ParamWithStringArrayTest, PopBack_Error) {
     std::vector<std::string> value{};
     StringArrayParam param(value, pd_);
 
@@ -258,7 +198,7 @@ TEST_F(StringArrayParamTest, PopBack_Error) {
 /**
  * TEST 10 - Testing <StringArray>ParamWithValue.toProto(catena::Param)
  */
-TEST_F(StringArrayParamTest, ToProto) {
+TEST_F(ParamWithStringArrayTest, ToProto) {
     StringArrayParam param(value_, pd_);
     std::vector<std::string> outValue{};
     catena::Param outParam;
@@ -277,7 +217,7 @@ TEST_F(StringArrayParamTest, ToProto) {
 /**
  * TEST 11 - Testing <StringArray>ParamWithValue.validateSetValue()
  */
-TEST_F(StringArrayParamTest, ValidateSetValue) {
+TEST_F(ParamWithStringArrayTest, ValidateSetValue) {
     std::vector<std::string> value{"Hello", "World"};
     StringArrayParam param(value, pd_);
     catena::Value protoValue;
@@ -291,7 +231,7 @@ TEST_F(StringArrayParamTest, ValidateSetValue) {
  * TEST 11 - Testing <StringArray>ParamWithValue.validateSetValue() for
  * appending and setting a single element.
  */
-TEST_F(StringArrayParamTest, ValidateSetValue_SingleElement) {
+TEST_F(ParamWithStringArrayTest, ValidateSetValue_SingleElement) {
     std::vector<std::string> value{"Hello", "World"};
     StringArrayParam param(value, pd_);
     catena::Value protoValue;
@@ -310,7 +250,7 @@ TEST_F(StringArrayParamTest, ValidateSetValue_SingleElement) {
  *  - New value exceeds maxLength
  *  - New value exceeds totalLength
  */
-TEST_F(StringArrayParamTest, ValidateSetValue_Error) {
+TEST_F(ParamWithStringArrayTest, ValidateSetValue_Error) {
     StringArrayParam param(value_, pd_);
     catena::Value protoValue;
     for (std::string i : {"Hello", "World", "Goodbye"}) {
@@ -349,7 +289,7 @@ TEST_F(StringArrayParamTest, ValidateSetValue_Error) {
  *  - New value exceeds maxLength
  *  - New value exceeds totalLength
  */
-TEST_F(StringArrayParamTest, ValidateSetValue_SingleElementError) {
+TEST_F(ParamWithStringArrayTest, ValidateSetValue_SingleElementError) {
     StringArrayParam param(value_, pd_);
     catena::Value protoValue;
     protoValue.set_string_value("!");
