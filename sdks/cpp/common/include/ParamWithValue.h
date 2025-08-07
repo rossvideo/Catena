@@ -243,7 +243,14 @@ class ParamWithValue : public catena::common::IParam {
      * @return a unique pointer to the child parameter, or nullptr if it does not exist
      */
     std::unique_ptr<IParam> getParam(Path& oid, const IAuthorizer& authz, catena::exception_with_status& status) override {
-        return getParam_(oid, value_.get(), authz, status);
+        std::unique_ptr<IParam> returnParam = nullptr;
+        // Check read authz
+        if (!authz.readAuthz(*this)) {
+            status = catena::exception_with_status("Not authorized to read param " + oid.fqoid(), catena::StatusCode::PERMISSION_DENIED);
+        } else {
+            returnParam = getParam_(oid, value_.get(), authz, status);
+        }
+        return returnParam;
     }
 
     /**
@@ -494,11 +501,8 @@ class ParamWithValue : public catena::common::IParam {
     std::unique_ptr<IParam> getParam_(Path& oid, U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
         using ElemType = U::value_type;
         std::unique_ptr<IParam> returnParam = nullptr;
-        // Check read authz
-        if (!authz.readAuthz(*this)) {
-            status = catena::exception_with_status("Not authorized to read param " + oid.fqoid(), catena::StatusCode::PERMISSION_DENIED);
         // Make sure the front is an index
-        } else if (!oid.front_is_index()) {
+        if (!oid.front_is_index()) {
             status = catena::exception_with_status("Expected index in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
         } else {
             size_t oidIndex = oid.front_as_index();
@@ -533,27 +537,28 @@ class ParamWithValue : public catena::common::IParam {
      */
     template <CatenaStruct U>
     std::unique_ptr<IParam> getParam_(Path& oid, U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
+        std::unique_ptr<IParam> returnParam = nullptr;
+        // Make sure the front is a field name.
         if (!oid.front_is_string()) {
             status = catena::exception_with_status("Expected string in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
-            return nullptr;
-        }
-        std::string oidStr = oid.front_as_string();
-        oid.pop();
-        auto fields = StructInfo<U>::fields; // get tuple of FieldInfo for this struct type
-
-        std::unique_ptr<IParam> ip = findParamByName_<U>(fields, oidStr);
-        if (!ip) {
-            status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::NOT_FOUND);
-            return nullptr;
-        }
-
-        if (oid.empty()) {
-            // we reached the end of the path, return the element
-            return ip;
         } else {
+            std::string oidStr = oid.front_as_string();
+            oid.pop();
+            auto fields = StructInfo<U>::fields; // get tuple of FieldInfo for this struct type
+            returnParam = findParamByName_<U>(fields, oidStr);
+            // Param does not exist, return nullptr
+            if (!returnParam) {
+                status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::NOT_FOUND);
             // The path has more segments, keep recursing
-            return ip->getParam(oid, authz, status);
+            } else if (!oid.empty()) {
+                returnParam = returnParam->getParam(oid, authz, status);
+            // If we're at the end of path make sure we have readAuthz for the gotten param before returning.
+            } else if (!authz.readAuthz(*returnParam)) {
+                status = catena::exception_with_status("Not authorized to read param " + oid.fqoid(), catena::StatusCode::PERMISSION_DENIED);
+                returnParam = nullptr;
+            }
         }
+        return returnParam;
     }
 
     /**

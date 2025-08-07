@@ -74,6 +74,19 @@ struct StructInfo<TestStruct2> {
     static constexpr Type fields = {{"f1", &TestStruct2::f1}, {"f2", &TestStruct2::f2}};
 };
 /*
+ * A test CatenaStruct with two CatenaStruct fields.
+ */
+struct TestNestedStruct {
+    TestStruct1 f1;
+    TestStruct2 f2;
+    using isCatenaStruct = void;
+};
+template<>
+struct StructInfo<TestNestedStruct> {
+    using Type = std::tuple<FieldInfo<TestStruct1, TestNestedStruct>, FieldInfo<TestStruct2, TestNestedStruct>>;
+    static constexpr Type fields = {{"f1", &TestNestedStruct::f1}, {"f2", &TestNestedStruct::f2}};
+};
+/*
  * A test CatenaStruct variant which can be a TestStruct1 or a TestStruct2.
  */
 using TestVariantStruct = std::variant<TestStruct1, TestStruct2>;

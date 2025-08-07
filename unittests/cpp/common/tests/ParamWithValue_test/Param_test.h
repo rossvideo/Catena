@@ -71,8 +71,10 @@ class ParamTest : public ::testing::Test {
                 return authz_.writeAuthz(p.getDescriptor());
             }));
         // Authorizer has read and write authz by default
-        EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillRepeatedly(testing::Return(true));
-        EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillRepeatedly(testing::Return(true));
+        for (auto* pd : {&pd_, &subpd1_, &subpd2_}) {
+            EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(*pd)))).WillRepeatedly(testing::Return(true));
+            EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(*pd)))).WillRepeatedly(testing::Return(true));
+        }
         // Some default values from paramDescriptor.
         EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(nullptr));
         EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(1000));
@@ -112,7 +114,7 @@ class ParamTest : public ::testing::Test {
         EXPECT_EQ(&getParamValue<T>(&param), &value);
     }
 
-    MockParamDescriptor pd_;
+    MockParamDescriptor pd_, subpd1_, subpd2_;
     MockDevice dm_;
     MockAuthorizer authz_;
     catena::exception_with_status rc_{"", catena::StatusCode::OK};

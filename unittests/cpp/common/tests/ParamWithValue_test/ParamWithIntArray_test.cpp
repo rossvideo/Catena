@@ -87,7 +87,7 @@ TEST_F(ParamWithIntArrayTest, GetParam_Error) {
     auto foundParam = param.getParam(path, authz_, rc_);
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
-        << "getParam should return OUT_OF_RANGE if front of path is not an index";
+        << "getParam should return OUT_OF_RANGE if the index is out of bounds";
     }
     rc_ = catena::exception_with_status{"", catena::StatusCode::OK}; // Reset status
     { // Param does not exist
@@ -97,6 +97,7 @@ TEST_F(ParamWithIntArrayTest, GetParam_Error) {
     EXPECT_EQ(rc_.status, catena::StatusCode::NOT_FOUND)
         << "getParam should return NOT_FOUND if attempting to retrieve a sub-parameter that does not exist";
     }
+    rc_ = catena::exception_with_status{"", catena::StatusCode::OK}; // Reset status
     { // Not authorized.
     Path path = Path("/0");
     EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
