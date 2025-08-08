@@ -97,7 +97,7 @@ TEST_F(ParamWithVariantTest, GetParam) {
     }
 }
 /*
- * TEST 6 - Testing <VARIANT>ParamWithValue.getParam() error handling.
+ * TEST 5 - Testing <VARIANT>ParamWithValue.getParam() error handling.
  * Four main error cases:
  *  - Front of path is not a struct type (string).
  *  - Struct type does not exist.
@@ -143,7 +143,7 @@ TEST_F(ParamWithVariantTest, GetParam_Error) {
     }
 }
 /*
- * TEST 7 - Testing <VARIANT>ParamWithValue.addBack().
+ * TEST 6 - Testing <VARIANT>ParamWithValue.addBack().
  */
 TEST_F(ParamWithVariantTest, AddBack) {
     VariantParam param(value_, pd_);
@@ -152,7 +152,7 @@ TEST_F(ParamWithVariantTest, AddBack) {
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 /*
- * TEST 8 - Testing <VARIANT>ParamWithValue.popBack().
+ * TEST 7 - Testing <VARIANT>ParamWithValue.popBack().
  */
 TEST_F(ParamWithVariantTest, PopBack) {
     VariantParam param(value_, pd_);
@@ -160,7 +160,7 @@ TEST_F(ParamWithVariantTest, PopBack) {
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 /*
- * TEST 9 - Testing <VARIANT>ParamWithValue.toProto().
+ * TEST 8 - Testing <VARIANT>ParamWithValue.toProto().
  */
 TEST_F(ParamWithVariantTest, ParamToProto) {
     VariantParam param(value_, pd_);
@@ -178,7 +178,7 @@ TEST_F(ParamWithVariantTest, ParamToProto) {
     EXPECT_EQ(oid_, outParam.template_oid());
 }
 /*
- * TEST 10 - Testing <VARIANT>ParamWithValue.fromProto().
+ * TEST 9 - Testing <VARIANT>ParamWithValue.fromProto().
  */
 TEST_F(ParamWithVariantTest, FromProto) {
     TestVariantStruct emptyVal{TestStruct2{0, 0}};
@@ -194,7 +194,7 @@ TEST_F(ParamWithVariantTest, FromProto) {
     EXPECT_EQ(std::get<TestStruct1>(param.get()).f2, std::get<TestStruct1>(value_).f2);
 }
 /*
- * TEST 11 - Testing <VARIANT>ParamWithValue.ValidateSetValue().
+ * TEST 10 - Testing <VARIANT>ParamWithValue.ValidateSetValue().
  */
 TEST_F(ParamWithVariantTest, ValidateSetValue) {
     VariantParam param(value_, pd_);
@@ -205,7 +205,7 @@ TEST_F(ParamWithVariantTest, ValidateSetValue) {
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_));
 }
 /*
- * TEST 12 - Testing <VARIANT>ParamWithValue.ValidateSetValue() error handling.
+ * TEST 11 - Testing <VARIANT>ParamWithValue.ValidateSetValue() error handling.
  * Two main error cases:
  *  - Index is defined.
  *  - validFromProto returns false.

@@ -30,77 +30,98 @@
 
 /**
  * @brief This file is for testing the ParamWithValue class.
+ * Also test ParamWithEmptyValue.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/07/31
+ * @date 25/08/08
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #include "Param_test.h"
 
 using namespace catena::common;
-
 using EmptyParam = ParamWithValue<EmptyValue>;
 
 class ParamWithValueTest : public ParamTest<EmptyValue> {
+    /*
+     * Returns the value type of the parameter we are testing with.
+     */
     catena::ParamType type() const override { return catena::ParamType::EMPTY; }
 };
-
+/*
+ * TEST 1 - Testing <EMPTY>ParamWithValue constructors.
+ */
 TEST_F(ParamWithValueTest, Create) {
     CreateTest(emptyValue);
 }
-
+/*
+ * TEST 2 - Testing <EMPTY>ParamWithValue.get().
+ */
 TEST_F(ParamWithValueTest, Get) {
     GetValueTest(emptyValue);
 }
-
+/*
+ * TEST 3 - Testing <EMPTY>ParamWithValue.size().
+ */
 TEST_F(ParamWithValueTest, Size) {
     EmptyParam param(emptyValue, pd_);
     EXPECT_EQ(param.size(), 0);
 }
-
+/*
+ * TEST 4 - Testing <EMPTY>ParamWithValue.getParam().
+ * EMPTY params have no sub-params and should return an error.
+ */
 TEST_F(ParamWithValueTest, GetParam) {
     EmptyParam param(emptyValue, pd_);
     Path path = Path("/test/oid");
-    EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillRepeatedly(testing::Return(true));
     auto foundParam = param.getParam(path, authz_, rc_);
+    // Checking results.
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
-
+/*
+ * TEST 5 - Testing <EMPTY>ParamWithValue.addBack().
+ * EMPTY params are not arrays, so this should return an error.
+ */
 TEST_F(ParamWithValueTest, AddBack) {
     EmptyParam param(emptyValue, pd_);
     auto addedParam = param.addBack(authz_, rc_);
     EXPECT_FALSE(addedParam) << "Added a value to non-array parameter";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
-
+/*
+ * TEST 6 - Testing <EMPTY>ParamWithValue.popBack().
+ * EMPTY params are not arrays, so this should return an error.
+ */
 TEST_F(ParamWithValueTest, PopBack) {
     EmptyParam param(emptyValue, pd_);
     rc_ = param.popBack(authz_);
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
-
+/*
+ * TEST 7 - Testing <EMPTY>ParamWithValue.toProto().
+ */
 TEST_F(ParamWithValueTest, ParamToProto) {
     EmptyParam param(emptyValue, pd_);
     catena::Param outParam;
-    EXPECT_CALL(pd_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::Param& p, const IAuthorizer&) {
-            p.set_template_oid(oid_);
-        }));
     rc_ = param.toProto(outParam, authz_);
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
     EXPECT_EQ(oid_, outParam.template_oid());
 }
-
+/*
+ * TEST 8 - Testing <EMPTY>ParamWithValue.fromProto().
+ */
 TEST_F(ParamWithValueTest, FromProto) {
     EmptyParam param(emptyValue, pd_);
     catena::Value protoValue;
     protoValue.empty_value();
     rc_ = param.fromProto(protoValue, authz_);
-    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    // Checking results.
+    EXPECT_EQ(rc_.status,  catena::StatusCode::OK);
     EXPECT_EQ(&param.get(), &emptyValue);
 }
-
+/*
+ * TEST 9 - Testing <INT>ParamWithValue.ValidateSetValue().
+ */
 TEST_F(ParamWithValueTest, ValidateSetValue) {
     EmptyParam param(emptyValue, pd_);
     catena::Value protoValue;
@@ -108,9 +129,8 @@ TEST_F(ParamWithValueTest, ValidateSetValue) {
     EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_));
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
-
 /*
- * TEST ? - Tests a number of functions that just forward to the descriptor.
+ * TEST 10 - Testing a number of functions that just forward to the descriptor.
  */
 TEST_F(ParamWithValueTest, DescriptorForwards) {
     EmptyParam param(emptyValue, pd_);
@@ -182,7 +202,9 @@ TEST_F(ParamWithValueTest, DescriptorForwards) {
     EXPECT_CALL(pd_, getScope()).Times(1).WillOnce(testing::ReturnRef(testScope));
     EXPECT_EQ(param.getScope(), testScope);
 }
-
+/*
+ * TEST 11 - Testing paramWithValue.copy().
+ */
 TEST_F(ParamWithValueTest, Copy) {
     int32_t value{0};
     ParamWithValue<int32_t> param(value, pd_);
@@ -193,24 +215,31 @@ TEST_F(ParamWithValueTest, Copy) {
     EXPECT_EQ(&getParamValue<int32_t>(paramCopy.get()), &param.get());
     EXPECT_EQ(&paramCopy->getDescriptor(), &param.getDescriptor());
 }
-
+/*
+ * TEST 11 - Testing paramWithValue.toProto(Param) error handling.
+ * Two main error cases:
+ * - pd_.toProto throws an error.
+ * - Not authorized.
+ */
 TEST_F(ParamWithValueTest, ParamToProto_Error) {
     int32_t value{16};
     ParamWithValue<int32_t> param(value, pd_);
     catena::Param outParam;
-    { // pd_.toProto throws an error
+    // pd_.toProto throws an error
     EXPECT_CALL(pd_, toProto(testing::An<catena::Param&>(), testing::_)).WillOnce(testing::Throw(std::runtime_error("Test error")));
     EXPECT_THROW(param.toProto(outParam, authz_), std::runtime_error);
-    }
-    { // No read authz
+    // Not authorized
     outParam.Clear();
     EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
     rc_ = param.toProto(outParam, authz_);
-    EXPECT_FALSE(outParam.value().has_int32_value());
-    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED);
-    }
+    EXPECT_FALSE(outParam.value().has_int32_value())
+        << "toProto should not set value if Authorizer does not have readAuthz.";
+    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
+        << "toProto should return PERMISSION_DENIED if Authorizer does not have readAuthz.";
 }
-
+/*
+ * TEST 12 - Testing paramWithValue.toProto(ParamInfo).
+ */
 TEST_F(ParamWithValueTest, ParamInfoToProto) {
     EmptyParam param(emptyValue, pd_);
     catena::ParamInfoResponse paramInfo;
@@ -222,17 +251,21 @@ TEST_F(ParamWithValueTest, ParamInfoToProto) {
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
     EXPECT_EQ(oid_, paramInfo.info().oid());
 }
-
+/*
+ * TEST 12 - Testing paramWithValue.toProto(ParamInfo) error handling.
+ * Two main error cases:
+ * - pd_.toProto throws an error.
+ * - Not authorized.
+ */
 TEST_F(ParamWithValueTest, ParamInfoToProto_Error) {
     EmptyParam param(emptyValue, pd_);
     catena::ParamInfoResponse paramInfo;
-    { // pd_.toProto throws an error
+    // pd_.toProto throws an error
     EXPECT_CALL(pd_, toProto(testing::An<catena::ParamInfo&>(), testing::_)).WillOnce(testing::Throw(std::runtime_error("Test error")));
     EXPECT_THROW(param.toProto(paramInfo, authz_), std::runtime_error);
-    }
-    { // No read authz
+    // No read authz
     EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
     rc_ = param.toProto(paramInfo, authz_);
-    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED);
-    }
+    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
+        << "toProto should return PERMISSION_DENIED if Authorizer does not have readAuthz.";
 }

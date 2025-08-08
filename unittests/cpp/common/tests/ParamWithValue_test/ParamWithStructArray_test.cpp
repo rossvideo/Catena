@@ -136,7 +136,6 @@ TEST_F(ParamWithStructArrayTest, GetParam_Error) {
  */
 TEST_F(ParamWithStructArrayTest, AddBack) {
     StructArrayParam param(value_, pd_);
-    EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(5));
     auto addedParam = param.addBack(authz_, rc_);
     EXPECT_TRUE(addedParam) << "Failed to add a value to array parameter";
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
