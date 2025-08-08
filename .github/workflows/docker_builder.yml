@@ -186,13 +186,26 @@ jobs:
             echo "Building examples for connection: $CONN"
             mkdir -p $EXAMPLES_DIR/$CONN
             for EXAMPLE in connections/${CONN}/examples/*; do
-              # Skip CMakeFiles directories and *.cmake files
-              if [[ "$(basename "$EXAMPLE")" == "CMakeFiles" ]] || [[ "$EXAMPLE" == *.cmake ]]; then
-              continue
+                if [[ ! -d "$EXAMPLE" ]] || [[ "$(basename "$EXAMPLE")" == "CMakeFiles" ]]; then
+                continue
               fi
               echo "Grabbing example: $EXAMPLE"
               EXAMPLE_NAME=$(basename "$EXAMPLE")
-              cp $EXAMPLE/$EXAMPLE_NAME $EXAMPLES_DIR/$CONN/$EXAMPLE_NAME
+              EXAMPLE_PATH=$EXAMPLE/$EXAMPLE_NAME
+              # Append the connection type to the example name if it's not already included
+              if [[ ! "$EXAMPLE_NAME" =~ $CONN$ ]]; then
+                EXAMPLE_NAME="${EXAMPLE_NAME}_${CONN}"
+              fi
+              EXAMPLE_NAME="${EXAMPLE_NAME//_/-}"
+              mkdir -p $EXAMPLES_DIR/$CONN/$EXAMPLE_NAME
+              cp $EXAMPLE_PATH $EXAMPLES_DIR/$CONN/$EXAMPLE_NAME/$EXAMPLE_NAME
+              # look for static files in the source directory and copy them if they exist
+              STATIC_DIR=$WORKDIR/sdks/cpp/$EXAMPLE/static
+              if [[ -d "$STATIC_DIR" ]]; then
+                echo "Copying static files from $STATIC_DIR to $EXAMPLES_DIR/$CONN/$EXAMPLE_NAME/static"
+                mkdir -p $EXAMPLES_DIR/$CONN/$EXAMPLE_NAME/static
+                cp -r $STATIC_DIR/* $EXAMPLES_DIR/$CONN/$EXAMPLE_NAME/static/
+              fi
             done
           done
 
@@ -206,7 +219,7 @@ jobs:
       - name: Generate matrix for example builds
         id: generate-matrix
         run: |
-            EXAMPLES_JSON=$(find $WORKDIR/examples -type f -executable -printf '"%P",')
+            EXAMPLES_JSON=$(find $WORKDIR/examples -mindepth 2 -maxdepth 2 -type d -printf '"%P",')
             EXAMPLES_JSON="[${EXAMPLES_JSON%,}]"
             echo "examples=${EXAMPLES_JSON}" >> $GITHUB_OUTPUT
 
@@ -227,7 +240,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-      attestations: write
 
     steps:
       - name: Checkout repository
@@ -241,6 +253,26 @@ jobs:
           name: examples
           path: ${{ github.workspace }}/examples
 
+      - name: Process example name
+        id: process-name
+        run: |
+          EXAMPLE_PATH="examples/${{ matrix.example }}"
+          CONNECTION=$(echo "${{ matrix.example }}" | cut -d'/' -f2)
+          EXAMPLE=$(basename "${{ matrix.example }}")
+          # Append the connection type to the example name if it's not already included
+          if [[ ! "$EXAMPLE" =~ $CONNECTION$ ]]; then
+            EXAMPLE="${EXAMPLE}-${CONNECTION}"
+          fi
+          TARGET_NAME=$(echo "$CONNECTION" | tr '[:upper:]' '[:lower:]')
+          echo "EXAMPLE_PATH=${EXAMPLE_PATH}" >> $GITHUB_ENV
+          echo "CONNECTION=${CONNECTION}" >> $GITHUB_ENV
+          echo "EXAMPLE=${EXAMPLE}" >> $GITHUB_ENV
+          echo "TARGET_NAME=${TARGET_NAME}" >> $GITHUB_ENV
+          echo "EXAMPLE_PATH=${EXAMPLE_PATH}"
+          echo "CONNECTION=${CONNECTION}"
+          echo "EXAMPLE=${EXAMPLE}"
+          echo "TARGET_NAME=${TARGET_NAME}"
+
       - name: Log in to the Container registry
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
@@ -253,10 +285,12 @@ jobs:
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
-          images: ${{ env.REGISTRY }}/rossvideo/catena-${{ matrix.example }}
+          images: ${{ env.REGISTRY }}/rossvideo/catena
+          tags: |
+            type=raw,value=${{ steps.process-name.outputs.EXAMPLE }}
           labels: |
-            org.opencontainers.image.title=Catena ${{ matrix.example }}
-            org.opencontainers.image.description=Self contained example for Catena ${{ matrix.example }}
+            org.opencontainers.image.title=Catena ${{ steps.process-name.outputs.EXAMPLE }}
+            org.opencontainers.image.description=Self contained example for Catena ${{ steps.process-name.outputs.EXAMPLE }}
             org.opencontainers.image.vendor=Ross Video
 
       - name: Print stuff
@@ -265,13 +299,16 @@ jobs:
           echo "labels: ${{ steps.meta.outputs.labels }}"
           find .
       
-      - name: build image for ${{ matrix.example }}
+      - name: Build and push image for ${{ matrix.example }}
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         with:
           context: .
           file: docker/example.dockerfile
-          # push: true
+          push: true
+          target: ${{ steps.process-name.outputs.TARGET_NAME }}
           build-args: |
-            EXAMPLE=./examples/${{ matrix.example }}
+            CONNECTION=${{ steps.process-name.outputs.CONNECTION }}
+            EXAMPLE=${{ steps.process-name.outputs.EXAMPLE }}
+            EXAMPLE_PATH=${{ steps.process-name.outputs.EXAMPLE_PATH }}
             WORKDIR=${{ env.WORKDIR }}
 
