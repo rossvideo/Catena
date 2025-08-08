@@ -57,14 +57,14 @@ jobs:
   #       run: |
   #         cp .devcontainer/toolchain-cpp.env toolchain-cpp.env
 
-        # - name: Paths Changes Filter
-        #   id: changes
-        #   uses: dorny/paths-filter@v3.0.2
-        #   with:
-        #     filters: |
-        #       toolchain-cpp:
-        #         - '.devcontainer/toolchain-cpp.dockerfile'
-        #         - '.devcontainer/toolchain-cpp.env'
+  #     - name: Paths Changes Filter
+  #       id: changes
+  #       uses: dorny/paths-filter@v3.0.2
+  #       with:
+  #         filters: |
+  #           toolchain-cpp:
+  #             - '.devcontainer/toolchain-cpp.dockerfile'
+  #             - '.devcontainer/toolchain-cpp.env'
 
   #     - name: Build and push Docker image
   #       id: push
@@ -317,6 +317,8 @@ jobs:
           file: docker/example.dockerfile
           push: true
           target: ${{ steps.process-name.outputs.target_name }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             CONNECTION=${{ steps.process-name.outputs.connection }}
             EXAMPLE=${{ steps.process-name.outputs.example }}
