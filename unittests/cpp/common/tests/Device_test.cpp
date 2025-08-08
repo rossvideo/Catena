@@ -2318,18 +2318,6 @@ TEST_F(DeviceTest, ShouldSendParam) {
     EXPECT_FALSE(device_->shouldSendParam(*mockParams_[0], false, *monitorAuthz_)); // fixture minimal set param
 }
 
-
-/** Currently missing the following tests...
-    Device signals:
-    * vdk::signal<void(const std::string&, const IParam*)>& getValueSetByClient() override { return valueSetByClient_; } 
-        ^ Covered, but still worth testing
-    * vdk::signal<void(const ILanguagePack*)>& getLanguageAddedPushUpdate() override { return languageAddedPushUpdate_; }
-    * vdk::signal<void(const std::string&, const IParam*)>& getValueSetByServer() override { return valueSetByServer_; }
-    * vdk::signal<void(const std::string&, const IAuthorizer*)>& getDownloadAssetRequest() override { return downloadAssetRequest_; } 
-    * vdk::signal<void(const std::string&, const IAuthorizer*)>& getUploadAssetRequest() override { return uploadAssetRequest_; }
-    * vdk::signal<void(const std::string&, const IAuthorizer*)>& getDeleteAssetRequest() override { return deleteAssetRequest_; }
-*/ 
-
 // ==== 8. Additional Header File Tests ====
 
 // 8.1: Success Case - Test slot
@@ -2372,3 +2360,51 @@ TEST_F(DeviceTest, SetDefaultTotalLength) {
 }
 
 // ==== 9. Device Signal Tests ====
+
+// 9.1: Success Case - Test getValueSetByClient
+TEST_F(DeviceTest, GetValueSetByClient) {
+    // Test that the signal is valid and usable
+    auto& signal = device_->getValueSetByClient();
+    // Test that the signal is not blocked (default state)
+    EXPECT_FALSE(signal.blocked());
+}
+
+// 9.2: Success Case - Test getLanguageAddedPushUpdate
+TEST_F(DeviceTest, GetLanguageAddedPushUpdate) {
+    // Test that the signal is valid and usable
+    auto& signal = device_->getLanguageAddedPushUpdate();
+    // Test that the signal is not blocked (default state)
+    EXPECT_FALSE(signal.blocked());
+}
+
+// 9.3: Success Case - Test getValueSetByServer
+TEST_F(DeviceTest, GetValueSetByServer) {
+    // Test that the signal is valid and usable
+    auto& signal = device_->getValueSetByServer();
+    // Test that the signal is not blocked (default state)
+    EXPECT_FALSE(signal.blocked());
+}
+
+// 9.4: Success Case - Test getDownloadAssetRequest
+TEST_F(DeviceTest, GetDownloadAssetRequest) {
+    // Test that the signal is valid and usable
+    auto& signal = device_->getDownloadAssetRequest();
+    // Test that the signal is not blocked (default state)
+    EXPECT_FALSE(signal.blocked());
+}
+
+// 9.5: Success Case - Test getUploadAssetRequest
+TEST_F(DeviceTest, GetUploadAssetRequest) {
+    // Test that the signal is valid and usable
+    auto& signal = device_->getUploadAssetRequest();
+    // Test that the signal is not blocked (default state)
+    EXPECT_FALSE(signal.blocked());
+}
+
+// 9.6: Success Case - Test getDeleteAssetRequest
+TEST_F(DeviceTest, GetDeleteAssetRequest) {
+    // Test that the signal is valid and usable
+    auto& signal = device_->getDeleteAssetRequest();
+    // Test that the signal is not blocked (default state)
+    EXPECT_FALSE(signal.blocked());
+}
