@@ -155,7 +155,7 @@ jobs:
   
   build-examples:
     runs-on: ubuntu-latest
-    # needs: build-and-push-toolchain-cpp
+    needs: build-and-push-toolchain-cpp
     outputs:
       examples: ${{ steps.generate-matrix.outputs.examples }}
     container:
