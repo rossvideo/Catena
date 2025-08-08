@@ -105,7 +105,7 @@ class ParamTest : public ::testing::Test {
             EXPECT_CALL(*pd, getSubParam("f1")).WillRepeatedly(testing::ReturnRef(subpd1_));
             EXPECT_CALL(*pd, getSubParam("TestStruct1")).WillRepeatedly(testing::ReturnRef(subpd1_));
             EXPECT_CALL(*pd, getSubParam("f2")).WillRepeatedly(testing::ReturnRef(subpd2_));
-            EXPECT_CALL(*pd, getSubParam("TestStruct1")).WillRepeatedly(testing::ReturnRef(subpd2_));
+            EXPECT_CALL(*pd, getSubParam("TestStruct2")).WillRepeatedly(testing::ReturnRef(subpd2_));
         }
     }
 

@@ -97,14 +97,12 @@ TEST_F(ParamWithStructTest, GetParam) {
 TEST_F(ParamWithStructTest, GetParam_Nested) {
     TestNestedStruct nestedValue{value_, {1.1, 2.2}};
     NestedStructParam param(nestedValue, pd_);
-    Path path = Path("/f1/f1");
-    EXPECT_CALL(subpd1_, getSubParam(std::get<0>(StructInfo<TestStruct1>::fields).name))
-        .Times(1).WillOnce(testing::ReturnRef(subpd2_));
+    Path path = Path("/f1/f2");
     auto foundParam = param.getParam(path, authz_, rc_);
     // Checking results.
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
     ASSERT_TRUE(foundParam) << "Did not find a parameter when one was expected";
-    EXPECT_EQ(getParamValue<int32_t>(foundParam.get()), value_.f1);
+    EXPECT_EQ(getParamValue<int32_t>(foundParam.get()), value_.f2);
     EXPECT_EQ(&foundParam->getDescriptor(), &subpd2_) << "Subparam should have its own param descriptor.";
 }
 /*
@@ -213,7 +211,7 @@ TEST_F(ParamWithStructTest, ValidateSetValue) {
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_));
 }
 /*
- * TEST 10 - Testing <STRUCT>ParamWithValue.ValidateSetValue() error handling.
+ * TEST 12 - Testing <STRUCT>ParamWithValue.ValidateSetValue() error handling.
  * Two main error cases:
  *  - Index is defined.
  *  - validFromProto returns false.
