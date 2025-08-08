@@ -123,15 +123,15 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IConnect</b> ()=d
 <tr class="memitem:a1486201427b85c1d21db57bdf4d369dd" id="r_a1486201427b85c1d21db57bdf4d369dd"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a1486201427b85c1d21db57bdf4d369dd">operator&lt;</a> (const <a class="el" href="classcatena_1_1common_1_1IConnect.html">IConnect</a> &amp;otherConnection) const =0</td></tr>
 <tr class="memdesc:a1486201427b85c1d21db57bdf4d369dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if this has less prioirty than otherConnection.  <br /></td></tr>
 <tr class="separator:a1486201427b85c1d21db57bdf4d369dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9e16530ff77a84dcb7c2b78d94dc88cd" id="r_a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd">isCancelled</a> ()=0</td></tr>
+<tr class="memdesc:a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if the call has been canceled.  <br /></td></tr>
+<tr class="separator:a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a975ae29c453d9d11655a7aa2571d808a" id="r_a975ae29c453d9d11655a7aa2571d808a"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a975ae29c453d9d11655a7aa2571d808a">shutdown</a> ()=0</td></tr>
 <tr class="memdesc:a975ae29c453d9d11655a7aa2571d808a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Forcefully shuts down the connection.  <br /></td></tr>
 <tr class="separator:a975ae29c453d9d11655a7aa2571d808a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr class="memitem:a9e16530ff77a84dcb7c2b78d94dc88cd" id="r_a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd">isCancelled</a> ()=0</td></tr>
-<tr class="memdesc:a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if the call has been canceled.  <br /></td></tr>
-<tr class="separator:a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5c5fc96d2da16542c86e443085894182" id="r_a5c5fc96d2da16542c86e443085894182"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a5c5fc96d2da16542c86e443085894182">updateResponse_</a> (const std::string &amp;oid, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *p, uint32_t slot)=0</td></tr>
 <tr class="memdesc:a5c5fc96d2da16542c86e443085894182"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with parameter values and handles authorization checks.  <br /></td></tr>
 <tr class="separator:a5c5fc96d2da16542c86e443085894182"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -210,14 +210,14 @@ Protected Member Functions</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">protected</span><span class="mlabel">pure virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">pure virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
 <p>Returns true if the call has been canceled. </p>
 
-<p>Implemented in <a class="el" href="classcatena_1_1gRPC_1_1Connect.html#aa028904826f9554475810ce7dead6ee9">catena::gRPC::Connect</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1gRPC_1_1Connect.html#aa028904826f9554475810ce7dead6ee9">catena::gRPC::Connect</a>, and <a class="el" href="classcatena_1_1REST_1_1Connect.html#a8e684bddec50b2b362401fb9a7df1eba">catena::REST::Connect</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
