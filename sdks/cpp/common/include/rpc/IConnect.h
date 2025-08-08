@@ -72,15 +72,15 @@ class IConnect {
      */
     virtual bool operator<(const IConnect& otherConnection) const = 0;
     /**
+     * @brief Returns true if the call has been canceled.
+     */
+    virtual inline bool isCancelled() = 0;
+    /**
      * @brief Forcefully shuts down the connection.
      */
     virtual void shutdown() = 0;
   
   protected:
-    /**
-     * @brief Returns true if the call has been canceled.
-     */
-    virtual inline bool isCancelled() = 0;
     /**
      * @brief Updates the response message with parameter values and handles 
      * authorization checks.
