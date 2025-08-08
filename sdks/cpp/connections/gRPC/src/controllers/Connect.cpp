@@ -198,5 +198,5 @@ void catena::gRPC::Connect::proceed(bool ok) {
 
 // Returns true if the connection has been cancelled.
 bool catena::gRPC::Connect::isCancelled() {
-    return context_.IsCancelled() || shutdown_;
+    return context_.IsCancelled() || shutdown_ || (authz_ && authz_->isExpired());
 }

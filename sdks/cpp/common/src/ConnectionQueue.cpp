@@ -41,6 +41,16 @@ bool ConnectionQueue::registerConnection(IConnect* cd) {
         throw catena::exception_with_status("Cannot add nullptr to connection queue", catena::StatusCode::INVALID_ARGUMENT);
     } else {
         std::lock_guard<std::mutex> lock(mtx_);
+        // Start by clearing out the connectionQueue_ of any cancelled connections.
+        if (connectionQueue_.size() >= maxConnections_) {
+            std::erase_if(connectionQueue_,
+                // Calls shutdown and returns true if the connection is cancelled.
+                [](IConnect* connection) {
+                    bool cancelled = connection->isCancelled();
+                    if (cancelled) { connection->shutdown(); }
+                    return cancelled;
+                });
+        }
         // Find the index to insert the new connection based on priority.
         auto it = std::find_if(connectionQueue_.begin(), connectionQueue_.end(),
             [cd](const IConnect* connection) {
