@@ -57,8 +57,18 @@ jobs:
   #       run: |
   #         cp .devcontainer/toolchain-cpp.env toolchain-cpp.env
 
+        # - name: Paths Changes Filter
+        #   id: changes
+        #   uses: dorny/paths-filter@v3.0.2
+        #   with:
+        #     filters: |
+        #       toolchain-cpp:
+        #         - '.devcontainer/toolchain-cpp.dockerfile'
+        #         - '.devcontainer/toolchain-cpp.env'
+
   #     - name: Build and push Docker image
   #       id: push
+  #       if: steps.changes.outputs.toolchain-cpp == 'true'
   #       uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
   #       with:
   #         context: .
@@ -69,6 +79,7 @@ jobs:
       
   #     # This step generates an artifact attestation for the image, which is an unforgeable statement about where and how it was built. It increases supply chain security for people who consume the image. For more information, see [Using artifact attestations to establish provenance for builds](/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds).
   #     - name: Generate artifact attestation
+  #       if: steps.changes.outputs.toolchain-cpp == 'true'
   #       uses: actions/attest-build-provenance@v2
   #       with:
   #         subject-name: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME}}
@@ -264,10 +275,10 @@ jobs:
             EXAMPLE="${EXAMPLE}-${CONNECTION}"
           fi
           TARGET_NAME=$(echo "$CONNECTION" | tr '[:upper:]' '[:lower:]')
-          echo "example_path=${EXAMPLE_PATH}" >> $GITHUB_ENV
-          echo "connection=${CONNECTION}" >> $GITHUB_ENV
-          echo "example=${EXAMPLE}" >> $GITHUB_ENV
-          echo "target_name=${TARGET_NAME}" >> $GITHUB_ENV
+          echo "example_path=${EXAMPLE_PATH}" >> $GITHUB_OUTPUT
+          echo "connection=${CONNECTION}" >> $GITHUB_OUTPUT
+          echo "example=${EXAMPLE}" >> $GITHUB_OUTPUT
+          echo "target_name=${TARGET_NAME}" >> $GITHUB_OUTPUT
           echo "EXAMPLE_PATH=${EXAMPLE_PATH}"
           echo "CONNECTION=${CONNECTION}"
           echo "EXAMPLE=${EXAMPLE}"
