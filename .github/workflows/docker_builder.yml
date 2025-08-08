@@ -257,17 +257,17 @@ jobs:
         id: process-name
         run: |
           EXAMPLE_PATH="examples/${{ matrix.example }}"
-          CONNECTION=$(echo "${{ matrix.example }}" | cut -d'/' -f2)
+          CONNECTION=$(echo "${{ matrix.example }}" | cut -d'/' -f1)
           EXAMPLE=$(basename "${{ matrix.example }}")
           # Append the connection type to the example name if it's not already included
           if [[ ! "$EXAMPLE" =~ $CONNECTION$ ]]; then
             EXAMPLE="${EXAMPLE}-${CONNECTION}"
           fi
           TARGET_NAME=$(echo "$CONNECTION" | tr '[:upper:]' '[:lower:]')
-          echo "EXAMPLE_PATH=${EXAMPLE_PATH}" >> $GITHUB_ENV
-          echo "CONNECTION=${CONNECTION}" >> $GITHUB_ENV
-          echo "EXAMPLE=${EXAMPLE}" >> $GITHUB_ENV
-          echo "TARGET_NAME=${TARGET_NAME}" >> $GITHUB_ENV
+          echo "example_path=${EXAMPLE_PATH}" >> $GITHUB_ENV
+          echo "connection=${CONNECTION}" >> $GITHUB_ENV
+          echo "example=${EXAMPLE}" >> $GITHUB_ENV
+          echo "target_name=${TARGET_NAME}" >> $GITHUB_ENV
           echo "EXAMPLE_PATH=${EXAMPLE_PATH}"
           echo "CONNECTION=${CONNECTION}"
           echo "EXAMPLE=${EXAMPLE}"
@@ -287,10 +287,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/rossvideo/catena
           tags: |
-            type=raw,value=${{ steps.process-name.outputs.EXAMPLE }}
+            type=raw,value=${{ steps.process-name.outputs.example }}
           labels: |
-            org.opencontainers.image.title=Catena ${{ steps.process-name.outputs.EXAMPLE }}
-            org.opencontainers.image.description=Self contained example for Catena ${{ steps.process-name.outputs.EXAMPLE }}
+            org.opencontainers.image.title=Catena ${{ steps.process-name.outputs.example }}
+            org.opencontainers.image.description=Self contained example for Catena ${{ steps.process-name.outputs.example }}
             org.opencontainers.image.vendor=Ross Video
 
       - name: Print stuff
@@ -305,10 +305,10 @@ jobs:
           context: .
           file: docker/example.dockerfile
           push: true
-          target: ${{ steps.process-name.outputs.TARGET_NAME }}
+          target: ${{ steps.process-name.outputs.target_name }}
           build-args: |
-            CONNECTION=${{ steps.process-name.outputs.CONNECTION }}
-            EXAMPLE=${{ steps.process-name.outputs.EXAMPLE }}
-            EXAMPLE_PATH=${{ steps.process-name.outputs.EXAMPLE_PATH }}
+            CONNECTION=${{ steps.process-name.outputs.connection }}
+            EXAMPLE=${{ steps.process-name.outputs.example }}
+            EXAMPLE_PATH=${{ steps.process-name.outputs.example_path }}
             WORKDIR=${{ env.WORKDIR }}
 
