@@ -61,7 +61,6 @@ class IParam {
 
     using Path = catena::common::Path;
 
-  public:
     IParam() = default;
     virtual ~IParam() = default;
 
@@ -141,7 +140,7 @@ class IParam {
      * @return The size of the array parameter, or 0 if the parameter is not an
      * array.
      */
-    virtual uint32_t size() const = 0;
+    virtual std::size_t size() const = 0;
 
     /**
      * @brief Add an empty value to and return the back of an array parameter.

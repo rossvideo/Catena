@@ -57,7 +57,7 @@ class MockParam : public IParam {
     MOCK_METHOD(bool, readOnly, (), (const, override));
     MOCK_METHOD(void, readOnly, (bool flag), (override));
     MOCK_METHOD(std::unique_ptr<IParam>, getParam, (Path& oid, const IAuthorizer& authz, catena::exception_with_status& status), (override));
-    MOCK_METHOD(uint32_t, size, (), (const, override));
+    MOCK_METHOD(std::size_t, size, (), (const, override));
     MOCK_METHOD(std::unique_ptr<IParam>, addBack, (const IAuthorizer& authz, catena::exception_with_status& status), (override));
     MOCK_METHOD(catena::exception_with_status, popBack, (const IAuthorizer& authz), (override));
     MOCK_METHOD(const IConstraint*, getConstraint, (), (const, override));

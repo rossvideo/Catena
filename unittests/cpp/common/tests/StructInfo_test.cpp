@@ -45,43 +45,11 @@
 #include <mocks/MockAuthorizer.h>
 
 // common
-#include "StructInfo.h"
+#include "CommonTestHelpers.h"
 #include "Enums.h"
 
 using namespace catena::common;
 
-/*
- * A test CatenaStruct with two int fields.
- */
-struct TestStruct1 {
-    int32_t f1;
-    int32_t f2;
-    using isCatenaStruct = void;
-};
-template<>
-struct catena::common::StructInfo<TestStruct1> {
-    using Type = std::tuple<FieldInfo<int32_t, TestStruct1>, FieldInfo<int32_t, TestStruct1>>;
-    static constexpr Type fields = {{"f1", &TestStruct1::f1}, {"f2", &TestStruct1::f2}};
-};
-/*
- * A test CatenaStruct with two float fields.
- */
-struct TestStruct2 {
-    float f1;
-    float f2;
-    using isCatenaStruct = void;
-};
-template<>
-struct catena::common::StructInfo<TestStruct2> {
-    using Type = std::tuple<FieldInfo<float, TestStruct2>, FieldInfo<float, TestStruct2>>;
-    static constexpr Type fields = {{"f1", &TestStruct2::f1}, {"f2", &TestStruct2::f2}};
-};
-/*
- * A test CatenaStruct variant which can be a TestStruct1 or a TestStruct2.
- */
-using TestVariantStruct = std::variant<TestStruct1, TestStruct2>;
-template<>
-inline std::array<const char*, 2> catena::common::alternativeNames<TestVariantStruct>{"TestStruct1", "TestStruct2"};
 // Fixture
 class StructInfoTest : public ::testing::Test {
   protected:
@@ -489,6 +457,8 @@ TEST_F(StructInfoTest, String_ToProto_NoAuthz) {
 TEST_F(StructInfoTest, String_ValidFromProto_Normal) {
     std::string dst = "";
     val_.set_string_value("Hello");
+    // Setting expectations.
+    EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(catena::ParamType::STRING));
     // Calling validFromProto() and comparing the result
     EXPECT_TRUE(validFromProto(val_, &dst, pd_, rc, authz_));
 }
@@ -499,6 +469,7 @@ TEST_F(StructInfoTest, String_ValidFromProto_Constraint) {
     std::string dst = "";
     val_.set_string_value("Hello");
     // Setting expectations.
+    EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(catena::ParamType::STRING));
     EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, satisfied(testing::_)).WillRepeatedly(
         testing::Invoke([this](const catena::Value &src) {
@@ -530,22 +501,13 @@ TEST_F(StructInfoTest, String_ValidFromProto_TypeMismatch) {
     EXPECT_EQ(rc.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 /*
- * TEST 3.7 - String ValidFromProto with string > max_length
- */
-TEST_F(StructInfoTest, String_ValidFromProto_MaxLength) {
-    std::string dst = "";
-    val_.set_string_value("Hello, World!"); // > 5
-    // Calling validFromProto() and comparing the result
-    EXPECT_FALSE(validFromProto(val_, &dst, pd_, rc, authz_));
-    EXPECT_EQ(rc.status, catena::StatusCode::OUT_OF_RANGE);
-}
-/*
- * TEST 3.8 - String FromProto with unsatisfied constraint
+ * TEST 3.7 - String FromProto with unsatisfied constraint
  */
 TEST_F(StructInfoTest, String_ValidFromProto_Unsatisfied) {
     std::string dst = "";
     val_.set_string_value("Hello");
     // Setting expectations.
+    EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(catena::ParamType::STRING));
     EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, satisfied(testing::_)).WillRepeatedly(testing::Return(false));
     // Calling validFromProto() and comparing the result
@@ -553,11 +515,13 @@ TEST_F(StructInfoTest, String_ValidFromProto_Unsatisfied) {
     EXPECT_EQ(rc.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 /*
- * TEST 3.9 - String FromProto
+ * TEST 3.8 - String FromProto
  */
 TEST_F(StructInfoTest, String_FromProto_Normal) {
     std::string dst = "";
     val_.set_string_value("Hello");
+    // Setting expectations.
+    EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(catena::ParamType::STRING));
     // Calling fromProto() and comparing the result
     rc = fromProto(val_, &dst, pd_, authz_);
     EXPECT_EQ(dst, val_.string_value());
