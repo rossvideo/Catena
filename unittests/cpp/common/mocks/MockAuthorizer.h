@@ -54,6 +54,7 @@ class MockAuthorizer : public IAuthorizer {
     MOCK_METHOD(bool, writeAuthz, (const IParamDescriptor& pd), (const, override));
     MOCK_METHOD(bool, writeAuthz, (const std::string& scope), (const, override));
     MOCK_METHOD(bool, writeAuthz, (const Scopes_e& scope), (const, override));
+    MOCK_METHOD(bool, isExpired, (), (const, override));
 };
 
 } // namespace common

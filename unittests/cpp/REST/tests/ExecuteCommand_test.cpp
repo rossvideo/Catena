@@ -450,6 +450,31 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzInvalid) {
 }
 
 /*
+ * TEST 9 - ExecuteCommand fails from expired JWS token.
+ */
+TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzExpired) {
+    expRc_ = catena::exception_with_status{"", catena::StatusCode::UNAUTHENTICATED};
+    initPayload(0, "test_command", "test_value", true);
+    // Adding authorization mockToken metadata.
+    authzEnabled_ = true;
+    jwsToken_ = getJwsToken("expired");
+    // Setting expectations
+    EXPECT_CALL(dm0_, getCommand(fqoid_, ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
+            return std::move(mockCommand_);
+        }));
+    EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const catena::Value& value) {
+            return std::move(mockResponder_);
+        }));
+    EXPECT_CALL(*mockResponder_, getNext()).Times(0);
+    EXPECT_CALL(*mockResponder_, hasMore()).Times(1).WillOnce(::testing::Return(true));
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
  * TEST 12 - No device in the specified slot.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {

@@ -92,8 +92,15 @@ void catena::REST::Connect::proceed() {
         hasUpdate_ = false;
         writeConsole_(CallStatus::kWrite, true);
         try {
-            if (socket_.is_open() && !shutdown_) {
-                writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), res_);
+            if (socket_.is_open()) {
+                if (shutdown_) {
+                    writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::CANCELLED));
+                } else if (authz_->isExpired()) {
+                    writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::UNAUTHENTICATED));
+                    shutdown_ = true;
+                } else {
+                    writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), res_);
+                }
             }
         // A little scuffed but I have no idea how else to detect disconnect.
         } catch (...) {

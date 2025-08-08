@@ -159,9 +159,12 @@ class Authorizer : public IAuthorizer {
      * @return true if the client has read authorization
      */
     bool writeAuthz(const Scopes_e& scope) const override;
+    /**
+     * @brief Returns true if the JWS token is expired.
+     */
+    bool isExpired() const override;
 
-
-  private:
+  protected:
 	  /**
      * @brief Constructor for kAuthzDisabled authorizer. 
      */
@@ -172,6 +175,10 @@ class Authorizer : public IAuthorizer {
      * @return true if the client has the specified authorization
      */
     bool hasAuthz_(const std::string& scope) const;
+    /**
+     * @brief The exp or expiry date field from the JWS token. 0 by default.
+     */
+    uint32_t exp_{0};
     /**
      * @brief Client scopes extracted from a valid JWS token.
      */
