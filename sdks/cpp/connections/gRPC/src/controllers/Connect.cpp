@@ -150,6 +150,9 @@ void catena::gRPC::Connect::proceed(bool ok) {
             if (!context_.IsCancelled()) {
                 if (shutdown_) {
                     writer_.Finish(Status::CANCELLED, this);
+                } else if (authz_->isExpired()) {
+                    status_ = CallStatus::kFinish;
+                    writer_.Finish(grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "JWS token expired"), this);
                 } else {
                     writer_.Write(res_, this);
                 }

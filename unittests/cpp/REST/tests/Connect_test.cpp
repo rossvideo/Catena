@@ -373,3 +373,34 @@ TEST_F(RESTConnectTest, Connect_HandlesWriterFailure) {
     catena::REST::Connect::shutdownSignal_.emit();
     proceed_thread.join();
 }
+
+// Test 3.5: Testing Connect with an expired authz token.
+TEST_F(RESTConnectTest, Connect_AuthzExpired) {
+    authzEnabled_ = true;
+    jwsToken_ = getJwsToken("expired");
+
+    auto param = std::make_unique<MockParam>();
+    EXPECT_CALL(*param, getOid())
+        .WillRepeatedly(testing::ReturnRef(paramOid_));
+    EXPECT_CALL(*param, getScope())
+        .WillRepeatedly(testing::ReturnRef(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
+    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<const IAuthorizer&>()))
+        .WillOnce(testing::Invoke([](catena::Value& value, const IAuthorizer&) {
+            value.set_string_value("test_value");
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+
+    std::string slotJson = buildSlotResponse();
+
+    // Run proceed() in a separate thread since it blocks
+    std::thread proceed_thread([this]() {
+        endpoint_->proceed();
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
+
+    dm0_.getValueSetByServer().emit(paramOid_, param.get());
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    proceed_thread.join();
+
+    EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, {slotJson}));
+}

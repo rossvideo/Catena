@@ -340,8 +340,35 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzJWSNotFound) {
     testRPC();
 }
 
+
 /*
- * TEST 9 - No device in the specified slot.
+ * TEST 9 - ExecuteCommand fails from expired JWS token.
+ */
+TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzExpired) {
+    expRc_ = catena::exception_with_status{"JWS token expired", catena::StatusCode::UNAUTHENTICATED};
+    initPayload(0, "test_command", "test_value", true);
+    // Adding authorization mockToken metadata.
+    authzEnabled_ = true;
+    std::string mockToken = getJwsToken("expired");
+    clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getCommand(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
+            return std::move(mockCommand_);
+        }));
+    EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const catena::Value& value) {
+            return std::move(mockResponder_);
+        }));
+    EXPECT_CALL(*mockResponder_, getNext()).Times(0);
+    EXPECT_CALL(*mockResponder_, hasMore()).Times(0);
+    // Sending the RPC
+    testRPC();
+}
+
+/*
+ * TEST 10 - No device in the specified slot.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
     initPayload(dms_.size(), "test_command", "test_value", true);
@@ -354,7 +381,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
 }
 
 /*
- * TEST 10 - getCommand does not find a command.
+ * TEST 11 - getCommand does not find a command.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
     expRc_ = catena::exception_with_status("Command not found", catena::StatusCode::INVALID_ARGUMENT);
@@ -370,7 +397,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
 }
 
 /*
- * TEST 11 - getCommand throws a catena::exception_with_status.
+ * TEST 12 - getCommand throws a catena::exception_with_status.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
     expRc_ = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
@@ -386,7 +413,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
 }
 
 /*
- * TEST 12 - getCommand throws an std::runtime error.
+ * TEST 13 - getCommand throws an std::runtime error.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -399,7 +426,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowUnknown) {
 }
 
 /*
- * TEST 13 - executeCommand returns a nullptr.
+ * TEST 14 - executeCommand returns a nullptr.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
     expRc_ = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
@@ -419,7 +446,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
 }
 
 /*
- * TEST 14 - executeCommand throws a catena::exception_with_status.
+ * TEST 15 - executeCommand throws a catena::exception_with_status.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
     expRc_ = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
@@ -440,7 +467,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
 }
 
 /*
- * TEST 15 - executeCommand returns an std::runtime_error.
+ * TEST 16 - executeCommand returns an std::runtime_error.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -458,7 +485,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
 }
 
 /*
- * TEST 16 - getNext throws a catena::exception_with_status.
+ * TEST 17 - getNext throws a catena::exception_with_status.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
     expRc_ = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
@@ -484,7 +511,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
 }
 
 /*
- * TEST 17 - getNext throws a std::runtime_error.
+ * TEST 18 - getNext throws a std::runtime_error.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
