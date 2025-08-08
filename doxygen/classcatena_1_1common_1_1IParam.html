@@ -170,9 +170,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a909fe01758dd9a9db016b7344933adcb" id="r_a909fe01758dd9a9db016b7344933adcb"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a909fe01758dd9a9db016b7344933adcb">getParam</a> (<a class="el" href="classcatena_1_1common_1_1Path.html">Path</a> &amp;oid, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status)=0</td></tr>
 <tr class="memdesc:a909fe01758dd9a9db016b7344933adcb"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a child parameter by name  <br /></td></tr>
 <tr class="separator:a909fe01758dd9a9db016b7344933adcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaa8281f1683c7b92bd962c14f5c6e65b" id="r_aaa8281f1683c7b92bd962c14f5c6e65b"><td class="memItemLeft" align="right" valign="top">virtual std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#aaa8281f1683c7b92bd962c14f5c6e65b">size</a> () const =0</td></tr>
-<tr class="memdesc:aaa8281f1683c7b92bd962c14f5c6e65b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the size of an array parameter.  <br /></td></tr>
-<tr class="separator:aaa8281f1683c7b92bd962c14f5c6e65b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a357881202bece2996171fae807517637" id="r_a357881202bece2996171fae807517637"><td class="memItemLeft" align="right" valign="top">virtual uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a357881202bece2996171fae807517637">size</a> () const =0</td></tr>
+<tr class="memdesc:a357881202bece2996171fae807517637"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the size of an array parameter.  <br /></td></tr>
+<tr class="separator:a357881202bece2996171fae807517637"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8f11a601f4e46465198821a6ec06046c" id="r_a8f11a601f4e46465198821a6ec06046c"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a8f11a601f4e46465198821a6ec06046c">addBack</a> (const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status)=0</td></tr>
 <tr class="memdesc:a8f11a601f4e46465198821a6ec06046c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an empty value to and return the back of an array parameter.  <br /></td></tr>
 <tr class="separator:a8f11a601f4e46465198821a6ec06046c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -744,8 +744,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="aaa8281f1683c7b92bd962c14f5c6e65b" name="aaa8281f1683c7b92bd962c14f5c6e65b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaa8281f1683c7b92bd962c14f5c6e65b">&#9670;&#160;</a></span>size()</h2>
+<a id="a357881202bece2996171fae807517637" name="a357881202bece2996171fae807517637"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a357881202bece2996171fae807517637">&#9670;&#160;</a></span>size()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -754,7 +754,7 @@ Here is the caller graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual std::size_t catena::common::IParam::size </td>
+          <td class="memname">virtual uint32_t catena::common::IParam::size </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -770,7 +770,7 @@ Here is the caller graph for this function:</div>
 <p>Return the size of an array parameter. </p>
 <dl class="section return"><dt>Returns</dt><dd>The size of the array parameter, or 0 if the parameter is not an array. </dd></dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a001f623072810061e11472dc57f3d796">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#aad918685bdc22bfb09674276e43b23da">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
 </div>
 </div>
