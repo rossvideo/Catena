@@ -165,7 +165,7 @@ TEST_F(ParamWithVariantTest, ParamToProto) {
     rc_ = param.toProto(outParam, authz_);
     ASSERT_TRUE(outParam.value().has_struct_variant_value());
     EXPECT_EQ(outParam.value().struct_variant_value().struct_variant_type(), "TestStruct1");
-    ASSERT_EQ(fromProto(outParam.value(), &outValue, pd_, authz_).status, catena::StatusCode::OK) << "fromProto failed, cannot compare results.";
+    ASSERT_EQ(fromProto(outParam.value(), &outValue, pd_, authz_).status, catena::StatusCode::OK) << "fromProto failed, cannot continue test.";
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
     EXPECT_EQ(std::get<TestStruct1>(value_).f1, std::get<TestStruct1>(outValue).f1);
     EXPECT_EQ(std::get<TestStruct1>(value_).f2, std::get<TestStruct1>(outValue).f2);

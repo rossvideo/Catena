@@ -79,9 +79,11 @@ TEST_F(ParamWithFloatArrayTest, GetParam) {
     FloatArrayParam param(value_, pd_);
     Path path = Path("/0");
     auto foundParam = param.getParam(path, authz_, rc_);
+    // Checking results.
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
     ASSERT_TRUE(foundParam) << "Did not find a parameter when one was expected";
     EXPECT_EQ(getParamValue<float>(foundParam.get()), value_[0]);
+    EXPECT_EQ(&foundParam->getDescriptor(), &pd_) << "Element should inherit the parent descriptor.";
 }
 /*
  * TEST 5 - Testing <FLOAT_ARRAY>ParamWithValue.getParam() error handling.
@@ -176,7 +178,7 @@ TEST_F(ParamWithFloatArrayTest, PopBack) {
  * - Not authorized.
  */
 TEST_F(ParamWithFloatArrayTest, PopBack_Error) {
-    std::vector<float> value{};
+    FloatArray value{};
     FloatArrayParam param(value, pd_);
     // Empty array
     rc_ = param.popBack(authz_);
@@ -198,9 +200,9 @@ TEST_F(ParamWithFloatArrayTest, ParamToProto) {
     rc_ = param.toProto(outParam, authz_);
     // Checking results.
     ASSERT_TRUE(outParam.value().has_float32_array_values());
-    std::vector<float> outValue{};
+    FloatArray outValue{};
     ASSERT_EQ(fromProto(outParam.value(), &outValue, pd_, authz_).status, catena::StatusCode::OK)
-        << "fromProto failed, cannot compare results.";
+        << "fromProto failed, cannot continue test.";
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
     EXPECT_EQ(value_, outValue);
     EXPECT_EQ(oid_, outParam.template_oid());

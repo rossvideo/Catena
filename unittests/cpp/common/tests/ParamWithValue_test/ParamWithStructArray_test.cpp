@@ -174,7 +174,7 @@ TEST_F(ParamWithStructArrayTest, ParamToProto) {
         }));
     rc_ = param.toProto(outParam, authz_);
     ASSERT_TRUE(outParam.value().has_struct_array_values());
-    ASSERT_EQ(fromProto(outParam.value(), &outValue, pd_, authz_).status, catena::StatusCode::OK) << "fromProto failed, cannot compare results.";
+    ASSERT_EQ(fromProto(outParam.value(), &outValue, pd_, authz_).status, catena::StatusCode::OK) << "fromProto failed, cannot continue test.";
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
     EXPECT_EQ(oid_, outParam.template_oid());
     for (uint32_t i = 0; i < value_.size(); ++i) {

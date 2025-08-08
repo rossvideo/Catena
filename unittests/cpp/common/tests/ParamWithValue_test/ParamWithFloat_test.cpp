@@ -78,6 +78,7 @@ TEST_F(ParamWithFloatTest, GetParam) {
     FloatParam param(value_, pd_);
     Path path = Path("/test/oid");
     auto foundParam = param.getParam(path, authz_, rc_);
+    // Checking results.
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
