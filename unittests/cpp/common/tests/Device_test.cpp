@@ -946,7 +946,13 @@ TEST_F(DeviceTest, GetValue_UnknownException) {
 
 // --- Get Language Tests ---
 
-// 3.1: Success Case - Language Pack Get
+// 3.1: Success Case - Test hasLanguage
+TEST_F(DeviceTest, HasLanguage) {
+    EXPECT_TRUE(device_->hasLanguage("en"));
+    EXPECT_FALSE(device_->hasLanguage("nonexistent"));
+}
+
+// 3.2: Success Case - Language Pack Get
 TEST_F(DeviceTest, LanguagePack_Get) {
     // Test getting a shipped language pack (English)
     
@@ -964,7 +970,7 @@ TEST_F(DeviceTest, LanguagePack_Get) {
     EXPECT_EQ(pack2.language_pack().name(), "French");
 }
 
-// 3.2: Error Case - Language Pack with Empty ID
+// 3.3: Error Case - Language Pack with Empty ID
 TEST_F(DeviceTest, LanguagePack_Get_EmptyLanguageId) {
     Device::ComponentLanguagePack pack;
     auto result = device_->getLanguagePack("", pack);
@@ -972,7 +978,7 @@ TEST_F(DeviceTest, LanguagePack_Get_EmptyLanguageId) {
     EXPECT_EQ(std::string(result.what()), "Language ID is empty");
 }
 
-// 3.3: Error Case - Language Pack Not Found
+// 3.4: Error Case - Language Pack Not Found
 TEST_F(DeviceTest, LanguagePack_Get_NotFound) {
     Device::ComponentLanguagePack pack;
     auto result = device_->getLanguagePack("nonexistent", pack);
@@ -980,7 +986,7 @@ TEST_F(DeviceTest, LanguagePack_Get_NotFound) {
     EXPECT_EQ(std::string(result.what()), "Language pack 'nonexistent' not found");
 }
 
-// 3.4: Error Case - Language Pack Get Internal Error
+// 3.5: Error Case - Language Pack Get Internal Error
 TEST_F(DeviceTest, LanguagePack_Get_InternalError) {
     // Create a mock language pack that throws std::exception
     auto mockLanguagePack = std::make_shared<MockLanguagePack>();
@@ -998,7 +1004,7 @@ TEST_F(DeviceTest, LanguagePack_Get_InternalError) {
     EXPECT_EQ(std::string(result.what()), "Internal error in toProto");
 }
 
-// 3.5: Error Case - Language Pack Get Unknown Error
+// 3.6: Error Case - Language Pack Get Unknown Error
 TEST_F(DeviceTest, LanguagePack_Get_UnknownError) {
     // Create a mock language pack that throws unknown exception
     auto mockLanguagePack = std::make_shared<MockLanguagePack>();
@@ -1018,7 +1024,7 @@ TEST_F(DeviceTest, LanguagePack_Get_UnknownError) {
 
 // --- Add Language Tests ---
 
-// 3.6: Success Case - Language Pack Add
+// 3.7: Success Case - Language Pack Add
 TEST_F(DeviceTest, LanguagePack_Add) {
     // Create a language pack payload for a new language
     catena::AddLanguagePayload payload;
@@ -1031,7 +1037,7 @@ TEST_F(DeviceTest, LanguagePack_Add) {
     EXPECT_EQ(result.status, catena::StatusCode::OK);
 }
 
-// 3.7: Error Case - Language Pack Add Not Authorized
+// 3.8: Error Case - Language Pack Add Not Authorized
 TEST_F(DeviceTest, LanguagePack_Add_NotAuthorized) {
     // Try to add a language pack with monitor permissions (should fail)
     catena::AddLanguagePayload payload;
@@ -1044,7 +1050,7 @@ TEST_F(DeviceTest, LanguagePack_Add_NotAuthorized) {
     EXPECT_EQ(std::string(result.what()), "Not authorized to add language");
 }
 
-// 3.8: Error Case - Language Pack Add Invalid
+// 3.9: Error Case - Language Pack Add Invalid
 TEST_F(DeviceTest, LanguagePack_Add_Invalid) {
     catena::AddLanguagePayload payload;
     payload.set_id(""); // Empty ID should cause INVALID_ARGUMENT
@@ -1056,7 +1062,7 @@ TEST_F(DeviceTest, LanguagePack_Add_Invalid) {
     EXPECT_EQ(std::string(result.what()), "Invalid language pack");
 }
 
-// 3.9: Error Case - Language Pack Add Cannot Overwrite Shipped Language
+// 3.10: Error Case - Language Pack Add Cannot Overwrite Shipped Language
 TEST_F(DeviceTest, LanguagePack_Add_NoOverwrite) {
     // Try to add a language pack with the same ID as a shipped language pack
     catena::AddLanguagePayload payload;
@@ -1071,7 +1077,7 @@ TEST_F(DeviceTest, LanguagePack_Add_NoOverwrite) {
 
 // --- Remove Language Tests ---
 
-// 3.10: Success Case - Language Pack Removal
+// 3.11: Success Case - Language Pack Removal
 TEST_F(DeviceTest, LanguagePack_Remove) {
     // First add a language pack that can be removed
     catena::AddLanguagePayload payload;
@@ -1088,7 +1094,7 @@ TEST_F(DeviceTest, LanguagePack_Remove) {
     EXPECT_EQ(result.status, catena::StatusCode::OK);
 }
 
-// 3.11: Error Case - Language Pack Remove Not Authorized
+// 3.12: Error Case - Language Pack Remove Not Authorized
 TEST_F(DeviceTest, LanguagePack_Remove_NotAuthorized) {
     // Try to remove a language pack with monitor permissions (should fail)
     auto result = device_->removeLanguage("en", *monitorAuthz_);
@@ -1096,7 +1102,7 @@ TEST_F(DeviceTest, LanguagePack_Remove_NotAuthorized) {
     EXPECT_EQ(std::string(result.what()), "Not authorized to delete language");
 }
 
-// 3.12: Error Case - Language Pack Remove Cannot Delete Shipped Language
+// 3.13: Error Case - Language Pack Remove Cannot Delete Shipped Language
 TEST_F(DeviceTest, LanguagePack_Remove_CannotDeleteShippedLanguage) {
     // Try to remove a shipped language pack (should fail)
     auto result = device_->removeLanguage("en", *adminAuthz_);
@@ -1104,7 +1110,7 @@ TEST_F(DeviceTest, LanguagePack_Remove_CannotDeleteShippedLanguage) {
     EXPECT_EQ(std::string(result.what()), "Cannot delete language pack shipped with device");
 }
 
-// 3.13: Error Case - Language Pack Remove Not Found
+// 3.14: Error Case - Language Pack Remove Not Found
 TEST_F(DeviceTest, LanguagePack_Remove_NotFound) {
     // Try to remove a language pack that doesn't exist
     auto result = device_->removeLanguage("nonexistent", *adminAuthz_);
@@ -2167,6 +2173,60 @@ TEST_F(DeviceTest, GetDeviceSerializer_Constraints) {
     EXPECT_TRUE(foundConstraint);
 }
 
+// 6.8: Error Case - Unhandled Exception
+TEST_F(DeviceTest, UnhandledException) {
+    // Create a mock descriptor for the exception-throwing parameter
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    EXPECT_CALL(*mockDescriptor, minimalSet()).WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(*mockDescriptor, isCommand()).WillRepeatedly(testing::Return(false));
+    mockDescriptors_.push_back(mockDescriptor);
+    
+    // Create a mock parameter that throws an exception in toProto
+    auto mockParam = std::make_unique<MockParam>();
+    setupMockParam(*mockParam, "/exceptionParam", *mockDescriptor);
+    
+    // Override toProto to throw an exception
+    EXPECT_CALL(*mockParam, toProto(testing::An<catena::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](catena::Param&, const IAuthorizer&) -> catena::exception_with_status {
+            throw std::runtime_error("Test exception from toProto");
+        }));
+    
+    // Add the parameter to the device
+    device_->addItem("exceptionParam", mockParam.get());
+    
+    // Keep the parameter alive
+    mockParams_.push_back(std::move(mockParam));
+
+    // Create a serializer that will encounter the exception during execution
+    std::set<std::string> subscribedOids = {};
+    auto serializer = device_->getComponentSerializer(*monitorAuthz_, subscribedOids, catena::Device_DetailLevel_FULL, false);
+
+    // The first call to getNext should work (returns device info)
+    EXPECT_TRUE(serializer->hasMore());
+    auto component = serializer->getNext();
+    EXPECT_TRUE(component.has_device());
+
+    // The second call should return the first language pack
+    EXPECT_TRUE(serializer->hasMore());
+    component = serializer->getNext();
+    EXPECT_TRUE(component.has_language_pack());
+
+    // The third call should return the second language pack
+    EXPECT_TRUE(serializer->hasMore());
+    component = serializer->getNext();
+    EXPECT_TRUE(component.has_language_pack());
+
+    // The fourth call should encounter exception during parameter serialization, triggering unhandled exception
+    EXPECT_TRUE(serializer->hasMore());    
+    // When getNext is called, it should rethrow the exception that was caught by unhandled_exception
+    try {
+        serializer->getNext();
+        FAIL() << "Expected std::runtime_error to be thrown";
+    } catch (const std::runtime_error& e) {
+        EXPECT_STREQ(e.what(), "Test exception from toProto");
+    }
+}
+
 // ==== 7. Helper Function Tests ====
 
 // 7.1: Success Case - Test Get Next method
@@ -2257,3 +2317,58 @@ TEST_F(DeviceTest, ShouldSendParam) {
     EXPECT_FALSE(device_->shouldSendParam(*mockCommand, false, *monitorAuthz_));
     EXPECT_FALSE(device_->shouldSendParam(*mockParams_[0], false, *monitorAuthz_)); // fixture minimal set param
 }
+
+
+/** Currently missing the following tests...
+    Device signals:
+    * vdk::signal<void(const std::string&, const IParam*)>& getValueSetByClient() override { return valueSetByClient_; } 
+        ^ Covered, but still worth testing
+    * vdk::signal<void(const ILanguagePack*)>& getLanguageAddedPushUpdate() override { return languageAddedPushUpdate_; }
+    * vdk::signal<void(const std::string&, const IParam*)>& getValueSetByServer() override { return valueSetByServer_; }
+    * vdk::signal<void(const std::string&, const IAuthorizer*)>& getDownloadAssetRequest() override { return downloadAssetRequest_; } 
+    * vdk::signal<void(const std::string&, const IAuthorizer*)>& getUploadAssetRequest() override { return uploadAssetRequest_; }
+    * vdk::signal<void(const std::string&, const IAuthorizer*)>& getDeleteAssetRequest() override { return deleteAssetRequest_; }
+*/ 
+
+// ==== 8. Additional Header File Tests ====
+
+// 8.1: Success Case - Test slot
+TEST_F(DeviceTest, Slot) {
+    // Test setting and getting the slot
+    device_->slot(1);
+    EXPECT_EQ(device_->slot(), 1);
+    device_->slot(0);
+    EXPECT_EQ(device_->slot(), 0);
+}
+
+// 8.2: Success Case - Test mutex
+TEST_F(DeviceTest, Mutex) {
+    auto& mutex = device_->mutex();
+    // Test that the mutex is usable by attempting to lock it
+    std::lock_guard<std::mutex> lock(mutex);
+    EXPECT_TRUE(true); // If we get here, the mutex works
+}
+
+// 8.3: Success Case - Test default_max_length
+TEST_F(DeviceTest, DefaultMaxLength) {
+    EXPECT_EQ(device_->default_max_length(), 1024);
+}
+
+// 8.4: Success Case - Test default_total_length
+TEST_F(DeviceTest, DefaultTotalLength) {
+    EXPECT_EQ(device_->default_total_length(), 1024);
+}
+
+// 8.5: Success Case - Test set_default_max_length
+TEST_F(DeviceTest, SetDefaultMaxLength) {
+    device_->set_default_max_length(2048);
+    EXPECT_EQ(device_->default_max_length(), 2048);
+}
+
+// 8.6: Success Case - Test set_default_total_length
+TEST_F(DeviceTest, SetDefaultTotalLength) {
+    device_->set_default_total_length(2048);
+    EXPECT_EQ(device_->default_total_length(), 2048);
+}
+
+// ==== 9. Device Signal Tests ====
