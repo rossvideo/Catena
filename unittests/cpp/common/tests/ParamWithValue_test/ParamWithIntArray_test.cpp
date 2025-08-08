@@ -275,9 +275,10 @@ TEST_F(ParamWithIntArrayTest, ValidateSetValue_Error) {
 /*
  * TEST 15 - Testing <INT_ARRAY>ParamWithValue.ValidateSetValue() error handling
  * for appending and setting a single element.
- * Three main error cases:
+ * Four main error cases:
  *  - Index is not defined for single element setValue.
  *  - Index is not kEnd and is out of bounds.
+ *  - Type mismatch between proto value and element value / validFromProto error.
  *  - Append would cause array to exceed the max length.
  */
 TEST_F(ParamWithIntArrayTest, ValidateSetValue_SingleElementError) {
@@ -294,6 +295,13 @@ TEST_F(ParamWithIntArrayTest, ValidateSetValue_SingleElementError) {
         << "ValidateSetValue should return false when index is out of the bounds of the array.";
     EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
         << "ValidateSetValue should return OUT_OF_RANGE when index is out of the bounds of the array.";
+    // Type mismatch / validFromProto error
+    catena::Value wrongTypeValue;
+    wrongTypeValue.set_string_value("Wrong type");
+    EXPECT_FALSE(param.validateSetValue(wrongTypeValue, 0, authz_, rc_))
+        << "ValidateSetValue should return false when validFromProto returns false.";
+    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT)
+        << "In this case validFromProto should fail from a type mismatch.";
     // Too many appends
     EXPECT_CALL(pd_, max_length()).WillRepeatedly(testing::Return(value_.size() + 2));
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kEnd, authz_, rc_))

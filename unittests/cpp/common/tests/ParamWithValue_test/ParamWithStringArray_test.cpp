@@ -284,9 +284,10 @@ TEST_F(ParamWithStringArrayTest, ValidateSetValue_Error) {
 /*
  * TEST 15 - Testing <INT_ARRAY>ParamWithValue.ValidateSetValue() error handling
  * for appending and setting a single element.
- * Three main error cases:
+ * Five main error cases:
  *  - Index is not defined for single element setValue.
  *  - Index is not kEnd and is out of bounds.
+ *  - Type mismatch between proto value and element value / validFromProto error.
  *  - Append would cause array to exceed the max length.
  *  - Append would cause array to exceed the total length.
  */
@@ -313,6 +314,13 @@ TEST_F(ParamWithStringArrayTest, ValidateSetValue_SingleElementError) {
         << "ValidateSetValue should return false when appending would exceed the max length.";
     EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
         << "ValidateSetValue should return OUT_OF_RANGE when appending would exceed the max length.";
+    // Type mismatch / validFromProto error
+    catena::Value wrongTypeValue;
+    wrongTypeValue.set_int32_value(48);
+    EXPECT_FALSE(param.validateSetValue(wrongTypeValue, 0, authz_, rc_))
+        << "ValidateSetValue should return false when validFromProto returns false.";
+    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT)
+        << "In this case validFromProto should fail from a type mismatch.";
     // Exceeds total_length
     param.resetValidate(); // Need to reset the trackers so max_length does not trigger.
     protoValue.set_string_value("This is a long string");

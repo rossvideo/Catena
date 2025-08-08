@@ -206,12 +206,10 @@ TEST_F(ParamWithStructTest, FromProto) {
  */
 TEST_F(ParamWithStructTest, ValidateSetValue) {
     StructParam param(value_, pd_);
-    catena::Value protoValue, f1, f2;
-    f1.set_int32_value(48);
-    f2.set_int32_value(64);
-    auto fields = protoValue.mutable_struct_value()->mutable_fields();
-    fields->insert({"f1", f1});
-    fields->insert({"f2", f2});
+    TestStruct1 newValue{48, 64};
+    catena::Value protoValue;
+    ASSERT_EQ(toProto(protoValue, &newValue, pd_, authz_).status, catena::StatusCode::OK)
+        << "toProto failed, cannot continue test.";
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_));
 }
 /*
