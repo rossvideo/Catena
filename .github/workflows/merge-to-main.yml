@@ -2,7 +2,9 @@ name: merge to main
 
 on:
   create
-
+  push:
+    branches:
+      - 'main-merge-20250811'
 jobs:
   check-conditions:
     runs-on: ubuntu-latest
@@ -31,6 +33,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: pull
+        run: |
+          git pull origin $GITHUB_REF
 
       - name: Generate new version number
         run: |
