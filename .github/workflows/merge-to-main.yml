@@ -1,7 +1,7 @@
 name: merge to main
 
 on:
-  create
+  # create
   push:
     branches:
       - 'main-merge-20250811'
