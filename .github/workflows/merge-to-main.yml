@@ -2,7 +2,7 @@ name: merge to main
 
 on:
   create
-  
+
 jobs:
   check-conditions:
     runs-on: ubuntu-latest
@@ -55,7 +55,7 @@ jobs:
           PATCH=$((PATCH + 1))
 
           result=$(git rev-list --left-right --count origin/main...origin/develop)
-          COMMIT_COUNT=$(echo "$result"| cut -f1)
+          COMMIT_COUNT=$(echo "$result"| cut -f2)
           ahead=$(echo "$result" | cut -f2)
           echo "Commit count: $COMMIT_COUNT"
 
