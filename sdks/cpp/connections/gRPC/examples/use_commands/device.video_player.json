@@ -111,7 +111,25 @@
       "type":"STRING"
     },
     "eject": {
-      "type":"EMPTY"
+      "type":"EMPTY",
+      "name": {"display_strings": {
+        "en": "Eject",
+        "fr": "Éjecter",
+        "es": "Expulsar",
+        "ja": "取り出す"
+      }},
+      "widget": "button"
+    },
+    "get_state": {
+      "type": "STRING",
+      "name": {"display_strings": {
+        "en": "Get State",
+        "fr": "Obtenir l'état",
+        "es": "Obtener estado",
+        "ja": "状態を取得"
+      }},
+      "widget": "button",
+      "response": true
     }
   },
   "menu_groups": {
