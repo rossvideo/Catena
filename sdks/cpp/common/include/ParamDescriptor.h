@@ -387,7 +387,7 @@ class ParamDescriptor : public IParamDescriptor {
      * The passed function will be executed when executeCommand is called on this param object.
      * If this is not a command parameter, an exception will be thrown.
      */
-    void defineCommand(std::function<std::unique_ptr<ICommandResponder>(const catena::Value&)> commandImpl) override {
+    void defineCommand(std::function<std::unique_ptr<ICommandResponder>(const catena::Value&, const bool)> commandImpl) override {
       if (!isCommand_) {
         throw std::runtime_error("Cannot define a command on a non-command parameter");
       }
@@ -402,8 +402,8 @@ class ParamDescriptor : public IParamDescriptor {
      * if executeCommand is called for a command that has not been defined, then the returned
      * command response will be an exception with type UNIMPLEMENTED
      */
-    std::unique_ptr<ICommandResponder> executeCommand(const catena::Value& value) override {
-      return commandImpl_(value);
+    std::unique_ptr<ICommandResponder> executeCommand(const catena::Value& value, const bool respond) override {
+      return commandImpl_(value, respond);
     }
 
     /**
@@ -436,7 +436,7 @@ class ParamDescriptor : public IParamDescriptor {
     bool minimal_set_;
 
     // default command implementation
-    std::function<std::unique_ptr<ICommandResponder>(const catena::Value&)> commandImpl_ = [](const catena::Value& value) -> std::unique_ptr<ICommandResponder> { 
+    std::function<std::unique_ptr<ICommandResponder>(const catena::Value&, const bool)> commandImpl_ = [](const catena::Value& value, const bool respond) -> std::unique_ptr<ICommandResponder> { 
       return std::make_unique<CommandResponder>([](const catena::Value& value) -> CommandResponder {
         catena::CommandResponse response;
         response.mutable_exception()->set_type("UNIMPLEMENTED");

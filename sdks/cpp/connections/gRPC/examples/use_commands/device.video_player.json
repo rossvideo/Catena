@@ -120,16 +120,16 @@
       }},
       "widget": "button"
     },
-    "get_state": {
-      "type": "STRING",
+    "debug_counter": {
       "name": {"display_strings": {
-        "en": "Get State",
-        "fr": "Obtenir l'état",
-        "es": "Obtener estado",
-        "ja": "状態を取得"
+        "en": "Debug Counter",
+        "fr": "Compteur de débogage",
+        "es": "Contador de depuración",
+        "ja": "デバッグカウンター"
       }},
+      "type":"INT32",
       "widget": "button",
-      "response": true
+      "read_only": true
     }
   },
   "menu_groups": {

@@ -144,8 +144,8 @@ void defineCommands() {
 
     // Define a lambda function to be executed when the command is called
     // The lambda function must take a catena::Value as an argument and return a catena::CommandResponse
-    playCommand->defineCommand([](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value) -> ParamDescriptor::CommandResponder {
+    playCommand->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
             catena::exception_with_status err{"", catena::StatusCode::OK};
             catena::CommandResponse response;
             std::unique_ptr<IParam> stateParam = dm.getParam("/state", err);
@@ -165,13 +165,13 @@ void defineCommands() {
                 response.mutable_no_response();
             }
             co_return response;
-        }(value));
+        }(value, respond));
     });
 
     std::unique_ptr<IParam> pauseCommand = dm.getCommand("/pause", err);
     assert(pauseCommand != nullptr);
-    pauseCommand->defineCommand([](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value) -> ParamDescriptor::CommandResponder {
+    pauseCommand->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
             catena::exception_with_status err{"", catena::StatusCode::OK};
             catena::CommandResponse response;
             std::unique_ptr<IParam> stateParam = dm.getParam("/state", err);
@@ -191,7 +191,32 @@ void defineCommands() {
                 response.mutable_no_response();
             }
             co_return response;
-        }(value));
+        }(value, respond));
+    });
+
+    std::unique_ptr<IParam> debugCounterCommand = dm.getCommand("/debug_counter", err);
+    assert(debugCounterCommand != nullptr);
+    debugCounterCommand->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+            catena::exception_with_status err{"", catena::StatusCode::OK};
+            catena::CommandResponse response;
+
+            if (!value.has_int32_value()) {
+                response.mutable_exception()->set_type("Invalid Command");
+                response.mutable_exception()->set_details("debug_counter command requires an int32 value");
+                co_return response;
+            }
+
+            int32_t counter =  value.int32_value();
+            for (int i = 1; i <= counter; ++i) {
+                // Simulate some work
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                response.mutable_response()->set_int32_value(i);
+                // Yield the response back to the client
+                co_yield response;
+            }
+            
+        }(value, respond));
     });
 }
 
