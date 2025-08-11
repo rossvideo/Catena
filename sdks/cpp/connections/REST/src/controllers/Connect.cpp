@@ -117,5 +117,12 @@ void catena::REST::Connect::proceed() {
 
 // Returns true if the connection has been cancelled.
 bool catena::REST::Connect::isCancelled() {
+    // Bandaid fix for detecting disconnection involves making an empty write
+    // to the socket and seeing if it throws an error.
+    try {
+        boost::asio::write(socket_, boost::asio::buffer(""));
+    } catch (...) {
+        shutdown_ = true;
+    }
     return !this->socket_.is_open() || shutdown_ || (authz_ && authz_->isExpired());
 }
