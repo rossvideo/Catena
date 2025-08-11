@@ -201,6 +201,9 @@ void defineCommands() {
             catena::exception_with_status err{"", catena::StatusCode::OK};
             catena::CommandResponse response;
 
+            // Short-circuit if we are not responding
+            if (!respond) co_return response;
+
             if (!value.has_int32_value()) {
                 response.mutable_exception()->set_type("Invalid Command");
                 response.mutable_exception()->set_details("debug_counter command requires an int32 value");
