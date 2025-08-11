@@ -24,6 +24,7 @@ jobs:
   
   update_version_file:
     if: needs.check-conditions.outputs.valid_branch == 'true'
+    needs: check-conditions
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
