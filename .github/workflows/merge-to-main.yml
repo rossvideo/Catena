@@ -113,7 +113,7 @@ jobs:
           gh pr create --base main --head "$BRANCH_NAME" \
             --title "Merge $BRANCH_NAME into main" \
             --body "Automated PR from workflow." \
-            --reviewer NR-RV,abrown-RV
+            --reviewer NR-RV,abrown-RV,ctwarog-ross
 
       - name: Create PR to develop
         env:
@@ -124,5 +124,5 @@ jobs:
           gh pr create --base develop --head "$BRANCH_NAME" \
             --title "Merge $BRANCH_NAME into develop" \
             --body "Automated PR from workflow." \
-            --reviewer NR-RV,abrown-RV
+            --reviewer NR-RV,abrown-RV,ctwarog-ross
 
