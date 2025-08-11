@@ -72,30 +72,33 @@ class ParamWithValue : public catena::common::IParam {
 
     /**
      * @brief Construct a new ParamWithValue object and add it to the device
+     * 
+     * @param value The value of the parameter
+     * @param descriptor The descriptor associated with the parameter
+     * @param dev The device to add the parameter to
      */
-    ParamWithValue(
-        T& value,
-        IParamDescriptor& descriptor,
-        IDevice& dev,
-        bool isCommand
-    ) : value_{value}, descriptor_{descriptor} {
-        if (isCommand) {
+    ParamWithValue(T& value, IParamDescriptor& descriptor, IDevice& dev, bool isCommand)
+        : value_{value}, descriptor_{descriptor} {
             dev.addItem(descriptor.getOid(), this);
-        } else {
-            dev.addItem(descriptor.getOid(), this);
-        }
     }
 
     /**
      * @brief Construct a new ParamWithValue object without adding it to device
+     * 
+     * @param value The value of the parameter
+     * @param descriptor The descriptor associated with the parameter
      */
-    ParamWithValue(
-        T& value,
-        IParamDescriptor& descriptor
-    ) : value_{value}, descriptor_{descriptor} {}
+    ParamWithValue(T& value, IParamDescriptor& descriptor)
+        : value_{value}, descriptor_{descriptor} {}
 
     /**
-     * @brief Construct a new ParamWithValue object without adding it to device
+     * @brief Construct a new ParamWithValue object without adding it to device.
+     * Also carry over size trackers for array parameters.
+     * 
+     * @param value The value of the parameter
+     * @param descriptor The descriptor associated with the parameter
+     * @param mSizeTracker A shared pointer to the max size tracker
+     * @param tSizeTracker A shared pointer to the total size tracker
      */
     ParamWithValue(
         T& value,
@@ -109,6 +112,10 @@ class ParamWithValue : public catena::common::IParam {
 
     /**
      * @brief Construct a new ParamWithValue object using FieldInfo
+     * 
+     * @param field The FieldInfo object containing the field name.
+     * @param parentValue The parent object containing the field values.
+     * @param parentDescriptor The descriptor associated with the parent param.
      */
     template <typename FieldType = T, typename ParentType>
     ParamWithValue(
@@ -121,20 +128,12 @@ class ParamWithValue : public catena::common::IParam {
      * @brief ParamWithValue can not be copied directly
      */
     ParamWithValue(const ParamWithValue&) = delete;
-
-    /**
-     * @brief ParamWithValue can not be copied directly
-     */
     ParamWithValue& operator=(const ParamWithValue&) = delete;
 
     /**
      * @brief ParamWithValue has move semantics
      */
     ParamWithValue(ParamWithValue&&) = default;
-
-    /**
-     * @brief ParamWithValue has move semantics
-     */
     ParamWithValue& operator=(ParamWithValue&&) = default;
 
     /**
@@ -142,13 +141,12 @@ class ParamWithValue : public catena::common::IParam {
      */
     virtual ~ParamWithValue() = default;
 
-  public:
     /**
      * @brief creates a shallow copy the parameter
      * 
      * Needed to copy IParam objects
      * 
-     * ParamWithValue objects only contain two references, so they are cheap to copy
+     * ParamWithValue objects only contain four references, so they are cheap to copy
      */
     std::unique_ptr<IParam> copy() const override {
         return std::make_unique<ParamWithValue<T>>(value_.get(), descriptor_, mSizeTracker_, tSizeTracker_);
@@ -171,7 +169,7 @@ class ParamWithValue : public catena::common::IParam {
      */
     catena::exception_with_status toProto(catena::Param& param, const IAuthorizer& authz) const override {
         // toProto checks authz.
-        catena::exception_with_status rc = catena::common::toProto<T>(*param.mutable_value(), &value_.get(), descriptor_, authz);
+        catena::exception_with_status rc = toProto(*param.mutable_value(), authz);
         if (rc.status == catena::StatusCode::OK) {
             descriptor_.toProto(param, authz);
         }
@@ -207,51 +205,37 @@ class ParamWithValue : public catena::common::IParam {
     /**
      * @brief get the parameters protobuf value type
      */
-    typename IParam::ParamType type() const override {
-        return descriptor_.type();
-    }
+    typename IParam::ParamType type() const override { return descriptor_.type(); }
 
     /** 
      * @brief get the parameter oid
      */
-    const std::string& getOid() const override {
-        return descriptor_.getOid();
-    }
+    const std::string& getOid() const override { return descriptor_.getOid(); }
 
     /**
      * @brief set the parameter oid
      */
-    void setOid(const std::string& oid) override{
-        descriptor_.setOid(oid);
-    }
+    void setOid(const std::string& oid) override{ descriptor_.setOid(oid); }
 
     /** 
      * @brief return the params read only flag
      */
-    bool readOnly() const override {
-        return descriptor_.readOnly();
-    }
+    bool readOnly() const override { return descriptor_.readOnly(); }
 
     /**
      * @brief set the params read only flag
      */
-    void readOnly(bool flag) override {
-        descriptor_.readOnly(flag);
-    }
+    void readOnly(bool flag) override { descriptor_.readOnly(flag); }
 
     /**
      * @brief get the value of the parameter
      */
-    T& get() {
-        return value_.get();
-    }
+    T& get() { return value_.get(); }
 
     /**
      * @brief get the value of the parameter (const version)
      */
-    const T& get() const {
-        return value_.get();
-    }
+    const T& get() const { return value_.get(); }
 
     /**
      * @brief get a child parameter by name
@@ -259,7 +243,14 @@ class ParamWithValue : public catena::common::IParam {
      * @return a unique pointer to the child parameter, or nullptr if it does not exist
      */
     std::unique_ptr<IParam> getParam(Path& oid, const IAuthorizer& authz, catena::exception_with_status& status) override {
-        return getParam_(oid, value_.get(), authz, status);
+        std::unique_ptr<IParam> returnParam = nullptr;
+        // Check read authz
+        if (!authz.readAuthz(*this)) {
+            status = catena::exception_with_status("Not authorized to read param " + oid.fqoid(), catena::StatusCode::PERMISSION_DENIED);
+        } else {
+            returnParam = getParam_(oid, value_.get(), authz, status);
+        }
+        return returnParam;
     }
 
     /**
@@ -284,9 +275,7 @@ class ParamWithValue : public catena::common::IParam {
      * @return The size of the array parameter, or 0 if the parameter is not an
      * array.
      */
-    uint32_t size() const override {     
-        return size(value_.get());
-    }
+    std::size_t size() const override { return size_(value_.get()); }
 
     /**
      * @brief Adds an empty element to the end of an array parameter.
@@ -297,7 +286,7 @@ class ParamWithValue : public catena::common::IParam {
      * failed.
      */
     std::unique_ptr<IParam> addBack(const IAuthorizer& authz, catena::exception_with_status& status) override {     
-        return addBack(value_.get(), authz, status);
+        return addBack_(value_.get(), authz, status);
     }
 
     /**
@@ -306,52 +295,93 @@ class ParamWithValue : public catena::common::IParam {
      * @return OK if succcessful, otherwise an error.
      */
     catena::exception_with_status popBack(const IAuthorizer& authz) override {
-        return popBack(value_.get(), authz);
+        return popBack_(value_.get(), authz);
     }
 
     /**
      * @brief get the descriptor of the parameter
      * @return the descriptor of the parameter
      */
-    const IParamDescriptor& getDescriptor() const override {
-        return descriptor_;
-    }
+    const IParamDescriptor& getDescriptor() const override { return descriptor_; }
 
     /**
      * @brief Check if the parameter is an array type
      * @return true if the parameter is an array type
      */
     bool isArrayType() const override {
-        return (type().value() == catena::ParamType::STRUCT_ARRAY ||
-                type().value() == catena::ParamType::INT32_ARRAY ||
-                type().value() == catena::ParamType::FLOAT32_ARRAY ||
-                type().value() == catena::ParamType::STRING_ARRAY ||
-                type().value() == catena::ParamType::STRUCT_VARIANT_ARRAY);
+        catena::ParamType paramType = type().value();
+        return (paramType == catena::ParamType::STRUCT_ARRAY ||
+                paramType == catena::ParamType::INT32_ARRAY ||
+                paramType == catena::ParamType::FLOAT32_ARRAY ||
+                paramType == catena::ParamType::STRING_ARRAY ||
+                paramType == catena::ParamType::STRUCT_VARIANT_ARRAY);
     }
 
-  private:
     /**
-     * @brief Gets the size of the array parameter.
+     * @brief add a child parameter
+     */
+    void addParam(const std::string& oid, IParamDescriptor* param) { descriptor_.addSubParam(oid, param); }
+
+    /**
+     * @brief get a constraint by oid
+     */
+    const catena::common::IConstraint* getConstraint() const override { return descriptor_.getConstraint(); }
+
+    /**
+     * @brief get the parameter scope
+     */
+    const std::string& getScope() const override { return descriptor_.getScope(); }
+
+    /**
+     * @brief Validates a setValue operation without changing the param's value.
+     * @param value The value we want to set the param to.
+     * @param index The index of the subparam to set (or nullptr if none).
+     * @param authz The Authorizer to test write permissions with.
+     * @param ans Catena::exception_with_status output.
+     * @returns true if valid.
+     */
+    bool validateSetValue(const catena::Value& value, Path::Index index, const IAuthorizer& authz, catena::exception_with_status& ans) override {
+        if (validateSetValueMap_.contains(value.kind_case())) {
+            // Updating trackers.
+            ans = validateSetValueMap_.at(value.kind_case())(value, index, authz);
+        } else {
+            ans = catena::exception_with_status("Type not supported with SetValue", catena::StatusCode::INVALID_ARGUMENT);
+        }
+        return ans.status == catena::StatusCode::OK;
+    }
+    /**
+     * @brief Resets any trackers that might have been changed in validateSetValue.
+     */
+    void resetValidate() override {
+        mSizeTracker_ = nullptr;
+        tSizeTracker_ = nullptr;
+    }
+
+  protected:
+    /**
+     * @brief Gets the size of the string/array parameter.
      * @return 0.
      * 
      * This generic template is used when the type is not a CatenaStructArray.
      * Since there is no .size() attribute, it only returns 0.
      */
     template <typename U>
-    uint32_t size(U& value) const {     
-        return 0;
-    }
-
+    std::size_t size_(const U& value) const { return 0; }
     /**
-     * @brief Gets the size of the array parameter.
+     * @brief Gets the size of the string/array parameter.
+     * @return The size of the string parameter.
+     * 
+     * This specialization is used when the type is a std::string.
+     */
+    std::size_t size_(const std::string& value) const { return value.length(); }
+    /**
+     * @brief Gets the size of the string/array parameter.
      * @return The size of the array parameter.
      * 
      * This specialization is used when the type is a CatenaStructArray.
      */
     template<meta::IsVector U>
-    uint32_t size(U& value) const {     
-        return value.size();
-    }
+    std::size_t size_(const U& value) const { return value.size(); }
 
     /**
      * @brief Adds an empty element to the end of an array parameter.
@@ -366,7 +396,7 @@ class ParamWithValue : public catena::common::IParam {
      * Since you cant add to the back, it only returns nullptr.
      */
     template <typename U>
-    std::unique_ptr<IParam> addBack(U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
+    std::unique_ptr<IParam> addBack_(U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
         status = catena::exception_with_status("Cannot add generic type to param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
         return nullptr;
     }
@@ -384,19 +414,21 @@ class ParamWithValue : public catena::common::IParam {
      * This specialization is used when the type is a CatenaStructArray.
      */
     template<meta::IsVector U>
-    std::unique_ptr<IParam> addBack(U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
+    std::unique_ptr<IParam> addBack_(U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
         using ElemType = U::value_type;
+        std::unique_ptr<IParam> returnParam = nullptr;
         auto oidIndex = value.size();
+        // Check writeAuthz.
         if (!authz.writeAuthz(*this)) {
             status = catena::exception_with_status("Not authorized to write to param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
-            return nullptr;
+        // Make sure add does not exceed max length constraint.
         } else if (oidIndex >= descriptor_.max_length()) {
             status = catena::exception_with_status("Array " + descriptor_.getOid() + " at maximum capacity", catena::StatusCode::OUT_OF_RANGE);
-            return nullptr;
         } else {
             value.push_back(ElemType());
-            return std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
+            returnParam = std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
         }
+        return returnParam;
     }
 
     /**
@@ -410,7 +442,7 @@ class ParamWithValue : public catena::common::IParam {
      * Since you cant pop the back, it only returns an error.
      */
     template <typename U>
-    catena::exception_with_status popBack(U& value, const IAuthorizer& authz) {
+    catena::exception_with_status popBack_(U& value, const IAuthorizer& authz) {
         // This type is not a CatenaStruct or CatenaStructArray so it has no sub-params
         return catena::exception_with_status("Cannot pop generic type", catena::StatusCode::INVALID_ARGUMENT);
     }
@@ -425,7 +457,7 @@ class ParamWithValue : public catena::common::IParam {
      * This specialization is used when the type is a CatenaStructArray.
      */
     template<meta::IsVector U>
-    catena::exception_with_status popBack(U& value, const IAuthorizer& authz) {
+    catena::exception_with_status popBack_(U& value, const IAuthorizer& authz) {
         catena::exception_with_status ans = catena::exception_with_status("", catena::StatusCode::OK);
         if (!authz.writeAuthz(*this)) {
             ans = catena::exception_with_status("Not authorized to write to param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
@@ -468,32 +500,29 @@ class ParamWithValue : public catena::common::IParam {
     template<meta::IsVector U>
     std::unique_ptr<IParam> getParam_(Path& oid, U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
         using ElemType = U::value_type;
+        std::unique_ptr<IParam> returnParam = nullptr;
+        // Make sure the front is an index
         if (!oid.front_is_index()) {
             status = catena::exception_with_status("Expected index in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
-            return nullptr;
-        }
-        size_t oidIndex = oid.front_as_index();
-        oid.pop();
-
-        if (oidIndex >= value.size() || oidIndex == catena::common::Path::kEnd) {
-            // If index is out of bounds, return nullptr
-            status = catena::exception_with_status("Index " + std::to_string(oidIndex) + " out of bounds in path " + oid.fqoid(), catena::StatusCode::OUT_OF_RANGE);
-            return nullptr;
-        }
-
-        if (oid.empty()) {
-            // we reached the end of the path, return the element
-            return std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
         } else {
-            if constexpr (CatenaStruct<ElemType> || meta::IsVariant<ElemType>) {
+            size_t oidIndex = oid.front_as_index();
+            oid.pop();
+            // If index is out of bounds, return nullptr
+            if (oidIndex >= value.size()) {
+                status = catena::exception_with_status("Index " + std::to_string(oidIndex) + " out of bounds in path " + oid.fqoid(), catena::StatusCode::OUT_OF_RANGE);
+            // we reached the end of the path, return the element
+            } else if (oid.empty()) {
+                returnParam = std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
+            // The path has more segments, keep recursing
+            } else if constexpr (CatenaStruct<ElemType> || meta::IsVariant<ElemType>) {
                 // The path has more segments, keep recursing
-                return ParamWithValue<ElemType>(value[oidIndex], descriptor_).getParam(oid, authz, status);
+                returnParam = ParamWithValue<ElemType>(value[oidIndex], descriptor_).getParam(oid, authz, status);
+            // This type is not a CatenaStructArray so it has no sub-params
             } else {
-                // This type is not a CatenaStructArray so it has no sub-params
                 status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::NOT_FOUND);
-                return nullptr;
             }
         }
+        return returnParam;
     }
 
     /**
@@ -508,27 +537,28 @@ class ParamWithValue : public catena::common::IParam {
      */
     template <CatenaStruct U>
     std::unique_ptr<IParam> getParam_(Path& oid, U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
+        std::unique_ptr<IParam> returnParam = nullptr;
+        // Make sure the front is a field name.
         if (!oid.front_is_string()) {
             status = catena::exception_with_status("Expected string in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
-            return nullptr;
-        }
-        std::string oidStr = oid.front_as_string();
-        oid.pop();
-        auto fields = StructInfo<U>::fields; // get tuple of FieldInfo for this struct type
-
-        std::unique_ptr<IParam> ip = findParamByName_<U>(fields, oidStr);
-        if (!ip) {
-            status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::NOT_FOUND);
-            return nullptr;
-        }
-
-        if (oid.empty()) {
-            // we reached the end of the path, return the element
-            return ip;
         } else {
+            std::string oidStr = oid.front_as_string();
+            oid.pop();
+            auto fields = StructInfo<U>::fields; // get tuple of FieldInfo for this struct type
+            returnParam = findParamByName_<U>(fields, oidStr);
+            // Param does not exist, return nullptr
+            if (!returnParam) {
+                status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::NOT_FOUND);
             // The path has more segments, keep recursing
-            return ip->getParam(oid, authz, status);
+            } else if (!oid.empty()) {
+                returnParam = returnParam->getParam(oid, authz, status);
+            // If we're at the end of path make sure we have readAuthz for the gotten param before returning.
+            } else if (!authz.readAuthz(*returnParam)) {
+                status = catena::exception_with_status("Not authorized to read param " + oid.fqoid(), catena::StatusCode::PERMISSION_DENIED);
+                returnParam = nullptr;
+            }
         }
+        return returnParam;
     }
 
     /**
@@ -594,63 +624,36 @@ class ParamWithValue : public catena::common::IParam {
 
     template <meta::IsVariant U>
     std::unique_ptr<IParam> getParam_(Path& oid, U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
+        std::unique_ptr<IParam> returnParam = nullptr;
         if (!oid.front_is_string()) {
             status = catena::exception_with_status("Expected string in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
-            return nullptr;
-        }
-        std::string oidStr = oid.front_as_string();
-        oid.pop();   
-        if (catena::common::alternativeNames<U>[value.index()] != oidStr) {
-            status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::NOT_FOUND);
-            return nullptr;
-        }
-
-        if (oid.empty()) {
-            // we reached the end of the path, return the element
-            return std::visit([&](auto& arg) -> std::unique_ptr<IParam> {
-                using V = std::decay_t<decltype(arg)>;
-                return std::make_unique<ParamWithValue<V>>(arg, descriptor_.getSubParam(oidStr));
-            }, value);
         } else {
+            std::string oidStr = oid.front_as_string();
+            oid.pop();
+            if (catena::common::alternativeNames<U>[value.index()] != oidStr) {
+                status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::NOT_FOUND);
+            // we reached the end of the path, return the element
+            } else if (oid.empty()) {
+                returnParam = std::visit([&](auto& arg) -> std::unique_ptr<IParam> {
+                    using V = std::decay_t<decltype(arg)>;
+                    return std::make_unique<ParamWithValue<V>>(arg, descriptor_.getSubParam(oidStr));
+                }, value);
+                // Making sure we have readAuthz for the gotten param before returning.
+                if (!authz.readAuthz(*returnParam)) {
+                    status = catena::exception_with_status("Not authorized to read param " + oid.fqoid(), catena::StatusCode::PERMISSION_DENIED);
+                    returnParam = nullptr;
+                }
             // The path has more segments, keep recursing
-            return std::visit([&](auto& arg) -> std::unique_ptr<IParam> {
-                using V = std::decay_t<decltype(arg)>;
-                return ParamWithValue<V>(arg, descriptor_.getSubParam(oidStr)).getParam(oid, authz, status);
-            }, value);
+            } else {
+                returnParam = std::visit([&](auto& arg) -> std::unique_ptr<IParam> {
+                    using V = std::decay_t<decltype(arg)>;
+                    return ParamWithValue<V>(arg, descriptor_.getSubParam(oidStr)).getParam(oid, authz, status);
+                }, value);
+            }
         }
+        return returnParam;
     }
 
-
-  public:
-    /**
-     * @brief add a child parameter
-     */
-    void addParam(const std::string& oid, IParamDescriptor* param) {
-        descriptor_.addSubParam(oid, param);
-    }
-
-    /**
-     * @brief get a constraint by oid
-     */
-    const catena::common::IConstraint* getConstraint() const override {
-        return descriptor_.getConstraint();
-    }
-
-    /**
-     * @brief get the parameter scope
-     */
-    const std::string& getScope() const override {
-        return descriptor_.getScope();
-    }
-
-  private: // Tracker functions.
-    template<typename U>
-    /**
-     * @brief Helper function to return length of value if it's a string.
-     * @returns The length of value if it's a string, or 0 otherwise.
-     */
-    std::size_t str_length(const U& value) const { return 0; }
-    std::size_t str_length(const std::string& value) const { return value.length(); }
     // Tracker updaters. One overload for each case.
     /**
      * @brief Default overload of validateSetValue_ used in cases where type(U) ==
@@ -671,7 +674,7 @@ class ParamWithValue : public catena::common::IParam {
         // newVal must pass all validation checks in validFromProto.
         } else if (validFromProto(protoVal, &oldVal, descriptor_, ans, authz)) {
             // Valid case if validFromProto returns true.
-            mSizeTracker_ = std::make_shared<std::size_t>(str_length(newVal));
+            mSizeTracker_ = std::make_shared<std::size_t>(size_(newVal));
         }
 
          // If above was sucessful, finish by validating mSize
@@ -698,9 +701,11 @@ class ParamWithValue : public catena::common::IParam {
         // Initializing mSizeTracker_ and tSizeTracker if they're not already.
         if (!mSizeTracker_) {
             mSizeTracker_ = std::make_shared<std::size_t>(arrayVal.size());
+        }
+        if (!tSizeTracker_) {
             tSizeTracker_ = std::make_shared<TSizeTracker>();
             for (auto& memVal : arrayVal) {
-                tSizeTracker_->push_back(str_length(memVal));
+                tSizeTracker_->push_back(size_(memVal));
             }
         }
 
@@ -717,10 +722,10 @@ class ParamWithValue : public catena::common::IParam {
             // Valid case 1: Appending to the end.
             if (index == Path::kEnd) {
                 *mSizeTracker_ += 1;
-                tSizeTracker_->push_back(str_length(memVal));
+                tSizeTracker_->push_back(size_(memVal));
             // Valid case 2: Inserting at an existing index.
             } else {
-                tSizeTracker_->at(index) = str_length(memVal);
+                tSizeTracker_->at(index) = size_(memVal);
             }
         }
 
@@ -798,31 +803,6 @@ class ParamWithValue : public catena::common::IParam {
         }}
     };
 
-  public: // Validation functions.
-    /**
-     * @brief Validates a setValue operation without changing the param's value.
-     * @param value The value we want to set the param to.
-     * @param index The index of the subparam to set (or nullptr if none).
-     * @param ans Catena::exception_with_status output.
-     * @returns true if valid.
-     */
-    bool validateSetValue(const catena::Value& value, Path::Index index, const IAuthorizer& authz, catena::exception_with_status& ans) override {
-        if (validateSetValueMap_.contains(value.kind_case())) {
-            // Updating trackers.
-            ans = validateSetValueMap_.at(value.kind_case())(value, index, authz);
-        }
-        return ans.status == catena::StatusCode::OK;
-    }
-    /**
-     * @brief Resets any trackers that might have been changed in validateSetValue.
-     */
-    void resetValidate() override {
-        // Resetting the trackers.
-        mSizeTracker_ = nullptr;
-        tSizeTracker_ = nullptr;
-    }
-
-  private:
     IParamDescriptor& descriptor_;
     std::reference_wrapper<T> value_;
 
