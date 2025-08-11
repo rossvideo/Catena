@@ -106,6 +106,10 @@ class Connect : public ICallData, public catena::common::Connect {
      * open connections to be shut down.
      */
     static vdk::signal<void()> shutdownSignal_;
+    /**
+     * @brief Returns true if the request was cancelled.
+     */
+    inline bool isCancelled() override;
     
   private:
     /**
@@ -119,10 +123,6 @@ class Connect : public ICallData, public catena::common::Connect {
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok;
     }
-    /**
-     * @brief Returns true if the request was cancelled.
-     */
-    inline bool isCancelled() override { return !this->socket_.is_open(); }
 
     /**
      * @brief The socket to write the response stream to.

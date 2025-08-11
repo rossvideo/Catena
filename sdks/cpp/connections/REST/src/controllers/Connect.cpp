@@ -37,6 +37,7 @@ void catena::REST::Connect::proceed() {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     try {
         // Cancels all open connections if shutdown signal is sent.
+        // socket_.async_wait(tcp::socket::wait_error, [this](const boost::system::error_code& error){ shutdown(); });
         shutdownSignalId_ = shutdownSignal_.connect([this](){ shutdown(); });
         // Initialize variables and authz and add connection to the priority queue.
         detailLevel_ = context_.detailLevel();
@@ -112,4 +113,9 @@ void catena::REST::Connect::proceed() {
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     DEBUG_LOG << "Connect[" << objectId_ << "] finished";
+}
+
+// Returns true if the connection has been cancelled.
+bool catena::REST::Connect::isCancelled() {
+    return !socket_.is_open() || shutdown_ || (authz_ && authz_->isExpired());
 }
