@@ -68,7 +68,7 @@ class ParamDescriptorTest : public ::testing::Test {
         IParamDescriptor* parentPtr = hasParent ? &parent : nullptr;
         pd = std::make_unique<ParamDescriptor>(
             type, oidAliases, PolyglotText::ListInitializer{{"en", "name"}, {"fr", "nom"}},
-            widget, scope, readOnly, oid, templateOid, constraintPtr, isCommand,
+            widget, scope, readOnly, oid, templateOid, constraintPtr, isCommand, respond,
             dm, maxLength, totalLength, precision, minimalSet, parentPtr
         );
         // authz_ by default has read and write authz.
@@ -89,6 +89,7 @@ class ParamDescriptorTest : public ::testing::Test {
     bool hasConstraint = true; // If false, nullptr will be passed into pd as the constraint.
     MockConstraint constraint;
     bool isCommand = false;
+    bool respond = true;
     MockDevice dm;
     uint32_t maxLength = 16;
     std::size_t totalLength = 16;
@@ -288,7 +289,8 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ParamToProto) {
  */
 TEST_F(ParamDescriptorTest, ParamDescriptor_ExecuteCommand) {
     catena::Value input;
-    auto responder = pd->executeCommand(input);
+    bool respond = false;
+    auto responder = pd->executeCommand(input, respond);
     auto response = responder->getNext();
     EXPECT_TRUE(response.has_exception()) << "Default command definition should return an \"UNIMPLEMENTED\" exception.";
     EXPECT_EQ(response.exception().type(), "UNIMPLEMENTED");
@@ -299,15 +301,16 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ExecuteCommand) {
 TEST_F(ParamDescriptorTest, ParamDescriptor_DefineCommand) {    
     {
     // Calling defineCommand with non-command parameter.
-    EXPECT_THROW(pd->defineCommand([](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value) -> ParamDescriptor::CommandResponder {
+    EXPECT_THROW(pd->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
             catena::CommandResponse response;
             co_return response;
-        }(value));
+        }(value, respond));
     });, std::runtime_error) << "defineCommand() should throw an error if the param isCommand == False";
     // Testing response
     catena::Value input;
-    auto responder = pd->executeCommand(input);
+    bool respond = true;
+    auto responder = pd->executeCommand(input, respond);
     auto response = responder->getNext();
     EXPECT_TRUE(response.has_exception()) << "Non-command param should retain the default command definition.";
     EXPECT_EQ(response.exception().type(), "UNIMPLEMENTED");
@@ -317,8 +320,8 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_DefineCommand) {
     isCommand = true;
     create();
     // Defining command and executing.
-    pd->defineCommand([](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value) -> ParamDescriptor::CommandResponder {
+    pd->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
             EXPECT_EQ(value.string_value(), "Test input") << "Input value not passed correctly to command.";
             catena::CommandResponse response;
             // Response #1
@@ -328,11 +331,12 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_DefineCommand) {
             response.Clear();
             response.mutable_response()->set_string_value("Command response 2");
             co_return response;
-        }(value));
+        }(value, respond));
     });
     catena::Value input;
     input.set_string_value("Test input");
-    auto responder = pd->executeCommand(input);
+    bool respond = true;
+    auto responder = pd->executeCommand(input, respond);
     // Testing response.
     catena::CommandResponse response;
     for (auto returnVal : {"Command response 1", "Command response 2"}) {
@@ -354,17 +358,18 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_CommandErrUnhandled) {
     isCommand = true;
     create();
     // Defining command that throws an error and executing.
-    pd->defineCommand([](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value) -> ParamDescriptor::CommandResponder {
+    pd->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
             throw std::runtime_error("Test error");
 
             catena::CommandResponse response;
             response.mutable_response()->set_string_value("Error should be thrown before recieving a response.");
             co_return response;
-        }(value));
+        }(value, respond));
     });
     catena::Value input;
-    auto responder = pd->executeCommand(input);
+    bool respond = true;
+    auto responder = pd->executeCommand(input, respond);
     // Testing response.
     catena::CommandResponse response;
     EXPECT_TRUE(responder->hasMore())                                 << "Responder should have at least 1 response.";
