@@ -1,7 +1,5 @@
 var NAVTREEINDEX7 =
 {
-"concepts.html":[9],
-"connections_2REST_2include_2controllers_2Connect_8h.html":[11,0,0,0,1,1,0,0,1],
 "connections_2REST_2include_2controllers_2Connect_8h_source.html":[11,0,0,0,1,1,0,0,1],
 "connections_2REST_2include_2controllers_2LanguagePack_8h.html":[11,0,0,0,1,1,0,0,7],
 "connections_2REST_2include_2controllers_2LanguagePack_8h_source.html":[11,0,0,0,1,1,0,0,7],
@@ -249,5 +247,7 @@ var NAVTREEINDEX7 =
 "namespacemembers_func.html":[8,1,1],
 "namespacemembers_type.html":[8,1,3],
 "namespacemembers_vars.html":[8,1,2],
-"namespaces.html":[8,0]
+"namespaces.html":[8,0],
+"pages.html":[],
+"path_8cpp-example.html":[12,2]
 };
