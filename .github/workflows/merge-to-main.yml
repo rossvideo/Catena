@@ -32,6 +32,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: pull
+        run: |
+          git pull origin $GITHUB_REF
+
       - name: Generate new version number
         run: |
           # Get the latest tag or default to "cpp-v0.0.0"
@@ -51,7 +55,7 @@ jobs:
           PATCH=$((PATCH + 1))
 
           result=$(git rev-list --left-right --count origin/main...origin/develop)
-          COMMIT_COUNT=$(echo "$result"| cut -f1)
+          COMMIT_COUNT=$(echo "$result"| cut -f2)
           ahead=$(echo "$result" | cut -f2)
           echo "Commit count: $COMMIT_COUNT"
 
@@ -109,7 +113,7 @@ jobs:
           gh pr create --base main --head "$BRANCH_NAME" \
             --title "Merge $BRANCH_NAME into main" \
             --body "Automated PR from workflow." \
-            --reviewer NR-RV,abrown-RV
+            --reviewer NR-RV,abrown-RV,ctwarog-ross
 
       - name: Create PR to develop
         env:
@@ -120,5 +124,5 @@ jobs:
           gh pr create --base develop --head "$BRANCH_NAME" \
             --title "Merge $BRANCH_NAME into develop" \
             --body "Automated PR from workflow." \
-            --reviewer NR-RV,abrown-RV
+            --reviewer NR-RV,abrown-RV,ctwarog-ross
 
