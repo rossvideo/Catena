@@ -24,7 +24,7 @@ set(SOURCES
     tests/utils_test.cpp
     tests/SubscriptionManager_test.cpp
     tests/ParamVisitor_test.cpp
-    tests/Authorization_test.cpp
+    tests/Authorizer_test.cpp
     tests/Connect_test.cpp
     tests/MenuGroup_test.cpp
     tests/Menu_test.cpp
@@ -34,6 +34,20 @@ set(SOURCES
     tests/PolyglotText_test.cpp
     tests/NamedChoiceConstraint_test.cpp
     tests/RangeConstraint_test.cpp
+    tests/ParamDescriptor_test.cpp
+    tests/Device_test.cpp
+    tests/ConnectionQueue_test.cpp
+    tests/ParamWithValue_test/ParamWithValue_test.cpp
+    tests/ParamWithValue_test/ParamWithInt_test.cpp
+    tests/ParamWithValue_test/ParamWithFloat_test.cpp
+    tests/ParamWithValue_test/ParamWithString_test.cpp
+    tests/ParamWithValue_test/ParamWithIntArray_test.cpp
+    tests/ParamWithValue_test/ParamWithFloatArray_test.cpp
+    tests/ParamWithValue_test/ParamWithStringArray_test.cpp
+    tests/ParamWithValue_test/ParamWithStruct_test.cpp
+    tests/ParamWithValue_test/ParamWithStructArray_test.cpp
+    tests/ParamWithValue_test/ParamWithVariant_test.cpp
+    tests/ParamWithValue_test/ParamWithVariantArray_test.cpp
 )
 
 add_executable(${This} ${SOURCES})

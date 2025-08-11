@@ -28,7 +28,7 @@ set(sources
     "src/utils.cpp" 
     "src/vdk/signals.cpp" 
     "src/Path.cpp"
-    "src/Authorization.cpp"
+    "src/Authorizer.cpp"
     "src/Device.cpp"
     "src/ParamDescriptor.cpp"
     "src/StructInfo.cpp"
@@ -39,6 +39,7 @@ set(sources
     "src/ParamVisitor.cpp"
     "src/SubscriptionManager.cpp"
     "src/SharedFlags.cpp"
+    "src/ConnectionQueue.cpp"
 )
 
 # conditionally make for gRPC

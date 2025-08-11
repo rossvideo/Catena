@@ -76,18 +76,22 @@ get:
           
           example:
             {
-              "info": {
-                "oid": "text_box",
-                "name": {
-                  "display_strings": {
-                    "en": "Text Box",
-                    "fr": "Boîte de Texte",
-                    "es": "Caja de Texto"
+              "data": [
+                {
+                  "info": {
+                    "oid": "text_box",
+                    "name": {
+                      "display_strings": {
+                        "en": "Text Box",
+                        "fr": "Boîte de Texte",
+                        "es": "Caja de Texto"
+                      }
+                    },
+                    "type": "STRING",
+                    "template_oid": ""
                   }
-                },
-                "type": "STRING",
-                "template_oid": ""
-              }
+                }
+              ]
             }
 
     "500":

@@ -41,7 +41,7 @@ int catena::gRPC::Connect::objectCounter_ = 0;
  * Constructor which initializes and registers the current Connect object, 
  * then starts the process.
  */
-catena::gRPC::Connect::Connect(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+catena::gRPC::Connect::Connect(IServiceImpl *service, SlotMap& dms, bool ok)
     : CallData(service), writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish}, 
         catena::common::Connect(dms, service->getSubscriptionManager()) {
@@ -60,7 +60,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
      * The newest connect object (the one that has not yet been attached to a
      * client request) will send shutdown signal to cancel all open connections
      */
-    if (!ok && status_ != CallStatus::kFinish) {
+    if (!ok && status_ == CallStatus::kProcess) {
         DEBUG_LOG << "Connect[" << objectId_ << "] cancelled";
         DEBUG_LOG << "Cancelling all open connections";
         shutdownSignal_.emit();
@@ -82,52 +82,57 @@ void catena::gRPC::Connect::proceed(bool ok) {
          * kFinish and notifying the responder once finished.
          */
         case CallStatus::kProcess:
+            // Cancels all open connections if shutdown signal is sent.
+            shutdownSignalId_ = shutdownSignal_.connect([this](){ shutdown(); });
             // Used to serve other clients while processing.
             new Connect(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
+
+            { // rc scope
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
             try {
-                catena::exception_with_status rc{"", catena::StatusCode::OK};
-                initAuthz_(jwsToken_(), service_->authorizationEnabled());
-                // Cancels all open connections if shutdown signal is sent.
-                shutdownSignalId_ = shutdownSignal_.connect([this](){
-                    context_.TryCancel();
-                    hasUpdate_ = true;
-                    this->cv_.notify_one();
-                });
-
-                // Set detail level from request
+                // Initialize authz and add connection to the priority queue.
                 detailLevel_ = req_.detail_level();
-
-                // Connecting to each device in dms_.
-                for (auto [slot, dm] : dms_) {
-                    if (dm) {
-                        // Waiting for a value set by server to be sent to execute code.
-                        valueSetByServerIds_[slot] = dm->getValueSetByServer().connect([this, slot](const std::string& oid, const IParam* p){
-                            updateResponse_(oid, p, slot);
-                        });
-                        // Waiting for a value set by client to be sent to execute code.
-                        valueSetByClientIds_[slot] = dm->getValueSetByClient().connect([this, slot](const std::string& oid, const IParam* p){
-                            updateResponse_(oid, p, slot);
-                        });
-                        // Waiting for a language to be added to execute code.
-                        languageAddedIds_[slot] = dm->getLanguageAddedPushUpdate().connect([this, slot](const ILanguagePack* l) {
-                            updateResponse_(l, slot);
-                        });
-                        // Send client a empty update with slot of the device
-                        catena::PushUpdates populatedSlots;
-                        populatedSlots.set_slot(slot);
-                        writer_.Write(populatedSlots, this);
+                forceConnection_ = req_.force_connection();
+                initAuthz_(jwsToken_(), service_->authorizationEnabled());
+                if (service_->connectionQueue().registerConnection(this)) {
+                    // Connecting to each device in dms_.
+                    catena::PushUpdates populatedSlots;
+                    for (auto [slot, dm] : dms_) {
+                        if (dm) {
+                            // Waiting for a value set by server to be sent to execute code.
+                            valueSetByServerIds_[slot] = dm->getValueSetByServer().connect([this, slot](const std::string& oid, const IParam* p){
+                                updateResponse_(oid, p, slot);
+                            });
+                            // Waiting for a value set by client to be sent to execute code.
+                            valueSetByClientIds_[slot] = dm->getValueSetByClient().connect([this, slot](const std::string& oid, const IParam* p){
+                                updateResponse_(oid, p, slot);
+                            });
+                            // Waiting for a language to be added to execute code.
+                            languageAddedIds_[slot] = dm->getLanguageAddedPushUpdate().connect([this, slot](const ILanguagePack* l) {
+                                updateResponse_(l, slot);
+                            });
+                            populatedSlots.mutable_slots_added()->add_slots(slot);
+                        }
                     }
+                    // Write update with connected slots to the client.
+                    status_ = CallStatus::kWrite;
+                    writer_.Write(populatedSlots, this);
+                // Failed to register connection.
+                } else {
+                    rc = catena::exception_with_status("Too many connections to service", catena::StatusCode::RESOURCE_EXHAUSTED);
                 }
-
-                status_ = CallStatus::kWrite;
-
-            } catch (catena::exception_with_status& rc) {
+            } catch (catena::exception_with_status& err) {
+                rc = catena::exception_with_status(err.what(), err.status);
+            }
+            // If above failed, finish the RPC.
+            if (rc.status != catena::StatusCode::OK) {
                 status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(static_cast<grpc::StatusCode>(rc.status), rc.what());
-                writer_.Finish(errorStatus, this);
+                writer_.Finish(grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+            }
             }
             break;
+            
         /**
          * kWrite: Waits until an update to either set res to device's slot or
          * end the process.
@@ -136,25 +141,33 @@ void catena::gRPC::Connect::proceed(bool ok) {
             lock.lock();
             cv_.wait(lock, [this] { return hasUpdate_; });
             hasUpdate_ = false;
-            // If connect was cancelled finish the process.
-            if (context_.IsCancelled()) {
+            // If connect was cancelled set state to kFinish.
+            if (shutdown_ || context_.IsCancelled()) {
                 status_ = CallStatus::kFinish;
                 DEBUG_LOG << "Connection[" << objectId_ << "] cancelled";
-                writer_.Finish(Status::CANCELLED, this);
-                break;
-            // Send the client an update with the slot of the device.
-            } else {
-                writer_.Write(res_, this);
             }
-            lock.unlock();
-            break;
+            // Write to client if the context is not cancelled.
+            if (!context_.IsCancelled()) {
+                if (shutdown_) {
+                    writer_.Finish(Status::CANCELLED, this);
+                } else if (authz_->isExpired()) {
+                    status_ = CallStatus::kFinish;
+                    writer_.Finish(grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "JWS token expired"), this);
+                } else {
+                    writer_.Write(res_, this);
+                }
+                lock.unlock();
+                break; // Fall through if nothing was sent to the client.
+            }
         /**
          * kFinish: Ends the connection.
          */
         case CallStatus::kFinish:
             DEBUG_LOG << "Connect[" << objectId_ << "] finished";
             // Disconnecting all initialized listeners.
-            if (shutdownSignalId_ != 0) { shutdownSignal_.disconnect(shutdownSignalId_); }
+            if (shutdownSignalId_ != 0) {
+                shutdownSignal_.disconnect(shutdownSignalId_);
+            }
             for (auto [slot, dm] : dms_) {
                 if (dm) {
                     if (valueSetByClientIds_.contains(slot)) {
@@ -168,17 +181,22 @@ void catena::gRPC::Connect::proceed(bool ok) {
                     }
                 }
             }
+            service_->connectionQueue().deregisterConnection(this);
             service_->deregisterItem(this);
             break;
-        // default: Error, end process.
-        default:
+        /*
+         * default: Error, end process.
+         * This should be impossible to reach.
+         */
+        default: // GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             writer_.Finish(errorStatus, this);
+            // GCOVR_EXCL_STOP
     }
 }
 
 // Returns true if the connection has been cancelled.
 bool catena::gRPC::Connect::isCancelled() {
-    return context_.IsCancelled();
+    return context_.IsCancelled() || shutdown_ || (authz_ && authz_->isExpired());
 }

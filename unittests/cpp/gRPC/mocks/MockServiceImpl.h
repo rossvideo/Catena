@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief Mock implementation for the gRPC ICatenaServiceImpl class.
+ * @brief Mock implementation for the gRPC IServiceImpl class.
  * @author benjamin.whitten@rossvideo.com
  * @date 25/06/26
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -45,8 +45,8 @@ using namespace catena::common;
 namespace catena {
 namespace gRPC {
 
-// Mock implementation for the gRPC ICatenaServiceImpl class.
-class MockServiceImpl : public ICatenaServiceImpl {
+// Mock implementation for the gRPC IServiceImpl class.
+class MockServiceImpl : public IServiceImpl {
   public:
     MOCK_METHOD(void, init, (), (override));
     MOCK_METHOD(void, processEvents, (), (override));
@@ -55,6 +55,7 @@ class MockServiceImpl : public ICatenaServiceImpl {
     MOCK_METHOD(ISubscriptionManager&, getSubscriptionManager, (), (override));
     MOCK_METHOD(grpc::ServerCompletionQueue*, cq, (), (override));
     MOCK_METHOD(const std::string&, EOPath, (), (override));
+    MOCK_METHOD(IConnectionQueue&, connectionQueue, (), (override));
     MOCK_METHOD(uint32_t, registrySize, (), (const, override));
     MOCK_METHOD(void, registerItem, (ICallData* cd), (override));
     MOCK_METHOD(void, deregisterItem, (ICallData* cd), (override));

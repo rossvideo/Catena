@@ -57,7 +57,8 @@
 #include <Logger.h>
 
 using grpc::Server;
-using catena::gRPC::CatenaServiceImpl;
+using catena::gRPC::ServiceConfig;
+using catena::gRPC::ServiceImpl;
 
 using namespace catena::common;
 
@@ -98,9 +99,13 @@ void RunRPCServer(std::string addr)
 
         builder.AddListeningPort(addr, catena::gRPC::getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
-        std::string EOPath = absl::GetFlag(FLAGS_static_root);
-        bool authz = absl::GetFlag(FLAGS_authz);
-        CatenaServiceImpl service(cq.get(), {&dm}, EOPath, authz);
+        ServiceConfig config = ServiceConfig()
+            .set_EOPath(absl::GetFlag(FLAGS_static_root))
+            .set_authz(absl::GetFlag(FLAGS_authz))
+            .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
+            .set_cq(cq.get())
+            .add_dm(&dm);
+        ServiceImpl service(config);
 
         builder.RegisterService(&service);
 
@@ -139,8 +144,8 @@ void defineCommands() {
 
     // Define a lambda function to be executed when the command is called
     // The lambda function must take a catena::Value as an argument and return a catena::CommandResponse
-    playCommand->defineCommand([](catena::Value value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([value]() -> ParamDescriptor::CommandResponder {
+    playCommand->defineCommand([](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value) -> ParamDescriptor::CommandResponder {
             catena::exception_with_status err{"", catena::StatusCode::OK};
             catena::CommandResponse response;
             std::unique_ptr<IParam> stateParam = dm.getParam("/state", err);
@@ -160,13 +165,13 @@ void defineCommands() {
                 response.mutable_no_response();
             }
             co_return response;
-        }());
+        }(value));
     });
 
     std::unique_ptr<IParam> pauseCommand = dm.getCommand("/pause", err);
     assert(pauseCommand != nullptr);
-    pauseCommand->defineCommand([](catena::Value value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([value]() -> ParamDescriptor::CommandResponder {
+    pauseCommand->defineCommand([](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value) -> ParamDescriptor::CommandResponder {
             catena::exception_with_status err{"", catena::StatusCode::OK};
             catena::CommandResponse response;
             std::unique_ptr<IParam> stateParam = dm.getParam("/state", err);
@@ -186,7 +191,7 @@ void defineCommands() {
                 response.mutable_no_response();
             }
             co_return response;
-        }());
+        }(value));
     });
 }
 

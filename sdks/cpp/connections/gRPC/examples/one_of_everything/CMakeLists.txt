@@ -39,8 +39,12 @@ add_executable(${TARGET})
 
 include (${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
 
+file(GLOB PARAM_EXAMPLES "${CMAKE_CURRENT_SOURCE_DIR}/params/param.*.yaml")
+file(GLOB CONSTRAINT_EXAMPLES "${CMAKE_CURRENT_SOURCE_DIR}/constraints/param.*.yaml")
+
 generate_catena_device(
     DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.${TARGET}.yaml
+    IMPORTED_PARAMS ${PARAM_EXAMPLES} ${CONSTRAINT_EXAMPLES}
     TARGET ${TARGET}
 )
 
@@ -49,6 +53,8 @@ target_include_directories(${TARGET}
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CATENA_CPP_ROOT_DIR}/common/include
 )
+
+
 
 target_sources(${TARGET}
     PUBLIC

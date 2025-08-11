@@ -25,9 +25,10 @@ name: "CodeQL-CPP"
 
 on:
   push:
-    branches: [ "develop", "main"]
-  pull_request:
-    branches: [ "develop", "main" ]
+    branches: [ "main"]
+    paths:
+      - 'sdks/cpp/**'
+      - 'unittests/cpp/**'
   schedule:
     - cron: '25 16 * * 2'
   workflow_dispatch:

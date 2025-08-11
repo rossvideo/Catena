@@ -136,17 +136,21 @@ int main (int argc, char** argv) {
     }
     auto& phonetic_alphabetParam = *dynamic_cast<ParamWithValue<std::vector<std::string>>*>(ip.get());
     std::vector<std::string>& phonetic_alphabetValue = phonetic_alphabetParam.get();
-    DEBUG_LOG << "phonetic alphabet initial value: ";
+    std::ostringstream outStream;
+    outStream << "phonetic alphabet initial value: ";
     for (const auto& s : phonetic_alphabetValue) {
-        DEBUG_LOG << s << " ";
+        outStream << s << " ";
     }
+    DEBUG_LOG << outStream.str();
 
     // note we change the length of the vector - decrease by one
     phonetic_alphabetValue = {"Whiskey", "Yankee", "Zulu"};
-    DEBUG_LOG << "phonetic alphabet new value: ";
+    outStream.str(""); // Clearing outStream
+    outStream << "phonetic alphabet new value: ";
     for (const auto& s : phonetic_alphabetValue) {
-        DEBUG_LOG << s << " ";
+        outStream << s << " ";
     }
+    DEBUG_LOG << outStream.str();
 
     // Example with array of integers
     ip = dm.getParam("/primes", err);
@@ -156,17 +160,21 @@ int main (int argc, char** argv) {
     }
     auto& primesParam = *dynamic_cast<ParamWithValue<std::vector<int>>*>(ip.get());
     std::vector<int>& primesValue = primesParam.get();
-    DEBUG_LOG << "primes initial value: ";
+    outStream.str(""); // Clearing outStream
+    outStream << "primes initial value: ";
     for (const auto& i : primesValue) {
-        DEBUG_LOG << i << " ";
+        outStream << i << " ";
     }
+    DEBUG_LOG << outStream.str();
 
     // note we change the length of the vector - increase by one
     primesValue = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31};
-    DEBUG_LOG << "primes new value: ";
+    outStream.str(""); // Clearing outStream
+    outStream << "primes new value: ";
     for (const auto& i : primesValue) {
-        DEBUG_LOG << i << " ";
+        outStream << i << " ";
     }
+    DEBUG_LOG << outStream.str();
 
     // example with array of floats that's initially empty
     ip = dm.getParam("/physical_constants", err);
@@ -180,10 +188,12 @@ int main (int argc, char** argv) {
     physical_constantsValue.push_back(3.14159);
     physical_constantsValue.push_back(2.71828);
     physical_constantsValue.push_back(1.61803);
-    DEBUG_LOG << "physical constants new value: ";
+    outStream.str(""); // Clearing outStream
+    outStream << "physical constants new value: ";
     for (const auto& f : physical_constantsValue) {
-        DEBUG_LOG << f << " ";
+        outStream << f << " ";
     }
+    DEBUG_LOG << outStream.str();
 
     // Shutdown Google Logging
     google::ShutdownGoogleLogging();

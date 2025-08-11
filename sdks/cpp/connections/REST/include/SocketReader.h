@@ -46,6 +46,7 @@
 
 // connections/REST
 #include "interface/ISocketReader.h"
+#include "interface/IServiceImpl.h"
 
 // boost
 #include <boost/asio.hpp>
@@ -79,17 +80,15 @@ class SocketReader : public ISocketReader {
   public:
     /**
      * @brief Constructor for the SocketReader class.
-     * @param subscriptionManager The subscription manager to use.
-     * @param EOPath The path to external objects
+     * @param service Pointer to the ServiceImpl.
      */
-    SocketReader(catena::common::ISubscriptionManager& subscriptionManager, const std::string& EOPath = "");
+    SocketReader(IServiceImpl* service) : service_(service) {};
     /**
      * @brief Populates variables using information read from the inputted
      * socket.
      * @param socket The socket to read from.
-     * @param authz Flag to indicate if authorization is enabled.
      */
-    void read(tcp::socket& socket, bool authz = false, const std::string& version = "v1") override;
+    void read(tcp::socket& socket) override;
     /**
      * @brief Returns the HTTP method of the request.
      */
@@ -144,23 +143,31 @@ class SocketReader : public ISocketReader {
      */
     const std::string& jsonBody() const override { return jsonBody_; }
     /**
-     * @brief Returns a reference to the subscription manager
+     * @brief Returns true if the client wants a stream response.
      */
-    catena::common::ISubscriptionManager& getSubscriptionManager() override { return subscriptionManager_; }
+    bool stream() const override { return stream_; } 
 
+    /**
+     * @brief Returns a pointer to the ServiceImpl
+     */
+    IServiceImpl* service() override { return service_; }
     /**
      * @brief Returns true if authorization is enabled.
      */
-    bool authorizationEnabled() const override { return authorizationEnabled_; };
-    /**
-     * @brief Returns true if the client wants a stream response.
-     */
-    bool stream() const override { return stream_; }
-
+    bool authorizationEnabled() const override { return service_->authorizationEnabled(); }
     /**
      * @brief Returns the path to the external object.
      */
-    const std::string& EOPath() const override { return EOPath_; }  
+    const std::string& EOPath() const override { return service_->EOPath();}
+    /**
+     * @brief Returns the ConnectionQueue object.
+     */
+    catena::common::IConnectionQueue& connectionQueue() override { return service_->connectionQueue(); }
+    /**
+     * @brief Returns a reference to the subscription manager
+     */
+    catena::common::ISubscriptionManager& subscriptionManager() override { return service_->subscriptionManager(); }
+
 
   private:
     /**
@@ -200,10 +207,6 @@ class SocketReader : public ISocketReader {
      */
     std::string jsonBody_ = "";
     /**
-     * @brief The subscription manager for handling parameter subscriptions
-     */
-    catena::common::ISubscriptionManager& subscriptionManager_;
-    /**
      * @brief A map of fields queried from the URL.
      */
     std::unordered_map<std::string, std::string> fields_;
@@ -213,13 +216,9 @@ class SocketReader : public ISocketReader {
      */
     std::string fieldNotFound = "";
     /**
-     * @brief True if authorization is enabled.
+     * @brief Pointer to the ServiceImpl
      */
-    bool authorizationEnabled_ = false;
-    /**
-     * @brief The path to the external object.
-     */
-    std::string EOPath_ = ""; 
+    IServiceImpl* service_ = nullptr;
 };
 
 }; // Namespace REST

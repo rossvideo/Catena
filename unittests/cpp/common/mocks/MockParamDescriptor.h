@@ -59,15 +59,16 @@ class MockParamDescriptor : public IParamDescriptor {
     MOCK_METHOD(void, setMinimalSet, (bool flag), (override));
     MOCK_METHOD(uint32_t, max_length, (), (const, override));
     MOCK_METHOD(std::size_t, total_length, (), (const, override));
-    MOCK_METHOD(void, toProto, (catena::Param& param, Authorizer& authz), (const, override));
-    MOCK_METHOD(void, toProto, (catena::ParamInfo& paramInfo, Authorizer& authz), (const, override));
+    MOCK_METHOD(uint32_t, precision, (), (const, override));
+    MOCK_METHOD(void, toProto, (catena::Param& param, const IAuthorizer& authz), (const, override));
+    MOCK_METHOD(void, toProto, (catena::ParamInfo& paramInfo, const IAuthorizer& authz), (const, override));
     MOCK_METHOD(const std::string&, name, (const std::string& language), (const, override));
     MOCK_METHOD(void, addSubParam, (const std::string& oid, IParamDescriptor* item), (override));
     MOCK_METHOD(IParamDescriptor&, getSubParam, (const std::string& oid), (const, override));
     MOCK_METHOD((const std::unordered_map<std::string, IParamDescriptor*>&), getAllSubParams, (), (const, override));
     MOCK_METHOD(const catena::common::IConstraint*, getConstraint, (), (const, override));
-    MOCK_METHOD(void, defineCommand, (std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl), (override));
-    MOCK_METHOD(std::unique_ptr<ICommandResponder>, executeCommand, (catena::Value value), (override));
+    MOCK_METHOD(void, defineCommand, (std::function<std::unique_ptr<ICommandResponder>(const catena::Value&)> commandImpl), (override));
+    MOCK_METHOD(std::unique_ptr<ICommandResponder>, executeCommand, (const catena::Value& value), (override));
     MOCK_METHOD(bool, isCommand, (), (const, override));
 };
 

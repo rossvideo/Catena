@@ -44,7 +44,7 @@
 #include <PolyglotText.h>
 #include <IParamDescriptor.h>
 #include <IDevice.h>
-#include <Authorization.h>  
+#include <IAuthorizer.h>  
 
 #include <vector>
 #include <string>
@@ -53,7 +53,7 @@
 namespace catena {
 namespace common {
 
-class Authorizer; // forward declaration
+class IAuthorizer; // forward declaration
 class IDevice; // forward declaration
 
 /**
@@ -100,13 +100,17 @@ class ParamDescriptor : public IParamDescriptor {
      * @param oid_aliases the parameter's oid aliases
      * @param name the parameter's name
      * @param widget the parameter's widget
+     * @param scope the parameter's access scope
      * @param read_only the parameter's read-only status
      * @param oid the parameter's oid
      * @param template_oid the parameter's template oid
      * @param constraint the parameter's constraint
      * @param isCommand the parameter's command status
-     * @param minimalSet the parameter's minimal set status
      * @param dm the device that the parameter belongs to
+     * @param max_length the parameter's maximum length
+     * @param total_length the parameter's total length
+     * @param precision the number of decimal places to display for floats
+     * @param minimalSet the parameter's minimal set status
      * @param parent the parent parameter
      */
     ParamDescriptor(
@@ -123,13 +127,14 @@ class ParamDescriptor : public IParamDescriptor {
       IDevice& dm,
       uint32_t max_length,
       std::size_t total_length,
+      uint32_t precision,
       bool minimal_set,
       IParamDescriptor* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget},
         scope_{scope}, read_only_{read_only}, template_oid_{template_oid},
         constraint_{constraint}, isCommand_{isCommand}, dev_{dm},
         max_length_{max_length}, total_length_{total_length},
-        minimal_set_{minimal_set}, parent_{parent} {
+        precision_{precision}, minimal_set_{minimal_set}, parent_{parent} {
       setOid(oid);
       if (parent_ != nullptr) {
         parent_->addSubParam(oid, this);
@@ -210,6 +215,11 @@ class ParamDescriptor : public IParamDescriptor {
     std::size_t total_length() const override;
 
     /**
+     * @brief Returns the precision of the parameter.
+     */
+    uint32_t precision() const override { return precision_; };
+
+    /**
      * @brief serialize param meta data in to protobuf message
      * @param param the protobuf message to serialize to
      * @param authz the authorization information
@@ -218,7 +228,7 @@ class ParamDescriptor : public IParamDescriptor {
      * with the information from the ParamDescriptor
      * 
      */
-    void toProto(catena::Param &param, Authorizer& authz) const override;
+    void toProto(catena::Param &param, const IAuthorizer& authz) const override;
 
 
     /**
@@ -229,7 +239,7 @@ class ParamDescriptor : public IParamDescriptor {
      * this function will populate all non-value fields of the protobuf param message 
      * with the information from the ParamDescriptor
      */
-    void toProto(catena::ParamInfo &paramInfo, Authorizer& authz) const override;
+    void toProto(catena::ParamInfo &paramInfo, const IAuthorizer& authz) const override;
 
     /**
      * @brief get the parameter name by language
@@ -245,7 +255,11 @@ class ParamDescriptor : public IParamDescriptor {
      * @param item the item to be added
      */
     void addSubParam(const std::string& oid, IParamDescriptor* item) override {
-      subParams_[oid] = item;
+      if (!item) {
+        throw std::runtime_error("Cannot add a null sub parameter to ParamDescriptor");
+      } else {
+        subParams_[oid] = item;
+      }
     }
 
     /**
@@ -253,6 +267,9 @@ class ParamDescriptor : public IParamDescriptor {
      * @return ParamDescriptor of the sub parameter
      */
     IParamDescriptor& getSubParam(const std::string& oid) const override {
+      if (!subParams_.contains(oid)) {
+        throw std::runtime_error("Sub parameter with oid '" + oid + "' not found in ParamDescriptor");
+      }
       return *subParams_.at(oid);
     }
 
@@ -368,7 +385,7 @@ class ParamDescriptor : public IParamDescriptor {
      * The passed function will be executed when executeCommand is called on this param object.
      * If this is not a command parameter, an exception will be thrown.
      */
-    void defineCommand(std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl) override {
+    void defineCommand(std::function<std::unique_ptr<ICommandResponder>(const catena::Value&)> commandImpl) override {
       if (!isCommand_) {
         throw std::runtime_error("Cannot define a command on a non-command parameter");
       }
@@ -383,7 +400,7 @@ class ParamDescriptor : public IParamDescriptor {
      * if executeCommand is called for a command that has not been defined, then the returned
      * command response will be an exception with type UNIMPLEMENTED
      */
-    std::unique_ptr<ICommandResponder> executeCommand(catena::Value value) override {
+    std::unique_ptr<ICommandResponder> executeCommand(const catena::Value& value) override {
       return commandImpl_(value);
     }
 
@@ -405,6 +422,7 @@ class ParamDescriptor : public IParamDescriptor {
     common::IConstraint* constraint_;
     uint32_t max_length_;
     std::size_t total_length_;
+    uint32_t precision_;
     
     std::string oid_;
     std::string template_oid_;
@@ -415,13 +433,13 @@ class ParamDescriptor : public IParamDescriptor {
     bool minimal_set_;
 
     // default command implementation
-    std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl_ = [](catena::Value value) -> std::unique_ptr<ICommandResponder> { 
-      return std::make_unique<CommandResponder>([value]() -> CommandResponder {
+    std::function<std::unique_ptr<ICommandResponder>(const catena::Value&)> commandImpl_ = [](const catena::Value& value) -> std::unique_ptr<ICommandResponder> { 
+      return std::make_unique<CommandResponder>([](const catena::Value& value) -> CommandResponder {
         catena::CommandResponse response;
         response.mutable_exception()->set_type("UNIMPLEMENTED");
         response.mutable_exception()->mutable_error_message()->mutable_display_strings()->insert({"en", "Command not implemented"});
         co_return response;
-      }());
+      }(value));
     };
 };
 

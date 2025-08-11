@@ -43,6 +43,7 @@
 #include <string>
 
 #include "MockDevice.h"
+#include "MockConnect.h"
 #include "MockServiceImpl.h"
 
 // protobuf
@@ -82,7 +83,13 @@ class gRPCServiceImplTests : public testing::Test {
         // Creating the gRPC server.
         builder_.AddListeningPort(serverAddr_, grpc::InsecureServerCredentials());
         cq_ = builder_.AddCompletionQueue();
-        service_.reset(new CatenaServiceImpl(cq_.get(), {&dm_}, EOPath_, authzEnabled_));
+        ServiceConfig config = ServiceConfig()
+            .set_EOPath(EOPath_)
+            .set_authz(authzEnabled_)
+            .set_maxConnections(1)
+            .set_cq(cq_.get())
+            .add_dm(&dm_);
+        service_.reset(new ServiceImpl(config));
         builder_.RegisterService(service_.get());
         server_ = builder_.BuildAndStart();
         service_->init();
@@ -117,7 +124,7 @@ class gRPCServiceImplTests : public testing::Test {
     // Server and service variables.
     grpc::ServerBuilder builder_;
     std::unique_ptr<grpc::Server> server_ = nullptr;
-    std::unique_ptr<CatenaServiceImpl> service_ = nullptr;
+    std::unique_ptr<ServiceImpl> service_ = nullptr;
     MockDevice dm_;
     // Completion queue variables.
     std::unique_ptr<grpc::ServerCompletionQueue> cq_ = nullptr;
@@ -136,29 +143,62 @@ class gRPCServiceImplTests : public testing::Test {
 };
 
 /*
- * TEST 1 - Test creation and destruction of the service implementation.
+ * TEST 1 - Test ServiceConfig set_dms() and add_dm()
+ */
+TEST(gRPCServiceConfigTests, ServiceConfig_SetDms) {
+    MockDevice dm1, dm2, dm3;
+    ServiceConfig config;
+    // Testing SetFlags.
+    config.set_dms({&dm1, &dm2});
+    EXPECT_EQ(config.dms, (std::vector<IDevice*>{&dm1, &dm2}));
+    config.add_dm(&dm3);
+    EXPECT_EQ(config.dms, (std::vector<IDevice*>{&dm1, &dm2, &dm3}));
+}
+
+/*
+ * TEST 2 - Test creation and destruction of the service implementation.
  */
 TEST_F(gRPCServiceImplTests, ServiceImpl_CreateDestroy) {
     ASSERT_TRUE(service_);
     EXPECT_EQ(service_->authorizationEnabled(), authzEnabled_);
     EXPECT_EQ(service_->EOPath(), EOPath_);
+    EXPECT_NO_THROW(service_->getSubscriptionManager());
+    EXPECT_NO_THROW(service_->connectionQueue());
     // Give it time to set up and timeout once.
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     service_->shutdownServer(); // Does nothing.
 }
 
 /*
- * TEST 2 - Creating a REST CatenaServiceImpl.
+ * TEST 3 - Creating a REST ServiceImpl with no completion queue.
+ *
+ * This is not under the fixture because setting up a gRPC server is time
+ * consuming and not needed.
+ */
+TEST(gRPCServiceImplTests_NoFixture, ServiceImpl_CreateNoCQ) {
+    // Creating a service with a no cq.
+    EXPECT_THROW(ServiceImpl(), std::runtime_error) << "Creating a service with cq = nullptr should throw an error.";
+}
+
+/*
+ * TEST 4 - Creating a REST ServiceImpl with two devices sharing a slot.
  *
  * This is not under the fixture because setting up a gRPC server is time
  * consuming and not needed.
  */
 TEST(gRPCServiceImplTests_NoFixture, ServiceImpl_CreateDuplicateSlot) {
+    ServiceConfig config;
+    // Adding completion queue
+    grpc::ServerBuilder builder;
+    builder.AddListeningPort("0.0.0.0:50051", grpc::InsecureServerCredentials());
+    auto cq = builder.AddCompletionQueue();
+    config.cq = cq.get();
+    // Adding devices
     MockDevice dm1, dm2;
-    std::string EOPath = "/Test/EO/Path";
     EXPECT_CALL(dm1, slot()).WillRepeatedly(testing::Return(0));
+    config.dms.push_back(&dm1);
     EXPECT_CALL(dm2, slot()).WillRepeatedly(testing::Return(0));
+    config.dms.push_back(&dm2);
     // Creating a service with a duplicate slot.
-    EXPECT_THROW(CatenaServiceImpl(nullptr, {&dm1, &dm2}, EOPath, false), std::runtime_error)
-        << "Creating a service with two devices sharing a slot should throw an error.";
+    EXPECT_THROW(ServiceImpl service = ServiceImpl{config}, std::runtime_error) << "Creating a service with two devices sharing a slot should throw an error.";
 }

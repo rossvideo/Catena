@@ -107,7 +107,7 @@ TEST_F(RESTSetValueTests, SetValue_Normal) {
     initPayload(0, "/test_oid", "test_value");
     // Setting expectations
     EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
+        .WillOnce(testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, const IAuthorizer &authz) {
             // Checking that function gets correct inputs.
             auto val = (*src.mutable_values())[0];
             EXPECT_EQ(val.oid(), fqoid_);

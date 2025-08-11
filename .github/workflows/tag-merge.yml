@@ -1,0 +1,38 @@
+name: Add tag to main after merge
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'sdks/cpp/VERSION.txt'
+
+jobs:
+  update_version_file:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Put the version tag on main
+        run: |
+
+          TEXT_FILE="$(cat sdks/cpp/VERSION.txt)"
+          VERSION=${TEXT_FILE#cpp-}
+          if [ "$(echo "$VERSION" | cut -d'-' -f1)" = "" ]; then
+            echo "❌ Bad Version FIle"
+            exit 1
+          fi
+
+          VERSION_PART="$(echo "$VERSION" | cut -d'-' -f1)-$(echo "$VERSION" | cut -d'-' -f2)"
+          VERSION="cpp-$VERSION_PART"
+          echo "tagging with $VERSION"
+
+          echo "VERSION=${NEW_VERSION}" >> $GITHUB_ENV
+
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git tag -a $VERSION -m "Version $VERSION"
+          git push origin $VERSION

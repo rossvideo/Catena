@@ -93,7 +93,7 @@
         "program": "${workspaceFolder}/${env:BUILD_TARGET}/connections/gRPC/examples/${input:pickService}/${input:pickService}", // Path to the full_service executable
         "args": ["--static_root", "${workspaceFolder}/sdks/cpp/connections/gRPC/examples/${input:pickService}/static", 
                 //  "--secure_comms", "tls",
-                "--authz"
+                // "--authz"
         ], // Any command-line arguments go here
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}/${env:BUILD_TARGET}",
@@ -156,8 +156,8 @@
       "args": [
         "--static_root", "${workspaceFolder}/sdks/cpp/connections/REST/examples/${input:pickRestService}/static",
         //  "--secure_comms", "tls", // Unsure if this is functional
-        //"--authz",
-        //"--port=6254"
+        "--authz",
+        "--port=6254"
       ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/${env:BUILD_TARGET}",

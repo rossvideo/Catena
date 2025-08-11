@@ -58,7 +58,7 @@ class ExecuteCommand : public CallData {
      * @param dms A map of slots to ptrs to their corresponding device.
      * @param ok flag to check if command was successfully executed 
      */
-    ExecuteCommand(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
+    ExecuteCommand(IServiceImpl *service, SlotMap& dms, bool ok);
     /**
      * @brief Manages gRPC command execution through a state machine
      *
@@ -89,6 +89,17 @@ class ExecuteCommand : public CallData {
      * @brief A map of slots to ptrs to their corresponding device.
      */
     SlotMap& dms_;
+    /**
+     * @brief Shared ptr to the authorizer object so that we can maintain
+     * ownership of raw ptr throughout call lifetime without use of "new"
+     * keyword. 
+     */
+    std::shared_ptr<catena::common::Authorizer> sharedAuthz_;
+    /**
+     * @brief Ptr to the authorizer object. Raw as to not attempt to delete in
+     * case of kAuthzDisabled.
+     */
+    catena::common::Authorizer* authz_;
     /**
      * @brief Unique identifier for command object
      */

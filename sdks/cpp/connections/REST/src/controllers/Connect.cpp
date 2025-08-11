@@ -1,23 +1,18 @@
 // connections/REST
 #include <controllers/Connect.h>
-using catena::REST::Connect;
 using catena::common::ILanguagePack;
 
 // Initializes the object counter for Connect to 0.
-int Connect::objectCounter_ = 0;
+int catena::REST::Connect::objectCounter_ = 0;
 
-Connect::Connect(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
-    socket_{socket}, writer_{socket, context.origin()}, shutdown_{false}, context_{context},
-    catena::common::Connect(dms, context.getSubscriptionManager()) {
+catena::REST::Connect::Connect(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
+    socket_{socket}, writer_{socket, context.origin()}, context_{context},
+    catena::common::Connect(dms, context.subscriptionManager()) {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
-    
-    // Parsing fields and assigning to respective variables.
-    userAgent_ = context.fields("user_agent");
-    forceConnection_ = context.hasField("force_connection");
 }
 
-Connect::~Connect() {
+catena::REST::Connect::~Connect() {
     // Disconnecting all initialized listeners.
     if (shutdownSignalId_ != 0) { shutdownSignal_.disconnect(shutdownSignalId_); }
     for (auto [slot, dm] : dms_) {
@@ -33,57 +28,61 @@ Connect::~Connect() {
             }
         }
     }
+    context_.connectionQueue().deregisterConnection(this);
 }
 
-void Connect::proceed() {
+void catena::REST::Connect::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
 
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
     try {
-        // Setting up the client's authorizer.
-        initAuthz_(context_.jwsToken(), context_.authorizationEnabled());
         // Cancels all open connections if shutdown signal is sent.
-        shutdownSignalId_ = shutdownSignal_.connect([this](){
-            shutdown_ = true;
-            this->hasUpdate_ = true;
-            this->cv_.notify_one();
-        });
-        // Set detail level from request
+        // socket_.async_wait(tcp::socket::wait_error, [this](const boost::system::error_code& error){ shutdown(); });
+        shutdownSignalId_ = shutdownSignal_.connect([this](){ shutdown(); });
+        // Initialize variables and authz and add connection to the priority queue.
         detailLevel_ = context_.detailLevel();
-
-        catena::PushUpdates populatedSlots;
-
-        // Connecting to each device in dms_.
-        for (auto [slot, dm] : dms_) {
-            if (dm) {
-                // Waiting for a value set by server to be sent to execute code.
-                valueSetByServerIds_[slot] = dm->getValueSetByServer().connect([this, slot](const std::string& oid, const IParam* p){
-                    updateResponse_(oid, p, slot);
-                });
-                // Waiting for a value set by client to be sent to execute code.
-                valueSetByClientIds_[slot] = dm->getValueSetByClient().connect([this, slot](const std::string& oid, const IParam* p){
-                    updateResponse_(oid, p, slot);
-                });
-                // Waiting for a language to be added to execute code.
-                languageAddedIds_[slot] = dm->getLanguageAddedPushUpdate().connect([this, slot](const ILanguagePack* l) {
-                    updateResponse_(l, slot);
-                });
-                populatedSlots.mutable_slots_added()->add_slots(slot);
+        userAgent_ = context_.fields("user_agent");
+        forceConnection_ = context_.hasField("force_connection");
+        initAuthz_(context_.jwsToken(), context_.authorizationEnabled());
+        if (context_.connectionQueue().registerConnection(this)) {
+            // Connecting to each device in dms_.
+            catena::PushUpdates populatedSlots;
+            for (auto [slot, dm] : dms_) {
+                if (dm) {
+                    // Waiting for a value set by server to be sent to execute code.
+                    valueSetByServerIds_[slot] = dm->getValueSetByServer().connect([this, slot](const std::string& oid, const IParam* p){
+                        updateResponse_(oid, p, slot);
+                    });
+                    // Waiting for a value set by client to be sent to execute code.
+                    valueSetByClientIds_[slot] = dm->getValueSetByClient().connect([this, slot](const std::string& oid, const IParam* p){
+                        updateResponse_(oid, p, slot);
+                    });
+                    // Waiting for a language to be added to execute code.
+                    languageAddedIds_[slot] = dm->getLanguageAddedPushUpdate().connect([this, slot](const ILanguagePack* l) {
+                        updateResponse_(l, slot);
+                    });
+                    populatedSlots.mutable_slots_added()->add_slots(slot);
+                }
             }
+            // Send client a empty update with slots populated by devices.
+            writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), populatedSlots); 
+        // Failed to register connection.
+        } else {
+            rc = catena::exception_with_status("Too many connections to service", catena::StatusCode::RESOURCE_EXHAUSTED);
+            shutdown_ = true;
         }
-        // Send client a empty update with slots populated by devices.
-        writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), populatedSlots); 
     // Used to catch the authz error.
     } catch (catena::exception_with_status& err) {
-        writer_.sendResponse(err);
-        shutdown_ = true;
+        rc = catena::exception_with_status(err.what(), err.status);
     } catch (const std::exception& e) {
-        writer_.sendResponse(catena::exception_with_status(std::string("Connection setup failed: ") + e.what(), 
-                                                         catena::StatusCode::INTERNAL));
-        shutdown_ = true;
+        rc = catena::exception_with_status(std::string("Connection setup failed: ") + e.what(), catena::StatusCode::INTERNAL);
     } catch (...) {
-        writer_.sendResponse(catena::exception_with_status("Unknown error during connection setup", 
-                                                         catena::StatusCode::UNKNOWN));
+        rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
+    }
+    // If above failed, finish the RPC.
+    if (rc.status != catena::StatusCode::OK) {
         shutdown_ = true;
+        writer_.sendResponse(rc);
     }
 
     // kWrite: Waiting for updates to send to the client.
@@ -94,8 +93,15 @@ void Connect::proceed() {
         hasUpdate_ = false;
         writeConsole_(CallStatus::kWrite, true);
         try {
-            if (socket_.is_open() && !shutdown_) {
-                writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), res_);
+            if (socket_.is_open()) {
+                if (shutdown_) {
+                    writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::CANCELLED));
+                } else if (authz_->isExpired()) {
+                    writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::UNAUTHENTICATED));
+                    shutdown_ = true;
+                } else {
+                    writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), res_);
+                }
             }
         // A little scuffed but I have no idea how else to detect disconnect.
         } catch (...) {
@@ -107,4 +113,9 @@ void Connect::proceed() {
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     DEBUG_LOG << "Connect[" << objectId_ << "] finished";
+}
+
+// Returns true if the connection has been cancelled.
+bool catena::REST::Connect::isCancelled() {
+    return !socket_.is_open() || shutdown_ || (authz_ && authz_->isExpired());
 }

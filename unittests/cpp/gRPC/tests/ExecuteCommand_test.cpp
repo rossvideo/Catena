@@ -39,6 +39,7 @@
 #include "MockParam.h"
 #include "MockCommandResponder.h"
 #include "GRPCTest.h"
+#include "StreamReader.h"
 #include "CommonTestHelpers.h"
 
 // gRPC
@@ -68,52 +69,8 @@ class gRPCExecuteCommandTests : public GRPCTest {
      * This is a test class which makes an async RPC to the MockServer on
      * construction and compares the streamed-back response.
      */
-    class StreamReader : public grpc::ClientReadReactor<catena::CommandResponse> {
-      public:
-        StreamReader(std::vector<catena::CommandResponse>* outVals_, grpc::Status* outRc_)
-            : outVals_(outVals_), outRc_(outRc_) {}
-        /*
-         * This function makes an async RPC to the MockServer.
-         */
-        void MakeCall(catena::CatenaService::Stub* client, grpc::ClientContext* clientContext_, const catena::ExecuteCommandPayload* inVal_) {
-            // Sending async RPC.
-            client->async()->ExecuteCommand(clientContext_, inVal_, this);
-            StartRead(&outVal_);
-            StartCall();
-        }
-        /*
-        * Triggers when a read is done_ and adds output to outVals_.
-        */
-        void OnReadDone(bool ok) override {
-            if (ok) {
-                outVals_->emplace_back(outVal_);
-                StartRead(&outVal_);
-            }
-        }
-        /*
-         * Triggers when the RPC is finished and notifies Await().
-         */
-        void OnDone(const grpc::Status& status) override {
-            *outRc_ = status;
-            done_ = true;
-            cv_.notify_one();
-        }
-        /*
-         * Blocks until the RPC is finished. 
-         */
-        inline void Await() { cv_.wait(lock_, [this] { return done_; }); }
-    
-      private:
-        // Pointers to the output variables.
-        grpc::Status* outRc_;
-        std::vector<catena::CommandResponse>* outVals_;
-
-        catena::CommandResponse outVal_;
-        bool done_ = false;
-        std::condition_variable cv_;
-        std::mutex cv_mtx_;
-        std::unique_lock<std::mutex> lock_{cv_mtx_};
-    };
+    using StreamReader = catena::gRPC::test::StreamReader<catena::CommandResponse, catena::ExecuteCommandPayload, 
+        std::function<void(grpc::ClientContext*, const catena::ExecuteCommandPayload*, grpc::ClientReadReactor<catena::CommandResponse>*)>>;
 
     /*
      * Streamlines the creation of executeCommandPayloads. 
@@ -156,7 +113,9 @@ class gRPCExecuteCommandTests : public GRPCTest {
     void testRPC() {
         // Sending async RPC.
         StreamReader streamReader(&outVals_, &outRc_);
-        streamReader.MakeCall(client_.get(), &clientContext_, &inVal_);
+        streamReader.MakeCall(&clientContext_, &inVal_, [this](auto ctx, auto payload, auto reactor) {
+            client_->async()->ExecuteCommand(ctx, payload, reactor);
+        });
         streamReader.Await();
         // Comparing the results.
         if (respond_) {
@@ -205,9 +164,9 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalResponse) {
     expResponse("test_response_3");
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             // Making sure the correct values were passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockCommand_);
         }));
@@ -238,9 +197,9 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalNoResponse) {
     expNoResponse();
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             // Making sure the correct values were passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockCommand_);
         }));
@@ -265,9 +224,9 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalException) {
     expException("test_exception_type", "test_exception_details");
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             // Making sure the correct values were passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockCommand_);
         }));
@@ -294,9 +253,9 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_RespondFalse) {
     expResponse("test_response_3");
     // Mocking kProcess functions
     EXPECT_CALL(dm0_, getCommand(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             // Making sure the correct values were passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockCommand_);
         }));
@@ -332,9 +291,9 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzValid) {
     clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             // Making sure the correct values were passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockCommand_);
         }));
@@ -381,8 +340,35 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzJWSNotFound) {
     testRPC();
 }
 
+
 /*
- * TEST 9 - No device in the specified slot.
+ * TEST 9 - ExecuteCommand fails from expired JWS token.
+ */
+TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzExpired) {
+    expRc_ = catena::exception_with_status{"JWS token expired", catena::StatusCode::UNAUTHENTICATED};
+    initPayload(0, "test_command", "test_value", true);
+    // Adding authorization mockToken metadata.
+    authzEnabled_ = true;
+    std::string mockToken = getJwsToken("expired");
+    clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getCommand(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
+            return std::move(mockCommand_);
+        }));
+    EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const catena::Value& value) {
+            return std::move(mockResponder_);
+        }));
+    EXPECT_CALL(*mockResponder_, getNext()).Times(0);
+    EXPECT_CALL(*mockResponder_, hasMore()).Times(0);
+    // Sending the RPC
+    testRPC();
+}
+
+/*
+ * TEST 10 - No device in the specified slot.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
     initPayload(dms_.size(), "test_command", "test_value", true);
@@ -395,13 +381,13 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
 }
 
 /*
- * TEST 10 - getCommand does not find a command.
+ * TEST 11 - getCommand does not find a command.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
     expRc_ = catena::exception_with_status("Command not found", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return nullptr;
         }));
@@ -411,13 +397,13 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
 }
 
 /*
- * TEST 11 - getCommand throws a catena::exception_with_status.
+ * TEST 12 - getCommand throws a catena::exception_with_status.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
     expRc_ = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return nullptr;
         }));
@@ -427,7 +413,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
 }
 
 /*
- * TEST 12 - getCommand throws an std::runtime error.
+ * TEST 13 - getCommand throws an std::runtime error.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -440,13 +426,13 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandThrowUnknown) {
 }
 
 /*
- * TEST 13 - executeCommand returns a nullptr.
+ * TEST 14 - executeCommand returns a nullptr.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
     expRc_ = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(mockCommand_);
         }));
@@ -460,13 +446,13 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
 }
 
 /*
- * TEST 14 - executeCommand throws a catena::exception_with_status.
+ * TEST 15 - executeCommand throws a catena::exception_with_status.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
     expRc_ = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(mockCommand_);
         }));
@@ -481,13 +467,13 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
 }
 
 /*
- * TEST 15 - executeCommand returns an std::runtime_error.
+ * TEST 16 - executeCommand returns an std::runtime_error.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(mockCommand_);
         }));
@@ -499,14 +485,14 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
 }
 
 /*
- * TEST 16 - getNext throws a catena::exception_with_status.
+ * TEST 17 - getNext throws a catena::exception_with_status.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
     expRc_ = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
     initPayload(0, "test_command", "test_value", false);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(mockCommand_);
         }));
@@ -525,14 +511,14 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
 }
 
 /*
- * TEST 17 - getNext throws a std::runtime_error.
+ * TEST 18 - getNext throws a std::runtime_error.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     initPayload(0, "test_command", "test_value", false);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(mockCommand_);
         }));

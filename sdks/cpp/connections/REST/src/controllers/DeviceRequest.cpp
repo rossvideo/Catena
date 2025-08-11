@@ -51,7 +51,7 @@ void DeviceRequest::proceed() {
 
             // Getting subscribed oids if dl == SUBSCRIPTIONS.
             if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
-                auto& subscriptionManager = context_.getSubscriptionManager();
+                auto& subscriptionManager = context_.subscriptionManager();
                 subscribedOids_ = subscriptionManager.getAllSubscribedOids(*dm);
             }
 

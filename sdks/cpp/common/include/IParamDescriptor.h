@@ -48,7 +48,7 @@
 namespace catena {
 namespace common {
 
-class Authorizer; // forward declaration
+class IAuthorizer; // forward declaration
 
 /**
  * @brief ParamDescriptor provides information about a parameter
@@ -159,6 +159,11 @@ class IParamDescriptor {
     virtual std::size_t total_length() const = 0;
 
     /**
+     * @brief Returns the precision of the parameter.
+     */
+    virtual uint32_t precision() const = 0;
+
+    /**
      * @brief serialize param meta data in to protobuf message
      * @param param the protobuf message to serialize to
      * @param authz the authorization information
@@ -167,7 +172,7 @@ class IParamDescriptor {
      * with the information from the ParamDescriptor
      * 
      */
-    virtual void toProto(catena::Param &param, Authorizer& authz) const = 0;
+    virtual void toProto(catena::Param &param, const IAuthorizer& authz) const = 0;
 
 
     /**
@@ -178,7 +183,7 @@ class IParamDescriptor {
      * this function will populate all non-value fields of the protobuf param message 
      * with the information from the ParamDescriptor
      */
-    virtual void toProto(catena::ParamInfo &paramInfo, Authorizer& authz) const = 0;
+    virtual void toProto(catena::ParamInfo &paramInfo, const IAuthorizer& authz) const = 0;
 
     /**
      * @brief get the parameter name by language
@@ -241,7 +246,7 @@ class IParamDescriptor {
      * The passed function will be executed when executeCommand is called on this param object.
      * If this is not a command parameter, an exception will be thrown.
      */
-    virtual void defineCommand(std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl) = 0;
+    virtual void defineCommand(std::function<std::unique_ptr<ICommandResponder>(const catena::Value&)> commandImpl) = 0;
 
     /**
      * @brief execute the command
@@ -251,7 +256,7 @@ class IParamDescriptor {
      * if executeCommand is called for a command that has not been defined, then the returned
      * command response will be an exception with type UNIMPLEMENTED
      */
-    virtual std::unique_ptr<ICommandResponder> executeCommand(catena::Value value) = 0;
+    virtual std::unique_ptr<ICommandResponder> executeCommand(const catena::Value& value) = 0;
 
     /**
      * @brief return true if this is a command parameter

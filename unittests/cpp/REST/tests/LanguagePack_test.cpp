@@ -257,9 +257,9 @@ TEST_F(RESTLanguagePackTests, LanguagePack_POSTNormal) {
     // Setting expectations.
     EXPECT_CALL(dm0_, hasLanguage(language_)).Times(1).WillOnce(testing::Return(method_ == Method_PUT));
     EXPECT_CALL(dm0_, addLanguage(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+        .WillOnce(testing::Invoke([this](catena::AddLanguagePayload &language, const IAuthorizer &authz) {
             // Make sure correct values are passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             EXPECT_EQ(language.id(), language_);
             EXPECT_EQ(language.language_pack().SerializeAsString(), inVal_.SerializeAsString());
             return catena::exception_with_status(expRc_.what(), expRc_.status);
@@ -278,9 +278,9 @@ TEST_F(RESTLanguagePackTests, LanguagePack_POSTAuthzValid) {
     // Setting expectations.
     EXPECT_CALL(dm0_, hasLanguage(language_)).Times(1).WillOnce(testing::Return(method_ == Method_PUT));
     EXPECT_CALL(dm0_, addLanguage(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+        .WillOnce(testing::Invoke([this](catena::AddLanguagePayload &language, const IAuthorizer &authz) {
             // Make sure correct values are passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             EXPECT_EQ(language.id(), language_);
             EXPECT_EQ(language.language_pack().SerializeAsString(), inVal_.SerializeAsString());
             return catena::exception_with_status(expRc_.what(), expRc_.status);
@@ -345,7 +345,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_POSTErrReturn) {
     // Setting expectations.
     EXPECT_CALL(dm0_, hasLanguage(language_)).Times(1).WillOnce(testing::Return(method_ == Method_PUT));
     EXPECT_CALL(dm0_, addLanguage(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+        .WillOnce(testing::Invoke([this](catena::AddLanguagePayload &language, const IAuthorizer &authz) {
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
     // Calling proceed and testing the output
@@ -362,7 +362,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_POSTErrThrowCat) {
     // Setting expectations.
     EXPECT_CALL(dm0_, hasLanguage(language_)).Times(1).WillOnce(testing::Return(method_ == Method_PUT));
     EXPECT_CALL(dm0_, addLanguage(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+        .WillOnce(testing::Invoke([this](catena::AddLanguagePayload &language, const IAuthorizer &authz) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK); // should not return.
         }));
@@ -413,9 +413,9 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PUTNormal) {
     // Setting expectations.
     EXPECT_CALL(dm0_, hasLanguage(language_)).Times(1).WillOnce(testing::Return(method_ == Method_PUT));
     EXPECT_CALL(dm0_, addLanguage(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+        .WillOnce(testing::Invoke([this](catena::AddLanguagePayload &language, const IAuthorizer &authz) {
             // Make sure correct values are passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             EXPECT_EQ(language.id(), language_);
             EXPECT_EQ(language.language_pack().SerializeAsString(), inVal_.SerializeAsString());
             return catena::exception_with_status(expRc_.what(), expRc_.status);
@@ -434,9 +434,9 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PUTAuthzValid) {
     // Setting expectations.
     EXPECT_CALL(dm0_, hasLanguage(language_)).Times(1).WillOnce(testing::Return(method_ == Method_PUT));
     EXPECT_CALL(dm0_, addLanguage(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+        .WillOnce(testing::Invoke([this](catena::AddLanguagePayload &language, const IAuthorizer &authz) {
             // Make sure correct values are passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             EXPECT_EQ(language.id(), language_);
             EXPECT_EQ(language.language_pack().SerializeAsString(), inVal_.SerializeAsString());
             return catena::exception_with_status(expRc_.what(), expRc_.status);
@@ -501,7 +501,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PUTErrReturn) {
     // Setting expectations.
     EXPECT_CALL(dm0_, hasLanguage(language_)).Times(1).WillOnce(testing::Return(method_ == Method_PUT));
     EXPECT_CALL(dm0_, addLanguage(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+        .WillOnce(testing::Invoke([this](catena::AddLanguagePayload &language, const IAuthorizer &authz) {
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
     // Calling proceed and testing the output
@@ -518,7 +518,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PUTErrThrowCat) {
     // Setting expectations.
     EXPECT_CALL(dm0_, hasLanguage(language_)).Times(1).WillOnce(testing::Return(method_ == Method_PUT));
     EXPECT_CALL(dm0_, addLanguage(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+        .WillOnce(testing::Invoke([this](catena::AddLanguagePayload &language, const IAuthorizer &authz) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK); // should not return.
         }));
@@ -568,8 +568,8 @@ TEST_F(RESTLanguagePackTests, LanguagePack_DELETENormal) {
     method_ = Method_DELETE;
     // Setting expectations.
     EXPECT_CALL(dm0_, removeLanguage(language_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string &languageId, catena::common::Authorizer &authz) {
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+        .WillOnce(testing::Invoke([this](const std::string &languageId, const IAuthorizer &authz) {
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
     // Calling proceed and testing the output
@@ -585,8 +585,8 @@ TEST_F(RESTLanguagePackTests, LanguagePack_DELETEAuthzValid) {
     authzEnabled_ = true;
     // Setting expectations.
     EXPECT_CALL(dm0_, removeLanguage(language_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string &languageId, catena::common::Authorizer &authz) {
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+        .WillOnce(testing::Invoke([this](const std::string &languageId, const IAuthorizer &authz) {
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
     // Calling proceed and testing the output
@@ -617,7 +617,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_DELETEErrReturn) {
     method_ = Method_DELETE;
     // Setting expectations
     EXPECT_CALL(dm0_, removeLanguage(language_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string &languageId, catena::common::Authorizer &authz) {
+        .WillOnce(testing::Invoke([this](const std::string &languageId, const IAuthorizer &authz) {
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
 
@@ -634,7 +634,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_DELETEErrThrowCat) {
     method_ = Method_DELETE;
     // Setting expectations
     EXPECT_CALL(dm0_, removeLanguage(language_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string &languageId, catena::common::Authorizer &authz) {
+        .WillOnce(testing::Invoke([this](const std::string &languageId, const IAuthorizer &authz) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK); // should not return.
         }));

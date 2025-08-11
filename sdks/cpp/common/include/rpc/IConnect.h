@@ -43,6 +43,9 @@
 #include <interface/device.pb.h>
 // Std
 #include <string>
+#include <chrono>
+
+using std::chrono::system_clock;
 
 namespace catena {
 namespace common {
@@ -51,19 +54,33 @@ namespace common {
  * @brief Interface class for Connect RPCs
  */
 class IConnect {
-  protected:
-    IConnect() = default;
-    IConnect(const IConnect&) = default;
-    IConnect& operator=(const IConnect&) = default;
-    IConnect(IConnect&&) = default;
-    IConnect& operator=(IConnect&&) = default;
+  public:
+    /**
+     * @brief Descructor
+     */
     virtual ~IConnect() = default;
-
+    /**
+     * @brief Returns the connection's priority.
+     */
+    virtual uint32_t priority() const = 0;
+    /**
+     * @brief Returns the object Id.
+     */
+    virtual uint32_t objectId() const = 0;
+    /**
+     * @brief Returns true if this has less prioirty than otherConnection.
+     */
+    virtual bool operator<(const IConnect& otherConnection) const = 0;
     /**
      * @brief Returns true if the call has been canceled.
      */
     virtual inline bool isCancelled() = 0;
-
+    /**
+     * @brief Forcefully shuts down the connection.
+     */
+    virtual void shutdown() = 0;
+  
+  protected:
     /**
      * @brief Updates the response message with parameter values and handles 
      * authorization checks.
@@ -72,7 +89,6 @@ class IConnect {
      * @param p - The parameter to update
      */
     virtual void updateResponse_(const std::string& oid, const IParam* p, uint32_t slot) = 0;
-    
     /**
      * @brief Updates the response message with a ILanguagePack and
      * handles authorization checks.
@@ -80,7 +96,6 @@ class IConnect {
      * @param l The added ILanguagePack emitted by device.
      */
     virtual void updateResponse_(const ILanguagePack* l, uint32_t slot) = 0;
-    
     /**
      * @brief Sets up the authorizer object with the jwsToken.
      * @param jwsToken The jwsToken to use for authorization.

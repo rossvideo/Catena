@@ -1,6 +1,6 @@
 // connections/REST
 #include <ServiceImpl.h>
-using catena::REST::CatenaServiceImpl;
+using catena::REST::ServiceImpl;
 
 // REST controllers
 #include <controllers/Connect.h>
@@ -35,17 +35,18 @@ void expandEnvVariables(std::string &str) {
 }
 // GCOVR_EXCL_STOP
 
-CatenaServiceImpl::CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOPath, bool authz, uint16_t port)
+ServiceImpl::ServiceImpl(const ServiceConfig& config)
     : version_{"v1"},
-      EOPath_{EOPath},
-      port_{port},
-      authorizationEnabled_{authz},
-      acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
-      router_{Router::getInstance()} {
+      EOPath_{config.EOPath},
+      port_{config.port},
+      authorizationEnabled_{config.authz},
+      acceptor_{io_context_, tcp::endpoint(tcp::v4(), config.port)},
+      router_{Router::getInstance()},
+      connectionQueue_{config.maxConnections} {
 
     if (authorizationEnabled_) { DEBUG_LOG <<"Authorization enabled."; }
     // Adding dms to slotMap.
-    for (auto dm : dms) {
+    for (auto dm : config.dms) {
         if (dms_.contains(dm->slot())) {
             throw std::runtime_error("Device with slot " + std::to_string(dm->slot()) + " already exists in the map.");
         } else {
@@ -59,6 +60,9 @@ CatenaServiceImpl::CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOP
         router_.addProduct("GET",                 DeviceRequest::makeOne);
         router_.addProduct("POST/command",        ExecuteCommand::makeOne);
         router_.addProduct("GET/asset",           AssetRequest::makeOne);
+        router_.addProduct("POST/asset",          AssetRequest::makeOne);
+        router_.addProduct("PUT/asset",           AssetRequest::makeOne);
+        router_.addProduct("DELETE/asset",        AssetRequest::makeOne);
         router_.addProduct("GET/devices",         GetPopulatedSlots::makeOne);
         router_.addProduct("GET/value",           GetValue::makeOne);
         router_.addProduct("PUT/values",          MultiSetValue::makeOne);
@@ -76,9 +80,9 @@ CatenaServiceImpl::CatenaServiceImpl(std::vector<IDevice*> dms, std::string& EOP
 }
 
 // Initializing the shutdown signal for all open connections.
-vdk::signal<void()> Connect::shutdownSignal_;
+vdk::signal<void()> catena::REST::Connect::shutdownSignal_;
 
-void CatenaServiceImpl::run() {
+void ServiceImpl::run() {
     // TLS handled by Envoyproxy
     shutdown_ = false;
 
@@ -96,9 +100,8 @@ void CatenaServiceImpl::run() {
             if (!shutdown_) {
                 try {
                     // Reading from the socket.
-                    SocketReader context(subscriptionManager_, EOPath_);
-                    context.read(socket, authorizationEnabled_, version_);
-                    //TODO: remove v1 from the request key when the router options are updated
+                    SocketReader context(this);
+                    context.read(socket);
                     std::string requestKey = RESTMethodMap().getForwardMap().at(context.method()) + context.endpoint();
                     // Returning empty response with options to the client if required.
                     if (context.method() == Method_OPTIONS) {
@@ -160,7 +163,7 @@ void CatenaServiceImpl::run() {
     acceptor_.close();
 }
 
-void CatenaServiceImpl::Shutdown() {
+void ServiceImpl::Shutdown() {
     shutdown_ = true;
     // Sending dummy connection to run() loop.
     tcp::socket dummySocket(io_context_);
@@ -169,7 +172,7 @@ void CatenaServiceImpl::Shutdown() {
 
 // (UNUSED)
 // GCOVR_EXCL_START
-bool CatenaServiceImpl::is_port_in_use_() const {
+bool ServiceImpl::is_port_in_use_() const {
     try {
         boost::asio::io_context io_context;
         tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), port_));

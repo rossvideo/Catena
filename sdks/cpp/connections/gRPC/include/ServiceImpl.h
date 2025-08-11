@@ -64,9 +64,10 @@
 #include <vdk/signals.h>
 #include <IParam.h>
 #include <IDevice.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 #include <SharedFlags.h>
 #include <SubscriptionManager.h>
+#include <rpc/ConnectionQueue.h>
 
 // std
 #include <iostream>
@@ -89,23 +90,100 @@ using grpc::ServerCompletionQueue;
 
 using catena::common::IDevice;
 using catena::common::IParam;
+using catena::common::IConnect;
 
 namespace catena {
 namespace gRPC {
 
 /**
- * @brief Implements Catena gRPC request handlers.
+ * @brief Config object for the ServiceImpl to streamline creation.
+ * 
+ * The cq field is required for ServiceImpl to function properly.
  */
-class CatenaServiceImpl : public ICatenaServiceImpl {
+class ServiceConfig {
   public:
     /**
-     * @brief Constructor for the CatenaServiceImpl class.
-     * @param cq The completion queue for the server.
-     * @param dms A map of slots to ptrs to their corresponding device.
-     * @param EOPath The path to the external object.
-     * @param authz Flag to enable authorization.
+     * @brief Sets the completion queue.
+     * @param cq A pointer to the completion queue
      */
-    CatenaServiceImpl(ServerCompletionQueue* cq, std::vector<IDevice*> dms, std::string& EOPath, bool authz);  
+    ServiceConfig& set_cq(ServerCompletionQueue* cq) {
+      this->cq = cq;
+      return *this;
+    }
+    /**
+     * @brief Sets the vector of Device pointers.
+     * @param dms A vector of Device pointers.
+     */
+    ServiceConfig& set_dms(std::vector<IDevice*> dms) {
+      this->dms = std::move(dms);
+      return *this;
+    }
+    /**
+     * @brief Adds a Device pointers.
+     * @param dm The Device pointer to add.
+     */
+    ServiceConfig& add_dm(IDevice* dm) {
+      this->dms.push_back(dm);
+      return *this;
+    }
+    /**
+     * @brief Sets the external object path.
+     * @param EOPath The external object path.
+     */
+    ServiceConfig& set_EOPath(const std::string& EOPath) {
+      this->EOPath = EOPath;
+      return *this;
+    }
+    /**
+     * @brief Sets the authz flag.
+     * @param authz True if authz is enabled, False otherwise.
+     */
+    ServiceConfig& set_authz(bool authz) {
+      this->authz = authz;
+      return *this;
+    }
+    /**
+     * @brief Sets the maximum number of connections allowed to the service.
+     * @param maxConnections The maximum number of connections allowed to the
+     * service.
+     */
+    ServiceConfig& set_maxConnections(uint32_t maxConnections) {
+      this->maxConnections = maxConnections;
+      return *this;
+    }
+    /**
+     * @brief The completion queue for the server.
+     */
+    ServerCompletionQueue* cq = nullptr;
+    /**
+     * @brief A map of slots to ptrs to their corresponding device.
+     */
+    std::vector<IDevice*> dms = {};
+    /**
+     * @brief The path to the external object.
+     */
+    std::string EOPath = "";
+    /**
+     * @brief Flag to enable authorization.
+     */
+    bool authz = false;
+    /**
+     * @brief The maximum number of connections allowed to the service.
+     */
+    uint32_t maxConnections = DEFAULT_MAX_CONNECTIONS;
+};
+
+/**
+ * @brief Implements Catena gRPC request handlers.
+ */
+class ServiceImpl : public IServiceImpl {
+  public:
+    /**
+     * @brief Constructor for the ServiceImpl class.
+     * @param config The service config object containing the necessary
+     * parameters.
+     */
+    ServiceImpl(const ServiceConfig& config = ServiceConfig{});
     /**
      * @brief Creates the CallData objects for each gRPC command.
      */
@@ -135,6 +213,10 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      * @brief Returns the EOPath.
      */
     const std::string& EOPath() override { return EOPath_; }
+    /**
+     * @brief Returns the ConnectionQueue object.
+     */
+    IConnectionQueue& connectionQueue() override { return connectionQueue_; };
     /**
      * @brief Returns the size of the registry.
      */
@@ -175,7 +257,7 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
     /**
      * @brief The path to the external object
      */
-    std::string& EOPath_; 
+    std::string EOPath_; 
     /**
      * @brief Flag to enable authorization
      */
@@ -184,6 +266,10 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      * @brief The subscription manager for handling parameter subscriptions
      */
     catena::common::SubscriptionManager subscriptionManager_;
+    /**
+     * @brief The connectionQueue object for managing connections to the service
+     */
+    ConnectionQueue connectionQueue_;
 };
 
 }; // namespace gRPC

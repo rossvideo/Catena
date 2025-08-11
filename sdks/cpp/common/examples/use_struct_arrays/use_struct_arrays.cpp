@@ -49,6 +49,7 @@
 #include <Device.h>
 #include <ParamWithValue.h>
 #include <PolyglotText.h>
+#include <Authorizer.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
@@ -91,9 +92,8 @@ int main (int argc, char** argv) {
     DEBUG_LOG << "audio_deck[2]: " << value.DebugString();
 
 
-    // add a new audio channel to audio_deck
+    // Don't clear value, append copy of audio_deck[2] to audio_deck.
     // getParam /- is invalid.
-    value.Clear();
     err = dm.setValue("/audio_deck/-", value);
     if (err.status != catena::StatusCode::OK){
         LOG(ERROR) << "Error: " << err.what();

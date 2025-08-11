@@ -43,7 +43,7 @@
 #include <IDevice.h>
 #include <IParam.h>
 #include <Status.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 #include <SubscriptionManager.h>
 #include <Logger.h>
 
@@ -69,7 +69,7 @@ protected:
         
         // Set up default mock behavior for device
         EXPECT_CALL(*device, getValue(::testing::_, ::testing::_, ::testing::_))
-            .WillRepeatedly(::testing::Invoke([](const std::string& jptr, catena::Value& value, Authorizer& authz) -> catena::exception_with_status {
+            .WillRepeatedly(::testing::Invoke([](const std::string& jptr, catena::Value& value, const IAuthorizer& authz) -> catena::exception_with_status {
                 return catena::exception_with_status("", catena::StatusCode::OK);
             }));
         static std::mutex test_mutex;
@@ -80,7 +80,7 @@ protected:
 
         // Set up default behavior for getParam
         EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
-            .WillRepeatedly(::testing::Invoke([this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+            .WillRepeatedly(::testing::Invoke([this](const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz) -> std::unique_ptr<IParam> {
                 auto param = std::make_unique<MockParam>();
                 EXPECT_CALL(*param, getDescriptor())
                     .WillRepeatedly(::testing::ReturnRef(test_descriptor));
@@ -121,8 +121,8 @@ protected:
         .WillRepeatedly(::testing::ReturnRef(empty_sub_params));
 
     // Set up default behavior for getTopLevelParams
-    EXPECT_CALL(*device, getTopLevelParams(::testing::Matcher<catena::exception_with_status&>(::testing::_), ::testing::Matcher<Authorizer&>(::testing::_)))
-        .WillRepeatedly(::testing::Invoke([](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+    EXPECT_CALL(*device, getTopLevelParams(::testing::Matcher<catena::exception_with_status&>(::testing::_), ::testing::Matcher<const IAuthorizer&>(::testing::_)))
+        .WillRepeatedly(::testing::Invoke([](catena::exception_with_status& status, const IAuthorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
             std::vector<std::unique_ptr<IParam>> params;
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return params;
@@ -320,7 +320,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_AddWildcardSubscription) {
     // Set up device to return wildcard root parameter
     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
-            [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+            [this](const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz) -> std::unique_ptr<IParam> {
                 auto param = std::make_unique<MockParam>();
                 if (fqoid == "/test/*") {
                     setupMockParam(*param, "/test", *wildcardDescriptors.at("/test").descriptor);
@@ -347,7 +347,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_ExpansionVerification) {
     // Set up device to return wildcard parameters
     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
-            [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+            [this](const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz) -> std::unique_ptr<IParam> {
                 auto param = std::make_unique<MockParam>();
                 if (fqoid == "/test/*") {
                     setupMockParam(*param, "/test", *wildcardDescriptors.at("/test").descriptor);
@@ -365,7 +365,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_ExpansionVerification) {
     // Set up device to return top-level parameters
     EXPECT_CALL(*device, getTopLevelParams(::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
-            [this](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+            [this](catena::exception_with_status& status, const IAuthorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
                 std::vector<std::unique_ptr<IParam>> params;
                 auto param = std::make_unique<MockParam>();
                 setupMockParam(*param, "/test", *wildcardDescriptors.at("/test").descriptor);
@@ -399,7 +399,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemoveWildcardSubscription) {
     // Set up device to return both wildcard and non-wildcard parameters
     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
-            [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+            [this](const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz) -> std::unique_ptr<IParam> {
                 auto param = std::make_unique<MockParam>();
                 if (fqoid == "/test/*") {
                     setupMockParam(*param, "/test", *wildcardDescriptors.at("/test").descriptor);
@@ -419,7 +419,7 @@ TEST_F(SubscriptionManagerTest, Wildcard_RemoveWildcardSubscription) {
     // Set up device to return top-level parameters
     EXPECT_CALL(*device, getTopLevelParams(::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
-            [this](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+            [this](catena::exception_with_status& status, const IAuthorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
                 std::vector<std::unique_ptr<IParam>> params;
                 
                 // Add test parameter
@@ -482,7 +482,7 @@ TEST_F(SubscriptionManagerTest, AllParams_AddAllParamsSubscription) {
     // Set up device to return all parameters 
     EXPECT_CALL(*device, getTopLevelParams(::testing::_, ::testing::_))
         .WillOnce(::testing::Invoke(
-            [&setup](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+            [&setup](catena::exception_with_status& status, const IAuthorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
                 std::vector<std::unique_ptr<IParam>> params;
                 // Create new parameters with proper authorization setup
                 auto parentParam = std::make_unique<MockParam>();
@@ -530,7 +530,7 @@ TEST_F(SubscriptionManagerTest, AllParams_MixedAuthorizationResults) {
     // Override getParam behavior for this test to return parameters with correct scopes
     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
-            [&setup, &authorized_scope, &unauthorized_scope](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+            [&setup, &authorized_scope, &unauthorized_scope](const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz) -> std::unique_ptr<IParam> {
                 auto param = std::make_unique<MockParam>();
                 // Setup parameters with correct scopes based on OID pattern
                 if (fqoid.find(setup.subOid) != std::string::npos) {
@@ -549,7 +549,7 @@ TEST_F(SubscriptionManagerTest, AllParams_MixedAuthorizationResults) {
     // Set up device to return all parameters
     EXPECT_CALL(*device, getTopLevelParams(::testing::_, ::testing::_))
         .WillOnce(::testing::Invoke(
-            [&setup, &authorized_scope, &unauthorized_scope](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+            [&setup, &authorized_scope, &unauthorized_scope](catena::exception_with_status& status, const IAuthorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
                 std::vector<std::unique_ptr<IParam>> params;
                 auto parentParam = std::make_unique<MockParam>();
                 setupMockParam(*parentParam, setup.parentOid, *setup.descriptors[setup.parentOid].descriptor);
@@ -590,7 +590,7 @@ TEST_F(SubscriptionManagerTest, AllParams_GetTopLevelParamsError) {
     // Set up device to return error from getTopLevelParams
     EXPECT_CALL(*device, getTopLevelParams(::testing::_, ::testing::_))
         .WillOnce(::testing::Invoke(
-            [](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+            [](catena::exception_with_status& status, const IAuthorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
                 status = catena::exception_with_status("Failed to get top level parameters", catena::StatusCode::INTERNAL);
                 return std::vector<std::unique_ptr<IParam>>();
             }
@@ -626,7 +626,7 @@ TEST_F(SubscriptionManagerTest, AllParams_ParameterTraversalException) {
     // Set up device to return all parameters 
     EXPECT_CALL(*device, getTopLevelParams(::testing::_, ::testing::_))
         .WillOnce(::testing::Invoke(
-            [&setup, &param_scope](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
+            [&setup, &param_scope](catena::exception_with_status& status, const IAuthorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
                 std::vector<std::unique_ptr<IParam>> params;
                 // Return both the parent and sub-parameter
                 params.push_back(std::move(setup.parentParam));
@@ -652,7 +652,7 @@ TEST_F(SubscriptionManagerTest, Array_ElementSubscription) {
     
     // Set up device to return array element parameter
     EXPECT_CALL(*device, getParam("/test/array/0/subparam", ::testing::_, ::testing::_))
-        .WillOnce(::testing::Invoke([&elementParam](const std::string&, catena::exception_with_status& status, Authorizer&) {
+        .WillOnce(::testing::Invoke([&elementParam](const std::string&, catena::exception_with_status& status, const IAuthorizer&) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(elementParam);
         }));
@@ -677,7 +677,7 @@ TEST_F(SubscriptionManagerTest, Array_BasicArraySubscriptionWithNestedElements) 
     
     // Set up device to return array elements with nested parameters
     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
-        .WillRepeatedly(::testing::Invoke([this](const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
+        .WillRepeatedly(::testing::Invoke([this](const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer&) -> std::unique_ptr<IParam> {
             auto param = std::make_unique<MockParam>();
             setupMockParam(*param, fqoid, test_descriptor, false);
             static const std::string scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
@@ -720,7 +720,7 @@ TEST_F(SubscriptionManagerTest, Array_WildcardSubscriptionWithNestedElements) {
     // Set up device to return array and subparams
     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
-            [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
+            [this](const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer&) -> std::unique_ptr<IParam> {
                 auto it = wildcardDescriptors.find(fqoid);
                 if (it != wildcardDescriptors.end()) {
                     auto param = std::make_unique<MockParam>();
@@ -761,7 +761,7 @@ TEST_F(SubscriptionManagerTest, Array_IsSubscribedCheck) {
     // Set up device to return parameters
     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
-            [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
+            [this](const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer&) -> std::unique_ptr<IParam> {
                 auto it = wildcardDescriptors.find(fqoid);
                 if (it != wildcardDescriptors.end()) {
                     auto param = std::make_unique<MockParam>();
@@ -799,7 +799,7 @@ TEST_F(SubscriptionManagerTest, Array_DuplicateSubscription) {
     // Set up device to return parameters using wildcardDescriptors
     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
         .WillRepeatedly(::testing::Invoke(
-            [this](const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
+            [this](const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer&) -> std::unique_ptr<IParam> {
                 auto it = wildcardDescriptors.find(fqoid);
                 if (it != wildcardDescriptors.end()) {
                     auto param = std::make_unique<MockParam>();

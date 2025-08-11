@@ -35,7 +35,7 @@ using catena::gRPC::ParamInfoRequest;
 
 int ParamInfoRequest::objectCounter_ = 0;
 
-ParamInfoRequest::ParamInfoRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+ParamInfoRequest::ParamInfoRequest(IServiceImpl *service, SlotMap& dms, bool ok)
     : CallData(service), dms_{dms}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);
@@ -62,206 +62,164 @@ void ParamInfoRequest::proceed(bool ok) {
             break;  
 
         case CallStatus::kProcess:
-
+            { // rc scope
             new ParamInfoRequest(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
             
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
+            std::unique_ptr<IParam> param;
+            std::shared_ptr<Authorizer> sharedAuthz;
+            Authorizer* authz;
+            
             try {
-                std::unique_ptr<IParam> param;
-                catena::exception_with_status rc{"", catena::StatusCode::OK};
-                std::shared_ptr<Authorizer> sharedAuthz;
-                Authorizer* authz;
-                IDevice* dm = nullptr;
                 // Getting device at specified slot.
                 if (dms_.contains(req_.slot())) {
-                    dm = dms_.at(req_.slot());
+                    dm_ = dms_.at(req_.slot());
                 }
                 // Making sure the device exists.
-                if (!dm) {
-                    throw catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
-                }
-
-                if (service_->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<Authorizer>(jwsToken_());
-                    authz = sharedAuthz.get();
+                if (!dm_) {
+                    rc = catena::exception_with_status("Device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
                 } else {
-                    authz = &Authorizer::kAuthzDisabled;
-                }
-
-                // Mode 1: Get all top-level parameters
-                if (req_.oid_prefix().empty() && !req_.recursive()) {
-                    std::vector<std::unique_ptr<IParam>> top_level_params;
-
-                    {
-                    std::lock_guard lg(dm->mutex());
-                    top_level_params = dm->getTopLevelParams(rc, *authz);
+                    if (service_->authorizationEnabled()) {
+                        sharedAuthz = std::make_shared<Authorizer>(jwsToken_());
+                        authz = sharedAuthz.get();
+                    } else {
+                        authz = &Authorizer::kAuthzDisabled;
                     }
-
-                    if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
-                        std::lock_guard lg(dm->mutex());                    
-                        responses_.clear();  
-                        // Process each top-level parameter
-                        for (auto& top_level_param : top_level_params) {
-                            // Add the parameter to our response list
-                            addParamToResponses(top_level_param.get(), *authz);
-                            // For array types, calculate and update array length
-                            if (top_level_param->isArrayType()) {
-                                uint32_t array_length = top_level_param->size();
-                                if (array_length > 0) {
-                                    updateArrayLengths_(top_level_param->getOid(), array_length);
-                                }
-                            }   
-                        }
-                        
-                        // Begin writing responses back to the client
-                        writer_lock_.lock();
-                        status_ = CallStatus::kWrite;
-                        writer_.Write(responses_[0], this);  //Write the first response
-                        writer_lock_.unlock();
-                        break;  
-                    }
-
-                // Mode 2: Get a specific parameter and its children
-                } else if (!req_.oid_prefix().empty()) { 
-                    {
-                    std::lock_guard lg(dm->mutex());
-                    param = dm->getParam(req_.oid_prefix(), rc, *authz);
-                    }
-
-                    if (rc.status == catena::StatusCode::OK && param) {
-                        responses_.clear();
-                        
-                        // Add the main parameter first 
-                        responses_.emplace_back();
-                        param->toProto(responses_.back(), *authz);
-                        
-                        // If the parameter is an array, update the array length
-                        if (param->isArrayType()) {
-                            uint32_t array_length = param->size();
-                            if (array_length > 0) {
-                                updateArrayLengths_(param->getOid(), array_length);
+                    
+                    // Mode 1: Get all top-level parameters
+                    if (req_.oid_prefix().empty() && !req_.recursive()) {
+                        std::vector<std::unique_ptr<IParam>> top_level_params;
+                        std::lock_guard lg(dm_->mutex());
+                        top_level_params = dm_->getTopLevelParams(rc, *authz);
+                        if (rc.status == catena::StatusCode::OK) {
+                            if (top_level_params.empty()) {
+                                rc = catena::exception_with_status("No top-level parameters found", catena::StatusCode::NOT_FOUND);
+                            } else {
+                                // Success case - process parameters               
+                                responses_.clear();  
+                                // Process each top-level parameter
+                                for (auto& top_level_param : top_level_params) {
+                                    // Add the parameter to our response list
+                                    addParamToResponses(top_level_param.get(), *authz);
+                                    // For array types, calculate and update array length
+                                    if (top_level_param->isArrayType()) {
+                                        uint32_t array_length = top_level_param->size();
+                                        if (array_length > 0) {
+                                            updateArrayLengths_(top_level_param->getOid(), array_length);
+                                        }
+                                    }   
+                                }                        
                             }
                         }
-                        
-                        // If recursive is true, collect all parameter info recursively through visitor pattern
-                        if (req_.recursive()) {
-                            ParamInfoVisitor visitor(*dm, *authz, responses_, *this);
-                            ParamVisitor::traverseParams(param.get(), req_.oid_prefix(), *dm, visitor, *authz);
+                    // Mode 2: Get ALL parameters recursively
+                    } else if (req_.oid_prefix().empty() && req_.recursive()) {
+                        std::vector<std::unique_ptr<IParam>> top_level_params;
+                        std::lock_guard lg(dm_->mutex());
+                        top_level_params = dm_->getTopLevelParams(rc, *authz);
+                        if (rc.status == catena::StatusCode::OK) {
+                            if (top_level_params.empty()) {
+                                rc = catena::exception_with_status("No top-level parameters found", catena::StatusCode::NOT_FOUND);
+                            } else {
+                                // Success case - process parameters recursively                  
+                                responses_.clear();  
+                                // Process each top-level parameter recursively
+                                for (auto& top_level_param : top_level_params) {
+                                    // Add the parameter to our response list
+                                    addParamToResponses(top_level_param.get(), *authz);
+                                    // For array types, calculate and update array length
+                                    if (top_level_param->isArrayType()) {
+                                        uint32_t array_length = top_level_param->size();
+                                        if (array_length > 0) {
+                                            updateArrayLengths_(top_level_param->getOid(), array_length);
+                                        }
+                                    }
+                                    // Collect all parameter info recursively through visitor pattern
+                                    ParamInfoVisitor visitor(*dm_, *authz, responses_, *this);
+                                    ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), *dm_, visitor, *authz);
+                                }                        
+                            }
                         }
-
-                        // Begin writing responses back to the client
-                        writer_lock_.lock();
-                        status_ = CallStatus::kWrite;
-                        writer_.Write(responses_[0], this); //Write the first response
-                        writer_lock_.unlock();
-                        break;
-                    } else {
-                        throw catena::exception_with_status(rc.what(), rc.status);
-                    }
-
-                // Mode 3: Get ALL parameters recursively
-                } else if (req_.oid_prefix().empty() && req_.recursive()) {
-                    std::vector<std::unique_ptr<IParam>> top_level_params;
-
-                    {
-                        std::lock_guard lg(dm->mutex());
-                        top_level_params = dm->getTopLevelParams(rc, *authz);
-                    }
-
-                    if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
-                        std::lock_guard lg(dm->mutex());                     
-                        responses_.clear();  
-                        // Process each top-level parameter recursively
-                        for (auto& top_level_param : top_level_params) {
-                            // Add the parameter to our response list
-                            addParamToResponses(top_level_param.get(), *authz);
-                            // For array types, calculate and update array length
-                            if (top_level_param->isArrayType()) {
-                                uint32_t array_length = top_level_param->size();
-                                if (array_length > 0) {
-                                    updateArrayLengths_(top_level_param->getOid(), array_length);
+                    // Mode 3: Get a specific parameter and its children
+                    } else if (!req_.oid_prefix().empty()) { 
+                        std::lock_guard lg(dm_->mutex());
+                        param = dm_->getParam(req_.oid_prefix(), rc, *authz);
+                        if (rc.status == catena::StatusCode::OK) {
+                            if (!param) {
+                                rc = catena::exception_with_status("Parameter not found: " + req_.oid_prefix(), catena::StatusCode::NOT_FOUND);
+                            } else {
+                                // Success case - process parameter
+                                responses_.clear();
+                                // Add the main parameter first 
+                                responses_.emplace_back();
+                                param->toProto(responses_.back(), *authz);                        
+                                // If the parameter is an array, update the array length
+                                if (param->isArrayType()) {
+                                    uint32_t array_length = param->size();
+                                    if (array_length > 0) {
+                                        updateArrayLengths_(param->getOid(), array_length);
+                                    }
+                                }                        
+                                // If recursive is true, collect all parameter info recursively through visitor pattern
+                                if (req_.recursive()) {
+                                    ParamInfoVisitor visitor(*dm_, *authz, responses_, *this);
+                                    ParamVisitor::traverseParams(param.get(), req_.oid_prefix(), *dm_, visitor, *authz);
                                 }
                             }
-                            
-                            // Collect all parameter info recursively through visitor pattern
-                            ParamInfoVisitor visitor(*dm, *authz, responses_, *this);
-                            ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), *dm, visitor, *authz);
                         }
-                        
-                        // Begin writing responses back to the client
-                        writer_lock_.lock();
-                        status_ = CallStatus::kWrite;
-                        writer_.Write(responses_[0], this);  //Write the first response
-                        writer_lock_.unlock();
-                        break;  
-                    } else {
-                        throw catena::exception_with_status(rc.what(), rc.status);
                     }
                 }
-
             } catch (catena::exception_with_status& err) {
-                status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
-                writer_.Finish(errorStatus, this);
-                break;
+                rc = catena::exception_with_status(err.what(), err.status);
+            } catch (const std::exception& e) {
+                rc = catena::exception_with_status("Failed due to unknown error in ParamInfoRequest: " + std::string(e.what()), catena::StatusCode::UNKNOWN);
             } catch (...) {
-                status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(grpc::StatusCode::INTERNAL, 
-                    "Failed due to unknown error in ParamInfoRequest");
-                writer_.Finish(errorStatus, this);
-                break;
+                rc = catena::exception_with_status("Failed due to unknown error in ParamInfoRequest", catena::StatusCode::UNKNOWN);
             }
+            
+            // If there was an error, finish the process and write the error to the client
+            if (rc.status != catena::StatusCode::OK) {
+                status_ = CallStatus::kFinish;
+                writer_.Finish(grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+                break;
+            } else{
+                // Fall through to write the first response
+                status_ = CallStatus::kWrite;
+            }
+            } // rc scope
 
         case CallStatus::kWrite:
-            try {
-                // Validate that we have responses to write
-                if (current_response_ >= responses_.size() || responses_.empty()) {
-                    status_ = CallStatus::kFinish;
-                    writer_.Finish(grpc::Status(grpc::StatusCode::INTERNAL, "No more responses"), this);
-                    break;
+            { // lock scope
+                std::lock_guard lg(dm_->mutex());
+                writer_.Write(responses_.at(current_response_), this);
+                // Check if we have more responses to write
+                if (current_response_ < responses_.size()-1) { 
+                    current_response_++;
+                    status_ = CallStatus::kWrite;
+                } else { 
+                    status_ = CallStatus::kPostWrite; 
                 }
-
-                // Ensure the current response is valid
-                if (!responses_[current_response_].has_info()) {
-                    status_ = CallStatus::kFinish;
-                    writer_.Finish(grpc::Status(grpc::StatusCode::INTERNAL, "Invalid response"), this);
-                    break;
-                }
-
-                // Write responses sequentially until we're done
-                if (current_response_ < responses_.size()) {
-                    writer_lock_.lock(); //Lock the writer for writing
-                    if (current_response_ >= responses_.size()-1) {
-                        status_ = CallStatus::kFinish; 
-                        writer_.Finish(Status::OK, this);
-                    } else {
-                        current_response_++;
-                        writer_.Write(responses_.at(current_response_), this);
-                    }
-                    writer_lock_.unlock();
-                    break;
-                }        
-            } catch (const std::exception& e) {
-                status_ = CallStatus::kFinish;
-                writer_.Finish(grpc::Status(grpc::StatusCode::INTERNAL, 
-                    "Error writing response: " + std::string(e.what())), this);
-            }
+            } // lock scope
             break;
-            
+
+        case CallStatus::kPostWrite:
+            status_ = CallStatus::kFinish;
+            writer_.Finish(Status::OK, this);
+            break;
+
         case CallStatus::kFinish:
             DEBUG_LOG << "[" << objectId_ << "] finished with status: " 
                       << (context_.IsCancelled() ? "CANCELLED" : "OK");
             service_->deregisterItem(this);
             break;
 
-        default:
+        default:  // GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             writer_.Finish(errorStatus, this);
+            // GCOVR_EXCL_STOP
     }
 }
-
-
 
 /** Updates the array_length field in the protobuf responses
  * for all responses that contain array_name in their OID

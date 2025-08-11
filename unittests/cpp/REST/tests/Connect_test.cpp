@@ -41,6 +41,7 @@
 #include "MockSubscriptionManager.h"
 #include "MockParam.h"
 #include "MockLanguagePack.h"
+#include "MockConnectionQueue.h"
 #include "CommonTestHelpers.h"
 
 // REST
@@ -64,12 +65,16 @@ protected:
     RESTConnectTest() : RESTEndpointTest() {
         EXPECT_CALL(context_, detailLevel())
             .WillRepeatedly(testing::Return(catena::Device_DetailLevel::Device_DetailLevel_FULL));
-        EXPECT_CALL(context_, getSubscriptionManager())
+        EXPECT_CALL(context_, subscriptionManager())
             .WillRepeatedly(testing::ReturnRef(subManager_));
         EXPECT_CALL(context_, fields("user_agent"))
             .WillRepeatedly(testing::ReturnRef(userAgent_));
         EXPECT_CALL(context_, hasField("force_connection"))
             .WillRepeatedly(testing::Return(false));
+        // Connection registration and deregistration
+        EXPECT_CALL(context_, connectionQueue()).WillRepeatedly(testing::ReturnRef(connectionQueue_));
+        EXPECT_CALL(connectionQueue_, registerConnection(testing::_)).WillRepeatedly(testing::Return(true)); // Should always call
+        EXPECT_CALL(connectionQueue_, deregisterConnection(testing::_)).Times(1).WillOnce(testing::Return()); // Should always call
         // dm0_ signals
         EXPECT_CALL(dm0_, getValueSetByClient()).WillRepeatedly(testing::ReturnRef(valueSetByClient0));
         EXPECT_CALL(dm0_, getValueSetByServer()).WillRepeatedly(testing::ReturnRef(valueSetByServer0));
@@ -137,6 +142,7 @@ protected:
     }
 
     MockSubscriptionManager subManager_;
+    MockConnectionQueue connectionQueue_;
     std::string userAgent_ = "test_agent";
     std::string paramOid_ = "test_param";
 
@@ -195,8 +201,8 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByServer) {
         .WillRepeatedly(testing::ReturnRef(paramOid_));
     EXPECT_CALL(*param, getScope())
         .WillRepeatedly(testing::ReturnRef(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
-    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<catena::common::Authorizer&>()))
-        .WillOnce(testing::Invoke([](catena::Value& value, catena::common::Authorizer&) {
+    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<const IAuthorizer&>()))
+        .WillOnce(testing::Invoke([](catena::Value& value, const IAuthorizer&) {
             value.set_string_value("test_value");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -228,8 +234,8 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByClient) {
         .WillRepeatedly(testing::ReturnRef(paramOid_));
     EXPECT_CALL(*param, getScope())
         .WillRepeatedly(testing::ReturnRef(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
-    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<catena::common::Authorizer&>()))
-        .WillOnce(testing::Invoke([](catena::Value& value, catena::common::Authorizer&) {
+    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<const IAuthorizer&>()))
+        .WillOnce(testing::Invoke([](catena::Value& value, const IAuthorizer&) {
             value.set_string_value("test_value");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -283,6 +289,21 @@ TEST_F(RESTConnectTest, Connect_HandlesLanguage) {
 
 // --- 3. EXCEPTION TESTS ---
 
+// Test 3.1: Test registration failure
+TEST_F(RESTConnectTest, Connect_RegisterConnectionFailure) {
+    expRc_ = catena::exception_with_status("Too many connections to service", catena::StatusCode::RESOURCE_EXHAUSTED);
+    EXPECT_CALL(connectionQueue_, registerConnection(testing::_)).WillOnce(testing::Return(false));
+
+    // Run proceed() in a separate thread since it blocks
+    std::thread proceed_thread([this]() {
+        endpoint_->proceed();
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    proceed_thread.join();
+
+    EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
+}
+
 // Test 3.2: Test std::exception handling
 TEST_F(RESTConnectTest, Connect_HandlesStdException) {
     expRc_ = catena::exception_with_status("Connection setup failed: Runtime error", catena::StatusCode::INTERNAL);
@@ -329,8 +350,8 @@ TEST_F(RESTConnectTest, Connect_HandlesWriterFailure) {
         .WillRepeatedly(testing::ReturnRef(paramOid_));
     EXPECT_CALL(*param, getScope())
         .WillRepeatedly(testing::ReturnRef(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
-    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<catena::common::Authorizer&>()))
-        .WillOnce(testing::Invoke([](catena::Value& value, catena::common::Authorizer&) {
+    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<const IAuthorizer&>()))
+        .WillOnce(testing::Invoke([](catena::Value& value, const IAuthorizer&) {
             value.set_string_value("test_value");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -351,4 +372,30 @@ TEST_F(RESTConnectTest, Connect_HandlesWriterFailure) {
 
     catena::REST::Connect::shutdownSignal_.emit();
     proceed_thread.join();
+}
+
+// Test 3.5: Testing Connect with an expired authz token.
+TEST_F(RESTConnectTest, Connect_AuthzExpired) {
+    authzEnabled_ = true;
+    jwsToken_ = getJwsToken("expired");
+
+    auto param = std::make_unique<MockParam>();
+    EXPECT_CALL(*param, getOid())
+        .WillRepeatedly(testing::ReturnRef(paramOid_));
+    EXPECT_CALL(*param, getScope())
+        .WillRepeatedly(testing::ReturnRef(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
+
+    std::string slotJson = buildSlotResponse();
+
+    // Run proceed() in a separate thread since it blocks
+    std::thread proceed_thread([this]() {
+        endpoint_->proceed();
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
+
+    dm0_.getValueSetByServer().emit(paramOid_, param.get());
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    proceed_thread.join();
+
+    EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, {slotJson}));
 }

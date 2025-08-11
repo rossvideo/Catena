@@ -100,3 +100,9 @@ extern absl::Flag<uint32_t> FLAGS_default_max_array_size;
  * @brief the default total length for string array params, default is 1024.
  */
 extern absl::Flag<uint32_t> FLAGS_default_total_array_size;
+
+/**
+ * @brief the maximum number of connections that can be made concurrently to a
+ * service.
+ */
+extern absl::Flag<uint32_t> FLAGS_max_connections;

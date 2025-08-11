@@ -32,25 +32,21 @@
 #include <controllers/ParamInfoRequest.h>
 using catena::REST::ParamInfoRequest;
 
-// common
-#include <Tags.h>
-#include <Authorization.h>
-#include <ParamVisitor.h>
-
-// type aliases
-using catena::common::ParamTag;
-using catena::common::Path;
-using catena::common::ParamVisitor;
-using catena::common::IParam;
-using catena::common::Authorizer;
-using catena::common::IDevice;
-
 // Initializes the object counter for ParamInfoRequest to 0.
 int ParamInfoRequest::objectCounter_ = 0;
 
 ParamInfoRequest::ParamInfoRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
-    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms},
+    socket_{socket}, context_{context}, dms_{dms},
     rc_("", catena::StatusCode::OK), recursive_{false} {
+    // Stream response
+    if (context.stream()) {
+        writer_ = std::make_unique<SSEWriter>(socket_, context_.origin());
+    // Unary response
+    } else {
+        writer_ = std::make_unique<SocketWriter>(socket_, context_.origin(), true);
+    }
+
+    
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
@@ -63,6 +59,8 @@ void ParamInfoRequest::proceed() {
         std::shared_ptr<Authorizer> sharedAuthz;
         Authorizer* authz;
         IDevice* dm = nullptr;
+        // Get recursive from query parameters - presence alone means true
+        recursive_ = context_.hasField("recursive");
         // Getting device at specified slot.
         if (dms_.contains(context_.slot())) {
             dm = dms_.at(context_.slot());
@@ -70,11 +68,10 @@ void ParamInfoRequest::proceed() {
         // Making sure the device exists.
         if (!dm) {
             rc_ = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
-
+        // Making sure client is not using recursive with unary response.
+        } else if (!context_.stream() && recursive_) {
+            rc_ = catena::exception_with_status("Recursive parameter info request is not supported with unary response", catena::StatusCode::INVALID_ARGUMENT);
         } else {
-            // Get recursive from query parameters - presence alone means true
-            recursive_ = context_.hasField("recursive");
-
             // Handle authorization setup
             if (context_.authorizationEnabled()) {
                 sharedAuthz = std::make_shared<Authorizer>(context_.jwsToken());
@@ -183,14 +180,13 @@ void ParamInfoRequest::proceed() {
     }
 
     // Writing responses to the client.
-    if (responses_.empty()) {
-        // If no responses, send at least one response with the error status
-        writer_.sendResponse(rc_);
-    } else {
+    if (rc_.status == catena::StatusCode::OK && !responses_.empty()) {
         for (auto& response : responses_) {
-            writer_.sendResponse(rc_, response);
+            writer_->sendResponse(rc_, response);
         }
     }
+    // Required to send errors or flush unary response.
+    writer_->sendResponse(rc_);
     
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());

@@ -64,7 +64,7 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
      */
     RESTSubscriptionsTests() : RESTEndpointTest() {
         // Default expectations for context_.
-        EXPECT_CALL(context_, getSubscriptionManager()).WillRepeatedly(testing::ReturnRef(subManager_));
+        EXPECT_CALL(context_, subscriptionManager()).WillRepeatedly(testing::ReturnRef(subManager_));
         // Default expectations for device model.
         EXPECT_CALL(dm0_, subscriptions()).WillRepeatedly(testing::Return(true));
         // Default expectations for device model 1 (do not call).
@@ -94,16 +94,16 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
 
             // Default expectations for test params_ for GET calls.
             EXPECT_CALL(dm0_, getParam(oids_[i], testing::_, testing::_)).WillRepeatedly(testing::Invoke(
-                [this, i](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
+                [this, i](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
                     // Make sure authz is correctly passed in.
-                    EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+                    EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
                     return std::move(params_[i]);
                 }));
             EXPECT_CALL(*params_.back(), getOid()).WillRepeatedly(testing::ReturnRefOfCopy(oids_[i]));
             EXPECT_CALL(*params_.back(), toProto(testing::An<catena::Param&>(), testing::_)).WillRepeatedly(testing::Invoke(
-                [this, i](catena::Param &param, catena::common::Authorizer &authz) {
+                [this, i](catena::Param &param, const IAuthorizer &authz) {
                     // Make sure authz is correctly passed in.
-                    EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+                    EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
                     param.CopyFrom(responses_[i].param());
                     return catena::exception_with_status("", catena::StatusCode::OK);
                 }));
@@ -117,9 +117,9 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
                     return true;
                 }));
             EXPECT_CALL(subManager_, addSubscription(oids_[i], testing::_, testing::_, testing::_)).WillRepeatedly(testing::Invoke(
-                [this](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc, catena::common::Authorizer& authz) {
+                [this](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc, const IAuthorizer& authz) {
                     // Make sure authz and device are correctly passed in.
-                    EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+                    EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
                     EXPECT_EQ(&dm, &dm0_);
                     this->addedOids_++;
                     return true;
@@ -202,7 +202,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_NotSupported) {
     expRc_ = catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::FAILED_PRECONDITION);
     // Setting expectations.
     EXPECT_CALL(dm0_, subscriptions()).WillOnce(testing::Return(false));
-    EXPECT_CALL(context_, getSubscriptionManager()).Times(0); // Should not call.
+    EXPECT_CALL(context_, subscriptionManager()).Times(0); // Should not call.
     // Calling proceed and testing the output
     testCall();
 }
@@ -217,7 +217,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_AuthzInalid) {
     jwsToken_ = "Invalid token";
     // Setting expectations.
     EXPECT_CALL(dm0_, getParam(testing::An<const std::string&>(), testing::_, testing::_)).Times(0);
-    EXPECT_CALL(context_, getSubscriptionManager()).Times(0); // Should not call.
+    EXPECT_CALL(context_, subscriptionManager()).Times(0); // Should not call.
     // Calling proceed and testing the output
     testCall();
 }
@@ -230,7 +230,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_BadMethod) {
     expRc_ = catena::exception_with_status("Bad method", catena::StatusCode::UNIMPLEMENTED);
     method_ = Method_NONE;
     // Setting expectations.
-    EXPECT_CALL(context_, getSubscriptionManager()).Times(0); // Should not call.
+    EXPECT_CALL(context_, subscriptionManager()).Times(0); // Should not call.
     // Calling proceed and testing the output
     testCall();
 }
@@ -242,7 +242,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_InvalidSlot) {
     initPayload(dms_.size());
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
     // Setting expectations.
-    EXPECT_CALL(context_, getSubscriptionManager()).Times(0); // Should not call.
+    EXPECT_CALL(context_, subscriptionManager()).Times(0); // Should not call.
     // Calling proceed and testing the output
     testCall();
 }
@@ -290,7 +290,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETGetParamReturnErr) {
     oids_.insert(oids_.begin(), "errParam");
     // Setting expectations.
     EXPECT_CALL(dm0_, getParam("errParam", testing::_, testing::_)).Times(1).WillOnce(testing::Invoke(
-        [](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
+        [](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             status = catena::exception_with_status("Param not found", catena::StatusCode::NOT_FOUND);
             return nullptr; // Simulating an error.
         }));
@@ -307,7 +307,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETGetParamThrowCatena) {
     oids_.insert(oids_.begin(), "errParam");
     // Setting expectations.
     EXPECT_CALL(dm0_, getParam("errParam", testing::_, testing::_)).Times(1).WillOnce(testing::Invoke(
-        [this](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
+        [this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return nullptr; // Simulating an error.
         }));
@@ -338,12 +338,12 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETToProtoReturnErr) {
     std::unique_ptr<MockParam> errParam = std::make_unique<MockParam>();
     // Setting expectations.
     EXPECT_CALL(dm0_, getParam("errParam", testing::_, testing::_)).Times(1).WillOnce(testing::Invoke(
-        [&errParam](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
+        [&errParam](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             return std::move(errParam);
         }));
     EXPECT_CALL(*errParam, getOid()).WillRepeatedly(testing::ReturnRef(oids_[0]));
     EXPECT_CALL(*errParam, toProto(testing::An<catena::Param&>(), testing::_)).WillRepeatedly(testing::Invoke(
-        [](catena::Param &param, catena::common::Authorizer &authz) {
+        [](catena::Param &param, const IAuthorizer &authz) {
             // Simulating an error in conversion.
             return catena::exception_with_status("Failed to convert to proto", catena::StatusCode::UNKNOWN);
         }));
@@ -361,12 +361,12 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETToProtoThrowCatena) {
     std::unique_ptr<MockParam> errParam = std::make_unique<MockParam>();
 
     EXPECT_CALL(dm0_, getParam("errParam", testing::_, testing::_)).Times(1).WillOnce(testing::Invoke(
-        [&errParam](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
+        [&errParam](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             return std::move(errParam);
         }));
     EXPECT_CALL(*errParam, getOid()).WillRepeatedly(testing::ReturnRef(oids_[0]));
     EXPECT_CALL(*errParam, toProto(testing::An<catena::Param&>(), testing::_)).WillRepeatedly(testing::Invoke(
-        [this](catena::Param &param, catena::common::Authorizer &authz) {
+        [this](catena::Param &param, const IAuthorizer &authz) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -384,7 +384,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETToProtoThrowUnknown) {
     std::unique_ptr<MockParam> errParam = std::make_unique<MockParam>();
     // Setting expectations.
     EXPECT_CALL(dm0_, getParam("errParam", testing::_, testing::_)).Times(1).WillOnce(testing::Invoke(
-        [&errParam](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
+        [&errParam](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             return std::move(errParam);
         }));
     EXPECT_CALL(*errParam, getOid()).WillRepeatedly(testing::ReturnRef(oids_[0]));
@@ -470,7 +470,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTReturnErr) {
             return false;
         }));
     EXPECT_CALL(subManager_, addSubscription("errParam", testing::_, testing::_, testing::_)).WillRepeatedly(testing::Invoke(
-        [this](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc, catena::common::Authorizer& authz) {
+        [this](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc, const IAuthorizer& authz) {
             // Simulating an error in adding subscription.
             rc = catena::exception_with_status("Failed to add subscription", catena::StatusCode::INVALID_ARGUMENT);
             this->addedOids_++;
@@ -522,7 +522,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowCatena) {
     initPayload(0, {"errParam", "param1", "param2"}, {});
     // Setting expectations.
     EXPECT_CALL(subManager_, addSubscription("errParam", testing::_, testing::_, testing::_)).WillRepeatedly(testing::Invoke(
-        [this](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc, catena::common::Authorizer& authz) {
+        [this](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc, const IAuthorizer& authz) {
             // Simulating an error in adding subscription.
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return false;

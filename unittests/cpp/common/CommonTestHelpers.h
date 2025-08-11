@@ -42,8 +42,56 @@
 #include "MockParamDescriptor.h"
 #include "MockDevice.h"
 
+#include "StructInfo.h"
+
 namespace catena {
 namespace common {
+
+/*
+ * A test CatenaStruct with two int fields.
+ */
+struct TestStruct1 {
+    int32_t f1;
+    int32_t f2;
+    using isCatenaStruct = void;
+};
+template<>
+struct StructInfo<TestStruct1> {
+    using Type = std::tuple<FieldInfo<int32_t, TestStruct1>, FieldInfo<int32_t, TestStruct1>>;
+    static constexpr Type fields = {{"f1", &TestStruct1::f1}, {"f2", &TestStruct1::f2}};
+};
+/*
+ * A test CatenaStruct with two float fields.
+ */
+struct TestStruct2 {
+    float f1;
+    float f2;
+    using isCatenaStruct = void;
+};
+template<>
+struct StructInfo<TestStruct2> {
+    using Type = std::tuple<FieldInfo<float, TestStruct2>, FieldInfo<float, TestStruct2>>;
+    static constexpr Type fields = {{"f1", &TestStruct2::f1}, {"f2", &TestStruct2::f2}};
+};
+/*
+ * A test CatenaStruct with two CatenaStruct fields.
+ */
+struct TestNestedStruct {
+    TestStruct1 f1;
+    TestStruct2 f2;
+    using isCatenaStruct = void;
+};
+template<>
+struct StructInfo<TestNestedStruct> {
+    using Type = std::tuple<FieldInfo<TestStruct1, TestNestedStruct>, FieldInfo<TestStruct2, TestNestedStruct>>;
+    static constexpr Type fields = {{"f1", &TestNestedStruct::f1}, {"f2", &TestNestedStruct::f2}};
+};
+/*
+ * A test CatenaStruct variant which can be a TestStruct1 or a TestStruct2.
+ */
+using TestVariantStruct = std::variant<TestStruct1, TestStruct2>;
+template<>
+inline std::array<const char*, 2> alternativeNames<TestVariantStruct>{"TestStruct1", "TestStruct2"};
 
 /**
  * @brief Helper function to set up common mock parameter expectations
@@ -63,14 +111,14 @@ inline void setupMockParam(MockParam& param, const std::string& oid, MockParamDe
         .WillRepeatedly(::testing::Return(isArray));
     EXPECT_CALL(param, getScope())
         .WillRepeatedly(::testing::ReturnRef(scope));
-    EXPECT_CALL(descriptor, isCommand())
-        .WillRepeatedly(::testing::Return(false));
-    EXPECT_CALL(descriptor, minimalSet())
-        .WillRepeatedly(::testing::Return(true));
     if (isArray) {
         EXPECT_CALL(param, size())
             .WillRepeatedly(::testing::Return(size));
     }
+    // Set default isCommand for params to be false
+    EXPECT_CALL(descriptor, isCommand())
+        .WillRepeatedly(::testing::Return(false));
+
 }
 
 /**
@@ -99,6 +147,9 @@ inline std::string getJwsToken(const std::string& scope) {
         // No scope.
         {"", 
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"},
+        // Expired
+        {"expired",        
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIiwiZXhwIjoxLCJpYXQiOjE1MTYyMzkwMjJ9.CZgrgp9fzvSNNaUp-kLB9Iyi5PdM6nYzFQoqu8M4jjA"},
         // Monitor and Operate Write Scope.
         {"st2138:mon st2138:op:w", 
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIHN0MjEzODpvcDp3IiwiaWF0IjoxNTE2MjM5MDIyfQ.Z8upjHhZWKBlZ-yUcu7FFlJPby_C4jB9Bnk-DGxoQyM"},

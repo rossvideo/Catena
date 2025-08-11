@@ -49,7 +49,7 @@
 #include <IDevice.h>
 #include <ILanguagePack.h>
 #include <utils.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 #include <SubscriptionManager.h>
 
 // Connections/REST
@@ -106,6 +106,10 @@ class Connect : public ICallData, public catena::common::Connect {
      * open connections to be shut down.
      */
     static vdk::signal<void()> shutdownSignal_;
+    /**
+     * @brief Returns true if the request was cancelled.
+     */
+    inline bool isCancelled() override;
     
   private:
     /**
@@ -119,10 +123,6 @@ class Connect : public ICallData, public catena::common::Connect {
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok;
     }
-    /**
-     * @brief Returns true if the request was cancelled.
-     */
-    inline bool isCancelled() override { return !this->socket_.is_open(); }
 
     /**
      * @brief The socket to write the response stream to.
@@ -159,15 +159,7 @@ class Connect : public ICallData, public catena::common::Connect {
      * @brief ID of the shutdown signal for the Connect object
     */
     unsigned int shutdownSignalId_;
-    /**
-     * @brief Flag to indicate when the shutdown signal has been recieved.
-     */
-    bool shutdown_;
-    
-    /**
-     * @brief ID of the Connect object
-     */
-    int objectId_;
+
     /**
      * @brief The total # of Connect objects.
      */

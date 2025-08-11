@@ -819,8 +819,13 @@
           "$comment": "@todo complete the regex",
           "type": "string"
         },
-        "^(fr|fr-BE|fr-CA|fr-CF|fr-TD|fr-KM)": {
+        "^(fr|fr-BE|fr-CA|fr-CF|fr-TD|fr-KM)$": {
           "title": "French Language Group",
+          "$comment": "@todo complete the regex",
+          "type": "string"
+        },
+        "^(ja|ja-JP)$": {
+          "title": "Japanese Language Group",
           "$comment": "@todo complete the regex",
           "type": "string"
         }
@@ -1087,7 +1092,7 @@
       "description": "The fully qualified object ID of a parameter, command, or external object.",
       "$comment": "The pattern is a series of segments starting with a solidus / and containing a valid oid, an array index or the one-past-the-end index.",
       "type": "string",
-      "pattern": "^([\\w]+([\\.]{1}[A-Za-z]+)?)$",
+      "pattern": "(?!.*\\.[^A-Za-z])(^[a-zA-Z][\\w\\.\\_\\-]{0,62}(?<!^stream)(\/(([a-zA-Z][\\w\\.\\_\\-]{0,62}(?<!\/stream))|((0|[1-9][\\d]{0,14}|[1-8][\\d]{0,15})))){0,30}($|\/\\-$)$)",
       "format": "json-pointer"
     },
     "float32": {

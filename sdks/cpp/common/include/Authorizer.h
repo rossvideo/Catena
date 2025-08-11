@@ -31,7 +31,7 @@
  */
 
 /**
- * @file Authorization.h
+ * @file Authorizer.h
  * @brief Class for handling authorization information
  * @author John R. Naylor john.naylor@rossvideo.com
  * @author John Danen
@@ -43,13 +43,11 @@
  */
 
 // common
-#include <Path.h>
-#include <Enums.h>
-#include <IParam.h>
-#include <IParamDescriptor.h>
-#include <jwt-cpp/jwt.h>
+#include <IAuthorizer.h>
 
+#include <jwt-cpp/jwt.h>
 #include <functional>
+#include <set>
 
 /**
  * @brief top level namespace for Catena. Functionality at this scope includes
@@ -66,13 +64,12 @@ namespace common {
 /**
  * @brief Class for handling authorization information
  */
-class Authorizer {
+class Authorizer : public IAuthorizer {
   public:
     /**
      * @brief The scopes of the object
      */
-    using Scopes = std::vector<std::string>;
-  public:
+    using ClientScopes = std::set<std::string>;
     /**
      * @brief Special Authorizer object that disables authorization
      */
@@ -90,23 +87,15 @@ class Authorizer {
     Authorizer(const std::string& JWSToken);
 
     /**
-     * @brief Authorizer does not have copy semantics
+     * @brief Authorizer does not have copy semantics 
      */
     Authorizer(const Authorizer&) = delete;
-
-    /**
-     * @brief Authorizer does not have copy semantics
-     */
     Authorizer& operator=(const Authorizer&) = delete;
 
     /**
      * @brief Authorizer has move semantics
      */
     Authorizer(Authorizer&&) = default;
-
-    /**
-     * @brief Authorizer has move semantics
-     */
     Authorizer& operator=(Authorizer&&) = default;
 
     /**
@@ -115,45 +104,85 @@ class Authorizer {
     virtual ~Authorizer() = default;
 
     /**
-     * @brief Check if the client has the specified authorization
-     * @return true if the client has the specified authorization
-     */
-    bool hasAuthz(const std::string& scope) const;
-
-    /**
-     * @brief Check if the client has read authorization
+     * @brief Check if the client has read authorization for a param
+     * @param param The param to check for authorization
      * @return true if the client has read authorization
      */
-    bool readAuthz(const IParam& param) const;
+    bool readAuthz(const IParam& param) const override;
 
     /**
-     * @brief Check if the client has read authorization
+     * @brief Check if the client has read authorization for a param descriptor
+     * @param pd The param descriptor to check for authorization
      * @return true if the client has read authorization
      */
-    bool readAuthz(const IParamDescriptor& pd) const;
+    bool readAuthz(const IParamDescriptor& pd) const override;
 
     /**
-     * @brief Check if the client has write authorization
-     * @return true if the client has write authorization
+     * @brief Check if the client has read authorization for a scope
+     * @param scope The scope to check for authorization
+     * @return true if the client has read authorization
      */
-    bool writeAuthz(const IParam& param) const;
+    bool readAuthz(const std::string& scope) const override;
 
     /**
-     * @brief Check if the client has write authorization
+     * @brief Check if the client has read authorization for a scope
+     * @param scope The scope to check for authorization
+     * @return true if the client has read authorization
+     */
+    bool readAuthz(const Scopes_e& scope) const override;
+
+    /**
+     * @brief Check if the client has write authorization for a param
+     * @param param The param to check for authorization
      * @return true if the client has write authorization
      */
-    bool writeAuthz(const IParamDescriptor& pd) const;
+    bool writeAuthz(const IParam& param) const override;
 
+    /**
+     * @brief Check if the client has write authorization for a param
+     * descriptor
+     * @param pd The param descriptor to check for authorization
+     * @return true if the client has write authorization
+     */
+    bool writeAuthz(const IParamDescriptor& pd) const override;
 
-  private:
+    /**
+     * @brief Check if the client has write authorization for a scope
+     * @param scope The scope to check for authorization
+     * @return true if the client has write authorization
+     */
+    bool writeAuthz(const std::string& scope) const override;
+
+    /**
+     * @brief Check if the client has read authorization for a scope
+     * @param scope The scope to check for authorization
+     * @return true if the client has read authorization
+     */
+    bool writeAuthz(const Scopes_e& scope) const override;
+    /**
+     * @brief Returns true if the JWS token is expired.
+     */
+    bool isExpired() const override;
+
+  protected:
 	  /**
      * @brief Constructor for kAuthzDisabled authorizer. 
      */
     Authorizer() : clientScopes_{{""}} {}
     /**
+     * @brief Check if the client has the specified authorization
+     * @param scope The scope to check for authorization
+     * @return true if the client has the specified authorization
+     */
+    bool hasAuthz_(const std::string& scope) const;
+    /**
+     * @brief The exp or expiry date field from the JWS token. 0 by default.
+     */
+    uint32_t exp_{0};
+    /**
      * @brief Client scopes extracted from a valid JWS token.
      */
-  	Scopes clientScopes_;
+  	ClientScopes clientScopes_;
 };
 
 } // namespace common

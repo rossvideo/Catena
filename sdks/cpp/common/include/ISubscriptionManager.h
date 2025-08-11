@@ -42,7 +42,7 @@
 #include <string>
 #include <IDevice.h>
 #include <IParam.h>
-#include <Authorization.h>
+#include <Authorizer.h>
 
 namespace catena {
 namespace common {
@@ -62,7 +62,7 @@ class ISubscriptionManager {
      * @param authz The authorizer to use for checking permissions
      * @return true if the subscription was added, false if it already existed
      */
-    virtual bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc, Authorizer& authz = Authorizer::kAuthzDisabled) = 0;
+    virtual bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc, const IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
 
     /**
      * @brief Remove an OID subscription

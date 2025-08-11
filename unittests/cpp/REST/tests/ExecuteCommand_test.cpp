@@ -161,9 +161,9 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalResponse) {
     expResponse("test_response_2");
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(fqoid_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             // Making sure the correct values were passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockCommand_);
         }));
@@ -192,9 +192,9 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalNoResponse) {
     expNoResponse();
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(fqoid_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             // Making sure the correct values were passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockCommand_);
         }));
@@ -220,9 +220,9 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalException) {
     expException("test_exception_type", "test_exception_details");
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(fqoid_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             // Making sure the correct values were passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockCommand_);
         }));
@@ -249,9 +249,9 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_RespondFalse) {
     expResponse("test_response_2");
     // Mocking kProcess functions
     EXPECT_CALL(dm0_, getCommand(fqoid_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             // Making sure the correct values were passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockCommand_);
         }));
@@ -284,9 +284,9 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamResponse) {
     endpoint_.reset(makeOne());
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(fqoid_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             // Making sure the correct values were passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockCommand_);
         }));
@@ -318,9 +318,9 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamNoResponse) {
     endpoint_.reset(makeOne());
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(fqoid_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             // Making sure the correct values were passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockCommand_);
         }));
@@ -349,9 +349,9 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamException) {
     endpoint_.reset(makeOne());
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(fqoid_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             // Making sure the correct values were passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockCommand_);
         }));
@@ -381,9 +381,9 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamRespondFalse) {
     endpoint_.reset(makeOne());
     // Mocking kProcess functions
     EXPECT_CALL(dm0_, getCommand(fqoid_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             // Making sure the correct values were passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockCommand_);
         }));
@@ -415,9 +415,9 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzValid) {
     jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(fqoid_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             // Making sure the correct values were passed in.
-            EXPECT_EQ(!authzEnabled_, &authz == &catena::common::Authorizer::kAuthzDisabled);
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return std::move(mockCommand_);
         }));
@@ -445,6 +445,31 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzInvalid) {
     jwsToken_ = "Bearer THIS SHOULD NOT PARSE";
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(testing::_, testing::_, testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 9 - ExecuteCommand fails from expired JWS token.
+ */
+TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzExpired) {
+    expRc_ = catena::exception_with_status{"", catena::StatusCode::UNAUTHENTICATED};
+    initPayload(0, "test_command", "test_value", true);
+    // Adding authorization mockToken metadata.
+    authzEnabled_ = true;
+    jwsToken_ = getJwsToken("expired");
+    // Setting expectations
+    EXPECT_CALL(dm0_, getCommand(fqoid_, ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
+            return std::move(mockCommand_);
+        }));
+    EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const catena::Value& value) {
+            return std::move(mockResponder_);
+        }));
+    EXPECT_CALL(*mockResponder_, getNext()).Times(0);
+    EXPECT_CALL(*mockResponder_, hasMore()).Times(1).WillOnce(::testing::Return(true));
     // Calling proceed and testing the output
     testCall();
 }
@@ -481,7 +506,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
     expRc_ = catena::exception_with_status("Command not found", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(testing::_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             status = catena::exception_with_status(expRc_.what(), expRc_.status);
             return nullptr;
         }));
@@ -496,7 +521,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
     expRc_ = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(testing::_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return nullptr;
         }));
@@ -523,7 +548,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
     expRc_ = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(testing::_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(mockCommand_);
         }));
@@ -542,7 +567,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
     expRc_ = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(testing::_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(mockCommand_);
         }));
@@ -562,7 +587,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(testing::_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(mockCommand_);
         }));
@@ -580,7 +605,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
     initPayload(0, "test_command", "test_value", false);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(testing::_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(mockCommand_);
         }));
@@ -606,7 +631,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
     initPayload(0, "test_command", "test_value", false);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(testing::_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, Authorizer& authz) {
+        .WillOnce(testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(mockCommand_);
         }));

@@ -41,12 +41,13 @@ std::size_t ParamDescriptor::total_length() const {
     return (total_length_ > 0) ? total_length_ : dev_.get().default_total_length();
 }
 
-void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {
+void ParamDescriptor::toProto(catena::Param &param, const IAuthorizer& authz) const {
     
     param.set_type(type_);
     param.set_read_only(read_only_);
     param.set_widget(widget_);
     param.set_minimal_set(minimal_set_);
+    param.set_precision(precision_);
 
     for (const auto& oid_alias : oid_aliases_) {
         param.add_oid_aliases(oid_alias);
@@ -75,7 +76,7 @@ void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {
 }
 
 
-void ParamDescriptor::toProto(catena::ParamInfo &paramInfo, Authorizer& authz) const {
+void ParamDescriptor::toProto(catena::ParamInfo &paramInfo, const IAuthorizer& authz) const {
     paramInfo.set_type(type_);
     paramInfo.set_oid(oid_);
     paramInfo.set_template_oid(template_oid_);
@@ -86,20 +87,22 @@ void ParamDescriptor::toProto(catena::ParamInfo &paramInfo, Authorizer& authz) c
 }
 
 const std::string& ParamDescriptor::name(const std::string& language) const { 
+    static const std::string empty;
+    const std::string* foundName = &empty;
     if (name_.displayStrings().contains(language)) {
-        return name_.displayStrings().at(language);
-    } else {
-        static const std::string empty;
-        return empty;
+        foundName = &name_.displayStrings().at(language);
     }
+    return *foundName;
 }
 
 const std::string& ParamDescriptor::getScope() const {
-    if (!scope_.empty()) {
-        return scope_;
-    } else if (parent_) {
-        return parent_->getScope();
-    } else {
-        return dev_.get().getDefaultScope();
+    const std::string* foundScope = &scope_;
+    if (foundScope->empty()) {
+        if (parent_) {
+            foundScope = &parent_->getScope();
+        } else {
+            foundScope = &dev_.get().getDefaultScope();
+        }
     }
+    return *foundScope;
 }

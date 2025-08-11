@@ -268,16 +268,14 @@ class CppGen {
       if (param.hasTypeInfo()) {
         this.writeTypeInfo(param);
       }
-
-      // initialize the param in the body file
+      // write param initial value
       if (param.hasValue()) {
-        // write param initial value
         bloc(param.initializeValue());
-        // write param descriptors
-        this.writeConstraintsAndDescriptors(param);
-        // inititalize the ParamWithValue object
-        bloc(param.initializeParamWithValue());
       }
+      // write param descriptors
+      this.writeConstraintsAndDescriptors(param);
+      // inititalize the ParamWithValue object
+      bloc(param.initializeParamWithValue());
     }
   }
 
@@ -300,9 +298,10 @@ class CppGen {
       hloc(`};`, --hindent);
 
       // add StructInfo specialization to the buffer
+      let paramNamespace = param.isArrayType() ? param.elementNamespaceType() : param.objectNamespaceType();
       ploc(`template<>`);
-      ploc(`struct catena::common::StructInfo<${param.objectNamespaceType()}> {`, pindent++);
-      ploc(`using ${param.objectType()} = ${param.objectNamespaceType()};`, pindent);
+      ploc(`struct catena::common::StructInfo<${paramNamespace}> {`, pindent++);
+      ploc(`using ${param.objectType()} = ${paramNamespace};`, pindent);
       ploc(`using Type = std::tuple<${param.getFieldInfoTypes()}>;`, pindent);
       ploc(`static constexpr Type fields = {${param.getFieldInfoInit()}};`, pindent);
       ploc(`};`, --pindent);

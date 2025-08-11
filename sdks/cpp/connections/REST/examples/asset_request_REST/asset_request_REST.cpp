@@ -62,10 +62,13 @@
 #include <signal.h>
 #include <functional>
 #include <Logger.h>
+#include <IAuthorizer.h>
 
 using namespace catena::common;
+using catena::REST::ServiceConfig;
+using catena::REST::ServiceImpl;
 
-catena::REST::CatenaServiceImpl *globalApi = nullptr;
+ServiceImpl *globalApi = nullptr;
 
 // handle SIGINT
 void handle_signal(int sig) {
@@ -79,8 +82,15 @@ void handle_signal(int sig) {
     t.join();
 }
 
-//populate assets list param with oid of asset if it doesn't already contain it
-void catenaLogoHandler(const std::string& fqoid) {
+void catenaAssetDownloadHandler(const std::string& fqoid, const IAuthorizer* authz) {
+    //insert business logic here
+    DEBUG_LOG << "Asset fqoid: " << fqoid << " get operation complete";
+}
+
+void catenaAssetUploadHandler(const std::string& fqoid, const IAuthorizer* authz) {
+    //update the assets list
+    //insert business logic here
+    //TODO: capability to check if asset exists and if has authz before uploading
     catena::exception_with_status err{"", catena::StatusCode::OK};
     std::unique_ptr<IParam> assets = dm.getParam("/assets", err);
     if (assets == nullptr) {
@@ -96,7 +106,33 @@ void catenaLogoHandler(const std::string& fqoid) {
         assetsList->get().push_back(fqoid);
         //let manager know that the assets list has changed
     }
-    DEBUG_LOG << "Asset fqoid: " << fqoid << " requested";
+
+    DEBUG_LOG << "Asset fqoid: " << fqoid << " upload operation complete";
+}
+
+void catenaAssetDeleteHandler(const std::string& fqoid, const IAuthorizer* authz) {
+    //update the assets list
+    //insert business logic here
+    //TODO: capability to check if asset exists and if has authz before deleting
+    catena::exception_with_status err{"", catena::StatusCode::OK};
+    std::unique_ptr<IParam> assets = dm.getParam("/assets", err);
+    if (assets == nullptr) {
+        throw err;
+    }
+
+    auto assetsList = dynamic_cast<ParamWithValue<std::vector<std::string>>*>(assets.get());
+    if (assetsList == nullptr) {
+        throw catena::exception_with_status("assets param is not a list", catena::StatusCode::INVALID_ARGUMENT);
+    }
+
+    if (std::find(assetsList->get().begin(), assetsList->get().end(), fqoid) != assetsList->get().end()) {
+        assetsList->get().erase(std::remove(assetsList->get().begin(), assetsList->get().end(), fqoid), assetsList->get().end());
+        //let manager know that the assets list has changed
+    } else {
+        throw catena::exception_with_status("Asset not found in the list", catena::StatusCode::NOT_FOUND);
+    }
+
+    DEBUG_LOG << "Asset fqoid: " << fqoid << " delete operation complete";
 }
 
 void RunRESTServer() {
@@ -104,27 +140,46 @@ void RunRESTServer() {
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
     signal(SIGKILL, handle_signal);
-    std::map<std::string, std::function<void(const std::string&)>> handlers;
 
     // this is the "receiving end" of the asset request example
-    dm.getAssetRequest().connect([&handlers](const std::string& fqoid) {
-        if (handlers.contains(fqoid)) {
-            handlers[fqoid](fqoid);
+    dm.getDownloadAssetRequest().connect([](const std::string& fqoid, const IAuthorizer* authz) {
+        try {
+            catenaAssetDownloadHandler(fqoid, authz);
+        } catch (catena::exception_with_status& err) {
+            DEBUG_LOG << "Asset download failed: " << err.what();
         }
     });
-    handlers["/catena_logo.png"] = catenaLogoHandler;
+
+    dm.getUploadAssetRequest().connect([](const std::string& fqoid, const IAuthorizer* authz) {
+        try {
+            catenaAssetUploadHandler(fqoid, authz);
+        } catch (catena::exception_with_status& err) {
+            DEBUG_LOG << "Asset upload failed: " << err.what();
+        }
+    });
+
+    dm.getDeleteAssetRequest().connect([](const std::string& fqoid, const IAuthorizer* authz) {
+        try {
+            catenaAssetDeleteHandler(fqoid, authz);
+        } catch (catena::exception_with_status& err) {
+            DEBUG_LOG << "Asset delete failed: " << err.what();
+        }
+    });
 
     try {
-        // Getting flags.
-        std::string EOPath = absl::GetFlag(FLAGS_static_root);
-        bool authorization = absl::GetFlag(FLAGS_authz);
-        uint16_t port = absl::GetFlag(FLAGS_port);
+        // Setting config.
+        ServiceConfig config = ServiceConfig()
+            .set_EOPath(absl::GetFlag(FLAGS_static_root))
+            .set_authz(absl::GetFlag(FLAGS_authz))
+            .set_port(absl::GetFlag(FLAGS_port))
+            .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
+            .add_dm(&dm);
         
         // Creating and running the REST service.
-        catena::REST::CatenaServiceImpl api({&dm}, EOPath, authorization, port);
+        ServiceImpl api(config);
         globalApi = &api;
         DEBUG_LOG << "API Version: " << api.version();
-        DEBUG_LOG << "REST on 0.0.0.0:" << port;
+        DEBUG_LOG << "REST on 0.0.0.0:" << config.port;
                 
         api.run();
     } catch (std::exception &why) {

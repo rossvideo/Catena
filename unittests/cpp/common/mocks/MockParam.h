@@ -47,26 +47,26 @@ namespace common {
 class MockParam : public IParam {
   public:
     MOCK_METHOD(std::unique_ptr<IParam>, copy, (), (const, override));
-    MOCK_METHOD(catena::exception_with_status, toProto, (catena::Value& dst, Authorizer& authz), (const, override));
-    MOCK_METHOD(catena::exception_with_status, fromProto, (const catena::Value& src, Authorizer& authz), (override));
-    MOCK_METHOD(catena::exception_with_status, toProto, (catena::Param& param, Authorizer& authz), (const, override));
-    MOCK_METHOD(catena::exception_with_status, toProto, (catena::ParamInfoResponse& paramInfo, Authorizer& authz), (const, override));
+    MOCK_METHOD(catena::exception_with_status, toProto, (catena::Value& dst, const IAuthorizer& authz), (const, override));
+    MOCK_METHOD(catena::exception_with_status, fromProto, (const catena::Value& src, const IAuthorizer& authz), (override));
+    MOCK_METHOD(catena::exception_with_status, toProto, (catena::Param& param, const IAuthorizer& authz), (const, override));
+    MOCK_METHOD(catena::exception_with_status, toProto, (catena::ParamInfoResponse& paramInfo, const IAuthorizer& authz), (const, override));
     MOCK_METHOD(ParamType, type, (), (const, override));
     MOCK_METHOD(const std::string&, getOid, (), (const, override));
     MOCK_METHOD(void, setOid, (const std::string& oid), (override));
     MOCK_METHOD(bool, readOnly, (), (const, override));
     MOCK_METHOD(void, readOnly, (bool flag), (override));
-    MOCK_METHOD(std::unique_ptr<IParam>, getParam, (Path& oid, Authorizer& authz, catena::exception_with_status& status), (override));
-    MOCK_METHOD(uint32_t, size, (), (const, override));
-    MOCK_METHOD(std::unique_ptr<IParam>, addBack, (Authorizer& authz, catena::exception_with_status& status), (override));
-    MOCK_METHOD(catena::exception_with_status, popBack, (Authorizer& authz), (override));
+    MOCK_METHOD(std::unique_ptr<IParam>, getParam, (Path& oid, const IAuthorizer& authz, catena::exception_with_status& status), (override));
+    MOCK_METHOD(std::size_t, size, (), (const, override));
+    MOCK_METHOD(std::unique_ptr<IParam>, addBack, (const IAuthorizer& authz, catena::exception_with_status& status), (override));
+    MOCK_METHOD(catena::exception_with_status, popBack, (const IAuthorizer& authz), (override));
     MOCK_METHOD(const IConstraint*, getConstraint, (), (const, override));
     MOCK_METHOD(const std::string&, getScope, (), (const, override));
-    MOCK_METHOD(void, defineCommand, (std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(catena::Value)> commandImpl), (override));
+    MOCK_METHOD(void, defineCommand, (std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(const catena::Value&)> commandImpl), (override));
     MOCK_METHOD(std::unique_ptr<IParamDescriptor::ICommandResponder>, executeCommand, (const catena::Value& value), (const, override));
     MOCK_METHOD(const IParamDescriptor&, getDescriptor, (), (const, override));
     MOCK_METHOD(bool, isArrayType, (), (const, override));
-    MOCK_METHOD(bool, validateSetValue, (const catena::Value& value, Path::Index index, Authorizer& authz, catena::exception_with_status& ans), (override));
+    MOCK_METHOD(bool, validateSetValue, (const catena::Value& value, Path::Index index, const IAuthorizer& authz, catena::exception_with_status& ans), (override));
     MOCK_METHOD(void, resetValidate, (), (override));
 };
 

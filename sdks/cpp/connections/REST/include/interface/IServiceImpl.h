@@ -42,6 +42,8 @@
 #include <vdk/signals.h>
 #include <IParam.h>
 #include <IDevice.h>
+#include <ISubscriptionManager.h>
+#include <rpc/IConnectionQueue.h>
 
 // boost
 #include <boost/asio.hpp>
@@ -53,18 +55,15 @@ using boost::asio::ip::tcp;
 #include <iostream>
 #include <regex>
 
+using namespace catena::common;
+
 namespace catena {
 namespace REST {
 
 /**
- * @brief Interface for the REST::CatenaServiceImpl class
+ * @brief Interface for the REST::ServiceImpl class
  */
 class IServiceImpl {
-
-  // Specifying which Device and IParam to use (defaults to catena::...)
-  using IDevice = catena::common::IDevice;
-  using IParam = catena::common::IParam;
-
   public:
     IServiceImpl() = default;
     IServiceImpl(const IServiceImpl&) = delete;
@@ -76,7 +75,7 @@ class IServiceImpl {
     /**
      * @brief Returns the API's version.
      */
-    virtual std::string version() const = 0;
+    virtual const std::string& version() const = 0;
     /**
      * @brief Starts the API.
      */
@@ -89,13 +88,20 @@ class IServiceImpl {
     /**
      * @brief Returns true if authorization is enabled.
      */
-    virtual bool authorizationEnabled() = 0;
-    
-  private:
+    virtual inline bool authorizationEnabled() const = 0;
     /**
-     * @brief Returns true if port_ is already in use.
+     * @brief Get the subscription manager
+     * @return Reference to the subscription manager
      */
-    virtual bool is_port_in_use_() const = 0;
+    virtual inline ISubscriptionManager& subscriptionManager() = 0;
+    /**
+     * @brief Returns the EOPath.
+     */
+    virtual const std::string& EOPath() = 0;
+    /**
+     * @brief Returns the ConnectionQueue object.
+     */
+    virtual IConnectionQueue& connectionQueue() = 0;
 };
 
 };  // namespace REST
