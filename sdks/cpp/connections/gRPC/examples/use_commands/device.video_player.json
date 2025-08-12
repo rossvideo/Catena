@@ -111,7 +111,14 @@
       "type":"STRING"
     },
     "eject": {
-      "type":"EMPTY"
+      "name": {
+        "display_strings": {
+          "en": "Eject",
+          "fr": "Éjecter",
+          "es": "Expulsar",
+          "ja": "取り出す"
+        }
+      }
     }
   },
   "menu_groups": {
