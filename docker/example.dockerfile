@@ -22,7 +22,7 @@ COPY --chmod=755 docker/example-entrypoint.sh /entrypoint.sh
 
 RUN mkdir -p ${WORKDIR}/logs && mkdir -p ${WORKDIR}/static
 
-ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
+ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
 
 FROM base AS grpc
 
