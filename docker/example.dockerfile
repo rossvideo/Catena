@@ -26,6 +26,8 @@ ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
 
 FROM base AS grpc
 
+ENV CATENA_PORT=6254
+
 # extra config just for gRPC
 
 FROM base AS rest

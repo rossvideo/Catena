@@ -15,9 +15,7 @@ fi
 OPTIONS=""
 
 # build up command line options based on env vars
-if [ -n "$CATENA_PORT" ]; then
-    OPTIONS="$OPTIONS --port $CATENA_PORT"
-fi
+OPTIONS="$OPTIONS --port $CATENA_PORT"
 
 if [ -n "$CATENA_CERTS" ]; then
     OPTIONS="$OPTIONS --certs $CATENA_CERTS"
