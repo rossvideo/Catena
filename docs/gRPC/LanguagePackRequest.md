@@ -6,7 +6,7 @@
 Returns a language pack from the device model.
 
 ### IN
-```
+``` proto
 /* LanguagePackRequestPayload
  * Requests a language pack from the device. */
 message LanguagePackRequestPayload {
@@ -17,7 +17,8 @@ message LanguagePackRequestPayload {
 
 ### OUT
 The requested lanuage pack as a ComponentLanguagePack.
-```
+
+``` proto
 /* A language pack. */
 message ComponentLanguagePack {
   string language = 1;            /* Language string is the language code that

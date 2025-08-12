@@ -6,7 +6,7 @@
 Sets the value of a parameter within a device model.
 
 ### IN
-```
+``` proto
 message SingleSetValuePayload {
   uint32 slot = 1;           // Uniquely identifies the device at node scope.
   SetValuePayload value = 2; // The param oid and value to apply

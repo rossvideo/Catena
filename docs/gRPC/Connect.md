@@ -6,7 +6,7 @@
 Connects a client to a service for updates on value changes.
 
 ### IN
-```
+```proto
 /* Initial handshake between client and device. */
 message ConnectPayload {
   string language = 1;                 // The language to recieve responses in.
@@ -20,7 +20,8 @@ message ConnectPayload {
 
 ### OUT
 A stream of PushUpdates from the server.
-```
+
+```proto
 /* Messages that the device can push to the client. */
 message PushUpdates {
   message PushExternalObject {
