@@ -103,6 +103,9 @@ protected:
         setupMockParam(*minimalSetParam, "/minimalSetParam", *minimalSetDescriptor, false, 0, monitorScope_);
         EXPECT_CALL(*minimalSetDescriptor, minimalSet())
             .WillRepeatedly(testing::Return(true));
+        static std::unordered_map<std::string, IParamDescriptor*> empty_sub_params;
+        EXPECT_CALL(*minimalSetDescriptor, getAllSubParams())
+            .WillRepeatedly(testing::ReturnRef(empty_sub_params));
         EXPECT_CALL(*minimalSetParam, getDescriptor())
             .WillRepeatedly(testing::ReturnRef(*minimalSetDescriptor));
         EXPECT_CALL(*minimalSetParam, toProto(testing::An<catena::Param&>(), testing::_))
@@ -111,6 +114,12 @@ protected:
                 return catena::exception_with_status("", catena::StatusCode::OK);
             }));
         device_->addItem("minimalSetParam", minimalSetParam.get());
+
+        // Set up copy expectation for the fixture parameter to avoid warnings in getTopLevelParams
+        EXPECT_CALL(*minimalSetParam, copy())
+        .WillRepeatedly(testing::Invoke([]() -> std::unique_ptr<IParam> {
+            return std::make_unique<MockParam>();
+        }));
 
         // Using the admin/monitor tokens from CommonTestHelpers.h
         std::string adminToken = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kAdmin) + ":w");
@@ -1330,16 +1339,20 @@ TEST_F(DeviceTest, GetTopLevelParams) {
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
     setupMockParam(*mockParam, "/adminParam", *mockDescriptor, false, 0, adminScope_);
+    
+    // For shallow copy, create a new mock parameter that reuses the existing descriptor
+    auto copiedMockParam = std::make_unique<MockParam>();
+    setupMockParam(*copiedMockParam, "/adminParam", *mockDescriptor, false, 0, adminScope_);
     EXPECT_CALL(*mockParam, copy())
-        .WillOnce(testing::Return(std::make_unique<MockParam>()));
+        .WillOnce(testing::Return(std::move(copiedMockParam)));
     device_->addItem("adminParam", mockParam.get());
     
-    // Test with monitor authorization (should get no params)
+    // Test with monitor authorization (should get the fixture param with monitor scope)
     catena::exception_with_status status{"", catena::StatusCode::OK};
     auto result = device_->getTopLevelParams(status, *monitorAuthz_);
     
     EXPECT_EQ(status.status, catena::StatusCode::OK);
-    EXPECT_EQ(result.size(), 0); // No params should be returned for monitor auth
+    EXPECT_EQ(result.size(), 1); // The fixture param with monitor scope should be returned
     
     // Test with admin authorization (should get the param)
     status = catena::exception_with_status{"", catena::StatusCode::OK};
@@ -2275,7 +2288,7 @@ TEST_F(DeviceTest, GetComponentSerializer) {
     EXPECT_NE(serializer5, nullptr);
 }
 
-// 7.3 - Success Case - shouldSendParam functionality
+// 7.3: Success Case - shouldSendParam functionality
 TEST_F(DeviceTest, ShouldSendParam) {
     // Create mock parameters with different characteristics
     auto mockParam = std::make_shared<MockParam>();
