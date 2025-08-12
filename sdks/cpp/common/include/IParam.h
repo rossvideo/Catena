@@ -65,7 +65,7 @@ class IParam {
     /**
      * @brief ParamType is an enum class that defines the types of parameters.
      */
-    using ParamType = catena::patterns::EnumDecorator<catena::ParamType>;
+    using ParamType = catena::patterns::EnumDecorator<st2138::ParamType>;
 
     /**
      * @brief OidAliases is a vector of strings.
@@ -97,7 +97,7 @@ class IParam {
      * @param dst The protobuf value to serialize to.
      * @param authz The authorizer object to containing the client's scopes.
      */
-    virtual catena::exception_with_status toProto(catena::Value& dst, const IAuthorizer& authz) const = 0;
+    virtual catena::exception_with_status toProto(st2138::Value& dst, const IAuthorizer& authz) const = 0;
     
     /**
      * @brief Deserializes the parameter value from protobuf.
@@ -105,21 +105,21 @@ class IParam {
      * @param authz The authorizer object to containing the client's scopes.
      * @note This method may constrain the source value and modify it.
      */
-    virtual catena::exception_with_status fromProto(const catena::Value& src, const IAuthorizer& authz) = 0;
+    virtual catena::exception_with_status fromProto(const st2138::Value& src, const IAuthorizer& authz) = 0;
 
     /**
      * @brief Serialize the parameter descriptor to a protobuf param object.
      * @param param The protobuf param to serialize to.
      * @param authz The authorizer object to containing the client's scopes.
      */
-    virtual catena::exception_with_status toProto(catena::Param& param, const IAuthorizer& authz) const = 0;
+    virtual catena::exception_with_status toProto(st2138::Param& param, const IAuthorizer& authz) const = 0;
 
     /**
      * @brief Serialize the parameter descriptor to a protobuf paramInfo object.
      * @param paramInfo The protobuf paramInfo object to serialize to.
      * @param authz The authorizer object to containing the client's scopes.
      */
-    virtual catena::exception_with_status toProto(catena::ParamInfoResponse& paramInfo, const IAuthorizer& authz) const = 0;
+    virtual catena::exception_with_status toProto(st2138::ParamInfoResponse& paramInfo, const IAuthorizer& authz) const = 0;
 
     /**
      * @brief Returns the param's protobuf value type.
@@ -205,7 +205,7 @@ class IParam {
      * @brief Defines the parameter's command implementation.
      * @param commandImpl The new command implementation.
      */
-    virtual void defineCommand(std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(const catena::Value&, const bool)> commandImpl) = 0;
+    virtual void defineCommand(std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(const st2138::Value&, const bool)> commandImpl) = 0;
 
     /**
      * @brief Exectutes the parameter's command implementation.
@@ -214,7 +214,7 @@ class IParam {
      * a CommandResponse.
      * @return The CommandResponder from the command implementation.
      */
-    virtual std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommand(const catena::Value&  value, const bool respond) const = 0;
+    virtual std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommand(const st2138::Value&  value, const bool respond) const = 0;
 
     /**
      * @brief Gets the parameter's descriptor.
@@ -236,7 +236,7 @@ class IParam {
      * @param ans Catena::exception_with_status output.
      * @returns true if valid.
      */
-    virtual bool validateSetValue(const catena::Value& value, Path::Index index, const IAuthorizer& authz, catena::exception_with_status& ans) = 0;
+    virtual bool validateSetValue(const st2138::Value& value, Path::Index index, const IAuthorizer& authz, catena::exception_with_status& ans) = 0;
     /**
      * @brief Resets any trackers that might have been changed in
      * validateSetValue().
@@ -251,19 +251,19 @@ class IParam {
 template<>
 const inline common::IParam::ParamType::FwdMap 
   common::IParam::ParamType::fwdMap_ {
-  { ParamType::UNDEFINED, "undefined" },
-  { ParamType::EMPTY, "empty"},
-  { ParamType::INT32, "int32" },
-  { ParamType::FLOAT32, "float32" },
-  { ParamType::STRING, "string" },
-  { ParamType::STRUCT, "struct" },
-  { ParamType::STRUCT_VARIANT, "struct_variant" },
-  { ParamType::INT32_ARRAY, "int32_array" },
-  { ParamType::FLOAT32_ARRAY, "float32_array" },
-  { ParamType::STRING_ARRAY, "string_array" },
-  { ParamType::BINARY, "binary" },
-  { ParamType::STRUCT_ARRAY, "struct_array" },
-  { ParamType::STRUCT_VARIANT_ARRAY, "struct_variant_array" },
-  { ParamType::DATA, "data" }
+  { st2138::ParamType::UNDEFINED, "undefined" },
+  { st2138::ParamType::EMPTY, "empty"},
+  { st2138::ParamType::INT32, "int32" },
+  { st2138::ParamType::FLOAT32, "float32" },
+  { st2138::ParamType::STRING, "string" },
+  { st2138::ParamType::STRUCT, "struct" },
+  { st2138::ParamType::STRUCT_VARIANT, "struct_variant" },
+  { st2138::ParamType::INT32_ARRAY, "int32_array" },
+  { st2138::ParamType::FLOAT32_ARRAY, "float32_array" },
+  { st2138::ParamType::STRING_ARRAY, "string_array" },
+  { st2138::ParamType::BINARY, "binary" },
+  { st2138::ParamType::STRUCT_ARRAY, "struct_array" },
+  { st2138::ParamType::STRUCT_VARIANT_ARRAY, "struct_variant_array" },
+  { st2138::ParamType::DATA, "data" }
 };
 }  // namespace catena

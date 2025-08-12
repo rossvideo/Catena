@@ -107,7 +107,7 @@ TEST_F(MenuTest, Menu_ErrCreate) {
  */
 TEST_F(MenuTest, Menu_ToProto) {
     // Calling toProto
-    ::catena::Menu protoMenu;
+    ::st2138::Menu protoMenu;
     menu_->toProto(protoMenu);
     // Checking results
     for (auto& [lang, name] : names_) {

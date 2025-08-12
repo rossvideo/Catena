@@ -100,7 +100,7 @@ class RESTTest {
                       const std::unordered_map<std::string, std::string>& fields,
                       const std::string& jwsToken,
                       const std::string& origin,
-                      catena::Device_DetailLevel detailLevel,
+                      st2138::Device_DetailLevel detailLevel,
                       const std::string& language,
                       const std::string& jsonBody) {
         // Compiling path:
@@ -132,9 +132,9 @@ class RESTTest {
                    "Origin: " + origin + "\n"
                    "User-Agent: test_agent\n"
                    "Authorization: Bearer " + jwsToken + " \n";
-        if (detailLevel != catena::Device_DetailLevel_UNSET) {
+        if (detailLevel != st2138::Device_DetailLevel_UNSET) {
             request += "Detail-Level: "
-                    + catena::patterns::EnumDecorator<catena::Device_DetailLevel>().getForwardMap().at(detailLevel)
+                    + catena::patterns::EnumDecorator<st2138::Device_DetailLevel>().getForwardMap().at(detailLevel)
                     + " \n";
         }
         if (!language.empty()) {

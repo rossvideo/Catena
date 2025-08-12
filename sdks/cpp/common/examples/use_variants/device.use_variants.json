@@ -113,37 +113,43 @@
         "struct_variant_array_values": {
           "struct_variants": [
             {
-              "struct_variant_type": "cartesian",
-              "value": {
-                "struct_value": {
-                  "fields": {
-                    "x": {"int32_value": 1},
-                    "y": {"int32_value": 2},
-                    "z": {"int32_value": 3}
+              "struct_variant_value": {
+                "struct_variant_type": "cartesian",
+                "value": {
+                  "struct_value": {
+                    "fields": {
+                      "x": {"int32_value": 1},
+                      "y": {"int32_value": 2},
+                      "z": {"int32_value": 3}
+                    }
                   }
                 }
               }
             },
             {
-              "struct_variant_type": "cylindrical",
-              "value": {
-                "struct_value": {
-                  "fields": {
-                    "rho": {"int32_value": 1},
-                    "phi": {"int32_value": 90},
-                    "z": {"int32_value": 3}
+              "struct_variant_value": {
+                "struct_variant_type": "cylindrical",
+                "value": {
+                  "struct_value": {
+                    "fields": {
+                      "rho": {"int32_value": 1},
+                      "phi": {"int32_value": 90},
+                      "z": {"int32_value": 3}
+                    }
                   }
                 }
               }
             },
             {
-              "struct_variant_type": "spherical",
-              "value": {
-                "struct_value": {
-                  "fields": {
-                    "r": {"int32_value": 1},
-                    "theta": {"int32_value": 90},
-                    "phi": {"int32_value": 180}
+              "struct_variant_value": {
+                "struct_variant_type": "spherical",
+                "value": {
+                  "struct_value": {
+                    "fields": {
+                      "r": {"int32_value": 1},
+                      "theta": {"int32_value": 90},
+                      "phi": {"int32_value": 180}
+                    }
                   }
                 }
               }

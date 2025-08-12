@@ -94,11 +94,11 @@ class Connect : public CallData, public catena::common::Connect {
      * - A flag indicating whether the client wants to force a connection to
      * the service.
      */
-    catena::ConnectPayload req_;
+    st2138::ConnectPayload req_;
     /**
      * @brief The RPC response writer for writing back to the client.
      */
-    ServerAsyncWriter<catena::PushUpdates> writer_;
+    ServerAsyncWriter<st2138::PushUpdates> writer_;
     /**
      * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */

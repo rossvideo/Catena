@@ -98,7 +98,7 @@ class AssetRequest : public ICallData {
      * @param encoding The PayloadEncoding enum value to convert.
      * @return The string representation of the PayloadEncoding.
      */
-    static std::string payloadEncodingToString(catena::DataPayload::PayloadEncoding encoding);
+    static std::string payloadEncodingToString(st2138::DataPayload::PayloadEncoding encoding);
 
     /**
      * @brief The Asset endpoint's main process.

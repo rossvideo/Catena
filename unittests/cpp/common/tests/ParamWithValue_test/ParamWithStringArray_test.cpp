@@ -47,7 +47,7 @@ class ParamWithStringArrayTest : public ParamTest<StringArray> {
     /*
      * Returns the value type of the parameter we are testing with.
      */
-    catena::ParamType type() const override { return catena::ParamType::STRING_ARRAY; }
+    st2138::ParamType type() const override { return st2138::ParamType::STRING_ARRAY; }
 
     StringArray value_{"Hello", "World"};
 };
@@ -196,7 +196,7 @@ TEST_F(ParamWithStringArrayTest, PopBack_Error) {
  */
 TEST_F(ParamWithStringArrayTest, ParamToProto) {
     StringArrayParam param(value_, pd_);
-    catena::Param outParam;
+    st2138::Param outParam;
     rc_ = param.toProto(outParam, authz_);
     // Checking results.
     ASSERT_TRUE(outParam.value().has_string_array_values());
@@ -213,7 +213,7 @@ TEST_F(ParamWithStringArrayTest, ParamToProto) {
 TEST_F(ParamWithStringArrayTest, FromProto) {
     StringArray val{};
     StringArrayParam param(val, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     for (std::string& i : value_) {
         protoValue.mutable_string_array_values()->add_strings(i);
     }
@@ -227,7 +227,7 @@ TEST_F(ParamWithStringArrayTest, FromProto) {
  */
 TEST_F(ParamWithStringArrayTest, ValidateSetValue) {
     StringArrayParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     for (std::string i : {"Hello", "World", "!"}) {
         protoValue.mutable_string_array_values()->add_strings(i);
     }
@@ -239,7 +239,7 @@ TEST_F(ParamWithStringArrayTest, ValidateSetValue) {
  */
 TEST_F(ParamWithStringArrayTest, ValidateSetValue_SingleElement) {
     StringArrayParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     protoValue.set_string_value("Goodbye");
     // Setting existing value.
     EXPECT_TRUE(param.validateSetValue(protoValue, 0, authz_, rc_))
@@ -258,7 +258,7 @@ TEST_F(ParamWithStringArrayTest, ValidateSetValue_SingleElement) {
  */
 TEST_F(ParamWithStringArrayTest, ValidateSetValue_Error) {
     StringArrayParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     for (std::string i : {"Hello", "World", "Goodbye"}) {
         protoValue.mutable_string_array_values()->add_strings(i);
     }
@@ -293,7 +293,7 @@ TEST_F(ParamWithStringArrayTest, ValidateSetValue_Error) {
  */
 TEST_F(ParamWithStringArrayTest, ValidateSetValue_SingleElementError) {
     StringArrayParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     protoValue.set_string_value("!");
     EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_))
         << "ValidateSetValue should return false when index is not defined for single element setValue.";
@@ -315,7 +315,7 @@ TEST_F(ParamWithStringArrayTest, ValidateSetValue_SingleElementError) {
     EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
         << "ValidateSetValue should return OUT_OF_RANGE when appending would exceed the max length.";
     // Type mismatch / validFromProto error
-    catena::Value wrongTypeValue;
+    st2138::Value wrongTypeValue;
     wrongTypeValue.set_int32_value(48);
     EXPECT_FALSE(param.validateSetValue(wrongTypeValue, 0, authz_, rc_))
         << "ValidateSetValue should return false when validFromProto returns false.";

@@ -94,7 +94,7 @@ class MenuGroup : public IMenuGroup {
      * @param menuGroup The protobuf message.
      * @param shallow If true, only the top-level info is copied.
      */
-    void toProto(::catena::MenuGroup& menuGroup, bool shallow) const override;
+    void toProto(::st2138::MenuGroup& menuGroup, bool shallow) const override;
 
     /**
      * @brief Add a menu to the group using move semantics.

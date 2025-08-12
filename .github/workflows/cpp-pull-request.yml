@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
 
       - name: Run Trivy vulnerability scanner in repo mode
         uses: aquasecurity/trivy-action@0.28.0
@@ -54,9 +56,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
       
       - name: build
         run: |
+          echo "Building OpenAPI"
+          cd ${GITHUB_WORKSPACE}/smpte
+          sudo ./install-tooling.sh
+          ./build-openapi.sh
+          echo "Done building OpenAPI"
+
+          echo "Building Catena"
           mkdir -p ~/Catena/${BUILD_TARGET}
           cmake -G Ninja \
             -DBUILD_DOC=OFF \
@@ -69,7 +80,7 @@ jobs:
             -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
             -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
             -B ~/Catena/${BUILD_TARGET} \
-            -S ./sdks/cpp
+            -S ${GITHUB_WORKSPACE}/sdks/cpp
           cd ~/Catena/${BUILD_TARGET}
           ninja -C ~/Catena/${BUILD_TARGET}
 
@@ -189,6 +200,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
@@ -198,6 +211,12 @@ jobs:
       
       - name: build
         run: |
+          echo "Building OpenAPI"
+          cd ${GITHUB_WORKSPACE}/smpte
+          sudo ./install-tooling.sh
+          ./build-openapi.sh
+          echo "Done building OpenAPI"
+
           mkdir -p ~/Catena/${BUILD_TARGET}
           cmake -G Ninja \
             -DUNIT_TESTING=OFF \
@@ -208,7 +227,7 @@ jobs:
             -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
             -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
             -B ~/Catena/${BUILD_TARGET} \
-            -S ./sdks/cpp
+            -S ${GITHUB_WORKSPACE}/sdks/cpp
           cd ~/Catena/${BUILD_TARGET}
           ninja -C ~/Catena/${BUILD_TARGET}
 

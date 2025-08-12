@@ -129,7 +129,7 @@ void ExecuteCommand::proceed(bool ok) {
         case CallStatus::kWrite:
             { // rc scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
-            catena::CommandResponse res{};
+            st2138::CommandResponse res{};
             do {
                 if (!responder_) {
                     // It should not be possible to get here

@@ -89,7 +89,7 @@ class RESTAssetRequestTests : public RESTEndpointTest {
         jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor) + ":w");
     }
 
-    void getAssetRequestTest(catena::DataPayload::PayloadEncoding compression, const std::string& fqoid, const std::string& payload,
+    void getAssetRequestTest(st2138::DataPayload::PayloadEncoding compression, const std::string& fqoid, const std::string& payload,
                 const std::string& digest, int fileSize, const std::string& authz) {
         //establish expectations
         method_ = Method_GET;
@@ -115,7 +115,7 @@ class RESTAssetRequestTests : public RESTEndpointTest {
 
         //parse into fields using json parser
         //check socketreader/socketwriter for json helper function if this doesnt work
-        catena::ExternalObjectPayload obj;
+        st2138::ExternalObjectPayload obj;
         auto status = google::protobuf::util::JsonStringToMessage(absl::string_view(response), &obj);
         ASSERT_TRUE(status.ok()) << "Failed to parse JSON response: " << status.ToString();
         
@@ -128,7 +128,7 @@ class RESTAssetRequestTests : public RESTEndpointTest {
         EXPECT_EQ(catena::to_base64(obj.payload().payload()), payload);
     }
 
-    void postAssetRequestTest(catena::DataPayload::PayloadEncoding compression, const std::string& fqoid,
+    void postAssetRequestTest(st2138::DataPayload::PayloadEncoding compression, const std::string& fqoid,
                 const std::string& payload, std::string authz) {
         //establish expectations
         method_ = Method_POST;
@@ -230,7 +230,7 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_NoAuthz) {
  * TEST 1.3 - GET asset request for a file that exists with authorization.
  */
 TEST_F(RESTAssetRequestTests, GETAssetRequest_Exists) {
-    getAssetRequestTest(catena::DataPayload::UNCOMPRESSED, "/" + fileName_, payloadUncompressed_,
+    getAssetRequestTest(st2138::DataPayload::UNCOMPRESSED, "/" + fileName_, payloadUncompressed_,
             digestUncompressed_, 1088, Scopes().getForwardMap().at(Scopes_e::kMonitor));
 }
 
@@ -238,7 +238,7 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_Exists) {
  * TEST 1.4 - GET asset request for a Gzip encoded file that exists with authorization.
  */
 TEST_F(RESTAssetRequestTests, GETAssetRequest_ExistsGzip) {
-    getAssetRequestTest(catena::DataPayload::GZIP, "/" + fileName_, payloadGzip_,
+    getAssetRequestTest(st2138::DataPayload::GZIP, "/" + fileName_, payloadGzip_,
             digestGzip_, 1026, Scopes().getForwardMap().at(Scopes_e::kMonitor));
 }
 
@@ -246,7 +246,7 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_ExistsGzip) {
  * TEST 1.5 - GET asset request for a Deflate encoded file that exists with authorization.
  */
 TEST_F(RESTAssetRequestTests, GETAssetRequest_ExistsDeflate) {
-    getAssetRequestTest(catena::DataPayload::DEFLATE, "/" + fileName_, payloadDeflate_,
+    getAssetRequestTest(st2138::DataPayload::DEFLATE, "/" + fileName_, payloadDeflate_,
             digestDeflate_, 1014, Scopes().getForwardMap().at(Scopes_e::kMonitor));
 }
 
@@ -290,7 +290,7 @@ TEST_F(RESTAssetRequestTests, POSTAssetRequest_Exists) {
  * TEST 2.3 - POST asset request for a file that does not exist with authorization.
  */
 TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNE) {
-    postAssetRequestTest(catena::DataPayload::UNCOMPRESSED, "/catena_logo_up.png", payloadUncompressed_,
+    postAssetRequestTest(st2138::DataPayload::UNCOMPRESSED, "/catena_logo_up.png", payloadUncompressed_,
                 Scopes().getForwardMap().at(Scopes_e::kOperate) + ":w");
     ASSERT_TRUE(std::filesystem::remove(downloadFolder_ + fqoid_));
 }
@@ -299,7 +299,7 @@ TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNE) {
  * TEST 2.4 - POST asset request for a Gzip encoded file that does not exist with authorization.
  */
 TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNE_Gzip) {
-    postAssetRequestTest(catena::DataPayload::GZIP, "/catena_logo_up.png", payloadGzip_,
+    postAssetRequestTest(st2138::DataPayload::GZIP, "/catena_logo_up.png", payloadGzip_,
                 Scopes().getForwardMap().at(Scopes_e::kOperate) + ":w");
     ASSERT_TRUE(std::filesystem::remove(downloadFolder_ + fqoid_));
 }
@@ -308,7 +308,7 @@ TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNE_Gzip) {
  * TEST 2.5 - POST asset request for a Deflate encoded file that does not exist with authorization.
  */
 TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNE_Deflate) {
-    postAssetRequestTest(catena::DataPayload::DEFLATE, "/catena_logo_up.png", payloadDeflate_,
+    postAssetRequestTest(st2138::DataPayload::DEFLATE, "/catena_logo_up.png", payloadDeflate_,
                 Scopes().getForwardMap().at(Scopes_e::kOperate) + ":w");
     ASSERT_TRUE(std::filesystem::remove(downloadFolder_ + fqoid_));
 }
@@ -361,7 +361,7 @@ TEST_F(RESTAssetRequestTests, PUTAssetRequest_Exists) {
     jsonBody_ = catena::from_base64(payloadUncompressed_);
     jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kOperate) + ":w");
 
-    std::string compressionString = AssetRequest::payloadEncodingToString(catena::DataPayload::UNCOMPRESSED);
+    std::string compressionString = AssetRequest::payloadEncodingToString(st2138::DataPayload::UNCOMPRESSED);
     ON_CALL(context_, hasField("compression")).WillByDefault(::testing::Return(true));
     ON_CALL(context_, fields("compression")).WillByDefault(::testing::ReturnRef(compressionString));
 
@@ -525,7 +525,7 @@ TEST_F(RESTAssetRequestTests, ExtractPayloadDNE) {
     //establish expectations
     fqoid_ = "/empty_file";
 
-    std::string compressionString = AssetRequest::payloadEncodingToString(catena::DataPayload::UNCOMPRESSED);
+    std::string compressionString = AssetRequest::payloadEncodingToString(st2138::DataPayload::UNCOMPRESSED);
     ON_CALL(context_, hasField("compression")).WillByDefault(::testing::Return(true));
     ON_CALL(context_, fields("compression")).WillByDefault(::testing::ReturnRef(compressionString));
 

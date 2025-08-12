@@ -97,7 +97,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
                 initAuthz_(jwsToken_(), service_->authorizationEnabled());
                 if (service_->connectionQueue().registerConnection(this)) {
                     // Connecting to each device in dms_.
-                    catena::PushUpdates populatedSlots;
+                    st2138::PushUpdates populatedSlots;
                     for (auto [slot, dm] : dms_) {
                         if (dm) {
                             // Waiting for a value set by server to be sent to execute code.

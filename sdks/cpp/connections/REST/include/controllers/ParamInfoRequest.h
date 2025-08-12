@@ -180,7 +180,7 @@ class ParamInfoRequest : public ICallData {
     /**
      * @brief The vector of ParamInfoResponse objects.
      */
-    std::vector<catena::ParamInfoResponse> responses_;
+    std::vector<st2138::ParamInfoResponse> responses_;
         
     /**
      * @brief Visitor class for collecting parameter info
@@ -195,7 +195,7 @@ class ParamInfoRequest : public ICallData {
              * @param request The request
              */
             ParamInfoVisitor(catena::common::IDevice& device, catena::common::Authorizer& authz,
-                                std::vector<catena::ParamInfoResponse>& responses,
+                                std::vector<st2138::ParamInfoResponse>& responses,
                                 ParamInfoRequest& request)
                 : device_(device), authz_(authz), responses_(responses), request_(request) {}
 
@@ -228,7 +228,7 @@ class ParamInfoRequest : public ICallData {
             /**
              * @brief The vector of responses within the visitor
              */
-            std::vector<catena::ParamInfoResponse>& responses_;
+            std::vector<st2138::ParamInfoResponse>& responses_;
 
             /**
              * @brief The request payload within the visitor

@@ -71,13 +71,13 @@ namespace common {
  * @tparam cType The constraint's named type, must be one of INT_CHOICE,
  * STRING_CHOICE, or STRING_STRING_CHOICE.
  */
-template <typename T, catena::Constraint::ConstraintType cType>
+template <typename T, st2138::Constraint::ConstraintType cType>
 class ChoiceConstraint : public catena::common::IConstraint {
   public:
     static_assert(
-        (std::is_same<T, int32_t>::value && cType == catena::Constraint::INT_CHOICE) ||
-        (std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_CHOICE) ||
-        (std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_STRING_CHOICE),
+        (std::is_same<T, int32_t>::value && cType == st2138::Constraint::INT_CHOICE) ||
+        (std::is_same<T, std::string>::value && cType == st2138::Constraint::STRING_CHOICE) ||
+        (std::is_same<T, std::string>::value && cType == st2138::Constraint::STRING_STRING_CHOICE),
         "ChoiceConstraint: Invalid combination of T and constraintType"
     );
 
@@ -126,7 +126,7 @@ class ChoiceConstraint : public catena::common::IConstraint {
      * @param src the value to check
      * @return true if the value satisfies the constraint
      */
-    bool satisfied(const catena::Value& src) const override;
+    bool satisfied(const st2138::Value& src) const override;
 
     /**
      * @brief Applies constraint to src and returns the constrained value.
@@ -138,15 +138,15 @@ class ChoiceConstraint : public catena::common::IConstraint {
      *
      * Calling this will always return an empty value.
      */
-    catena::Value apply(const catena::Value& src) const override {
-        return catena::Value();
+    st2138::Value apply(const st2138::Value& src) const override {
+        return st2138::Value();
     }
 
     /**
      * @brief Serialize the constraint to a protobuf message.
      * @param constraint The protobuf message to populate.
      */
-    void toProto(catena::Constraint& constraint) const override;
+    void toProto(st2138::Constraint& constraint) const override;
 
     /**
      * @brief This constraint is not a range constraint so return false

@@ -77,7 +77,7 @@ void GetPopulatedSlots::proceed( bool ok) {
                 // Used to serve other clients while processing.
                 new GetPopulatedSlots(service_, dms_, ok);
                 context_.AsyncNotifyWhenDone(this);
-                catena::SlotList ans;
+                st2138::SlotList ans;
                 for (auto [slot, dm] : dms_) {
                     // If a devices exists at the slot, add it to the response.
                     if (dm) {

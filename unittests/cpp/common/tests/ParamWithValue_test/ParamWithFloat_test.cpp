@@ -46,7 +46,7 @@ class ParamWithFloatTest : public ParamTest<float> {
     /*
      * Returns the value type of the parameter we are testing with.
      */
-    catena::ParamType type() const override { return catena::ParamType::FLOAT32; }
+    st2138::ParamType type() const override { return st2138::ParamType::FLOAT32; }
 
     float value_{16};
 };
@@ -106,7 +106,7 @@ TEST_F(ParamWithFloatTest, PopBack) {
  */
 TEST_F(ParamWithFloatTest, ParamToProto) {
     FloatParam param(value_, pd_);
-    catena::Param protoParam;
+    st2138::Param protoParam;
     rc_ = param.toProto(protoParam, authz_);
     // Checking results.
     ASSERT_TRUE(protoParam.value().has_float32_value());
@@ -119,7 +119,7 @@ TEST_F(ParamWithFloatTest, ParamToProto) {
  */
 TEST_F(ParamWithFloatTest, FromProto) {
     FloatParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     protoValue.set_float32_value(32);
     rc_ = param.fromProto(protoValue, authz_);
     // Checking results.
@@ -131,7 +131,7 @@ TEST_F(ParamWithFloatTest, FromProto) {
  */
 TEST_F(ParamWithFloatTest, ValidateSetValue) {
     FloatParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     protoValue.set_float32_value(16);
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_));
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
@@ -144,7 +144,7 @@ TEST_F(ParamWithFloatTest, ValidateSetValue) {
  */
 TEST_F(ParamWithFloatTest, ValidateSetValue_Error) {
     FloatParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     protoValue.set_float32_value(16);
     // Defined index w non-array
     EXPECT_FALSE(param.validateSetValue(protoValue, 1, authz_, rc_))

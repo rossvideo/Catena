@@ -47,7 +47,7 @@ namespace common {
 class MockDeviceSerializer : public IDevice::IDeviceSerializer {
   public:
     MOCK_METHOD(bool, hasMore, (), (const, override));
-    MOCK_METHOD(DeviceComponent, getNext, (), (override));
+    MOCK_METHOD(st2138::DeviceComponent, getNext, (), (override));
 };
 
 }; // namespace common

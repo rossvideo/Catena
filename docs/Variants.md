@@ -2,7 +2,7 @@
 ![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
 :::
 
-> Defined in `interface/param.proto`
+> Defined in `smpte/interface/proto/param.proto`
 
 # Variant Parameters
 

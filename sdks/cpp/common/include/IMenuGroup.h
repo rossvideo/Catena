@@ -67,7 +67,7 @@ class IMenuGroup {
      * @brief Serialize a menu group to a protobuf message.
      * @param menuGroup The protobuf message.
      */
-    virtual void toProto(catena::MenuGroup& menuGroup, bool shallow) const = 0;
+    virtual void toProto(st2138::MenuGroup& menuGroup, bool shallow) const = 0;
 
     /**
      * @brief Adds a menu to the group using move semantics.

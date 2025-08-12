@@ -58,7 +58,7 @@ class RESTLanguagesTests : public RESTEndpointTest {
     
     RESTLanguagesTests() : RESTEndpointTest() {
         // Default expectations for the device model 1 (should not be called).
-        EXPECT_CALL(dm1_, toProto(testing::An<catena::LanguageList&>())).Times(0);
+        EXPECT_CALL(dm1_, toProto(testing::An<st2138::LanguageList&>())).Times(0);
     }
     /*
      * Creates a Languages handler object.
@@ -79,7 +79,7 @@ class RESTLanguagesTests : public RESTEndpointTest {
     }
 
     // Expected values
-    catena::LanguageList expVal_;
+    st2138::LanguageList expVal_;
 };
 
 /* 
@@ -96,7 +96,7 @@ TEST_F(RESTLanguagesTests, Languages_BadMethod) {
     expRc_ = catena::exception_with_status("Bad method", catena::StatusCode::UNIMPLEMENTED);
     method_ = Method_NONE;
     // Setting expectations
-    EXPECT_CALL(dm0_, toProto(testing::An<catena::LanguageList&>())).Times(0);
+    EXPECT_CALL(dm0_, toProto(testing::An<st2138::LanguageList&>())).Times(0);
     // Calling proceed and testing the output
     testCall();
 }
@@ -108,7 +108,7 @@ TEST_F(RESTLanguagesTests, Languages_InvalidSlot) {
     slot_ = dms_.size();
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
     // Setting expectations
-    EXPECT_CALL(dm0_, toProto(testing::An<catena::LanguageList&>())).Times(0);
+    EXPECT_CALL(dm0_, toProto(testing::An<st2138::LanguageList&>())).Times(0);
     // Calling proceed and testing the output
     testCall();
 }
@@ -125,8 +125,8 @@ TEST_F(RESTLanguagesTests, Languages_GETNormal) {
     expVal_.add_languages("fr");
     expVal_.add_languages("es");
     // Setting expectations
-    EXPECT_CALL(dm0_, toProto(testing::An<catena::LanguageList&>())).Times(1)
-        .WillOnce(testing::Invoke([this](catena::LanguageList& list) {
+    EXPECT_CALL(dm0_, toProto(testing::An<st2138::LanguageList&>())).Times(1)
+        .WillOnce(testing::Invoke([this](st2138::LanguageList& list) {
             list.CopyFrom(expVal_);
         }));
     // Calling proceed and testing the output
@@ -139,7 +139,7 @@ TEST_F(RESTLanguagesTests, Languages_GETNormal) {
 TEST_F(RESTLanguagesTests, Languages_GETEmpty) {
     expRc_ = catena::exception_with_status("No languages found", catena::StatusCode::NOT_FOUND);
     // Setting expectations
-    EXPECT_CALL(dm0_, toProto(testing::An<catena::LanguageList&>())).Times(1)
+    EXPECT_CALL(dm0_, toProto(testing::An<st2138::LanguageList&>())).Times(1)
         .WillOnce(testing::Return());
     // Calling proceed and testing the output
     testCall();
@@ -151,8 +151,8 @@ TEST_F(RESTLanguagesTests, Languages_GETEmpty) {
 TEST_F(RESTLanguagesTests, Languages_GETErrThrowCat) {
     expRc_ = catena::exception_with_status("Device not found", catena::StatusCode::NOT_FOUND);
     // Setting expectations
-    EXPECT_CALL(dm0_, toProto(testing::An<catena::LanguageList&>())).Times(1)
-        .WillOnce(testing::Invoke([this](catena::LanguageList& list) {
+    EXPECT_CALL(dm0_, toProto(testing::An<st2138::LanguageList&>())).Times(1)
+        .WillOnce(testing::Invoke([this](st2138::LanguageList& list) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
     // Calling proceed and testing the output
@@ -165,7 +165,7 @@ TEST_F(RESTLanguagesTests, Languages_GETErrThrowCat) {
 TEST_F(RESTLanguagesTests, Languages_GETErrThrowStd) {
     expRc_ = catena::exception_with_status("Standard error", catena::StatusCode::INTERNAL);
     // Setting expectations
-    EXPECT_CALL(dm0_, toProto(testing::An<catena::LanguageList&>())).Times(1)
+    EXPECT_CALL(dm0_, toProto(testing::An<st2138::LanguageList&>())).Times(1)
         .WillOnce(testing::Throw(std::runtime_error(expRc_.what())));
     // Calling proceed and testing the output
     testCall();
@@ -177,7 +177,7 @@ TEST_F(RESTLanguagesTests, Languages_GETErrThrowStd) {
 TEST_F(RESTLanguagesTests, Languages_GetErrThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations
-    EXPECT_CALL(dm0_, toProto(testing::An<catena::LanguageList&>())).Times(1)
+    EXPECT_CALL(dm0_, toProto(testing::An<st2138::LanguageList&>())).Times(1)
         .WillOnce(testing::Throw(0));
     // Calling proceed and testing the output
     testCall();

@@ -58,7 +58,7 @@ namespace gRPC {
 /**
  * @brief Interface class for the gRPC API Implementation.
  */
-class IServiceImpl : public catena::CatenaService::AsyncService {
+class IServiceImpl : public st2138::CatenaService::AsyncService {
   public:
     /**
      * @brief Creates the CallData objects for each gRPC command.

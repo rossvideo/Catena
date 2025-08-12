@@ -73,7 +73,7 @@ int main (int argc, char** argv) {
         LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
-    catena::Value value;
+    st2138::Value value;
     ip->toProto(value, Authorizer::kAuthzDisabled);
     DEBUG_LOG << "audio_deck: " << value.DebugString();
 

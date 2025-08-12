@@ -72,7 +72,7 @@ class ISocketWriter {
      * @param msg The protobuf message to write as JSON.
      * @param err The error status of the response.
      */
-    virtual void sendResponse(const catena::exception_with_status& err, const google::protobuf::Message& msg = catena::Empty()) = 0;
+    virtual void sendResponse(const catena::exception_with_status& err, const google::protobuf::Message& msg = st2138::Empty()) = 0;
 };
  
 }; // Namespace REST

@@ -106,7 +106,7 @@
       "value": { "float32_value": 0.0 },
       "constraint": {
         "type": "FLOAT_RANGE",
-        "float_range": {
+        "float32_range": {
           "min_value": -2.0,
           "max_value": 2.0,
           "step": 0.25
@@ -244,7 +244,8 @@
           }},
           "param_oids": ["/state"]
         }
-      }
+      },
+      "order": 0
     },
     "config": {
       "name": { "display_strings": {
@@ -264,7 +265,8 @@
           "param_oids": [],
           "command_oids": ["/play", "/pause", "/stop", "/rewind", "/fast_forward", "/load", "/eject"]
         }
-      }
+      },
+      "order": 1
     }
   }
 }

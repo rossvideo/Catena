@@ -63,6 +63,7 @@ function valueTypeArg(type) {
     STRUCT: `struct_value`,
     STRUCT_ARRAY: `struct_array_values`,
     STRUCT_VARIANT: `struct_variant_value`,
+    STRUCT_VARIANTS: `struct_variants`,
     STRUCT_VARIANT_ARRAY: `struct_variant_array_values`,
   };
 
@@ -94,7 +95,7 @@ class Descriptor {
   constructor(desc, oid, constraint, parentOid = "", isCommand) {
     const args = {
       type: () => { 
-        return `catena::ParamType::${desc.type}`;
+        return `st2138::ParamType::${desc.type}`;
       },
       oid_aliases: () => {
         return `{${(desc.oid_aliases ?? []).map((alias) => `{"${alias}"}`).join(", ")}}`;
@@ -485,9 +486,16 @@ class Param {
         return `${paramDef.objectNamespaceType()}${this.valueInitializer(typeValue.value, subParam.type, paramDef)}`;
       },
 
+      struct_variants: (typeValue) => {
+        if (typeValue.struct_variant_value == undefined) {
+          throw new Error("struct_variants must have struct_variant_type");
+        }
+        return `{${valueObject.struct_variant_value(typeValue.struct_variant_value)}}`;
+      },
+
       struct_variant_array_values: (typeValue) => {
         let arr = typeValue.struct_variants;
-        let mappedArr = arr.map(valueObject.struct_variant_value);
+        let mappedArr = arr.map(valueObject.struct_variants);
         return `${mappedArr.join(",")}`;
       },
 

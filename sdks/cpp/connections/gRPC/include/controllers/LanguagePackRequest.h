@@ -78,11 +78,11 @@ class LanguagePackRequest : public CallData {
      * 
      * - The id of the language pack to retrieve (e.g. "es" for Global Spanish).
      */
-    catena::LanguagePackRequestPayload req_;
+    st2138::LanguagePackRequestPayload req_;
     /**
      * @brief The RPC response writer for writing back to the client.
      */
-    grpc::ServerAsyncResponseWriter<::catena::DeviceComponent_ComponentLanguagePack> responder_;
+    grpc::ServerAsyncResponseWriter<::st2138::DeviceComponent_ComponentLanguagePack> responder_;
     /**
      * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */

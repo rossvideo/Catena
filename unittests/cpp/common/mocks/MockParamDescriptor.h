@@ -46,7 +46,7 @@ namespace common {
 // Mock implementation for the IParamDescriptor class.
 class MockParamDescriptor : public IParamDescriptor {
   public:
-    MOCK_METHOD(ParamType, type, (), (const, override));
+    MOCK_METHOD(st2138::ParamType, type, (), (const, override));
     MOCK_METHOD(const PolyglotText::DisplayStrings&, name, (), (const, override));
     MOCK_METHOD((const std::string&), getOid, (), (const, override));
     MOCK_METHOD(void, setOid, (const std::string& oid), (override));
@@ -60,15 +60,15 @@ class MockParamDescriptor : public IParamDescriptor {
     MOCK_METHOD(uint32_t, max_length, (), (const, override));
     MOCK_METHOD(std::size_t, total_length, (), (const, override));
     MOCK_METHOD(uint32_t, precision, (), (const, override));
-    MOCK_METHOD(void, toProto, (catena::Param& param, const IAuthorizer& authz), (const, override));
-    MOCK_METHOD(void, toProto, (catena::ParamInfo& paramInfo, const IAuthorizer& authz), (const, override));
+    MOCK_METHOD(void, toProto, (st2138::Param& param, const IAuthorizer& authz), (const, override));
+    MOCK_METHOD(void, toProto, (st2138::ParamInfo& paramInfo, const IAuthorizer& authz), (const, override));
     MOCK_METHOD(const std::string&, name, (const std::string& language), (const, override));
     MOCK_METHOD(void, addSubParam, (const std::string& oid, IParamDescriptor* item), (override));
     MOCK_METHOD(IParamDescriptor&, getSubParam, (const std::string& oid), (const, override));
     MOCK_METHOD((const std::unordered_map<std::string, IParamDescriptor*>&), getAllSubParams, (), (const, override));
     MOCK_METHOD(const catena::common::IConstraint*, getConstraint, (), (const, override));
-    MOCK_METHOD(void, defineCommand, (std::function<std::unique_ptr<ICommandResponder>(const catena::Value&, const bool respond)> commandImpl), (override));
-    MOCK_METHOD(std::unique_ptr<ICommandResponder>, executeCommand, (const catena::Value& value, const bool respond), (override));
+    MOCK_METHOD(void, defineCommand, (std::function<std::unique_ptr<ICommandResponder>(const st2138::Value&, const bool respond)> commandImpl), (override));
+    MOCK_METHOD(std::unique_ptr<ICommandResponder>, executeCommand, (const st2138::Value& value, const bool respond), (override));
     MOCK_METHOD(bool, isCommand, (), (const, override));
 };
 

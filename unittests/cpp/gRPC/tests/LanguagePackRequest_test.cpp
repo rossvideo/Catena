@@ -90,10 +90,10 @@ class gRPCLanguagePackRequestTests : public GRPCTest {
     }
 
     // in/out val
-    catena::LanguagePackRequestPayload inVal_;
-    catena::DeviceComponent_ComponentLanguagePack outVal_;
+    st2138::LanguagePackRequestPayload inVal_;
+    st2138::DeviceComponent_ComponentLanguagePack outVal_;
     // Expected variables
-    catena::DeviceComponent_ComponentLanguagePack expVal_;
+    st2138::DeviceComponent_ComponentLanguagePack expVal_;
 };
 
 /*
@@ -118,7 +118,7 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_Normal) {
     (*languagePack->mutable_words())["greeting"] = "Hello";
     // Setting expecteations
     EXPECT_CALL(dm0_, getLanguagePack(inVal_.language(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack){
+        .WillOnce(::testing::Invoke([this](const std::string &languageId, st2138::DeviceComponent_ComponentLanguagePack &pack){
             pack.CopyFrom(expVal_);
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
@@ -147,7 +147,7 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrReturn) {
     expRc_ = catena::exception_with_status("Language pack en not found", catena::StatusCode::NOT_FOUND);    
     // Setting expecteations
     EXPECT_CALL(dm0_, getLanguagePack(inVal_.language(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack){
+        .WillOnce(::testing::Invoke([this](const std::string &languageId, st2138::DeviceComponent_ComponentLanguagePack &pack){
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
     EXPECT_CALL(dm1_, getLanguagePack(::testing::_, ::testing::_)).Times(0);
@@ -162,7 +162,7 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrThrow) {
     expRc_ = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
     // Setting expecteations
     EXPECT_CALL(dm0_, getLanguagePack(inVal_.language(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack){
+        .WillOnce(::testing::Invoke([this](const std::string &languageId, st2138::DeviceComponent_ComponentLanguagePack &pack){
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));

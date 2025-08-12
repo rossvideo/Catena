@@ -69,7 +69,7 @@ protected:
         
         // Set up default mock behavior for device
         EXPECT_CALL(*device, getValue(::testing::_, ::testing::_, ::testing::_))
-            .WillRepeatedly(::testing::Invoke([](const std::string& jptr, catena::Value& value, const IAuthorizer& authz) -> catena::exception_with_status {
+            .WillRepeatedly(::testing::Invoke([](const std::string& jptr, st2138::Value& value, const IAuthorizer& authz) -> catena::exception_with_status {
                 return catena::exception_with_status("", catena::StatusCode::OK);
             }));
         static std::mutex test_mutex;
