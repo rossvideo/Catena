@@ -22,24 +22,18 @@
          </button>
       </tr>
       <tr>
-         <button buttontype="push" height="75" left="600" name="load" top="0" width="235">
-            <task tasktype="ogscript">
-               params.executeCommand("load", null, null);
-            </task>
-         </button>
-      </tr>
-      <tr>
          <button buttontype="push" height="75" left="600" name="debug_counter" top="0" width="235">
             <task tasktype="ogscript">
             function debugMessage(success, result, commandId, args){
-               ogscript.debug(success);
-               ogscript.debug(result);
-               ogscript.debug(commandId);
-               ogscript.debug(args);
+               ogscript.debug("\nCommand Id: " + commandId
+               + "\nInput Argument: " + args["count value"]
+               + "\nSuccess: " + success
+               + "\nResult: " + result[0]);
             }
-            params.executeCommand("debug_counter", {"int32_value": 5}, debugMessage);
+            params.executeCommand("debug_counter", {"count value": params.getValue("count_to", 0)}, debugMessage);
             </task>
          </button>
+         <param oid="count_to" showlabel="false" fill="both" height="75" left="835" top="0" width="235"/>
       </tr>
    </table>
 </abs>

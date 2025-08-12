@@ -205,8 +205,14 @@ void defineCommands() {
             if (!respond) co_return response;
 
             if (!value.has_int32_value()) {
-                response.mutable_exception()->set_type("Invalid Command");
+                response.mutable_exception()->set_type("Invalid Argument");
                 response.mutable_exception()->set_details("debug_counter command requires an int32 value");
+                co_return response;
+            }
+
+            if (value.int32_value() <= 0) {
+                response.mutable_exception()->set_type("Invalid Argument");
+                response.mutable_exception()->set_details("debug_counter command requires a positive int32 value");
                 co_return response;
             }
 

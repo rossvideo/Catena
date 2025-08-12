@@ -57,6 +57,17 @@
         }
       },
       "read_only": true
+    },
+    "count_to": {
+      "type": "INT32",
+      "value": { "int32_value": 5 },
+      "name": { "display_strings": {
+        "en": "Count To",
+        "fr": "Compter jusqu'à",
+        "es": "Contar hasta",
+        "ja": "カウントする"
+      }},
+      "widget": "default"
     }
   },
   "commands": {
