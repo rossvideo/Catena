@@ -18,6 +18,7 @@
       "type": "STRING",
       "read_only": true,
       "minimal_set": true,
+      "widget": "text-display",
       "value": { "string_value": "stopped" },
       "constraint": {
         "type": "STRING_STRING_CHOICE",
