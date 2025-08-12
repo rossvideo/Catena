@@ -111,7 +111,7 @@ class Connect : public IConnect {
     Connect(SlotMap& dms, ISubscriptionManager& subscriptionManager) : 
         dms_{dms}, 
         subscriptionManager_{subscriptionManager},
-        detailLevel_{catena::Device_DetailLevel_UNSET} {}
+        detailLevel_{st2138::Device_DetailLevel_UNSET} {}
     /**
      * @brief Connect does not have copy semantics
      */
@@ -141,24 +141,24 @@ class Connect : public IConnect {
             // Send a push update if the client has read authorization.
             } else if (authz_->readAuthz(*p)) {
                 // Map of detail levels to their update logic
-                const std::unordered_map<catena::Device_DetailLevel, std::function<bool()>> detailLevelMap {
-                    {catena::Device_DetailLevel_FULL, [&]() {
+                const std::unordered_map<st2138::Device_DetailLevel, std::function<bool()>> detailLevelMap {
+                    {st2138::Device_DetailLevel_FULL, [&]() {
                         // Always update for FULL detail level
                         return true;
                     }},
-                    {catena::Device_DetailLevel_MINIMAL, [&]() {
+                    {st2138::Device_DetailLevel_MINIMAL, [&]() {
                         // For MINIMAL, only update if it's in the minimal set
                         return p->getDescriptor().minimalSet();
                     }},
-                    {catena::Device_DetailLevel_SUBSCRIPTIONS, [&]() {
+                    {st2138::Device_DetailLevel_SUBSCRIPTIONS, [&]() {
                         // Update if OID is subscribed or in minimal set
                         return p->getDescriptor().minimalSet() || (dms_[slot] && subscriptionManager_.isSubscribed(oid, *dms_[slot]));
                     }},
-                    {catena::Device_DetailLevel_COMMANDS, [&]() {
+                    {st2138::Device_DetailLevel_COMMANDS, [&]() {
                         // For COMMANDS, only update command parameters
                         return p->getDescriptor().isCommand();
                     }},
-                    {catena::Device_DetailLevel_NONE, [&]() {
+                    {st2138::Device_DetailLevel_NONE, [&]() {
                         // Don't send any updates
                         return false;
                     }}
@@ -168,7 +168,7 @@ class Connect : public IConnect {
                     res_.Clear();
                     res_.set_slot(slot);
                     res_.mutable_value()->set_oid(oid);    
-                    catena::Value* value = res_.mutable_value()->mutable_value();
+                    st2138::Value* value = res_.mutable_value()->mutable_value();
             
                     catena::exception_with_status rc{"", catena::StatusCode::OK};
                     rc = p->toProto(*value, *authz_);
@@ -273,7 +273,7 @@ class Connect : public IConnect {
     /**
      * @brief A map of slots to ptrs to their corresponding device.
      */
-    SlotMap& dms_;
+    catena::common::SlotMap& dms_;
     /**
      * @brief Bool indicating whether the child has an update to write.
      */
@@ -285,7 +285,7 @@ class Connect : public IConnect {
     /**
      * @brief Server response (updates).
      */
-    catena::PushUpdates res_;
+    st2138::PushUpdates res_;
     /**
      * @brief The language of the response.
      */
@@ -293,7 +293,7 @@ class Connect : public IConnect {
     /**
      * @brief The detail level of the response.
      */
-    catena::Device_DetailLevel detailLevel_;
+    st2138::Device_DetailLevel detailLevel_;
     /**
      * @brief The subscription manager.
      */

@@ -16,7 +16,7 @@ void Languages::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
 
     // Getting language list from the device.
-    catena::LanguageList ans;
+    st2138::LanguageList ans;
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
         IDevice* dm = nullptr;

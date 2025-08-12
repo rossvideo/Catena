@@ -47,7 +47,7 @@ class ParamWithFloatArrayTest : public ParamTest<FloatArray> {
     /*
      * Returns the value type of the parameter we are testing with.
      */
-    catena::ParamType type() const override { return catena::ParamType::FLOAT32_ARRAY; }
+    st2138::ParamType type() const override { return st2138::ParamType::FLOAT32_ARRAY; }
 
     FloatArray value_{0, 1, 2};
 };
@@ -196,7 +196,7 @@ TEST_F(ParamWithFloatArrayTest, PopBack_Error) {
  */
 TEST_F(ParamWithFloatArrayTest, ParamToProto) {
     FloatArrayParam param(value_, pd_);
-    catena::Param outParam;
+    st2138::Param outParam;
     rc_ = param.toProto(outParam, authz_);
     // Checking results.
     ASSERT_TRUE(outParam.value().has_float32_array_values());
@@ -213,7 +213,7 @@ TEST_F(ParamWithFloatArrayTest, ParamToProto) {
 TEST_F(ParamWithFloatArrayTest, FromProto) {
     FloatArray val{};
     FloatArrayParam param(val, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     for (float i : value_) {
         protoValue.mutable_float32_array_values()->add_floats(i);
     }
@@ -227,7 +227,7 @@ TEST_F(ParamWithFloatArrayTest, FromProto) {
  */
 TEST_F(ParamWithFloatArrayTest, ValidateSetValue) {
     FloatArrayParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     for (float i : {0, 1, 2}) {
         protoValue.mutable_float32_array_values()->add_floats(i);
     }
@@ -239,7 +239,7 @@ TEST_F(ParamWithFloatArrayTest, ValidateSetValue) {
  */
 TEST_F(ParamWithFloatArrayTest, ValidateSetValue_SingleElement) {
     FloatArrayParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     protoValue.set_float32_value(3);
     // Setting existing value.
     EXPECT_TRUE(param.validateSetValue(protoValue, 0, authz_, rc_))
@@ -256,7 +256,7 @@ TEST_F(ParamWithFloatArrayTest, ValidateSetValue_SingleElement) {
  */
 TEST_F(ParamWithFloatArrayTest, ValidateSetValue_Error) {
     FloatArrayParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     for (float i : {0, 1, 2, 3}) {
         protoValue.mutable_float32_array_values()->add_floats(i);
     }
@@ -283,7 +283,7 @@ TEST_F(ParamWithFloatArrayTest, ValidateSetValue_Error) {
  */
 TEST_F(ParamWithFloatArrayTest, ValidateSetValue_SingleElementError) {
     FloatArrayParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     protoValue.set_float32_value(3);
     // Index is not defined for single element setValue.
     EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_))
@@ -296,7 +296,7 @@ TEST_F(ParamWithFloatArrayTest, ValidateSetValue_SingleElementError) {
     EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
         << "ValidateSetValue should return OUT_OF_RANGE when index is out of the bounds of the array.";
     // Type mismatch / validFromProto error
-    catena::Value wrongTypeValue;
+    st2138::Value wrongTypeValue;
     wrongTypeValue.set_int32_value(48);
     EXPECT_FALSE(param.validateSetValue(wrongTypeValue, 0, authz_, rc_))
         << "ValidateSetValue should return false when validFromProto returns false.";

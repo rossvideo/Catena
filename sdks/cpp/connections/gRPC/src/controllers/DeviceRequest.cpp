@@ -102,10 +102,10 @@ void DeviceRequest::proceed(bool ok) {
                     }
 
                     // req_.detail_level defaults to FULL
-                    catena::Device_DetailLevel dl = req_.detail_level();
+                    st2138::Device_DetailLevel dl = req_.detail_level();
 
                     // Getting subscribed oids if dl == SUBSCRIPTIONS.
-                    if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
+                    if (dl == st2138::Device_DetailLevel_SUBSCRIPTIONS) {
                         // Add new subscriptions to both the manager and our tracking list
                         for (const auto& oid : req_.subscribed_oids()) {
                             // Supressing errors.
@@ -144,7 +144,7 @@ void DeviceRequest::proceed(bool ok) {
         case CallStatus::kWrite:
             { // rc scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
-            catena::DeviceComponent component{};
+            st2138::DeviceComponent component{};
 
             if (!serializer_) {
                 // It should not be possible to get here

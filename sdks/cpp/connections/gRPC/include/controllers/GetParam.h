@@ -83,11 +83,11 @@ class GetParam : public CallData {
      * 
      * - The OID of the param to get.
      */
-    catena::GetParamPayload req_;
+    st2138::GetParamPayload req_;
     /**
      * @brief The RPC response writer for writing back to the client.
      */
-    ServerAsyncResponseWriter<catena::DeviceComponent_ComponentParam> writer_;
+    ServerAsyncResponseWriter<st2138::DeviceComponent_ComponentParam> writer_;
     /**
      * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */

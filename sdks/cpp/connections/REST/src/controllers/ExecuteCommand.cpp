@@ -25,7 +25,7 @@ void ExecuteCommand::proceed() {
     bool respond = context_.hasField("respond");
 
     try {
-        catena::Value val;
+        st2138::Value val;
         IDevice* dm = nullptr;
 
         // Getting device at specified slot.
@@ -72,7 +72,7 @@ void ExecuteCommand::proceed() {
                             break;
                         // If not expired, get the next response.
                         } else {
-                            catena::CommandResponse res = responder->getNext();
+                            st2138::CommandResponse res = responder->getNext();
                             if (respond) {
                                 writer_->sendResponse(rc, res);
                             }

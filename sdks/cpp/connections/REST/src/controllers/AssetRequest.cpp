@@ -16,11 +16,11 @@ AssetRequest::AssetRequest(tcp::socket& socket, ISocketReader& context, SlotMap&
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
 
-std::string AssetRequest::payloadEncodingToString(catena::DataPayload::PayloadEncoding encoding) {
+std::string AssetRequest::payloadEncodingToString(st2138::DataPayload::PayloadEncoding encoding) {
     switch (encoding) {
-        case catena::DataPayload::DEFLATE:
+        case st2138::DataPayload::DEFLATE:
             return "DEFLATE";
-        case catena::DataPayload::GZIP:
+        case st2138::DataPayload::GZIP:
             return "GZIP";
         default:
             return "UNCOMPRESSED";
@@ -132,7 +132,7 @@ void AssetRequest::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
 
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    catena::ExternalObjectPayload obj;
+    st2138::ExternalObjectPayload obj;
     std::shared_ptr<catena::common::Authorizer> sharedAuthz;
     catena::common::Authorizer* authz;
 
@@ -191,17 +191,17 @@ void AssetRequest::proceed() {
             // Set the payload encoding and compress the data accordingly
             if (context_.fields("compression") == "GZIP") {
                 DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] using GZIP compression";
-                obj.mutable_payload()->set_payload_encoding(catena::DataPayload::GZIP);
+                obj.mutable_payload()->set_payload_encoding(st2138::DataPayload::GZIP);
                 gzip_compress(file_data);
 
             } else if (context_.fields("compression") == "DEFLATE") {
                 DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] using DEFLATE compression";
-                obj.mutable_payload()->set_payload_encoding(catena::DataPayload::DEFLATE);
+                obj.mutable_payload()->set_payload_encoding(st2138::DataPayload::DEFLATE);
                 deflate_compress(file_data);
 
             } else {
                 DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] using UNCOMPRESSED compression";
-                obj.mutable_payload()->set_payload_encoding(catena::DataPayload::UNCOMPRESSED);
+                obj.mutable_payload()->set_payload_encoding(st2138::DataPayload::UNCOMPRESSED);
             }
 
             obj.mutable_payload()->set_payload(file_data.data(), file_data.size());

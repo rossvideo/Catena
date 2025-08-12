@@ -122,7 +122,7 @@ TEST(RangeConstraintTest, RangeConstraint_IntCreate) {
  */
 TEST(RangeConstraintTest, RangeConstraint_IntSatisfied) {
     RangeConstraint<int32_t> constraint(0, 10, 2, "test_oid", false);
-    catena::Value src;
+    st2138::Value src;
     // Valid
     src.set_int32_value(4);
     EXPECT_TRUE(constraint.satisfied(src)) << "Constraint should be satisfied by valid value 4";
@@ -142,25 +142,25 @@ TEST(RangeConstraintTest, RangeConstraint_IntSatisfied) {
 TEST(RangeConstraintTest, RangeConstraint_IntApply) {
     int32_t min = 0, max = 10, step = 2;
     RangeConstraint<int32_t> constraint(min, max, step, "test_oid", false);
-    catena::Value src;
+    st2138::Value src;
     { // Valid - do nothing
     src.set_int32_value(4);
-    catena::Value res = constraint.apply(src);
+    st2138::Value res = constraint.apply(src);
     EXPECT_EQ(res.int32_value(), src.int32_value()) << "Constraint should not change valid value 4";
     }
     { // Invalid - < min
     src.set_int32_value(-2);
-    catena::Value res = constraint.apply(src);
+    st2138::Value res = constraint.apply(src);
     EXPECT_EQ(res.int32_value(), min) << "Constraint should set invalid value -2 to min 0";
     }
     { // Invalid - > max
     src.set_int32_value(12);
-    catena::Value res = constraint.apply(src);
+    st2138::Value res = constraint.apply(src);
     EXPECT_EQ(res.int32_value(), max) << "Constraint should set invalid value 12 to max 10";
     }
     { // Invalid - % step != 0
     src.set_int32_value(3);
-    catena::Value res = constraint.apply(src);
+    st2138::Value res = constraint.apply(src);
     EXPECT_EQ(res.int32_value(), 2) << "Constraint should set invalid value 3 to 2";
     }
 }
@@ -170,10 +170,10 @@ TEST(RangeConstraintTest, RangeConstraint_IntApply) {
 TEST(RangeConstraintTest, RangeConstraint_IntToProto) {
     int32_t min = 0, max = 10, step = 2, displayMin = 2, displayMax = 8;
     RangeConstraint<int32_t> constraint(min, max, step, displayMin, displayMax, "test_oid", false);
-    catena::Constraint protoConstraint;
+    st2138::Constraint protoConstraint;
     constraint.toProto(protoConstraint);
     // Comparing results
-    EXPECT_EQ(protoConstraint.type(), catena::Constraint::INT_RANGE);
+    EXPECT_EQ(protoConstraint.type(), st2138::Constraint::INT_RANGE);
     EXPECT_EQ(protoConstraint.int32_range().min_value(), min);
     EXPECT_EQ(protoConstraint.int32_range().max_value(), max);
     EXPECT_EQ(protoConstraint.int32_range().step(), step);
@@ -232,7 +232,7 @@ TEST(RangeConstraintTest, RangeConstraint_FloatCreate) {
  */
 TEST(RangeConstraintTest, RangeConstraint_FloatSatisfied) {
     RangeConstraint<float> constraint(0.5, 9.5, 0.5, "test_oid", false);
-    catena::Value src;
+    st2138::Value src;
     // Valid
     src.set_float32_value(4.5);
     EXPECT_TRUE(constraint.satisfied(src)) << "Constraint should be satisfied by valid value 4.5";
@@ -252,25 +252,25 @@ TEST(RangeConstraintTest, RangeConstraint_FloatSatisfied) {
 TEST(RangeConstraintTest, RangeConstraint_FloatApply) {
     float min = 0.5, max = 9.5, step = 0.5;
     RangeConstraint<float> constraint(min, max, step, "test_oid", false);
-    catena::Value src;
+    st2138::Value src;
     { // Valid - do nothing
     src.set_float32_value(4.5);
-    catena::Value res = constraint.apply(src);
+    st2138::Value res = constraint.apply(src);
     EXPECT_EQ(res.float32_value(), src.float32_value()) << "Constraint should not change valid value 4.5";
     }
     { // Invalid - < min
     src.set_float32_value(0);
-    catena::Value res = constraint.apply(src);
+    st2138::Value res = constraint.apply(src);
     EXPECT_EQ(res.float32_value(), min) << "Constraint should set invalid value 0 to min 0.5";
     }
     { // Invalid - > max
     src.set_float32_value(10);
-    catena::Value res = constraint.apply(src);
+    st2138::Value res = constraint.apply(src);
     EXPECT_EQ(res.float32_value(), max) << "Constraint should set invalid value 10 to max 9.5";
     }
     { // Invalid - % step != 0
     src.set_float32_value(3.25);
-    catena::Value res = constraint.apply(src);
+    st2138::Value res = constraint.apply(src);
     EXPECT_EQ(res.float32_value(), 3) << "Constraint should set invalid value 3.25 to 3";
     }
 }
@@ -280,10 +280,10 @@ TEST(RangeConstraintTest, RangeConstraint_FloatApply) {
 TEST(RangeConstraintTest, RangeConstraint_FloatToProto) {
     int32_t min = 0.5, max = 9.5, step = 0.5, displayMin = 2, displayMax = 8;
     RangeConstraint<float> constraint(min, max, step, displayMin, displayMax, "test_oid", false);
-    catena::Constraint protoConstraint;
+    st2138::Constraint protoConstraint;
     constraint.toProto(protoConstraint);
     // Comparing results
-    EXPECT_EQ(protoConstraint.type(), catena::Constraint::FLOAT_RANGE);
+    EXPECT_EQ(protoConstraint.type(), st2138::Constraint::FLOAT_RANGE);
     EXPECT_EQ(protoConstraint.float_range().min_value(), min);
     EXPECT_EQ(protoConstraint.float_range().max_value(), max);
     EXPECT_EQ(protoConstraint.float_range().step(), step);

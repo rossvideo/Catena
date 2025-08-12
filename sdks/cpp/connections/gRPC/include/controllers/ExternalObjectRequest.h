@@ -87,11 +87,11 @@ class ExternalObjectRequest : public CallData {
      * 
      * - The encoding to return the object in.
      */
-    catena::ExternalObjectRequestPayload req_;
+    st2138::ExternalObjectRequestPayload req_;
     /**
      * @brief The RPC response writer for writing back to the client. 
      */
-    ServerAsyncWriter<catena::ExternalObjectPayload> writer_;
+    ServerAsyncWriter<st2138::ExternalObjectPayload> writer_;
     /**
      * @brief The RPC's state (kCreate, kProcess, kFinish, etc.)
      */

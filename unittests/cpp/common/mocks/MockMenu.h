@@ -46,7 +46,7 @@ namespace common {
 // Mock implementation for the IMenu class.
 class MockMenu : public IMenu {
   public:
-    MOCK_METHOD(void, toProto, (catena::Menu& menu), (const, override));
+    MOCK_METHOD(void, toProto, (st2138::Menu& menu), (const, override));
 };
 
 } // namespace common

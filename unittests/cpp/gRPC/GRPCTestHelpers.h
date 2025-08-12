@@ -58,7 +58,7 @@ namespace test {
 
 struct ParamInfo {
     std::string oid;
-    catena::ParamType type;
+    st2138::ParamType type;
     uint32_t array_length = 0;
     catena::StatusCode status = catena::StatusCode::OK;  // Default to OK
 };
@@ -66,7 +66,7 @@ struct ParamInfo {
 /**
  * @brief Creates or populates a ParamInfoResponse with the specified parameters
  */
-inline void setupParamInfo(catena::ParamInfoResponse& response, const ParamInfo& info) {
+inline void setupParamInfo(st2138::ParamInfoResponse& response, const ParamInfo& info) {
     response.mutable_info()->set_oid(info.oid);
     response.mutable_info()->set_type(info.type);
     if (info.array_length > 0) {
@@ -104,8 +104,8 @@ inline void setupMockParamInfo(catena::common::MockParam& mockParam, const Param
 
     // Set up toProto for successful status
     if (info.status == catena::StatusCode::OK) {
-        EXPECT_CALL(mockParam, toProto(::testing::An<catena::ParamInfoResponse&>(), ::testing::_))
-            .WillRepeatedly(::testing::Invoke([info](catena::ParamInfoResponse& response, const IAuthorizer&) {
+        EXPECT_CALL(mockParam, toProto(::testing::An<st2138::ParamInfoResponse&>(), ::testing::_))
+            .WillRepeatedly(::testing::Invoke([info](st2138::ParamInfoResponse& response, const IAuthorizer&) {
                 setupParamInfo(response, info);
                 return catena::exception_with_status("", catena::StatusCode::OK);
             }));
@@ -116,8 +116,8 @@ inline void setupMockParamInfo(catena::common::MockParam& mockParam, const Param
  * @brief Creates a ParamInfoResponse with the specified parameters
  * @return The ParamInfoResponse object
  */
-inline catena::ParamInfoResponse createParamInfoResponse(const ParamInfo& info) {
-    catena::ParamInfoResponse response;
+inline st2138::ParamInfoResponse createParamInfoResponse(const ParamInfo& info) {
+    st2138::ParamInfoResponse response;
     setupParamInfo(response, info);
     return response;
 }
@@ -126,8 +126,8 @@ inline catena::ParamInfoResponse createParamInfoResponse(const ParamInfo& info) 
  * @brief Creates a vector of ParamInfoResponse objects from a vector of ParamInfo structs
  * @return The vector of ParamInfoResponse objects
  */
-inline std::vector<catena::ParamInfoResponse> createParamInfoResponses(const std::vector<ParamInfo>& infos) {
-    std::vector<catena::ParamInfoResponse> responses;
+inline std::vector<st2138::ParamInfoResponse> createParamInfoResponses(const std::vector<ParamInfo>& infos) {
+    std::vector<st2138::ParamInfoResponse> responses;
     responses.reserve(infos.size());
     
     for (const auto& info : infos) {

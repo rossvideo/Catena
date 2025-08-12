@@ -76,7 +76,6 @@ params:
       fr: "Exemple Tableau Flottants", 
       es: "Ejemplo de Matriz Flotante", 
       ja: "浮動小数点配列の例" } }
-    max_length: 128
     precision: 3
 
   string_array:
@@ -131,6 +130,7 @@ menu_groups:
       fr: "Statut", 
       es: "Estado", 
       ja: "ステータス" } }
+    order: 0
     menus:
       product:
         name: { display_strings: { 
@@ -147,6 +147,7 @@ menu_groups:
       fr: "Configuration", 
       es: "Configuración", 
       ja: "設定" } }
+    order: 1
     menus:
       catena:
         name: { display_strings: { 
@@ -185,7 +186,7 @@ menu_groups:
           - /constraint_examples/int_array_choice
           #- /constraint_examples/int32_alarm
           #- /constraint_examples/int_array_alarm
-          - /constraint_examples/float32_range
+          - /constraint_examples/float_range
           - /constraint_examples/float_array_range
           - /constraint_examples/string_choice
           - /constraint_examples/string_array_choice

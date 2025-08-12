@@ -34,13 +34,13 @@ using catena::common::ChoiceConstraint;
 
 // INT_CHOICE implementation
 template<>
-bool ChoiceConstraint<int32_t, catena::Constraint::INT_CHOICE>::satisfied(const catena::Value& src) const {
+bool ChoiceConstraint<int32_t, st2138::Constraint::INT_CHOICE>::satisfied(const st2138::Value& src) const {
     return choices_.contains(src.int32_value());
 }
 
 template<>
-void ChoiceConstraint<int32_t, catena::Constraint::INT_CHOICE>::toProto(catena::Constraint& constraint) const {
-    constraint.set_type(catena::Constraint::INT_CHOICE);
+void ChoiceConstraint<int32_t, st2138::Constraint::INT_CHOICE>::toProto(st2138::Constraint& constraint) const {
+    constraint.set_type(st2138::Constraint::INT_CHOICE);
     for (auto& [value, name] : choices_) {
         auto intChoice = constraint.mutable_int32_choice()->add_choices();
         intChoice->set_value(value);
@@ -50,13 +50,13 @@ void ChoiceConstraint<int32_t, catena::Constraint::INT_CHOICE>::toProto(catena::
 
 // STRING_CHOICE implementation
 template<>
-bool ChoiceConstraint<std::string, catena::Constraint::STRING_CHOICE>::satisfied(const catena::Value& src) const {
+bool ChoiceConstraint<std::string, st2138::Constraint::STRING_CHOICE>::satisfied(const st2138::Value& src) const {
     return !strict_ || choices_.contains(src.string_value());
 }
 
 template<>
-void ChoiceConstraint<std::string, catena::Constraint::STRING_CHOICE>::toProto(catena::Constraint& constraint) const {
-    constraint.set_type(catena::Constraint::STRING_CHOICE);
+void ChoiceConstraint<std::string, st2138::Constraint::STRING_CHOICE>::toProto(st2138::Constraint& constraint) const {
+    constraint.set_type(st2138::Constraint::STRING_CHOICE);
     for (auto& [value, name] : choices_) {
         *constraint.mutable_string_choice()->add_choices() = value;
     }
@@ -64,13 +64,13 @@ void ChoiceConstraint<std::string, catena::Constraint::STRING_CHOICE>::toProto(c
 
 // STRING_STRING_CHOICE implementation
 template<>
-bool ChoiceConstraint<std::string, catena::Constraint::STRING_STRING_CHOICE>::satisfied(const catena::Value& src) const {
+bool ChoiceConstraint<std::string, st2138::Constraint::STRING_STRING_CHOICE>::satisfied(const st2138::Value& src) const {
     return !strict_ || choices_.contains(src.string_value());
 }
 
 template<>
-void ChoiceConstraint<std::string, catena::Constraint::STRING_STRING_CHOICE>::toProto(catena::Constraint& constraint) const {
-    constraint.set_type(catena::Constraint::STRING_STRING_CHOICE);
+void ChoiceConstraint<std::string, st2138::Constraint::STRING_STRING_CHOICE>::toProto(st2138::Constraint& constraint) const {
+    constraint.set_type(st2138::Constraint::STRING_STRING_CHOICE);
     for (auto& [value, name] : choices_) {
         auto stringChoice = constraint.mutable_string_string_choice()->add_choices();
         stringChoice->set_value(value);

@@ -23,6 +23,7 @@ language_packs:
 menu_groups:
   status:
     name: {display_strings: {en: status, es: estado, fr: statut}}
+    order: 0
     menus:
       page_1:
         name: {display_strings: {en: Product, es: Producto, fr: Produit}}
@@ -32,6 +33,7 @@ menu_groups:
         param_oids: ["/offset", "/button", "/counter"]
   config:
     name: {display_strings: {en: config, es: configuración, fr: configuration}}
+    order: 1
     menus:
       page_1:
         name: {display_strings: {en: Page 1, es: Página 1, fr: Page 1}}

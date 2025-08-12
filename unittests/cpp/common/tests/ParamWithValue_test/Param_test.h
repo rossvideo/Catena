@@ -59,7 +59,7 @@ class ParamTest : public ::testing::Test {
     /*
      * Returns the value type of the parameter we are testing with.
      */
-    virtual catena::ParamType type() const = 0;
+    virtual st2138::ParamType type() const = 0;
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
@@ -95,8 +95,8 @@ class ParamTest : public ::testing::Test {
             EXPECT_CALL(*pd, max_length()).WillRepeatedly(testing::Return(1000));
             EXPECT_CALL(*pd, total_length()).WillRepeatedly(testing::Return(1000));
             EXPECT_CALL(*pd, type()).WillRepeatedly(testing::Return(type()));
-            EXPECT_CALL(*pd, toProto(testing::An<catena::Param&>(), testing::_))
-                .WillRepeatedly(testing::Invoke([this](catena::Param& p, const IAuthorizer&) {
+            EXPECT_CALL(*pd, toProto(testing::An<st2138::Param&>(), testing::_))
+                .WillRepeatedly(testing::Invoke([this](st2138::Param& p, const IAuthorizer&) {
                     p.set_template_oid(oid_);
                 }));
             // Default paramDescriptor tree:

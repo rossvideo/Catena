@@ -163,7 +163,7 @@ class SocketReader : public ISocketReader {
     /**
      * @brief Returns the detail level to return the response in.
      */
-    catena::Device_DetailLevel detailLevel() const override { return detailLevel_; };
+    st2138::Device_DetailLevel detailLevel() const override { return detailLevel_; };
     /**
      * @brief Returns the json body of the request, which may be empty.
      */
@@ -223,7 +223,7 @@ class SocketReader : public ISocketReader {
     /**
      * @brief The detail level to return the response in.
      */
-    catena::Device_DetailLevel detailLevel_;
+    st2138::Device_DetailLevel detailLevel_;
     /**
      * @brief The client's jws token (empty if authorization is disabled).
      */

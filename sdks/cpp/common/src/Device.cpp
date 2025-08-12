@@ -44,7 +44,7 @@
 
 using namespace catena::common;
 
-bool Device::tryMultiSetValue (catena::MultiSetValuePayload src, catena::exception_with_status& ans, const IAuthorizer& authz) {
+bool Device::tryMultiSetValue (st2138::MultiSetValuePayload src, catena::exception_with_status& ans, const IAuthorizer& authz) {
     // Making sure multi set is enabled.
     if (src.values_size() > 1 && !multi_set_enabled_) {
         ans = catena::exception_with_status("Multi-set is disabled for the device in slot " + std::to_string(slot_), catena::StatusCode::PERMISSION_DENIED);
@@ -52,7 +52,7 @@ bool Device::tryMultiSetValue (catena::MultiSetValuePayload src, catena::excepti
         std::vector<std::string> affectedOids;
 
         // Looping through and validating set value requests.
-        for (const catena::SetValuePayload& setValuePayload : src.values()) {
+        for (const st2138::SetValuePayload& setValuePayload : src.values()) {
             try {
                 // First validate no overlapping actions.
                 for (const auto& oid : affectedOids) {
@@ -98,10 +98,10 @@ bool Device::tryMultiSetValue (catena::MultiSetValuePayload src, catena::excepti
     return ans.status == catena::StatusCode::OK;
 }
 
-catena::exception_with_status Device::commitMultiSetValue (catena::MultiSetValuePayload src, const IAuthorizer& authz) {
+catena::exception_with_status Device::commitMultiSetValue (st2138::MultiSetValuePayload src, const IAuthorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     // Looping through and commiting all setValue operations.
-    for (const catena::SetValuePayload& setValuePayload : src.values()) {
+    for (const st2138::SetValuePayload& setValuePayload : src.values()) {
         try {
             // Figuring out parent param for appends and resetValidate().
             Path path(setValuePayload.oid());
@@ -137,10 +137,10 @@ catena::exception_with_status Device::commitMultiSetValue (catena::MultiSetValue
     return ans;
 } //GCOV_EXCL_LINE
 
-catena::exception_with_status Device::setValue (const std::string& jptr, catena::Value& src, const IAuthorizer& authz) {
+catena::exception_with_status Device::setValue (const std::string& jptr, st2138::Value& src, const IAuthorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
-    catena::MultiSetValuePayload setValues;
-    catena::SetValuePayload* setValuePayload = setValues.add_values();
+    st2138::MultiSetValuePayload setValues;
+    st2138::SetValuePayload* setValuePayload = setValues.add_values();
     setValuePayload->set_oid(jptr);
     setValuePayload->mutable_value()->CopyFrom(src);
     if (tryMultiSetValue(setValues, ans, authz)) {
@@ -149,7 +149,7 @@ catena::exception_with_status Device::setValue (const std::string& jptr, catena:
     return ans;
 }
 
-catena::exception_with_status Device::getValue (const std::string& jptr, catena::Value& dst, const IAuthorizer& authz) const {
+catena::exception_with_status Device::getValue (const std::string& jptr, st2138::Value& dst, const IAuthorizer& authz) const {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     /**
      * Converting to Path object to validate input (cant end with /-).
@@ -201,10 +201,10 @@ catena::exception_with_status Device::getLanguagePack(const std::string& languag
     return ans;
 } //GCOV_EXCL_LINE
 
-catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& language, const IAuthorizer& authz) {
+catena::exception_with_status Device::addLanguage (st2138::AddLanguagePayload& language, const IAuthorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     auto& name = language.language_pack().name();
-    auto& id = language.id();
+    auto& id = language.language();
     // Admin scope required.
     if (!authz.writeAuthz(Scopes_e::kAdmin)) {
         ans = catena::exception_with_status("Not authorized to add language", catena::StatusCode::PERMISSION_DENIED);
@@ -355,7 +355,7 @@ std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exc
     return command;
 }
 
-void Device::toProto(::catena::Device& dst, const IAuthorizer& authz, bool shallow) const {
+void Device::toProto(::st2138::Device& dst, const IAuthorizer& authz, bool shallow) const {
     dst.set_slot(slot_);
     dst.set_detail_level(detail_level_);
     *dst.mutable_default_scope() = default_scope_;
@@ -365,10 +365,10 @@ void Device::toProto(::catena::Device& dst, const IAuthorizer& authz, bool shall
 
     // Helper function to serialize a collection of IParams
     auto serializeParamCollection = [&](const std::unordered_map<std::string, IParam*>& collection, 
-                                      google::protobuf::Map<std::string, ::catena::Param>& dstMap) {
+                                      google::protobuf::Map<std::string, ::st2138::Param>& dstMap) {
         for (const auto& [name, param] : collection) {
             if (shouldSendParam(*param, true, authz)) {
-                ::catena::Param dstParam{};
+                ::st2138::Param dstParam{};
                 param->toProto(dstParam, authz);
                 dstMap[name] = dstParam;
             }
@@ -376,42 +376,42 @@ void Device::toProto(::catena::Device& dst, const IAuthorizer& authz, bool shall
     };
 
     // Serialize parameters
-    google::protobuf::Map<std::string, ::catena::Param> dstParams{};
+    google::protobuf::Map<std::string, ::st2138::Param> dstParams{};
     serializeParamCollection(params_, dstParams);
     dst.mutable_params()->swap(dstParams); //lowercase swap, not an error
 
     // Serialize commands
-    google::protobuf::Map<std::string, ::catena::Param> dstCommands{};
+    google::protobuf::Map<std::string, ::st2138::Param> dstCommands{};
     serializeParamCollection(commands_, dstCommands);
     dst.mutable_commands()->swap(dstCommands); // n.b. lowercase swap, not an error
 
     // If in minimal detail level, skip the rest of the serialization
-    if (detail_level_ == catena::Device_DetailLevel_MINIMAL) {
+    if (detail_level_ == st2138::Device_DetailLevel_MINIMAL) {
         return;
     }
 
     // make deep copy of the constraints
-    google::protobuf::Map<std::string, ::catena::Constraint> dstConstraints{};
+    google::protobuf::Map<std::string, ::st2138::Constraint> dstConstraints{};
     for (const auto& [name, constraint] : constraints_) {
-        ::catena::Constraint dstConstraint{};
+        ::st2138::Constraint dstConstraint{};
         constraint->toProto(dstConstraint);
         dstConstraints[name] = dstConstraint;
     }
     dst.mutable_constraints()->swap(dstConstraints); // n.b. lowercase swap, not an error
 
     // make deep copy of the language packs
-    ::catena::LanguagePacks dstPacks{};
+    ::st2138::LanguagePacks dstPacks{};
     for (const auto& [name, pack] : language_packs_) {
-        ::catena::LanguagePack dstPack{};
+        ::st2138::LanguagePack dstPack{};
         pack->toProto(dstPack);
         dstPacks.mutable_packs()->insert({name, dstPack});
     }
     dst.mutable_language_packs()->Swap(&dstPacks); // N.B uppercase Swap, not an error
 
     // make a copy of the menu groups
-    google::protobuf::Map<std::string, ::catena::MenuGroup> dstMenuGroups{};
+    google::protobuf::Map<std::string, ::st2138::MenuGroup> dstMenuGroups{};
     for (const auto& [name, group] : menu_groups_) {
-        ::catena::MenuGroup dstGroup{};
+        ::st2138::MenuGroup dstGroup{};
         group->toProto(dstGroup, false);
         dstMenuGroups[name] = dstGroup;
     }
@@ -419,7 +419,7 @@ void Device::toProto(::catena::Device& dst, const IAuthorizer& authz, bool shall
 }
 
 
-void Device::toProto(::catena::LanguagePacks& packs) const {
+void Device::toProto(::st2138::LanguagePacks& packs) const {
     packs.clear_packs();
     auto& proto_packs = *packs.mutable_packs();
     for (const auto& [name, pack] : language_packs_) {
@@ -429,14 +429,14 @@ void Device::toProto(::catena::LanguagePacks& packs) const {
     }
 }
 
-void Device::toProto(::catena::LanguageList& list) const {
+void Device::toProto(::st2138::LanguageList& list) const {
     list.clear_languages();
     for (const auto& [name, pack] : language_packs_) {
         list.add_languages(name);
     }
 }
 
-catena::DeviceComponent Device::DeviceSerializer::getNext() {
+st2138::DeviceComponent Device::DeviceSerializer::getNext() {
     if (hasMore()) {
         handle_.resume();
         handle_.promise().rethrow_if_exception();
@@ -444,19 +444,19 @@ catena::DeviceComponent Device::DeviceSerializer::getNext() {
     return std::move(handle_.promise().deviceMessage); 
 }
 
-std::unique_ptr<Device::IDeviceSerializer> Device::getComponentSerializer(const IAuthorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow) const {
+std::unique_ptr<Device::IDeviceSerializer> Device::getComponentSerializer(const IAuthorizer& authz, const std::set<std::string>& subscribedOids, st2138::Device_DetailLevel dl, bool shallow) const {
     // Sanitizing if trying to use SUBSCRIPTIONS mode with subscriptions disabled
-    if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS && !subscriptions_) {
+    if (dl == st2138::Device_DetailLevel_SUBSCRIPTIONS && !subscriptions_) {
         throw catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::INVALID_ARGUMENT);
     }
     return std::make_unique<Device::DeviceSerializer>(getDeviceSerializer(authz, subscribedOids, dl, shallow));
 }
 
-Device::DeviceSerializer Device::getDeviceSerializer(const IAuthorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow) const {
-    catena::DeviceComponent component{};
+Device::DeviceSerializer Device::getDeviceSerializer(const IAuthorizer& authz, const std::set<std::string>& subscribedOids, st2138::Device_DetailLevel dl, bool shallow) const {
+    st2138::DeviceComponent component{};
 
     // Send basic device information first
-    catena::Device* dst = component.mutable_device();
+    st2138::Device* dst = component.mutable_device();
     dst->set_slot(slot_);
     dst->set_detail_level(detail_level_);
     *dst->mutable_default_scope() = default_scope_;
@@ -466,26 +466,26 @@ Device::DeviceSerializer Device::getDeviceSerializer(const IAuthorizer& authz, c
         dst->add_access_scopes(scope);
     }
     for (std::pair<std::string, IMenuGroup*> entry : menu_groups_) {
-        ::catena::MenuGroup dstMenuGroup;
+        ::st2138::MenuGroup dstMenuGroup;
         entry.second->toProto(dstMenuGroup, true);
         dst->mutable_menu_groups()->insert({entry.first, dstMenuGroup});
     }
 
-    if (dl != catena::Device_DetailLevel_NONE) {
+    if (dl != st2138::Device_DetailLevel_NONE) {
         // Helper function to check if an OID is subscribed
         auto isSubscribed = [&subscribedOids](const std::string& paramName) {
             return subscribedOids.contains("/" + paramName);
         };
 
         // Only send non-minimal items in FULL mode
-        if (dl == catena::Device_DetailLevel_FULL) {
+        if (dl == st2138::Device_DetailLevel_FULL) {
             // Send menus
             for (const auto& [groupGame, menuGroup] : menu_groups_) {
                 for (const auto& [name, menu] : *menuGroup->menus()) {
                     std::string oid = groupGame + "/" + name;
                     co_yield component;
                     component.Clear();
-                    ::catena::Menu* dstMenu = component.mutable_menu()->mutable_menu();
+                    ::st2138::Menu* dstMenu = component.mutable_menu()->mutable_menu();
                     menu->toProto(*dstMenu);
                     component.mutable_menu()->set_oid(oid);
                 }
@@ -494,7 +494,7 @@ Device::DeviceSerializer Device::getDeviceSerializer(const IAuthorizer& authz, c
             for (const auto& [language, languagePack] : language_packs_) {
                 co_yield component;
                 component.Clear();
-                ::catena::LanguagePack* dstPack = component.mutable_language_pack()->mutable_language_pack();
+                ::st2138::LanguagePack* dstPack = component.mutable_language_pack()->mutable_language_pack();
                 languagePack->toProto(*dstPack);
                 component.mutable_language_pack()->set_language(language);
             }
@@ -502,34 +502,34 @@ Device::DeviceSerializer Device::getDeviceSerializer(const IAuthorizer& authz, c
             for (const auto& [name, constraint] : constraints_) {
                 co_yield component;
                 component.Clear();
-                ::catena::Constraint* dstConstraint = component.mutable_shared_constraint()->mutable_constraint();
+                ::st2138::Constraint* dstConstraint = component.mutable_shared_constraint()->mutable_constraint();
                 constraint->toProto(*dstConstraint);
                 component.mutable_shared_constraint()->set_oid(name);
             }
         }
 
         // Send commands if authorized and in FULL or COMMANDS mode
-        if (dl == catena::Device_DetailLevel_FULL || dl == catena::Device_DetailLevel_COMMANDS) {
+        if (dl == st2138::Device_DetailLevel_FULL || dl == st2138::Device_DetailLevel_COMMANDS) {
             for (const auto& [name, param] : commands_) {
                 if (authz.readAuthz(*param)) {
                     co_yield component;
                     component.Clear();
-                    ::catena::Param* dstParam = component.mutable_command()->mutable_param();
+                    ::st2138::Param* dstParam = component.mutable_command()->mutable_command();
                     param->toProto(*dstParam, authz);
                     component.mutable_command()->set_oid(name);
                 }
             }
         }
         // Send parameters if authorized, and either in the minimal set or if subscribed to
-        if (dl != catena::Device_DetailLevel_COMMANDS) {
+        if (dl != st2138::Device_DetailLevel_COMMANDS) {
             for (const auto& [name, param] : params_) {
                 if (authz.readAuthz(*param) &&
-                    ((dl == catena::Device_DetailLevel_FULL) ||
+                    ((dl == st2138::Device_DetailLevel_FULL) ||
                      (param->getDescriptor().minimalSet()) ||
-                     (dl == catena::Device_DetailLevel_SUBSCRIPTIONS && isSubscribed(name)))) {
+                     (dl == st2138::Device_DetailLevel_SUBSCRIPTIONS && isSubscribed(name)))) {
                     co_yield component;
                     component.Clear();
-                    ::catena::Param* dstParam = component.mutable_param()->mutable_param();
+                    ::st2138::Param* dstParam = component.mutable_param()->mutable_param();
                     param->toProto(*dstParam, authz);
                     component.mutable_param()->set_oid(name);
                 }
@@ -548,12 +548,12 @@ bool Device::shouldSendParam(const IParam& param, bool is_subscribed, const IAut
 
     // First check authorization
     if (authz.readAuthz(param)) {
-        if (casted_detail_level != static_cast<int>(catena::Device_DetailLevel_NONE)) {
+        if (casted_detail_level != static_cast<int>(st2138::Device_DetailLevel_NONE)) {
             should_send = 
-                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_MINIMAL) && param.getDescriptor().minimalSet()) ||
-                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_FULL)) ||
-                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_SUBSCRIPTIONS) && (param.getDescriptor().minimalSet() || is_subscribed)) ||
-                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_COMMANDS) && param.getDescriptor().isCommand());
+                (casted_detail_level == static_cast<int>(st2138::Device_DetailLevel_MINIMAL) && param.getDescriptor().minimalSet()) ||
+                (casted_detail_level == static_cast<int>(st2138::Device_DetailLevel_FULL)) ||
+                (casted_detail_level == static_cast<int>(st2138::Device_DetailLevel_SUBSCRIPTIONS) && (param.getDescriptor().minimalSet() || is_subscribed)) ||
+                (casted_detail_level == static_cast<int>(st2138::Device_DetailLevel_COMMANDS) && param.getDescriptor().isCommand());
         }
     }
 

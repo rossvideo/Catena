@@ -39,7 +39,7 @@
           "access_scope": "st2138:op",
           "constraint": {
             "type": "FLOAT_RANGE",
-            "float_range": {"min_value":20, "display_min": 20,  "max_value": 20000, "display_max": 20000, "step": 1.0}
+            "float32_range": {"min_value":20, "display_min": 20,  "max_value": 20000, "display_max": 20000}
           },
           "widget": "wheel"
         },
@@ -49,7 +49,7 @@
           "access_scope": "st2138:cfg",
           "constraint": {
             "type": "FLOAT_RANGE",
-            "float_range": {"min_value":0,  "max_value": 10.0, "step": 0.1}
+            "float32_range": {"min_value":0,  "max_value": 10.0, "step": 0.1}
           },
           "widget": "wheel"
         },
@@ -59,7 +59,7 @@
           "access_scope": "st2138:adm",
           "constraint": {
             "type": "FLOAT_RANGE",
-            "float_range": {"min_value":0,  "max_value": 10.0, "step": 0.1}
+            "float32_range": {"min_value":0,  "max_value": 10.0, "step": 0.1}
           },
           "widget": "wheel"
         }
@@ -74,7 +74,7 @@
           "name": { "display_strings": { "en": "Fader" } },
           "constraint": {
             "type": "FLOAT_RANGE",
-            "float_range": {"min_value":0,  "max_value": 1.00, "display_min":0, "display_max":1.00, "step": 0.01}
+            "float32_range": {"min_value":0,  "max_value": 1.00, "display_min":0, "display_max":1.00, "step": 0.01}
           },
           "precision": 3,
           "widget": "fader"
@@ -459,23 +459,27 @@
         "struct_variant_array_values": {
           "struct_variants": [
             {
-              "struct_variant_type": "reverb",
-              "value": {
-                "struct_value": {
-                  "fields": {
-                    "room_size": { "float32_value": 0.8 },
-                    "damping": { "float32_value": 0.3 }
+              "struct_variant_value": {
+                "struct_variant_type": "reverb",
+                "value": {
+                  "struct_value": {
+                    "fields": {
+                      "room_size": { "float32_value": 0.8 },
+                      "damping": { "float32_value": 0.3 }
+                    }
                   }
                 }
               }
             },
             {
-              "struct_variant_type": "delay",
-              "value": {
-                "struct_value": {
-                  "fields": {
-                    "time": { "float32_value": 0.4 },
-                    "feedback": { "float32_value": 0.6 }
+              "struct_variant_value": {
+                "struct_variant_type": "delay",
+                "value": {
+                  "struct_value": {
+                    "fields": {
+                      "room_size": { "float32_value": 0.4 },
+                      "damping": { "float32_value": 0.6 }
+                    }
                   }
                 }
               }

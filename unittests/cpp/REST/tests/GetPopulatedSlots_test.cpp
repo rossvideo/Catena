@@ -75,7 +75,7 @@ class RESTGetPopulatedSlotsTests : public RESTEndpointTest {
     }
 
     // Expected values
-    catena::SlotList expVal_;
+    st2138::SlotList expVal_;
 };
 
 /*

@@ -69,13 +69,13 @@ class gRPCDeviceRequestTests : public GRPCTest {
      * This is a test class which makes an async RPC to the MockServer on
      * construction and returns the streamed-back response.
      */
-    using StreamReader = catena::gRPC::test::StreamReader<catena::DeviceComponent, catena::DeviceRequestPayload, 
-        std::function<void(grpc::ClientContext*, const catena::DeviceRequestPayload*, grpc::ClientReadReactor<catena::DeviceComponent>*)>>;
+    using StreamReader = catena::gRPC::test::StreamReader<st2138::DeviceComponent, st2138::DeviceRequestPayload, 
+        std::function<void(grpc::ClientContext*, const st2138::DeviceRequestPayload*, grpc::ClientReadReactor<st2138::DeviceComponent>*)>>;
 
     /*
      * Helper function which initializes an DeviceRequestPayload object.
      */
-    void initPayload(uint32_t slot, const catena::Device_DetailLevel& dl, const std::set<std::string>& subbedOids) {
+    void initPayload(uint32_t slot, const st2138::Device_DetailLevel& dl, const std::set<std::string>& subbedOids) {
         inVal_.set_detail_level(dl);
         inVal_.set_slot(slot);
         for (const auto& oid : subbedOids) {
@@ -90,22 +90,22 @@ class gRPCDeviceRequestTests : public GRPCTest {
         if (expNum > 6 ) { expNum = 6; }
         switch (expNum) {
             case 6:
-                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.emplace(expVals_.begin(), st2138::DeviceComponent());
                 expVals_.begin()->mutable_command()->set_oid("command_test");
             case 5:
-                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.emplace(expVals_.begin(), st2138::DeviceComponent());
                 expVals_.begin()->mutable_param()->set_oid("param_test");
             case 4:
-                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.emplace(expVals_.begin(), st2138::DeviceComponent());
                 expVals_.begin()->mutable_shared_constraint()->set_oid("constraint_test");
             case 3:
-                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.emplace(expVals_.begin(), st2138::DeviceComponent());
                 expVals_.begin()->mutable_language_pack()->set_language("language_test");
             case 2:
-                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.emplace(expVals_.begin(), st2138::DeviceComponent());
                 expVals_.begin()->mutable_menu()->set_oid("menu_test");
             case 1:
-                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.emplace(expVals_.begin(), st2138::DeviceComponent());
                 expVals_.begin()->mutable_device()->set_slot(inVal_.slot());
         }
     }
@@ -133,10 +133,10 @@ class gRPCDeviceRequestTests : public GRPCTest {
     }
 
     // in/out val
-    catena::DeviceRequestPayload inVal_;
-    std::vector<catena::DeviceComponent> outVals_;
+    st2138::DeviceRequestPayload inVal_;
+    std::vector<st2138::DeviceComponent> outVals_;
     // Expected variables
-    std::vector<catena::DeviceComponent> expVals_;
+    std::vector<st2138::DeviceComponent> expVals_;
 
     std::unique_ptr<MockDeviceSerializer> mockSerializer_ = std::make_unique<MockDeviceSerializer>();
 };
@@ -156,11 +156,11 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_Create) {
  * TEST 2 - Normal case for DeviceRequest proceed().
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_Normal) {
-    initPayload(0, catena::Device_DetailLevel::Device_DetailLevel_FULL, {});
+    initPayload(0, st2138::Device_DetailLevel::Device_DetailLevel_FULL, {});
     initExpVal(6);
     // Setting expectations
     EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, inVal_.detail_level(), true)).Times(1)
-        .WillOnce(::testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+        .WillOnce(::testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
             // Making sure the correct values were passed in
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             EXPECT_TRUE(subscribedOids.empty());
@@ -189,7 +189,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_Normal) {
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_Subscriptions) {
     std::set<std::string> subscribedTestOids{"oid_test_1", "oid_test_2", "oid_test_3"};
-    initPayload(0, catena::Device_DetailLevel::Device_DetailLevel_SUBSCRIPTIONS, subscribedTestOids);
+    initPayload(0, st2138::Device_DetailLevel::Device_DetailLevel_SUBSCRIPTIONS, subscribedTestOids);
     initExpVal(1);
     MockSubscriptionManager mockSubManager;
     // Setting expectations
@@ -205,7 +205,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_Subscriptions) {
     }
     EXPECT_CALL(mockSubManager, getAllSubscribedOids(::testing::_)).Times(1).WillOnce(::testing::Return(subscribedTestOids));
     EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, inVal_.detail_level(), true)).Times(1)
-        .WillOnce(::testing::Invoke([this, &subscribedTestOids](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+        .WillOnce(::testing::Invoke([this, &subscribedTestOids](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
             // Making sure the correct values were passed in
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             EXPECT_EQ(subscribedOids, subscribedTestOids);
@@ -222,7 +222,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_Subscriptions) {
  * TEST 4 - DeviceRequest with authz on and valid token.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzValid) {
-    initPayload(0, catena::Device_DetailLevel::Device_DetailLevel_MINIMAL, {});
+    initPayload(0, st2138::Device_DetailLevel::Device_DetailLevel_MINIMAL, {});
     initExpVal(1);
     // Adding authorization mockToken metadata.
     authzEnabled_ = true;
@@ -230,7 +230,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzValid) {
     clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
     // Setting expectations
     EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, inVal_.detail_level(), true)).Times(1)
-        .WillOnce(::testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+        .WillOnce(::testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
             // Making sure the correct values were passed in.
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             EXPECT_TRUE(subscribedOids.empty());
@@ -276,7 +276,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzJWSNotFound) {
  * TEST 7 - No device in the specified slot.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
-    initPayload(dms_.size(), catena::Device_DetailLevel_FULL, {});
+    initPayload(dms_.size(), st2138::Device_DetailLevel_FULL, {});
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     // Setting expectations
     EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
@@ -304,7 +304,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowCatena) {
     expRc_ = catena::exception_with_status("Component not found", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
     EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+        .WillOnce(::testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return nullptr;
         }));

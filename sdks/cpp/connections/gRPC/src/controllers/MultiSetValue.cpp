@@ -126,7 +126,7 @@ void MultiSetValue::proceed(bool ok) {
             // Changing state to kFinish and writing response to client.
             status_ = CallStatus::kFinish;
             if (rc.status == catena::StatusCode::OK) {
-                responder_.Finish(catena::Empty{}, Status::OK, this);
+                responder_.Finish(st2138::Empty{}, Status::OK, this);
             } else {
                 responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
             }

@@ -117,7 +117,7 @@ class Menu : public IMenu {
      * @brief serialize a menu to a protobuf message
      * @param menu the protobuf message
      */
-    void toProto(::catena::Menu& menu) const override;
+    void toProto(::st2138::Menu& menu) const override;
 
   private:
     /**
