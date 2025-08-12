@@ -18,6 +18,12 @@
       "type": "STRING",
       "read_only": true,
       "minimal_set": true,
+      "name": { "display_strings": {
+        "en": "State",
+        "fr": "État",
+        "es": "Estado",
+        "ja": "状態"
+      }},
       "value": { "string_value": "stopped" },
       "constraint": {
         "type": "STRING_CHOICE",
@@ -129,7 +135,8 @@
       }},
       "type":"INT32",
       "widget": "button",
-      "read_only": true
+      "read_only": true, 
+      "response": true
     }
   },
   "menu_groups": {

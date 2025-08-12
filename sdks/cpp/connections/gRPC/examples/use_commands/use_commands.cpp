@@ -211,12 +211,18 @@ void defineCommands() {
             }
 
             int32_t counter =  value.int32_value();
-            for (int i = 1; i <= counter; ++i) {
+            for (int i = 1; i <= counter; i++) {
                 // Simulate some work
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 response.mutable_response()->set_int32_value(i);
-                // Yield the response back to the client
-                co_yield response;
+
+                if (i < counter) {
+                    // Yield the response back to the client
+                    co_yield response;
+                } else {
+                    // Last response, use co_return to close stream
+                    co_return response;
+                }
             }
             
         }(value, respond));

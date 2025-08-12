@@ -28,5 +28,18 @@
             </task>
          </button>
       </tr>
+      <tr>
+         <button buttontype="push" height="75" left="600" name="debug_counter" top="0" width="235">
+            <task tasktype="ogscript">
+            function debugMessage(success, result, commandId, args){
+               ogscript.debug(success);
+               ogscript.debug(result);
+               ogscript.debug(commandId);
+               ogscript.debug(args);
+            }
+            params.executeCommand("debug_counter", {"int32_value": 5}, debugMessage);
+            </task>
+         </button>
+      </tr>
    </table>
 </abs>
