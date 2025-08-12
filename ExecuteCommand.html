@@ -10,33 +10,32 @@ style="width: 100%;" alt="Catena Logo" />
 <p>Executes a command on the device model connected to the specified
 slot.</p>
 <h3 id="in">IN</h3>
-<div class="sourceCode" id="cb1"><pre
-class="sourceCode proto"><code class="sourceCode protobuf"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> ExecuteCommandPayload {</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32</span> slot = <span class="dv">1</span>;  <span class="co">// Slot id of the device</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span> oid = <span class="dv">2</span>;   <span class="co">/* The object id of the command to execute relative to</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">                     * device.commands */</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  Value value = <span class="dv">3</span>;  <span class="co">// The command&#39;s parameter value, if any</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bool</span> respond = <span class="dv">4</span>; <span class="co">// False if client wants to surpress response from server</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<pre><code>message ExecuteCommandPayload {
+  uint32 slot = 1;  // Slot id of the device
+  string oid = 2;   /* The object id of the command to execute relative to
+                     * device.commands */
+  Value value = 3;  // The command&#39;s parameter value, if any
+  bool respond = 4; // False if client wants to surpress response from server
+  bool proceed = 5; // Used to short circuit sending payloads 
+}</code></pre>
 <h3 id="out">OUT</h3>
 <p>A stream of values, exceptions, or nothing.</p>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode proto"><code class="sourceCode protobuf"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* When streamed, only the response field will be used after the first message. */</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> CommandResponse {</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  oneof kind {</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    Empty no_response = <span class="dv">1</span>;    <span class="co">/* Server/Device does not have a response for the</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">                               * command. */</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    Value response = <span class="dv">2</span>;</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    Exception exception = <span class="dv">3</span>;  <span class="co">/* This is for Server/Device error executing the</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">                               * command. */</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> Exception {</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span> type = <span class="dv">1</span>;</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  PolyglotText error_message = <span class="dv">2</span>;</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span> details = <span class="dv">3</span>;</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<pre><code>/* When streamed, only the response field will be used after the first message. */
+message CommandResponse {
+  oneof kind {
+    Empty no_response = 1;    /* Server/Device does not have a response for the
+                               * command. */
+    Value response = 2;
+    Exception exception = 3;  /* This is for Server/Device error executing the
+                               * command. */
+  }
+}
+
+message Exception {
+  string type = 1;
+  PolyglotText error_message = 2;
+  string details = 3;
+}</code></pre>
 <div style="text-align: center">
 <p><a href="ExternalObjectRequest.html">Next Page:
 ExecuteCommand</a></p>

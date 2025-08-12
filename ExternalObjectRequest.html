@@ -9,42 +9,41 @@ style="width: 100%;" alt="Catena Logo" />
 <h1 id="externalobjectrequest">ExternalObjectRequest</h1>
 <p>Gets an external object from the service.</p>
 <h3 id="in">IN</h3>
-<div class="sourceCode" id="cb1"><pre
-class="sourceCode proto"><code class="sourceCode protobuf"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> ExternalObjectRequestPayload {</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32</span> slot = <span class="dv">1</span>; <span class="co">// Uniquely identifies the device at node scope.</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span> oid = <span class="dv">2</span>;  <span class="co">// ID of external object being requested</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<pre><code>message ExternalObjectRequestPayload {
+  uint32 slot = 1; // Uniquely identifies the device at node scope.
+  string oid = 2;  // ID of external object being requested
+  uint32 encoding = 3; 
+}</code></pre>
 <h3 id="out">OUT</h3>
 <p>An ExternalObjectPayload.</p>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode proto"><code class="sourceCode protobuf"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> ExternalObjectPayload {</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bool</span> cachable = <span class="dv">1</span>;       <span class="co">/* If false, do not cache the external object</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">                            * payload */</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  DataPayload payload = <span class="dv">2</span>; </span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">// When streamed, only the payload field will be used after the first message.</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> DataPayload {</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">enum</span> PayloadEncoding {</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    UNCOMPRESSED = <span class="dv">0</span>;</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    GZIP = <span class="dv">1</span>;</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    DEFLATE = <span class="dv">2</span>;</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  map&lt;<span class="dt">string</span>, <span class="dt">string</span>&gt; metadata = <span class="dv">1</span>;     <span class="co">/* information about the payload to be</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">                                         * interpreted by the client (e.g.</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">                                         * mime-type, filename, etc.) */</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bytes</span> digest = <span class="dv">2</span>;                     <span class="co">/* SHA-256 digest of the payload -</span></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">                                         * flags the recipient to respond with</span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">                                         * proceed flag set to true/false to</span></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">                                         * resume or cancel payload data */</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  PayloadEncoding payload_encoding = <span class="dv">3</span>;</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  oneof kind {</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="dt">string</span> url = <span class="dv">4</span>;    <span class="co">// URL containing data for the payload</span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bytes</span> payload = <span class="dv">5</span>; <span class="co">// Data for the payload</span></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<pre><code>message ExternalObjectPayload {
+  bool cachable = 1;       /* If false, do not cache the external object
+                            * payload */
+  DataPayload payload = 2; 
+}
+
+// When streamed, only the payload field will be used after the first message.
+message DataPayload {
+  enum PayloadEncoding {
+    UNCOMPRESSED = 0;
+    GZIP = 1;
+    DEFLATE = 2;
+  }
+
+  map&lt;string, string&gt; metadata = 1;     /* information about the payload to be
+                                         * interpreted by the client (e.g.
+                                         * mime-type, filename, etc.) */
+  bytes digest = 2;                     /* SHA-256 digest of the payload -
+                                         * flags the recipient to respond with
+                                         * proceed flag set to true/false to
+                                         * resume or cancel payload data */
+  PayloadEncoding payload_encoding = 3;
+
+  oneof kind {
+    string url = 4;    // URL containing data for the payload
+    bytes payload = 5; // Data for the payload
+  }
+}</code></pre>
 <div style="text-align: center">
 <p><a href="ParamInfoRequest.html">Next Page: ParamInfoRequest</a></p>
 </div>

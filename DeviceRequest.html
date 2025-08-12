@@ -11,98 +11,96 @@ style="width: 100%;" alt="Catena Logo" />
 manager at the specified slot. Which components are retrieved depends on
 the specified detail_level.</p>
 <h3 id="in">IN</h3>
-<div class="sourceCode" id="cb1"><pre
-class="sourceCode proto"><code class="sourceCode protobuf"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> DeviceRequestPayload {</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32</span> slot = <span class="dv">1</span>;                     <span class="co">/* Uniquely identifies the device at</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">                                        * node scope. */</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span> language = <span class="dv">2</span>;                 <span class="co">/* Optionally specify the language for</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">                                        * the response */</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  Device.DetailLevel detail_level = <span class="dv">3</span>; <span class="co">/* Optionally specify the detail level</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">                                        * for the response */</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">repeated</span> <span class="dt">string</span> subscribed_oids = <span class="dv">4</span>; <span class="co">/* Optionally specify a subscription</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">                                        * list for the device (see</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">                                        * UpdateSubscriptionsPayload) */</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<pre><code>message DeviceRequestPayload {
+  uint32 slot = 1;                     /* Uniquely identifies the device at
+                                        * node scope. */
+  string language = 2;                 /* Optionally specify the language for
+                                        * the response */
+  Device.DetailLevel detail_level = 3; /* Optionally specify the detail level
+                                        * for the response */
+  repeated string subscribed_oids = 4; /* Optionally specify a subscription
+                                        * list for the device (see
+                                        * UpdateSubscriptionsPayload) */
+}</code></pre>
 <h3 id="out">OUT</h3>
 <p>A stream of DeviceComponents.</p>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode proto"><code class="sourceCode protobuf"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> DeviceComponent {</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* A parameter or sub-parameter, or sub-sub-parameter, or ...</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">   *</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">   * These can be arbitrarily nested so a JSON pointer (RFC 6901) is used to</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">   * locate the component within the data model.</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">   * This is to allow large parameter trees to be broken into smaller</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">   * components.</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">   *</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">   * The json_pointer is relative to device[&quot;params&quot;].</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">   * Let&#39;s see how this could be arranged for an audio processing device</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">   * which has a monitor output mix that has gain and eq controls.</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">   *</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">   * monitor - top level object id. The json_pointer is an object id in this</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">   * case. The whole multi-level parameter descriptor would form the body</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">   * of the message.</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">   *</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">   * monitor/eq, monitor/level - sub-params of the top-level monitor</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">   * parameter. The json_pointer is a cascade of object IDs.</span></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">   * Only the selected sub-param occupies the message body. Note that the eq</span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">   * param is likely an array of 4 objects. Without an index in the</span></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">   * json_pointer, the whole array forms the body of the message.</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">   *</span></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">   * monitor/eq/1/f, monitor/eq/1/q, monitor/eq/1/gain sub-sub params of</span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co">   * eq 2 in the monitor output audio processing.</span></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co">   * It&#39;s likely not practical to use messages this small to report device</span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="co">   * models, but this illustrates how it could be done if desirable.</span></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co">   */</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* A parameter */</span></span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>  <span class="kw">message</span> ComponentParam {</span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    <span class="dt">string</span> oid = <span class="dv">1</span>;</span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    Param param = <span class="dv">2</span>;</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>   <span class="co">/* A menu.</span></span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="co">    * Note that menus are grouped into menu groups. They are uniquely identified</span></span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="co">    * by the json_pointer field which is relative to the Device&#39;s top-level</span></span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="co">    * menu-groups object thus: menu-group-name/menu-name.</span></span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="co">    * example: status/vendor_info */</span></span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>  <span class="kw">message</span> ComponentMenu {</span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    <span class="dt">string</span> oid = <span class="dv">1</span>;</span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    Menu menu = <span class="dv">2</span>;</span>
-<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>   <span class="co">/* A constraint descriptor.</span></span>
-<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="co">    * The oid is relative to the &quot;constraints&quot; child of the device&#39;s top-level</span></span>
-<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="co">    * &quot;types&quot; object. */</span></span>
-<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>  <span class="kw">message</span> ComponentConstraint {</span>
-<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>    <span class="dt">string</span> oid = <span class="dv">1</span>;</span>
-<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>    Constraint constraint = <span class="dv">2</span>;</span>
-<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* A command descriptor.</span></span>
-<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a><span class="co">   * Defines a command to be mapped to device.commands.oid */</span></span>
-<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>  <span class="kw">message</span> ComponentCommand {</span>
-<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>    <span class="dt">string</span> oid = <span class="dv">1</span>;</span>
-<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>    Param param = <span class="dv">2</span>;</span>
-<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* A language pack. */</span></span>
-<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>  <span class="kw">message</span> ComponentLanguagePack {</span>
-<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>    <span class="dt">string</span> language = <span class="dv">1</span>; <span class="co">/* Language string is the language code that</span></span>
-<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a><span class="co">                          * identifies the language e.g. en-uk */</span></span>
-<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>    LanguagePack language_pack = <span class="dv">2</span>;</span>
-<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* Small device models can be sent as a whole.</span></span>
-<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a><span class="co">   * Larger ones should be broken into a stream of smaller components. */</span></span>
-<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>  oneof kind {</span>
-<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>    Device device = <span class="dv">2</span>;</span>
-<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>    ComponentParam param = <span class="dv">3</span>;</span>
-<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>    ComponentConstraint shared_constraint = <span class="dv">4</span>;</span>
-<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>    ComponentMenu menu = <span class="dv">5</span>;</span>
-<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a>    ComponentCommand command = <span class="dv">6</span>;</span>
-<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a>    ComponentLanguagePack language_pack = <span class="dv">7</span>;</span>
-<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<pre><code>message DeviceComponent {
+  /* A parameter or sub-parameter, or sub-sub-parameter, or ...
+   *
+   * These can be arbitrarily nested so a JSON pointer (RFC 6901) is used to
+   * locate the component within the data model.
+   * This is to allow large parameter trees to be broken into smaller
+   * components.
+   *
+   * The json_pointer is relative to device[&quot;params&quot;].
+   * Let&#39;s see how this could be arranged for an audio processing device
+   * which has a monitor output mix that has gain and eq controls.
+   *
+   * monitor - top level object id. The json_pointer is an object id in this
+   * case. The whole multi-level parameter descriptor would form the body
+   * of the message.
+   *
+   * monitor/eq, monitor/level - sub-params of the top-level monitor
+   * parameter. The json_pointer is a cascade of object IDs.
+   * Only the selected sub-param occupies the message body. Note that the eq
+   * param is likely an array of 4 objects. Without an index in the
+   * json_pointer, the whole array forms the body of the message.
+   *
+   * monitor/eq/1/f, monitor/eq/1/q, monitor/eq/1/gain sub-sub params of
+   * eq 2 in the monitor output audio processing.
+   * It&#39;s likely not practical to use messages this small to report device
+   * models, but this illustrates how it could be done if desirable.
+   */
+
+  /* A parameter */
+  message ComponentParam {
+    string oid = 1;
+    Param param = 2;
+  }
+
+   /* A menu.
+    * Note that menus are grouped into menu groups. They are uniquely identified
+    * by the json_pointer field which is relative to the Device&#39;s top-level
+    * menu-groups object thus: menu-group-name/menu-name.
+    * example: status/vendor_info */
+  message ComponentMenu {
+    string oid = 1;
+    Menu menu = 2;
+  }
+
+   /* A constraint descriptor.
+    * The oid is relative to the &quot;constraints&quot; child of the device&#39;s top-level
+    * &quot;types&quot; object. */
+  message ComponentConstraint {
+    string oid = 1;
+    Constraint constraint = 2;
+  }
+
+  /* A command descriptor.
+   * Defines a command to be mapped to device.commands.oid */
+  message ComponentCommand {
+    string oid = 1;
+    Param param = 2;
+  }
+
+  /* A language pack. */
+  message ComponentLanguagePack {
+    string language = 1; /* Language string is the language code that
+                          * identifies the language e.g. en-uk */
+    LanguagePack language_pack = 2;
+  }
+
+  /* Small device models can be sent as a whole.
+   * Larger ones should be broken into a stream of smaller components. */
+  oneof kind {
+    Device device = 2;
+    ComponentParam param = 3;
+    ComponentConstraint shared_constraint = 4;
+    ComponentMenu menu = 5;
+    ComponentCommand command = 6;
+    ComponentLanguagePack language_pack = 7;
+  }
+}</code></pre>
 <div style="text-align: center">
 <p><a href="GetPopulatedSlots.html">Next Page: GetPopulatedSlots</a></p>
 </div>

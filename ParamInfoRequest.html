@@ -10,33 +10,31 @@ style="width: 100%;" alt="Catena Logo" />
 <p>Gets a parameter’s basic information from the device model connected
 to the specified slot</p>
 <h3 id="in">IN</h3>
-<div class="sourceCode" id="cb1"><pre
-class="sourceCode proto"><code class="sourceCode protobuf"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* Specifies the OID and potentially its subtree of</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"> * child parameters if the recursive flag is set. */</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> ParamInfoRequestPayload {</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32</span> slot = <span class="dv">1</span>;       <span class="co">// Uniquely identifies the device at node scope.</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span> oid_prefix = <span class="dv">2</span>; <span class="co">/* Uniquely identifies starting parameter relative to</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">                          * device.params. Specifying &quot;&quot; selects all top-level</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">                          * parameters. */</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bool</span> recursive = <span class="dv">3</span>;    <span class="co">/* Selects whether the param&#39;s child parameters should</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">                          * also be returned. */</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<pre><code>/* Specifies the OID and potentially its subtree of
+ * child parameters if the recursive flag is set. */
+message ParamInfoRequestPayload {
+  uint32 slot = 1;       // Uniquely identifies the device at node scope.
+  string oid_prefix = 2; /* Uniquely identifies starting parameter relative to
+                          * device.params. Specifying &quot;&quot; selects all top-level
+                          * parameters. */
+  bool recursive = 3;    /* Selects whether the param&#39;s child parameters should
+                          * also be returned. */
+}</code></pre>
 <h3 id="out">OUT</h3>
 <p>A stream of ParamInfoResponses</p>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode proto"><code class="sourceCode protobuf"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> ParamInfoResponse {</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  ParamInfo info = <span class="dv">1</span>;</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32</span> array_length = <span class="dv">2</span>; <span class="co">/* If this ParamInfoResponse is for an array </span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">                            * parameter, include the length of the array. */</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> ParamInfo {</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span> oid = <span class="dv">1</span>;          <span class="co">// The parameter&#39;s OID.</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  PolyglotText name = <span class="dv">2</span>;   <span class="co">// The parameter&#39;s name to display in a client GUI.</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  ParamType type = <span class="dv">3</span>;      <span class="co">// The parameter&#39;s type.</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span> template_oid = <span class="dv">4</span>; <span class="co">/* The OID of the template from which this parameter</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">                            * was created. */</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<pre><code>message ParamInfoResponse {
+  ParamInfo info = 1;
+  uint32 array_length = 2; // If this ParamInfoResponse is for an array 
+                           // parameter, include the length of the array.
+}
+
+message ParamInfo {
+  string oid = 1;          // The parameter&#39;s OID.
+  PolyglotText name = 2;   // The parameter&#39;s name to display in a client GUI.
+  ParamType type = 3;      // The parameter&#39;s type.
+  string template_oid = 4; /* The OID of the template from which this parameter
+                            * was created. */
+}</code></pre>
 <div style="text-align: center">
 <p><a href="SetValue.html">Next Page: SetValue</a></p>
 </div>
