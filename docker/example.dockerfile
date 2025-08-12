@@ -18,7 +18,11 @@ USER ${USER_GROUP}
 WORKDIR ${WORKDIR}
 
 COPY --chmod=755 --chown=${USER_GROUP} ${EXAMPLE_PATH} ${WORKDIR}/${CONNECTION}/${EXAMPLE}
+COPY --chmod=755 --chown=${USER_GROUP} interface ${WORKDIR}/interface
 COPY --chmod=755 docker/example-entrypoint.sh /entrypoint.sh
+COPY --chmod=755 docker/example-healthcheck.sh /healthcheck.sh
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD /healthcheck.sh
 
 RUN mkdir -p ${WORKDIR}/logs && mkdir -p ${WORKDIR}/static
 
@@ -28,7 +32,20 @@ FROM base AS grpc
 
 ENV CATENA_PORT=6254
 
-# extra config just for gRPC
+USER root
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && wget https://github.com/fullstorydev/grpcurl/releases/download/v1.9.3/grpcurl_1.9.3_linux_amd64.deb \
+    && dpkg -i grpcurl_1.9.3_linux_amd64.deb \
+    && rm grpcurl_1.9.3_linux_amd64.deb \
+    && apt-get remove -y wget ca-certificates \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
+
+USER ${USER_GROUP}
 
 FROM base AS rest
 
@@ -42,5 +59,3 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 USER ${USER_GROUP}
-
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -q --spider http://localhost:${CATENA_PORT}/st2138-api/v1/health || exit 1
