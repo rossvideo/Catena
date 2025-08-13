@@ -106,6 +106,7 @@ class ParamDescriptor : public IParamDescriptor {
      * @param template_oid the parameter's template oid
      * @param constraint the parameter's constraint
      * @param isCommand the parameter's command status
+     * @param response true if the command returns a response when executed
      * @param dm the device that the parameter belongs to
      * @param max_length the parameter's maximum length
      * @param total_length the parameter's total length
@@ -124,6 +125,7 @@ class ParamDescriptor : public IParamDescriptor {
       const std::string& template_oid,
       catena::common::IConstraint* constraint,
       bool isCommand,
+      bool response,
       IDevice& dm,
       uint32_t max_length,
       std::size_t total_length,
@@ -132,7 +134,7 @@ class ParamDescriptor : public IParamDescriptor {
       IParamDescriptor* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget},
         scope_{scope}, read_only_{read_only}, template_oid_{template_oid},
-        constraint_{constraint}, isCommand_{isCommand}, dev_{dm},
+        constraint_{constraint}, isCommand_{isCommand}, response_{response},dev_{dm},
         max_length_{max_length}, total_length_{total_length},
         precision_{precision}, minimal_set_{minimal_set}, parent_{parent} {
       setOid(oid);
@@ -385,7 +387,7 @@ class ParamDescriptor : public IParamDescriptor {
      * The passed function will be executed when executeCommand is called on this param object.
      * If this is not a command parameter, an exception will be thrown.
      */
-    void defineCommand(std::function<std::unique_ptr<ICommandResponder>(const catena::Value&)> commandImpl) override {
+    void defineCommand(std::function<std::unique_ptr<ICommandResponder>(const catena::Value&, const bool)> commandImpl) override {
       if (!isCommand_) {
         throw std::runtime_error("Cannot define a command on a non-command parameter");
       }
@@ -400,8 +402,8 @@ class ParamDescriptor : public IParamDescriptor {
      * if executeCommand is called for a command that has not been defined, then the returned
      * command response will be an exception with type UNIMPLEMENTED
      */
-    std::unique_ptr<ICommandResponder> executeCommand(const catena::Value& value) override {
-      return commandImpl_(value);
+    std::unique_ptr<ICommandResponder> executeCommand(const catena::Value& value, const bool respond) override {
+      return commandImpl_(value, respond);
     }
 
     /**
@@ -430,10 +432,11 @@ class ParamDescriptor : public IParamDescriptor {
     std::reference_wrapper<IDevice> dev_;
 
     bool isCommand_;
+    bool response_;
     bool minimal_set_;
 
     // default command implementation
-    std::function<std::unique_ptr<ICommandResponder>(const catena::Value&)> commandImpl_ = [](const catena::Value& value) -> std::unique_ptr<ICommandResponder> { 
+    std::function<std::unique_ptr<ICommandResponder>(const catena::Value&, const bool)> commandImpl_ = [](const catena::Value& value, const bool respond) -> std::unique_ptr<ICommandResponder> { 
       return std::make_unique<CommandResponder>([](const catena::Value& value) -> CommandResponder {
         catena::CommandResponse response;
         response.mutable_exception()->set_type("UNIMPLEMENTED");

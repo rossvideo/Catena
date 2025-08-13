@@ -19,6 +19,12 @@
       "read_only": true,
       "minimal_set": true,
       "widget": "text-display",
+      "name": { "display_strings": {
+        "en": "State",
+        "fr": "État",
+        "es": "Estado",
+        "ja": "状態"
+      }},
       "value": { "string_value": "stopped" },
       "constraint": {
         "type": "STRING_STRING_CHOICE",
@@ -108,6 +114,17 @@
         }
       },
       "read_only": true
+    },
+    "count_to": {
+      "type": "INT32",
+      "value": { "int32_value": 5 },
+      "name": { "display_strings": {
+        "en": "Count To",
+        "fr": "Compter jusqu'à",
+        "es": "Contar hasta",
+        "ja": "カウントする"
+      }},
+      "widget": "default"
     }
   },
   "commands": {
@@ -168,15 +185,26 @@
       "type":"STRING"
     },
     "eject": {
-      "name": {
-        "display_strings": {
-          "en": "Eject",
-          "fr": "Éjecter",
-          "es": "Expulsar",
-          "ja": "取り出す"
-        }
-      },
-      "type":"STRING"
+      "type":"STRING",
+      "name": {"display_strings": {
+        "en": "Eject",
+        "fr": "Éjecter",
+        "es": "Expulsar",
+        "ja": "取り出す"
+      }},
+      "widget": "button"
+    },
+    "debug_counter": {
+      "name": {"display_strings": {
+        "en": "Debug Counter",
+        "fr": "Compteur de débogage",
+        "es": "Contador de depuración",
+        "ja": "デバッグカウンター"
+      }},
+      "type":"INT32",
+      "widget": "button",
+      "read_only": true, 
+      "response": true
     }
   },
   "menu_groups": {

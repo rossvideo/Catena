@@ -172,12 +172,12 @@ class IParam {
     /**
      * @brief define a command for the parameter
      */
-    virtual void defineCommand(std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(const catena::Value&)> commandImpl) = 0;
+    virtual void defineCommand(std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(const catena::Value&, const bool)> commandImpl) = 0;
 
     /**
      * @brief execute the command for the parameter
      */
-    virtual std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommand(const catena::Value&  value) const = 0;
+    virtual std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommand(const catena::Value&  value, const bool respond) const = 0;
 
     /**
      * @brief get the descriptor of the parameter
