@@ -6,12 +6,12 @@
 Gets the languages supported by the device model.
 
 ### IN
-```
+``` proto
 uint32 slot = 1; // Uniquely identifies the device at node scope.
 ```
 
 ### OUT
-```
+``` proto
 /* Language List
  * The list of language tags that the device supports.
  *
@@ -31,6 +31,6 @@ message LanguageList {
 
 <div style="text-align: center">
 
-[Next Page: Supported gRPC Services](gRPC.html)
+[Next Page: RefreshToken](RefreshToken.html)
 
 </div>

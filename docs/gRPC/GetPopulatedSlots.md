@@ -7,7 +7,7 @@ The GetPopulatedSlots gRPC returns a list of a service's slots actively populate
 
 ### OUT
 A list of a service's slots actively populated by device managers.
-```
+``` proto
 message SlotList {
   	repeated uint32 slots = 1;
 }

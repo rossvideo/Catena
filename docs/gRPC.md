@@ -19,6 +19,8 @@ The following gRPCs are currently supported by the Catena gRPC service implement
 - [AddLanguage](AddLanguage.html)
 - [LanguagePackRequest](LanguagePackRequest.html)
 - [ListLanguages](ListLanguages.html)
+- [RefreshToken](RefreshToken.html)
+- [RevokeAccess](RevokeAccess.html)
 
 > For more information on the .proto definitions, see [Catena/interface](https://github.com/rossvideo/Catena/tree/main/interface).
 
