@@ -203,12 +203,12 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IParamDescriptor<
 <tr class="memitem:a20824363ddc06d52cde3f06e9bb34e7a" id="r_a20824363ddc06d52cde3f06e9bb34e7a"><td class="memItemLeft" align="right" valign="top">virtual const <a class="el" href="classcatena_1_1common_1_1IConstraint.html">catena::common::IConstraint</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a20824363ddc06d52cde3f06e9bb34e7a">getConstraint</a> () const =0</td></tr>
 <tr class="memdesc:a20824363ddc06d52cde3f06e9bb34e7a"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a constraint by oid  <br /></td></tr>
 <tr class="separator:a20824363ddc06d52cde3f06e9bb34e7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a72a6a3de31505714ffd91ef90d1ffc96" id="r_a72a6a3de31505714ffd91ef90d1ffc96"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a72a6a3de31505714ffd91ef90d1ffc96">defineCommand</a> (std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt;(const catena::Value &amp;)&gt; commandImpl)=0</td></tr>
-<tr class="memdesc:a72a6a3de31505714ffd91ef90d1ffc96"><td class="mdescLeft">&#160;</td><td class="mdescRight">define the command implementation  <br /></td></tr>
-<tr class="separator:a72a6a3de31505714ffd91ef90d1ffc96"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a065310761a946bff2a9e14ae0b3f895f" id="r_a065310761a946bff2a9e14ae0b3f895f"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a065310761a946bff2a9e14ae0b3f895f">executeCommand</a> (const catena::Value &amp;value)=0</td></tr>
-<tr class="memdesc:a065310761a946bff2a9e14ae0b3f895f"><td class="mdescLeft">&#160;</td><td class="mdescRight">execute the command  <br /></td></tr>
-<tr class="separator:a065310761a946bff2a9e14ae0b3f895f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6fe8d2ee503a589b480eb90d41ad87b6" id="r_a6fe8d2ee503a589b480eb90d41ad87b6"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a6fe8d2ee503a589b480eb90d41ad87b6">defineCommand</a> (std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt;(const catena::Value &amp;, const bool)&gt; commandImpl)=0</td></tr>
+<tr class="memdesc:a6fe8d2ee503a589b480eb90d41ad87b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">define the command implementation  <br /></td></tr>
+<tr class="separator:a6fe8d2ee503a589b480eb90d41ad87b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3f9cbc3c77fed5c3a9c6fde1560bd9a" id="r_ad3f9cbc3c77fed5c3a9c6fde1560bd9a"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ad3f9cbc3c77fed5c3a9c6fde1560bd9a">executeCommand</a> (const catena::Value &amp;value, const bool respond)=0</td></tr>
+<tr class="memdesc:ad3f9cbc3c77fed5c3a9c6fde1560bd9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">execute the command  <br /></td></tr>
+<tr class="separator:ad3f9cbc3c77fed5c3a9c6fde1560bd9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac8fa8aef0a96605c1bdd1d6172312028" id="r_ac8fa8aef0a96605c1bdd1d6172312028"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ac8fa8aef0a96605c1bdd1d6172312028">isCommand</a> () const =0</td></tr>
 <tr class="memdesc:ac8fa8aef0a96605c1bdd1d6172312028"><td class="mdescLeft">&#160;</td><td class="mdescRight">return true if this is a command parameter  <br /></td></tr>
 <tr class="separator:ac8fa8aef0a96605c1bdd1d6172312028"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -274,8 +274,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="a72a6a3de31505714ffd91ef90d1ffc96" name="a72a6a3de31505714ffd91ef90d1ffc96"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a72a6a3de31505714ffd91ef90d1ffc96">&#9670;&#160;</a></span>defineCommand()</h2>
+<a id="a6fe8d2ee503a589b480eb90d41ad87b6" name="a6fe8d2ee503a589b480eb90d41ad87b6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6fe8d2ee503a589b480eb90d41ad87b6">&#9670;&#160;</a></span>defineCommand()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -286,7 +286,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="memname">virtual void catena::common::IParamDescriptor::defineCommand </td>
           <td>(</td>
-          <td class="paramtype">std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt;(const catena::Value &amp;)&gt;&#160;</td>
+          <td class="paramtype">std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt;(const catena::Value &amp;, const bool)&gt;&#160;</td>
           <td class="paramname"><em>commandImpl</em></td><td>)</td>
           <td></td>
         </tr>
@@ -307,17 +307,17 @@ Here is the caller graph for this function:</div>
 </dl>
 <p>The passed function will be executed when executeCommand is called on this param object. If this is not a command parameter, an exception will be thrown. </p>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a68362878ee51288be48a6f5cdc71aa82">catena::common::ParamDescriptor</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a6a767d162d6264c7d864bfb0a9996683">catena::common::ParamDescriptor</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1IParamDescriptor_a72a6a3de31505714ffd91ef90d1ffc96_icgraph.svg" width="520" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1IParamDescriptor_a6fe8d2ee503a589b480eb90d41ad87b6_icgraph.svg" width="520" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
 </div>
-<a id="a065310761a946bff2a9e14ae0b3f895f" name="a065310761a946bff2a9e14ae0b3f895f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a065310761a946bff2a9e14ae0b3f895f">&#9670;&#160;</a></span>executeCommand()</h2>
+<a id="ad3f9cbc3c77fed5c3a9c6fde1560bd9a" name="ad3f9cbc3c77fed5c3a9c6fde1560bd9a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad3f9cbc3c77fed5c3a9c6fde1560bd9a">&#9670;&#160;</a></span>executeCommand()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -329,8 +329,18 @@ Here is the caller graph for this function:</div>
           <td class="memname">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt; catena::common::IParamDescriptor::executeCommand </td>
           <td>(</td>
           <td class="paramtype">const catena::Value &amp;&#160;</td>
-          <td class="paramname"><em>value</em></td><td>)</td>
+          <td class="paramname"><em>value</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const bool&#160;</td>
+          <td class="paramname"><em>respond</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -350,11 +360,11 @@ Here is the caller graph for this function:</div>
 <dl class="section return"><dt>Returns</dt><dd>the response from the command implementation</dd></dl>
 <p>if executeCommand is called for a command that has not been defined, then the returned command response will be an exception with type UNIMPLEMENTED </p>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a050c81ccedb8144a21e7a25e497dfd15">catena::common::ParamDescriptor</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#aca1396430d2e6f3a7bc9167d78f10a22">catena::common::ParamDescriptor</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1IParamDescriptor_a065310761a946bff2a9e14ae0b3f895f_icgraph.svg" width="520" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1IParamDescriptor_ad3f9cbc3c77fed5c3a9c6fde1560bd9a_icgraph.svg" width="520" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
