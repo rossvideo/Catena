@@ -48,6 +48,7 @@ void ParamDescriptor::toProto(catena::Param &param, const IAuthorizer& authz) co
     param.set_widget(widget_);
     param.set_minimal_set(minimal_set_);
     param.set_precision(precision_);
+    param.set_response(response_);
 
     for (const auto& oid_alias : oid_aliases_) {
         param.add_oid_aliases(oid_alias);

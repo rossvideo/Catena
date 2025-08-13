@@ -18,11 +18,74 @@
       "type": "STRING",
       "read_only": true,
       "minimal_set": true,
+      "widget": "text-display",
+      "name": { "display_strings": {
+        "en": "State",
+        "fr": "État",
+        "es": "Estado",
+        "ja": "状態"
+      }},
       "value": { "string_value": "stopped" },
       "constraint": {
-        "type": "STRING_CHOICE",
-        "string_choice": {
-          "choices": ["stopped", "playing", "paused", "rewinding", "fast_forwarding"],
+        "type": "STRING_STRING_CHOICE",
+        "string_string_choice": {
+          "choices": [
+            {
+              "value": "stopped",
+              "name": {
+                "display_strings": {
+                  "en": "Stopped",
+                  "fr": "Arrêté",
+                  "es": "Detenido",
+                  "ja": "停止"
+                }
+              }
+            },
+            {
+              "value": "playing",
+              "name": {
+                "display_strings": {
+                  "en": "Playing",
+                  "fr": "En lecture",
+                  "es": "Reproduciendo",
+                  "ja": "再生中"
+                }
+              }
+            },
+            {
+              "value": "paused",
+              "name": {
+                "display_strings": {
+                  "en": "Paused",
+                  "fr": "En pause",
+                  "es": "Pausado",
+                  "ja": "一時停止"
+                }
+              }
+            },
+            {
+              "value": "rewinding",
+              "name": {
+                "display_strings": {
+                  "en": "Rewinding",
+                  "fr": "Rembobinage",
+                  "es": "Rebobinando",
+                  "ja": "巻き戻し中"
+                }
+              }
+            },
+            {
+              "value": "fast_forwarding",
+              "name": {
+                "display_strings": {
+                  "en": "Fast Forwarding",
+                  "fr": "Avance rapide",
+                  "es": "Avance rápido",
+                  "ja": "早送り中"
+                }
+              }
+            }
+          ],
           "strict": true
         }
       }
@@ -51,6 +114,17 @@
         }
       },
       "read_only": true
+    },
+    "count_to": {
+      "type": "INT32",
+      "value": { "int32_value": 5 },
+      "name": { "display_strings": {
+        "en": "Count To",
+        "fr": "Compter jusqu'à",
+        "es": "Contar hasta",
+        "ja": "カウントする"
+      }},
+      "widget": "default"
     }
   },
   "commands": {
@@ -111,7 +185,26 @@
       "type":"STRING"
     },
     "eject": {
-      "type":"EMPTY"
+      "type":"STRING",
+      "name": {"display_strings": {
+        "en": "Eject",
+        "fr": "Éjecter",
+        "es": "Expulsar",
+        "ja": "取り出す"
+      }},
+      "widget": "button"
+    },
+    "debug_counter": {
+      "name": {"display_strings": {
+        "en": "Debug Counter",
+        "fr": "Compteur de débogage",
+        "es": "Contador de depuración",
+        "ja": "デバッグカウンター"
+      }},
+      "type":"INT32",
+      "widget": "button",
+      "read_only": true, 
+      "response": true
     }
   },
   "menu_groups": {

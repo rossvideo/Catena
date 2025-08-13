@@ -139,14 +139,6 @@ class SubscriptionManager : public ISubscriptionManager {
                 }
             }
             
-            /**
-             * @brief Visit an array
-             * @param param The array to visit
-             * @param path The path of the array
-             * @param length The length of the array
-             */
-            void visitArray(catena::common::IParam* param, const std::string& path, uint32_t length) override {}
-
         private:
             /**
              * @brief The vector of subscribed OIDs within the visitor

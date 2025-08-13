@@ -62,8 +62,8 @@ class MockParam : public IParam {
     MOCK_METHOD(catena::exception_with_status, popBack, (const IAuthorizer& authz), (override));
     MOCK_METHOD(const IConstraint*, getConstraint, (), (const, override));
     MOCK_METHOD(const std::string&, getScope, (), (const, override));
-    MOCK_METHOD(void, defineCommand, (std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(const catena::Value&)> commandImpl), (override));
-    MOCK_METHOD(std::unique_ptr<IParamDescriptor::ICommandResponder>, executeCommand, (const catena::Value& value), (const, override));
+    MOCK_METHOD(void, defineCommand, (std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(const catena::Value&, const bool respond)> commandImpl), (override));
+    MOCK_METHOD(std::unique_ptr<IParamDescriptor::ICommandResponder>, executeCommand, (const catena::Value& value, const bool respond), (const, override));
     MOCK_METHOD(const IParamDescriptor&, getDescriptor, (), (const, override));
     MOCK_METHOD(bool, isArrayType, (), (const, override));
     MOCK_METHOD(bool, validateSetValue, (const catena::Value& value, Path::Index index, const IAuthorizer& authz, catena::exception_with_status& ans), (override));

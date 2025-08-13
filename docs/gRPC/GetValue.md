@@ -6,7 +6,7 @@
 Gets the value of a parameter within a device model.
 
 ### IN
-```
+```proto
 message GetValuePayload {
   uint32 slot = 1;          // Uniquely identifies the device at node scope.
   string oid = 2;           // Uniquely identifies the param at device scope
@@ -15,7 +15,8 @@ message GetValuePayload {
 
 ### OUT
 The value of the specified parameter.
-```
+
+``` proto
 /* Represents a dynamically typed value with straightforward mapping to
  * OGP/JSON.
  * Note that sfixed32 types are used to prefer marshalling performance
