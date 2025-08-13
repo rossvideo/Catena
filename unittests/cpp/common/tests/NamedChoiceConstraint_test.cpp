@@ -249,10 +249,9 @@ TEST(NamedChoiceConstraintTest, NamedChoiceConstraint_StringToProto) {
     constraint.toProto(protoConstraint);
     // Comparing results
     EXPECT_EQ(protoConstraint.type(), catena::Constraint::STRING_CHOICE);
-    EXPECT_EQ(choices.size(), protoConstraint.string_string_choice().choices_size());
-    for (const auto& protoChoice : protoConstraint.string_string_choice().choices()) {
-        EXPECT_TRUE(choices.contains(protoChoice.value())) << "Choice value should be in the choices map";
-        EXPECT_TRUE(protoChoice.name().display_strings().empty()) << "Display strings should be empty for STRING_CHOICE";
+    EXPECT_EQ(choices.size(), protoConstraint.string_choice().choices_size());
+    for (const auto& protoChoice : protoConstraint.string_choice().choices()) {
+        EXPECT_TRUE(choices.contains(protoChoice)) << "Choice value should be in the choices map";
     }
 }
 /* 

@@ -153,15 +153,21 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
         }  
         // String choice serialization
         else if constexpr (std::is_same<T, std::string>::value) {
-            // Default is STRING_CHOICE, changes to STRING_STRING_CHOICE if
-            // there are no display strings
-            constraint.set_type(catena::Constraint::STRING_CHOICE);
-            for (auto& [value, name] : choices_) {
-                auto stringChoice = constraint.mutable_string_string_choice()->add_choices();
-                stringChoice->set_value(value);
-                name.toProto(*stringChoice->mutable_name());
-                if (!name.displayStrings().empty()) {
-                    constraint.set_type(catena::Constraint::STRING_STRING_CHOICE);
+            // STRING_STRING_CHOICE is used if any of the names have display strings
+            if (std::any_of(choices_.begin(), choices_.end(), [](const auto& pair) {
+                return !pair.second.displayStrings().empty();
+            })) {
+                constraint.set_type(catena::Constraint::STRING_STRING_CHOICE);
+                for (auto& [value, name] : choices_) {
+                    auto stringChoice = constraint.mutable_string_string_choice()->add_choices();
+                    stringChoice->set_value(value);
+                    name.toProto(*stringChoice->mutable_name());
+                }
+            // STRING_CHOICE
+            } else {
+                constraint.set_type(catena::Constraint::STRING_CHOICE);
+                for (auto& [value, name] : choices_) {
+                    *constraint.mutable_string_choice()->add_choices() = value;
                 }
             }
         }
