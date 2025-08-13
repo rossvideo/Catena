@@ -29,7 +29,7 @@ USER ${USER_GROUP}
 
 WORKDIR ${WORKDIR}
 
-COPY --chmod=755 --chown=${USER_GROUP} interface ${WORKDIR}/interface
+COPY --chmod=755 --chown=${USER_GROUP} interface ${WORKDIR}/st2138
 COPY --chmod=755 docker/example-entrypoint.sh /entrypoint.sh
 COPY --chmod=755 docker/example-healthcheck.sh /healthcheck.sh
 
