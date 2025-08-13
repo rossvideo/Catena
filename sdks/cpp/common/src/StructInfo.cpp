@@ -164,12 +164,12 @@ bool catena::common::validFromProto<std::string>(const catena::Value& src, const
     // Must have correct type
     } else if (!src.has_string_value()) {
         rc = catena::exception_with_status("Type mismatch between value and string " + pd.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+    // If pd has type string it must not exceed max_length
+    } else if (pd.type() == ParamType::STRING && src.string_value().size() > pd.total_length()) {
+        rc = catena::exception_with_status("Param " + pd.getOid() + " exceeds maximum capacity", catena::StatusCode::OUT_OF_RANGE);
     // Must satisfy present constraint
     } else if (constraint && !constraint->satisfied(src)) {
        rc = catena::exception_with_status(pd.getOid() + " constraint not met", catena::StatusCode::INVALID_ARGUMENT);
-    // Must not exceed max length
-    } else if (src.string_value().size() > pd.max_length()) {
-        rc = catena::exception_with_status("Param " + pd.getOid() + " exceeds maximum capacity", catena::StatusCode::OUT_OF_RANGE);
     }
     return rc.status == catena::StatusCode::OK;
 }
