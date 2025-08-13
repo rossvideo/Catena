@@ -13,6 +13,9 @@ env:
   CONNECTIONS: gRPC;REST
   BUILD_TARGET: build/cpp
   WORKDIR: /app
+  SPARSE_CHECKOUT: |
+    docker
+    interface
   
 
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
@@ -257,9 +260,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          sparse-checkout: |
-            docker
-            interface
+          sparse-checkout: ${{ env.SPARSE_CHECKOUT }}
 
       - name: Download examples
         uses: actions/download-artifact@v4
@@ -341,7 +342,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          sparse-checkout: docker
+          sparse-checkout: ${{ env.SPARSE_CHECKOUT }}
 
       - name: Download examples
         uses: actions/download-artifact@v4
