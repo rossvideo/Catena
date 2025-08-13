@@ -67,8 +67,10 @@ class IParamVisitor {
          * @param param The array to visit
          * @param path The path of the array
          * @param length The length of the array
+         * @note Default implementation does nothing, but can be overridden 
+         * by subclasses for special array handling.
          */
-        virtual void visitArray(IParam* param, const std::string& path, uint32_t length) = 0;
+        virtual void visitArray(IParam* param, const std::string& path, uint32_t length) {}
 };
 
 } // namespace common
