@@ -4,7 +4,7 @@ name: Create and publish a Docker images
 # Configures this workflow to run every time a change is pushed to the branch called `release`.
 on:
   push:
-    branches: ['develop', 'main']
+    branches: ['develop', 'main', '948-combined-examples-image']
 
 # Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
 env:
@@ -243,7 +243,94 @@ jobs:
           ls -l $WORKDIR/examples
           echo "Examples saved to artifact 'examples'"
 
-  build-and-push-examples:
+  build-and-push-single-examples:
+    runs-on: ubuntu-latest
+    needs: build-examples
+    strategy:
+      matrix:
+        example: ${{ fromJson(needs.build-examples.outputs.examples) }}
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            docker
+            interface
+
+      - name: Download examples
+        uses: actions/download-artifact@v4
+        with:
+          name: examples
+          path: ${{ github.workspace }}/examples
+
+      - name: Process example name
+        id: process-name
+        run: |
+          EXAMPLE_PATH="examples/${{ matrix.example }}"
+          CONNECTION=$(echo "${{ matrix.example }}" | cut -d'/' -f1)
+          EXAMPLE=$(basename "${{ matrix.example }}")
+          # Append the connection type to the example name if it's not already included
+          if [[ ! "$EXAMPLE" =~ $CONNECTION$ ]]; then
+            EXAMPLE="${EXAMPLE}-${CONNECTION}"
+          fi
+          SINGLE_SOURCE=$(echo "$CONNECTION" | tr '[:upper:]' '[:lower:]')
+          echo "example_path=${EXAMPLE_PATH}" >> $GITHUB_OUTPUT
+          echo "connection=${CONNECTION}" >> $GITHUB_OUTPUT
+          echo "example=${EXAMPLE}" >> $GITHUB_OUTPUT
+          echo "single_source=${SINGLE_SOURCE}" >> $GITHUB_OUTPUT
+          echo "EXAMPLE_PATH=${EXAMPLE_PATH}"
+          echo "CONNECTION=${CONNECTION}"
+          echo "EXAMPLE=${EXAMPLE}"
+          echo "SINGLE_SOURCE=${SINGLE_SOURCE}"
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # This step uses [docker/metadata-action](https://github.com/docker/metadata-action#about) to extract tags and labels that will be applied to the specified image. The `id` "meta" allows the output of this step to be referenced in a subsequent step. The `images` value provides the base name for the tags and labels.
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.REGISTRY }}/rossvideo/catena
+          tags: |
+            type=raw,value=${{ steps.process-name.outputs.example }}testing
+          labels: |
+            org.opencontainers.image.title=Catena ${{ steps.process-name.outputs.example }}
+            org.opencontainers.image.description=Self contained example for Catena ${{ steps.process-name.outputs.example }}
+            org.opencontainers.image.vendor=Ross Video
+
+      - name: Print stuff
+        run: |
+          echo "tags: ${{ steps.meta.outputs.tags }}"
+          echo "labels: ${{ steps.meta.outputs.labels }}"
+          find .
+      
+      - name: Build and push image for ${{ matrix.example }}
+        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+        with:
+          context: .
+          file: docker/example.dockerfile
+          # push: true
+          target: single
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            CONNECTION=${{ steps.process-name.outputs.connection }}
+            EXAMPLE=${{ steps.process-name.outputs.example }}
+            EXAMPLE_PATH=${{ steps.process-name.outputs.example_path }}
+            SINGLE_SOURCE=${{ steps.process-name.outputs.single_source }}
+            WORKDIR=${{ env.WORKDIR }}
+
+
+  build-and-push-all-examples:
     runs-on: ubuntu-latest
     needs: build-examples
     strategy:
@@ -265,26 +352,6 @@ jobs:
           name: examples
           path: ${{ github.workspace }}/examples
 
-      - name: Process example name
-        id: process-name
-        run: |
-          EXAMPLE_PATH="examples/${{ matrix.example }}"
-          CONNECTION=$(echo "${{ matrix.example }}" | cut -d'/' -f1)
-          EXAMPLE=$(basename "${{ matrix.example }}")
-          # Append the connection type to the example name if it's not already included
-          if [[ ! "$EXAMPLE" =~ $CONNECTION$ ]]; then
-            EXAMPLE="${EXAMPLE}-${CONNECTION}"
-          fi
-          TARGET_NAME=$(echo "$CONNECTION" | tr '[:upper:]' '[:lower:]')
-          echo "example_path=${EXAMPLE_PATH}" >> $GITHUB_OUTPUT
-          echo "connection=${CONNECTION}" >> $GITHUB_OUTPUT
-          echo "example=${EXAMPLE}" >> $GITHUB_OUTPUT
-          echo "target_name=${TARGET_NAME}" >> $GITHUB_OUTPUT
-          echo "EXAMPLE_PATH=${EXAMPLE_PATH}"
-          echo "CONNECTION=${CONNECTION}"
-          echo "EXAMPLE=${EXAMPLE}"
-          echo "TARGET_NAME=${TARGET_NAME}"
-
       - name: Log in to the Container registry
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
@@ -299,10 +366,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/rossvideo/catena
           tags: |
-            type=raw,value=${{ steps.process-name.outputs.example }}
+            type=raw,value=latest
           labels: |
-            org.opencontainers.image.title=Catena ${{ steps.process-name.outputs.example }}
-            org.opencontainers.image.description=Self contained example for Catena ${{ steps.process-name.outputs.example }}
+            org.opencontainers.image.title=Catena Examples
+            org.opencontainers.image.description=Self contained example for Catena Examples
             org.opencontainers.image.vendor=Ross Video
 
       - name: Print stuff
@@ -316,13 +383,13 @@ jobs:
         with:
           context: .
           file: docker/example.dockerfile
-          push: true
-          target: ${{ steps.process-name.outputs.target_name }}
+          # push: true
+          target: all
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            CONNECTION=${{ steps.process-name.outputs.connection }}
-            EXAMPLE=${{ steps.process-name.outputs.example }}
-            EXAMPLE_PATH=${{ steps.process-name.outputs.example_path }}
+            CONNECTION=gRPC
+            EXAMPLE=one-of-everything-gRPC
+            EXAMPLE_PATH=examples
             WORKDIR=${{ env.WORKDIR }}
 
