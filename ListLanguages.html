@@ -9,23 +9,25 @@ style="width: 100%;" alt="Catena Logo" />
 <h1 id="listlanguages">ListLanguages</h1>
 <p>Gets the languages supported by the device model.</p>
 <h3 id="in">IN</h3>
-<pre><code>uint32 slot = 1; // Uniquely identifies the device at node scope.</code></pre>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode proto"><code class="sourceCode protobuf"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">uint32</span> slot = <span class="dv">1</span>; <span class="co">// Uniquely identifies the device at node scope.</span></span></code></pre></div>
 <h3 id="out">OUT</h3>
-<pre><code>/* Language List
- * The list of language tags that the device supports.
- *
- * e.g.
- * [
- *    &quot;en&quot;,
- *    &quot;es&quot;,
- *    &quot;fr&quot;
- * ] // Support for English, Spanish &amp; French
- *
- * e.g.
- * [] // No multi-lingual support */
-message LanguageList {
-  repeated string languages = 1;
-}</code></pre>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode proto"><code class="sourceCode protobuf"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* Language List</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"> * The list of language tags that the device supports.</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"> *</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"> * e.g.</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"> * [</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"> *    &quot;en&quot;,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"> *    &quot;es&quot;,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"> *    &quot;fr&quot;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"> * ] // Support for English, Spanish &amp; French</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"> *</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"> * e.g.</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co"> * [] // No multi-lingual support */</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> LanguageList {</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">repeated</span> <span class="dt">string</span> languages = <span class="dv">1</span>;</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <div style="text-align: center">
-<p><a href="gRPC.html">Next Page: Supported gRPC Services</a></p>
+<p><a href="RefreshToken.html">Next Page: RefreshToken</a></p>
 </div>

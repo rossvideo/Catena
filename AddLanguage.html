@@ -10,22 +10,23 @@ style="width: 100%;" alt="Catena Logo" />
 <p>Adds a language pack to a device model. This gRPC requires admin
 write if authorization is enabled.</p>
 <h3 id="in">IN</h3>
-<pre><code>/* AddLanguagePayload
- * Used by a client to request that a device adds support for a language pack. */
-message AddLanguagePayload {
-  uint32 slot = 1;                /* Uniquely identifies the device at node
-                                   * scope. */
-  LanguagePack language_pack = 2; // The language pack to add.
-  string id = 3;                  // e.g. &quot;es&quot; Global Spanish.
-}
-
-/* Language Pack
- * A map of string identifiers, e.g. &quot;greeting&quot; to strings which are all
- * in the same language. */
-message LanguagePack {
-  string name = 1;               // e.g. &quot;Global Spanish&quot;
-  map&lt;string, string&gt; words = 2; // e.g. &quot;greeting&quot; -&gt; &quot;Hola&quot;
-}</code></pre>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode proto"><code class="sourceCode protobuf"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* AddLanguagePayload</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"> * Used by a client to request that a device adds support for a language pack. */</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> AddLanguagePayload {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32</span> slot = <span class="dv">1</span>;                <span class="co">/* Uniquely identifies the device at node</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">                                   * scope. */</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  LanguagePack language_pack = <span class="dv">2</span>; <span class="co">// The language pack to add.</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span> language = <span class="dv">3</span>;            <span class="co">// e.g. &quot;es&quot; Global Spanish.</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">/* Language Pack</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"> * A map of string identifiers, e.g. &quot;greeting&quot; to strings which are all</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"> * in the same language. */</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> LanguagePack {</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span> name = <span class="dv">1</span>;               <span class="co">// e.g. &quot;Global Spanish&quot;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  map&lt;<span class="dt">string</span>, <span class="dt">string</span>&gt; words = <span class="dv">2</span>; <span class="co">// e.g. &quot;greeting&quot; -&gt; &quot;Hola&quot;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <h3 id="out">OUT</h3>
 <p>This gRPC returns nothing.</p>
 <div style="text-align: center">

@@ -9,44 +9,46 @@ style="width: 100%;" alt="Catena Logo" />
 <h1 id="connect">Connect</h1>
 <p>Connects a client to a service for updates on value changes.</p>
 <h3 id="in">IN</h3>
-<pre><code>/* Initial handshake between client and device. */
-message ConnectPayload {
-  string language = 1;                 // The language to recieve responses in.
-  Device.DetailLevel detail_level = 2; // The detail level for the responses.
-  string user_agent = 3;               /* Description of the client type and
-                                        * version */
-  bool force_connection = 4;           /* True to request access if connection
-                                        * had been previously refused */
-}</code></pre>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode proto"><code class="sourceCode protobuf"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* Initial handshake between client and device. */</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> ConnectPayload {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span> language = <span class="dv">1</span>;                 <span class="co">// The language to recieve responses in.</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  Device.DetailLevel detail_level = <span class="dv">2</span>; <span class="co">// The detail level for the responses.</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">string</span> user_agent = <span class="dv">3</span>;               <span class="co">/* Description of the client type and</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">                                        * version */</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bool</span> force_connection = <span class="dv">4</span>;           <span class="co">/* True to request access if connection</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">                                        * had been previously refused */</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <h3 id="out">OUT</h3>
 <p>A stream of PushUpdates from the server.</p>
-<pre><code>/* Messages that the device can push to the client. */
-message PushUpdates {
-  message PushExternalObject {
-    string oid = 1;
-    ExternalObjectPayload external_object = 2;
-  }
-
-  message PushValue {
-    string oid = 1;
-      Value value = 3;
-  }
-
-  uint32 slot = 1;
-  
-  oneof kind {
-    PushValue value = 2; // e.g. audio meters
-    DeviceComponent device_component = 3;
-    Exception refused = 4;
-    string invalidated_external_object_id = 5;
-    TrapMessage trap_message = 6;
-    bool invalidate_device_model = 7;
-    PushExternalObject external_object = 8;
-    RemoveComponents remove_device_components = 9;
-    SlotList slots_added = 10;
-    SlotList slots_removed = 11;
-  }
-}</code></pre>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode proto"><code class="sourceCode protobuf"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* Messages that the device can push to the client. */</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> PushUpdates {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">message</span> PushExternalObject {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">string</span> oid = <span class="dv">1</span>;</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    ExternalObjectPayload external_object = <span class="dv">2</span>;</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">message</span> PushValue {</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">string</span> oid = <span class="dv">1</span>;</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      Value value = <span class="dv">3</span>;</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32</span> slot = <span class="dv">1</span>;</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  oneof kind {</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    PushValue value = <span class="dv">2</span>; <span class="co">// e.g. audio meters</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    DeviceComponent device_component = <span class="dv">3</span>;</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    Exception refused = <span class="dv">4</span>;</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">string</span> invalidated_external_object_id = <span class="dv">5</span>;</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    TrapMessage trap_message = <span class="dv">6</span>;</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> invalidate_device_model = <span class="dv">7</span>;</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    PushExternalObject external_object = <span class="dv">8</span>;</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    RemoveComponents remove_device_components = <span class="dv">9</span>;</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    SlotList slots_added = <span class="dv">10</span>;</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    SlotList slots_removed = <span class="dv">11</span>;</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <div style="text-align: center">
 <p><a href="AddLanguage.html">Next Page: AddLanguage</a></p>
 </div>
