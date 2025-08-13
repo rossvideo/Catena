@@ -116,9 +116,9 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IParamVisitor</b>
 <tr class="memitem:a79483a6748bdd35ca240d9766cd88add" id="r_a79483a6748bdd35ca240d9766cd88add"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParamVisitor.html#a79483a6748bdd35ca240d9766cd88add">visit</a> (<a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *param, const std::string &amp;path)=0</td></tr>
 <tr class="memdesc:a79483a6748bdd35ca240d9766cd88add"><td class="mdescLeft">&#160;</td><td class="mdescRight">Visit a parameter.  <br /></td></tr>
 <tr class="separator:a79483a6748bdd35ca240d9766cd88add"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3f09be6b1bc15fd423f6ea1d985c11cf" id="r_a3f09be6b1bc15fd423f6ea1d985c11cf"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParamVisitor.html#a3f09be6b1bc15fd423f6ea1d985c11cf">visitArray</a> (<a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *param, const std::string &amp;path, uint32_t length)=0</td></tr>
-<tr class="memdesc:a3f09be6b1bc15fd423f6ea1d985c11cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Visit an array.  <br /></td></tr>
-<tr class="separator:a3f09be6b1bc15fd423f6ea1d985c11cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a84357aa670213bf6272c575942167051" id="r_a84357aa670213bf6272c575942167051"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParamVisitor.html#a84357aa670213bf6272c575942167051">visitArray</a> (<a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *param, const std::string &amp;path, uint32_t length)</td></tr>
+<tr class="memdesc:a84357aa670213bf6272c575942167051"><td class="mdescLeft">&#160;</td><td class="mdescRight">Visit an array.  <br /></td></tr>
+<tr class="separator:a84357aa670213bf6272c575942167051"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface for parameter visitors. </p>
@@ -170,8 +170,8 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IParamVisitor</b>
 
 </div>
 </div>
-<a id="a3f09be6b1bc15fd423f6ea1d985c11cf" name="a3f09be6b1bc15fd423f6ea1d985c11cf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3f09be6b1bc15fd423f6ea1d985c11cf">&#9670;&#160;</a></span>visitArray()</h2>
+<a id="a84357aa670213bf6272c575942167051" name="a84357aa670213bf6272c575942167051"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a84357aa670213bf6272c575942167051">&#9670;&#160;</a></span>visitArray()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -205,7 +205,7 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IParamVisitor</b>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -219,8 +219,9 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IParamVisitor</b>
   </table>
   </dd>
 </dl>
+<dl class="section note"><dt>Note</dt><dd>Default implementation does nothing, but can be overridden by subclasses for special array handling. </dd></dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamVisitor.html#ae302c4cc4c35b605f29226c54590288f">catena::common::ParamVisitor</a>.</p>
+<p>Reimplemented in <a class="el" href="classcatena_1_1common_1_1ParamVisitor.html#ae302c4cc4c35b605f29226c54590288f">catena::common::ParamVisitor</a>.</p>
 
 </div>
 </div>
