@@ -205,6 +205,26 @@
       "widget": "button",
       "read_only": true, 
       "response": true
+    },
+    "multi_arg_command": {
+      "name": {"display_strings": {
+        "en": "Multi-Arg Command",
+        "fr": "Commande multi-argument",
+        "es": "Comando multi-argumento",
+        "ja": "マルチ引数コマンド"
+      }},
+      "type":"STRUCT",
+      "widget": "button",
+      "read_only": false,
+      "response": true,
+      "params": {
+        "arg1": {
+          "type": "INT32"
+        },
+        "arg2": {
+          "type": "INT32"
+        }
+      }
     }
   },
   "menu_groups": {

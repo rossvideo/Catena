@@ -233,6 +233,29 @@ void defineCommands() {
             
         }(value, respond));
     });
+
+    std::unique_ptr<IParam> multiArgCommand = dm.getCommand("/multi_arg_command", err);
+    assert(multiArgCommand != nullptr);
+    multiArgCommand->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+            catena::exception_with_status err{"", catena::StatusCode::OK};
+            catena::CommandResponse response;
+
+            video_player::Multi_arg_command commandArgs;
+            std::unique_ptr<IParam> multiArgCommand = dm.getCommand("/multi_arg_command", err);
+            IParamDescriptor& desc = const_cast<IParamDescriptor&>(multiArgCommand->getDescriptor());
+            auto pwv = ParamWithValue<video_player::Multi_arg_command>(commandArgs,  desc);
+            pwv.fromProto(value, Authorizer::kAuthzDisabled);
+
+            // Execute command here
+            printf("Executed multi arg commnad \nArg1: %d \nArg2: %d\n", commandArgs.arg1, commandArgs.arg2);
+
+            // For now just echo arguments back to client
+            *response.mutable_response() = value; 
+            co_return response;
+            
+        }(value, respond));
+    }); 
 }
 
 int main(int argc, char* argv[])

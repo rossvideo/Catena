@@ -26,14 +26,40 @@
             <task tasktype="ogscript">
             function debugMessage(success, result, commandId, args){
                ogscript.debug("\nCommand Id: " + commandId
-               + "\nInput Argument: " + args["count value"]
+               + "\nInput Arguments: " + JSON.stringify(args)
                + "\nSuccess: " + success
-               + "\nResult: " + result[0]);
+               + "\nResult: " + JSON.stringify(result));
             }
             params.executeCommand("debug_counter", {"count value": params.getValue("count_to", 0)}, debugMessage);
             </task>
          </button>
          <param oid="count_to" showlabel="false" fill="both" height="75" left="835" top="0" width="235"/>
+      </tr>
+      <tr>
+         <button buttontype="push" height="75" left="600" name="multi_arg_command" top="0" width="235">
+            <task tasktype="ogscript">
+            function debugMessage(success, result, commandId, args){
+               ogscript.debug("\nCommand Id: " + commandId
+               + "\nInput Arguments: " + JSON.stringify(args)
+               + "\nSuccess: " + success
+               + "\nResult: " + JSON.stringify(result));
+            }
+            params.executeCommand("multi_arg_command", {"arg1": 5, "arg2": 10}, debugMessage);
+            </task>
+         </button>
+      </tr>
+      <tr>
+         <button buttontype="push" height="75" left="600" name="struct_arg_command" top="0" width="235">
+            <task tasktype="ogscript">
+            function debugMessage(success, result, commandId, args){
+               ogscript.debug("\nCommand Id: " + commandId
+               + "\nInput Arguments: " + JSON.stringify(args)
+               + "\nSuccess: " + success
+               + "\nResult: " + JSON.stringify(result));
+            }
+            params.executeCommand("multi_arg_command", {"My_struct_arg": {"arg1": 5, "arg2": 10}}, debugMessage);
+            </task>
+         </button>
       </tr>
    </table>
 </abs>
