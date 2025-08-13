@@ -6,13 +6,14 @@
 
 The recommended process is hopefully simple:
 
-1. Design your [device model](DeviceModel.html) as a set of JSON or YAML files in a file structure documented [here](Validation.html).
-2. Create two files: `device_model.cpp` and `CMakeLists.txt`. `device_model.cpp` can be left empty for now.
-3. Include the `.../common/include` directory in your `CMakeList.txt` file using `target_include_directories()`.
-4. Place the three of these files together in a directory `device_model` and include it as a subdirectory in the parent directory's `CMakeLists.txt` file.
-5. Build Catena following the steps documented [here](doxygen/index.html). If the CMake file has been configured correctly, this should generate your device's code and create an executable named after your folder.
-6. In your build folder, use `./path/to/your/device/folder/folderName` to run your model. This should do nothing at the moment.
-7. If working, add your buisness logic to `device_model.cpp`.
+1. Build the [Dev Container](DevContainer.html).
+2. Design your [device model](DeviceModel.html) as a set of JSON or YAML files in a file structure documented [here](Validation.html).
+3. Create two files: `device_model.cpp` and `CMakeLists.txt`. `device_model.cpp` can be left empty for now.
+4. Include the `.../common/include` directory in your `CMakeList.txt` file using `target_include_directories()`.
+5. Place the three of these files together in a directory `device_model` and include it as a subdirectory in the parent directory's `CMakeLists.txt` file.
+6. Build Catena following the steps documented [here](doxygen/index.html). If the CMake file has been configured correctly, this should generate your device's code and create an executable named after your folder.
+7. In your build folder, use `./path/to/your/device/folder/folderName` to run your model. This should do nothing at the moment.
+8. If working, add your buisness logic to `device_model.cpp`.
 
 For example devices, see `sdks/cpp/common/examples`.
 
@@ -70,13 +71,18 @@ void RunRPCServer(std::string addr) {
     grpc::ServerBuilder builder;
     grpc::EnableDefaultHealthCheckService(true);
     // Adding a listening port and completion queue.
-    builder.AddListeningPort(addr, catena::getServerCredentials());
+    builder.AddListeningPort(addr, catena::gRPC::getServerCredentials());
     std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
-    // Getting flags from command line.
-    std::string EOPath = absl::GetFlag(FLAGS_static_root);
-    bool authz = absl::GetFlag(FLAGS_authz);
-    // Initializing and registering a gRPC service with the generated device.
-    CatenaServiceImpl service(cq.get(), dm, EOPath, authz);
+    // Getting command line flags
+    ServiceConfig config = ServiceConfig()
+        .set_EOPath(absl::GetFlag(FLAGS_static_root))
+        .set_authz(absl::GetFlag(FLAGS_authz))
+        .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
+        .set_cq(cq.get())
+        // Adding devices
+        .add_dm(&dm);
+    // Creating and registering catena service
+    ServiceImpl service(config);
     builder.RegisterService(&service);
     // Building the server and beginning loop.
     std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
@@ -120,12 +126,16 @@ catena::REST::CatenaServiceImpl *globalApi = nullptr;
 
 // This initializes a REST Catena service with your device.
 void RunRESTServer () {
-    // Getting flags from command line.
-    std::string EOPath = absl::GetFlag(FLAGS_static_root);
-    bool authorization = absl::GetFlag(FLAGS_authz);
-    uint16_t port = absl::GetFlag(FLAGS_port);
+    // Getting command line flags
+    ServiceConfig config = ServiceConfig()
+        .set_EOPath(absl::GetFlag(FLAGS_static_root))
+        .set_authz(absl::GetFlag(FLAGS_authz))
+        .set_port(absl::GetFlag(FLAGS_port))
+        .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
+        // Adding devices
+        .add_dm(&dm);
     // Creating and running the REST service.
-    catena::REST::CatenaServiceImpl api(dm, EOPath, authorization, port);
+    ServiceImpl api(config);
     globalApi = &api;
     api.run();
 }

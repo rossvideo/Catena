@@ -6,7 +6,7 @@
 Updates a client's subscriptions, affecting the output of the Connect and DeviceRequest RPCs on detail_level SUBSCRIPTIONS.
 
 ### IN
-```
+``` proto
 message UpdateSubscriptionsPayload {
   uint32 slot = 1;                  /* Uniquely identifies the device at node
                                      * scope. */
@@ -23,7 +23,8 @@ message UpdateSubscriptionsPayload {
 
 ### OUT
 A stream of parameters added/removed from subscriptions.
-```
+
+``` proto
 /* A parameter */
 message ComponentParam {
   string oid = 1;

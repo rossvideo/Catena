@@ -6,10 +6,10 @@
 Sets the value of multiple parameters within a device model.
 
 ### IN
-```
+``` proto
 message MultiSetValuePayload {
-  uint32 slot = 1;                     // Uniquely identifies the device at
-                                       // node scope.
+  uint32 slot = 1;                     /* Uniquely identifies the device at
+                                        * node scope. */
   repeated SetValuePayload values = 2; // The param oids and values to apply.
 }
 

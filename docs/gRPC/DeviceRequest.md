@@ -6,7 +6,7 @@
 The DeviceRequest gRPC returns a stream of components from the device manager at the specified slot. Which components are retrieved depends on the specified detail_level.
 
 ### IN
-```
+```proto
 message DeviceRequestPayload {
   uint32 slot = 1;                     /* Uniquely identifies the device at
                                         * node scope. */
@@ -22,7 +22,8 @@ message DeviceRequestPayload {
 
 ### OUT
 A stream of DeviceComponents.
-```
+
+```proto
 message DeviceComponent {
   /* A parameter or sub-parameter, or sub-sub-parameter, or ...
    *

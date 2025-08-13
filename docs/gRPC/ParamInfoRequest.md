@@ -6,7 +6,7 @@
 Gets a parameter's basic information from the device model connected to the specified slot
 
 ### IN
-```
+``` proto
 /* Specifies the OID and potentially its subtree of
  * child parameters if the recursive flag is set. */
 message ParamInfoRequestPayload {
@@ -21,11 +21,12 @@ message ParamInfoRequestPayload {
 
 ### OUT
 A stream of ParamInfoResponses
-```
+
+``` proto
 message ParamInfoResponse {
   ParamInfo info = 1;
-  uint32 array_length = 2; // If this ParamInfoResponse is for an array 
-                           // parameter, include the length of the array.
+  uint32 array_length = 2; /* If this ParamInfoResponse is for an array 
+                            * parameter, include the length of the array. */
 }
 
 message ParamInfo {
