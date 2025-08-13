@@ -42,7 +42,11 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
     std::set<std::string>& dmSubscriptions = subscriptions_[dm.slot()];
 
     // Getting base Oid if wildcard.
-    baseOid = wildcard ? oid.substr(0, oid.length() - 2) : oid;
+    if (wildcard) {
+        baseOid = oid.substr(0, oid.length() - 2);
+    } else {
+        baseOid = oid;
+    }
 
     // Making sure the oid exists unless client is subbing to all params.
     if (!wildcard || oid != "/*") {
