@@ -193,7 +193,16 @@ menu_groups:
           - /constraint_examples/string_string_array_choice
           - /constraint_examples/string_length
           - /constraint_examples/string_array_length
-      
+      command_examples:
+        name: { display_strings: {
+          en: "Command Examples",
+          fr: "Exemples de Commandes",
+          es: "Ejemplos de Comandos",
+          ja: "コマンド例"}}
+        param_oids: []
+        client_hints: {
+          "oglml": "eo://commands.grid"
+        }
 commands:
   fib_start:
     type: EMPTY
