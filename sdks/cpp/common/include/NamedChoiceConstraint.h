@@ -80,17 +80,12 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
      * @param shared is the constraint shared
      * @note  the first choice provided will be the default for the constraint
      */
-    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
-        : choices_{init.begin(), init.end()}, strict_{strict},
+    NamedChoiceConstraint(ListInitializer init, bool isNamed, bool strict, std::string oid, bool shared)
+        : choices_{init.begin(), init.end()}, strict_{strict}, isNamed_{isNamed},
           default_{init.begin()->first}, oid_{oid}, shared_{shared} {
         // Making sure T is a valid type.
         if constexpr (!std::is_same<T, int32_t>::value && !std::is_same<T, std::string>::value) {
             throw std::runtime_error("Cannot create NamedChoiceConstraint with type other than int32_t or std::string");
-        // Setting isNamed_ to true if any of the choices have display strings.
-        } else {
-            isNamed_ = std::any_of(choices_.begin(), choices_.end(), [](const auto& pair) {
-                return !pair.second.displayStrings().empty();
-            });
         }
     }
 
@@ -103,8 +98,8 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
      * @param dm the device to add the constraint to
      * @note  the first choice provided will be the default for the constraint
      */
-    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, IDevice& dm)
-        : NamedChoiceConstraint(init, strict, oid, shared) {
+    NamedChoiceConstraint(ListInitializer init, bool isNamed, bool strict, std::string oid, bool shared, IDevice& dm)
+        : NamedChoiceConstraint(init, isNamed, strict, oid, shared) {
         dm.addItem(oid, this);
     }
 
