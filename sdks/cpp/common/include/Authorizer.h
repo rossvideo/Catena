@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -39,7 +39,7 @@
  * @author Ben Whitten benjamin.whitten@rossvideo.com
  * @author Zuhayr Sarker zuhayr.sarker@rossvideo.com
  * @date 2025-02-20
- * @copyright Copyright (c) 2024 Ross Video
+ * @copyright Copyright (c) 2025 Ross Video
  */
 
 // common
@@ -62,7 +62,12 @@ namespace catena {
 namespace common {
 
 /**
- * @brief Class for handling authorization information
+ * @brief Class for handling authorization information.
+ * 
+ * This class takes a valid JWS token and extracts the "scope" and "exp" claims
+ * to later check client access.
+ * The actual authentication portion of the JWS token is handled externally and
+ * the class just assumes that the token is good when it recieves it.
  */
 class Authorizer : public IAuthorizer {
   public:
@@ -76,10 +81,12 @@ class Authorizer : public IAuthorizer {
     static Authorizer kAuthzDisabled;
 
     /**
-     * @brief Constructs a new Authorizer object by extracting client scopes
+     * @brief Constructs a new Authorizer object by extracting the "scope" and
+     * "exp" claims from the JWS token.
      * from a JWS token.
-     * Authorizer expects the JWSToken to be valid. Authentication of the token
-     * is to be handled by the API gateway.
+     * 
+     * The JWS token is assumed to be valid as authentication is handled
+     * externally.
      * @param JWSToken The JWS token to extract scopes from.
      * @throw Throws an catena::exception_with_status UNAUTHENTICATED if the
      * authorizer fails to decoded the JWS Token.
@@ -170,7 +177,7 @@ class Authorizer : public IAuthorizer {
      */
     Authorizer() : clientScopes_{{""}} {}
     /**
-     * @brief Check if the client has the specified authorization
+     * @brief Checks if the client has the specified authorization
      * @param scope The scope to check for authorization
      * @return true if the client has the specified authorization
      */

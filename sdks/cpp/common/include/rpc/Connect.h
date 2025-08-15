@@ -30,7 +30,7 @@
 
 /**
  * @file Connect.h
- * @brief Pure virtual class for Connect RPCs used to share update code.
+ * @brief Virtual class for Connect handlers inherit to share update code.
  * @author Ben Whitten (benjamin.whitten@rossvideo.com)
  * @copyright Copyright (c) 2025 Ross Video
  */
@@ -58,13 +58,14 @@ namespace catena {
 namespace common {
 
 /**
- * @brief Pure virtual class for Connect RPCs.
- * Contains functions for updating the response message with parameter values.
- * Can only be inherited.
- * 
- * @todo Implement subscriptionManager.
+ * @brief Virtual class for Connect handlers to inherit to share update code
+ * among other things.
  */
 class Connect : public IConnect {
+  /*
+   * Public functions are all used for connection management and priority
+   * comparison in the connectionQueue class.
+   */
   public:
     /**
      * @brief Descructor
@@ -79,12 +80,16 @@ class Connect : public IConnect {
      */
     uint32_t objectId() const override { return objectId_; }
     /**
-     * @brief Returns true if this has less prioirty than otherConnection.
+     * @brief Comparison between IConnect objects which returns true if the
+     * current priority is less than the priority it's being compared to.
      */
     bool operator<(const IConnect& otherConnection) const override {
         return priority_ < otherConnection.priority() ||
                (priority_ == otherConnection.priority() && objectId_ >= otherConnection.objectId());
     }
+
+    // IConnect::IsCanceled() to be defined by the derived class
+
     /**
      * @brief Forcefully shuts down the connection.
      */
@@ -95,15 +100,10 @@ class Connect : public IConnect {
     };
 
   protected:
-    /**
-     * @brief Constructor
-     */
     Connect() = delete;
     /**
      * @brief Constructor for the Connect class.
      * @param dms A map of slots to ptrs to their corresponding device.
-     * @param authz true if authorization is enabled, false otherwise.
-     * @param jwsToken The client's JWS token.
      * @param subscriptionManager The subscription manager.
      */
     Connect(SlotMap& dms, ISubscriptionManager& subscriptionManager) : 
@@ -121,22 +121,21 @@ class Connect : public IConnect {
     Connect(Connect&&) = delete;
     Connect& operator=(Connect&&) = delete;
 
-    // IConnect::IsCanceled to be defined by the derived class
-
     /**
-     * @brief Updates the response message with parameter values and handles 
-     * authorization checks.
+     * @brief Updates the response message with parameter values if the client
+     * has read authorization and the correct detail level.
      * 
-     * @param oid - The OID of the value to update
-     * @param p - The parameter to update
+     * @param oid The OID of the updated value
+     * @param p The updated parameter
+     * @param slot The slot number of the device containing the parameter.
      */
     void updateResponse_(const std::string& oid, const IParam* p, uint32_t slot) override {
         try {
-            // If Connect was cancelled, notify client and end process
+            // If Connect was cancelled, shutdown the call.
             if (isCancelled()) {
-                hasUpdate_ = true;
-                cv_.notify_one();
+                shutdown();
 
+            // Send a push update if the client has read authorization.
             } else if (authz_->readAuthz(*p)) {
                 // Map of detail levels to their update logic
                 const std::unordered_map<catena::Device_DetailLevel, std::function<bool()>> detailLevelMap {
@@ -184,17 +183,19 @@ class Connect : public IConnect {
     }
     
     /**
-     * @brief Updates the response message with an ILanguagePack and
-     * handles authorization checks.
+     * @brief Updates the response message with an ILanguagePack if the client
+     * has monitor scope.
      * 
      * @param l The added ILanguagePack emitted by device.
+     * @param slot The slot number of the device containing the language pack.
      */
     void updateResponse_(const ILanguagePack* l, uint32_t slot) override {
         try {
-            // If Connect was cancelled, notify client and end process.
+            // If Connect was cancelled, shutdown the call.
             if (isCancelled()){
-                hasUpdate_ = true;
-                cv_.notify_one();
+                shutdown();
+
+            // Send a push update if the client has monitor scope.
             } else if (authz_->readAuthz(Scopes_e::kMonitor)) {
                 // Updating res_'s device_component and pushing update.
                 res_.Clear();
@@ -211,13 +212,20 @@ class Connect : public IConnect {
     }
 
     /**
-     * @brief Sets up the authorizer object with the jwsToken and calculates
-     * connection priority.
+     * @brief Crates an authorizer using the jws token and calculates the
+     * client's priority.
+     * 
+     * If authz == false, the authorizer is instead set to the kAuthzDisabled
+     * object and their priority is left at 0.
+     * 
+     * A client's priority is calculated based on the their highest scope as
+     * well as whether they have force connection set to True (only relevant
+     * for adm:w clients).
      * 
      * priority_ = scope * 2 + write + (adm:w && forceConnection)
      * 
-     * @param jwsToken The jwsToken to use for authorization.
-     * @param authz true if authorization is enabled, false otherwise.
+     * @param jwsToken The client's jws token to create the authorizer with.
+     * @param authz True if authorization is enabled, False otherwise.
      */
     void initAuthz_(const std::string& jwsToken, bool authz = false) override {
         if (authz) {
@@ -295,7 +303,7 @@ class Connect : public IConnect {
     /**
      * @brief Flag to force a connection.
      * 
-     * Only applicable if client has admin:w scope.
+     * Only applicable if client has adm:w scope.
      */
     bool forceConnection_;
     /**
@@ -303,7 +311,10 @@ class Connect : public IConnect {
      */
     bool shutdown_ = false;
     /**
-     * @brief ID of the Connect object
+     * @brief ID of the Connect object.
+     * 
+     * Since this is uniformly increased with each new call to the handler,
+     * older connections will thus have a lower objectId_.
      */
     uint32_t objectId_ = 0;
 };
