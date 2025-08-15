@@ -148,31 +148,33 @@ function namedChoicesArg(desc) {
     choices = desc.string_string_choice.choices;
   }
   let ans = '{';
-    for (let i = 0; i < choices.length; ++i) {
-      if (desc.type === "STRING_CHOICE") {
-        ans += `{"${choices[i]}",{`;
+  for (let i = 0; i < choices.length; ++i) {
+    if (desc.type === "STRING_CHOICE") {
+      ans += `{"${choices[i]}",{`;
+    } else {
+      if (this.type === "int32_t") {
+        ans += `{${choices[i].value},{`;
       } else {
-        if (this.type === "int32_t") {
-          ans += `{${choices[i].value},{`;
-        } else {
-          ans += `{"${choices[i].value}",{`;
-        }
-        let display_strings = choices[i].name.display_strings;
-        let pairs = Object.keys(display_strings).length;
-        for (let lang in display_strings) {
-          ans += `{"${lang}","${display_strings[lang]}"}`;
-          if (--pairs > 0) {
-            ans += ',';
-          }
-        }
+        ans += `{"${choices[i].value}",{`;
       }
-      ans += '}}';
-      if (i < choices.length - 1) {
-        ans += ',';
-      } else {
-        ans += '}';
+      let display_strings = choices[i].name.display_strings;
+      let pairs = Object.keys(display_strings).length;
+      for (let lang in display_strings) {
+        ans += `{"${lang}","${display_strings[lang]}"}`;
+        if (--pairs > 0) {
+          ans += ',';
+        }
       }
     }
+    ans += '}}';
+    if (i < choices.length - 1) {
+      ans += ',';
+    } else {
+      ans += '}, ';
+    }
+  }
+  // Adding isNamed argument.
+  ans += desc.type !== "STRING_CHOICE" ? `true` : `false`;
   return ans;
 }
 
