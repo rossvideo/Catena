@@ -196,7 +196,7 @@ class Param {
     this.oid = oid;
     this.namespace = namespace;
     this.subParams = {};
-    this.type = isCommand ? "EMPTY" : desc.type;
+    this.type = desc.type;
     this.value = desc.value;
     this.isCommand = isCommand;
     this.parent = parent;

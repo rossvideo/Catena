@@ -115,12 +115,12 @@
       "skipFiles": [
           "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/${env:BUILD_TARGET}/tools/codegen/index.js",
+      "program": "${workspaceFolder}/tools/codegen/index.js",
       "args": [
           "--schema",
           "${workspaceFolder}/schema",
           "--device-model",
-          "${workspaceFolder}/${env:BUILD_TARGET}/sdks/cpp/${input:pickDeviceModel}",
+          "${workspaceFolder}/sdks/cpp/${input:pickDeviceModel}",
           "--output",
           "${workspaceFolder}/${env:BUILD_TARGET}/${input:pickDeviceModel}/..",
           "--language",
