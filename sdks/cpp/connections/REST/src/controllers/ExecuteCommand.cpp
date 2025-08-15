@@ -60,7 +60,7 @@ void ExecuteCommand::proceed() {
             // If the command is not found, return an error
             if (command != nullptr) {
                 // Execute the command and write response if respond = true.
-                std::unique_ptr<CommandResponder> responder = command->executeCommand(val);
+                std::unique_ptr<CommandResponder> responder = command->executeCommand(val, respond);
                 if (!responder) {
                     rc = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
                 } else {

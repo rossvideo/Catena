@@ -137,6 +137,9 @@ class Descriptor {
       is_command: () => {
         return !!isCommand;
       },
+      response: () => {
+        return ("response" in desc) ? `${desc.response}` : "false";
+      },
       device: () => {
         return "dm";
       },
@@ -159,6 +162,7 @@ class Descriptor {
     const argsArray = Object.values(args);
     this.args = argsArray.map(arg => arg()).join(', ');
     this.minimalSet = desc.minimal_set;
+    this.response = desc.response;
   }
 
   /**
@@ -192,11 +196,12 @@ class Param {
     this.oid = oid;
     this.namespace = namespace;
     this.subParams = {};
-    this.type = isCommand ? "EMPTY" : desc.type;
+    this.type = desc.type;
     this.value = desc.value;
     this.isCommand = isCommand;
     this.parent = parent;
     this.minimal_set = desc.minimal_set === true;
+    this.response = desc.response === true;
 
     if ("constraint" in desc) {
       if (desc.constraint.ref_oid) {

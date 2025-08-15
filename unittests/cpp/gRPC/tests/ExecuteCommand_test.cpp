@@ -171,8 +171,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalResponse) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const catena::Value& value) {
+    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const catena::Value& value, const bool respond) {
             // Making sure the correct values were passed in.
             EXPECT_EQ(value.SerializeAsString(), inVal_.value().SerializeAsString());
             return std::move(mockResponder_);
@@ -204,8 +204,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalNoResponse) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const catena::Value& value) {
+    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const catena::Value& value, const bool respond) {
             // Making sure the correct values were passed in.
             EXPECT_EQ(value.string_value(), "test_value");
             return std::move(mockResponder_);
@@ -231,8 +231,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalException) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const catena::Value& value) {
+    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const catena::Value& value, const bool respond) {
             // Making sure the correct values were passed in.
             EXPECT_EQ(value.string_value(), "test_value");
             return std::move(mockResponder_);
@@ -260,8 +260,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_RespondFalse) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const catena::Value& value) {
+    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const catena::Value& value, const bool respond) {
             // Making sure the correct values were passed in.
             EXPECT_EQ(value.string_value(), "test_value");
             return std::move(mockResponder_);
@@ -298,8 +298,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzValid) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const catena::Value& value) {
+    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const catena::Value& value, const bool respond) {
             // Making sure the correct values were passed in.
             EXPECT_EQ(value.string_value(), "test_value");
             return std::move(mockResponder_);
@@ -357,8 +357,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzExpired) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const catena::Value& value) {
+    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const catena::Value& value, const bool respond) {
             return std::move(mockResponder_);
         }));
     EXPECT_CALL(*mockResponder_, getNext()).Times(0);
@@ -437,8 +437,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([](const catena::Value& value) {
+    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([](const catena::Value& value, const bool respond) {
             return nullptr;
         }));
     // Sending the RPC
@@ -457,8 +457,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const catena::Value& value) {
+    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const catena::Value& value, const bool respond) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return nullptr;
         }));
@@ -478,7 +478,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_)).Times(1)
+    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
     // Sending the RPC
     testRPC();
@@ -497,8 +497,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const catena::Value& value) {
+    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const catena::Value& value, const bool respond) {
             return std::move(mockResponder_);
         }));
     EXPECT_CALL(*mockResponder_, getNext()).Times(1)
@@ -523,8 +523,8 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const catena::Value& value) {
+    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const catena::Value& value, const bool respond) {
             return std::move(mockResponder_);
         }));
     EXPECT_CALL(*mockResponder_, getNext()).Times(1)

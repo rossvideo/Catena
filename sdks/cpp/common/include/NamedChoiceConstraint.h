@@ -83,8 +83,14 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
     NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
         : choices_{init.begin(), init.end()}, strict_{strict},
           default_{init.begin()->first}, oid_{oid}, shared_{shared} {
+        // Making sure T is a valid type.
         if constexpr (!std::is_same<T, int32_t>::value && !std::is_same<T, std::string>::value) {
             throw std::runtime_error("Cannot create NamedChoiceConstraint with type other than int32_t or std::string");
+        // Setting isNamed_ to true if any of the choices have display strings.
+        } else {
+            isNamed_ = std::any_of(choices_.begin(), choices_.end(), [](const auto& pair) {
+                return !pair.second.displayStrings().empty();
+            });
         }
     }
 
@@ -153,10 +159,8 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
         }  
         // String choice serialization
         else if constexpr (std::is_same<T, std::string>::value) {
-            // STRING_STRING_CHOICE is used if any of the names have display strings
-            if (std::any_of(choices_.begin(), choices_.end(), [](const auto& pair) {
-                return !pair.second.displayStrings().empty();
-            })) {
+            // STRING_STRING_CHOICE is used if the constraint has named choices
+            if (isNamed_) {
                 constraint.set_type(catena::Constraint::STRING_STRING_CHOICE);
                 for (auto& [value, name] : choices_) {
                     auto stringChoice = constraint.mutable_string_string_choice()->add_choices();
@@ -196,6 +200,7 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
     bool strict_;      ///< should the value be constrained on apply
     T default_;        ///< the default value to constrain to
     bool shared_;      ///< is the constraint shared
+    bool isNamed_;     ///< is the constraint a named choice
     std::string oid_;  ///< the oid of the constraint
 };
 
