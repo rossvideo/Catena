@@ -13,6 +13,10 @@ env:
   CONNECTIONS: gRPC;REST
   BUILD_TARGET: build/cpp
   WORKDIR: /app
+  SPARSE_CHECKOUT: |
+    docker
+    interface/*.proto
+    interface/openapi/openapi.yaml
   
 
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
@@ -80,73 +84,6 @@ jobs:
       # This step generates an artifact attestation for the image, which is an unforgeable statement about where and how it was built. It increases supply chain security for people who consume the image. For more information, see [Using artifact attestations to establish provenance for builds](/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds).
       - name: Generate artifact attestation
         if: steps.changes.outputs.toolchain-cpp == 'true'
-        uses: actions/attest-build-provenance@v2
-        with:
-          subject-name: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME}}
-          subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
-      
-  build-and-push-catena:
-    runs-on: ubuntu-latest
-    env:
-      IMAGE_NAME: catena
-    # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
-    permissions:
-      contents: read
-      packages: write
-      attestations: write
-      id-token: write
-      #
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      # Uses the `docker/login-action` action to log in to the Container registry registry using the account and password that will publish the packages. Once published, the packages are scoped to the account defined here.
-      - name: Log in to the Container registry
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      # This step uses [docker/metadata-action](https://github.com/docker/metadata-action#about) to extract tags and labels that will be applied to the specified image. The `id` "meta" allows the output of this step to be referenced in a subsequent step. The `images` value provides the base name for the tags and labels.
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
-        with:
-          images: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}
-
-      - name: Print stuff
-        run: |
-          echo "IMAGE_NAME: ${{ env.IMAGE_NAME }}"
-          echo "REGISTRY: ${{ env.REGISTRY }}"
-          echo "tags: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}:latest"
-          echo "labels: ${{ steps.meta.outputs.labels }}"
-
-      - name: copy env file
-        run: |
-          cp .devcontainer/devcontainer.env devcontainer.env
-
-      - name: Build and push Docker image
-        id: push
-        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
-        with:
-          context: .
-          file: .devcontainer/devcontainer.dockerfile
-          push: true
-          tags: "${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}:latest"
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            IMAGE_TITLE="Catena Development Container"
-            IMAGE_DESCRIPTION="Development container for Catena"
-            IMAGE_VERSION="1.0.0"
-            IMAGE_VENDOR="Ross Video"
-            CMAKE_BUILD_TYPE=Debug
-            CONNECTIONS='gRPC;REST'
-            BUILD_TARGET=build/cpp
-        
-      
-      # This step generates an artifact attestation for the image, which is an unforgeable statement about where and how it was built. It increases supply chain security for people who consume the image. For more information, see [Using artifact attestations to establish provenance for builds](/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds).
-      - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v2
         with:
           subject-name: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME}}
@@ -243,7 +180,7 @@ jobs:
           ls -l $WORKDIR/examples
           echo "Examples saved to artifact 'examples'"
 
-  build-and-push-examples:
+  build-and-push-single-examples:
     runs-on: ubuntu-latest
     needs: build-examples
     strategy:
@@ -257,7 +194,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          sparse-checkout: docker
+          sparse-checkout: ${{ env.SPARSE_CHECKOUT }}
+          sparse-checkout-cone-mode: false
 
       - name: Download examples
         uses: actions/download-artifact@v4
@@ -275,15 +213,15 @@ jobs:
           if [[ ! "$EXAMPLE" =~ $CONNECTION$ ]]; then
             EXAMPLE="${EXAMPLE}-${CONNECTION}"
           fi
-          TARGET_NAME=$(echo "$CONNECTION" | tr '[:upper:]' '[:lower:]')
+          SINGLE_SOURCE=$(echo "$CONNECTION" | tr '[:upper:]' '[:lower:]')
           echo "example_path=${EXAMPLE_PATH}" >> $GITHUB_OUTPUT
           echo "connection=${CONNECTION}" >> $GITHUB_OUTPUT
           echo "example=${EXAMPLE}" >> $GITHUB_OUTPUT
-          echo "target_name=${TARGET_NAME}" >> $GITHUB_OUTPUT
+          echo "single_source=${SINGLE_SOURCE}" >> $GITHUB_OUTPUT
           echo "EXAMPLE_PATH=${EXAMPLE_PATH}"
           echo "CONNECTION=${CONNECTION}"
           echo "EXAMPLE=${EXAMPLE}"
-          echo "TARGET_NAME=${TARGET_NAME}"
+          echo "SINGLE_SOURCE=${SINGLE_SOURCE}"
 
       - name: Log in to the Container registry
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
@@ -317,12 +255,75 @@ jobs:
           context: .
           file: docker/example.dockerfile
           push: true
-          target: ${{ steps.process-name.outputs.target_name }}
+          target: single
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             CONNECTION=${{ steps.process-name.outputs.connection }}
             EXAMPLE=${{ steps.process-name.outputs.example }}
             EXAMPLE_PATH=${{ steps.process-name.outputs.example_path }}
+            SINGLE_SOURCE=${{ steps.process-name.outputs.single_source }}
+            WORKDIR=${{ env.WORKDIR }}
+
+
+  build-and-push-all-examples:
+    runs-on: ubuntu-latest
+    needs: build-examples
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: ${{ env.SPARSE_CHECKOUT }}
+          sparse-checkout-cone-mode: false
+
+      - name: Download examples
+        uses: actions/download-artifact@v4
+        with:
+          name: examples
+          path: ${{ github.workspace }}/examples
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # This step uses [docker/metadata-action](https://github.com/docker/metadata-action#about) to extract tags and labels that will be applied to the specified image. The `id` "meta" allows the output of this step to be referenced in a subsequent step. The `images` value provides the base name for the tags and labels.
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.REGISTRY }}/rossvideo/catena
+          tags: |
+            type=raw,value=latest
+          labels: |
+            org.opencontainers.image.title=Catena Examples
+            org.opencontainers.image.description=Self contained example for Catena Examples
+            org.opencontainers.image.vendor=Ross Video
+
+      - name: Print stuff
+        run: |
+          echo "tags: ${{ steps.meta.outputs.tags }}"
+          echo "labels: ${{ steps.meta.outputs.labels }}"
+          find .
+      
+      - name: Build and push image
+        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+        with:
+          context: .
+          file: docker/example.dockerfile
+          push: true
+          target: all
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            CONNECTION=gRPC
+            EXAMPLE=one-of-everything-gRPC
+            EXAMPLE_PATH=examples
             WORKDIR=${{ env.WORKDIR }}
 
