@@ -220,7 +220,7 @@ class CppGen {
         let clientHintsStr = "";
         if (clientHints != null) {
           let clientHintsKeys = Object.keys(clientHints);
-          clientHintsStr = `${clientHintsKeys.map((key) => { return `{ "${key}", "${clientHints[key]}" }` }).join(", ")}`;
+          clientHintsStr = clientHintsKeys.map((key) => { return `{ "${key}", "${clientHints[key]}" }` }).join(", ");
         }
 
         bloc(`Menu _${group}Group_${menu}Menu {\n  {    `);
