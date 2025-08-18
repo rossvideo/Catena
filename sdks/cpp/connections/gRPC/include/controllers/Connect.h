@@ -56,6 +56,13 @@ namespace gRPC {
 
 /**
  * @brief CallData class for the Connect RPC
+ *
+ * This RPC connects the client to each device in the service and writes
+ * updates whenever one of their ValueSetByClient, ValueSetByServer, or
+ * LanguageAddedPushUpdate signals is emitted.
+ *
+ * Whether or not a PushUpdate is written to the client also depends on their
+ * specified DetailLevel.
  */
 class Connect : public CallData, public catena::common::Connect {
   public:

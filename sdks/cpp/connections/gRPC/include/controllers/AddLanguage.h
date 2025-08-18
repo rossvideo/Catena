@@ -45,7 +45,10 @@ namespace catena {
 namespace gRPC {
 
 /**
- * @brief CallData class for the ListLanguages RPC
+ * @brief CallData class for the AddLanguage RPC
+ * 
+ * This RPC gets a slot and a language pack from the client and adds the
+ * language pack to the specified device.
  */
 class AddLanguage : public CallData {
   public:
@@ -59,8 +62,8 @@ class AddLanguage : public CallData {
      */ 
     AddLanguage(IServiceImpl *service, SlotMap& dms, bool ok);
     /**
-     * @brief Manages the steps of the AddLanguage gRPC commands through
-     * the state variable status.
+     * @brief Manages the steps of the AddLanguage gRPC commands through the
+     * state variable status.
      *
      * @param service Pointer to the parent ServiceImpl.
      * @param ok Flag to check if the command was successfully executed.
@@ -68,15 +71,18 @@ class AddLanguage : public CallData {
     void proceed(bool ok) override;
   private:
     /**
-     * @brief Server request (slot, id, language).
+     * @brief The client's request containg three things:
+     * - A slot specifying the device to add the language pack to.
+     * - The language pack to add to the device.
+     * - The id of the language pack (e.g. "es" Global spanish).
      */
     catena::AddLanguagePayload req_;
     /**
-     * @brief Empty catena value to respond with.
+     * @brief The server's response, which is empty in this case.
      */
     catena::Empty res_;
     /**
-     * @brief gRPC async response writer.
+     * @brief The gRPC response writer for writing back to the client.
      */
     grpc::ServerAsyncResponseWriter<::catena::Empty> responder_;
     /**
