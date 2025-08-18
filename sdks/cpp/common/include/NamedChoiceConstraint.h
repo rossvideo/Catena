@@ -53,6 +53,7 @@
 #include <string>
 #include <unordered_set>
 #include <initializer_list>
+#include <type_traits>
 
 namespace catena {
 namespace common {
@@ -61,7 +62,8 @@ namespace common {
  * @brief Named choice constraint, ensures a value is within a named choice
  * @tparam T int or string
  */
-template <typename T> class NamedChoiceConstraint : public catena::common::IConstraint {
+template <typename T, catena::Constraint::ConstraintType cType>
+class NamedChoiceConstraint : public catena::common::IConstraint {
   public:
     /**
      * @brief map of choices with their display names
@@ -80,14 +82,17 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
      * @param shared is the constraint shared
      * @note  the first choice provided will be the default for the constraint
      */
-    NamedChoiceConstraint(ListInitializer init, bool isNamed, bool strict, std::string oid, bool shared)
-        : choices_{init.begin(), init.end()}, strict_{strict}, isNamed_{isNamed},
+    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
+        : choices_{init.begin(), init.end()}, strict_{strict},
           default_{init.begin()->first}, oid_{oid}, shared_{shared} {
-        // Making sure T is a valid type.
-        if constexpr (!std::is_same<T, int32_t>::value && !std::is_same<T, std::string>::value) {
-            throw std::runtime_error("Cannot create NamedChoiceConstraint with type other than int32_t or std::string");
+            // Making sure the template parameters are valid combinations.
+            if constexpr(!( (std::is_same<T, int32_t>::value     && cType == catena::Constraint::INT_CHOICE)
+                         || (std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_CHOICE)
+                         || (std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_STRING_CHOICE)
+                        )) {
+                throw std::runtime_error("NamedChoiceConstraint instantiated with invalid type/constraint type combination");
+            }
         }
-    }
 
     /**
      * @brief Construct a new Named Choice Constraint object
@@ -98,8 +103,8 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
      * @param dm the device to add the constraint to
      * @note  the first choice provided will be the default for the constraint
      */
-    NamedChoiceConstraint(ListInitializer init, bool isNamed, bool strict, std::string oid, bool shared, IDevice& dm)
-        : NamedChoiceConstraint(init, isNamed, strict, oid, shared) {
+    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, IDevice& dm)
+        : NamedChoiceConstraint(init, strict, oid, shared) {
         dm.addItem(oid, this);
     }
 
@@ -114,14 +119,18 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
      * @return true if the value satisfies the constraint
      */
     bool satisfied(const catena::Value& src) const override {
-        bool ans = false;
-        if constexpr (std::is_same<T, int32_t>::value) {
-            ans = choices_.contains(src.int32_value());
+        // INT_CHOICE implementation
+        if constexpr(std::is_same<T, int32_t>::value) {
+            return choices_.contains(src.int32_value());
         }
-        else if constexpr (std::is_same<T, std::string>::value) {
-            ans = !strict_ || choices_.contains(src.string_value());
+        // STRING_CHOICE and STRING_STRING_CHOICE implementation
+        else if constexpr(std::is_same<T, std::string>::value) {
+            return !strict_ || choices_.contains(src.string_value());
         }
-        return ans;
+        // Implementation for everything else.
+        else {
+            return false;
+        }
     }
 
     /**
@@ -143,31 +152,29 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
      * @param msg the protobuf message to populate
      */
     void toProto(catena::Constraint& constraint) const override {
-        // Int choice serialization
-        if constexpr (std::is_same<T, int32_t>::value) {
+        // INT_CHOICE implementation
+        if constexpr(std::is_same<T, int32_t>::value && cType == catena::Constraint::INT_CHOICE) {
             constraint.set_type(catena::Constraint::INT_CHOICE);
             for (auto& [value, name] : choices_) {
                 auto intChoice = constraint.mutable_int32_choice()->add_choices();
                 intChoice->set_value(value);
                 name.toProto(*intChoice->mutable_name());
             }
-        }  
-        // String choice serialization
-        else if constexpr (std::is_same<T, std::string>::value) {
-            // STRING_STRING_CHOICE is used if the constraint has named choices
-            if (isNamed_) {
-                constraint.set_type(catena::Constraint::STRING_STRING_CHOICE);
-                for (auto& [value, name] : choices_) {
-                    auto stringChoice = constraint.mutable_string_string_choice()->add_choices();
-                    stringChoice->set_value(value);
-                    name.toProto(*stringChoice->mutable_name());
-                }
-            // STRING_CHOICE
-            } else {
-                constraint.set_type(catena::Constraint::STRING_CHOICE);
-                for (auto& [value, name] : choices_) {
-                    *constraint.mutable_string_choice()->add_choices() = value;
-                }
+        }
+        // STRING_CHOICE implementation
+        else if constexpr(std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_CHOICE) {
+            constraint.set_type(catena::Constraint::STRING_CHOICE);
+            for (auto& [value, name] : choices_) {
+                *constraint.mutable_string_choice()->add_choices() = value;
+            }
+        }
+        //STRING_STRING_CHOICE implementation
+        else if constexpr(std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_STRING_CHOICE) {
+            constraint.set_type(catena::Constraint::STRING_STRING_CHOICE);
+            for (auto& [value, name] : choices_) {
+                auto stringChoice = constraint.mutable_string_string_choice()->add_choices();
+                stringChoice->set_value(value);
+                name.toProto(*stringChoice->mutable_name());
             }
         }
     }
@@ -195,7 +202,6 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
     bool strict_;      ///< should the value be constrained on apply
     T default_;        ///< the default value to constrain to
     bool shared_;      ///< is the constraint shared
-    bool isNamed_;     ///< is the constraint a named choice
     std::string oid_;  ///< the oid of the constraint
 };
 

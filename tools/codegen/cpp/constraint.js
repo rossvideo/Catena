@@ -170,11 +170,9 @@ function namedChoicesArg(desc) {
     if (i < choices.length - 1) {
       ans += ',';
     } else {
-      ans += '}, ';
+      ans += '}';
     }
   }
-  // Adding isNamed argument.
-  ans += desc.type !== "STRING_CHOICE" ? `true` : `false`;
   return ans;
 }
 
@@ -303,7 +301,11 @@ class Constraint extends CppCtor {
    */
   getInitializer() {
     this.initialized = true;
-    return `catena::common::${this.constraintType}<${this.type}> ${this.variableName()}(${this.arguments.map((arg) => arg(this.desc)).join(", ")});`;
+    if (this.constraintType === "NamedChoiceConstraint") {
+      return `catena::common::${this.constraintType}<${this.type}, catena::Constraint::${this.desc.type}> ${this.variableName()}(${this.arguments.map((arg) => arg(this.desc)).join(", ")});`;
+    } else {
+      return `catena::common::${this.constraintType}<${this.type}> ${this.variableName()}(${this.arguments.map((arg) => arg(this.desc)).join(", ")});`;
+    }
   }
 }
 
