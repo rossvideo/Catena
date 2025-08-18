@@ -66,19 +66,24 @@ namespace gRPC {
 enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
 /**
- * @brief Abstract base class for the CallData classes which defines the
- * jwsToken_ class.
+ * @brief Abstract base class for inherited by CallData child classes defining
+ * the jwsToken_() method.
  */
 class CallData : public ICallData {
   protected:
     /**
-     * @brief CallData constructor which initializes service_.
+     * @brief CallData constructor which sets service_.
+     * 
+     * @param service Pointer to the ServiceImpl.
      */
     CallData(IServiceImpl *service): service_(service) {}
     /**
-     * @brief Extracts the JWS Bearer token from the server context's
-     * client metadata.
-     * @return The JWS Bearer token as a string.
+     * @brief Extracts the JWS Bearer token from the client's metadata.
+     * 
+     * Client metadata is included in the ServerContext.
+     * The bearer token can then be found under the "authorization" key.
+     * 
+     * @return The JWS Bearer token with the "Bearer " prefix removed.
      * @throw catena::exception_with_status if the token is not found.
      */
     std::string jwsToken_() const override {
@@ -104,11 +109,12 @@ class CallData : public ICallData {
     }
 
     /**
-     * @brief The context of the gRPC command.
+     * @brief The context of the RPC. This is retrieved once a call to
+     * RequestRPC has been made to register the RPC with the server.
      */
     ServerContext context_;
     /**
-     * @brief Pointer to ServiceImpl
+     * @brief Pointer to ServiceImpl.
      */
     IServiceImpl* service_;
 };

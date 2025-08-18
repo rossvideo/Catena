@@ -85,6 +85,7 @@ void GetParam::proceed( bool ok) {
             { // var scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             std::unique_ptr<IParam> param = nullptr;
+            catena::DeviceComponent_ComponentParam res;
             std::shared_ptr<catena::common::Authorizer> sharedAuthz;
             catena::common::Authorizer* authz;
             IDevice* dm = nullptr;
@@ -111,8 +112,8 @@ void GetParam::proceed( bool ok) {
                     param = dm->getParam(req_.oid(), rc, *authz);
                     // If we found a param update the response.
                     if (param && rc.status == catena::StatusCode::OK) {
-                        res_.set_oid(param->getOid());
-                        rc = param->toProto(*res_.mutable_param(), *authz);
+                        res.set_oid(param->getOid());
+                        rc = param->toProto(*res.mutable_param(), *authz);
                     }
                 }
             // ERROR
@@ -124,7 +125,7 @@ void GetParam::proceed( bool ok) {
             // Writing the response.
             status_ = CallStatus::kFinish;
             if (rc.status == catena::StatusCode::OK) {
-                writer_.Finish(res_, Status::OK, this);
+                writer_.Finish(res, Status::OK, this);
             // Error along the way, finish call with error.
             } else {
                 writer_.FinishWithError(grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
