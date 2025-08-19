@@ -40,6 +40,7 @@ set(sources
     "src/SubscriptionManager.cpp"
     "src/SharedFlags.cpp"
     "src/ConnectionQueue.cpp"
+    "src/ChoiceConstraint.cpp"
 )
 
 # conditionally make for gRPC

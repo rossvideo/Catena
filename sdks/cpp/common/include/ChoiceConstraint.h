@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,8 +34,9 @@
  * @file ChoiceConstraint.h
  * @brief A constraint that checks if a value is within some named choices
  * @author isaac.robert@rossvideo.com
- * @date 2024-07-25
- * @copyright Copyright (c) 2024 Ross Video
+ * @author benjamin.whitten@rossvideo.com
+ * @date 2028-08-19
+ * @copyright Copyright (c) 2025 Ross Video
  */
 
 /**
@@ -73,6 +74,13 @@ namespace common {
 template <typename T, catena::Constraint::ConstraintType cType>
 class ChoiceConstraint : public catena::common::IConstraint {
   public:
+    static_assert(
+        (std::is_same<T, int32_t>::value && cType == catena::Constraint::INT_CHOICE) ||
+        (std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_CHOICE) ||
+        (std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_STRING_CHOICE),
+        "ChoiceConstraint: Invalid combination of T and constraintType"
+    );
+
     /**
      * @brief map of choices with their display names
      */
@@ -92,12 +100,7 @@ class ChoiceConstraint : public catena::common::IConstraint {
      */
     ChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
         : choices_{init.begin(), init.end()}, strict_{strict},
-          default_{init.begin()->first}, oid_{oid}, shared_{shared} {
-            // Making sure the template parameters are valid combinations.
-            if constexpr(!(isIntChoice_ || isStringChoice_ || isStringStringChoice_)) {
-                throw std::runtime_error("ChoiceConstraint instantiated with invalid type/constraint type combination");
-            }
-        }
+          default_{init.begin()->first}, oid_{oid}, shared_{shared} {}
 
     /**
      * @brief Construct a new Named Choice Constraint object
@@ -123,20 +126,7 @@ class ChoiceConstraint : public catena::common::IConstraint {
      * @param src the value to check
      * @return true if the value satisfies the constraint
      */
-    bool satisfied(const catena::Value& src) const override {
-        // INT_CHOICE implementation
-        if constexpr(isIntChoice_) {
-            return choices_.contains(src.int32_value());
-        }
-        // STRING_CHOICE and STRING_STRING_CHOICE implementation
-        else if constexpr(isStringChoice_ || isStringStringChoice_) {
-            return !strict_ || choices_.contains(src.string_value());
-        }
-        // Implementation for everything else.
-        else {
-            return false;
-        }
-    }
+    bool satisfied(const catena::Value& src) const override;
 
     /**
      * @brief applies constraint to src and returns the constrained value
@@ -156,33 +146,7 @@ class ChoiceConstraint : public catena::common::IConstraint {
      * @brief serialize the constraint to a protobuf message
      * @param msg the protobuf message to populate
      */
-    void toProto(catena::Constraint& constraint) const override {
-        // INT_CHOICE implementation
-        if constexpr(isIntChoice_) {
-            constraint.set_type(catena::Constraint::INT_CHOICE);
-            for (auto& [value, name] : choices_) {
-                auto intChoice = constraint.mutable_int32_choice()->add_choices();
-                intChoice->set_value(value);
-                name.toProto(*intChoice->mutable_name());
-            }
-        }
-        // STRING_CHOICE implementation
-        else if constexpr(isStringChoice_) {
-            constraint.set_type(catena::Constraint::STRING_CHOICE);
-            for (auto& [value, name] : choices_) {
-                *constraint.mutable_string_choice()->add_choices() = value;
-            }
-        }
-        //STRING_STRING_CHOICE implementation
-        else if constexpr(isStringStringChoice_) {
-            constraint.set_type(catena::Constraint::STRING_STRING_CHOICE);
-            for (auto& [value, name] : choices_) {
-                auto stringChoice = constraint.mutable_string_string_choice()->add_choices();
-                stringChoice->set_value(value);
-                name.toProto(*stringChoice->mutable_name());
-            }
-        }
-    }
+    void toProto(catena::Constraint& constraint) const override;
 
     /**
      * @brief This constraint is not a range constraint so return false
@@ -203,22 +167,6 @@ class ChoiceConstraint : public catena::common::IConstraint {
     const std::string& getOid() const override { return oid_; }
 
   private:
-    /**
-     * @brief True if the constraint is a valid INT_CHOICE constraint.
-     */
-    static constexpr bool isIntChoice_
-        = std::is_same<T, int32_t>::value && cType == catena::Constraint::INT_CHOICE;
-    /**
-     * @brief True if the constraint is a valid STRING_CHOICE constraint.
-     */
-    static constexpr bool isStringChoice_
-        = std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_CHOICE;
-    /**
-     * @brief True if the constraint is a valid STRING_STRING_CHOICE constraint.
-     */
-    static constexpr bool isStringStringChoice_
-        = std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_STRING_CHOICE;
-
     Choices choices_;  ///< the choices
     bool strict_;      ///< should the value be constrained on apply
     T default_;        ///< the default value to constrain to

@@ -45,24 +45,6 @@
 
 using namespace catena::common;
 
-/* 
- * TEST 0.1 - Testing ChoiceConstraint constructor when the type is not int or string
- */
-TEST(ChoiceConstraintTest, ChoiceConstraint_InvalidCreate) {
-    { // Without device
-    EXPECT_THROW((ChoiceConstraint<int32_t, catena::Constraint::STRING_CHOICE>({{1, {{"en", "one"}}}, {2, {{"en", "two"}}}}, true, "", false)), std::runtime_error)
-        << "Constructor should throw an error when defined with a type other than int and string";
-    }
-    { // With device
-    MockDevice dm;
-    EXPECT_CALL(dm, addItem(::testing::_, testing::An<IConstraint*>())).Times(0);
-    EXPECT_THROW((ChoiceConstraint<int32_t, catena::Constraint::STRING_CHOICE>({{1, {{"en", "one"}}}, {2, {{"en", "two"}}}}, true, "", false, dm)), std::runtime_error)
-        << "Constructor should throw an error when defined with a type other than int and string";
-    }
-}
-
-
-
 /* ============================================================================
  *                                    INT
  * ============================================================================
