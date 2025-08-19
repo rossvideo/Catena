@@ -30,7 +30,7 @@
 
 /**
  * @file DeviceRequest.h
- * @brief Implements REST DeviceRequest controller.
+ * @brief Implements controll for the REST "DeviceReqeust" endpoint.
  * @author benjamin.whitten@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -61,7 +61,12 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the DeviceRequest REST controller.
+ * @brief Controller class for the "DeviceRequest" REST endpoint.
+ * 
+ * This controller supports one method:
+ * 
+ * - GET: Writes the device as a collection of components to the client.
+ * Supports both stream and unary responses.
  */
 class DeviceRequest : public ICallData {
   public:
@@ -71,23 +76,23 @@ class DeviceRequest : public ICallData {
     using SlotMap = catena::common::SlotMap;
 
     /**
-     * @brief Constructor for the DeviceRequest controller.
+     * @brief Constructor for the "DeviceRequest" endpoint controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The ISocketReader object.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     DeviceRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
-     * @brief DeviceRequest's main process.
+     * @brief The "DeviceRequest" endpoint's main process.
      */
     void proceed() override;
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     * 
-     * @param socket The socket to write the response stream to.
-     * @param context The ISocketReader object.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
@@ -108,11 +113,17 @@ class DeviceRequest : public ICallData {
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok;
     }
     /**
-     * @brief The socket to write the response stream to.
+     * @brief The socket to write the response to.
      */
     tcp::socket& socket_;
     /**
-     * @brief The ISocketReader object.
+     * @brief The ISocketReader object used to read the client's request.
+     * 
+     * This is used to get two things from the client:
+     * 
+     * - A slot specifying the device to request the components of.
+     * 
+     * - The detail level to return this request in.
      */
     ISocketReader& context_;
     /**
@@ -130,21 +141,17 @@ class DeviceRequest : public ICallData {
     std::set<std::string> subscribedOids_;
 
     /**
-     * @brief A list of the subscriptions from the current request.
-     */
-    std::set<std::string> requestSubscriptions_;
-
-    /**
-     * @brief Serializer for device.
+     * @brief The device serializer coroutine recieved from a call to
+     * Device.getComponentSerializer().
      */
     std::unique_ptr<IDevice::IDeviceSerializer> serializer_ = nullptr;
 
     /**
-     * @brief ID of the DeviceRequest object
+     * @brief The object's unique id.
      */
     int objectId_;
     /**
-     * @brief The total # of DeviceRequest objects.
+     * @brief The total # of "DeviceRequest" endpoint controller objects.
      */
     static int objectCounter_;
 };

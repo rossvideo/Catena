@@ -30,7 +30,7 @@
 
 /**
  * @file AssetRequest.h
- * @brief Implements REST AssetRequest controller.
+ * @brief Implements controller for the REST asset endpoint.
  * @author christian.twarog@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -64,7 +64,18 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the GetParam REST controller.
+ * @brief Controller class for the Asset REST endpoint.
+ * 
+ * This controller supports four methods:
+ * 
+ * - GET: Writes the requested external object to the client. Supports both
+ * stream and unary responses.
+ * 
+ * - POST: Uploads an external object to the server.
+ * 
+ * - PUT: Overwrites an existing external object on the server.
+ * 
+ * - DELETE: Deletes an external object from the server.
  */
 class AssetRequest : public ICallData {
   public:
@@ -73,31 +84,32 @@ class AssetRequest : public ICallData {
     using SlotMap = catena::common::SlotMap;
 
     /**
-     * @brief Constructor for the GetParam controller.
+     * @brief Constructor for the Asset endpoint controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The ISocketReader object.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     AssetRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
 
     /**
-     * converts the PayloadEncoding enum to a string
+     * @brief Converts the PayloadEncoding enum to a string
+     * 
      * @param encoding The PayloadEncoding enum value to convert.
      * @return The string representation of the PayloadEncoding.
      */
     static std::string payloadEncodingToString(catena::DataPayload::PayloadEncoding encoding);
 
     /**
-     * @brief GetParam's main process.
+     * @brief The Asset endpoint's main process.
      */
     void proceed() override;
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
      *
-     * @param socket The socket to write the response stream to.
-     * @param context The ISocketReader object.
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
@@ -163,7 +175,8 @@ class AssetRequest : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      DEBUG_LOG << "AssetRequest::proceed[" << objectId_ << "]: "
+      DEBUG_LOG << RESTMethodMap().getForwardMap().at(context_.method())
+                << " Asset::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok;
     }
@@ -173,7 +186,7 @@ class AssetRequest : public ICallData {
      */
     tcp::socket& socket_;
     /**
-     * @brief The ISocketReader object.
+     * @brief The ISocketReader object used to read the client's request.
      */
     ISocketReader& context_;
     /**
@@ -190,7 +203,7 @@ class AssetRequest : public ICallData {
      */
     int objectId_;
     /**
-     * @brief The total # of objects.
+     * @brief The total # of asset endpoint controller objects.
      */
     static int objectCounter_;
 };
