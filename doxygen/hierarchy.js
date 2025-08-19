@@ -73,7 +73,7 @@ var hierarchy =
       [ "catena::common::ConnectionQueue", "classcatena_1_1common_1_1ConnectionQueue.html", null ]
     ] ],
     [ "catena::common::IConstraint", "classcatena_1_1common_1_1IConstraint.html", [
-      [ "catena::common::NamedChoiceConstraint< T >", "classcatena_1_1common_1_1NamedChoiceConstraint.html", null ],
+      [ "catena::common::ChoiceConstraint< T, cType >", "classcatena_1_1common_1_1ChoiceConstraint.html", null ],
       [ "catena::common::RangeConstraint< T >", "classcatena_1_1common_1_1RangeConstraint.html", null ]
     ] ],
     [ "catena::common::IDevice", "classcatena_1_1common_1_1IDevice.html", [
