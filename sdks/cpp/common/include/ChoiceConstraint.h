@@ -31,7 +31,7 @@
  */
 
 /**
- * @file NamedChoiceConstraint.h
+ * @file ChoiceConstraint.h
  * @brief A constraint that checks if a value is within some named choices
  * @author isaac.robert@rossvideo.com
  * @date 2024-07-25
@@ -71,7 +71,7 @@ namespace common {
  * STRING_CHOICE, or STRING_STRING_CHOICE.
  */
 template <typename T, catena::Constraint::ConstraintType cType>
-class NamedChoiceConstraint : public catena::common::IConstraint {
+class ChoiceConstraint : public catena::common::IConstraint {
   public:
     /**
      * @brief map of choices with their display names
@@ -90,12 +90,12 @@ class NamedChoiceConstraint : public catena::common::IConstraint {
      * @param shared is the constraint shared
      * @note  the first choice provided will be the default for the constraint
      */
-    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
+    ChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
         : choices_{init.begin(), init.end()}, strict_{strict},
           default_{init.begin()->first}, oid_{oid}, shared_{shared} {
             // Making sure the template parameters are valid combinations.
             if constexpr(!(isIntChoice_ || isStringChoice_ || isStringStringChoice_)) {
-                throw std::runtime_error("NamedChoiceConstraint instantiated with invalid type/constraint type combination");
+                throw std::runtime_error("ChoiceConstraint instantiated with invalid type/constraint type combination");
             }
         }
 
@@ -108,15 +108,15 @@ class NamedChoiceConstraint : public catena::common::IConstraint {
      * @param dm the device to add the constraint to
      * @note  the first choice provided will be the default for the constraint
      */
-    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, IDevice& dm)
-        : NamedChoiceConstraint(init, strict, oid, shared) {
+    ChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, IDevice& dm)
+        : ChoiceConstraint(init, strict, oid, shared) {
         dm.addItem(oid, this);
     }
 
     /**
      * @brief default destructor
      */
-    virtual ~NamedChoiceConstraint() = default;
+    virtual ~ChoiceConstraint() = default;
 
     /**
      * @brief checks if the value satisfies the constraint

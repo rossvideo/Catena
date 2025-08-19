@@ -50,7 +50,7 @@
 #include <ParamWithValue.h>
 #include <PolyglotText.h>
 #include <RangeConstraint.h>
-#include <NamedChoiceConstraint.h>
+#include <ChoiceConstraint.h>
 
 // interface
 #include <interface/param.pb.h>

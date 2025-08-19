@@ -232,7 +232,7 @@ class Constraint extends CppCtor {
       this.arguments.push(stepArg.bind(this));
       this.arguments.push(displayMinArg.bind(this));
       this.arguments.push(displayMaxArg.bind(this));
-    } else if (this.constraintType === "NamedChoiceConstraint") {
+    } else if (this.constraintType === "ChoiceConstraint") {
       this.arguments.push(namedChoicesArg.bind(this));
       this.arguments.push(strictArg);
     }
@@ -249,9 +249,9 @@ class Constraint extends CppCtor {
     const types = {
       INT_RANGE: ["int32_t", "RangeConstraint"],
       FLOAT_RANGE: ["float", "RangeConstraint"],
-      INT_CHOICE: ["int32_t", "NamedChoiceConstraint"],
-      STRING_STRING_CHOICE: ["std::string", "NamedChoiceConstraint"],
-      STRING_CHOICE: ["std::string", "NamedChoiceConstraint"],
+      INT_CHOICE: ["int32_t", "ChoiceConstraint"],
+      STRING_STRING_CHOICE: ["std::string", "ChoiceConstraint"],
+      STRING_CHOICE: ["std::string", "ChoiceConstraint"],
       ALARM_TABLE: ["", ""], // not yet implemented
     };
 
@@ -301,7 +301,7 @@ class Constraint extends CppCtor {
    */
   getInitializer() {
     this.initialized = true;
-    if (this.constraintType === "NamedChoiceConstraint") {
+    if (this.constraintType === "ChoiceConstraint") {
       return `catena::common::${this.constraintType}<${this.type}, catena::Constraint::${this.desc.type}> ${this.variableName()}(${this.arguments.map((arg) => arg(this.desc)).join(", ")});`;
     } else {
       return `catena::common::${this.constraintType}<${this.type}> ${this.variableName()}(${this.arguments.map((arg) => arg(this.desc)).join(", ")});`;
