@@ -98,7 +98,6 @@ class DeviceRequest : public ICallData {
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
       return new DeviceRequest(socket, context, dms);
     }
-    
 
   private:
     /**
