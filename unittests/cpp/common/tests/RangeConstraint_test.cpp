@@ -187,7 +187,7 @@ TEST(RangeConstraintTest, RangeConstraint_IntToProto) {
  *                                   FLOAT
  * ============================================================================
  * 
- * TEST 2.1 - Testing FLOAT NamedChoiceConstraint constructors
+ * TEST 2.1 - Testing FLOAT RangeConstraint constructors
  */
 TEST(RangeConstraintTest, RangeConstraint_FloatCreate) {
     bool shared = false;

@@ -148,31 +148,31 @@ function namedChoicesArg(desc) {
     choices = desc.string_string_choice.choices;
   }
   let ans = '{';
-    for (let i = 0; i < choices.length; ++i) {
-      if (desc.type === "STRING_CHOICE") {
-        ans += `{"${choices[i]}",{`;
+  for (let i = 0; i < choices.length; ++i) {
+    if (desc.type === "STRING_CHOICE") {
+      ans += `{"${choices[i]}",{`;
+    } else {
+      if (this.type === "int32_t") {
+        ans += `{${choices[i].value},{`;
       } else {
-        if (this.type === "int32_t") {
-          ans += `{${choices[i].value},{`;
-        } else {
-          ans += `{"${choices[i].value}",{`;
-        }
-        let display_strings = choices[i].name.display_strings;
-        let pairs = Object.keys(display_strings).length;
-        for (let lang in display_strings) {
-          ans += `{"${lang}","${display_strings[lang]}"}`;
-          if (--pairs > 0) {
-            ans += ',';
-          }
-        }
+        ans += `{"${choices[i].value}",{`;
       }
-      ans += '}}';
-      if (i < choices.length - 1) {
-        ans += ',';
-      } else {
-        ans += '}';
+      let display_strings = choices[i].name.display_strings;
+      let pairs = Object.keys(display_strings).length;
+      for (let lang in display_strings) {
+        ans += `{"${lang}","${display_strings[lang]}"}`;
+        if (--pairs > 0) {
+          ans += ',';
+        }
       }
     }
+    ans += '}}';
+    if (i < choices.length - 1) {
+      ans += ',';
+    } else {
+      ans += '}';
+    }
+  }
   return ans;
 }
 
@@ -232,7 +232,7 @@ class Constraint extends CppCtor {
       this.arguments.push(stepArg.bind(this));
       this.arguments.push(displayMinArg.bind(this));
       this.arguments.push(displayMaxArg.bind(this));
-    } else if (this.constraintType === "NamedChoiceConstraint") {
+    } else if (this.constraintType === "ChoiceConstraint") {
       this.arguments.push(namedChoicesArg.bind(this));
       this.arguments.push(strictArg);
     }
@@ -249,9 +249,9 @@ class Constraint extends CppCtor {
     const types = {
       INT_RANGE: ["int32_t", "RangeConstraint"],
       FLOAT_RANGE: ["float", "RangeConstraint"],
-      INT_CHOICE: ["int32_t", "NamedChoiceConstraint"],
-      STRING_STRING_CHOICE: ["std::string", "NamedChoiceConstraint"],
-      STRING_CHOICE: ["std::string", "NamedChoiceConstraint"],
+      INT_CHOICE: ["int32_t", "ChoiceConstraint"],
+      STRING_STRING_CHOICE: ["std::string", "ChoiceConstraint"],
+      STRING_CHOICE: ["std::string", "ChoiceConstraint"],
       ALARM_TABLE: ["", ""], // not yet implemented
     };
 
@@ -301,7 +301,11 @@ class Constraint extends CppCtor {
    */
   getInitializer() {
     this.initialized = true;
-    return `catena::common::${this.constraintType}<${this.type}> ${this.variableName()}(${this.arguments.map((arg) => arg(this.desc)).join(", ")});`;
+    if (this.constraintType === "ChoiceConstraint") {
+      return `catena::common::${this.constraintType}<${this.type}, catena::Constraint::${this.desc.type}> ${this.variableName()}(${this.arguments.map((arg) => arg(this.desc)).join(", ")});`;
+    } else {
+      return `catena::common::${this.constraintType}<${this.type}> ${this.variableName()}(${this.arguments.map((arg) => arg(this.desc)).join(", ")});`;
+    }
   }
 }
 
