@@ -20,10 +20,10 @@
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:href="classcatena_1_1common_1_1NamedChoiceConstraint.html" target="_top" xlink:title="Named choice constraint which ensures a value is within a named choice.">
-<polygon fill="white" stroke="#666666" points="387.5,-67.5 214.5,-67.5 214.5,-37.5 387.5,-37.5 387.5,-67.5"/>
-<text text-anchor="start" x="222.5" y="-55.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::NamedChoice</text>
-<text text-anchor="middle" x="301" y="-44.5" font-family="Helvetica,sans-Serif" font-size="10.00">Constraint&lt; T, cType &gt;</text>
+<g id="a_Node000001"><a xlink:href="classcatena_1_1common_1_1ChoiceConstraint.html" target="_top" xlink:title="Named choice constraint which ensures a value is within a named choice.">
+<polygon fill="white" stroke="#666666" points="395,-67.5 207,-67.5 207,-37.5 395,-37.5 395,-67.5"/>
+<text text-anchor="start" x="215" y="-55.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::ChoiceConstraint</text>
+<text text-anchor="middle" x="301" y="-44.5" font-family="Helvetica,sans-Serif" font-size="10.00">&lt; T, cType &gt;</text>
 </a>
 </g>
 </g>
@@ -31,7 +31,7 @@
 <g id="edge5_Node000000_Node000001" class="edge">
 <title>Node0&#45;&gt;Node1</title>
 <g id="a_edge5_Node000000_Node000001"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M168.51,-39.35C183.59,-40.86 199.22,-42.42 214.22,-43.92"/>
+<path fill="none" stroke="#63b8ff" d="M168.22,-39.32C180.86,-40.59 193.9,-41.89 206.64,-43.16"/>
 <polygon fill="#63b8ff" stroke="#63b8ff" points="168.48,-35.83 158.18,-38.32 167.79,-42.8 168.48,-35.83"/>
 </a>
 </g>

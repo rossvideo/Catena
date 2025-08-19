@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cpp-v0.0.14-4: catena::common::NamedChoiceConstraint&lt; T, cType &gt; Class Template Reference</title>
+<title>cpp-v0.0.14-4: catena::common::ChoiceConstraint&lt; T, cType &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -64,7 +64,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classcatena_1_1common_1_1NamedChoiceConstraint.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classcatena_1_1common_1_1ChoiceConstraint.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -93,71 +93,71 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1NamedChoiceCo
   <div class="summary">
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="classcatena_1_1common_1_1NamedChoiceConstraint-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">catena::common::NamedChoiceConstraint&lt; T, cType &gt; Class Template Reference</div></div>
+<a href="classcatena_1_1common_1_1ChoiceConstraint-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">catena::common::ChoiceConstraint&lt; T, cType &gt; Class Template Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
 <p>Named choice constraint which ensures a value is within a named choice.  
- <a href="classcatena_1_1common_1_1NamedChoiceConstraint.html#details">More...</a></p>
+ <a href="classcatena_1_1common_1_1ChoiceConstraint.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="NamedChoiceConstraint_8h_source.html">NamedChoiceConstraint.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="ChoiceConstraint_8h_source.html">ChoiceConstraint.h</a>&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for catena::common::NamedChoiceConstraint&lt; T, cType &gt;:</div>
+Inheritance diagram for catena::common::ChoiceConstraint&lt; T, cType &gt;:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1NamedChoiceConstraint__inherit__graph.svg" width="242" height="124"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ChoiceConstraint__inherit__graph.svg" width="262" height="124"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <div class="dynheader">
-Collaboration diagram for catena::common::NamedChoiceConstraint&lt; T, cType &gt;:</div>
+Collaboration diagram for catena::common::ChoiceConstraint&lt; T, cType &gt;:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1NamedChoiceConstraint__coll__graph.svg" width="242" height="124"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ChoiceConstraint__coll__graph.svg" width="262" height="124"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-types" name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:ae494fab111dd328f3878ac60bd591277" id="r_ae494fab111dd328f3878ac60bd591277"><td class="memItemLeft" align="right" valign="top"><a id="ae494fab111dd328f3878ac60bd591277" name="ae494fab111dd328f3878ac60bd591277"></a>
+<tr class="memitem:a0be9dd914966f1968a94a71016b4850d" id="r_a0be9dd914966f1968a94a71016b4850d"><td class="memItemLeft" align="right" valign="top"><a id="a0be9dd914966f1968a94a71016b4850d" name="a0be9dd914966f1968a94a71016b4850d"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>Choices</b> = std::unordered_map&lt; T, <a class="el" href="classcatena_1_1common_1_1PolyglotText.html">PolyglotText</a> &gt;</td></tr>
-<tr class="memdesc:ae494fab111dd328f3878ac60bd591277"><td class="mdescLeft">&#160;</td><td class="mdescRight">map of choices with their display names <br /></td></tr>
-<tr class="separator:ae494fab111dd328f3878ac60bd591277"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab4f5cafd8acd6c832874add51f0e79bc" id="r_ab4f5cafd8acd6c832874add51f0e79bc"><td class="memItemLeft" align="right" valign="top"><a id="ab4f5cafd8acd6c832874add51f0e79bc" name="ab4f5cafd8acd6c832874add51f0e79bc"></a>
+<tr class="memdesc:a0be9dd914966f1968a94a71016b4850d"><td class="mdescLeft">&#160;</td><td class="mdescRight">map of choices with their display names <br /></td></tr>
+<tr class="separator:a0be9dd914966f1968a94a71016b4850d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90ec9a8d58d405adf4da6edfa571c365" id="r_a90ec9a8d58d405adf4da6edfa571c365"><td class="memItemLeft" align="right" valign="top"><a id="a90ec9a8d58d405adf4da6edfa571c365" name="a90ec9a8d58d405adf4da6edfa571c365"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>ListInitializer</b> = std::initializer_list&lt; std::pair&lt; T, PolyglotText::ListInitializer &gt; &gt;</td></tr>
-<tr class="memdesc:ab4f5cafd8acd6c832874add51f0e79bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">initializer list for choices <br /></td></tr>
-<tr class="separator:ab4f5cafd8acd6c832874add51f0e79bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memdesc:a90ec9a8d58d405adf4da6edfa571c365"><td class="mdescLeft">&#160;</td><td class="mdescRight">initializer list for choices <br /></td></tr>
+<tr class="separator:a90ec9a8d58d405adf4da6edfa571c365"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:af9c17530fe294d047a236e44581db4ef" id="r_af9c17530fe294d047a236e44581db4ef"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html#af9c17530fe294d047a236e44581db4ef">NamedChoiceConstraint</a> (<a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html#ab4f5cafd8acd6c832874add51f0e79bc">ListInitializer</a> init, bool strict, std::string oid, bool shared)</td></tr>
-<tr class="memdesc:af9c17530fe294d047a236e44581db4ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Named Choice Constraint object.  <br /></td></tr>
-<tr class="separator:af9c17530fe294d047a236e44581db4ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1c3c80b0fda1479cbc2838c30d5d556f" id="r_a1c3c80b0fda1479cbc2838c30d5d556f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html#a1c3c80b0fda1479cbc2838c30d5d556f">NamedChoiceConstraint</a> (<a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html#ab4f5cafd8acd6c832874add51f0e79bc">ListInitializer</a> init, bool strict, std::string oid, bool shared, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm)</td></tr>
-<tr class="memdesc:a1c3c80b0fda1479cbc2838c30d5d556f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Named Choice Constraint object.  <br /></td></tr>
-<tr class="separator:a1c3c80b0fda1479cbc2838c30d5d556f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5f98ef83809c03cb0ce04c267df7a120" id="r_a5f98ef83809c03cb0ce04c267df7a120"><td class="memItemLeft" align="right" valign="top"><a id="a5f98ef83809c03cb0ce04c267df7a120" name="a5f98ef83809c03cb0ce04c267df7a120"></a>
-virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~NamedChoiceConstraint</b> ()=default</td></tr>
-<tr class="memdesc:a5f98ef83809c03cb0ce04c267df7a120"><td class="mdescLeft">&#160;</td><td class="mdescRight">default destructor <br /></td></tr>
-<tr class="separator:a5f98ef83809c03cb0ce04c267df7a120"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a32ecf9ef68a46cf79b0fc4b266036563" id="r_a32ecf9ef68a46cf79b0fc4b266036563"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html#a32ecf9ef68a46cf79b0fc4b266036563">satisfied</a> (const catena::Value &amp;src) const override</td></tr>
-<tr class="memdesc:a32ecf9ef68a46cf79b0fc4b266036563"><td class="mdescLeft">&#160;</td><td class="mdescRight">checks if the value satisfies the constraint  <br /></td></tr>
-<tr class="separator:a32ecf9ef68a46cf79b0fc4b266036563"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0fedf101a25d6b40332d43af8e1dea6b" id="r_a0fedf101a25d6b40332d43af8e1dea6b"><td class="memItemLeft" align="right" valign="top">catena::Value&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html#a0fedf101a25d6b40332d43af8e1dea6b">apply</a> (const catena::Value &amp;src) const override</td></tr>
-<tr class="memdesc:a0fedf101a25d6b40332d43af8e1dea6b"><td class="mdescLeft">&#160;</td><td class="mdescRight">applies constraint to src and returns the constrained value  <br /></td></tr>
-<tr class="separator:a0fedf101a25d6b40332d43af8e1dea6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4c11a5a9d3d71e9338d0f5c75fdcbab2" id="r_a4c11a5a9d3d71e9338d0f5c75fdcbab2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html#a4c11a5a9d3d71e9338d0f5c75fdcbab2">toProto</a> (catena::Constraint &amp;constraint) const override</td></tr>
-<tr class="memdesc:a4c11a5a9d3d71e9338d0f5c75fdcbab2"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the constraint to a protobuf message  <br /></td></tr>
-<tr class="separator:a4c11a5a9d3d71e9338d0f5c75fdcbab2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac5808102ede13689cfbc752f00796bf5" id="r_ac5808102ede13689cfbc752f00796bf5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html#ac5808102ede13689cfbc752f00796bf5">isRange</a> () const override</td></tr>
-<tr class="memdesc:ac5808102ede13689cfbc752f00796bf5"><td class="mdescLeft">&#160;</td><td class="mdescRight">This constraint is not a range constraint so return false.  <br /></td></tr>
-<tr class="separator:ac5808102ede13689cfbc752f00796bf5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8c6639002d5a2b7a1ff7ba7b0ba7eada" id="r_a8c6639002d5a2b7a1ff7ba7b0ba7eada"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html#a8c6639002d5a2b7a1ff7ba7b0ba7eada">isShared</a> () const override</td></tr>
-<tr class="memdesc:a8c6639002d5a2b7a1ff7ba7b0ba7eada"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if the constraint is shared  <br /></td></tr>
-<tr class="separator:a8c6639002d5a2b7a1ff7ba7b0ba7eada"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a85e5d2cbe94481fadb15380da505ffd0" id="r_a85e5d2cbe94481fadb15380da505ffd0"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html#a85e5d2cbe94481fadb15380da505ffd0">getOid</a> () const override</td></tr>
-<tr class="memdesc:a85e5d2cbe94481fadb15380da505ffd0"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the constraint oid  <br /></td></tr>
-<tr class="separator:a85e5d2cbe94481fadb15380da505ffd0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6df4da0e9c520ca4f42b578fad7df53f" id="r_a6df4da0e9c520ca4f42b578fad7df53f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#a6df4da0e9c520ca4f42b578fad7df53f">ChoiceConstraint</a> (<a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#a90ec9a8d58d405adf4da6edfa571c365">ListInitializer</a> init, bool strict, std::string oid, bool shared)</td></tr>
+<tr class="memdesc:a6df4da0e9c520ca4f42b578fad7df53f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Named Choice Constraint object.  <br /></td></tr>
+<tr class="separator:a6df4da0e9c520ca4f42b578fad7df53f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a0f947a0a49fa2ebcfaf6d6f58d9c6e" id="r_a1a0f947a0a49fa2ebcfaf6d6f58d9c6e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#a1a0f947a0a49fa2ebcfaf6d6f58d9c6e">ChoiceConstraint</a> (<a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#a90ec9a8d58d405adf4da6edfa571c365">ListInitializer</a> init, bool strict, std::string oid, bool shared, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm)</td></tr>
+<tr class="memdesc:a1a0f947a0a49fa2ebcfaf6d6f58d9c6e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Named Choice Constraint object.  <br /></td></tr>
+<tr class="separator:a1a0f947a0a49fa2ebcfaf6d6f58d9c6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:add5eba8912839e695394ad53f97fe06b" id="r_add5eba8912839e695394ad53f97fe06b"><td class="memItemLeft" align="right" valign="top"><a id="add5eba8912839e695394ad53f97fe06b" name="add5eba8912839e695394ad53f97fe06b"></a>
+virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~ChoiceConstraint</b> ()=default</td></tr>
+<tr class="memdesc:add5eba8912839e695394ad53f97fe06b"><td class="mdescLeft">&#160;</td><td class="mdescRight">default destructor <br /></td></tr>
+<tr class="separator:add5eba8912839e695394ad53f97fe06b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abbf15bbd4613f740dd23a27fa1a0c068" id="r_abbf15bbd4613f740dd23a27fa1a0c068"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#abbf15bbd4613f740dd23a27fa1a0c068">satisfied</a> (const catena::Value &amp;src) const override</td></tr>
+<tr class="memdesc:abbf15bbd4613f740dd23a27fa1a0c068"><td class="mdescLeft">&#160;</td><td class="mdescRight">checks if the value satisfies the constraint  <br /></td></tr>
+<tr class="separator:abbf15bbd4613f740dd23a27fa1a0c068"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e2ca3075df8ef89298554dc26413376" id="r_a2e2ca3075df8ef89298554dc26413376"><td class="memItemLeft" align="right" valign="top">catena::Value&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#a2e2ca3075df8ef89298554dc26413376">apply</a> (const catena::Value &amp;src) const override</td></tr>
+<tr class="memdesc:a2e2ca3075df8ef89298554dc26413376"><td class="mdescLeft">&#160;</td><td class="mdescRight">applies constraint to src and returns the constrained value  <br /></td></tr>
+<tr class="separator:a2e2ca3075df8ef89298554dc26413376"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ad0c9d046ac029c196fb130d8925dd3" id="r_a2ad0c9d046ac029c196fb130d8925dd3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#a2ad0c9d046ac029c196fb130d8925dd3">toProto</a> (catena::Constraint &amp;constraint) const override</td></tr>
+<tr class="memdesc:a2ad0c9d046ac029c196fb130d8925dd3"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the constraint to a protobuf message  <br /></td></tr>
+<tr class="separator:a2ad0c9d046ac029c196fb130d8925dd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaa4be8cd2425c275c83e7483d012f1da" id="r_aaa4be8cd2425c275c83e7483d012f1da"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#aaa4be8cd2425c275c83e7483d012f1da">isRange</a> () const override</td></tr>
+<tr class="memdesc:aaa4be8cd2425c275c83e7483d012f1da"><td class="mdescLeft">&#160;</td><td class="mdescRight">This constraint is not a range constraint so return false.  <br /></td></tr>
+<tr class="separator:aaa4be8cd2425c275c83e7483d012f1da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3ba9c2235123f169d85564665a24404" id="r_ae3ba9c2235123f169d85564665a24404"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#ae3ba9c2235123f169d85564665a24404">isShared</a> () const override</td></tr>
+<tr class="memdesc:ae3ba9c2235123f169d85564665a24404"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if the constraint is shared  <br /></td></tr>
+<tr class="separator:ae3ba9c2235123f169d85564665a24404"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40ce1b41abf70767eaff41dc38c4f1d0" id="r_a40ce1b41abf70767eaff41dc38c4f1d0"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#a40ce1b41abf70767eaff41dc38c4f1d0">getOid</a> () const override</td></tr>
+<tr class="memdesc:a40ce1b41abf70767eaff41dc38c4f1d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the constraint oid  <br /></td></tr>
+<tr class="separator:a40ce1b41abf70767eaff41dc38c4f1d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><div class="compoundTemplParams">template&lt;typename T, catena::Constraint::ConstraintType cType&gt;<br />
-class catena::common::NamedChoiceConstraint&lt; T, cType &gt;</div><p>Named choice constraint which ensures a value is within a named choice. </p>
+class catena::common::ChoiceConstraint&lt; T, cType &gt;</div><p>Named choice constraint which ensures a value is within a named choice. </p>
 <p>Supports three types: INT_CHOICE, STRING_CHOICE, and STRING_STRING_CHOICE.</p>
 <p>INT_CHOICE and STRING_STRING_CHOICE have both a value and a polyglot text "name" for each choice while STRING_CHOICE is just a value.</p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
@@ -168,8 +168,8 @@ class catena::common::NamedChoiceConstraint&lt; T, cType &gt;</div><p>Named choi
   </dd>
 </dl>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="af9c17530fe294d047a236e44581db4ef" name="af9c17530fe294d047a236e44581db4ef"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af9c17530fe294d047a236e44581db4ef">&#9670;&#160;</a></span>NamedChoiceConstraint() <span class="overload">[1/2]</span></h2>
+<a id="a6df4da0e9c520ca4f42b578fad7df53f" name="a6df4da0e9c520ca4f42b578fad7df53f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6df4da0e9c520ca4f42b578fad7df53f">&#9670;&#160;</a></span>ChoiceConstraint() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -180,9 +180,9 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html">catena::common::NamedChoiceConstraint</a>&lt; T, cType &gt;::NamedChoiceConstraint </td>
+          <td class="memname"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html">catena::common::ChoiceConstraint</a>&lt; T, cType &gt;::ChoiceConstraint </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html#ab4f5cafd8acd6c832874add51f0e79bc">ListInitializer</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#a90ec9a8d58d405adf4da6edfa571c365">ListInitializer</a>&#160;</td>
           <td class="paramname"><em>init</em>, </td>
         </tr>
         <tr>
@@ -230,8 +230,8 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
 
 </div>
 </div>
-<a id="a1c3c80b0fda1479cbc2838c30d5d556f" name="a1c3c80b0fda1479cbc2838c30d5d556f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1c3c80b0fda1479cbc2838c30d5d556f">&#9670;&#160;</a></span>NamedChoiceConstraint() <span class="overload">[2/2]</span></h2>
+<a id="a1a0f947a0a49fa2ebcfaf6d6f58d9c6e" name="a1a0f947a0a49fa2ebcfaf6d6f58d9c6e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1a0f947a0a49fa2ebcfaf6d6f58d9c6e">&#9670;&#160;</a></span>ChoiceConstraint() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -242,9 +242,9 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html">catena::common::NamedChoiceConstraint</a>&lt; T, cType &gt;::NamedChoiceConstraint </td>
+          <td class="memname"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html">catena::common::ChoiceConstraint</a>&lt; T, cType &gt;::ChoiceConstraint </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html#ab4f5cafd8acd6c832874add51f0e79bc">ListInitializer</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#a90ec9a8d58d405adf4da6edfa571c365">ListInitializer</a>&#160;</td>
           <td class="paramname"><em>init</em>, </td>
         </tr>
         <tr>
@@ -301,14 +301,14 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1NamedChoiceConstraint_a1c3c80b0fda1479cbc2838c30d5d556f_cgraph.svg" width="502" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ChoiceConstraint_a1a0f947a0a49fa2ebcfaf6d6f58d9c6e_cgraph.svg" width="498" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a0fedf101a25d6b40332d43af8e1dea6b" name="a0fedf101a25d6b40332d43af8e1dea6b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0fedf101a25d6b40332d43af8e1dea6b">&#9670;&#160;</a></span>apply()</h2>
+<a id="a2e2ca3075df8ef89298554dc26413376" name="a2e2ca3075df8ef89298554dc26413376"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2e2ca3075df8ef89298554dc26413376">&#9670;&#160;</a></span>apply()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -319,7 +319,7 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">catena::Value <a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html">catena::common::NamedChoiceConstraint</a>&lt; T, cType &gt;::apply </td>
+          <td class="memname">catena::Value <a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html">catena::common::ChoiceConstraint</a>&lt; T, cType &gt;::apply </td>
           <td>(</td>
           <td class="paramtype">const catena::Value &amp;&#160;</td>
           <td class="paramname"><em>src</em></td><td>)</td>
@@ -348,8 +348,8 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
 
 </div>
 </div>
-<a id="a85e5d2cbe94481fadb15380da505ffd0" name="a85e5d2cbe94481fadb15380da505ffd0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a85e5d2cbe94481fadb15380da505ffd0">&#9670;&#160;</a></span>getOid()</h2>
+<a id="a40ce1b41abf70767eaff41dc38c4f1d0" name="a40ce1b41abf70767eaff41dc38c4f1d0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a40ce1b41abf70767eaff41dc38c4f1d0">&#9670;&#160;</a></span>getOid()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -360,7 +360,7 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const std::string &amp; <a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html">catena::common::NamedChoiceConstraint</a>&lt; T, cType &gt;::getOid </td>
+          <td class="memname">const std::string &amp; <a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html">catena::common::ChoiceConstraint</a>&lt; T, cType &gt;::getOid </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -380,8 +380,8 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
 
 </div>
 </div>
-<a id="ac5808102ede13689cfbc752f00796bf5" name="ac5808102ede13689cfbc752f00796bf5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac5808102ede13689cfbc752f00796bf5">&#9670;&#160;</a></span>isRange()</h2>
+<a id="aaa4be8cd2425c275c83e7483d012f1da" name="aaa4be8cd2425c275c83e7483d012f1da"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaa4be8cd2425c275c83e7483d012f1da">&#9670;&#160;</a></span>isRange()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -392,7 +392,7 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html">catena::common::NamedChoiceConstraint</a>&lt; T, cType &gt;::isRange </td>
+          <td class="memname">bool <a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html">catena::common::ChoiceConstraint</a>&lt; T, cType &gt;::isRange </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -412,8 +412,8 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
 
 </div>
 </div>
-<a id="a8c6639002d5a2b7a1ff7ba7b0ba7eada" name="a8c6639002d5a2b7a1ff7ba7b0ba7eada"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8c6639002d5a2b7a1ff7ba7b0ba7eada">&#9670;&#160;</a></span>isShared()</h2>
+<a id="ae3ba9c2235123f169d85564665a24404" name="ae3ba9c2235123f169d85564665a24404"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae3ba9c2235123f169d85564665a24404">&#9670;&#160;</a></span>isShared()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -424,7 +424,7 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html">catena::common::NamedChoiceConstraint</a>&lt; T, cType &gt;::isShared </td>
+          <td class="memname">bool <a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html">catena::common::ChoiceConstraint</a>&lt; T, cType &gt;::isShared </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -444,8 +444,8 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
 
 </div>
 </div>
-<a id="a32ecf9ef68a46cf79b0fc4b266036563" name="a32ecf9ef68a46cf79b0fc4b266036563"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a32ecf9ef68a46cf79b0fc4b266036563">&#9670;&#160;</a></span>satisfied()</h2>
+<a id="abbf15bbd4613f740dd23a27fa1a0c068" name="abbf15bbd4613f740dd23a27fa1a0c068"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abbf15bbd4613f740dd23a27fa1a0c068">&#9670;&#160;</a></span>satisfied()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -456,7 +456,7 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html">catena::common::NamedChoiceConstraint</a>&lt; T, cType &gt;::satisfied </td>
+          <td class="memname">bool <a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html">catena::common::ChoiceConstraint</a>&lt; T, cType &gt;::satisfied </td>
           <td>(</td>
           <td class="paramtype">const catena::Value &amp;&#160;</td>
           <td class="paramname"><em>src</em></td><td>)</td>
@@ -483,8 +483,8 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
 
 </div>
 </div>
-<a id="a4c11a5a9d3d71e9338d0f5c75fdcbab2" name="a4c11a5a9d3d71e9338d0f5c75fdcbab2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4c11a5a9d3d71e9338d0f5c75fdcbab2">&#9670;&#160;</a></span>toProto()</h2>
+<a id="a2ad0c9d046ac029c196fb130d8925dd3" name="a2ad0c9d046ac029c196fb130d8925dd3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2ad0c9d046ac029c196fb130d8925dd3">&#9670;&#160;</a></span>toProto()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -495,7 +495,7 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html">catena::common::NamedChoiceConstraint</a>&lt; T, cType &gt;::toProto </td>
+          <td class="memname">void <a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html">catena::common::ChoiceConstraint</a>&lt; T, cType &gt;::toProto </td>
           <td>(</td>
           <td class="paramtype">catena::Constraint &amp;&#160;</td>
           <td class="paramname"><em>constraint</em></td><td>)</td>
@@ -522,14 +522,14 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>/home/runner/work/Catena/Catena/sdks/cpp/common/include/<a class="el" href="NamedChoiceConstraint_8h_source.html">NamedChoiceConstraint.h</a></li>
+<li>/home/runner/work/Catena/Catena/sdks/cpp/common/include/<a class="el" href="ChoiceConstraint_8h_source.html">ChoiceConstraint.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="namespacecatena.html">catena</a></li><li class="navelem"><a class="el" href="namespacecatena_1_1common.html">common</a></li><li class="navelem"><a class="el" href="classcatena_1_1common_1_1NamedChoiceConstraint.html">NamedChoiceConstraint</a></li>
+    <li class="navelem"><a class="el" href="namespacecatena.html">catena</a></li><li class="navelem"><a class="el" href="namespacecatena_1_1common.html">common</a></li><li class="navelem"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html">ChoiceConstraint</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>
