@@ -59,8 +59,16 @@ namespace catena {
 namespace common {
 
 /**
- * @brief Named choice constraint, ensures a value is within a named choice
- * @tparam T int or string
+ * @brief Named choice constraint which ensures a value is within a named choice.
+ * 
+ * Supports three types: INT_CHOICE, STRING_CHOICE, and STRING_STRING_CHOICE.
+ * 
+ * INT_CHOICE and STRING_STRING_CHOICE have both a value and a polyglot text
+ * "name" for each choice while STRING_CHOICE is just a value.
+ * 
+ * @tparam T The constraint's primitive type. Must be int or string.
+ * @tparam cType The constraint's named type, must be one of INT_CHOICE,
+ * STRING_CHOICE, or STRING_STRING_CHOICE.
  */
 template <typename T, catena::Constraint::ConstraintType cType>
 class NamedChoiceConstraint : public catena::common::IConstraint {
@@ -86,10 +94,7 @@ class NamedChoiceConstraint : public catena::common::IConstraint {
         : choices_{init.begin(), init.end()}, strict_{strict},
           default_{init.begin()->first}, oid_{oid}, shared_{shared} {
             // Making sure the template parameters are valid combinations.
-            if constexpr(!( (std::is_same<T, int32_t>::value     && cType == catena::Constraint::INT_CHOICE)
-                         || (std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_CHOICE)
-                         || (std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_STRING_CHOICE)
-                        )) {
+            if constexpr(!(isIntChoice_ || isStringChoice_ || isStringStringChoice_)) {
                 throw std::runtime_error("NamedChoiceConstraint instantiated with invalid type/constraint type combination");
             }
         }
@@ -120,11 +125,11 @@ class NamedChoiceConstraint : public catena::common::IConstraint {
      */
     bool satisfied(const catena::Value& src) const override {
         // INT_CHOICE implementation
-        if constexpr(std::is_same<T, int32_t>::value) {
+        if constexpr(isIntChoice_) {
             return choices_.contains(src.int32_value());
         }
         // STRING_CHOICE and STRING_STRING_CHOICE implementation
-        else if constexpr(std::is_same<T, std::string>::value) {
+        else if constexpr(isStringChoice_ || isStringStringChoice_) {
             return !strict_ || choices_.contains(src.string_value());
         }
         // Implementation for everything else.
@@ -153,7 +158,7 @@ class NamedChoiceConstraint : public catena::common::IConstraint {
      */
     void toProto(catena::Constraint& constraint) const override {
         // INT_CHOICE implementation
-        if constexpr(std::is_same<T, int32_t>::value && cType == catena::Constraint::INT_CHOICE) {
+        if constexpr(isIntChoice_) {
             constraint.set_type(catena::Constraint::INT_CHOICE);
             for (auto& [value, name] : choices_) {
                 auto intChoice = constraint.mutable_int32_choice()->add_choices();
@@ -162,14 +167,14 @@ class NamedChoiceConstraint : public catena::common::IConstraint {
             }
         }
         // STRING_CHOICE implementation
-        else if constexpr(std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_CHOICE) {
+        else if constexpr(isStringChoice_) {
             constraint.set_type(catena::Constraint::STRING_CHOICE);
             for (auto& [value, name] : choices_) {
                 *constraint.mutable_string_choice()->add_choices() = value;
             }
         }
         //STRING_STRING_CHOICE implementation
-        else if constexpr(std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_STRING_CHOICE) {
+        else if constexpr(isStringStringChoice_) {
             constraint.set_type(catena::Constraint::STRING_STRING_CHOICE);
             for (auto& [value, name] : choices_) {
                 auto stringChoice = constraint.mutable_string_string_choice()->add_choices();
@@ -198,6 +203,22 @@ class NamedChoiceConstraint : public catena::common::IConstraint {
     const std::string& getOid() const override { return oid_; }
 
   private:
+    /**
+     * @brief True if the constraint is a valid INT_CHOICE constraint.
+     */
+    static constexpr bool isIntChoice_
+        = std::is_same<T, int32_t>::value && cType == catena::Constraint::INT_CHOICE;
+    /**
+     * @brief True if the constraint is a valid STRING_CHOICE constraint.
+     */
+    static constexpr bool isStringChoice_
+        = std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_CHOICE;
+    /**
+     * @brief True if the constraint is a valid STRING_STRING_CHOICE constraint.
+     */
+    static constexpr bool isStringStringChoice_
+        = std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_STRING_CHOICE;
+
     Choices choices_;  ///< the choices
     bool strict_;      ///< should the value be constrained on apply
     T default_;        ///< the default value to constrain to
