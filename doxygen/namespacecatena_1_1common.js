@@ -1,7 +1,6 @@
 var namespacecatena_1_1common =
 [
     [ "Authorizer", "classcatena_1_1common_1_1Authorizer.html", "classcatena_1_1common_1_1Authorizer" ],
-    [ "ChoiceConstraint", "classcatena_1_1common_1_1ChoiceConstraint.html", "classcatena_1_1common_1_1ChoiceConstraint" ],
     [ "CommandTag", "structcatena_1_1common_1_1CommandTag.html", null ],
     [ "Connect", "classcatena_1_1common_1_1Connect.html", "classcatena_1_1common_1_1Connect" ],
     [ "ConnectionQueue", "classcatena_1_1common_1_1ConnectionQueue.html", "classcatena_1_1common_1_1ConnectionQueue" ],
@@ -29,6 +28,7 @@ var namespacecatena_1_1common =
     [ "MenuGroup", "classcatena_1_1common_1_1MenuGroup.html", "classcatena_1_1common_1_1MenuGroup" ],
     [ "MenuGroupTag", "structcatena_1_1common_1_1MenuGroupTag.html", null ],
     [ "MenuTag", "structcatena_1_1common_1_1MenuTag.html", null ],
+    [ "NamedChoiceConstraint", "classcatena_1_1common_1_1NamedChoiceConstraint.html", "classcatena_1_1common_1_1NamedChoiceConstraint" ],
     [ "ParamDescriptor", "classcatena_1_1common_1_1ParamDescriptor.html", "classcatena_1_1common_1_1ParamDescriptor" ],
     [ "ParamTag", "structcatena_1_1common_1_1ParamTag.html", null ],
     [ "ParamVisitor", "classcatena_1_1common_1_1ParamVisitor.html", "classcatena_1_1common_1_1ParamVisitor" ],
