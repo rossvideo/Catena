@@ -32,7 +32,7 @@
 
 /**
  * @file IMenuGroup.h
- * @brief Interface for MenuGroup
+ * @brief Interface for MenuGroup.
  * @author Ben Mostafa Ben.Mostafa@rossvideo.com
  * @date 2024-10-04
  * @copyright Copyright (c) 2024 Ross Video
@@ -52,7 +52,7 @@ namespace catena {
 namespace common {
 
 /**
- * @brief Interface for Menu Group
+ * @brief Interface for Menu Group.
  */
 class IMenuGroup {
   public:
@@ -64,21 +64,21 @@ class IMenuGroup {
     virtual ~IMenuGroup() = default;
 
     /**
-     * @brief serialize a menu group to a protobuf message
-     * @param menuGroup the protobuf message
+     * @brief Serialize a menu group to a protobuf message.
+     * @param menuGroup The protobuf message.
      */
     virtual void toProto(catena::MenuGroup& menuGroup, bool shallow) const = 0;
 
     /**
-     * @brief add a menu to the group using move semantics
-     * @param oid the key of the menu
-     * @param menu the menu
+     * @brief Adds a menu to the group using move semantics.
+     * @param oid The new menu's oid.
+     * @param menu The new menu.
      */
     virtual void addMenu(const std::string& oid, std::unique_ptr<IMenu> menu) = 0;
 
     /**
-     * @brief get menus from menu group
-     * @return a map of menus
+     * @brief Get menus from menu group.
+     * @return A map of menus.
      */
     virtual const MenuMap* menus() const = 0;
 };

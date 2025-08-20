@@ -189,7 +189,7 @@ class RangeConstraint : public catena::common::IConstraint {
 
     /**
      * @brief serialize the constraint to a protobuf message
-     * @param msg the protobuf message to populate
+     * @param constraint the protobuf message to populate
      */
     void toProto(catena::Constraint& constraint) const override {
         // Int range constraint
@@ -231,14 +231,38 @@ class RangeConstraint : public catena::common::IConstraint {
     const std::string& getOid() const override { return oid_; }
 
 private:
-    T min_;           ///< the minimum value
-    T max_;           ///< the maximum value
-    T step_;          ///< the step size
-    T display_min_;   ///< the minimum value to display
-    T display_max_;   ///< the maximum value to display
-    bool strict_;     ///< should the value be constrained on apply
-    bool shared_;     ///< is the constraint shared
-    std::string oid_; ///< the oid of the constraint
+    /** 
+     * @brief The minimum value.
+     */
+    T min_;
+    /** 
+     * @brief The maximum value
+     */
+    T max_;
+    /** 
+     * @brief The step size.
+     */
+    T step_;
+    /** 
+     * @brief the minimum value to display.
+     */
+    T display_min_;
+    /** 
+     * @brief The maximum value to display.
+     */
+    T display_max_;
+    /** 
+     * @brief Flag indicating if the value should be constrained on apply.
+     */
+    bool strict_;
+    /** 
+     * @brief Flag indicating if the constraint shared.
+     */
+    bool shared_;
+    /** 
+     * @brief The oid of the constraint.
+     */
+    std::string oid_;
 };
 
 } // namespace common

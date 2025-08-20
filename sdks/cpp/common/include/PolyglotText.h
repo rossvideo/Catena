@@ -84,6 +84,9 @@ class PolyglotText : public IPolyglotText {
     inline const DisplayStrings& displayStrings() const override { return display_strings_; }
 
   private:
+    /**
+     * @brief A map of supported languages to translations of the text.
+     */
     DisplayStrings display_strings_;
 };
 

@@ -55,43 +55,42 @@ public:
     virtual ~IConstraint() = default;
 
     /**
-     * @brief serialize the constraint to a protobuf message
-     * @param constraint the protobuf message to serialize to
+     * @brief Serializes the constraint to a protobuf message.
+     * @param constraint The protobuf message to serialize to.
      */
     virtual void toProto(catena::Constraint& constraint) const = 0;
 
     /**
-     * @brief check if the constraint is satisfied by src
-     * @param src a catena::Value to check the constraint against
-     * @return true if the constraint is satisfied, false otherwise
+     * @brief Checks if the constraint is satisfied by src.
+     * @param src A catena::Value to check the constraint against.
+     * @return True if the constraint is satisfied, false otherwise.
      */
     virtual bool satisfied(const catena::Value& src) const = 0;
 
     /**
-     * @brief applies constraint to src and returns the constrained value
-     * @param src a catena::Value to apply the constraint to
-     * @return a catena::Value with the constraint applied
+     * @brief Applies constraint to src and returns the constrained value.
+     * @param src A catena::Value to apply the constraint to.
+     * @return A catena::Value with the constraint applied.
      */
     virtual catena::Value apply(const catena::Value& src) const = 0;
 
     /**
-     * @brief check if the constraint is a range constraint
-     * @return true if the constraint is a range constraint, false otherwise
+     * @brief Checks if the constraint is a range constraint.
+     * @return True if the constraint is a range constraint, False otherwise.
      */
     virtual bool isRange() const = 0;
 
     /**
-     * @brief check if the constraint is a shared constraint
-     * @return true if the constraint is shared, false otherwise
+     * @brief Checks if the constraint is a shared constraint.
+     * @return True if the constraint is shared, False otherwise.
      */
     virtual bool isShared() const = 0;
 
     /**
-     * @brief get the constraint oid
-     * @return the oid of the constraint
+     * @brief Gets the constraint oid.
+     * @return The oid of the constraint.
      */
     virtual const std::string& getOid() const = 0;
-
 };
 
 } // namespace common

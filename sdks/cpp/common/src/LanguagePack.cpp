@@ -52,6 +52,3 @@ void LanguagePack::toProto(catena::LanguagePack& pack) const {
         (*pack.mutable_words())[key] = value;
     }
 }
-
-
-

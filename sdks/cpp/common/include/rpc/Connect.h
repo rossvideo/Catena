@@ -49,8 +49,10 @@
 #include "IConnect.h"
 #include <Logger.h>
 
+// protobug interface
 #include <interface/device.pb.h>
 
+// std
 #include <string>
 #include <condition_variable>
 
@@ -319,5 +321,5 @@ class Connect : public IConnect {
     uint32_t objectId_ = 0;
 };
 
-}; // common
-}; // catena
+}; // namespace common
+}; // namespace catena

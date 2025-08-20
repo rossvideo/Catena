@@ -30,7 +30,7 @@
 
 /**
  * @file IConnect.h
- * @brief Interface for Connect.h
+ * @brief Interface for Connect classes.
  * @author Ben Whitten (benjamin.whitten@rossvideo.com)
  * @copyright Copyright (c) 2025 Ross Video
  */

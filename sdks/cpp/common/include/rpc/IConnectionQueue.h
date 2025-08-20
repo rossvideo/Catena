@@ -30,7 +30,7 @@
 
 /**
  * @file IConnectionQueue.h
- * @brief Pure virtual class for the ConnectionQueue object.
+ * @brief Interface class for the ConnectionQueue object.
  * @author Ben Whitten (benjamin.whitten@rossvideo.com)
  * @copyright Copyright (c) 2025 Ross Video
  */
