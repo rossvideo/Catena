@@ -462,6 +462,11 @@ Device::DeviceSerializer Device::getDeviceSerializer(const IAuthorizer& authz, c
     for (auto& scope : access_scopes_) {
         dst->add_access_scopes(scope);
     }
+    for (std::pair<std::string, IMenuGroup*> entry : menu_groups_) {
+        ::catena::MenuGroup dstMenuGroup;
+        entry.second->toProto(dstMenuGroup, true);
+        dst->mutable_menu_groups()->insert({entry.first, dstMenuGroup});
+    }
 
     if (dl != catena::Device_DetailLevel_NONE) {
         // Helper function to check if an OID is subscribed
