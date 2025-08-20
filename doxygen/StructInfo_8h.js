@@ -8,8 +8,8 @@ var StructInfo_8h =
     [ "catena::common::IsVariantArray", "conceptcatena_1_1common_1_1IsVariantArray.html", null ],
     [ "_changeType", "StructInfo_8h.html#a2f37737db27ab4b01982ea3514500fb0", null ],
     [ "_findTypeIndex", "StructInfo_8h.html#addddb371559a45d42994973db1a69f08", null ],
-    [ "fromProto", "StructInfo_8h.html#a5ad5f48a946620a675877d2301531370", null ],
-    [ "toProto", "StructInfo_8h.html#aa45a6f4433e677dd49851d61bdee0350", null ],
-    [ "validFromProto", "StructInfo_8h.html#a846f2287f628fa1adeba439f9dc37fba", null ],
+    [ "fromProto", "StructInfo_8h.html#a76d541652cd1d16e108a82973e7da2e9", null ],
+    [ "toProto", "StructInfo_8h.html#ae60728f21704d097a8446afb0de17b11", null ],
+    [ "validFromProto", "StructInfo_8h.html#aa1d6718b95661e20844462e2f044488a", null ],
     [ "alternativeNames", "StructInfo_8h.html#a50a9d30ba7a22910857f12f13ed809cc", null ]
 ];

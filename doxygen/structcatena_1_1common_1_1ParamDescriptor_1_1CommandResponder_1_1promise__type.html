@@ -111,20 +111,20 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:acf50b862190ca82ab694f52243ce8e01"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a824694519e694746d3f626dd8abfc27c" id="r_a824694519e694746d3f626dd8abfc27c"><td class="memItemLeft" align="right" valign="top"><a id="a824694519e694746d3f626dd8abfc27c" name="a824694519e694746d3f626dd8abfc27c"></a>
 std::suspend_always&#160;</td><td class="memItemRight" valign="bottom"><b>initial_suspend</b> ()</td></tr>
-<tr class="memdesc:a824694519e694746d3f626dd8abfc27c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pauses the coroutine after creation until <a class="el" href="classcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder.html#a8b8297eda6694095bb9cd0cb9ceca8fb" title="Resumes the coroutine and returns a CommandResponse object.">getNext()</a> is called. <br /></td></tr>
+<tr class="memdesc:a824694519e694746d3f626dd8abfc27c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pauses the coroutine after creation until <a class="el" href="classcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder.html#a47fb434a529bdbdd5323e8d2c57d6188" title="Resumes the coroutine and returns a CommandResponse object.">getNext()</a> is called. <br /></td></tr>
 <tr class="separator:a824694519e694746d3f626dd8abfc27c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a971a80984ef989f471d63fcb28a0d55a" id="r_a971a80984ef989f471d63fcb28a0d55a"><td class="memItemLeft" align="right" valign="top"><a id="a971a80984ef989f471d63fcb28a0d55a" name="a971a80984ef989f471d63fcb28a0d55a"></a>
 std::suspend_always&#160;</td><td class="memItemRight" valign="bottom"><b>final_suspend</b> () noexcept</td></tr>
 <tr class="memdesc:a971a80984ef989f471d63fcb28a0d55a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pauses the coroutine before destruction. <br /></td></tr>
 <tr class="separator:a971a80984ef989f471d63fcb28a0d55a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a00388cdb351a0c0f8fc1e1b29a8891d1" id="r_a00388cdb351a0c0f8fc1e1b29a8891d1"><td class="memItemLeft" align="right" valign="top"><a id="a00388cdb351a0c0f8fc1e1b29a8891d1" name="a00388cdb351a0c0f8fc1e1b29a8891d1"></a>
-std::suspend_always&#160;</td><td class="memItemRight" valign="bottom"><b>yield_value</b> (catena::CommandResponse &amp;component)</td></tr>
-<tr class="memdesc:a00388cdb351a0c0f8fc1e1b29a8891d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a CommandResponse object when co_yield is called and suspends the coroutine until <a class="el" href="classcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder.html#a8b8297eda6694095bb9cd0cb9ceca8fb" title="Resumes the coroutine and returns a CommandResponse object.">getNext()</a> is called. <br /></td></tr>
-<tr class="separator:a00388cdb351a0c0f8fc1e1b29a8891d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9c41b07e45ead9f65d71ea4fe2d1a7be" id="r_a9c41b07e45ead9f65d71ea4fe2d1a7be"><td class="memItemLeft" align="right" valign="top"><a id="a9c41b07e45ead9f65d71ea4fe2d1a7be" name="a9c41b07e45ead9f65d71ea4fe2d1a7be"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>return_value</b> (catena::CommandResponse component)</td></tr>
-<tr class="memdesc:a9c41b07e45ead9f65d71ea4fe2d1a7be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes the coroutine and returns a CommandResponse. <br /></td></tr>
-<tr class="separator:a9c41b07e45ead9f65d71ea4fe2d1a7be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6752e5e300d8fe2b8077ca90fd9afe98" id="r_a6752e5e300d8fe2b8077ca90fd9afe98"><td class="memItemLeft" align="right" valign="top"><a id="a6752e5e300d8fe2b8077ca90fd9afe98" name="a6752e5e300d8fe2b8077ca90fd9afe98"></a>
+std::suspend_always&#160;</td><td class="memItemRight" valign="bottom"><b>yield_value</b> (st2138::CommandResponse &amp;component)</td></tr>
+<tr class="memdesc:a6752e5e300d8fe2b8077ca90fd9afe98"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a CommandResponse object when co_yield is called and suspends the coroutine until <a class="el" href="classcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder.html#a47fb434a529bdbdd5323e8d2c57d6188" title="Resumes the coroutine and returns a CommandResponse object.">getNext()</a> is called. <br /></td></tr>
+<tr class="separator:a6752e5e300d8fe2b8077ca90fd9afe98"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac691206f4e5653a56c4611a59f3ff5a4" id="r_ac691206f4e5653a56c4611a59f3ff5a4"><td class="memItemLeft" align="right" valign="top"><a id="ac691206f4e5653a56c4611a59f3ff5a4" name="ac691206f4e5653a56c4611a59f3ff5a4"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>return_value</b> (st2138::CommandResponse component)</td></tr>
+<tr class="memdesc:ac691206f4e5653a56c4611a59f3ff5a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes the coroutine and returns a CommandResponse. <br /></td></tr>
+<tr class="separator:ac691206f4e5653a56c4611a59f3ff5a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a65ac3f86d08630057799235974c1ab0f" id="r_a65ac3f86d08630057799235974c1ab0f"><td class="memItemLeft" align="right" valign="top"><a id="a65ac3f86d08630057799235974c1ab0f" name="a65ac3f86d08630057799235974c1ab0f"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>unhandled_exception</b> ()</td></tr>
 <tr class="memdesc:a65ac3f86d08630057799235974c1ab0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">handles exceptions that occur during execution. <br /></td></tr>
@@ -136,9 +136,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>rethrow_if_exception<
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:abb9c9fd2184a4294da562b02278a6bd0" id="r_abb9c9fd2184a4294da562b02278a6bd0"><td class="memItemLeft" align="right" valign="top"><a id="abb9c9fd2184a4294da562b02278a6bd0" name="abb9c9fd2184a4294da562b02278a6bd0"></a>
-catena::CommandResponse&#160;</td><td class="memItemRight" valign="bottom"><b>responseMessage</b> {}</td></tr>
-<tr class="separator:abb9c9fd2184a4294da562b02278a6bd0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:accbdf10726684a8bfdf8391d50bbf68b" id="r_accbdf10726684a8bfdf8391d50bbf68b"><td class="memItemLeft" align="right" valign="top"><a id="accbdf10726684a8bfdf8391d50bbf68b" name="accbdf10726684a8bfdf8391d50bbf68b"></a>
+st2138::CommandResponse&#160;</td><td class="memItemRight" valign="bottom"><b>responseMessage</b> {}</td></tr>
+<tr class="separator:accbdf10726684a8bfdf8391d50bbf68b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad337b6da8a9c32a075217a2c0ec5af3c" id="r_ad337b6da8a9c32a075217a2c0ec5af3c"><td class="memItemLeft" align="right" valign="top"><a id="ad337b6da8a9c32a075217a2c0ec5af3c" name="ad337b6da8a9c32a075217a2c0ec5af3c"></a>
 std::exception_ptr&#160;</td><td class="memItemRight" valign="bottom"><b>exception_</b></td></tr>
 <tr class="separator:ad337b6da8a9c32a075217a2c0ec5af3c"><td class="memSeparator" colspan="2">&#160;</td></tr>

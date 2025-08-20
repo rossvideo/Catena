@@ -203,12 +203,12 @@ $(document).ready(function(){initNavTree('REST_2include_2controllers_2ParamInfoR
 <div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>    </div>
 <div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;</div>
 <div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>    </div>
-<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>    std::vector&lt;catena::ParamInfoResponse&gt; responses_;</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>    std::vector&lt;st2138::ParamInfoResponse&gt; responses_;</div>
 <div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>        </div>
 <div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>    <span class="keyword">class </span>ParamInfoVisitor : <span class="keyword">public</span> <a class="code hl_class" href="classcatena_1_1common_1_1IParamVisitor.html">catena::common::IParamVisitor</a> {</div>
 <div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>        <span class="keyword">public</span>:</div>
 <div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>            ParamInfoVisitor(<a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a>&amp; device, <a class="code hl_class" href="classcatena_1_1common_1_1Authorizer.html">catena::common::Authorizer</a>&amp; authz,</div>
-<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>                                std::vector&lt;catena::ParamInfoResponse&gt;&amp; responses,</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>                                std::vector&lt;st2138::ParamInfoResponse&gt;&amp; responses,</div>
 <div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>                                ParamInfoRequest&amp; request)</div>
 <div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>                : device_(device), authz_(authz), responses_(responses), request_(request) {}</div>
 <div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span> </div>
@@ -221,7 +221,7 @@ $(document).ready(function(){initNavTree('REST_2include_2controllers_2ParamInfoR
 <div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span> </div>
 <div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>            <a class="code hl_class" href="classcatena_1_1common_1_1Authorizer.html">catena::common::Authorizer</a>&amp; authz_;</div>
 <div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span> </div>
-<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>            std::vector&lt;catena::ParamInfoResponse&gt;&amp; responses_;</div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>            std::vector&lt;st2138::ParamInfoResponse&gt;&amp; responses_;</div>
 <div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span> </div>
 <div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>            ParamInfoRequest&amp; request_;</div>
 <div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>    };</div>

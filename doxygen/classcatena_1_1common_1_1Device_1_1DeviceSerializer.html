@@ -139,9 +139,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:af684414d5b70a6b7bf6c28653054fc54" id="r_af684414d5b70a6b7bf6c28653054fc54"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#af684414d5b70a6b7bf6c28653054fc54">hasMore</a> () const override</td></tr>
 <tr class="memdesc:af684414d5b70a6b7bf6c28653054fc54"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns true if there are more DeviceComponents to be serialized  <br /></td></tr>
 <tr class="separator:af684414d5b70a6b7bf6c28653054fc54"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a697c5d2f2a26800e2926381aff68b11d" id="r_a697c5d2f2a26800e2926381aff68b11d"><td class="memItemLeft" align="right" valign="top">catena::DeviceComponent&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#a697c5d2f2a26800e2926381aff68b11d">getNext</a> () override</td></tr>
-<tr class="memdesc:a697c5d2f2a26800e2926381aff68b11d"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the next DeviceComponent to be serialized.  <br /></td></tr>
-<tr class="separator:a697c5d2f2a26800e2926381aff68b11d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d9e2fc309c7684b12b73e25bc4c7af1" id="r_a2d9e2fc309c7684b12b73e25bc4c7af1"><td class="memItemLeft" align="right" valign="top">st2138::DeviceComponent&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#a2d9e2fc309c7684b12b73e25bc4c7af1">getNext</a> () override</td></tr>
+<tr class="memdesc:a2d9e2fc309c7684b12b73e25bc4c7af1"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the next DeviceComponent to be serialized.  <br /></td></tr>
+<tr class="separator:a2d9e2fc309c7684b12b73e25bc4c7af1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">catena::common::IDevice::IDeviceSerializer</a></td></tr>
 <tr class="memitem:a4ce08828b886f9e717e9ae87b742cf22 inherit pub_methods_classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer" id="r_a4ce08828b886f9e717e9ae87b742cf22"><td class="memItemLeft" align="right" valign="top">
 &#160;</td><td class="memItemRight" valign="bottom"><b>IDeviceSerializer</b> (const <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &amp;)=delete</td></tr>
@@ -153,8 +153,8 @@ Public Member Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html" title="DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This str...">DeviceSerializer</a> is a coroutine that serializes the device into a stream of DeviceComponents This struct manages the state and lifetime of the coroutine. It also provides the interface for resuming the coroutine. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a697c5d2f2a26800e2926381aff68b11d" name="a697c5d2f2a26800e2926381aff68b11d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a697c5d2f2a26800e2926381aff68b11d">&#9670;&#160;</a></span>getNext()</h2>
+<a id="a2d9e2fc309c7684b12b73e25bc4c7af1" name="a2d9e2fc309c7684b12b73e25bc4c7af1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2d9e2fc309c7684b12b73e25bc4c7af1">&#9670;&#160;</a></span>getNext()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -163,7 +163,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">catena::DeviceComponent catena::common::Device::DeviceSerializer::getNext </td>
+          <td class="memname">st2138::DeviceComponent catena::common::Device::DeviceSerializer::getNext </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -180,7 +180,7 @@ Public Member Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>the next DeviceComponent</dd></dl>
 <p>If the coroutine is done and there are no more components to serialize then an empty DeviceComponent is returned. </p>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html#a05da15cbcbe92d67dea2b88e24c9ff75">catena::common::IDevice::IDeviceSerializer</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html#a640222d5e39d54beaf20a80fdebbf0f8">catena::common::IDevice::IDeviceSerializer</a>.</p>
 
 </div>
 </div>
