@@ -51,6 +51,9 @@
   #define DEBUG_LOG Logger()
 #endif
 
+/**
+ * @brief Logger class for logging messages to both console and file.
+ */
 class Logger {
 public:
   Logger() = default;

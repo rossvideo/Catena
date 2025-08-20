@@ -152,6 +152,10 @@ inline std::array<const char*, 0> alternativeNames{};
  * generic template declaration
  * 
  * @tparam T the type of the value
+ * @param dst The protobuf message to serialize to.
+ * @param src The value to serialize.
+ * @param pd The parameter descriptor of the parameter containing the value.
+ * @param authz The authorizer object to containing the client's scopes.
  */
 template <typename T>
 catena::exception_with_status toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const IAuthorizer& authz);
@@ -162,6 +166,10 @@ catena::exception_with_status toProto(catena::Value& dst, const T* src, const IP
  * generic template declaration
  * 
  * @tparam T the type of the value
+ * @param src The protobuf message to serialize.
+ * @param dst The value to serialize to.
+ * @param pd The parameter descriptor of the parameter containing the value.
+ * @param authz The authorizer object to containing the client's scopes.
  */
 template <typename T>
 bool validFromProto(const catena::Value& src, const T* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz);
@@ -172,6 +180,10 @@ bool validFromProto(const catena::Value& src, const T* dst, const IParamDescript
  * generic template declaration
  * 
  * @tparam T the type of the value
+ * @param src The protobuf message to serialize.
+ * @param dst The value to serialize to.
+ * @param pd The parameter descriptor of the parameter containing the value.
+ * @param authz The authorizer object to containing the client's scopes.
  */
 template <typename T>
 catena::exception_with_status fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const IAuthorizer& authz);
