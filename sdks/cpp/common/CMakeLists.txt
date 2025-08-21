@@ -41,6 +41,7 @@ set(sources
     "src/SharedFlags.cpp"
     "src/ConnectionQueue.cpp"
     "src/ChoiceConstraint.cpp"
+    "src/Heartbeat.cpp"
 )
 
 # conditionally make for gRPC

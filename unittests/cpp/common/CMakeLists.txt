@@ -37,6 +37,7 @@ set(SOURCES
     tests/ParamDescriptor_test.cpp
     tests/Device_test.cpp
     tests/ConnectionQueue_test.cpp
+    tests/Heartbeat_test.cpp
     tests/ParamWithValue_test/ParamWithValue_test.cpp
     tests/ParamWithValue_test/ParamWithInt_test.cpp
     tests/ParamWithValue_test/ParamWithFloat_test.cpp
