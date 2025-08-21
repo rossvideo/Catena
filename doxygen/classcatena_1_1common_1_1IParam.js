@@ -4,7 +4,6 @@ var classcatena_1_1common_1_1IParam =
     [ "ParamType", "classcatena_1_1common_1_1IParam.html#a3a869493afc3b6cf59f599a2fe43d21d", null ],
     [ "IParam", "classcatena_1_1common_1_1IParam.html#a6c58f51d423fb45ec1f4886fd193d35e", null ],
     [ "addBack", "classcatena_1_1common_1_1IParam.html#a8f11a601f4e46465198821a6ec06046c", null ],
-    [ "addParam", "classcatena_1_1common_1_1IParam.html#a4bbfdb7a54674c95728b92d037df0a4d", null ],
     [ "defineCommand", "classcatena_1_1common_1_1IParam.html#a6210697991859f1cc956b07f3cdef25a", null ],
     [ "executeCommand", "classcatena_1_1common_1_1IParam.html#a688ea70d7fe7d37f48daf280f303883f", null ],
     [ "fromProto", "classcatena_1_1common_1_1IParam.html#a0eb3e45483c13f4ea0c9292510432a6a", null ],

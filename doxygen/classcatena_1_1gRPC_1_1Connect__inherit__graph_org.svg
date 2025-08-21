@@ -20,7 +20,7 @@
 <!-- Node2 -->
 <g id="Node000002" class="node">
 <title>Node2</title>
-<g id="a_Node000002"><a xlink:href="classcatena_1_1gRPC_1_1CallData.html" target="_top" xlink:title="Abstract base class for inherited by CallData child classes defining the jwsToken_() method.">
+<g id="a_Node000002"><a xlink:href="classcatena_1_1gRPC_1_1CallData.html" target="_top" xlink:title="Abstract base class for the CallData classes which defines the jwsToken_ class.">
 <polygon fill="white" stroke="#666666" points="131.5,-74 2.5,-74 2.5,-55 131.5,-55 131.5,-74"/>
 <text text-anchor="middle" x="67" y="-62" font-family="Helvetica,sans-Serif" font-size="10.00">catena::gRPC::CallData</text>
 </a>
@@ -56,7 +56,7 @@
 <!-- Node4 -->
 <g id="Node000004" class="node">
 <title>Node4</title>
-<g id="a_Node000004"><a xlink:href="classcatena_1_1common_1_1Connect.html" target="_top" xlink:title="Virtual class for Connect handlers to inherit to share update code among other things.">
+<g id="a_Node000004"><a xlink:href="classcatena_1_1common_1_1Connect.html" target="_top" xlink:title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">
 <polygon fill="white" stroke="#666666" points="295,-74 151,-74 151,-55 295,-55 295,-74"/>
 <text text-anchor="middle" x="223" y="-62" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::Connect</text>
 </a>
@@ -74,7 +74,7 @@
 <!-- Node5 -->
 <g id="Node000005" class="node">
 <title>Node5</title>
-<g id="a_Node000005"><a xlink:href="classcatena_1_1common_1_1IConnect.html" target="_top" xlink:title="Interface class for the Connect handlers.">
+<g id="a_Node000005"><a xlink:href="classcatena_1_1common_1_1IConnect.html" target="_top" xlink:title="Interface class for Connect RPCs.">
 <polygon fill="white" stroke="#666666" points="297.5,-129 150.5,-129 150.5,-110 297.5,-110 297.5,-129"/>
 <text text-anchor="middle" x="224" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IConnect</text>
 </a>

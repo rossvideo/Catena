@@ -98,7 +98,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1IConnect.html
 </div><!--header-->
 <div class="contents">
 
-<p>Interface class for the <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Virtual class for Connect handlers to inherit to share update code among other things.">Connect</a> handlers.  
+<p>Interface class for <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> RPCs.  
  <a href="classcatena_1_1common_1_1IConnect.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="IConnect_8h_source.html">IConnect.h</a>&gt;</code></p>
@@ -121,7 +121,7 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IConnect</b> ()=d
 <tr class="memdesc:a964249be27b61de8bf49f15c1b76b7ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the object Id.  <br /></td></tr>
 <tr class="separator:a964249be27b61de8bf49f15c1b76b7ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1486201427b85c1d21db57bdf4d369dd" id="r_a1486201427b85c1d21db57bdf4d369dd"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a1486201427b85c1d21db57bdf4d369dd">operator&lt;</a> (const <a class="el" href="classcatena_1_1common_1_1IConnect.html">IConnect</a> &amp;otherConnection) const =0</td></tr>
-<tr class="memdesc:a1486201427b85c1d21db57bdf4d369dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Comparison between <a class="el" href="classcatena_1_1common_1_1IConnect.html" title="Interface class for the Connect handlers.">IConnect</a> objects which returns true if the current priority is less than the priority it's being compared to.  <br /></td></tr>
+<tr class="memdesc:a1486201427b85c1d21db57bdf4d369dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if this has less prioirty than otherConnection.  <br /></td></tr>
 <tr class="separator:a1486201427b85c1d21db57bdf4d369dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9e16530ff77a84dcb7c2b78d94dc88cd" id="r_a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd">isCancelled</a> ()=0</td></tr>
 <tr class="memdesc:a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if the call has been canceled.  <br /></td></tr>
@@ -133,17 +133,17 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IConnect</b> ()=d
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
 <tr class="memitem:a5c5fc96d2da16542c86e443085894182" id="r_a5c5fc96d2da16542c86e443085894182"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a5c5fc96d2da16542c86e443085894182">updateResponse_</a> (const std::string &amp;oid, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *p, uint32_t slot)=0</td></tr>
-<tr class="memdesc:a5c5fc96d2da16542c86e443085894182"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with parameter values.  <br /></td></tr>
+<tr class="memdesc:a5c5fc96d2da16542c86e443085894182"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with parameter values and handles authorization checks.  <br /></td></tr>
 <tr class="separator:a5c5fc96d2da16542c86e443085894182"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a13d36e283fe2780d001042aacca872c6" id="r_a13d36e283fe2780d001042aacca872c6"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a13d36e283fe2780d001042aacca872c6">updateResponse_</a> (const <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *l, uint32_t slot)=0</td></tr>
-<tr class="memdesc:a13d36e283fe2780d001042aacca872c6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with an <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface class for Language Packs.">ILanguagePack</a>.  <br /></td></tr>
+<tr class="memdesc:a13d36e283fe2780d001042aacca872c6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with a <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface for Language Packs.">ILanguagePack</a> and handles authorization checks.  <br /></td></tr>
 <tr class="separator:a13d36e283fe2780d001042aacca872c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a02ef98650e356794414eb781a552fddb" id="r_a02ef98650e356794414eb781a552fddb"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a02ef98650e356794414eb781a552fddb">initAuthz_</a> (const std::string &amp;jwsToken, bool authz=false)=0</td></tr>
-<tr class="memdesc:a02ef98650e356794414eb781a552fddb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Crates an authorizer using the jws token.  <br /></td></tr>
+<tr class="memdesc:a02ef98650e356794414eb781a552fddb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets up the authorizer object with the jwsToken.  <br /></td></tr>
 <tr class="separator:a02ef98650e356794414eb781a552fddb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Interface class for the <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Virtual class for Connect handlers to inherit to share update code among other things.">Connect</a> handlers. </p>
+<div class="textblock"><p>Interface class for <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> RPCs. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a02ef98650e356794414eb781a552fddb" name="a02ef98650e356794414eb781a552fddb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a02ef98650e356794414eb781a552fddb">&#9670;&#160;</a></span>initAuthz_()</h2>
@@ -179,11 +179,11 @@ Protected Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Crates an authorizer using the jws token. </p>
+<p>Sets up the authorizer object with the jwsToken. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">jwsToken</td><td>The client's jws token to create the authorizer with. </td></tr>
-    <tr><td class="paramname">authz</td><td>True if authorization is enabled, False otherwise. </td></tr>
+    <tr><td class="paramname">jwsToken</td><td>The jwsToken to use for authorization. </td></tr>
+    <tr><td class="paramname">authz</td><td>true if authorization is enabled, false otherwise. </td></tr>
   </table>
   </dd>
 </dl>
@@ -284,7 +284,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Comparison between <a class="el" href="classcatena_1_1common_1_1IConnect.html" title="Interface class for the Connect handlers.">IConnect</a> objects which returns true if the current priority is less than the priority it's being compared to. </p>
+<p>Returns true if this has less prioirty than otherConnection. </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1Connect.html#a626ddb1d15f4f911fae7cdbf8723f940">catena::common::Connect</a>.</p>
 
@@ -387,11 +387,10 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Updates the response message with an <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface class for Language Packs.">ILanguagePack</a>. </p>
+<p>Updates the response message with a <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface for Language Packs.">ILanguagePack</a> and handles authorization checks. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">l</td><td>The added <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface class for Language Packs.">ILanguagePack</a> emitted by device. </td></tr>
-    <tr><td class="paramname">slot</td><td>The slot number of the device containing the language pack. </td></tr>
+    <tr><td class="paramname">l</td><td>The added <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface for Language Packs.">ILanguagePack</a> emitted by device. </td></tr>
   </table>
   </dd>
 </dl>
@@ -440,12 +439,11 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Updates the response message with parameter values. </p>
+<p>Updates the response message with parameter values and handles authorization checks. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">oid</td><td>The OID of the updated value </td></tr>
-    <tr><td class="paramname">p</td><td>The updated parameter </td></tr>
-    <tr><td class="paramname">slot</td><td>The slot number of the device containing the parameter. </td></tr>
+    <tr><td class="paramname">oid</td><td>- The OID of the value to update </td></tr>
+    <tr><td class="paramname">p</td><td>- The parameter to update </td></tr>
   </table>
   </dd>
 </dl>

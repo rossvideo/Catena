@@ -123,13 +123,13 @@ Public Member Functions</h2></td></tr>
 <a class="el" href="classcatena_1_1common_1_1IMenuGroup.html">IMenuGroup</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classcatena_1_1common_1_1IMenuGroup.html">IMenuGroup</a> &amp;&amp;)=default</td></tr>
 <tr class="separator:a9b63b495fd1ef781932dec85d1b2afc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae59aa8c3ff83243acaa7449906deb78e" id="r_ae59aa8c3ff83243acaa7449906deb78e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IMenuGroup.html#ae59aa8c3ff83243acaa7449906deb78e">toProto</a> (catena::MenuGroup &amp;menuGroup, bool shallow) const =0</td></tr>
-<tr class="memdesc:ae59aa8c3ff83243acaa7449906deb78e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serialize a menu group to a protobuf message.  <br /></td></tr>
+<tr class="memdesc:ae59aa8c3ff83243acaa7449906deb78e"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize a menu group to a protobuf message  <br /></td></tr>
 <tr class="separator:ae59aa8c3ff83243acaa7449906deb78e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab5ab36b7072f70b19193e675d9dde352" id="r_ab5ab36b7072f70b19193e675d9dde352"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IMenuGroup.html#ab5ab36b7072f70b19193e675d9dde352">addMenu</a> (const std::string &amp;oid, std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IMenu.html">IMenu</a> &gt; menu)=0</td></tr>
-<tr class="memdesc:ab5ab36b7072f70b19193e675d9dde352"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a menu to the group using move semantics.  <br /></td></tr>
+<tr class="memdesc:ab5ab36b7072f70b19193e675d9dde352"><td class="mdescLeft">&#160;</td><td class="mdescRight">add a menu to the group using move semantics  <br /></td></tr>
 <tr class="separator:ab5ab36b7072f70b19193e675d9dde352"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8c8926bc0d5496b9748757aaa01695d4" id="r_a8c8926bc0d5496b9748757aaa01695d4"><td class="memItemLeft" align="right" valign="top">virtual const MenuMap *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IMenuGroup.html#a8c8926bc0d5496b9748757aaa01695d4">menus</a> () const =0</td></tr>
-<tr class="memdesc:a8c8926bc0d5496b9748757aaa01695d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get menus from menu group.  <br /></td></tr>
+<tr class="memdesc:a8c8926bc0d5496b9748757aaa01695d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">get menus from menu group  <br /></td></tr>
 <tr class="separator:a8c8926bc0d5496b9748757aaa01695d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -169,11 +169,11 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Adds a menu to the group using move semantics. </p>
+<p>add a menu to the group using move semantics </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">oid</td><td>The new menu's oid. </td></tr>
-    <tr><td class="paramname">menu</td><td>The new menu. </td></tr>
+    <tr><td class="paramname">oid</td><td>the key of the menu </td></tr>
+    <tr><td class="paramname">menu</td><td>the menu </td></tr>
   </table>
   </dd>
 </dl>
@@ -205,8 +205,8 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Get menus from menu group. </p>
-<dl class="section return"><dt>Returns</dt><dd>A map of menus. </dd></dl>
+<p>get menus from menu group </p>
+<dl class="section return"><dt>Returns</dt><dd>a map of menus </dd></dl>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1MenuGroup.html#ad79bbd7ccb9e3a9d065880c480fd3dc9">catena::common::MenuGroup</a>.</p>
 
@@ -246,10 +246,10 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Serialize a menu group to a protobuf message. </p>
+<p>serialize a menu group to a protobuf message </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">menuGroup</td><td>The protobuf message. </td></tr>
+    <tr><td class="paramname">menuGroup</td><td>the protobuf message </td></tr>
   </table>
   </dd>
 </dl>

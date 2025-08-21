@@ -1,11 +1,9 @@
 <map id="catena::common::Connect::updateResponse_" name="catena::common::Connect::updateResponse_">
-<area shape="rect" id="Node000001" title="Updates the response message with an ILanguagePack if the client has monitor scope." alt="" coords="5,101,197,141"/>
+<area shape="rect" id="Node000001" title="Updates the response message with an ILanguagePack and handles authorization checks." alt="" coords="5,69,197,109"/>
 <area shape="rect" id="Node000002" href="$classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd" title="Returns true if the call has been canceled." alt="" coords="251,5,447,45"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="143,99,244,55,266,47,267,52,246,60,145,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="179,67,257,46,258,51,180,72"/>
 <area shape="rect" id="Node000003" href="$classcatena_1_1common_1_1Authorizer.html#ac66ff0d1ad2b482889d370fcec8abf65" title="Check if the client has read authorization for a param." alt="" coords="245,69,452,109"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="197,106,231,102,232,107,198,112"/>
-<area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1Connect.html#a01c7fc640c14b76dd1756d3fb2cad62d" title="Forcefully shuts down the connection." alt="" coords="253,133,445,173"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="198,131,239,136,238,142,197,136"/>
-<area shape="rect" id="Node000005" href="$classcatena_1_1common_1_1ILanguagePack.html#a3e6a4f733927ce286195246e666f8c9f" title="Serializes a language pack to a protobuf message." alt="" coords="245,197,452,237"/>
-<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="145,139,246,183,267,190,266,195,244,188,143,144"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="198,87,232,87,232,92,198,92"/>
+<area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1ILanguagePack.html#a3e6a4f733927ce286195246e666f8c9f" title="serialize a language pack to a protobuf message" alt="" coords="245,133,452,173"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="180,107,258,127,257,132,179,112"/>
 </map>

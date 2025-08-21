@@ -42,7 +42,7 @@
 <!-- Node3 -->
 <g id="Node000003" class="node">
 <title>Node3</title>
-<g id="a_Node000003"><a xlink:href="REST_2include_2controllers_2ExecuteCommand_8h.html" target="_top" xlink:title="Implements controller for the REST command endpoint.">
+<g id="a_Node000003"><a xlink:href="REST_2include_2controllers_2ExecuteCommand_8h.html" target="_top" xlink:title="Implements REST ExecuteCommand controller.">
 <polygon fill="white" stroke="#666666" points="2336.89,-211.5 2098.89,-211.5 2098.89,-170.5 2336.89,-170.5 2336.89,-211.5"/>
 <text text-anchor="start" x="2106.89" y="-199.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="2106.89" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -62,7 +62,7 @@
 <!-- Node4 -->
 <g id="Node000004" class="node">
 <title>Node4</title>
-<g id="a_Node000004"><a xlink:href="IDevice_8h.html" target="_top" xlink:title="Interface for the Device class.">
+<g id="a_Node000004"><a xlink:href="IDevice_8h.html" target="_top" xlink:title="Interface for device.">
 <polygon fill="white" stroke="#666666" points="4001.89,-448 3855.89,-448 3855.89,-407 4001.89,-407 4001.89,-448"/>
 <text text-anchor="start" x="3863.89" y="-436" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="3863.89" y="-425" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
@@ -122,7 +122,7 @@
 <!-- Node10 -->
 <g id="Node000010" class="node">
 <title>Node10</title>
-<g id="a_Node000010"><a xlink:href="connections_2REST_2include_2controllers_2Connect_8h.html" target="_top" xlink:title="Implements controller for the REST connect endpoint.">
+<g id="a_Node000010"><a xlink:href="connections_2REST_2include_2controllers_2Connect_8h.html" target="_top" xlink:title="Implements REST Connect controller.">
 <polygon fill="white" stroke="#666666" points="3385.39,-123.5 3196.39,-123.5 3196.39,-82.5 3385.39,-82.5 3385.39,-123.5"/>
 <text text-anchor="start" x="3204.39" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="3204.39" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -162,7 +162,7 @@
 <!-- Node12 -->
 <g id="Node000012" class="node">
 <title>Node12</title>
-<g id="a_Node000012"><a xlink:href="REST_2include_2controllers_2ParamInfoRequest_8h.html" target="_top" xlink:title="Implements controller for the REST param&#45;info endpoint.">
+<g id="a_Node000012"><a xlink:href="REST_2include_2controllers_2ParamInfoRequest_8h.html" target="_top" xlink:title="Implements REST ParamInfoRequest controller.">
 <polygon fill="white" stroke="#666666" points="3911.89,-217 3721.89,-217 3721.89,-165 3911.89,-165 3911.89,-217"/>
 <text text-anchor="start" x="3729.89" y="-205" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="3729.89" y="-194" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -203,7 +203,7 @@
 <!-- Node15 -->
 <g id="Node000015" class="node">
 <title>Node15</title>
-<g id="a_Node000015"><a xlink:href="common_2include_2rpc_2Connect_8h.html" target="_top" xlink:title="Virtual class for Connect handlers inherit to share update code.">
+<g id="a_Node000015"><a xlink:href="common_2include_2rpc_2Connect_8h.html" target="_top" xlink:title="Pure virtual class for Connect RPCs used to share update code.">
 <polygon fill="white" stroke="#666666" points="2613.89,-294 2467.89,-294 2467.89,-253 2613.89,-253 2613.89,-294"/>
 <text text-anchor="start" x="2475.89" y="-282" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="2475.89" y="-271" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
@@ -223,7 +223,7 @@
 <!-- Node19 -->
 <g id="Node000019" class="node">
 <title>Node19</title>
-<g id="a_Node000019"><a xlink:href="Subscriptions_8h.html" target="_top" xlink:title="Implements controller for the REST subscriptions endpoint.">
+<g id="a_Node000019"><a xlink:href="Subscriptions_8h.html" target="_top" xlink:title="Implements Catena REST Subscriptions.">
 <polygon fill="white" stroke="#666666" points="2951.39,-211.5 2736.39,-211.5 2736.39,-170.5 2951.39,-170.5 2951.39,-211.5"/>
 <text text-anchor="start" x="2744.39" y="-199.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="2744.39" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -243,7 +243,7 @@
 <!-- Node22 -->
 <g id="Node000022" class="node">
 <title>Node22</title>
-<g id="a_Node000022"><a xlink:href="AssetRequest_8h.html" target="_top" xlink:title="Implements controller for the REST asset endpoint.">
+<g id="a_Node000022"><a xlink:href="AssetRequest_8h.html" target="_top" xlink:title="Implements REST AssetRequest controller.">
 <polygon fill="white" stroke="#666666" points="3703.89,-211.5 3487.89,-211.5 3487.89,-170.5 3703.89,-170.5 3703.89,-211.5"/>
 <text text-anchor="start" x="3495.89" y="-199.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="3495.89" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -263,7 +263,7 @@
 <!-- Node23 -->
 <g id="Node000023" class="node">
 <title>Node23</title>
-<g id="a_Node000023"><a xlink:href="REST_2include_2controllers_2DeviceRequest_8h.html" target="_top" xlink:title="Implements controll for the REST &quot;DeviceReqeust&quot; endpoint.">
+<g id="a_Node000023"><a xlink:href="REST_2include_2controllers_2DeviceRequest_8h.html" target="_top" xlink:title="Implements REST DeviceRequest controller.">
 <polygon fill="white" stroke="#666666" points="5096.39,-211.5 4873.39,-211.5 4873.39,-170.5 5096.39,-170.5 5096.39,-211.5"/>
 <text text-anchor="start" x="4881.39" y="-199.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="4881.39" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -283,7 +283,7 @@
 <!-- Node24 -->
 <g id="Node000024" class="node">
 <title>Node24</title>
-<g id="a_Node000024"><a xlink:href="REST_2include_2controllers_2GetParam_8h.html" target="_top" xlink:title="Implements controller for the REST param endpoint.">
+<g id="a_Node000024"><a xlink:href="REST_2include_2controllers_2GetParam_8h.html" target="_top" xlink:title="Implements REST GetParam controller.">
 <polygon fill="white" stroke="#666666" points="5311.39,-211.5 5114.39,-211.5 5114.39,-170.5 5311.39,-170.5 5311.39,-211.5"/>
 <text text-anchor="start" x="5122.39" y="-199.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="5122.39" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -303,7 +303,7 @@
 <!-- Node25 -->
 <g id="Node000025" class="node">
 <title>Node25</title>
-<g id="a_Node000025"><a xlink:href="REST_2include_2controllers_2GetPopulatedSlots_8h.html" target="_top" xlink:title="Implements controller for the REST devices endpoint.">
+<g id="a_Node000025"><a xlink:href="REST_2include_2controllers_2GetPopulatedSlots_8h.html" target="_top" xlink:title="Implements REST GetPopulatedSlots controller.">
 <polygon fill="white" stroke="#666666" points="5573.89,-217 5367.89,-217 5367.89,-165 5573.89,-165 5573.89,-217"/>
 <text text-anchor="start" x="5375.89" y="-205" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="5375.89" y="-194" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -324,7 +324,7 @@
 <!-- Node26 -->
 <g id="Node000026" class="node">
 <title>Node26</title>
-<g id="a_Node000026"><a xlink:href="REST_2include_2controllers_2GetValue_8h.html" target="_top" xlink:title="Implements controller for the REST GET value endpoint.">
+<g id="a_Node000026"><a xlink:href="REST_2include_2controllers_2GetValue_8h.html" target="_top" xlink:title="Implements REST GetValue controller.">
 <polygon fill="white" stroke="#666666" points="4161.89,-211.5 3967.89,-211.5 3967.89,-170.5 4161.89,-170.5 4161.89,-211.5"/>
 <text text-anchor="start" x="3975.89" y="-199.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="3975.89" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -344,7 +344,7 @@
 <!-- Node27 -->
 <g id="Node000027" class="node">
 <title>Node27</title>
-<g id="a_Node000027"><a xlink:href="connections_2REST_2include_2controllers_2LanguagePack_8h.html" target="_top" xlink:title="Implements controller for the REST language&#45;pack endpoint.">
+<g id="a_Node000027"><a xlink:href="connections_2REST_2include_2controllers_2LanguagePack_8h.html" target="_top" xlink:title="Implements REST LanguagePack controller.">
 <polygon fill="white" stroke="#666666" points="4399.39,-211.5 4180.39,-211.5 4180.39,-170.5 4399.39,-170.5 4399.39,-211.5"/>
 <text text-anchor="start" x="4188.39" y="-199.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="4188.39" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -364,7 +364,7 @@
 <!-- Node28 -->
 <g id="Node000028" class="node">
 <title>Node28</title>
-<g id="a_Node000028"><a xlink:href="Languages_8h.html" target="_top" xlink:title="Implements controller for the REST languages endpoint.">
+<g id="a_Node000028"><a xlink:href="Languages_8h.html" target="_top" xlink:title="Implements REST Languages controller.">
 <polygon fill="white" stroke="#666666" points="4619.89,-211.5 4417.89,-211.5 4417.89,-170.5 4619.89,-170.5 4619.89,-211.5"/>
 <text text-anchor="start" x="4425.89" y="-199.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="4425.89" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -384,7 +384,7 @@
 <!-- Node29 -->
 <g id="Node000029" class="node">
 <title>Node29</title>
-<g id="a_Node000029"><a xlink:href="REST_2include_2controllers_2MultiSetValue_8h.html" target="_top" xlink:title="Implements controller for the REST values endpoint.">
+<g id="a_Node000029"><a xlink:href="REST_2include_2controllers_2MultiSetValue_8h.html" target="_top" xlink:title="Implements REST MultiSetValue controller.">
 <polygon fill="white" stroke="#666666" points="4855.39,-211.5 4638.39,-211.5 4638.39,-170.5 4855.39,-170.5 4855.39,-211.5"/>
 <text text-anchor="start" x="4646.39" y="-199.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="4646.39" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -677,7 +677,7 @@
 <!-- Node44 -->
 <g id="Node000044" class="node">
 <title>Node44</title>
-<g id="a_Node000044"><a xlink:href="common_2include_2LanguagePack_8h.html" target="_top" xlink:title="Implements multi language support class LanguagePack.">
+<g id="a_Node000044"><a xlink:href="common_2include_2LanguagePack_8h.html" target="_top" xlink:title="multi language support in 2 classes: LanguagePack and LanguagePacks">
 <polygon fill="white" stroke="#666666" points="3755.89,-371 3609.89,-371 3609.89,-330 3755.89,-330 3755.89,-371"/>
 <text text-anchor="start" x="3617.89" y="-359" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="3617.89" y="-348" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
@@ -824,7 +824,7 @@
 <!-- Node13 -->
 <g id="Node000013" class="node">
 <title>Node13</title>
-<g id="a_Node000013"><a xlink:href="gRPC_2include_2controllers_2ParamInfoRequest_8h.html" target="_top" xlink:title="Implements the Catena ParamInfoRequest RPC.">
+<g id="a_Node000013"><a xlink:href="gRPC_2include_2controllers_2ParamInfoRequest_8h.html" target="_top" xlink:title="Implements gRPC ParamInfoRequest controller.">
 <polygon fill="white" stroke="#666666" points="3101.39,-129 2910.39,-129 2910.39,-77 3101.39,-77 3101.39,-129"/>
 <text text-anchor="start" x="2918.39" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="2918.39" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -899,7 +899,7 @@
 <!-- Node17 -->
 <g id="Node000017" class="node">
 <title>Node17</title>
-<g id="a_Node000017"><a xlink:href="SocketReader_8h.html" target="_top" xlink:title="Implements the SocketReader class.">
+<g id="a_Node000017"><a xlink:href="SocketReader_8h.html" target="_top" xlink:title="Helper class used to read from a socket using boost.">
 <polygon fill="white" stroke="#666666" points="3469.39,-211.5 3308.39,-211.5 3308.39,-170.5 3469.39,-170.5 3469.39,-211.5"/>
 <text text-anchor="start" x="3316.39" y="-199.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="3316.39" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -957,7 +957,7 @@
 <!-- Node31 -->
 <g id="Node000031" class="node">
 <title>Node31</title>
-<g id="a_Node000031"><a xlink:href="gRPC_2include_2controllers_2DeviceRequest_8h.html" target="_top" xlink:title="Implements the Catena DeviceRequest RPC.">
+<g id="a_Node000031"><a xlink:href="gRPC_2include_2controllers_2DeviceRequest_8h.html" target="_top" xlink:title="Implements Catena gRPC DeviceRequest.">
 <polygon fill="white" stroke="#666666" points="2545.89,-123.5 2321.89,-123.5 2321.89,-82.5 2545.89,-82.5 2545.89,-123.5"/>
 <text text-anchor="start" x="2329.89" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="2329.89" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -977,7 +977,7 @@
 <!-- Node32 -->
 <g id="Node000032" class="node">
 <title>Node32</title>
-<g id="a_Node000032"><a xlink:href="UpdateSubscriptions_8h.html" target="_top" xlink:title="Implements the Catena UpdateSubscriptions RPC.">
+<g id="a_Node000032"><a xlink:href="UpdateSubscriptions_8h.html" target="_top" xlink:title="Implements Catena gRPC UpdateSubscriptions.">
 <polygon fill="white" stroke="#666666" points="2815.39,-123.5 2564.39,-123.5 2564.39,-82.5 2815.39,-82.5 2815.39,-123.5"/>
 <text text-anchor="start" x="2572.39" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="2572.39" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -1026,7 +1026,7 @@
 <!-- Node16 -->
 <g id="Node000016" class="node">
 <title>Node16</title>
-<g id="a_Node000016"><a xlink:href="connections_2gRPC_2include_2controllers_2Connect_8h.html" target="_top" xlink:title="Implements the Catena Connect RPC.">
+<g id="a_Node000016"><a xlink:href="connections_2gRPC_2include_2controllers_2Connect_8h.html" target="_top" xlink:title="Implements Catena gRPC Connect.">
 <polygon fill="white" stroke="#666666" points="2303.89,-123.5 2113.89,-123.5 2113.89,-82.5 2303.89,-82.5 2303.89,-123.5"/>
 <text text-anchor="start" x="2121.89" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="2121.89" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -1217,7 +1217,7 @@
 <!-- Node30 -->
 <g id="Node000030" class="node">
 <title>Node30</title>
-<g id="a_Node000030"><a xlink:href="REST_2include_2controllers_2SetValue_8h.html" target="_top" xlink:title="Implements controller for the REST PUT value endpoint.">
+<g id="a_Node000030"><a xlink:href="REST_2include_2controllers_2SetValue_8h.html" target="_top" xlink:title="Implements REST SetValue controller.">
 <polygon fill="white" stroke="#666666" points="4257.89,-123.5 4065.89,-123.5 4065.89,-82.5 4257.89,-82.5 4257.89,-123.5"/>
 <text text-anchor="start" x="4073.89" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="4073.89" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -1309,7 +1309,7 @@
 <!-- Node35 -->
 <g id="Node000035" class="node">
 <title>Node35</title>
-<g id="a_Node000035"><a xlink:href="AddLanguage_8h.html" target="_top" xlink:title="Implements the Catena AddLanguage RPC.">
+<g id="a_Node000035"><a xlink:href="AddLanguage_8h.html" target="_top" xlink:title="Implements Catena gRPC AddLanguage.">
 <polygon fill="white" stroke="#666666" points="484.89,-123.5 268.89,-123.5 268.89,-82.5 484.89,-82.5 484.89,-123.5"/>
 <text text-anchor="start" x="276.89" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="276.89" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -1329,7 +1329,7 @@
 <!-- Node36 -->
 <g id="Node000036" class="node">
 <title>Node36</title>
-<g id="a_Node000036"><a xlink:href="gRPC_2include_2controllers_2ExecuteCommand_8h.html" target="_top" xlink:title="Implements the Catena ExecuteCommand RPC.">
+<g id="a_Node000036"><a xlink:href="gRPC_2include_2controllers_2ExecuteCommand_8h.html" target="_top" xlink:title="Implements Catena gRPC ExecuteCommand.">
 <polygon fill="white" stroke="#666666" points="742.39,-123.5 503.39,-123.5 503.39,-82.5 742.39,-82.5 742.39,-123.5"/>
 <text text-anchor="start" x="511.39" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="511.39" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -1349,7 +1349,7 @@
 <!-- Node37 -->
 <g id="Node000037" class="node">
 <title>Node37</title>
-<g id="a_Node000037"><a xlink:href="ExternalObjectRequest_8h.html" target="_top" xlink:title="Implements the Catena ExternalObjectRequest RPC.">
+<g id="a_Node000037"><a xlink:href="ExternalObjectRequest_8h.html" target="_top" xlink:title="Implements Catena gRPC ExternalObjectRequest.">
 <polygon fill="white" stroke="#666666" points="973.39,-129 760.39,-129 760.39,-77 973.39,-77 973.39,-129"/>
 <text text-anchor="start" x="768.39" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="768.39" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -1370,7 +1370,7 @@
 <!-- Node38 -->
 <g id="Node000038" class="node">
 <title>Node38</title>
-<g id="a_Node000038"><a xlink:href="gRPC_2include_2controllers_2GetParam_8h.html" target="_top" xlink:title="Implements the Catena GetParam RPC.">
+<g id="a_Node000038"><a xlink:href="gRPC_2include_2controllers_2GetParam_8h.html" target="_top" xlink:title="Implements Catena gRPC GetParam.">
 <polygon fill="white" stroke="#666666" points="1189.89,-123.5 991.89,-123.5 991.89,-82.5 1189.89,-82.5 1189.89,-123.5"/>
 <text text-anchor="start" x="999.89" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="999.89" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -1390,7 +1390,7 @@
 <!-- Node39 -->
 <g id="Node000039" class="node">
 <title>Node39</title>
-<g id="a_Node000039"><a xlink:href="gRPC_2include_2controllers_2GetPopulatedSlots_8h.html" target="_top" xlink:title="Implements the Catena GetPopulatedSlots RPC.">
+<g id="a_Node000039"><a xlink:href="gRPC_2include_2controllers_2GetPopulatedSlots_8h.html" target="_top" xlink:title="Implements Catena gRPC GetPopulatedSlots.">
 <polygon fill="white" stroke="#666666" points="1415.39,-129 1208.39,-129 1208.39,-77 1415.39,-77 1415.39,-129"/>
 <text text-anchor="start" x="1216.39" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="1216.39" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -1411,7 +1411,7 @@
 <!-- Node40 -->
 <g id="Node000040" class="node">
 <title>Node40</title>
-<g id="a_Node000040"><a xlink:href="gRPC_2include_2controllers_2GetValue_8h.html" target="_top" xlink:title="Implements the Catena GetValue RPC.">
+<g id="a_Node000040"><a xlink:href="gRPC_2include_2controllers_2GetValue_8h.html" target="_top" xlink:title="Implements Catena gRPC GetValue.">
 <polygon fill="white" stroke="#666666" points="1627.89,-123.5 1433.89,-123.5 1433.89,-82.5 1627.89,-82.5 1627.89,-123.5"/>
 <text text-anchor="start" x="1441.89" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="1441.89" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -1431,7 +1431,7 @@
 <!-- Node41 -->
 <g id="Node000041" class="node">
 <title>Node41</title>
-<g id="a_Node000041"><a xlink:href="LanguagePackRequest_8h.html" target="_top" xlink:title="Implements the Catena LanguagePackRequest RPC.">
+<g id="a_Node000041"><a xlink:href="LanguagePackRequest_8h.html" target="_top" xlink:title="Implements Catena gRPC LanguagePackRequest.">
 <polygon fill="white" stroke="#666666" points="1857.39,-129 1646.39,-129 1646.39,-77 1857.39,-77 1857.39,-129"/>
 <text text-anchor="start" x="1654.39" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="1654.39" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -1452,7 +1452,7 @@
 <!-- Node42 -->
 <g id="Node000042" class="node">
 <title>Node42</title>
-<g id="a_Node000042"><a xlink:href="ListLanguages_8h.html" target="_top" xlink:title="Implements the Catena ListLanguages RPC.">
+<g id="a_Node000042"><a xlink:href="ListLanguages_8h.html" target="_top" xlink:title="Implements Catena gRPC ListLanguages.">
 <polygon fill="white" stroke="#666666" points="2095.89,-123.5 1875.89,-123.5 1875.89,-82.5 2095.89,-82.5 2095.89,-123.5"/>
 <text text-anchor="start" x="1883.89" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="1883.89" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -1472,7 +1472,7 @@
 <!-- Node43 -->
 <g id="Node000043" class="node">
 <title>Node43</title>
-<g id="a_Node000043"><a xlink:href="gRPC_2include_2controllers_2MultiSetValue_8h.html" target="_top" xlink:title="Generic CallData class for the Catena SetValue and MultiSetValue RPCs.">
+<g id="a_Node000043"><a xlink:href="gRPC_2include_2controllers_2MultiSetValue_8h.html" target="_top" xlink:title="Generic CallData class for the SetValue and MultiSetValue RPCs.">
 <polygon fill="white" stroke="#666666" points="250.89,-123.5 32.89,-123.5 32.89,-82.5 250.89,-82.5 250.89,-123.5"/>
 <text text-anchor="start" x="40.89" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="40.89" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>

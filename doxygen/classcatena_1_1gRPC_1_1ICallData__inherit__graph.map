@@ -1,8 +1,8 @@
 <map id="catena::gRPC::ICallData" name="catena::gRPC::ICallData">
 <area shape="rect" id="Node000001" title="Interface class for gRPC CallData classes." alt="" coords="5,325,181,351"/>
-<area shape="rect" id="Node000002" href="$classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for inherited by CallData child classes defining the jwsToken_() method." alt="" coords="229,325,401,351"/>
+<area shape="rect" id="Node000002" href="$classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for the CallData classes which defines the jwsToken_ class." alt="" coords="229,325,401,351"/>
 <area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="195,335,229,335,229,341,195,341"/>
-<area shape="rect" id="Node000003" href="$classcatena_1_1gRPC_1_1AddLanguage.html" title="CallData class for the AddLanguage RPC." alt="" coords="473,5,677,31"/>
+<area shape="rect" id="Node000003" href="$classcatena_1_1gRPC_1_1AddLanguage.html" title="CallData class for the ListLanguages RPC." alt="" coords="473,5,677,31"/>
 <area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="318,311,330,254,353,180,370,141,391,104,417,69,448,40,471,26,473,31,451,44,421,73,396,107,375,144,358,182,335,255,323,312"/>
 <area shape="rect" id="Node000004" href="$classcatena_1_1gRPC_1_1Connect.html" title="CallData class for the Connect RPC." alt="" coords="490,55,659,80"/>
 <area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="320,311,335,263,360,202,397,141,421,113,448,89,467,78,489,71,491,76,470,83,451,94,424,117,401,144,365,205,340,265,325,313"/>
@@ -20,11 +20,11 @@
 <area shape="poly" id="edge9_Node000002_Node000010" title=" " alt="" coords="381,351,450,367,509,380,508,385,449,373,380,357"/>
 <area shape="rect" id="Node000011" href="$classcatena_1_1gRPC_1_1LanguagePackRequest.html" title="CallData class for the LanguagePackRequest RPC." alt="" coords="470,433,679,473"/>
 <area shape="poly" id="edge10_Node000002_Node000011" title=" " alt="" coords="346,356,394,387,450,417,487,430,485,435,448,422,391,392,343,361"/>
-<area shape="rect" id="Node000012" href="$classcatena_1_1gRPC_1_1ListLanguages.html" title="CallData class for the ListLangauges RPC." alt="" coords="470,497,679,523"/>
+<area shape="rect" id="Node000012" href="$classcatena_1_1gRPC_1_1ListLanguages.html" title="CallData class for the ListLanguages RPC." alt="" coords="470,497,679,523"/>
 <area shape="poly" id="edge11_Node000002_Node000012" title=" " alt="" coords="334,361,381,423,413,455,451,482,479,495,477,500,448,487,410,460,377,426,329,364"/>
 <area shape="rect" id="Node000013" href="$classcatena_1_1gRPC_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs." alt="" coords="471,547,678,572"/>
 <area shape="poly" id="edge12_Node000002_Node000013" title=" " alt="" coords="329,363,347,401,373,447,408,494,451,532,476,544,473,549,448,536,404,497,368,450,342,404,324,365"/>
-<area shape="rect" id="Node000015" href="$classcatena_1_1gRPC_1_1ParamInfoRequest.html" title="CallData class for the ParamInfoRequest RPC." alt="" coords="457,596,692,621"/>
+<area shape="rect" id="Node000015" href="$classcatena_1_1gRPC_1_1ParamInfoRequest.html" title="CallData class for the ParamInfoRequest gRPC controller." alt="" coords="457,596,692,621"/>
 <area shape="poly" id="edge14_Node000002_Node000015" title=" " alt="" coords="326,364,340,411,365,471,402,531,425,558,451,581,473,594,471,598,448,586,421,562,398,534,361,473,335,413,320,365"/>
 <area shape="rect" id="Node000016" href="$classcatena_1_1gRPC_1_1UpdateSubscriptions.html" title="CallData class for the UpdateSubscriptions RPC." alt="" coords="449,645,700,671"/>
 <area shape="poly" id="edge15_Node000002_Node000016" title=" " alt="" coords="323,364,335,420,358,493,375,531,396,568,421,602,451,631,472,643,469,648,448,635,417,605,391,571,370,534,353,495,330,422,318,365"/>

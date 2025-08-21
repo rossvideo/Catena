@@ -21,7 +21,7 @@
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:title="Crates an authorizer using the jws token and calculates the client&#39;s priority.">
+<g id="a_Node000001"><a xlink:title="Sets up the authorizer object with the jwsToken and calculates connection priority.">
 <polygon fill="#999999" stroke="#666666" points="144,-54 0,-54 0,-24 144,-24 144,-54"/>
 <text text-anchor="start" x="8" y="-42" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::Connect</text>
 <text text-anchor="middle" x="72" y="-31" font-family="Helvetica,sans-Serif" font-size="10.00">::initAuthz_</text>

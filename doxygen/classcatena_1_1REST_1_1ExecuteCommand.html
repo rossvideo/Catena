@@ -99,7 +99,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1REST_1_1ExecuteCommand.
 </div><!--header-->
 <div class="contents">
 
-<p>Controller class for the Command <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> endpoint.  
+<p><a class="el" href="classcatena_1_1REST_1_1ICallData.html" title="Interface class for REST API controllers.">ICallData</a> class for the <a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html" title="ICallData class for the ExecuteCommand REST controller.">ExecuteCommand</a> <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> controller.  
  <a href="classcatena_1_1REST_1_1ExecuteCommand.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="REST_2include_2controllers_2ExecuteCommand_8h_source.html">ExecuteCommand.h</a>&gt;</code></p>
@@ -123,7 +123,7 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>IDevice</b> = <a cla
 using&#160;</td><td class="memItemRight" valign="bottom"><b>IParam</b> = <a class="el" href="classcatena_1_1common_1_1IParam.html">catena::common::IParam</a></td></tr>
 <tr class="separator:a5d2dad8954a014712db4faf403aa5e77"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af76ca8d480d997429f588edcc647f6ab" id="r_af76ca8d480d997429f588edcc647f6ab"><td class="memItemLeft" align="right" valign="top"><a id="af76ca8d480d997429f588edcc647f6ab" name="af76ca8d480d997429f588edcc647f6ab"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>SlotMap</b> = <a class="el" href="namespacecatena_1_1common.html#a118a88218f9509068efa0f46414ee018">catena::common::SlotMap</a></td></tr>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>SlotMap</b> = catena::common::SlotMap</td></tr>
 <tr class="separator:af76ca8d480d997429f588edcc647f6ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace049d866376f818387d43fb56524782" id="r_ace049d866376f818387d43fb56524782"><td class="memItemLeft" align="right" valign="top"><a id="ace049d866376f818387d43fb56524782" name="ace049d866376f818387d43fb56524782"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>CommandResponder</b> = <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">catena::common::IParamDescriptor::ICommandResponder</a></td></tr>
@@ -132,10 +132,10 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>CommandResponder</b>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a82da7334916cf58649516b2566cde175" id="r_a82da7334916cf58649516b2566cde175"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html#a82da7334916cf58649516b2566cde175">ExecuteCommand</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;context, SlotMap &amp;dms)</td></tr>
-<tr class="memdesc:a82da7334916cf58649516b2566cde175"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the command endpoint controller.  <br /></td></tr>
+<tr class="memdesc:a82da7334916cf58649516b2566cde175"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html" title="ICallData class for the ExecuteCommand REST controller.">ExecuteCommand</a> controller.  <br /></td></tr>
 <tr class="separator:a82da7334916cf58649516b2566cde175"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e34f0a06c9031559191c119ab371833" id="r_a0e34f0a06c9031559191c119ab371833"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html#a0e34f0a06c9031559191c119ab371833">proceed</a> () override</td></tr>
-<tr class="memdesc:a0e34f0a06c9031559191c119ab371833"><td class="mdescLeft">&#160;</td><td class="mdescRight">The command endpoint's main process.  <br /></td></tr>
+<tr class="memdesc:a0e34f0a06c9031559191c119ab371833"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html" title="ICallData class for the ExecuteCommand REST controller.">ExecuteCommand</a>'s main process.  <br /></td></tr>
 <tr class="separator:a0e34f0a06c9031559191c119ab371833"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
@@ -148,11 +148,7 @@ Static Public Member Functions</h2></td></tr>
 Additional Inherited Members</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Controller class for the Command <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> endpoint. </p>
-<p>This controller supports one method:</p>
-<ul>
-<li>GET: Executes a command on the specified device. Supports both stream and unary responses. </li>
-</ul>
+<div class="textblock"><p><a class="el" href="classcatena_1_1REST_1_1ICallData.html" title="Interface class for REST API controllers.">ICallData</a> class for the <a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html" title="ICallData class for the ExecuteCommand REST controller.">ExecuteCommand</a> <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> controller. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a82da7334916cf58649516b2566cde175" name="a82da7334916cf58649516b2566cde175"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a82da7334916cf58649516b2566cde175">&#9670;&#160;</a></span>ExecuteCommand()</h2>
@@ -186,11 +182,11 @@ Additional Inherited Members</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Constructor for the command endpoint controller. </p>
+<p>Constructor for the <a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html" title="ICallData class for the ExecuteCommand REST controller.">ExecuteCommand</a> controller. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">socket</td><td>The socket to write the response to. </td></tr>
-    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object used to read the client's request. </td></tr>
+    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object. </td></tr>
     <tr><td class="paramname">dms</td><td>A map of slots to ptrs to their corresponding device. </td></tr>
   </table>
   </dd>
@@ -242,8 +238,8 @@ Additional Inherited Members</h2></td></tr>
 <p>Creates a new controller object for use with GenericFactory. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">socket</td><td>The socket to write the response to. </td></tr>
-    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object used to read the client's request. </td></tr>
+    <tr><td class="paramname">socket</td><td>The socket to write the response stream to. </td></tr>
+    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1SocketReader.html" title="Helper class used to read from a socket using boost.">SocketReader</a> object. </td></tr>
     <tr><td class="paramname">dms</td><td>A map of slots to ptrs to their corresponding device. </td></tr>
   </table>
   </dd>
@@ -274,7 +270,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>The command endpoint's main process. </p>
+<p><a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html" title="ICallData class for the ExecuteCommand REST controller.">ExecuteCommand</a>'s main process. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ICallData.html#a4672626b422b580fa4b9bad98db4205e">catena::REST::ICallData</a>.</p>
 

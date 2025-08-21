@@ -99,7 +99,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1REST_1_1DeviceRequest.h
 </div><!--header-->
 <div class="contents">
 
-<p>Controller class for the "DeviceRequest" <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> endpoint.  
+<p><a class="el" href="classcatena_1_1REST_1_1ICallData.html" title="Interface class for REST API controllers.">ICallData</a> class for the <a class="el" href="classcatena_1_1REST_1_1DeviceRequest.html" title="ICallData class for the DeviceRequest REST controller.">DeviceRequest</a> <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> controller.  
  <a href="classcatena_1_1REST_1_1DeviceRequest.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="REST_2include_2controllers_2DeviceRequest_8h_source.html">DeviceRequest.h</a>&gt;</code></p>
@@ -123,16 +123,16 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>IDevice</b> = <a cla
 using&#160;</td><td class="memItemRight" valign="bottom"><b>IParam</b> = <a class="el" href="classcatena_1_1common_1_1IParam.html">catena::common::IParam</a></td></tr>
 <tr class="separator:aa2936921c77a21cede9f411594bdd1c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a74d1ffc8df744da4801cba427a98932d" id="r_a74d1ffc8df744da4801cba427a98932d"><td class="memItemLeft" align="right" valign="top"><a id="a74d1ffc8df744da4801cba427a98932d" name="a74d1ffc8df744da4801cba427a98932d"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>SlotMap</b> = <a class="el" href="namespacecatena_1_1common.html#a118a88218f9509068efa0f46414ee018">catena::common::SlotMap</a></td></tr>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>SlotMap</b> = catena::common::SlotMap</td></tr>
 <tr class="separator:a74d1ffc8df744da4801cba427a98932d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a509376dc29c763653144378466a5a695" id="r_a509376dc29c763653144378466a5a695"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1DeviceRequest.html#a509376dc29c763653144378466a5a695">DeviceRequest</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;context, SlotMap &amp;dms)</td></tr>
-<tr class="memdesc:a509376dc29c763653144378466a5a695"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the "DeviceRequest" endpoint controller.  <br /></td></tr>
+<tr class="memdesc:a509376dc29c763653144378466a5a695"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1REST_1_1DeviceRequest.html" title="ICallData class for the DeviceRequest REST controller.">DeviceRequest</a> controller.  <br /></td></tr>
 <tr class="separator:a509376dc29c763653144378466a5a695"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a204fa7f15bb249fa6db26c94cb488b0d" id="r_a204fa7f15bb249fa6db26c94cb488b0d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1DeviceRequest.html#a204fa7f15bb249fa6db26c94cb488b0d">proceed</a> () override</td></tr>
-<tr class="memdesc:a204fa7f15bb249fa6db26c94cb488b0d"><td class="mdescLeft">&#160;</td><td class="mdescRight">The "DeviceRequest" endpoint's main process.  <br /></td></tr>
+<tr class="memdesc:a204fa7f15bb249fa6db26c94cb488b0d"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1REST_1_1DeviceRequest.html" title="ICallData class for the DeviceRequest REST controller.">DeviceRequest</a>'s main process.  <br /></td></tr>
 <tr class="separator:a204fa7f15bb249fa6db26c94cb488b0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
@@ -145,11 +145,7 @@ Static Public Member Functions</h2></td></tr>
 Additional Inherited Members</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Controller class for the "DeviceRequest" <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> endpoint. </p>
-<p>This controller supports one method:</p>
-<ul>
-<li>GET: Writes the device as a collection of components to the client. Supports both stream and unary responses. </li>
-</ul>
+<div class="textblock"><p><a class="el" href="classcatena_1_1REST_1_1ICallData.html" title="Interface class for REST API controllers.">ICallData</a> class for the <a class="el" href="classcatena_1_1REST_1_1DeviceRequest.html" title="ICallData class for the DeviceRequest REST controller.">DeviceRequest</a> <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> controller. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a509376dc29c763653144378466a5a695" name="a509376dc29c763653144378466a5a695"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a509376dc29c763653144378466a5a695">&#9670;&#160;</a></span>DeviceRequest()</h2>
@@ -183,11 +179,11 @@ Additional Inherited Members</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Constructor for the "DeviceRequest" endpoint controller. </p>
+<p>Constructor for the <a class="el" href="classcatena_1_1REST_1_1DeviceRequest.html" title="ICallData class for the DeviceRequest REST controller.">DeviceRequest</a> controller. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">socket</td><td>The socket to write the response to. </td></tr>
-    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object used to read the client's request. </td></tr>
+    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object. </td></tr>
     <tr><td class="paramname">dms</td><td>A map of slots to ptrs to their corresponding device. </td></tr>
   </table>
   </dd>
@@ -239,8 +235,8 @@ Additional Inherited Members</h2></td></tr>
 <p>Creates a new controller object for use with GenericFactory. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">socket</td><td>The socket to write the response to. </td></tr>
-    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object used to read the client's request. </td></tr>
+    <tr><td class="paramname">socket</td><td>The socket to write the response stream to. </td></tr>
+    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object. </td></tr>
     <tr><td class="paramname">dms</td><td>A map of slots to ptrs to their corresponding device. </td></tr>
   </table>
   </dd>
@@ -271,7 +267,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>The "DeviceRequest" endpoint's main process. </p>
+<p><a class="el" href="classcatena_1_1REST_1_1DeviceRequest.html" title="ICallData class for the DeviceRequest REST controller.">DeviceRequest</a>'s main process. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ICallData.html#a4672626b422b580fa4b9bad98db4205e">catena::REST::ICallData</a>.</p>
 

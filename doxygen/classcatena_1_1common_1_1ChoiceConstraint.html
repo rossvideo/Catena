@@ -140,19 +140,19 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~ChoiceConstraint<
 <tr class="memdesc:abbf15bbd4613f740dd23a27fa1a0c068"><td class="mdescLeft">&#160;</td><td class="mdescRight">checks if the value satisfies the constraint  <br /></td></tr>
 <tr class="separator:abbf15bbd4613f740dd23a27fa1a0c068"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2e2ca3075df8ef89298554dc26413376" id="r_a2e2ca3075df8ef89298554dc26413376"><td class="memItemLeft" align="right" valign="top">catena::Value&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#a2e2ca3075df8ef89298554dc26413376">apply</a> (const catena::Value &amp;src) const override</td></tr>
-<tr class="memdesc:a2e2ca3075df8ef89298554dc26413376"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies constraint to src and returns the constrained value.  <br /></td></tr>
+<tr class="memdesc:a2e2ca3075df8ef89298554dc26413376"><td class="mdescLeft">&#160;</td><td class="mdescRight">applies constraint to src and returns the constrained value  <br /></td></tr>
 <tr class="separator:a2e2ca3075df8ef89298554dc26413376"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ad0c9d046ac029c196fb130d8925dd3" id="r_a2ad0c9d046ac029c196fb130d8925dd3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#a2ad0c9d046ac029c196fb130d8925dd3">toProto</a> (catena::Constraint &amp;constraint) const override</td></tr>
-<tr class="memdesc:a2ad0c9d046ac029c196fb130d8925dd3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serialize the constraint to a protobuf message.  <br /></td></tr>
+<tr class="memdesc:a2ad0c9d046ac029c196fb130d8925dd3"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the constraint to a protobuf message  <br /></td></tr>
 <tr class="separator:a2ad0c9d046ac029c196fb130d8925dd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaa4be8cd2425c275c83e7483d012f1da" id="r_aaa4be8cd2425c275c83e7483d012f1da"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#aaa4be8cd2425c275c83e7483d012f1da">isRange</a> () const override</td></tr>
 <tr class="memdesc:aaa4be8cd2425c275c83e7483d012f1da"><td class="mdescLeft">&#160;</td><td class="mdescRight">This constraint is not a range constraint so return false.  <br /></td></tr>
 <tr class="separator:aaa4be8cd2425c275c83e7483d012f1da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae3ba9c2235123f169d85564665a24404" id="r_ae3ba9c2235123f169d85564665a24404"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#ae3ba9c2235123f169d85564665a24404">isShared</a> () const override</td></tr>
-<tr class="memdesc:ae3ba9c2235123f169d85564665a24404"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the constraint is shared.  <br /></td></tr>
+<tr class="memdesc:ae3ba9c2235123f169d85564665a24404"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if the constraint is shared  <br /></td></tr>
 <tr class="separator:ae3ba9c2235123f169d85564665a24404"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a40ce1b41abf70767eaff41dc38c4f1d0" id="r_a40ce1b41abf70767eaff41dc38c4f1d0"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#a40ce1b41abf70767eaff41dc38c4f1d0">getOid</a> () const override</td></tr>
-<tr class="memdesc:a40ce1b41abf70767eaff41dc38c4f1d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the constraint's oid.  <br /></td></tr>
+<tr class="memdesc:a40ce1b41abf70767eaff41dc38c4f1d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the constraint oid  <br /></td></tr>
 <tr class="separator:a40ce1b41abf70767eaff41dc38c4f1d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -333,14 +333,14 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Applies constraint to src and returns the constrained value. </p>
+<p>applies constraint to src and returns the constrained value </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">src</td><td>A catena::Value to apply the constraint to. </td></tr>
+    <tr><td class="paramname">src</td><td>a catena::Value to apply the constraint to </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>An empty catena::Value.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>an empty catena::Value</dd></dl>
 <p>If a request does not satisfy a choice constraint, then the request is invalid and should be ignored.</p>
 <p>Calling this will always return an empty value. </p>
 
@@ -373,8 +373,8 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Gets the constraint's oid. </p>
-<dl class="section return"><dt>Returns</dt><dd>The oid of the constraint. </dd></dl>
+<p>get the constraint oid </p>
+<dl class="section return"><dt>Returns</dt><dd>the oid of the constraint </dd></dl>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IConstraint.html#adad569de2d0ffb54aeec9422169c6052">catena::common::IConstraint</a>.</p>
 
@@ -406,7 +406,7 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
 </div><div class="memdoc">
 
 <p>This constraint is not a range constraint so return false. </p>
-<dl class="section return"><dt>Returns</dt><dd>False </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>false </dd></dl>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IConstraint.html#a589ef8199e9fbd757c37bf90f8065b51">catena::common::IConstraint</a>.</p>
 
@@ -437,8 +437,8 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Checks if the constraint is shared. </p>
-<dl class="section return"><dt>Returns</dt><dd>True if the constraint is shared. </dd></dl>
+<p>check if the constraint is shared </p>
+<dl class="section return"><dt>Returns</dt><dd>true if the constraint is shared </dd></dl>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IConstraint.html#a68c0673d7ce4ad12024aa8f0e138ee79">catena::common::IConstraint</a>.</p>
 
@@ -509,10 +509,10 @@ template&lt;typename T , catena::Constraint::ConstraintType cType&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Serialize the constraint to a protobuf message. </p>
+<p>serialize the constraint to a protobuf message </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">constraint</td><td>The protobuf message to populate. </td></tr>
+    <tr><td class="paramname">msg</td><td>the protobuf message to populate </td></tr>
   </table>
   </dd>
 </dl>

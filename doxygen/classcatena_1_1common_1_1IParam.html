@@ -141,70 +141,67 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ae2d92a97e18eaa411dee4658e5ca49ef" id="r_ae2d92a97e18eaa411dee4658e5ca49ef"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#ae2d92a97e18eaa411dee4658e5ca49ef">copy</a> () const =0</td></tr>
 <tr class="separator:ae2d92a97e18eaa411dee4658e5ca49ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a29d283259836a110494e9fa0d3987d13" id="r_a29d283259836a110494e9fa0d3987d13"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a29d283259836a110494e9fa0d3987d13">toProto</a> (catena::Value &amp;dst, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz) const =0</td></tr>
-<tr class="memdesc:a29d283259836a110494e9fa0d3987d13"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serializes the parameter value to protobuf.  <br /></td></tr>
+<tr class="memdesc:a29d283259836a110494e9fa0d3987d13"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter value to protobuf  <br /></td></tr>
 <tr class="separator:a29d283259836a110494e9fa0d3987d13"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0eb3e45483c13f4ea0c9292510432a6a" id="r_a0eb3e45483c13f4ea0c9292510432a6a"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a0eb3e45483c13f4ea0c9292510432a6a">fromProto</a> (const catena::Value &amp;src, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz)=0</td></tr>
-<tr class="memdesc:a0eb3e45483c13f4ea0c9292510432a6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deserializes the parameter value from protobuf.  <br /></td></tr>
+<tr class="memdesc:a0eb3e45483c13f4ea0c9292510432a6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">deserialize the parameter value from protobuf  <br /></td></tr>
 <tr class="separator:a0eb3e45483c13f4ea0c9292510432a6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6b6e2f5d23746cae19c84454728f3933" id="r_a6b6e2f5d23746cae19c84454728f3933"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a6b6e2f5d23746cae19c84454728f3933">toProto</a> (catena::Param &amp;param, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz) const =0</td></tr>
-<tr class="memdesc:a6b6e2f5d23746cae19c84454728f3933"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serialize the parameter descriptor to a protobuf param object.  <br /></td></tr>
+<tr class="memdesc:a6b6e2f5d23746cae19c84454728f3933"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter descriptor to protobuf  <br /></td></tr>
 <tr class="separator:a6b6e2f5d23746cae19c84454728f3933"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac077b4e62c4712b3b063beb06e121287" id="r_ac077b4e62c4712b3b063beb06e121287"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#ac077b4e62c4712b3b063beb06e121287">toProto</a> (catena::ParamInfoResponse &amp;paramInfo, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz) const =0</td></tr>
-<tr class="memdesc:ac077b4e62c4712b3b063beb06e121287"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serialize the parameter descriptor to a protobuf paramInfo object.  <br /></td></tr>
+<tr class="memdesc:ac077b4e62c4712b3b063beb06e121287"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter descriptor to protobuf  <br /></td></tr>
 <tr class="separator:ac077b4e62c4712b3b063beb06e121287"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a27bcdbf5ce0f692b975c82f8f5683ee3" id="r_a27bcdbf5ce0f692b975c82f8f5683ee3"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classcatena_1_1common_1_1IParam.html#a3a869493afc3b6cf59f599a2fe43d21d">ParamType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a27bcdbf5ce0f692b975c82f8f5683ee3">type</a> () const =0</td></tr>
-<tr class="memdesc:a27bcdbf5ce0f692b975c82f8f5683ee3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the param's protobuf value type.  <br /></td></tr>
+<tr class="memdesc:a27bcdbf5ce0f692b975c82f8f5683ee3"><td class="mdescLeft">&#160;</td><td class="mdescRight">return the type of the param  <br /></td></tr>
 <tr class="separator:a27bcdbf5ce0f692b975c82f8f5683ee3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad188e7291de350c17f6d3e18f55c5576" id="r_ad188e7291de350c17f6d3e18f55c5576"><td class="memItemLeft" align="right" valign="top">virtual const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#ad188e7291de350c17f6d3e18f55c5576">getOid</a> () const =0</td></tr>
-<tr class="memdesc:ad188e7291de350c17f6d3e18f55c5576"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the oid of the param.  <br /></td></tr>
+<tr class="memdesc:ad188e7291de350c17f6d3e18f55c5576"><td class="mdescLeft">&#160;</td><td class="mdescRight">return the oid of the param  <br /></td></tr>
 <tr class="separator:ad188e7291de350c17f6d3e18f55c5576"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af88f70976495a6fc8cdad0369ce29aad" id="r_af88f70976495a6fc8cdad0369ce29aad"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#af88f70976495a6fc8cdad0369ce29aad">setOid</a> (const std::string &amp;oid)=0</td></tr>
-<tr class="memdesc:af88f70976495a6fc8cdad0369ce29aad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the param's oid.  <br /></td></tr>
+<tr class="memdesc:af88f70976495a6fc8cdad0369ce29aad"><td class="mdescLeft">&#160;</td><td class="mdescRight">set the oid of the param  <br /></td></tr>
 <tr class="separator:af88f70976495a6fc8cdad0369ce29aad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a634b9db470586152595e8b2b13baa432" id="r_a634b9db470586152595e8b2b13baa432"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a634b9db470586152595e8b2b13baa432">readOnly</a> () const =0</td></tr>
-<tr class="memdesc:a634b9db470586152595e8b2b13baa432"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if the param is readOnly.  <br /></td></tr>
+<tr class="memdesc:a634b9db470586152595e8b2b13baa432"><td class="mdescLeft">&#160;</td><td class="mdescRight">return read only status of the param  <br /></td></tr>
 <tr class="separator:a634b9db470586152595e8b2b13baa432"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8e53f1ada467889732259adb72cff031" id="r_a8e53f1ada467889732259adb72cff031"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a8e53f1ada467889732259adb72cff031">readOnly</a> (bool flag)=0</td></tr>
-<tr class="memdesc:a8e53f1ada467889732259adb72cff031"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the read only status of the param.  <br /></td></tr>
+<tr class="memdesc:a8e53f1ada467889732259adb72cff031"><td class="mdescLeft">&#160;</td><td class="mdescRight">set read only status of the param  <br /></td></tr>
 <tr class="separator:a8e53f1ada467889732259adb72cff031"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a909fe01758dd9a9db016b7344933adcb" id="r_a909fe01758dd9a9db016b7344933adcb"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a909fe01758dd9a9db016b7344933adcb">getParam</a> (<a class="el" href="classcatena_1_1common_1_1Path.html">Path</a> &amp;oid, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status)=0</td></tr>
-<tr class="memdesc:a909fe01758dd9a9db016b7344933adcb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets a child parameter by name.  <br /></td></tr>
+<tr class="memdesc:a909fe01758dd9a9db016b7344933adcb"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a child parameter by name  <br /></td></tr>
 <tr class="separator:a909fe01758dd9a9db016b7344933adcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaa8281f1683c7b92bd962c14f5c6e65b" id="r_aaa8281f1683c7b92bd962c14f5c6e65b"><td class="memItemLeft" align="right" valign="top">virtual std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#aaa8281f1683c7b92bd962c14f5c6e65b">size</a> () const =0</td></tr>
-<tr class="memdesc:aaa8281f1683c7b92bd962c14f5c6e65b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the size of an array parameter.  <br /></td></tr>
+<tr class="memdesc:aaa8281f1683c7b92bd962c14f5c6e65b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the size of an array parameter.  <br /></td></tr>
 <tr class="separator:aaa8281f1683c7b92bd962c14f5c6e65b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8f11a601f4e46465198821a6ec06046c" id="r_a8f11a601f4e46465198821a6ec06046c"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a8f11a601f4e46465198821a6ec06046c">addBack</a> (const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status)=0</td></tr>
 <tr class="memdesc:a8f11a601f4e46465198821a6ec06046c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an empty value to and return the back of an array parameter.  <br /></td></tr>
 <tr class="separator:a8f11a601f4e46465198821a6ec06046c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4bbfdb7a54674c95728b92d037df0a4d" id="r_a4bbfdb7a54674c95728b92d037df0a4d"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a4bbfdb7a54674c95728b92d037df0a4d">addParam</a> (const std::string &amp;oid, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> *param)=0</td></tr>
-<tr class="memdesc:a4bbfdb7a54674c95728b92d037df0a4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a child parameter.  <br /></td></tr>
-<tr class="separator:a4bbfdb7a54674c95728b92d037df0a4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c1c93a622ed69f2c75c491b4459c085" id="r_a7c1c93a622ed69f2c75c491b4459c085"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a7c1c93a622ed69f2c75c491b4459c085">popBack</a> (const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz)=0</td></tr>
-<tr class="memdesc:a7c1c93a622ed69f2c75c491b4459c085"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pops the back of an array parameter.  <br /></td></tr>
+<tr class="memdesc:a7c1c93a622ed69f2c75c491b4459c085"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pop the back of an array parameter.  <br /></td></tr>
 <tr class="separator:a7c1c93a622ed69f2c75c491b4459c085"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a87f839385b3bba233c80b49444c2c8ac" id="r_a87f839385b3bba233c80b49444c2c8ac"><td class="memItemLeft" align="right" valign="top">virtual const <a class="el" href="classcatena_1_1common_1_1IConstraint.html">IConstraint</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a87f839385b3bba233c80b49444c2c8ac">getConstraint</a> () const =0</td></tr>
-<tr class="memdesc:a87f839385b3bba233c80b49444c2c8ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the parameter's constraint.  <br /></td></tr>
+<tr class="memdesc:a87f839385b3bba233c80b49444c2c8ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a constraint by oid  <br /></td></tr>
 <tr class="separator:a87f839385b3bba233c80b49444c2c8ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace2807e50e373d9dc5c02452876a9d8e" id="r_ace2807e50e373d9dc5c02452876a9d8e"><td class="memItemLeft" align="right" valign="top">virtual const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#ace2807e50e373d9dc5c02452876a9d8e">getScope</a> () const =0</td></tr>
-<tr class="memdesc:ace2807e50e373d9dc5c02452876a9d8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the parameter's access scope.  <br /></td></tr>
+<tr class="memdesc:ace2807e50e373d9dc5c02452876a9d8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the parameter access scope  <br /></td></tr>
 <tr class="separator:ace2807e50e373d9dc5c02452876a9d8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6210697991859f1cc956b07f3cdef25a" id="r_a6210697991859f1cc956b07f3cdef25a"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a6210697991859f1cc956b07f3cdef25a">defineCommand</a> (std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt;(const catena::Value &amp;, const bool)&gt; commandImpl)=0</td></tr>
-<tr class="memdesc:a6210697991859f1cc956b07f3cdef25a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Defines the parameter's command implementation.  <br /></td></tr>
+<tr class="memdesc:a6210697991859f1cc956b07f3cdef25a"><td class="mdescLeft">&#160;</td><td class="mdescRight">define a command for the parameter  <br /></td></tr>
 <tr class="separator:a6210697991859f1cc956b07f3cdef25a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a688ea70d7fe7d37f48daf280f303883f" id="r_a688ea70d7fe7d37f48daf280f303883f"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a688ea70d7fe7d37f48daf280f303883f">executeCommand</a> (const catena::Value &amp;value, const bool respond) const =0</td></tr>
-<tr class="memdesc:a688ea70d7fe7d37f48daf280f303883f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Exectutes the parameter's command implementation.  <br /></td></tr>
+<tr class="memdesc:a688ea70d7fe7d37f48daf280f303883f"><td class="mdescLeft">&#160;</td><td class="mdescRight">execute the command for the parameter  <br /></td></tr>
 <tr class="separator:a688ea70d7fe7d37f48daf280f303883f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9111464c2fc6f68b29db19d10610ac31" id="r_a9111464c2fc6f68b29db19d10610ac31"><td class="memItemLeft" align="right" valign="top">virtual const <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a9111464c2fc6f68b29db19d10610ac31">getDescriptor</a> () const =0</td></tr>
-<tr class="memdesc:a9111464c2fc6f68b29db19d10610ac31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the parameter's descriptor.  <br /></td></tr>
+<tr class="memdesc:a9111464c2fc6f68b29db19d10610ac31"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the descriptor of the parameter  <br /></td></tr>
 <tr class="separator:a9111464c2fc6f68b29db19d10610ac31"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3df0c29a015ceab195e6dafd17fae0b0" id="r_a3df0c29a015ceab195e6dafd17fae0b0"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a3df0c29a015ceab195e6dafd17fae0b0">isArrayType</a> () const =0</td></tr>
-<tr class="memdesc:a3df0c29a015ceab195e6dafd17fae0b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the parameter is an array type.  <br /></td></tr>
+<tr class="memdesc:a3df0c29a015ceab195e6dafd17fae0b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the parameter is an array type.  <br /></td></tr>
 <tr class="separator:a3df0c29a015ceab195e6dafd17fae0b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a93bf4b23dac4e5e8988b6cf27fdeab38" id="r_a93bf4b23dac4e5e8988b6cf27fdeab38"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a93bf4b23dac4e5e8988b6cf27fdeab38">validateSetValue</a> (const catena::Value &amp;value, <a class="el" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Path::Index</a> index, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;ans)=0</td></tr>
 <tr class="memdesc:a93bf4b23dac4e5e8988b6cf27fdeab38"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates a setValue operation without changing the param's value.  <br /></td></tr>
 <tr class="separator:a93bf4b23dac4e5e8988b6cf27fdeab38"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0524a3a6faa1200e946ebdaa32db3d70" id="r_a0524a3a6faa1200e946ebdaa32db3d70"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a0524a3a6faa1200e946ebdaa32db3d70">resetValidate</a> ()=0</td></tr>
-<tr class="memdesc:a0524a3a6faa1200e946ebdaa32db3d70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets any trackers that might have been changed in <a class="el" href="classcatena_1_1common_1_1IParam.html#a93bf4b23dac4e5e8988b6cf27fdeab38" title="Validates a setValue operation without changing the param&#39;s value.">validateSetValue()</a>.  <br /></td></tr>
+<tr class="memdesc:a0524a3a6faa1200e946ebdaa32db3d70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets any trackers that might have been changed in validateSetValue.  <br /></td></tr>
 <tr class="separator:a0524a3a6faa1200e946ebdaa32db3d70"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -248,7 +245,7 @@ Public Member Functions</h2></td></tr>
 <p>Add an empty value to and return the back of an array parameter. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">authz</td><td>The <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html" title="Interface for objects handling authorization information.">IAuthorizer</a> to test write permissions with. </td></tr>
+    <tr><td class="paramname">authz</td><td>The <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html" title="Class for handling authorization information.">IAuthorizer</a> to test write permissions with. </td></tr>
     <tr><td class="paramname">status</td><td>The status of the operation. OK if successful, otherwise an error. </td></tr>
   </table>
   </dd>
@@ -256,53 +253,6 @@ Public Member Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>A unique ptr to the new element, or nullptr if the operation failed. </dd></dl>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a0b10299b1adaeb707f7151759a47925a">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
-
-</div>
-</div>
-<a id="a4bbfdb7a54674c95728b92d037df0a4d" name="a4bbfdb7a54674c95728b92d037df0a4d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4bbfdb7a54674c95728b92d037df0a4d">&#9670;&#160;</a></span>addParam()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual void catena::common::IParam::addParam </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>oid</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> *&#160;</td>
-          <td class="paramname"><em>param</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Adds a child parameter. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">oid</td><td>The oid of the child parameter to add. </td></tr>
-    <tr><td class="paramname">param</td><td>The child parameter to add. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a53957a5afdc5bcd28c315fe3f780bec5">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
 </div>
 </div>
@@ -357,13 +307,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Defines the parameter's command implementation. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">commandImpl</td><td>The new command implementation. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>define a command for the parameter </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a6d19ddb0cbabac72062b462a0823439b">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
@@ -403,15 +347,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Exectutes the parameter's command implementation. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">value</td><td>the value to pass to the command implementation. </td></tr>
-    <tr><td class="paramname">respond</td><td>Flag indicating whether the command should respond with a CommandResponse. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The CommandResponder from the command implementation. </dd></dl>
+<p>execute the command for the parameter </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a17fe201aafefeeb4aadd061e85ea5a41">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
@@ -451,15 +387,14 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Deserializes the parameter value from protobuf. </p>
+<p>deserialize the parameter value from protobuf </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">src</td><td>The protobuf value to deserialize from. </td></tr>
-    <tr><td class="paramname">authz</td><td>The authorizer object to containing the client's scopes. </td></tr>
+    <tr><td class="paramname">src</td><td>the protobuf value to deserialize from </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section note"><dt>Note</dt><dd>This method may constrain the source value and modify it. </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>this method may constrain the source value and modify it </dd></dl>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a52c01e4504112c7126e39a2fd9dee92f">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
@@ -488,7 +423,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Gets the parameter's constraint. </p>
+<p>get a constraint by oid </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a156aa87bcb206205c1e614680733d610">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
@@ -517,8 +452,8 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Gets the parameter's descriptor. </p>
-<dl class="section return"><dt>Returns</dt><dd>The parameter's <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html" title="ParamDescriptor provides information about a parameter as well as command definition and execution fu...">ParamDescriptor</a> object. </dd></dl>
+<p>get the descriptor of the parameter </p>
+<dl class="section return"><dt>Returns</dt><dd>the descriptor of the parameter </dd></dl>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#ac8675eb5b82b63dbbc7ed597eeb9dfc5">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 <div class="dynheader">
@@ -552,8 +487,8 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Gets the oid of the param. </p>
-<dl class="section return"><dt>Returns</dt><dd>The oid of the param </dd></dl>
+<p>return the oid of the param </p>
+<dl class="section return"><dt>Returns</dt><dd>the oid of the param </dd></dl>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a13b03b7df7f5ee620e388ff75f3c2540">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
@@ -599,16 +534,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Gets a child parameter by name. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">oid</td><td>The oid of the child parameter to get. </td></tr>
-    <tr><td class="paramname">authz</td><td>The <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html" title="Interface for objects handling authorization information.">IAuthorizer</a> to test read permissions with. </td></tr>
-    <tr><td class="paramname">status</td><td>The status of the operation. OK if successful, otherwise an error. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>A unique pointer to the child parameter, or nullptr if the operation failed. </dd></dl>
+<p>get a child parameter by name </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a77b784c48506b34d0672493d773b8120">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
@@ -637,7 +563,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Gets the parameter's access scope. </p>
+<p>get the parameter access scope </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#acd4912fbb721d5c0c98497b2c11859c9">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
@@ -666,8 +592,8 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Checks if the parameter is an array type. </p>
-<dl class="section return"><dt>Returns</dt><dd>True if the parameter is an array type (INT32_ARRAY, FLOAT32_ARRAY, STRING_ARRAY, STRUCT_ARRAY, or STRUCT_VARIANT_ARRAY). </dd></dl>
+<p>Check if the parameter is an array type. </p>
+<dl class="section return"><dt>Returns</dt><dd>true if the parameter is an array type (INT32_ARRAY, FLOAT32_ARRAY, STRING_ARRAY, STRUCT_ARRAY, or STRUCT_VARIANT_ARRAY) </dd></dl>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a5657a8fc5c8d8b6f21c59bc9888bd954">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
@@ -697,10 +623,10 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Pops the back of an array parameter. </p>
+<p>Pop the back of an array parameter. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">authz</td><td>The <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html" title="Interface for objects handling authorization information.">IAuthorizer</a> to test write permissions with. </td></tr>
+    <tr><td class="paramname">authz</td><td>The <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html" title="Class for handling authorization information.">IAuthorizer</a> to test write permissions with. </td></tr>
   </table>
   </dd>
 </dl>
@@ -733,7 +659,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Returns true if the param is readOnly. </p>
+<p>return read only status of the param </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a5444af1e9f14b4b761aeb2fd06696ea8">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
@@ -763,13 +689,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Sets the read only status of the param. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">flag</td><td>True if the param should be read only, false otherwise. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>set read only status of the param </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a4bc78bbd1bbb04d564747e55045c0ccc">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
@@ -798,7 +718,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Resets any trackers that might have been changed in <a class="el" href="classcatena_1_1common_1_1IParam.html#a93bf4b23dac4e5e8988b6cf27fdeab38" title="Validates a setValue operation without changing the param&#39;s value.">validateSetValue()</a>. </p>
+<p>Resets any trackers that might have been changed in validateSetValue. </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a99130fd6880369ab0955c70522876814">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
@@ -828,13 +748,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Sets the param's oid. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">oid</td><td>The new oid for the param. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>set the oid of the param </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a0d2d5a3967daccff82a534aada04fd97">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
@@ -863,7 +777,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Returns the size of an array parameter. </p>
+<p>Return the size of an array parameter. </p>
 <dl class="section return"><dt>Returns</dt><dd>The size of the array parameter, or 0 if the parameter is not an array. </dd></dl>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a001f623072810061e11472dc57f3d796">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
@@ -904,11 +818,10 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Serialize the parameter descriptor to a protobuf param object. </p>
+<p>serialize the parameter descriptor to protobuf </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">param</td><td>The protobuf param to serialize to. </td></tr>
-    <tr><td class="paramname">authz</td><td>The authorizer object to containing the client's scopes. </td></tr>
+    <tr><td class="paramname">param</td><td>the protobuf value to serialize to </td></tr>
   </table>
   </dd>
 </dl>
@@ -951,11 +864,10 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Serialize the parameter descriptor to a protobuf paramInfo object. </p>
+<p>serialize the parameter descriptor to protobuf </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">paramInfo</td><td>The protobuf paramInfo object to serialize to. </td></tr>
-    <tr><td class="paramname">authz</td><td>The authorizer object to containing the client's scopes. </td></tr>
+    <tr><td class="paramname">paramInfo</td><td>the protobuf value to serialize to </td></tr>
   </table>
   </dd>
 </dl>
@@ -998,11 +910,10 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Serializes the parameter value to protobuf. </p>
+<p>serialize the parameter value to protobuf </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">dst</td><td>The protobuf value to serialize to. </td></tr>
-    <tr><td class="paramname">authz</td><td>The authorizer object to containing the client's scopes. </td></tr>
+    <tr><td class="paramname">dst</td><td>the protobuf value to serialize to </td></tr>
   </table>
   </dd>
 </dl>
@@ -1039,7 +950,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Returns the param's protobuf value type. </p>
+<p>return the type of the param </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a5d100719a0270a1b71ab5221bcda3b4e">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
@@ -1096,7 +1007,6 @@ Here is the caller graph for this function:</div>
   <table class="params">
     <tr><td class="paramname">value</td><td>The value we want to set the param to. </td></tr>
     <tr><td class="paramname">index</td><td>The index of the subparam to set (or nullptr if none). </td></tr>
-    <tr><td class="paramname">authz</td><td>The authorizer object to check write permissions with. </td></tr>
     <tr><td class="paramname">ans</td><td>Catena::exception_with_status output. </td></tr>
   </table>
   </dd>
