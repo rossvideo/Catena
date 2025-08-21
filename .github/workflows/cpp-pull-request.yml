@@ -76,7 +76,8 @@ jobs:
       - name: Run Tests
         run: |
           ctest --test-dir ~/Catena/${BUILD_TARGET} -V --rerun-failed > test_results.log
-          # check if file contains "100% tests passed"
+          # check if file contains "100% tests passed" 
+          ctest --test-dir ~/Catena/${BUILD_TARGET} --rerun-failed --output-junit test-results.xml
           if grep -q "100% tests passed" test_results.log; then
             echo "All tests passed!"
             echo "passed" > unit_test_status.txt
@@ -127,6 +128,11 @@ jobs:
           path: test_results.log
           retention-days: 4
 
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: github.event_name == 'pull_request'
+        with:
+          files: build/test-results.xml
 
       - name: Build PR comment body
         if: github.event_name == 'pull_request'
@@ -138,9 +144,6 @@ jobs:
           else
             echo '### ❌ Unit Tests Status' >> comment-body.md
             echo ' ❌ Some unit tests have failed.'>> comment-body.md
-                  echo '```' >> comment-body.md
-                  cat test_results.log >> comment-body.md
-                  echo '```' >> comment-body.md
           fi
 
           echo "" >> comment-body.md
@@ -173,7 +176,6 @@ jobs:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           edit-mode: replace
           
-
   CodeQL:
     name: CodeQL Analysis (15-30 minutes)
     timeout-minutes: 35
