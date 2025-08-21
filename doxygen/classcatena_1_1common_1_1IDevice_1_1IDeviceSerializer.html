@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cpp-v0.0.14-4: catena::common::IDevice::IDeviceSerializer Class Reference</title>
+<title>cpp-v0.0.15-896: catena::common::IDevice::IDeviceSerializer Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -26,7 +26,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="doxylogo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">cpp-v0.0.14-4
+   <div id="projectname">cpp-v0.0.15-896
    </div>
   </td>
  </tr>
@@ -118,16 +118,16 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ab35a715a8c265585c50d51e4e7aed7fd" id="r_ab35a715a8c265585c50d51e4e7aed7fd"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html#ab35a715a8c265585c50d51e4e7aed7fd">hasMore</a> () const =0</td></tr>
 <tr class="memdesc:ab35a715a8c265585c50d51e4e7aed7fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns true if there are more DeviceComponents to be serialized  <br /></td></tr>
 <tr class="separator:ab35a715a8c265585c50d51e4e7aed7fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a640222d5e39d54beaf20a80fdebbf0f8" id="r_a640222d5e39d54beaf20a80fdebbf0f8"><td class="memItemLeft" align="right" valign="top">virtual st2138::DeviceComponent&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html#a640222d5e39d54beaf20a80fdebbf0f8">getNext</a> ()=0</td></tr>
-<tr class="memdesc:a640222d5e39d54beaf20a80fdebbf0f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the next DeviceComponent to be serialized.  <br /></td></tr>
-<tr class="separator:a640222d5e39d54beaf20a80fdebbf0f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a05da15cbcbe92d67dea2b88e24c9ff75" id="r_a05da15cbcbe92d67dea2b88e24c9ff75"><td class="memItemLeft" align="right" valign="top">virtual catena::DeviceComponent&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html#a05da15cbcbe92d67dea2b88e24c9ff75">getNext</a> ()=0</td></tr>
+<tr class="memdesc:a05da15cbcbe92d67dea2b88e24c9ff75"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the next DeviceComponent to be serialized.  <br /></td></tr>
+<tr class="separator:a05da15cbcbe92d67dea2b88e24c9ff75"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This struct manages the state and lifetime of the coroutine. It also provides the interface for resuming the coroutine. </p>
 <p>Coroutine types are required to contain a promise_type struct that defines some special member functions that the compiler will call when the coroutine is created, destroyed, or resumed. This promise_type struct must be defined in the inherited class. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a640222d5e39d54beaf20a80fdebbf0f8" name="a640222d5e39d54beaf20a80fdebbf0f8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a640222d5e39d54beaf20a80fdebbf0f8">&#9670;&#160;</a></span>getNext()</h2>
+<a id="a05da15cbcbe92d67dea2b88e24c9ff75" name="a05da15cbcbe92d67dea2b88e24c9ff75"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a05da15cbcbe92d67dea2b88e24c9ff75">&#9670;&#160;</a></span>getNext()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -136,7 +136,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual st2138::DeviceComponent catena::common::IDevice::IDeviceSerializer::getNext </td>
+          <td class="memname">virtual catena::DeviceComponent catena::common::IDevice::IDeviceSerializer::getNext </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -153,7 +153,7 @@ Public Member Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>the next DeviceComponent</dd></dl>
 <p>If the coroutine is done and there are no more components to serialize then an empty DeviceComponent is returned. </p>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#a2d9e2fc309c7684b12b73e25bc4c7af1">catena::common::Device::DeviceSerializer</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#a697c5d2f2a26800e2926381aff68b11d">catena::common::Device::DeviceSerializer</a>.</p>
 
 </div>
 </div>

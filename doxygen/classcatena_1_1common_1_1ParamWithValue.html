@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cpp-v0.0.14-4: catena::common::ParamWithValue&lt; T &gt; Class Template Reference</title>
+<title>cpp-v0.0.15-896: catena::common::ParamWithValue&lt; T &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -26,7 +26,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="doxylogo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">cpp-v0.0.14-4
+   <div id="projectname">cpp-v0.0.15-896
    </div>
   </td>
  </tr>
@@ -122,10 +122,10 @@ Public Types</h2></td></tr>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>TSizeTracker</b> = std::vector&lt; std::size_t &gt;</td></tr>
 <tr class="separator:ae624ab09e3a4a773efaacebb01f463b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_types_classcatena_1_1common_1_1IParam"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classcatena_1_1common_1_1IParam')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="classcatena_1_1common_1_1IParam.html">catena::common::IParam</a></td></tr>
-<tr class="memitem:acad997446b9bfc7e3737319dfa389e18 inherit pub_types_classcatena_1_1common_1_1IParam" id="r_acad997446b9bfc7e3737319dfa389e18"><td class="memItemLeft" align="right" valign="top">
-using&#160;</td><td class="memItemRight" valign="bottom"><b>ParamType</b> = <a class="el" href="classcatena_1_1patterns_1_1EnumDecorator.html">catena::patterns::EnumDecorator</a>&lt; st2138::ParamType &gt;</td></tr>
-<tr class="memdesc:acad997446b9bfc7e3737319dfa389e18 inherit pub_types_classcatena_1_1common_1_1IParam"><td class="mdescLeft">&#160;</td><td class="mdescRight">ParamType is an enum class that defines the types of parameters. <br /></td></tr>
-<tr class="separator:acad997446b9bfc7e3737319dfa389e18 inherit pub_types_classcatena_1_1common_1_1IParam"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a869493afc3b6cf59f599a2fe43d21d inherit pub_types_classcatena_1_1common_1_1IParam" id="r_a3a869493afc3b6cf59f599a2fe43d21d"><td class="memItemLeft" align="right" valign="top">
+using&#160;</td><td class="memItemRight" valign="bottom"><b>ParamType</b> = <a class="el" href="classcatena_1_1patterns_1_1EnumDecorator.html">catena::patterns::EnumDecorator</a>&lt; catena::ParamType &gt;</td></tr>
+<tr class="memdesc:a3a869493afc3b6cf59f599a2fe43d21d inherit pub_types_classcatena_1_1common_1_1IParam"><td class="mdescLeft">&#160;</td><td class="mdescRight">ParamType is an enum class that defines the types of parameters. <br /></td></tr>
+<tr class="separator:a3a869493afc3b6cf59f599a2fe43d21d inherit pub_types_classcatena_1_1common_1_1IParam"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a487044851ec828b06464c8990fd0add1 inherit pub_types_classcatena_1_1common_1_1IParam" id="r_a487044851ec828b06464c8990fd0add1"><td class="memItemLeft" align="right" valign="top">
 using&#160;</td><td class="memItemRight" valign="bottom"><b>OidAliases</b> = std::vector&lt; std::string &gt;</td></tr>
 <tr class="memdesc:a487044851ec828b06464c8990fd0add1 inherit pub_types_classcatena_1_1common_1_1IParam"><td class="mdescLeft">&#160;</td><td class="mdescRight">OidAliases is a vector of strings. <br /></td></tr>
@@ -170,19 +170,19 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~ParamWithValue</b
 <tr class="memitem:a1576dc92412a51c12a374dba5e0eeacb" id="r_a1576dc92412a51c12a374dba5e0eeacb"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a1576dc92412a51c12a374dba5e0eeacb">copy</a> () const override</td></tr>
 <tr class="memdesc:a1576dc92412a51c12a374dba5e0eeacb"><td class="mdescLeft">&#160;</td><td class="mdescRight">creates a shallow copy the parameter  <br /></td></tr>
 <tr class="separator:a1576dc92412a51c12a374dba5e0eeacb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a66fceb8f44c0454678fa50ea1a762792" id="r_a66fceb8f44c0454678fa50ea1a762792"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a66fceb8f44c0454678fa50ea1a762792">toProto</a> (st2138::Value &amp;value, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz) const override</td></tr>
-<tr class="memdesc:a66fceb8f44c0454678fa50ea1a762792"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter value to protobuf if authorized  <br /></td></tr>
-<tr class="separator:a66fceb8f44c0454678fa50ea1a762792"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acaa3714d49eb55fa9ebb60d6b5858cf9" id="r_acaa3714d49eb55fa9ebb60d6b5858cf9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#acaa3714d49eb55fa9ebb60d6b5858cf9">toProto</a> (st2138::Param &amp;param, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz) const override</td></tr>
-<tr class="memdesc:acaa3714d49eb55fa9ebb60d6b5858cf9"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter descriptor to protobuf includes both the descriptor and the value  <br /></td></tr>
-<tr class="separator:acaa3714d49eb55fa9ebb60d6b5858cf9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2a76ae1eb31c3d0cb471e4a871ec90ca" id="r_a2a76ae1eb31c3d0cb471e4a871ec90ca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a2a76ae1eb31c3d0cb471e4a871ec90ca">toProto</a> (st2138::ParamInfoResponse &amp;paramInfo, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz) const override</td></tr>
-<tr class="memdesc:a2a76ae1eb31c3d0cb471e4a871ec90ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter descriptor to protobuf include both the descriptor and the value  <br /></td></tr>
-<tr class="separator:a2a76ae1eb31c3d0cb471e4a871ec90ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a811e2ff14760b84be30e6a09fc2d84d7" id="r_a811e2ff14760b84be30e6a09fc2d84d7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a811e2ff14760b84be30e6a09fc2d84d7">fromProto</a> (const st2138::Value &amp;value, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz) override</td></tr>
-<tr class="memdesc:a811e2ff14760b84be30e6a09fc2d84d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">deserialize the parameter value from protobuf if authorized  <br /></td></tr>
-<tr class="separator:a811e2ff14760b84be30e6a09fc2d84d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d100719a0270a1b71ab5221bcda3b4e" id="r_a5d100719a0270a1b71ab5221bcda3b4e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1IParam.html#acad997446b9bfc7e3737319dfa389e18">IParam::ParamType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a5d100719a0270a1b71ab5221bcda3b4e">type</a> () const override</td></tr>
+<tr class="memitem:a114978c20b21938e2182aca7e47ca4fb" id="r_a114978c20b21938e2182aca7e47ca4fb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a114978c20b21938e2182aca7e47ca4fb">toProto</a> (catena::Value &amp;value, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz) const override</td></tr>
+<tr class="memdesc:a114978c20b21938e2182aca7e47ca4fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter value to protobuf if authorized  <br /></td></tr>
+<tr class="separator:a114978c20b21938e2182aca7e47ca4fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa429ba63f070f72f100ccc9ed3324150" id="r_aa429ba63f070f72f100ccc9ed3324150"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#aa429ba63f070f72f100ccc9ed3324150">toProto</a> (catena::Param &amp;param, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz) const override</td></tr>
+<tr class="memdesc:aa429ba63f070f72f100ccc9ed3324150"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter descriptor to protobuf includes both the descriptor and the value  <br /></td></tr>
+<tr class="separator:aa429ba63f070f72f100ccc9ed3324150"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3834efd72939b0e2dc3978025fe3a00e" id="r_a3834efd72939b0e2dc3978025fe3a00e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a3834efd72939b0e2dc3978025fe3a00e">toProto</a> (catena::ParamInfoResponse &amp;paramInfo, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz) const override</td></tr>
+<tr class="memdesc:a3834efd72939b0e2dc3978025fe3a00e"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter descriptor to protobuf include both the descriptor and the value  <br /></td></tr>
+<tr class="separator:a3834efd72939b0e2dc3978025fe3a00e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52c01e4504112c7126e39a2fd9dee92f" id="r_a52c01e4504112c7126e39a2fd9dee92f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a52c01e4504112c7126e39a2fd9dee92f">fromProto</a> (const catena::Value &amp;value, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz) override</td></tr>
+<tr class="memdesc:a52c01e4504112c7126e39a2fd9dee92f"><td class="mdescLeft">&#160;</td><td class="mdescRight">deserialize the parameter value from protobuf if authorized  <br /></td></tr>
+<tr class="separator:a52c01e4504112c7126e39a2fd9dee92f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d100719a0270a1b71ab5221bcda3b4e" id="r_a5d100719a0270a1b71ab5221bcda3b4e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1IParam.html#a3a869493afc3b6cf59f599a2fe43d21d">IParam::ParamType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a5d100719a0270a1b71ab5221bcda3b4e">type</a> () const override</td></tr>
 <tr class="memdesc:a5d100719a0270a1b71ab5221bcda3b4e"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the parameters protobuf value type  <br /></td></tr>
 <tr class="separator:a5d100719a0270a1b71ab5221bcda3b4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a13b03b7df7f5ee620e388ff75f3c2540" id="r_a13b03b7df7f5ee620e388ff75f3c2540"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a13b03b7df7f5ee620e388ff75f3c2540">getOid</a> () const override</td></tr>
@@ -208,12 +208,12 @@ const T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> () c
 <tr class="memitem:a77b784c48506b34d0672493d773b8120" id="r_a77b784c48506b34d0672493d773b8120"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a77b784c48506b34d0672493d773b8120">getParam</a> (<a class="el" href="classcatena_1_1common_1_1Path.html">Path</a> &amp;oid, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status) override</td></tr>
 <tr class="memdesc:a77b784c48506b34d0672493d773b8120"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a child parameter by name  <br /></td></tr>
 <tr class="separator:a77b784c48506b34d0672493d773b8120"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7efb5b89339e64fcd1aa62ae65486bcc" id="r_a7efb5b89339e64fcd1aa62ae65486bcc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a7efb5b89339e64fcd1aa62ae65486bcc">defineCommand</a> (std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt;(const st2138::Value &amp;, const bool)&gt; commandImpl)</td></tr>
-<tr class="memdesc:a7efb5b89339e64fcd1aa62ae65486bcc"><td class="mdescLeft">&#160;</td><td class="mdescRight">define the command implementation  <br /></td></tr>
-<tr class="separator:a7efb5b89339e64fcd1aa62ae65486bcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aab67422b13982b1961a737809f9c70dd" id="r_aab67422b13982b1961a737809f9c70dd"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#aab67422b13982b1961a737809f9c70dd">executeCommand</a> (const st2138::Value &amp;value, const bool respond) const override</td></tr>
-<tr class="memdesc:aab67422b13982b1961a737809f9c70dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">execute the command for the parameter  <br /></td></tr>
-<tr class="separator:aab67422b13982b1961a737809f9c70dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d19ddb0cbabac72062b462a0823439b" id="r_a6d19ddb0cbabac72062b462a0823439b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a6d19ddb0cbabac72062b462a0823439b">defineCommand</a> (std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt;(const catena::Value &amp;, const bool)&gt; commandImpl)</td></tr>
+<tr class="memdesc:a6d19ddb0cbabac72062b462a0823439b"><td class="mdescLeft">&#160;</td><td class="mdescRight">define the command implementation  <br /></td></tr>
+<tr class="separator:a6d19ddb0cbabac72062b462a0823439b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a17fe201aafefeeb4aadd061e85ea5a41" id="r_a17fe201aafefeeb4aadd061e85ea5a41"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a17fe201aafefeeb4aadd061e85ea5a41">executeCommand</a> (const catena::Value &amp;value, const bool respond) const override</td></tr>
+<tr class="memdesc:a17fe201aafefeeb4aadd061e85ea5a41"><td class="mdescLeft">&#160;</td><td class="mdescRight">execute the command for the parameter  <br /></td></tr>
+<tr class="separator:a17fe201aafefeeb4aadd061e85ea5a41"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a001f623072810061e11472dc57f3d796" id="r_a001f623072810061e11472dc57f3d796"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a001f623072810061e11472dc57f3d796">size</a> () const override</td></tr>
 <tr class="memdesc:a001f623072810061e11472dc57f3d796"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the size of the array parameter.  <br /></td></tr>
 <tr class="separator:a001f623072810061e11472dc57f3d796"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -239,9 +239,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>addParam</b> (const s
 <tr class="memitem:acd4912fbb721d5c0c98497b2c11859c9" id="r_acd4912fbb721d5c0c98497b2c11859c9"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#acd4912fbb721d5c0c98497b2c11859c9">getScope</a> () const override</td></tr>
 <tr class="memdesc:acd4912fbb721d5c0c98497b2c11859c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the parameter scope  <br /></td></tr>
 <tr class="separator:acd4912fbb721d5c0c98497b2c11859c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a877789fcdef88f170029e9601ebb00d4" id="r_a877789fcdef88f170029e9601ebb00d4"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a877789fcdef88f170029e9601ebb00d4">validateSetValue</a> (const st2138::Value &amp;value, <a class="el" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Path::Index</a> index, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;ans) override</td></tr>
-<tr class="memdesc:a877789fcdef88f170029e9601ebb00d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates a setValue operation without changing the param's value.  <br /></td></tr>
-<tr class="separator:a877789fcdef88f170029e9601ebb00d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8fa6c13abfe1843d25120f3b9e8d14af" id="r_a8fa6c13abfe1843d25120f3b9e8d14af"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a8fa6c13abfe1843d25120f3b9e8d14af">validateSetValue</a> (const catena::Value &amp;value, <a class="el" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Path::Index</a> index, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;ans) override</td></tr>
+<tr class="memdesc:a8fa6c13abfe1843d25120f3b9e8d14af"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates a setValue operation without changing the param's value.  <br /></td></tr>
+<tr class="separator:a8fa6c13abfe1843d25120f3b9e8d14af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a99130fd6880369ab0955c70522876814" id="r_a99130fd6880369ab0955c70522876814"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a99130fd6880369ab0955c70522876814">resetValidate</a> () override</td></tr>
 <tr class="memdesc:a99130fd6880369ab0955c70522876814"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets any trackers that might have been changed in validateSetValue.  <br /></td></tr>
 <tr class="separator:a99130fd6880369ab0955c70522876814"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -263,9 +263,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>addParam</b> (const s
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-types" name="pro-types"></a>
 Protected Types</h2></td></tr>
-<tr class="memitem:a02f84611eac6b5b966575219f39fcdbd" id="r_a02f84611eac6b5b966575219f39fcdbd"><td class="memItemLeft" align="right" valign="top"><a id="a02f84611eac6b5b966575219f39fcdbd" name="a02f84611eac6b5b966575219f39fcdbd"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>Kind</b> = st2138::Value::KindCase</td></tr>
-<tr class="separator:a02f84611eac6b5b966575219f39fcdbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3ebe79ee4f012f2a5a554cad195aefca" id="r_a3ebe79ee4f012f2a5a554cad195aefca"><td class="memItemLeft" align="right" valign="top"><a id="a3ebe79ee4f012f2a5a554cad195aefca" name="a3ebe79ee4f012f2a5a554cad195aefca"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>Kind</b> = catena::Value::KindCase</td></tr>
+<tr class="separator:a3ebe79ee4f012f2a5a554cad195aefca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
@@ -324,21 +324,21 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:a3706691522f93c404c34b1ddbdc0573d"><td class="memTemplItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a3706691522f93c404c34b1ddbdc0573d">getParamAtIndex_</a> (const Tuple &amp;tuple)</td></tr>
 <tr class="memdesc:a3706691522f93c404c34b1ddbdc0573d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new paramWithValue object for the field at index I.  <br /></td></tr>
 <tr class="separator:a3706691522f93c404c34b1ddbdc0573d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a18e8cf17311d8eec6cef67a666fce2d0" id="r_a18e8cf17311d8eec6cef67a666fce2d0"><td class="memTemplParams" colspan="2">template&lt;typename U , typename V &gt; </td></tr>
-<tr class="memitem:a18e8cf17311d8eec6cef67a666fce2d0"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a18e8cf17311d8eec6cef67a666fce2d0">validateSetValue_</a> (U &amp;oldVal, const V &amp;newVal, const st2138::Value &amp;protoVal, <a class="el" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Path::Index</a> index, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz)</td></tr>
-<tr class="memdesc:a18e8cf17311d8eec6cef67a666fce2d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default overload of validateSetValue_ used in cases where type(U) == type(V).  <br /></td></tr>
-<tr class="separator:a18e8cf17311d8eec6cef67a666fce2d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a48f9ca039cdb8d1916fa86e77b4921e3" id="r_a48f9ca039cdb8d1916fa86e77b4921e3"><td class="memTemplParams" colspan="2">template&lt;typename U , typename V &gt; <br />
+<tr class="memitem:aa4013b24573981dcbe131d9692f81578" id="r_aa4013b24573981dcbe131d9692f81578"><td class="memTemplParams" colspan="2">template&lt;typename U , typename V &gt; </td></tr>
+<tr class="memitem:aa4013b24573981dcbe131d9692f81578"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#aa4013b24573981dcbe131d9692f81578">validateSetValue_</a> (U &amp;oldVal, const V &amp;newVal, const catena::Value &amp;protoVal, <a class="el" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Path::Index</a> index, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz)</td></tr>
+<tr class="memdesc:aa4013b24573981dcbe131d9692f81578"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default overload of validateSetValue_ used in cases where type(U) == type(V).  <br /></td></tr>
+<tr class="separator:aa4013b24573981dcbe131d9692f81578"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a93a1437fd14b795386ca38db3db5facd" id="r_a93a1437fd14b795386ca38db3db5facd"><td class="memTemplParams" colspan="2">template&lt;typename U , typename V &gt; <br />
 requires (!meta::IsVector&lt;V&gt;)</td></tr>
-<tr class="memitem:a48f9ca039cdb8d1916fa86e77b4921e3"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a48f9ca039cdb8d1916fa86e77b4921e3">validateSetValue_</a> (std::vector&lt; U &gt; &amp;arrayVal, const V &amp;memVal, const st2138::Value &amp;protoVal, <a class="el" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Path::Index</a> index, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz)</td></tr>
-<tr class="memdesc:a48f9ca039cdb8d1916fa86e77b4921e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Insert/append value to array overload of validateSetValue_.  <br /></td></tr>
-<tr class="separator:a48f9ca039cdb8d1916fa86e77b4921e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a93a1437fd14b795386ca38db3db5facd"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a93a1437fd14b795386ca38db3db5facd">validateSetValue_</a> (std::vector&lt; U &gt; &amp;arrayVal, const V &amp;memVal, const catena::Value &amp;protoVal, <a class="el" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Path::Index</a> index, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz)</td></tr>
+<tr class="memdesc:a93a1437fd14b795386ca38db3db5facd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Insert/append value to array overload of validateSetValue_.  <br /></td></tr>
+<tr class="separator:a93a1437fd14b795386ca38db3db5facd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
-<tr class="memitem:a8c3cd8aae751df0fbe2cef55b2a3b721" id="r_a8c3cd8aae751df0fbe2cef55b2a3b721"><td class="memItemLeft" align="right" valign="top">const std::unordered_map&lt; Kind, std::function&lt; <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>(const st2138::Value &amp;, <a class="el" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Path::Index</a>, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;)&gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a8c3cd8aae751df0fbe2cef55b2a3b721">validateSetValueMap_</a></td></tr>
-<tr class="memdesc:a8c3cd8aae751df0fbe2cef55b2a3b721"><td class="mdescLeft">&#160;</td><td class="mdescRight">A map to help routing to the validateSetValue_ functions above. Protobuf is great in that you need to use a seperate function to get each different type of value.  <br /></td></tr>
-<tr class="separator:a8c3cd8aae751df0fbe2cef55b2a3b721"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9a7bf857ce563d1c3449e42ecd48ac2d" id="r_a9a7bf857ce563d1c3449e42ecd48ac2d"><td class="memItemLeft" align="right" valign="top">const std::unordered_map&lt; Kind, std::function&lt; <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>(const catena::Value &amp;, <a class="el" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Path::Index</a>, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;)&gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a9a7bf857ce563d1c3449e42ecd48ac2d">validateSetValueMap_</a></td></tr>
+<tr class="memdesc:a9a7bf857ce563d1c3449e42ecd48ac2d"><td class="mdescLeft">&#160;</td><td class="mdescRight">A map to help routing to the validateSetValue_ functions above. Protobuf is great in that you need to use a seperate function to get each different type of value.  <br /></td></tr>
+<tr class="separator:a9a7bf857ce563d1c3449e42ecd48ac2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae1d5e52624f0b2f8a43f7aa9f43bc8d6" id="r_ae1d5e52624f0b2f8a43f7aa9f43bc8d6"><td class="memItemLeft" align="right" valign="top"><a id="ae1d5e52624f0b2f8a43f7aa9f43bc8d6" name="ae1d5e52624f0b2f8a43f7aa9f43bc8d6"></a>
 <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>descriptor_</b></td></tr>
 <tr class="separator:ae1d5e52624f0b2f8a43f7aa9f43bc8d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -833,8 +833,8 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a id="a7efb5b89339e64fcd1aa62ae65486bcc" name="a7efb5b89339e64fcd1aa62ae65486bcc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7efb5b89339e64fcd1aa62ae65486bcc">&#9670;&#160;</a></span>defineCommand()</h2>
+<a id="a6d19ddb0cbabac72062b462a0823439b" name="a6d19ddb0cbabac72062b462a0823439b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6d19ddb0cbabac72062b462a0823439b">&#9670;&#160;</a></span>defineCommand()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -847,7 +847,7 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="memname">void <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a>&lt; T &gt;::defineCommand </td>
           <td>(</td>
-          <td class="paramtype">std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt;(const st2138::Value &amp;, const bool)&gt;&#160;</td>
+          <td class="paramtype">std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt;(const catena::Value &amp;, const bool)&gt;&#160;</td>
           <td class="paramname"><em>commandImpl</em></td><td>)</td>
           <td></td>
         </tr>
@@ -867,19 +867,19 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#aaa06564eb19476810804e34d33490456">catena::common::IParam</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#a6210697991859f1cc956b07f3cdef25a">catena::common::IParam</a>.</p>
 
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#acb64ee3460cc68044440b2f5f73d599d">catena::common::IParamDescriptor::defineCommand()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a6fe8d2ee503a589b480eb90d41ad87b6">catena::common::IParamDescriptor::defineCommand()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a7efb5b89339e64fcd1aa62ae65486bcc_cgraph.svg" width="520" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a6d19ddb0cbabac72062b462a0823439b_cgraph.svg" width="520" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
 </div>
-<a id="aab67422b13982b1961a737809f9c70dd" name="aab67422b13982b1961a737809f9c70dd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aab67422b13982b1961a737809f9c70dd">&#9670;&#160;</a></span>executeCommand()</h2>
+<a id="a17fe201aafefeeb4aadd061e85ea5a41" name="a17fe201aafefeeb4aadd061e85ea5a41"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a17fe201aafefeeb4aadd061e85ea5a41">&#9670;&#160;</a></span>executeCommand()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -892,7 +892,7 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="memname">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt; <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a>&lt; T &gt;::executeCommand </td>
           <td>(</td>
-          <td class="paramtype">const st2138::Value &amp;&#160;</td>
+          <td class="paramtype">const catena::Value &amp;&#160;</td>
           <td class="paramname"><em>value</em>, </td>
         </tr>
         <tr>
@@ -923,13 +923,13 @@ template&lt;typename T &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the responser from the command implementation </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#a8377fdc1616cc5e7cdbe699597739a8e">catena::common::IParam</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#a688ea70d7fe7d37f48daf280f303883f">catena::common::IParam</a>.</p>
 
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#aa8f46f29a3bca012be45a40728af5b29">catena::common::IParamDescriptor::executeCommand()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ad3f9cbc3c77fed5c3a9c6fde1560bd9a">catena::common::IParamDescriptor::executeCommand()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_aab67422b13982b1961a737809f9c70dd_cgraph.svg" width="520" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a17fe201aafefeeb4aadd061e85ea5a41_cgraph.svg" width="520" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
@@ -1058,8 +1058,8 @@ template&lt;typename Struct , typename Tuple , std::size_t... Is&gt; </div>
 
 </div>
 </div>
-<a id="a811e2ff14760b84be30e6a09fc2d84d7" name="a811e2ff14760b84be30e6a09fc2d84d7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a811e2ff14760b84be30e6a09fc2d84d7">&#9670;&#160;</a></span>fromProto()</h2>
+<a id="a52c01e4504112c7126e39a2fd9dee92f" name="a52c01e4504112c7126e39a2fd9dee92f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a52c01e4504112c7126e39a2fd9dee92f">&#9670;&#160;</a></span>fromProto()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1072,7 +1072,7 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="memname"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a>&lt; T &gt;::fromProto </td>
           <td>(</td>
-          <td class="paramtype">const st2138::Value &amp;&#160;</td>
+          <td class="paramtype">const catena::Value &amp;&#160;</td>
           <td class="paramname"><em>value</em>, </td>
         </tr>
         <tr>
@@ -1103,7 +1103,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#ad664d612e1e5a34574bff5207fbdc7ef">catena::common::IParam</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#a0eb3e45483c13f4ea0c9292510432a6a">catena::common::IParam</a>.</p>
 
 </div>
 </div>
@@ -2180,8 +2180,8 @@ template&lt;meta::IsVector U&gt; </div>
 
 </div>
 </div>
-<a id="acaa3714d49eb55fa9ebb60d6b5858cf9" name="acaa3714d49eb55fa9ebb60d6b5858cf9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acaa3714d49eb55fa9ebb60d6b5858cf9">&#9670;&#160;</a></span>toProto() <span class="overload">[1/3]</span></h2>
+<a id="aa429ba63f070f72f100ccc9ed3324150" name="aa429ba63f070f72f100ccc9ed3324150"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa429ba63f070f72f100ccc9ed3324150">&#9670;&#160;</a></span>toProto() <span class="overload">[1/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -2194,7 +2194,7 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="memname"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a>&lt; T &gt;::toProto </td>
           <td>(</td>
-          <td class="paramtype">st2138::Param &amp;&#160;</td>
+          <td class="paramtype">catena::Param &amp;&#160;</td>
           <td class="paramname"><em>param</em>, </td>
         </tr>
         <tr>
@@ -2225,19 +2225,19 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#a526950dbc22251dce0833e1540ebc5a0">catena::common::IParam</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#a6b6e2f5d23746cae19c84454728f3933">catena::common::IParam</a>.</p>
 
-<p class="reference">References <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#af7c99e6e1b2248e692e722e1454fec69">catena::common::IParamDescriptor::toProto()</a>, and <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a66fceb8f44c0454678fa50ea1a762792">catena::common::ParamWithValue&lt; T &gt;::toProto()</a>.</p>
+<p class="reference">References <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#aa25bebe4e773ae82ff0b64e1853b7729">catena::common::IParamDescriptor::toProto()</a>, and <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a114978c20b21938e2182aca7e47ca4fb">catena::common::ParamWithValue&lt; T &gt;::toProto()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_acaa3714d49eb55fa9ebb60d6b5858cf9_cgraph.svg" width="520" height="115"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_aa429ba63f070f72f100ccc9ed3324150_cgraph.svg" width="520" height="115"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
 </div>
-<a id="a2a76ae1eb31c3d0cb471e4a871ec90ca" name="a2a76ae1eb31c3d0cb471e4a871ec90ca"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2a76ae1eb31c3d0cb471e4a871ec90ca">&#9670;&#160;</a></span>toProto() <span class="overload">[2/3]</span></h2>
+<a id="a3834efd72939b0e2dc3978025fe3a00e" name="a3834efd72939b0e2dc3978025fe3a00e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3834efd72939b0e2dc3978025fe3a00e">&#9670;&#160;</a></span>toProto() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -2250,7 +2250,7 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="memname"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a>&lt; T &gt;::toProto </td>
           <td>(</td>
-          <td class="paramtype">st2138::ParamInfoResponse &amp;&#160;</td>
+          <td class="paramtype">catena::ParamInfoResponse &amp;&#160;</td>
           <td class="paramname"><em>paramInfo</em>, </td>
         </tr>
         <tr>
@@ -2281,19 +2281,19 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#afef895993c72b884ae679aa01958eece">catena::common::IParam</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#ac077b4e62c4712b3b063beb06e121287">catena::common::IParam</a>.</p>
 
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a55ceeb3c4f8934314af7457b96becbc0">catena::common::IParamDescriptor::getOid()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ade1d7d4fd21e79ff2045feeb9425d923">catena::PERMISSION_DENIED</a>, <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html#acedeea5eadbebac67cb4e727c5dd762c">catena::common::IAuthorizer::readAuthz()</a>, and <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#af7c99e6e1b2248e692e722e1454fec69">catena::common::IParamDescriptor::toProto()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a55ceeb3c4f8934314af7457b96becbc0">catena::common::IParamDescriptor::getOid()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ade1d7d4fd21e79ff2045feeb9425d923">catena::PERMISSION_DENIED</a>, <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html#acedeea5eadbebac67cb4e727c5dd762c">catena::common::IAuthorizer::readAuthz()</a>, and <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#aa25bebe4e773ae82ff0b64e1853b7729">catena::common::IParamDescriptor::toProto()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a2a76ae1eb31c3d0cb471e4a871ec90ca_cgraph.svg" width="520" height="179"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a3834efd72939b0e2dc3978025fe3a00e_cgraph.svg" width="520" height="179"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
 </div>
-<a id="a66fceb8f44c0454678fa50ea1a762792" name="a66fceb8f44c0454678fa50ea1a762792"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a66fceb8f44c0454678fa50ea1a762792">&#9670;&#160;</a></span>toProto() <span class="overload">[3/3]</span></h2>
+<a id="a114978c20b21938e2182aca7e47ca4fb" name="a114978c20b21938e2182aca7e47ca4fb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a114978c20b21938e2182aca7e47ca4fb">&#9670;&#160;</a></span>toProto() <span class="overload">[3/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -2306,7 +2306,7 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="memname"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a>&lt; T &gt;::toProto </td>
           <td>(</td>
-          <td class="paramtype">st2138::Value &amp;&#160;</td>
+          <td class="paramtype">catena::Value &amp;&#160;</td>
           <td class="paramname"><em>value</em>, </td>
         </tr>
         <tr>
@@ -2337,11 +2337,11 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#af217e155ea1af0936be45f30c76d3a54">catena::common::IParam</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#a29d283259836a110494e9fa0d3987d13">catena::common::IParam</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a66fceb8f44c0454678fa50ea1a762792_icgraph.svg" width="480" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a114978c20b21938e2182aca7e47ca4fb_icgraph.svg" width="480" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
@@ -2358,7 +2358,7 @@ template&lt;typename T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classcatena_1_1common_1_1IParam.html#acad997446b9bfc7e3737319dfa389e18">IParam::ParamType</a> <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a>&lt; T &gt;::type </td>
+          <td class="memname"><a class="el" href="classcatena_1_1common_1_1IParam.html#a3a869493afc3b6cf59f599a2fe43d21d">IParam::ParamType</a> <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a>&lt; T &gt;::type </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -2375,7 +2375,7 @@ template&lt;typename T &gt; </div>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#a27bcdbf5ce0f692b975c82f8f5683ee3">catena::common::IParam</a>.</p>
 
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#aaf6f77cef24cf212d4d2abf55fa3d867">catena::common::IParamDescriptor::type()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ac434ca64d3939e3a38ca91c5f5c648eb">catena::common::IParamDescriptor::type()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -2389,8 +2389,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="a877789fcdef88f170029e9601ebb00d4" name="a877789fcdef88f170029e9601ebb00d4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a877789fcdef88f170029e9601ebb00d4">&#9670;&#160;</a></span>validateSetValue()</h2>
+<a id="a8fa6c13abfe1843d25120f3b9e8d14af" name="a8fa6c13abfe1843d25120f3b9e8d14af"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8fa6c13abfe1843d25120f3b9e8d14af">&#9670;&#160;</a></span>validateSetValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -2403,7 +2403,7 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="memname">bool <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a>&lt; T &gt;::validateSetValue </td>
           <td>(</td>
-          <td class="paramtype">const st2138::Value &amp;&#160;</td>
+          <td class="paramtype">const catena::Value &amp;&#160;</td>
           <td class="paramname"><em>value</em>, </td>
         </tr>
         <tr>
@@ -2449,14 +2449,14 @@ template&lt;typename T &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if valid. </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#aab3ee35b6e647b285aedf2d55f23f9be">catena::common::IParam</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#a93bf4b23dac4e5e8988b6cf27fdeab38">catena::common::IParam</a>.</p>
 
-<p class="reference">References <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ad1b5f6c215be9637e2cd1a34acef6454">catena::INVALID_ARGUMENT</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, and <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a8c3cd8aae751df0fbe2cef55b2a3b721">catena::common::ParamWithValue&lt; T &gt;::validateSetValueMap_</a>.</p>
+<p class="reference">References <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ad1b5f6c215be9637e2cd1a34acef6454">catena::INVALID_ARGUMENT</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, and <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a9a7bf857ce563d1c3449e42ecd48ac2d">catena::common::ParamWithValue&lt; T &gt;::validateSetValueMap_</a>.</p>
 
 </div>
 </div>
-<a id="a48f9ca039cdb8d1916fa86e77b4921e3" name="a48f9ca039cdb8d1916fa86e77b4921e3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a48f9ca039cdb8d1916fa86e77b4921e3">&#9670;&#160;</a></span>validateSetValue_() <span class="overload">[1/2]</span></h2>
+<a id="a93a1437fd14b795386ca38db3db5facd" name="a93a1437fd14b795386ca38db3db5facd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a93a1437fd14b795386ca38db3db5facd">&#9670;&#160;</a></span>validateSetValue_() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -2484,7 +2484,7 @@ requires (!meta::IsVector&lt;V&gt;)</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const st2138::Value &amp;&#160;</td>
+          <td class="paramtype">const catena::Value &amp;&#160;</td>
           <td class="paramname"><em>protoVal</em>, </td>
         </tr>
         <tr>
@@ -2525,17 +2525,17 @@ requires (!meta::IsVector&lt;V&gt;)</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">catena::exception_with_status</a>. </dd></dl>
 
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a55ceeb3c4f8934314af7457b96becbc0">catena::common::IParamDescriptor::getOid()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ad1b5f6c215be9637e2cd1a34acef6454">catena::INVALID_ARGUMENT</a>, <a class="el" href="classcatena_1_1common_1_1Path.html#a61a2ae300f348afd7bf9c6eaa3eaf48e">catena::common::Path::kEnd</a>, <a class="el" href="classcatena_1_1common_1_1Path.html#a258dd91d9e35ac7dd2afebf01b6325f1">catena::common::Path::kNone</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a12a2eebee18935585154b095ae1d7958">catena::common::IParamDescriptor::max_length()</a>, <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a5cd15be01b362f6240da7059bcd8f55d">catena::common::ParamWithValue&lt; T &gt;::mSizeTracker_</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a324df925b76a9e2014feef284c1d7945">catena::OUT_OF_RANGE</a>, <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a668d8556897da8086c84d0989a5e93a4">catena::common::ParamWithValue&lt; T &gt;::size_()</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ab0ec2ac672593f7081169d083379bee3">catena::common::IParamDescriptor::total_length()</a>, <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a21333d34142da64f554dcefc055ce2cb">catena::common::ParamWithValue&lt; T &gt;::tSizeTracker_</a>, and <a class="el" href="namespacecatena_1_1common.html#aa1d6718b95661e20844462e2f044488a">catena::common::validFromProto()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a55ceeb3c4f8934314af7457b96becbc0">catena::common::IParamDescriptor::getOid()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ad1b5f6c215be9637e2cd1a34acef6454">catena::INVALID_ARGUMENT</a>, <a class="el" href="classcatena_1_1common_1_1Path.html#a61a2ae300f348afd7bf9c6eaa3eaf48e">catena::common::Path::kEnd</a>, <a class="el" href="classcatena_1_1common_1_1Path.html#a258dd91d9e35ac7dd2afebf01b6325f1">catena::common::Path::kNone</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a12a2eebee18935585154b095ae1d7958">catena::common::IParamDescriptor::max_length()</a>, <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a5cd15be01b362f6240da7059bcd8f55d">catena::common::ParamWithValue&lt; T &gt;::mSizeTracker_</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a324df925b76a9e2014feef284c1d7945">catena::OUT_OF_RANGE</a>, <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a668d8556897da8086c84d0989a5e93a4">catena::common::ParamWithValue&lt; T &gt;::size_()</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ab0ec2ac672593f7081169d083379bee3">catena::common::IParamDescriptor::total_length()</a>, <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a21333d34142da64f554dcefc055ce2cb">catena::common::ParamWithValue&lt; T &gt;::tSizeTracker_</a>, and <a class="el" href="namespacecatena_1_1common.html#a846f2287f628fa1adeba439f9dc37fba">catena::common::validFromProto()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a48f9ca039cdb8d1916fa86e77b4921e3_cgraph.svg" width="100%" height="548"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a93a1437fd14b795386ca38db3db5facd_cgraph.svg" width="100%" height="548"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 </div>
 
 </div>
 </div>
-<a id="a18e8cf17311d8eec6cef67a666fce2d0" name="a18e8cf17311d8eec6cef67a666fce2d0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a18e8cf17311d8eec6cef67a666fce2d0">&#9670;&#160;</a></span>validateSetValue_() <span class="overload">[2/2]</span></h2>
+<a id="aa4013b24573981dcbe131d9692f81578" name="aa4013b24573981dcbe131d9692f81578"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa4013b24573981dcbe131d9692f81578">&#9670;&#160;</a></span>validateSetValue_() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -2562,7 +2562,7 @@ template&lt;typename U , typename V &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const st2138::Value &amp;&#160;</td>
+          <td class="paramtype">const catena::Value &amp;&#160;</td>
           <td class="paramname"><em>protoVal</em>, </td>
         </tr>
         <tr>
@@ -2603,18 +2603,18 @@ template&lt;typename U , typename V &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">catena::exception_with_status</a>. </dd></dl>
 
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a55ceeb3c4f8934314af7457b96becbc0">catena::common::IParamDescriptor::getOid()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ad1b5f6c215be9637e2cd1a34acef6454">catena::INVALID_ARGUMENT</a>, <a class="el" href="classcatena_1_1common_1_1Path.html#a258dd91d9e35ac7dd2afebf01b6325f1">catena::common::Path::kNone</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a12a2eebee18935585154b095ae1d7958">catena::common::IParamDescriptor::max_length()</a>, <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a5cd15be01b362f6240da7059bcd8f55d">catena::common::ParamWithValue&lt; T &gt;::mSizeTracker_</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a324df925b76a9e2014feef284c1d7945">catena::OUT_OF_RANGE</a>, <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a668d8556897da8086c84d0989a5e93a4">catena::common::ParamWithValue&lt; T &gt;::size_()</a>, and <a class="el" href="namespacecatena_1_1common.html#aa1d6718b95661e20844462e2f044488a">catena::common::validFromProto()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a55ceeb3c4f8934314af7457b96becbc0">catena::common::IParamDescriptor::getOid()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ad1b5f6c215be9637e2cd1a34acef6454">catena::INVALID_ARGUMENT</a>, <a class="el" href="classcatena_1_1common_1_1Path.html#a258dd91d9e35ac7dd2afebf01b6325f1">catena::common::Path::kNone</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a12a2eebee18935585154b095ae1d7958">catena::common::IParamDescriptor::max_length()</a>, <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a5cd15be01b362f6240da7059bcd8f55d">catena::common::ParamWithValue&lt; T &gt;::mSizeTracker_</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a324df925b76a9e2014feef284c1d7945">catena::OUT_OF_RANGE</a>, <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a668d8556897da8086c84d0989a5e93a4">catena::common::ParamWithValue&lt; T &gt;::size_()</a>, and <a class="el" href="namespacecatena_1_1common.html#a846f2287f628fa1adeba439f9dc37fba">catena::common::validFromProto()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a18e8cf17311d8eec6cef67a666fce2d0_cgraph.svg" width="100%" height="494"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_aa4013b24573981dcbe131d9692f81578_cgraph.svg" width="100%" height="494"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 </div>
 
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="a8c3cd8aae751df0fbe2cef55b2a3b721" name="a8c3cd8aae751df0fbe2cef55b2a3b721"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8c3cd8aae751df0fbe2cef55b2a3b721">&#9670;&#160;</a></span>validateSetValueMap_</h2>
+<a id="a9a7bf857ce563d1c3449e42ecd48ac2d" name="a9a7bf857ce563d1c3449e42ecd48ac2d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9a7bf857ce563d1c3449e42ecd48ac2d">&#9670;&#160;</a></span>validateSetValueMap_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -2625,7 +2625,7 @@ template&lt;typename T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const std::unordered_map&lt;Kind, std::function&lt;<a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>(const st2138::Value&amp;, <a class="el" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Path::Index</a>, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a>&amp;)&gt; &gt; <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a>&lt; T &gt;::validateSetValueMap_</td>
+          <td class="memname">const std::unordered_map&lt;Kind, std::function&lt;<a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>(const catena::Value&amp;, <a class="el" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Path::Index</a>, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a>&amp;)&gt; &gt; <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a>&lt; T &gt;::validateSetValueMap_</td>
         </tr>
       </table>
   </td>

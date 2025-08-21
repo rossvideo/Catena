@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cpp-v0.0.14-4: catena::REST::SocketWriter Class Reference</title>
+<title>cpp-v0.0.15-896: catena::REST::SocketWriter Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -26,7 +26,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="doxylogo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">cpp-v0.0.14-4
+   <div id="projectname">cpp-v0.0.15-896
    </div>
   </td>
  </tr>
@@ -117,9 +117,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a24ac760e7dc534056d4b33516090b99b" id="r_a24ac760e7dc534056d4b33516090b99b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a24ac760e7dc534056d4b33516090b99b">SocketWriter</a> (tcp::socket &amp;socket, const std::string &amp;origin=&quot;*&quot;, bool buffer=false)</td></tr>
 <tr class="memdesc:a24ac760e7dc534056d4b33516090b99b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write a unary response to a socket using boost.">SocketWriter</a>.  <br /></td></tr>
 <tr class="separator:a24ac760e7dc534056d4b33516090b99b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae1a348dd24b3f59a03ab212073e8a0b4" id="r_ae1a348dd24b3f59a03ab212073e8a0b4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#ae1a348dd24b3f59a03ab212073e8a0b4">sendResponse</a> (const <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;err, const google::protobuf::Message &amp;msg=st2138::Empty()) override</td></tr>
-<tr class="memdesc:ae1a348dd24b3f59a03ab212073e8a0b4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes a HTTP response to the socket.  <br /></td></tr>
-<tr class="separator:ae1a348dd24b3f59a03ab212073e8a0b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af02f381664cc47015fb639b691908b29" id="r_af02f381664cc47015fb639b691908b29"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#af02f381664cc47015fb639b691908b29">sendResponse</a> (const <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;err, const google::protobuf::Message &amp;msg=catena::Empty()) override</td></tr>
+<tr class="memdesc:af02f381664cc47015fb639b691908b29"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes a HTTP response to the socket.  <br /></td></tr>
+<tr class="separator:af02f381664cc47015fb639b691908b29"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classcatena_1_1REST_1_1ISocketWriter"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classcatena_1_1REST_1_1ISocketWriter')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html">catena::REST::ISocketWriter</a></td></tr>
 <tr class="memitem:a69830f9da3cd89430fec17d1e66576eb inherit pub_methods_classcatena_1_1REST_1_1ISocketWriter" id="r_a69830f9da3cd89430fec17d1e66576eb"><td class="memItemLeft" align="right" valign="top">
 &#160;</td><td class="memItemRight" valign="bottom"><b>ISocketWriter</b> ()=default</td></tr>
@@ -194,8 +194,8 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="ae1a348dd24b3f59a03ab212073e8a0b4" name="ae1a348dd24b3f59a03ab212073e8a0b4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae1a348dd24b3f59a03ab212073e8a0b4">&#9670;&#160;</a></span>sendResponse()</h2>
+<a id="af02f381664cc47015fb639b691908b29" name="af02f381664cc47015fb639b691908b29"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af02f381664cc47015fb639b691908b29">&#9670;&#160;</a></span>sendResponse()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -213,7 +213,7 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const google::protobuf::Message &amp;&#160;</td>
-          <td class="paramname"><em>msg</em> = <code>st2138::Empty()</code>&#160;</td>
+          <td class="paramname"><em>msg</em> = <code>catena::Empty()</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -238,7 +238,7 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#ac895859b853678bafdaf4783fa62b90d">catena::REST::ISocketWriter</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a063ef9d3b8e4fd04d3f9cbf8d2d3b9ff">catena::REST::ISocketWriter</a>.</p>
 
 </div>
 </div>
