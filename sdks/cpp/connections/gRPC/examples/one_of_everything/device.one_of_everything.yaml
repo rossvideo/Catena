@@ -5,11 +5,11 @@ access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
 default_scope: st2138:mon
 
 params:
-  dashboard_UI:
-    type: STRING
-    oid_aliases: ["0xFF0E"]
-    read_only: true
-    value: { string_value: "eo://onedisplay.grid" }
+  # dashboard_UI:
+  #   type: STRING
+  #   oid_aliases: ["0xFF0E"]
+  #   read_only: true
+  #   value: { string_value: "eo://onedisplay.grid" }
 
   dashboard_icon:
     type: STRING
@@ -203,6 +203,35 @@ menu_groups:
         client_hints: {
           "oglml": "eo://commands.grid"
         }
+      menu_examples:
+        name: { display_strings: { 
+          en: "Menu Examples", 
+          fr: "Exemples de Menu", 
+          es: "Ejemplos de Menú", 
+          ja: "メニューの例" } }
+        param_oids: []
+        client_hints: {
+          "oglml": "eo://menus.grid"
+        }
+  my_menu_group:
+    name: { display_strings: { 
+      en: "My Menu Group", 
+      fr: "Mon Groupe de Menu", 
+      es: "Mi Grupo de Menú", 
+      ja: "マイメニューグループ" } }
+    menus:
+      my_menu:
+        name: { display_strings: { 
+          en: "My Menu", 
+          fr: "Mon Menu", 
+          es: "Mi Menú", 
+          ja: "マイメニュー" } }
+        param_oids:
+          - /float_example
+          - /string_example
+          - /number_array
+          - /float_array
+          - /string_array
 commands:
   fib_start:
     type: EMPTY
