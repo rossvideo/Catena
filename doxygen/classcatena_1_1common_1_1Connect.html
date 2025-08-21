@@ -99,7 +99,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1Connect.html'
 </div><!--header-->
 <div class="contents">
 
-<p>Pure virtual class for <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> RPCs. Contains functions for updating the response message with parameter values. Can only be inherited.  
+<p>Virtual class for <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Virtual class for Connect handlers to inherit to share update code among other things.">Connect</a> handlers to inherit to share update code among other things.  
  <a href="classcatena_1_1common_1_1Connect.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="common_2include_2rpc_2Connect_8h_source.html">Connect.h</a>&gt;</code></p>
@@ -126,7 +126,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:aeffedba07f664d4ec3640c499cde7e10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the object Id.  <br /></td></tr>
 <tr class="separator:aeffedba07f664d4ec3640c499cde7e10"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a626ddb1d15f4f911fae7cdbf8723f940" id="r_a626ddb1d15f4f911fae7cdbf8723f940"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Connect.html#a626ddb1d15f4f911fae7cdbf8723f940">operator&lt;</a> (const <a class="el" href="classcatena_1_1common_1_1IConnect.html">IConnect</a> &amp;otherConnection) const override</td></tr>
-<tr class="memdesc:a626ddb1d15f4f911fae7cdbf8723f940"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if this has less prioirty than otherConnection.  <br /></td></tr>
+<tr class="memdesc:a626ddb1d15f4f911fae7cdbf8723f940"><td class="mdescLeft">&#160;</td><td class="mdescRight">Comparison between <a class="el" href="classcatena_1_1common_1_1IConnect.html" title="Interface class for the Connect handlers.">IConnect</a> objects which returns true if the current priority is less than the priority it's being compared to.  <br /></td></tr>
 <tr class="separator:a626ddb1d15f4f911fae7cdbf8723f940"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01c7fc640c14b76dd1756d3fb2cad62d" id="r_a01c7fc640c14b76dd1756d3fb2cad62d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Connect.html#a01c7fc640c14b76dd1756d3fb2cad62d">shutdown</a> () override</td></tr>
 <tr class="memdesc:a01c7fc640c14b76dd1756d3fb2cad62d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Forcefully shuts down the connection.  <br /></td></tr>
@@ -142,35 +142,31 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IConnect</b> ()=d
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr class="memitem:a86b2bc07e6ff84fe3b86dcdfca117d28" id="r_a86b2bc07e6ff84fe3b86dcdfca117d28"><td class="memItemLeft" align="right" valign="top"><a id="a86b2bc07e6ff84fe3b86dcdfca117d28" name="a86b2bc07e6ff84fe3b86dcdfca117d28"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Connect</b> ()=delete</td></tr>
-<tr class="memdesc:a86b2bc07e6ff84fe3b86dcdfca117d28"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor. <br /></td></tr>
-<tr class="separator:a86b2bc07e6ff84fe3b86dcdfca117d28"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3515b58f8533b18b9b3f9151ade3fea9" id="r_a3515b58f8533b18b9b3f9151ade3fea9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Connect.html#a3515b58f8533b18b9b3f9151ade3fea9">Connect</a> (SlotMap &amp;dms, <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html">ISubscriptionManager</a> &amp;subscriptionManager)</td></tr>
-<tr class="memdesc:a3515b58f8533b18b9b3f9151ade3fea9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> class.  <br /></td></tr>
+<tr class="memitem:a3515b58f8533b18b9b3f9151ade3fea9" id="r_a3515b58f8533b18b9b3f9151ade3fea9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Connect.html#a3515b58f8533b18b9b3f9151ade3fea9">Connect</a> (<a class="el" href="namespacecatena_1_1common.html#a118a88218f9509068efa0f46414ee018">SlotMap</a> &amp;dms, <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html">ISubscriptionManager</a> &amp;subscriptionManager)</td></tr>
+<tr class="memdesc:a3515b58f8533b18b9b3f9151ade3fea9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Virtual class for Connect handlers to inherit to share update code among other things.">Connect</a> class.  <br /></td></tr>
 <tr class="separator:a3515b58f8533b18b9b3f9151ade3fea9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaa137c0fa7a8e9914734e516a0036dcb" id="r_aaa137c0fa7a8e9914734e516a0036dcb"><td class="memItemLeft" align="right" valign="top"><a id="aaa137c0fa7a8e9914734e516a0036dcb" name="aaa137c0fa7a8e9914734e516a0036dcb"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Connect</b> (const <a class="el" href="classcatena_1_1common_1_1Connect.html">Connect</a> &amp;)=delete</td></tr>
-<tr class="memdesc:aaa137c0fa7a8e9914734e516a0036dcb"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> does not have copy semantics. <br /></td></tr>
+<tr class="memdesc:aaa137c0fa7a8e9914734e516a0036dcb"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1common_1_1Connect.html" title="Virtual class for Connect handlers to inherit to share update code among other things.">Connect</a> does not have copy semantics. <br /></td></tr>
 <tr class="separator:aaa137c0fa7a8e9914734e516a0036dcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a589220231c226629b4e79d3f89788491" id="r_a589220231c226629b4e79d3f89788491"><td class="memItemLeft" align="right" valign="top"><a id="a589220231c226629b4e79d3f89788491" name="a589220231c226629b4e79d3f89788491"></a>
 <a class="el" href="classcatena_1_1common_1_1Connect.html">Connect</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="classcatena_1_1common_1_1Connect.html">Connect</a> &amp;)=delete</td></tr>
 <tr class="separator:a589220231c226629b4e79d3f89788491"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a456e6a4492e1d42e5971c7d4b01bbb69" id="r_a456e6a4492e1d42e5971c7d4b01bbb69"><td class="memItemLeft" align="right" valign="top"><a id="a456e6a4492e1d42e5971c7d4b01bbb69" name="a456e6a4492e1d42e5971c7d4b01bbb69"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Connect</b> (<a class="el" href="classcatena_1_1common_1_1Connect.html">Connect</a> &amp;&amp;)=delete</td></tr>
-<tr class="memdesc:a456e6a4492e1d42e5971c7d4b01bbb69"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> does not have move semantics. <br /></td></tr>
+<tr class="memdesc:a456e6a4492e1d42e5971c7d4b01bbb69"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1common_1_1Connect.html" title="Virtual class for Connect handlers to inherit to share update code among other things.">Connect</a> does not have move semantics. <br /></td></tr>
 <tr class="separator:a456e6a4492e1d42e5971c7d4b01bbb69"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4e7ef50a286e772722588d6b4b679c87" id="r_a4e7ef50a286e772722588d6b4b679c87"><td class="memItemLeft" align="right" valign="top"><a id="a4e7ef50a286e772722588d6b4b679c87" name="a4e7ef50a286e772722588d6b4b679c87"></a>
 <a class="el" href="classcatena_1_1common_1_1Connect.html">Connect</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classcatena_1_1common_1_1Connect.html">Connect</a> &amp;&amp;)=delete</td></tr>
 <tr class="separator:a4e7ef50a286e772722588d6b4b679c87"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8ff9c432f5f47f67746433d1827fd19d" id="r_a8ff9c432f5f47f67746433d1827fd19d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Connect.html#a8ff9c432f5f47f67746433d1827fd19d">updateResponse_</a> (const std::string &amp;oid, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *p, uint32_t slot) override</td></tr>
-<tr class="memdesc:a8ff9c432f5f47f67746433d1827fd19d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with parameter values and handles authorization checks.  <br /></td></tr>
+<tr class="memdesc:a8ff9c432f5f47f67746433d1827fd19d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with parameter values if the client has read authorization and the correct detail level.  <br /></td></tr>
 <tr class="separator:a8ff9c432f5f47f67746433d1827fd19d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a79a548ee8b6b66ed2b9b1dbb29bf77d1" id="r_a79a548ee8b6b66ed2b9b1dbb29bf77d1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Connect.html#a79a548ee8b6b66ed2b9b1dbb29bf77d1">updateResponse_</a> (const <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *l, uint32_t slot) override</td></tr>
-<tr class="memdesc:a79a548ee8b6b66ed2b9b1dbb29bf77d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with an <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface for Language Packs.">ILanguagePack</a> and handles authorization checks.  <br /></td></tr>
+<tr class="memdesc:a79a548ee8b6b66ed2b9b1dbb29bf77d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with an <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface class for Language Packs.">ILanguagePack</a> if the client has monitor scope.  <br /></td></tr>
 <tr class="separator:a79a548ee8b6b66ed2b9b1dbb29bf77d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0040e4b363a858cdee334dd1e36d904" id="r_aa0040e4b363a858cdee334dd1e36d904"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Connect.html#aa0040e4b363a858cdee334dd1e36d904">initAuthz_</a> (const std::string &amp;jwsToken, bool authz=false) override</td></tr>
-<tr class="memdesc:aa0040e4b363a858cdee334dd1e36d904"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets up the authorizer object with the jwsToken and calculates connection priority.  <br /></td></tr>
+<tr class="memdesc:aa0040e4b363a858cdee334dd1e36d904"><td class="mdescLeft">&#160;</td><td class="mdescRight">Crates an authorizer using the jws token and calculates the client's priority.  <br /></td></tr>
 <tr class="separator:aa0040e4b363a858cdee334dd1e36d904"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
@@ -187,7 +183,7 @@ std::shared_ptr&lt; <a class="el" href="classcatena_1_1common_1_1Authorizer.html
 <tr class="memdesc:aa8bc272574ef3b115d24b7ad925013d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">The authorizer object containing client's scopes. <br /></td></tr>
 <tr class="separator:aa8bc272574ef3b115d24b7ad925013d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adfe7d4330809b53c666e5617872afa5c" id="r_adfe7d4330809b53c666e5617872afa5c"><td class="memItemLeft" align="right" valign="top"><a id="adfe7d4330809b53c666e5617872afa5c" name="adfe7d4330809b53c666e5617872afa5c"></a>
-SlotMap &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>dms_</b></td></tr>
+<a class="el" href="namespacecatena_1_1common.html#a118a88218f9509068efa0f46414ee018">SlotMap</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>dms_</b></td></tr>
 <tr class="memdesc:adfe7d4330809b53c666e5617872afa5c"><td class="mdescLeft">&#160;</td><td class="mdescRight">A map of slots to ptrs to their corresponding device. <br /></td></tr>
 <tr class="separator:adfe7d4330809b53c666e5617872afa5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeb08058009d6f93da96fc9c72ba6c99c" id="r_aeb08058009d6f93da96fc9c72ba6c99c"><td class="memItemLeft" align="right" valign="top"><a id="aeb08058009d6f93da96fc9c72ba6c99c" name="aeb08058009d6f93da96fc9c72ba6c99c"></a>
@@ -224,14 +220,12 @@ catena::Device_DetailLevel&#160;</td><td class="memItemRight" valign="bottom"><b
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>shutdown_</b> = false</td></tr>
 <tr class="memdesc:a4a50ec64dddf9389f8ae62744db3198c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flag indicating whether to shut down the connection. <br /></td></tr>
 <tr class="separator:a4a50ec64dddf9389f8ae62744db3198c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaf087489151d65442a43ceed5f57fe6b" id="r_aaf087489151d65442a43ceed5f57fe6b"><td class="memItemLeft" align="right" valign="top"><a id="aaf087489151d65442a43ceed5f57fe6b" name="aaf087489151d65442a43ceed5f57fe6b"></a>
-uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>objectId_</b> = 0</td></tr>
-<tr class="memdesc:aaf087489151d65442a43ceed5f57fe6b"><td class="mdescLeft">&#160;</td><td class="mdescRight">ID of the <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> object. <br /></td></tr>
+<tr class="memitem:aaf087489151d65442a43ceed5f57fe6b" id="r_aaf087489151d65442a43ceed5f57fe6b"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Connect.html#aaf087489151d65442a43ceed5f57fe6b">objectId_</a> = 0</td></tr>
+<tr class="memdesc:aaf087489151d65442a43ceed5f57fe6b"><td class="mdescLeft">&#160;</td><td class="mdescRight">ID of the <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Virtual class for Connect handlers to inherit to share update code among other things.">Connect</a> object.  <br /></td></tr>
 <tr class="separator:aaf087489151d65442a43ceed5f57fe6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Pure virtual class for <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> RPCs. Contains functions for updating the response message with parameter values. Can only be inherited. </p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000004">Todo:</a></b></dt><dd>Implement subscriptionManager. </dd></dl>
+<div class="textblock"><p>Virtual class for <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Virtual class for Connect handlers to inherit to share update code among other things.">Connect</a> handlers to inherit to share update code among other things. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a1fa4c47904353be364d9930b22f2d3c8" name="a1fa4c47904353be364d9930b22f2d3c8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1fa4c47904353be364d9930b22f2d3c8">&#9670;&#160;</a></span>~Connect()</h2>
@@ -274,7 +268,7 @@ uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>objectId_</b> = 0
         <tr>
           <td class="memname">catena::common::Connect::Connect </td>
           <td>(</td>
-          <td class="paramtype">SlotMap &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="namespacecatena_1_1common.html#a118a88218f9509068efa0f46414ee018">SlotMap</a> &amp;&#160;</td>
           <td class="paramname"><em>dms</em>, </td>
         </tr>
         <tr>
@@ -296,12 +290,10 @@ uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>objectId_</b> = 0
 </table>
 </div><div class="memdoc">
 
-<p>Constructor for the <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> class. </p>
+<p>Constructor for the <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Virtual class for Connect handlers to inherit to share update code among other things.">Connect</a> class. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">dms</td><td>A map of slots to ptrs to their corresponding device. </td></tr>
-    <tr><td class="paramname">authz</td><td>true if authorization is enabled, false otherwise. </td></tr>
-    <tr><td class="paramname">jwsToken</td><td>The client's JWS token. </td></tr>
     <tr><td class="paramname">subscriptionManager</td><td>The subscription manager. </td></tr>
   </table>
   </dd>
@@ -344,12 +336,14 @@ uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>objectId_</b> = 0
 </table>
 </div><div class="memdoc">
 
-<p>Sets up the authorizer object with the jwsToken and calculates connection priority. </p>
+<p>Crates an authorizer using the jws token and calculates the client's priority. </p>
+<p>If authz == false, the authorizer is instead set to the kAuthzDisabled object and their priority is left at 0.</p>
+<p>A client's priority is calculated based on the their highest scope as well as whether they have force connection set to True (only relevant for adm:w clients).</p>
 <p>priority_ = scope * 2 + write + (adm:w &amp;&amp; forceConnection)</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">jwsToken</td><td>The jwsToken to use for authorization. </td></tr>
-    <tr><td class="paramname">authz</td><td>true if authorization is enabled, false otherwise. </td></tr>
+    <tr><td class="paramname">jwsToken</td><td>The client's jws token to create the authorizer with. </td></tr>
+    <tr><td class="paramname">authz</td><td>True if authorization is enabled, False otherwise. </td></tr>
   </table>
   </dd>
 </dl>
@@ -420,7 +414,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Returns true if this has less prioirty than otherConnection. </p>
+<p>Comparison between <a class="el" href="classcatena_1_1common_1_1IConnect.html" title="Interface class for the Connect handlers.">IConnect</a> objects which returns true if the current priority is less than the priority it's being compared to. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IConnect.html#a1486201427b85c1d21db57bdf4d369dd">catena::common::IConnect</a>.</p>
 
@@ -492,6 +486,11 @@ Here is the call graph for this function:</div>
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IConnect.html#a975ae29c453d9d11655a7aa2571d808a">catena::common::IConnect</a>.</p>
 
 <p class="reference">References <a class="el" href="classcatena_1_1common_1_1Connect.html#a17d6b5ab4a8216b5cc199be23eb1e7cd">cv_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#aeb08058009d6f93da96fc9c72ba6c99c">hasUpdate_</a>, and <a class="el" href="classcatena_1_1common_1_1Connect.html#a4a50ec64dddf9389f8ae62744db3198c">shutdown_</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Connect_a01c7fc640c14b76dd1756d3fb2cad62d_icgraph.svg" width="443" height="115"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
 
 </div>
 </div>
@@ -529,21 +528,22 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Updates the response message with an <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface for Language Packs.">ILanguagePack</a> and handles authorization checks. </p>
+<p>Updates the response message with an <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface class for Language Packs.">ILanguagePack</a> if the client has monitor scope. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">l</td><td>The added <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface for Language Packs.">ILanguagePack</a> emitted by device. </td></tr>
+    <tr><td class="paramname">l</td><td>The added <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface class for Language Packs.">ILanguagePack</a> emitted by device. </td></tr>
+    <tr><td class="paramname">slot</td><td>The slot number of the device containing the language pack. </td></tr>
   </table>
   </dd>
 </dl>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IConnect.html#a13d36e283fe2780d001042aacca872c6">catena::common::IConnect</a>.</p>
 
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1Connect.html#aa8bc272574ef3b115d24b7ad925013d6">authz_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a17d6b5ab4a8216b5cc199be23eb1e7cd">cv_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#aeb08058009d6f93da96fc9c72ba6c99c">hasUpdate_</a>, <a class="el" href="classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd">catena::common::IConnect::isCancelled()</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#ac66ff0d1ad2b482889d370fcec8abf65">catena::common::Authorizer::readAuthz()</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a758621bfebc66d9e0439e3b9484351c5">res_</a>, and <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html#a3e6a4f733927ce286195246e666f8c9f">catena::common::ILanguagePack::toProto()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1Connect.html#aa8bc272574ef3b115d24b7ad925013d6">authz_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a17d6b5ab4a8216b5cc199be23eb1e7cd">cv_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#aeb08058009d6f93da96fc9c72ba6c99c">hasUpdate_</a>, <a class="el" href="classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd">catena::common::IConnect::isCancelled()</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#ac66ff0d1ad2b482889d370fcec8abf65">catena::common::Authorizer::readAuthz()</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a758621bfebc66d9e0439e3b9484351c5">res_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a01c7fc640c14b76dd1756d3fb2cad62d">shutdown()</a>, and <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html#a3e6a4f733927ce286195246e666f8c9f">catena::common::ILanguagePack::toProto()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Connect_a79a548ee8b6b66ed2b9b1dbb29bf77d1_cgraph.svg" width="458" height="179"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Connect_a79a548ee8b6b66ed2b9b1dbb29bf77d1_cgraph.svg" width="458" height="243"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
@@ -588,22 +588,23 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Updates the response message with parameter values and handles authorization checks. </p>
+<p>Updates the response message with parameter values if the client has read authorization and the correct detail level. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">oid</td><td>- The OID of the value to update </td></tr>
-    <tr><td class="paramname">p</td><td>- The parameter to update </td></tr>
+    <tr><td class="paramname">oid</td><td>The OID of the updated value </td></tr>
+    <tr><td class="paramname">p</td><td>The updated parameter </td></tr>
+    <tr><td class="paramname">slot</td><td>The slot number of the device containing the parameter. </td></tr>
   </table>
   </dd>
 </dl>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IConnect.html#a5c5fc96d2da16542c86e443085894182">catena::common::IConnect</a>.</p>
 
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1Connect.html#aa8bc272574ef3b115d24b7ad925013d6">authz_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a17d6b5ab4a8216b5cc199be23eb1e7cd">cv_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a7a879b1ef16b80e48af3a923012bd28b">detailLevel_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#adfe7d4330809b53c666e5617872afa5c">dms_</a>, <a class="el" href="classcatena_1_1common_1_1IParam.html#a9111464c2fc6f68b29db19d10610ac31">catena::common::IParam::getDescriptor()</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#aeb08058009d6f93da96fc9c72ba6c99c">hasUpdate_</a>, <a class="el" href="classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd">catena::common::IConnect::isCancelled()</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ac8fa8aef0a96605c1bdd1d6172312028">catena::common::IParamDescriptor::isCommand()</a>, <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#a2306837ba01d990d283dbbed75b0a992">catena::common::ISubscriptionManager::isSubscribed()</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a21ec0cb6550d0de205b050bedec26611">catena::common::IParamDescriptor::minimalSet()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#ac66ff0d1ad2b482889d370fcec8abf65">catena::common::Authorizer::readAuthz()</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a758621bfebc66d9e0439e3b9484351c5">res_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a1d1530db5d58c723f6067e5090e43db9">subscriptionManager_</a>, and <a class="el" href="classcatena_1_1common_1_1IParam.html#a29d283259836a110494e9fa0d3987d13">catena::common::IParam::toProto()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1Connect.html#aa8bc272574ef3b115d24b7ad925013d6">authz_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a17d6b5ab4a8216b5cc199be23eb1e7cd">cv_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a7a879b1ef16b80e48af3a923012bd28b">detailLevel_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#adfe7d4330809b53c666e5617872afa5c">dms_</a>, <a class="el" href="classcatena_1_1common_1_1IParam.html#a9111464c2fc6f68b29db19d10610ac31">catena::common::IParam::getDescriptor()</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#aeb08058009d6f93da96fc9c72ba6c99c">hasUpdate_</a>, <a class="el" href="classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd">catena::common::IConnect::isCancelled()</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ac8fa8aef0a96605c1bdd1d6172312028">catena::common::IParamDescriptor::isCommand()</a>, <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#a2306837ba01d990d283dbbed75b0a992">catena::common::ISubscriptionManager::isSubscribed()</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a21ec0cb6550d0de205b050bedec26611">catena::common::IParamDescriptor::minimalSet()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#ac66ff0d1ad2b482889d370fcec8abf65">catena::common::Authorizer::readAuthz()</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a758621bfebc66d9e0439e3b9484351c5">res_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a01c7fc640c14b76dd1756d3fb2cad62d">shutdown()</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a1d1530db5d58c723f6067e5090e43db9">subscriptionManager_</a>, and <a class="el" href="classcatena_1_1common_1_1IParam.html#a29d283259836a110494e9fa0d3987d13">catena::common::IParam::toProto()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Connect_a8ff9c432f5f47f67746433d1827fd19d_cgraph.svg" width="502" height="435"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Connect_a8ff9c432f5f47f67746433d1827fd19d_cgraph.svg" width="502" height="499"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
@@ -630,7 +631,32 @@ Here is the call graph for this function:</div>
 </div><div class="memdoc">
 
 <p>Flag to force a connection. </p>
-<p>Only applicable if client has admin:w scope. </p>
+<p>Only applicable if client has adm:w scope. </p>
+
+</div>
+</div>
+<a id="aaf087489151d65442a43ceed5f57fe6b" name="aaf087489151d65442a43ceed5f57fe6b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaf087489151d65442a43ceed5f57fe6b">&#9670;&#160;</a></span>objectId_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t catena::common::Connect::objectId_ = 0</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>ID of the <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Virtual class for Connect handlers to inherit to share update code among other things.">Connect</a> object. </p>
+<p>Since this is uniformly increased with each new call to the handler, older connections will thus have a lower objectId_. </p>
 
 </div>
 </div>

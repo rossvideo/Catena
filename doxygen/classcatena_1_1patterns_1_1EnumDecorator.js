@@ -12,8 +12,6 @@ var classcatena_1_1patterns_1_1EnumDecorator =
     [ "operator utype", "classcatena_1_1patterns_1_1EnumDecorator.html#adc2bfc84e613e135d599d32320f37536", null ],
     [ "operator!=", "classcatena_1_1patterns_1_1EnumDecorator.html#a4d706c41d7078768b75998cf29972649", null ],
     [ "operator()", "classcatena_1_1patterns_1_1EnumDecorator.html#adbec64eda4d73739d18f1c8fc48fe2fd", null ],
-    [ "operator=", "classcatena_1_1patterns_1_1EnumDecorator.html#a94b634ae45d250acbc475b59d85e9d41", null ],
-    [ "operator=", "classcatena_1_1patterns_1_1EnumDecorator.html#ab106f593c1eb2ed17c7b742030c86e25", null ],
     [ "operator==", "classcatena_1_1patterns_1_1EnumDecorator.html#abab665cebd403e8ee1ea4cc7b853e75d", null ],
     [ "toString", "classcatena_1_1patterns_1_1EnumDecorator.html#a2b64f8fee4d3faa69a2c53f068c01d6d", null ],
     [ "value", "classcatena_1_1patterns_1_1EnumDecorator.html#a5b381dd49122b46f4aca4b103c4f5c7f", null ]

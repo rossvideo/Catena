@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1IDevice_1_1ID
 </div><!--header-->
 <div class="contents">
 
-<p>DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This struct manages the state and lifetime of the coroutine. It also provides the interface for resuming the coroutine.  
+<p>DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents. This struct manages the state and lifetime of the coroutine. It also provides the interface for resuming the coroutine.  
  <a href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="IDevice_8h_source.html">IDevice.h</a>&gt;</code></p>
@@ -116,14 +116,14 @@ Public Member Functions</h2></td></tr>
 <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &amp;)=delete</td></tr>
 <tr class="separator:ab676a606faeba79c7b5e1191e6288f28"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab35a715a8c265585c50d51e4e7aed7fd" id="r_ab35a715a8c265585c50d51e4e7aed7fd"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html#ab35a715a8c265585c50d51e4e7aed7fd">hasMore</a> () const =0</td></tr>
-<tr class="memdesc:ab35a715a8c265585c50d51e4e7aed7fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns true if there are more DeviceComponents to be serialized  <br /></td></tr>
+<tr class="memdesc:ab35a715a8c265585c50d51e4e7aed7fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns true if there are more DeviceComponents to be serialized by the coroutine.  <br /></td></tr>
 <tr class="separator:ab35a715a8c265585c50d51e4e7aed7fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a05da15cbcbe92d67dea2b88e24c9ff75" id="r_a05da15cbcbe92d67dea2b88e24c9ff75"><td class="memItemLeft" align="right" valign="top">virtual catena::DeviceComponent&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html#a05da15cbcbe92d67dea2b88e24c9ff75">getNext</a> ()=0</td></tr>
-<tr class="memdesc:a05da15cbcbe92d67dea2b88e24c9ff75"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the next DeviceComponent to be serialized.  <br /></td></tr>
+<tr class="memdesc:a05da15cbcbe92d67dea2b88e24c9ff75"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the next DeviceComponent to be serialized.  <br /></td></tr>
 <tr class="separator:a05da15cbcbe92d67dea2b88e24c9ff75"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This struct manages the state and lifetime of the coroutine. It also provides the interface for resuming the coroutine. </p>
+<div class="textblock"><p>DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents. This struct manages the state and lifetime of the coroutine. It also provides the interface for resuming the coroutine. </p>
 <p>Coroutine types are required to contain a promise_type struct that defines some special member functions that the compiler will call when the coroutine is created, destroyed, or resumed. This promise_type struct must be defined in the inherited class. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a05da15cbcbe92d67dea2b88e24c9ff75" name="a05da15cbcbe92d67dea2b88e24c9ff75"></a>
@@ -149,8 +149,8 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>get the next DeviceComponent to be serialized. </p>
-<dl class="section return"><dt>Returns</dt><dd>the next DeviceComponent</dd></dl>
+<p>Gets the next DeviceComponent to be serialized. </p>
+<dl class="section return"><dt>Returns</dt><dd>The next DeviceComponent.</dd></dl>
 <p>If the coroutine is done and there are no more components to serialize then an empty DeviceComponent is returned. </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#a697c5d2f2a26800e2926381aff68b11d">catena::common::Device::DeviceSerializer</a>.</p>
@@ -180,7 +180,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>returns true if there are more DeviceComponents to be serialized </p>
+<p>returns true if there are more DeviceComponents to be serialized by the coroutine. </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#af684414d5b70a6b7bf6c28653054fc54">catena::common::Device::DeviceSerializer</a>.</p>
 

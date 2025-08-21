@@ -11,7 +11,7 @@
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:title="ICallData class for the SetValue REST controller.">
+<g id="a_Node000001"><a xlink:title="Controller class for the PUT Value REST endpoint.">
 <polygon fill="#999999" stroke="#666666" points="290.5,-19 162.5,-19 162.5,0 290.5,0 290.5,-19"/>
 <text text-anchor="middle" x="226.5" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::SetValue</text>
 </a>
@@ -20,7 +20,7 @@
 <!-- Node2 -->
 <g id="Node000002" class="node">
 <title>Node2</title>
-<g id="a_Node000002"><a xlink:href="classcatena_1_1REST_1_1MultiSetValue.html" target="_top" xlink:title="ICallData class for the MultiSetValue REST controller.">
+<g id="a_Node000002"><a xlink:href="classcatena_1_1REST_1_1MultiSetValue.html" target="_top" xlink:title="Controller class for the Param REST endpoint.">
 <polygon fill="white" stroke="#666666" points="303,-75 150,-75 150,-56 303,-56 303,-75"/>
 <text text-anchor="middle" x="226.5" y="-63" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::MultiSetValue</text>
 </a>
@@ -75,7 +75,7 @@
 <!-- Node5 -->
 <g id="Node000005" class="node">
 <title>Node5</title>
-<g id="a_Node000005"><a xlink:href="classcatena_1_1REST_1_1SocketWriter.html" target="_top" xlink:title="Helper class used to write a unary response to a socket using boost.">
+<g id="a_Node000005"><a xlink:href="classcatena_1_1REST_1_1SocketWriter.html" target="_top" xlink:title="A helper class which writes a unary response to the client socket using boost.">
 <polygon fill="white" stroke="#666666" points="470.5,-141 322.5,-141 322.5,-122 470.5,-122 470.5,-141"/>
 <text text-anchor="middle" x="396.5" y="-129" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::SocketWriter</text>
 </a>
