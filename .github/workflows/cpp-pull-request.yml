@@ -75,7 +75,7 @@ jobs:
 
       - name: Run Tests
         run: |
-          ctest --test-dir ~/Catena/${BUILD_TARGET} -V --rerun-failed > test_results.log
+          ctest --test-dir ~/Catena/${BUILD_TARGET} --rerun-failed -V > test_results.log
           # check if file contains "100% tests passed" 
           ctest --test-dir ~/Catena/${BUILD_TARGET} --rerun-failed --output-junit test-results.xml
           if grep -q "100% tests passed" test_results.log; then
