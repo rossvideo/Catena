@@ -135,7 +135,8 @@ class Connect : public IConnect {
         try {
             // If Connect was cancelled, shutdown the call.
             if (isCancelled()) {
-                shutdown();
+                hasUpdate_ = true;
+                cv_.notify_one();
 
             // Send a push update if the client has read authorization.
             } else if (authz_->readAuthz(*p)) {
@@ -195,7 +196,8 @@ class Connect : public IConnect {
         try {
             // If Connect was cancelled, shutdown the call.
             if (isCancelled()){
-                shutdown();
+                hasUpdate_ = true;
+                cv_.notify_one();
 
             // Send a push update if the client has monitor scope.
             } else if (authz_->readAuthz(Scopes_e::kMonitor)) {
