@@ -89,7 +89,7 @@ params:
       ja: "文字列配列の例" } }
 
   menu_button:
-    type: INT32
+    type: STRING
     name: { display_strings: { 
         en: "Menu Button",
         fr: "Bouton de Menu",
@@ -97,12 +97,12 @@ params:
         ja: "メニューボタン" } }
     widget: menu_popup
     value:
-      int32_value: 0
+      string_value: "status/product"
     constraint:
-      type: INT_CHOICE
-      int32_choice:
+      type: STRING_STRING_CHOICE
+      string_string_choice:
         choices:
-          - value: 0
+          - value: "status/product"
             name: { display_strings: { 
                 en: "Popup Menu", 
                 fr: "Menu Popup",
