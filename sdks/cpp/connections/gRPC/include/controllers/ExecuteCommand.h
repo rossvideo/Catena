@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,12 +30,12 @@
 
 /**
  * @file ExecuteCommand.h
- * @brief Implements Catena gRPC ExecuteCommand
+ * @brief Implements the Catena ExecuteCommand RPC.
  * @author john.naylor@rossvideo.com
  * @author john.danen@rossvideo.com
  * @author isaac.robert@rossvideo.com
- * @date 2024-06-08
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @date 2025-08-18
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
@@ -47,42 +47,57 @@ namespace catena {
 namespace gRPC {
 
 /**
-* @brief CallData class for the ExecuteCommand RPC
-*/
+ * @brief CallData class for the ExecuteCommand RPC
+ *
+ * This RPC gets a slot and a command OID from the client and executes the
+ * specified command on the specifed device.
+ */
 class ExecuteCommand : public CallData {
   public:
     /**
-     * @brief Constructor for ExecuteCommand class
+     * @brief Constructor for the CallData class of the ExecuteCommand RPC.
+     * Calls proceed() once initialized.
      *
-     * @param service the service to which the command wll be executed
+     * @param service Pointer to the ServiceImpl.
      * @param dms A map of slots to ptrs to their corresponding device.
-     * @param ok flag to check if command was successfully executed 
-     */
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
+     */ 
     ExecuteCommand(IServiceImpl *service, SlotMap& dms, bool ok);
     /**
-     * @brief Manages gRPC command execution through a state machine
+     * @brief Manages the steps of the ExecuteCommand RPC through the state
+     * variable status.
      *
-     * @param service the service to which the command wll be executed
-     * @param ok flag to check if command was successfully executed        
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */
     void proceed(bool ok) override;
 
   private:
     /**
-     * @brief Request payload for command
+     * @brief The client's request containing four things:
+     * 
+     * - A slot specifying the device to execute the command on.
+     * 
+     * - The OID of the command to execute.
+     * 
+     * - The value to pass to the command (if applicable).
+     * 
+     * - A flag indicating whether the client wants a response stream from the
+     * command.
      */
     catena::ExecuteCommandPayload req_;
     /**
-     * @brief Response coroutine for command
-     */
-    std::unique_ptr<IParamDescriptor::ICommandResponder> responder_;
-    /**
-     * @brief gRPC async response writer.
+     * @brief The RPC response writer for writing back to the client. 
      */
     ServerAsyncWriter<catena::CommandResponse> writer_;
     /**
-     * @brief Represents the current status of the command execution
-     * (kCreate, kProcess, kFinish, etc.)
+     * @brief The command's response coroutine recieved from a call to
+     * Command.executeCommand().
+     */
+    std::unique_ptr<IParamDescriptor::ICommandResponder> responder_;
+    /**
+     * @brief The RPC's state (kCreate, kProcess, kFinish, etc.)
      */
     CallStatus status_;
     /**
@@ -90,22 +105,23 @@ class ExecuteCommand : public CallData {
      */
     SlotMap& dms_;
     /**
-     * @brief Shared ptr to the authorizer object so that we can maintain
-     * ownership of raw ptr throughout call lifetime without use of "new"
-     * keyword. 
+     * @brief A shared pointer which maintains ownership over a newly created
+     * Authozier object.
+     * 
+     * This is seperate from authz_ to avoid any attempts to delete
+     * kAuthzDisabled if authorization is disabled.
      */
     std::shared_ptr<catena::common::Authorizer> sharedAuthz_;
     /**
-     * @brief Ptr to the authorizer object. Raw as to not attempt to delete in
-     * case of kAuthzDisabled.
+     * @brief Ptr to the authorizer object to use for the RPC.
      */
     catena::common::Authorizer* authz_;
     /**
-     * @brief Unique identifier for command object
+     * @brief The object's unique id.
      */
     int objectId_;
     /**
-     * @brief Counter to generate unique object IDs for each new object
+     * @brief The total # of ExecuteCommand objects.
      */
     static int objectCounter_;
 };

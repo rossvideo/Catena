@@ -30,7 +30,7 @@
 
 /**
  * @file IConnectionQueue.h
- * @brief Pure virtual class for the ConnectionQueue object.
+ * @brief Interface class for the ConnectionQueue object.
  * @author Ben Whitten (benjamin.whitten@rossvideo.com)
  * @copyright Copyright (c) 2025 Ross Video
  */
@@ -60,13 +60,13 @@ class IConnectionQueue {
     IConnectionQueue& operator=(const IConnectionQueue&) = delete;
 
     /**
-     * @brief Regesters a Connect CallData object into the Connection priority queue.
+     * @brief Regesters a Connect CallData object into the priority queue.
      * @param cd The Connect CallData object to register.
      * @return TRUE if successfully registered, FALSE otherwise
      */
     virtual bool registerConnection(IConnect* cd) = 0;
     /**
-     * @brief Deregisters a Connect CallData object into the Connection priority queue.
+     * @brief Deregisters a Connect CallData object from the priority queue.
      * @param cd The Connect CallData object to deregister.
      */
     virtual void deregisterConnection(const IConnect* cd) = 0;

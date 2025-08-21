@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,13 +30,13 @@
 
 /**
  * @file GetParam.h
- * @brief Implements Catena gRPC GetParam
+ * @brief Implements the Catena GetParam RPC.
  * @author john.naylor@rossvideo.com
  * @author john.danen@rossvideo.com
  * @author isaac.robert@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
- * @date 2025-01-28
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @date 2025-08-18
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
@@ -48,45 +48,48 @@ namespace catena {
 namespace gRPC {
 
 /**
-* @brief CallData class for the GetParam RPC
-*/
+ * @brief CallData class for the GetParam RPC
+ * 
+ * This RPC gets a slot and a param oid from the client and returns the
+ * specified param from the specified device.
+ */
 class GetParam : public CallData {
   public:
     /**
-     * @brief Constructor for the CallData class of the GetParam
-     * gRPC. Calls proceed() once initialized.
+     * @brief Constructor for the CallData class of the GetParam RPC.
+     * Calls proceed() once initialized.
      *
-     * @param service - Pointer to the parent ServiceImpl.
+     * @param service Pointer to the ServiceImpl.
      * @param dms A map of slots to ptrs to their corresponding device.
-     * @param ok - Flag to check if the command was successfully executed.
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */ 
     GetParam(IServiceImpl *service, SlotMap& dms, bool ok);
 
     /**
-     * @brief Manages the steps of the GetParam gRPC command
-     * through the state variable status. Returns the value of the
-     * parameter specified by the user.
+     * @brief Manages the steps of the GetParam RPC through the state
+     * variable status.
      *
-     * @param service - Pointer to the parent ServiceImpl.
-     * @param ok - Flag to check if the command was successfully executed.
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */
     void proceed(bool ok) override;
 
   private:
     /**
-     * @brief The request payload.
+     * @brief The client's request containing two things:
+     * 
+     * - A slot specifying the device to get the param from.
+     * 
+     * - The OID of the param to get.
      */
     catena::GetParamPayload req_;
     /**
-     * @brief The component param to write to the client.
-     */
-    catena::DeviceComponent_ComponentParam res_;
-    /**
-     * @brief gRPC async response writer.
+     * @brief The RPC response writer for writing back to the client.
      */
     ServerAsyncResponseWriter<catena::DeviceComponent_ComponentParam> writer_;
     /**
-     * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+     * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */
     CallStatus status_;
     /**
@@ -99,7 +102,7 @@ class GetParam : public CallData {
      */
     int objectId_;
     /**
-     * @brief The object's unique id counter.
+     * @brief The total # of GetParam objects.
      */
     static int objectCounter_;  
 };

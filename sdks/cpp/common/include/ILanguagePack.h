@@ -32,23 +32,23 @@
 
 /**
  * @file ILanguagePack.h
- * @brief Interface for language packs
+ * @brief Interface class for language packs
  * @author John R. Naylor, john.naylor@rossvideo.com
  * @date 2024-08-22
  * @copyright Copyright (c) 2024 Ross Video
  */
 
+// protobuf interface
+#include <interface/language.pb.h>
+
 #include <string>
 #include <unordered_map>
 
 namespace catena {
-
-class LanguagePack; // forward reference
-
 namespace common {
 
 /**
- * @brief Interface for Language Packs
+ * @brief Interface class for Language Packs
  */
 class ILanguagePack {
 public:
@@ -57,33 +57,37 @@ public:
      */
     using const_iterator = std::unordered_map<std::string, std::string>::const_iterator;
 
-public:
     ILanguagePack() = default;
     ILanguagePack(ILanguagePack&&) = default;
     ILanguagePack& operator=(ILanguagePack&&) = default;
+
+    /**
+     * @brief Destructor
+     */
     virtual ~ILanguagePack() = default;
 
     /**
-     * @brief serialize a language pack to a protobuf message
-     * @param pack the protobuf message
-     */
-    virtual void toProto(catena::LanguagePack& pack) const = 0;
-
-    /**
-     * @brief deserialize a language pack from a protobuf message
-     * @param pack the protobuf message
+     * @brief Deserializes a language pack from a protobuf message
+     * @param pack The protobuf message
      */
     virtual void fromProto(const catena::LanguagePack& pack) = 0;
 
     /**
-     * @brief get the begin iterator to the key/word pairs
+     * @brief Serializes a language pack to a protobuf message
+     * @param pack The protobuf message
+     */
+    virtual void toProto(catena::LanguagePack& pack) const = 0;
+
+    /**
+     * @brief Gets the begin iterator to the key/word pairs
      */
     virtual inline const_iterator begin() const = 0;
 
     /**
-     * @brief get the end iterator to the key/word pairs
+     * @brief Gets the end iterator to the key/word pairs
      */
     virtual inline const_iterator end() const = 0;
 };
+
 }  // namespace common
 }  // namespace catena

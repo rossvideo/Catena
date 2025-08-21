@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,12 +30,12 @@
 
 /**
  * @file DeviceRequest.h
- * @brief Implements Catena gRPC DeviceRequest
+ * @brief Implements the Catena DeviceRequest RPC.
  * @author john.naylor@rossvideo.com
  * @author john.danen@rossvideo.com
  * @author isaac.robert@rossvideo.com
- * @date 2024-06-08
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @date 2025-08-18
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
@@ -50,43 +50,55 @@ namespace catena {
 namespace gRPC {
 
 /**
-* @brief CallData class for the DeviceRequest RPC
-*/
+ * @brief CallData class for the DeviceRequest RPC
+ *
+ * This RPC gets a slot and detail level from the client and writes back the
+ * specified device as a stream of components.
+ */
 class DeviceRequest : public CallData {
   public:
     /**
-     * @brief Constructor for ExternalObjectRequest class
+     * @brief Constructor for the CallData class of the DeviceRequest RPC.
+     * Calls proceed() once initialized.
      *
-     * @param service the service to which the request is made
+     * @param service Pointer to the ServiceImpl.
      * @param dms A map of slots to ptrs to their corresponding device.
-     * @param ok flag to check if request is successful 
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */
     DeviceRequest(IServiceImpl *service, SlotMap& dms, bool ok);
     /**
-     * @brief Manages gRPC request through a state machine
+     * @brief Manages the steps of the DeviceRequest RPC through the state
+     * variable status.
      *
-     * @param service the service to which the request is made
-     * @param ok flag to check if request is successful        
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.   
      */
     void proceed(bool ok) override;
 
   private:
     /**
-     * @brief Request payload for device
+     * @brief The client's request containing two/three things:
+     * 
+     * - A slot specifying the device to request the components of.
+     * 
+     * - The detail level to return this request in.
+     * 
+     * - Optionally a set of specific param oids to get from the device if the
+     * detail level is set to SUBSCRIPTIONS.
      */
     catena::DeviceRequestPayload req_;
     /**
-     * @brief Stream for reading and writing gRPC messages
+     * @brief The RPC response writer for writing back to the client.
      */
     ServerAsyncWriter<catena::DeviceComponent> writer_;
     /**
-     * @brief Serializer for device.
-     * Can't create serializer until we have client scopes
+     * @brief The device serializer coroutine recieved from a call to
+     * Device.getComponentSerializer().
      */
     std::unique_ptr<IDevice::IDeviceSerializer> serializer_ = nullptr;
     /**
-     * @brief Represents the current status of the call within the state
-     * machine (kCreate, kProcess, kFinish, etc.)
+     * @brief The RPC's state (kCreate, kProcess, kFinish, etc.)
      */
     CallStatus status_;
     /**
@@ -98,26 +110,28 @@ class DeviceRequest : public CallData {
      */
     IDevice* dm_ = nullptr;
     /**
-     * @brief Shared ptr to the authorizer object so that we can maintain
-     * ownership of raw ptr throughout call lifetime without use of "new"
-     * keyword. 
+     * @brief A shared pointer which maintains ownership over a newly created
+     * Authozier object.
+     * 
+     * This is seperate from authz_ to avoid any attempts to delete
+     * kAuthzDisabled if authorization is disabled.
      */
     std::shared_ptr<catena::common::Authorizer> sharedAuthz_;
     /**
-     * @brief Ptr to the authorizer object. Raw as to not attempt to delete in
-     * case of kAuthzDisabled.
+     * @brief Ptr to the authorizer object to use for the RPC.
      */
     catena::common::Authorizer* authz_;
     /**
-     * @brief The set of subscribed OIDs.
+     * @brief The set of subscribed OIDs for use if the detail level is set to
+     * SUBSCRIPTIONS.
      */
     std::set<std::string> subscribedOids_;
     /**
-     * @brief Unique identifier for device request object
+     * @brief The object's unique id.
      */
     int objectId_;
     /**
-     * @brief Counter to generate unique object IDs for each new object
+     * @brief The total # of DeviceRequest objects.
      */
     static int objectCounter_;
 };

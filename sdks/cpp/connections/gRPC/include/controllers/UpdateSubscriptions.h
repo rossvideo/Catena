@@ -30,10 +30,10 @@
 
 /**
  * @file UpdateSubscriptions.h
- * @brief Implements Catena gRPC UpdateSubscriptions
+ * @brief Implements the Catena UpdateSubscriptions RPC.
  * @author john.naylor@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
- * @date 2025-02-27
+ * @date 2025-08-18
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -50,49 +50,49 @@ namespace gRPC {
 
 /**
  * @brief CallData class for the UpdateSubscriptions RPC
+ * 
+ * This RPC gets a slot and a list of parameter oids to subscribe/unsibscribe
+ * to from the client and updates their subscriptions accordingly.
  */
 class UpdateSubscriptions : public CallData {
   public:
     /**
-     * @brief Constructor for the CallData class of the UpdateSubscriptions RPC
-     * gRPC. Calls proceed() once initialized.
-     * @param service The ServiceImpl instance
+     * @brief Constructor for the CallData class of the UpdateSubscriptions RPC.
+     * Calls proceed() once initialized.
+     *
+     * @param service Pointer to the ServiceImpl.
      * @param dms A map of slots to ptrs to their corresponding device.
-     * @param ok Flag indicating if initialization was successful
-     */
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
+     */ 
     UpdateSubscriptions(IServiceImpl *service, SlotMap& dms, bool ok);
-
     /**
-     * @brief Manages the steps of the UpdateSubscriptions gRPC command
-     * through the state variable status. Returns the value of the
-     * parameter specified by the user.
+     * @brief Manages the steps of the UpdateSubscriptions RPC through the state
+     * variable status.
+     *
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */
     void proceed(bool ok) override;
 
   private:
     /**
-     * @brief Helper method to process a subscription
-     * @param baseOid The base OID 
-     * @param authz The authorizer to use for access control
-     */
-    void processSubscription_(const std::string& baseOid, catena::common::Authorizer& authz);
-
-    /**
-     * @brief Helper method to send all currently subscribed parameters
-     * @param authz The authorizer to use for access control
-     */
-    void sendSubscribedParameters_(catena::common::Authorizer& authz);
-
-    /**
-     * @brief The request payload.
+     * @brief The client's request containing three things:
+     * 
+     * - A slot specifying the device containing the paramters to
+     * subscribe/unsubscribe to.
+     * 
+     * - A list of parameter oids to subscribe to.
+     * 
+     * - A list of paramter oids to unsubscribe from.
      */
     catena::UpdateSubscriptionsPayload req_;
     /**
-     * @brief gRPC async response writer.
+     * @brief The RPC response writer for writing back to the client.
      */
     ServerAsyncWriter<catena::DeviceComponent_ComponentParam> writer_;
     /**
-     * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+     * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */
     CallStatus status_;
     /**
@@ -104,14 +104,15 @@ class UpdateSubscriptions : public CallData {
      */
     IDevice* dm_ = nullptr;
     /**
-     * @brief Shared ptr to the authorizer object so that we can maintain
-     * ownership of raw ptr throughout call lifetime without use of "new"
-     * keyword. 
+     * @brief A shared pointer which maintains ownership over a newly created
+     * Authozier object.
+     * 
+     * This is seperate from authz_ to avoid any attempts to delete
+     * kAuthzDisabled if authorization is disabled.
      */
     std::shared_ptr<catena::common::Authorizer> sharedAuthz_;
     /**
-     * @brief Ptr to the authorizer object. Raw as to not attempt to delete in
-     * case of kAuthzDisabled.
+     * @brief Ptr to the authorizer object to use for the RPC.
      */
     catena::common::Authorizer* authz_;
     /**

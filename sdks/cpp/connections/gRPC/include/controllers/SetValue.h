@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,11 +30,11 @@
 
 /**
  * @file SetValue.h
- * @brief Implements Catena gRPC SetValue
+ * @brief Implements the Catena SetValue RPC.
  * @author benjamin.whitten@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
- * @date 2025-01-20
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @date 2025-08-18
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
@@ -46,23 +46,27 @@ namespace catena {
 namespace gRPC {
 
 /**
-* @brief CallData class for the SetValue RPC
-*/
+ * @brief CallData class for the SetValue RPC
+ *
+ * This RPC gets a slot and a single oid, value pair from the client and sets
+ * the value of the specified parameter in the specified device.
+ */
 class SetValue : public MultiSetValue {
   public:
     /**
-     * @brief Constructor for the CallData class of the SetValue
-     * gRPC. Calls proceed() once initialized.
+     * @brief Constructor for the CallData class of the SetValue RPC.
+     * Calls proceed() once initialized.
      *
-     * @param service - Pointer to the parent ServiceImpl.
+     * @param service Pointer to the ServiceImpl.
      * @param dms A map of slots to ptrs to their corresponding device.
-     * @param ok - Flag to check if the command was successfully executed.
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */ 
     SetValue(IServiceImpl *service, SlotMap& dms, bool ok);
+
   private:
     /**
-     * @brief Requests Set Value from the system and adds the request to
-     * the MultiSetValuePayload in MultiSetValue.
+     * @brief Requests SetValue from the system.
      * 
      * Helper function to allow reuse of MultiSetValue's proceed().
      */
@@ -70,21 +74,26 @@ class SetValue : public MultiSetValue {
     /**
      * @brief Creates a new SetValue object to serve other clients while
      * processing.
-     *
-     * @param ok - Flag to check if the command was successfully executed.
-     *  
+     * 
      * Helper function to allow reuse of MultiSetValue's proceed().
+     *
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */ 
     void create_(bool ok) override;
     /**
      * @brief Converts req_ to a MultiSetValuePayload reqs_.
-     *  
-     * Helper function to allow reuse of MultiSetValue's proceed().
+     *   
+     * Helper function to allow reuse of proceed().
      */
     void toMulti_() override;
 
     /**
-     * @brief The SetValuePayload recieved from request().
+     * @brief The client's request containing two things:
+     * 
+     * - The slot specifying the device containing the parameter to update.
+     * 
+     * - An oid, value pair specifying the parameter to update.
      */
     catena::SingleSetValuePayload req_;
     /**

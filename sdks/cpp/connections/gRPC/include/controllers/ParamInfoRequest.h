@@ -30,9 +30,9 @@
 
 /**
  * @file ParamInfoRequest.h
- * @brief Implements gRPC ParamInfoRequest controller.
+ * @brief Implements the Catena ParamInfoRequest RPC.
  * @author zuhayr.sarker@rossvideo.com
- * @date 2025-02-06
+ * @date 2025-08-18
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -56,27 +56,30 @@ namespace catena {
 namespace gRPC {
 
 /**
- * @brief CallData class for the ParamInfoRequest gRPC controller.
+ * @brief CallData class for the ParamInfoRequest RPC
+ * 
+ * This RPC gets a slot and a parameter oid from the client and returns
+ * information about the specified parameter from the specified device as well
+ * as any sub paramters if the recursive flag is set to true.
  */
 class ParamInfoRequest : public CallData {
   public:
     /**
-     * @brief Constructor for the CallData class of the ParamInfoRequest
-     * gRPC. Calls proceed() once initialized.
+     * @brief Constructor for the CallData class of the ParamInfoRequest RPC.
+     * Calls proceed() once initialized.
      *
-     * @param service - Pointer to the parent ServiceImpl.
+     * @param service Pointer to the ServiceImpl.
      * @param dms A map of slots to ptrs to their corresponding device.
-     * @param ok - Flag to check if the command was successfully executed.
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */ 
     ParamInfoRequest(IServiceImpl *service, SlotMap& dms, bool ok);
-
     /**
-     * @brief Manages the steps of the ParamInfoRequest gRPC command
-     * through the state variable status. Returns the value of the
-     * parameter specified by the user.
+     * @brief Manages the steps of the ParamInfoRequest RPC through the state
+     * variable status.
      *
-     * @param service - Pointer to the parent ServiceImpl.
-     * @param ok - Flag to check if the command was successfully executed.
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */
     void proceed(bool ok) override;
 
@@ -97,47 +100,43 @@ class ParamInfoRequest : public CallData {
     void updateArrayLengths_(const std::string& array_name, uint32_t length);
 
     /**
-     * @brief The client's scopes.
-     */
-    std::vector<std::string> clientScopes_;
-
-    /**
-     * @brief The request payload.
+     * @brief The client's request containing three things:
+     * 
+     * - The slot specifying the device containing the parameter to query.
+     * 
+     * - The oid specifying the parameter to query. An empty oid indicates the
+     * retrieval of the device's top level parameters.
+     * 
+     * - A flag signifying whether to include sub-parameters.
      */
     catena::ParamInfoRequestPayload req_;
-
     /**
      * @brief The response payload.
      */
     catena::PushUpdates res_;
-
     /**
-     * @brief gRPC async response writer.
+     * @brief The RPC response writer for writing back to the client.
      */
     ServerAsyncWriter<catena::ParamInfoResponse> writer_;
-    
     /**
-     * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+     * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */
     CallStatus status_;
-
     /**
      * @brief A map of slots to ptrs to their corresponding device.
      */
     SlotMap& dms_;
-    
     /**
      * @brief The device for the current request.
      */
     IDevice* dm_{nullptr};
-    
+  
     /**
      * @brief The object's unique id.
      */
     int objectId_;
-
     /**
-     * @brief The object's unique id counter.
+     * @brief The total # of ParamInfoRequest objects.
      */
     static int objectCounter_;
     
@@ -145,7 +144,6 @@ class ParamInfoRequest : public CallData {
      * @brief The vector of ParamInfoResponse objects.
      */
     std::vector<catena::ParamInfoResponse> responses_;
-
     /**
      * @brief The current response index.
      */

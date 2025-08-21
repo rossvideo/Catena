@@ -30,7 +30,7 @@
 
 /**
  * @file MultiSetValue.h
- * @brief Implements REST MultiSetValue controller.
+ * @brief Implements controller for the REST values endpoint.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -61,7 +61,11 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the MultiSetValue REST controller.
+ * @brief Controller class for the Param REST endpoint.
+ * 
+ * This controller supports one method:
+ * 
+ * - PUT: Updates the values of one or more parameters in the specified device.
  */
 class MultiSetValue : public ICallData {
   public:
@@ -71,23 +75,23 @@ class MultiSetValue : public ICallData {
     using SlotMap = catena::common::SlotMap;
 
     /**
-     * @brief Constructor for the MultiSetValue controller.
+     * @brief Constructor for the values endpoint controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The ISocketReader object.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     MultiSetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
-     * @brief MultiSetValue's main process.
+     * @brief The values and PUT value endpoint's main process.
      */
     void proceed() override;
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     * 
-     * @param socket The socket to write the response stream to.
-     * @param context The ISocketReader object.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
@@ -95,11 +99,13 @@ class MultiSetValue : public ICallData {
     }
   protected:
     /**
-     * @brief Constructor for child SetValue rest endpoints. Does not call proceed().
+     * @brief Construct for the both REST controller classes MultiSetValue and
+     * SetValue which additionally sets the objectId. 
+     *
      * @param socket The socket to write the response to.
-     * @param context The ISocketReader object.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
-     * @param objectId The object's unique id.
+     * @param objectId objectCounter_ + 1
      */
     MultiSetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms, int objectId);
     /**
@@ -108,10 +114,10 @@ class MultiSetValue : public ICallData {
      */
     virtual bool toMulti_();
     /**
-     * @brief Helper function to write status messages to the API console.
+     * @brief Writes the current state of the request to the console.
      * 
-     * @param status The current state of the RPC (kCreate, kFinish, etc.)
-     * @param ok The status of the RPC (open or closed).
+     * @param status The current state of the request (kCreate, kFinish, etc.)
+     * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
       DEBUG_LOG << typeName_ << "SetValue::proceed[" << objectId_ << "]: "
@@ -124,7 +130,13 @@ class MultiSetValue : public ICallData {
      */
     tcp::socket& socket_;
     /**
-     * @brief The ISocketReader object.
+     * @brief The ISocketReader object used to read the client's request.
+     * 
+     * This is used to get two things from the client:
+     * 
+     * - The slot specifying the device containing the parameters to update.
+     * 
+     * - Any number of oid, value pairs specifying the parameters to update.
      */
     ISocketReader& context_;
     /**
@@ -142,16 +154,16 @@ class MultiSetValue : public ICallData {
     catena::MultiSetValuePayload reqs_;
 
     /**
-     * @brief ID of the MultiSetValue object
+     * @brief The object's unique id.
      */
     int objectId_;
   private:
     /**
-     * @brief Name of class to specify rpc in console notifications.
+     * @brief Name of class to specify endpoint in console notifications.
      */
     std::string typeName_ = "";
     /**
-     * @brief The total # of MultiSetValue objects.
+     * @brief The total # of values endpoint controller objects.
      */
     static int objectCounter_;
 };

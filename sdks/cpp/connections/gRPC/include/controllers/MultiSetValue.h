@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,14 +30,14 @@
 
 /**
  * @file MultiSetValue.h
- * @brief Generic CallData class for the SetValue and MultiSetValue RPCs.
+ * @brief Generic CallData class for the Catena SetValue and MultiSetValue RPCs.
  * @author john.naylor@rossvideo.com
  * @author john.danen@rossvideo.com
  * @author isaac.robert@rossvideo.com
  * @author benjamin.whitten@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
- * @date 2025-01-20
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @date 2025-08-18
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
@@ -49,42 +49,45 @@ namespace catena {
 namespace gRPC {
 
 /**
-* @brief Generic CallData class for the SetValue and MultiSetValue RPCs.
-*/
+ * @brief Generic CallData class for the SetValue and MultiSetValue RPCs.
+ *
+ * This RPC gets a slot and any number of oid, value pairs from the client and
+ * sets the value of each specified parameter in the specified device. 
+ */
 class MultiSetValue : public CallData {
   public:
     /**
-     * @brief Constructor for the CallData class of the MultiSetValue
-     * gRPC. Calls proceed() once initialized.
+     * @brief Constructor for the CallData class of the MultiSetValue RPC.
+     * Calls proceed() once initialized.
      *
-     * @param service - Pointer to the parent ServiceImpl.
+     * @param service Pointer to the ServiceImpl.
      * @param dms A map of slots to ptrs to their corresponding device.
-     * @param ok - Flag to check if the command was successfully executed.
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */ 
     MultiSetValue(IServiceImpl *service, SlotMap& dms, bool ok);
     /**
-     * @brief Manages the steps of the SetValue and MultiSetValue gRPC
-     * commands through the state variable status.
+     * @brief Manages the steps of the MultiSetValue RPC through the state
+     * variable status.
      *
-     * @param service - Pointer to the parent ServiceImpl.
-     * @param ok - Flag to check if the command was successfully executed.
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */
     void proceed(bool ok) override;
   protected:
     /**
-     * @brief Constructor class for child classes.
-     *   
-     * Helper function to allow reuse of proceed().
+     * @brief Construct for the CallData class for both MultiSetValue and
+     * SetValue which additionally sets the objectId. 
      *
-     * @param service Pointer to the parent ServiceImpl.
+     * @param service Pointer to the ServiceImpl.
      * @param dms A map of slots to ptrs to their corresponding device.
-     * @param ok Flag to check if the command was successfully executed.
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      * @param objectId objectCounter_ + 1
      */ 
     MultiSetValue(IServiceImpl *service, SlotMap& dms, bool ok, int objectId);
     /**
-     * @brief Requests Multi Set Value from the system and sets the
-     * request to the MultiSetValuePayload.
+     * @brief Requests MultiSetValue from the service.
      *   
      * Helper function to allow reuse of proceed().
      */
@@ -95,7 +98,8 @@ class MultiSetValue : public CallData {
      *   
      * Helper function to allow reuse of proceed().
      *
-     * @param ok Flag to check if the command was successfully executed.
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */ 
     virtual void create_(bool ok);
     /**
@@ -108,23 +112,23 @@ class MultiSetValue : public CallData {
     virtual void toMulti_() { return; }
 
     /**
-     * @brief Name of childclass to specify gRPC in console notifications.
+     * @brief Name of childclass to specify RPC in console notifications.
      */
     std::string typeName;
     /**
-     * @brief Server request as a MultiSetValuePayload if not already.
+     * @brief The client's request containing two things:
+     * 
+     * - The slot specifying the device containing the parameters to update.
+     * 
+     * - Any number of oid, value pairs specifying the parameters to update.
      */
     catena::MultiSetValuePayload reqs_;
     /**
-     * @brief Server response (UNUSED).
-     */
-    catena::Value res_;
-    /**
-     * @brief gRPC async response writer.
+     * @brief The RPC response writer for writing back to the client.
      */
     ServerAsyncResponseWriter<catena::Empty> responder_;
     /**
-     * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+     * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */
     CallStatus status_;
     /**

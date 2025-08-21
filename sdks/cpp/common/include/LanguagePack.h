@@ -32,7 +32,7 @@
 
 /**
  * @file LanguagePack.h
- * @brief multi language support in 2 classes: LanguagePack and LanguagePacks
+ * @brief Implements multi language support class LanguagePack
  * @author John R. Naylor john.naylor@rossvideo.com
  * @date 2024-08-22
  * @copyright Copyright (c) 2024 Ross Video
@@ -42,26 +42,20 @@
 #include <ILanguagePack.h>
 #include <IDevice.h>
 
-// protobuf interface
-#include <interface/language.pb.h>
-
-#include <string>
-#include <unordered_map>
+// std
 #include <initializer_list>
-#include <vector>
 
 namespace catena {
 namespace common {
 
-class LanguagePacks;  // forward declaration
-
 /**
- * @brief a language pack
+ * @brief A class represeting a language via a set of key/word pairs with
+ * support for protobuf serialization.
  */
 class LanguagePack : public common::ILanguagePack {
   public:
     /**
-     * @brief a list of words in a language, used by main constructor
+     * @brief A list of words in a language, used by the main constructor
      */
     using ListInitializer = std::initializer_list<std::pair<std::string, std::string>>;
 
@@ -70,62 +64,60 @@ class LanguagePack : public common::ILanguagePack {
      * @brief LanguagePack does not have copy semantics
      */
     LanguagePack(const LanguagePack&) = delete;
-
-    /**
-     * @brief LanguagePack has move semantics
-     */
-    LanguagePack(LanguagePack&&) = default;
-
-    /**
-     * @brief LanguagePack does not have copy semantics
-     */
     LanguagePack& operator=(const LanguagePack&) = delete;
 
     /**
      * @brief LanguagePack has move semantics
      */
+    LanguagePack(LanguagePack&&) = default;
     LanguagePack& operator=(LanguagePack&&) = default;
 
     /**
-     * destructor
+     * @brief Destructor
      */
     virtual ~LanguagePack() = default;
 
     /**
-     * @brief construct a language pack from a list of words
-     * @param name the name of the language
-     * @param list the list of key/word pairs
-     * @param dev the device model to which this language pack belongs
+     * @brief Constructs a language pack from a list of words
+     * @param languageCode The language's unique id (e.g. "es" for Spanish)
+     * @param name The name of the language
+     * @param list The list of key/word pairs
+     * @param dev The device model this language pack belongs to
      */
     LanguagePack(const std::string& languageCode, const std::string& name, ListInitializer list, IDevice& dev);
 
     /**
-     * @brief deserialize a language pack from a protobuf message
-     * @param pack the protobuf message
+     * @brief Deserializes a language pack from a protobuf message
+     * @param pack The protobuf message
      */
     void fromProto(const ::catena::LanguagePack& pack) override;
 
     /**
-     * @brief serialize a language pack to a protobuf message
-     * @param pack the protobuf message
+     * @brief Serializes a language pack to a protobuf message
+     * @param pack The protobuf message
      */
     void toProto(::catena::LanguagePack& pack) const override;
 
     /**
-     * @brief get the begin iterator to the key/word pairs
+     * @brief Gets the begin iterator to the key/word pairs
      */
     inline const_iterator begin() const override { return words_.cbegin(); }
 
     /**
-     * @brief get the end iterator to the key/word pairs
+     * @brief Gets the end iterator to the key/word pairs
      */
     inline const_iterator end() const override { return words_.cend(); }
 
   private:
+    /**
+     * @brief The language's name (e.g. "Spanish") 
+     */
     std::string name_;
+    /**
+     * @brief The map of key/word pairs.
+     */
     std::unordered_map<std::string, std::string> words_;
 };
-
 
 }  // namespace common
 }  // namespace catena
