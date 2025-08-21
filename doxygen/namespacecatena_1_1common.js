@@ -41,6 +41,8 @@ var namespacecatena_1_1common =
     [ "CatenaStruct", "conceptcatena_1_1common_1_1CatenaStruct.html", null ],
     [ "CatenaStructArray", "conceptcatena_1_1common_1_1CatenaStructArray.html", null ],
     [ "IsVariantArray", "conceptcatena_1_1common_1_1IsVariantArray.html", null ],
+    [ "SignalMap", "namespacecatena_1_1common.html#a2167b391607d3775a33d0e4e49dfc5c7", null ],
+    [ "SlotMap", "namespacecatena_1_1common.html#a118a88218f9509068efa0f46414ee018", null ],
     [ "Scopes_e", "namespacecatena_1_1common.html#a52e17ef3ce00a51e608afb060211e3a8", [
       [ "kUndefined", "namespacecatena_1_1common.html#a52e17ef3ce00a51e608afb060211e3a8a7934d40c7c17315d892e8d5d745b1c66", null ],
       [ "kMonitor", "namespacecatena_1_1common.html#a52e17ef3ce00a51e608afb060211e3a8a371b131e5e8ab58eefe1bd1b5df26c55", null ],

@@ -40,7 +40,7 @@
 <!-- Node4 -->
 <g id="Node000004" class="node">
 <title>Node4</title>
-<g id="a_Node000004"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#a13b03b7df7f5ee620e388ff75f3c2540" target="_top" xlink:title="get the parameter oid">
+<g id="a_Node000004"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#a13b03b7df7f5ee620e388ff75f3c2540" target="_top" xlink:title="Gets the oid of the param.">
 <polygon fill="white" stroke="#666666" points="352,-377 194,-377 194,-347 352,-347 352,-377"/>
 <text text-anchor="start" x="202" y="-365" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::ParamWith</text>
 <text text-anchor="middle" x="273" y="-354" font-family="Helvetica,sans-Serif" font-size="10.00">Value::getOid</text>
@@ -59,7 +59,7 @@
 <!-- Node5 -->
 <g id="Node000005" class="node">
 <title>Node5</title>
-<g id="a_Node000005"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#aa0c849e1ec2cc180e57f860c1d04676a" target="_top" xlink:title="Construct a new ParamWithValue object and add it to the device.">
+<g id="a_Node000005"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#aa0c849e1ec2cc180e57f860c1d04676a" target="_top" xlink:title="Constructs a new ParamWithValue object and adds it to the device.">
 <polygon fill="white" stroke="#666666" points="352,-329 194,-329 194,-299 352,-299 352,-329"/>
 <text text-anchor="start" x="202" y="-317" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::ParamWith</text>
 <text text-anchor="middle" x="273" y="-306" font-family="Helvetica,sans-Serif" font-size="10.00">Value::ParamWithValue</text>
@@ -97,7 +97,7 @@
 <!-- Node7 -->
 <g id="Node000007" class="node">
 <title>Node7</title>
-<g id="a_Node000007"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#a3834efd72939b0e2dc3978025fe3a00e" target="_top" xlink:title="serialize the parameter descriptor to protobuf include both the descriptor and the value">
+<g id="a_Node000007"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#a3834efd72939b0e2dc3978025fe3a00e" target="_top" xlink:title="Serializes the parameter descriptor to a protobuf paramInfo object.">
 <polygon fill="white" stroke="#666666" points="352,-233 194,-233 194,-203 352,-203 352,-233"/>
 <text text-anchor="start" x="202" y="-221" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::ParamWith</text>
 <text text-anchor="middle" x="273" y="-210" font-family="Helvetica,sans-Serif" font-size="10.00">Value::toProto</text>
@@ -191,7 +191,7 @@
 <!-- Node3 -->
 <g id="Node000003" class="node">
 <title>Node3</title>
-<g id="a_Node000003"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#a0b10299b1adaeb707f7151759a47925a" target="_top" xlink:title="Adds an empty element to the end of an array parameter.">
+<g id="a_Node000003"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#a0b10299b1adaeb707f7151759a47925a" target="_top" xlink:title="Add an empty value to and return the back of an array parameter.">
 <polygon fill="white" stroke="#666666" points="158,-425 0,-425 0,-395 158,-395 158,-425"/>
 <text text-anchor="start" x="8" y="-413" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::ParamWith</text>
 <text text-anchor="middle" x="79" y="-402" font-family="Helvetica,sans-Serif" font-size="10.00">Value::addBack</text>

@@ -21,7 +21,7 @@
 <!-- Node2 -->
 <g id="Node000002" class="node">
 <title>Node2</title>
-<g id="a_Node000002"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#a77b784c48506b34d0672493d773b8120" target="_top" xlink:title="get a child parameter by name">
+<g id="a_Node000002"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#a77b784c48506b34d0672493d773b8120" target="_top" xlink:title="Gets a child parameter by name.">
 <polygon fill="white" stroke="#666666" points="352,-171.5 194,-171.5 194,-141.5 352,-141.5 352,-171.5"/>
 <text text-anchor="start" x="202" y="-159.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::ParamWith</text>
 <text text-anchor="middle" x="273" y="-148.5" font-family="Helvetica,sans-Serif" font-size="10.00">Value::getParam</text>
@@ -59,7 +59,7 @@
 <!-- Node4 -->
 <g id="Node000004" class="node">
 <title>Node4</title>
-<g id="a_Node000004"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#a3834efd72939b0e2dc3978025fe3a00e" target="_top" xlink:title="serialize the parameter descriptor to protobuf include both the descriptor and the value">
+<g id="a_Node000004"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#a3834efd72939b0e2dc3978025fe3a00e" target="_top" xlink:title="Serializes the parameter descriptor to a protobuf paramInfo object.">
 <polygon fill="white" stroke="#666666" points="352,-85.5 194,-85.5 194,-55.5 352,-55.5 352,-85.5"/>
 <text text-anchor="start" x="202" y="-73.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::ParamWith</text>
 <text text-anchor="middle" x="273" y="-62.5" font-family="Helvetica,sans-Serif" font-size="10.00">Value::toProto</text>

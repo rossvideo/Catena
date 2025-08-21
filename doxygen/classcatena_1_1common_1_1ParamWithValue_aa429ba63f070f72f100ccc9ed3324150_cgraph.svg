@@ -21,7 +21,7 @@
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:title="serialize the parameter descriptor to protobuf includes both the descriptor and the value">
+<g id="a_Node000001"><a xlink:title="Serializes the parameter descriptor to a protobuf param object. Includes both the descriptor and the ...">
 <polygon fill="#999999" stroke="#666666" points="158,-54 0,-54 0,-24 158,-24 158,-54"/>
 <text text-anchor="start" x="8" y="-42" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::ParamWith</text>
 <text text-anchor="middle" x="79" y="-31" font-family="Helvetica,sans-Serif" font-size="10.00">Value::toProto</text>
@@ -50,7 +50,7 @@
 <!-- Node3 -->
 <g id="Node000003" class="node">
 <title>Node3</title>
-<g id="a_Node000003"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#a114978c20b21938e2182aca7e47ca4fb" target="_top" xlink:title="serialize the parameter value to protobuf if authorized">
+<g id="a_Node000003"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#a114978c20b21938e2182aca7e47ca4fb" target="_top" xlink:title="Serialize the parameter value to protobuf if authorized.">
 <polygon fill="white" stroke="#666666" points="367,-30 209,-30 209,0 367,0 367,-30"/>
 <text text-anchor="start" x="217" y="-18" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::ParamWith</text>
 <text text-anchor="middle" x="288" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">Value::toProto</text>

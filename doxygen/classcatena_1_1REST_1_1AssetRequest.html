@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cpp-v0.0.15-896: catena::REST::AssetRequest Class Reference</title>
+<title>cpp-v0.0.14-4: catena::REST::AssetRequest Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -26,7 +26,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="doxylogo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">cpp-v0.0.15-896
+   <div id="projectname">cpp-v0.0.14-4
    </div>
   </td>
  </tr>
@@ -103,7 +103,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1REST_1_1AssetRequest.ht
 </div><!--header-->
 <div class="contents">
 
-<p><a class="el" href="classcatena_1_1REST_1_1ICallData.html" title="Interface class for REST API controllers.">ICallData</a> class for the <a class="el" href="classcatena_1_1REST_1_1GetParam.html" title="ICallData class for the GetParam REST controller.">GetParam</a> <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> controller.  
+<p>Controller class for the Asset <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> endpoint.  
  <a href="classcatena_1_1REST_1_1AssetRequest.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="AssetRequest_8h_source.html">AssetRequest.h</a>&gt;</code></p>
@@ -124,21 +124,22 @@ Public Types</h2></td></tr>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>IDevice</b> = <a class="el" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a></td></tr>
 <tr class="separator:ab6158e31d0ef524b9264e933c2613d96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6a61010d3b956a24e7e532b522df96d1" id="r_a6a61010d3b956a24e7e532b522df96d1"><td class="memItemLeft" align="right" valign="top"><a id="a6a61010d3b956a24e7e532b522df96d1" name="a6a61010d3b956a24e7e532b522df96d1"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>SlotMap</b> = catena::common::SlotMap</td></tr>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>SlotMap</b> = <a class="el" href="namespacecatena_1_1common.html#a118a88218f9509068efa0f46414ee018">catena::common::SlotMap</a></td></tr>
 <tr class="separator:a6a61010d3b956a24e7e532b522df96d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a2dc49b17cdae8a7cc4bf46269707a5ee" id="r_a2dc49b17cdae8a7cc4bf46269707a5ee"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1AssetRequest.html#a2dc49b17cdae8a7cc4bf46269707a5ee">AssetRequest</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;context, SlotMap &amp;dms)</td></tr>
-<tr class="memdesc:a2dc49b17cdae8a7cc4bf46269707a5ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1REST_1_1GetParam.html" title="ICallData class for the GetParam REST controller.">GetParam</a> controller.  <br /></td></tr>
+<tr class="memdesc:a2dc49b17cdae8a7cc4bf46269707a5ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the Asset endpoint controller.  <br /></td></tr>
 <tr class="separator:a2dc49b17cdae8a7cc4bf46269707a5ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a55d2f30ac4a93ba98490c15f86897f9e" id="r_a55d2f30ac4a93ba98490c15f86897f9e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1AssetRequest.html#a55d2f30ac4a93ba98490c15f86897f9e">proceed</a> () override</td></tr>
-<tr class="memdesc:a55d2f30ac4a93ba98490c15f86897f9e"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1REST_1_1GetParam.html" title="ICallData class for the GetParam REST controller.">GetParam</a>'s main process.  <br /></td></tr>
+<tr class="memdesc:a55d2f30ac4a93ba98490c15f86897f9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The Asset endpoint's main process.  <br /></td></tr>
 <tr class="separator:a55d2f30ac4a93ba98490c15f86897f9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a11081d4ce95742b80fcd416ce4442805" id="r_a11081d4ce95742b80fcd416ce4442805"><td class="memItemLeft" align="right" valign="top">static std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1AssetRequest.html#a11081d4ce95742b80fcd416ce4442805">payloadEncodingToString</a> (catena::DataPayload::PayloadEncoding encoding)</td></tr>
+<tr class="memdesc:a11081d4ce95742b80fcd416ce4442805"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts the PayloadEncoding enum to a string.  <br /></td></tr>
 <tr class="separator:a11081d4ce95742b80fcd416ce4442805"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a68c0e898306391c44488cc7967e71854" id="r_a68c0e898306391c44488cc7967e71854"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1AssetRequest.html#a68c0e898306391c44488cc7967e71854">makeOne</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;context, SlotMap &amp;dms)</td></tr>
 <tr class="memdesc:a68c0e898306391c44488cc7967e71854"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a new controller object for use with GenericFactory.  <br /></td></tr>
@@ -186,11 +187,11 @@ tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_<
 <tr class="separator:ad40efdf929abae68d2c1935c0f500b63"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a44dc2c8454c904b02e48bd87092a5f3a" id="r_a44dc2c8454c904b02e48bd87092a5f3a"><td class="memItemLeft" align="right" valign="top"><a id="a44dc2c8454c904b02e48bd87092a5f3a" name="a44dc2c8454c904b02e48bd87092a5f3a"></a>
 <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b></td></tr>
-<tr class="memdesc:a44dc2c8454c904b02e48bd87092a5f3a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object. <br /></td></tr>
+<tr class="memdesc:a44dc2c8454c904b02e48bd87092a5f3a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object used to read the client's request. <br /></td></tr>
 <tr class="separator:a44dc2c8454c904b02e48bd87092a5f3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab568ecede4a527eb31aa1b70ac389d0b" id="r_ab568ecede4a527eb31aa1b70ac389d0b"><td class="memItemLeft" align="right" valign="top"><a id="ab568ecede4a527eb31aa1b70ac389d0b" name="ab568ecede4a527eb31aa1b70ac389d0b"></a>
 <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html">SocketWriter</a>&#160;</td><td class="memItemRight" valign="bottom"><b>writer_</b></td></tr>
-<tr class="memdesc:ab568ecede4a527eb31aa1b70ac389d0b"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write a unary response to a socket using boost.">SocketWriter</a> object for writing to socket_. <br /></td></tr>
+<tr class="memdesc:ab568ecede4a527eb31aa1b70ac389d0b"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="A helper class which writes a unary response to the client socket using boost.">SocketWriter</a> object for writing to socket_. <br /></td></tr>
 <tr class="separator:ab568ecede4a527eb31aa1b70ac389d0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc3899b01c1e95ee880cd0834e3d849d" id="r_afc3899b01c1e95ee880cd0834e3d849d"><td class="memItemLeft" align="right" valign="top"><a id="afc3899b01c1e95ee880cd0834e3d849d" name="afc3899b01c1e95ee880cd0834e3d849d"></a>
 SlotMap &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>dms_</b></td></tr>
@@ -205,11 +206,18 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>objectId_</b></td></tr
 Static Protected Attributes</h2></td></tr>
 <tr class="memitem:a70f642e4a8507b15e02ad4e5f830f31c" id="r_a70f642e4a8507b15e02ad4e5f830f31c"><td class="memItemLeft" align="right" valign="top"><a id="a70f642e4a8507b15e02ad4e5f830f31c" name="a70f642e4a8507b15e02ad4e5f830f31c"></a>
 static int&#160;</td><td class="memItemRight" valign="bottom"><b>objectCounter_</b></td></tr>
-<tr class="memdesc:a70f642e4a8507b15e02ad4e5f830f31c"><td class="mdescLeft">&#160;</td><td class="mdescRight">The total # of objects. <br /></td></tr>
+<tr class="memdesc:a70f642e4a8507b15e02ad4e5f830f31c"><td class="mdescLeft">&#160;</td><td class="mdescRight">The total # of asset endpoint controller objects. <br /></td></tr>
 <tr class="separator:a70f642e4a8507b15e02ad4e5f830f31c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p><a class="el" href="classcatena_1_1REST_1_1ICallData.html" title="Interface class for REST API controllers.">ICallData</a> class for the <a class="el" href="classcatena_1_1REST_1_1GetParam.html" title="ICallData class for the GetParam REST controller.">GetParam</a> <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> controller. </p>
+<div class="textblock"><p>Controller class for the Asset <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> endpoint. </p>
+<p>This controller supports four methods:</p>
+<ul>
+<li>GET: Writes the requested external object to the client. Supports both stream and unary responses.</li>
+<li>POST: Uploads an external object to the server.</li>
+<li>PUT: Overwrites an existing external object on the server.</li>
+<li>DELETE: Deletes an external object from the server. </li>
+</ul>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a2dc49b17cdae8a7cc4bf46269707a5ee" name="a2dc49b17cdae8a7cc4bf46269707a5ee"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2dc49b17cdae8a7cc4bf46269707a5ee">&#9670;&#160;</a></span>AssetRequest()</h2>
@@ -243,11 +251,11 @@ static int&#160;</td><td class="memItemRight" valign="bottom"><b>objectCounter_<
       </table>
 </div><div class="memdoc">
 
-<p>Constructor for the <a class="el" href="classcatena_1_1REST_1_1GetParam.html" title="ICallData class for the GetParam REST controller.">GetParam</a> controller. </p>
+<p>Constructor for the Asset endpoint controller. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">socket</td><td>The socket to write the response to. </td></tr>
-    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object. </td></tr>
+    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object used to read the client's request. </td></tr>
     <tr><td class="paramname">dms</td><td>A map of slots to ptrs to their corresponding device. </td></tr>
   </table>
   </dd>
@@ -571,8 +579,8 @@ static int&#160;</td><td class="memItemRight" valign="bottom"><b>objectCounter_<
 <p>Creates a new controller object for use with GenericFactory. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">socket</td><td>The socket to write the response stream to. </td></tr>
-    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object. </td></tr>
+    <tr><td class="paramname">socket</td><td>The socket to write the response to. </td></tr>
+    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object used to read the client's request. </td></tr>
     <tr><td class="paramname">dms</td><td>A map of slots to ptrs to their corresponding device. </td></tr>
   </table>
   </dd>
@@ -603,7 +611,9 @@ static int&#160;</td><td class="memItemRight" valign="bottom"><b>objectCounter_<
   </tr>
 </table>
 </div><div class="memdoc">
-<p>converts the PayloadEncoding enum to a string </p><dl class="params"><dt>Parameters</dt><dd>
+
+<p>Converts the PayloadEncoding enum to a string. </p>
+<dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">encoding</td><td>The PayloadEncoding enum value to convert. </td></tr>
   </table>
@@ -636,7 +646,7 @@ static int&#160;</td><td class="memItemRight" valign="bottom"><b>objectCounter_<
 </table>
 </div><div class="memdoc">
 
-<p><a class="el" href="classcatena_1_1REST_1_1GetParam.html" title="ICallData class for the GetParam REST controller.">GetParam</a>'s main process. </p>
+<p>The Asset endpoint's main process. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ICallData.html#a4672626b422b580fa4b9bad98db4205e">catena::REST::ICallData</a>.</p>
 
@@ -687,11 +697,11 @@ static int&#160;</td><td class="memItemRight" valign="bottom"><b>objectCounter_<
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ICallData.html#a0b80a7ae783c642c6a3fbf0e2b8f716a">catena::REST::ICallData</a>.</p>
 
-<p class="reference">References <a class="el" href="classcatena_1_1REST_1_1AssetRequest.html#a2d0c6a578244ecbc43369e0b6fea52b2">objectId_</a>, and <a class="el" href="namespacecatena_1_1common.html#aaf7051c03c402f50294ffebece8d0cfb">catena::common::timeNow()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1REST_1_1AssetRequest.html#a44dc2c8454c904b02e48bd87092a5f3a">context_</a>, <a class="el" href="classcatena_1_1patterns_1_1EnumDecorator.html#abbc4dc6f40094261f65b35750c73ad58">catena::patterns::EnumDecorator&lt; E &gt;::getForwardMap()</a>, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#ae2011e753a4f3f1fcc7932d91dafc8e3">catena::REST::ISocketReader::method()</a>, <a class="el" href="classcatena_1_1REST_1_1AssetRequest.html#a2d0c6a578244ecbc43369e0b6fea52b2">objectId_</a>, and <a class="el" href="namespacecatena_1_1common.html#aaf7051c03c402f50294ffebece8d0cfb">catena::common::timeNow()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1AssetRequest_a41ded026f6c3efe6f3985847b54b0e07_cgraph.svg" width="460" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1AssetRequest_a41ded026f6c3efe6f3985847b54b0e07_cgraph.svg" width="499" height="166"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>

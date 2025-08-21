@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cpp-v0.0.15-896: /home/runner/work/Catena/Catena/sdks/cpp/connections/gRPC/include/controllers/GetPopulatedSlots.h Source File</title>
+<title>cpp-v0.0.14-4: /home/runner/work/Catena/Catena/sdks/cpp/connections/gRPC/include/controllers/GetPopulatedSlots.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -26,7 +26,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="doxylogo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">cpp-v0.0.15-896
+   <div id="projectname">cpp-v0.0.14-4
    </div>
   </td>
  </tr>
@@ -99,7 +99,7 @@ $(document).ready(function(){initNavTree('gRPC_2include_2controllers_2GetPopulat
 </div><!--header-->
 <div class="contents">
 <a href="gRPC_2include_2controllers_2GetPopulatedSlots_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*</span></div>
-<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> * Copyright 2024 Ross Video Ltd</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> * Copyright 2025 Ross Video Ltd</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment"> *</span></div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment"> * Redistribution and use in source and binary forms, with or without</span></div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment"> * modification, are permitted provided that the following conditions are met:</span></div>
@@ -136,31 +136,31 @@ $(document).ready(function(){initNavTree('gRPC_2include_2controllers_2GetPopulat
 <div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacecatena.html">catena</a> {</div>
 <div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="keyword">namespace </span>gRPC {</div>
 <div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span> </div>
-<div class="foldopen" id="foldopen00052" data-start="{" data-end="};">
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno"><a class="line" href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html">   52</a></span><span class="keyword">class </span><a class="code hl_class" href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html">GetPopulatedSlots</a> : <span class="keyword">public</span> <a class="code hl_class" href="classcatena_1_1gRPC_1_1CallData.html">CallData</a>{</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno"><a class="line" href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html#a7a5ccc585a35e576d8e8dcad053d0761">   62</a></span>    <a class="code hl_function" href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html#a7a5ccc585a35e576d8e8dcad053d0761">GetPopulatedSlots</a>(<a class="code hl_class" href="classcatena_1_1gRPC_1_1IServiceImpl.html">IServiceImpl</a> *service, SlotMap&amp; dms, <span class="keywordtype">bool</span> ok);</div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno"><a class="line" href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html#a79a5e674e005763321e99b00cd5d4f27">   71</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html#a79a5e674e005763321e99b00cd5d4f27">proceed</a>(<span class="keywordtype">bool</span> ok) <span class="keyword">override</span>;</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span> </div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    catena::Empty req_;</div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    catena::SlotList res_;</div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    ServerAsyncResponseWriter&lt;::catena::SlotList&gt; responder_;</div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    <a class="code hl_enumeration" href="namespacecatena_1_1gRPC.html#a27aee93775bf0dcce2e1fa3afe6d1982">CallStatus</a> status_;</div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    SlotMap&amp; dms_;</div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    <span class="keywordtype">int</span> objectId_;</div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>};</div>
+<div class="foldopen" id="foldopen00054" data-start="{" data-end="};">
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno"><a class="line" href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html">   54</a></span><span class="keyword">class </span><a class="code hl_class" href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html">GetPopulatedSlots</a> : <span class="keyword">public</span> <a class="code hl_class" href="classcatena_1_1gRPC_1_1CallData.html">CallData</a>{</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno"><a class="line" href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html#a7a5ccc585a35e576d8e8dcad053d0761">   65</a></span>    <a class="code hl_function" href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html#a7a5ccc585a35e576d8e8dcad053d0761">GetPopulatedSlots</a>(<a class="code hl_class" href="classcatena_1_1gRPC_1_1IServiceImpl.html">IServiceImpl</a> *service, <a class="code hl_typedef" href="namespacecatena_1_1common.html#a118a88218f9509068efa0f46414ee018">SlotMap</a>&amp; dms, <span class="keywordtype">bool</span> ok);</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno"><a class="line" href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html#a79a5e674e005763321e99b00cd5d4f27">   73</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html#a79a5e674e005763321e99b00cd5d4f27">proceed</a>(<span class="keywordtype">bool</span> ok) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    catena::Empty req_;</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    ServerAsyncResponseWriter&lt;::catena::SlotList&gt; responder_;</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    <a class="code hl_enumeration" href="namespacecatena_1_1gRPC.html#a27aee93775bf0dcce2e1fa3afe6d1982">CallStatus</a> status_;</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    <a class="code hl_typedef" href="namespacecatena_1_1common.html#a118a88218f9509068efa0f46414ee018">SlotMap</a>&amp; dms_;</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    <span class="keywordtype">int</span> objectId_;</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>};</div>
 </div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span> </div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>}; <span class="comment">// namespace gRPC</span></div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>}; <span class="comment">// namespace catena</span></div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span> </div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>}; <span class="comment">// namespace gRPC</span></div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>}; <span class="comment">// namespace catena</span></div>
 <div class="ttc" id="aCallData_8h_html"><div class="ttname"><a href="CallData_8h.html">CallData.h</a></div><div class="ttdoc">Base class for gRPC CallData classes which defines getJWSToken_().</div></div>
-<div class="ttc" id="aclasscatena_1_1gRPC_1_1CallData_html"><div class="ttname"><a href="classcatena_1_1gRPC_1_1CallData.html">catena::gRPC::CallData</a></div><div class="ttdoc">Abstract base class for the CallData classes which defines the jwsToken_ class.</div><div class="ttdef"><b>Definition</b> CallData.h:72</div></div>
-<div class="ttc" id="aclasscatena_1_1gRPC_1_1GetPopulatedSlots_html"><div class="ttname"><a href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html">catena::gRPC::GetPopulatedSlots</a></div><div class="ttdoc">CallData class for the GetPopulatedSlots RPC.</div><div class="ttdef"><b>Definition</b> GetPopulatedSlots.h:52</div></div>
-<div class="ttc" id="aclasscatena_1_1gRPC_1_1GetPopulatedSlots_html_a79a5e674e005763321e99b00cd5d4f27"><div class="ttname"><a href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html#a79a5e674e005763321e99b00cd5d4f27">catena::gRPC::GetPopulatedSlots::proceed</a></div><div class="ttdeci">void proceed(bool ok) override</div><div class="ttdoc">Manages the steps of the GetPopulatedSlots gRPC command through the state variable status....</div></div>
-<div class="ttc" id="aclasscatena_1_1gRPC_1_1GetPopulatedSlots_html_a7a5ccc585a35e576d8e8dcad053d0761"><div class="ttname"><a href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html#a7a5ccc585a35e576d8e8dcad053d0761">catena::gRPC::GetPopulatedSlots::GetPopulatedSlots</a></div><div class="ttdeci">GetPopulatedSlots(IServiceImpl *service, SlotMap &amp;dms, bool ok)</div><div class="ttdoc">Constructor for the CallData class of the GetPopulatedSlots gRPC. Calls proceed() once initialized.</div></div>
+<div class="ttc" id="aclasscatena_1_1gRPC_1_1CallData_html"><div class="ttname"><a href="classcatena_1_1gRPC_1_1CallData.html">catena::gRPC::CallData</a></div><div class="ttdoc">Abstract base class for inherited by CallData child classes defining the jwsToken_() method.</div><div class="ttdef"><b>Definition</b> CallData.h:72</div></div>
+<div class="ttc" id="aclasscatena_1_1gRPC_1_1GetPopulatedSlots_html"><div class="ttname"><a href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html">catena::gRPC::GetPopulatedSlots</a></div><div class="ttdoc">CallData class for the GetPopulatedSlots RPC.</div><div class="ttdef"><b>Definition</b> GetPopulatedSlots.h:54</div></div>
+<div class="ttc" id="aclasscatena_1_1gRPC_1_1GetPopulatedSlots_html_a79a5e674e005763321e99b00cd5d4f27"><div class="ttname"><a href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html#a79a5e674e005763321e99b00cd5d4f27">catena::gRPC::GetPopulatedSlots::proceed</a></div><div class="ttdeci">void proceed(bool ok) override</div><div class="ttdoc">Manages the steps of the GetPopulatedSlots RPC through the state variable status.</div></div>
+<div class="ttc" id="aclasscatena_1_1gRPC_1_1GetPopulatedSlots_html_a7a5ccc585a35e576d8e8dcad053d0761"><div class="ttname"><a href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html#a7a5ccc585a35e576d8e8dcad053d0761">catena::gRPC::GetPopulatedSlots::GetPopulatedSlots</a></div><div class="ttdeci">GetPopulatedSlots(IServiceImpl *service, SlotMap &amp;dms, bool ok)</div><div class="ttdoc">Constructor for the CallData class of the GetPopulatedSlots RPC. Calls proceed() once initialized.</div></div>
 <div class="ttc" id="aclasscatena_1_1gRPC_1_1IServiceImpl_html"><div class="ttname"><a href="classcatena_1_1gRPC_1_1IServiceImpl.html">catena::gRPC::IServiceImpl</a></div><div class="ttdoc">Interface class for the gRPC API Implementation.</div><div class="ttdef"><b>Definition</b> IServiceImpl.h:61</div></div>
+<div class="ttc" id="anamespacecatena_1_1common_html_a118a88218f9509068efa0f46414ee018"><div class="ttname"><a href="namespacecatena_1_1common.html#a118a88218f9509068efa0f46414ee018">catena::common::SlotMap</a></div><div class="ttdeci">std::unordered_map&lt; uint32_t, IDevice * &gt; SlotMap</div><div class="ttdoc">Type alias for a map of slot numbers to their corresponding device.</div><div class="ttdef"><b>Definition</b> IDevice.h:420</div></div>
 <div class="ttc" id="anamespacecatena_1_1gRPC_html_a27aee93775bf0dcce2e1fa3afe6d1982"><div class="ttname"><a href="namespacecatena_1_1gRPC.html#a27aee93775bf0dcce2e1fa3afe6d1982">catena::gRPC::CallStatus</a></div><div class="ttdeci">CallStatus</div><div class="ttdoc">CallData states.</div><div class="ttdef"><b>Definition</b> CallData.h:66</div></div>
 <div class="ttc" id="anamespacecatena_html"><div class="ttname"><a href="namespacecatena.html">catena</a></div><div class="ttdoc">top level namespace for Catena. Functionality at this scope includes the protoc generated classes....</div><div class="ttdef"><b>Definition</b> Authorizer.h:57</div></div>
 </div><!-- fragment --></div><!-- contents -->

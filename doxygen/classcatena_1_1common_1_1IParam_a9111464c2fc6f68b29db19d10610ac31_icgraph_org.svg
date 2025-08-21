@@ -11,7 +11,7 @@
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:title="get the descriptor of the parameter">
+<g id="a_Node000001"><a xlink:title="Gets the parameter&#39;s descriptor.">
 <polygon fill="#999999" stroke="#666666" points="318,-54 180,-54 180,-24 318,-24 318,-54"/>
 <text text-anchor="start" x="188" y="-42" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IParam</text>
 <text text-anchor="middle" x="249" y="-31" font-family="Helvetica,sans-Serif" font-size="10.00">::getDescriptor</text>
@@ -40,7 +40,7 @@
 <!-- Node3 -->
 <g id="Node000003" class="node">
 <title>Node3</title>
-<g id="a_Node000003"><a xlink:href="classcatena_1_1common_1_1Connect.html#a8ff9c432f5f47f67746433d1827fd19d" target="_top" xlink:title="Updates the response message with parameter values and handles authorization checks.">
+<g id="a_Node000003"><a xlink:href="classcatena_1_1common_1_1Connect.html#a8ff9c432f5f47f67746433d1827fd19d" target="_top" xlink:title="Updates the response message with parameter values if the client has read authorization and the corre...">
 <polygon fill="white" stroke="#666666" points="144,-30 0,-30 0,0 144,0 144,-30"/>
 <text text-anchor="start" x="8" y="-18" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::Connect</text>
 <text text-anchor="middle" x="72" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">::updateResponse_</text>

@@ -8,7 +8,5 @@ var classcatena_1_1common_1_1LanguagePack =
     [ "begin", "classcatena_1_1common_1_1LanguagePack.html#a9807b22bc41d90ae89ff65476878f789", null ],
     [ "end", "classcatena_1_1common_1_1LanguagePack.html#aacd755242de708791fee43db3885eae5", null ],
     [ "fromProto", "classcatena_1_1common_1_1LanguagePack.html#ab2a24dffc6a85aaba1bb93b7b90944fd", null ],
-    [ "operator=", "classcatena_1_1common_1_1LanguagePack.html#a3beb9a4527693f4c5ed46e263879282a", null ],
-    [ "operator=", "classcatena_1_1common_1_1LanguagePack.html#a4b5b8ddd66620d3514d99e998ffc2190", null ],
     [ "toProto", "classcatena_1_1common_1_1LanguagePack.html#a15152d22617ab65dd405851091f5f003", null ]
 ];

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cpp-v0.0.15-896: catena::common::Authorizer Class Reference</title>
+<title>cpp-v0.0.14-4: catena::common::Authorizer Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -26,7 +26,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="doxylogo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">cpp-v0.0.15-896
+   <div id="projectname">cpp-v0.0.14-4
    </div>
   </td>
  </tr>
@@ -126,7 +126,7 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>ClientScopes</b> = s
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:afc70628c3d7fb1b6b2d1a9e2dddf7f5c" id="r_afc70628c3d7fb1b6b2d1a9e2dddf7f5c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Authorizer.html#afc70628c3d7fb1b6b2d1a9e2dddf7f5c">Authorizer</a> (const std::string &amp;JWSToken)</td></tr>
-<tr class="memdesc:afc70628c3d7fb1b6b2d1a9e2dddf7f5c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a new <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> object by extracting client scopes from a JWS token. <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> expects the JWSToken to be valid. Authentication of the token is to be handled by the API gateway.  <br /></td></tr>
+<tr class="memdesc:afc70628c3d7fb1b6b2d1a9e2dddf7f5c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a new <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> object by extracting the "scope" and "exp" claims from the JWS token. from a JWS token.  <br /></td></tr>
 <tr class="separator:afc70628c3d7fb1b6b2d1a9e2dddf7f5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2267ed3de4f1a48fbef629a7fbb0c20e" id="r_a2267ed3de4f1a48fbef629a7fbb0c20e"><td class="memItemLeft" align="right" valign="top"><a id="a2267ed3de4f1a48fbef629a7fbb0c20e" name="a2267ed3de4f1a48fbef629a7fbb0c20e"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Authorizer</b> (const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;)=delete</td></tr>
@@ -207,7 +207,7 @@ Protected Member Functions</h2></td></tr>
 <tr class="memdesc:aa6701f5b8518a0e2be683fa3d9d0ab3b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for kAuthzDisabled authorizer. <br /></td></tr>
 <tr class="separator:aa6701f5b8518a0e2be683fa3d9d0ab3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae9117e71cc39f2ac1b9c365cbb5201fe" id="r_ae9117e71cc39f2ac1b9c365cbb5201fe"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Authorizer.html#ae9117e71cc39f2ac1b9c365cbb5201fe">hasAuthz_</a> (const std::string &amp;scope) const</td></tr>
-<tr class="memdesc:ae9117e71cc39f2ac1b9c365cbb5201fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the client has the specified authorization.  <br /></td></tr>
+<tr class="memdesc:ae9117e71cc39f2ac1b9c365cbb5201fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the client has the specified authorization.  <br /></td></tr>
 <tr class="separator:ae9117e71cc39f2ac1b9c365cbb5201fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
@@ -223,6 +223,7 @@ uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>exp_</b> {0}</td>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class for handling authorization information. </p>
+<p>This class takes a valid JWS token and extracts the "scope" and "exp" claims to later check client access. The actual authentication portion of the JWS token is handled externally and the class just assumes that the token is good when it recieves it. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="afc70628c3d7fb1b6b2d1a9e2dddf7f5c" name="afc70628c3d7fb1b6b2d1a9e2dddf7f5c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afc70628c3d7fb1b6b2d1a9e2dddf7f5c">&#9670;&#160;</a></span>Authorizer()</h2>
@@ -240,8 +241,8 @@ uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>exp_</b> {0}</td>
       </table>
 </div><div class="memdoc">
 
-<p>Constructs a new <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> object by extracting client scopes from a JWS token. <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> expects the JWSToken to be valid. Authentication of the token is to be handled by the API gateway. </p>
-<dl class="params"><dt>Parameters</dt><dd>
+<p>Constructs a new <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> object by extracting the "scope" and "exp" claims from the JWS token. from a JWS token. </p>
+<p>The JWS token is assumed to be valid as authentication is handled externally. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">JWSToken</td><td>The JWS token to extract scopes from. </td></tr>
   </table>
@@ -281,7 +282,7 @@ uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>exp_</b> {0}</td>
 </table>
 </div><div class="memdoc">
 
-<p>Check if the client has the specified authorization. </p>
+<p>Checks if the client has the specified authorization. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">scope</td><td>The scope to check for authorization </td></tr>
