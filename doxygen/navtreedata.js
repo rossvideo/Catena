@@ -24,7 +24,7 @@
 */
 var NAVTREE =
 [
-  [ "cpp-v0.0.14-4", "index.html", [
+  [ "cpp-v0.0.15-896", "index.html", [
     [ "Catena C++ SDK", "index.html", "index" ],
     [ "Cross Compiling", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html", [
       [ "Prequisites", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md3", null ],
@@ -129,14 +129,14 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "AddLanguage_8h.html",
-"Variant_8h_source.html",
-"classcatena_1_1REST_1_1SocketReader.html#aa77a5dcf3caf0ae527fa88e73dc3fdf1",
-"classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#ad4ecf53a730d118a682846ca17e63e35",
-"classcatena_1_1common_1_1IParamDescriptor.html#a20824363ddc06d52cde3f06e9bb34e7a",
-"classcatena_1_1common_1_1ParamWithValue.html#a302feec9677b9cdf1181bbfeef73eafa",
-"classcatena_1_1gRPC_1_1IServiceImpl.html",
-"classcatena_1_1patterns_1_1GenericFactory.html#a31ee2959ec29c96c0be704711ab38b2d",
-"namespacecatena_1_1REST.html#a8af25535c8f5625132fd95a8bec8a0a4"
+"classLogger.html",
+"classcatena_1_1REST_1_1SocketReader.html#ab5edbce738e945acf8e9ec25239a6a02",
+"classcatena_1_1common_1_1IAuthorizer.html#a550199326e5fe0c591f86c0f7ef40926",
+"classcatena_1_1common_1_1IParamDescriptor.html#a551914beb28d87b2d9ade3ef5fd8c2c0",
+"classcatena_1_1common_1_1ParamWithValue.html#a380b12a09281e8ad4ee415b2257c655c",
+"classcatena_1_1gRPC_1_1IServiceImpl.html#a752fc6fa2b5761a8e27e85924ebee9be",
+"classcatena_1_1patterns_1_1GenericFactory.html#ab354f924c26b98e52f63f226b292fb18",
+"namespacecatena_1_1common.html#a52e17ef3ce00a51e608afb060211e3a8a371b131e5e8ab58eefe1bd1b5df26c55"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

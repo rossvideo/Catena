@@ -11,7 +11,7 @@
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:title="Checks if the parameter is an array type.">
+<g id="a_Node000001"><a xlink:title="Check if the parameter is an array type.">
 <polygon fill="#999999" stroke="#666666" points="158,-54 0,-54 0,-24 158,-24 158,-54"/>
 <text text-anchor="start" x="8" y="-42" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::ParamWith</text>
 <text text-anchor="middle" x="79" y="-31" font-family="Helvetica,sans-Serif" font-size="10.00">Value::isArrayType</text>
@@ -21,7 +21,7 @@
 <!-- Node2 -->
 <g id="Node000002" class="node">
 <title>Node2</title>
-<g id="a_Node000002"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#a5d100719a0270a1b71ab5221bcda3b4e" target="_top" xlink:title="Gets the parameters protobuf value type.">
+<g id="a_Node000002"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#a5d100719a0270a1b71ab5221bcda3b4e" target="_top" xlink:title="get the parameters protobuf value type">
 <polygon fill="white" stroke="#666666" points="362,-78 204,-78 204,-48 362,-48 362,-78"/>
 <text text-anchor="start" x="212" y="-66" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::ParamWith</text>
 <text text-anchor="middle" x="283" y="-55" font-family="Helvetica,sans-Serif" font-size="10.00">Value::type</text>
@@ -40,7 +40,7 @@
 <!-- Node4 -->
 <g id="Node000004" class="node">
 <title>Node4</title>
-<g id="a_Node000004"><a xlink:href="classcatena_1_1patterns_1_1EnumDecorator.html#a5b381dd49122b46f4aca4b103c4f5c7f" target="_top" xlink:title="Value accessor.">
+<g id="a_Node000004"><a xlink:href="classcatena_1_1patterns_1_1EnumDecorator.html#a5b381dd49122b46f4aca4b103c4f5c7f" target="_top" xlink:title="value accessor.">
 <polygon fill="white" stroke="#666666" points="372,-30 194,-30 194,0 372,0 372,-30"/>
 <text text-anchor="start" x="202" y="-18" font-family="Helvetica,sans-Serif" font-size="10.00">catena::patterns::EnumDecorator</text>
 <text text-anchor="middle" x="283" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">::value</text>

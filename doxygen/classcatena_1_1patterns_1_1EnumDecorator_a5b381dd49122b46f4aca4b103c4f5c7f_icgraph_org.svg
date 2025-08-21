@@ -11,7 +11,7 @@
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:title="Value accessor.">
+<g id="a_Node000001"><a xlink:title="value accessor.">
 <polygon fill="#999999" stroke="#666666" points="392,-78 214,-78 214,-48 392,-48 392,-78"/>
 <text text-anchor="start" x="222" y="-66" font-family="Helvetica,sans-Serif" font-size="10.00">catena::patterns::EnumDecorator</text>
 <text text-anchor="middle" x="303" y="-55" font-family="Helvetica,sans-Serif" font-size="10.00">::value</text>
@@ -21,7 +21,7 @@
 <!-- Node2 -->
 <g id="Node000002" class="node">
 <title>Node2</title>
-<g id="a_Node000002"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#a5657a8fc5c8d8b6f21c59bc9888bd954" target="_top" xlink:title="Checks if the parameter is an array type.">
+<g id="a_Node000002"><a xlink:href="classcatena_1_1common_1_1ParamWithValue.html#a5657a8fc5c8d8b6f21c59bc9888bd954" target="_top" xlink:title="Check if the parameter is an array type.">
 <polygon fill="white" stroke="#666666" points="168,-126 10,-126 10,-96 168,-96 168,-126"/>
 <text text-anchor="start" x="18" y="-114" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::ParamWith</text>
 <text text-anchor="middle" x="89" y="-103" font-family="Helvetica,sans-Serif" font-size="10.00">Value::isArrayType</text>
@@ -40,7 +40,7 @@
 <!-- Node3 -->
 <g id="Node000003" class="node">
 <title>Node3</title>
-<g id="a_Node000003"><a xlink:href="classcatena_1_1patterns_1_1EnumDecorator.html#adc2bfc84e613e135d599d32320f37536" target="_top" xlink:title="Cast to the enum&#39;s underlying integral type.">
+<g id="a_Node000003"><a xlink:href="classcatena_1_1patterns_1_1EnumDecorator.html#adc2bfc84e613e135d599d32320f37536" target="_top" xlink:title="cast to the enum&#39;s underlying integral type">
 <polygon fill="white" stroke="#666666" points="178,-78 0,-78 0,-48 178,-48 178,-78"/>
 <text text-anchor="start" x="8" y="-66" font-family="Helvetica,sans-Serif" font-size="10.00">catena::patterns::EnumDecorator</text>
 <text text-anchor="middle" x="89" y="-55" font-family="Helvetica,sans-Serif" font-size="10.00">::operator utype</text>
@@ -59,7 +59,7 @@
 <!-- Node4 -->
 <g id="Node000004" class="node">
 <title>Node4</title>
-<g id="a_Node000004"><a xlink:href="classcatena_1_1patterns_1_1EnumDecorator.html#abab665cebd403e8ee1ea4cc7b853e75d" target="_top" xlink:title="Equality operator.">
+<g id="a_Node000004"><a xlink:href="classcatena_1_1patterns_1_1EnumDecorator.html#abab665cebd403e8ee1ea4cc7b853e75d" target="_top" xlink:title="equality operator">
 <polygon fill="white" stroke="#666666" points="178,-30 0,-30 0,0 178,0 178,-30"/>
 <text text-anchor="start" x="8" y="-18" font-family="Helvetica,sans-Serif" font-size="10.00">catena::patterns::EnumDecorator</text>
 <text text-anchor="middle" x="89" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">::operator==</text>

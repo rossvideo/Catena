@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cpp-v0.0.14-4: catena::gRPC::ICallData Class Reference</title>
+<title>cpp-v0.0.15-896: catena::gRPC::ICallData Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -26,7 +26,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="doxylogo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">cpp-v0.0.14-4
+   <div id="projectname">cpp-v0.0.15-896
    </div>
   </td>
  </tr>
@@ -98,7 +98,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1gRPC_1_1ICallData.html'
 </div><!--header-->
 <div class="contents">
 
-<p>Interface class for <a class="el" href="namespacecatena_1_1gRPC.html" title="Namespace containing classes relating to the gRPC API.">gRPC</a> <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for inherited by CallData child classes defining the jwsToken_() method.">CallData</a> classes.  
+<p>Interface class for <a class="el" href="namespacecatena_1_1gRPC.html" title="Namespace containing classes relating to the gRPC API.">gRPC</a> <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for the CallData classes which defines the jwsToken_ class.">CallData</a> classes.  
  <a href="classcatena_1_1gRPC_1_1ICallData.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="gRPC_2include_2interface_2ICallData_8h_source.html">ICallData.h</a>&gt;</code></p>
@@ -111,21 +111,21 @@ Inheritance diagram for catena::gRPC::ICallData:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:ab700b0e47f89bc02e630048172f24972" id="r_ab700b0e47f89bc02e630048172f24972"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1gRPC_1_1ICallData.html#ab700b0e47f89bc02e630048172f24972">proceed</a> (bool ok)=0</td></tr>
-<tr class="memdesc:ab700b0e47f89bc02e630048172f24972"><td class="mdescLeft">&#160;</td><td class="mdescRight">Manages the steps of the child <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for inherited by CallData child classes defining the jwsToken_() method.">CallData</a> class.  <br /></td></tr>
+<tr class="memdesc:ab700b0e47f89bc02e630048172f24972"><td class="mdescLeft">&#160;</td><td class="mdescRight">Proceed function to be implemented by the <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for the CallData classes which defines the jwsToken_ class.">CallData</a> classes.  <br /></td></tr>
 <tr class="separator:ab700b0e47f89bc02e630048172f24972"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4e4408ec52d1ef27b59739fbcff5ff6" id="r_ac4e4408ec52d1ef27b59739fbcff5ff6"><td class="memItemLeft" align="right" valign="top"><a id="ac4e4408ec52d1ef27b59739fbcff5ff6" name="ac4e4408ec52d1ef27b59739fbcff5ff6"></a>
 virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~ICallData</b> ()</td></tr>
-<tr class="memdesc:ac4e4408ec52d1ef27b59739fbcff5ff6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor for the <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for inherited by CallData child classes defining the jwsToken_() method.">CallData</a> class. <br /></td></tr>
+<tr class="memdesc:ac4e4408ec52d1ef27b59739fbcff5ff6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor for the <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for the CallData classes which defines the jwsToken_ class.">CallData</a> class. <br /></td></tr>
 <tr class="separator:ac4e4408ec52d1ef27b59739fbcff5ff6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
 <tr class="memitem:a8bad679b189ee76c89e80336a08706ad" id="r_a8bad679b189ee76c89e80336a08706ad"><td class="memItemLeft" align="right" valign="top">virtual std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1gRPC_1_1ICallData.html#a8bad679b189ee76c89e80336a08706ad">jwsToken_</a> () const =0</td></tr>
-<tr class="memdesc:a8bad679b189ee76c89e80336a08706ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extracts the JWS Bearer token from the client's metadata.  <br /></td></tr>
+<tr class="memdesc:a8bad679b189ee76c89e80336a08706ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extracts the JWS Bearer token from the server context's client metadata.  <br /></td></tr>
 <tr class="separator:a8bad679b189ee76c89e80336a08706ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Interface class for <a class="el" href="namespacecatena_1_1gRPC.html" title="Namespace containing classes relating to the gRPC API.">gRPC</a> <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for inherited by CallData child classes defining the jwsToken_() method.">CallData</a> classes. </p>
+<div class="textblock"><p>Interface class for <a class="el" href="namespacecatena_1_1gRPC.html" title="Namespace containing classes relating to the gRPC API.">gRPC</a> <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for the CallData classes which defines the jwsToken_ class.">CallData</a> classes. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a8bad679b189ee76c89e80336a08706ad" name="a8bad679b189ee76c89e80336a08706ad"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8bad679b189ee76c89e80336a08706ad">&#9670;&#160;</a></span>jwsToken_()</h2>
@@ -150,7 +150,7 @@ Protected Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Extracts the JWS Bearer token from the client's metadata. </p>
+<p>Extracts the JWS Bearer token from the server context's client metadata. </p>
 <dl class="section return"><dt>Returns</dt><dd>The JWS Bearer token as a string. </dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
@@ -187,14 +187,7 @@ Protected Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Manages the steps of the child <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for inherited by CallData child classes defining the jwsToken_() method.">CallData</a> class. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">ok</td><td>Flag indicating the status of the service and call. Will be false if either has been shutdown/cancelled. <br  />
- </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Proceed function to be implemented by the <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for the CallData classes which defines the jwsToken_ class.">CallData</a> classes. </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1gRPC_1_1AddLanguage.html#a69d4c47066d33bd5d18aea939fccb151">catena::gRPC::AddLanguage</a>, <a class="el" href="classcatena_1_1gRPC_1_1Connect.html#a424ff10a7606f927cc617ff4616eb8c3">catena::gRPC::Connect</a>, <a class="el" href="classcatena_1_1gRPC_1_1DeviceRequest.html#ae551adf8b29584ab6d41b22ce166ffd1">catena::gRPC::DeviceRequest</a>, <a class="el" href="classcatena_1_1gRPC_1_1ExecuteCommand.html#a20404dadcba84fd96277052f061cdb1a">catena::gRPC::ExecuteCommand</a>, <a class="el" href="classcatena_1_1gRPC_1_1ExternalObjectRequest.html#a33142ffa2f411e24732863f849760a01">catena::gRPC::ExternalObjectRequest</a>, <a class="el" href="classcatena_1_1gRPC_1_1GetParam.html#a2f4fddc5cff5453a07eb45e1736fd238">catena::gRPC::GetParam</a>, <a class="el" href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html#a79a5e674e005763321e99b00cd5d4f27">catena::gRPC::GetPopulatedSlots</a>, <a class="el" href="classcatena_1_1gRPC_1_1GetValue.html#ad377b42ef9b07055e479ba01b10a49f2">catena::gRPC::GetValue</a>, <a class="el" href="classcatena_1_1gRPC_1_1LanguagePackRequest.html#ad9853cc210f0e1e26d7ebb7d7792fa7c">catena::gRPC::LanguagePackRequest</a>, <a class="el" href="classcatena_1_1gRPC_1_1ListLanguages.html#afb057985a5ad5a9b5b669ce8dcc603a8">catena::gRPC::ListLanguages</a>, <a class="el" href="classcatena_1_1gRPC_1_1MultiSetValue.html#a6b9fa23b75af036824354f5f2ea29d1f">catena::gRPC::MultiSetValue</a>, <a class="el" href="classcatena_1_1gRPC_1_1ParamInfoRequest.html#a88317ab753a1c9ad05a4350af4299256">catena::gRPC::ParamInfoRequest</a>, and <a class="el" href="classcatena_1_1gRPC_1_1UpdateSubscriptions.html#ab5fda07507dba9a19dccde4389ff872d">catena::gRPC::UpdateSubscriptions</a>.</p>
 

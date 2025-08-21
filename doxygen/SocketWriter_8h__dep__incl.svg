@@ -57,7 +57,7 @@ var sectionId = 'dynsection-1';
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:title="Implements the SocketWriter class.">
+<g id="a_Node000001"><a xlink:title="Helper class used to write to a socket using boost.">
 <polygon fill="#999999" stroke="#666666" points="1651.5,-206 1490.5,-206 1490.5,-165 1651.5,-165 1651.5,-206"/>
 <text text-anchor="start" x="1498.5" y="-194" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="1498.5" y="-183" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -88,7 +88,7 @@ var sectionId = 'dynsection-1';
 <!-- Node3 -->
 <g id="Node000003" class="node">
 <title>Node3</title>
-<g id="a_Node000003"><a xlink:href="AssetRequest_8h.html" target="_top" xlink:title="Implements controller for the REST asset endpoint.">
+<g id="a_Node000003"><a xlink:href="AssetRequest_8h.html" target="_top" xlink:title="Implements REST AssetRequest controller.">
 <polygon fill="white" stroke="#666666" points="420,-123.5 204,-123.5 204,-82.5 420,-82.5 420,-123.5"/>
 <text text-anchor="start" x="212" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="212" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -108,7 +108,7 @@ var sectionId = 'dynsection-1';
 <!-- Node4 -->
 <g id="Node000004" class="node">
 <title>Node4</title>
-<g id="a_Node000004"><a xlink:href="connections_2REST_2include_2controllers_2Connect_8h.html" target="_top" xlink:title="Implements controller for the REST connect endpoint.">
+<g id="a_Node000004"><a xlink:href="connections_2REST_2include_2controllers_2Connect_8h.html" target="_top" xlink:title="Implements REST Connect controller.">
 <polygon fill="white" stroke="#666666" points="627.5,-123.5 438.5,-123.5 438.5,-82.5 627.5,-82.5 627.5,-123.5"/>
 <text text-anchor="start" x="446.5" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="446.5" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -128,7 +128,7 @@ var sectionId = 'dynsection-1';
 <!-- Node5 -->
 <g id="Node000005" class="node">
 <title>Node5</title>
-<g id="a_Node000005"><a xlink:href="REST_2include_2controllers_2DeviceRequest_8h.html" target="_top" xlink:title="Implements controll for the REST &quot;DeviceReqeust&quot; endpoint.">
+<g id="a_Node000005"><a xlink:href="REST_2include_2controllers_2DeviceRequest_8h.html" target="_top" xlink:title="Implements REST DeviceRequest controller.">
 <polygon fill="white" stroke="#666666" points="868.5,-123.5 645.5,-123.5 645.5,-82.5 868.5,-82.5 868.5,-123.5"/>
 <text text-anchor="start" x="653.5" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="653.5" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -148,7 +148,7 @@ var sectionId = 'dynsection-1';
 <!-- Node6 -->
 <g id="Node000006" class="node">
 <title>Node6</title>
-<g id="a_Node000006"><a xlink:href="REST_2include_2controllers_2ExecuteCommand_8h.html" target="_top" xlink:title="Implements controller for the REST command endpoint.">
+<g id="a_Node000006"><a xlink:href="REST_2include_2controllers_2ExecuteCommand_8h.html" target="_top" xlink:title="Implements REST ExecuteCommand controller.">
 <polygon fill="white" stroke="#666666" points="1125,-123.5 887,-123.5 887,-82.5 1125,-82.5 1125,-123.5"/>
 <text text-anchor="start" x="895" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="895" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -168,7 +168,7 @@ var sectionId = 'dynsection-1';
 <!-- Node7 -->
 <g id="Node000007" class="node">
 <title>Node7</title>
-<g id="a_Node000007"><a xlink:href="REST_2include_2controllers_2GetParam_8h.html" target="_top" xlink:title="Implements controller for the REST param endpoint.">
+<g id="a_Node000007"><a xlink:href="REST_2include_2controllers_2GetParam_8h.html" target="_top" xlink:title="Implements REST GetParam controller.">
 <polygon fill="white" stroke="#666666" points="1340.5,-123.5 1143.5,-123.5 1143.5,-82.5 1340.5,-82.5 1340.5,-123.5"/>
 <text text-anchor="start" x="1151.5" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="1151.5" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -188,7 +188,7 @@ var sectionId = 'dynsection-1';
 <!-- Node8 -->
 <g id="Node000008" class="node">
 <title>Node8</title>
-<g id="a_Node000008"><a xlink:href="REST_2include_2controllers_2GetPopulatedSlots_8h.html" target="_top" xlink:title="Implements controller for the REST devices endpoint.">
+<g id="a_Node000008"><a xlink:href="REST_2include_2controllers_2GetPopulatedSlots_8h.html" target="_top" xlink:title="Implements REST GetPopulatedSlots controller.">
 <polygon fill="white" stroke="#666666" points="1565,-129 1359,-129 1359,-77 1565,-77 1565,-129"/>
 <text text-anchor="start" x="1367" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="1367" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -209,7 +209,7 @@ var sectionId = 'dynsection-1';
 <!-- Node9 -->
 <g id="Node000009" class="node">
 <title>Node9</title>
-<g id="a_Node000009"><a xlink:href="REST_2include_2controllers_2GetValue_8h.html" target="_top" xlink:title="Implements controller for the REST GET value endpoint.">
+<g id="a_Node000009"><a xlink:href="REST_2include_2controllers_2GetValue_8h.html" target="_top" xlink:title="Implements REST GetValue controller.">
 <polygon fill="white" stroke="#666666" points="1777,-123.5 1583,-123.5 1583,-82.5 1777,-82.5 1777,-123.5"/>
 <text text-anchor="start" x="1591" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="1591" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -229,7 +229,7 @@ var sectionId = 'dynsection-1';
 <!-- Node10 -->
 <g id="Node000010" class="node">
 <title>Node10</title>
-<g id="a_Node000010"><a xlink:href="connections_2REST_2include_2controllers_2LanguagePack_8h.html" target="_top" xlink:title="Implements controller for the REST language&#45;pack endpoint.">
+<g id="a_Node000010"><a xlink:href="connections_2REST_2include_2controllers_2LanguagePack_8h.html" target="_top" xlink:title="Implements REST LanguagePack controller.">
 <polygon fill="white" stroke="#666666" points="2014.5,-123.5 1795.5,-123.5 1795.5,-82.5 2014.5,-82.5 2014.5,-123.5"/>
 <text text-anchor="start" x="1803.5" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="1803.5" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -249,7 +249,7 @@ var sectionId = 'dynsection-1';
 <!-- Node11 -->
 <g id="Node000011" class="node">
 <title>Node11</title>
-<g id="a_Node000011"><a xlink:href="Languages_8h.html" target="_top" xlink:title="Implements controller for the REST languages endpoint.">
+<g id="a_Node000011"><a xlink:href="Languages_8h.html" target="_top" xlink:title="Implements REST Languages controller.">
 <polygon fill="white" stroke="#666666" points="2235,-123.5 2033,-123.5 2033,-82.5 2235,-82.5 2235,-123.5"/>
 <text text-anchor="start" x="2041" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="2041" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -269,7 +269,7 @@ var sectionId = 'dynsection-1';
 <!-- Node12 -->
 <g id="Node000012" class="node">
 <title>Node12</title>
-<g id="a_Node000012"><a xlink:href="REST_2include_2controllers_2MultiSetValue_8h.html" target="_top" xlink:title="Implements controller for the REST values endpoint.">
+<g id="a_Node000012"><a xlink:href="REST_2include_2controllers_2MultiSetValue_8h.html" target="_top" xlink:title="Implements REST MultiSetValue controller.">
 <polygon fill="white" stroke="#666666" points="2949.5,-123.5 2732.5,-123.5 2732.5,-82.5 2949.5,-82.5 2949.5,-123.5"/>
 <text text-anchor="start" x="2740.5" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="2740.5" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -289,7 +289,7 @@ var sectionId = 'dynsection-1';
 <!-- Node14 -->
 <g id="Node000014" class="node">
 <title>Node14</title>
-<g id="a_Node000014"><a xlink:href="REST_2include_2controllers_2ParamInfoRequest_8h.html" target="_top" xlink:title="Implements controller for the REST param&#45;info endpoint.">
+<g id="a_Node000014"><a xlink:href="REST_2include_2controllers_2ParamInfoRequest_8h.html" target="_top" xlink:title="Implements REST ParamInfoRequest controller.">
 <polygon fill="white" stroke="#666666" points="2481,-129 2291,-129 2291,-77 2481,-77 2481,-129"/>
 <text text-anchor="start" x="2299" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="2299" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -310,7 +310,7 @@ var sectionId = 'dynsection-1';
 <!-- Node15 -->
 <g id="Node000015" class="node">
 <title>Node15</title>
-<g id="a_Node000015"><a xlink:href="Subscriptions_8h.html" target="_top" xlink:title="Implements controller for the REST subscriptions endpoint.">
+<g id="a_Node000015"><a xlink:href="Subscriptions_8h.html" target="_top" xlink:title="Implements Catena REST Subscriptions.">
 <polygon fill="white" stroke="#666666" points="2714.5,-123.5 2499.5,-123.5 2499.5,-82.5 2714.5,-82.5 2714.5,-123.5"/>
 <text text-anchor="start" x="2507.5" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="2507.5" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -350,7 +350,7 @@ var sectionId = 'dynsection-1';
 <!-- Node13 -->
 <g id="Node000013" class="node">
 <title>Node13</title>
-<g id="a_Node000013"><a xlink:href="REST_2include_2controllers_2SetValue_8h.html" target="_top" xlink:title="Implements controller for the REST PUT value endpoint.">
+<g id="a_Node000013"><a xlink:href="REST_2include_2controllers_2SetValue_8h.html" target="_top" xlink:title="Implements REST SetValue controller.">
 <polygon fill="white" stroke="#666666" points="2937,-41 2745,-41 2745,0 2937,0 2937,-41"/>
 <text text-anchor="start" x="2753" y="-29" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="2753" y="-18" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>

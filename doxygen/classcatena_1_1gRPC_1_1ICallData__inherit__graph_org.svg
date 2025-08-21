@@ -20,7 +20,7 @@
 <!-- Node2 -->
 <g id="Node000002" class="node">
 <title>Node2</title>
-<g id="a_Node000002"><a xlink:href="classcatena_1_1gRPC_1_1CallData.html" target="_top" xlink:title="Abstract base class for inherited by CallData child classes defining the jwsToken_() method.">
+<g id="a_Node000002"><a xlink:href="classcatena_1_1gRPC_1_1CallData.html" target="_top" xlink:title="Abstract base class for the CallData classes which defines the jwsToken_ class.">
 <polygon fill="white" stroke="#666666" points="297,-259 168,-259 168,-240 297,-240 297,-259"/>
 <text text-anchor="middle" x="232.5" y="-247" font-family="Helvetica,sans-Serif" font-size="10.00">catena::gRPC::CallData</text>
 </a>
@@ -38,7 +38,7 @@
 <!-- Node3 -->
 <g id="Node000003" class="node">
 <title>Node3</title>
-<g id="a_Node000003"><a xlink:href="classcatena_1_1gRPC_1_1AddLanguage.html" target="_top" xlink:title="CallData class for the AddLanguage RPC.">
+<g id="a_Node000003"><a xlink:href="classcatena_1_1gRPC_1_1AddLanguage.html" target="_top" xlink:title="CallData class for the ListLanguages RPC.">
 <polygon fill="white" stroke="#666666" points="503.5,-499 350.5,-499 350.5,-480 503.5,-480 503.5,-499"/>
 <text text-anchor="middle" x="427" y="-487" font-family="Helvetica,sans-Serif" font-size="10.00">catena::gRPC::AddLanguage</text>
 </a>
@@ -203,7 +203,7 @@
 <!-- Node12 -->
 <g id="Node000012" class="node">
 <title>Node12</title>
-<g id="a_Node000012"><a xlink:href="classcatena_1_1gRPC_1_1ListLanguages.html" target="_top" xlink:title="CallData class for the ListLangauges RPC.">
+<g id="a_Node000012"><a xlink:href="classcatena_1_1gRPC_1_1ListLanguages.html" target="_top" xlink:title="CallData class for the ListLanguages RPC.">
 <polygon fill="white" stroke="#666666" points="505.5,-130 348.5,-130 348.5,-111 505.5,-111 505.5,-130"/>
 <text text-anchor="middle" x="427" y="-118" font-family="Helvetica,sans-Serif" font-size="10.00">catena::gRPC::ListLanguages</text>
 </a>
@@ -239,7 +239,7 @@
 <!-- Node15 -->
 <g id="Node000015" class="node">
 <title>Node15</title>
-<g id="a_Node000015"><a xlink:href="classcatena_1_1gRPC_1_1ParamInfoRequest.html" target="_top" xlink:title="CallData class for the ParamInfoRequest RPC.">
+<g id="a_Node000015"><a xlink:href="classcatena_1_1gRPC_1_1ParamInfoRequest.html" target="_top" xlink:title="CallData class for the ParamInfoRequest gRPC controller.">
 <polygon fill="white" stroke="#666666" points="515,-56 339,-56 339,-37 515,-37 515,-56"/>
 <text text-anchor="middle" x="427" y="-44" font-family="Helvetica,sans-Serif" font-size="10.00">catena::gRPC::ParamInfoRequest</text>
 </a>

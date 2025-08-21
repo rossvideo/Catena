@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cpp-v0.0.14-4: /home/runner/work/Catena/Catena/sdks/cpp/common/include/IDevice.h File Reference</title>
+<title>cpp-v0.0.15-896: /home/runner/work/Catena/Catena/sdks/cpp/common/include/IDevice.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -26,7 +26,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="doxylogo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">cpp-v0.0.14-4
+   <div id="projectname">cpp-v0.0.15-896
    </div>
   </td>
  </tr>
@@ -98,7 +98,7 @@ $(document).ready(function(){initNavTree('IDevice_8h.html',''); initResizable();
 </div><!--header-->
 <div class="contents">
 
-<p>Interface for the Device class.  
+<p>Interface for device.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;<a class="el" href="Authorizer_8h_source.html">Authorizer.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="Path_8h_source.html">Path.h</a>&gt;</code><br />
@@ -130,7 +130,7 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interface class for <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a>.  <a href="classcatena_1_1common_1_1IDevice.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">catena::common::IDevice::IDeviceSerializer</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents. This struct manages the state and lifetime of the coroutine. It also provides the interface for resuming the coroutine.  <a href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This struct manages the state and lifetime of the coroutine. It also provides the interface for resuming the coroutine.  <a href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="namespaces" name="namespaces"></a>
@@ -144,15 +144,15 @@ Namespaces</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:a118a88218f9509068efa0f46414ee018" id="r_a118a88218f9509068efa0f46414ee018"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1common.html#a118a88218f9509068efa0f46414ee018">catena::common::SlotMap</a> = std::unordered_map&lt; uint32_t, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> * &gt;</td></tr>
-<tr class="memdesc:a118a88218f9509068efa0f46414ee018"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for a map of slot numbers to their corresponding device.  <br /></td></tr>
+<tr class="memitem:a118a88218f9509068efa0f46414ee018" id="r_a118a88218f9509068efa0f46414ee018"><td class="memItemLeft" align="right" valign="top"><a id="a118a88218f9509068efa0f46414ee018" name="a118a88218f9509068efa0f46414ee018"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>catena::common::SlotMap</b> = std::unordered_map&lt; uint32_t, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> * &gt;</td></tr>
 <tr class="separator:a118a88218f9509068efa0f46414ee018"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2167b391607d3775a33d0e4e49dfc5c7" id="r_a2167b391607d3775a33d0e4e49dfc5c7"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1common.html#a2167b391607d3775a33d0e4e49dfc5c7">catena::common::SignalMap</a> = std::unordered_map&lt; uint32_t, uint32_t &gt;</td></tr>
-<tr class="memdesc:a2167b391607d3775a33d0e4e49dfc5c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">A map for storing signals and the slot of the device they belong to.  <br /></td></tr>
+<tr class="memitem:a2167b391607d3775a33d0e4e49dfc5c7" id="r_a2167b391607d3775a33d0e4e49dfc5c7"><td class="memItemLeft" align="right" valign="top"><a id="a2167b391607d3775a33d0e4e49dfc5c7" name="a2167b391607d3775a33d0e4e49dfc5c7"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>catena::common::SignalMap</b> = std::unordered_map&lt; uint32_t, uint32_t &gt;</td></tr>
 <tr class="separator:a2167b391607d3775a33d0e4e49dfc5c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Interface for the Device class. </p>
+<div class="textblock"><p>Interface for device. </p>
 <dl class="section author"><dt>Author</dt><dd><a href="#" onclick="location.href='mai'+'lto:'+'ben'+'ja'+'min'+'.w'+'hit'+'te'+'n@r'+'os'+'svi'+'de'+'o.c'+'om'; return false;">benja<span class="obfuscator">.nosp@m.</span>min.<span class="obfuscator">.nosp@m.</span>whitt<span class="obfuscator">.nosp@m.</span>en@r<span class="obfuscator">.nosp@m.</span>ossvi<span class="obfuscator">.nosp@m.</span>deo.<span class="obfuscator">.nosp@m.</span>com</a> </dd></dl>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2025 Ross Video </dd></dl>
 </div></div><!-- contents -->

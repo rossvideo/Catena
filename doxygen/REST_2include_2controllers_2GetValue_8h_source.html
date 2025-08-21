@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cpp-v0.0.14-4: /home/runner/work/Catena/Catena/sdks/cpp/connections/REST/include/controllers/GetValue.h Source File</title>
+<title>cpp-v0.0.15-896: /home/runner/work/Catena/Catena/sdks/cpp/connections/REST/include/controllers/GetValue.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -26,7 +26,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="doxylogo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">cpp-v0.0.14-4
+   <div id="projectname">cpp-v0.0.15-896
    </div>
   </td>
  </tr>
@@ -153,61 +153,60 @@ $(document).ready(function(){initNavTree('REST_2include_2controllers_2GetValue_8
 <div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacecatena.html">catena</a> {</div>
 <div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="keyword">namespace </span>REST {</div>
 <div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span> </div>
-<div class="foldopen" id="foldopen00071" data-start="{" data-end="};">
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1GetValue.html">   71</a></span><span class="keyword">class </span><a class="code hl_class" href="classcatena_1_1REST_1_1GetValue.html">GetValue</a> : <span class="keyword">public</span> <a class="code hl_class" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a> {</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    <span class="comment">// Specifying which Device and IParam to use (defaults to catena::...)</span></div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    <span class="keyword">using </span><a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> = <a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a>;</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    <span class="keyword">using </span><a class="code hl_class" href="classcatena_1_1common_1_1IParam.html">IParam</a> = <a class="code hl_class" href="classcatena_1_1common_1_1IParam.html">catena::common::IParam</a>;</div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    <span class="keyword">using </span>SlotMap = <a class="code hl_typedef" href="namespacecatena_1_1common.html#a118a88218f9509068efa0f46414ee018">catena::common::SlotMap</a>;</div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span> </div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1GetValue.html#a5792787a3789b6584e86ee7b110a4dce">   85</a></span>    <a class="code hl_function" href="classcatena_1_1REST_1_1GetValue.html#a5792787a3789b6584e86ee7b110a4dce">GetValue</a>(tcp::socket&amp; socket, <a class="code hl_class" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a>&amp; context, SlotMap&amp; dms);</div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1GetValue.html#a9121874ea5a4a5a5cdd93e36b8b1ccb5">   89</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1REST_1_1GetValue.html#a9121874ea5a4a5a5cdd93e36b8b1ccb5">proceed</a>() <span class="keyword">override</span>;</div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    </div>
-<div class="foldopen" id="foldopen00098" data-start="{" data-end="}">
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1GetValue.html#a27d3e8e921a16067323d6200927c2e30">   98</a></span>    <span class="keyword">static</span> <a class="code hl_class" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a>* <a class="code hl_function" href="classcatena_1_1REST_1_1GetValue.html#a27d3e8e921a16067323d6200927c2e30">makeOne</a>(tcp::socket&amp; socket, <a class="code hl_class" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a>&amp; context, SlotMap&amp; dms) {</div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>      <span class="keywordflow">return</span> <span class="keyword">new</span> <a class="code hl_class" href="classcatena_1_1REST_1_1GetValue.html">GetValue</a>(socket, context, dms);</div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>    }</div>
+<div class="foldopen" id="foldopen00066" data-start="{" data-end="};">
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1GetValue.html">   66</a></span><span class="keyword">class </span><a class="code hl_class" href="classcatena_1_1REST_1_1GetValue.html">GetValue</a> : <span class="keyword">public</span> <a class="code hl_class" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a> {</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>    <span class="comment">// Specifying which Device and IParam to use (defaults to catena::...)</span></div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>    <span class="keyword">using </span><a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> = <a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a>;</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    <span class="keyword">using </span><a class="code hl_class" href="classcatena_1_1common_1_1IParam.html">IParam</a> = <a class="code hl_class" href="classcatena_1_1common_1_1IParam.html">catena::common::IParam</a>;</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    <span class="keyword">using </span>SlotMap = catena::common::SlotMap;</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span> </div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1GetValue.html#a5792787a3789b6584e86ee7b110a4dce">   80</a></span>    <a class="code hl_function" href="classcatena_1_1REST_1_1GetValue.html#a5792787a3789b6584e86ee7b110a4dce">GetValue</a>(tcp::socket&amp; socket, <a class="code hl_class" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a>&amp; context, SlotMap&amp; dms);</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1GetValue.html#a9121874ea5a4a5a5cdd93e36b8b1ccb5">   84</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1REST_1_1GetValue.html#a9121874ea5a4a5a5cdd93e36b8b1ccb5">proceed</a>() <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    </div>
+<div class="foldopen" id="foldopen00093" data-start="{" data-end="}">
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1GetValue.html#a27d3e8e921a16067323d6200927c2e30">   93</a></span>    <span class="keyword">static</span> <a class="code hl_class" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a>* <a class="code hl_function" href="classcatena_1_1REST_1_1GetValue.html#a27d3e8e921a16067323d6200927c2e30">makeOne</a>(tcp::socket&amp; socket, <a class="code hl_class" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a>&amp; context, SlotMap&amp; dms) {</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>      <span class="keywordflow">return</span> <span class="keyword">new</span> <a class="code hl_class" href="classcatena_1_1REST_1_1GetValue.html">GetValue</a>(socket, context, dms);</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    }</div>
 </div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    </div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    </div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> writeConsole_(<a class="code hl_enumeration" href="namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009">CallStatus</a> status, <span class="keywordtype">bool</span> ok)<span class="keyword"> const override </span>{</div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>      DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;GetValue::proceed[&quot;</span> &lt;&lt; objectId_ &lt;&lt; <span class="stringliteral">&quot;]: &quot;</span></div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>                &lt;&lt; <a class="code hl_function" href="namespacecatena_1_1common.html#aaf7051c03c402f50294ffebece8d0cfb">catena::common::timeNow</a>() &lt;&lt; <span class="stringliteral">&quot; status: &quot;</span></div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>                &lt;&lt; <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(status) &lt;&lt;<span class="stringliteral">&quot;, ok: &quot;</span>&lt;&lt; std::boolalpha &lt;&lt; ok;</div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    }</div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    tcp::socket&amp; socket_;</div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>    ISocketReader&amp; context_;</div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>    SocketWriter writer_;</div>
-<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>    SlotMap&amp; dms_;</div>
-<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span> </div>
-<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>    <span class="keywordtype">int</span> objectId_;</div>
-<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;</div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>};</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>    </div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    </div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> writeConsole_(<a class="code hl_enumeration" href="namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009">CallStatus</a> status, <span class="keywordtype">bool</span> ok)<span class="keyword"> const override </span>{</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>      DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;GetValue::proceed[&quot;</span> &lt;&lt; objectId_ &lt;&lt; <span class="stringliteral">&quot;]: &quot;</span></div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>                &lt;&lt; <a class="code hl_function" href="namespacecatena_1_1common.html#aaf7051c03c402f50294ffebece8d0cfb">catena::common::timeNow</a>() &lt;&lt; <span class="stringliteral">&quot; status: &quot;</span></div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>                &lt;&lt; <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(status) &lt;&lt;<span class="stringliteral">&quot;, ok: &quot;</span>&lt;&lt; std::boolalpha &lt;&lt; ok;</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    }</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    tcp::socket&amp; socket_;</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>    ISocketReader&amp; context_;</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>    SocketWriter writer_;</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    SlotMap&amp; dms_;</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span> </div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>    <span class="keywordtype">int</span> objectId_;</div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>};</div>
 </div>
-<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span> </div>
-<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>}; <span class="comment">// namespace REST</span></div>
-<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>}; <span class="comment">// namespace catena</span></div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span> </div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>}; <span class="comment">// namespace REST</span></div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>}; <span class="comment">// namespace catena</span></div>
 <div class="ttc" id="aAuthorizer_8h_html"><div class="ttname"><a href="Authorizer_8h.html">Authorizer.h</a></div><div class="ttdoc">Class for handling authorization information.</div></div>
-<div class="ttc" id="aEnums_8h_html"><div class="ttname"><a href="Enums_8h.html">Enums.h</a></div><div class="ttdoc">Tools for using EnumDecorators.</div></div>
-<div class="ttc" id="aIDevice_8h_html"><div class="ttname"><a href="IDevice_8h.html">IDevice.h</a></div><div class="ttdoc">Interface for the Device class.</div></div>
+<div class="ttc" id="aEnums_8h_html"><div class="ttname"><a href="Enums_8h.html">Enums.h</a></div><div class="ttdoc">tools for using EnumDecorators.</div></div>
+<div class="ttc" id="aIDevice_8h_html"><div class="ttname"><a href="IDevice_8h.html">IDevice.h</a></div><div class="ttdoc">Interface for device.</div></div>
 <div class="ttc" id="aIParam_8h_html"><div class="ttname"><a href="IParam_8h.html">IParam.h</a></div><div class="ttdoc">Interface for parameters.</div></div>
 <div class="ttc" id="aISocketReader_8h_html"><div class="ttname"><a href="ISocketReader_8h.html">ISocketReader.h</a></div><div class="ttdoc">Interface for the SocketReader class.</div></div>
 <div class="ttc" id="aLogger_8h_html"><div class="ttname"><a href="Logger_8h.html">Logger.h</a></div><div class="ttdoc">Logger class.</div></div>
-<div class="ttc" id="aSocketWriter_8h_html"><div class="ttname"><a href="SocketWriter_8h.html">SocketWriter.h</a></div><div class="ttdoc">Implements the SocketWriter class.</div></div>
+<div class="ttc" id="aSocketWriter_8h_html"><div class="ttname"><a href="SocketWriter_8h.html">SocketWriter.h</a></div><div class="ttdoc">Helper class used to write to a socket using boost.</div></div>
 <div class="ttc" id="aStatus_8h_html"><div class="ttname"><a href="Status_8h.html">Status.h</a></div><div class="ttdoc">Communicates failure status using gRPC's codes.</div></div>
 <div class="ttc" id="aTimeNow_8h_html"><div class="ttname"><a href="TimeNow_8h.html">TimeNow.h</a></div><div class="ttdoc">Contains a function which returns the current time as a string.</div></div>
-<div class="ttc" id="aclasscatena_1_1REST_1_1GetValue_html"><div class="ttname"><a href="classcatena_1_1REST_1_1GetValue.html">catena::REST::GetValue</a></div><div class="ttdoc">Controller class for the GET Value REST endpoint.</div><div class="ttdef"><b>Definition</b> GetValue.h:71</div></div>
-<div class="ttc" id="aclasscatena_1_1REST_1_1GetValue_html_a27d3e8e921a16067323d6200927c2e30"><div class="ttname"><a href="classcatena_1_1REST_1_1GetValue.html#a27d3e8e921a16067323d6200927c2e30">catena::REST::GetValue::makeOne</a></div><div class="ttdeci">static ICallData * makeOne(tcp::socket &amp;socket, ISocketReader &amp;context, SlotMap &amp;dms)</div><div class="ttdoc">Creates a new controller object for use with GenericFactory.</div><div class="ttdef"><b>Definition</b> GetValue.h:98</div></div>
-<div class="ttc" id="aclasscatena_1_1REST_1_1GetValue_html_a5792787a3789b6584e86ee7b110a4dce"><div class="ttname"><a href="classcatena_1_1REST_1_1GetValue.html#a5792787a3789b6584e86ee7b110a4dce">catena::REST::GetValue::GetValue</a></div><div class="ttdeci">GetValue(tcp::socket &amp;socket, ISocketReader &amp;context, SlotMap &amp;dms)</div><div class="ttdoc">Constructor for the GET value endpoint controller.</div></div>
-<div class="ttc" id="aclasscatena_1_1REST_1_1GetValue_html_a9121874ea5a4a5a5cdd93e36b8b1ccb5"><div class="ttname"><a href="classcatena_1_1REST_1_1GetValue.html#a9121874ea5a4a5a5cdd93e36b8b1ccb5">catena::REST::GetValue::proceed</a></div><div class="ttdeci">void proceed() override</div><div class="ttdoc">The GET value endpoint's main process.</div></div>
+<div class="ttc" id="aclasscatena_1_1REST_1_1GetValue_html"><div class="ttname"><a href="classcatena_1_1REST_1_1GetValue.html">catena::REST::GetValue</a></div><div class="ttdoc">ICallData class for the GetValue REST controller.</div><div class="ttdef"><b>Definition</b> GetValue.h:66</div></div>
+<div class="ttc" id="aclasscatena_1_1REST_1_1GetValue_html_a27d3e8e921a16067323d6200927c2e30"><div class="ttname"><a href="classcatena_1_1REST_1_1GetValue.html#a27d3e8e921a16067323d6200927c2e30">catena::REST::GetValue::makeOne</a></div><div class="ttdeci">static ICallData * makeOne(tcp::socket &amp;socket, ISocketReader &amp;context, SlotMap &amp;dms)</div><div class="ttdoc">Creates a new controller object for use with GenericFactory.</div><div class="ttdef"><b>Definition</b> GetValue.h:93</div></div>
+<div class="ttc" id="aclasscatena_1_1REST_1_1GetValue_html_a5792787a3789b6584e86ee7b110a4dce"><div class="ttname"><a href="classcatena_1_1REST_1_1GetValue.html#a5792787a3789b6584e86ee7b110a4dce">catena::REST::GetValue::GetValue</a></div><div class="ttdeci">GetValue(tcp::socket &amp;socket, ISocketReader &amp;context, SlotMap &amp;dms)</div><div class="ttdoc">Constructor for the GetValue controller.</div></div>
+<div class="ttc" id="aclasscatena_1_1REST_1_1GetValue_html_a9121874ea5a4a5a5cdd93e36b8b1ccb5"><div class="ttname"><a href="classcatena_1_1REST_1_1GetValue.html#a9121874ea5a4a5a5cdd93e36b8b1ccb5">catena::REST::GetValue::proceed</a></div><div class="ttdeci">void proceed() override</div><div class="ttdoc">GetValue's main process.</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1ICallData_html"><div class="ttname"><a href="classcatena_1_1REST_1_1ICallData.html">catena::REST::ICallData</a></div><div class="ttdoc">Interface class for REST API controllers.</div><div class="ttdef"><b>Definition</b> ICallData.h:67</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1ISocketReader_html"><div class="ttname"><a href="classcatena_1_1REST_1_1ISocketReader.html">catena::REST::ISocketReader</a></div><div class="ttdoc">Interface for the SocketReader class.</div><div class="ttdef"><b>Definition</b> ISocketReader.h:69</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1IDevice_html"><div class="ttname"><a href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a></div><div class="ttdoc">Interface class for Device.</div><div class="ttdef"><b>Definition</b> IDevice.h:62</div></div>
-<div class="ttc" id="aclasscatena_1_1common_1_1IParam_html"><div class="ttname"><a href="classcatena_1_1common_1_1IParam.html">catena::common::IParam</a></div><div class="ttdoc">IParam is the interface for business logic and connection logic to interact with parameters.</div><div class="ttdef"><b>Definition</b> IParam.h:63</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1IParam_html"><div class="ttname"><a href="classcatena_1_1common_1_1IParam.html">catena::common::IParam</a></div><div class="ttdoc">IParam is the interface for business logic and connection logic to interact with parameters.</div><div class="ttdef"><b>Definition</b> IParam.h:50</div></div>
 <div class="ttc" id="anamespacecatena_1_1REST_html_a58c70401164afb6c66bd561a88da4009"><div class="ttname"><a href="namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009">catena::REST::CallStatus</a></div><div class="ttdeci">CallStatus</div><div class="ttdoc">CallData states for status messages.</div><div class="ttdef"><b>Definition</b> ICallData.h:62</div></div>
-<div class="ttc" id="anamespacecatena_1_1common_html_a118a88218f9509068efa0f46414ee018"><div class="ttname"><a href="namespacecatena_1_1common.html#a118a88218f9509068efa0f46414ee018">catena::common::SlotMap</a></div><div class="ttdeci">std::unordered_map&lt; uint32_t, IDevice * &gt; SlotMap</div><div class="ttdoc">Type alias for a map of slot numbers to their corresponding device.</div><div class="ttdef"><b>Definition</b> IDevice.h:420</div></div>
 <div class="ttc" id="anamespacecatena_1_1common_html_aaf7051c03c402f50294ffebece8d0cfb"><div class="ttname"><a href="namespacecatena_1_1common.html#aaf7051c03c402f50294ffebece8d0cfb">catena::common::timeNow</a></div><div class="ttdeci">std::string timeNow()</div><div class="ttdoc">Returns the current time as a string including microseconds.</div><div class="ttdef"><b>Definition</b> TimeNow.h:51</div></div>
 <div class="ttc" id="anamespacecatena_html"><div class="ttname"><a href="namespacecatena.html">catena</a></div><div class="ttdoc">top level namespace for Catena. Functionality at this scope includes the protoc generated classes....</div><div class="ttdef"><b>Definition</b> Authorizer.h:57</div></div>
 <div class="ttc" id="autils_8h_html"><div class="ttname"><a href="utils_8h.html">utils.h</a></div><div class="ttdoc">Utility functions.</div></div>
