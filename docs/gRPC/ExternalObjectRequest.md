@@ -6,17 +6,17 @@
 Gets an external object from the service.
 
 ### IN
-```
+```proto
 message ExternalObjectRequestPayload {
   uint32 slot = 1; // Uniquely identifies the device at node scope.
   string oid = 2;  // ID of external object being requested
-  uint32 encoding = 3; 
 }
 ```
 
 ### OUT
 An ExternalObjectPayload.
-```
+
+```proto
 message ExternalObjectPayload {
   bool cachable = 1;       /* If false, do not cache the external object
                             * payload */

@@ -257,7 +257,7 @@ class ParamWithValue : public catena::common::IParam {
      * @brief define the command implementation
      * @param commandImpl a function that takes a Value and returns a CommandResponder
      */ 
-    void defineCommand(std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(const catena::Value&)> commandImpl) {
+    void defineCommand(std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(const catena::Value&, const bool)> commandImpl) {
         descriptor_.defineCommand(commandImpl);
     }
 
@@ -266,8 +266,8 @@ class ParamWithValue : public catena::common::IParam {
      * @param value the value to pass to the command implementation
      * @return the responser from the command implementation
      */
-    std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommand(const catena::Value& value) const override {
-        return descriptor_.executeCommand(value);
+    std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommand(const catena::Value& value, const bool respond) const override {
+        return descriptor_.executeCommand(value, respond);
     }
 
     /**
@@ -476,7 +476,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param value the value to get the child parameter from
      * @return a unique pointer to the child parameter
      * 
-     * this generic template is used when the type is not a CatenaStruct or CatenaStructArray.
+     * This generic template is used when the type is not a CatenaStruct or CatenaStructArray.
      * Since this type has no sub-params, it only returns nullptr.
      * 
      */
@@ -494,7 +494,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param value the value to get the child parameter from
      * @return a unique pointer to the child parameter, or nullptr if it does not exist
      * 
-     * this specialization is used when the type is a CatenaStructArray.
+     * This specialization is used when the type is a CatenaStructArray.
      * This function expects the front segment of the oid to be an index.
      */
     template<meta::IsVector U>
@@ -532,7 +532,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param value the value to get the child parameter from
      * @return a unique pointer to the child parameter, or nullptr if it does not exist
      * 
-     * this specialization is used when the type is a CatenaStruct.
+     * This specialization is used when the type is a CatenaStruct.
      * This function expects the front segment of the oid to be a string.
      */
     template <CatenaStruct U>
@@ -560,6 +560,48 @@ class ParamWithValue : public catena::common::IParam {
         }
         return returnParam;
     }
+
+     /**
+     * @brief get the child parameter that oid points to
+     * @tparam U the type of the value that we are getting the child parameter from
+     * @param oid the path to the child parameter
+     * @param value the value to get the child parameter from
+     * @return a unique pointer to the child parameter, or nullptr if it does not exist
+     * 
+     * This specialization is used when the type is a CatenaStructVariant.
+     * This function expects the front segment of the oid to be a string.
+     */
+     template <meta::IsVariant U>
+     std::unique_ptr<IParam> getParam_(Path& oid, U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
+         std::unique_ptr<IParam> returnParam = nullptr;
+         if (!oid.front_is_string()) {
+             status = catena::exception_with_status("Expected string in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
+         } else {
+             std::string oidStr = oid.front_as_string();
+             oid.pop();
+             if (catena::common::alternativeNames<U>[value.index()] != oidStr) {
+                 status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::NOT_FOUND);
+             // we reached the end of the path, return the element
+             } else if (oid.empty()) {
+                 returnParam = std::visit([&](auto& arg) -> std::unique_ptr<IParam> {
+                     using V = std::decay_t<decltype(arg)>;
+                     return std::make_unique<ParamWithValue<V>>(arg, descriptor_.getSubParam(oidStr));
+                 }, value);
+                 // Making sure we have readAuthz for the gotten param before returning.
+                 if (!authz.readAuthz(*returnParam)) {
+                     status = catena::exception_with_status("Not authorized to read param " + oid.fqoid(), catena::StatusCode::PERMISSION_DENIED);
+                     returnParam = nullptr;
+                 }
+             // The path has more segments, keep recursing
+             } else {
+                 returnParam = std::visit([&](auto& arg) -> std::unique_ptr<IParam> {
+                     using V = std::decay_t<decltype(arg)>;
+                     return ParamWithValue<V>(arg, descriptor_.getSubParam(oidStr)).getParam(oid, authz, status);
+                 }, value);
+             }
+         }
+         return returnParam;
+     }
 
     /**
      * @brief gets the child parameter by name
@@ -620,38 +662,6 @@ class ParamWithValue : public catena::common::IParam {
         // Get the type of the field at index I so that we can create a ParamWithValue object of that type
         using FieldType = typename std::tuple_element_t<I, Tuple>::Field;
         return std::make_unique<ParamWithValue<FieldType>>(std::get<I>(tuple), value_.get(), descriptor_);
-    }
-
-    template <meta::IsVariant U>
-    std::unique_ptr<IParam> getParam_(Path& oid, U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
-        std::unique_ptr<IParam> returnParam = nullptr;
-        if (!oid.front_is_string()) {
-            status = catena::exception_with_status("Expected string in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
-        } else {
-            std::string oidStr = oid.front_as_string();
-            oid.pop();
-            if (catena::common::alternativeNames<U>[value.index()] != oidStr) {
-                status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::NOT_FOUND);
-            // we reached the end of the path, return the element
-            } else if (oid.empty()) {
-                returnParam = std::visit([&](auto& arg) -> std::unique_ptr<IParam> {
-                    using V = std::decay_t<decltype(arg)>;
-                    return std::make_unique<ParamWithValue<V>>(arg, descriptor_.getSubParam(oidStr));
-                }, value);
-                // Making sure we have readAuthz for the gotten param before returning.
-                if (!authz.readAuthz(*returnParam)) {
-                    status = catena::exception_with_status("Not authorized to read param " + oid.fqoid(), catena::StatusCode::PERMISSION_DENIED);
-                    returnParam = nullptr;
-                }
-            // The path has more segments, keep recursing
-            } else {
-                returnParam = std::visit([&](auto& arg) -> std::unique_ptr<IParam> {
-                    using V = std::decay_t<decltype(arg)>;
-                    return ParamWithValue<V>(arg, descriptor_.getSubParam(oidStr)).getParam(oid, authz, status);
-                }, value);
-            }
-        }
-        return returnParam;
     }
 
     // Tracker updaters. One overload for each case.

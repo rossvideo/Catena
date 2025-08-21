@@ -115,12 +115,12 @@
       "skipFiles": [
           "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/${env:BUILD_TARGET}/tools/codegen/index.js",
+      "program": "${workspaceFolder}/tools/codegen/index.js",
       "args": [
           "--schema",
           "${workspaceFolder}/schema",
           "--device-model",
-          "${workspaceFolder}/${env:BUILD_TARGET}/sdks/cpp/${input:pickDeviceModel}",
+          "${workspaceFolder}/sdks/cpp/${input:pickDeviceModel}",
           "--output",
           "${workspaceFolder}/${env:BUILD_TARGET}/${input:pickDeviceModel}/..",
           "--language",
@@ -188,6 +188,7 @@
                   "common/examples/import_params/device.import_params.json",
                   "common/examples/use_variants/device.use_variants.json",
                   "connections/gRPC/examples/external_object_request/device.external_object_request.json",
+                  "connections/gRPC/examples/one_of_everything/device.one_of_everything.yaml",
                   "connections/gRPC/examples/status_update/device.status_update.json",
                   "connections/gRPC/examples/structs_with_authz/device.AudioDeck.json",
                   "connections/gRPC/examples/structs_with_authz_yaml/device.AudioDeck.yaml",
@@ -245,7 +246,7 @@
         //"api_only", // unimplemented
         "asset_request_REST",
         "status_update_REST",
-        "status_update_REST_JSON",
+        "status_update_JSON_REST",
         "use_commands_REST",
         "use_menus_REST",
         "structs_with_authz_REST",

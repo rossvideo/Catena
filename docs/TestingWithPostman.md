@@ -21,7 +21,7 @@ Follow [this guide](https://learning.postman.com/docs/getting-started/installati
 
 ### Sending a REST API call using Postman
 1. Once installed open Postman and create a new request by selecting "new" then selecting "HTTP". 
-2. Go to the "URL" tab and enter the IP and port of that the service is running on followed by "v1/endpoint-to-call/slot"
+2. Go to the "URL" tab and enter the IP and port of that the service is running on followed by "st2138-api/v1/slot/endpoint-to-call/fqoid"
     1. **Note that the connect and get-populated-slots API calls require the slot to not be defined.*
 3. Go to the "Method" dropdown and select the correct method for your API call.
 4. If the API call requires the "Detail_Level" or "Language" headers, click on the "Headers" tab and enter them there.

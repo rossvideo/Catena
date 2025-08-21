@@ -41,23 +41,39 @@
 // gtest
 #include <gtest/gtest.h>
 
+// common
+#include <Logger.h>
+
 using namespace catena::common;
 
-// Test class proviing a get function for the underlying connectionQueue_ vector.
-class TestConnectionQueue : public ConnectionQueue {
-  public:
-    TestConnectionQueue(size_t maxConnections) : ConnectionQueue(maxConnections) {}
-    
-    // Returns the underlying connectionQueue_ vector.
-    std::vector<IConnect*>& get() {
-        return connectionQueue_;
+// Test fixture for ConnectionQueue tests
+class ConnectionQueueTest : public testing::Test {
+  protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("ConnectionQueueTest");
     }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
+    // Helper class that provides access to connectionQueue_ vector
+    class TestConnectionQueue : public ConnectionQueue {
+      public:
+        TestConnectionQueue(size_t maxConnections) : ConnectionQueue(maxConnections) {}
+        
+        // Returns the underlying connectionQueue_ vector.
+        std::vector<IConnect*>& get() {
+            return connectionQueue_;
+        }
+    };
 };
 
 /*
  * TEST 1 - Testing ConnectionQueue registerConnection and deregisterConnection.
  */
-TEST(ConnectionQueueTests, ConnectionQueue_ManageConnections) {
+TEST_F(ConnectionQueueTest, ConnectionQueue_ManageConnections) {
     // Initializing connectionQueue with maxConnections = 1.
     TestConnectionQueue connectionQueue{1};
     // Mocking 2 connections with A < B.
@@ -85,7 +101,7 @@ TEST(ConnectionQueueTests, ConnectionQueue_ManageConnections) {
 /*
  * TEST 2 - Testing adding a nullptr to ConnectionQueue.
  */
-TEST(ConnectionQueueTests, ConnectionQueue_AddNullConnection) {
+TEST_F(ConnectionQueueTest, ConnectionQueue_AddNullConnection) {
     // Initializing connectionQueue with maxConnections = 1.
     TestConnectionQueue connectionQueue{1};
     // Adding a nullptr.

@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,11 +31,12 @@
  */
 
 /**
- * @file NamedChoiceConstraint.h
+ * @file ChoiceConstraint.h
  * @brief A constraint that checks if a value is within some named choices
  * @author isaac.robert@rossvideo.com
- * @date 2024-07-25
- * @copyright Copyright (c) 2024 Ross Video
+ * @author benjamin.whitten@rossvideo.com
+ * @date 2028-08-19
+ * @copyright Copyright (c) 2025 Ross Video
  */
 
 /**
@@ -53,16 +54,33 @@
 #include <string>
 #include <unordered_set>
 #include <initializer_list>
+#include <type_traits>
 
 namespace catena {
 namespace common {
 
 /**
- * @brief Named choice constraint, ensures a value is within a named choice
- * @tparam T int or string
+ * @brief Named choice constraint which ensures a value is within a named choice.
+ * 
+ * Supports three types: INT_CHOICE, STRING_CHOICE, and STRING_STRING_CHOICE.
+ * 
+ * INT_CHOICE and STRING_STRING_CHOICE have both a value and a polyglot text
+ * "name" for each choice while STRING_CHOICE is just a value.
+ * 
+ * @tparam T The constraint's primitive type. Must be int or string.
+ * @tparam cType The constraint's named type, must be one of INT_CHOICE,
+ * STRING_CHOICE, or STRING_STRING_CHOICE.
  */
-template <typename T> class NamedChoiceConstraint : public catena::common::IConstraint {
+template <typename T, catena::Constraint::ConstraintType cType>
+class ChoiceConstraint : public catena::common::IConstraint {
   public:
+    static_assert(
+        (std::is_same<T, int32_t>::value && cType == catena::Constraint::INT_CHOICE) ||
+        (std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_CHOICE) ||
+        (std::is_same<T, std::string>::value && cType == catena::Constraint::STRING_STRING_CHOICE),
+        "ChoiceConstraint: Invalid combination of T and constraintType"
+    );
+
     /**
      * @brief map of choices with their display names
      */
@@ -80,13 +98,9 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
      * @param shared is the constraint shared
      * @note  the first choice provided will be the default for the constraint
      */
-    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
+    ChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
         : choices_{init.begin(), init.end()}, strict_{strict},
-          default_{init.begin()->first}, oid_{oid}, shared_{shared} {
-        if constexpr (!std::is_same<T, int32_t>::value && !std::is_same<T, std::string>::value) {
-            throw std::runtime_error("Cannot create NamedChoiceConstraint with type other than int32_t or std::string");
-        }
-    }
+          default_{init.begin()->first}, oid_{oid}, shared_{shared} {}
 
     /**
      * @brief Construct a new Named Choice Constraint object
@@ -97,31 +111,22 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
      * @param dm the device to add the constraint to
      * @note  the first choice provided will be the default for the constraint
      */
-    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, IDevice& dm)
-        : NamedChoiceConstraint(init, strict, oid, shared) {
+    ChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, IDevice& dm)
+        : ChoiceConstraint(init, strict, oid, shared) {
         dm.addItem(oid, this);
     }
 
     /**
      * @brief default destructor
      */
-    virtual ~NamedChoiceConstraint() = default;
+    virtual ~ChoiceConstraint() = default;
 
     /**
      * @brief checks if the value satisfies the constraint
      * @param src the value to check
      * @return true if the value satisfies the constraint
      */
-    bool satisfied(const catena::Value& src) const override {
-        bool ans = false;
-        if constexpr (std::is_same<T, int32_t>::value) {
-            ans = choices_.contains(src.int32_value());
-        }
-        else if constexpr (std::is_same<T, std::string>::value) {
-            ans = !strict_ || choices_.contains(src.string_value());
-        }
-        return ans;
-    }
+    bool satisfied(const catena::Value& src) const override;
 
     /**
      * @brief applies constraint to src and returns the constrained value
@@ -141,31 +146,7 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
      * @brief serialize the constraint to a protobuf message
      * @param msg the protobuf message to populate
      */
-    void toProto(catena::Constraint& constraint) const override {
-        // Int choice serialization
-        if constexpr (std::is_same<T, int32_t>::value) {
-            constraint.set_type(catena::Constraint::INT_CHOICE);
-            for (auto& [value, name] : choices_) {
-                auto intChoice = constraint.mutable_int32_choice()->add_choices();
-                intChoice->set_value(value);
-                name.toProto(*intChoice->mutable_name());
-            }
-        }  
-        // String choice serialization
-        else if constexpr (std::is_same<T, std::string>::value) {
-            // Default is STRING_CHOICE, changes to STRING_STRING_CHOICE if
-            // there are no display strings
-            constraint.set_type(catena::Constraint::STRING_CHOICE);
-            for (auto& [value, name] : choices_) {
-                auto stringChoice = constraint.mutable_string_string_choice()->add_choices();
-                stringChoice->set_value(value);
-                name.toProto(*stringChoice->mutable_name());
-                if (!name.displayStrings().empty()) {
-                    constraint.set_type(catena::Constraint::STRING_STRING_CHOICE);
-                }
-            }
-        }
-    }
+    void toProto(catena::Constraint& constraint) const override;
 
     /**
      * @brief This constraint is not a range constraint so return false

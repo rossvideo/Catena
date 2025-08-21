@@ -155,17 +155,18 @@ TEST_F(ParamWithValueTest, DescriptorForwards) {
     // param.defineCommand()
     EXPECT_CALL(pd_, defineCommand(testing::_)).Times(1).WillOnce(testing::Return());
     EXPECT_NO_THROW(param.defineCommand(
-        [](const catena::Value& value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        [](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
             return nullptr;
         }););
     // param.executeCommand()
     catena::Value testVal;
     testVal.set_string_value("test");
-    EXPECT_CALL(pd_, executeCommand(testing::_)).Times(1).WillOnce(testing::Invoke([&testVal](catena::Value value){
+    EXPECT_CALL(pd_, executeCommand(testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([&testVal](catena::Value value, const bool respond){
         EXPECT_EQ(value.string_value(), testVal.string_value());
         return nullptr;
     }));
-    EXPECT_FALSE(param.executeCommand(testVal));
+    EXPECT_FALSE(param.executeCommand(testVal, true));
     // param.addParam()
     std::string subOid = "sub_oid";
     MockParamDescriptor subPd;

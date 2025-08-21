@@ -6,14 +6,14 @@
 Adds a language pack to a device model. This gRPC requires admin write if authorization is enabled.
 
 ### IN
-```
+```proto
 /* AddLanguagePayload
  * Used by a client to request that a device adds support for a language pack. */
 message AddLanguagePayload {
   uint32 slot = 1;                /* Uniquely identifies the device at node
                                    * scope. */
   LanguagePack language_pack = 2; // The language pack to add.
-  string id = 3;                  // e.g. "es" Global Spanish.
+  string language = 3;            // e.g. "es" Global Spanish.
 }
 
 /* Language Pack

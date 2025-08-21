@@ -6,7 +6,7 @@
 Gets a parameter within a device model.
 
 ### IN
-```
+``` proto
 message GetParamPayload {
   uint32 slot = 1; // Uniquely identifies the device at node scope.
   string oid = 2;  // Uniquely identifies the param at device scope.
@@ -15,7 +15,7 @@ message GetParamPayload {
 
 ### OUT
 The specified parameter within the device mode.
-```
+``` proto
 /* A parameter */
 message ComponentParam {
   string oid = 1;

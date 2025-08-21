@@ -104,7 +104,7 @@ void ExecuteCommand::proceed(bool ok) {
                     std::unique_ptr<IParam> command = dm->getCommand(req_.oid(), rc, *authz_);
                     // Executing the command if found.
                     if (command != nullptr) {
-                        responder_ = command->executeCommand(req_.value());
+                        responder_ = command->executeCommand(req_.value(), req_.respond());
                         status_ = CallStatus::kWrite; 
                     }
                 }

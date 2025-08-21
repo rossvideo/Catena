@@ -6,20 +6,20 @@
 Executes a command on the device model connected to the specified slot.
 
 ### IN
-```
+```proto
 message ExecuteCommandPayload {
   uint32 slot = 1;  // Slot id of the device
   string oid = 2;   /* The object id of the command to execute relative to
                      * device.commands */
   Value value = 3;  // The command's parameter value, if any
   bool respond = 4; // False if client wants to surpress response from server
-  bool proceed = 5; // Used to short circuit sending payloads 
 }
 ```
 
 ### OUT
 A stream of values, exceptions, or nothing.
-```
+
+```proto
 /* When streamed, only the response field will be used after the first message. */
 message CommandResponse {
   oneof kind {

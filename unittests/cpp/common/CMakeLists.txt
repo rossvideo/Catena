@@ -32,7 +32,7 @@ set(SOURCES
     tests/LanguagePack_test.cpp
     tests/Path_test.cpp
     tests/PolyglotText_test.cpp
-    tests/NamedChoiceConstraint_test.cpp
+    tests/ChoiceConstraint_test.cpp
     tests/RangeConstraint_test.cpp
     tests/ParamDescriptor_test.cpp
     tests/Device_test.cpp

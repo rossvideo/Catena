@@ -42,6 +42,7 @@
 // Test helpers
 #include "RESTTest.h"
 #include "MockServiceImpl.h"
+#include "MockSubscriptionManager.h"
 
 // REST
 #include "SocketReader.h"
@@ -67,13 +68,13 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
     void SetUp() override {
         origin_ = "test_origin";
         // Setting up expectations for the mock service.
-        EXPECT_CALL(service_, subscriptionManager()).WillRepeatedly(testing::ReturnRef(sm));
-        EXPECT_CALL(service_, EOPath()).WillRepeatedly(testing::ReturnRef(EOPath));
-        EXPECT_CALL(service_, version()).WillRepeatedly(testing::ReturnRef(version));
+        EXPECT_CALL(service_, subscriptionManager()).WillRepeatedly(testing::ReturnRef(sm_));
+        EXPECT_CALL(service_, EOPath()).WillRepeatedly(testing::ReturnRef(EOPath_));
+        EXPECT_CALL(service_, version()).WillRepeatedly(testing::ReturnRef(version_));
         // Making sure the reader properly adds the subscriptions manager.
         EXPECT_EQ(socketReader.service(), &service_);
-        EXPECT_EQ(&socketReader.subscriptionManager(), &sm);
-        EXPECT_EQ(socketReader.EOPath(), EOPath);
+        EXPECT_EQ(&socketReader.subscriptionManager(), &sm_);
+        EXPECT_EQ(socketReader.EOPath(), EOPath_);
     }
   
     void TearDown() override { /* Cleanup code here */ }
@@ -120,9 +121,9 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
     }
 
     // Variables to test on creation.
-    catena::common::SubscriptionManager sm;
-    std::string EOPath = "/test/eo/path";
-    std::string version = "v1";
+    MockSubscriptionManager sm_;
+    std::string EOPath_ = "/test/eo/path";
+    std::string version_ = "v1";
 
     // Mock service implementation.
     MockServiceImpl service_;
