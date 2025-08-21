@@ -30,7 +30,7 @@
 
 /**
  * @file GetParam.h
- * @brief Implements REST GetParam controller.
+ * @brief Implements controller for the REST param endpoint.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -61,7 +61,11 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the GetParam REST controller.
+ * @brief Controller class for the Param REST endpoint.
+ * 
+ * This controller supports one method:
+ * 
+ * - GET: Writes a parameter from the specified device to the client.
  */
 class GetParam : public ICallData {
   public:
@@ -71,23 +75,23 @@ class GetParam : public ICallData {
     using SlotMap = catena::common::SlotMap;
 
     /**
-     * @brief Constructor for the GetParam controller.
+     * @brief Constructor for the param endpoint controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The ISocketReader object.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     GetParam(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
-     * @brief GetParam's main process.
+     * @brief The param endpoint's main process.
      */
     void proceed() override;
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     * 
-     * @param socket The socket to write the response stream to.
-     * @param context The ISocketReader object.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
@@ -111,7 +115,13 @@ class GetParam : public ICallData {
      */
     tcp::socket& socket_;
     /**
-     * @brief The ISocketReader object.
+     * @brief The ISocketReader object used to read the client's request.
+     * 
+     * This is used to get two things from the client:
+     * 
+     * - A slot specifying the device to get the param from.
+     * 
+     * - The OID of the param to get.
      */
     ISocketReader& context_;
     /**
@@ -124,11 +134,11 @@ class GetParam : public ICallData {
     SlotMap& dms_;
 
     /**
-     * @brief ID of the GetParam object
+     * @brief The object's unique id.
      */
     int objectId_;
     /**
-     * @brief The total # of GetParam objects.
+     * @brief The total # of param endpoint controller objects.
      */
     static int objectCounter_;
 };

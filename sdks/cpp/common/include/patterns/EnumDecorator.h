@@ -1,21 +1,34 @@
 #pragma once
 
-/** Copyright 2024 Ross Video Ltd
-
- Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
- 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
- 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
- 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
- INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
- INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-//
+/*
+ * Copyright 2024 Ross Video Ltd
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 
 /**
  * @brief Provides an enum with useful extra functionality.
@@ -39,13 +52,15 @@
  * @copyright © 2024 Ross Video Ltd.
  */
 
- /** @example enum_decorator.cpp
+ /**
+  * @example enum_decorator.cpp
   * Provides example of using EnumDecorator.
   */
 
-//common
+// common
 #include <ReflectionMacros.h>
 
+// std
 #include <cstdint>
 #include <unordered_map>
 #include <string>
@@ -54,16 +69,15 @@
 namespace catena {
 
 /**
- * @brief A collection of classes which implement design patterns for function object management
+ * @brief A collection of classes which implement design patterns for function
+ * object management.
  */
-
 namespace patterns {
 
 /**
- * @brief Enhances default C++ enums by adding functionality for converting between enum values, strings and integral types
- * 
+ * @brief Enhances default C++ enums by adding functionality for converting
+ * between enum values, strings and integral types.
  */
-
 template <typename E> class EnumDecorator {
     // cause compile time error if E is not an enum
     static_assert(std::is_enum<E>::value, "EnumDecorator requires an enum type");
@@ -74,22 +88,16 @@ template <typename E> class EnumDecorator {
     using FwdMap = std::unordered_map<E, std::string>;    /*< forward map of enum values to strings */
     using RevMap = std::unordered_map<std::string, E>;    /*< reverse map of strings to enum values */
 
-  private:
-    E value_;                    /*< the current enum value */
-    static const FwdMap fwdMap_; /*< forward map of enum values to strings */
-
-  public:
     /**
      * @brief Default constructor.
      * Value of object will be 0.
-     *
      */
     EnumDecorator() : value_{static_cast<E>(0)} {}
 
     /**
      * @brief Construct from an enum value.
      *
-     * @param value the enum value
+     * @param value The enum value.
      */
     EnumDecorator(E value) : value_{value} {}
 
@@ -97,9 +105,10 @@ template <typename E> class EnumDecorator {
     /**
      * @brief Construct from a string.
      *
-     * Beware, the default value is set to 0, which may not be a valid enum value.
+     * Beware, the default value is set to 0, which may not be a valid enum
+     * value.
      *
-     * @param str the string representation of the enum value
+     * @param str The string representation of the enum value.
      */
     EnumDecorator(const std::string& str) : value_{static_cast<E>(0)} {
         const RevMap& revMap = getReverseMap();
@@ -109,11 +118,11 @@ template <typename E> class EnumDecorator {
     }
 
     /**
-     * @brief provide the reverse map of strings to enum values
+     * @brief provide the reverse map of strings to enum values.
      *
-     * lazy implementation
+     * Lazy implementation.
      *
-     * @returns the reverse map
+     * @returns The reverse map.
      */
     const RevMap& getReverseMap() {
         static RevMap revMap;
@@ -133,11 +142,11 @@ template <typename E> class EnumDecorator {
     const FwdMap& getForwardMap() const { return fwdMap_; }
 
     /**
-     * @brief construct from a value of the enum's underlying integral type.
+     * @brief Construct from a value of the enum's underlying integral type.
      *
      * Sets the value of the object to 0 if the integral value is not valid.
      *
-     * @param value the integral value
+     * @param value The integral value.
      */
     EnumDecorator(utype value) : value_{static_cast<E>(value)} {
         if (!fwdMap_.contains(value_)) {
@@ -148,52 +157,40 @@ template <typename E> class EnumDecorator {
 
     /**
      * @brief EnumDecorators have copy semantics.
-     *
      */
     EnumDecorator(const EnumDecorator& other) = default;
-
-    /**
-     * @brief EnumDecorators have copy semantics.
-     *
-     */
     EnumDecorator& operator=(const EnumDecorator& other) = default;
 
     /**
      * @brief EnumDecorators have move semantics.
-     *
      */
     EnumDecorator(EnumDecorator&& other) = default;
-
-    /**
-     * @brief EnumDecorators have move semantics.
-     *
-     */
     EnumDecorator& operator=(EnumDecorator&& other) = default;
 
     /**
-     * @brief value accessor.
+     * @brief Value accessor.
      *
-     * @returns the current enum value.
-     *
+     * @returns The current enum value.
      */
     E value() const { return value_; }
 
     /**
-     * @brief value accessor, alternative syntax.
-     * @returns the current enum value.
+     * @brief Value accessor, alternative syntax.
+     * @returns The current enum value.
      */
     E operator()() const { return value_; }
 
 
     /**
-     * @brief cast to the enum's underlying integral type
+     * @brief Cast to the enum's underlying integral type
      *
-     * @returns the current enum value or the default value if the object is not valid.
+     * @returns The current enum value or the default value if the object is
+     * not valid.
      */
     operator utype() const { return static_cast<utype>(value()); }
 
     /**
-     * @brief cast to a string
+     * @brief Cast to a string.
      */
     operator std::string() const {
         if (fwdMap_.contains(value_)) {
@@ -204,7 +201,7 @@ template <typename E> class EnumDecorator {
     }
 
     /**
-     * @brief get the string representation of the enum value
+     * @brief Get the string representation of the enum value.
      */
     const std::string& toString() const {
         if (fwdMap_.contains(value_)) {
@@ -216,20 +213,30 @@ template <typename E> class EnumDecorator {
     }
 
     /**
-     * @brief equality operator
+     * @brief Equality operator.
      *
-     * @returns true if the enum values are equal, false if they are different, and false if either object is
-     * not valid.
+     * @returns True if the enum values are equal, False if they are different
+     * or either object is not valid.
      */
     bool operator==(const EnumDecorator& other) const { return value() == other.value(); }
 
     /**
      * @brief inequality operator
      *
-     * @returns true if the enum values are different, false if they are equal, and false if either object is
-     * not valid.
+     * @returns true if the enum values are different, false if they are equal
+     * or either object is not valid.
      */
     bool operator!=(const EnumDecorator& other) const { return value_ != other.value_; }
+
+  private:
+    /**
+     * @brief The current enum value.
+     */
+    E value_;
+    /**
+     * @brief Forward map of enum values to strings.
+     */
+    static const FwdMap fwdMap_;
 };
 
 }  // namespace patterns

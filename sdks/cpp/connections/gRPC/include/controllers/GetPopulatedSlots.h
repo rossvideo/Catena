@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,12 +30,12 @@
 
 /**
  * @file GetPopulatedSlots.h
- * @brief Implements Catena gRPC GetPopulatedSlots
+ * @brief Implements the Catena GetPopulatedSlots RPC.
  * @author john.naylor@rossvideo.com
  * @author john.danen@rossvideo.com
  * @author isaac.robert@rossvideo.com
- * @date 2024-06-08
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @date 2024-08-18
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
@@ -47,45 +47,42 @@ namespace catena {
 namespace gRPC {
 
 /**
-* @brief CallData class for the GetPopulatedSlots RPC
-*/
+ * @brief CallData class for the GetPopulatedSlots RPC
+ *
+ * This RPC returns a list of all slots populated by devices in the service.
+ */
 class GetPopulatedSlots : public CallData{
   public:
     /**
-     * @brief Constructor for the CallData class of the GetPopulatedSlots
-     * gRPC. Calls proceed() once initialized.
+     * @brief Constructor for the CallData class of the GetPopulatedSlots RPC.
+     * Calls proceed() once initialized.
      *
-     * @param service - Pointer to the parent ServiceImpl.
+     * @param service Pointer to the ServiceImpl.
      * @param dms A map of slots to ptrs to their corresponding device.
-     * @param ok - Flag to check if the command was successfully executed.
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */ 
     GetPopulatedSlots(IServiceImpl *service, SlotMap& dms, bool ok);
     /**
-    * @brief Manages the steps of the GetPopulatedSlots gRPC command
-    * through the state variable status. Returns the number of populated
-    * slots to the client.
-    *
-    * @param service - Pointer to the parent ServiceImpl.
-    * @param ok - Flag to check if the command was successfully executed.
-    */
+     * @brief Manages the steps of the GetPopulatedSlots RPC through the state
+     * variable status.
+     *
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
+     */
     void proceed(bool ok) override;
 
   private:
     /**
-     * @brief Server request (empty).
+     * @brief The client's request, which in empty in this case.
      */
     catena::Empty req_;
     /**
-     * @brief Server response (list of populated slots).
-     */
-    catena::SlotList res_;
-    /**
-     * @brief gRPC async response writer.
+     * @brief The RPC response writer for writing back to the client.
      */
     ServerAsyncResponseWriter<::catena::SlotList> responder_;
     /**
-     * @brief Represents the current status of the command execution
-     * (kCreate, kProcess, kFinish, etc.)
+     * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */
     CallStatus status_;
     /**

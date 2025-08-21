@@ -32,7 +32,7 @@
 
 /**
  * @file IDevice.h
- * @brief Interface for device
+ * @brief Interface for the Device class.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright (c) 2025 Ross Video
  */
@@ -68,74 +68,75 @@ class IDevice {
     using DetailLevel_e = catena::Device_DetailLevel;
     
     /**
-     * @brief Construct a new Device object
+     * @brief Constructs a new Device object.
      */
     IDevice() = default;
     /**
-     * @brief Destroy the Device object
+     * @brief Destroys the Device object.
      */
     virtual ~IDevice() = default;
 
     /**
-     * @brief set the slot number of the device
-     * @param slot the slot number of the device
+     * @brief Set the slot number of the device.
+     * @param slot The device's new slot number.
      */
     virtual inline void slot(const uint32_t slot) = 0;
 
     /**
-     * @brief get the slot number of the device
-     * @return slot number
+     * @brief Get the slot number of the device
+     * @return The device's slot number.
      */
     virtual inline uint32_t slot() const = 0;
 
     /**
-     * @brief Returns the device's mutex.
+     * @brief Gets the device's mutex.
+     * @return The device's mutex.
      */
     virtual inline std::mutex& mutex() = 0;
 
     /**
-     * @brief set the detail level of the device
-     * @param detail_level the detail level of the device
+     * @brief Sets the default detail level of the device.
+     * @param detail_level the new default detail level of the device.
      */
     virtual inline void detail_level(const DetailLevel_e detail_level) = 0;
 
     /**
-     * @brief get the detail level of the device
-     * @return DetailLevel_
+     * @brief Get the default detail level of the device.
+     * @return The device's default detail level.
      */
     virtual inline DetailLevel_e detail_level() const = 0;
     /**
-     * @brief Returns the device's default scope.
+     * @brief Gets the device's default scope.
+     * @return The device's default scope.
      */
     virtual inline const std::string& getDefaultScope() const = 0;
 
     /**
-     * @brief Check if subscriptions are enabled for this device
-     * @return true if subscriptions are enabled, false otherwise
+     * @brief Check if subscriptions are enabled for this device.
+     * @return True if subscriptions are enabled, False otherwise.
      */
     virtual inline bool subscriptions() const = 0;
 
     /**
+     * @brief Gets the default max length for this device's array params.
      * @return The default max length for this device's array params.
      */
     virtual inline uint32_t default_max_length() const = 0;
     /**
+     * @brief Gets the default total length for this device's string array
+     * params.
      * @return The default total length for this device's string array params.
      */
     virtual inline uint32_t default_total_length() const = 0;
 
     /**
-     * @brief Sets the default_max_length_ for this device's array params.
-     * If default_max_length <= 0, then it reverts default_max_length_ to
-     * kDefaultMaxArrayLength.
-     * @param default_max_length The value to set default_max_length_ to.
+     * @brief Sets the default max length for this device's array params.
+     * @param default_max_length The device's new default max length.
      */
     virtual void set_default_max_length(const uint32_t default_max_length) = 0;
     /**
-     * @brief Sets the default_total_length_ for this device's array params.
-     * If default_total_length <= 0, then it reverts default_total_length_ to
-     * kDefaultMaxArrayLength.
-     * @param default_total_length The value to set default_total_length_ to.
+     * @brief Sets the default total length for this device's array params.
+     * @param default_total_length The device's new default total length.
      */
     virtual void set_default_total_length(const uint32_t default_total_length) = 0;
 
@@ -146,31 +147,26 @@ class IDevice {
      * commands etc are not copied. Design intent is to permit large models to
      * stream their parameters instead of sending a huge device model in one
      * big lump.
-     * 
-     * N.B. This method is not thread-safe. It is the caller's responsibility
-     * to ensure that the device is not modified while this method is running.
-     * This class provides a LockGuard helper class to make this easier.
      */
     virtual void toProto(::catena::Device& dst, const IAuthorizer& authz, bool shallow = true) const = 0;
 
     /**
-     * @brief Create a protobuf representation of the language packs.
+     * @brief Creates a protobuf representation of the device's language packs.
      * @param packs the protobuf representation of the language packs.
      */
     virtual void toProto(::catena::LanguagePacks& packs) const = 0;
 
     /**
-     * @brief Create a protobuf representation of the language list.
-     * @param list the protobuf representation of the language list.
+     * @brief Populates a protobuf LanguageList with the language IDs of the
+     * device's supported languages.
+     * @param list The protobuf language list object.
      */
     virtual void toProto(::catena::LanguageList& list) const = 0;
 
-    using ComponentLanguagePack = catena::DeviceComponent_ComponentLanguagePack;
-
     /**
-     * @brief Returns true if device has the specified language pack.
-     * @param languageId The language id of the language pack to check
-     * @return True if the device has the specified language pack.
+     * @brief Returns true if device supports the specified language.
+     * @param languageId The language id to check for (e.g. "en").
+     * @return True if the device supports specified language pack.
      */
     virtual bool hasLanguage(const std::string& languageId) const = 0;
 
@@ -181,13 +177,11 @@ class IDevice {
      * @param authz The authorizer object containing client's scopes.
      * @return An exception_with_status with status set OK if successful,
      * otherwise an error.
-     * Intention is for the AddLanguage RPCs / API calls to be serviced by this
-     * method.
      */
     virtual catena::exception_with_status addLanguage(catena::AddLanguagePayload& language, const IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
 
     /**
-     * @brief Removed a language pack from the device. Requires client to have
+     * @brief Removes a language pack from the device. Requires client to have
      * admin:w scope. Fails if the language pack was shipped with the device.
      * @param language The language to remove from the device.
      * @param authz The authorizer object containing client's scopes.
@@ -196,9 +190,11 @@ class IDevice {
      */
     virtual catena::exception_with_status removeLanguage(const std::string& languageId, const IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
 
+    using ComponentLanguagePack = catena::DeviceComponent_ComponentLanguagePack;
     /**
      * @brief Finds and returns a language pack based on languageId.
-     * @param languageId The language id of the language pack e.g. "en"
+     * @param languageId The language id of the language pack to get
+     * (e.g. "en").
      * @param pack Output var containing the found LanguagePack.
      * @return exception_with_status containing the status of the operation.
      */
@@ -206,7 +202,7 @@ class IDevice {
 
     /**
      * @brief DeviceSerializer is a coroutine that serializes the device into a
-     * stream of DeviceComponents
+     * stream of DeviceComponents.
      * This struct manages the state and lifetime of the coroutine. It also
      * provides the interface for resuming the coroutine.
      * 
@@ -226,13 +222,13 @@ class IDevice {
 
         /**
          * @brief returns true if there are more DeviceComponents to be
-         * serialized
+         * serialized by the coroutine.
          */
         virtual inline bool hasMore() const = 0;
 
         /**
-         * @brief get the next DeviceComponent to be serialized.
-         * @return the next DeviceComponent
+         * @brief Gets the next DeviceComponent to be serialized.
+         * @return The next DeviceComponent.
          * 
          * If the coroutine is done and there are no more components to
          * serialize then an empty DeviceComponent is returned.
@@ -241,87 +237,87 @@ class IDevice {
     };
 
     /**
-     * @brief get a serializer for the device
-     * @param authz The authorizer object containing the scopes of the client
+     * @brief Gets a serializer for the device.
+     * 
+     * @param authz The authorizer object containing the scopes of the client.
+     * @param subscribedOids The oids of the subscribed parameters.
      * @param dl The detail level to retrieve information in.
-     * @param subscribedOids the oids of the subscribed parameters
-     * @param shallow if true, the device will be returned in parts, otherwise
-     * the whole device will be returned in one message
-     * @return a DeviceSerializer object
+     * @param shallow If true, the device will be returned in parts, otherwise
+     * the whole device will be returned in one message.
+     * @return A DeviceSerializer object.
      */
     virtual std::unique_ptr<IDeviceSerializer> getComponentSerializer(const IAuthorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow = false) const = 0;
 
     /**
      * @brief add an item to one of the collections owned by the device.
      * Overload for parameters and commands.
-     * @param key item's unique key
-     * @param item the item to be added
+     * 
+     * @param key The item's unique key.
+     * @param item The item to be added.
      */
     virtual void addItem(const std::string& key, IParam* item) = 0;
     /**
      * @brief add an item to one of the collections owned by the device.
      * Overload for constraints.
-     * @param key item's unique key
-     * @param item the item to be added
+     * 
+     * @param key The item's unique key.
+     * @param item The item to be added.
      */
     virtual void addItem(const std::string& key, IConstraint* item) = 0;
     /**
      * @brief add an item to one of the collections owned by the device.
      * Overload for menu groups.
-     * @param key item's unique key
-     * @param item the item to be added
+     * 
+     * @param key The item's unique key
+     * @param item The item to be added
      */
     virtual void addItem(const std::string& key, IMenuGroup* item) = 0;
     /**
      * @brief add an item to one of the collections owned by the device
      * Overload for language packs.
-     * @param key item's unique key
-     * @param item the item to be added
+     * 
+     * @param key The item's unique key
+     * @param item The item to be added
      */
     virtual void addItem(const std::string& key, ILanguagePack* item) = 0;
 
     /**
-     * @brief get a parameter by oid with authorization
-     * @param fqoid the fully qualified oid of the parameter
-     * @param authz The IAuthorizer to test read permission with.
+     * @brief Get a parameter by oid with authorization.
+     * @param fqoid The fully qualified oid of the parameter.
      * @param status will contain an error message if the parameter does not
-     * exist
+     * exist.
+     * @param authz The IAuthorizer to test read permission with.
      * @return a unique pointer to the parameter, or nullptr if it does not
-     * exist
-     * 
-     * gets a parameter if it exists and the client is authorized to read it.
+     * exist.
      */
     virtual std::unique_ptr<IParam> getParam(const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const = 0;
 
     /**
-     * @brief get a parameter by oid with authorization
-     * @param path the full path to the parameter
-     * @param authz The IAuthorizer to test read permission with.
-     * @param status will contain an error message if the parameter does not
-     * exist
+     * @brief Gets a parameter by oid with authorization.
+     * @param path The full path to the parameter.
+     * @param status Will contain an error message if the parameter does not
+     * exist.
+     * @param authz The authorizer object to test read permission with.
      * @return a unique pointer to the parameter, or nullptr if it does not
-     * exist
-     * 
-     * gets a parameter if it exists and the client is authorized to read it.
+     * exist.
      */
     virtual std::unique_ptr<IParam> getParam(catena::common::Path& path, catena::exception_with_status& status, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const = 0;
     
     /**
-     * @brief get all top level parameters
-     * @param status the status of the operation
-     * @param authz the authorizer object
-     * @return a vector of unique pointers to the parameters
+     * @brief Gets all top level parameters.
+     * @param status The status of the operation.
+     * @param authz The authorizer object.
+     * @return A vector of unique pointers to the top level parameters.
      */
     virtual std::vector<std::unique_ptr<IParam>> getTopLevelParams(catena::exception_with_status& status, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const = 0;
 
     /**
-     * @brief get a command by oid
-     * @param fqoid the fully qualified oid of the command
-     * @param authz the authorizer object
-     * @param status will contain an error message if the command does not
-     * exist
-     * @return a unique pointer to the command, or nullptr if it does not exist
-     * @todo add authorization checking
+     * @brief Gets a command by oid.
+     * @param fqoid The fully qualified oid of the command.
+     * @param authz The authorizer object.
+     * @param status Will contain an error message if the command does not
+     * exist.
+     * @return A unique pointer to the command, or nullptr if it does not exist.
      */
     virtual std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const = 0;
 
@@ -331,7 +327,7 @@ class IDevice {
      * @param src The MultiSetValuePayload to validate.
      * @param ans The exception_with_status to return.
      * @param authz The IAuthorizer to test with.
-     * @returns true if the call is valid.
+     * @returns True if the call is valid.
      */
     virtual bool tryMultiSetValue (catena::MultiSetValuePayload src, catena::exception_with_status& ans, const IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
     
@@ -342,86 +338,92 @@ class IDevice {
      * beforehand to validate the call.
      * @param src The MultiSetValuePayload to update the device with.
      * @param authz The Authroizer with the client's scopes.
-     * @returns an exception_with_status with status set OK if successful.
+     * @returns An exception_with_status with status set OK if successful.
      */
     virtual catena::exception_with_status commitMultiSetValue (catena::MultiSetValuePayload src, const IAuthorizer& authz) = 0;
 
     /**
-     * @brief deserialize a protobuf value object into the parameter value
+     * @brief Deserialize a protobuf value object into the parameter value
      * pointed to by jptr.
-     * @param jptr json pointer to the part of the device model to update.
-     * @param src the value to update the parameter with.
+     * @param jptr Json pointer to the part of the device model to update.
+     * @param src The value to update the parameter with.
      * @param authz The IAuthorizer to test with.
-     * @return an exception_with_status with status set OK if successful,
+     * @return An exception_with_status with status set OK if successful,
      * otherwise an error.
-     * 
-     * This method essentially redirects the input values to tryMultiSetValue()
-     * and commitMultiSetValue().
-     * It remains to support the old way of setting values.
      */
     virtual catena::exception_with_status setValue (const std::string& jptr, catena::Value& src, const IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
 
     /**
-     * @brief serialize the parameter value to protobuf
-     * @param jptr json pointer to the part of the device model to serialize.
+     * @brief Serialize the parameter value to protobuf.
+     * @param jptr Json pointer to the part of the device model to serialize.
      * @param dst the protobuf value to serialize to.
      * @param authz The IAuthorizer to test read permission with.
-     * @return an exception_with_status with status set OK if successful,
+     * @return An exception_with_status with status set OK if successful,
      * otherwise an error.
-     * Intention is to for GetValue RPCs / API calls to be serviced by this
-     * method.
      */
     virtual catena::exception_with_status getValue (const std::string& jptr, catena::Value& value, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const = 0;
 
     /**
-     * @brief check if a parameter should be sent based on detail level and
-     * authorization
-     * @param param the parameter to check
-     * @param is_subscribed true if the parameter is subscribed, false
-     * otherwise
-     * @param authz the authorizer object
-     * @return true if the parameter should be sent, false otherwise
+     * @brief Check if a parameter should be sent based on detail level and
+     * authorization.
+     * @param param The parameter to check.
+     * @param is_subscribed True if the parameter is subscribed, false
+     * otherwise.
+     * @param authz The authorizer object.
+     * @return True if the parameter should be sent, false otherwise.
      */
     virtual bool shouldSendParam(const IParam& param, bool is_subscribed, const IAuthorizer& authz) const = 0;
 
     /**
-     * @brief signal emitted when a value is set by the client.
-     * Intended recipient is the business logic.
+     * @brief Get the signal emitted when a value is set by the client.
+     * @return The signal.
      */
     virtual vdk::signal<void(const std::string&, const IParam*)>& getValueSetByClient() = 0;
 
     /**
-     * @brief signal emitted when a language pack is added to the device.
-     * Intended recipient is the business logic.
+     * @brief Get the signal emitted when a language pack is added to the
+     * device.
+     * @return The signal.
      */
     virtual vdk::signal<void(const ILanguagePack*)>& getLanguageAddedPushUpdate() = 0;
 
     /**
-     * @brief signal emitted when a value is set by the server, or business
-     * logic.
-     * Intended recipient is the connection manager.
+     * @brief Get the signal emitted when a value is set by the server, or
+     * business logic.
+     * @return The signal.
      */
     virtual vdk::signal<void(const std::string&, const IParam*)>& getValueSetByServer() = 0;
 
     /**
-     * @brief signal emitted when a download asset request is made.
-     * Intended recipient is the business logic.
+     * @brief Get the asset request signal.
+     * @return The signal.
      */
     virtual vdk::signal<void(const std::string&, const IAuthorizer*)>& getDownloadAssetRequest() = 0;
 
     /**
-     * @brief signal emitted when an upload asset request is made.
-     * Intended recipient is the business logic.
-     */
+      * @brief Get the upload asset request signal.
+      * @return The signal.
+      */
     virtual vdk::signal<void(const std::string&, const IAuthorizer*)>& getUploadAssetRequest() = 0;
     /**
-     * @brief signal emitted when a delete asset request is made.
-     * Intended recipient is the business logic.
+     * @brief Get the delete asset request signal.
+     * @return The signal.
      */
     virtual vdk::signal<void(const std::string&, const IAuthorizer*)>& getDeleteAssetRequest() = 0;
 };
 
+/**
+ * @brief Type alias for a map of slot numbers to their corresponding device.
+ * 
+ * Designed for use in the catena APIs.
+ */
 using SlotMap = std::unordered_map<uint32_t, IDevice*>;
+/**
+ * @brief A map for storing signals and the slot of the device they belong to.
+ * 
+ * Designed for use in the catena APIs connect handlers for signal
+ * disconnection.
+ */
 using SignalMap = std::unordered_map<uint32_t, uint32_t>;
 
 }  // namespace common

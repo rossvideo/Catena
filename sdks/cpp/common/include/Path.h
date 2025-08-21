@@ -104,8 +104,7 @@ class Path {
     /**
      * @brief Construct a new Path object.
      *
-     *
-     * @param path an escaped json-pointer,
+     * @param jptr an escaped json-pointer,
      * i.e. '/' replaced by "~1" and '~' by "~0"
      * @throw catena::exception_with_status INVALID_ARGUMENT if path is not a
      * valid json-pointer

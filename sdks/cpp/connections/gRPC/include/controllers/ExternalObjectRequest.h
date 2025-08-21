@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,12 +30,12 @@
 
 /**
  * @file ExternalObjectRequest.h
- * @brief Implements Catena gRPC ExternalObjectRequest
+ * @brief Implements the Catena ExternalObjectRequest RPC.
  * @author john.naylor@rossvideo.com
  * @author john.danen@rossvideo.com
  * @author isaac.robert@rossvideo.com
- * @date 2024-06-08
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @date 2025-08-18
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
@@ -47,42 +47,53 @@ namespace catena {
 namespace gRPC {
 
 /**
-* @brief CallData class for the ExternalObjectRequest RPC
-*/
+ * @brief CallData class for the ExternalObjectRequest RPC
+ *
+ * This RPC gets a slot and an external object oid from the client and returns
+ * the specified object from the specified device.
+ */
 class ExternalObjectRequest : public CallData {
   public:
     /**
-     * @brief Constructor for ExternalObjectRequest class
+     * @brief Constructor for the CallData class of the ExternalObjectRequest
+     * RPC. Calls proceed() once initialized.
      *
-     * @param service the service to which the request is made
+     * @param service Pointer to the ServiceImpl.
      * @param dms A map of slots to ptrs to their corresponding device.
-     * @param ok flag to check if request is successful 
-     */
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
+     */ 
     ExternalObjectRequest(IServiceImpl *service, SlotMap& dms, bool ok);
     /**
      * @brief Destrutor for ExternalObjectRequest, although it isn't used.
      */
     ~ExternalObjectRequest() {}
     /**
-     * @brief Manages gRPC request through a state machine
+     * @brief Manages the steps of the ExternalObjectRequest RPC through the
+     * state variable status.
      *
-     * @param service the service to which the request is made
-     * @param ok flag to check if request is successful        
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */
     void proceed(bool ok) override;
 
   private:
     /**
-     * @brief Request payload for external object
+     * @brief The client's request containing two things:
+     * 
+     * - The slot specifying the device to request the object from.
+     * 
+     * - The OID of the external object to request.
+     * 
+     * - The encoding to return the object in.
      */
     catena::ExternalObjectRequestPayload req_;
     /**
-     * @brief Stream for reading and writing gRPC messages
+     * @brief The RPC response writer for writing back to the client. 
      */
     ServerAsyncWriter<catena::ExternalObjectPayload> writer_;
     /**
-     * @brief Represents the current status of the call within the state
-     * machine (kCreate, kProcess, kFinish, etc.)
+     * @brief The RPC's state (kCreate, kProcess, kFinish, etc.)
      */
     CallStatus status_;
     /**
@@ -90,11 +101,11 @@ class ExternalObjectRequest : public CallData {
      */
     SlotMap& dms_;
     /**
-     * @brief Unique identifier for command object
+     * @brief The object's unique id.
      */
     int objectId_;
     /**
-     * @brief Counter to generate unique object IDs for each new object
+     * @brief The total # of ExternalObjectRequest objects.
      */
     static int objectCounter_;
 };

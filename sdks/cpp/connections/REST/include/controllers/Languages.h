@@ -30,7 +30,7 @@
 
 /**
  * @file Languages.h
- * @brief Implements REST Languages controller.
+ * @brief Implements controller for the REST languages endpoint.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -60,7 +60,12 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the Languages REST controller.
+ * @brief Controller class for the languages REST endpoint.
+ * 
+ * This controller supports one method:
+ * 
+ * - GET: Writes a list of languages supported by the specified device to the
+ * client.
  */
 class Languages : public ICallData {
   public:
@@ -70,23 +75,23 @@ class Languages : public ICallData {
     using SlotMap = catena::common::SlotMap;
 
     /**
-     * @brief Constructor for the Languages controller.
+     * @brief Constructor for the languages endpoint controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The ISocketReader object.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     Languages(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
-     * @brief Languages's main process.
+     * @brief The languages endpoint's main process.
      */
     void proceed() override;
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     * 
-     * @param socket The socket to write the response stream to.
-     * @param context The ISocketReader object.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
@@ -112,7 +117,11 @@ class Languages : public ICallData {
      */
     tcp::socket& socket_;
     /**
-     * @brief The ISocketReader object.
+     * @brief The ISocketReader object used to read the client's request.
+     * 
+     * This is used to get one thing from the client:
+     * 
+     * - A slot specifying the device to get the supported languages of.
      */
     ISocketReader& context_;
     /**
@@ -125,11 +134,11 @@ class Languages : public ICallData {
     SlotMap& dms_;
 
     /**
-     * @brief ID of the Languages object
+     * @brief The object's unique id.
      */
     int objectId_;
     /**
-     * @brief The total # of Languages objects.
+     * @brief The total # of languages endpoint controller objects.
      */
     static int objectCounter_;
 };

@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2024 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,8 +35,8 @@
  * @brief A constraint that checks if a value is within some named choices
  * @author isaac.robert@rossvideo.com
  * @author benjamin.whitten@rossvideo.com
- * @date 2028-08-19
- * @copyright Copyright (c) 2025 Ross Video
+ * @date 2025-08-19
+ * @copyright Copyright (c) 2024 Ross Video
  */
 
 /**
@@ -129,9 +129,9 @@ class ChoiceConstraint : public catena::common::IConstraint {
     bool satisfied(const catena::Value& src) const override;
 
     /**
-     * @brief applies constraint to src and returns the constrained value
-     * @param src a catena::Value to apply the constraint to
-     * @return an empty catena::Value
+     * @brief Applies constraint to src and returns the constrained value.
+     * @param src A catena::Value to apply the constraint to.
+     * @return An empty catena::Value.
      *
      * If a request does not satisfy a choice constraint, then
      * the request is invalid and should be ignored.
@@ -143,35 +143,50 @@ class ChoiceConstraint : public catena::common::IConstraint {
     }
 
     /**
-     * @brief serialize the constraint to a protobuf message
-     * @param msg the protobuf message to populate
+     * @brief Serialize the constraint to a protobuf message.
+     * @param constraint The protobuf message to populate.
      */
     void toProto(catena::Constraint& constraint) const override;
 
     /**
      * @brief This constraint is not a range constraint so return false
-     * @return false
+     * @return False
      */
     bool isRange() const override { return false; }
 
     /**
-     * @brief check if the constraint is shared
-     * @return true if the constraint is shared
+     * @brief Checks if the constraint is shared.
+     * @return True if the constraint is shared.
      */
     bool isShared() const override { return shared_; }
 
     /**
-     * @brief get the constraint oid
-     * @return the oid of the constraint
+     * @brief Gets the constraint's oid.
+     * @return The oid of the constraint.
      */
     const std::string& getOid() const override { return oid_; }
 
   private:
-    Choices choices_;  ///< the choices
-    bool strict_;      ///< should the value be constrained on apply
-    T default_;        ///< the default value to constrain to
-    bool shared_;      ///< is the constraint shared
-    std::string oid_;  ///< the oid of the constraint
+    /**
+     * @brief The choices
+     */
+    Choices choices_; 
+    /**
+     * @brief Flag indicating whether the value should be constrained on apply.
+     */
+    bool strict_;
+    /**
+     * @brief The default value to constrain to.
+     */
+    T default_;
+    /**
+     * @brief Flag indicating whether the constraint is shared.
+     */
+    bool shared_;
+    /**
+     * @brief The oid of the constraint.
+     */
+    std::string oid_;
 };
 
 }  // namespace common

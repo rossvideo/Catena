@@ -30,7 +30,7 @@
 
 /**
  * @file Connect.h
- * @brief Implements REST Connect controller.
+ * @brief Implements controller for the REST connect endpoint.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -63,7 +63,14 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the Connect REST controller.
+ * @brief Controller class for the Connect REST endpoint.
+ * 
+ * This controller supports one method:
+ * 
+ * - GET: Connects the client to each device in the service and writes
+ * updates whenever one of their ValueSetByClient, ValueSetByServer, or
+ * LanguageAddedPushUpdate signals is emitted. Whether or not a PushUpdate is
+ * written to the client also depends on their specified DetailLevel.
  */
 class Connect : public ICallData, public catena::common::Connect {
   public:
@@ -74,10 +81,10 @@ class Connect : public ICallData, public catena::common::Connect {
     using SignalMap = catena::common::SignalMap;
 
     /**
-     * @brief Constructor for the Connect controller.
+     * @brief Constructor for the Connect endpoint controller.
      *
-     * @param socket The socket to write the response stream to.
-     * @param context The ISocketReader object.
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     Connect(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
@@ -86,15 +93,15 @@ class Connect : public ICallData, public catena::common::Connect {
      */
     virtual ~Connect();
     /**
-     * @brief Connect's main process.
+     * @brief The Connect endpoint's main process.
      */
     void proceed() override;
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     * 
-     * @param socket The socket to write the response stream to.
-     * @param context The ISocketReader object.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
@@ -102,18 +109,18 @@ class Connect : public ICallData, public catena::common::Connect {
     }
     
     /**
-     * @brief Signal emitted in the case of an error which requires the all
-     * open connections to be shut down.
+     * @brief Signal emitted in cases which require all open connections to be
+     * shut down such as service shutdown.
      */
     static vdk::signal<void()> shutdownSignal_;
     /**
-     * @brief Returns true if the request was cancelled.
+     * @brief Returns true if the connection has been cancelled.
      */
     inline bool isCancelled() override;
     
   private:
     /**
-     * @brief Helper function to write status messages to the API console.
+     * @brief Writes the current state of the request to the console.
      * 
      * @param status The current state of the request (kCreate, kFinish, etc.)
      * @param ok The status of the request (open or closed).
@@ -133,35 +140,42 @@ class Connect : public ICallData, public catena::common::Connect {
      */
     SSEWriter writer_;
     /**
-     * @brief The ISocketReader object for reading the request.
+     * @brief The ISocketReader object used to read the client's request.
+     * 
+     * This is used to get two things from the client:
+     * 
+     * - The detail level of updates the they want to recieve.
+     * 
+     * - A flag indicating whether the client wants to force a connection to
+     * the service.
      */
     ISocketReader& context_;
     /**
-     * @brief The mutex to for locking the object while writing
+     * @brief The mutex to lock the controller while writing.
      */
     std::mutex mtx_;
     /**
-     * @brief Id of operation waiting for valueSetByClient to be emitted.
-     * Used when ending the connection.
+     * @brief A list of ids for the operations waiting for valueSetByClient to
+     * be emitted.
      */
     SignalMap valueSetByClientIds_;
     /**
-     * @brief Id of operation waiting for valueSetByServer to be emitted.
-     * Used when ending the connection.
+     * @brief A list of ids for the operations waiting for valueSetByServer to
+     * be emitted.
      */
     SignalMap valueSetByServerIds_;
     /**
-     * @brief Id of operation waiting for languageAddedPushUpdate to be
-     * emitted. Used when ending the connection.
+     * @brief A list of ids for the operations waiting for
+     * languageAddedPushUpdate to be emitted.
      */
     SignalMap languageAddedIds_;
     /**
      * @brief ID of the shutdown signal for the Connect object
-    */
+     */
     unsigned int shutdownSignalId_;
 
     /**
-     * @brief The total # of Connect objects.
+     * @brief The total # of connect endpoint controller objects.
      */
     static int objectCounter_;
 };

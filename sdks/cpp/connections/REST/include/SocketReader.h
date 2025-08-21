@@ -30,7 +30,7 @@
 
 /**
  * @file SocketReader.h
- * @brief Helper class used to read from a socket using boost.
+ * @brief Implements the SocketReader class.
  * @author benjamin.whitten@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -74,7 +74,33 @@ inline const RESTMethodMap::FwdMap RESTMethodMap::fwdMap_ = {
 };
 
 /**
- * @brief Helper class used to read from a socket using boost.
+ * @brief A helper class which reads from the client socket using boost and
+ * extracts relevant information pertaining to a REST request.
+ * 
+ * This includes (if applicable):
+ * 
+ * - The HTTP method (GET, POST, etc.)
+ * 
+ * - The endpoint being accessed (param, etc.)
+ * 
+ * - The slot of the device to make the API call on.
+ * 
+ * - The fqoid of an asset to access.
+ * 
+ * - The fields queried from the URL.
+ * 
+ * - The client's jws token.
+ * 
+ * - The origin of the request.
+ * 
+ * - The detail level to return the response in.
+ * 
+ * - The json body of the request.
+ * 
+ * - A flag indicating whether to return the response as a stream.
+ * 
+ * It also contains links to several objects from the service, such as the
+ * subscription manager, the external object path, and the connection queue.
  */
 class SocketReader : public ISocketReader {
   public:
@@ -84,8 +110,8 @@ class SocketReader : public ISocketReader {
      */
     SocketReader(IServiceImpl* service) : service_(service) {};
     /**
-     * @brief Populates variables using information read from the inputted
-     * socket.
+     * @brief Reads information from the inputted socket and extracts relevant
+     * information pertaining to the REST request.
      * @param socket The socket to read from.
      */
     void read(tcp::socket& socket) override;
@@ -94,7 +120,7 @@ class SocketReader : public ISocketReader {
      */
     RESTMethod method() const override { return method_; }
     /**
-     * @brief Returns the REST endpoint of the request (/v1/GetValue, etc.)
+     * @brief Returns the endpoint of the request (parameter, etc.)
      */
     const std::string& endpoint() const override { return endpoint_; }
     /**
@@ -152,7 +178,7 @@ class SocketReader : public ISocketReader {
      */
     IServiceImpl* service() override { return service_; }
     /**
-     * @brief Returns true if authorization is enabled.
+     * @brief Returns true if authorization is enabled for this service.
      */
     bool authorizationEnabled() const override { return service_->authorizationEnabled(); }
     /**
@@ -171,7 +197,7 @@ class SocketReader : public ISocketReader {
 
   private:
     /**
-     * @brief The method of the request (GET, PUT, etc.).
+     * @brief The HTTP method of the request (GET, PUT, etc.).
      */
     RESTMethod method_;
     /**
@@ -179,7 +205,7 @@ class SocketReader : public ISocketReader {
      */
     uint32_t slot_ = 0;
     /**
-     * @brief The REST endpoint being accessed (/v1/GetValue, etc.)
+     * @brief The endpoint being accessed (/v1/GetValue, etc.)
      */
     std::string endpoint_ = "";
     /**
