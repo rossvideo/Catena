@@ -1,17 +1,19 @@
 <map id="catena::common::Connect::updateResponse_" name="catena::common::Connect::updateResponse_">
-<area shape="rect" id="Node000001" title="Updates the response message with parameter values and handles authorization checks." alt="" coords="5,197,197,237"/>
-<area shape="rect" id="Node000002" href="$classcatena_1_1common_1_1IParam.html#a9111464c2fc6f68b29db19d10610ac31" title="get the descriptor of the parameter" alt="" coords="279,5,463,45"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="113,196,164,126,201,88,244,55,264,45,267,50,247,60,205,92,168,130,117,199"/>
+<area shape="rect" id="Node000001" title="Updates the response message with parameter values if the client has read authorization and the corre..." alt="" coords="5,229,197,269"/>
+<area shape="rect" id="Node000002" href="$classcatena_1_1common_1_1IParam.html#a9111464c2fc6f68b29db19d10610ac31" title="Gets the parameter&#39;s descriptor." alt="" coords="279,5,463,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="110,228,129,190,159,144,197,96,244,55,264,44,267,49,247,60,201,99,163,147,134,193,114,230"/>
 <area shape="rect" id="Node000003" href="$classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd" title="Returns true if the call has been canceled." alt="" coords="273,69,469,109"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="125,195,178,156,244,119,263,111,265,116,246,124,181,161,128,199"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="117,227,170,173,205,144,244,119,259,112,261,117,247,124,209,148,174,177,121,231"/>
 <area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1IParamDescriptor.html#ac8fa8aef0a96605c1bdd1d6172312028" title="return true if this is a command parameter" alt="" coords="245,133,496,173"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="186,195,272,174,273,179,187,200"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="141,227,244,183,269,175,271,180,246,188,144,232"/>
 <area shape="rect" id="Node000005" href="$classcatena_1_1common_1_1ISubscriptionManager.html#a2306837ba01d990d283dbbed75b0a992" title="Check if an OID is subscribed to." alt="" coords="259,197,482,237"/>
-<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="197,215,245,215,245,220,197,220"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="197,235,245,230,246,235,198,241"/>
 <area shape="rect" id="Node000006" href="$classcatena_1_1common_1_1IParamDescriptor.html#a21ec0cb6550d0de205b050bedec26611" title="get the minimal set status of the parameter" alt="" coords="245,261,496,301"/>
-<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="187,235,273,256,272,261,186,240"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="198,258,232,262,231,267,197,263"/>
 <area shape="rect" id="Node000007" href="$classcatena_1_1common_1_1Authorizer.html#ac66ff0d1ad2b482889d370fcec8abf65" title="Check if the client has read authorization for a param." alt="" coords="267,325,474,365"/>
-<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="128,235,181,274,246,311,265,318,263,323,244,316,178,278,125,240"/>
-<area shape="rect" id="Node000008" href="$classcatena_1_1common_1_1IParam.html#a29d283259836a110494e9fa0d3987d13" title="serialize the parameter value to protobuf" alt="" coords="279,389,463,429"/>
-<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="117,236,168,305,205,343,247,375,267,385,264,390,244,380,201,347,164,308,113,239"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="144,267,246,311,271,319,269,324,244,316,141,272"/>
+<area shape="rect" id="Node000008" href="$classcatena_1_1common_1_1Connect.html#a01c7fc640c14b76dd1756d3fb2cad62d" title="Forcefully shuts down the connection." alt="" coords="275,389,467,429"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="121,268,174,322,209,350,247,375,263,383,260,387,244,380,205,355,170,325,117,271"/>
+<area shape="rect" id="Node000009" href="$classcatena_1_1common_1_1IParam.html#a29d283259836a110494e9fa0d3987d13" title="Serializes the parameter value to protobuf." alt="" coords="279,453,463,493"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="114,269,134,306,163,352,201,399,247,439,267,450,264,455,244,444,197,403,159,355,129,308,110,271"/>
 </map>

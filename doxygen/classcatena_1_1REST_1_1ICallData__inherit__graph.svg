@@ -66,7 +66,7 @@ var sectionId = 'dynsection-0';
 <!-- Node2 -->
 <g id="Node000002" class="node">
 <title>Node2</title>
-<g id="a_Node000002"><a xlink:href="classcatena_1_1REST_1_1AssetRequest.html" target="_top" xlink:title="ICallData class for the GetParam REST controller.">
+<g id="a_Node000002"><a xlink:href="classcatena_1_1REST_1_1AssetRequest.html" target="_top" xlink:title="Controller class for the Asset REST endpoint.">
 <polygon fill="white" stroke="#666666" points="330.5,-438 178.5,-438 178.5,-419 330.5,-419 330.5,-438"/>
 <text text-anchor="middle" x="254.5" y="-426" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::AssetRequest</text>
 </a>
@@ -84,7 +84,7 @@ var sectionId = 'dynsection-0';
 <!-- Node3 -->
 <g id="Node000003" class="node">
 <title>Node3</title>
-<g id="a_Node000003"><a xlink:href="classcatena_1_1REST_1_1Connect.html" target="_top" xlink:title="ICallData class for the Connect REST controller.">
+<g id="a_Node000003"><a xlink:href="classcatena_1_1REST_1_1Connect.html" target="_top" xlink:title="Controller class for the Connect REST endpoint.">
 <polygon fill="white" stroke="#666666" points="317,-401 192,-401 192,-382 317,-382 317,-401"/>
 <text text-anchor="middle" x="254.5" y="-389" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::Connect</text>
 </a>
@@ -102,7 +102,7 @@ var sectionId = 'dynsection-0';
 <!-- Node4 -->
 <g id="Node000004" class="node">
 <title>Node4</title>
-<g id="a_Node000004"><a xlink:href="classcatena_1_1REST_1_1DeviceRequest.html" target="_top" xlink:title="ICallData class for the DeviceRequest REST controller.">
+<g id="a_Node000004"><a xlink:href="classcatena_1_1REST_1_1DeviceRequest.html" target="_top" xlink:title="Controller class for the &quot;DeviceRequest&quot; REST endpoint.">
 <polygon fill="white" stroke="#666666" points="334,-364 175,-364 175,-345 334,-345 334,-364"/>
 <text text-anchor="middle" x="254.5" y="-352" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::DeviceRequest</text>
 </a>
@@ -120,7 +120,7 @@ var sectionId = 'dynsection-0';
 <!-- Node5 -->
 <g id="Node000005" class="node">
 <title>Node5</title>
-<g id="a_Node000005"><a xlink:href="classcatena_1_1REST_1_1ExecuteCommand.html" target="_top" xlink:title="ICallData class for the ExecuteCommand REST controller.">
+<g id="a_Node000005"><a xlink:href="classcatena_1_1REST_1_1ExecuteCommand.html" target="_top" xlink:title="Controller class for the Command REST endpoint.">
 <polygon fill="white" stroke="#666666" points="341.5,-327 167.5,-327 167.5,-308 341.5,-308 341.5,-327"/>
 <text text-anchor="middle" x="254.5" y="-315" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::ExecuteCommand</text>
 </a>
@@ -138,7 +138,7 @@ var sectionId = 'dynsection-0';
 <!-- Node6 -->
 <g id="Node000006" class="node">
 <title>Node6</title>
-<g id="a_Node000006"><a xlink:href="classcatena_1_1REST_1_1GetParam.html" target="_top" xlink:title="ICallData class for the GetParam REST controller.">
+<g id="a_Node000006"><a xlink:href="classcatena_1_1REST_1_1GetParam.html" target="_top" xlink:title="Controller class for the Param REST endpoint.">
 <polygon fill="white" stroke="#666666" points="321.5,-290 187.5,-290 187.5,-271 321.5,-271 321.5,-290"/>
 <text text-anchor="middle" x="254.5" y="-278" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::GetParam</text>
 </a>
@@ -156,7 +156,7 @@ var sectionId = 'dynsection-0';
 <!-- Node7 -->
 <g id="Node000007" class="node">
 <title>Node7</title>
-<g id="a_Node000007"><a xlink:href="classcatena_1_1REST_1_1GetPopulatedSlots.html" target="_top" xlink:title="ICallData class for the GetPopulatedSlots REST controller.">
+<g id="a_Node000007"><a xlink:href="classcatena_1_1REST_1_1GetPopulatedSlots.html" target="_top" xlink:title="Controller class for the Devices REST endpoint.">
 <polygon fill="white" stroke="#666666" points="330.5,-252.5 178.5,-252.5 178.5,-222.5 330.5,-222.5 330.5,-252.5"/>
 <text text-anchor="start" x="186.5" y="-240.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::GetPopulated</text>
 <text text-anchor="middle" x="254.5" y="-229.5" font-family="Helvetica,sans-Serif" font-size="10.00">Slots</text>
@@ -175,7 +175,7 @@ var sectionId = 'dynsection-0';
 <!-- Node8 -->
 <g id="Node000008" class="node">
 <title>Node8</title>
-<g id="a_Node000008"><a xlink:href="classcatena_1_1REST_1_1GetValue.html" target="_top" xlink:title="ICallData class for the GetValue REST controller.">
+<g id="a_Node000008"><a xlink:href="classcatena_1_1REST_1_1GetValue.html" target="_top" xlink:title="Controller class for the GET Value REST endpoint.">
 <polygon fill="white" stroke="#666666" points="319.5,-204 189.5,-204 189.5,-185 319.5,-185 319.5,-204"/>
 <text text-anchor="middle" x="254.5" y="-192" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::GetValue</text>
 </a>
@@ -193,7 +193,7 @@ var sectionId = 'dynsection-0';
 <!-- Node9 -->
 <g id="Node000009" class="node">
 <title>Node9</title>
-<g id="a_Node000009"><a xlink:href="classcatena_1_1REST_1_1LanguagePack.html" target="_top" xlink:title="ICallData class for the LanguagePack REST controller.">
+<g id="a_Node000009"><a xlink:href="classcatena_1_1REST_1_1LanguagePack.html" target="_top" xlink:title="Controller class for the language&#45;pack REST endpoint.">
 <polygon fill="white" stroke="#666666" points="332,-167 177,-167 177,-148 332,-148 332,-167"/>
 <text text-anchor="middle" x="254.5" y="-155" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::LanguagePack</text>
 </a>
@@ -211,7 +211,7 @@ var sectionId = 'dynsection-0';
 <!-- Node10 -->
 <g id="Node000010" class="node">
 <title>Node10</title>
-<g id="a_Node000010"><a xlink:href="classcatena_1_1REST_1_1Languages.html" target="_top" xlink:title="ICallData class for the Languages REST controller.">
+<g id="a_Node000010"><a xlink:href="classcatena_1_1REST_1_1Languages.html" target="_top" xlink:title="Controller class for the languages REST endpoint.">
 <polygon fill="white" stroke="#666666" points="323.5,-130 185.5,-130 185.5,-111 323.5,-111 323.5,-130"/>
 <text text-anchor="middle" x="254.5" y="-118" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::Languages</text>
 </a>
@@ -229,7 +229,7 @@ var sectionId = 'dynsection-0';
 <!-- Node11 -->
 <g id="Node000011" class="node">
 <title>Node11</title>
-<g id="a_Node000011"><a xlink:href="classcatena_1_1REST_1_1MultiSetValue.html" target="_top" xlink:title="ICallData class for the MultiSetValue REST controller.">
+<g id="a_Node000011"><a xlink:href="classcatena_1_1REST_1_1MultiSetValue.html" target="_top" xlink:title="Controller class for the Param REST endpoint.">
 <polygon fill="white" stroke="#666666" points="331,-93 178,-93 178,-74 331,-74 331,-93"/>
 <text text-anchor="middle" x="254.5" y="-81" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::MultiSetValue</text>
 </a>
@@ -247,7 +247,7 @@ var sectionId = 'dynsection-0';
 <!-- Node13 -->
 <g id="Node000013" class="node">
 <title>Node13</title>
-<g id="a_Node000013"><a xlink:href="classcatena_1_1REST_1_1ParamInfoRequest.html" target="_top" xlink:title="ICallData class for the ParamInfoRequest REST controller.">
+<g id="a_Node000013"><a xlink:href="classcatena_1_1REST_1_1ParamInfoRequest.html" target="_top" xlink:title="Controller class for the param&#45;info REST endpoint.">
 <polygon fill="white" stroke="#666666" points="342,-56 167,-56 167,-37 342,-37 342,-56"/>
 <text text-anchor="middle" x="254.5" y="-44" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::ParamInfoRequest</text>
 </a>
@@ -265,7 +265,7 @@ var sectionId = 'dynsection-0';
 <!-- Node14 -->
 <g id="Node000014" class="node">
 <title>Node14</title>
-<g id="a_Node000014"><a xlink:href="classcatena_1_1REST_1_1Subscriptions.html" target="_top" xlink:title="ICallData class for the Subscriptions REST controller.">
+<g id="a_Node000014"><a xlink:href="classcatena_1_1REST_1_1Subscriptions.html" target="_top" xlink:title="Controller class for the subscriptions REST endpoint.">
 <polygon fill="white" stroke="#666666" points="330,-19 179,-19 179,0 330,0 330,-19"/>
 <text text-anchor="middle" x="254.5" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::Subscriptions</text>
 </a>
@@ -283,7 +283,7 @@ var sectionId = 'dynsection-0';
 <!-- Node12 -->
 <g id="Node000012" class="node">
 <title>Node12</title>
-<g id="a_Node000012"><a xlink:href="classcatena_1_1REST_1_1SetValue.html" target="_top" xlink:title="ICallData class for the SetValue REST controller.">
+<g id="a_Node000012"><a xlink:href="classcatena_1_1REST_1_1SetValue.html" target="_top" xlink:title="Controller class for the PUT Value REST endpoint.">
 <polygon fill="white" stroke="#666666" points="506,-93 378,-93 378,-74 506,-74 506,-93"/>
 <text text-anchor="middle" x="442" y="-81" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::SetValue</text>
 </a>

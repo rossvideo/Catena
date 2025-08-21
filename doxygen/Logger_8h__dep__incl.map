@@ -1,36 +1,36 @@
 <map id="/home/runner/work/Catena/Catena/sdks/cpp/common/include/Logger.h" name="/home/runner/work/Catena/Catena/sdks/cpp/common/include/Logger.h">
 <area shape="rect" id="Node000001" title="Logger class." alt="" coords="1691,5,1886,60"/>
-<area shape="rect" id="Node000002" href="$common_2include_2rpc_2Connect_8h.html" title="Pure virtual class for Connect RPCs used to share update code." alt="" coords="169,115,363,170"/>
+<area shape="rect" id="Node000002" href="$common_2include_2rpc_2Connect_8h.html" title="Virtual class for Connect handlers inherit to share update code." alt="" coords="169,115,363,170"/>
 <area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="1678,39,1388,47,1012,61,644,82,491,95,376,111,344,118,342,113,375,105,491,90,643,77,1012,56,1388,41,1677,34"/>
-<area shape="rect" id="Node000003" href="$connections_2REST_2include_2controllers_2Connect_8h.html" title="Implements REST Connect controller." alt="" coords="5,225,257,280"/>
+<area shape="rect" id="Node000003" href="$connections_2REST_2include_2controllers_2Connect_8h.html" title="Implements controller for the REST connect endpoint." alt="" coords="5,225,257,280"/>
 <area shape="poly" id="edge6_Node000001_Node000003" title=" " alt="" coords="1678,38,1297,44,804,57,569,67,368,79,224,93,180,102,158,110,140,135,131,165,128,197,130,225,125,225,123,197,126,165,135,133,155,106,178,96,223,88,368,73,568,61,804,52,1297,39,1678,33"/>
-<area shape="rect" id="Node000006" href="$AssetRequest_8h.html" title="Implements REST AssetRequest controller." alt="" coords="387,115,675,170"/>
+<area shape="rect" id="Node000006" href="$AssetRequest_8h.html" title="Implements controller for the REST asset endpoint." alt="" coords="387,115,675,170"/>
 <area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="1678,39,1490,45,1243,58,966,79,688,111,644,118,643,113,687,105,966,74,1243,52,1490,40,1678,34"/>
-<area shape="rect" id="Node000007" href="$REST_2include_2controllers_2DeviceRequest_8h.html" title="Implements REST DeviceRequest controller." alt="" coords="700,115,997,170"/>
+<area shape="rect" id="Node000007" href="$REST_2include_2controllers_2DeviceRequest_8h.html" title="Implements controll for the REST &quot;DeviceReqeust&quot; endpoint." alt="" coords="700,115,997,170"/>
 <area shape="poly" id="edge7_Node000001_Node000007" title=" " alt="" coords="1678,43,1376,67,1193,87,1010,111,968,118,967,113,1010,105,1193,81,1376,62,1678,38"/>
-<area shape="rect" id="Node000008" href="$REST_2include_2controllers_2ExecuteCommand_8h.html" title="Implements REST ExecuteCommand controller." alt="" coords="1022,115,1339,170"/>
+<area shape="rect" id="Node000008" href="$REST_2include_2controllers_2ExecuteCommand_8h.html" title="Implements controller for the REST command endpoint." alt="" coords="1022,115,1339,170"/>
 <area shape="poly" id="edge8_Node000001_Node000008" title=" " alt="" coords="1678,55,1352,111,1313,118,1312,113,1351,105,1678,49"/>
-<area shape="rect" id="Node000009" href="$REST_2include_2controllers_2GetParam_8h.html" title="Implements REST GetParam controller." alt="" coords="1364,115,1627,170"/>
+<area shape="rect" id="Node000009" href="$REST_2include_2controllers_2GetParam_8h.html" title="Implements controller for the REST param endpoint." alt="" coords="1364,115,1627,170"/>
 <area shape="poly" id="edge9_Node000001_Node000009" title=" " alt="" coords="1706,67,1567,118,1566,113,1704,62"/>
-<area shape="rect" id="Node000010" href="$REST_2include_2controllers_2GetPopulatedSlots_8h.html" title="Implements REST GetPopulatedSlots controller." alt="" coords="1651,108,1926,177"/>
+<area shape="rect" id="Node000010" href="$REST_2include_2controllers_2GetPopulatedSlots_8h.html" title="Implements controller for the REST devices endpoint." alt="" coords="1651,108,1926,177"/>
 <area shape="poly" id="edge10_Node000001_Node000010" title=" " alt="" coords="1791,74,1791,108,1786,108,1786,74"/>
-<area shape="rect" id="Node000011" href="$REST_2include_2controllers_2GetValue_8h.html" title="Implements REST GetValue controller." alt="" coords="1950,115,2209,170"/>
+<area shape="rect" id="Node000011" href="$REST_2include_2controllers_2GetValue_8h.html" title="Implements controller for the REST GET value endpoint." alt="" coords="1950,115,2209,170"/>
 <area shape="poly" id="edge11_Node000001_Node000011" title=" " alt="" coords="1873,62,2010,113,2008,118,1871,67"/>
-<area shape="rect" id="Node000012" href="$connections_2REST_2include_2controllers_2LanguagePack_8h.html" title="Implements REST LanguagePack controller." alt="" coords="2233,115,2525,170"/>
+<area shape="rect" id="Node000012" href="$connections_2REST_2include_2controllers_2LanguagePack_8h.html" title="Implements controller for the REST language&#45;pack endpoint." alt="" coords="2233,115,2525,170"/>
 <area shape="poly" id="edge12_Node000001_Node000012" title=" " alt="" coords="1900,49,2221,105,2258,113,2257,118,2220,111,1899,55"/>
-<area shape="rect" id="Node000013" href="$Languages_8h.html" title="Implements REST Languages controller." alt="" coords="2550,115,2819,170"/>
+<area shape="rect" id="Node000013" href="$Languages_8h.html" title="Implements controller for the REST languages endpoint." alt="" coords="2550,115,2819,170"/>
 <area shape="poly" id="edge13_Node000001_Node000013" title=" " alt="" coords="1900,38,2189,62,2363,81,2537,105,2577,113,2576,118,2536,111,2363,86,2189,67,1900,43"/>
-<area shape="rect" id="Node000014" href="$REST_2include_2controllers_2MultiSetValue_8h.html" title="Implements REST MultiSetValue controller." alt="" coords="2844,115,3133,170"/>
+<area shape="rect" id="Node000014" href="$REST_2include_2controllers_2MultiSetValue_8h.html" title="Implements controller for the REST values endpoint." alt="" coords="2844,115,3133,170"/>
 <area shape="poly" id="edge14_Node000001_Node000014" title=" " alt="" coords="1900,34,2078,41,2311,54,2571,75,2832,105,2875,113,2874,118,2831,111,2570,80,2310,60,2078,46,1899,40"/>
-<area shape="rect" id="Node000016" href="$REST_2include_2controllers_2ParamInfoRequest_8h.html" title="Implements REST ParamInfoRequest controller." alt="" coords="3158,108,3411,177"/>
+<area shape="rect" id="Node000016" href="$REST_2include_2controllers_2ParamInfoRequest_8h.html" title="Implements controller for the REST param&#45;info endpoint." alt="" coords="3158,108,3411,177"/>
 <area shape="poly" id="edge16_Node000001_Node000016" title=" " alt="" coords="1900,31,2128,33,2438,43,2791,65,2970,83,3146,105,3158,107,3157,113,3146,111,2970,88,2790,71,2438,48,2128,38,1900,36"/>
-<area shape="rect" id="Node000017" href="$Subscriptions_8h.html" title="Implements Catena REST Subscriptions." alt="" coords="3436,115,3723,170"/>
+<area shape="rect" id="Node000017" href="$Subscriptions_8h.html" title="Implements controller for the REST subscriptions endpoint." alt="" coords="3436,115,3723,170"/>
 <area shape="poly" id="edge17_Node000001_Node000017" title=" " alt="" coords="1900,34,2670,58,3105,79,3286,92,3424,105,3469,113,3468,118,3423,111,3286,97,3105,85,2670,64,1900,39"/>
 <area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="224,181,166,227,163,223,221,177"/>
-<area shape="rect" id="Node000004" href="$connections_2gRPC_2include_2controllers_2Connect_8h.html" title="Implements Catena gRPC Connect." alt="" coords="282,225,535,280"/>
+<area shape="rect" id="Node000004" href="$connections_2gRPC_2include_2controllers_2Connect_8h.html" title="Implements the Catena Connect RPC." alt="" coords="282,225,535,280"/>
 <area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="313,176,375,223,372,227,310,180"/>
 <area shape="rect" id="Node000005" href="$gRPC_2include_2ServiceImpl_8h.html" title="Implements Catena gRPC request handlers." alt="" coords="301,328,516,383"/>
 <area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="411,294,411,328,406,328,406,294"/>
-<area shape="rect" id="Node000015" href="$REST_2include_2controllers_2SetValue_8h.html" title="Implements REST SetValue controller." alt="" coords="2861,225,3117,280"/>
+<area shape="rect" id="Node000015" href="$REST_2include_2controllers_2SetValue_8h.html" title="Implements controller for the REST PUT value endpoint." alt="" coords="2861,225,3117,280"/>
 <area shape="poly" id="edge15_Node000014_Node000015" title=" " alt="" coords="2991,184,2991,225,2986,225,2986,184"/>
 </map>

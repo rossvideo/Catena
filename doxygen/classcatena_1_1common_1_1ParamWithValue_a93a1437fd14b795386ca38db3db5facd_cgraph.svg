@@ -48,7 +48,7 @@
 <script type="application/ecmascript">
 var viewWidth = 614;
 var viewHeight = 248;
-var sectionId = 'dynsection-32';
+var sectionId = 'dynsection-33';
 </script>
 <script type="application/ecmascript" xlink:href="svg.min.js"/>
 <svg id="graph" class="graph">
@@ -86,7 +86,7 @@ var sectionId = 'dynsection-32';
 <!-- Node3 -->
 <g id="Node000003" class="node">
 <title>Node3</title>
-<g id="a_Node000003"><a xlink:href="classcatena_1_1common_1_1IParamDescriptor.html#a12a2eebee18935585154b095ae1d7958" target="_top" xlink:title="Returns the max length of the array/string parameter. If max length is not set in the ....">
+<g id="a_Node000003"><a xlink:href="classcatena_1_1common_1_1IParamDescriptor.html#a12a2eebee18935585154b095ae1d7958" target="_top" xlink:title="Returns the max length an array/string parameter can be.">
 <polygon fill="white" stroke="#666666" points="382,-216 194,-216 194,-186 382,-186 382,-216"/>
 <text text-anchor="start" x="202" y="-204" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IParamDescriptor</text>
 <text text-anchor="middle" x="288" y="-193" font-family="Helvetica,sans-Serif" font-size="10.00">::max_length</text>
@@ -124,7 +124,7 @@ var sectionId = 'dynsection-32';
 <!-- Node5 -->
 <g id="Node000005" class="node">
 <title>Node5</title>
-<g id="a_Node000005"><a xlink:href="classcatena_1_1common_1_1IParamDescriptor.html#ab0ec2ac672593f7081169d083379bee3" target="_top" xlink:title="Returns the total length of the string_array parameter. If max length is not set in the ....">
+<g id="a_Node000005"><a xlink:href="classcatena_1_1common_1_1IParamDescriptor.html#ab0ec2ac672593f7081169d083379bee3" target="_top" xlink:title="Returns the total length the sum of all strings in a string_array parameter can be.">
 <polygon fill="white" stroke="#666666" points="382,-120 194,-120 194,-90 382,-90 382,-120"/>
 <text text-anchor="start" x="202" y="-108" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IParamDescriptor</text>
 <text text-anchor="middle" x="288" y="-97" font-family="Helvetica,sans-Serif" font-size="10.00">::total_length</text>

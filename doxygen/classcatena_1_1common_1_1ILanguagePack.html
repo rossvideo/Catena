@@ -98,7 +98,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1ILanguagePack
 </div><!--header-->
 <div class="contents">
 
-<p>Interface for Language Packs.  
+<p>Interface class for Language Packs.  
  <a href="classcatena_1_1common_1_1ILanguagePack.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="ILanguagePack_8h_source.html">ILanguagePack.h</a>&gt;</code></p>
@@ -123,21 +123,25 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac4df766b705f81f6944d60573ee129e1" id="r_ac4df766b705f81f6944d60573ee129e1"><td class="memItemLeft" align="right" valign="top"><a id="ac4df766b705f81f6944d60573ee129e1" name="ac4df766b705f81f6944d60573ee129e1"></a>
 <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> &amp;&amp;)=default</td></tr>
 <tr class="separator:ac4df766b705f81f6944d60573ee129e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3e6a4f733927ce286195246e666f8c9f" id="r_a3e6a4f733927ce286195246e666f8c9f"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ILanguagePack.html#a3e6a4f733927ce286195246e666f8c9f">toProto</a> (catena::LanguagePack &amp;pack) const =0</td></tr>
-<tr class="memdesc:a3e6a4f733927ce286195246e666f8c9f"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize a language pack to a protobuf message  <br /></td></tr>
-<tr class="separator:a3e6a4f733927ce286195246e666f8c9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af118ffe5b9dc22d6527b6717f60e1802" id="r_af118ffe5b9dc22d6527b6717f60e1802"><td class="memItemLeft" align="right" valign="top"><a id="af118ffe5b9dc22d6527b6717f60e1802" name="af118ffe5b9dc22d6527b6717f60e1802"></a>
+virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~ILanguagePack</b> ()=default</td></tr>
+<tr class="memdesc:af118ffe5b9dc22d6527b6717f60e1802"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor. <br /></td></tr>
+<tr class="separator:af118ffe5b9dc22d6527b6717f60e1802"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07ab953bd35bb181866d3c62c84b3174" id="r_a07ab953bd35bb181866d3c62c84b3174"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ILanguagePack.html#a07ab953bd35bb181866d3c62c84b3174">fromProto</a> (const catena::LanguagePack &amp;pack)=0</td></tr>
-<tr class="memdesc:a07ab953bd35bb181866d3c62c84b3174"><td class="mdescLeft">&#160;</td><td class="mdescRight">deserialize a language pack from a protobuf message  <br /></td></tr>
+<tr class="memdesc:a07ab953bd35bb181866d3c62c84b3174"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deserializes a language pack from a protobuf message.  <br /></td></tr>
 <tr class="separator:a07ab953bd35bb181866d3c62c84b3174"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e6a4f733927ce286195246e666f8c9f" id="r_a3e6a4f733927ce286195246e666f8c9f"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ILanguagePack.html#a3e6a4f733927ce286195246e666f8c9f">toProto</a> (catena::LanguagePack &amp;pack) const =0</td></tr>
+<tr class="memdesc:a3e6a4f733927ce286195246e666f8c9f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serializes a language pack to a protobuf message.  <br /></td></tr>
+<tr class="separator:a3e6a4f733927ce286195246e666f8c9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab5984be8118c831717492c632efc07b1" id="r_ab5984be8118c831717492c632efc07b1"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html#ac56aa1e8ab3688b2d161c10d57781ef9">const_iterator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ILanguagePack.html#ab5984be8118c831717492c632efc07b1">begin</a> () const =0</td></tr>
-<tr class="memdesc:ab5984be8118c831717492c632efc07b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the begin iterator to the key/word pairs  <br /></td></tr>
+<tr class="memdesc:ab5984be8118c831717492c632efc07b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the begin iterator to the key/word pairs.  <br /></td></tr>
 <tr class="separator:ab5984be8118c831717492c632efc07b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a69ea055c81ec1e44273345aad967004d" id="r_a69ea055c81ec1e44273345aad967004d"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html#ac56aa1e8ab3688b2d161c10d57781ef9">const_iterator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ILanguagePack.html#a69ea055c81ec1e44273345aad967004d">end</a> () const =0</td></tr>
-<tr class="memdesc:a69ea055c81ec1e44273345aad967004d"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the end iterator to the key/word pairs  <br /></td></tr>
+<tr class="memdesc:a69ea055c81ec1e44273345aad967004d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the end iterator to the key/word pairs.  <br /></td></tr>
 <tr class="separator:a69ea055c81ec1e44273345aad967004d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Interface for Language Packs. </p>
+<div class="textblock"><p>Interface class for Language Packs. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="ab5984be8118c831717492c632efc07b1" name="ab5984be8118c831717492c632efc07b1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab5984be8118c831717492c632efc07b1">&#9670;&#160;</a></span>begin()</h2>
@@ -162,7 +166,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>get the begin iterator to the key/word pairs </p>
+<p>Gets the begin iterator to the key/word pairs. </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1LanguagePack.html#a9807b22bc41d90ae89ff65476878f789">catena::common::LanguagePack</a>.</p>
 
@@ -191,7 +195,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>get the end iterator to the key/word pairs </p>
+<p>Gets the end iterator to the key/word pairs. </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1LanguagePack.html#aacd755242de708791fee43db3885eae5">catena::common::LanguagePack</a>.</p>
 
@@ -221,10 +225,10 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>deserialize a language pack from a protobuf message </p>
+<p>Deserializes a language pack from a protobuf message. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">pack</td><td>the protobuf message </td></tr>
+    <tr><td class="paramname">pack</td><td>The protobuf message </td></tr>
   </table>
   </dd>
 </dl>
@@ -255,10 +259,10 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>serialize a language pack to a protobuf message </p>
+<p>Serializes a language pack to a protobuf message. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">pack</td><td>the protobuf message </td></tr>
+    <tr><td class="paramname">pack</td><td>The protobuf message </td></tr>
   </table>
   </dd>
 </dl>

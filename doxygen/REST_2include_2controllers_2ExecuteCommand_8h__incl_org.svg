@@ -11,7 +11,7 @@
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:title="Implements REST ExecuteCommand controller.">
+<g id="a_Node000001"><a xlink:title="Implements controller for the REST command endpoint.">
 <polygon fill="#999999" stroke="#666666" points="800,-547 562,-547 562,-506 800,-506 800,-547"/>
 <text text-anchor="start" x="570" y="-535" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="570" y="-524" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -112,7 +112,7 @@
 <!-- Node46 -->
 <g id="Node000046" class="node">
 <title>Node46</title>
-<g id="a_Node000046"><a xlink:href="SocketWriter_8h.html" target="_top" xlink:title="Helper class used to write to a socket using boost.">
+<g id="a_Node000046"><a xlink:href="SocketWriter_8h.html" target="_top" xlink:title="Implements the SocketWriter class.">
 <polygon fill="white" stroke="#666666" points="356.5,-470 269.5,-470 269.5,-451 356.5,-451 356.5,-470"/>
 <text text-anchor="middle" x="313" y="-458" font-family="Helvetica,sans-Serif" font-size="10.00">SocketWriter.h</text>
 </a>
@@ -302,7 +302,7 @@
 <!-- Node42 -->
 <g id="Node000042" class="node">
 <title>Node42</title>
-<g id="a_Node000042"><a xlink:href="IConnectionQueue_8h.html" target="_top" xlink:title="Pure virtual class for the ConnectionQueue object.">
+<g id="a_Node000042"><a xlink:href="IConnectionQueue_8h.html" target="_top" xlink:title="Interface class for the ConnectionQueue object.">
 <polygon fill="white" stroke="#666666" points="936.5,-415 803.5,-415 803.5,-396 936.5,-396 936.5,-415"/>
 <text text-anchor="middle" x="870" y="-403" font-family="Helvetica,sans-Serif" font-size="10.00">rpc/IConnectionQueue.h</text>
 </a>
@@ -365,7 +365,7 @@
 <!-- Node8 -->
 <g id="Node000008" class="node">
 <title>Node8</title>
-<g id="a_Node000008"><a xlink:href="IDevice_8h.html" target="_top" xlink:title="Interface for device.">
+<g id="a_Node000008"><a xlink:href="IDevice_8h.html" target="_top" xlink:title="Interface for the Device class.">
 <polygon fill="#fff0f0" stroke="red" points="1146,-354.5 1084,-354.5 1084,-335.5 1146,-335.5 1146,-354.5"/>
 <text text-anchor="middle" x="1115" y="-342.5" font-family="Helvetica,sans-Serif" font-size="10.00">IDevice.h</text>
 </a>
@@ -491,8 +491,8 @@
 <!-- Node38 -->
 <g id="Node000038" class="node">
 <title>Node38</title>
-<g id="a_Node000038"><a xlink:href="ILanguagePack_8h.html" target="_top" xlink:title="Interface for language packs.">
-<polygon fill="white" stroke="#666666" points="1684,-184 1586,-184 1586,-165 1684,-165 1684,-184"/>
+<g id="a_Node000038"><a xlink:href="ILanguagePack_8h.html" target="_top" xlink:title="Interface class for language packs.">
+<polygon fill="#fff0f0" stroke="red" points="1684,-184 1586,-184 1586,-165 1684,-165 1684,-184"/>
 <text text-anchor="middle" x="1635" y="-172" font-family="Helvetica,sans-Serif" font-size="10.00">ILanguagePack.h</text>
 </a>
 </g>
@@ -617,7 +617,7 @@
 <!-- Node12 -->
 <g id="Node000012" class="node">
 <title>Node12</title>
-<g id="a_Node000012"><a xlink:href="Enums_8h.html" target="_top" xlink:title="tools for using EnumDecorators.">
+<g id="a_Node000012"><a xlink:href="Enums_8h.html" target="_top" xlink:title="Tools for using EnumDecorators.">
 <polygon fill="white" stroke="#666666" points="877.5,-129 818.5,-129 818.5,-110 877.5,-110 877.5,-129"/>
 <text text-anchor="middle" x="848" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00">Enums.h</text>
 </a>
@@ -995,7 +995,7 @@
 <!-- Node43 -->
 <g id="Node000043" class="node">
 <title>Node43</title>
-<g id="a_Node000043"><a xlink:href="IConnect_8h.html" target="_top" xlink:title="Interface for Connect.h.">
+<g id="a_Node000043"><a xlink:href="IConnect_8h.html" target="_top" xlink:title="Interface for Connect classes.">
 <polygon fill="white" stroke="#666666" points="916,-239 848,-239 848,-220 916,-220 916,-239"/>
 <text text-anchor="middle" x="882" y="-227" font-family="Helvetica,sans-Serif" font-size="10.00">IConnect.h</text>
 </a>

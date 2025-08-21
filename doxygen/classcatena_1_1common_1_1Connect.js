@@ -1,7 +1,6 @@
 var classcatena_1_1common_1_1Connect =
 [
     [ "~Connect", "classcatena_1_1common_1_1Connect.html#a1fa4c47904353be364d9930b22f2d3c8", null ],
-    [ "Connect", "classcatena_1_1common_1_1Connect.html#a86b2bc07e6ff84fe3b86dcdfca117d28", null ],
     [ "Connect", "classcatena_1_1common_1_1Connect.html#a3515b58f8533b18b9b3f9151ade3fea9", null ],
     [ "Connect", "classcatena_1_1common_1_1Connect.html#aaa137c0fa7a8e9914734e516a0036dcb", null ],
     [ "Connect", "classcatena_1_1common_1_1Connect.html#a456e6a4492e1d42e5971c7d4b01bbb69", null ],

@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1IConnectionQu
 </div><!--header-->
 <div class="contents">
 
-<p>Interface class for the <a class="el" href="classcatena_1_1common_1_1ConnectionQueue.html" title="Implements a priority queue which manages IConnect objects.">ConnectionQueue</a> object.  
+<p>Interface class for the <a class="el" href="classcatena_1_1common_1_1ConnectionQueue.html" title="Class for managing connections to a service.">ConnectionQueue</a> object.  
  <a href="classcatena_1_1common_1_1IConnectionQueue.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="IConnectionQueue_8h_source.html">IConnectionQueue.h</a>&gt;</code></p>
@@ -123,14 +123,14 @@ Public Member Functions</h2></td></tr>
 <a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html">IConnectionQueue</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html">IConnectionQueue</a> &amp;)=delete</td></tr>
 <tr class="separator:a4fffbd5355a0da18baecfca1b1a673d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a45432af9cafbf393c8249b4800cea9ee" id="r_a45432af9cafbf393c8249b4800cea9ee"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html#a45432af9cafbf393c8249b4800cea9ee">registerConnection</a> (<a class="el" href="classcatena_1_1common_1_1IConnect.html">IConnect</a> *cd)=0</td></tr>
-<tr class="memdesc:a45432af9cafbf393c8249b4800cea9ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Regesters a <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> CallData object into the Connection priority queue.  <br /></td></tr>
+<tr class="memdesc:a45432af9cafbf393c8249b4800cea9ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Regesters a <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Virtual class for Connect handlers to inherit to share update code among other things.">Connect</a> CallData object into the priority queue.  <br /></td></tr>
 <tr class="separator:a45432af9cafbf393c8249b4800cea9ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a57258bd6a9e68c4764a614d78793fc52" id="r_a57258bd6a9e68c4764a614d78793fc52"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnectionQueue.html#a57258bd6a9e68c4764a614d78793fc52">deregisterConnection</a> (const <a class="el" href="classcatena_1_1common_1_1IConnect.html">IConnect</a> *cd)=0</td></tr>
-<tr class="memdesc:a57258bd6a9e68c4764a614d78793fc52"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deregisters a <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> CallData object into the Connection priority queue.  <br /></td></tr>
+<tr class="memdesc:a57258bd6a9e68c4764a614d78793fc52"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deregisters a <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Virtual class for Connect handlers to inherit to share update code among other things.">Connect</a> CallData object from the priority queue.  <br /></td></tr>
 <tr class="separator:a57258bd6a9e68c4764a614d78793fc52"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Interface class for the <a class="el" href="classcatena_1_1common_1_1ConnectionQueue.html" title="Implements a priority queue which manages IConnect objects.">ConnectionQueue</a> object. </p>
+<div class="textblock"><p>Interface class for the <a class="el" href="classcatena_1_1common_1_1ConnectionQueue.html" title="Class for managing connections to a service.">ConnectionQueue</a> object. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a57258bd6a9e68c4764a614d78793fc52" name="a57258bd6a9e68c4764a614d78793fc52"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a57258bd6a9e68c4764a614d78793fc52">&#9670;&#160;</a></span>deregisterConnection()</h2>
@@ -156,10 +156,10 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Deregisters a <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> CallData object into the Connection priority queue. </p>
+<p>Deregisters a <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Virtual class for Connect handlers to inherit to share update code among other things.">Connect</a> CallData object from the priority queue. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cd</td><td>The <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> CallData object to deregister. </td></tr>
+    <tr><td class="paramname">cd</td><td>The <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Virtual class for Connect handlers to inherit to share update code among other things.">Connect</a> CallData object to deregister. </td></tr>
   </table>
   </dd>
 </dl>
@@ -192,10 +192,10 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Regesters a <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> CallData object into the Connection priority queue. </p>
+<p>Regesters a <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Virtual class for Connect handlers to inherit to share update code among other things.">Connect</a> CallData object into the priority queue. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cd</td><td>The <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> CallData object to register. </td></tr>
+    <tr><td class="paramname">cd</td><td>The <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Virtual class for Connect handlers to inherit to share update code among other things.">Connect</a> CallData object to register. </td></tr>
   </table>
   </dd>
 </dl>

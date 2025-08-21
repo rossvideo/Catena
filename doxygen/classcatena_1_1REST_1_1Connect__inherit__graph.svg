@@ -21,7 +21,7 @@
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:title="ICallData class for the Connect REST controller.">
+<g id="a_Node000001"><a xlink:title="Controller class for the Connect REST endpoint.">
 <polygon fill="#999999" stroke="#666666" points="206,-19 81,-19 81,0 206,0 206,-19"/>
 <text text-anchor="middle" x="143.5" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::Connect</text>
 </a>
@@ -48,7 +48,7 @@
 <!-- Node3 -->
 <g id="Node000003" class="node">
 <title>Node3</title>
-<g id="a_Node000003"><a xlink:href="classcatena_1_1common_1_1Connect.html" target="_top" xlink:title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">
+<g id="a_Node000003"><a xlink:href="classcatena_1_1common_1_1Connect.html" target="_top" xlink:title="Virtual class for Connect handlers to inherit to share update code among other things.">
 <polygon fill="white" stroke="#666666" points="293.5,-74 149.5,-74 149.5,-55 293.5,-55 293.5,-74"/>
 <text text-anchor="middle" x="221.5" y="-62" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::Connect</text>
 </a>
@@ -66,7 +66,7 @@
 <!-- Node4 -->
 <g id="Node000004" class="node">
 <title>Node4</title>
-<g id="a_Node000004"><a xlink:href="classcatena_1_1common_1_1IConnect.html" target="_top" xlink:title="Interface class for Connect RPCs.">
+<g id="a_Node000004"><a xlink:href="classcatena_1_1common_1_1IConnect.html" target="_top" xlink:title="Interface class for the Connect handlers.">
 <polygon fill="white" stroke="#666666" points="295,-129 148,-129 148,-110 295,-110 295,-129"/>
 <text text-anchor="middle" x="221.5" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IConnect</text>
 </a>

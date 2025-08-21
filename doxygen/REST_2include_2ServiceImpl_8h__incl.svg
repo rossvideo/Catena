@@ -176,7 +176,7 @@ var sectionId = 'dynsection-0';
 <!-- Node17 -->
 <g id="Node000017" class="node">
 <title>Node17</title>
-<g id="a_Node000017"><a xlink:href="Enums_8h.html" target="_top" xlink:title="tools for using EnumDecorators.">
+<g id="a_Node000017"><a xlink:href="Enums_8h.html" target="_top" xlink:title="Tools for using EnumDecorators.">
 <polygon fill="white" stroke="#666666" points="696.92,-129 637.92,-129 637.92,-110 696.92,-110 696.92,-129"/>
 <text text-anchor="middle" x="667.42" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00">Enums.h</text>
 </a>
@@ -248,7 +248,7 @@ var sectionId = 'dynsection-0';
 <!-- Node48 -->
 <g id="Node000048" class="node">
 <title>Node48</title>
-<g id="a_Node000048"><a xlink:href="ConnectionQueue_8h.html" target="_top" xlink:title="Implements the ConnectionQueue class.">
+<g id="a_Node000048"><a xlink:href="ConnectionQueue_8h.html" target="_top" xlink:title="Implements the ConnectionQueue class which manages connections to a service.">
 <polygon fill="white" stroke="#666666" points="1004.42,-459 874.42,-459 874.42,-440 1004.42,-440 1004.42,-459"/>
 <text text-anchor="middle" x="939.42" y="-447" font-family="Helvetica,sans-Serif" font-size="10.00">rpc/ConnectionQueue.h</text>
 </a>
@@ -356,7 +356,7 @@ var sectionId = 'dynsection-0';
 <!-- Node57 -->
 <g id="Node000057" class="node">
 <title>Node57</title>
-<g id="a_Node000057"><a xlink:href="SocketReader_8h.html" target="_top" xlink:title="Helper class used to read from a socket using boost.">
+<g id="a_Node000057"><a xlink:href="SocketReader_8h.html" target="_top" xlink:title="Implements the SocketReader class.">
 <polygon fill="white" stroke="#666666" points="1721.42,-514 1629.42,-514 1629.42,-495 1721.42,-495 1721.42,-514"/>
 <text text-anchor="middle" x="1675.42" y="-502" font-family="Helvetica,sans-Serif" font-size="10.00">SocketReader.h</text>
 </a>
@@ -374,7 +374,7 @@ var sectionId = 'dynsection-0';
 <!-- Node63 -->
 <g id="Node000063" class="node">
 <title>Node63</title>
-<g id="a_Node000063"><a xlink:href="SocketWriter_8h.html" target="_top" xlink:title="Helper class used to write to a socket using boost.">
+<g id="a_Node000063"><a xlink:href="SocketWriter_8h.html" target="_top" xlink:title="Implements the SocketWriter class.">
 <polygon fill="white" stroke="#666666" points="1965.92,-514 1878.92,-514 1878.92,-495 1965.92,-495 1965.92,-514"/>
 <text text-anchor="middle" x="1922.42" y="-502" font-family="Helvetica,sans-Serif" font-size="10.00">SocketWriter.h</text>
 </a>
@@ -977,7 +977,7 @@ var sectionId = 'dynsection-0';
 <!-- Node40 -->
 <g id="Node000040" class="node">
 <title>Node40</title>
-<g id="a_Node000040"><a xlink:href="IDevice_8h.html" target="_top" xlink:title="Interface for device.">
+<g id="a_Node000040"><a xlink:href="IDevice_8h.html" target="_top" xlink:title="Interface for the Device class.">
 <polygon fill="#fff0f0" stroke="red" points="1392.42,-349 1330.42,-349 1330.42,-330 1392.42,-330 1392.42,-349"/>
 <text text-anchor="middle" x="1361.42" y="-337" font-family="Helvetica,sans-Serif" font-size="10.00">IDevice.h</text>
 </a>
@@ -1211,7 +1211,7 @@ var sectionId = 'dynsection-0';
 <!-- Node49 -->
 <g id="Node000049" class="node">
 <title>Node49</title>
-<g id="a_Node000049"><a xlink:href="IConnectionQueue_8h.html" target="_top" xlink:title="Pure virtual class for the ConnectionQueue object.">
+<g id="a_Node000049"><a xlink:href="IConnectionQueue_8h.html" target="_top" xlink:title="Interface class for the ConnectionQueue object.">
 <polygon fill="#fff0f0" stroke="red" points="999.92,-404 884.92,-404 884.92,-385 999.92,-385 999.92,-404"/>
 <text text-anchor="middle" x="942.42" y="-392" font-family="Helvetica,sans-Serif" font-size="10.00">IConnectionQueue.h</text>
 </a>

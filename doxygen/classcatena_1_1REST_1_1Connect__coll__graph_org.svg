@@ -11,7 +11,7 @@
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:title="ICallData class for the Connect REST controller.">
+<g id="a_Node000001"><a xlink:title="Controller class for the Connect REST endpoint.">
 <polygon fill="#999999" stroke="#666666" points="815,-85.5 690,-85.5 690,-66.5 815,-66.5 815,-85.5"/>
 <text text-anchor="middle" x="752.5" y="-73.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::Connect</text>
 </a>
@@ -38,7 +38,7 @@
 <!-- Node3 -->
 <g id="Node000003" class="node">
 <title>Node3</title>
-<g id="a_Node000003"><a xlink:href="classcatena_1_1common_1_1Connect.html" target="_top" xlink:title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">
+<g id="a_Node000003"><a xlink:href="classcatena_1_1common_1_1Connect.html" target="_top" xlink:title="Virtual class for Connect handlers to inherit to share update code among other things.">
 <polygon fill="white" stroke="#666666" points="653,-67.5 509,-67.5 509,-48.5 653,-48.5 653,-67.5"/>
 <text text-anchor="middle" x="581" y="-55.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::Connect</text>
 </a>
@@ -56,7 +56,7 @@
 <!-- Node4 -->
 <g id="Node000004" class="node">
 <title>Node4</title>
-<g id="a_Node000004"><a xlink:href="classcatena_1_1common_1_1IConnect.html" target="_top" xlink:title="Interface class for Connect RPCs.">
+<g id="a_Node000004"><a xlink:href="classcatena_1_1common_1_1IConnect.html" target="_top" xlink:title="Interface class for the Connect handlers.">
 <polygon fill="white" stroke="#666666" points="352,-133.5 205,-133.5 205,-114.5 352,-114.5 352,-133.5"/>
 <text text-anchor="middle" x="278.5" y="-121.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IConnect</text>
 </a>
@@ -103,7 +103,7 @@
 <!-- Node6 -->
 <g id="Node000006" class="node">
 <title>Node6</title>
-<g id="a_Node000006"><a xlink:href="classcatena_1_1common_1_1IAuthorizer.html" target="_top" xlink:title="Class for handling authorization information.">
+<g id="a_Node000006"><a xlink:href="classcatena_1_1common_1_1IAuthorizer.html" target="_top" xlink:title="Interface for objects handling authorization information.">
 <polygon fill="white" stroke="#666666" points="158,-67.5 0,-67.5 0,-48.5 158,-48.5 158,-67.5"/>
 <text text-anchor="middle" x="79" y="-55.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IAuthorizer</text>
 </a>

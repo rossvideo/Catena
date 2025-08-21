@@ -11,7 +11,7 @@
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:title="type trait to determine if a type is a std::variant those with std::get&lt;0&gt; defined are std::variants">
+<g id="a_Node000001"><a xlink:title="Type trait to determine if a type is a std::variant. Those with std::get&lt;0&gt; defined are std::variants...">
 <polygon fill="#999999" stroke="#666666" points="146,-52 0,-52 0,0 146,0 146,-52"/>
 <text text-anchor="start" x="8" y="-40" font-family="Helvetica,sans-Serif" font-size="10.00">catena::meta::is_variant</text>
 <text text-anchor="start" x="8" y="-29" font-family="Helvetica,sans-Serif" font-size="10.00">&lt; T, std::void_t&lt; decltype</text>
