@@ -49,7 +49,7 @@
 #include "IConnect.h"
 #include <Logger.h>
 
-// protobug interface
+// protobuf interface
 #include <interface/device.pb.h>
 
 // std

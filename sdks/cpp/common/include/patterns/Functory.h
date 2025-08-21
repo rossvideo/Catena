@@ -78,8 +78,8 @@ class Functory final : public Singleton<Functory<K, R, Ms...>> {
      * Needed for Singletons that are class templates such as
      * this one.
      */
-   using Protector = typename catena::patterns::Singleton<Functory<K, R, Ms...>>::Protector;
-   using LockGuard = std::lock_guard<std::mutex>;
+    using Protector = typename catena::patterns::Singleton<Functory<K, R, Ms...>>::Protector;
+    using LockGuard = std::lock_guard<std::mutex>;
 
     /**
      * @brief As a singleton, we don't provide a default constructor.
