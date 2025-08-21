@@ -2073,6 +2073,12 @@ TEST_F(DeviceTest, GetDeviceSerializer_Menus) {
     // Create mock menu groups and add them to the device
     auto mockMenuGroup = std::make_shared<MockMenuGroup>();
     auto mockMenu = std::make_unique<MockMenu>();
+
+    EXPECT_CALL(*mockMenuGroup, toProto(testing::An<catena::MenuGroup&>(), true))
+        .WillOnce(testing::Invoke([](catena::MenuGroup& menuGroup, bool shallow) {
+            auto* name = menuGroup.mutable_name();
+            name->mutable_display_strings()->insert({"en", "Test Menu Group"});
+        }));
     
     // Set up expectations for menu toProto
     EXPECT_CALL(*mockMenu, toProto(testing::An<catena::Menu&>()))
@@ -2103,6 +2109,13 @@ TEST_F(DeviceTest, GetDeviceSerializer_Menus) {
     while (serializer.hasMore()) {
         auto component = serializer.getNext();
         componentCount++;
+
+        // First component should be device info with the menu group
+        if (componentCount == 1) {
+            EXPECT_TRUE(component.has_device());
+            EXPECT_EQ(component.device().menu_groups_size(), 1);
+            EXPECT_NO_THROW(component.device().menu_groups().at("menuGroup"));
+        }
         
         // Check for menu component
         if (component.has_menu()) {

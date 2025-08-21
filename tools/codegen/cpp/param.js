@@ -123,7 +123,7 @@ class Descriptor {
         return `"${desc.access_scope || ""}"`;
       },
       read_only: () => {
-        return !!desc.readonly;
+        return !!desc.read_only;
       },
       oid: () => {
         return `"${oid}"`;

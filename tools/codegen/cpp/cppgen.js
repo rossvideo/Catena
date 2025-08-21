@@ -141,7 +141,7 @@ class CppGen {
     bloc(`#include <LanguagePack.h>`);
     bloc(`#include <Device.h>`);
     bloc(`#include <RangeConstraint.h>`);
-    bloc(`#include <NamedChoiceConstraint.h>`);
+    bloc(`#include <ChoiceConstraint.h>`);
     bloc(`#include <Enums.h>`);
     bloc(`#include <StructInfo.h>`);
     bloc(`#include <string>`);
@@ -158,7 +158,7 @@ class CppGen {
     bloc(`using catena::common::ParamWithValue;`);
     bloc(`using catena::common::Device;`);
     bloc(`using catena::common::RangeConstraint;`);
-    bloc(`using catena::common::NamedChoiceConstraint;`);
+    bloc(`using catena::common::ChoiceConstraint;`);
     bloc(`using catena::common::IParam;`);
     bloc(`using catena::common::EmptyValue;`);
     bloc(`using std::placeholders::_1;`);
@@ -216,11 +216,18 @@ class CppGen {
         let paramOids = menus[menu].param_oids.map(oid => `"${oid}"`).join(", ");
         let menuName = menus[menu].name.display_strings;
         let menuNamePairs = Object.keys(menuName);
+        let clientHints = menus[menu].client_hints;
+        let clientHintsStr = "";
+        if (clientHints != null) {
+          let clientHintsKeys = Object.keys(clientHints);
+          clientHintsStr = clientHintsKeys.map((key) => { return `{ "${key}", "${clientHints[key]}" }` }).join(", ");
+        }
+
         bloc(`Menu _${group}Group_${menu}Menu {\n  {    `);
         bloc(`    ${menuNamePairs.map((key) => { return `{ "${key}", "${menuName[key]}" }` }).join(",\n    ")}\n  },`);
         bloc(`  false, false, `);
         bloc(`  {${paramOids}}, `);
-        bloc(`  {}, {}, "${menu}", _${group}Group\n};`);
+        bloc(`  {}, {${clientHintsStr}}, "${menu}", _${group}Group\n};`);
       }
     }
   }
