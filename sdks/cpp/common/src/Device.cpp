@@ -322,34 +322,37 @@ std::vector<std::unique_ptr<IParam>> Device::getTopLevelParams(catena::exception
 } //GCOV_EXCL_LINE
 
 std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz) const {
-   // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
+    std::unique_ptr<IParam> command = nullptr;
+    // Path will throw an exception if the json pointer is invalid.
     try {
         catena::common::Path path(fqoid);
-        if (path.empty()) {
+        // Making sure path is valid.
+        if (path.empty() || !path.front_is_string()) {
             status = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
-            return nullptr;
-        }
-        if (path.front_is_string()) {
+        } else {
             IParam* param = getItem<common::CommandTag>(path.front_as_string());
             path.pop();
+            // Making sure a command is found.
             if (!param) {
                 status = catena::exception_with_status("Command not found: " + fqoid, catena::StatusCode::NOT_FOUND);
-                return nullptr;
             }
-            if (path.empty()) {
-                return param->copy();
-            } else {
+            // Making sure client has readAuthz for the command.
+            else if (!authz.readAuthz(*param)) {
+                status = catena::exception_with_status("Not authorized to read the param " + fqoid, catena::StatusCode::PERMISSION_DENIED);
+            }
+            // If the path is empty, then we found the command.
+            else if (path.empty()) {
+                command = param->copy();
+            }
+            // If path is not empty, keep recursing.
+            else {
                 status = catena::exception_with_status("sub-commands not implemented", catena::StatusCode::UNIMPLEMENTED);
-                return nullptr;
             }
-        } else {
-            status = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
-            return nullptr;
         }
     } catch (const catena::exception_with_status& why) {
         status = catena::exception_with_status(why.what(), why.status);
-        return nullptr;
     }
+    return command;
 }
 
 void Device::toProto(::catena::Device& dst, const IAuthorizer& authz, bool shallow) const {

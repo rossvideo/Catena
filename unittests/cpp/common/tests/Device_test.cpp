@@ -1428,7 +1428,28 @@ TEST_F(DeviceTest, GetCommand_NotFound) {
     EXPECT_EQ(result, nullptr);
 }
 
-// 4.18: Error Case - Get Command with Sub-commands (Unimplemented)
+// 4.18: Error Case - Get Command With Read Authz.
+TEST_F(DeviceTest, GetCommand_NoReadAuthz) {
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    // Create a mock command and add it to the device
+    MockParam mockCommand;
+    MockParamDescriptor mockDescriptor;
+    setupMockParam(mockCommand, "/testCommand", mockDescriptor, false, 0, adminScope_);
+    
+    // Setup expectations for command
+    EXPECT_CALL(mockDescriptor, isCommand())
+        .WillRepeatedly(testing::Return(true));
+    
+    device_->addItem("testCommand", &mockCommand);
+    
+    // Test getting the command
+    auto result = device_->getCommand("/testCommand", status, *monitorAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::PERMISSION_DENIED);
+    EXPECT_EQ(result, nullptr);
+}
+
+// 4.19: Error Case - Get Command with Sub-commands (Unimplemented)
 TEST_F(DeviceTest, GetCommand_SubCommandsUnimplemented) {
     // Create a mock command and add it to the device
     auto mockCommand = std::make_shared<MockParam>();
@@ -1453,7 +1474,7 @@ TEST_F(DeviceTest, GetCommand_SubCommandsUnimplemented) {
     EXPECT_EQ(result, nullptr);
 }
 
-// 4.19: Error Case - Get Command with Invalid Json Pointer
+// 4.20: Error Case - Get Command with Invalid Json Pointer
 TEST_F(DeviceTest, GetCommand_InvalidJsonPointer) {
     catena::exception_with_status status{"", catena::StatusCode::OK};
     auto result = device_->getCommand("/invalid[", status, *adminAuthz_);
@@ -1462,7 +1483,7 @@ TEST_F(DeviceTest, GetCommand_InvalidJsonPointer) {
     EXPECT_EQ(result, nullptr);
 }
 
-// 4.20: Error Case - Get Command with Non-String Front Element
+// 4.21: Error Case - Get Command with Non-String Front Element
 TEST_F(DeviceTest, GetCommand_NonStringFrontElement) {
     catena::exception_with_status status{"", catena::StatusCode::OK};
     auto result = device_->getCommand("/123", status, *adminAuthz_);
@@ -1472,7 +1493,7 @@ TEST_F(DeviceTest, GetCommand_NonStringFrontElement) {
     EXPECT_EQ(result, nullptr);
 }
 
-// 4.21: Error Case - Get Command with Exception
+// 4.22: Error Case - Get Command with Exception
 TEST_F(DeviceTest, GetCommand_Exception) {
     // Create a mock command that throws an exception
     auto mockCommand = std::make_shared<MockParam>();

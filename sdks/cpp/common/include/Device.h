@@ -502,7 +502,6 @@ class Device : public IDevice {
      * @param status Will contain an error message if the command does not
      * exist.
      * @return A unique pointer to the command, or nullptr if it does not exist.
-     * @todo Add authorization checking.
      */
     std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const override;
 
