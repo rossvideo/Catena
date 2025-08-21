@@ -47,7 +47,7 @@ var NAVTREEINDEX7 =
 "connections_2REST_2include_2controllers_2LanguagePack_8h_source.html":[11,0,0,0,1,1,0,0,7],
 "connections_2gRPC_2include_2controllers_2Connect_8h.html":[11,0,0,0,1,0,0,0,1],
 "connections_2gRPC_2include_2controllers_2Connect_8h_source.html":[11,0,0,0,1,0,0,0,1],
-"deprecated.html":[7],
+"deprecated.html":[6],
 "dir_01181b2e4bcbd5d200324c852c35719a.html":[11,0,0,0,1],
 "dir_0bcd5a6b0e4d30efc395921e20921952.html":[11,0,0,0,0,0,0],
 "dir_182967fd2bbf5e595958d2ac00eb9d3f.html":[11,0,0,0,0,0],
