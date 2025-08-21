@@ -1,8 +1,8 @@
 var classcatena_1_1gRPC_1_1PeerInfo =
 [
     [ "PeerID", "classcatena_1_1gRPC_1_1PeerInfo.html#ace373fd9b19ebe0345e468d74c0b10e7", null ],
-    [ "Writer", "classcatena_1_1gRPC_1_1PeerInfo.html#a878029a8603b7c2f957c54d6324f2c3d", null ],
-    [ "PeerInfo", "classcatena_1_1gRPC_1_1PeerInfo.html#a2bcd4465bd7ef2ed892492cbb3c81fdc", null ],
+    [ "Writer", "classcatena_1_1gRPC_1_1PeerInfo.html#acf6dd564aad98f190b2d8b09b7207e14", null ],
+    [ "PeerInfo", "classcatena_1_1gRPC_1_1PeerInfo.html#a405daef3e54ae9d5a4f72556a5e1389f", null ],
     [ "PeerInfo", "classcatena_1_1gRPC_1_1PeerInfo.html#a29ecd8ad4cea63e90030533aa5a2e6e3", null ],
     [ "PeerInfo", "classcatena_1_1gRPC_1_1PeerInfo.html#af3935fca7640140124d4ed13490618de", null ],
     [ "PeerInfo", "classcatena_1_1gRPC_1_1PeerInfo.html#a1e2568d082023fef0899350bb1a30918", null ],
