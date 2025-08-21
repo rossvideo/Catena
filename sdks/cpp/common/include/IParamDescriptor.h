@@ -51,7 +51,8 @@ namespace common {
 class IAuthorizer; // forward declaration
 
 /**
- * @brief ParamDescriptor provides information about a parameter
+ * @brief ParamDescriptor provides information about a parameter as well as
+ * command definition and execution functions.
  */
 class IParamDescriptor {
   public:
@@ -142,18 +143,13 @@ class IParamDescriptor {
     virtual inline void setMinimalSet(bool flag) = 0;
 
     /**
-     * @brief Returns the max length of the array/string parameter. If max
-     * length is not set in the .JSON file, then the default value of 1024 is
-     * used. The default value can also be configured with the command line
-     * argument "--default_max_length=#".
+     * @brief Returns the max length an array/string parameter can be.
      * @returns max_length_
      */
     virtual uint32_t max_length() const = 0;
     /**
-     * @brief Returns the total length of the string_array parameter. If max
-     * length is not set in the .JSON file, then the default value of 1024 is
-     * used. The default value can also be configured with the command line
-     * argument "--default_max_length=#".
+     * @brief Returns the total length the sum of all strings in a string_array
+     * parameter can be.
      * @returns total_length_
      */
     virtual std::size_t total_length() const = 0;

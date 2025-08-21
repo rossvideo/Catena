@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,12 +30,12 @@
 
 /**
  * @file Connect.h
- * @brief Implements Catena gRPC Connect
+ * @brief Implements the Catena Connect RPC
  * @author john.naylor@rossvideo.com
  * @author john.danen@rossvideo.com
  * @author isaac.robert@rossvideo.com
- * @date 2024-06-08
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @date 2025-08-18
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
@@ -46,59 +46,65 @@
 // common
 #include <rpc/Connect.h>
 #include <ILanguagePack.h>
-#include <Enums.h>
-
-// std
-#include <condition_variable>
 
 namespace catena {
 namespace gRPC {
 
 /**
  * @brief CallData class for the Connect RPC
+ *
+ * This RPC connects the client to each device in the service and writes
+ * updates whenever one of their ValueSetByClient, ValueSetByServer, or
+ * LanguageAddedPushUpdate signals is emitted.
+ *
+ * Whether or not a PushUpdate is written to the client also depends on their
+ * specified DetailLevel.
  */
 class Connect : public CallData, public catena::common::Connect {
   public:
     /**
-     * @brief Constructor for the CallData class of the Connect gRPC.
+     * @brief Constructor for the CallData class of the Connect RPC.
      * Calls proceed() once initialized.
      *
-     * @param service - Pointer to the parent ServiceImpl.
+     * @param service Pointer to the ServiceImpl.
      * @param dms A map of slots to ptrs to their corresponding device.
-     * @param ok - Flag to check if the command was successfully executed.
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */ 
     Connect(IServiceImpl *service, SlotMap& dms, bool ok);
     /**
-     * @brief Manages the steps of the Connect gRPC command
-     * through the state variable status. Returns the value of the
-     * parameter specified by the user.
+     * @brief Manages the steps of the Connect RPC through the state variable
+     * status.
      *
-     * @param service - Pointer to the parent ServiceImpl.
-     * @param ok - Flag to check if the command was successfully executed.
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */
     void proceed(bool ok) override;
     /**
      * @brief Returns true if the connection has been cancelled.
-     * 
-     * @return true if the connection has been cancelled, false otherwise.
      */
     bool isCancelled() override;
 
   private:
     /**
-     * @brief Server request (Info on connection).
+     * @brief The client's request containing two things:
+     * 
+     * - The detail level of updates they want to receive.
+     * 
+     * - A flag indicating whether the client wants to force a connection to
+     * the service.
      */
     catena::ConnectPayload req_;
     /**
-     * @brief gRPC async writer to write updates.
+     * @brief The RPC response writer for writing back to the client.
      */
     ServerAsyncWriter<catena::PushUpdates> writer_;
     /**
-     * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+     * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */
     CallStatus status_;
     /**
-     * @brief The mutex to for locking the object while writing
+     * @brief The mutex to lock the RPC while writing.
      */
     std::mutex mtx_;
     /**
@@ -107,24 +113,24 @@ class Connect : public CallData, public catena::common::Connect {
     static int objectCounter_;
 
     /**
-     * @brief Id of operation waiting for valueSetByClient to be emitted.
-     * Used when ending the connection.
+     * @brief A list of ids for the operations waiting for valueSetByClient to
+     * be emitted.
      */
     SignalMap valueSetByClientIds_;
     /**
-     * @brief Id of operation waiting for valueSetByServer to be emitted.
-     * Used when ending the connection.
+     * @brief A list of ids for the operations waiting for valueSetByServer to
+     * be emitted.
      */
     SignalMap valueSetByServerIds_;
     /**
-     * @brief Id of operation waiting for languageAddedPushUpdate to be
-     * emitted. Used when ending the connection.
+     * @brief A list of ids for the operations waiting for
+     * languageAddedPushUpdate to be emitted.
      */
     SignalMap languageAddedIds_;
 
     /**
-     * @brief Signal emitted in the case of an error which requires the all
-     * open connections to be shut down.
+     * @brief Signal emitted in cases which require all open connections to be
+     * shut down such as service shutdown.
      */
     static vdk::signal<void()> shutdownSignal_;
     /**

@@ -52,7 +52,6 @@ namespace common {
  * @brief A Group of device menus
  */
 class MenuGroup : public IMenuGroup {
-
   public:
     MenuGroup() = delete;
     /**
@@ -76,30 +75,31 @@ class MenuGroup : public IMenuGroup {
     MenuGroup& operator=(MenuGroup&&) = default;
 
     /**
-     * destructor
+     * @brief Destructor
      */
     ~MenuGroup() = default;
 
     /**
-     * @brief construct a Menu Group from a list of Menus
-     * @param oid the oid of the Menu Group
-     * @param name the name of the Menu Group
-     * @param dev the device to add the menu group to
+     * @brief Construct a Menu Group from a list of Menus.
+     * @param oid The oid of the Menu Group.
+     * @param name The name of the Menu Group.
+     * @param dev The device to add the menu group to.
      */
     MenuGroup(std::string oid, const PolyglotText::ListInitializer name, IDevice& dev) : name_{name} {
         dev.addItem(oid, this);
     }
 
     /**
-     * @brief serialize a menu group to a protobuf message
-     * @param menuGroup the protobuf message
+     * @brief serialize a menu group to a protobuf message.
+     * @param menuGroup The protobuf message.
+     * @param shallow If true, only the top-level info is copied.
      */
     void toProto(::catena::MenuGroup& menuGroup, bool shallow) const override;
 
     /**
-     * @brief add a menu to the group using move semantics
-     * @param oid the key of the menu
-     * @param menu the menu
+     * @brief Add a menu to the group using move semantics.
+     * @param oid The key of the menu.
+     * @param menu The menu to add.
      */
     void addMenu(const std::string& oid, std::unique_ptr<IMenu> menu) override {
         // Sanitizes input before adding.
@@ -113,13 +113,19 @@ class MenuGroup : public IMenuGroup {
     }
 
     /**
-     * @brief get menus from menu group
-     * @return a map of menus
+     * @brief Gets menus from the menu group.
+     * @return A map of the menu group's menus.
      */
     const MenuMap* menus() const override { return &menus_; }
 
   private:
+    /**
+     * @brief The menu group's name.
+     */
     PolyglotText name_;
+    /**
+     * @brief A map of the menu group's menus.
+     */
     MenuMap menus_;
 };
 

@@ -30,7 +30,7 @@
 
 /**
  * @file SocketWriter.h
- * @brief Helper class used to write to a socket using boost.
+ * @brief Implements the SocketWriter class.
  * @author benjamin.whitten@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -45,7 +45,11 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief Helper class used to write a unary response to a socket using boost.
+ * @brief A helper class which writes a unary response to the client socket
+ * using boost.
+ * 
+ * SocketWriter can also combine/buffer multiple messages to later send as a
+ * single response.
  */
 class SocketWriter : public ISocketWriter {
   public:
@@ -53,15 +57,19 @@ class SocketWriter : public ISocketWriter {
      * @brief Constructs a SocketWriter.
      * @param socket The socket to write to.
      * @param origin The origin of the request.
-     * @param buffer Flag indicating whether to buffer a multi-message response.
+     * @param buffer Flag indicating whether to buffer the response.
      */
     SocketWriter(tcp::socket& socket, const std::string& origin = "*", bool buffer = false) : socket_{socket}, origin_{origin}, buffer_{buffer} {}
 
     /**
      * @brief Writes a HTTP response to the socket.
      * 
-     * If the message is being buffered, a call to this function with an empty
-     * message will flush the response. 
+     * If the message is being buffered, the message will not be sent until a
+     * call to this function is made with an empty message and a non-error
+     * status code.
+     * 
+     * Any error status code will be sent immediately and without
+     * the jsonBody, at which point subsequent calls to this function will fail.
      * 
      * @param msg The protobuf message to write (if status is OK).
      * @param err The error status to of the response.
@@ -89,12 +97,13 @@ class SocketWriter : public ISocketWriter {
 };
 
 /**
- * @brief Helper class to write Server Sent Events to a socket using boost.
+ * @brief A helper class which writes a stream of server-sent events to the
+ * client socket using boost.
  */
 class SSEWriter : public ISocketWriter {
   public:
     /**
-     * @brief Constructor for SSEWriter.
+     * @brief Constructs a SSEWriter.
      * @param socket The socket to write to.
      * @param origin The origin of the request.
      */
@@ -102,11 +111,13 @@ class SSEWriter : public ISocketWriter {
 
     /**
      * @brief Writes a Server-Sent Event HTTP response.
+     * 
+     * Headers are sent allong with the first call to sendResponse(). Thus,
+     * subsequent calls to this function with an error status code will not
+     * change the status code the recieved by the client.
+     * 
      * @param msg The protobuf message to write as JSON.
      * @param err The error status of the response.
-     * 
-     * Due to the nature of Server-Sent Events, only the first err status sent
-     * with the response.
      */
     void sendResponse(const catena::exception_with_status& err, const google::protobuf::Message& msg = catena::Empty()) override;
 

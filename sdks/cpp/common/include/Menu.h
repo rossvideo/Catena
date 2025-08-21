@@ -120,11 +120,29 @@ class Menu : public IMenu {
     void toProto(::catena::Menu& menu) const override;
 
   private:
+    /**
+     * @brief The menu's name.
+     */
     PolyglotText name_;
+    /**
+     * @brief Flag indicating if the menu is hidden.
+     */
     bool hidden_;
+    /**
+     * @brief Flag indicating if the menu is disabled.
+     */
     bool disabled_;
+    /**
+     * @brief A list of the param oids contained in this menu.
+     */
     std::vector<std::string> param_oids_;
+    /**
+     * @brief A list of the command oids contained in this menu.
+     */
     std::vector<std::string> command_oids_;
+    /**
+     * @brief A collection of client hints for use with this menu.
+     */
     std::unordered_map<std::string, std::string> client_hints_;
 };
 

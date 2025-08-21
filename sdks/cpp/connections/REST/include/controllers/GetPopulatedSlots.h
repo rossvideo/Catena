@@ -30,7 +30,7 @@
 
 /**
  * @file GetPopulatedSlots.h
- * @brief Implements REST GetPopulatedSlots controller.
+ * @brief Implements controller for the REST devices endpoint.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -61,7 +61,11 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the GetPopulatedSlots REST controller.
+ * @brief Controller class for the Devices REST endpoint.
+ * 
+ * This controller supports one method:
+ * 
+ * - GET: Writes a list of slots populated by devices to the client.
  */
 class GetPopulatedSlots : public ICallData {
   public:
@@ -71,23 +75,23 @@ class GetPopulatedSlots : public ICallData {
     using SlotMap = catena::common::SlotMap;
 
     /**
-     * @brief Constructor for the GetPopulatedSlots controller.
+     * @brief Constructor for the devices endpoint controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The ISocketReader object.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     GetPopulatedSlots(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
-     * @brief GetPopulatedSlots's main process.
+     * @brief The devices endpoint's main process.
      */
     void proceed() override;
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     * 
-     * @param socket The socket to write the response stream to.
-     * @param context The ISocketReader object.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
@@ -120,11 +124,11 @@ class GetPopulatedSlots : public ICallData {
     SlotMap& dms_;
  
     /**
-     * @brief ID of the GetPopulatedSlots object
+     * @brief The object's unique id.
      */
     int objectId_;
     /**
-     * @brief The total # of GetPopulatedSlots objects.
+     * @brief The total # of devices endpoint controller objects.
      */
     static int objectCounter_;
 };

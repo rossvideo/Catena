@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,10 +30,10 @@
 
 /**
  * @file LanguagePackRequest.h
- * @brief Implements Catena gRPC LanguagePackRequest
+ * @brief Implements the Catena LanguagePackRequest RPC.
  * @author benjamin.whitten@rossvideo.com
- * @date 2025-01-29
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @date 2025-08-18
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
@@ -45,38 +45,46 @@ namespace catena {
 namespace gRPC {
 
 /**
-* @brief CallData class for the LanguagePackRequest RPC
-*/
+ * @brief CallData class for the LanguagePackRequest RPC
+ * 
+ * This RPC gets a slot and a language id from the client and returns the
+ * specified language pack from the specified device.
+ */
 class LanguagePackRequest : public CallData {
   public:
     /**
-     * @brief Constructor for the CallData class of the LanguagePackRequest
-     * gRPC. Calls proceed() once initialized.
+     * @brief Constructor for the CallData class of the LanguagePackRequest RPC.
+     * Calls proceed() once initialized.
      *
-     * @param service - Pointer to the parent ServiceImpl.
+     * @param service Pointer to the ServiceImpl.
      * @param dms A map of slots to ptrs to their corresponding device.
-     * @param ok - Flag to check if the command was successfully executed.
-     */ 
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
+     */
     LanguagePackRequest(IServiceImpl *service, SlotMap& dms, bool ok);
     /**
-     * @brief Manages the steps of the LanguagePackRequest command through
-     * the state variable status.
+     * @brief Manages the steps of the LanguagePackRequest RPC through the state
+     * variable status.
      *
-     * @param service - Pointer to the parent ServiceImpl.
-     * @param ok - Flag to check if the command was successfully executed.
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */
     void proceed(bool ok) override;
   private:
     /**
-     * @brief Server request (slot, languageId).
+     * @brief The client's request containing two things:
+     * 
+     * - A slot specifying the device to retireve the language pack from.
+     * 
+     * - The id of the language pack to retrieve (e.g. "es" for Global Spanish).
      */
     catena::LanguagePackRequestPayload req_;
     /**
-     * @brief gRPC async response writer.
+     * @brief The RPC response writer for writing back to the client.
      */
     grpc::ServerAsyncResponseWriter<::catena::DeviceComponent_ComponentLanguagePack> responder_;
     /**
-     * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+     * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */
     CallStatus status_;
     /**

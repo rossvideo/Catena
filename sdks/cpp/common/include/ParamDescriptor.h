@@ -57,7 +57,8 @@ class IAuthorizer; // forward declaration
 class IDevice; // forward declaration
 
 /**
- * @brief ParamDescriptor provides information about a parameter
+ * @brief ParamDescriptor provides information about a parameter as well as
+ * command definition and execution functions.
  */
 class ParamDescriptor : public IParamDescriptor {
   public:
@@ -200,7 +201,7 @@ class ParamDescriptor : public IParamDescriptor {
     inline void setMinimalSet(bool flag) override { minimal_set_ = flag; }
 
     /**
-     * @brief Returns the max length of the array/string parameter. If max
+     * @brief Returns the max length an array/string parameter can be. If max
      * length is not set in the .JSON file, then the default value of 1024 is
      * used. The default value can also be configured with the command line
      * argument "--default_max_length=#".
@@ -208,10 +209,10 @@ class ParamDescriptor : public IParamDescriptor {
      */
     uint32_t max_length() const override;
     /**
-     * @brief Returns the total length of the string_array parameter. If max
-     * length is not set in the .JSON file, then the default value of 1024 is
-     * used. The default value can also be configured with the command line
-     * argument "--default_max_length=#".
+     * @brief Returns the total length the sum of all strings in a string_array
+     * parameter can be. If max length is not set in the .JSON file, then the
+     * default value of 1024 is used. The default value can also be configured
+     * with the command line argument "--default_total_length=#".
      * @returns total_length_
      */
     std::size_t total_length() const override;
@@ -381,8 +382,9 @@ class ParamDescriptor : public IParamDescriptor {
     };
 
     /**
-     * @brief define the command implementation
-     * @param commandImpl a function that takes a Value and returns a CommandResponder
+     * @brief Defines the command implementation if the parameter is a command.
+     * @param commandImpl A function that takes a protobuf Value and a response
+     * bool and returns a CommandResponder.
      * 
      * The passed function will be executed when executeCommand is called on this param object.
      * If this is not a command parameter, an exception will be thrown.
@@ -395,11 +397,13 @@ class ParamDescriptor : public IParamDescriptor {
     }
 
     /**
-     * @brief execute the command
+     * @brief Executes the command implementation
      * @param value the value to pass to the command implementation
-     * @return the responser from the command implementation
+     * @param respond Flag indicating whether the command should respond with
+     * a CommandResponse.
+     * @return The CommandResponder from the command implementation
      * 
-     * if executeCommand is called for a command that has not been defined, then the returned
+     * If executeCommand is called for a command that has not been defined, then the returned
      * command response will be an exception with type UNIMPLEMENTED
      */
     std::unique_ptr<ICommandResponder> executeCommand(const catena::Value& value, const bool respond) override {

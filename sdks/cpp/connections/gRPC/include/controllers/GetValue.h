@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,12 +30,12 @@
 
 /**
  * @file GetValue.h
- * @brief Implements Catena gRPC GetValue
+ * @brief Implements the Catena GetValue RPC.
  * @author john.naylor@rossvideo.com
  * @author john.danen@rossvideo.com
  * @author isaac.robert@rossvideo.com
- * @date 2024-06-08
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @date 2025-08-18
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
@@ -47,44 +47,47 @@ namespace catena {
 namespace gRPC {
 
 /**
-* @brief CallData class for the GetValue RPC
-*/
+ * @brief CallData class for the GetValue RPC
+ * 
+ * This RPC gets a slot and a paramter oid from the client and returns the
+ * value of the specified perameter from the specified device.
+ */
 class GetValue : public CallData{
   public:
     /**
-     * @brief Constructor for the CallData class of the GetValue
-     * gRPC. Calls proceed() once initialized.
+     * @brief Constructor for the CallData class of the GetValue RPC.
+     * Calls proceed() once initialized.
      *
-     * @param service - Pointer to the parent ServiceImpl.
+     * @param service Pointer to the ServiceImpl.
      * @param dms A map of slots to ptrs to their corresponding device.
-     * @param ok - Flag to check if the command was successfully executed.
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */ 
     GetValue(IServiceImpl *service, SlotMap& dms, bool ok);
     /**
-     * @brief Manages the steps of the GetValue gRPC command
-     * through the state variable status. Returns the value of the
-     * parameter specified by the user.
+     * @brief Manages the steps of the GetValue RPC through the state
+     * variable status.
      *
-     * @param service - Pointer to the parent ServiceImpl.
-     * @param ok - Flag to check if the command was successfully executed.
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */
     void proceed(bool ok) override;
 
   private:
     /**
-     * @brief Server request (Info on value to get).
+     * @brief The client's request containing two things:
+     * 
+     * - The slot specifying the device containing the parameter.
+     * 
+     * - The oid of the paramter to retrieve the value from.
      */
     catena::GetValuePayload req_;
     /**
-     * @brief Server response (The requested value).
-     */
-    catena::Value res_;
-    /**
-     * @brief gRPC async response writer.
+     * @brief The RPC response writer for writing back to the client.
      */
     ServerAsyncResponseWriter<::catena::Value> responder_;
     /**
-     * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+     * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */
     CallStatus status_;
     /**

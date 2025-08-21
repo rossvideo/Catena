@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,10 +30,10 @@
 
 /**
  * @file AddLanguage.h
- * @brief Implements Catena gRPC AddLanguage
+ * @brief Implements the Catena AddLanguage RPC.
  * @author benjamin.whitten@rossvideo.com
- * @date 2025-02-03
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @date 2025-08-18
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
@@ -45,42 +45,53 @@ namespace catena {
 namespace gRPC {
 
 /**
- * @brief CallData class for the ListLanguages RPC
+ * @brief CallData class for the AddLanguage RPC
+ * 
+ * This RPC gets a slot and a language pack from the client and adds the
+ * language pack to the specified device.
  */
 class AddLanguage : public CallData {
   public:
     /**
-     * @brief Constructor for the CallData class of the AddLanguage gRPC.
+     * @brief Constructor for the CallData class of the AddLanguage RPC.
      * Calls proceed() once initialized.
      *
-     * @param service Pointer to the parent ServiceImpl.
+     * @param service Pointer to the ServiceImpl.
      * @param dms A map of slots to ptrs to their corresponding device.
-     * @param ok Flag to check if the command was successfully executed.
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */ 
     AddLanguage(IServiceImpl *service, SlotMap& dms, bool ok);
     /**
-     * @brief Manages the steps of the AddLanguage gRPC commands through
-     * the state variable status.
+     * @brief Manages the steps of the AddLanguage RPC through the state
+     * variable status.
      *
-     * @param service Pointer to the parent ServiceImpl.
-     * @param ok Flag to check if the command was successfully executed.
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.
      */
     void proceed(bool ok) override;
+
   private:
     /**
-     * @brief Server request (slot, id, language).
+     * @brief The client's request containg three things:
+     * 
+     * - A slot specifying the device to add the language pack to.
+     * 
+     * - The language pack to add to the device.
+     * 
+     * - The id of the language pack (e.g. "es" Global spanish).
      */
     catena::AddLanguagePayload req_;
     /**
-     * @brief Empty catena value to respond with.
+     * @brief The server's response, which is empty in this case.
      */
     catena::Empty res_;
     /**
-     * @brief gRPC async response writer.
+     * @brief The RPC response writer for writing back to the client.
      */
     grpc::ServerAsyncResponseWriter<::catena::Empty> responder_;
     /**
-     * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+     * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */
     CallStatus status_;
     /**
