@@ -76,17 +76,13 @@ jobs:
       - name: Run Tests
         run: |
           ctest --test-dir ~/Catena/${BUILD_TARGET} --rerun-failed --output-junit test-results.xml
-          echo "------------------"
-          pwd
-          echo "------------------"
-          ls -la
-          echo "------------------"
+
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          files: test-results.xml
+          files: build/cpp/test-results.xml
       
       - name: Generate Coverage Report
         run: |
