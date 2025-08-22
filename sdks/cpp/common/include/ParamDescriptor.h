@@ -401,13 +401,22 @@ class ParamDescriptor : public IParamDescriptor {
      * @param value the value to pass to the command implementation
      * @param respond Flag indicating whether the command should respond with
      * a CommandResponse.
+     * @param rc The return status of the operation.
+     * @param authz The Authorizer to check permissions with.
      * @return The CommandResponder from the command implementation
      * 
      * If executeCommand is called for a command that has not been defined, then the returned
      * command response will be an exception with type UNIMPLEMENTED
      */
-    std::unique_ptr<ICommandResponder> executeCommand(const catena::Value& value, const bool respond) override {
-      return commandImpl_(value, respond);
+    std::unique_ptr<ICommandResponder> executeCommand(const catena::Value& value, const bool respond, catena::exception_with_status& rc, const IAuthorizer& authz) override {
+      std::unique_ptr<ICommandResponder> responder = nullptr;
+      // Make sure the client has write access.
+      if (!authz.writeAuthz(*this)) {
+        rc = catena::exception_with_status("Not authorized to execute command " + oid_, StatusCode::PERMISSION_DENIED);
+      } else {
+        responder = commandImpl_(value, respond);
+      }
+      return responder;
     }
 
     /**
