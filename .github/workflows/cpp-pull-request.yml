@@ -75,16 +75,7 @@ jobs:
 
       - name: Run Tests
         run: |
-          ctest --test-dir ~/Catena/${BUILD_TARGET} --rerun-failed -V > test_results.log
-          # check if file contains "100% tests passed" 
           ctest --test-dir ~/Catena/${BUILD_TARGET} --rerun-failed --output-junit test-results.xml
-          if grep -q "100% tests passed" test_results.log; then
-            echo "All tests passed!"
-            echo "passed" > unit_test_status.txt
-          else
-            echo "Some tests failed."
-            echo "failed" > unit_test_status.txt
-          fi
 
       - name: Generate Coverage Report
         run: |
@@ -116,21 +107,9 @@ jobs:
             coverage.info
           retention-days: 60
 
-      - name: Read unit test status
-        id: teststatus
-        run: echo "status=$(cat unit_test_status.txt)" >> $GITHUB_OUTPUT
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: test_results.log
-          retention-days: 4
-
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
-        if: github.event_name == 'pull_request'
+        if: always()
         with:
           files: build/test-results.xml
 
@@ -138,14 +117,6 @@ jobs:
         if: github.event_name == 'pull_request'
         id: comment
         run: |
-          if [ "${{ steps.teststatus.outputs.status }}" = "passed" ]; then
-            echo '### ✅ Unit Tests Status' >> comment-body.md
-            echo ' ✅  All the unit tests have passed.' >> comment-body.md
-          else
-            echo '### ❌ Unit Tests Status' >> comment-body.md
-            echo ' ❌ Some unit tests have failed.'>> comment-body.md
-          fi
-
           echo "" >> comment-body.md
           echo '### 📈 Code Coverage Summary' >> comment-body.md
           cat code-coverage-results.md >> comment-body.md
