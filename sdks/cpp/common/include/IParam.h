@@ -209,12 +209,14 @@ class IParam {
 
     /**
      * @brief Exectutes the parameter's command implementation.
-     * @param value the value to pass to the command implementation.
+     * @param value the value to pass to the command implementation
      * @param respond Flag indicating whether the command should respond with
      * a CommandResponse.
+     * @param rc The return status of the operation.
+     * @param authz The Authorizer to check permissions with.
      * @return The CommandResponder from the command implementation.
      */
-    virtual std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommand(const catena::Value&  value, const bool respond) const = 0;
+    virtual std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommand(const catena::Value& value, const bool respond, catena::exception_with_status& rc, const IAuthorizer& authz) const = 0;
 
     /**
      * @brief Gets the parameter's descriptor.
