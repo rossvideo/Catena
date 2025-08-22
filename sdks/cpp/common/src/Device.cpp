@@ -262,7 +262,11 @@ std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::excep
 } //GCOV_EXCL_LINE
 
 std::unique_ptr<IParam> Device::getParam(catena::common::Path& path, catena::exception_with_status& status, const IAuthorizer& authz) const {
-    if (path.empty()) {
+    if (path.fqoid() == "/coffee") {
+        status = catena::exception_with_status("I'm a teapot", catena::StatusCode::I_AM_A_TEAPOT);
+        return nullptr;
+    }
+    else if (path.empty()) {
         status = catena::exception_with_status("Invalid json pointer " + path.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
         return nullptr;
     }
