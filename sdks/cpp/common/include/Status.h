@@ -213,6 +213,9 @@ enum StatusCode {
   /// The server was acting as a gateway/proxy and did not receive a timely
   /// response from the upstream server.
   GATEWAY_TIMEOUT = 504,
+
+  /// I'm a teapot.
+  I_AM_A_TEAPOT = 418,
 };
 
 /**
