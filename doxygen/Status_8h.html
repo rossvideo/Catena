@@ -171,6 +171,8 @@ Enumerations</h2></td></tr>
 , <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3b1d30cc8dadf912c63485ca943476ca">catena::BAD_GATEWAY</a> = 502
 , <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a9d5459e04f17b1d6afb709fcdf9e2201">catena::SERVICE_UNAVAILABLE</a> = 503
 , <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85aa43de93dcd5ab8b4aea415b756197696">catena::GATEWAY_TIMEOUT</a> = 504
+, <br />
+&#160;&#160;<a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ace3e1b022afa8ec63de6351760532c92">catena::I_AM_A_TEAPOT</a> = 418
 <br />
  }</td></tr>
 <tr class="memdesc:a8883f03e942ef610b66860d5b52f8d85"><td class="mdescLeft">&#160;</td><td class="mdescRight">Status Code - reproduced from google's grpc project and extended for REST.  <a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85">More...</a><br /></td></tr>
@@ -213,7 +215,7 @@ Enumerations</h2></td></tr>
 <div class="line">        <span class="keywordflow">throw</span> <a class="code hl_struct" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>(why.str(), status);                                              \</div>
 <div class="line">    } <span class="keywordflow">while</span> (<span class="keyword">false</span>)</div>
 <div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a></div><div class="ttdeci">@ OK</div><div class="ttdoc">Not an error; returned on success.</div><div class="ttdef"><b>Definition</b> Status.h:63</div></div>
-<div class="ttc" id="astructcatena_1_1exception__with__status_html"><div class="ttname"><a href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a></div><div class="ttdoc">A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.</div><div class="ttdef"><b>Definition</b> Status.h:222</div></div>
+<div class="ttc" id="astructcatena_1_1exception__with__status_html"><div class="ttname"><a href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a></div><div class="ttdoc">A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.</div><div class="ttdef"><b>Definition</b> Status.h:225</div></div>
 </div><!-- fragment -->
 <p>creates a <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">catena::exception_with_status</a> object and throws it. </p>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd>condition whether <b>FILE</b> and <b>LINE</b> are reported on the build type this info should be restricted to dev and dbg builds and not go into release / production ones. </dd></dl>
