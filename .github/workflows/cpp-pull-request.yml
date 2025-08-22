@@ -76,7 +76,18 @@ jobs:
       - name: Run Tests
         run: |
           ctest --test-dir ~/Catena/${BUILD_TARGET} --rerun-failed --output-junit test-results.xml
+          echo "------------------"
+          pwd
+          echo "------------------"
+          ls -la
+          echo "------------------"
 
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: test-results.xml
+      
       - name: Generate Coverage Report
         run: |
           gcovr --root ~/Catena \
@@ -106,12 +117,6 @@ jobs:
             coverage.xml
             coverage.info
           retention-days: 60
-
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          files: build/test-results.xml
 
       - name: Build PR comment body
         if: github.event_name == 'pull_request'
