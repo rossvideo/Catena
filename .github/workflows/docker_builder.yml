@@ -4,7 +4,8 @@ name: Create and publish a Docker images
 # Configures this workflow to run every time a change is pushed to the branch called `release`.
 on:
   push:
-    branches: ['develop', 'main']
+    # branches: ['develop', 'main'] don't build on main for now
+    branches: ['develop']
 
 # Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
 env:
@@ -236,8 +237,9 @@ jobs:
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: ${{ env.REGISTRY }}/rossvideo/catena
+          # -dev suffix for now, until we figure out building on main
           tags: |
-            type=raw,value=${{ steps.process-name.outputs.example }}
+            type=raw,suffix=-dev,value=${{ steps.process-name.outputs.example }}
           labels: |
             org.opencontainers.image.title=Catena ${{ steps.process-name.outputs.example }}
             org.opencontainers.image.description=Self contained example for Catena ${{ steps.process-name.outputs.example }}
