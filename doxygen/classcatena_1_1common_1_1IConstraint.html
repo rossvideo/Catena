@@ -109,15 +109,15 @@ Inheritance diagram for catena::common::IConstraint:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a19c26014753b8e8fbb1e753de0f7574d" id="r_a19c26014753b8e8fbb1e753de0f7574d"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConstraint.html#a19c26014753b8e8fbb1e753de0f7574d">toProto</a> (st2138::Constraint &amp;constraint) const =0</td></tr>
-<tr class="memdesc:a19c26014753b8e8fbb1e753de0f7574d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serializes the constraint to a protobuf message.  <br /></td></tr>
-<tr class="separator:a19c26014753b8e8fbb1e753de0f7574d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a19a4b14cab83b14b14d4f8ad77c75f3f" id="r_a19a4b14cab83b14b14d4f8ad77c75f3f"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConstraint.html#a19a4b14cab83b14b14d4f8ad77c75f3f">satisfied</a> (const st2138::Value &amp;src) const =0</td></tr>
-<tr class="memdesc:a19a4b14cab83b14b14d4f8ad77c75f3f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the constraint is satisfied by src.  <br /></td></tr>
-<tr class="separator:a19a4b14cab83b14b14d4f8ad77c75f3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5157d62e3fb21578e12f73e047a00a89" id="r_a5157d62e3fb21578e12f73e047a00a89"><td class="memItemLeft" align="right" valign="top">virtual st2138::Value&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConstraint.html#a5157d62e3fb21578e12f73e047a00a89">apply</a> (const st2138::Value &amp;src) const =0</td></tr>
-<tr class="memdesc:a5157d62e3fb21578e12f73e047a00a89"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies constraint to src and returns the constrained value.  <br /></td></tr>
-<tr class="separator:a5157d62e3fb21578e12f73e047a00a89"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af0cff88bd4406e6ecc09180e6e95847e" id="r_af0cff88bd4406e6ecc09180e6e95847e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConstraint.html#af0cff88bd4406e6ecc09180e6e95847e">toProto</a> (catena::Constraint &amp;constraint) const =0</td></tr>
+<tr class="memdesc:af0cff88bd4406e6ecc09180e6e95847e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serializes the constraint to a protobuf message.  <br /></td></tr>
+<tr class="separator:af0cff88bd4406e6ecc09180e6e95847e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1632e09ef25e3ae15703b3d43f9c2e19" id="r_a1632e09ef25e3ae15703b3d43f9c2e19"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConstraint.html#a1632e09ef25e3ae15703b3d43f9c2e19">satisfied</a> (const catena::Value &amp;src) const =0</td></tr>
+<tr class="memdesc:a1632e09ef25e3ae15703b3d43f9c2e19"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the constraint is satisfied by src.  <br /></td></tr>
+<tr class="separator:a1632e09ef25e3ae15703b3d43f9c2e19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1ddc656a7b1a5f03b26f4000b675bac9" id="r_a1ddc656a7b1a5f03b26f4000b675bac9"><td class="memItemLeft" align="right" valign="top">virtual catena::Value&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConstraint.html#a1ddc656a7b1a5f03b26f4000b675bac9">apply</a> (const catena::Value &amp;src) const =0</td></tr>
+<tr class="memdesc:a1ddc656a7b1a5f03b26f4000b675bac9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies constraint to src and returns the constrained value.  <br /></td></tr>
+<tr class="separator:a1ddc656a7b1a5f03b26f4000b675bac9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a589ef8199e9fbd757c37bf90f8065b51" id="r_a589ef8199e9fbd757c37bf90f8065b51"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConstraint.html#a589ef8199e9fbd757c37bf90f8065b51">isRange</a> () const =0</td></tr>
 <tr class="memdesc:a589ef8199e9fbd757c37bf90f8065b51"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the constraint is a range constraint.  <br /></td></tr>
 <tr class="separator:a589ef8199e9fbd757c37bf90f8065b51"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -131,8 +131,8 @@ Public Member Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface for constraints. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a5157d62e3fb21578e12f73e047a00a89" name="a5157d62e3fb21578e12f73e047a00a89"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5157d62e3fb21578e12f73e047a00a89">&#9670;&#160;</a></span>apply()</h2>
+<a id="a1ddc656a7b1a5f03b26f4000b675bac9" name="a1ddc656a7b1a5f03b26f4000b675bac9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1ddc656a7b1a5f03b26f4000b675bac9">&#9670;&#160;</a></span>apply()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -141,9 +141,9 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual st2138::Value catena::common::IConstraint::apply </td>
+          <td class="memname">virtual catena::Value catena::common::IConstraint::apply </td>
           <td>(</td>
-          <td class="paramtype">const st2138::Value &amp;&#160;</td>
+          <td class="paramtype">const catena::Value &amp;&#160;</td>
           <td class="paramname"><em>src</em></td><td>)</td>
           <td> const</td>
         </tr>
@@ -164,7 +164,7 @@ Public Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>A catena::Value with the constraint applied. </dd></dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#a0c18d0aabd2aa2a60b467aa985dfe68e">catena::common::ChoiceConstraint&lt; T, cType &gt;</a>, and <a class="el" href="classcatena_1_1common_1_1RangeConstraint.html#a3dc1b6c95cc270d53795be74b5ad4816">catena::common::RangeConstraint&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#a2e2ca3075df8ef89298554dc26413376">catena::common::ChoiceConstraint&lt; T, cType &gt;</a>, and <a class="el" href="classcatena_1_1common_1_1RangeConstraint.html#a67b95ece6963e2186ce110931208db31">catena::common::RangeConstraint&lt; T &gt;</a>.</p>
 
 </div>
 </div>
@@ -258,8 +258,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a19a4b14cab83b14b14d4f8ad77c75f3f" name="a19a4b14cab83b14b14d4f8ad77c75f3f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a19a4b14cab83b14b14d4f8ad77c75f3f">&#9670;&#160;</a></span>satisfied()</h2>
+<a id="a1632e09ef25e3ae15703b3d43f9c2e19" name="a1632e09ef25e3ae15703b3d43f9c2e19"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1632e09ef25e3ae15703b3d43f9c2e19">&#9670;&#160;</a></span>satisfied()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -270,7 +270,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname">virtual bool catena::common::IConstraint::satisfied </td>
           <td>(</td>
-          <td class="paramtype">const st2138::Value &amp;&#160;</td>
+          <td class="paramtype">const catena::Value &amp;&#160;</td>
           <td class="paramname"><em>src</em></td><td>)</td>
           <td> const</td>
         </tr>
@@ -291,12 +291,12 @@ Public Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>True if the constraint is satisfied, false otherwise. </dd></dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#a32859b4f007a7e428844899f5b2acbf0">catena::common::ChoiceConstraint&lt; T, cType &gt;</a>, and <a class="el" href="classcatena_1_1common_1_1RangeConstraint.html#a5307b51c79cf514429f3ec640cb48e68">catena::common::RangeConstraint&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#abbf15bbd4613f740dd23a27fa1a0c068">catena::common::ChoiceConstraint&lt; T, cType &gt;</a>, and <a class="el" href="classcatena_1_1common_1_1RangeConstraint.html#a3eac7c6a90d9d83b0101b30793007f26">catena::common::RangeConstraint&lt; T &gt;</a>.</p>
 
 </div>
 </div>
-<a id="a19c26014753b8e8fbb1e753de0f7574d" name="a19c26014753b8e8fbb1e753de0f7574d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a19c26014753b8e8fbb1e753de0f7574d">&#9670;&#160;</a></span>toProto()</h2>
+<a id="af0cff88bd4406e6ecc09180e6e95847e" name="af0cff88bd4406e6ecc09180e6e95847e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af0cff88bd4406e6ecc09180e6e95847e">&#9670;&#160;</a></span>toProto()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -307,7 +307,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname">virtual void catena::common::IConstraint::toProto </td>
           <td>(</td>
-          <td class="paramtype">st2138::Constraint &amp;&#160;</td>
+          <td class="paramtype">catena::Constraint &amp;&#160;</td>
           <td class="paramname"><em>constraint</em></td><td>)</td>
           <td> const</td>
         </tr>
@@ -327,7 +327,7 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#a664e9a33a9283ee73fe4a81172b3c4cb">catena::common::ChoiceConstraint&lt; T, cType &gt;</a>, and <a class="el" href="classcatena_1_1common_1_1RangeConstraint.html#a181959490d3134c90df6bf2ba6b6fbb8">catena::common::RangeConstraint&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ChoiceConstraint.html#a2ad0c9d046ac029c196fb130d8925dd3">catena::common::ChoiceConstraint&lt; T, cType &gt;</a>, and <a class="el" href="classcatena_1_1common_1_1RangeConstraint.html#a38177414199bd8d5f73bc075c7e83b3c">catena::common::RangeConstraint&lt; T &gt;</a>.</p>
 
 </div>
 </div>
