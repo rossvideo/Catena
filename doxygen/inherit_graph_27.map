@@ -1,3 +1,65 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="Node000000" href="$structcatena_1_1common_1_1StructInfo.html" title="StructInfo is specialized at compile time to provide type information about a struct." alt="" coords="5,5,245,31"/>
+<area shape="rect" id="Node000000" href="$classcatena_1_1gRPC_1_1ICallData.html" title="Interface class for gRPC CallData classes." alt="" coords="15,333,191,359"/>
+<area shape="rect" id="Node000001" href="$classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for inherited by CallData child classes defining the jwsToken_() method." alt="" coords="259,333,431,359"/>
+<area shape="poly" id="edge16_Node000000_Node000001" title=" " alt="" coords="205,343,259,343,259,349,205,349"/>
+<area shape="rect" id="Node000002" href="$classcatena_1_1gRPC_1_1AddLanguage.html" title="CallData class for the AddLanguage RPC." alt="" coords="513,5,717,31"/>
+<area shape="poly" id="edge17_Node000001_Node000002" title=" " alt="" coords="348,319,361,261,387,185,405,145,428,106,455,70,488,40,511,27,514,31,491,44,459,74,432,109,410,147,392,187,367,262,353,320"/>
+<area shape="rect" id="Node000003" href="$classcatena_1_1gRPC_1_1Connect.html" title="CallData class for the Connect RPC." alt="" coords="530,645,699,671"/>
+<area shape="poly" id="edge18_Node000001_Node000003" title=" " alt="" coords="354,372,368,427,394,498,412,535,434,571,460,604,491,632,510,643,530,650,529,655,507,648,488,636,457,608,430,574,408,538,389,500,363,429,349,373"/>
+<area shape="rect" id="Node000020" href="$classcatena_1_1gRPC_1_1DeviceRequest.html" title="CallData class for the DeviceRequest RPC." alt="" coords="507,55,722,80"/>
+<area shape="poly" id="edge19_Node000001_Node000020" title=" " alt="" coords="351,319,367,269,394,206,434,143,459,114,488,89,508,78,511,82,491,94,463,118,438,146,399,209,372,271,356,321"/>
+<area shape="rect" id="Node000021" href="$classcatena_1_1gRPC_1_1ExecuteCommand.html" title="CallData class for the ExecuteCommand RPC." alt="" coords="497,104,732,129"/>
+<area shape="poly" id="edge20_Node000001_Node000021" title=" " alt="" coords="355,319,374,279,403,230,441,181,463,159,488,140,513,127,516,132,491,144,467,163,445,184,407,233,378,281,359,321"/>
+<area shape="rect" id="Node000022" href="$classcatena_1_1gRPC_1_1ExternalObjectRequest.html" title="CallData class for the ExternalObjectRequest RPC." alt="" coords="509,154,721,194"/>
+<area shape="poly" id="edge21_Node000001_Node000022" title=" " alt="" coords="362,321,414,262,449,230,488,204,514,192,516,196,491,208,452,235,418,266,366,324"/>
+<area shape="rect" id="Node000023" href="$classcatena_1_1gRPC_1_1GetParam.html" title="CallData class for the GetParam RPC." alt="" coords="525,219,705,244"/>
+<area shape="poly" id="edge22_Node000001_Node000023" title=" " alt="" coords="372,323,424,287,488,254,529,242,531,247,490,259,427,292,375,327"/>
+<area shape="rect" id="Node000024" href="$classcatena_1_1gRPC_1_1GetPopulatedSlots.html" title="CallData class for the GetPopulatedSlots RPC." alt="" coords="513,269,717,309"/>
+<area shape="poly" id="edge23_Node000001_Node000024" title=" " alt="" coords="419,328,520,306,521,311,420,333"/>
+<area shape="rect" id="Node000025" href="$classcatena_1_1gRPC_1_1GetValue.html" title="CallData class for the GetValue RPC." alt="" coords="527,333,702,359"/>
+<area shape="poly" id="edge24_Node000001_Node000025" title=" " alt="" coords="445,343,527,343,527,349,445,349"/>
+<area shape="rect" id="Node000026" href="$classcatena_1_1gRPC_1_1LanguagePackRequest.html" title="CallData class for the LanguagePackRequest RPC." alt="" coords="510,383,719,423"/>
+<area shape="poly" id="edge25_Node000001_Node000026" title=" " alt="" coords="420,359,521,381,520,386,419,364"/>
+<area shape="rect" id="Node000027" href="$classcatena_1_1gRPC_1_1ListLanguages.html" title="CallData class for the ListLangauges RPC." alt="" coords="510,448,719,473"/>
+<area shape="poly" id="edge26_Node000001_Node000027" title=" " alt="" coords="375,365,427,400,490,433,531,445,529,450,488,438,424,405,372,369"/>
+<area shape="rect" id="Node000028" href="$classcatena_1_1gRPC_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs." alt="" coords="511,497,718,523"/>
+<area shape="poly" id="edge27_Node000001_Node000028" title=" " alt="" coords="366,368,417,426,452,457,491,482,522,495,520,500,488,487,449,461,414,430,362,371"/>
+<area shape="rect" id="Node000030" href="$classcatena_1_1gRPC_1_1ParamInfoRequest.html" title="CallData class for the ParamInfoRequest RPC." alt="" coords="497,547,732,572"/>
+<area shape="poly" id="edge29_Node000001_Node000030" title=" " alt="" coords="361,370,381,407,409,451,446,495,491,532,517,544,515,549,488,536,443,499,405,455,376,410,356,373"/>
+<area shape="rect" id="Node000031" href="$classcatena_1_1gRPC_1_1UpdateSubscriptions.html" title="CallData class for the UpdateSubscriptions RPC." alt="" coords="489,596,740,621"/>
+<area shape="poly" id="edge30_Node000001_Node000031" title=" " alt="" coords="357,371,374,417,402,475,441,533,464,559,491,581,514,593,512,598,488,586,461,563,436,536,397,477,369,419,352,373"/>
+<area shape="rect" id="Node000029" href="$classcatena_1_1gRPC_1_1SetValue.html" title="CallData class for the SetValue RPC." alt="" coords="788,497,961,523"/>
+<area shape="poly" id="edge28_Node000028_Node000029" title=" " alt="" coords="732,507,788,507,788,513,732,513"/>
+<area shape="rect" id="Node000006" href="$classcatena_1_1REST_1_1ICallData.html" title="Interface class for REST API controllers." alt="" coords="258,977,433,1003"/>
+<area shape="rect" id="Node000007" href="$classcatena_1_1REST_1_1AssetRequest.html" title="Controller class for the Asset REST endpoint." alt="" coords="513,744,716,769"/>
+<area shape="poly" id="edge31_Node000006_Node000007" title=" " alt="" coords="354,963,373,922,402,872,440,822,463,799,488,780,513,767,516,772,491,784,466,803,444,825,406,875,378,925,359,966"/>
+<area shape="rect" id="Node000005" href="$classcatena_1_1REST_1_1Connect.html" title="Controller class for the Connect REST endpoint." alt="" coords="531,695,698,720"/>
+<area shape="poly" id="edge32_Node000006_Node000005" title=" " alt="" coords="351,964,367,913,394,850,434,785,459,756,488,730,508,719,530,711,532,716,510,724,491,735,463,759,438,788,399,852,372,915,356,965"/>
+<area shape="rect" id="Node000008" href="$classcatena_1_1REST_1_1DeviceRequest.html" title="Controller class for the &quot;DeviceRequest&quot; REST endpoint." alt="" coords="509,793,721,819"/>
+<area shape="poly" id="edge33_Node000006_Node000008" title=" " alt="" coords="359,964,410,896,446,859,488,829,517,816,519,821,491,834,450,863,414,899,363,967"/>
+<area shape="rect" id="Node000009" href="$classcatena_1_1REST_1_1ExecuteCommand.html" title="Controller class for the Command REST endpoint." alt="" coords="499,843,731,868"/>
+<area shape="poly" id="edge34_Node000006_Node000009" title=" " alt="" coords="367,966,419,921,453,898,488,878,525,866,527,871,490,883,456,902,423,925,371,970"/>
+<area shape="rect" id="Node000010" href="$classcatena_1_1REST_1_1GetParam.html" title="Controller class for the Param REST endpoint." alt="" coords="525,892,704,917"/>
+<area shape="poly" id="edge35_Node000006_Node000010" title=" " alt="" coords="384,969,433,948,489,927,538,915,539,920,490,933,435,952,386,974"/>
+<area shape="rect" id="Node000011" href="$classcatena_1_1REST_1_1GetPopulatedSlots.html" title="Controller class for the Devices REST endpoint." alt="" coords="513,942,716,982"/>
+<area shape="poly" id="edge36_Node000006_Node000011" title=" " alt="" coords="446,977,513,970,513,975,447,982"/>
+<area shape="rect" id="Node000012" href="$classcatena_1_1REST_1_1GetValue.html" title="Controller class for the GET Value REST endpoint." alt="" coords="528,1007,701,1032"/>
+<area shape="poly" id="edge37_Node000006_Node000012" title=" " alt="" coords="447,998,528,1007,528,1013,446,1004"/>
+<area shape="rect" id="Node000013" href="$classcatena_1_1REST_1_1LanguagePack.html" title="Controller class for the language&#45;pack REST endpoint." alt="" coords="511,1056,718,1081"/>
+<area shape="poly" id="edge38_Node000006_Node000013" title=" " alt="" coords="389,1006,490,1042,537,1053,535,1058,489,1047,387,1011"/>
+<area shape="rect" id="Node000014" href="$classcatena_1_1REST_1_1Languages.html" title="Controller class for the languages REST endpoint." alt="" coords="523,1105,707,1131"/>
+<area shape="poly" id="edge39_Node000006_Node000014" title=" " alt="" coords="371,1010,424,1052,456,1074,490,1092,523,1103,522,1108,488,1096,453,1078,420,1057,368,1014"/>
+<area shape="rect" id="Node000015" href="$classcatena_1_1REST_1_1MultiSetValue.html" title="Controller class for the Param REST endpoint." alt="" coords="513,1155,717,1180"/>
+<area shape="poly" id="edge40_Node000006_Node000015" title=" " alt="" coords="364,1013,415,1078,450,1113,491,1141,517,1152,515,1157,488,1146,447,1117,411,1082,360,1016"/>
+<area shape="rect" id="Node000017" href="$classcatena_1_1REST_1_1ParamInfoRequest.html" title="Controller class for the param&#45;info REST endpoint." alt="" coords="498,1204,731,1229"/>
+<area shape="poly" id="edge42_Node000006_Node000017" title=" " alt="" coords="359,1014,378,1054,407,1103,445,1151,467,1172,491,1190,513,1202,511,1206,488,1195,463,1176,441,1154,403,1106,374,1057,355,1017"/>
+<area shape="rect" id="Node000018" href="$classcatena_1_1REST_1_1Subscriptions.html" title="Controller class for the subscriptions REST endpoint." alt="" coords="514,1253,715,1279"/>
+<area shape="poly" id="edge43_Node000006_Node000018" title=" " alt="" coords="356,1015,372,1064,400,1126,439,1188,463,1216,491,1240,515,1253,513,1257,488,1244,459,1220,434,1191,395,1128,367,1066,351,1017"/>
+<area shape="rect" id="Node000016" href="$classcatena_1_1REST_1_1SetValue.html" title="Controller class for the PUT Value REST endpoint." alt="" coords="789,1155,960,1180"/>
+<area shape="poly" id="edge41_Node000015_Node000016" title=" " alt="" coords="731,1165,789,1165,789,1170,731,1170"/>
+<area shape="rect" id="Node000019" href="$classcatena_1_1common_1_1IConnect.html" title="Interface class for the Connect handlers." alt="" coords="5,671,201,696"/>
+<area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1Connect.html" title="Virtual class for Connect handlers to inherit to share update code among other things." alt="" coords="249,671,441,696"/>
+<area shape="poly" id="edge44_Node000019_Node000004" title=" " alt="" coords="215,681,249,681,249,686,215,686"/>
+<area shape="poly" id="edge46_Node000004_Node000003" title=" " alt="" coords="455,670,530,663,530,669,455,676"/>
+<area shape="poly" id="edge45_Node000004_Node000005" title=" " alt="" coords="455,690,531,697,531,703,455,696"/>
 </map>
