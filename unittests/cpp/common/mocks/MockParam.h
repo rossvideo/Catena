@@ -47,10 +47,10 @@ namespace common {
 class MockParam : public IParam {
   public:
     MOCK_METHOD(std::unique_ptr<IParam>, copy, (), (const, override));
-    MOCK_METHOD(catena::exception_with_status, toProto, (catena::Value& dst, const IAuthorizer& authz), (const, override));
-    MOCK_METHOD(catena::exception_with_status, fromProto, (const catena::Value& src, const IAuthorizer& authz), (override));
-    MOCK_METHOD(catena::exception_with_status, toProto, (catena::Param& param, const IAuthorizer& authz), (const, override));
-    MOCK_METHOD(catena::exception_with_status, toProto, (catena::ParamInfoResponse& paramInfo, const IAuthorizer& authz), (const, override));
+    MOCK_METHOD(catena::exception_with_status, toProto, (st2138::Value& dst, const IAuthorizer& authz), (const, override));
+    MOCK_METHOD(catena::exception_with_status, fromProto, (const st2138::Value& src, const IAuthorizer& authz), (override));
+    MOCK_METHOD(catena::exception_with_status, toProto, (st2138::Param& param, const IAuthorizer& authz), (const, override));
+    MOCK_METHOD(catena::exception_with_status, toProto, (st2138::ParamInfoResponse& paramInfo, const IAuthorizer& authz), (const, override));
     MOCK_METHOD(ParamType, type, (), (const, override));
     MOCK_METHOD(const std::string&, getOid, (), (const, override));
     MOCK_METHOD(void, setOid, (const std::string& oid), (override));
@@ -63,11 +63,11 @@ class MockParam : public IParam {
     MOCK_METHOD(catena::exception_with_status, popBack, (const IAuthorizer& authz), (override));
     MOCK_METHOD(const IConstraint*, getConstraint, (), (const, override));
     MOCK_METHOD(const std::string&, getScope, (), (const, override));
-    MOCK_METHOD(void, defineCommand, (std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(const catena::Value&, const bool respond)> commandImpl), (override));
-    MOCK_METHOD(std::unique_ptr<IParamDescriptor::ICommandResponder>, executeCommand, (const catena::Value& value, const bool respond), (const, override));
+    MOCK_METHOD(void, defineCommand, (std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(const st2138::Value&, const bool respond)> commandImpl), (override));
+    MOCK_METHOD(std::unique_ptr<IParamDescriptor::ICommandResponder>, executeCommand, (const st2138::Value& value, const bool respond), (const, override));
     MOCK_METHOD(const IParamDescriptor&, getDescriptor, (), (const, override));
     MOCK_METHOD(bool, isArrayType, (), (const, override));
-    MOCK_METHOD(bool, validateSetValue, (const catena::Value& value, Path::Index index, const IAuthorizer& authz, catena::exception_with_status& ans), (override));
+    MOCK_METHOD(bool, validateSetValue, (const st2138::Value& value, Path::Index index, const IAuthorizer& authz, catena::exception_with_status& ans), (override));
     MOCK_METHOD(void, resetValidate, (), (override));
 };
 

@@ -47,7 +47,7 @@ namespace common {
 class MockCommandResponder : public IParamDescriptor::ICommandResponder {
   public:
     MOCK_METHOD(bool, hasMore, (), (const, override));
-    MOCK_METHOD(catena::CommandResponse, getNext, (), (override));
+    MOCK_METHOD(st2138::CommandResponse, getNext, (), (override));
 };
 
 } // namespace common

@@ -23,13 +23,13 @@
 
 using catena::gRPC::PeerInfo;
 using catena::common::IParam;
-//using catena::ParamIndex;
+//using st2138::ParamIndex;
 
 std::atomic<bool> going{}; // flag shared among threads and methods in this translation unit
 
 void PeerInfo::handleValueUpdate(const IParam& param/*, ParamIndex idx*/) {
     if (going) {
-        catena::PushUpdates update;
+        st2138::PushUpdates update;
         update.set_slot(0);
         // *update.mutable_value()->mutable_oid() = param.oid();
         // *update.mutable_value()->mutable_value() = param.value<false>();

@@ -47,7 +47,7 @@ class ParamWithIntArrayTest : public ParamTest<IntArray> {
     /*
      * Returns the value type of the parameter we are testing with.
      */
-    catena::ParamType type() const override { return catena::ParamType::INT32_ARRAY; }
+    st2138::ParamType type() const override { return st2138::ParamType::INT32_ARRAY; }
 
     IntArray value_{0, 1, 2};
 };
@@ -196,7 +196,7 @@ TEST_F(ParamWithIntArrayTest, PopBack_Error) {
  */
 TEST_F(ParamWithIntArrayTest, ParamToProto) {
     IntArrayParam param(value_, pd_);
-    catena::Param outParam;
+    st2138::Param outParam;
     rc_ = param.toProto(outParam, authz_);
     // Checking results.
     ASSERT_TRUE(outParam.value().has_int32_array_values());
@@ -213,7 +213,7 @@ TEST_F(ParamWithIntArrayTest, ParamToProto) {
 TEST_F(ParamWithIntArrayTest, FromProto) {
     IntArray val{};
     IntArrayParam param(val, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     for (uint32_t i : value_) {
         protoValue.mutable_int32_array_values()->add_ints(i);
     }
@@ -227,7 +227,7 @@ TEST_F(ParamWithIntArrayTest, FromProto) {
  */
 TEST_F(ParamWithIntArrayTest, ValidateSetValue) {
     IntArrayParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     for (uint32_t i : {0, 1, 2}) {
         protoValue.mutable_int32_array_values()->add_ints(i);
     }
@@ -239,7 +239,7 @@ TEST_F(ParamWithIntArrayTest, ValidateSetValue) {
  */
 TEST_F(ParamWithIntArrayTest, ValidateSetValue_SingleElement) {
     IntArrayParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     protoValue.set_int32_value(3);
     // Setting existing value.
     EXPECT_TRUE(param.validateSetValue(protoValue, 0, authz_, rc_))
@@ -256,7 +256,7 @@ TEST_F(ParamWithIntArrayTest, ValidateSetValue_SingleElement) {
  */
 TEST_F(ParamWithIntArrayTest, ValidateSetValue_Error) {
     IntArrayParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     for (uint32_t i : {0, 1, 2, 3}) {
         protoValue.mutable_int32_array_values()->add_ints(i);
     }
@@ -283,7 +283,7 @@ TEST_F(ParamWithIntArrayTest, ValidateSetValue_Error) {
  */
 TEST_F(ParamWithIntArrayTest, ValidateSetValue_SingleElementError) {
     IntArrayParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     protoValue.set_int32_value(3);
     // Index is not defined for single element setValue.
     EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_))
@@ -296,7 +296,7 @@ TEST_F(ParamWithIntArrayTest, ValidateSetValue_SingleElementError) {
     EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
         << "ValidateSetValue should return OUT_OF_RANGE when index is out of the bounds of the array.";
     // Type mismatch / validFromProto error
-    catena::Value wrongTypeValue;
+    st2138::Value wrongTypeValue;
     wrongTypeValue.set_string_value("Wrong type");
     EXPECT_FALSE(param.validateSetValue(wrongTypeValue, 0, authz_, rc_))
         << "ValidateSetValue should return false when validFromProto returns false.";

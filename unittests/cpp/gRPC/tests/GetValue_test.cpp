@@ -91,10 +91,10 @@ class gRPCGetValueTests : public GRPCTest {
     }
 
     // in/out val
-    catena::GetValuePayload inVal_;
-    catena::Value outVal_;
+    st2138::GetValuePayload inVal_;
+    st2138::Value outVal_;
     // Expected variables
-    catena::Value expVal_;
+    st2138::Value expVal_;
 };
 
 /*
@@ -116,7 +116,7 @@ TEST_F(gRPCGetValueTests, GetValue_Normal) {
     expVal_.set_string_value("test_value");
     // Setting expectations
     EXPECT_CALL(dm0_, getValue(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& jptr, catena::Value& value, const IAuthorizer& authz) {
+        .WillOnce(::testing::Invoke([this](const std::string& jptr, st2138::Value& value, const IAuthorizer& authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             value.CopyFrom(expVal_);
@@ -139,7 +139,7 @@ TEST_F(gRPCGetValueTests, GetValue_AuthzValid) {
     clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
     // Setting expectations
     EXPECT_CALL(dm0_, getValue(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& jptr, catena::Value& value, const IAuthorizer& authz) {
+        .WillOnce(::testing::Invoke([this](const std::string& jptr, st2138::Value& value, const IAuthorizer& authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             value.CopyFrom(expVal_);
@@ -203,7 +203,7 @@ TEST_F(gRPCGetValueTests, GetValue_ErrReturnCatena) {
     initPayload(0, "/test_oid");
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(dm0_, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& jptr, catena::Value& value, const IAuthorizer& authz) {
+        .WillOnce(::testing::Invoke([this](const std::string& jptr, st2138::Value& value, const IAuthorizer& authz) {
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
     EXPECT_CALL(dm1_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
@@ -219,7 +219,7 @@ TEST_F(gRPCGetValueTests, GetValue_ErrThrowCatena) {
     initPayload(0, "/test_oid");
     // Setting expectations
     EXPECT_CALL(dm0_, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& jptr, catena::Value& value, const IAuthorizer& authz) {
+        .WillOnce(::testing::Invoke([this](const std::string& jptr, st2138::Value& value, const IAuthorizer& authz) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));

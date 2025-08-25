@@ -122,11 +122,11 @@ class MultiSetValue : public CallData {
      * 
      * - Any number of oid, value pairs specifying the parameters to update.
      */
-    catena::MultiSetValuePayload reqs_;
+    st2138::MultiSetValuePayload reqs_;
     /**
      * @brief The RPC response writer for writing back to the client.
      */
-    ServerAsyncResponseWriter<catena::Empty> responder_;
+    ServerAsyncResponseWriter<st2138::Empty> responder_;
     /**
      * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */

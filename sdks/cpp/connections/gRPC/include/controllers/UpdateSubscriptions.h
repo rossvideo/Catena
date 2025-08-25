@@ -86,11 +86,11 @@ class UpdateSubscriptions : public CallData {
      * 
      * - A list of paramter oids to unsubscribe from.
      */
-    catena::UpdateSubscriptionsPayload req_;
+    st2138::UpdateSubscriptionsPayload req_;
     /**
      * @brief The RPC response writer for writing back to the client.
      */
-    ServerAsyncWriter<catena::DeviceComponent_ComponentParam> writer_;
+    ServerAsyncWriter<st2138::DeviceComponent_ComponentParam> writer_;
     /**
      * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */

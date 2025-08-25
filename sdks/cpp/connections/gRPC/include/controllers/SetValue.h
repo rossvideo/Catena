@@ -95,7 +95,7 @@ class SetValue : public MultiSetValue {
      * 
      * - An oid, value pair specifying the parameter to update.
      */
-    catena::SingleSetValuePayload req_;
+    st2138::SingleSetValuePayload req_;
     /**
      * @brief The total # of SetValue objects.
      */

@@ -48,7 +48,7 @@ Menu::Menu(const catena::common::PolyglotText::ListInitializer name, bool hidden
     menuGroup.addMenu(oid, std::make_unique<Menu>(std::move(*this)));
 }
 
-void Menu::toProto(::catena::Menu& menu) const {
+void Menu::toProto(::st2138::Menu& menu) const {
     name_.toProto(*menu.mutable_name());
     menu.set_hidden(hidden_);
     menu.set_disabled(disabled_);

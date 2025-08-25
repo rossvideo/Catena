@@ -3,7 +3,7 @@ type: FLOAT32
 value: { float32_value: 10.5 }
 constraint:
   type: FLOAT_RANGE
-  float_range:
+  float32_range:
     min_value: 0.0
     max_value: 100.0
     display_min: 10.0

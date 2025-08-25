@@ -68,7 +68,7 @@ class IPolyglotText {
      * @brief Serializes the multilingual text into a protobuf message.
      * @param dst The destination protobuf object.
      */
-    virtual void toProto(catena::PolyglotText& dst) const = 0;
+    virtual void toProto(st2138::PolyglotText& dst) const = 0;
     /**
      * @brief Returns the unordered map of multilingual text.
      */

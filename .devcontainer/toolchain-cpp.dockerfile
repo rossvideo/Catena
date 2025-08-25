@@ -6,6 +6,7 @@ LABEL org.opencontainers.image.vendor=$IMAGE_VENDOR
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH=$PATH:~/.local/bin
 
 # Copy the toolchain.env file
 COPY toolchain-cpp.env /root/toolchain.env
@@ -75,3 +76,9 @@ RUN sudo apt-get update && sudo apt-get install -y python3-pip \
     && sudo pip3 install --no-cache-dir gcovr --break-system-packages \
     && sudo apt-get clean \
     && sudo rm -rf /var/cache/apt/archives/ /var/lib/apt/lists/*
+
+# Build OpenAPI
+RUN echo "INSTALLING OPENAPI"
+COPY smpte /root/smpte
+RUN cd /root/smpte \
+    && ./install-tooling.sh

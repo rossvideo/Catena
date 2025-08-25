@@ -91,7 +91,7 @@ function(generate_catena_device)
     add_custom_command(
         OUTPUT ${_OUT_DIR}/${HEADER}
             ${_OUT_DIR}/${BODY}
-        COMMAND ${NODE} ${CATENA_CODEGEN} --schema ${CATENA_SCHEMA} --device-model "${_DEVICE_MODEL}" --output ${_OUT_DIR}
+        COMMAND ${NODE} ${CATENA_CODEGEN} --schema ${CATENA_SCHEMA}/device.json --device-model "${_DEVICE_MODEL}" --output ${_OUT_DIR}
         DEPENDS ${_DEVICE_MODEL} ${SCHEMA_FILES} ${CODEGEN_FILES} ${_IMPORTED_PARAMS}
         COMMENT "Generating ${HEADER} and ${BODY} from ${_DEVICE_MODEL}"
     )

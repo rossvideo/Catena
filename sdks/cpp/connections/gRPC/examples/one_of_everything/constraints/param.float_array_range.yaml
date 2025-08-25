@@ -2,7 +2,7 @@
 type: FLOAT32_ARRAY
 constraint:
   type: FLOAT_RANGE
-  float_range:
+  float32_range:
     min_value: 0.0
     max_value: 100.0
     display_min: 10.0

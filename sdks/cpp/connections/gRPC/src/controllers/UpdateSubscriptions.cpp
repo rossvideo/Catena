@@ -121,7 +121,7 @@ void UpdateSubscriptions::proceed(bool ok) {
             { // rc scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             std::unique_ptr<IParam> param = nullptr;
-            catena::DeviceComponent_ComponentParam res;
+            st2138::DeviceComponent_ComponentParam res;
 
             try {
                 // Getting the next parameter while ignoring errors.

@@ -71,7 +71,7 @@ int main (int argc, char** argv) {
     std::lock_guard lg(dm.mutex());
 
     catena::exception_with_status err{"", catena::StatusCode::OK};
-    catena::Value value;
+    st2138::Value value;
     std::string clientScope = "operate";
     std::string debugString;
 

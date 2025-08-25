@@ -14,7 +14,7 @@ GetValue::GetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
 
 void GetValue::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
-    catena::Value ans;
+    st2138::Value ans;
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
         IDevice* dm = nullptr;

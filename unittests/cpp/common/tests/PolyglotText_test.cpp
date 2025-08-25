@@ -76,7 +76,7 @@ TEST(PolyglotTextTest, PolyglotText_ToProto) {
     // Creating PolyglotText;
     PolyglotText::DisplayStrings displayStrings = {{"en", "Name"}, {"fr", "Nom"}};
     PolyglotText pt(displayStrings);
-    catena::PolyglotText dst;
+    st2138::PolyglotText dst;
     pt.toProto(dst);
     EXPECT_EQ(PolyglotText::DisplayStrings(dst.display_strings().begin(), dst.display_strings().end()), displayStrings);
 }
@@ -86,7 +86,7 @@ TEST(PolyglotTextTest, PolyglotText_ToProto) {
 TEST(PolyglotTextTest, PolyglotText_ToProtoEmpty) {
     // Creating PolyglotText;
     PolyglotText pt;
-    catena::PolyglotText dst;
+    st2138::PolyglotText dst;
     pt.toProto(dst);
     EXPECT_TRUE(dst.display_strings().empty()) << "Protobuf object should be empty";
 }

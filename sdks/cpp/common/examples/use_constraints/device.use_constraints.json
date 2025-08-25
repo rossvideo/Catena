@@ -124,7 +124,7 @@
   "constraints": {
     "basic_slider": {
       "type": "FLOAT_RANGE",
-      "float_range": {
+      "float32_range": {
         "min_value": 0.0,
         "max_value": 10.0,
         "step": 0.25,

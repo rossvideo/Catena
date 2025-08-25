@@ -46,7 +46,7 @@ class ParamWithStringTest : public ParamTest<std::string> {
     /*
      * Returns the value type of the parameter we are testing with.
      */
-    catena::ParamType type() const override { return catena::ParamType::STRING; }
+    st2138::ParamType type() const override { return st2138::ParamType::STRING; }
 
     std::string value_{"Hello World"};
 };
@@ -106,7 +106,7 @@ TEST_F(ParamWithStringTest, PopBack) {
  */
 TEST_F(ParamWithStringTest, ParamToProto) {
     StringParam param(value_, pd_);
-    catena::Param outParam;
+    st2138::Param outParam;
     rc_ = param.toProto(outParam, authz_);
     // Checking results.
     ASSERT_TRUE(outParam.value().has_string_value());
@@ -119,7 +119,7 @@ TEST_F(ParamWithStringTest, ParamToProto) {
  */
 TEST_F(ParamWithStringTest, FromProto) {
     StringParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     protoValue.set_string_value("Goodbye, World");
     rc_ = param.fromProto(protoValue, authz_);
     // Checking results.
@@ -131,7 +131,7 @@ TEST_F(ParamWithStringTest, FromProto) {
  */
 TEST_F(ParamWithStringTest, ValidateSetValue) {
     StringParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     protoValue.set_string_value("Goodbye, World");
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_));
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
@@ -144,7 +144,7 @@ TEST_F(ParamWithStringTest, ValidateSetValue) {
  */
 TEST_F(ParamWithStringTest, ValidateSetValue_Error) {
     StringParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     protoValue.set_string_value("Goodbye, World");
     // Defined index w non-array
     EXPECT_FALSE(param.validateSetValue(protoValue, 1, authz_, rc_))

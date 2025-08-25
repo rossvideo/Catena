@@ -94,7 +94,7 @@ if (NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif (NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
 
 get_filename_component(CODEGEN_DIR "${CATENA_ROOT_DIR}/tools/codegen" ABSOLUTE) 
-get_filename_component(SCHEMA_LOCATION "${CATENA_ROOT_DIR}/schema" ABSOLUTE)
+get_filename_component(SCHEMA_LOCATION "${CATENA_ROOT_DIR}/smpte/interface/schemata" ABSOLUTE)
 
 # install node modules if it hasn't been done yet
 if(NOT EXISTS "${CODEGEN_DIR}/node_modules")
@@ -187,7 +187,7 @@ find_package(Protobuf CONFIG REQUIRED)
 message(STATUS "Using protobuf ${Protobuf_VERSION}")
 
 # Locate the input proto files
-set (relative_interface "../../interface/")
+set (relative_interface "../../smpte/interface/proto/")
 cmake_path(ABSOLUTE_PATH relative_interface OUTPUT_VARIABLE interface)
 cmake_path(SET catena_interface_dir NORMALIZE ${interface})
 

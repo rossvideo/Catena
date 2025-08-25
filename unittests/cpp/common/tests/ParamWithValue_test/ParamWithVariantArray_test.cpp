@@ -48,7 +48,7 @@ class ParamWithVariantArrayTest : public ParamTest<VariantArray> {
     /*
      * Returns the value type of the parameter we are testing with.
      */
-    catena::ParamType type() const override { return catena::ParamType::STRUCT_VARIANT_ARRAY; }
+    st2138::ParamType type() const override { return st2138::ParamType::STRUCT_VARIANT_ARRAY; }
 
     VariantArray value_{TestStruct1{1, 2}, TestStruct2{3.3, 4.4}, TestStruct1{5, 6}};
 };
@@ -205,7 +205,7 @@ TEST_F(ParamWithVariantArrayTest, PopBack_Error) {
  */
 TEST_F(ParamWithVariantArrayTest, ParamToProto) {
     VariantArrayParam param(value_, pd_);
-    catena::Param outParam;
+    st2138::Param outParam;
     // Checking results.
     rc_ = param.toProto(outParam, authz_);
     ASSERT_TRUE(outParam.value().has_struct_variant_array_values());
@@ -233,7 +233,7 @@ TEST_F(ParamWithVariantArrayTest, ParamToProto) {
 TEST_F(ParamWithVariantArrayTest, FromProto) {
     VariantArray emptyVal_{};
     VariantArrayParam param(emptyVal_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     ASSERT_EQ(toProto(protoValue, &value_, pd_, authz_).status, catena::StatusCode::OK)
         << "toProto failed, cannot continue test.";
     rc_ = param.fromProto(protoValue, authz_);
@@ -257,7 +257,7 @@ TEST_F(ParamWithVariantArrayTest, FromProto) {
 TEST_F(ParamWithVariantArrayTest, ValidateSetValue) {
     VariantArrayParam param(value_, pd_);
     VariantArray newValue{TestStruct2{1.1, 2.2}, TestStruct1{3, 4}, TestStruct2{5.5, 6.6}};
-    catena::Value protoValue;
+    st2138::Value protoValue;
     ASSERT_EQ(toProto(protoValue, &newValue, pd_, authz_).status, catena::StatusCode::OK)
         << "toProto failed, cannot continue test.";
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_)) << "Valid setting whole array";
@@ -269,7 +269,7 @@ TEST_F(ParamWithVariantArrayTest, ValidateSetValue) {
 TEST_F(ParamWithVariantArrayTest, ValidateSetValue_SingleElement) {
     VariantArrayParam param(value_, pd_);
     TestVariantStruct newValue{TestStruct1{48, 64}};
-    catena::Value protoValue;
+    st2138::Value protoValue;
     ASSERT_EQ(toProto(protoValue, &newValue, pd_, authz_).status, catena::StatusCode::OK)
         << "toProto failed, cannot continue test.";
     // Setting existing value.
@@ -286,7 +286,7 @@ TEST_F(ParamWithVariantArrayTest, ValidateSetValue_SingleElement) {
 TEST_F(ParamWithVariantArrayTest, ValidateSetValue_Error) {
     VariantArrayParam param(value_, pd_);
     VariantArray newValue{TestStruct2{1.1, 2.2}, TestStruct1{3, 4}, TestStruct2{5.5, 6.6}, TestStruct1{7, 8}};
-    catena::Value protoValue;
+    st2138::Value protoValue;
     ASSERT_EQ(toProto(protoValue, &newValue, pd_, authz_).status, catena::StatusCode::OK)
         << "toProto failed, cannot continue test.";
     // Defined index with non-single element set
@@ -313,7 +313,7 @@ TEST_F(ParamWithVariantArrayTest, ValidateSetValue_Error) {
 TEST_F(ParamWithVariantArrayTest, ValidateSetValue_SingleElementError) {
     VariantArrayParam param(value_, pd_);
     TestVariantStruct newValue{TestStruct1{48, 64}};
-    catena::Value protoValue;
+    st2138::Value protoValue;
     ASSERT_EQ(toProto(protoValue, &newValue, pd_, authz_).status, catena::StatusCode::OK)
         << "toProto failed, cannot continue test.";
     // Index is not defined for single element setValue.
@@ -327,7 +327,7 @@ TEST_F(ParamWithVariantArrayTest, ValidateSetValue_SingleElementError) {
     EXPECT_EQ(rc_.status, catena::StatusCode::OUT_OF_RANGE)
         << "ValidateSetValue should return OUT_OF_RANGE when index is out of the bounds of the array.";
     // Type mismatch / validFromProto error
-    catena::Value wrongTypeValue;
+    st2138::Value wrongTypeValue;
     wrongTypeValue.set_int32_value(48);
     EXPECT_FALSE(param.validateSetValue(wrongTypeValue, 0, authz_, rc_))
         << "ValidateSetValue should return false when validFromProto returns false.";

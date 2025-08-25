@@ -89,7 +89,7 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
     * Adds a response to the expected values.
     */
     void expResponse(const std::string& stringVal) {
-        expVals_.push_back(catena::CommandResponse());
+        expVals_.push_back(st2138::CommandResponse());
         expVals_.back().mutable_response()->set_string_value(stringVal);
     }
 
@@ -97,7 +97,7 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
     * Adds an exception to the expected values.
     */
     void expException(const std::string& type, const std::string& details) {
-        expVals_.push_back(catena::CommandResponse());
+        expVals_.push_back(st2138::CommandResponse());
         expVals_.back().mutable_exception()->set_type(type);
         expVals_.back().mutable_exception()->set_details(details);
     }
@@ -106,7 +106,7 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
     * Adds a no_response to the expected values.
     */
     void expNoResponse() {
-        expVals_.push_back(catena::CommandResponse());
+        expVals_.push_back(st2138::CommandResponse());
         expVals_.back().mutable_no_response();
     }
     
@@ -132,10 +132,10 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
     }
 
     // in variables
-    catena::Value inVal_;
+    st2138::Value inVal_;
     bool respond_ = false;
     // Expected variables
-    std::vector<catena::CommandResponse> expVals_;
+    std::vector<st2138::CommandResponse> expVals_;
 
     std::unique_ptr<MockParam> mockCommand_ = std::make_unique<MockParam>();
     std::unique_ptr<MockCommandResponder> mockResponder_ = std::make_unique<MockCommandResponder>();
@@ -168,7 +168,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalResponse) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(*mockCommand_, executeCommand(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const catena::Value& value, const bool respond) {
+        .WillOnce(testing::Invoke([this](const st2138::Value& value, const bool respond) {
             // Making sure the correct values were passed in.
             EXPECT_EQ(value.SerializeAsString(), inVal_.SerializeAsString());
             return std::move(mockResponder_);
@@ -199,7 +199,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalNoResponse) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(*mockCommand_, executeCommand(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const catena::Value& value, const bool respond) {
+        .WillOnce(testing::Invoke([this](const st2138::Value& value, const bool respond) {
             // Making sure the correct values were passed in.
             EXPECT_EQ(value.SerializeAsString(), inVal_.SerializeAsString());
             return std::move(mockResponder_);
@@ -227,7 +227,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalException) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(*mockCommand_, executeCommand(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const catena::Value& value, const bool respond) {
+        .WillOnce(testing::Invoke([this](const st2138::Value& value, const bool respond) {
             // Making sure the correct values were passed in.
             EXPECT_EQ(value.SerializeAsString(), inVal_.SerializeAsString());
             return std::move(mockResponder_);
@@ -256,7 +256,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_RespondFalse) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(*mockCommand_, executeCommand(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const catena::Value& value, const bool respond) {
+        .WillOnce(testing::Invoke([this](const st2138::Value& value, const bool respond) {
             // Making sure the correct values were passed in.
             EXPECT_EQ(value.SerializeAsString(), inVal_.SerializeAsString());
             return std::move(mockResponder_);
@@ -291,7 +291,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamResponse) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(*mockCommand_, executeCommand(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const catena::Value& value, const bool respond) {
+        .WillOnce(testing::Invoke([this](const st2138::Value& value, const bool respond) {
             // Making sure the correct values were passed in.
             EXPECT_EQ(value.SerializeAsString(), inVal_.SerializeAsString());
             return std::move(mockResponder_);
@@ -325,7 +325,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamNoResponse) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(*mockCommand_, executeCommand(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const catena::Value& value, const bool respond) {
+        .WillOnce(testing::Invoke([this](const st2138::Value& value, const bool respond) {
             // Making sure the correct values were passed in.
             EXPECT_EQ(value.SerializeAsString(), inVal_.SerializeAsString());
             return std::move(mockResponder_);
@@ -356,7 +356,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamException) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(*mockCommand_, executeCommand(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const catena::Value& value, const bool respond) {
+        .WillOnce(testing::Invoke([this](const st2138::Value& value, const bool respond) {
             // Making sure the correct values were passed in.
             EXPECT_EQ(value.SerializeAsString(), inVal_.SerializeAsString());
             return std::move(mockResponder_);
@@ -388,7 +388,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_StreamRespondFalse) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(*mockCommand_, executeCommand(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const catena::Value& value, const bool respond) {
+        .WillOnce(testing::Invoke([this](const st2138::Value& value, const bool respond) {
             // Making sure the correct values were passed in.
             EXPECT_EQ(value.SerializeAsString(), inVal_.SerializeAsString());
             return std::move(mockResponder_);
@@ -422,7 +422,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzValid) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(*mockCommand_, executeCommand(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const catena::Value& value, const bool respond) {
+        .WillOnce(testing::Invoke([this](const st2138::Value& value, const bool respond) {
             // Making sure the correct values were passed in.
             EXPECT_EQ(value.SerializeAsString(), inVal_.SerializeAsString());
             return std::move(mockResponder_);
@@ -465,7 +465,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzExpired) {
         }));
     EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(*mockCommand_, executeCommand(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const catena::Value& value, const bool respond) {
+        .WillOnce(testing::Invoke([this](const st2138::Value& value, const bool respond) {
             return std::move(mockResponder_);
         }));
     EXPECT_CALL(*mockResponder_, getNext()).Times(0);
@@ -553,7 +553,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(*mockCommand_, executeCommand(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const catena::Value& value, const bool respond) {
+        .WillOnce(testing::Invoke([this](const st2138::Value& value, const bool respond) {
             return nullptr;
         }));
     // Calling proceed and testing the output
@@ -572,7 +572,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(*mockCommand_, executeCommand(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const catena::Value& value, const bool respond) {
+        .WillOnce(testing::Invoke([this](const st2138::Value& value, const bool respond) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return nullptr;
         }));
@@ -610,13 +610,13 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(*mockCommand_, executeCommand(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const catena::Value& value, const bool respond) {
+        .WillOnce(testing::Invoke([this](const st2138::Value& value, const bool respond) {
             return std::move(mockResponder_);
         }));
     EXPECT_CALL(*mockResponder_, getNext()).Times(1)
         .WillOnce(testing::Invoke([this]() {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
-            return catena::CommandResponse();
+            return st2138::CommandResponse();
         }));
     EXPECT_CALL(*mockResponder_, hasMore()).Times(1).WillOnce(testing::Return(true));
     // Calling proceed and testing the output
@@ -636,7 +636,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
             return std::move(mockCommand_);
         }));
     EXPECT_CALL(*mockCommand_, executeCommand(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const catena::Value& value, const bool respond) {
+        .WillOnce(testing::Invoke([this](const st2138::Value& value, const bool respond) {
             return std::move(mockResponder_);
         }));
     EXPECT_CALL(*mockResponder_, getNext()).Times(1)
