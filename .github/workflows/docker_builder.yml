@@ -301,8 +301,9 @@ jobs:
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: ${{ env.REGISTRY }}/rossvideo/catena
+          # -dev suffix for now, until we figure out building on main
           tags: |
-            type=raw,value=latest
+            type=raw,value=latest-dev
           labels: |
             org.opencontainers.image.title=Catena Examples
             org.opencontainers.image.description=Self contained example for Catena Examples
