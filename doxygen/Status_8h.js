@@ -30,7 +30,6 @@ var Status_8h =
       [ "TOO_MANY_REQUESTS", "Status_8h.html#a8883f03e942ef610b66860d5b52f8d85a99e6e5bcff220e13c14f05e5b7f27ecc", null ],
       [ "BAD_GATEWAY", "Status_8h.html#a8883f03e942ef610b66860d5b52f8d85a3b1d30cc8dadf912c63485ca943476ca", null ],
       [ "SERVICE_UNAVAILABLE", "Status_8h.html#a8883f03e942ef610b66860d5b52f8d85a9d5459e04f17b1d6afb709fcdf9e2201", null ],
-      [ "GATEWAY_TIMEOUT", "Status_8h.html#a8883f03e942ef610b66860d5b52f8d85aa43de93dcd5ab8b4aea415b756197696", null ],
-      [ "I_AM_A_TEAPOT", "Status_8h.html#a8883f03e942ef610b66860d5b52f8d85ace3e1b022afa8ec63de6351760532c92", null ]
+      [ "GATEWAY_TIMEOUT", "Status_8h.html#a8883f03e942ef610b66860d5b52f8d85aa43de93dcd5ab8b4aea415b756197696", null ]
     ] ]
 ];

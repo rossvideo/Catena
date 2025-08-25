@@ -34,8 +34,7 @@ var namespacecatena =
       [ "TOO_MANY_REQUESTS", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a99e6e5bcff220e13c14f05e5b7f27ecc", null ],
       [ "BAD_GATEWAY", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3b1d30cc8dadf912c63485ca943476ca", null ],
       [ "SERVICE_UNAVAILABLE", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a9d5459e04f17b1d6afb709fcdf9e2201", null ],
-      [ "GATEWAY_TIMEOUT", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85aa43de93dcd5ab8b4aea415b756197696", null ],
-      [ "I_AM_A_TEAPOT", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ace3e1b022afa8ec63de6351760532c92", null ]
+      [ "GATEWAY_TIMEOUT", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85aa43de93dcd5ab8b4aea415b756197696", null ]
     ] ],
     [ "from_base64", "namespacecatena.html#aad27d3bb1ed2bbaa2ceca7a06d0a04fd", null ],
     [ "readFile", "namespacecatena.html#a274b596fd164b9f6c1ec6dfe8c278efc", null ],
