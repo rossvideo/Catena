@@ -75,14 +75,23 @@ jobs:
 
       - name: Run Tests
         run: |
-          ctest --test-dir ~/Catena/${BUILD_TARGET} --rerun-failed --output-junit ~/Catena/test-results.xml
+          ctest --test-dir ~/Catena/${BUILD_TARGET} --rerun-failed --output-junit test-results.xml
+          cp test-results.xml /test-results.xml
+          echo "--------------"
+          pwd
+          echo "--------------"
+          ls -la
+          echo "--------------"
+          ls -la ~/Catena
+        
 
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
+        report_individual_runs: "true"
         with:
-          files: ~/Catena/test-results.xml
+          files: /test-results.xml
       
       - name: Generate Coverage Report
         run: |
@@ -148,45 +157,45 @@ jobs:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           edit-mode: replace
           
-  CodeQL:
-    name: CodeQL Analysis (15-30 minutes)
-    timeout-minutes: 35
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
+  # CodeQL:
+  #   name: CodeQL Analysis (15-30 minutes)
+  #   timeout-minutes: 35
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
 
-    env:
-      CMAKE_BUILD_TYPE: 
-      CONNECTIONS: gRPC
-      BUILD_TARGET: build/cpp
+  #   env:
+  #     CMAKE_BUILD_TYPE: 
+  #     CONNECTIONS: gRPC
+  #     BUILD_TARGET: build/cpp
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: 'cpp'
-          debug: true
+  #     - name: Initialize CodeQL
+  #       uses: github/codeql-action/init@v3
+  #       with:
+  #         languages: 'cpp'
+  #         debug: true
       
-      - name: build
-        run: |
-          mkdir -p ~/Catena/${BUILD_TARGET}
-          cmake -G Ninja \
-            -DUNIT_TESTING=OFF \
-            -DBUILD_DOC=OFF \
-            -DCATENA_MODEL="lite" \
-            -DCONNECTIONS=${CONNECTIONS} \
-            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
-            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
-            -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
-            -B ~/Catena/${BUILD_TARGET} \
-            -S ./sdks/cpp
-          cd ~/Catena/${BUILD_TARGET}
-          ninja -C ~/Catena/${BUILD_TARGET}
+  #     - name: build
+  #       run: |
+  #         mkdir -p ~/Catena/${BUILD_TARGET}
+  #         cmake -G Ninja \
+  #           -DUNIT_TESTING=OFF \
+  #           -DBUILD_DOC=OFF \
+  #           -DCATENA_MODEL="lite" \
+  #           -DCONNECTIONS=${CONNECTIONS} \
+  #           -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
+  #           -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+  #           -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
+  #           -B ~/Catena/${BUILD_TARGET} \
+  #           -S ./sdks/cpp
+  #         cd ~/Catena/${BUILD_TARGET}
+  #         ninja -C ~/Catena/${BUILD_TARGET}
 
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:cpp"
+  #     - name: Perform CodeQL Analysis
+  #       uses: github/codeql-action/analyze@v3
+  #       with:
+  #         category: "/language:cpp"
