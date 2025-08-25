@@ -78,6 +78,7 @@ jobs:
           ctest --test-dir ~/Catena/${BUILD_TARGET} --rerun-failed --output-junit /test-results.xml
           echo "--------------"
           ls -la /
+          cp /test-results.xml test-results.xml
           echo "--------------"
           ls -la
 
@@ -86,7 +87,7 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          files: /test-results.xml
+          files: test-results.xml
           report_individual_runs: "true"
       
       - name: Generate Coverage Report
