@@ -75,15 +75,11 @@ jobs:
 
       - name: Run Tests
         run: |
-          ctest --test-dir ~/Catena/${BUILD_TARGET} --rerun-failed --output-junit test-results.xml
-          cp test-results.xml /test-results.xml
+          ctest --test-dir ~/Catena/${BUILD_TARGET} --rerun-failed --output-junit /test-results.xml
           echo "--------------"
-          pwd
+          ls -la /
           echo "--------------"
           ls -la
-          echo "--------------"
-          ls -la ~/Catena
-        
 
 
       - name: Publish Test Results
