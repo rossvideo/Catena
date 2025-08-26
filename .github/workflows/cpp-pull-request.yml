@@ -154,45 +154,45 @@ jobs:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           edit-mode: replace
           
-  # CodeQL:
-  #   name: CodeQL Analysis (15-30 minutes)
-  #   timeout-minutes: 35
-  #   runs-on: ubuntu-latest
-  #   container:
-  #     image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
+  CodeQL:
+    name: CodeQL Analysis (15-30 minutes)
+    timeout-minutes: 35
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
 
-  #   env:
-  #     CMAKE_BUILD_TYPE: 
-  #     CONNECTIONS: gRPC
-  #     BUILD_TARGET: build/cpp
+    env:
+      CMAKE_BUILD_TYPE: 
+      CONNECTIONS: gRPC
+      BUILD_TARGET: build/cpp
 
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  #     - name: Initialize CodeQL
-  #       uses: github/codeql-action/init@v3
-  #       with:
-  #         languages: 'cpp'
-  #         debug: true
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: 'cpp'
+          debug: true
       
-  #     - name: build
-  #       run: |
-  #         mkdir -p ~/Catena/${BUILD_TARGET}
-  #         cmake -G Ninja \
-  #           -DUNIT_TESTING=OFF \
-  #           -DBUILD_DOC=OFF \
-  #           -DCATENA_MODEL="lite" \
-  #           -DCONNECTIONS=${CONNECTIONS} \
-  #           -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
-  #           -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
-  #           -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
-  #           -B ~/Catena/${BUILD_TARGET} \
-  #           -S ./sdks/cpp
-  #         cd ~/Catena/${BUILD_TARGET}
-  #         ninja -C ~/Catena/${BUILD_TARGET}
+      - name: build
+        run: |
+          mkdir -p ~/Catena/${BUILD_TARGET}
+          cmake -G Ninja \
+            -DUNIT_TESTING=OFF \
+            -DBUILD_DOC=OFF \
+            -DCATENA_MODEL="lite" \
+            -DCONNECTIONS=${CONNECTIONS} \
+            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+            -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
+            -B ~/Catena/${BUILD_TARGET} \
+            -S ./sdks/cpp
+          cd ~/Catena/${BUILD_TARGET}
+          ninja -C ~/Catena/${BUILD_TARGET}
 
-  #     - name: Perform CodeQL Analysis
-  #       uses: github/codeql-action/analyze@v3
-  #       with:
-  #         category: "/language:cpp"
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:cpp"
