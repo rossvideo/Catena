@@ -1,6 +1,6 @@
 var hierarchy =
 [
-    [ "catena::CatenaService::AsyncService", null, [
+    [ "st2138::CatenaService::AsyncService", null, [
       [ "catena::gRPC::IServiceImpl", "classcatena_1_1gRPC_1_1IServiceImpl.html", [
         [ "catena::gRPC::ServiceImpl", "classcatena_1_1gRPC_1_1ServiceImpl.html", null ]
       ] ]
