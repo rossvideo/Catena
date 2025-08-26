@@ -160,13 +160,14 @@ TEST_F(ParamWithValueTest, DescriptorForwards) {
         }););
     // param.executeCommand()
     catena::Value testVal;
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
     testVal.set_string_value("test");
-    EXPECT_CALL(pd_, executeCommand(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([&testVal](catena::Value value, const bool respond){
+    EXPECT_CALL(pd_, executeCommand(testing::_, testing::_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([&testVal](catena::Value value, const bool respond, catena::exception_with_status& rc, const IAuthorizer& authz) {
         EXPECT_EQ(value.string_value(), testVal.string_value());
         return nullptr;
     }));
-    EXPECT_FALSE(param.executeCommand(testVal, true));
+    EXPECT_FALSE(param.executeCommand(testVal, true, rc, Authorizer::kAuthzDisabled));
     // param.addParam()
     std::string subOid = "sub_oid";
     MockParamDescriptor subPd;
