@@ -76,12 +76,15 @@ jobs:
       - name: Run Tests
         run: |
           ctest --test-dir ~/Catena/${BUILD_TARGET} --rerun-failed --output-junit /test-results.xml
-          echo "--------------"
-          ls -la /
-          cp /test-results.xml test-results.xml
-          echo "--------------"
-          ls -la
-
+      
+      - name: move the Test results file
+        if: always()
+        run: |
+          if [ -f /test-results.xml ]; then
+            cp /test-results.xml test-results.xml
+          else
+            echo "Test results file not found"
+          fi
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
