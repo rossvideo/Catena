@@ -49,7 +49,7 @@ jobs:
     env:
       CMAKE_BUILD_TYPE: Debug
       CONNECTIONS: gRPC;REST
-      BUILD_TARGET: build/cpp
+      BUILD_TARGET: ~/Catena/build/cpp
 
     steps:
       - name: Checkout code
