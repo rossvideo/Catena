@@ -59,10 +59,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/Catena/build/cpp
-          key: ${{ runner.os }}-catena-build-${{ github.ref }}-${{ hashFiles('**/CMakeLists.txt') }}
+          key: ${{ runner.os }}-catena-build-${{ github.ref }}-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-catena-build-${{ github.ref }}-
-            ${{ runner.os }}-catena-build-
 
       - name: Build (incremental, clean only if needed)
         run: |
