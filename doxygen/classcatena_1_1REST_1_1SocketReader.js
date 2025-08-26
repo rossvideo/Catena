@@ -3,7 +3,7 @@ var classcatena_1_1REST_1_1SocketReader =
     [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html#a7e7de6cd90e39a3eff518b4c98c0b0d8", null ],
     [ "authorizationEnabled", "classcatena_1_1REST_1_1SocketReader.html#a62c9b62d7b47d7d7d709e1304c130204", null ],
     [ "connectionQueue", "classcatena_1_1REST_1_1SocketReader.html#a975d62ff80dea964b72ba6c02ee66d27", null ],
-    [ "detailLevel", "classcatena_1_1REST_1_1SocketReader.html#ac642161d8a6a08a30b40166ce8d3fa2e", null ],
+    [ "detailLevel", "classcatena_1_1REST_1_1SocketReader.html#a7f2402b9309f2c6cc1f3895b3efe29aa", null ],
     [ "endpoint", "classcatena_1_1REST_1_1SocketReader.html#a0e84dc373e33e8e94713895f3ac4d76f", null ],
     [ "EOPath", "classcatena_1_1REST_1_1SocketReader.html#a01e040f166589c9c4f26b0bc94cb9bb1", null ],
     [ "fields", "classcatena_1_1REST_1_1SocketReader.html#a326879171d92d4af9a1f773fc1e9cb81", null ],
