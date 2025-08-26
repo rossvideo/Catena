@@ -75,16 +75,24 @@ jobs:
 
       - name: Run Tests
         run: |
-          ctest --test-dir ~/Catena/${BUILD_TARGET} -V --rerun-failed > test_results.log
-          # check if file contains "100% tests passed"
-          if grep -q "100% tests passed" test_results.log; then
-            echo "All tests passed!"
-            echo "passed" > unit_test_status.txt
+          ctest --test-dir ~/Catena/${BUILD_TARGET} --rerun-failed --output-junit /test-results.xml
+      
+      - name: move the Test results file
+        if: always()
+        run: |
+          if [ -f /test-results.xml ]; then
+            cp /test-results.xml test-results.xml
           else
-            echo "Some tests failed."
-            echo "failed" > unit_test_status.txt
+            echo "Test results file not found"
           fi
 
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: test-results.xml
+          report_individual_runs: "true"
+      
       - name: Generate Coverage Report
         run: |
           gcovr --root ~/Catena \
@@ -115,34 +123,10 @@ jobs:
             coverage.info
           retention-days: 60
 
-      - name: Read unit test status
-        id: teststatus
-        run: echo "status=$(cat unit_test_status.txt)" >> $GITHUB_OUTPUT
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: test_results.log
-          retention-days: 4
-
-
       - name: Build PR comment body
         if: github.event_name == 'pull_request'
         id: comment
         run: |
-          if [ "${{ steps.teststatus.outputs.status }}" = "passed" ]; then
-            echo '### ✅ Unit Tests Status' >> comment-body.md
-            echo ' ✅  All the unit tests have passed.' >> comment-body.md
-          else
-            echo '### ❌ Unit Tests Status' >> comment-body.md
-            echo ' ❌ Some unit tests have failed.'>> comment-body.md
-                  echo '```' >> comment-body.md
-                  cat test_results.log >> comment-body.md
-                  echo '```' >> comment-body.md
-          fi
-
           echo "" >> comment-body.md
           echo '### 📈 Code Coverage Summary' >> comment-body.md
           cat code-coverage-results.md >> comment-body.md
@@ -173,7 +157,6 @@ jobs:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           edit-mode: replace
           
-
   CodeQL:
     name: CodeQL Analysis (15-30 minutes)
     timeout-minutes: 35
