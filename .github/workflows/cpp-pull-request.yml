@@ -85,14 +85,32 @@ jobs:
 
       - name: Run Tests
         run: |
-          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^common\\.' --output-junit common_test_results.xml
-          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^gRPC\\.' --output-junit grpc_test_results.xml
-          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^REST\\.' --output-junit rest_test_results.xml
+          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^common\\.' --output-junit /common_test_results.xml
+          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^gRPC\\.' --output-junit /grpc_test_results.xml
+          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^REST\\.' --output-junit /rest_test_results.xml
+
+      - name: Copy files
+        if: always()
+        run: |
+          if [ -f /common_test_results.xml ]; then
+            cp /common_test_results.xml common_test_results.xml
+          fi
+          if [ -f /grpc_test_results.xml ]; then
+            cp /grpc_test_results.xml grpc_test_results.xml
+          fi
+          if [ -f /rest_test_results.xml ]; then
+            cp /rest_test_results.xml rest_test_results.xml
+          fi
+
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
         with:
-          files: common_test_results.xml, grpc_test_results.xml, rest_test_results.xml
+          files: |
+            common_test_results.xml
+            grpc_test_results.xml
+            rest_test_results.xml
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
 
