@@ -55,28 +55,39 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: build
+      - name: Cache build directory
+        uses: actions/cache@v4
+        with:
+          path: ~/Catena/build/cpp
+          key: ${{ runner.os }}-catena-build-${{ github.ref }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-catena-build-${{ github.ref }}-
+            ${{ runner.os }}-catena-build-
+          retention-days: 1
+
+      - name: Build (incremental, clean only if needed)
         run: |
-          mkdir -p ~/Catena/${BUILD_TARGET}
-          cmake -G Ninja \
-            -DBUILD_DOC=OFF \
-            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
-            -DCONNECTIONS=${CONNECTIONS} \
-            -DCMAKE_CXX_FLAGS="--coverage" \
-            -DCMAKE_C_FLAGS="--coverage" \
-            -DCMAKE_EXE_LINKER_FLAGS="--coverage" \
-            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
-            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
-            -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
-            -B ~/Catena/${BUILD_TARGET} \
-            -S ./sdks/cpp
+          if [ ! -d ~/Catena/${BUILD_TARGET} ]; then
+            mkdir -p ~/Catena/${BUILD_TARGET}
+            cmake -G Ninja \
+              -DBUILD_DOC=OFF \
+              -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+              -DCONNECTIONS=${CONNECTIONS} \
+              -DCMAKE_CXX_FLAGS="--coverage" \
+              -DCMAKE_C_FLAGS="--coverage" \
+              -DCMAKE_EXE_LINKER_FLAGS="--coverage" \
+              -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
+              -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+              -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
+              -B ~/Catena/${BUILD_TARGET} \
+              -S ./sdks/cpp
+          fi
           cd ~/Catena/${BUILD_TARGET}
-          ninja -C ~/Catena/${BUILD_TARGET}
+          ninja
 
       - name: Run Tests
         run: |
           ctest --test-dir ~/Catena/${BUILD_TARGET} -V --rerun-failed > test_results.log
-          # check if file contains "100% tests passed"
           if grep -q "100% tests passed" test_results.log; then
             echo "All tests passed!"
             echo "passed" > unit_test_status.txt
@@ -84,6 +95,22 @@ jobs:
             echo "Some tests failed."
             echo "failed" > unit_test_status.txt
           fi
+
+      - name: Split test results into suites
+        run: |
+          grep '^Test.*common\.' test_results.log > common_suite.log || true
+          grep '^Test.*gRPC\.' test_results.log > grpc_suite.log || true
+          grep '^Test.*REST\.' test_results.log > rest_suite.log || true
+
+      - name: Upload suite test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: suite-test-results
+          path: |
+            common_suite.log
+            grpc_suite.log
+            rest_suite.log
+          retention-days: 4
 
       - name: Generate Coverage Report
         run: |
@@ -181,6 +208,10 @@ jobs:
     container:
       image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
 
+    strategy:
+      matrix:
+        language: [cpp]
+
     env:
       CMAKE_BUILD_TYPE: 
       CONNECTIONS: gRPC
@@ -193,7 +224,7 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: 'cpp'
+          languages: ${{ matrix.language }}
           debug: true
       
       - name: build
@@ -215,4 +246,4 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:cpp"
+          category: "/language:${{ matrix.language }}"
