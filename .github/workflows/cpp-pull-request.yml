@@ -85,30 +85,50 @@ jobs:
 
       - name: Run Tests
         run: |
-          ctest --test-dir ~/Catena/${BUILD_TARGET} -V --rerun-failed > test_results.log
-          if grep -q "100% tests passed" test_results.log; then
-            echo "All tests passed!"
-            echo "passed" > unit_test_status.txt
-          else
-            echo "Some tests failed."
-            echo "failed" > unit_test_status.txt
-          fi
+          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^common\\.' --output-junit common_test_results.xml
+          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^gRPC\\.' --output-junit grpc_test_results.xml
+          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^REST\\.' --output-junit rest_test_results.xml
 
-      - name: Split test results into suites
-        run: |
-          grep '^Test.*common\.' test_results.log > common_suite.log || true
-          grep '^Test.*gRPC\.' test_results.log > grpc_suite.log || true
-          grep '^Test.*REST\.' test_results.log > rest_suite.log || true
-
-      - name: Upload suite test results
-        uses: actions/upload-artifact@v4
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          name: suite-test-results
-          path: |
-            common_suite.log
-            grpc_suite.log
-            rest_suite.log
-          retention-days: 4
+          files: common_test_results.xml, grpc_test_results.xml, rest_test_results.xml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Build PR comment body for unit tests and coverage
+      - name: Build PR comment body (Unit Tests + Coverage)
+        if: github.event_name == 'pull_request'
+        id: unit_comment
+        run: |
+          echo '### 📈 Code Coverage Summary' >> unit-comment-body.md
+          cat code-coverage-results.md >> unit-comment-body.md
+
+      - name: Find Unit Test Comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/find-comment@v3
+        id: fc_unit
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: 'Unit Tests Status'
+
+      - name: Comment on PR with unit test and coverage results
+        if: steps.fc_unit.outputs.comment-id == '' && github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: unit-comment-body.md
+
+      - name: Update PR comment with unit test and coverage results
+        if: steps.fc_unit.outputs.comment-id != '' && github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: unit-comment-body.md
+          comment-id: ${{ steps.fc_unit.outputs.comment-id }}
+          edit-mode: replace
 
       - name: Generate Coverage Report
         run: |
@@ -139,49 +159,6 @@ jobs:
             coverage.xml
             coverage.info
           retention-days: 60
-
-      # Build PR comment body for unit tests
-      - name: Build PR comment body (Unit Tests)
-        if: github.event_name == 'pull_request'
-        id: unit_comment
-        run: |
-          if [ "$(cat unit_test_status.txt)" = "passed" ]; then
-            echo '### ✅ Unit Tests Status' > unit-comment-body.md
-            echo ' ✅  All the unit tests have passed.' >> unit-comment-body.md
-          else
-            echo '### ❌ Unit Tests Status' > unit-comment-body.md
-            echo ' ❌ Some unit tests have failed.' >> unit-comment-body.md
-            echo '```' >> unit-comment-body.md
-            cat test_results.log >> unit-comment-body.md
-            echo '```' >> unit-comment-body.md
-          fi
-
-      - name: Find Unit Test Comment
-        if: github.event_name == 'pull_request'
-        uses: peter-evans/find-comment@v3
-        id: fc_unit
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: 'Unit Tests Status'
-
-      - name: Comment on PR with unit test results
-        if: steps.fc_unit.outputs.comment-id == '' && github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body-path: unit-comment-body.md
-
-      - name: Update PR comment with unit test results
-        if: steps.fc_unit.outputs.comment-id != '' && github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body-path: unit-comment-body.md
-          comment-id: ${{ steps.fc_unit.outputs.comment-id }}
-          edit-mode: replace
 
       # Build PR comment body for coverage
       - name: Build PR comment body (Coverage)
