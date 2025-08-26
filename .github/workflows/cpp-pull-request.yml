@@ -95,40 +95,6 @@ jobs:
           files: common_test_results.xml, grpc_test_results.xml, rest_test_results.xml
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build PR comment body for unit tests and coverage
-      - name: Build PR comment body (Unit Tests + Coverage)
-        if: github.event_name == 'pull_request'
-        id: unit_comment
-        run: |
-          echo '### 📈 Code Coverage Summary' >> unit-comment-body.md
-          cat code-coverage-results.md >> unit-comment-body.md
-
-      - name: Find Unit Test Comment
-        if: github.event_name == 'pull_request'
-        uses: peter-evans/find-comment@v3
-        id: fc_unit
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: 'Unit Tests Status'
-
-      - name: Comment on PR with unit test and coverage results
-        if: steps.fc_unit.outputs.comment-id == '' && github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body-path: unit-comment-body.md
-
-      - name: Update PR comment with unit test and coverage results
-        if: steps.fc_unit.outputs.comment-id != '' && github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body-path: unit-comment-body.md
-          comment-id: ${{ steps.fc_unit.outputs.comment-id }}
-          edit-mode: replace
 
       - name: Generate Coverage Report
         run: |
@@ -168,32 +134,23 @@ jobs:
           echo '### 📈 Code Coverage Summary' > coverage-comment-body.md
           cat code-coverage-results.md >> coverage-comment-body.md
 
-      - name: Find Coverage Comment
+      - name: Find Unit Test Comment
         if: github.event_name == 'pull_request'
         uses: peter-evans/find-comment@v3
-        id: fc_coverage
+        id: fc_unit
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
-          body-includes: 'Code Coverage Summary'
-
-      - name: Comment on PR with coverage results
-        if: steps.fc_coverage.outputs.comment-id == '' && github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body-path: coverage-comment-body.md
 
       - name: Update PR comment with coverage results
-        if: steps.fc_coverage.outputs.comment-id != '' && github.event_name == 'pull_request'
+        if: steps.fc_unit.outputs.comment-id != '' && github.event_name == 'pull_request'
         uses: peter-evans/create-or-update-comment@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
           body-path: coverage-comment-body.md
-          comment-id: ${{ steps.fc_coverage.outputs.comment-id }}
-          edit-mode: replace
+          comment-id: ${{ steps.fc_unit.outputs.comment-id }}
+          edit-mode: append
           
   CodeQL:
     name: CodeQL Analysis (15-30 minutes)
