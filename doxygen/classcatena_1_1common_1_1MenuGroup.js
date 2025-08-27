@@ -8,5 +8,5 @@ var classcatena_1_1common_1_1MenuGroup =
     [ "menus", "classcatena_1_1common_1_1MenuGroup.html#ad79bbd7ccb9e3a9d065880c480fd3dc9", null ],
     [ "operator=", "classcatena_1_1common_1_1MenuGroup.html#a7fb64b18349511780cbbc1b0cc1202c0", null ],
     [ "operator=", "classcatena_1_1common_1_1MenuGroup.html#ad6a6458a0f17979f0992d55820ddc51c", null ],
-    [ "toProto", "classcatena_1_1common_1_1MenuGroup.html#af0bc563f93ff7e53c2f8984b038914d0", null ]
+    [ "toProto", "classcatena_1_1common_1_1MenuGroup.html#a02fdacdb0c10e1611d4afabfe9ea9b26", null ]
 ];
