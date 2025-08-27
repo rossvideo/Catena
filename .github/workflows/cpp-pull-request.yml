@@ -85,9 +85,9 @@ jobs:
 
       - name: Run Tests
         run: |
-          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^common\\.' --output-junit /common_test_results.xml
-          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^gRPC\\.' --output-junit /grpc_test_results.xml
-          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^REST\\.' --output-junit /rest_test_results.xml
+          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^common\.' --output-junit /common_test_results.xml
+          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^gRPC\.' --output-junit /grpc_test_results.xml
+          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^REST\.' --output-junit /rest_test_results.xml
 
       - name: Copy files
         if: always()
