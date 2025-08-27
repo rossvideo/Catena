@@ -5,6 +5,6 @@ var classcatena_1_1common_1_1Device_1_1DeviceSerializer =
     [ "DeviceSerializer", "classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#a98c97f5244e591ddcaa661069f641790", null ],
     [ "DeviceSerializer", "classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#a17d5873026071040b4cfe867bb4dc27c", null ],
     [ "~DeviceSerializer", "classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#ad4ecf53a730d118a682846ca17e63e35", null ],
-    [ "getNext", "classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#a2d9e2fc309c7684b12b73e25bc4c7af1", null ],
+    [ "getNext", "classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#a697c5d2f2a26800e2926381aff68b11d", null ],
     [ "hasMore", "classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#af684414d5b70a6b7bf6c28653054fc54", null ]
 ];
