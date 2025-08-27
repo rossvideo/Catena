@@ -1,51 +1,44 @@
-cmake_minimum_required(VERSION 3.20)	
 
-set(This gRPC_unit_tests)	
+cmake_minimum_required(VERSION 3.20)
 
-find_package(GTest REQUIRED)	
-
+find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(mocks)
 include_directories(${CATENA_UNITTESTS_DIR}/cpp/common/mocks)
 include_directories(${CATENA_UNITTESTS_DIR}/cpp/common)
 
-set(SOURCES 	
-    tests/AddLanguage_test.cpp
-    tests/DeviceRequest_test.cpp
-    tests/ExecuteCommand_test.cpp
-    tests/GetParam_test.cpp
-    tests/GetPopulatedSlots_test.cpp
-    tests/GetValue_test.cpp
-    tests/LanguagePackRequest_test.cpp
-    tests/ListLanguages_test.cpp
-    tests/MultiSetValue_test.cpp
-    tests/ParamInfoRequest_test.cpp
-    tests/SetValue_test.cpp
-    tests/ServiceImpl_test.cpp
-    tests/Connect_test.cpp
-    tests/UpdateSubscriptions_test.cpp
-)	
+# List all test files in tests/
+set(GRPC_TEST_FILES
+    AddLanguage_test.cpp
+    Connect_test.cpp
+    DeviceRequest_test.cpp
+    ExecuteCommand_test.cpp
+    GetParam_test.cpp
+    GetPopulatedSlots_test.cpp
+    GetValue_test.cpp
+    LanguagePackRequest_test.cpp
+    ListLanguages_test.cpp
+    MultiSetValue_test.cpp
+    ParamInfoRequest_test.cpp
+    ServiceImpl_test.cpp
+    SetValue_test.cpp
+    UpdateSubscriptions_test.cpp
+)
 
-add_executable(${This} ${SOURCES})	
-
-target_link_libraries(${This}	
-    PUBLIC	
+foreach(test_file ${GRPC_TEST_FILES})
+    get_filename_component(test_name ${test_file} NAME_WE)
+    add_executable(gRPC_${test_name} tests/${test_file})
+    target_link_libraries(gRPC_${test_name} PRIVATE
         catena_grpc_common
         catena_connections_grpc
-        pthread	
-    PRIVATE	
-        ${GTEST_BOTH_LIBRARIES}	
+        pthread
+        ${GTEST_BOTH_LIBRARIES}
         glog::glog
         GTest::GTest
-        GTest::Main	
-        GTest::gmock	
-        GTest::gmock_main	
-        catena_grpc_common	
-        pthread	
-)	
-
-add_test(	
-    NAME gRPC_unit_tests
-    COMMAND ${This}	
-)	
+        GTest::Main
+        GTest::gmock
+        GTest::gmock_main
+    )
+    add_test(NAME gRPC.${test_name} COMMAND gRPC_${test_name})
+endforeach()
