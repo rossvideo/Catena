@@ -287,6 +287,14 @@
       "description": "Select REST service to debug",
       "type": "pickString",
       "options": [
+                //"api_only", // unimplemented
+        "asset_request_REST",
+        "status_update_REST",
+        "status_update_JSON_REST",
+        "use_commands_REST",
+        "use_menus_REST",
+        "structs_with_authz_REST",
+        "one_of_everything_REST"
       ],
       "default": "status_update_REST"
     }
