@@ -210,6 +210,7 @@ jobs:
       - name: build
         run: |
           mkdir -p ~/Catena/${BUILD_TARGET}
+          git config --global --add safe.directory /__w/Catena/Catena
           cmake -G Ninja \
             -DUNIT_TESTING=OFF \
             -DBUILD_DOC=OFF \
