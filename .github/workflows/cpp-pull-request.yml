@@ -190,7 +190,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['c-pp']
+        language: ['c-cpp']
 
     env:
       CMAKE_BUILD_TYPE: 
