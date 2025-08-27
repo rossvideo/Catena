@@ -94,12 +94,18 @@ jobs:
         run: |
           if [ -f /common_test_results.xml ]; then
             cp /common_test_results.xml common_test_results.xml
+            echo "------------COMMON"
+            cat common_test_results.xml
           fi
           if [ -f /grpc_test_results.xml ]; then
             cp /grpc_test_results.xml grpc_test_results.xml
+            echo "------------gRPC"
+            cat grpc_test_results.xml
           fi
           if [ -f /rest_test_results.xml ]; then
             cp /rest_test_results.xml rest_test_results.xml
+            echo "------------REST"
+            cat rest_test_results.xml
           fi
 
 
@@ -107,6 +113,7 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
+          report_individual_runs: "true"
           files: |
             common_test_results.xml
             grpc_test_results.xml
