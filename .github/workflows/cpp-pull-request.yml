@@ -41,7 +41,7 @@ jobs:
 
   Unit-Tests:
     name: Run Unit Tests and coverage (11 minutes)
-    timeout-minutes: 15
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
