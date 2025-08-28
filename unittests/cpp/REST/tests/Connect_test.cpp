@@ -64,7 +64,7 @@ protected:
 
     RESTConnectTest() : RESTEndpointTest() {
         EXPECT_CALL(context_, detailLevel())
-            .WillRepeatedly(testing::Return(catena::Device_DetailLevel::Device_DetailLevel_FULL));
+            .WillRepeatedly(testing::Return(st2138::Device_DetailLevel::Device_DetailLevel_FULL));
         EXPECT_CALL(context_, subscriptionManager())
             .WillRepeatedly(testing::ReturnRef(subManager_));
         EXPECT_CALL(context_, fields("user_agent"))
@@ -98,7 +98,7 @@ protected:
 
     // Helper function to build slot response
     std::string buildSlotResponse() {
-        catena::PushUpdates populatedSlots;
+        st2138::PushUpdates populatedSlots;
         for (auto& [slot, dm] : dms_) {
             if (dm) {
                 populatedSlots.mutable_slots_added()->add_slots(slot);
@@ -112,7 +112,7 @@ protected:
 
     // Helper function to build parameter update response
     std::string buildParamUpdateResponse(uint32_t slot, const std::string& oid, const std::string& value) {
-        catena::PushUpdates updateResponse;
+        st2138::PushUpdates updateResponse;
         updateResponse.set_slot(slot);
         auto* paramValue = updateResponse.mutable_value();
         paramValue->set_oid(oid);
@@ -126,7 +126,7 @@ protected:
 
     // Helper function to build language pack update response
     std::string buildLanguagePackUpdateResponse(uint32_t slot, const std::string& name, const std::map<std::string, std::string>& words) {
-        catena::PushUpdates updateResponse;
+        st2138::PushUpdates updateResponse;
         updateResponse.set_slot(slot);
         auto* deviceComponent = updateResponse.mutable_device_component();
         auto* languagePackComponent = deviceComponent->mutable_language_pack();
@@ -201,8 +201,8 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByServer) {
         .WillRepeatedly(testing::ReturnRef(paramOid_));
     EXPECT_CALL(*param, getScope())
         .WillRepeatedly(testing::ReturnRef(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
-    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<const IAuthorizer&>()))
-        .WillOnce(testing::Invoke([](catena::Value& value, const IAuthorizer&) {
+    EXPECT_CALL(*param, toProto(testing::An<st2138::Value&>(), testing::An<const IAuthorizer&>()))
+        .WillOnce(testing::Invoke([](st2138::Value& value, const IAuthorizer&) {
             value.set_string_value("test_value");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -234,8 +234,8 @@ TEST_F(RESTConnectTest, Connect_HandlesValueSetByClient) {
         .WillRepeatedly(testing::ReturnRef(paramOid_));
     EXPECT_CALL(*param, getScope())
         .WillRepeatedly(testing::ReturnRef(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
-    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<const IAuthorizer&>()))
-        .WillOnce(testing::Invoke([](catena::Value& value, const IAuthorizer&) {
+    EXPECT_CALL(*param, toProto(testing::An<st2138::Value&>(), testing::An<const IAuthorizer&>()))
+        .WillOnce(testing::Invoke([](st2138::Value& value, const IAuthorizer&) {
             value.set_string_value("test_value");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -264,7 +264,7 @@ TEST_F(RESTConnectTest, Connect_HandlesLanguage) {
 
     auto languagePack = std::make_unique<MockLanguagePack>();
     EXPECT_CALL(*languagePack, toProto(testing::_))
-        .WillOnce(testing::Invoke([](catena::LanguagePack& pack) {
+        .WillOnce(testing::Invoke([](st2138::LanguagePack& pack) {
             pack.set_name("English");
             (*pack.mutable_words())["greeting"] = "Hello";
         }));
@@ -350,8 +350,8 @@ TEST_F(RESTConnectTest, Connect_HandlesWriterFailure) {
         .WillRepeatedly(testing::ReturnRef(paramOid_));
     EXPECT_CALL(*param, getScope())
         .WillRepeatedly(testing::ReturnRef(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
-    EXPECT_CALL(*param, toProto(testing::An<catena::Value&>(), testing::An<const IAuthorizer&>()))
-        .WillOnce(testing::Invoke([](catena::Value& value, const IAuthorizer&) {
+    EXPECT_CALL(*param, toProto(testing::An<st2138::Value&>(), testing::An<const IAuthorizer&>()))
+        .WillOnce(testing::Invoke([](st2138::Value& value, const IAuthorizer&) {
             value.set_string_value("test_value");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));

@@ -46,7 +46,7 @@ namespace common {
 // Mock implementation for the IMenuGroup class.
 class MockMenuGroup : public IMenuGroup {
   public:
-    MOCK_METHOD(void, toProto, (catena::MenuGroup& menuGroup, bool shallow), (const, override));
+    MOCK_METHOD(void, toProto, (st2138::MenuGroup& menuGroup, bool shallow), (const, override));
     MOCK_METHOD(void, addMenu, (const std::string& oid, std::unique_ptr<IMenu> menu), (override));
     MOCK_METHOD(const MenuMap*, menus, (), (const, override));
 };

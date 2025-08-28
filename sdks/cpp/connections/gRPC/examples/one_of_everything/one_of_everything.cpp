@@ -106,15 +106,15 @@ void defineCommands() {
 
     /* 
      * Define a lambda function to be executed when the command is called
-     * The lambda function must take a catena::Value as an argument and return 
-     * a catena::CommandResponse.
+     * The lambda function must take a st2138::Value as an argument and return 
+     * a st2138::CommandResponse.
      * Starts a thread which updates the number_example parameter with the next
      * number of the Fibonacci sequence every second.
      */
-    fibStart->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+    fibStart->defineCommand([](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
             catena::exception_with_status err{"", catena::StatusCode::OK};
-            catena::CommandResponse response;
+            st2138::CommandResponse response;
             std::unique_ptr<IParam> intParam = dm.getParam("/number_example", err);
             
             // If the loop is already running, return an exception.
@@ -156,10 +156,10 @@ void defineCommands() {
     // This stops the looping thread in the fib_start command above.
     std::unique_ptr<IParam> fibStop = dm.getCommand("/fib_stop", err);
     assert(fibStop != nullptr);
-    fibStop->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+    fibStop->defineCommand([](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
             catena::exception_with_status err{"", catena::StatusCode::OK};
-            catena::CommandResponse response;
+            st2138::CommandResponse response;
             if (fibThread) {
                 fibLoop = false;
                 fibThread->join();
@@ -177,10 +177,10 @@ void defineCommands() {
     // This sets the value of number_example.
     std::unique_ptr<IParam> fibSet = dm.getCommand("/fib_set", err);
     assert(fibSet != nullptr);
-    fibSet->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+    fibSet->defineCommand([](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
             catena::exception_with_status err{"", catena::StatusCode::OK};
-            catena::CommandResponse response;
+            st2138::CommandResponse response;
             std::unique_ptr<IParam> intParam = dm.getParam("/number_example", err);
             if (intParam) {
                 auto& fibParam = *dynamic_cast<ParamWithValue<int32_t>*>(intParam.get());
@@ -198,10 +198,10 @@ void defineCommands() {
     // This fills float_array with 128 random floats rounded to 3 decimal places.
     std::unique_ptr<IParam> randomize = dm.getCommand("/randomize", err);
     assert(randomize != nullptr);
-    randomize->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+    randomize->defineCommand([](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
             catena::exception_with_status err{"", catena::StatusCode::OK};
-            catena::CommandResponse response;
+            st2138::CommandResponse response;
             std::unique_ptr<IParam> floatArray = dm.getParam("/float_array", err);
             if (!floatArray) {
                 response.mutable_exception()->set_type("Invalid Command");
@@ -227,10 +227,10 @@ void defineCommands() {
     // This simulates a tape bot and returns a stream of responses.
     std::unique_ptr<IParam> tapeBot = dm.getCommand("/tape_bot", err);
     assert(tapeBot != nullptr);
-    tapeBot->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+    tapeBot->defineCommand([](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
             catena::exception_with_status err{"", catena::StatusCode::OK};
-            catena::CommandResponse response;
+            st2138::CommandResponse response;
             // Locating
             DEBUG_LOG << "Locating tape...";
             response.mutable_response()->set_string_value("Locating tape...");

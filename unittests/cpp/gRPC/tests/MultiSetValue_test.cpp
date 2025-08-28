@@ -95,10 +95,10 @@ class gRPCMultiSetValueTests : public GRPCTest {
     }
 
     // in/out val
-    catena::MultiSetValuePayload inVal_;
-    catena::Empty outVal_;
+    st2138::MultiSetValuePayload inVal_;
+    st2138::Empty outVal_;
     // Expected variables
-    catena::Empty expVal_;
+    st2138::Empty expVal_;
 };
 
 /*
@@ -120,7 +120,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_Normal) {
     expRc_ = catena::exception_with_status("", catena::StatusCode::OK);
     // Setting expectations
     EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, const IAuthorizer &authz) {
+        .WillOnce(::testing::Invoke([this](st2138::MultiSetValuePayload src, catena::exception_with_status &ans, const IAuthorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(src.SerializeAsString(), inVal_.SerializeAsString());
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
@@ -130,7 +130,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_Normal) {
         }));
     EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, const IAuthorizer &authz) {
+        .WillOnce(::testing::Invoke([this](st2138::MultiSetValuePayload src, const IAuthorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(src.SerializeAsString(), inVal_.SerializeAsString());
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
@@ -154,7 +154,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_AuthzValid) {
     clientContext_.AddMetadata("authorization", "Bearer " + mockToken);
     // Setting expectations
     EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, const IAuthorizer &authz) {
+        .WillOnce(::testing::Invoke([this](st2138::MultiSetValuePayload src, catena::exception_with_status &ans, const IAuthorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(src.SerializeAsString(), inVal_.SerializeAsString());
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
@@ -164,7 +164,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_AuthzValid) {
         }));
     EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, const IAuthorizer &authz) {
+        .WillOnce(::testing::Invoke([this](st2138::MultiSetValuePayload src, const IAuthorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(src.SerializeAsString(), inVal_.SerializeAsString());
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
@@ -232,7 +232,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryReturnCatena) {
     expRc_ = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
     EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, const IAuthorizer &authz) {
+        .WillOnce(::testing::Invoke([this](st2138::MultiSetValuePayload src, catena::exception_with_status &ans, const IAuthorizer &authz) {
             // Setting the output status and returning false.
             ans = catena::exception_with_status(expRc_.what(), expRc_.status);
             return false;
@@ -251,7 +251,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowCatena) {
     expRc_ = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
     EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, catena::exception_with_status &ans, const IAuthorizer &authz) {
+        .WillOnce(::testing::Invoke([this](st2138::MultiSetValuePayload src, catena::exception_with_status &ans, const IAuthorizer &authz) {
             // Throwing error and returning true.
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return true;
@@ -287,7 +287,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitReturnCatena) {
     EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
     EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, const IAuthorizer &authz) {
+        .WillOnce(::testing::Invoke([this](st2138::MultiSetValuePayload src, const IAuthorizer &authz) {
             // Returning error status.
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
@@ -305,7 +305,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowCatena) {
     EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
     EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::MultiSetValuePayload src, const IAuthorizer &authz) {
+        .WillOnce(::testing::Invoke([this](st2138::MultiSetValuePayload src, const IAuthorizer &authz) {
             // Throwing error and returning ok.
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK);

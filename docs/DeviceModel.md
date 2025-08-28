@@ -5,14 +5,14 @@
 
 # The Device Model
 
-> Defined in `interface/device.proto`.
+> Defined in `smpte/interface/proto/device.proto`.
 
 ![Alt](images/Catena%20UML%20-%20Device.svg)
 
 
 As previously mentioned, it's possible to represent a device model using human-authored JSON and YAML.
 
-The example service, `full_service` that's part of Catena's C++ SDK imports and initializes itself from JSON files and then provides access to it using the RPCs defined in `interface/service.proto`.
+The example service, `full_service` that's part of Catena's C++ SDK imports and initializes itself from JSON files and then provides access to it using the RPCs defined in `smpte/interface/proto/service.proto`.
 
 There are some example device models in JSON and YAML such as `device.minimal.json`.
 

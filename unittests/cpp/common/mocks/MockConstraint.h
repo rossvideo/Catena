@@ -46,9 +46,9 @@ namespace common {
 // Mock implementation for the IConstraint class.
 class MockConstraint : public IConstraint {
   public:
-    MOCK_METHOD(void, toProto, (catena::Constraint& constraint), (const, override));
-    MOCK_METHOD(bool, satisfied, (const catena::Value& src), (const, override));
-    MOCK_METHOD(catena::Value, apply, (const catena::Value& src), (const, override));
+    MOCK_METHOD(void, toProto, (st2138::Constraint& constraint), (const, override));
+    MOCK_METHOD(bool, satisfied, (const st2138::Value& src), (const, override));
+    MOCK_METHOD(st2138::Value, apply, (const st2138::Value& src), (const, override));
     MOCK_METHOD(bool, isRange, (), (const, override));
     MOCK_METHOD(bool, isShared, (), (const, override));
     MOCK_METHOD(const std::string&, getOid, (), (const, override));

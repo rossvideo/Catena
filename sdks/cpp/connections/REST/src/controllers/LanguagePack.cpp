@@ -16,7 +16,7 @@ void LanguagePack::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
 
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    catena::DeviceComponent_ComponentLanguagePack ans;
+    st2138::DeviceComponent_ComponentLanguagePack ans;
     std::shared_ptr<catena::common::Authorizer> sharedAuthz;
     catena::common::Authorizer* authz;
 
@@ -50,9 +50,9 @@ void LanguagePack::proceed() {
         // POST/language-pack and PUT/language-pack
         } else if (context_.method() == Method_POST || context_.method() == Method_PUT) {
             // Constructing the AddLanguagePayload
-            catena::AddLanguagePayload payload;
+            st2138::AddLanguagePayload payload;
             payload.set_slot(context_.slot());
-            payload.set_id(languageId);
+            payload.set_language(languageId);
             absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), payload.mutable_language_pack());
 
             if (status.ok()) {

@@ -65,7 +65,7 @@ class PeerInfo {
     /**
      * type definition for a Writer to the peer
      */
-    using Writer = grpc::ServerWriter<catena::PushUpdates>;
+    using Writer = grpc::ServerWriter<st2138::PushUpdates>;
 
     /**
      * @brief Construct a new Peer Info object
@@ -74,7 +74,7 @@ class PeerInfo {
      *
      * @param id the result of grpc::ServerContext::peer(), aka std::string.
      */
-    explicit PeerInfo(grpc::ServerContext* ctx, grpc::ServerWriter<catena::PushUpdates>* writer)
+    explicit PeerInfo(grpc::ServerContext* ctx, grpc::ServerWriter<st2138::PushUpdates>* writer)
         : context_{ctx}, writer_{writer} {}
 
     /**

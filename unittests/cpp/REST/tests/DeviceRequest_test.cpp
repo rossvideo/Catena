@@ -65,7 +65,7 @@ class RESTDeviceRequestTests : public RESTEndpointTest {
      * Sets default expectations for detailLevel().
      */
     RESTDeviceRequestTests() : RESTEndpointTest() {
-        EXPECT_CALL(context_, detailLevel()).WillRepeatedly(testing::Return(catena::Device_DetailLevel_FULL));
+        EXPECT_CALL(context_, detailLevel()).WillRepeatedly(testing::Return(st2138::Device_DetailLevel_FULL));
         // Default expectations for the device model 1 (should not be called).
         EXPECT_CALL(dm1_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
         
@@ -85,22 +85,22 @@ class RESTDeviceRequestTests : public RESTEndpointTest {
         if (expNum > 6 ) { expNum = 6; }
         switch (expNum) {
             case 6:
-                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.emplace(expVals_.begin(), st2138::DeviceComponent());
                 expVals_.begin()->mutable_command()->set_oid("command_test");
             case 5:
-                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.emplace(expVals_.begin(), st2138::DeviceComponent());
                 expVals_.begin()->mutable_param()->set_oid("param_test");
             case 4:
-                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.emplace(expVals_.begin(), st2138::DeviceComponent());
                 expVals_.begin()->mutable_shared_constraint()->set_oid("constraint_test");
             case 3:
-                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.emplace(expVals_.begin(), st2138::DeviceComponent());
                 expVals_.begin()->mutable_language_pack()->set_language("language_test");
             case 2:
-                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.emplace(expVals_.begin(), st2138::DeviceComponent());
                 expVals_.begin()->mutable_menu()->set_oid("menu_test");
             case 1:
-                expVals_.emplace(expVals_.begin(), catena::DeviceComponent());
+                expVals_.emplace(expVals_.begin(), st2138::DeviceComponent());
                 expVals_.begin()->mutable_device()->set_slot(slot_);
         }
     }
@@ -123,7 +123,7 @@ class RESTDeviceRequestTests : public RESTEndpointTest {
     }
 
     // Expected variables
-    std::vector<catena::DeviceComponent> expVals_;
+    std::vector<st2138::DeviceComponent> expVals_;
 };
 
 // --- 0. INITIAL TESTS ---
@@ -138,9 +138,9 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Normal) {
     initExpVal(3);
     // Set up expectation for getComponentSerializer to return a working serializer
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_))
-        .WillOnce(testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+        .WillOnce(testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
-            EXPECT_EQ(dl, catena::Device_DetailLevel_FULL);
+            EXPECT_EQ(dl, st2138::Device_DetailLevel_FULL);
             EXPECT_TRUE(subscribedOids.empty());
             auto mockSerializer = std::make_unique<MockDeviceSerializer>();
             EXPECT_CALL(*mockSerializer, hasMore())
@@ -167,9 +167,9 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Stream) {
     initExpVal(3);
     // Set up expectation for getComponentSerializer to return a working serializer
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_))
-        .WillOnce(testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+        .WillOnce(testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
-            EXPECT_EQ(dl, catena::Device_DetailLevel_FULL);
+            EXPECT_EQ(dl, st2138::Device_DetailLevel_FULL);
             EXPECT_TRUE(subscribedOids.empty());
             auto mockSerializer = std::make_unique<MockDeviceSerializer>();
             EXPECT_CALL(*mockSerializer, hasMore()).Times(4)
@@ -192,9 +192,9 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_AuthzValid) {
     authzEnabled_ = true;
     // Set up expectation for getComponentSerializer to return a working serializer
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+        .WillOnce(testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
-            EXPECT_EQ(dl, catena::Device_DetailLevel_FULL);
+            EXPECT_EQ(dl, st2138::Device_DetailLevel_FULL);
             EXPECT_TRUE(subscribedOids.empty());
             auto mockSerializer = std::make_unique<MockDeviceSerializer>();
             EXPECT_CALL(*mockSerializer, hasMore()).WillOnce(testing::Return(false));
@@ -210,16 +210,16 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Subscriptions) {
     std::set<std::string> expectedSubscribedOids = {"param1", "param2", "param3"};
     MockSubscriptionManager mockSubManager;
     // Set up expectations for subscription mode
-    EXPECT_CALL(context_, detailLevel()).WillOnce(testing::Return(catena::Device_DetailLevel_SUBSCRIPTIONS));
+    EXPECT_CALL(context_, detailLevel()).WillOnce(testing::Return(st2138::Device_DetailLevel_SUBSCRIPTIONS));
     EXPECT_CALL(context_, subscriptionManager()).Times(1)
         .WillOnce(testing::ReturnRef(mockSubManager));
     EXPECT_CALL(mockSubManager, getAllSubscribedOids(testing::Ref(dm0_))).Times(1)
         .WillOnce(testing::Return(expectedSubscribedOids));
     // Set up expectation for getComponentSerializer to verify subscribed OIDs are passed
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([&expectedSubscribedOids](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+        .WillOnce(testing::Invoke([&expectedSubscribedOids](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
             EXPECT_EQ(subscribedOids, expectedSubscribedOids);
-            EXPECT_EQ(dl, catena::Device_DetailLevel_SUBSCRIPTIONS);
+            EXPECT_EQ(dl, st2138::Device_DetailLevel_SUBSCRIPTIONS);
             auto mockSerializer = std::make_unique<MockDeviceSerializer>();
             EXPECT_CALL(*mockSerializer, hasMore()).WillOnce(testing::Return(false));
             EXPECT_CALL(*mockSerializer, getNext()).Times(0);

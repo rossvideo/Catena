@@ -77,7 +77,7 @@ class RESTSocketWriterTests : public testing::Test, public RESTTest {
 TEST_F(RESTSocketWriterTests, SocketWriter_Write200) {
     // msg variables.
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    catena::Value msg;
+    st2138::Value msg;
     msg.set_string_value("Test string");
 
     // Initializing SocketWriter with serverSocket_ and writing message.
@@ -97,7 +97,7 @@ TEST_F(RESTSocketWriterTests, SocketWriter_Write200) {
 TEST_F(RESTSocketWriterTests, SocketWriter_Write204) {
     // msg variables.
     catena::exception_with_status rc("", catena::StatusCode::NO_CONTENT);
-    catena::Empty emptyMsg = catena::Empty();
+    st2138::Empty emptyMsg = st2138::Empty();
 
     // Initializing SocketWriter with serverSocket_ and writing message.
     SocketWriter writer(serverSocket_, origin_);
@@ -113,7 +113,7 @@ TEST_F(RESTSocketWriterTests, SocketWriter_Write204) {
 TEST_F(RESTSocketWriterTests, SocketWriter_WriteErr) {
     // msg variables.
     catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
-    catena::Value msg;
+    st2138::Value msg;
     msg.set_string_value("Test string");
 
     // Initializing SocketWriter with serverSocket_ and writing message.
@@ -130,7 +130,7 @@ TEST_F(RESTSocketWriterTests, SocketWriter_WriteErr) {
 TEST_F(RESTSocketWriterTests, SocketWriter_Buffer200) {
     // msg variables.
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    std::vector<catena::Value> msgs = {catena::Value(), catena::Value(), catena::Value()};
+    std::vector<st2138::Value> msgs = {st2138::Value(), st2138::Value(), st2138::Value()};
     msgs[0].set_string_value("test-string-1");
     msgs[1].set_string_value("test-string-2");
     msgs[2].set_string_value("test-string-3");
@@ -179,7 +179,7 @@ TEST_F(RESTSocketWriterTests, SocketWriter_BufferErrBegin) {
 TEST_F(RESTSocketWriterTests, SocketWriter_BufferErrEnd) {
     // msg variables.
     catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
-    std::vector<catena::Value> msgs = {catena::Value(), catena::Value(), catena::Value()};
+    std::vector<st2138::Value> msgs = {st2138::Value(), st2138::Value(), st2138::Value()};
     msgs[0].set_string_value("test-string-1");
     msgs[1].set_string_value("test-string-2");
     msgs[2].set_string_value("test-string-3");
@@ -217,7 +217,7 @@ TEST_F(RESTSocketWriterTests, SSEWriter_Write200) {
     // Initializing SSEWriter with serverSocket_ and writing messages.
     SSEWriter writer(serverSocket_, origin_);
     for (std::string msgJson : msgs) {
-        catena::Value msg;
+        st2138::Value msg;
         auto status = google::protobuf::util::JsonStringToMessage(absl::string_view(msgJson), &msg);
         writer.sendResponse(rc, msg);
     }
@@ -233,7 +233,7 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteEmpty) {
     // msg variables.
     catena::exception_with_status rc("", catena::StatusCode::OK);
     std::vector<std::string> msgs = {};
-    catena::Empty emptyMsg = catena::Empty();
+    st2138::Empty emptyMsg = st2138::Empty();
 
     // Initializing SSEWriter with serverSocket_ and writing messages.
     SSEWriter writer(serverSocket_, origin_);
@@ -253,12 +253,12 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteEmptyEnd) {
         "{\"stringValue\":\"Test string #1\"}",
         "{\"float32Value\":2}"
     };
-    catena::Empty emptyMsg = catena::Empty();
+    st2138::Empty emptyMsg = st2138::Empty();
 
     // Initializing SSEWriter with serverSocket_ and writing messages.
     SSEWriter writer(serverSocket_, origin_);
     for (std::string msgJson : msgs) {
-        catena::Value msg;
+        st2138::Value msg;
         auto status = google::protobuf::util::JsonStringToMessage(absl::string_view(msgJson), &msg);
         writer.sendResponse(rc, msg);
     }
@@ -274,7 +274,7 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteEmptyEnd) {
 TEST_F(RESTSocketWriterTests, SSEWriter_WriteErrBegin) {
     // msg variables.
     catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
-    catena::Empty emptyMsg = catena::Empty();
+    st2138::Empty emptyMsg = st2138::Empty();
 
     // Initializing SSEWriter with serverSocket_ and writing error.
     SSEWriter writer(serverSocket_, origin_);
@@ -295,12 +295,12 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteErrEnd) {
         "{\"float32Value\":2}"
     };
     catena::exception_with_status err("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
-    catena::Empty emptyMsg = catena::Empty();
+    st2138::Empty emptyMsg = st2138::Empty();
 
     // Initializing SSEWriter with serverSocket_ and writing messages.
     SSEWriter writer(serverSocket_, origin_);
     for (std::string msgJson : msgs) {
-        catena::Value msg;
+        st2138::Value msg;
         auto status = google::protobuf::util::JsonStringToMessage(absl::string_view(msgJson), &msg);
         writer.sendResponse(rc, msg);
     }

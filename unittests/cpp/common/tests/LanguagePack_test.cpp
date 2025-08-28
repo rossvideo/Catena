@@ -100,7 +100,7 @@ TEST_F(LanguagePackTest, LanguagePack_Iterator) {
  * TEST 3 - Testing use of LanguagePack.toProto()
  */
 TEST_F(LanguagePackTest, LanguagePack_ToProto) {
-    catena::LanguagePack protoPack;
+    st2138::LanguagePack protoPack;
     // Call toProto.
     testPack_->toProto(protoPack);
     // Compare results.
@@ -116,13 +116,13 @@ TEST_F(LanguagePackTest, LanguagePack_ToProto) {
  */
 TEST_F(LanguagePackTest, LanguagePack_FromProto) {
     // Initi languagePack with french.
-    catena::LanguagePack frenchPack;
+    st2138::LanguagePack frenchPack;
     frenchPack.set_name("French");
     frenchPack.mutable_words()->insert({"greeting", "Bonjour"});
     frenchPack.mutable_words()->insert({"parting", "Au revoir"});
     // Call fromProto and get results using toProto.
     testPack_->fromProto(frenchPack);
-    catena::LanguagePack protoPack;
+    st2138::LanguagePack protoPack;
     testPack_->toProto(protoPack);
     // Compare results.
     EXPECT_EQ(frenchPack.name(), protoPack.name());

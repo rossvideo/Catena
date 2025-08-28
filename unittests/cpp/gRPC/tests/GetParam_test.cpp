@@ -74,7 +74,7 @@ class gRPCGetParamTests : public GRPCTest {
     void initexpVal_(const std::string& oid, const std::string& value, const std::string& alias, const std::string& enName) {
         expVal_.set_oid(oid);
         auto param = expVal_.mutable_param();
-        param->set_type(catena::ParamType::STRING);
+        param->set_type(st2138::ParamType::STRING);
         param->mutable_value()->set_string_value(value);
         param->add_oid_aliases(alias);
         (*param->mutable_name()->mutable_display_strings())["en"] = enName;
@@ -101,10 +101,10 @@ class gRPCGetParamTests : public GRPCTest {
     }
 
     // In/out val
-    catena::GetParamPayload inVal_;
-    catena::DeviceComponent_ComponentParam outVal_;
+    st2138::GetParamPayload inVal_;
+    st2138::DeviceComponent_ComponentParam outVal_;
     // Expected variables
-    catena::DeviceComponent_ComponentParam expVal_;
+    st2138::DeviceComponent_ComponentParam expVal_;
 
     std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
 };
@@ -137,8 +137,8 @@ TEST_F(gRPCGetParamTests, GetParam_Normal) {
         }));
     EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(expVal_.oid()));
-    EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1).WillOnce(::testing::Invoke(
-        [this](catena::Param &param, const IAuthorizer &authz) {
+    EXPECT_CALL(*mockParam, toProto(::testing::An<st2138::Param&>(), ::testing::_)).Times(1).WillOnce(::testing::Invoke(
+        [this](st2138::Param &param, const IAuthorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             param.CopyFrom(expVal_.param());
@@ -168,8 +168,8 @@ TEST_F(gRPCGetParamTests, GetParam_AuthzValid) {
         }));
     EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(expVal_.oid()));
-    EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1).WillOnce(::testing::Invoke(
-        [this](catena::Param &param, const IAuthorizer &authz) {
+    EXPECT_CALL(*mockParam, toProto(::testing::An<st2138::Param&>(), ::testing::_)).Times(1).WillOnce(::testing::Invoke(
+        [this](st2138::Param &param, const IAuthorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             param.CopyFrom(expVal_.param());
@@ -281,7 +281,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoReturnCatena) {
         .WillOnce(::testing::Invoke([this](){ return std::move(mockParam); }));
     EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(*mockParam, getOid()).WillRepeatedly(::testing::ReturnRef(expVal_.oid()));
-    EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1)
+    EXPECT_CALL(*mockParam, toProto(::testing::An<st2138::Param&>(), ::testing::_)).Times(1)
         .WillOnce(::testing::Return(catena::exception_with_status(expRc_.what(), expRc_.status)));
     // Sending the RPC.
     testRPC();
@@ -298,8 +298,8 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowCatena) {
         .WillOnce(::testing::Invoke([this](){ return std::move(mockParam); }));
     EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(*mockParam, getOid()).WillRepeatedly(::testing::ReturnRef(expVal_.oid()));
-    EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::Param &param, const IAuthorizer &authz)  {
+    EXPECT_CALL(*mockParam, toProto(::testing::An<st2138::Param&>(), ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](st2138::Param &param, const IAuthorizer &authz)  {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -318,7 +318,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowUnknown) {
         .WillOnce(::testing::Invoke([this](){ return std::move(mockParam); }));
     EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(*mockParam, getOid()).WillRepeatedly(::testing::ReturnRef(expVal_.oid()));
-    EXPECT_CALL(*mockParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).Times(1)
+    EXPECT_CALL(*mockParam, toProto(::testing::An<st2138::Param&>(), ::testing::_)).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
     // Sending the RPC.
     testRPC();

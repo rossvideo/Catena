@@ -58,21 +58,21 @@ public:
      * @brief Serializes the constraint to a protobuf message.
      * @param constraint The protobuf message to serialize to.
      */
-    virtual void toProto(catena::Constraint& constraint) const = 0;
+    virtual void toProto(st2138::Constraint& constraint) const = 0;
 
     /**
      * @brief Checks if the constraint is satisfied by src.
      * @param src A catena::Value to check the constraint against.
      * @return True if the constraint is satisfied, false otherwise.
      */
-    virtual bool satisfied(const catena::Value& src) const = 0;
+    virtual bool satisfied(const st2138::Value& src) const = 0;
 
     /**
      * @brief Applies constraint to src and returns the constrained value.
      * @param src A catena::Value to apply the constraint to.
      * @return A catena::Value with the constraint applied.
      */
-    virtual catena::Value apply(const catena::Value& src) const = 0;
+    virtual st2138::Value apply(const st2138::Value& src) const = 0;
 
     /**
      * @brief Checks if the constraint is a range constraint.

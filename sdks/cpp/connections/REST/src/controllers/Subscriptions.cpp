@@ -86,7 +86,7 @@ void Subscriptions::proceed() {
                 auto subbedOids = context_.subscriptionManager().getAllSubscribedOids(*dm);
                 for (auto oid : subbedOids) {
                     supressErr = catena::exception_with_status{"", catena::StatusCode::OK};
-                    catena::DeviceComponent_ComponentParam res;
+                    st2138::DeviceComponent_ComponentParam res;
                     auto param = dm->getParam(oid, supressErr, *authz);
                     // Converting to proto.
                     if (param) {
@@ -103,7 +103,7 @@ void Subscriptions::proceed() {
             // PUT/subscriptions - Add/remove subscriptions.
             } else if (context_.method() == Method_PUT) {
                 // Parsing JSON body.
-                catena::UpdateSubscriptionsPayload req;
+                st2138::UpdateSubscriptionsPayload req;
                 absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &req);
                 if (!status.ok()) {
                     rc = catena::exception_with_status("Failed to parse JSON Body", catena::StatusCode::INVALID_ARGUMENT);

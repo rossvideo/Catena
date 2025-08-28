@@ -43,7 +43,6 @@ params:
     type: FLOAT32_ARRAY
     value: { float32_array_values: { floats: [1.1, 2.2, 3.3, 4.4] } }
     name: { display_strings: { en: "Float Array Example" } }
-    max_length: 128
     precision: 3
 
   string_array:
@@ -76,6 +75,7 @@ menu_groups:
         name: {display_strings: { en: "Product" } }
         param_oids:
           - /number_example
+    order: 0
   config:
     name: { display_strings: { en: "Config" } }
     menus:
@@ -84,6 +84,7 @@ menu_groups:
         param_oids:
           - /float_example
           - /string_example
+    order: 1
 
 commands:
   fib_start:

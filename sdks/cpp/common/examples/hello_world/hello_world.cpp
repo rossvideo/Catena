@@ -58,7 +58,7 @@
 
 // this include header was generated from the protobuf definition
 // it's in the BINARY folder structure, not SOURCE.
-#include <interface/param.pb.h> // catena::Value
+#include <interface/param.pb.h> // st2138::Value
 
 #include <Logger.h>
 #include <iostream>

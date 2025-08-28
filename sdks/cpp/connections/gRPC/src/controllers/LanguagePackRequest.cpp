@@ -73,7 +73,7 @@ void LanguagePackRequest::proceed(bool ok) {
             context_.AsyncNotifyWhenDone(this);
             { // rc scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
-            catena::DeviceComponent_ComponentLanguagePack ans;
+            st2138::DeviceComponent_ComponentLanguagePack ans;
             IDevice* dm = nullptr;
             try {
                 // Getting device at specified slot.

@@ -46,7 +46,7 @@ void catena::REST::Connect::proceed() {
         initAuthz_(context_.jwsToken(), context_.authorizationEnabled());
         if (context_.connectionQueue().registerConnection(this)) {
             // Connecting to each device in dms_.
-            catena::PushUpdates populatedSlots;
+            st2138::PushUpdates populatedSlots;
             for (auto [slot, dm] : dms_) {
                 if (dm) {
                     // Waiting for a value set by server to be sent to execute code.

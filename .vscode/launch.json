@@ -93,7 +93,7 @@
         "program": "${workspaceFolder}/${env:BUILD_TARGET}/connections/gRPC/examples/${input:pickService}/${input:pickService}", // Path to the full_service executable
         "args": ["--static_root", "${workspaceFolder}/sdks/cpp/connections/gRPC/examples/${input:pickService}/static", 
                 //  "--secure_comms", "tls",
-                // "--authz"
+                "--authz"
         ], // Any command-line arguments go here
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}/${env:BUILD_TARGET}",
@@ -118,7 +118,7 @@
       "program": "${workspaceFolder}/tools/codegen/index.js",
       "args": [
           "--schema",
-          "${workspaceFolder}/schema",
+          "${workspaceFolder}/smpte/interface/schemata/device.json",
           "--device-model",
           "${workspaceFolder}/sdks/cpp/${input:pickDeviceModel}",
           "--output",

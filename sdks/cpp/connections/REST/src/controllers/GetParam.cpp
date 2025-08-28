@@ -15,7 +15,7 @@ GetParam::GetParam(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
 void GetParam::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
 
-    catena::DeviceComponent_ComponentParam ans;
+    st2138::DeviceComponent_ComponentParam ans;
     catena::exception_with_status rc("", catena::StatusCode::OK);
 
     try {

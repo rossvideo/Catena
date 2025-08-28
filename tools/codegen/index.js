@@ -21,7 +21,7 @@
 // load the command line parser
 const { program } = require('commander');
 program
-    .option('-s, --schema <string>', 'path to schema definitions', '../../schema')
+    .option('-s, --schema <string>', 'path to schema definitions', '../../smpte/interface/schemata/device.json')
     .option('-d, --device-model <string>', 'Catena device model to process', '../../example_device_models/device.minimal.json')
     .option('-l, --language <string>', 'Language to generate code for', 'cpp')
     .option('-o, --output <string>', 'Output folder for generated code', '.');
@@ -41,9 +41,6 @@ if (options.output) {
     console.log(`output: ${options.output}`);
 }
 
-
-
-
 // import the fs libraries
 const fs = require('fs');
 
@@ -53,12 +50,8 @@ if (!fs.existsSync(options.deviceModel)) {
     process.exit(1);
 }
 
-
-// read the schema definition file
-const schemaFilename = options.schema;
-
-const Validator = require('./validator.js');
-const validator = new Validator(schemaFilename);
+const Validator = require('smpte-validator');
+const validator = new Validator(options.schema);
 const path = require("node:path");
 const yaml = require('yaml')
 
@@ -109,9 +102,6 @@ class DeviceModel {
                     return JSON.parse(fs.readFileSync(importPath));
                 }
             })();
-            if (!this.validator.validateParam(importData)) {
-              throw new Error(`Imported data is not valid`);
-            }
             return importData;
       
           } else {
@@ -120,24 +110,47 @@ class DeviceModel {
       }
 }
 
-try {
-    // Determining if the file is yaml or json and parsing accordingly.
-    const data = (() => {
-        const extension = path.extname(options.deviceModel);
-        if (extension === ".yaml" || extension === ".yml") {
-            return yaml.parse(fs.readFileSync(options.deviceModel, 'utf8'));
-        } else { // Default
-            return JSON.parse(fs.readFileSync(options.deviceModel));
-        }
-    })();
-    if (validator.validateDevice(data)) {
-        const CodeGen =  require(`./${options.language}/${options.language}gen.js`);
-        const dm = new DeviceModel(options.deviceModel, validator, data);
-        const codeGen = new CodeGen(dm, options.output);
-        codeGen.generate();
-    }
+// extract schema name from input filename
+const deviceName = path.parse(options.deviceModel).name.split('.')[0];
+console.log(`Validating device model '${deviceName}' from file '${options.deviceModel}' against schema file '${options.schema}'...`);
 
-} catch (why) {
-    console.log(why.message);
-    process.exit(typeof why.error === 'number' ? why.error : 1);
+// try {
+//     // Determining if the file is yaml or json and parsing accordingly.
+//     const data = (() => {
+//         const extension = path.extname(options.deviceModel);
+//         if (extension === ".yaml" || extension === ".yml") {
+//             return yaml.parse(fs.readFileSync(options.deviceModel, 'utf8'));
+//         } else { // Default
+//             return JSON.parse(fs.readFileSync(options.deviceModel));
+//         }
+//     })();
+//     if (validator.validateDevice(data)) {
+//         const CodeGen =  require(`./${options.language}/${options.language}gen.js`);
+//         const dm = new DeviceModel(options.deviceModel, validator, data);
+//         const codeGen = new CodeGen(dm, options.output);
+//         codeGen.generate();
+//     }
+
+// } catch (why) {
+//     console.log(why.message);
+//     process.exit(typeof why.error === 'number' ? why.error : 1);
+// }
+
+
+try {
+    const validator = new Validator(options.schema);
+    console.log(`Applying schema '${deviceName}' to file '${options.deviceModel}'`);
+    const isValid = validator.validate(deviceName, options.deviceModel);
+    console.log(isValid.valid ? '✅ Validation succeeded.' : '❌ Validation failed.');
+    if (isValid.data) {
+        const CodeGen =  require(`../../tools/codegen/${options.language}/${options.language}gen.js`);
+        const dm = new DeviceModel(options.deviceModel, validator, isValid.data);
+        const codeGen = new CodeGen(dm, options.output);
+        console.log("Generating code...");
+        codeGen.generate();
+        console.log('✅ Code generation completed.');
+    }
+} catch (err) {
+    console.error(`Error: ${err.message}`);
+    process.exit(err.error || 1);
 }

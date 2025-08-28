@@ -89,7 +89,7 @@ int main (int argc, char** argv) {
         LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
-    catena::Param numberParam;
+    st2138::Param numberParam;
     ip->toProto(numberParam, Authorizer::kAuthzDisabled);
     DEBUG_LOG << numberParam.DebugString();
 
@@ -104,7 +104,7 @@ int main (int argc, char** argv) {
         LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
-    catena::Param coordinatesParam;
+    st2138::Param coordinatesParam;
     ip->toProto(coordinatesParam, Authorizer::kAuthzDisabled);
     DEBUG_LOG << coordinatesParam.DebugString();
 
@@ -123,7 +123,7 @@ int main (int argc, char** argv) {
         LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
-    catena::Value value;
+    st2138::Value value;
     value.mutable_struct_variant_value()->set_struct_variant_type("cartesian");
     dm.getValue("/cartesian", *value.mutable_struct_variant_value()->mutable_value());
     dm.setValue("/coordinates/2", value);

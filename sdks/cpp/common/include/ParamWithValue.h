@@ -160,7 +160,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param value the protobuf object to serialize to.
      * @param authz the authorizer object containing the client's scopes.
      */
-    catena::exception_with_status toProto(catena::Value& value, const IAuthorizer& authz) const override {
+    catena::exception_with_status toProto(st2138::Value& value, const IAuthorizer& authz) const override {
         return catena::common::toProto<T>(value, &value_.get(), descriptor_, authz);
     }
 
@@ -170,7 +170,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param param The protobuf object to serialize to.
      * @param authz The authorizer object containing the client's scopes.
      */
-    catena::exception_with_status toProto(catena::Param& param, const IAuthorizer& authz) const override {
+    catena::exception_with_status toProto(st2138::Param& param, const IAuthorizer& authz) const override {
         // toProto checks authz.
         catena::exception_with_status rc = toProto(*param.mutable_value(), authz);
         if (rc.status == catena::StatusCode::OK) {
@@ -184,7 +184,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param paramInfo The protobuf value to serialize to.
      * @param authz The authorization information.
      */
-    catena::exception_with_status toProto(catena::ParamInfoResponse& paramInfo, const IAuthorizer& authz) const override {
+    catena::exception_with_status toProto(st2138::ParamInfoResponse& paramInfo, const IAuthorizer& authz) const override {
         catena::exception_with_status ans{"", catena::StatusCode::OK};
         if (!authz.readAuthz(*this)) {
             ans = catena::exception_with_status("Not authorized to read param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
@@ -199,7 +199,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param dst The protobuf value to serialize to.
      * @param authz The authorizer object to containing the client's scopes.
      */
-    catena::exception_with_status fromProto(const catena::Value& value, const IAuthorizer& authz) override {
+    catena::exception_with_status fromProto(const st2138::Value& value, const IAuthorizer& authz) override {
         return catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
     }
 
@@ -265,7 +265,7 @@ class ParamWithValue : public catena::common::IParam {
      * @brief Defines the parameter's command implementation.
      * @param commandImpl The new command implementation.
      */
-    void defineCommand(std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(const catena::Value&, const bool)> commandImpl) {
+    void defineCommand(std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(const st2138::Value&, const bool)> commandImpl) {
         descriptor_.defineCommand(commandImpl);
     }
 
@@ -276,7 +276,7 @@ class ParamWithValue : public catena::common::IParam {
      * a CommandResponse.
      * @return The CommandResponder from the command implementation.
      */
-    std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommand(const catena::Value& value, const bool respond) const override {
+    std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommand(const st2138::Value& value, const bool respond) const override {
         return descriptor_.executeCommand(value, respond);
     }
 
@@ -320,12 +320,12 @@ class ParamWithValue : public catena::common::IParam {
      * FLOAT32_ARRAY, STRING_ARRAY, STRUCT_ARRAY, or STRUCT_VARIANT_ARRAY).
      */
     bool isArrayType() const override {
-        catena::ParamType paramType = type().value();
-        return (paramType == catena::ParamType::STRUCT_ARRAY ||
-                paramType == catena::ParamType::INT32_ARRAY ||
-                paramType == catena::ParamType::FLOAT32_ARRAY ||
-                paramType == catena::ParamType::STRING_ARRAY ||
-                paramType == catena::ParamType::STRUCT_VARIANT_ARRAY);
+        st2138::ParamType paramType = type().value();
+        return (paramType == st2138::ParamType::STRUCT_ARRAY ||
+                paramType == st2138::ParamType::INT32_ARRAY ||
+                paramType == st2138::ParamType::FLOAT32_ARRAY ||
+                paramType == st2138::ParamType::STRING_ARRAY ||
+                paramType == st2138::ParamType::STRUCT_VARIANT_ARRAY);
     }
 
     /**
@@ -353,7 +353,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param ans Catena::exception_with_status output.
      * @returns true if valid.
      */
-    bool validateSetValue(const catena::Value& value, Path::Index index, const IAuthorizer& authz, catena::exception_with_status& ans) override {
+    bool validateSetValue(const st2138::Value& value, Path::Index index, const IAuthorizer& authz, catena::exception_with_status& ans) override {
         if (validateSetValueMap_.contains(value.kind_case())) {
             // Updating trackers.
             ans = validateSetValueMap_.at(value.kind_case())(value, index, authz);
@@ -705,7 +705,7 @@ class ParamWithValue : public catena::common::IParam {
      * @returns catena::exception_with_status.
      */
     template<typename U, typename V>
-    catena::exception_with_status validateSetValue_(U& oldVal, const V& newVal, const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+    catena::exception_with_status validateSetValue_(U& oldVal, const V& newVal, const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
         // Index cannot be defined.
         if (index != Path::kNone) {
@@ -735,7 +735,7 @@ class ParamWithValue : public catena::common::IParam {
      * @returns catena::exception_with_status.
      */
     template<typename U, typename V> requires (!meta::IsVector<V>)
-    catena::exception_with_status validateSetValue_(std::vector<U>& arrayVal, const V& memVal, const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+    catena::exception_with_status validateSetValue_(std::vector<U>& arrayVal, const V& memVal, const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
         // Initializing mSizeTracker_ and tSizeTracker if they're not already.
         if (!mSizeTracker_) {
@@ -787,7 +787,7 @@ class ParamWithValue : public catena::common::IParam {
 
         return ans;
     }
-    using Kind = catena::Value::KindCase;
+    using Kind = st2138::Value::KindCase;
     /**
      * @brief A map to help routing to the validateSetValue_ functions above.
      * Protobuf is great in that you need to use a seperate function to get
@@ -799,45 +799,45 @@ class ParamWithValue : public catena::common::IParam {
      * @param authz The authorizer object for checking kWrite permissions.
      * @returns catena::exception_with_status.
      */
-    const std::unordered_map<Kind, std::function<catena::exception_with_status(const catena::Value&, Path::Index, const IAuthorizer&)>> validateSetValueMap_ {
-        {Kind::kInt32Value, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+    const std::unordered_map<Kind, std::function<catena::exception_with_status(const st2138::Value&, Path::Index, const IAuthorizer&)>> validateSetValueMap_ {
+        {Kind::kInt32Value, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             return this->validateSetValue_(this->get(), protoVal.int32_value(), protoVal, index, authz);
         }},
-        {Kind::kFloat32Value, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kFloat32Value, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             return this->validateSetValue_(this->get(), protoVal.float32_value(), protoVal, index, authz);
         }},
-        {Kind::kStringValue, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kStringValue, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             return this->validateSetValue_(this->get(), protoVal.string_value(), protoVal, index, authz);
         }},
-        {Kind::kStructValue, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kStructValue, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             return this->validateSetValue_(this->get(), protoVal.struct_value(), protoVal, index, authz);
         }},
-        {Kind::kStructVariantValue, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kStructVariantValue, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             return this->validateSetValue_(this->get(), protoVal.struct_variant_value(), protoVal, index, authz);
         }},
-        {Kind::kInt32ArrayValues, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kInt32ArrayValues, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             auto ints = protoVal.int32_array_values().ints();
             auto protoVector = std::vector<int>(ints.begin(), ints.end());
             return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }},
-        {Kind::kFloat32ArrayValues, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kFloat32ArrayValues, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             auto floats = protoVal.float32_array_values().floats();
             auto protoVector = std::vector<float>(floats.begin(), floats.end());
             return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }},
-        {Kind::kStringArrayValues, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kStringArrayValues, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             auto strings = protoVal.string_array_values().strings();
             auto protoVector = std::vector<std::string>(strings.begin(), strings.end());
             return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }},
-        {Kind::kStructArrayValues, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kStructArrayValues, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             auto structs = protoVal.struct_array_values().struct_values();
-            auto protoVector = std::vector<catena::StructValue>(structs.begin(), structs.end());
+            auto protoVector = std::vector<st2138::StructValue>(structs.begin(), structs.end());
             return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }},
-        {Kind::kStructVariantArrayValues, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kStructVariantArrayValues, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             auto structs = protoVal.struct_variant_array_values().struct_variants();
-            auto protoVector = std::vector<catena::StructVariantValue>(structs.begin(), structs.end());
+            auto protoVector = std::vector<st2138::StructVariantValue>(structs.begin(), structs.end());
             return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }}
     };

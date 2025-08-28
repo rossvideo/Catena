@@ -81,15 +81,15 @@ class AddLanguage : public CallData {
      * 
      * - The id of the language pack (e.g. "es" Global spanish).
      */
-    catena::AddLanguagePayload req_;
+    st2138::AddLanguagePayload req_;
     /**
      * @brief The server's response, which is empty in this case.
      */
-    catena::Empty res_;
+    st2138::Empty res_;
     /**
      * @brief The RPC response writer for writing back to the client.
      */
-    grpc::ServerAsyncResponseWriter<::catena::Empty> responder_;
+    grpc::ServerAsyncResponseWriter<::st2138::Empty> responder_;
     /**
      * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */

@@ -10,7 +10,7 @@ void SocketReader::read(tcp::socket& socket) {
     fqoid_ = "";
     stream_ = false;
     origin_ = "";
-    detailLevel_ = Device_DetailLevel_UNSET;
+    detailLevel_ = st2138::Device_DetailLevel_UNSET;
     jwsToken_ = "";
     jsonBody_ = "";
 
@@ -88,7 +88,7 @@ void SocketReader::read(tcp::socket& socket) {
             origin_ = header.substr(std::string("Origin: ").length());
         }
         // Getting detail level from header
-        else if (detailLevel_ == Device_DetailLevel_UNSET && header.starts_with("Detail-Level: ")) {
+        else if (detailLevel_ == st2138::Device_DetailLevel_UNSET && header.starts_with("Detail-Level: ")) {
             std::string dl = header.substr(std::string("Detail-Level: ").length());
             dl.erase(dl.length() - 1); // Removing newline
             auto& dlMap = catena::common::DetailLevel().getReverseMap();
@@ -113,7 +113,7 @@ void SocketReader::read(tcp::socket& socket) {
         }
     }
     // Setting detail level to NONE if not set.
-    if (detailLevel_ == Device_DetailLevel_UNSET) {
-        detailLevel_ = Device_DetailLevel_NONE;
+    if (detailLevel_ == st2138::Device_DetailLevel_UNSET) {
+        detailLevel_ = st2138::Device_DetailLevel_NONE;
     }
 }

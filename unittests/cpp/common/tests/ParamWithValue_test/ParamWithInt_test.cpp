@@ -46,7 +46,7 @@ class ParamWithIntTest : public ParamTest<int32_t> {
     /*
      * Returns the value type of the parameter we are testing with.
      */
-    catena::ParamType type() const override { return catena::ParamType::INT32; }
+    st2138::ParamType type() const override { return st2138::ParamType::INT32; }
 
     int32_t value_{16};
 };
@@ -106,7 +106,7 @@ TEST_F(ParamWithIntTest, PopBack) {
  */
 TEST_F(ParamWithIntTest, ParamToProto) {
     IntParam param(value_, pd_);
-    catena::Param protoParam;
+    st2138::Param protoParam;
     rc_ = param.toProto(protoParam, authz_);
     // Checking results.
     ASSERT_TRUE(protoParam.value().has_int32_value());
@@ -119,7 +119,7 @@ TEST_F(ParamWithIntTest, ParamToProto) {
  */
 TEST_F(ParamWithIntTest, FromProto) {
     IntParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     protoValue.set_int32_value(32);
     rc_ = param.fromProto(protoValue, authz_);
     // Checking results.
@@ -131,7 +131,7 @@ TEST_F(ParamWithIntTest, FromProto) {
  */
 TEST_F(ParamWithIntTest, ValidateSetValue) {
     IntParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     protoValue.set_int32_value(32);
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_));
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
@@ -144,7 +144,7 @@ TEST_F(ParamWithIntTest, ValidateSetValue) {
  */
 TEST_F(ParamWithIntTest, ValidateSetValue_Error) {
     IntParam param(value_, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     protoValue.set_int32_value(32);
     // Defined index w non-array
     EXPECT_FALSE(param.validateSetValue(protoValue, 1, authz_, rc_))

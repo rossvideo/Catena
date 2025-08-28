@@ -58,7 +58,7 @@ enum class Scopes_e : int32_t { kUndefined, kMonitor, kOperate, kConfig, kAdmin 
 
 // Instantiate the EnumDecorator for the Scopes_e and DetailLevel_e enums.
 using Scopes = patterns::EnumDecorator<common::Scopes_e>;
-using DetailLevel = patterns::EnumDecorator<catena::Device_DetailLevel>;
+using DetailLevel = patterns::EnumDecorator<st2138::Device_DetailLevel>;
 
 } // namespace common
 
@@ -79,12 +79,12 @@ inline const common::Scopes::FwdMap common::Scopes::fwdMap_ = {
  */
 template <>
 inline const common::DetailLevel::FwdMap common::DetailLevel::fwdMap_ = {
-  {Device_DetailLevel_FULL,          "FULL"},
-  {Device_DetailLevel_SUBSCRIPTIONS, "SUBSCRIPTIONS"},
-  {Device_DetailLevel_MINIMAL,       "MINIMAL"},
-  {Device_DetailLevel_COMMANDS,      "COMMANDS"},
-  {Device_DetailLevel_NONE,          "NONE"},
-  {Device_DetailLevel_UNSET,         "UNSET"}
+  {st2138::Device_DetailLevel_FULL,          "FULL"},
+  {st2138::Device_DetailLevel_SUBSCRIPTIONS, "SUBSCRIPTIONS"},
+  {st2138::Device_DetailLevel_MINIMAL,       "MINIMAL"},
+  {st2138::Device_DetailLevel_COMMANDS,      "COMMANDS"},
+  {st2138::Device_DetailLevel_NONE,          "NONE"},
+  {st2138::Device_DetailLevel_UNSET,         "UNSET"}
 };
 
 } // namespace catena

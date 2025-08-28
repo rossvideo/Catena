@@ -60,7 +60,7 @@ namespace test {
 struct ParamInfo {
     std::string oid;
     // std::string name; // Might be irrelevant
-    catena::ParamType type;
+    st2138::ParamType type;
     // std::string template_oid = ""; // Might be irrelevant
     uint32_t array_length = 0;
     catena::StatusCode status = catena::StatusCode::OK;  // Default to OK
@@ -69,7 +69,7 @@ struct ParamInfo {
 /**
  * @brief Creates or populates a ParamInfoResponse with the specified parameters
  */
-inline void setupParamInfo(catena::ParamInfoResponse& response, const ParamInfo& info) {
+inline void setupParamInfo(st2138::ParamInfoResponse& response, const ParamInfo& info) {
     response.mutable_info()->set_oid(info.oid);
     // response.mutable_info()->mutable_name()->mutable_display_strings()->insert({"en", info.name}); // Might be irrelevant
     response.mutable_info()->set_type(info.type);
@@ -107,8 +107,8 @@ inline void setupMockParam(catena::common::MockParam& mockParam, const ParamInfo
 
     // Only expect toProto if status indicates success (HTTP status < 300)
     if (catena::REST::codeMap_.at(info.status).first < 300) {
-        EXPECT_CALL(mockParam, toProto(::testing::An<catena::ParamInfoResponse&>(), ::testing::_))
-            .WillRepeatedly(::testing::Invoke([info](catena::ParamInfoResponse& response, const IAuthorizer&) {
+        EXPECT_CALL(mockParam, toProto(::testing::An<st2138::ParamInfoResponse&>(), ::testing::_))
+            .WillRepeatedly(::testing::Invoke([info](st2138::ParamInfoResponse& response, const IAuthorizer&) {
                 setupParamInfo(response, info);
                 return catena::exception_with_status("", catena::StatusCode::OK);
             }));
@@ -120,7 +120,7 @@ inline void setupMockParam(catena::common::MockParam& mockParam, const ParamInfo
  * @return The serialized JSON string
  */
 inline std::string createParamInfoJson(const ParamInfo& info) {
-    catena::ParamInfoResponse response;
+    st2138::ParamInfoResponse response;
     setupParamInfo(response, info);
     std::string jsonBody;
     google::protobuf::util::JsonPrintOptions options;

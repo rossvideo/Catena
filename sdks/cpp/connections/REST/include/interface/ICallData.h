@@ -42,7 +42,7 @@
 #include <patterns/EnumDecorator.h>
 #include <IDevice.h>
 
-using DetailLevel = catena::patterns::EnumDecorator<catena::Device_DetailLevel>;
+using DetailLevel = catena::patterns::EnumDecorator<st2138::Device_DetailLevel>;
 
 // boost
 #include <boost/asio.hpp>

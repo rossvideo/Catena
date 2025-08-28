@@ -97,7 +97,7 @@ class gRPCServiceImplTests : public testing::Test {
         cqthread_ = std::make_unique<std::thread>([&]() { service_->processEvents(); });
         // Creating the gRPC client.
         channel_ = grpc::CreateChannel(serverAddr_, grpc::InsecureChannelCredentials());
-        client_ = catena::CatenaService::NewStub(channel_);
+        client_ = st2138::CatenaService::NewStub(channel_);
     }
 
     /*
@@ -131,7 +131,7 @@ class gRPCServiceImplTests : public testing::Test {
     std::unique_ptr<std::thread> cqthread_ = nullptr;
     // Client variables.
     std::shared_ptr<grpc::Channel> channel_ = nullptr;
-    std::unique_ptr<catena::CatenaService::Stub> client_ = nullptr;
+    std::unique_ptr<st2138::CatenaService::Stub> client_ = nullptr;
     grpc::ClientContext clientContext_;
     bool done_ = false;
     std::condition_variable cv_;
