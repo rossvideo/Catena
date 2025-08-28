@@ -48,7 +48,7 @@ class ParamWithStructTest : public ParamTest<TestStruct1> {
     /*
      * Returns the value type of the parameter we are testing with.
      */
-    catena::ParamType type() const override { return catena::ParamType::STRUCT; }
+    st2138::ParamType type() const override { return st2138::ParamType::STRUCT; }
 
     TestStruct1 value_{16, 32};
 };
@@ -172,7 +172,7 @@ TEST_F(ParamWithStructTest, PopBack) {
  */
 TEST_F(ParamWithStructTest, ParamToProto) {
     StructParam param(value_, pd_);
-    catena::Param outParam;
+    st2138::Param outParam;
     rc_ = param.toProto(outParam, authz_);
     // Checking results.
     ASSERT_TRUE(outParam.value().has_struct_value());
@@ -190,7 +190,7 @@ TEST_F(ParamWithStructTest, ParamToProto) {
 TEST_F(ParamWithStructTest, FromProto) {
     TestStruct1 emptyVal{0, 0};
     StructParam param(emptyVal, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     ASSERT_EQ(toProto(protoValue, &value_, pd_, authz_).status, catena::StatusCode::OK)
         << "toProto failed, cannot continue test.";
     rc_ = param.fromProto(protoValue, authz_);
@@ -205,7 +205,7 @@ TEST_F(ParamWithStructTest, FromProto) {
 TEST_F(ParamWithStructTest, ValidateSetValue) {
     StructParam param(value_, pd_);
     TestStruct1 newValue{48, 64};
-    catena::Value protoValue;
+    st2138::Value protoValue;
     ASSERT_EQ(toProto(protoValue, &newValue, pd_, authz_).status, catena::StatusCode::OK)
         << "toProto failed, cannot continue test.";
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_));
@@ -219,7 +219,7 @@ TEST_F(ParamWithStructTest, ValidateSetValue) {
 TEST_F(ParamWithStructTest, ValidateSetValue_Error) {
     StructParam param(value_, pd_);
     TestStruct1 newValue{48, 64};
-    catena::Value protoValue;
+    st2138::Value protoValue;
     ASSERT_EQ(toProto(protoValue, &newValue, pd_, authz_).status, catena::StatusCode::OK)
         << "toProto failed, cannot continue test.";
     // Defined index w non-array

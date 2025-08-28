@@ -78,7 +78,7 @@ class ParamDescriptorTest : public ::testing::Test {
 
     std::unique_ptr<ParamDescriptor> pd = nullptr;
 
-    catena::ParamType type = catena::ParamType::EMPTY;
+    st2138::ParamType type = st2138::ParamType::EMPTY;
     ParamDescriptor::OidAliases oidAliases = {"oid_alias1", "oid_alias2"};
     PolyglotText::DisplayStrings name = {{"en", "name"}, {"fr", "nom"}};
     std::string widget = "widget";
@@ -214,7 +214,7 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_SubParams) {
  * TEST 7 - Testing ParamDescriptor toProto with ParamInfo object.
  */
 TEST_F(ParamDescriptorTest, ParamDescriptor_ParamInfoToProto) {
-    catena::ParamInfo paramInfo;
+    st2138::ParamInfo paramInfo;
     pd->toProto(paramInfo, authz_);
     EXPECT_EQ(paramInfo.type(), type);
     EXPECT_EQ(paramInfo.oid(), oid);
@@ -240,22 +240,22 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ParamToProto) {
         .WillOnce(testing::Return(false)); // Unique constraint on second test.
     EXPECT_CALL(constraint, getOid()).Times(1).WillOnce(testing::ReturnRef(constraintOid));
     EXPECT_CALL(constraint, toProto(testing::_)).Times(1)
-        .WillOnce(testing::Invoke([](catena::Constraint &constraint){
+        .WillOnce(testing::Invoke([](st2138::Constraint &constraint){
             constraint.set_ref_oid("constraint_oid");
         }));
 
     EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(subPd1)))).WillRepeatedly(testing::Return(true));
-    EXPECT_CALL(subPd1, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([&subOid1](catena::Param& param, const IAuthorizer& authz) {
+    EXPECT_CALL(subPd1, toProto(testing::An<st2138::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([&subOid1](st2138::Param& param, const IAuthorizer& authz) {
             param.add_oid_aliases(subOid1);
         }));
     EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(subPd2)))).WillRepeatedly(testing::Return(true));
-    EXPECT_CALL(subPd2, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([&subOid2](catena::Param& param, const IAuthorizer& authz) {
+    EXPECT_CALL(subPd2, toProto(testing::An<st2138::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([&subOid2](st2138::Param& param, const IAuthorizer& authz) {
             param.add_oid_aliases(subOid2);
         }));
     // Calling toProto and checking the result.
-    catena::Param param;
+    st2138::Param param;
     pd->toProto(param, authz_);
     EXPECT_EQ(param.type(), type);
     EXPECT_EQ(param.read_only(), readOnly);
@@ -288,7 +288,7 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ParamToProto) {
  * TEST 9 - Testing ParamDescriptor ExecuteCommand default command definition.
  */
 TEST_F(ParamDescriptorTest, ParamDescriptor_ExecuteCommand) {
-    catena::Value input;
+    st2138::Value input;
     bool respond = false;
     auto responder = pd->executeCommand(input, respond);
     auto response = responder->getNext();
@@ -301,14 +301,14 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ExecuteCommand) {
 TEST_F(ParamDescriptorTest, ParamDescriptor_DefineCommand) {    
     {
     // Calling defineCommand with non-command parameter.
-    EXPECT_THROW(pd->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
-            catena::CommandResponse response;
+    EXPECT_THROW(pd->defineCommand([](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+            st2138::CommandResponse response;
             co_return response;
         }(value, respond));
     });, std::runtime_error) << "defineCommand() should throw an error if the param isCommand == False";
     // Testing response
-    catena::Value input;
+    st2138::Value input;
     bool respond = true;
     auto responder = pd->executeCommand(input, respond);
     auto response = responder->getNext();
@@ -320,10 +320,10 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_DefineCommand) {
     isCommand = true;
     create();
     // Defining command and executing.
-    pd->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+    pd->defineCommand([](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
             EXPECT_EQ(value.string_value(), "Test input") << "Input value not passed correctly to command.";
-            catena::CommandResponse response;
+            st2138::CommandResponse response;
             // Response #1
             response.mutable_response()->set_string_value("Command response 1");
             co_yield response;
@@ -333,12 +333,12 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_DefineCommand) {
             co_return response;
         }(value, respond));
     });
-    catena::Value input;
+    st2138::Value input;
     input.set_string_value("Test input");
     bool respond = true;
     auto responder = pd->executeCommand(input, respond);
     // Testing response.
-    catena::CommandResponse response;
+    st2138::CommandResponse response;
     for (auto returnVal : {"Command response 1", "Command response 2"}) {
         EXPECT_TRUE(responder->hasMore())    << "Responder should have 2 responses.";
         response = responder->getNext();
@@ -358,20 +358,20 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_CommandErrUnhandled) {
     isCommand = true;
     create();
     // Defining command that throws an error and executing.
-    pd->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+    pd->defineCommand([](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
             throw std::runtime_error("Test error");
 
-            catena::CommandResponse response;
+            st2138::CommandResponse response;
             response.mutable_response()->set_string_value("Error should be thrown before recieving a response.");
             co_return response;
         }(value, respond));
     });
-    catena::Value input;
+    st2138::Value input;
     bool respond = true;
     auto responder = pd->executeCommand(input, respond);
     // Testing response.
-    catena::CommandResponse response;
+    st2138::CommandResponse response;
     EXPECT_TRUE(responder->hasMore())                                 << "Responder should have at least 1 response.";
     EXPECT_THROW(response = responder->getNext(), std::runtime_error) << "Responder should rethrow error when command execution fails";
     EXPECT_FALSE(responder->hasMore())                                << "Responder should not have any more responses after an error.";

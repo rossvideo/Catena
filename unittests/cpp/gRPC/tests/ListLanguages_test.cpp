@@ -82,10 +82,10 @@ class gRPCListLanguagesTests : public GRPCTest {
     }
 
     // in/out val
-    catena::Slot inVal_;
-    catena::LanguageList outVal_;
+    st2138::Slot inVal_;
+    st2138::LanguageList outVal_;
     // Expected variables
-    catena::LanguageList expVal_;
+    st2138::LanguageList expVal_;
 };
 
 /*
@@ -107,11 +107,11 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_Normal) {
     *expVal_.add_languages() = "fr";
     *expVal_.add_languages() = "es";
     // Setting expectations
-    EXPECT_CALL(dm0_, toProto(::testing::An<catena::LanguageList&>())).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::LanguageList &list){
+    EXPECT_CALL(dm0_, toProto(::testing::An<st2138::LanguageList&>())).Times(1)
+        .WillOnce(::testing::Invoke([this](st2138::LanguageList &list){
             list.CopyFrom(expVal_);
         }));
-    EXPECT_CALL(dm1_, toProto(::testing::An<catena::LanguageList&>())).Times(0);
+    EXPECT_CALL(dm1_, toProto(::testing::An<st2138::LanguageList&>())).Times(0);
     // Sending the RPC.
     testRPC();
 }
@@ -123,8 +123,8 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_ErrInvalidSlot) {
     inVal_.set_slot(dms_.size());
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     // Setting expectations
-    EXPECT_CALL(dm0_, toProto(::testing::An<catena::LanguageList&>())).Times(0);
-    EXPECT_CALL(dm1_, toProto(::testing::An<catena::LanguageList&>())).Times(0);
+    EXPECT_CALL(dm0_, toProto(::testing::An<st2138::LanguageList&>())).Times(0);
+    EXPECT_CALL(dm1_, toProto(::testing::An<st2138::LanguageList&>())).Times(0);
     // Sending the RPC
     testRPC();
 }
@@ -135,11 +135,11 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_ErrInvalidSlot) {
 TEST_F(gRPCListLanguagesTests, ListLanguages_Err) {
     expRc_ = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations
-    EXPECT_CALL(dm0_, toProto(::testing::An<catena::LanguageList&>())).Times(1)
-        .WillOnce(::testing::Invoke([this](catena::LanguageList &list){
+    EXPECT_CALL(dm0_, toProto(::testing::An<st2138::LanguageList&>())).Times(1)
+        .WillOnce(::testing::Invoke([this](st2138::LanguageList &list){
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
-    EXPECT_CALL(dm1_, toProto(::testing::An<catena::LanguageList&>())).Times(0);
+    EXPECT_CALL(dm1_, toProto(::testing::An<st2138::LanguageList&>())).Times(0);
     // Sending the RPC.
     testRPC();
 }

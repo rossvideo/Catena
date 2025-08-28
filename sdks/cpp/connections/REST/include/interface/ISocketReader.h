@@ -121,7 +121,7 @@ class ISocketReader {
     /**
      * @brief Returns the detail level to return the response in.
      */
-    virtual catena::Device_DetailLevel detailLevel() const = 0;
+    virtual st2138::Device_DetailLevel detailLevel() const = 0;
     /**
      * @brief Returns the json body of the request, which may be empty.
      */

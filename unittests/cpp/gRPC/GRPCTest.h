@@ -106,7 +106,7 @@ class GRPCTest : public ::testing::Test {
 
         // Creating the gRPC client.
         channel_ = grpc::CreateChannel(serverAddr_, grpc::InsecureChannelCredentials());
-        client_ = catena::CatenaService::NewStub(channel_);
+        client_ = st2138::CatenaService::NewStub(channel_);
 
         // Setting common expected values for the mock service.
         EXPECT_CALL(service_, registerItem(::testing::_)).WillRepeatedly(::testing::Invoke([this](ICallData* cd) {
@@ -170,7 +170,7 @@ class GRPCTest : public ::testing::Test {
     bool ok_ = true;
     // Client variables.
     std::shared_ptr<grpc::Channel> channel_ = nullptr;
-    std::unique_ptr<catena::CatenaService::Stub> client_ = nullptr;
+    std::unique_ptr<st2138::CatenaService::Stub> client_ = nullptr;
     grpc::ClientContext clientContext_;
     bool done_ = false;
     std::condition_variable cv_;

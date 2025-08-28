@@ -30,7 +30,7 @@
 
 /**
  * @file IConnect.h
- * @brief Interface for Connect.h
+ * @brief Interface for Connect classes.
  * @author Ben Whitten (benjamin.whitten@rossvideo.com)
  * @copyright Copyright (c) 2025 Ross Video
  */
@@ -51,7 +51,7 @@ namespace catena {
 namespace common {
  
 /**
- * @brief Interface class for Connect RPCs
+ * @brief Interface class for the Connect handlers
  */
 class IConnect {
   public:
@@ -68,7 +68,8 @@ class IConnect {
      */
     virtual uint32_t objectId() const = 0;
     /**
-     * @brief Returns true if this has less prioirty than otherConnection.
+     * @brief Comparison between IConnect objects which returns true if the
+     * current priority is less than the priority it's being compared to.
      */
     virtual bool operator<(const IConnect& otherConnection) const = 0;
     /**
@@ -82,24 +83,25 @@ class IConnect {
   
   protected:
     /**
-     * @brief Updates the response message with parameter values and handles 
-     * authorization checks.
+     * @brief Updates the response message with parameter values.
      * 
-     * @param oid - The OID of the value to update
-     * @param p - The parameter to update
+     * @param oid The OID of the updated value
+     * @param p The updated parameter
+     * @param slot The slot number of the device containing the parameter.
      */
     virtual void updateResponse_(const std::string& oid, const IParam* p, uint32_t slot) = 0;
     /**
-     * @brief Updates the response message with a ILanguagePack and
-     * handles authorization checks.
+     * @brief Updates the response message with an ILanguagePack.
      * 
      * @param l The added ILanguagePack emitted by device.
+     * @param slot The slot number of the device containing the language pack.
      */
     virtual void updateResponse_(const ILanguagePack* l, uint32_t slot) = 0;
     /**
-     * @brief Sets up the authorizer object with the jwsToken.
-     * @param jwsToken The jwsToken to use for authorization.
-     * @param authz true if authorization is enabled, false otherwise.
+     * @brief Crates an authorizer using the jws token.
+     *
+     * @param jwsToken The client's jws token to create the authorizer with.
+     * @param authz True if authorization is enabled, False otherwise.
      */
     virtual void initAuthz_(const std::string& jwsToken, bool authz = false) = 0;
 };

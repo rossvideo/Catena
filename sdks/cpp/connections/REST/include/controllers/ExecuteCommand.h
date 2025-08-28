@@ -30,8 +30,9 @@
 
 /**
  * @file ExecuteCommand.h
- * @brief Implements REST ExecuteCommand controller.
+ * @brief Implements controller for the REST command endpoint.
  * @author zuhayr.sarker@rossvideo.com
+ * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -62,7 +63,12 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the ExecuteCommand REST controller.
+ * @brief Controller class for the Command REST endpoint.
+ * 
+ * This controller supports one method:
+ * 
+ * - GET: Executes a command on the specified device. Supports both stream and
+ * unary responses.
  */
 class ExecuteCommand : public ICallData {
   public:
@@ -73,24 +79,24 @@ class ExecuteCommand : public ICallData {
     using CommandResponder = catena::common::IParamDescriptor::ICommandResponder;
 
     /**
-     * @brief Constructor for the ExecuteCommand controller.
+     * @brief Constructor for the command endpoint controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The ISocketReader object.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     ExecuteCommand(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     
     /**
-     * @brief ExecuteCommand's main process.
+     * @brief The command endpoint's main process.
      */
     void proceed() override;
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     * 
-     * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
@@ -98,8 +104,9 @@ class ExecuteCommand : public ICallData {
     }
 
   private:
-      /**
+    /**
      * @brief Writes the current state of the request to the console.
+     * 
      * @param status The current state of the request (kCreate, kFinish, etc.)
      * @param ok The status of the request (open or closed).
      */
@@ -109,15 +116,7 @@ class ExecuteCommand : public ICallData {
                 <<", ok: "<< std::boolalpha << ok;
     }
     /**
-     * @brief The number of ExecuteCommand objects created.
-     */
-    static int objectCounter_;
-    /**
-     * @brief The ID of the current ExecuteCommand object.
-     */
-    int objectId_;
-    /**
-     * @brief The socket to write the response stream to.
+     * @brief The socket to write the response to.
      */
     tcp::socket& socket_;
     /**
@@ -125,13 +124,35 @@ class ExecuteCommand : public ICallData {
      */
     std::unique_ptr<ISocketWriter> writer_ = nullptr;
     /**
-     * @brief The ISocketReader object.
+     * @brief The ISocketReader object used to read the client's request.
+     * 
+     * This is used to get five things from the client:
+     * 
+     * - A slot specifying the device to execute the command on.
+     * 
+     * - The OID of the command to execute.
+     * 
+     * - The value to pass to the command (if applicable).
+     * 
+     * - A flag indicating whether the client wants a response stream from the
+     * command.
+     * 
+     * - Whether the client wants a stream or unary response.
      */
     ISocketReader& context_;
     /**
      * @brief A map of slots to ptrs to their corresponding device.
      */
     SlotMap& dms_;
+  
+    /**
+     * @brief The object's unique id.
+     */
+    int objectId_;
+    /**
+     * @brief The total # of connect endpoint controller objects.
+     */
+    static int objectCounter_;
 };
 
 } // namespace REST

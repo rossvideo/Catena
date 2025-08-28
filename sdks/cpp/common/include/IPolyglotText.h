@@ -48,12 +48,12 @@ namespace catena {
 namespace common {
 
 /**
- * @brief Interface for managing multilingual text with support for serialization to protocol buffers.
+ * @brief Interface for managing multilingual text with support for
+ * serialization to protocol buffers.
  *
- * Defines the contract for handling and accessing multilingual display strings and serializing them 
- * into protocol buffers.
+ * Defines the contract for handling and accessing multilingual display strings
+ * and serializing them into protocol buffers.
  */
-
 class IPolyglotText {
   public:
     using DisplayStrings = std::unordered_map<std::string, std::string>;
@@ -68,7 +68,7 @@ class IPolyglotText {
      * @brief Serializes the multilingual text into a protobuf message.
      * @param dst The destination protobuf object.
      */
-    virtual void toProto(catena::PolyglotText& dst) const = 0;
+    virtual void toProto(st2138::PolyglotText& dst) const = 0;
     /**
      * @brief Returns the unordered map of multilingual text.
      */

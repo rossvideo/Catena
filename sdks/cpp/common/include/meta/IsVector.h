@@ -43,12 +43,12 @@
 namespace catena {
 
 /** 
- * @brief A collection of classes for compile-time type manipulation, type traits and concept checking.
+ * @brief A collection of classes for compile-time type manipulation, type
+ * traits and concept checking.
  */
-
 namespace meta {
     /**
-     * @brief Concept to check if a type is a vector
+     * @brief Concept to check if a type is a vector.
      */
     template <typename T>
     concept IsVector = requires {
@@ -56,7 +56,3 @@ namespace meta {
     };
 }
 }
-
-
-
-

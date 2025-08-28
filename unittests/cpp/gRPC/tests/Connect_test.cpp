@@ -118,13 +118,13 @@ class gRPCConnectTests : public GRPCTest {
      * This is a test class which makes an async RPC to the MockServer on
      * construction and compares the streamed-back response.
      */
-    using StreamReader = catena::gRPC::test::StreamReader<catena::PushUpdates, catena::ConnectPayload, 
-        std::function<void(grpc::ClientContext*, const catena::ConnectPayload*, grpc::ClientReadReactor<catena::PushUpdates>*)>>;
+    using StreamReader = catena::gRPC::test::StreamReader<st2138::PushUpdates, st2138::ConnectPayload, 
+        std::function<void(grpc::ClientContext*, const st2138::ConnectPayload*, grpc::ClientReadReactor<st2138::PushUpdates>*)>>;
 
     /*
      * Streamlines the creation of executeCommandPayloads. 
      */
-    void initPayload(const std::string& language, const catena::Device_DetailLevel& dl, const std::string& userAgent, bool forceConnection) {
+    void initPayload(const std::string& language, const st2138::Device_DetailLevel& dl, const std::string& userAgent, bool forceConnection) {
         inVal_.set_language(language);
         inVal_.set_detail_level(dl);
         inVal_.set_user_agent(userAgent);
@@ -134,7 +134,7 @@ class gRPCConnectTests : public GRPCTest {
      * Adds a PushValue to the expected values.
      */
     void expPushValue(uint32_t slot, const std::string& oid, const std::string& stringVal) {
-        catena::PushUpdates pushUpdate;
+        st2138::PushUpdates pushUpdate;
         pushUpdate.set_slot(slot);
         // Set value.
         pushUpdate.mutable_value()->set_oid(oid);
@@ -146,7 +146,7 @@ class gRPCConnectTests : public GRPCTest {
      * Adds a LanguagePack to the expected values.
      */
     void expLanguage(uint32_t slot, const std::string& language, const std::unordered_map<std::string, std::string>& words) {
-        catena::PushUpdates pushUpdate;
+        st2138::PushUpdates pushUpdate;
         pushUpdate.set_slot(slot);
         // Set language pack
         auto langComponent = pushUpdate.mutable_device_component()->mutable_language_pack();
@@ -163,7 +163,7 @@ class gRPCConnectTests : public GRPCTest {
      */
     void testRPC() {
         // Adding slotList
-        expVals_.insert(expVals_.begin(), catena::PushUpdates());
+        expVals_.insert(expVals_.begin(), st2138::PushUpdates());
         auto slotList = expVals_.front().mutable_slots_added();
         for (auto& [slot, dm] : dms_) {
             slotList->add_slots(slot);
@@ -187,10 +187,10 @@ class gRPCConnectTests : public GRPCTest {
     }
 
     // in/out val
-    catena::ConnectPayload inVal_;
-    std::vector<catena::PushUpdates> outVals_;
+    st2138::ConnectPayload inVal_;
+    std::vector<st2138::PushUpdates> outVals_;
     // Expected variables
-    std::vector<catena::PushUpdates> expVals_;
+    std::vector<st2138::PushUpdates> expVals_;
     bool respond_ = false;
 
     MockSubscriptionManager subManager_;
@@ -235,20 +235,20 @@ TEST_F(gRPCConnectTests, Connect_ConnectDisconnect) {
  */
 TEST_F(gRPCConnectTests, Connect_ValueSetByClient) {
     MockParam param0, param1;
-    initPayload("en", catena::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
+    initPayload("en", st2138::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
     expPushValue(0, "oid0", "value0");
     expPushValue(1, "oid1", "value1");
     // Setting expectations
     EXPECT_CALL(param0, getScope()).WillRepeatedly(testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
-    EXPECT_CALL(param0, toProto(testing::An<catena::Value&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::Value& dst, const IAuthorizer& authz) {
+    EXPECT_CALL(param0, toProto(testing::An<st2138::Value&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](st2138::Value& dst, const IAuthorizer& authz) {
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             dst.set_string_value("value0");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
     EXPECT_CALL(param1, getScope()).WillRepeatedly(testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
-    EXPECT_CALL(param1, toProto(testing::An<catena::Value&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::Value& dst, const IAuthorizer& authz) {
+    EXPECT_CALL(param1, toProto(testing::An<st2138::Value&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](st2138::Value& dst, const IAuthorizer& authz) {
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             dst.set_string_value("value1");
             return catena::exception_with_status("", catena::StatusCode::OK);
@@ -270,22 +270,22 @@ TEST_F(gRPCConnectTests, Connect_ValueSetByClient) {
  */
 TEST_F(gRPCConnectTests, Connect_ValueSetByServer) {
     MockParam param0, param1;
-    initPayload("en", catena::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
+    initPayload("en", st2138::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
     expPushValue(0, "oid0", "value0");
     expPushValue(1, "oid1", "value1");
     // Setting expectations
     EXPECT_CALL(param0, getScope()).WillRepeatedly(
         testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
-    EXPECT_CALL(param0, toProto(testing::An<catena::Value&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::Value& dst, const IAuthorizer& authz) {
+    EXPECT_CALL(param0, toProto(testing::An<st2138::Value&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](st2138::Value& dst, const IAuthorizer& authz) {
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             dst.set_string_value("value0");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
     EXPECT_CALL(param1, getScope()).WillRepeatedly(
         testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kUndefined)));
-    EXPECT_CALL(param1, toProto(testing::An<catena::Value&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::Value& dst, const IAuthorizer& authz) {
+    EXPECT_CALL(param1, toProto(testing::An<st2138::Value&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](st2138::Value& dst, const IAuthorizer& authz) {
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             dst.set_string_value("value1");
             return catena::exception_with_status("", catena::StatusCode::OK);
@@ -307,17 +307,17 @@ TEST_F(gRPCConnectTests, Connect_ValueSetByServer) {
  */
 TEST_F(gRPCConnectTests, Connect_LanguageAddedPushUpdate) {
     MockLanguagePack languagePack0, languagePack1;
-    initPayload("en", catena::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
+    initPayload("en", st2138::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
     expLanguage(0, "language0", {{"key0", "value0"}});
     expLanguage(1, "language1", {{"key1", "value1"}});
     // Setting expectations
     EXPECT_CALL(languagePack0, toProto(testing::_)).Times(1)
-        .WillOnce(testing::Invoke([](catena::LanguagePack &pack) {
+        .WillOnce(testing::Invoke([](st2138::LanguagePack &pack) {
             pack.set_name("language0");
             (*pack.mutable_words())["key0"] = "value0";
         }));
     EXPECT_CALL(languagePack1, toProto(testing::_)).Times(1)
-        .WillOnce(testing::Invoke([](catena::LanguagePack &pack) {
+        .WillOnce(testing::Invoke([](st2138::LanguagePack &pack) {
             pack.set_name("language1");
             (*pack.mutable_words())["key1"] = "value1";
         }));
@@ -339,7 +339,7 @@ TEST_F(gRPCConnectTests, Connect_LanguageAddedPushUpdate) {
 TEST_F(gRPCConnectTests, Connect_AuthzValid) {
     MockParam param0, param1;
     MockLanguagePack languagePack0, languagePack1;
-    initPayload("en", catena::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
+    initPayload("en", st2138::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
     expPushValue(0, "oid0", "value0");
     expPushValue(0, "oid0", "value0");
     expLanguage(0, "language0", {{"key0", "value0"}});
@@ -350,14 +350,14 @@ TEST_F(gRPCConnectTests, Connect_AuthzValid) {
     // Setting expectations
     EXPECT_CALL(param0, getScope()).WillRepeatedly(
         testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
-    EXPECT_CALL(param0, toProto(testing::An<catena::Value&>(), testing::_)).Times(2)
-        .WillRepeatedly(testing::Invoke([this](catena::Value& dst, const IAuthorizer& authz) {
+    EXPECT_CALL(param0, toProto(testing::An<st2138::Value&>(), testing::_)).Times(2)
+        .WillRepeatedly(testing::Invoke([this](st2138::Value& dst, const IAuthorizer& authz) {
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             dst.set_string_value("value0");
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
     EXPECT_CALL(languagePack0, toProto(testing::_)).Times(1)
-        .WillOnce(testing::Invoke([](catena::LanguagePack &pack) {
+        .WillOnce(testing::Invoke([](st2138::LanguagePack &pack) {
             pack.set_name("language0");
             (*pack.mutable_words())["key0"] = "value0";
         }));
@@ -413,7 +413,7 @@ TEST_F(gRPCConnectTests, Connect_AuthzJWSNotFound) {
 TEST_F(gRPCConnectTests, Connect_AuthzExpired) {
     expRc_ = catena::exception_with_status("JWS bearer token expired", catena::StatusCode::UNAUTHENTICATED);
     MockParam param0;
-    initPayload("en", catena::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
+    initPayload("en", st2138::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
     // Adding authorization mockToken metadata. This it a random RSA token
     authzEnabled_ = true;
     std::string mockToken = getJwsToken("expired");
@@ -421,8 +421,8 @@ TEST_F(gRPCConnectTests, Connect_AuthzExpired) {
     // Setting expectations
     EXPECT_CALL(param0, getScope()).WillRepeatedly(
         testing::ReturnRefOfCopy(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
-    EXPECT_CALL(param0, toProto(testing::An<catena::Value&>(), testing::_))
-        .WillRepeatedly(testing::Invoke([this](catena::Value& dst, const IAuthorizer& authz) {
+    EXPECT_CALL(param0, toProto(testing::An<st2138::Value&>(), testing::_))
+        .WillRepeatedly(testing::Invoke([this](st2138::Value& dst, const IAuthorizer& authz) {
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             dst.set_string_value("value0");
             return catena::exception_with_status("", catena::StatusCode::OK);

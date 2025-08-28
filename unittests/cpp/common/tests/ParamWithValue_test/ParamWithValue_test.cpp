@@ -45,7 +45,7 @@ class ParamWithValueTest : public ParamTest<EmptyValue> {
     /*
      * Returns the value type of the parameter we are testing with.
      */
-    catena::ParamType type() const override { return catena::ParamType::EMPTY; }
+    st2138::ParamType type() const override { return st2138::ParamType::EMPTY; }
 };
 /*
  * TEST 1 - Testing <EMPTY>ParamWithValue constructors.
@@ -102,7 +102,7 @@ TEST_F(ParamWithValueTest, PopBack) {
  */
 TEST_F(ParamWithValueTest, ParamToProto) {
     EmptyParam param(emptyValue, pd_);
-    catena::Param outParam;
+    st2138::Param outParam;
     rc_ = param.toProto(outParam, authz_);
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
     EXPECT_EQ(oid_, outParam.template_oid());
@@ -112,7 +112,7 @@ TEST_F(ParamWithValueTest, ParamToProto) {
  */
 TEST_F(ParamWithValueTest, FromProto) {
     EmptyParam param(emptyValue, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     protoValue.empty_value();
     rc_ = param.fromProto(protoValue, authz_);
     // Checking results.
@@ -124,7 +124,7 @@ TEST_F(ParamWithValueTest, FromProto) {
  */
 TEST_F(ParamWithValueTest, ValidateSetValue) {
     EmptyParam param(emptyValue, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     protoValue.empty_value();
     EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_));
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
@@ -137,8 +137,8 @@ TEST_F(ParamWithValueTest, DescriptorForwards) {
     // param.getDescriptor()
     EXPECT_EQ(&param.getDescriptor(), &pd_);
     // param.type()
-    EXPECT_CALL(pd_, type()).Times(1).WillOnce(testing::Return(catena::ParamType::EMPTY));
-    EXPECT_EQ(param.type().value(), catena::ParamType::EMPTY);
+    EXPECT_CALL(pd_, type()).Times(1).WillOnce(testing::Return(st2138::ParamType::EMPTY));
+    EXPECT_EQ(param.type().value(), st2138::ParamType::EMPTY);
     // param.getOid()
     EXPECT_CALL(pd_, getOid()).Times(1).WillOnce(testing::ReturnRef(oid_));
     EXPECT_EQ(param.getOid(), oid_);
@@ -155,14 +155,14 @@ TEST_F(ParamWithValueTest, DescriptorForwards) {
     // param.defineCommand()
     EXPECT_CALL(pd_, defineCommand(testing::_)).Times(1).WillOnce(testing::Return());
     EXPECT_NO_THROW(param.defineCommand(
-        [](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        [](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
             return nullptr;
         }););
     // param.executeCommand()
-    catena::Value testVal;
+    st2138::Value testVal;
     testVal.set_string_value("test");
     EXPECT_CALL(pd_, executeCommand(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([&testVal](catena::Value value, const bool respond){
+        .WillOnce(testing::Invoke([&testVal](st2138::Value value, const bool respond){
         EXPECT_EQ(value.string_value(), testVal.string_value());
         return nullptr;
     }));
@@ -173,21 +173,21 @@ TEST_F(ParamWithValueTest, DescriptorForwards) {
     EXPECT_CALL(pd_, addSubParam(subOid, &subPd)).Times(1).WillOnce(testing::Return());
     EXPECT_NO_THROW(param.addParam(subOid, &subPd););
     // param.isArrayType()
-    for (auto [type, expected] : std::vector<std::pair<catena::ParamType, bool>>{
-        {catena::ParamType::UNDEFINED, false},
-        {catena::ParamType::EMPTY, false},
-        {catena::ParamType::INT32, false},
-        {catena::ParamType::FLOAT32, false},
-        {catena::ParamType::STRING, false},
-        {catena::ParamType::STRUCT, false},
-        {catena::ParamType::STRUCT_VARIANT, false},
-        {catena::ParamType::INT32_ARRAY, true},
-        {catena::ParamType::FLOAT32_ARRAY, true},
-        {catena::ParamType::STRING_ARRAY, true},
-        {catena::ParamType::BINARY, false},
-        {catena::ParamType::STRUCT_ARRAY, true},
-        {catena::ParamType::STRUCT_VARIANT_ARRAY, true},
-        {catena::ParamType::DATA, false}
+    for (auto [type, expected] : std::vector<std::pair<st2138::ParamType, bool>>{
+        {st2138::ParamType::UNDEFINED, false},
+        {st2138::ParamType::EMPTY, false},
+        {st2138::ParamType::INT32, false},
+        {st2138::ParamType::FLOAT32, false},
+        {st2138::ParamType::STRING, false},
+        {st2138::ParamType::STRUCT, false},
+        {st2138::ParamType::STRUCT_VARIANT, false},
+        {st2138::ParamType::INT32_ARRAY, true},
+        {st2138::ParamType::FLOAT32_ARRAY, true},
+        {st2138::ParamType::STRING_ARRAY, true},
+        {st2138::ParamType::BINARY, false},
+        {st2138::ParamType::STRUCT_ARRAY, true},
+        {st2138::ParamType::STRUCT_VARIANT_ARRAY, true},
+        {st2138::ParamType::DATA, false}
     }) {
         MockParamDescriptor typeTestPd_;
         EmptyParam typeTestParam(emptyValue, typeTestPd_);
@@ -225,9 +225,9 @@ TEST_F(ParamWithValueTest, Copy) {
 TEST_F(ParamWithValueTest, ParamToProto_Error) {
     int32_t value{16};
     ParamWithValue<int32_t> param(value, pd_);
-    catena::Param outParam;
+    st2138::Param outParam;
     // pd_.toProto throws an error
-    EXPECT_CALL(pd_, toProto(testing::An<catena::Param&>(), testing::_)).WillOnce(testing::Throw(std::runtime_error("Test error")));
+    EXPECT_CALL(pd_, toProto(testing::An<st2138::Param&>(), testing::_)).WillOnce(testing::Throw(std::runtime_error("Test error")));
     EXPECT_THROW(param.toProto(outParam, authz_), std::runtime_error);
     // Not authorized
     outParam.Clear();
@@ -243,9 +243,9 @@ TEST_F(ParamWithValueTest, ParamToProto_Error) {
  */
 TEST_F(ParamWithValueTest, ParamInfoToProto) {
     EmptyParam param(emptyValue, pd_);
-    catena::ParamInfoResponse paramInfo;
-    EXPECT_CALL(pd_, toProto(testing::An<catena::ParamInfo&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::ParamInfo& p, const IAuthorizer&) {
+    st2138::ParamInfoResponse paramInfo;
+    EXPECT_CALL(pd_, toProto(testing::An<st2138::ParamInfo&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](st2138::ParamInfo& p, const IAuthorizer&) {
             p.set_oid(oid_);
         }));
     rc_ = param.toProto(paramInfo, authz_);
@@ -260,9 +260,9 @@ TEST_F(ParamWithValueTest, ParamInfoToProto) {
  */
 TEST_F(ParamWithValueTest, ParamInfoToProto_Error) {
     EmptyParam param(emptyValue, pd_);
-    catena::ParamInfoResponse paramInfo;
+    st2138::ParamInfoResponse paramInfo;
     // pd_.toProto throws an error
-    EXPECT_CALL(pd_, toProto(testing::An<catena::ParamInfo&>(), testing::_)).WillOnce(testing::Throw(std::runtime_error("Test error")));
+    EXPECT_CALL(pd_, toProto(testing::An<st2138::ParamInfo&>(), testing::_)).WillOnce(testing::Throw(std::runtime_error("Test error")));
     EXPECT_THROW(param.toProto(paramInfo, authz_), std::runtime_error);
     // No read authz
     EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));

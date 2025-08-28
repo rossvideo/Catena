@@ -125,7 +125,7 @@ void ExternalObjectRequest::proceed(bool ok) {
                 std::ifstream file(path, std::ios::binary);
                 std::vector<char> file_data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
                 
-                catena::ExternalObjectPayload obj;
+                st2138::ExternalObjectPayload obj;
                 obj.mutable_payload()->set_payload(file_data.data(), file_data.size()); 
                 //obj.mutable_payload()->set_meta(file.);
 

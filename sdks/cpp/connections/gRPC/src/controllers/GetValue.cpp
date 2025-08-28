@@ -82,7 +82,7 @@ void GetValue::proceed( bool ok) {
             context_.AsyncNotifyWhenDone(this);
 
             { // var scope
-            catena::Value ans;
+            st2138::Value ans;
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             IDevice* dm = nullptr;
             try {

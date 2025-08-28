@@ -30,7 +30,7 @@
 
 /**
  * @file LanguagePack.h
- * @brief Implements REST LanguagePack controller.
+ * @brief Implements controller for the REST language-pack endpoint.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -60,7 +60,17 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the LanguagePack REST controller.
+ * @brief Controller class for the language-pack REST endpoint.
+ * 
+ * This controller supports four methods:
+ * 
+ * - GET: Writes the specified language pack to the client.
+ * 
+ * - POST: Adds a new language pack to the specified device.
+ * 
+ * - PUT: Updates a language pack on the specified device.
+ * 
+ * - DELETE: Deletes a language pack from the specified device.
  */
 class LanguagePack : public ICallData {
   public:
@@ -69,23 +79,23 @@ class LanguagePack : public ICallData {
     using SlotMap = catena::common::SlotMap;
 
     /**
-     * @brief Constructor for the LanguagePack controller.
+     * @brief Constructor for the language-pack endpoint controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The ISocketReader object.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     LanguagePack(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
-     * @brief LanguagePack's main processes.
+     * @brief The language-pack endpoint's main process.
      */
     void proceed() override;
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     * 
-     * @param socket The socket to write the response stream to.
-     * @param context The ISocketReader object.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
@@ -111,7 +121,15 @@ class LanguagePack : public ICallData {
      */
     tcp::socket& socket_;
     /**
-     * @brief The ISocketReader object.
+     * @brief The ISocketReader object used to read the client's request.
+     * 
+     * This is used to get five things from the client:
+     * 
+     * - A slot specifying the device to manage language packs of.
+     * 
+     * - The id of the language pack to manage (e.g. "es" Global spanish).
+     * 
+     * - The language pack to add/overwrite (if applicable).
      */
     ISocketReader& context_;
     /**
@@ -124,11 +142,11 @@ class LanguagePack : public ICallData {
     SlotMap& dms_;
 
     /**
-     * @brief ID of the LanguagePack object
+     * @brief The object's unique id.
      */
     int objectId_;
     /**
-     * @brief The total # of LanguagePack objects.
+     * @brief The total # of language-pack endpoint controller objects.
      */
     static int objectCounter_;
 };

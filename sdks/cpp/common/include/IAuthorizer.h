@@ -46,7 +46,7 @@ namespace catena {
 namespace common {
 
 /**
- * @brief Class for handling authorization information
+ * @brief Interface for objects handling authorization information.
  */
 class IAuthorizer {
   public:

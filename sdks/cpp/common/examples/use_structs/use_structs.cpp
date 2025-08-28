@@ -81,7 +81,7 @@ int main (int argc, char** argv) {
               << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
               << "' " << loc.longitude.seconds << "\")";
 
-    catena::Value value;
+    st2138::Value value;
     ip->toProto(value, Authorizer::kAuthzDisabled);
     DEBUG_LOG << "Location: " << value.DebugString();
 

@@ -44,17 +44,18 @@ namespace catena {
 namespace meta {
 
 /**
- * @brief Struct that holds a list of types that can be manipulated at compile time
+ * @brief Struct that holds a list of types that can be manipulated at compile
+ * time.
  */
 template <typename... Ts> class TypeList {};
 
 /**
- * @brief Get the type at the front of a type list, forward declaration
+ * @brief Get the type at the front of a type list, forward declaration.
  */
 template <typename L> class FrontT;
 
 /**
- * @brief Get the type at the front of a type list
+ * @brief Get the type at the front of a type list.
  */
 template <typename Head, typename... Tail> class FrontT<TypeList<Head, Tail...>> {
   public:
@@ -62,17 +63,17 @@ template <typename Head, typename... Tail> class FrontT<TypeList<Head, Tail...>>
 };
 
 /**
- * @brief Convenience alias for FrontT
+ * @brief Convenience alias for FrontT.
  */
 template <typename L> using Front = typename FrontT<L>::type;
 
 /**
- * @brief Pop the front type off a type list, forward declaration
+ * @brief Pop the front type off a type list, forward declaration.
  */
 template <typename L> class PopFrontT;
 
 /**
- * @brief Pop the front type off a type list
+ * @brief Pop the front type off a type list.
  */
 template <typename Head, typename... Tail> class PopFrontT<TypeList<Head, Tail...>> {
   public:
@@ -80,17 +81,17 @@ template <typename Head, typename... Tail> class PopFrontT<TypeList<Head, Tail..
 };
 
 /**
- * @brief Convenience alias for PopFrontT
+ * @brief Convenience alias for PopFrontT.
  */
 template <typename L> using PopFront = typename PopFrontT<L>::type;
 
 /**
- * @brief Push a type onto the front of a type list, forward declaration
+ * @brief Push a type onto the front of a type list, forward declaration.
  */
 template <typename L, typename T> class PushFrontT;
 
 /**
- * @brief push a type onto the front of a type list
+ * @brief push a type onto the front of a type list.
  */
 template <typename... Ts, typename T> class PushFrontT<TypeList<Ts...>, T> {
   public:
@@ -98,22 +99,22 @@ template <typename... Ts, typename T> class PushFrontT<TypeList<Ts...>, T> {
 };
 
 /**
- * @brief convenience alias for PushFrontT
+ * @brief convenience alias for PushFrontT.
  */
 template <typename L, typename T> using PushFront = typename PushFrontT<L, T>::type;
 
 /**
- * @brief get the Nth type in a type list
+ * @brief get the Nth type in a type list.
  */
 template <typename L, unsigned int N> class NthElementT : public NthElementT<PopFront<L>, N - 1> {};
 
 /**
- * @brief get the 0th type in a type list, terminates recursion
+ * @brief get the 0th type in a type list, terminates recursion.
  */
 template <typename L> class NthElementT<L, 0> : public FrontT<L> {};
 
 /**
- * @brief get the Nth type in a type list, recursive
+ * @brief get the Nth type in a type list, recursive.
  */
 template <typename L, unsigned int N> using NthElement = typename NthElementT<L, N>::type;
 

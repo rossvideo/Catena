@@ -82,7 +82,7 @@ class PeerManager : public catena::patterns::Singleton<PeerManager> {
      *
      * @param id the result of grpc::ServerContext::peer(), aka std::string.
      */
-    PeerInfo& addPeer(grpc::ServerContext* context, grpc::ServerWriter<catena::PushUpdates>* writer) {
+    PeerInfo& addPeer(grpc::ServerContext* context, grpc::ServerWriter<st2138::PushUpdates>* writer) {
         const PeerID id = std::hash<std::string>{}(context->peer());
         peers_.emplace(id, PeerInfo{context, writer}); 
         return peers_.at(id); 

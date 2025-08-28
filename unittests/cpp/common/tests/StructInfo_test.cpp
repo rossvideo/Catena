@@ -74,7 +74,7 @@ class StructInfoTest : public ::testing::Test {
     void initVal_(std::vector<TestStruct1> array) {
         for (auto& testStruct : array) {
             auto newStruct = val_.mutable_struct_array_values()->add_struct_values();
-            catena::Value fieldVal;
+            st2138::Value fieldVal;
             fieldVal.set_int32_value(testStruct.f1);
             newStruct->mutable_fields()->insert({"f1", fieldVal});
             fieldVal.set_int32_value(testStruct.f2);
@@ -88,7 +88,7 @@ class StructInfoTest : public ::testing::Test {
         for (auto& testVal : array) {
             std::string variantType = alternativeNames<TestVariantStruct>[testVal.index()];
             auto newStruct = val_.mutable_struct_variant_array_values()->add_struct_variants();
-            catena::Value f1, f2;
+            st2138::Value f1, f2;
             if (variantType == "TestStruct1") {
                 f1.set_int32_value(std::get<TestStruct1>(testVal).f1);
                 f2.set_int32_value(std::get<TestStruct1>(testVal).f2);
@@ -136,11 +136,11 @@ class StructInfoTest : public ::testing::Test {
 
     catena::exception_with_status rc{"", catena::StatusCode::OK};
 
-    catena::Value val_;
+    st2138::Value val_;
     MockParamDescriptor pd_, subpd1_, subpd2_;
     MockConstraint constraint_;
     MockAuthorizer authz_;
-    catena::Value constrainedVal_;
+    st2138::Value constrainedVal_;
 };
 
 
@@ -211,7 +211,7 @@ TEST_F(StructInfoTest, Int_ValidFromProto_Constraint) {
     // Setting expectations.
     EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, satisfied(testing::_)).WillRepeatedly(
-        testing::Invoke([this](const catena::Value &src) {
+        testing::Invoke([this](const st2138::Value &src) {
             EXPECT_EQ(val_.SerializeAsString(), src.SerializeAsString());
             return true;
         }));
@@ -287,7 +287,7 @@ TEST_F(StructInfoTest, Int_FromProto_Range) {
     EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, isRange()).WillRepeatedly(testing::Return(true));
     EXPECT_CALL(constraint_, apply(testing::_)).WillRepeatedly(
-        testing::Invoke([this](const catena::Value &src) {
+        testing::Invoke([this](const st2138::Value &src) {
             EXPECT_EQ(val_.SerializeAsString(), src.SerializeAsString());
             return constrainedVal_;
         }));
@@ -339,7 +339,7 @@ TEST_F(StructInfoTest, Float_ValidFromProto_Constraint) {
     // Setting expectations.
     EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, satisfied(testing::_)).WillRepeatedly(
-        testing::Invoke([this](const catena::Value &src) {
+        testing::Invoke([this](const st2138::Value &src) {
             EXPECT_EQ(val_.SerializeAsString(), src.SerializeAsString());
             return true;
         }));
@@ -415,7 +415,7 @@ TEST_F(StructInfoTest, Float_FromProto_Range) {
     EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, isRange()).WillRepeatedly(testing::Return(true));
     EXPECT_CALL(constraint_, apply(testing::_)).WillRepeatedly(
-        testing::Invoke([this](const catena::Value &src) {
+        testing::Invoke([this](const st2138::Value &src) {
             EXPECT_EQ(val_.SerializeAsString(), src.SerializeAsString());
             return constrainedVal_;
         }));
@@ -458,7 +458,7 @@ TEST_F(StructInfoTest, String_ValidFromProto_Normal) {
     std::string dst = "";
     val_.set_string_value("Hello");
     // Setting expectations.
-    EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(catena::ParamType::STRING));
+    EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(st2138::ParamType::STRING));
     // Calling validFromProto() and comparing the result
     EXPECT_TRUE(validFromProto(val_, &dst, pd_, rc, authz_));
 }
@@ -469,10 +469,10 @@ TEST_F(StructInfoTest, String_ValidFromProto_Constraint) {
     std::string dst = "";
     val_.set_string_value("Hello");
     // Setting expectations.
-    EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(catena::ParamType::STRING));
+    EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(st2138::ParamType::STRING));
     EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, satisfied(testing::_)).WillRepeatedly(
-        testing::Invoke([this](const catena::Value &src) {
+        testing::Invoke([this](const st2138::Value &src) {
             EXPECT_EQ(val_.SerializeAsString(), src.SerializeAsString());
             return true;
         }));
@@ -507,7 +507,7 @@ TEST_F(StructInfoTest, String_ValidFromProto_Unsatisfied) {
     std::string dst = "";
     val_.set_string_value("Hello");
     // Setting expectations.
-    EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(catena::ParamType::STRING));
+    EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(st2138::ParamType::STRING));
     EXPECT_CALL(pd_, getConstraint()).WillRepeatedly(testing::Return(&constraint_));
     EXPECT_CALL(constraint_, satisfied(testing::_)).WillRepeatedly(testing::Return(false));
     // Calling validFromProto() and comparing the result
@@ -521,7 +521,7 @@ TEST_F(StructInfoTest, String_FromProto_Normal) {
     std::string dst = "";
     val_.set_string_value("Hello");
     // Setting expectations.
-    EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(catena::ParamType::STRING));
+    EXPECT_CALL(pd_, type()).WillRepeatedly(testing::Return(st2138::ParamType::STRING));
     // Calling fromProto() and comparing the result
     rc = fromProto(val_, &dst, pd_, authz_);
     EXPECT_EQ(dst, val_.string_value());
@@ -660,8 +660,8 @@ TEST_F(StructInfoTest, IntArray_FromProtoRange) {
     EXPECT_CALL(constraint_, isRange()).WillRepeatedly(testing::Return(true));
     // Contraint sets non-odd numbers to 0.
     EXPECT_CALL(constraint_, apply(testing::_)).Times(times)
-        .WillRepeatedly(testing::Invoke([this](const catena::Value &src) {
-            catena::Value ans;
+        .WillRepeatedly(testing::Invoke([this](const st2138::Value &src) {
+            st2138::Value ans;
             ans.set_int32_value(src.int32_value() % 2 == 1 ? src.int32_value() : 0);
             constrainedVal_.mutable_int32_array_values()->add_ints(ans.int32_value());
             return ans;
@@ -808,8 +808,8 @@ TEST_F(StructInfoTest, FloatArray_FromProto_Range) {
     EXPECT_CALL(constraint_, isRange()).WillRepeatedly(testing::Return(true));
     // Contraint caps numbers at 3.
     EXPECT_CALL(constraint_, apply(testing::_)).Times(times)
-        .WillRepeatedly(testing::Invoke([this](const catena::Value &src) {
-            catena::Value ans;
+        .WillRepeatedly(testing::Invoke([this](const st2138::Value &src) {
+            st2138::Value ans;
             ans.set_float32_value(src.float32_value() < 3 ? src.float32_value() : 3);
             constrainedVal_.mutable_float32_array_values()->add_floats(ans.float32_value());
             return ans;
@@ -991,7 +991,7 @@ TEST_F(StructInfoTest, Struct_ToProto_NestedNoAuthz) {
  */
 TEST_F(StructInfoTest, Struct_ValidFromProto_Normal) {
     TestStruct1 dst{.f1{0}, .f2{0}};
-    catena::Value f1, f2;
+    st2138::Value f1, f2;
     f1.set_int32_value(1);
     f2.set_int32_value(2);
     val_.mutable_struct_value()->mutable_fields()->insert({"f1", f1});
@@ -1004,7 +1004,7 @@ TEST_F(StructInfoTest, Struct_ValidFromProto_Normal) {
  */
 TEST_F(StructInfoTest, Struct_ValidFromProto_NoAuthz) {
     TestStruct1 dst{.f1{0}, .f2{0}};
-    catena::Value f1, f2;
+    st2138::Value f1, f2;
     f1.set_int32_value(1);
     f2.set_int32_value(2);
     val_.mutable_struct_value()->mutable_fields()->insert({"f1", f1});
@@ -1019,7 +1019,7 @@ TEST_F(StructInfoTest, Struct_ValidFromProto_NoAuthz) {
  */
 TEST_F(StructInfoTest, Struct_ValidFromProto_NestedNoAuthz) {
     TestStruct1 dst{.f1{0}, .f2{0}};
-    catena::Value f1, f2;
+    st2138::Value f1, f2;
     f1.set_int32_value(1);
     f2.set_int32_value(2);
     val_.mutable_struct_value()->mutable_fields()->insert({"f1", f1});
@@ -1048,7 +1048,7 @@ TEST_F(StructInfoTest, Struct_ValidFromProto_TypeMismatch) {
  */
 TEST_F(StructInfoTest, Struct_ValidFromProto_FieldMismatch) {
     TestStruct1 dst{.f1{0}, .f2{0}};
-    catena::Value f1;
+    st2138::Value f1;
     f1.set_int32_value(1);
     val_.mutable_struct_value()->mutable_fields()->insert({"unknown_field_1", f1});
     // Calling validFromProto() and comparing the result
@@ -1059,7 +1059,7 @@ TEST_F(StructInfoTest, Struct_ValidFromProto_FieldMismatch) {
  */
 TEST_F(StructInfoTest, Struct_FromProto_Normal) {
     TestStruct1 dst{.f1{0}, .f2{0}};
-    catena::Value f1, f2;
+    st2138::Value f1, f2;
     f1.set_int32_value(1);
     f2.set_int32_value(2);
     val_.mutable_struct_value()->mutable_fields()->insert({"f1", f1});
@@ -1244,7 +1244,7 @@ TEST_F(StructInfoTest, VariantStruct_ToProto_NestedNoAuthz) {
  */
 TEST_F(StructInfoTest, VariantStruct_ValidFromProto_Normal) {
     TestVariantStruct dst{TestStruct1{.f1{9}, .f2{9}}};
-    catena::Value f1, f2;
+    st2138::Value f1, f2;
     f1.set_float32_value(1.1);
     f2.set_float32_value(2.2);
     val_.mutable_struct_variant_value()->set_struct_variant_type("TestStruct2");
@@ -1258,7 +1258,7 @@ TEST_F(StructInfoTest, VariantStruct_ValidFromProto_Normal) {
  */
 TEST_F(StructInfoTest, VariantStruct_ValidFromProto_NoAuthz) {
     TestVariantStruct dst{TestStruct1{.f1{9}, .f2{9}}};
-    catena::Value f1, f2;
+    st2138::Value f1, f2;
     f1.set_float32_value(1.1);
     f2.set_float32_value(2.2);
     val_.mutable_struct_variant_value()->set_struct_variant_type("TestStruct2");
@@ -1274,7 +1274,7 @@ TEST_F(StructInfoTest, VariantStruct_ValidFromProto_NoAuthz) {
  */
 TEST_F(StructInfoTest, VariantStruct_ValidFromProto_NestedNoAuthz) {
     TestVariantStruct dst{TestStruct1{.f1{9}, .f2{9}}};
-    catena::Value f1, f2;
+    st2138::Value f1, f2;
     f1.set_float32_value(1.1);
     f2.set_float32_value(2.2);
     val_.mutable_struct_variant_value()->set_struct_variant_type("TestStruct2");
@@ -1305,7 +1305,7 @@ TEST_F(StructInfoTest, VariantStruct_ValidFromProto_TypeMismatch) {
  */
 TEST_F(StructInfoTest, VariantStruct_ValidFromProto_VariantTypeMismatch) {
     TestVariantStruct dst{TestStruct1{.f1{9}, .f2{9}}};
-    catena::Value f1, f2;
+    st2138::Value f1, f2;
     f1.set_float32_value(1.1);
     f2.set_float32_value(2.2);
     val_.mutable_struct_variant_value()->set_struct_variant_type("unknown_struct");
@@ -1320,7 +1320,7 @@ TEST_F(StructInfoTest, VariantStruct_ValidFromProto_VariantTypeMismatch) {
  */
 TEST_F(StructInfoTest, VariantStruct_ValidFromProto_FieldMismatch) {
     TestVariantStruct dst{TestStruct1{.f1{9}, .f2{9}}};
-    catena::Value f1, f2;
+    st2138::Value f1, f2;
     f1.set_float32_value(1.1);
     val_.mutable_struct_variant_value()->set_struct_variant_type("TestStruct2");
     val_.mutable_struct_variant_value()->mutable_value()->mutable_struct_value()->mutable_fields()->insert({"unknown_field_1", f1});
@@ -1333,7 +1333,7 @@ TEST_F(StructInfoTest, VariantStruct_ValidFromProto_FieldMismatch) {
  */
 TEST_F(StructInfoTest, VariantStruct_FromProto_Normal) {
     TestVariantStruct dst{TestStruct1{.f1{9}, .f2{9}}};
-    catena::Value f1, f2;
+    st2138::Value f1, f2;
     f1.set_float32_value(1.1);
     f2.set_float32_value(2.2);
     val_.mutable_struct_variant_value()->set_struct_variant_type("TestStruct2");

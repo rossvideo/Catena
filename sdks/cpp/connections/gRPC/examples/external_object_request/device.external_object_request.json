@@ -4,5 +4,29 @@
   "detail_level": "FULL",
   "access_scopes": ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
   "default_scope": "st2138:op",
-  "subscriptions": true
+  "language_packs": {
+    "packs": {
+      "es": {
+        "name": "Spanish",
+        "words": {
+          "greeting": "Hola",
+          "parting": "Adiós"
+        }
+      },
+      "en": {
+        "name": "English",
+        "words": {
+          "greeting": "Hello",
+          "parting": "Goodbye"
+        }
+      },
+      "fr": {
+        "name": "French",
+        "words": {
+          "greeting": "Bonjour",
+          "parting": "Adieu"
+        }
+      }
+    }
+  }
 }

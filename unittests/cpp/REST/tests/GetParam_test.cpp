@@ -82,7 +82,7 @@ class RESTGetParamTests : public RESTEndpointTest {
     void initExpVal(const std::string& oid, const std::string& value, const std::string& alias, const std::string& enName) {
         expVal_.set_oid(oid);
         auto param = expVal_.mutable_param();
-        param->set_type(catena::ParamType::STRING);
+        param->set_type(st2138::ParamType::STRING);
         param->mutable_value()->set_string_value(value);
         param->add_oid_aliases(alias);
         (*param->mutable_name()->mutable_display_strings())["en"] = enName;
@@ -99,7 +99,7 @@ class RESTGetParamTests : public RESTEndpointTest {
     }
 
     // Expected variables
-    catena::DeviceComponent_ComponentParam expVal_;
+    st2138::DeviceComponent_ComponentParam expVal_;
     std::string expJson_ = "";
 
     std::unique_ptr<MockParam> mockParam_ = std::make_unique<MockParam>();
@@ -130,8 +130,8 @@ TEST_F(RESTGetParamTests, GetParam_Normal) {
             return std::move(mockParam_);
         }));
     EXPECT_CALL(*mockParam_, getOid()).Times(1).WillOnce(testing::ReturnRef(fqoid_));
-    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1).WillOnce(testing::Invoke(
-        [this](catena::Param &param, const IAuthorizer &authz) {
+    EXPECT_CALL(*mockParam_, toProto(testing::An<st2138::Param&>(), testing::_)).Times(1).WillOnce(testing::Invoke(
+        [this](st2138::Param &param, const IAuthorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             param.CopyFrom(expVal_.param());
@@ -159,8 +159,8 @@ TEST_F(RESTGetParamTests, GetParam_AuthzValid) {
             return std::move(mockParam_);
         }));
     EXPECT_CALL(*mockParam_, getOid()).Times(1).WillOnce(testing::ReturnRef(fqoid_));
-    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1).WillOnce(testing::Invoke(
-        [this](catena::Param &param, const IAuthorizer &authz) {
+    EXPECT_CALL(*mockParam_, toProto(testing::An<st2138::Param&>(), testing::_)).Times(1).WillOnce(testing::Invoke(
+        [this](st2138::Param &param, const IAuthorizer &authz) {
             // Checking that function gets correct inputs.
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             param.CopyFrom(expVal_.param());
@@ -181,7 +181,7 @@ TEST_F(RESTGetParamTests, GetParam_AuthzInvalid) {
     // Setting expectations
     EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(0);
     EXPECT_CALL(*mockParam_, getOid()).Times(0);
-    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(0);
+    EXPECT_CALL(*mockParam_, toProto(testing::An<st2138::Param&>(), testing::_)).Times(0);
     // Calling proceed and testing the output
     testCall();
 }
@@ -212,7 +212,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrGetParamReturnCatena) {
             return nullptr;
         }));
     EXPECT_CALL(*mockParam_, getOid()).Times(0);
-    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(0);
+    EXPECT_CALL(*mockParam_, toProto(testing::An<st2138::Param&>(), testing::_)).Times(0);
     // Calling proceed and testing the output
     testCall();
 }
@@ -230,7 +230,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowCatena) {
             return nullptr;
         }));
     EXPECT_CALL(*mockParam_, getOid()).Times(0);
-    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(0);
+    EXPECT_CALL(*mockParam_, toProto(testing::An<st2138::Param&>(), testing::_)).Times(0);
     // Calling proceed and testing the output
     testCall();
 }
@@ -245,7 +245,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowStd) {
     EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(1)
         .WillOnce(testing::Throw(std::runtime_error(expRc_.what())));
     EXPECT_CALL(*mockParam_, getOid()).Times(0);
-    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(0);
+    EXPECT_CALL(*mockParam_, toProto(testing::An<st2138::Param&>(), testing::_)).Times(0);
     // Calling proceed and testing the output
     testCall();
 }
@@ -260,7 +260,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowUnknown) {
     EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(1)
         .WillOnce(testing::Throw(0));
     EXPECT_CALL(*mockParam_, getOid()).Times(0);
-    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(0);
+    EXPECT_CALL(*mockParam_, toProto(testing::An<st2138::Param&>(), testing::_)).Times(0);
     // Calling proceed and testing the output
     testCall();
 }
@@ -275,7 +275,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoReturnCatena) {
     EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](){ return std::move(mockParam_); }));
     EXPECT_CALL(*mockParam_, getOid()).WillRepeatedly(testing::ReturnRef(fqoid_));
-    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
+    EXPECT_CALL(*mockParam_, toProto(testing::An<st2138::Param&>(), testing::_)).Times(1)
         .WillOnce(testing::Return(catena::exception_with_status(expRc_.what(), expRc_.status)));
     // Calling proceed and testing the output
     testCall();
@@ -291,8 +291,8 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowCatena) {
     EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](){ return std::move(mockParam_); }));
     EXPECT_CALL(*mockParam_, getOid()).WillRepeatedly(testing::ReturnRef(fqoid_));
-    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](catena::Param &param, const IAuthorizer &authz)  {
+    EXPECT_CALL(*mockParam_, toProto(testing::An<st2138::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](st2138::Param &param, const IAuthorizer &authz)  {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -310,7 +310,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowStd) {
     EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](){ return std::move(mockParam_); }));
     EXPECT_CALL(*mockParam_, getOid()).WillRepeatedly(testing::ReturnRef(fqoid_));
-    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
+    EXPECT_CALL(*mockParam_, toProto(testing::An<st2138::Param&>(), testing::_)).Times(1)
         .WillOnce(testing::Throw(std::runtime_error(expRc_.what())));
     // Calling proceed and testing the output
     testCall();
@@ -326,7 +326,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowUnknown) {
     EXPECT_CALL(dm0_, getParam(fqoid_, testing::_, testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](){ return std::move(mockParam_); }));
     EXPECT_CALL(*mockParam_, getOid()).WillRepeatedly(testing::ReturnRef(fqoid_));
-    EXPECT_CALL(*mockParam_, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
+    EXPECT_CALL(*mockParam_, toProto(testing::An<st2138::Param&>(), testing::_)).Times(1)
         .WillOnce(testing::Throw(0));
     // Calling proceed and testing the output
     testCall();

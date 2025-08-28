@@ -30,7 +30,7 @@
 
 /**
  * @file SetValue.h
- * @brief Implements REST SetValue controller.
+ * @brief Implements controller for the REST PUT value endpoint.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -44,7 +44,11 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the SetValue REST controller.
+ * @brief Controller class for the PUT Value REST endpoint.
+ * 
+ * This controller supports one method:
+ * 
+ * - PUT: Updates the values of one parameter in the specified device.
  */
 class SetValue : public MultiSetValue {
   // Specifying which Device and IParam to use (defaults to catena::...)
@@ -54,18 +58,18 @@ class SetValue : public MultiSetValue {
 
   public:
     /**
-     * @brief Constructor for the SetValue controller.
+     * @brief Constructor for the PUT value endpoint controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The ISocketReader object.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     SetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
-     * @brief Creates a new rest object for use with GenericFactory.
-     * 
-     * @param socket The socket to write the response stream to.
-     * @param context The ISocketReader object.
+     * @brief Creates a new controller object for use with GenericFactory.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
@@ -77,9 +81,8 @@ class SetValue : public MultiSetValue {
      * @returns True if successful.
      */
     bool toMulti_() override;
-
     /**
-     * @brief The total # of SetValue objects.
+     * @brief The total # of PUT value endpoint controller objects.
      */
     static int objectCounter_;
 };

@@ -60,7 +60,7 @@ class gRPCUpdateSubscriptionsTests : public GRPCTest {
         * This is a test class which makes an async RPC to the MockServer on
         * construction and returns the streamed-back response.
         */
-        using StreamReader = catena::gRPC::test::StreamReader<catena::DeviceComponent_ComponentParam, catena::UpdateSubscriptionsPayload, std::function<void(grpc::ClientContext*, const catena::UpdateSubscriptionsPayload*, grpc::ClientReadReactor<catena::DeviceComponent_ComponentParam>*)>>;
+        using StreamReader = catena::gRPC::test::StreamReader<st2138::DeviceComponent_ComponentParam, st2138::UpdateSubscriptionsPayload, std::function<void(grpc::ClientContext*, const st2138::UpdateSubscriptionsPayload*, grpc::ClientReadReactor<st2138::DeviceComponent_ComponentParam>*)>>;
 
         // Set up and tear down Google Logging
         static void SetUpTestSuite() {
@@ -124,9 +124,9 @@ class gRPCUpdateSubscriptionsTests : public GRPCTest {
                 EXPECT_CALL(*mockParams_[i], getOid()).WillRepeatedly(testing::ReturnRefOfCopy(testOids_[i]));
                 
                 // Set up toProto expectation
-                EXPECT_CALL(*mockParams_[i], toProto(testing::An<catena::Param&>(), testing::_)).WillRepeatedly(testing::Invoke(
-                    [this, i](catena::Param &param, const IAuthorizer &authz) -> catena::exception_with_status {
-                        param.set_type(catena::ParamType::STRING);
+                EXPECT_CALL(*mockParams_[i], toProto(testing::An<st2138::Param&>(), testing::_)).WillRepeatedly(testing::Invoke(
+                    [this, i](st2138::Param &param, const IAuthorizer &authz) -> catena::exception_with_status {
+                        param.set_type(st2138::ParamType::STRING);
                         param.mutable_value()->set_string_value("value" + std::to_string(i + 1));
                         return catena::exception_with_status("", catena::StatusCode::OK);
                     }));
@@ -167,8 +167,8 @@ class gRPCUpdateSubscriptionsTests : public GRPCTest {
         }
 
         // Input/Output values
-        catena::UpdateSubscriptionsPayload inVal_;
-        std::vector<catena::DeviceComponent_ComponentParam> outVals_;
+        st2138::UpdateSubscriptionsPayload inVal_;
+        std::vector<st2138::DeviceComponent_ComponentParam> outVals_;
         
         // Trackers for calls to add/remove subscriptions
         uint32_t addedOids_ = 0;

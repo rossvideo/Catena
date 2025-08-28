@@ -149,7 +149,7 @@ class CppGen {
     bloc(`#include <functional>`);
     bloc(`#include <Menu.h>`);
     bloc(`#include <MenuGroup.h>`);
-    bloc(`using catena::Device_DetailLevel;`);
+    bloc(`using st2138::Device_DetailLevel;`);
     bloc(`using DetailLevel = catena::common::DetailLevel;`);
     bloc(`using catena::common::Scopes_e;`);
     bloc(`using Scope = typename catena::patterns::EnumDecorator<Scopes_e>;`);

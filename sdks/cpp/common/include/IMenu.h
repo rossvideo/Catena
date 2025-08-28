@@ -32,7 +32,7 @@
 
 /**
  * @file IMenu.h
- * @brief Interface for Menus
+ * @brief Interface for Menus.
  * @author Ben Mostafa Ben.Mostafa@rossvideo.com
  * @date 2024-10-04
  * @copyright Copyright (c) 2024 Ross Video
@@ -45,7 +45,7 @@ namespace catena {
 namespace common {
 
 /**
- * @brief Interface for Menus
+ * @brief Interface for Menus.
  */
 class IMenu {
   public:
@@ -55,10 +55,10 @@ class IMenu {
     virtual ~IMenu() = default;
 
     /**
-     * @brief serialize a menu to a protobuf message
-     * @param menu the protobuf message
+     * @brief Serializes a menu to a protobuf message.
+     * @param menu The protobuf message.
      */
-    virtual void toProto(catena::Menu& menu) const = 0;
+    virtual void toProto(st2138::Menu& menu) const = 0;
 
 };
 

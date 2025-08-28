@@ -32,9 +32,10 @@
 
 /**
  * @file Subscriptions.h
- * @brief Implements Catena REST Subscriptions
+ * @brief Implements controller for the REST subscriptions endpoint.
  * @author zuhayr.sarker@rossvideo.com
- * @date 2025-04-28
+ * @author benjamin.whitten@rossvideo.com
+ * @date 2025-08-19
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -57,7 +58,14 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the Subscriptions REST controller.
+ * @brief Controller class for the subscriptions REST endpoint.
+ * 
+ * This controller supports two methods:
+ * 
+ * - GET: Returns the client's current subscriptions for the specified device.
+ * Supports both stream and unary responses.
+ * 
+ * - PUT: Adds and removes any number of the client's subscriptions.
  */
 class Subscriptions : public ICallData {
 public:
@@ -67,24 +75,23 @@ public:
     using SlotMap = catena::common::SlotMap;
 
     /**
-     * @brief Constructor for the Subscriptions controller.
+     * @brief Constructor for the subscriptions endpoint controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The ISocketReader object.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     Subscriptions(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
-    
     /**
-     * @brief Subscriptions's main process.
+     * @brief The subscriptions endpoint's main process.
      */
     void proceed() override;
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     * 
-     * @param socket The socket to write the response stream to.
-     * @param context The ISocketReader object.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
@@ -93,10 +100,10 @@ public:
 
 private:
     /**
-     * @brief Helper function to write status messages to the API console.
+     * @brief Writes the current state of the request to the console.
      * 
-     * @param status The current state of the RPC (kCreate, kFinish, etc.)
-     * @param ok The status of the RPC (open or closed).
+     * @param status The current state of the request (kCreate, kFinish, etc.)
+     * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
         DEBUG_LOG << RESTMethodMap().getForwardMap().at(context_.method())
@@ -110,7 +117,15 @@ private:
      */
     tcp::socket& socket_;
     /**
-     * @brief The ISocketReader object.
+     * @brief The ISocketReader object used to read the client's request.
+     * 
+     * This is used to get three things from the client:
+     * 
+     * - A slot specifying the device to get/add/remove subscriptions from.
+     * 
+     * - A list of parameter oids to subscribe to.
+     * 
+     * - A list of paramter oids to unsubscribe from.
      */
     ISocketReader& context_;
     /**
@@ -123,11 +138,11 @@ private:
     SlotMap& dms_;
 
     /**
-     * @brief ID of the Subscriptions object
+     * @brief The object's unique id.
      */
     int objectId_;
     /**
-     * @brief The total # of Subscriptions objects.
+     * @brief The total # of subscriptions endpoint controller objects.
      */
     static int objectCounter_;
 };

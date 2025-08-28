@@ -30,7 +30,8 @@
 
 /**
  * @file ConnectionQueue.h
- * @brief Implements the ConnectionQueue class.
+ * @brief Implements the ConnectionQueue class which manages connections to a
+ * service.
  * @author Ben Whitten (benjamin.whitten@rossvideo.com)
  * @copyright Copyright (c) 2025 Ross Video
  */
@@ -48,7 +49,11 @@ namespace catena {
 namespace common {
 
 /**
- * @brief Implements a priority queue which manages IConnect objects.
+ * @brief Class for managing connections to a service.
+ * 
+ * This class manages connections via a priority queue which will forcefully
+ * disconnect lower priority connections which exceed the defined max.
+ * Priority is determined by the IConnect object.
  */
 class ConnectionQueue : public IConnectionQueue {
   public:
@@ -59,18 +64,20 @@ class ConnectionQueue : public IConnectionQueue {
      */
     ConnectionQueue(uint32_t maxConnections) : maxConnections_(maxConnections) {}
     /**
-     * @brief Regesters a Connect CallData object into the Connection priority
-     * queue.
+     * @brief Regesters a Connect CallData object into the priority queue.
      * 
-     * If the queue is full, the lowest priority connection will be shutdown.
+     * If the queue is full, the queue will first check for any cancelled
+     * connections it can remove. If none are found, it will then forcefully
+     * shutdown the lowest priority connection to make way for the new one.
      * 
      * @param cd The Connect CallData object to register.
-     * @return TRUE if successfully registered, FALSE otherwise
+     * @return True if successfully registered, False otherwise.
      */
     bool registerConnection(IConnect* cd) override;
     /**
-     * @brief Deregisters a Connect CallData object into the Connection
-     * priority queue.
+     * @brief Deregisters a Connect CallData object from the priority queue if
+     * it hasn't aleady.
+     * 
      * @param cd The Connect CallData object to deregister.
      */
     void deregisterConnection(const IConnect* cd) override;
@@ -81,14 +88,16 @@ class ConnectionQueue : public IConnectionQueue {
      */
     uint32_t maxConnections_;
     /**
-     * @brief Mutex to protect the connectionQueue 
+     * @brief Mutex to protect calls to register and deregisterConnection
+     * across multiple threads.
      */
     std::mutex mtx_;
     /**
      * @brief The priority queue for Connect CallData objects.
      * 
-     * Not an actual priority queue object since individual access is required
-     * for deregistering old connections.
+     * This is a vector instead of an actual priority queue object as
+     * individual access is required for deregistering connections at the end
+     * of their lifetime.
      */
     std::vector<IConnect*> connectionQueue_;
 };

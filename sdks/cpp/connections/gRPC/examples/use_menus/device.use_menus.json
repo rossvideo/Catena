@@ -41,7 +41,8 @@
           "name": { "display_strings": { "en": "Page 2", "es": "Página 2", "fr": "Page 2" } },
           "param_oids": ["/offset", "/button", "/counter"]
         }
-      }
+      },
+      "order": 0
     },
     "config": {
       "name": { "display_strings": { "en": "config", "es": "configuración", "fr": "configuration" } },
@@ -54,7 +55,8 @@
           "name": { "display_strings": { "en": "Page 2", "es": "Página 2", "fr": "Page 2" }},
           "param_oids": ["/offset", "/button", "/inline_button", "/counter"]
         }
-      }
+      },
+      "order": 1
     }
   },
   "params": {

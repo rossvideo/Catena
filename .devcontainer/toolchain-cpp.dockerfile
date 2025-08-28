@@ -75,3 +75,8 @@ RUN sudo apt-get update && sudo apt-get install -y python3-pip \
     && sudo pip3 install --no-cache-dir gcovr --break-system-packages \
     && sudo apt-get clean \
     && sudo rm -rf /var/cache/apt/archives/ /var/lib/apt/lists/*
+
+# Build OpenAPI
+COPY smpte/install-tooling.sh /root/smpte/install-tooling.sh
+RUN cd /root/smpte \
+    && ./install-tooling.sh

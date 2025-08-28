@@ -51,6 +51,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+          submodules: 'recursive'
 
     # Cache gRPC and Protobuf dependencies
     - name: Cache gRPC and Protobuf dependencies

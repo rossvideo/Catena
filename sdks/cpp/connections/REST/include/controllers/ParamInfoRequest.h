@@ -30,7 +30,7 @@
 
 /**
  * @file ParamInfoRequest.h
- * @brief Implements REST ParamInfoRequest controller.
+ * @brief Implements controller for the REST param-info endpoint.
  * @author zuhayr.sarker@rossvideo.com
  * @date 2025-04-22
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -67,7 +67,13 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the ParamInfoRequest REST controller.
+ * @brief Controller class for the param-info REST endpoint.
+ * 
+ * This controller supports one method:
+ * 
+ * - GET: Returns info about the specifeid parameter as well as its sub
+ * paramters if the rescursive flag is set to true. Supports both stream and
+ * unary responses.
  */
 class ParamInfoRequest : public ICallData {
   public:
@@ -77,24 +83,24 @@ class ParamInfoRequest : public ICallData {
     using SlotMap = catena::common::SlotMap;
 
     /**
-     * @brief Constructor for the ParamInfoRequest controller.
+     * @brief Constructor for the param-info endpoint controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The ISocketReader object.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     ParamInfoRequest(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     
     /**
-     * @brief ParamInfoRequest's main process.
+     * @brief The param-info endpoint's main process.
      */
     void proceed() override;
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     * 
-     * @param socket The socket to write the response stream to.
-     * @param context The ISocketReader object.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
@@ -105,6 +111,7 @@ class ParamInfoRequest : public ICallData {
   private:
     /**
      * @brief Writes the current state of the request to the console.
+     * 
      * @param status The current state of the request (kCreate, kFinish, etc.)
      * @param ok The status of the request (open or closed).
      */
@@ -131,46 +138,49 @@ class ParamInfoRequest : public ICallData {
      * @brief The socket to write the response to.
      */
     tcp::socket& socket_;
-    
     /**
-     * @brief The ISocketReader object.
+     * @brief The ISocketReader object used to read the client's request.
+     * 
+     * This is used to get three things from the client:
+     * 
+     * - A slot specifying the device containing the parameter to query.
+     * 
+     * - The oid of the parameter to query. An empty oid indicates the
+     * retrieval of the device's top level parameters.
+     * 
+     * - A flag signifying whether to include sub-parameters.
      */
     ISocketReader& context_;
-    
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
     std::unique_ptr<ISocketWriter> writer_ = nullptr;
-    
     /**
      * @brief The error status
      */
     catena::exception_with_status rc_;
-
     /**
      * @brief A map of slots to ptrs to their corresponding device.
      */
     SlotMap& dms_;
-
     /**
-     * @brief Whether to recursively get parameter info.
+     * @brief Whether to also go param info of sub-parameters.
      */
     bool recursive_;
 
     /**
-     * @brief ID of the ParamInfoRequest object
+     * @brief The object's unique id.
      */
     int objectId_;
-    
     /**
-     * @brief The total # of ParamInfoRequest objects.
+     * @brief The total # of param-info endpoint controller objects.
      */
     static int objectCounter_;
     
     /**
      * @brief The vector of ParamInfoResponse objects.
      */
-    std::vector<catena::ParamInfoResponse> responses_;
+    std::vector<st2138::ParamInfoResponse> responses_;
         
     /**
      * @brief Visitor class for collecting parameter info
@@ -185,7 +195,7 @@ class ParamInfoRequest : public ICallData {
              * @param request The request
              */
             ParamInfoVisitor(catena::common::IDevice& device, catena::common::Authorizer& authz,
-                                std::vector<catena::ParamInfoResponse>& responses,
+                                std::vector<st2138::ParamInfoResponse>& responses,
                                 ParamInfoRequest& request)
                 : device_(device), authz_(authz), responses_(responses), request_(request) {}
 
@@ -218,7 +228,7 @@ class ParamInfoRequest : public ICallData {
             /**
              * @brief The vector of responses within the visitor
              */
-            std::vector<catena::ParamInfoResponse>& responses_;
+            std::vector<st2138::ParamInfoResponse>& responses_;
 
             /**
              * @brief The request payload within the visitor

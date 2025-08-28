@@ -52,7 +52,10 @@ namespace gRPC {
 class ICallData {
   public:
     /**
-     * @brief Proceed function to be implemented by the CallData classes.
+     * @brief Manages the steps of the child CallData class.
+     *
+     * @param ok Flag indicating the status of the service and call.
+     * Will be false if either has been shutdown/cancelled.   
      */
     virtual void proceed(bool ok) = 0;
     /**
@@ -61,8 +64,8 @@ class ICallData {
     virtual ~ICallData() {}
   protected:
     /**
-     * @brief Extracts the JWS Bearer token from the server context's
-     * client metadata.
+     * @brief Extracts the JWS Bearer token from the client's metadata.
+     * 
      * @return The JWS Bearer token as a string.
      * @throw catena::exception_with_status if the token is not found.
      */

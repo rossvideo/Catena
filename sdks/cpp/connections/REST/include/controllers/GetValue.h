@@ -30,7 +30,7 @@
 
 /**
  * @file GetValue.h
- * @brief Implements REST GetValue controller.
+ * @brief Implements controller for the REST GET value endpoint.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -61,7 +61,12 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the GetValue REST controller.
+ * @brief Controller class for the GET Value REST endpoint.
+ * 
+ * This controller supports one method:
+ * 
+ * - GET: Writes a value from the specified device's specified parameter to the
+ * client.
  */
 class GetValue : public ICallData {
   public:
@@ -71,23 +76,23 @@ class GetValue : public ICallData {
     using SlotMap = catena::common::SlotMap;
 
     /**
-     * @brief Constructor for the GetValue controller.
+     * @brief Constructor for the GET value endpoint controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The ISocketReader object.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */ 
     GetValue(tcp::socket& socket, ISocketReader& context, SlotMap& dms);
     /**
-     * @brief GetValue's main process.
+     * @brief The GET value endpoint's main process.
      */
     void proceed() override;
     
     /**
      * @brief Creates a new controller object for use with GenericFactory.
-     * 
-     * @param socket The socket to write the response stream to.
-     * @param context The ISocketReader object.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object used to read the client's request.
      * @param dms A map of slots to ptrs to their corresponding device.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, SlotMap& dms) {
@@ -112,7 +117,13 @@ class GetValue : public ICallData {
      */
     tcp::socket& socket_;
     /**
-     * @brief The ISocketReader object.
+     * @brief The ISocketReader object used to read the client's request.
+     * 
+     * This is used to get two things from the client:
+     * 
+     * - A slot specifying the device to get the value from.
+     * 
+     * - The OID of the param to get the value of.
      */
     ISocketReader& context_;
     /**
@@ -125,11 +136,11 @@ class GetValue : public ICallData {
     SlotMap& dms_;
 
     /**
-     * @brief ID of the GetValue object
+     * @brief The object's unique id.
      */
     int objectId_;
     /**
-     * @brief The total # of GetValue objects.
+     * @brief The total # of GET value endpoint controller objects.
      */
     static int objectCounter_;
 };

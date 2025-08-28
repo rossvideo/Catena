@@ -57,7 +57,8 @@ class IAuthorizer; // forward declaration
 class IDevice; // forward declaration
 
 /**
- * @brief ParamDescriptor provides information about a parameter
+ * @brief ParamDescriptor provides information about a parameter as well as
+ * command definition and execution functions.
  */
 class ParamDescriptor : public IParamDescriptor {
   public:
@@ -115,7 +116,7 @@ class ParamDescriptor : public IParamDescriptor {
      * @param parent the parent parameter
      */
     ParamDescriptor(
-      catena::ParamType type, 
+      st2138::ParamType type, 
       const OidAliases& oid_aliases, 
       const PolyglotText::ListInitializer name, 
       const std::string& widget,
@@ -146,7 +147,7 @@ class ParamDescriptor : public IParamDescriptor {
     /**
      * @brief get the parameter type
      */
-    ParamType type() const override { return type_; }
+    st2138::ParamType type() const override { return type_; }
 
     /**
      * @brief get the parameter name
@@ -200,7 +201,7 @@ class ParamDescriptor : public IParamDescriptor {
     inline void setMinimalSet(bool flag) override { minimal_set_ = flag; }
 
     /**
-     * @brief Returns the max length of the array/string parameter. If max
+     * @brief Returns the max length an array/string parameter can be. If max
      * length is not set in the .JSON file, then the default value of 1024 is
      * used. The default value can also be configured with the command line
      * argument "--default_max_length=#".
@@ -208,10 +209,10 @@ class ParamDescriptor : public IParamDescriptor {
      */
     uint32_t max_length() const override;
     /**
-     * @brief Returns the total length of the string_array parameter. If max
-     * length is not set in the .JSON file, then the default value of 1024 is
-     * used. The default value can also be configured with the command line
-     * argument "--default_max_length=#".
+     * @brief Returns the total length the sum of all strings in a string_array
+     * parameter can be. If max length is not set in the .JSON file, then the
+     * default value of 1024 is used. The default value can also be configured
+     * with the command line argument "--default_total_length=#".
      * @returns total_length_
      */
     std::size_t total_length() const override;
@@ -230,7 +231,7 @@ class ParamDescriptor : public IParamDescriptor {
      * with the information from the ParamDescriptor
      * 
      */
-    void toProto(catena::Param &param, const IAuthorizer& authz) const override;
+    void toProto(st2138::Param &param, const IAuthorizer& authz) const override;
 
 
     /**
@@ -241,7 +242,7 @@ class ParamDescriptor : public IParamDescriptor {
      * this function will populate all non-value fields of the protobuf param message 
      * with the information from the ParamDescriptor
      */
-    void toProto(catena::ParamInfo &paramInfo, const IAuthorizer& authz) const override;
+    void toProto(st2138::ParamInfo &paramInfo, const IAuthorizer& authz) const override;
 
     /**
      * @brief get the parameter name by language
@@ -320,14 +321,14 @@ class ParamDescriptor : public IParamDescriptor {
              * @brief Returns a CommandResponse object when co_yield is called
              * and suspends the coroutine until getNext() is called.
              */
-            inline std::suspend_always yield_value(catena::CommandResponse& component) { 
+            inline std::suspend_always yield_value(st2138::CommandResponse& component) { 
               responseMessage = component;
               return {}; 
             }
             /**
              * @brief Finishes the coroutine and returns a CommandResponse.
              */
-            inline void return_value(catena::CommandResponse component) { this->responseMessage = component; }
+            inline void return_value(st2138::CommandResponse component) { this->responseMessage = component; }
             /**
              * @brief handles exceptions that occur during execution.
              */
@@ -341,7 +342,7 @@ class ParamDescriptor : public IParamDescriptor {
               if (exception_) std::rethrow_exception(exception_);
             }
 
-            catena::CommandResponse responseMessage{};
+            st2138::CommandResponse responseMessage{};
             std::exception_ptr exception_; 
         };
 
@@ -368,7 +369,7 @@ class ParamDescriptor : public IParamDescriptor {
         /**
          * @brief Resumes the coroutine and returns a CommandResponse object.
          */
-        catena::CommandResponse getNext() override {
+        st2138::CommandResponse getNext() override {
           if (hasMore()) {
             handle_.resume();
             handle_.promise().rethrow_if_exception();
@@ -381,13 +382,14 @@ class ParamDescriptor : public IParamDescriptor {
     };
 
     /**
-     * @brief define the command implementation
-     * @param commandImpl a function that takes a Value and returns a CommandResponder
+     * @brief Defines the command implementation if the parameter is a command.
+     * @param commandImpl A function that takes a protobuf Value and a response
+     * bool and returns a CommandResponder.
      * 
      * The passed function will be executed when executeCommand is called on this param object.
      * If this is not a command parameter, an exception will be thrown.
      */
-    void defineCommand(std::function<std::unique_ptr<ICommandResponder>(const catena::Value&, const bool)> commandImpl) override {
+    void defineCommand(std::function<std::unique_ptr<ICommandResponder>(const st2138::Value&, const bool)> commandImpl) override {
       if (!isCommand_) {
         throw std::runtime_error("Cannot define a command on a non-command parameter");
       }
@@ -395,14 +397,16 @@ class ParamDescriptor : public IParamDescriptor {
     }
 
     /**
-     * @brief execute the command
+     * @brief Executes the command implementation
      * @param value the value to pass to the command implementation
-     * @return the responser from the command implementation
+     * @param respond Flag indicating whether the command should respond with
+     * a CommandResponse.
+     * @return The CommandResponder from the command implementation
      * 
-     * if executeCommand is called for a command that has not been defined, then the returned
+     * If executeCommand is called for a command that has not been defined, then the returned
      * command response will be an exception with type UNIMPLEMENTED
      */
-    std::unique_ptr<ICommandResponder> executeCommand(const catena::Value& value, const bool respond) override {
+    std::unique_ptr<ICommandResponder> executeCommand(const st2138::Value& value, const bool respond) override {
       return commandImpl_(value, respond);
     }
 
@@ -412,7 +416,7 @@ class ParamDescriptor : public IParamDescriptor {
     inline bool isCommand() const override { return isCommand_; }
 
   private:
-    ParamType type_;  // ParamType is from param.pb.h
+    st2138::ParamType type_;  // ParamType is from param.pb.h
     std::vector<std::string> oid_aliases_;
     PolyglotText name_;
     std::string widget_;
@@ -436,9 +440,9 @@ class ParamDescriptor : public IParamDescriptor {
     bool minimal_set_;
 
     // default command implementation
-    std::function<std::unique_ptr<ICommandResponder>(const catena::Value&, const bool)> commandImpl_ = [](const catena::Value& value, const bool respond) -> std::unique_ptr<ICommandResponder> { 
-      return std::make_unique<CommandResponder>([](const catena::Value& value) -> CommandResponder {
-        catena::CommandResponse response;
+    std::function<std::unique_ptr<ICommandResponder>(const st2138::Value&, const bool)> commandImpl_ = [](const st2138::Value& value, const bool respond) -> std::unique_ptr<ICommandResponder> { 
+      return std::make_unique<CommandResponder>([](const st2138::Value& value) -> CommandResponder {
+        st2138::CommandResponse response;
         response.mutable_exception()->set_type("UNIMPLEMENTED");
         response.mutable_exception()->mutable_error_message()->mutable_display_strings()->insert({"en", "Command not implemented"});
         co_return response;
