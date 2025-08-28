@@ -87,7 +87,7 @@ jobs:
               -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
               -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
               -B ~/Catena/${BUILD_TARGET} \
-              -S ./sdks/cpp
+              -S ${GITHUB_WORKSPACE}/sdks/cpp
           fi
           cd ~/Catena/${BUILD_TARGET}
           ninja
