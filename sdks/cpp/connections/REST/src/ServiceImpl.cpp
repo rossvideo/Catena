@@ -102,7 +102,7 @@ void ServiceImpl::run() {
                     // Reading from the socket.
                     SocketReader context(this);
                     context.read(socket);
-                    std::string requestKey = RESTMethodMap().getForwardMap().at(context.method()) + context.endpoint();
+                    std::string requestKey = SocketReader::RESTMethodMap().getForwardMap().at(context.method()) + context.endpoint();
                     // Returning empty response with options to the client if required.
                     if (context.method() == Method_OPTIONS) {
                         rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
