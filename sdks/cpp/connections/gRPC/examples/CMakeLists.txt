@@ -27,5 +27,7 @@ add_subdirectory("one_of_everything")
 add_subdirectory("status_update")
 add_subdirectory("structs_with_authz")
 add_subdirectory("structs_with_authz_yaml")
-add_subdirectory("use_commands")
+# gnarly, frankly over-complex nested lambdas make this a bit of a pain to build
+# so we'll skip it for now
+# add_subdirectory("use_commands")
 add_subdirectory("use_menus")
