@@ -58,7 +58,7 @@ void SocketReader::read(tcp::socket& socket) {
                     i++;
                 }
                 // Everything after the endpoint is the fqoid.
-                for (i; i < path.size(); i++) {
+                for (; i < path.size(); i++) {
                     fqoid_ += "/" + path.at(i);
                 }
             }
