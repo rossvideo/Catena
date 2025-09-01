@@ -44,6 +44,10 @@
 #include <IParam.h>
 #include <Authorizer.h>
 
+// suppress clang warning about comments that contain "/*"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcomment"
+
 namespace catena {
 namespace common {
 
@@ -101,4 +105,6 @@ class ISubscriptionManager {
 };
 
 } // namespace common
-} // namespace catena 
+} // namespace catena
+
+#pragma clang diagnostic pop

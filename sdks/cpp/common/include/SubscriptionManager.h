@@ -39,6 +39,9 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
+// suppress clang warning about comments that contain "/*"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcomment"
 
 // common
 #include <IDevice.h>
@@ -160,3 +163,5 @@ class SubscriptionManager : public ISubscriptionManager {
 
 } // namespace common
 } // namespace catena 
+
+#pragma clang diagnostic pop

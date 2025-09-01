@@ -126,10 +126,13 @@ std::set<std::string> SubscriptionManager::getAllSubscribedOids(const IDevice& d
     return subscriptions_[dm.slot()];
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcomment"
 // Returns true if the OID ends with "/*", indicating it's a wildcard subscription
 bool SubscriptionManager::isWildcard(const std::string& oid) {
     return oid.length() >= 2 && oid.substr(oid.length() - 2) == "/*";
 }
+#pragma clang diagnostic pop
 
 bool SubscriptionManager::isSubscribed(const std::string& oid, const IDevice& dm) {
     std::lock_guard sg(mtx_);
