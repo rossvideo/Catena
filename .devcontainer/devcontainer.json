@@ -18,8 +18,9 @@
   },
   "postCreateCommand": {
     "dockerInit": "sudo groupdel docker || true && DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) && sudo groupadd -forg $DOCKER_GID docker && sudo usermod -aG docker ${USER_NAME}",
-    "buildOpenAPI": "cd /home/${USER_NAME}/Catena/smpte && ./build-openapi.sh",
-    "cmake": "chown ${USER_NAME}:${USER_NAME} ~/Catena/${BUILD_TARGET} && ${CMAKE_COMMAND} && echo 'Docker setup complete, please restart the dev container!'"
+    "initSubmodules": "git submodule update --init --recursive",
+    "buildOpenAPI": "set -x;cd /home/${USER_NAME}/Catena/smpte;ls -la; ./build-openapi.sh",
+    "cmake": "chown ${USER_NAME}:${USER_NAME} ~/Catena/${BUILD_TARGET}; ${CMAKE_COMMAND}; echo 'Docker setup complete, please restart the dev container!'"
   },
   "runArgs": [
     "--env-file",

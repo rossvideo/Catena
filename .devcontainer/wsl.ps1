@@ -121,7 +121,7 @@ Run-WSLCommand 20 "Start Docker" "sudo service docker start"
 Run-WSLCommand 21 "Build Catena build dir" "mkdir -p ~/Catena/${BUILD_TARGET}"
 
 
-Run-WSLCommand 22 "Pull Catena repo" "mkdir -p ~/Catena && cd ~/Catena && git init && git remote add origin https://github.com/rossvideo/Catena.git && git pull origin develop --recurse-submodules && git checkout develop"
+Run-WSLCommand 22 "Pull Catena repo" "mkdir -p ~/Catena && cd ~/Catena && git init && git remote add origin https://github.com/rossvideo/Catena.git && git pull origin develop --recurse-submodules && git checkout develop && git submodule update --init --recursive"
 
 # set git to use my username and email
 Run-WSLCommand 23 "Git config user info" "git config --global user.email '$gitEmail' && git config --global user.name '$gitName'"
