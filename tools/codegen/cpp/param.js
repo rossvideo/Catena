@@ -54,6 +54,7 @@ function typeArg(type) {
  */
 function valueTypeArg(type) {
   const types = {
+    EMPTY: "empty_value",
     STRING: `string_value`,
     INT32: `int32_value`,
     FLOAT32: `float32_value`,
@@ -417,6 +418,7 @@ class Param {
    */
   valueInitializer(value, type, param) {
     const valueObject = {
+      empty_value: () => '',
       string_value: (typeValue) => {
         return `"${typeValue}"`;
       },
