@@ -24,6 +24,7 @@ set(GRPC_TEST_FILES
     ServiceImpl_test.cpp
     SetValue_test.cpp
     UpdateSubscriptions_test.cpp
+    ICallData_test.cpp
 )
 
 foreach(test_file ${GRPC_TEST_FILES})
