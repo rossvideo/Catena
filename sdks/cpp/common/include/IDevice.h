@@ -141,6 +141,25 @@ class IDevice {
     virtual void set_default_total_length(const uint32_t default_total_length) = 0;
 
     /**
+     * @brief Cause the device to send a heartbeat update.
+     * @param param The parameter to use for the heartbeat update. The current value
+     * will be sent regardless of whether it has changed.
+     */
+    virtual void sendHeartbeat(const IParam& param) = 0;
+
+    /**
+     * @brief Start sending heartbeat updates for a parameter at the specified interval. This is a simple
+     * heartbeat set up. For a more complex implementation, consider using the Heartbeat class directly.
+     * @param param The parameter to use for heartbeats.
+     */
+    virtual void startHeartbeat(const IParam& param) = 0;
+
+    /**
+     * @brief Stop sending the heartbeat.
+     */
+    virtual void stopHeartbeat() = 0;
+
+    /**
      * @brief Create a protobuf representation of the device.
      * @param dst the protobuf representation of the device.
      * @param shallow if true, only the top-level info is copied, params,

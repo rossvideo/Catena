@@ -53,6 +53,7 @@
 #include <Status.h>
 #include <IMenu.h>
 #include <IMenuGroup.h>
+#include <rpc/IHeartbeat.h>
 
 // Interface
 #include <IDevice.h>
@@ -159,6 +160,12 @@ class Device : public IDevice {
      * @return The default total length for this device's string array params.
      */
     inline uint32_t default_total_length() const override {return default_total_length_;}
+
+    void sendHeartbeat(const IParam& param) override { valueSetByServer_.emit(param.getOid(), &param); }
+
+    void startHeartbeat(const IParam& param) override;
+
+    void stopHeartbeat() override;
 
     /**
      * @brief Sets the default max length for this device's array params.
@@ -701,6 +708,8 @@ class Device : public IDevice {
      * @brief The device's mutex.
      */
     mutable std::mutex mutex_;
+
+    std::unique_ptr<IHeartbeat> heartbeat_;
 };
 
 }  // namespace common

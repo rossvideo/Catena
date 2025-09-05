@@ -36,6 +36,7 @@
 #include <IParamDescriptor.h>
 #include <IMenuGroup.h> 
 #include <Menu.h>
+#include <rpc/Heartbeat.h>
 
 #include <cassert>
 #include <sstream>
@@ -353,6 +354,22 @@ std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exc
         status = catena::exception_with_status(why.what(), why.status);
     }
     return command;
+}
+
+void Device::startHeartbeat(const IParam& param) {
+    if (!heartbeat_) {
+        heartbeat_ = std::make_unique<Heartbeat>();
+        heartbeat_->getHeartbeatSignal().connect([this, &param]() {
+            this->sendHeartbeat(param);
+        });
+    }
+    heartbeat_->start(5000);
+}
+
+void Device::stopHeartbeat() {
+    if (heartbeat_) {
+        heartbeat_->stop();
+    }
 }
 
 void Device::toProto(::st2138::Device& dst, const IAuthorizer& authz, bool shallow) const {

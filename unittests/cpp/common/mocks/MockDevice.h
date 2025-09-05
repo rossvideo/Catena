@@ -84,6 +84,9 @@ class MockDevice : public IDevice {
     MOCK_METHOD(vdk::signal<void(const std::string&, const IAuthorizer*)>&, getDownloadAssetRequest, (), (override));
     MOCK_METHOD(vdk::signal<void(const std::string&, const IAuthorizer*)>&, getUploadAssetRequest, (), (override));
     MOCK_METHOD(vdk::signal<void(const std::string&, const IAuthorizer*)>&, getDeleteAssetRequest, (), (override));
+    MOCK_METHOD(void, sendHeartbeat, (const IParam& param), (override));
+    MOCK_METHOD(void, startHeartbeat, (const IParam& param), (override));
+    MOCK_METHOD(void, stopHeartbeat, (), (override));
   };
 
 } // namespace common
