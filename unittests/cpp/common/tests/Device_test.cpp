@@ -2455,3 +2455,14 @@ TEST_F(DeviceTest, GetDeleteAssetRequest) {
     // Test that the signal is not blocked (default state)
     EXPECT_FALSE(signal.blocked());
 }
+
+
+// ==== 10. Teapot Tests ====
+
+// 10.1: Success Case - Test getParam with teapot oid
+TEST_F(DeviceTest, GetParam_Teapot) {
+    // Test that the parameter is valid and usable
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto param = device_->getParam("/coffee", status, *monitorAuthz_);
+    EXPECT_EQ(status.status, catena::StatusCode::I_AM_A_TEAPOT);
+}
