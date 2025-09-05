@@ -212,8 +212,7 @@ class IDevice {
     using ComponentLanguagePack = st2138::DeviceComponent_ComponentLanguagePack;
     /**
      * @brief Finds and returns a language pack based on languageId.
-     * @param languageId The language id of the language pack to get
-     * (e.g. "en").
+     * @param languageId The language id of the language pack to get (e.g. "en").
      * @param pack Output var containing the found LanguagePack.
      * @return exception_with_status containing the status of the operation.
      */
