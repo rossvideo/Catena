@@ -124,9 +124,19 @@ void RunRPCServer(std::string addr)
 
         service.init();
         std::thread cq_thread([&]() { service.processEvents(); });
+        
+        catena::exception_with_status err{"", catena::StatusCode::OK};
+        // The rest is the "sending end" of the status update example
+        std::unique_ptr<IParam> param = dm.getParam("/heartbeat", err);
+        if (param == nullptr) {
+            throw err;
+        }
+        
+        dm.startHeartbeat(*param);
 
         // wait for the server to shutdown and tidy up
         server->Wait();
+        dm.stopHeartbeat();
 
         cq->Shutdown();
         cq_thread.join();

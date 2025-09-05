@@ -28,5 +28,12 @@
         }
       }
     }
+  },
+  "params": {
+    "heartbeat": {
+      "type": "EMPTY",
+      "read_only": true,
+      "value": { "empty_value": {} }
+    }
   }
 }
