@@ -57,21 +57,11 @@ using namespace boost::urls;
 
 #include <string>
 
+
+
 namespace catena {
 namespace REST {
 
-using RESTMethodMap = catena::patterns::EnumDecorator<RESTMethod>;
-template <>
-inline const RESTMethodMap::FwdMap RESTMethodMap::fwdMap_ = {
-  {catena::REST::Method_NONE,    "NONE"},
-  {catena::REST::Method_GET,     "GET"},
-  {catena::REST::Method_POST,    "POST"},
-  {catena::REST::Method_PUT,     "PUT"},
-  {catena::REST::Method_PATCH,   "PATCH"},
-  {catena::REST::Method_DELETE,  "DELETE"},
-  {catena::REST::Method_HEAD,    "HEAD"},
-  {catena::REST::Method_OPTIONS, "OPTIONS"}
-};
 
 /**
  * @brief A helper class which reads from the client socket using boost and
@@ -249,3 +239,15 @@ class SocketReader : public ISocketReader {
 
 }; // Namespace REST
 }; // Namespace catena
+
+template <>
+inline const catena::REST::ISocketReader::RESTMethodMap::FwdMap catena::REST::ISocketReader::RESTMethodMap::fwdMap_ = {
+  {catena::REST::Method_NONE,    "NONE"},
+  {catena::REST::Method_GET,     "GET"},
+  {catena::REST::Method_POST,    "POST"},
+  {catena::REST::Method_PUT,     "PUT"},
+  {catena::REST::Method_PATCH,   "PATCH"},
+  {catena::REST::Method_DELETE,  "DELETE"},
+  {catena::REST::Method_HEAD,    "HEAD"},
+  {catena::REST::Method_OPTIONS, "OPTIONS"}
+};

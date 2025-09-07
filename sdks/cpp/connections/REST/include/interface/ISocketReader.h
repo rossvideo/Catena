@@ -68,6 +68,11 @@ enum RESTMethod : uint32_t { Method_NONE, Method_GET, Method_POST, Method_PUT, M
  */
 class ISocketReader {
   public:
+    /**
+     * @brief typedef for the RESTMethodMap.
+     */
+    using RESTMethodMap = ::catena::patterns::EnumDecorator<RESTMethod>;
+  public:
     ISocketReader() = default;
     ISocketReader(const ISocketReader&) = default;
     ISocketReader& operator=(const ISocketReader&) = default;

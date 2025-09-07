@@ -51,6 +51,9 @@
 #include <set>
 #include <string>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcomment"
+
 namespace catena {
 namespace common {
 
@@ -160,3 +163,5 @@ class SubscriptionManager : public ISubscriptionManager {
 
 } // namespace common
 } // namespace catena 
+
+#pragma clang diagnostic pop

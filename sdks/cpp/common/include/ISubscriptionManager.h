@@ -44,6 +44,9 @@
 #include <IParam.h>
 #include <Authorizer.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcomment"
+
 namespace catena {
 namespace common {
 
@@ -102,3 +105,5 @@ class ISubscriptionManager {
 
 } // namespace common
 } // namespace catena 
+
+#pragma clang diagnostic pop
