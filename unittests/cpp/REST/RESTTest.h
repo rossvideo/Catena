@@ -105,7 +105,7 @@ class RESTTest {
                       const std::string& jsonBody) {
         // Compiling path:
         std::string request = "";
-        request += RESTMethodMap().getForwardMap().at(method)
+        request += ISocketReader::RESTMethodMap().getForwardMap().at(method)
                 + " /st2138-api/v1";
         if (slot != 0) {
             request += "/" + std::to_string(slot);
