@@ -30,7 +30,6 @@
       }
     }
   },
-
   "params": {
     "counter": {
       "type": "INT32",
@@ -89,17 +88,19 @@
       "read_only": true,
       "value": { "string_value": "eo://status_update.grid" }
     },
-    "Product": {
+    "product": {
       "type": "STRUCT",
       "read_only": true,
       "value": {
         "struct_value": {
-          "name": { "string_value": "Catena" },
-          "vendor": { "string_value": "Catena Technologies Pte. Ltd" },
-          "version": { "string_value": "1.0.0" },
-          "catena_sdk": { "string_value": "1.0.0" },
-          "catena_sdk_version": { "string_value": "1.0.0" },
-          "serial_number": { "string_value": "" }
+          "fields": {
+            "name": { "string_value": "Status Update" },
+            "vendor": { "string_value": "Ross Video" },
+            "version": { "string_value": "1.0.0" },
+            "catena_sdk": { "string_value": "https://github.com/rossvideo/Catena.git" },
+            "catena_sdk_version": { "string_value": "" },
+            "serial_number": { "string_value": "SN-7K9M-2024-XR485-BLU" }
+          }
         }
       },
       "params": {

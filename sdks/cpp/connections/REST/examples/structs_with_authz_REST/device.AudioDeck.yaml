@@ -27,33 +27,31 @@ params:
         type: FLOAT32
         name: {display_strings: {en: Q Factor}}
         access_scope: st2138:adm
-
-product:
-    type: STRUCT
-    read_only: true
-    value: 
-      struct_value:
-        fields:
-          name: { string_value: "Catena" }
-          vendor: { string_value: "Catena Technologies Pte. Ltd" }
-          version: { string_value: "1.0.0" }
-          catena_sdk: { string_value: "1.0.0" }
-          catena_sdk_version: { string_value: "1.0.0" }
-          serial_number: { string_value: "" }
-    params:
-      name: 
-        type: STRING  
-      vendor:
-        type: STRING
-      version:
-        type: STRING
-      catena_sdk:
-        type: STRING
-      catena_sdk_version:
-        type: STRING
-      serial_number:
-        type: STRING
-
+  product:
+      type: STRUCT
+      read_only: true
+      value: 
+        struct_value:
+          fields:
+            name: { string_value: "Audio Deck" }
+            vendor: { string_value: "Ross Video" }
+            version: { string_value: "1.0.0" }
+            catena_sdk: { string_value: "https://github.com/rossvideo/Catena.git" }
+            catena_sdk_version: { string_value: "" }
+            serial_number: { string_value: "SN-7K9M-2024-XR485-BLU" }
+      params:
+        name: 
+          type: STRING  
+        vendor:
+          type: STRING
+        version:
+          type: STRING
+        catena_sdk:
+          type: STRING
+        catena_sdk_version:
+          type: STRING
+        serial_number:
+          type: STRING
   # Template struct containing an array (STRUCT containing STRUCT_ARRAY)
   audio_channel: 
     type: STRUCT
@@ -220,7 +218,6 @@ product:
                   fields:
                     time: {float32_value: 0.4}
                     feedback: {float32_value: 0.6}
-
 
   # Templates for structs that will be used by variants
   delay_effect:
