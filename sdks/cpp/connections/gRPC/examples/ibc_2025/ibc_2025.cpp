@@ -120,7 +120,7 @@ void businessLogic(){
     auto& meters = *dynamic_cast<ParamWithValue<std::vector<float>>*>(param.get());
 
     while (globalLoop) {
-        // update the counter once per second, and emit the event
+        // Update the meters once per 25ms, and emit the event
         std::this_thread::sleep_for(std::chrono::milliseconds(25));
         {
             std::lock_guard lg(dm.mutex());
