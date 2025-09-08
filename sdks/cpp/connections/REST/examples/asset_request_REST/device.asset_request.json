@@ -11,29 +11,39 @@
       "name": { "display_strings": { "en": "Assets", "es": "Assets", "fr": "Assets" } },
       "value": { "string_array_values": { "strings": [] } }
     },
-  "name": {
-    "type": "STRING",
-    "value": { "string_value": "Catena" }
-  },
-  "vendor": {
-    "type": "STRING",
-    "value": { "string_value": "Catena Technologies Pte. Ltd" }
-  },
-  "version": {
-    "type": "STRING",
-    "value": { "string_value": "1.0.0" }
-  },
-  "catena_sdk": {
-    "type": "STRING",
-    "value": { "string_value": "1.0.0" }
-  },
-  "catena_sdk_version": {
-    "type": "STRING",
-    "value": { "string_value": "1.0.0" }
-  },
-  "serial_number": {
-    "type": "STRING",
-    "value": { "string_value": "" } 
-  }
+    "Product": {
+      "type": "STRUCT",
+      "read_only": true,
+      "value": {
+        "struct_value": {
+          "name": { "string_value": "Catena" },
+          "vendor": { "string_value": "Catena Technologies Pte. Ltd" },
+          "version": { "string_value": "1.0.0" },
+          "catena_sdk": { "string_value": "1.0.0" },
+          "catena_sdk_version": { "string_value": "1.0.0" },
+          "serial_number": { "string_value": "" }
+        }
+      },
+      "params": {
+        "name": {
+          "type": "STRING"
+        },
+        "vendor": {
+          "type": "STRING"
+        },
+        "version": {
+          "type": "STRING"
+        },
+        "catena_sdk": {
+          "type": "STRING"
+        },
+        "catena_sdk_version": {
+          "type": "STRING"
+        },
+        "serial_number": {
+          "type": "STRING"
+        }
+      }
+    }
   }
 }

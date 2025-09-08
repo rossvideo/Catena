@@ -27,24 +27,32 @@ params:
         type: FLOAT32
         name: {display_strings: {en: Q Factor}}
         access_scope: st2138:adm
-      name:
-        type: STRING
-        value: {string_value: "Catena"}
+
+product:
+    type: STRUCT
+    read_only: true
+    value: 
+      struct_value:
+        fields:
+          name: { string_value: "Catena" }
+          vendor: { string_value: "Catena Technologies Pte. Ltd" }
+          version: { string_value: "1.0.0" }
+          catena_sdk: { string_value: "1.0.0" }
+          catena_sdk_version: { string_value: "1.0.0" }
+          serial_number: { string_value: "" }
+    params:
+      name: 
+        type: STRING  
       vendor:
         type: STRING
-        value: {string_value: "Catena Technologies Pte. Ltd"}
       version:
         type: STRING
-        value: {string_value: "1.0.0"}
       catena_sdk:
         type: STRING
-        value: {string_value: "1.0.0"}
       catena_sdk_version:
         type: STRING
-        value: {string_value: "1.0.0"}
       serial_number:
         type: STRING
-        value: {string_value: ""}
 
   # Template struct containing an array (STRUCT containing STRUCT_ARRAY)
   audio_channel: 
