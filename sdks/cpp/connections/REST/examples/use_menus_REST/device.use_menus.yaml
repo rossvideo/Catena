@@ -83,6 +83,24 @@ params:
         min_value: -10
         max_value: 10
         step: 1
+  name:
+    type: STRING
+    value: {string_value: "Catena"}
+  vendor:
+    type: STRING
+    value: {string_value: "Catena Technologies Pte. Ltd"}
+  version:
+    type: STRING
+    value: {string_value: "1.0.0"}
+  catena_sdk:
+    type: STRING
+    value: {string_value: "1.0.0"}
+  catena_sdk_version:
+    type: STRING
+    value: {string_value: "1.0.0"}
+  serial_number:
+    type: STRING
+    value: {string_value: ""}
 constraints:
   basic_button:
     type: INT_CHOICE

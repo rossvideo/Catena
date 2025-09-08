@@ -39,6 +39,24 @@ params:
         max_value: 2.0
         step: 0.25
     read_only: true
+  name:
+    type: STRING
+    value: {string_value: "Catena"}
+  vendor:
+    type: STRING
+    value: {string_value: "Catena Technologies Pte. Ltd"}
+  version:
+    type: STRING
+    value: {string_value: "1.0.0"}
+  catena_sdk:
+    type: STRING
+    value: {string_value: "1.0.0"}
+  catena_sdk_version:
+    type: STRING
+    value: {string_value: "1.0.0"}
+  serial_number:
+    type: STRING
+    value: {string_value: ""}
 commands:
   play:
     type: EMPTY

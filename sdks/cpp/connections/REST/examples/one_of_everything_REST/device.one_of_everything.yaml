@@ -67,6 +67,31 @@ params:
   constraint_examples:
     import: { file: /constraints/param.constraint_examples.yaml }
 
+  #Mandatory params
+  name: 
+    type: STRING
+    value: { string_value: "Catena"}
+  
+  vendor:
+    type: STRING
+    value: { string_value: "Catena Technologies Pte. Ltd"}
+
+  version:
+    type: STRING
+    value: { string_value: "1.0.0"}
+
+  catena_sdk:
+    type: STRING
+    value: { string_value: "1.0.0"}
+
+  catena_sdk_version:
+    type: STRING
+    value: { string_value: "1.0.0"}
+
+  serial_number:
+    type: STRING
+    value: { string_value: ""}
+
 menu_groups:
   status:
     name: { display_strings: { en: "Status" } }

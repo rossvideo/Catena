@@ -91,7 +91,7 @@ class Connect : public CallData, public catena::common::Connect {
      * 
      * - The detail level of updates they want to receive.
      * 
-     * - A flag indicating whether the client wants to force a connection to
+     * - A flag indicating whether the client wants to force a connection to  
      * the service.
      */
     st2138::ConnectPayload req_;
