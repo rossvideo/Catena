@@ -1,6 +1,5 @@
 var classcatena_1_1gRPC_1_1IServiceImpl =
 [
-    [ "~IServiceImpl", "classcatena_1_1gRPC_1_1IServiceImpl.html#a54124bc159af9042d4557a7eaa0168b6", null ],
     [ "authorizationEnabled", "classcatena_1_1gRPC_1_1IServiceImpl.html#a2cf11131ac6ec0bdf77d0c56753264dc", null ],
     [ "connectionQueue", "classcatena_1_1gRPC_1_1IServiceImpl.html#a44110a33e438db93427cdfdaba4332d8", null ],
     [ "cq", "classcatena_1_1gRPC_1_1IServiceImpl.html#ad85633e7c544986f5c966a43984ef927", null ],
