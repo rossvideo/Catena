@@ -168,15 +168,6 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IDevice</b> ()=de
 <tr class="memitem:a45c1d87171f95fa1bdb8fbf0d2e81387" id="r_a45c1d87171f95fa1bdb8fbf0d2e81387"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a45c1d87171f95fa1bdb8fbf0d2e81387">set_default_total_length</a> (const uint32_t <a class="el" href="classcatena_1_1common_1_1IDevice.html#af0932dc3bb5bb73dda7db8679b00a831">default_total_length</a>)=0</td></tr>
 <tr class="memdesc:a45c1d87171f95fa1bdb8fbf0d2e81387"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the default total length for this device's array params.  <br /></td></tr>
 <tr class="separator:a45c1d87171f95fa1bdb8fbf0d2e81387"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a63fd95372ea348bebd70b02c4935bcda" id="r_a63fd95372ea348bebd70b02c4935bcda"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a63fd95372ea348bebd70b02c4935bcda">sendHeartbeat</a> (const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &amp;param)=0</td></tr>
-<tr class="memdesc:a63fd95372ea348bebd70b02c4935bcda"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cause the device to send a heartbeat update.  <br /></td></tr>
-<tr class="separator:a63fd95372ea348bebd70b02c4935bcda"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aecfaf8cc80a45f6b60b63097a9dfa569" id="r_aecfaf8cc80a45f6b60b63097a9dfa569"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#aecfaf8cc80a45f6b60b63097a9dfa569">startHeartbeat</a> (const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &amp;param)=0</td></tr>
-<tr class="memdesc:aecfaf8cc80a45f6b60b63097a9dfa569"><td class="mdescLeft">&#160;</td><td class="mdescRight">Start sending heartbeat updates for a parameter at the specified interval. This is a simple heartbeat set up. For a more complex implementation, consider using the <a class="el" href="classcatena_1_1common_1_1Heartbeat.html">Heartbeat</a> class directly.  <br /></td></tr>
-<tr class="separator:aecfaf8cc80a45f6b60b63097a9dfa569"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac70b7061883afa61c25db2772d996cdd" id="r_ac70b7061883afa61c25db2772d996cdd"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#ac70b7061883afa61c25db2772d996cdd">stopHeartbeat</a> ()=0</td></tr>
-<tr class="memdesc:ac70b7061883afa61c25db2772d996cdd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stop sending the heartbeat.  <br /></td></tr>
-<tr class="separator:ac70b7061883afa61c25db2772d996cdd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e0c5ad6a8f5c049cf2ab2bfee0cd995" id="r_a0e0c5ad6a8f5c049cf2ab2bfee0cd995"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a0e0c5ad6a8f5c049cf2ab2bfee0cd995">toProto</a> (::st2138::Device &amp;dst, const <a class="el" href="classcatena_1_1common_1_1IAuthorizer.html">IAuthorizer</a> &amp;authz, bool shallow=true) const =0</td></tr>
 <tr class="memdesc:a0e0c5ad6a8f5c049cf2ab2bfee0cd995"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a protobuf representation of the device.  <br /></td></tr>
 <tr class="separator:a0e0c5ad6a8f5c049cf2ab2bfee0cd995"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1380,42 +1371,6 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="a63fd95372ea348bebd70b02c4935bcda" name="a63fd95372ea348bebd70b02c4935bcda"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a63fd95372ea348bebd70b02c4935bcda">&#9670;&#160;</a></span>sendHeartbeat()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual void catena::common::IDevice::sendHeartbeat </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &amp;&#160;</td>
-          <td class="paramname"><em>param</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Cause the device to send a heartbeat update. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">param</td><td>The parameter to use for the heartbeat update. The current value will be sent regardless of whether it has changed. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#acbf1836c2ec82828fef974ebdac179c1">catena::common::Device</a>.</p>
-
-</div>
-</div>
 <a id="a08a3075dc712800ffe3044b5dc80240b" name="a08a3075dc712800ffe3044b5dc80240b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a08a3075dc712800ffe3044b5dc80240b">&#9670;&#160;</a></span>set_default_max_length()</h2>
 
@@ -1661,71 +1616,6 @@ Here is the caller graph for this function:</div>
 </dl>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#a40b1e5cfa1d5b61d9d8ae914cde30818">catena::common::Device</a>.</p>
-
-</div>
-</div>
-<a id="aecfaf8cc80a45f6b60b63097a9dfa569" name="aecfaf8cc80a45f6b60b63097a9dfa569"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aecfaf8cc80a45f6b60b63097a9dfa569">&#9670;&#160;</a></span>startHeartbeat()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual void catena::common::IDevice::startHeartbeat </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &amp;&#160;</td>
-          <td class="paramname"><em>param</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Start sending heartbeat updates for a parameter at the specified interval. This is a simple heartbeat set up. For a more complex implementation, consider using the <a class="el" href="classcatena_1_1common_1_1Heartbeat.html">Heartbeat</a> class directly. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">param</td><td>The parameter to use for heartbeats. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#aed30c9bf634eeb0949b7cb6363614ca6">catena::common::Device</a>.</p>
-
-</div>
-</div>
-<a id="ac70b7061883afa61c25db2772d996cdd" name="ac70b7061883afa61c25db2772d996cdd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac70b7061883afa61c25db2772d996cdd">&#9670;&#160;</a></span>stopHeartbeat()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual void catena::common::IDevice::stopHeartbeat </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Stop sending the heartbeat. </p>
-
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#ad5058a7200cd05677d33b7e3c95ed17d">catena::common::Device</a>.</p>
 
 </div>
 </div>
