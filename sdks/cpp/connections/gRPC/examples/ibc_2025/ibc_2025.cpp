@@ -69,6 +69,9 @@
 #include <signal.h>
 #include <functional>
 #include <Logger.h>
+#include <random>
+#include <cstdlib>
+#include <ctime>
 
 using grpc::Server;
 using catena::gRPC::ServiceConfig;
@@ -92,6 +95,13 @@ void handle_signal(int sig) {
     });
     t.join();
 }
+
+float randomFloatInRange(float min, float max) {
+    static std::mt19937 rng(std::random_device{}());  // seeded once
+    std::uniform_real_distribution<float> dist(min, max);
+    return dist(rng);
+}
+
 
 void businessLogic(){   
     // std::map<std::string, std::function<void(const std::string&, const IParam*)>> handlers;
@@ -118,14 +128,33 @@ void businessLogic(){
 
     // downcast the IParam to a ParamWithValue<int32_t>
     auto& meters = *dynamic_cast<ParamWithValue<std::vector<float>>*>(param.get());
+    std::vector<float> delays(meters.get().size(), 0.0);
 
     while (globalLoop) {
-        // Update the meters once per 25ms, and emit the event
-        std::this_thread::sleep_for(std::chrono::milliseconds(25));
+        // Update the meters occasionally, and emit the event
+        size_t my_turn = 0;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         {
             std::lock_guard lg(dm.mutex());
-            for (auto& meter : meters.get()) {
-                meter = static_cast<float>(rand()) / static_cast<float>(RAND_MAX / 100);
+            for (size_t i = 0; i < meters.get().size(); i++) {
+                float& meter = meters.get()[i];
+                float& delay = delays[i];
+                float offset = randomFloatInRange(-40.0f, 19.0f);
+                float input = (i == my_turn++) ? 80.0f + offset : input;
+                float a1, b0;
+                // if (input > meter) {
+                //     // attack
+                    a1 = -0.759857016f;
+                    b0 = 1.0f + a1;
+                //     meter = delay = input;
+                // } else {
+                    // release,
+                    // a1 = -0.972911166f;
+                    // b0 = 1.0f + a1;  
+                // }
+                float old_delay = delay;
+                delay = input - a1 * old_delay;
+                meter = b0 * delay;
             }
             dm.getValueSetByServer().emit("/meters", &meters);
         }
