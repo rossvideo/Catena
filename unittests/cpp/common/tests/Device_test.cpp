@@ -48,6 +48,7 @@
 #include <mocks/MockMenuGroup.h>
 #include <mocks/MockMenu.h>
 #include <CommonTestHelpers.h>
+#include <mocks/MockHeartbeat.h>
 
 using namespace catena::common;
 
@@ -58,10 +59,38 @@ protected:
         : adminScope_(Scopes().getForwardMap().at(Scopes_e::kAdmin))
         , monitorScope_(Scopes().getForwardMap().at(Scopes_e::kMonitor)) {
     }
+
+    // Helper class that provides access to connectionQueue_ vector
+    class DummyDevice : public ::catena::common::Device {
+      public:
+        using Device::Device;  // Inherit constructors
+
+        static MockHeartbeat* mockHeartbeat;
+        static bool mockHeartbeatOwned;
+
+        IHeartbeat* getHeartbeat() { return heartbeat_.get(); }
+
+        void initHeartbeat(const IParam& param) override {
+            if (heartbeat_ != nullptr) {
+                // Heartbeat already initialized, do nothing
+                return;
+            }
+            // Use the mockHeartbeat instance
+            // EXPECT_NE(mockHeartbeat, nullptr) << "mockHeartbeat must be set before in tests that use it";
+            heartbeat_ = std::unique_ptr<IHeartbeat>(mockHeartbeat);
+            // transfer ownership to heartbeat_, mark mockHeartbeat no longer owned
+            mockHeartbeatOwned = false;
+        }
+
+        // Exposes the protected initHeartbeat method for testing
+        void coverInitHeartbeat(const IParam& param) {
+            Device::initHeartbeat(param);
+        }
+    };
     
     void SetUp() override {
         // Create a device with basic parameters
-        device_ = std::make_unique<Device>(
+        device_ = std::make_unique<DummyDevice>(
             1,  // slot
             st2138::Device_DetailLevel_FULL,  // detail_level
             std::vector<std::string>{"admin"},  // access_scopes
@@ -93,7 +122,10 @@ protected:
             },
             *device_
         );
-        
+
+        DeviceTest::DummyDevice::mockHeartbeat = new MockHeartbeat();
+        DeviceTest::DummyDevice::mockHeartbeatOwned = true;
+
         // Add a minimal set parameter to the device
         auto minimalSetParam = std::make_shared<MockParam>();
         auto minimalSetDescriptor = std::make_shared<MockParamDescriptor>();
@@ -129,7 +161,15 @@ protected:
 
     }
 
-    std::unique_ptr<Device> device_;
+    void TearDown() override {
+        if (DeviceTest::DummyDevice::mockHeartbeatOwned && DeviceTest::DummyDevice::mockHeartbeat) {
+            delete DeviceTest::DummyDevice::mockHeartbeat;
+        }
+        DeviceTest::DummyDevice::mockHeartbeat = nullptr;
+        DeviceTest::DummyDevice::mockHeartbeatOwned = false;
+    }
+
+    std::unique_ptr<DummyDevice> device_;
     std::unique_ptr<Authorizer> adminAuthz_;
     std::unique_ptr<Authorizer> monitorAuthz_;
     std::shared_ptr<LanguagePack> englishPack_;
@@ -263,6 +303,10 @@ protected:
 };
 
 // ======== 0. Initial Setup ========
+
+// Static member definitions for DummyDevice
+MockHeartbeat* DeviceTest::DummyDevice::mockHeartbeat = nullptr;
+bool DeviceTest::DummyDevice::mockHeartbeatOwned = false;
 
 // 0.1 - Test device creation
 TEST_F(DeviceTest, Device_Create) {
@@ -2454,4 +2498,113 @@ TEST_F(DeviceTest, GetDeleteAssetRequest) {
     auto& signal = device_->getDeleteAssetRequest();
     // Test that the signal is not blocked (default state)
     EXPECT_FALSE(signal.blocked());
+}
+
+// ==== Device Heartbeat Tests ====
+
+// test send heartbeat emits a value set by server signal
+TEST_F(DeviceTest, SendHeartbeat) {
+    bool signalEmitted = false;
+    auto connection = device_->getValueSetByServer().connect(
+        [&signalEmitted](const std::string& oid, const IParam* p){ signalEmitted = true; });
+
+    // Create a mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope_);
+
+    device_->sendHeartbeat(*mockParam);
+
+    EXPECT_TRUE(signalEmitted);
+}
+
+// mostly just for code coverage, since initHeartbeat is called by startHeartbeat
+TEST_F(DeviceTest, InitHeartbeat) {
+    // Create a mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope_);
+    device_->addItem("testParam", mockParam.get());
+
+    // run the base classes initHeartbeat
+    EXPECT_EQ(device_->getHeartbeat(), nullptr);
+    device_->coverInitHeartbeat(*mockParam);
+    EXPECT_NE(device_->getHeartbeat(), nullptr);
+    // run it a second time to cover the already initialized case
+    device_->coverInitHeartbeat(*mockParam);
+    EXPECT_NE(device_->getHeartbeat(), nullptr);
+    // and no errors or anything
+
+    // connect to the value set by server signal to verify it works
+    bool signalEmitted = false;
+    auto connection = device_->getValueSetByServer().connect(
+        [&signalEmitted](const std::string& oid, const IParam* p){ signalEmitted = true; });
+    
+    // fire the heartbeat to ensure it works
+    device_->getHeartbeat()->getHeartbeatSignal().emit();
+    EXPECT_TRUE(signalEmitted);
+}
+
+// test initializing the heartbeat and starting it
+TEST_F(DeviceTest, StartHeartbeat) {
+    // Create a mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope_);
+    device_->addItem("testParam", mockParam.get());
+
+    EXPECT_CALL(*DummyDevice::mockHeartbeat, start((int32_t)5000)).Times(1);
+
+    // Start heartbeat
+    device_->startHeartbeat(*mockParam);
+
+    // Since we cannot directly check private members, we assume if no exceptions were thrown, it worked
+    EXPECT_NE(device_->getHeartbeat(), nullptr);
+}
+
+// test starting the heartbeat when it's already initialized
+TEST_F(DeviceTest, StartHeartbeatAlreadyStarted) {
+    // Create a mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope_);
+    device_->addItem("testParam", mockParam.get());
+
+    // simulate a started heartbeat by assigning a mock heartbeat instance
+    EXPECT_EQ(device_->getHeartbeat(), nullptr);
+    device_->initHeartbeat(*mockParam);
+    EXPECT_NE(device_->getHeartbeat(), nullptr);
+    // will still call start on the existing heartbeat
+    EXPECT_CALL(*DummyDevice::mockHeartbeat, start((int32_t)5000)).Times(1);
+    device_->startHeartbeat(*mockParam);
+    // should not clean up the heartbeat
+    EXPECT_NE(device_->getHeartbeat(), nullptr);
+}
+
+// test stopping the heartbeat when it's started
+TEST_F(DeviceTest, StopHeartbeat) {
+    // Create a mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope_);
+    device_->addItem("testParam", mockParam.get());
+
+    // simulate a started heartbeat by assigning a mock heartbeat instance
+    EXPECT_EQ(device_->getHeartbeat(), nullptr);
+    device_->initHeartbeat(*mockParam);
+    EXPECT_NE(device_->getHeartbeat(), nullptr);
+    // Expect the stop method to be called once
+    EXPECT_CALL(*DummyDevice::mockHeartbeat, stop()).Times(1);
+    // Stopping heartbeat when started should stop up the heartbeat
+    device_->stopHeartbeat();
+    // should not clean up the heartbeat
+    EXPECT_NE(device_->getHeartbeat(), nullptr);
+}
+
+// test stopping the heartbeat when it's not started
+TEST_F(DeviceTest, StopHeartbeatNotStarted) {
+    // Stopping heartbeat when not started should not throw or crash
+    device_->stopHeartbeat();
+    // and the heartbeat should still be nullptr
+    EXPECT_EQ(device_->getHeartbeat(), nullptr);
 }
