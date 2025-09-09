@@ -356,13 +356,17 @@ std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exc
     return command;
 }
 
-void Device::startHeartbeat(const IParam& param) {
+void Device::initHeartbeat(const IParam& param) {
     if (!heartbeat_) {
         heartbeat_ = std::make_unique<Heartbeat>();
         heartbeat_->getHeartbeatSignal().connect([this, &param]() {
             this->sendHeartbeat(param);
         });
     }
+}
+
+void Device::startHeartbeat(const IParam& param) {
+    initHeartbeat(param);
     heartbeat_->start(5000);
 }
 

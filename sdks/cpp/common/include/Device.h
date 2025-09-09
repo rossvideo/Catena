@@ -607,6 +607,20 @@ class Device : public IDevice {
      */
      vdk::signal<void(const std::string&, const IAuthorizer*)>& getDeleteAssetRequest() override { return deleteAssetRequest_; }
 
+  protected:
+    /**
+     * @brief The heartbeat object. starts as null, and is created when
+     * startHeartbeat() is called.
+     */
+    std::unique_ptr<IHeartbeat> heartbeat_;
+
+    /**
+     * @brief Initializes the heartbeat object. Can be overridden by derived
+     * classes to provide a custom heartbeat implementation.
+     * @param param The parameter to use for the heartbeat.
+     */
+    virtual void initHeartbeat(const IParam& param);
+
   private:
     /**
      * @brief Signal emitted when a value is set by the client.
@@ -708,8 +722,6 @@ class Device : public IDevice {
      * @brief The device's mutex.
      */
     mutable std::mutex mutex_;
-
-    std::unique_ptr<IHeartbeat> heartbeat_;
 };
 
 }  // namespace common
