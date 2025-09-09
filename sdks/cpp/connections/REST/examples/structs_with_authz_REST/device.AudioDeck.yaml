@@ -47,6 +47,8 @@ params:
           type: STRING
         catena_sdk:
           type: STRING
+        catena_sdk_version:
+          type: STRING
         serial_number:
           type: STRING
   # Template struct containing an array (STRUCT containing STRUCT_ARRAY)

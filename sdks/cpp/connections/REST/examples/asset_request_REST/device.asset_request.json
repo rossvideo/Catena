@@ -21,6 +21,7 @@
             "vendor": { "string_value": "Ross Video" },
             "version": { "string_value": "1.0.0" },
             "catena_sdk": { "string_value": "https://github.com/rossvideo/Catena.git" },
+            "catena_sdk_version": { "string_value": "" },
             "serial_number": { "string_value": "SN-7K9M-2024-XR485-BLU" }
           }
         }
@@ -36,6 +37,9 @@
           "type": "STRING"
         },
         "catena_sdk": {
+          "type": "STRING"
+        },
+        "catena_sdk_version": {
           "type": "STRING"
         },
         "serial_number": {
