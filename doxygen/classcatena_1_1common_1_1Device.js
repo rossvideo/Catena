@@ -32,22 +32,17 @@ var classcatena_1_1common_1_1Device =
     [ "getValueSetByClient", "classcatena_1_1common_1_1Device.html#adbae70c7d6b3db45356cd6e6cf0bca95", null ],
     [ "getValueSetByServer", "classcatena_1_1common_1_1Device.html#ac7d2618b26fdf77883c88a5583e0eb26", null ],
     [ "hasLanguage", "classcatena_1_1common_1_1Device.html#a42c79543c8d0cca71b17df91694f2fa9", null ],
-    [ "initHeartbeat", "classcatena_1_1common_1_1Device.html#a0e115a90aa8f5a2ecff16f3ca6a103ff", null ],
     [ "mutex", "classcatena_1_1common_1_1Device.html#afca445ccc7d023e325c408afc852f9a1", null ],
     [ "removeLanguage", "classcatena_1_1common_1_1Device.html#ab2291b513ae3f6d8950819a62617bf86", null ],
-    [ "sendHeartbeat", "classcatena_1_1common_1_1Device.html#acbf1836c2ec82828fef974ebdac179c1", null ],
     [ "set_default_max_length", "classcatena_1_1common_1_1Device.html#ae159a884fae051a65a541193da5a8391", null ],
     [ "set_default_total_length", "classcatena_1_1common_1_1Device.html#a8d0f934f834a1bf8871ea5cecd70e64c", null ],
     [ "setValue", "classcatena_1_1common_1_1Device.html#aeb4b6591a3444280706faab892c6f258", null ],
     [ "shouldSendParam", "classcatena_1_1common_1_1Device.html#af5f40f541475501a826c99332131e180", null ],
     [ "slot", "classcatena_1_1common_1_1Device.html#af7658a6d3922612c9e4f38b7f847d89a", null ],
     [ "slot", "classcatena_1_1common_1_1Device.html#a40b1e5cfa1d5b61d9d8ae914cde30818", null ],
-    [ "startHeartbeat", "classcatena_1_1common_1_1Device.html#aed30c9bf634eeb0949b7cb6363614ca6", null ],
-    [ "stopHeartbeat", "classcatena_1_1common_1_1Device.html#ad5058a7200cd05677d33b7e3c95ed17d", null ],
     [ "subscriptions", "classcatena_1_1common_1_1Device.html#acc0eb46301cab4a128ff88b7543918ff", null ],
     [ "toProto", "classcatena_1_1common_1_1Device.html#af9ff2a4dfacc827b00bd738e688fb07c", null ],
     [ "toProto", "classcatena_1_1common_1_1Device.html#aeea1c6d734064d5f11a21e05c8c08596", null ],
     [ "toProto", "classcatena_1_1common_1_1Device.html#a83759f7e3d841fc889054fb88e1c9e4f", null ],
-    [ "tryMultiSetValue", "classcatena_1_1common_1_1Device.html#aa3d7b558bf10b8739238441eaa7cadca", null ],
-    [ "heartbeat_", "classcatena_1_1common_1_1Device.html#af215801aedb611651778294be663c95c", null ]
+    [ "tryMultiSetValue", "classcatena_1_1common_1_1Device.html#aa3d7b558bf10b8739238441eaa7cadca", null ]
 ];
