@@ -31,7 +31,7 @@
 /**
  * @file IHeartbeat.h
  * @brief Pure virtual class for the Heartbeat object.
- * @author Andrew Brown (andrew.brown@rossvide.com)
+ * @author Andrew Brown (andrew.brown@rossvideo.com)
  * @copyright Copyright (c) 2025 Ross Video
  */
 

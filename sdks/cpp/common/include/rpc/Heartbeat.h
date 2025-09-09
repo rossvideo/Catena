@@ -31,7 +31,7 @@
 /**
  * @file IHeartbeat.h
  * @brief Implements a Heartbeat object.
- * @author Andrew Brown (andrew.brown@rossvide.com)
+ * @author Andrew Brown (andrew.brown@rossvideo.com)
  * @copyright Copyright (c) 2025 Ross Video
  */
 

@@ -76,7 +76,6 @@ protected:
                 return;
             }
             // Use the mockHeartbeat instance
-            // EXPECT_NE(mockHeartbeat, nullptr) << "mockHeartbeat must be set before in tests that use it";
             heartbeat_ = std::unique_ptr<IHeartbeat>(mockHeartbeat);
             // transfer ownership to heartbeat_, mark mockHeartbeat no longer owned
             mockHeartbeatOwned = false;

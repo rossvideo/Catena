@@ -39,7 +39,7 @@ Heartbeat::~Heartbeat() {
 }
 
 void Heartbeat::start(int32_t milliseconds) {
-    // aquire the lock
+    // acquire the lock
     std::lock_guard<std::mutex> lock(mutex_);
     // don't allow starting if already running
     if (running_) {
@@ -48,7 +48,7 @@ void Heartbeat::start(int32_t milliseconds) {
     // create the thread
     running_ = true;
     thread_ = std::make_unique<std::thread>([this, milliseconds]() {
-        // the thread aquires the lock
+        // the thread acquires the lock
         std::unique_lock<std::mutex> lock(mutex_);
         while (running_) {
             // this is basically an interruptible sleep
