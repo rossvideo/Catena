@@ -11,5 +11,7 @@ var searchData=
   ['haspeer_8',['hasPeer',['../classcatena_1_1gRPC_1_1PeerManager.html#a1bfff0f8e615ac6ce48db0057918b458',1,'catena::gRPC::PeerManager']]],
   ['hastemplateoid_9',['hastemplateoid',['../classcatena_1_1common_1_1IParamDescriptor.html#a496ebc33a50af577f907872656d0ec47',1,'catena::common::IParamDescriptor::hasTemplateOid()'],['../classcatena_1_1common_1_1ParamDescriptor.html#a144abac5962ba34fa5affd26f6a93785',1,'catena::common::ParamDescriptor::hasTemplateOid()']]],
   ['hasupdate_5f_10',['hasUpdate_',['../classcatena_1_1common_1_1Connect.html#aeb08058009d6f93da96fc9c72ba6c99c',1,'catena::common::Connect']]],
-  ['homebrew_11',['Install homebrew',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md35',1,'']]]
+  ['heartbeat_11',['Heartbeat',['../classcatena_1_1common_1_1Heartbeat.html',1,'catena::common']]],
+  ['heartbeat_5f_12',['heartbeat_',['../classcatena_1_1common_1_1Device.html#af215801aedb611651778294be663c95c',1,'catena::common::Device']]],
+  ['homebrew_13',['Install homebrew',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md35',1,'']]]
 ];
