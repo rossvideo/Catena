@@ -53,6 +53,6 @@ void Languages::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    DEBUG_LOG << RESTMethodMap().getForwardMap().at(context_.method())
+    DEBUG_LOG << ISocketReader::RESTMethodMap().getForwardMap().at(context_.method())
               << "Languages[" << objectId_ << "] finished";
 }

@@ -95,7 +95,7 @@ class RESTServiceImplTests : public testing::Test {
         clientSocket.connect(tcp::endpoint(tcp::v4(), port_));
         // Compiling request.
         std::string request = "";
-        request += RESTMethodMap().getForwardMap().at(method);
+        request += ISocketReader::RESTMethodMap().getForwardMap().at(method);
         request += " /st2138-api/" + service_->version() + endpoint + " HTTP/1.1\r\n\r\n";
         // Writing to service.
         boost::asio::write(clientSocket, boost::asio::buffer(request));
@@ -211,9 +211,9 @@ TEST_F(RESTServiceImplTests, ServiceImpl_Router) {
     for (auto& [method, endpoint] : routes) {
         std::string response = makeCall(method, endpoint);
         ASSERT_TRUE(!response.empty())
-            << "No response read from " << RESTMethodMap().getForwardMap().at(method) << endpoint;
+            << "No response read from " << ISocketReader::RESTMethodMap().getForwardMap().at(method) << endpoint;
         EXPECT_TRUE(!response.starts_with("HTTP/1.1 501 Not Implemented"))
-            << "Failed to route " << RESTMethodMap().getForwardMap().at(method) << endpoint;
+            << "Failed to route " << ISocketReader::RESTMethodMap().getForwardMap().at(method) << endpoint;
     }
     // Making sure router returns proper error on invalid method/endpoints.
     std::string response = makeCall(Method_NONE, "/does-not-exist");

@@ -1,0 +1,85 @@
+slot: 0
+multi_set_enabled: true
+detail_level: FULL
+access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
+default_scope: st2138:mon
+
+params:
+  dashboard_UI:
+    type: STRING
+    oid_aliases: ["0xFF0E"]
+    read_only: true
+    value:
+      string_value: eo://ibc_2025.grid
+
+  dashboard_icon:
+    type: STRING
+    oid_aliases: ["0xFF0C"]
+    read_only: true
+    value:
+      string_value: eo://catena_logo_16x16.png
+
+  meters:
+    import:
+      file: ./params/param.meters.yaml
+
+  
+
+  # This is a struct reference imported from another file and used as a
+  # template oid for struct_example and struct_array.
+  # ref_struct:
+  #   import: { file: /params/param.ref_struct.yaml }
+
+
+
+menu_groups:
+  status:
+    name: { display_strings: { 
+      en: "Status", 
+      fr: "Statut", 
+      es: "Estado", 
+      ja: "ステータス" } }
+    menus:
+      product:
+        name: { display_strings: { 
+          en: "Product", 
+          fr: "Produit", 
+          es: "Producto", 
+          ja: "製品" } }
+        param_oids: []
+        command_oids: []
+        
+  config:
+    name: 
+      display_strings:
+        en: "IBC 2025"
+        fr: "IBC 2025"
+        es: "IBC 2025"
+        ja: "IBC 2025"
+
+    menus:
+      channels:
+        name: { display_strings: { 
+          en: "Channels View", 
+          fr: "Vue des Canaux", 
+          es: "Vista de Canales", 
+          ja: "チャンネルビュー" } }
+        param_oids: []
+        command_oids: []
+        client_hints:
+          oglml: eo://channels.grid
+      
+
+      channel:
+        name: { display_strings: { 
+          en: "Single Channel View", 
+          fr: "Vue de Canal Unique", 
+          es: "Vista de Canal Único", 
+          ja: "単一チャンネルビュー" } }
+        param_oids: []
+        command_oids: []
+        client_hints:
+          oglml: eo://channel.grid
+        
+
+

@@ -231,6 +231,7 @@ void defineCommands() {
                 }
             }
             
+            co_return response; // clang needs this
         }(value, respond));
     });
 
