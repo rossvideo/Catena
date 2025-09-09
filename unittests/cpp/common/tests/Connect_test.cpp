@@ -642,11 +642,6 @@ TEST_F(CommonConnectTest, updateResponseLODUnset) {
 
 // // == 4. Exception Handling Tests ==
 
-// TO-DO
-// - Test 4.2
-// - Check tests are what is wanted
-// - Implement more tests
-
 // Test 4.1: EXPECT FALSE - If toProto throws, no update is pushed to the client
 TEST_F(CommonConnectTest, updateResponseExceptionParamToProto) {
     // Arange
@@ -660,8 +655,7 @@ TEST_F(CommonConnectTest, updateResponseExceptionParamToProto) {
 
      // Model fails via the return value
     EXPECT_CALL(param, 
-        toProto(::testing::An<st2138::Value&>(),
-                ::testing::An<const IAuthorizer&>()))
+        toProto(::testing::An<st2138::Value&>(), ::testing::An<const IAuthorizer&>()))
         .WillOnce(::testing::Invoke([&](st2138::Value&, const IAuthorizer&) {
             return catena::exception_with_status("Test Failure", catena::StatusCode::INTERNAL);
     }));
@@ -672,20 +666,21 @@ TEST_F(CommonConnectTest, updateResponseExceptionParamToProto) {
 }
 
 // Test 4.2: EXPECT FALSE - If any exception is thrown inside updateResponse_ (language pack), no update is pushed to the client
-/* TEST_F(CommonConnectTest, updateResponseLanguagePacktoProto) {
+TEST_F(CommonConnectTest, updateResponseLanguagePacktoProto) {
     // Create a language pack that will throw when accessed
     auto languagePack = std::make_unique<MockLanguagePack>();
+    connect->initAuthz_(monitorToken, true);
     
-    // Make the language pack throw when its data is accessed
-    EXPECT_CALL(*languagePack, toProto(::testing::_))
-        .WillOnce(::testing::Invoke([](st2138::LanguagePack&) {
+    // Make the language pack return failed not by throwing 
+    EXPECT_CALL(*languagePack, toProto(::testing::An<st2138::LanguagePack&>()))
+        .WillOnce(::testing::Invoke([](st2138::LanguagePack&) -> void {
             throw catena::exception_with_status("Test exception", catena::StatusCode::INTERNAL);
         }));
     
-    // Create a test connect instance
-    connect->initAuthz_(monitorToken, true);
+    // Expect no exception to be thrown
+    EXPECT_NO_THROW(connect->updateResponse_(languagePack.get(), 0));
     
-    connect->updateResponse_(languagePack.get(), 0);
+    // Should not have been updated
     EXPECT_FALSE(connect->hasUpdate());
-} */
+}
 
