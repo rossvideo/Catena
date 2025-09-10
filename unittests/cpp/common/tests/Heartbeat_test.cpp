@@ -151,3 +151,11 @@ TEST_F(HeartbeatTest, NonStdExceptionInSlot) {
     EXPECT_GE(count.load(), 3);
     EXPECT_LE(count.load(), 4);
 }
+
+TEST_F(HeartbeatTest, CanStopFromSlot) {
+    hb.getHeartbeatSignal().connect([this]() { hb.stop(); });
+    hb.start(100);
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    // should have stopped after the first signal
+    EXPECT_EQ(count.load(), 1);
+}

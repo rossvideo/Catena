@@ -55,6 +55,8 @@ void Heartbeat::start(int32_t milliseconds) {
             condition_.wait_for(lock, std::chrono::milliseconds(milliseconds));
             // don't emit if we're shutting down
             if (running_) {
+                // unlock while we emit the signal
+                lock.unlock();
                 try {
                     // emit the signal
                     signal_.emit();
@@ -65,6 +67,8 @@ void Heartbeat::start(int32_t milliseconds) {
                     // log non-std exceptions
                     DEBUG_LOG << "Unknown exception in heartbeat slot";
                 }
+                // re-lock before the next iteration
+                lock.lock();
             }
         }
     });
