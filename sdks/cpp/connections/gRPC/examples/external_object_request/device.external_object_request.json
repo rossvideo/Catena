@@ -30,10 +30,40 @@
     }
   },
   "params": {
-    "heartbeat": {
-      "type": "EMPTY",
+    "product": {
+      "type": "STRUCT",
       "read_only": true,
-      "value": { "empty_value": {} }
+      "value": {
+        "struct_value": {
+          "fields": {
+            "name": { "string_value": "External Object Request" },
+            "vendor": { "string_value": "Ross Video" },
+            "version": { "string_value": "1.0.0" },
+            "catena_sdk": { "string_value": "https://github.com/rossvideo/Catena.git" },
+            "serial_number": { "string_value": "SN-7K9M-2024-XR485-BLU" }
+          }
+        }
+      },
+      "params": {
+        "name": {
+          "type": "STRING"
+        },
+        "vendor": {
+          "type": "STRING"
+        },
+        "version": {
+          "type": "STRING"
+        },
+        "catena_sdk": {
+          "type": "STRING"
+        },
+        "catena_sdk_version": {
+          "type": "STRING"
+        },
+        "serial_number": {
+          "type": "STRING"
+        }
+      }
     }
   }
 }
