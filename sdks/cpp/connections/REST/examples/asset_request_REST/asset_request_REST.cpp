@@ -183,7 +183,7 @@ void RunRESTServer() {
 
         catena::exception_with_status err{"", catena::StatusCode::OK};
         // The rest is the "sending end" of the status update example
-        std::unique_ptr<IParam> param = dm.getParam("/device_name", err);
+        std::unique_ptr<IParam> param = dm.getParam("/product/version", err);
         if (param == nullptr) {
             throw err;
         }

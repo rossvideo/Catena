@@ -6,11 +6,6 @@
   "default_scope": "st2138:op",
   "subscriptions": true,
   "params": {
-    "device_name": {
-      "type": "STRING",
-      "read_only": true,
-      "value": { "string_value": "External Object Request Device" }
-    },
     "assets": {
       "type": "STRING_ARRAY",
       "name": { "display_strings": { "en": "Assets", "es": "Assets", "fr": "Assets" } },
