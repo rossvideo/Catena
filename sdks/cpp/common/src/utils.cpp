@@ -119,3 +119,9 @@ std::string catena::from_base64(const std::string& encoded) {
     }
     return decoded;
 }
+
+std::string catena::fmt(const char* f, ...) {
+    va_list ap; va_start(ap, f);
+    char buf[4096]; vsnprintf(buf, sizeof(buf), f, ap); va_end(ap);
+    return std::string(buf);
+}

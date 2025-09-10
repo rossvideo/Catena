@@ -19,6 +19,7 @@
 #
 
 cmake_minimum_required(VERSION 3.20)
+find_package(CURL REQUIRED)
 
 project(COMMON C CXX)
 
@@ -42,6 +43,7 @@ set(sources
     "src/ConnectionQueue.cpp"
     "src/ChoiceConstraint.cpp"
     "src/Heartbeat.cpp"
+    "src/NmosNode.cpp"
 )
 
 # conditionally make for gRPC
