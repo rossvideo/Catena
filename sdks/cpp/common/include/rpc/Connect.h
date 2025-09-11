@@ -235,15 +235,11 @@ class Connect : public IConnect {
         if (authz) {
             sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
             authz_ = sharedAuthz_.get();
-            // Throw error for non-admin clients trying to force a connection.
-            if (forceConnection_ && !authz_->writeAuthz(Scopes_e::kAdmin)) {
-                throw catena::exception_with_status("adm:w scope required to force a connection", catena::StatusCode::PERMISSION_DENIED);
-            }
             // Setting up their connection priority.
             for (uint32_t i = static_cast<uint32_t>(Scopes_e::kAdmin); i >= static_cast<uint32_t>(Scopes_e::kMonitor); i -= 1) {             
                 // Client has read
                 if (authz_->readAuthz(static_cast<Scopes_e>(i))) {
-                    priority_ = 2 * i + forceConnection_;
+                    priority_ = 2 * i;
                     // Also has write
                     if (authz_->writeAuthz(static_cast<Scopes_e>(i))) {
                         priority_ += 1;
@@ -309,7 +305,6 @@ class Connect : public IConnect {
      * 
      * Only applicable if client has adm:w scope.
      */
-    bool forceConnection_;
     /**
      * @brief Flag indicating whether to shut down the connection.
      */

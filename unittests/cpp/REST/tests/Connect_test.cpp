@@ -69,8 +69,6 @@ protected:
             .WillRepeatedly(testing::ReturnRef(subManager_));
         EXPECT_CALL(context_, fields("user_agent"))
             .WillRepeatedly(testing::ReturnRef(userAgent_));
-        EXPECT_CALL(context_, hasField("force_connection"))
-            .WillRepeatedly(testing::Return(false));
         // Connection registration and deregistration
         EXPECT_CALL(context_, connectionQueue()).WillRepeatedly(testing::ReturnRef(connectionQueue_));
         EXPECT_CALL(connectionQueue_, registerConnection(testing::_)).WillRepeatedly(testing::Return(true)); // Should always call

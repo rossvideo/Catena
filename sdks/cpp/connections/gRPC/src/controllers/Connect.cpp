@@ -93,7 +93,6 @@ void catena::gRPC::Connect::proceed(bool ok) {
             try {
                 // Initialize authz and add connection to the priority queue.
                 detailLevel_ = req_.detail_level();
-                forceConnection_ = req_.force_connection();
                 initAuthz_(jwsToken_(), service_->authorizationEnabled());
                 if (service_->connectionQueue().registerConnection(this)) {
                     // Connecting to each device in dms_.

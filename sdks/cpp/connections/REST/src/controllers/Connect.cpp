@@ -42,7 +42,6 @@ void catena::REST::Connect::proceed() {
         // Initialize variables and authz and add connection to the priority queue.
         detailLevel_ = context_.detailLevel();
         userAgent_ = context_.fields("user_agent");
-        forceConnection_ = context_.hasField("force_connection");
         initAuthz_(context_.jwsToken(), context_.authorizationEnabled());
         if (context_.connectionQueue().registerConnection(this)) {
             // Connecting to each device in dms_.
