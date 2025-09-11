@@ -131,3 +131,46 @@ TEST_F(RESTSetValueTests, SetValue_FailParse) {
     // Calling proceed and testing the output
     testCall();
 }
+
+// Tests to debug ability to modify structs that are declaired read-only
+/**
+ * @author nelson.daniels@rossvideo.com
+ * @date 25/09/11
+ * @copyright Copyright © 2025 Ross Video Ltd
+ */
+
+// TO-DO
+// - Figure out how to test a device that has a struct with read onlu
+// - Implement the test for that below
+
+TEST_F(RESTSetValueTests, SetValue_SlotAndOid) {
+    // Use a non-zero slot and a distinct oid to ensure slot/oid are propagated.
+    initPayload(0, "/product", "TestProduct");
+    
+   
+}
+
+// This test is the next task
+/* 
+TEST_F(RESTSetValueTests, SetValue_EmptyObjectValue) {
+    // Create a payload that is an empty JSON object for the value.
+    // Reuse inVal_ by setting an empty string value and obtaining JSON for it.
+    initPayload(1, "/empty/obj/oid", "");
+    // Note: this produces a JSON string representing an empty string value;
+    // it exercises parsing of small/edge-case payloads through toMulti_.
+
+    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Invoke([this](st2138::MultiSetValuePayload src, catena::exception_with_status &ans, const IAuthorizer &authz) {
+            EXPECT_EQ(src.slot(), slot_);
+            ASSERT_EQ(src.values_size(), 1);
+            auto val = src.values(0);
+            EXPECT_EQ(val.oid(), fqoid_);
+            EXPECT_EQ(val.value().SerializeAsString(), inVal_.SerializeAsString());
+            return true;
+        }));
+
+    EXPECT_CALL(dm0_, commitMultiSetValue(testing::_, testing::_)).Times(1)
+        .WillOnce(testing::Return(catena::exception_with_status(expRc_.what(), expRc_.status)));
+
+    testCall();
+} */
