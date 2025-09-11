@@ -7,26 +7,65 @@ default_scope: st2138:mon
 language_packs: {}
 params: 
   # Basic struct template used by arrays
-  eq: 
+  eq:
     type: STRUCT
-    name: {display_strings: {en: EQ}}
-    params: 
-      response: 
+    name:
+      display_strings:
+        en: "EQ"
+    params:
+      response:
         type: INT32
-        name: {display_strings: {en: Response}}
+        name: 
+          display_strings:
+            en: "Response"
         access_scope: st2138:mon
-      frequency: 
+        constraint:
+          type: INT_RANGE
+          int32_range:
+            min_value: 0
+            max_value: 100
+            step: 2
+        widget: wheel
+      frequency:
         type: FLOAT32
-        name: {display_strings: {en: Frequency}}
+        name:
+          display_strings:
+            en: "Frequency"
         access_scope: st2138:op
-      gain: 
+        constraint:
+          type: FLOAT_RANGE
+          float32_range:
+            min_value: 20
+            display_min: 20
+            max_value: 20000
+            display_max: 20000
+        widget: wheel
+      gain:
         type: FLOAT32
-        name: {display_strings: {en: Gain}}
+        name:
+          display_strings:
+            en: "Gain"
         access_scope: st2138:cfg
-      q_factor: 
+        constraint:
+          type: FLOAT_RANGE
+          float32_range:
+            min_value: 0
+            max_value: 10.0
+            step: 0.1
+        widget: wheel
+      q_factor:
         type: FLOAT32
-        name: {display_strings: {en: Q Factor}}
+        name:
+          display_strings:
+            en: "Q Factor"
         access_scope: st2138:adm
+        constraint:
+          type: FLOAT_RANGE
+          float32_range:
+            min_value: 0
+            max_value: 10.0
+            step: 0.1
+        widget: wheel
   product:
       type: STRUCT
       read_only: true
