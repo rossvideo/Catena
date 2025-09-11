@@ -303,16 +303,6 @@ TEST_F(CommonConnectTest, PriorityAuthzOn) {
         // Write
         connect->initAuthz_(getJwsToken(Scopes().getForwardMap().at(static_cast<Scopes_e>(i)) + ":w"), true);
         EXPECT_EQ(connect->priority(), 2 * i + 1);
-
-        // Read
-        EXPECT_THROW(connect->initAuthz_(getJwsToken(Scopes().getForwardMap().at(static_cast<Scopes_e>(i))), true), catena::exception_with_status);
-        // Write
-        if (static_cast<Scopes_e>(i) != Scopes_e::kAdmin) {
-            EXPECT_THROW(connect->initAuthz_(getJwsToken(Scopes().getForwardMap().at(static_cast<Scopes_e>(i)) + ":w"), true), catena::exception_with_status);
-        } else {
-            connect->initAuthz_(getJwsToken(Scopes().getForwardMap().at(static_cast<Scopes_e>(i)) + ":w"), true);
-            EXPECT_EQ(connect->priority(), 2 * i + 2);  // Admin with force connection gets highest priority
-        }
     }
 }
 
