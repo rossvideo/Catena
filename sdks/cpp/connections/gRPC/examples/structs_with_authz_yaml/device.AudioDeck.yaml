@@ -6,6 +6,68 @@ access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
 default_scope: st2138:mon
 language_packs: {}
 params:
+  # Updated Eq Logic
+  dashboard_UI:
+    type: STRING
+    oid_aliases: ["0xFF0E"]
+    read_only: true
+    value: {string_value: "eo://AudioDeck.grid"}
+  dashboard_icon:
+    type: STRING
+    oid_aliases: ["0xFF0C"]
+    read_only: true
+    value: {string_value: "eo://catena_logo_16x16.png"}  
+  eq:
+    type: STRUCT
+    name: {display_strings: {en: EQ}}
+    params:
+      response:
+        type: INT32
+        name: {display_strings: {en: Response}}
+        access_scope: st2138:mon
+        constraint:
+          type: INT_RANGE
+          int32_range:
+            min_value: 0
+            max_value: 100
+            step: 2
+        widget: wheel
+      frequency:
+        type: FLOAT32
+        name: {display_strings: {en: Frequency}}
+        access_scope: st2138:op
+        constraint:
+          type: FLOAT_RANGE
+          float32_range:
+            min_value: 20
+            display_min: 20
+            max_value: 20000
+            display_max: 20000
+        widget: wheel
+      gain:
+        type: FLOAT32
+        name: {display_strings: {en: Gain}}
+        access_scope: st2138:cfg
+        constraint:
+          type: FLOAT_RANGE
+          float32_range:
+            min_value: 0
+            max_value: 10.0
+            step: 0.1
+        widget: wheel
+      q_factor:
+        type: FLOAT32
+        name: {display_strings: {en: Q Factor}}
+        access_scope: st2138:adm
+        constraint:
+          type: FLOAT_RANGE
+          float32_range:
+            min_value: 0
+            max_value: 10.0
+            step: 0.1
+        widget: wheel
+  # End of new EQ Logic
+
   # Template struct containing an array (STRUCT containing STRUCT_ARRAY)
   audio_channel: 
     type: STRUCT
@@ -131,6 +193,94 @@ params:
                             frequency: {float32_value: 800}
                             gain: {float32_value: 0}
                             q_factor: {float32_value: 0}
+  # Updated with new EQ Logic
+  eq_graph_0:
+    type: STRING
+    name: {display_strings: {en: EQ Graph 0}}
+    widget: eq_graph
+    constraint:
+      type: STRING_STRING_CHOICE
+      string_string_choice:
+        choices:
+          - name: {display_strings: {en: audio_deck.0.eq_list.0.frequency}}
+            value: "1.f"
+          - name: {display_strings: {en: audio_deck.0.eq_list.0.gain}}
+            value: "1.g"
+          - name: {display_strings: {en: audio_deck.0.eq_list.0.q_factor}}
+            value: "1.q"
+          - name: {display_strings: {en: audio_deck.0.eq_list.1.frequency}}
+            value: "2.f"
+          - name: {display_strings: {en: audio_deck.0.eq_list.1.gain}}
+            value: "2.g"
+          - name: {display_strings: {en: audio_deck.0.eq_list.1.q_factor}}
+            value: "2.q"
+    value: {string_value: ""}
+
+  eq_graph_1:
+    type: STRING
+    name: {display_strings: {en: EQ Graph 1}}
+    widget: eq_graph
+    constraint:
+      type: STRING_STRING_CHOICE
+      string_string_choice:
+        choices:
+          - name: {display_strings: {en: audio_deck.1.eq_list.0.frequency}}
+            value: "1.f"
+          - name: {display_strings: {en: audio_deck.1.eq_list.0.gain}}
+            value: "1.g"
+          - name: {display_strings: {en: audio_deck.1.eq_list.0.q_factor}}
+            value: "1.q"
+          - name: {display_strings: {en: audio_deck.1.eq_list.1.frequency}}
+            value: "2.f"
+          - name: {display_strings: {en: audio_deck.1.eq_list.1.gain}}
+            value: "2.g"
+          - name: {display_strings: {en: audio_deck.1.eq_list.1.q_factor}}
+            value: "2.q"
+    value: {string_value: ""}
+
+  eq_graph_2:
+    type: STRING
+    name: {display_strings: {en: EQ Graph 2}}
+    widget: eq_graph
+    constraint:
+      type: STRING_STRING_CHOICE
+      string_string_choice:
+        choices:
+          - name: {display_strings: {en: audio_deck.2.eq_list.0.frequency}}
+            value: "1.f"
+          - name: {display_strings: {en: audio_deck.2.eq_list.0.gain}}
+            value: "1.g"
+          - name: {display_strings: {en: audio_deck.2.eq_list.0.q_factor}}
+            value: "1.q"
+          - name: {display_strings: {en: audio_deck.2.eq_list.1.frequency}}
+            value: "2.f"
+          - name: {display_strings: {en: audio_deck.2.eq_list.1.gain}}
+            value: "2.g"
+          - name: {display_strings: {en: audio_deck.2.eq_list.1.q_factor}}
+            value: "2.q"
+    value: {string_value: ""}
+
+  eq_graph_3:
+    type: STRING
+    name: {display_strings: {en: EQ Graph 3}}
+    widget: eq_graph
+    constraint:
+      type: STRING_STRING_CHOICE
+      string_string_choice:
+        choices:
+          - name: {display_strings: {en: audio_deck.3.eq_list.0.frequency}}
+            value: "1.f"
+          - name: {display_strings: {en: audio_deck.3.eq_list.0.gain}}
+            value: "1.g"
+          - name: {display_strings: {en: audio_deck.3.eq_list.0.q_factor}}
+            value: "1.q"
+          - name: {display_strings: {en: audio_deck.3.eq_list.1.frequency}}
+            value: "2.f"
+          - name: {display_strings: {en: audio_deck.3.eq_list.1.gain}}
+            value: "2.g"
+          - name: {display_strings: {en: audio_deck.3.eq_list.1.q_factor}}
+            value: "2.q"
+    value: {string_value: ""} 
 
   # Demonstrates basic variant of structs
   effect_settings:
@@ -258,67 +408,6 @@ params:
         type: STRING
       serial_number:
         type: STRING  
-
-  # Updated EQ Logic
-  eq:
-    type: STRUCT
-    name:
-      display_strings:
-        en: "EQ"
-    params:
-      response:
-        type: INT32
-        name: 
-          display_strings:
-            en: "Response"
-        access_scope: st2138:mon
-        constraint:
-          type: INT_RANGE
-          int32_range:
-            min_value: 0
-            max_value: 100
-            step: 2
-        widget: wheel
-      frequency:
-        type: FLOAT32
-        name:
-          display_strings:
-            en: "Frequency"
-        access_scope: st2138:op
-        constraint:
-          type: FLOAT_RANGE
-          float32_range:
-            min_value: 20
-            display_min: 20
-            max_value: 20000
-            display_max: 20000
-        widget: wheel
-      gain:
-        type: FLOAT32
-        name:
-          display_strings:
-            en: "Gain"
-        access_scope: st2138:cfg
-        constraint:
-          type: FLOAT_RANGE
-          float32_range:
-            min_value: 0
-            max_value: 10.0
-            step: 0.1
-        widget: wheel
-      q_factor:
-        type: FLOAT32
-        name:
-          display_strings:
-            en: "Q Factor"
-        access_scope: st2138:adm
-        constraint:
-          type: FLOAT_RANGE
-          float32_range:
-            min_value: 0
-            max_value: 10.0
-            step: 0.1
-        widget: wheel
 
 
                     
