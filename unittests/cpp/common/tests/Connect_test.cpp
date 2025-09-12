@@ -45,11 +45,9 @@ class TestConnect : public Connect {
   public:
     TestConnect(SlotMap& dms, ISubscriptionManager& subscriptionManager) 
         : Connect(dms, subscriptionManager) {
-            forceConnection_ = false;
         }
     
     bool isCancelled() override { return shutdown_; }
-    void forceConnection(bool forceConnection) { forceConnection_ = forceConnection; }
     void objectId(uint32_t id) { objectId_ = id; }
 
     // Expose protected methods for testing
@@ -299,26 +297,12 @@ TEST_F(CommonConnectTest, PriorityAuthzOn) {
     EXPECT_EQ(connect->priority(), 0);
     // Read/write scopes with and without force connection
     for (uint32_t i = 1; i <= static_cast<uint32_t>(Scopes_e::kAdmin); i += 1) {
-        // Testing with force_connection = false
-        connect->forceConnection(false);
         // Read
         connect->initAuthz_(getJwsToken(Scopes().getForwardMap().at(static_cast<Scopes_e>(i))), true);
         EXPECT_EQ(connect->priority(), 2 * i);
         // Write
         connect->initAuthz_(getJwsToken(Scopes().getForwardMap().at(static_cast<Scopes_e>(i)) + ":w"), true);
         EXPECT_EQ(connect->priority(), 2 * i + 1);
-
-        // Testing with force_connection = true
-        connect->forceConnection(true);
-        // Read
-        EXPECT_THROW(connect->initAuthz_(getJwsToken(Scopes().getForwardMap().at(static_cast<Scopes_e>(i))), true), catena::exception_with_status);
-        // Write
-        if (static_cast<Scopes_e>(i) != Scopes_e::kAdmin) {
-            EXPECT_THROW(connect->initAuthz_(getJwsToken(Scopes().getForwardMap().at(static_cast<Scopes_e>(i)) + ":w"), true), catena::exception_with_status);
-        } else {
-            connect->initAuthz_(getJwsToken(Scopes().getForwardMap().at(static_cast<Scopes_e>(i)) + ":w"), true);
-            EXPECT_EQ(connect->priority(), 2 * i + 2);  // Admin with force connection gets highest priority
-        }
     }
 }
 

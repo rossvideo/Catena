@@ -124,11 +124,10 @@ class gRPCConnectTests : public GRPCTest {
     /*
      * Streamlines the creation of executeCommandPayloads. 
      */
-    void initPayload(const std::string& language, const st2138::Device_DetailLevel& dl, const std::string& userAgent, bool forceConnection) {
+    void initPayload(const std::string& language, const st2138::Device_DetailLevel& dl, const std::string& userAgent) {
         inVal_.set_language(language);
         inVal_.set_detail_level(dl);
         inVal_.set_user_agent(userAgent);
-        inVal_.set_force_connection(forceConnection);
     }
     /*
      * Adds a PushValue to the expected values.
@@ -235,7 +234,7 @@ TEST_F(gRPCConnectTests, Connect_ConnectDisconnect) {
  */
 TEST_F(gRPCConnectTests, Connect_ValueSetByClient) {
     MockParam param0, param1;
-    initPayload("en", st2138::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
+    initPayload("en", st2138::Device_DetailLevel::Device_DetailLevel_FULL, "");
     expPushValue(0, "oid0", "value0");
     expPushValue(1, "oid1", "value1");
     // Setting expectations
@@ -270,7 +269,7 @@ TEST_F(gRPCConnectTests, Connect_ValueSetByClient) {
  */
 TEST_F(gRPCConnectTests, Connect_ValueSetByServer) {
     MockParam param0, param1;
-    initPayload("en", st2138::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
+    initPayload("en", st2138::Device_DetailLevel::Device_DetailLevel_FULL, "");
     expPushValue(0, "oid0", "value0");
     expPushValue(1, "oid1", "value1");
     // Setting expectations
@@ -307,7 +306,7 @@ TEST_F(gRPCConnectTests, Connect_ValueSetByServer) {
  */
 TEST_F(gRPCConnectTests, Connect_LanguageAddedPushUpdate) {
     MockLanguagePack languagePack0, languagePack1;
-    initPayload("en", st2138::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
+    initPayload("en", st2138::Device_DetailLevel::Device_DetailLevel_FULL, "");
     expLanguage(0, "language0", {{"key0", "value0"}});
     expLanguage(1, "language1", {{"key1", "value1"}});
     // Setting expectations
@@ -339,7 +338,7 @@ TEST_F(gRPCConnectTests, Connect_LanguageAddedPushUpdate) {
 TEST_F(gRPCConnectTests, Connect_AuthzValid) {
     MockParam param0, param1;
     MockLanguagePack languagePack0, languagePack1;
-    initPayload("en", st2138::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
+    initPayload("en", st2138::Device_DetailLevel::Device_DetailLevel_FULL, "");
     expPushValue(0, "oid0", "value0");
     expPushValue(0, "oid0", "value0");
     expLanguage(0, "language0", {{"key0", "value0"}});
@@ -413,7 +412,7 @@ TEST_F(gRPCConnectTests, Connect_AuthzJWSNotFound) {
 TEST_F(gRPCConnectTests, Connect_AuthzExpired) {
     expRc_ = catena::exception_with_status("JWS bearer token expired", catena::StatusCode::UNAUTHENTICATED);
     MockParam param0;
-    initPayload("en", st2138::Device_DetailLevel::Device_DetailLevel_FULL, "", false);
+    initPayload("en", st2138::Device_DetailLevel::Device_DetailLevel_FULL, "");
     // Adding authorization mockToken metadata. This it a random RSA token
     authzEnabled_ = true;
     std::string mockToken = getJwsToken("expired");

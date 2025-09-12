@@ -146,8 +146,6 @@ class Connect : public ICallData, public catena::common::Connect {
      * 
      * - The detail level of updates the they want to recieve.
      * 
-     * - A flag indicating whether the client wants to force a connection to
-     * the service.
      */
     ISocketReader& context_;
     /**
