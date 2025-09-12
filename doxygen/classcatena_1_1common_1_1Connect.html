@@ -213,6 +213,9 @@ st2138::Device_DetailLevel&#160;</td><td class="memItemRight" valign="bottom"><b
 <tr class="memitem:af65f3d8646574a41942a3f68106a8a2f" id="r_af65f3d8646574a41942a3f68106a8a2f"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Connect.html#af65f3d8646574a41942a3f68106a8a2f">userAgent_</a></td></tr>
 <tr class="memdesc:af65f3d8646574a41942a3f68106a8a2f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The user agent of the client.  <br /></td></tr>
 <tr class="separator:af65f3d8646574a41942a3f68106a8a2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4755edff6106c38156a0fcc3e00dde50" id="r_a4755edff6106c38156a0fcc3e00dde50"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Connect.html#a4755edff6106c38156a0fcc3e00dde50">forceConnection_</a></td></tr>
+<tr class="memdesc:a4755edff6106c38156a0fcc3e00dde50"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flag to force a connection.  <br /></td></tr>
+<tr class="separator:a4755edff6106c38156a0fcc3e00dde50"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4a50ec64dddf9389f8ae62744db3198c" id="r_a4a50ec64dddf9389f8ae62744db3198c"><td class="memItemLeft" align="right" valign="top"><a id="a4a50ec64dddf9389f8ae62744db3198c" name="a4a50ec64dddf9389f8ae62744db3198c"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>shutdown_</b> = false</td></tr>
 <tr class="memdesc:a4a50ec64dddf9389f8ae62744db3198c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flag indicating whether to shut down the connection. <br /></td></tr>
@@ -335,8 +338,8 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>shutdown_</b> = false
 
 <p>Crates an authorizer using the jws token and calculates the client's priority. </p>
 <p>If authz == false, the authorizer is instead set to the kAuthzDisabled object and their priority is left at 0.</p>
-<p>A client's priority is calculated based on the their highest scope.</p>
-<p>priority_ = scope * 2 + write</p>
+<p>A client's priority is calculated based on the their highest scope as well as whether they have force connection set to True (only relevant for adm:w clients).</p>
+<p>priority_ = scope * 2 + write + (adm:w &amp;&amp; forceConnection)</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">jwsToken</td><td>The client's jws token to create the authorizer with. </td></tr>
@@ -347,7 +350,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>shutdown_</b> = false
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IConnect.html#a02ef98650e356794414eb781a552fddb">catena::common::IConnect</a>.</p>
 
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1Connect.html#aa8bc272574ef3b115d24b7ad925013d6">authz_</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">catena::common::Authorizer::kAuthzDisabled</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a346fb16e73abcd5c674159d0f39b386b">priority_</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#ac66ff0d1ad2b482889d370fcec8abf65">catena::common::Authorizer::readAuthz()</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a156de209700b42ce94bfa322e16138e2">sharedAuthz_</a>, and <a class="el" href="classcatena_1_1common_1_1Authorizer.html#acf4702d3219e78e76598e44cbb467232">catena::common::Authorizer::writeAuthz()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1Connect.html#aa8bc272574ef3b115d24b7ad925013d6">authz_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a4755edff6106c38156a0fcc3e00dde50">forceConnection_</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">catena::common::Authorizer::kAuthzDisabled</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ade1d7d4fd21e79ff2045feeb9425d923">catena::PERMISSION_DENIED</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a346fb16e73abcd5c674159d0f39b386b">priority_</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#ac66ff0d1ad2b482889d370fcec8abf65">catena::common::Authorizer::readAuthz()</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a156de209700b42ce94bfa322e16138e2">sharedAuthz_</a>, and <a class="el" href="classcatena_1_1common_1_1Authorizer.html#acf4702d3219e78e76598e44cbb467232">catena::common::Authorizer::writeAuthz()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -602,6 +605,31 @@ Here is the call graph for this function:</div>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
+<a id="a4755edff6106c38156a0fcc3e00dde50" name="a4755edff6106c38156a0fcc3e00dde50"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4755edff6106c38156a0fcc3e00dde50">&#9670;&#160;</a></span>forceConnection_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool catena::common::Connect::forceConnection_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Flag to force a connection. </p>
+<p>Only applicable if client has adm:w scope. </p>
+
+</div>
+</div>
 <a id="aaf087489151d65442a43ceed5f57fe6b" name="aaf087489151d65442a43ceed5f57fe6b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aaf087489151d65442a43ceed5f57fe6b">&#9670;&#160;</a></span>objectId_</h2>
 
@@ -648,7 +676,7 @@ Here is the call graph for this function:</div>
 </div><div class="memdoc">
 
 <p>The priority of the connection. </p>
-<p>priority_ = scope * 2 + write </p>
+<p>priority_ = scope * 2 + write + (adm:w &amp;&amp; forceConnection) </p>
 
 </div>
 </div>
