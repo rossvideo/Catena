@@ -52,7 +52,7 @@ void Heartbeat::start(int32_t milliseconds) {
         std::unique_lock<std::mutex> lock(mutex_);
         while (running_) {
             // this is basically an interruptible sleep
-            condition_.wait_for(lock, std::chrono::milliseconds(milliseconds));
+            condition_.wait_for(lock, std::chrono::milliseconds(milliseconds), [this] { return !running_; });
             // don't emit if we're shutting down
             if (running_) {
                 // unlock while we emit the signal
