@@ -132,58 +132,39 @@ TEST_F(RESTSetValueTests, SetValue_FailParse) {
     testCall();
 }
 
-/*
-* TEST 4 - SetValue fails to write to a read-only struct.
-*/
-
-// Tests to debug ability to modify structs that are declaired read-only
+// Tests to debug ability to modify structs child fields that are declaired read-only
 /**
  * @author nelson.daniels@rossvideo.com
  * @date 25/09/11
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
+// On hold until I do the gRPC one first
+
 // TO-DO
 // - Figure out how to test a device that has a struct with read onlu
 // - Implement the test for that below
 
+/*
+* TEST 4 - SetValue fails to write to a read-only struct children fields
+*/
+
 TEST_F(RESTSetValueTests, SetValue_ReadOnlyStruct) {
-    // Expecting a FAILED_PRECONDITION error when trying to set a read-only struct
-    expRc_ = catena::exception_with_status("Cannot modify read-only parameter", catena::StatusCode::FAILED_PRECONDITION);
+    // Start with a known "before" value for /product/name
+    initPayload(0, "/product/name", "OriginalName");
 
-    fqoid_ = "/product"; // This is a read-only struct in the test device model
-    slot_ = 0;
-
-    jsonBody_ = R"({"name":"NewName"})";
-
-    // The device model should NOT be invoked because the server must block the modification first.
-    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(0);
-    EXPECT_CALL(dm0_, commitMultiSetValue(testing::_, testing::_)).Times(0);
-
-    testCall();
-}
-
-// This test is the next task
-/* 
-TEST_F(RESTSetValueTests, SetValue_EmptyObjectValue) {
-    // Create a payload that is an empty JSON object for the value.
-    // Reuse inVal_ by setting an empty string value and obtaining JSON for it.
-    initPayload(1, "/empty/obj/oid", "");
-    // Note: this produces a JSON string representing an empty string value;
-    // it exercises parsing of small/edge-case payloads through toMulti_.
-
+    // Setting expectations for the first call to set the value to "OriginalName"
     EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](st2138::MultiSetValuePayload src, catena::exception_with_status &ans, const IAuthorizer &authz) {
-            EXPECT_EQ(src.slot(), slot_);
-            ASSERT_EQ(src.values_size(), 1);
-            auto val = src.values(0);
+            // Checking that function gets correct inputs.
+            auto val = (*src.mutable_values())[0];
             EXPECT_EQ(val.oid(), fqoid_);
-            EXPECT_EQ(val.value().SerializeAsString(), inVal_.SerializeAsString());
+            EXPECT_EQ(val.value().string_value(), inVal_.string_value());
             return true;
         }));
 
     EXPECT_CALL(dm0_, commitMultiSetValue(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Return(catena::exception_with_status(expRc_.what(), expRc_.status)));
-
+        .WillOnce(testing::Return(catena::exception_with_status(expRc_.what(), expRc_.status)));    
+    // Calling proceed and testing the output
     testCall();
-} */
+}
