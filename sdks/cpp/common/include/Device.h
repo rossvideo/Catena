@@ -161,9 +161,13 @@ class Device : public IDevice {
      */
     inline uint32_t default_total_length() const override {return default_total_length_;}
 
-    void sendHeartbeat(const IParam& param) override { valueSetByServer_.emit(param.getOid(), &param); }
+    const std::string& getHeartbeatParam() const override { return heartbeatParam_; }
 
-    void startHeartbeat(const IParam& param) override;
+    void setHeartbeatParam(const std::string& fqoid) override { heartbeatParam_ = fqoid; }
+
+    void sendHeartbeat() override;
+
+    void startHeartbeat() override;
 
     void stopHeartbeat() override;
 
@@ -615,11 +619,15 @@ class Device : public IDevice {
     std::unique_ptr<IHeartbeat> heartbeat_;
 
     /**
+     * @brief The param fqoid used for the heartbeat.
+     */
+    std::string heartbeatParam_;
+
+    /**
      * @brief Initializes the heartbeat object. Can be overridden by derived
      * classes to provide a custom heartbeat implementation.
-     * @param param The parameter to use for the heartbeat.
      */
-    virtual void initHeartbeat(const IParam& param);
+    virtual void initHeartbeat();
 
   private:
     /**

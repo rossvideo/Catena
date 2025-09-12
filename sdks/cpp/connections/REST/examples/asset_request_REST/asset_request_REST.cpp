@@ -181,13 +181,8 @@ void RunRESTServer() {
         DEBUG_LOG << "API Version: " << api.version();
         DEBUG_LOG << "REST on 0.0.0.0:" << config.port;
 
-        catena::exception_with_status err{"", catena::StatusCode::OK};
-        // The rest is the "sending end" of the status update example
-        std::unique_ptr<IParam> param = dm.getParam("/product/version", err);
-        if (param == nullptr) {
-            throw err;
-        }
-        dm.startHeartbeat(*param);
+        dm.setHeartbeatParam("/product/version");
+        dm.startHeartbeat();
         api.run();
         dm.stopHeartbeat();
     } catch (std::exception &why) {

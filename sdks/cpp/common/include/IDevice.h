@@ -141,18 +141,28 @@ class IDevice {
     virtual void set_default_total_length(const uint32_t default_total_length) = 0;
 
     /**
-     * @brief Cause the device to send a heartbeat update.
-     * @param param The parameter to use for the heartbeat update. The current value
-     * will be sent regardless of whether it has changed.
+     * @brief Get the heartbeat param fqoid.
+     * @return The heartbeat param fqoid.
      */
-    virtual void sendHeartbeat(const IParam& param) = 0;
+    virtual const std::string& getHeartbeatParam() const = 0;
+
+    /**
+     * @brief Sets the heartbeat param fqoid.
+     * @param fqoid The heartbeat param fqoid.
+     */
+    virtual void setHeartbeatParam(const std::string& fqoid) = 0;
+
+    /**
+     * @brief Cause the device to send a heartbeat update using the parameter
+     * set by setHeartbeatParam.
+     */
+    virtual void sendHeartbeat() = 0;
 
     /**
      * @brief Start sending heartbeat updates for a parameter at the specified interval. This is a simple
      * heartbeat set up. For a more complex implementation, consider using the Heartbeat class directly.
-     * @param param The parameter to use for heartbeats.
      */
-    virtual void startHeartbeat(const IParam& param) = 0;
+    virtual void startHeartbeat() = 0;
 
     /**
      * @brief Stop sending the heartbeat.
