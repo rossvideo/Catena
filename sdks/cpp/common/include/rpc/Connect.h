@@ -222,6 +222,10 @@ class Connect : public IConnect {
      * If authz == false, the authorizer is instead set to the kAuthzDisabled
      * object and their priority is left at 0.
      * 
+     * A client's priority is calculated based on the their highest scope.
+     * 
+     * priority_ = scope * 2 + write 
+     * 
      * @param jwsToken The client's jws token to create the authorizer with.
      * @param authz True if authorization is enabled, False otherwise.
      */
