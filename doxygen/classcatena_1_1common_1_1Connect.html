@@ -335,6 +335,8 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>shutdown_</b> = false
 
 <p>Crates an authorizer using the jws token and calculates the client's priority. </p>
 <p>If authz == false, the authorizer is instead set to the kAuthzDisabled object and their priority is left at 0.</p>
+<p>A client's priority is calculated based on the their highest scope.</p>
+<p>priority_ = scope * 2 + write</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">jwsToken</td><td>The client's jws token to create the authorizer with. </td></tr>
