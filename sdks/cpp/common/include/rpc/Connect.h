@@ -222,12 +222,6 @@ class Connect : public IConnect {
      * If authz == false, the authorizer is instead set to the kAuthzDisabled
      * object and their priority is left at 0.
      * 
-     * A client's priority is calculated based on the their highest scope as
-     * well as whether they have force connection set to True (only relevant
-     * for adm:w clients).
-     * 
-     * priority_ = scope * 2 + write + (adm:w && forceConnection)
-     * 
      * @param jwsToken The client's jws token to create the authorizer with.
      * @param authz True if authorization is enabled, False otherwise.
      */
@@ -255,7 +249,7 @@ class Connect : public IConnect {
     /**
      * @brief The priority of the connection.
      * 
-     * priority_ = scope * 2 + write + (adm:w && forceConnection)
+     * priority_ = scope * 2 + write
      */
     uint32_t priority_ = 0;
     /**
@@ -300,11 +294,6 @@ class Connect : public IConnect {
      * No idea what this is used for and if its even needed here.
      */
     std::string userAgent_;
-    /**
-     * @brief Flag to force a connection.
-     * 
-     * Only applicable if client has adm:w scope.
-     */
     /**
      * @brief Flag indicating whether to shut down the connection.
      */
