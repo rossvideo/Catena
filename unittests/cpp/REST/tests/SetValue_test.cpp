@@ -132,6 +132,10 @@ TEST_F(RESTSetValueTests, SetValue_FailParse) {
     testCall();
 }
 
+/*
+* TEST 4 - SetValue fails to write to a read-only struct.
+*/
+
 // Tests to debug ability to modify structs that are declaired read-only
 /**
  * @author nelson.daniels@rossvideo.com
@@ -143,11 +147,20 @@ TEST_F(RESTSetValueTests, SetValue_FailParse) {
 // - Figure out how to test a device that has a struct with read onlu
 // - Implement the test for that below
 
-TEST_F(RESTSetValueTests, SetValue_SlotAndOid) {
-    // Use a non-zero slot and a distinct oid to ensure slot/oid are propagated.
-    initPayload(0, "/product", "TestProduct");
-    
-   
+TEST_F(RESTSetValueTests, SetValue_ReadOnlyStruct) {
+    // Expecting a FAILED_PRECONDITION error when trying to set a read-only struct
+    expRc_ = catena::exception_with_status("Cannot modify read-only parameter", catena::StatusCode::FAILED_PRECONDITION);
+
+    fqoid_ = "/product"; // This is a read-only struct in the test device model
+    slot_ = 0;
+
+    jsonBody_ = R"({"name":"NewName"})";
+
+    // The device model should NOT be invoked because the server must block the modification first.
+    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(0);
+    EXPECT_CALL(dm0_, commitMultiSetValue(testing::_, testing::_)).Times(0);
+
+    testCall();
 }
 
 // This test is the next task
