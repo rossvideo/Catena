@@ -222,11 +222,9 @@ class Connect : public IConnect {
      * If authz == false, the authorizer is instead set to the kAuthzDisabled
      * object and their priority is left at 0.
      * 
-     * A client's priority is calculated based on the their highest scope as
-     * well as whether they have force connection set to True (only relevant
-     * for adm:w clients).
+     * A client's priority is calculated based on the their highest scope.
      * 
-     * priority_ = scope * 2 + write + (adm:w && forceConnection)
+     * priority_ = scope * 2 + write 
      * 
      * @param jwsToken The client's jws token to create the authorizer with.
      * @param authz True if authorization is enabled, False otherwise.
@@ -235,15 +233,11 @@ class Connect : public IConnect {
         if (authz) {
             sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
             authz_ = sharedAuthz_.get();
-            // Throw error for non-admin clients trying to force a connection.
-            if (forceConnection_ && !authz_->writeAuthz(Scopes_e::kAdmin)) {
-                throw catena::exception_with_status("adm:w scope required to force a connection", catena::StatusCode::PERMISSION_DENIED);
-            }
             // Setting up their connection priority.
             for (uint32_t i = static_cast<uint32_t>(Scopes_e::kAdmin); i >= static_cast<uint32_t>(Scopes_e::kMonitor); i -= 1) {             
                 // Client has read
                 if (authz_->readAuthz(static_cast<Scopes_e>(i))) {
-                    priority_ = 2 * i + forceConnection_;
+                    priority_ = 2 * i;
                     // Also has write
                     if (authz_->writeAuthz(static_cast<Scopes_e>(i))) {
                         priority_ += 1;
@@ -259,7 +253,7 @@ class Connect : public IConnect {
     /**
      * @brief The priority of the connection.
      * 
-     * priority_ = scope * 2 + write + (adm:w && forceConnection)
+     * priority_ = scope * 2 + write
      */
     uint32_t priority_ = 0;
     /**
@@ -304,12 +298,6 @@ class Connect : public IConnect {
      * No idea what this is used for and if its even needed here.
      */
     std::string userAgent_;
-    /**
-     * @brief Flag to force a connection.
-     * 
-     * Only applicable if client has adm:w scope.
-     */
-    bool forceConnection_;
     /**
      * @brief Flag indicating whether to shut down the connection.
      */
