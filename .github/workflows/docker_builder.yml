@@ -94,7 +94,8 @@ jobs:
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
-          repositories: 'Catena-deployments'
+          repositories: Catena-deployments
+          owner: rossvideo
       
       - name: Print Length of Token
         run: |
