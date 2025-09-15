@@ -86,12 +86,15 @@ add_custom_command(
 )
 
 # run build_openapi.sh if openapi.yaml changes
+file(GLOB INTERFACE_FILES "${CATENA_ROOT_DIR}/smpte/interface/*")
 add_custom_command(
   OUTPUT ${CATENA_ROOT_DIR}/tools/openapi.stamp
   COMMAND ${CATENA_ROOT_DIR}/smpte/build-openapi.sh
   COMMAND ${CMAKE_COMMAND} -E touch ${CATENA_ROOT_DIR}/tools/openapi.stamp
   WORKING_DIRECTORY ${CATENA_ROOT_DIR}/smpte
-  DEPENDS ${CATENA_ROOT_DIR}/smpte/interface/openapi.yaml ${CATENA_ROOT_DIR}/tools/smpte_node_modules.stamp
+  DEPENDS ${CATENA_ROOT_DIR}/smpte/interface/openapi.yaml
+  DEPENDS ${CATENA_ROOT_DIR}/tools/smpte_node_modules.stamp
+  DEPENDS ${INTERFACE_FILES}
   COMMENT "Running build-openapi.sh if openapi.yaml changed"
 )
 add_custom_target(build_openapi ALL DEPENDS ${CATENA_ROOT_DIR}/tools/openapi.stamp)
