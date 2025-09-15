@@ -104,4 +104,4 @@ jobs:
             /repos/rossvideo/Catena-deployments/dispatches \
             -f 'event_type=build-examples'
         env:
-          GITHUB_TOKEN: ${{ steps.app-token.token }}
+          GH_TOKEN: ${{ steps.app-token.token }}
