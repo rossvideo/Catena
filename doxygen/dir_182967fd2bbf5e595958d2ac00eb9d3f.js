@@ -23,6 +23,7 @@ var dir_182967fd2bbf5e595958d2ac00eb9d3f =
     [ "Logger.h", "Logger_8h.html", "Logger_8h" ],
     [ "Menu.h", "Menu_8h.html", "Menu_8h" ],
     [ "MenuGroup.h", "MenuGroup_8h.html", "MenuGroup_8h" ],
+    [ "NmosNode.h", "NmosNode_8h_source.html", null ],
     [ "ParamDescriptor.h", "ParamDescriptor_8h.html", "ParamDescriptor_8h" ],
     [ "ParamVisitor.h", "ParamVisitor_8h.html", "ParamVisitor_8h" ],
     [ "ParamWithValue.h", "ParamWithValue_8h.html", "ParamWithValue_8h" ],

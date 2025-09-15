@@ -31,6 +31,7 @@ var annotated_dup =
         [ "MenuGroup", "classcatena_1_1common_1_1MenuGroup.html", "classcatena_1_1common_1_1MenuGroup" ],
         [ "MenuGroupTag", "structcatena_1_1common_1_1MenuGroupTag.html", null ],
         [ "MenuTag", "structcatena_1_1common_1_1MenuTag.html", null ],
+        [ "NmosNode", "classcatena_1_1common_1_1NmosNode.html", "classcatena_1_1common_1_1NmosNode" ],
         [ "ParamDescriptor", "classcatena_1_1common_1_1ParamDescriptor.html", "classcatena_1_1common_1_1ParamDescriptor" ],
         [ "ParamTag", "structcatena_1_1common_1_1ParamTag.html", null ],
         [ "ParamVisitor", "classcatena_1_1common_1_1ParamVisitor.html", "classcatena_1_1common_1_1ParamVisitor" ],

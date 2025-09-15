@@ -120,6 +120,7 @@ var hierarchy =
     [ "Logger", "classLogger.html", null ],
     [ "catena::common::MenuGroupTag", "structcatena_1_1common_1_1MenuGroupTag.html", null ],
     [ "catena::common::MenuTag", "structcatena_1_1common_1_1MenuTag.html", null ],
+    [ "catena::common::NmosNode", "classcatena_1_1common_1_1NmosNode.html", null ],
     [ "catena::meta::NthElementT< L, N >", "classcatena_1_1meta_1_1NthElementT.html", null ],
     [ "catena::common::ParamTag", "structcatena_1_1common_1_1ParamTag.html", null ],
     [ "catena::common::Path", "classcatena_1_1common_1_1Path.html", null ],
@@ -131,6 +132,8 @@ var hierarchy =
     [ "catena::patterns::Singleton< T >::Protector", "structcatena_1_1patterns_1_1Singleton_1_1Protector.html", null ],
     [ "catena::meta::PushFrontT< L, T >", "classcatena_1_1meta_1_1PushFrontT.html", null ],
     [ "catena::meta::PushFrontT< TypeList< Ts... >, T >", "classcatena_1_1meta_1_1PushFrontT_3_01TypeList_3_01Ts_8_8_8_01_4_00_01T_01_4.html", null ],
+    [ "catena::common::NmosNode::RegistryCandidate", "structcatena_1_1common_1_1NmosNode_1_1RegistryCandidate.html", null ],
+    [ "catena::common::NmosNode::RegistrySelection", "structcatena_1_1common_1_1NmosNode_1_1RegistrySelection.html", null ],
     [ "std::runtime_error", null, [
       [ "catena::exception_with_status", "structcatena_1_1exception__with__status.html", null ]
     ] ],
