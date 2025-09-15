@@ -103,6 +103,7 @@ jobs:
             -H "Accept: application/vnd.github.v3+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             /repos/rossvideo/Catena-deployments/dispatches \
-            -f 'event_type=build-examples'
+            -f 'event_type=build-examples' \
+            -F 'client_payload[ref]=${{ github.ref }}'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
