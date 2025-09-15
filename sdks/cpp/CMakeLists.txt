@@ -76,6 +76,15 @@ add_custom_command(
 )
 add_custom_target(npm_smpte_tools ALL DEPENDS ${CATENA_ROOT_DIR}/tools/smpte_node_modules.stamp)
 
+
+# Ensure openapi.yaml exists, generate if missing
+add_custom_command(
+  OUTPUT ${CATENA_ROOT_DIR}/smpte/interface/openapi.yaml
+  COMMAND ${CATENA_ROOT_DIR}/smpte/build-openapi.sh
+  WORKING_DIRECTORY ${CATENA_ROOT_DIR}/smpte
+  COMMENT "Generating openapi.yaml if missing"
+)
+
 # run build_openapi.sh if openapi.yaml changes
 add_custom_command(
   OUTPUT ${CATENA_ROOT_DIR}/tools/openapi.stamp
