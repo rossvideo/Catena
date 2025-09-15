@@ -115,6 +115,10 @@ void MultiSetValue::proceed(bool ok) {
                     // Trying and commiting the multiSetValue.
                     if (dm->tryMultiSetValue(reqs_, rc, *authz)) {
                         rc = dm->commitMultiSetValue(reqs_, *authz);
+                    } else { // debug log new
+                        DEBUG_LOG << "MultiSetValue: tryMultiSetValue failed for slot " << reqs_.slot()
+                                  << " status=" << static_cast<int>(rc.status)
+                                  << " msg=\"" << rc.what() << "\"";
                     }
                 }
             // ERROR
