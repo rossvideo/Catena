@@ -95,6 +95,10 @@ jobs:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           repositories: 'Catena-deployments'
+
+      - name: Print
+        run: |
+          echo "Token: ${{ steps.app-token.token }}"
         
       - name: Trigger examples build workflow
         run: |
