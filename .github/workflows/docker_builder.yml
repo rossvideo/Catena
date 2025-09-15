@@ -96,10 +96,6 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           repositories: Catena-deployments
           owner: rossvideo
-      
-      - name: Print Length of Token
-        run: |
-          wc -c <<< "${{ steps.app-token.token }}"
         
       - name: Trigger examples build workflow
         run: |
@@ -109,4 +105,4 @@ jobs:
             /repos/rossvideo/Catena-deployments/dispatches \
             -f 'event_type=build-examples'
         env:
-          GH_TOKEN: ${{ steps.app-token.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
