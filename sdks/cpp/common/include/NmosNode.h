@@ -149,7 +149,7 @@ class NmosNode {
       curl_global_cleanup();
     }
 
-    bool init();
+    bool init(std::chrono::milliseconds heartbeatInterval = std::chrono::seconds(1));
 
     static std::string now_is04_version();
 

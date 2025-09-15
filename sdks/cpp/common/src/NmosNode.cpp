@@ -32,7 +32,9 @@
 
 using namespace catena::common;
 
-bool NmosNode::init() {
+void NmosNode::on_signal(int){ stop_ = true; if (simple_poll_) avahi_simple_poll_quit(simple_poll_); }
+
+bool NmosNode::init(std::chrono::milliseconds heartbeatInterval) {
     curl_global_init(CURL_GLOBAL_ALL);
     DEBUG_LOG << "Starting Catena REST Discovery Example";
 
@@ -105,7 +107,7 @@ bool NmosNode::init() {
     }
 
     // Start heartbeat loop
-    std::thread hb(&NmosNode::heartbeat_thread, this, sel->base, node_id, bearer);
+    std::thread hb(&NmosNode::heartbeat_thread, this, sel->base, node_id, bearer, heartbeatInterval);
 
     DEBUG_LOG << "Registered Node " << node_id << ". Heartbeating. Press Ctrl+C to exit.";
 
@@ -422,6 +424,3 @@ void NmosNode::heartbeat_thread(std::string base, std::string node_id, std::stri
         std::this_thread::sleep_for(interval);
     }
 }
-
-// ---------------------- main ----------------------
-void NmosNode::on_signal(int){ stop_ = true; if (simple_poll_) avahi_simple_poll_quit(simple_poll_); }
