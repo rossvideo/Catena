@@ -48,6 +48,46 @@ message(STATUS "Using glog logging directory: ${GLOG_LOGGING_DIR}")
 # Add the glog logging directory to the compile definitions
 add_compile_definitions(GLOG_LOGGING_DIR="${GLOG_LOGGING_DIR}")
 
+# Check if npm did its Installs 
+
+
+# Add custom targets to run npm install in tools and smpte/tools only if package.json changes
+find_program(NPM_EXECUTABLE npm REQUIRED)
+
+# tools npm install
+add_custom_command(
+  OUTPUT ${CATENA_ROOT_DIR}/tools/node_modules.stamp
+  COMMAND ${NPM_EXECUTABLE} install --yes
+  COMMAND ${CMAKE_COMMAND} -E touch ${CATENA_ROOT_DIR}/tools/node_modules.stamp
+  WORKING_DIRECTORY ${CATENA_ROOT_DIR}/tools
+  DEPENDS ${CATENA_ROOT_DIR}/tools/codegen/package.json
+  COMMENT "Running npm install in tools directory if package.json changed"
+)
+add_custom_target(npm_tools ALL DEPENDS ${CATENA_ROOT_DIR}/tools/node_modules.stamp)
+
+# smpte/tools npm install
+add_custom_command(
+  OUTPUT ${CATENA_ROOT_DIR}/tools/smpte_node_modules.stamp
+  COMMAND ${NPM_EXECUTABLE} install --yes
+  COMMAND ${CMAKE_COMMAND} -E touch ${CATENA_ROOT_DIR}/tools/smpte_node_modules.stamp
+  WORKING_DIRECTORY ${CATENA_ROOT_DIR}/smpte/tools
+  DEPENDS ${CATENA_ROOT_DIR}/smpte/tools/package.json
+  COMMENT "Running npm install in smpte/tools directory if package.json changed"
+)
+add_custom_target(npm_smpte_tools ALL DEPENDS ${CATENA_ROOT_DIR}/tools/smpte_node_modules.stamp)
+
+# run build_openapi.sh if openapi.yaml changes
+add_custom_command(
+  OUTPUT ${CATENA_ROOT_DIR}/tools/openapi.stamp
+  COMMAND ${CATENA_ROOT_DIR}/smpte/build-openapi.sh
+  COMMAND ${CMAKE_COMMAND} -E touch ${CATENA_ROOT_DIR}/tools/openapi.stamp
+  WORKING_DIRECTORY ${CATENA_ROOT_DIR}/smpte
+  DEPENDS ${CATENA_ROOT_DIR}/smpte/interface/openapi.yaml ${CATENA_ROOT_DIR}/tools/smpte_node_modules.stamp
+  COMMENT "Running build-openapi.sh if openapi.yaml changed"
+)
+add_custom_target(build_openapi ALL DEPENDS ${CATENA_ROOT_DIR}/tools/openapi.stamp)
+
+
 # Set the default max number of connections
 set(DEFAULT_MAX_CONNECTIONS 16 CACHE STRING "Default max connections")
 add_compile_definitions(DEFAULT_MAX_CONNECTIONS=${DEFAULT_MAX_CONNECTIONS})
