@@ -84,53 +84,34 @@ bool Device::tryMultiSetValue (st2138::MultiSetValuePayload src, catena::excepti
                             ancestorPath.popBack();
                             if (ancestorPath.empty()) { break; }
                             catena::exception_with_status localStatus{"", catena::StatusCode::OK};
-                            // IMPORTANT: use the disabled authorizer so we can always inspect
-                            // descriptor properties (like readOnly) even if the client
-                            // doesn't have read permission on the ancestor.
                             std::unique_ptr<IParam> ancestor = getParam(ancestorPath, localStatus, catena::common::Authorizer::kAuthzDisabled);
                             if (ancestor) {
-
                                 bool ro = ancestor->getDescriptor().readOnly();
-                                DEBUG_LOG << "tryMultiSetValue: checking ancestor " << ancestorPath.fqoid()
-                                          << " read_only=" << std::boolalpha << ro;
-
                                 if (ro) {
-                                    DEBUG_LOG << "tryMultiSetValue: cannot modify child of read-only struct";
                                     ans = catena::exception_with_status(
                                         "Cannot modify child '" + path.fqoid() + "' of read-only struct '" + ancestorPath.fqoid() + "'",
                                         catena::StatusCode::PERMISSION_DENIED);
-                                    return false;
+                                    return false; // returns false from tryMultiSetValue
                                 }
 
-                            } else {
-                                DEBUG_LOG << "tryMultiSetValue: ancestor not found or error for " << ancestorPath.fqoid()
-                                          << " (" << localStatus.what() << ")";
-                            }
+                            } 
                         }
                     }
                     // End of new logic
-
-
-                    // new debug log
-                    DEBUG_LOG << "tryMultiSetValue: returning status=" << static_cast<int>(ans.status)
-                        << " msg=\"" << ans.what() << "\"";
 
                     std::unique_ptr<IParam> param = getParam(path, ans, authz);
                     // Validating setValue operation.
                     if (!param || !param->validateSetValue(setValuePayload.value(), index, authz, ans)) {
                         break;
                     }
-
-                    // new dubg log
-                    DEBUG_LOG << "tryMultiSetValue: returning status=" << static_cast<int>(ans.status)
-                        << " msg=\"" << ans.what() << "\"";
                 }
             } catch (const catena::exception_with_status& why) {
                 ans = catena::exception_with_status(why.what(), why.status);
                 break;
             }
         }
-        /* // Resetting trackers regardless of whether something went wrong or not.
+
+        // Resetting trackers regardless of whether something went wrong or not.
         for (const std::string& oid : affectedOids) {
             // Creating another exception_with_status as to not overwrite ans.
             catena::exception_with_status status{"", catena::StatusCode::OK};
@@ -139,31 +120,10 @@ bool Device::tryMultiSetValue (st2138::MultiSetValuePayload src, catena::excepti
             if (path.back_is_index()) { path.popBack(); }
             std::unique_ptr<IParam> param = getParam(path, status, authz);
             if (param) { param->resetValidate(); }
-        } */    
-        
-        // new debug log
-
-        DEBUG_LOG << "tryMultiSetValue: returning status=" << static_cast<int>(ans.status)
-              << " msg=\"" << ans.what() << "\"";
-
-        // Resetting trackers only if all validations were successful. (New logic)
-        if (ans.status == catena::StatusCode::OK) {
-            for (const std::string& oid : affectedOids) {
-                // Creating another exception_with_status as to not overwrite ans.
-                catena::exception_with_status status{"", catena::StatusCode::OK};
-                // Resetting param's trackers, or parent param's if back is index.
-                Path path(oid);
-                if (path.back_is_index()) { path.popBack(); }
-                    std::unique_ptr<IParam> param = getParam(path, status, authz);
-                if (param) { param->resetValidate(); }
-            }    
         }
     }
+
     // Returning true if successful.
-                                
-    // new debug log
-    DEBUG_LOG << "tryMultiSetValue: returning status=" << static_cast<int>(ans.status)
-              << " msg=\"" << ans.what() << "\"";
     return ans.status == catena::StatusCode::OK;
 }
 
