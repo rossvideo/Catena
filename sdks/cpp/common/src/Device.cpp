@@ -42,9 +42,6 @@
 #include <stdexcept>
 #include <utility>
 
-// Logger for testing
-#include <Logger.h>
-
 using namespace catena::common;
 
 bool Device::tryMultiSetValue (st2138::MultiSetValuePayload src, catena::exception_with_status& ans, const IAuthorizer& authz) {
@@ -76,7 +73,7 @@ bool Device::tryMultiSetValue (st2138::MultiSetValuePayload src, catena::excepti
                         path.popBack();
                     }
                     
-                    // New Logic
+                    // New logic to make sure children of read-only structs cannot be modified
                     {
                         Path ancestorPath = path;
                         // walk up parents: popBack first so we only inspect strict ancestors
