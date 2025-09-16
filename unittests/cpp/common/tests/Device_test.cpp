@@ -47,7 +47,14 @@
 #include <mocks/MockConstraint.h>
 #include <mocks/MockMenuGroup.h>
 #include <mocks/MockMenu.h>
+#include <mocks/MockDevice.h> // Added include for MockDevice
 #include <CommonTestHelpers.h>
+
+// Include ParamWithValue for readOnly struct test
+#include <ParamWithValue.h>
+
+// Logger for temp testing
+#include <Logger.h>
 
 using namespace catena::common;
 
@@ -275,6 +282,39 @@ TEST_F(DeviceTest, Device_Create) {
 // ======== 1. Multi-Set Tests ========
 
 // --- TryMultiSetValue Tests ---
+
+// 1.0: Error Case - Fails to write to a child when parent struct ("product") is read-only
+TEST_F(DeviceTest, TryMultiSetValue_ReadOnlyStruct) {
+
+    // --- Parent descriptor/param: /product (STRUCT, read_only = true)
+    auto parentParam = std::make_shared<MockParam>();
+    auto parentInfo  = std::make_shared<MockParamDescriptor>();
+    auto& parentDesc = *parentInfo;
+    parentParam->readOnly(true); // Make the struct read-only
+    parentDesc.readOnly(true);
+    setupMockParam(*parentParam, "/product", parentDesc, false, 0, adminScope_);
+
+    // --- Child descriptor/param: /product/name (STRING, nominally writable)
+    auto childParam = std::make_shared<MockParam>();
+    auto childInfo  = std::make_shared<MockParamDescriptor>();
+    auto& childDesc = *childInfo;
+    setupMockParam(*childParam, "/product/name", childDesc, false, 0, adminScope_);
+
+    // Parents add childs param
+    parentDesc.addSubParam("name", childInfo.get());
+
+    // add ONLY the parent to the device so writes must traverse the struct.
+    device_->addItem("product", parentParam.get());
+    device_->addItem("product/name", childParam.get()); // Also add child to device for getParam to find it.
+
+    // Attempt to modify /product/name (string) while /product is read-only.
+    auto payload = createMultiSetPayload({{"/product/name", "Audio Deck Pro"}});
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    bool result = device_->tryMultiSetValue(payload, status, *adminAuthz_);
+
+    EXPECT_FALSE(result);
+    EXPECT_EQ(status.status, catena::StatusCode::PERMISSION_DENIED);
+}
 
 // 1.1: Success Case - Multi-Set Value with Single Value
 TEST_F(DeviceTest, TryMultiSetValue_SingleValue) {
