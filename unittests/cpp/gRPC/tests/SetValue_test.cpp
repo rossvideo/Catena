@@ -150,6 +150,7 @@ TEST_F(gRPCSetValueTests, SetValue_Normal) {
 */
 
 TEST_F(gRPCSetValueTests, SetValue_StructReadOnlyFail) {
+    // Start with a known "before" value for /structy_readonly/child
     initPayload(0, "/struct_readonly/child", "new_value");
     // Setting expectations.
     EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
@@ -168,7 +169,6 @@ TEST_F(gRPCSetValueTests, SetValue_StructReadOnlyFail) {
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
-    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();

@@ -132,26 +132,19 @@ TEST_F(RESTSetValueTests, SetValue_FailParse) {
     testCall();
 }
 
-// Tests to debug ability to modify structs child fields that are declaired read-only
 /**
  * @author nelson.daniels@rossvideo.com
  * @date 25/09/11
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-// On hold until I do the gRPC one first
-
-// TO-DO
-// - Figure out how to test a device that has a struct with read onlu
-// - Implement the test for that below
-
 /*
 * TEST 4 - SetValue fails to write to a read-only struct children fields
 */
 
 TEST_F(RESTSetValueTests, SetValue_ReadOnlyStruct) {
-    // Start with a known "before" value for /product/name
-    initPayload(0, "/product/name", "OriginalName");
+    // Start with a known "before" value for /structy_readonly/child
+    initPayload(0, "/struct_readonly/child", "new_value");
 
     // Setting expectations for the first call to set the value to "OriginalName"
     EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(1)
