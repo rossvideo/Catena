@@ -149,10 +149,6 @@ class Connect : public ICallData, public catena::common::Connect {
      */
     ISocketReader& context_;
     /**
-     * @brief The mutex to lock the controller while writing.
-     */
-    std::mutex mtx_;
-    /**
      * @brief A list of ids for the operations waiting for valueSetByClient to
      * be emitted.
      */

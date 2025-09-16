@@ -67,7 +67,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
         status_ = CallStatus::kFinish;
     }
 
-    std::unique_lock<std::mutex> lock{mtx_, std::defer_lock};
+    std::unique_lock<std::mutex> connect_lock{mtx_, std::defer_lock};
     switch (status_) {
         /** 
          * kCreate: Updates status to kProcess and requests the Connect command
@@ -137,8 +137,8 @@ void catena::gRPC::Connect::proceed(bool ok) {
          * end the process.
          */
         case CallStatus::kWrite:
-            lock.lock();
-            cv_.wait(lock, [this] { return hasUpdate_; });
+            connect_lock.lock();
+            cv_.wait(connect_lock, [this] { return hasUpdate_; });
             hasUpdate_ = false;
             // If connect was cancelled set state to kFinish.
             if (shutdown_ || context_.IsCancelled()) {
@@ -155,9 +155,9 @@ void catena::gRPC::Connect::proceed(bool ok) {
                 } else {
                     writer_.Write(res_, this);
                 }
-                lock.unlock();
-                break; // Fall through if nothing was sent to the client.
             }
+            connect_lock.unlock();
+            break;
         /**
          * kFinish: Ends the connection.
          */
