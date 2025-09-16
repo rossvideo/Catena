@@ -22,10 +22,10 @@
 const { program } = require('commander');
 program
     .option('-s, --schema <string>', 'path to schema definitions', '../../smpte/interface/schemata/device.json')
-    .option('-d, --device-model <string>', 'Catena device model to process', '../../example_device_models/device.minimal.json')
+    .option('-d, --device-model <string>', 'Catena device model to process', '../../smpte')
     .option('-l, --language <string>', 'Language to generate code for', 'cpp')
     .option('-o, --output <string>', 'Output folder for generated code', '.')
-    .option('-m, --mandatory-params <string>', 'patht to files')
+    .option('-m, --mandatory-params <string>', '../../tools/codegen/MANDATORY_PARAMS.json', '../../tools/codegen/')
     .option('disable-mandatory-enforcement', 'Disable enforcement of mandatory parameters during code generation', false)
     // Individual mandatory parameter flags
     .option('--product-name <string>', 'Product name for the device')
@@ -69,17 +69,18 @@ const path = require("node:path");
 const yaml = require('yaml');
 
 // Load YAML or JsSON
-function loadMandatoryParams(){
+function loadMandatoryParams(filePath) {
     if (!fs.existsSync(filePath)) {
-        throw new Error('Cannot open mandatory parameters file at ${filePath}');
+        throw new Error(`Cannot open mandatory parameters file at ${filePath}`);
     }
 
-    console.log('Loading mandatory parameters from ${filePath}');
+    console.log(`Loading mandatory parameters from ${filePath}`);
     const extension = path.extname(filePath);
-    const raw = fs.readFileSync(filePath, 'utf8')
+    const raw = fs.readFileSync(filePath, 'utf8');
     
-    return (ext === ".yaml" || ext === ".yml") ? yaml.parse(raw) : JSON.parse(raw);
+    return (extension === ".yaml" || extension === ".yml") ? yaml.parse(raw) : JSON.parse(raw);
 }
+
 
 // Check for missing required fields
 function checkRequiredParams(params, requiredParams){
@@ -94,7 +95,7 @@ const aj = new Ajv({ allErrors: true });
 
 function validParams(params, schemaPath){
     const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
-    const validate = Ajv.complie(schema);
+    const validate = Ajv.compile(schema);
     const valid = validate(params);
 
     if (!valid) {
@@ -104,58 +105,6 @@ function validParams(params, schemaPath){
         });
         throw new Error('Device definition validation failed');
     }
-}
-
-
-// function getMandatoryParams(){
-//     const versionFile = path.join(__dirname, '..', 'MANDATORY_PARAMS.json');
-//     let sdkVersion = 'unknown';
-//     if (fs.existsSync(versionFile)) {
-//         const versionData = JSON.parse(fs.readFileSync(versionFile, 'utf8'));
-//         sdkVersion = match ? match[1] : versionString;
-//     }
-
-//     return {
-//         params: {
-//             product: {
-//                 type: "STRUCT",
-//                 params: {
-//                     catena_sdk: {
-//                         type: "STRING",
-//                         value: {
-//                             string_value: ""
-//                         }
-//                     },
-//                     catena_sdk_version: {
-//                         tpye: "STRING",
-//                         value: {
-//                             string_value: sdkVersion
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-//     };
-// }
-
-function mergeMandatoryParams(target, source){
-    const result = JSON.parse(JSON.stringify(target));
-
-    function merge(obj1, obj2) {
-            for (const key in obj2) {
-                if (obj2.hasOwnProperty(key)) {
-                    if (obj2[key] && typeof obj2[key] === 'object' && !Array.isArray(obj2[key]) && 
-                        obj1[key] && typeof obj1[key] === 'object' && !Array.isArray(obj1[key])) {
-                        obj1[key] = merge(obj1[key], obj2[key]);
-                    } else {
-                        obj1[key] = obj2[key];
-                    }
-                }
-            }
-            return obj1;
-        }
-
-    return merge(result, source);
 }
 
 /**
