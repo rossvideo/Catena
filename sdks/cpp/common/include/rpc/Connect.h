@@ -165,6 +165,7 @@ class Connect : public IConnect {
                 };
 
                 if (detailLevelMap.contains(detailLevel_) && detailLevelMap.at(detailLevel_)()) {
+                    std::lock_guard<std::mutex> res_lock(mtx_);
                     res_.Clear();
                     res_.set_slot(slot);
                     res_.mutable_value()->set_oid(oid);    
@@ -184,7 +185,8 @@ class Connect : public IConnect {
             DEBUG_LOG << "Failed to send SetValue update: " << why.what();
         }
     }
-    
+
+
     /**
      * @brief Updates the response message with an ILanguagePack if the client
      * has monitor scope.
@@ -272,6 +274,10 @@ class Connect : public IConnect {
      * @brief Bool indicating whether the child has an update to write.
      */
     bool hasUpdate_ = false;
+    /**
+     * @brief The mutex to lock the RPC while writing.
+     */
+    std::mutex mtx_;
     /**
      * @brief A condition variable used to wait for an update.
      */

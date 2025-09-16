@@ -101,10 +101,7 @@ class Connect : public CallData, public catena::common::Connect {
      * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */
     CallStatus status_;
-    /**
-     * @brief The mutex to lock the RPC while writing.
-     */
-    std::mutex mtx_;
+
     /**
      * @brief The total # of Connect objects.
      */
