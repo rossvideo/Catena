@@ -17,6 +17,7 @@ var classcatena_1_1common_1_1Connect =
     [ "dms_", "classcatena_1_1common_1_1Connect.html#a3c85567822ae589d63ed41db48f632e4", null ],
     [ "hasUpdate_", "classcatena_1_1common_1_1Connect.html#aeb08058009d6f93da96fc9c72ba6c99c", null ],
     [ "language_", "classcatena_1_1common_1_1Connect.html#a017fd071366adf86a7e0d90c64aa10d2", null ],
+    [ "mtx_", "classcatena_1_1common_1_1Connect.html#a7700d85ccdeb950984fca45d743c080b", null ],
     [ "objectId_", "classcatena_1_1common_1_1Connect.html#aaf087489151d65442a43ceed5f57fe6b", null ],
     [ "priority_", "classcatena_1_1common_1_1Connect.html#a346fb16e73abcd5c674159d0f39b386b", null ],
     [ "res_", "classcatena_1_1common_1_1Connect.html#a7e6b76ceb58fa41677c069d756c9cffb", null ],
