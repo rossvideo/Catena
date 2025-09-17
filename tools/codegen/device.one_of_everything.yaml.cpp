@@ -183,6 +183,15 @@ catena::common::ChoiceConstraint<std::string, st2138::Constraint::STRING_STRING_
 catena::common::ParamDescriptor _constraint_examples_string_string_array_choiceDescriptor(st2138::ParamType::STRING_ARRAY, {}, {}, "combo_entry", "", false, "string_string_array_choice", "", &_constraint_examples_string_string_array_choiceConstraint, false, false, dm, 0, 0, 2, false, &_constraint_examplesDescriptor);
 catena::common::ParamDescriptor _constraint_examples_string_array_lengthDescriptor(st2138::ParamType::STRING_ARRAY, {}, {}, "text_entry", "", false, "string_array_length", "", nullptr, false, false, dm, 10, 100, 2, false, &_constraint_examplesDescriptor);
 catena::common::ParamWithValue<one_of_everything::Constraint_examples> _constraint_examplesParam(constraint_examples, _constraint_examplesDescriptor, dm, false);
+Product product{.name{"One of Everything"},.vendor{""},.version{"1.0.0"},.catena_sdk{"https://github.com/rossvideo/Catena.git"},.serial_number{"SN-7K9M-2024-XR485-BLU"}};
+catena::common::ParamDescriptor _productDescriptor(st2138::ParamType::STRUCT, {}, {}, "", "", true, "product", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
+catena::common::ParamDescriptor _product_nameDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, "name", "", nullptr, false, false, dm, 0, 0, 2, false, &_productDescriptor);
+catena::common::ParamDescriptor _product_vendorDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, "vendor", "", nullptr, false, false, dm, 0, 0, 2, false, &_productDescriptor);
+catena::common::ParamDescriptor _product_versionDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, "version", "", nullptr, false, false, dm, 0, 0, 2, false, &_productDescriptor);
+catena::common::ParamDescriptor _product_catena_sdkDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, "catena_sdk", "", nullptr, false, false, dm, 0, 0, 2, false, &_productDescriptor);
+catena::common::ParamDescriptor _product_catena_sdk_versionDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, "catena_sdk_version", "", nullptr, false, false, dm, 0, 0, 2, false, &_productDescriptor);
+catena::common::ParamDescriptor _product_serial_numberDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, "serial_number", "", nullptr, false, false, dm, 0, 0, 2, false, &_productDescriptor);
+catena::common::ParamWithValue<one_of_everything::Product> _productParam(product, _productDescriptor, dm, false);
 catena::common::ParamDescriptor _fib_startDescriptor(st2138::ParamType::EMPTY, {}, {}, "", "", false, "fib_start", "", nullptr, true, false, dm, 0, 0, 2, false, nullptr);
 catena::common::ParamWithValue<catena::common::EmptyValue> _fib_startParam(catena::common::emptyValue, _fib_startDescriptor, dm, true);
 catena::common::ParamDescriptor _fib_stopDescriptor(st2138::ParamType::EMPTY, {}, {}, "", "", false, "fib_stop", "", nullptr, true, false, dm, 0, 0, 2, false, nullptr);
@@ -193,3 +202,11 @@ catena::common::ParamDescriptor _randomizeDescriptor(st2138::ParamType::EMPTY, {
 catena::common::ParamWithValue<catena::common::EmptyValue> _randomizeParam(catena::common::emptyValue, _randomizeDescriptor, dm, true);
 catena::common::ParamDescriptor _tape_botDescriptor(st2138::ParamType::EMPTY, {}, {}, "", "", false, "tape_bot", "", nullptr, true, false, dm, 0, 0, 2, false, nullptr);
 catena::common::ParamWithValue<catena::common::EmptyValue> _tape_botParam(catena::common::emptyValue, _tape_botDescriptor, dm, true);
+#define STRINGIFY(x) #x
+#define TO_STRING(x) STRINGIFY(x)
+constexpr const char* real_sdk_version = TO_STRING(CATENA_CPP_VERSION);
+one_of_everything::Product& initialize_sdk_version(one_of_everything::Product& p) {
+  p.catena_sdk_version = real_sdk_version;
+  return p;
+}
+one_of_everything::Product dummy = initialize_sdk_version(product);

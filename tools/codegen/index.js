@@ -150,12 +150,46 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
     return;
   }
 
-  // Check if product has params
+  // Check if product has params and values
   const productParams = deviceParams.product.params || {};
-  const missing = REQUIRED_PARAMS.filter(key => !productParams[key]);
+  const productValue = deviceParams.product.value; 
+  const missing = [];
+  const emptyValues = [];
 
-  if (missing.length > 0 && !disableMandatoryEnforcement) {
-    throw new Error(`Missing mandatory product parameters: ${missing.join(', ')}`);
+  REQUIRED_PARAMS.forEach(key => {
+    const param = productParams[key];
+    
+    if (!param) {
+      missing.push(key);
+    } else if (key !== 'catena_sdk_version') {
+    // Check for values in both JSON and YAML structures
+    let stringValue;
+
+    // JSPM strucutre: product.params[key].value.string_value
+    if (param.value && param.value.string_value) {
+        stringValue = param.value.string_value;
+    }
+    // YAML structure: product.value.struct_value.fields[key].string_value
+    else if (productValue && productValue.struct_value && productValue.struct_value.fields) {
+        const field = productValue.struct_value.fields[key];
+        if (field && field.string_value) {
+            stringValue = field.string_value;
+        }
+    }
+
+        // Validate the found value
+        if (!stringValue) {
+            emptyValues.push(`${key} (no value found)`);
+        } else if (stringValue.trim() === '') {
+            emptyValues.push(`${key} (empty string value)`);
+        }
+    }
+  });
+
+  const allIssues = [...missing.map(p => `${p} (missing field)`), ...emptyValues];
+  
+  if (allIssues.length > 0 && !disableMandatoryEnforcement) {
+    throw new Error(`Invalid mandatory product parameters: ${allIssues.join(', ')}`);
   }
 
   console.log('✅ All mandatory product parameters present');

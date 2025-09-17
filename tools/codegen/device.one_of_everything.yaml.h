@@ -29,6 +29,15 @@ struct Constraint_examples {
   std::vector<std::string> string_array_length{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
   using isCatenaStruct = void;
 };
+struct Product {
+  std::string name;
+  std::string vendor;
+  std::string version;
+  std::string catena_sdk;
+  std::string catena_sdk_version;
+  std::string serial_number;
+  using isCatenaStruct = void;
+};
 } // namespace one_of_everything
 template<>
 struct catena::common::StructInfo<one_of_everything::Ref_struct::Nested_struct> {
@@ -47,4 +56,10 @@ struct catena::common::StructInfo<one_of_everything::Constraint_examples> {
   using Constraint_examples = one_of_everything::Constraint_examples;
   using Type = std::tuple<FieldInfo<int32_t, Constraint_examples>, FieldInfo<int32_t, Constraint_examples>, FieldInfo<float, Constraint_examples>, FieldInfo<std::string, Constraint_examples>, FieldInfo<std::string, Constraint_examples>, FieldInfo<std::string, Constraint_examples>, FieldInfo<std::vector<int32_t>, Constraint_examples>, FieldInfo<std::vector<int32_t>, Constraint_examples>, FieldInfo<std::vector<float>, Constraint_examples>, FieldInfo<std::vector<std::string>, Constraint_examples>, FieldInfo<std::vector<std::string>, Constraint_examples>, FieldInfo<std::vector<std::string>, Constraint_examples>>;
   static constexpr Type fields = {{"int32_range", &Constraint_examples::int32_range}, {"int32_choice", &Constraint_examples::int32_choice}, {"float32_range", &Constraint_examples::float32_range}, {"string_choice", &Constraint_examples::string_choice}, {"string_string_choice", &Constraint_examples::string_string_choice}, {"string_length", &Constraint_examples::string_length}, {"int_array_range", &Constraint_examples::int_array_range}, {"int_array_choice", &Constraint_examples::int_array_choice}, {"float_array_range", &Constraint_examples::float_array_range}, {"string_array_choice", &Constraint_examples::string_array_choice}, {"string_string_array_choice", &Constraint_examples::string_string_array_choice}, {"string_array_length", &Constraint_examples::string_array_length}};
+};
+template<>
+struct catena::common::StructInfo<one_of_everything::Product> {
+  using Product = one_of_everything::Product;
+  using Type = std::tuple<FieldInfo<std::string, Product>, FieldInfo<std::string, Product>, FieldInfo<std::string, Product>, FieldInfo<std::string, Product>, FieldInfo<std::string, Product>, FieldInfo<std::string, Product>>;
+  static constexpr Type fields = {{"name", &Product::name}, {"vendor", &Product::vendor}, {"version", &Product::version}, {"catena_sdk", &Product::catena_sdk}, {"catena_sdk_version", &Product::catena_sdk_version}, {"serial_number", &Product::serial_number}};
 };
