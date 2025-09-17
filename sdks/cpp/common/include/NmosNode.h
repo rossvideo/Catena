@@ -42,17 +42,10 @@
  * @copyright Copyright (c) 2024 Ross Video
  */
 
-// device model
-#include <avahi-client/client.h>
-#include <avahi-client/lookup.h>
-#include <avahi-common/address.h>
-#include <avahi-common/error.h>
-#include <avahi-common/malloc.h>
-#include <avahi-common/simple-watch.h>
-#include <avahi-common/strlst.h>
-
 #include <curl/curl.h>
 #include <netdb.h> 
+#include "INmosNode.h"
+#include <nlohmann/json.hpp>
 
 //common
 #include <utils.h>
@@ -104,29 +97,19 @@ namespace common {
  * The actual authentication portion of the JWS token is handled externally and
  * the class just assumes that the token is good when it recieves it.
  */
-class NmosNode {
+class NmosNode : public INmosNode {
   public:
-    struct RegistryCandidate {
-      std::string name;
-      std::string host; // SRV target hostname
-      std::string addr; // printable address (for info)
-      uint16_t port{};
-      bool https{false};
-      int priority{100}; // lower is better (example)
-      std::vector<std::string> api_versions; // from TXT api_ver
-    };
-
-    struct RegistrySelection {
-      std::string base; // e.g. http://host:port/x-nmos/registration/v1.3
-      std::string node_ver; // chosen version string, e.g. v1.3
-    };
-
     /**
      * @brief Construct a new NmosNode object
      * 
      * @param serviceImpl Pointer to the REST service implementation
      */
-    NmosNode(){};
+    NmosNode(const std::string& device_name = "Catena Device", const std::string& node_name = "Catena Node",
+          const std::string& device_desc = "A Catena example Node", const std::string& model_name = "Catena Model") : 
+      device_name_(device_name),
+      node_name_(node_name),
+      device_desc_(device_desc),
+      model_name_(model_name) {};
 
     /**
      * @brief Destroy the NmosNode object
@@ -149,25 +132,37 @@ class NmosNode {
       curl_global_cleanup();
     }
 
-    bool init(std::chrono::milliseconds heartbeatInterval = std::chrono::seconds(1));
+    bool init(std::chrono::milliseconds heartbeatInterval = std::chrono::seconds(1)) override;
 
+    AvahiSimplePoll* getPoll() override { return simple_poll_; }
+
+    void addCandidate(RegistryCandidate&& c) override {
+      std::lock_guard<std::mutex> lk(cand_mtx_);
+      candidates_.push_back(std::move(c));
+    }
+    std::vector<RegistryCandidate> getCandidates() override {
+      std::lock_guard<std::mutex> lk(cand_mtx_);
+      return candidates_;
+    }
+
+    AvahiClient* getClient() { return client_; }
+
+  protected:
     static std::string now_is04_version();
 
     static std::string now_version_ts();
 
     static std::string random_uuid();
 
-    static bool pick_primary_iface(std::string& ifname, std::string& mac);
+    bool get_node_iface(const std::string& reg_addr) override;
 
-    static bool pick_ipv4_for_iface(const std::string& ifname, std::string& ipv4_out);
-
-    static bool http_post_json(const std::string& url, const std::string& json, const std::string& bearer);
+    static bool http_post_json(const std::string& url, const std::string& jsonObj, const std::string& bearer);
 
     static void parse_txt_into_candidate(AvahiStringList* txt, RegistryCandidate& c);
 
-    static std::string make_node_json(const std::string& node_id, int node_port);
+    std::string make_node_json(const std::string& node_id, int node_port) override;
 
-    static std::string make_device_json(const std::string& dev_id, const std::string& node_id, int node_port);
+    std::string make_device_json(const std::string& dev_id, const std::string& node_id, int node_port) override;
 
     static void resolve_cb(
         AvahiServiceResolver *r,
@@ -197,31 +192,24 @@ class NmosNode {
 
     static void client_cb(AvahiClient *client, AvahiClientState state, void* userdata);
     
-    std::optional<RegistrySelection> choose_registry_and_build_base(int node_port);
+    std::optional<RegistrySelection> choose_registry_and_build_base(int node_port) override;
     
-    void heartbeat_thread(std::string base, std::string node_id, std::string bearer, std::chrono::milliseconds interval = std::chrono::seconds(1));
+    void heartbeat_thread(std::string base, std::string node_id, std::string bearer, std::chrono::milliseconds interval = std::chrono::seconds(5)) override;
 
-    void on_signal(int);
-
-    AvahiSimplePoll* getPoll() { return simple_poll_; }
-
-    void addCandidate(RegistryCandidate&& c) {
-      std::lock_guard<std::mutex> lk(cand_mtx_);
-      candidates_.push_back(std::move(c));
-    }
-    std::vector<RegistryCandidate> getCandidates() {
-      std::lock_guard<std::mutex> lk(cand_mtx_);
-      return candidates_;
-    }
-
-    AvahiClient* getClient() { return client_; }
-  protected:
 	  AvahiSimplePoll *simple_poll_ = nullptr;
     AvahiClient* client_ = nullptr;
     AvahiServiceBrowser *sb_ = nullptr;
     std::atomic<bool> stop_ = false;
     std::mutex cand_mtx_;
     std::vector<RegistryCandidate> candidates_;
+    std::string iface_ = "eth0"; //default interface
+    std::string mac_ = "00-00-00-00-00-00"; //default mac
+    std::string ipv4_ = "127.0.0.1"; //default ip
+    std::string chassis_id_ = "00-00-00-00-00-00"; //default chassis id
+    std::string device_name_;
+    std::string node_name_;
+    std::string device_desc_;
+    std::string model_name_;
 };
 
 } // namespace common

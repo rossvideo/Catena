@@ -114,7 +114,7 @@ int main(int argc, char* argv[]) {
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
 
-    NmosNode node;
+    NmosNode node("Catena Device", "Catena Node", "A Catena example Node", "discovery_REST");
     node.init();
     
     std::thread catenaRestThread(RunRESTServer);

@@ -29,10 +29,10 @@
  */
 
 #include <NmosNode.h>
+#include <sys/ioctl.h>
 
+using json = nlohmann::json;
 using namespace catena::common;
-
-void NmosNode::on_signal(int){ stop_ = true; if (simple_poll_) avahi_simple_poll_quit(simple_poll_); }
 
 bool NmosNode::init(std::chrono::milliseconds heartbeatInterval) {
     curl_global_init(CURL_GLOBAL_ALL);
@@ -85,7 +85,7 @@ bool NmosNode::init(std::chrono::milliseconds heartbeatInterval) {
 
     // Choose a registry
     auto sel = choose_registry_and_build_base(8080);
-    if (!sel) { LOG(ERROR) << "No registry discovered. Exiting.\n"; return 2; }
+    if (!sel) { LOG(ERROR) << "No registry discovered. Exiting.\n"; return false; }
 
     const char* bearerChars = std::getenv("NMOS_BEARER");
     std::string bearer = bearerChars ? std::string(bearerChars) : std::string();
@@ -93,16 +93,18 @@ bool NmosNode::init(std::chrono::milliseconds heartbeatInterval) {
     // Compose minimal resources
     std::string node_id = random_uuid();
     std::string dev_id = random_uuid();
-    // TODO: detect local IP to reach your Node API; using 127.0.0.1 as placeholder
-    std::string node_json = make_node_json(node_id, 8080);
-    std::string dev_json = make_device_json(dev_id, node_id, 8080);
+
+    if (!get_node_iface(candidates_[0].addr)) return false;
+
+    json node_json = make_node_json(node_id, 8080);
+    json dev_json = make_device_json(dev_id, node_id, 8080);
     std::string resource_url = sel->base + "/resource";
 
     // Register Node then Device (dependency order)
-    if (!http_post_json(resource_url, fmt("{\"type\":\"node\",\"data\":%s}", node_json.c_str()), bearer)) {
+    if (!http_post_json(resource_url, node_json, bearer)) {
         LOG(ERROR) << "Failed to register Node\n";
     }
-    if (!http_post_json(resource_url, fmt("{\"type\":\"device\",\"data\":%s}", dev_json.c_str()), bearer)) {
+    if (!http_post_json(resource_url, dev_json, bearer)) {
         LOG(ERROR) << "Failed to register Device\n";
     }
 
@@ -143,42 +145,52 @@ std::string NmosNode::now_version_ts() {
 
 std::string NmosNode::random_uuid() {
     // NOT cryptographically strong. Good enough for example code.
-    auto r32 = [](){ unsigned v = (unsigned)std::rand(); return v; };
+    auto r32 = [](){ uint32_t v = (uint32_t)std::rand(); return v; };
     return fmt("%08x-%04x-%04x-%04x-%012x",
     r32(), r32() & 0xFFFF, (r32() & 0x0FFF) | 0x4000,
-    (r32() & 0x3FFF) | 0x8000, ((unsigned long long)r32() << 16) | (r32() & 0xFFFF));
+    (r32() & 0x3FFF) | 0x8000, ((uint64_t)r32() << 16) | (r32() & 0xFFFF));
 }
 
-bool NmosNode::pick_primary_iface(std::string& ifname, std::string& mac){
-    DIR* d = opendir("/sys/class/net"); if (!d) return false;
-    struct dirent* e;
-    while ((e = readdir(d))) {
-        if (e->d_name[0] == '.') continue;
-            std::string name = e->d_name;
-        if (name == "lo") continue;
-        std::string oper = catena::readFile("/sys/class/net/"+name+"/operstate");
-        std::string addr = catena::readFile("/sys/class/net/"+name+"/address");
-        if (!oper.empty() && oper == "up") {
-            if (!addr.empty()) {
-                ifname = name; mac = addr; closedir(d); return true;
-            }
-        }
-    }
-    closedir(d);
-    return false;
-}
+//figure out how to get subnet and match it to the current ip in the loop
+bool NmosNode::get_node_iface(const std::string& reg_addr){
+    std::string subnet = reg_addr.substr(0, reg_addr.rfind('.'));
 
-bool NmosNode::pick_ipv4_for_iface(const std::string& ifname, std::string& ipv4_out){
-    struct ifaddrs *ifaddr=nullptr; if (getifaddrs(&ifaddr)==-1) return false;
+    int fd = ::socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd == -1) return false;
+
+    struct ifaddrs *ifaddr=nullptr;
+    if (getifaddrs(&ifaddr)==-1) return false;
+    
     for (auto* ifa=ifaddr; ifa; ifa=ifa->ifa_next){
         if (!ifa->ifa_addr) continue;
         if (!(ifa->ifa_flags & IFF_UP)) continue;
-        if (ifname != ifa->ifa_name) continue;
         if (ifa->ifa_addr->sa_family == AF_INET){
             char host[NI_MAXHOST];
             auto* sa = (struct sockaddr_in*)ifa->ifa_addr;
-            if (inet_ntop(AF_INET, &sa->sin_addr, host, sizeof(host))){
-                ipv4_out = host; freeifaddrs(ifaddr); return true;
+
+            //get host ip from current interface
+            if (inet_ntop(AF_INET, &sa->sin_addr, host, sizeof(host)) &&
+                    subnet == std::string(host).substr(0, std::string(host).rfind('.'))) {
+                // Found interface on same /24 as reg_addr
+                ipv4_ = host;
+                iface_ = ifa->ifa_name;
+
+                // Get MAC via ioctl(SIOCGIFHWADDR)
+                struct ifreq ifr;
+                std::memset(&ifr, 0, sizeof(ifr));
+                std::strncpy(ifr.ifr_name, ifa->ifa_name, IFNAMSIZ - 1);
+
+                if (ioctl(fd, SIOCGIFHWADDR, &ifr) == 0) {
+                    auto* hw = reinterpret_cast<unsigned char*>(ifr.ifr_hwaddr.sa_data);
+                    mac_ = fmt("%02x-%02x-%02x-%02x-%02x-%02x",
+                        hw[0], hw[1], hw[2], hw[3], hw[4], hw[5]);
+                } else {
+                    mac_.clear(); // or keep previous / handle error as needed
+                }
+
+                freeifaddrs(ifaddr);
+                close(fd);
+                return true;
             }
         }
     }
@@ -186,7 +198,7 @@ bool NmosNode::pick_ipv4_for_iface(const std::string& ifname, std::string& ipv4_
 }
 
 // ---------------------- HTTP ----------------------
-bool NmosNode::http_post_json(const std::string& url, const std::string& json, const std::string& bearer = {}) {
+bool NmosNode::http_post_json(const std::string& url, const std::string& jsonObj, const std::string& bearer = {}) {
     CURL* c = curl_easy_init();
     if (!c) return false;
     struct curl_slist* hdrs = nullptr;
@@ -197,8 +209,8 @@ bool NmosNode::http_post_json(const std::string& url, const std::string& json, c
     }
     curl_easy_setopt(c, CURLOPT_URL, url.c_str());
     curl_easy_setopt(c, CURLOPT_HTTPHEADER, hdrs);
-    curl_easy_setopt(c, CURLOPT_POSTFIELDS, json.c_str());
-    curl_easy_setopt(c, CURLOPT_POSTFIELDSIZE, (long)json.size());
+    curl_easy_setopt(c, CURLOPT_POSTFIELDS, jsonObj.c_str());
+    curl_easy_setopt(c, CURLOPT_POSTFIELDSIZE, (long)jsonObj.size());
     curl_easy_setopt(c, CURLOPT_TIMEOUT, 5L);
     CURLcode rc = curl_easy_perform(c);
     long code = 0; curl_easy_getinfo(c, CURLINFO_RESPONSE_CODE, &code);
@@ -228,94 +240,78 @@ void NmosNode::parse_txt_into_candidate(AvahiStringList* txt, NmosNode::Registry
 }
 
 std::string NmosNode::make_node_json(const std::string& node_id, int node_port) {
-    std::string ver = now_is04_version();
-    std::string ifname = "eth0", mac = "00-00-00-00-00-00";
-    std::string ip = "127.0.0.1";            // keep your arg as a hint/fallback
-    std::string detected;
+    json node_json;
 
-    pick_primary_iface(ifname, mac);
-    if (pick_ipv4_for_iface(ifname, detected)) ip = detected;
-
-    std::string href = fmt("http://%s:%d/x-nmos/node/v1.3/", ip.c_str(), node_port);
-
-    return fmt(
-    "{"
-        "\"id\": \"%s\","
-        "\"version\": \"%s\","
-        "\"label\": \"Catena Node\","
-        "\"description\": \"An NMOS node running Catena software\","
-        "\"href\": \"%s\","
-        "\"caps\": {},"
-        "\"tags\": {},"
-        "\"services\": ["
-            "{"
-                "\"href\": \"http://%s:%d/x-catena/status/\","
-                "\"type\": \"urn:x-catena:service:status\""
-            "}"
-        "],"
-        "\"api\": {"
-            "\"versions\": [ \"v1.3\" ],"
-            "\"endpoints\": ["
-                "{"
-                "\"host\": \"%s\","
-                "\"port\": %d,"
-                "\"protocol\": \"http\","
-                "\"authorization\": false"
-                "}"
-            "]"
-        "},"
-        "\"clocks\": ["
-        "{"
-            "\"name\": \"clk0\","
-            "\"ref_type\": \"internal\""
-        "}"
-        "],"
-        "\"interfaces\": ["
-        "{"
-            "\"name\": \"%s\","
-            "\"chassis_id\": \"%s\","
-            "\"port_id\": \"%s\""
-        "}"
-        "]"
-    "}",
-    node_id.c_str(), ver.c_str(), href.c_str(), ip.c_str(), node_port, ip.c_str(), node_port, ifname.c_str(), mac.c_str(), mac.c_str()
-    );
+    node_json["type"] = "node";
+    node_json["data"] = json::object();
+    node_json["data"]["id"] = node_id;
+    node_json["data"]["version"] = now_is04_version();
+    node_json["data"]["label"] = node_name_;
+    node_json["data"]["description"] = device_desc_;
+    node_json["data"]["href"] = fmt("http://%s:%d/x-nmos/node/v1.3/", ipv4_.c_str(), node_port);
+    node_json["data"]["caps"] = json::object();
+    node_json["data"]["tags"] = json::object();
+    node_json["data"]["services"] = json::array({
+        {
+            {"href", fmt("http://%s:%d/x-catena/status/", ipv4_.c_str(), node_port)},
+            {"type", "urn:x-catena:service:status"}
+        }
+    });
+    node_json["data"]["api"] = {
+        {"versions", json::array({"v1.3"})},
+        {"endpoints", json::array({
+            {
+                {"host", ipv4_},
+                {"port", node_port},
+                {"protocol", "http"},
+                {"authorization", false}
+            }
+        })}
+    };
+    node_json["data"]["clocks"] = json::array({
+        {
+            {"name", "clk0"},
+            {"ref_type", "internal"}
+        }
+    });
+    node_json["data"]["interfaces"] = json::array({
+        {
+            {"name", iface_},
+            {"chassis_id", chassis_id_},
+            {"port_id", mac_}
+        }
+    });
+    
+    return node_json.dump();
 }
 
 // make_device_json: builds a minimal IS-04 Device object
 std::string NmosNode::make_device_json(const std::string& dev_id, const std::string& node_id, int node_port) {
-    std::string ver = now_is04_version();
-    std::string ifname = "eth0", mac = "00-00-00-00-00-00";
-    std::string ip = "127.0.0.1";            // keep your arg as a hint/fallback
-    std::string detected;
+    json dev_json;
 
-    pick_primary_iface(ifname, mac);
-    if (pick_ipv4_for_iface(ifname, detected)) ip = detected;
+    dev_json["type"] = "device";
+    dev_json["data"] = json::object();
+    dev_json["data"]["id"] = dev_id;
+    dev_json["data"]["version"] = now_is04_version();
+    dev_json["data"]["node_id"] = node_id;
+    dev_json["data"]["label"] = device_name_;
+    dev_json["data"]["description"] = device_desc_;
+    dev_json["data"]["type"] = "urn:x-nmos:device:generic";
+    dev_json["data"]["senders"] = json::array();
+    dev_json["data"]["receivers"] = json::array();
+    dev_json["data"]["controls"] = json::array({
+        {
+            {"type", "urn:x-nmos:control:sr-ctrl/v1.1"},
+            {"href", fmt("http://%s:%d/x-catena/connection/v1.1/", ipv4_.c_str(), node_port)}
+        }
+    });
+    dev_json["data"]["tags"] = {
+        {"vendor", json::array({"RossVideo"})},
+        {"model_name", json::array({model_name_})},
+        {"device_name", json::array({device_name_})}
+    };
 
-    return fmt(
-    "{"
-        "\"id\": \"%s\","
-        "\"version\": \"%s\","
-        "\"node_id\": \"%s\","
-        "\"label\": \"Catena Device\","
-        "\"description\": \"Catena Device\","
-        "\"type\": \"urn:x-nmos:device:generic\","
-        "\"senders\": [],"
-        "\"receivers\": [],"
-        "\"controls\": ["
-            "{"
-                "\"type\": \"urn:x-nmos:control:sr-ctrl/v1.1\","
-                "\"href\": \"http://%s:%d/x-catena/connection/v1.1/\""
-            "}"
-        "],"
-        "\"tags\": {"
-            "\"vendor\": [\"RossVideo\"],"
-            "\"model_name\": [\"Catena Model X\"],"
-            "\"device_name\": [\"Catena Device 1\"]"
-        "}"
-    "}",
-    dev_id.c_str(), ver.c_str(), node_id.c_str(), ip.c_str(), node_port
-    );
+    return dev_json.dump();
 }
 
 // Callback for resolving a service
