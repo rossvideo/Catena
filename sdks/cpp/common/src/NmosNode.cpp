@@ -146,7 +146,7 @@ std::string NmosNode::now_version_ts() {
 std::string NmosNode::random_uuid() {
     // NOT cryptographically strong. Good enough for example code.
     auto r32 = [](){ uint32_t v = (uint32_t)std::rand(); return v; };
-    return fmt("%08x-%04x-%04x-%04x-%012x",
+    return fmt("%08x-%04x-%04x-%04x-%012llx",
     r32(), r32() & 0xFFFF, (r32() & 0x0FFF) | 0x4000,
     (r32() & 0x3FFF) | 0x8000, ((uint64_t)r32() << 16) | (r32() & 0xFFFF));
 }

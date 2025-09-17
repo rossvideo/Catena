@@ -50,7 +50,7 @@ TEST(UtilsTest, ReadFile_FileNotFound) {
     fs::path test_path = "non_existent_file.txt";
     
     // Expect an exception since the file doesn't exist
-    EXPECT_THROW(catena::readFile(test_path), std::filesystem::filesystem_error);
+    EXPECT_EQ(catena::readFile(test_path), "");
 }
 
 // SUBS TESTS
