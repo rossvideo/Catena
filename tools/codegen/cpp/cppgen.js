@@ -86,7 +86,17 @@ class CppGen {
    * @param {DeviceModel} deviceModel to the device model's top-level json file
    * @param {string} outputDir folder for generated code
    */
-  constructor(deviceModel, outputDir) {
+
+  static REQUIRED_PARAMS = [
+    "name",
+    "vendor",
+    "version",
+    "catena_sdk",
+    "catena_sdk_version",
+    "serial_number"
+    ];
+
+  constructor(deviceModel, outputDir, ) {
     this.headerFilename = `${deviceModel.baseFilename}.h`;
     let header = fs.openSync(path.join(outputDir, `${this.headerFilename}`), "w");
     let body = fs.openSync(path.join(outputDir, `${deviceModel.baseFilename}.cpp`), "w");
