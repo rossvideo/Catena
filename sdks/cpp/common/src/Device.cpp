@@ -73,29 +73,6 @@ bool Device::tryMultiSetValue (st2138::MultiSetValuePayload src, catena::excepti
                         path.popBack();
                     }
                     
-                    // New logic to make sure children of read-only structs cannot be modified
-                    {
-                        Path ancestorPath = path;
-                        // walk up parents: popBack first so we only inspect strict ancestors
-                        while (!ancestorPath.empty()) {
-                            ancestorPath.popBack();
-                            if (ancestorPath.empty()) { break; }
-                            catena::exception_with_status localStatus{"", catena::StatusCode::OK};
-                            std::unique_ptr<IParam> ancestor = getParam(ancestorPath, localStatus, catena::common::Authorizer::kAuthzDisabled);
-                            if (ancestor) {
-                                bool ro = ancestor->getDescriptor().readOnly();
-                                if (ro) {
-                                    ans = catena::exception_with_status(
-                                        "Cannot modify child '" + path.fqoid() + "' of read-only struct '" + ancestorPath.fqoid() + "'",
-                                        catena::StatusCode::PERMISSION_DENIED);
-                                    return false; // returns false from tryMultiSetValue
-                                }
-
-                            } 
-                        }
-                    }
-                    // End of new logic
-
                     std::unique_ptr<IParam> param = getParam(path, ans, authz);
                     // Validating setValue operation.
                     if (!param || !param->validateSetValue(setValuePayload.value(), index, authz, ans)) {
