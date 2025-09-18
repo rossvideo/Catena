@@ -55,7 +55,6 @@ if (!fs.existsSync(options.deviceModel)) {
     process.exit(1);
 }
 
-//These libraries are used for validation, path handling, and optional YAML import
 const Validator = require('smpte-validator');
 const validator = new Validator(options.schema);
 const path = require("node:path");
@@ -66,7 +65,6 @@ const yaml = require('yaml')
  * @brief Holds the information parsed from a json device model file
  */
 
-//Encapsulates a device model, its validator, and methods to import additional files
 class DeviceModel {
   /**
    * @brief Construct a new DeviceModel object
@@ -94,7 +92,6 @@ class DeviceModel {
        * @throws {Error} if the file cannot be opened or the data is invalid against the schema
        * @todo add support for other import types 
        */
-
       importParam(importArg) {
           if ("file" in importArg) {
             const importDir = path.dirname(this.filePath);
@@ -123,97 +120,6 @@ class DeviceModel {
 const deviceName = path.parse(options.deviceModel).name.split('.')[0]; //Extracts the name prefix (eg device.minimal.json -> device)
 console.log(`Validating device model '${deviceName}' from file '${options.deviceModel}' against schema file '${options.schema}'...`); //Begins validation
 
-/**
- * Apply CLI argument overrides to mandatory parameters
- * @param {Object} deviceData the device model data
- * @param {Object} options parsed CLI options
- */
-function applyCliOverrides(deviceData, options) {
-    // Product parameter mappings: CLI option -> device model field
-    const productOverrides = {
-        productName: 'name',
-        productVendor: 'vendor', 
-        productVersion: 'version',
-        productSerial: 'serial_number',
-        catenaSdk: 'catena_sdk',
-        catenaSdkVersion: 'catena_sdk_version'
-    };
-    
-    if (!deviceData.params) deviceData.params = {};
-    if (!deviceData.params.product) {
-        deviceData.params.product = { type: "STRUCT", read_only: true, params: {} };
-    }
-    if (!deviceData.params.product.params) deviceData.params.product.params = {};
-    
-    // Ensure SDK parameters always have values (for C++ struct initialization)  
-    const sdkDefaults = {
-        catena_sdk: "",
-        catena_sdk_version: ""
-    };
-    
-    Object.entries(sdkDefaults).forEach(([paramName, defaultValue]) => {
-        if (!deviceData.params.product.params[paramName]) {
-            deviceData.params.product.params[paramName] = { type: "STRING" };
-        }
-        if (!deviceData.params.product.params[paramName].value) {
-            deviceData.params.product.params[paramName].value = { string_value: defaultValue };
-            
-            // Also set in YAML structure if it exists
-            if (deviceData.params.product.value?.struct_value?.fields) {
-                deviceData.params.product.value.struct_value.fields[paramName] = {
-                    string_value: defaultValue
-                };
-            }
-        }
-    });
-    
-    const hasOverrides = Object.keys(productOverrides).some(key => options[key]);
-      
-    if (hasOverrides) {
-        // Apply all product parameter overrides with detailed output
-        Object.entries(productOverrides).forEach(([cliKey, fieldKey]) => {
-            if (options[cliKey]) {
-                // Get original value for comparison
-                let originalValue = "undefined";
-                
-                // Check JSON structure first
-                if (deviceData.params.product.params?.[fieldKey]?.value?.string_value) {
-                    originalValue = deviceData.params.product.params[fieldKey].value.string_value;
-                }
-                // Check YAML structure
-                else if (deviceData.params.product.value?.struct_value?.fields?.[fieldKey]?.string_value) {
-                    originalValue = deviceData.params.product.value.struct_value.fields[fieldKey].string_value;
-                }
-                
-                // Show what's being overridden
-                console.log(`🔄 Overriding product.${fieldKey}: "${originalValue}" → "${options[cliKey]}"`);
-                
-                // Apply JSON structure
-                deviceData.params.product.params[fieldKey] = { 
-                    type: "STRING", value: { string_value: options[cliKey] }
-                };
-                
-                // Apply YAML structure (if exists)
-                if (deviceData.params.product.value?.struct_value) {
-                    if (!deviceData.params.product.value.struct_value.fields) {
-                        deviceData.params.product.value.struct_value.fields = {};
-                    }
-                    deviceData.params.product.value.struct_value.fields[fieldKey] = { 
-                        string_value: options[cliKey] 
-                    };
-                }
-            }
-        });
-    }
-    
-    // Apply device-level overrides
-    if (options.deviceSlot !== undefined) {
-        const originalSlot = deviceData.slot || "undefined";
-        console.log(`🔄 Overriding device.slot: "${originalSlot}" → "${options.deviceSlot}"`);
-        deviceData.slot = options.deviceSlot;
-    }
-}
-
 function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement = false) {
   const REQUIRED_PARAMS = [
     "name",
@@ -224,9 +130,6 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
     "serial_number"
   ];
 
-  //console.log('🔍 DEBUG areAllRequiredParamsPresent called - hasProduct:', !!(deviceParams && deviceParams.product));
-
-  // Check if product struct exists
   if (!deviceParams || !deviceParams.product) {
     if (!disableMandatoryEnforcement) {
       throw new Error(`Missing mandatory product struct in params`);
@@ -234,7 +137,6 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
     return;
   }
 
-  // Check if product has params and values
   const productParams = deviceParams.product.params || {};
   const productValue = deviceParams.product.value; 
   const missing = [];
@@ -246,14 +148,12 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
     if (!param) {
       missing.push(key);
     } else if (key !== 'catena_sdk_version' && key !== 'catena_sdk') { 
-    // Check for values in both JSON and YAML structures
     let stringValue;
 
-    // JSPM strucutre: product.params[key].value.string_value
     if (param.value && param.value.string_value) {
         stringValue = param.value.string_value;
     }
-    // YAML structure: product.value.struct_value.fields[key].string_value
+
     else if (productValue && productValue.struct_value && productValue.struct_value.fields) {
         const field = productValue.struct_value.fields[key];
         if (field && field.string_value) {
@@ -261,7 +161,6 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
         }
     }
 
-        // Validate the found value
         if (!stringValue) {
             emptyValues.push(`${key} (no value found)`);
         } else if (stringValue.trim() === '') {
@@ -288,9 +187,6 @@ try {
     let mandatoryParamsValid = true;
     
     if (isValid.data) {
-        // Apply CLI overrides BEFORE creating DeviceModel and validation
-        applyCliOverrides(isValid.data, options);
-
         const dm = new DeviceModel(options.deviceModel, validator, isValid.data);
         
         // Check mandatory parameters 
