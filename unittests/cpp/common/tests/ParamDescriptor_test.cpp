@@ -405,7 +405,18 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyTrue) {
     EXPECT_EQ(pd->readOnly(), subPd1.readOnly());
     EXPECT_EQ(pd->readOnly(), subPd2.readOnly());
 
+    // Swap parent to readOnly = false
+    pd->readOnly(false);
 
-    // ADD CHECK FOR FALSE DOWN HERE TO
+    // Check expectations.
+    EXPECT_CALL(subPd1, readOnly())
+        .WillRepeatedly(testing::Return(pd->readOnly()));
+    EXPECT_CALL(subPd2, readOnly())
+        .WillRepeatedly(testing::Return(pd->readOnly()));
+
+    // Test readOnly is false on children
+    EXPECT_FALSE(pd->readOnly());
+    EXPECT_EQ(pd->readOnly(), subPd1.readOnly());
+    EXPECT_EQ(pd->readOnly(), subPd2.readOnly());
 }
 
