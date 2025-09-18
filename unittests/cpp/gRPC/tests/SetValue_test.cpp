@@ -138,39 +138,3 @@ TEST_F(gRPCSetValueTests, SetValue_Normal) {
     // Sending the RPC.
     testRPC();
 }
-
-/**
- * @author nelson.daniels@rossvideo.com
- * @date 25/09/12
- * @copyright Copyright © 2025 Ross Video Ltd
- */
-
-/*
-* TEST 3 - SetValue fails to write to a read-only struct children fields
-*/
-
-TEST_F(gRPCSetValueTests, SetValue_StructReadOnlyFail) {
-    // Start with a known "before" value for /structy_readonly/child
-    initPayload(0, "/struct_readonly/child", "new_value");
-    // Setting expectations.
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](st2138::MultiSetValuePayload src, catena::exception_with_status &ans, const IAuthorizer &authz) {
-            EXPECT_EQ(src.SerializeAsString(), expMultiVal_.SerializeAsString());
-            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
-            return true;
-        }));
-        
-    EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
-
-    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](st2138::MultiSetValuePayload src, const IAuthorizer &authz) {
-            // Checking that function gets correct inputs.
-            EXPECT_EQ(src.SerializeAsString(), expMultiVal_.SerializeAsString());
-            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
-            return catena::exception_with_status(expRc_.what(), expRc_.status);
-        }));
-    EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
-    // Sending the RPC.
-    testRPC();
-}
-

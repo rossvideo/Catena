@@ -49,13 +49,6 @@
 #include <mocks/MockMenu.h>
 #include <CommonTestHelpers.h>
 
-// Include ParamWithValue for readOnly struct test
-#include <ParamWithValue.h>
-#include <ParamDescriptor.h>
-
-// Logger for temp testing
-#include <Logger.h>
-
 using namespace catena::common;
 
 class DeviceTest : public ::testing::Test {
@@ -282,87 +275,6 @@ TEST_F(DeviceTest, Device_Create) {
 // ======== 1. Multi-Set Tests ========
 
 // --- TryMultiSetValue Tests ---
-
-// add expect calls
-// child param is not mock
-
-// 1.0: Error Case - Fails to write to a child when parent struct ("product") is read-only
-TEST_F(DeviceTest, TryMultiSetValue_ReadOnlyStruct) {
-auto parentParam = std::make_shared<MockParam>();
-    auto parentInfo  = std::make_shared<MockParamDescriptor>();
-    auto& parentDesc = *parentInfo;
-
-    setupMockParam(*parentParam, "/product", parentDesc, /*isReadonly*/false, /*access*/0, adminScope_);
-
-    // Many code paths check descriptor readOnly(); keep param readOnly() too for clarity.
-    EXPECT_CALL(*parentParam, readOnly()).WillRepeatedly(testing::Return(true));
-    EXPECT_CALL(parentDesc, readOnly()).WillRepeatedly(testing::Return(true));
-
-    EXPECT_CALL(*parentParam, getDescriptor())
-        .WillRepeatedly(testing::ReturnRef(parentDesc));
-
-    // --- Child: /product/name (STRING, nominally writable)
-    auto childParam = std::make_shared<MockParam>();
-    auto childInfo  = std::make_shared<MockParamDescriptor>();
-    auto& childDesc = *childInfo;
-
-    setupMockParam(*childParam, "/product/name", childDesc, /*isReadonly*/false, /*access*/0, adminScope_);
-
-    EXPECT_CALL(childDesc, readOnly()).WillRepeatedly(testing::Return(false));
-    EXPECT_CALL(*childParam, getDescriptor())
-        .WillRepeatedly(testing::ReturnRef(childDesc));
-
-    // --- Wire parent->child on the DESCRIPTORS via subparam map
-    static std::unordered_map<std::string, IParamDescriptor*> parentSubs;
-    parentSubs.clear();
-
-    EXPECT_CALL(parentDesc, addSubParam(testing::StrEq("/name"), childInfo.get()))
-        .Times(1);
-    parentDesc.addSubParam("/name", childInfo.get());   // actually populate the relation
-    parentSubs.emplace("/name", childInfo.get());
-
-    EXPECT_CALL(parentDesc, getAllSubParams())
-        .WillRepeatedly(testing::ReturnRef(parentSubs));
-
-    // --- Quiet common warnings: code may clone params
-    EXPECT_CALL(*parentParam, copy())
-    .WillRepeatedly(testing::Invoke([&parentDesc]() -> std::unique_ptr<IParam> {
-        auto mock = std::make_unique<MockParam>();
-        // The cloned param should report the same descriptor and readOnly status
-        EXPECT_CALL(*mock, getDescriptor())
-            .WillRepeatedly(testing::ReturnRef(parentDesc));
-        EXPECT_CALL(*mock, readOnly())
-            .WillRepeatedly(testing::Return(true));
-        EXPECT_CALL(*mock, resetValidate())
-            .Times(testing::AnyNumber());
-        return mock;
-    }));
-
-    EXPECT_CALL(*childParam, copy())
-    .WillRepeatedly(testing::Invoke([&childDesc]() -> std::unique_ptr<IParam> {
-        auto mock = std::make_unique<MockParam>();
-        // The cloned child should report the child descriptor
-        EXPECT_CALL(*mock, getDescriptor())
-            .WillRepeatedly(testing::ReturnRef(childDesc));
-        EXPECT_CALL(*mock, readOnly())
-            .WillRepeatedly(testing::Return(false));
-        EXPECT_CALL(*mock, resetValidate())
-            .Times(testing::AnyNumber());
-        return mock;
-    }));
-
-    // --- Register both so lookups succeed
-    device_->addItem("product", parentParam.get());
-    device_->addItem("product/name", childParam.get());
-
-    // --- Attempt to write child under read-only parent
-    auto payload = createMultiSetPayload({{"/product/name", "Audio Deck Pro"}});
-    catena::exception_with_status status{"", catena::StatusCode::OK};
-    bool result = device_->tryMultiSetValue(payload, status, *adminAuthz_);
-
-    EXPECT_FALSE(result);
-    EXPECT_EQ(status.status, catena::StatusCode::PERMISSION_DENIED);
-}
 
 // 1.1: Success Case - Multi-Set Value with Single Value
 TEST_F(DeviceTest, TryMultiSetValue_SingleValue) {

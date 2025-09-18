@@ -179,7 +179,7 @@ class ParamDescriptor : public IParamDescriptor {
      * @brief return the readOnly status of the parameter
      * @note if the parameter has a parent, then the readOnly status is the logical OR of the parameter's readOnly status and the parent's readOnly status
      */
-    inline bool readOnly() const override { return read_only_ || parent_ != nullptr && parent_->readOnly(); }
+    inline bool readOnly() const override { return read_only_ || (parent_ != nullptr && parent_->readOnly()); }
 
     /**
      * @brief set the readOnly status of the parameter

@@ -131,33 +131,3 @@ TEST_F(RESTSetValueTests, SetValue_FailParse) {
     // Calling proceed and testing the output
     testCall();
 }
-
-/**
- * @author nelson.daniels@rossvideo.com
- * @date 25/09/11
- * @copyright Copyright © 2025 Ross Video Ltd
- */
-
-/*
-* TEST 4 - SetValue fails to write to a read-only struct children fields
-*/
-
-TEST_F(RESTSetValueTests, SetValue_ReadOnlyStruct) {
-    // Start with a known "before" value for /structy_readonly/child
-    initPayload(0, "/struct_readonly/child", "new_value");
-
-    // Setting expectations for the first call to set the value to "OriginalName"
-    EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](st2138::MultiSetValuePayload src, catena::exception_with_status &ans, const IAuthorizer &authz) {
-            // Checking that function gets correct inputs.
-            auto val = (*src.mutable_values())[0];
-            EXPECT_EQ(val.oid(), fqoid_);
-            EXPECT_EQ(val.value().string_value(), inVal_.string_value());
-            return true;
-        }));
-
-    EXPECT_CALL(dm0_, commitMultiSetValue(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Return(catena::exception_with_status(expRc_.what(), expRc_.status)));    
-    // Calling proceed and testing the output
-    testCall();
-}

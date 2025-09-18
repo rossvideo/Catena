@@ -72,7 +72,6 @@ bool Device::tryMultiSetValue (st2138::MultiSetValuePayload src, catena::excepti
                         index = path.back_as_index();
                         path.popBack();
                     }
-                    
                     std::unique_ptr<IParam> param = getParam(path, ans, authz);
                     // Validating setValue operation.
                     if (!param || !param->validateSetValue(setValuePayload.value(), index, authz, ans)) {
@@ -84,7 +83,6 @@ bool Device::tryMultiSetValue (st2138::MultiSetValuePayload src, catena::excepti
                 break;
             }
         }
-
         // Resetting trackers regardless of whether something went wrong or not.
         for (const std::string& oid : affectedOids) {
             // Creating another exception_with_status as to not overwrite ans.
@@ -96,7 +94,6 @@ bool Device::tryMultiSetValue (st2138::MultiSetValuePayload src, catena::excepti
             if (param) { param->resetValidate(); }
         }
     }
-
     // Returning true if successful.
     return ans.status == catena::StatusCode::OK;
 }
