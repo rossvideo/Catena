@@ -18,24 +18,31 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-
-
 get_filename_component(TARGET ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 project(${TARGET} C CXX)
 
 add_executable(${TARGET})
 
+include (${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
+
 generate_catena_device(
-    DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.${TARGET}.json
+    DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.AudioDeck.json
     TARGET ${TARGET}
 )
 
+target_include_directories(${TARGET}
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CATENA_CPP_ROOT_DIR}/common/include
+)
+
 target_sources(${TARGET}
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp     
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>      
 )
 
 target_link_libraries(${TARGET}
-    Catena_cpp::catena_connections_grpc
+    catena_connections_REST
     absl::flags_parse
 )
 
@@ -43,6 +50,7 @@ target_compile_features(${TARGET}
     PUBLIC
         cxx_std_20
 )
+
 
 
 

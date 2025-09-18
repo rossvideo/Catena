@@ -91,8 +91,6 @@ class Connect : public CallData, public catena::common::Connect {
      * 
      * - The detail level of updates they want to receive.
      * 
-     * - A flag indicating whether the client wants to force a connection to
-     * the service.
      */
     st2138::ConnectPayload req_;
     /**
@@ -103,10 +101,7 @@ class Connect : public CallData, public catena::common::Connect {
      * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */
     CallStatus status_;
-    /**
-     * @brief The mutex to lock the RPC while writing.
-     */
-    std::mutex mtx_;
+
     /**
      * @brief The total # of Connect objects.
      */
