@@ -45,6 +45,7 @@
 #include "MockAuthorizer.h"
 
 // gtest
+#include "gmock/gmock.h"
 #include <gtest/gtest.h>
 
 using namespace catena::common;
@@ -377,3 +378,34 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_CommandErrUnhandled) {
     EXPECT_FALSE(responder->hasMore())                                << "Responder should not have any more responses after an error.";
     EXPECT_FALSE(response.has_response())                             << "Response should not have a response after an error.";
 }
+
+/*
+ * TEST 11 - Testing ParamDescriptor readOnly passed down from parent where readOnly() = true.
+ */
+
+// TO-DO:
+// - Check multiple levels of so make sure readOnly() is passed down on all levels.
+// - Verify the mock readOnly() is calling the through the parents readonly() function.
+
+TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyTrue) {
+    // Adding sub parameters.
+    MockParamDescriptor subPd1, subPd2;
+    std::string subOid1 = "sub_oid1", subOid2 = "sub_oid2";
+    pd->addSubParam(subOid1, &subPd1);
+    pd->addSubParam(subOid2, &subPd2);
+
+    // Setting expectations.
+    EXPECT_CALL(subPd1, readOnly())
+        .WillRepeatedly(testing::Return(pd->readOnly()));
+    EXPECT_CALL(subPd2, readOnly())
+        .WillRepeatedly(testing::Return(pd->readOnly()));
+
+    // Test readOnly is true on children
+    EXPECT_TRUE(pd->readOnly());
+    EXPECT_EQ(pd->readOnly(), subPd1.readOnly());
+    EXPECT_EQ(pd->readOnly(), subPd2.readOnly());
+
+
+    // ADD CHECK FOR FALSE DOWN HERE TO
+}
+
