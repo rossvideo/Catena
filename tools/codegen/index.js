@@ -19,25 +19,17 @@
 //
 
 // load the command line parser
-const { program } = require('commander');  
-program 
+const { program } = require('commander');
+program
     .option('-s, --schema <string>', 'path to schema definitions', '../../smpte/interface/schemata/device.json')
-    .option('-d, --device-model <string>', 'Catena device model to process', '../../example_device_models/device.minimal.json') 
-    .option('-l, --language <string>', 'Language to generate code for', 'cpp') 
-    .option('-o, --output <string>', 'Output folder for generated code', '.') 
-    .option('-m, --mandatory-params <string>', 'patht to files')
-    .option('--disable-mandatory-enforcement', 'Disable enforcement of mandatory parameters during code generation')
-    // Individual mandatory parameter flags
-    .option('--product-name <string>', 'Catena')
-    .option('--product-vendor <string>', 'Ross Video')
-    .option('--product-version <string>', '1.0.0')
-    .option('--catena-sdk <string> ' , '')
-    .option('--catena-sdk-version <string> ' , '')
-    .option('--product-serial <string>', 'SN-7K9M-2024-XR485-BLU')
+    .option('-d, --device-model <string>', 'Catena device model to process', '../../example_device_models/device.minimal.json')
+    .option('-l, --language <string>', 'Language to generate code for', 'cpp')
+    .option('-o, --output <string>', 'Output folder for generated code', '../../build/cpp')
+    .option('disable-mandatory-enforcement', 'Disable enforcement of mandatory parameters during code generation' , true)
 
-program.parse(process.argv); 
-const options = program.opts(); 
-if (options.schema) { 
+program.parse(process.argv);
+const options = program.opts();
+if (options.schema) {
     console.log(`schema: ${options.schema}`);
 }
 if (options.deviceModel) {
@@ -55,15 +47,15 @@ if(options.mandatoryParams) {
 if(options.disableMandatoryEnforcement) {
     console.log(`Mandatory parameter enforcement disabled`);
 }
-// import the fs libraries
+
 const fs = require('fs');
 
-// verify input file exists 
 if (!fs.existsSync(options.deviceModel)) {
     console.log(`Cannot open file at ${options.deviceModel}`);
     process.exit(1);
 }
 
+//These libraries are used for validation, path handling, and optional YAML import
 const Validator = require('smpte-validator');
 const validator = new Validator(options.schema);
 const path = require("node:path");
@@ -74,6 +66,7 @@ const yaml = require('yaml')
  * @brief Holds the information parsed from a json device model file
  */
 
+//Encapsulates a device model, its validator, and methods to import additional files
 class DeviceModel {
   /**
    * @brief Construct a new DeviceModel object
@@ -81,7 +74,7 @@ class DeviceModel {
    * @param {Validator} validator the json validator object
    * @param {object} desc the parsed json object
    */
-  constructor(filePath, validator, desc) { 
+  constructor(filePath, validator, desc) {
         this.filePath = filePath;
         this.validator = validator;
         this.desc = desc;
@@ -102,7 +95,6 @@ class DeviceModel {
        * @todo add support for other import types 
        */
 
-      //Allows importing other JSON/YAML files referenced in the main device model
       importParam(importArg) {
           if ("file" in importArg) {
             const importDir = path.dirname(this.filePath);
@@ -127,8 +119,100 @@ class DeviceModel {
       }
 }
 
+// extract schema name from input filename
 const deviceName = path.parse(options.deviceModel).name.split('.')[0]; //Extracts the name prefix (eg device.minimal.json -> device)
 console.log(`Validating device model '${deviceName}' from file '${options.deviceModel}' against schema file '${options.schema}'...`); //Begins validation
+
+/**
+ * Apply CLI argument overrides to mandatory parameters
+ * @param {Object} deviceData the device model data
+ * @param {Object} options parsed CLI options
+ */
+function applyCliOverrides(deviceData, options) {
+    // Product parameter mappings: CLI option -> device model field
+    const productOverrides = {
+        productName: 'name',
+        productVendor: 'vendor', 
+        productVersion: 'version',
+        productSerial: 'serial_number',
+        catenaSdk: 'catena_sdk',
+        catenaSdkVersion: 'catena_sdk_version'
+    };
+    
+    if (!deviceData.params) deviceData.params = {};
+    if (!deviceData.params.product) {
+        deviceData.params.product = { type: "STRUCT", read_only: true, params: {} };
+    }
+    if (!deviceData.params.product.params) deviceData.params.product.params = {};
+    
+    // Ensure SDK parameters always have values (for C++ struct initialization)  
+    const sdkDefaults = {
+        catena_sdk: "",
+        catena_sdk_version: ""
+    };
+    
+    Object.entries(sdkDefaults).forEach(([paramName, defaultValue]) => {
+        if (!deviceData.params.product.params[paramName]) {
+            deviceData.params.product.params[paramName] = { type: "STRING" };
+        }
+        if (!deviceData.params.product.params[paramName].value) {
+            deviceData.params.product.params[paramName].value = { string_value: defaultValue };
+            
+            // Also set in YAML structure if it exists
+            if (deviceData.params.product.value?.struct_value?.fields) {
+                deviceData.params.product.value.struct_value.fields[paramName] = {
+                    string_value: defaultValue
+                };
+            }
+        }
+    });
+    
+    const hasOverrides = Object.keys(productOverrides).some(key => options[key]);
+      
+    if (hasOverrides) {
+        // Apply all product parameter overrides with detailed output
+        Object.entries(productOverrides).forEach(([cliKey, fieldKey]) => {
+            if (options[cliKey]) {
+                // Get original value for comparison
+                let originalValue = "undefined";
+                
+                // Check JSON structure first
+                if (deviceData.params.product.params?.[fieldKey]?.value?.string_value) {
+                    originalValue = deviceData.params.product.params[fieldKey].value.string_value;
+                }
+                // Check YAML structure
+                else if (deviceData.params.product.value?.struct_value?.fields?.[fieldKey]?.string_value) {
+                    originalValue = deviceData.params.product.value.struct_value.fields[fieldKey].string_value;
+                }
+                
+                // Show what's being overridden
+                console.log(`🔄 Overriding product.${fieldKey}: "${originalValue}" → "${options[cliKey]}"`);
+                
+                // Apply JSON structure
+                deviceData.params.product.params[fieldKey] = { 
+                    type: "STRING", value: { string_value: options[cliKey] }
+                };
+                
+                // Apply YAML structure (if exists)
+                if (deviceData.params.product.value?.struct_value) {
+                    if (!deviceData.params.product.value.struct_value.fields) {
+                        deviceData.params.product.value.struct_value.fields = {};
+                    }
+                    deviceData.params.product.value.struct_value.fields[fieldKey] = { 
+                        string_value: options[cliKey] 
+                    };
+                }
+            }
+        });
+    }
+    
+    // Apply device-level overrides
+    if (options.deviceSlot !== undefined) {
+        const originalSlot = deviceData.slot || "undefined";
+        console.log(`🔄 Overriding device.slot: "${originalSlot}" → "${options.deviceSlot}"`);
+        deviceData.slot = options.deviceSlot;
+    }
+}
 
 function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement = false) {
   const REQUIRED_PARAMS = [
@@ -204,6 +288,9 @@ try {
     let mandatoryParamsValid = true;
     
     if (isValid.data) {
+        // Apply CLI overrides BEFORE creating DeviceModel and validation
+        applyCliOverrides(isValid.data, options);
+
         const dm = new DeviceModel(options.deviceModel, validator, isValid.data);
         
         // Check mandatory parameters 
@@ -251,4 +338,4 @@ try {
 } catch (err) {
     console.error(`Error: ${err.message}`);
     process.exit(err.error || 1);
-} 
+}
