@@ -2626,6 +2626,24 @@ TEST_F(DeviceTest, StartHeartbeat) {
     device_->addItem("testParam", mockParam.get());
     device_->setHeartbeatParam("/testParam");
 
+    EXPECT_CALL(*DummyDevice::mockHeartbeat, start((int32_t)2222)).Times(1);
+
+    // Start heartbeat
+    device_->startHeartbeat(2222);
+
+    // Since we cannot directly check private members, we assume if no exceptions were thrown, it worked
+    EXPECT_NE(device_->getHeartbeat(), nullptr);
+}
+
+// test start Heartbeat with default interval
+TEST_F(DeviceTest, StartHeartbeatDefaultInterval) {
+    // Create a mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope_);
+    device_->addItem("testParam", mockParam.get());
+    device_->setHeartbeatParam("/testParam");
+
     EXPECT_CALL(*DummyDevice::mockHeartbeat, start((int32_t)5000)).Times(1);
 
     // Start heartbeat
@@ -2634,6 +2652,7 @@ TEST_F(DeviceTest, StartHeartbeat) {
     // Since we cannot directly check private members, we assume if no exceptions were thrown, it worked
     EXPECT_NE(device_->getHeartbeat(), nullptr);
 }
+
 
 // test starting the heartbeat when it's already initialized
 TEST_F(DeviceTest, StartHeartbeatAlreadyStarted) {
@@ -2649,8 +2668,8 @@ TEST_F(DeviceTest, StartHeartbeatAlreadyStarted) {
     device_->initHeartbeat();
     EXPECT_NE(device_->getHeartbeat(), nullptr);
     // will still call start on the existing heartbeat
-    EXPECT_CALL(*DummyDevice::mockHeartbeat, start((int32_t)5000)).Times(1);
-    device_->startHeartbeat();
+    EXPECT_CALL(*DummyDevice::mockHeartbeat, start((int32_t)3333)).Times(1);
+    device_->startHeartbeat(3333);
     // should not clean up the heartbeat
     EXPECT_NE(device_->getHeartbeat(), nullptr);
 }

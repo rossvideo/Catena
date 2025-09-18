@@ -377,12 +377,12 @@ void Device::sendHeartbeat() {
     valueSetByServer_.emit(heartbeatParam_, param.get());
 }
 
-void Device::startHeartbeat() {
+void Device::startHeartbeat(int32_t interval) {
     // initialize heartbeat if not already done
     initHeartbeat();
-    // start heartbeat with 5 second interval
+    // start heartbeat with specified interval
     // heartbeat protects against multiple calls to start
-    heartbeat_->start(5000);
+    heartbeat_->start(interval);
 }
 
 void Device::stopHeartbeat() {

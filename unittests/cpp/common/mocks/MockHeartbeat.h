@@ -44,7 +44,7 @@ namespace common {
 // Mock implementation for the IHeartbeat class.
 class MockHeartbeat : public IHeartbeat {
   public:
-    MOCK_METHOD(void, start, (int32_t milliseconds), (override));
+    MOCK_METHOD(void, start, (int32_t), (override));
     MOCK_METHOD(void, stop, (), (override));
     MOCK_METHOD(vdk::signal<void()>&, getHeartbeatSignal, (), (override));
 };
