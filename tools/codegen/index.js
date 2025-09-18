@@ -24,8 +24,8 @@ program
     .option('-s, --schema <string>', 'path to schema definitions', '../../smpte/interface/schemata/device.json')
     .option('-d, --device-model <string>', 'Catena device model to process', '../../example_device_models/device.minimal.json')
     .option('-l, --language <string>', 'Language to generate code for', 'cpp')
-    .option('-o, --output <string>', 'Output folder for generated code', '../../build/cpp')
-    .option('disable-mandatory-enforcement', 'Disable enforcement of mandatory parameters during code generation' , true)
+    .option('-o, --output <string>', 'Output folder for generated code', '.')
+    .option('--disable-mandatory-enforcement', 'Disable enforcement of mandatory parameters during code generation')
 
 program.parse(process.argv);
 const options = program.opts();
