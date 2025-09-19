@@ -24,7 +24,8 @@ program
     .option('-s, --schema <string>', 'path to schema definitions', '../../smpte/interface/schemata/device.json')
     .option('-d, --device-model <string>', 'Catena device model to process', '../../example_device_models/device.minimal.json')
     .option('-l, --language <string>', 'Language to generate code for', 'cpp')
-    .option('-o, --output <string>', 'Output folder for generated code', '.');
+    .option('-o, --output <string>', 'Output folder for generated code', '.')
+    .option('--disable-mandatory-enforcement', 'Disable enforcement of mandatory parameters during code generation')
 
 program.parse(process.argv);
 const options = program.opts();
@@ -39,6 +40,9 @@ if (options.language) {
 }
 if (options.output) {
     console.log(`output: ${options.output}`);
+}
+if (options.disableMandatoryEnforcement) {
+    console.log(`Mandatory parameter enforcement disabled`);
 }
 
 // import the fs libraries
@@ -137,18 +141,98 @@ console.log(`Validating device model '${deviceName}' from file '${options.device
 // }
 
 
+/**
+ * @brief Validates that all mandatory product parameters are present and have valid values
+ * @param {object} deviceParams The device parameters object from the device model
+ * @param {boolean} disableMandatoryEnforcement If true, skip validation and return early
+ * @throws {Error} If mandatory parameters are missing or have invalid values (when enforcement enabled)
+ */
+function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement = false) {
+    if (disableMandatoryEnforcement) {
+        return;
+    }
+    const REQUIRED_PARAMS = {
+        "name": true,
+        "vendor": true,
+        "version": true,
+        "catena_sdk": false,
+        "catena_sdk_version": false,
+        "serial_number": true
+    };
+
+    if (!deviceParams || !deviceParams.product) {
+        throw new Error(`Missing mandatory product struct in params`);
+    }
+
+    if (deviceParams.product.type !== 'STRUCT') {
+        throw new Error(`Product parameter must be STRUCT type, not ${deviceParams.product.type}`);
+    }
+
+    if (!deviceParams.product.read_only) {
+        throw new Error(`Product parameter must be read_only`);
+    }
+
+    const productParams = deviceParams.product.params || {};
+    const productValue = deviceParams.product.value;
+    const missing = [];
+    const emptyValues = [];
+
+    Object.entries(REQUIRED_PARAMS).forEach(([key, checkValue]) => {
+        const param = productParams[key];
+
+        if (!param) {
+            missing.push(key);
+        } else {
+            if (param.type !== 'STRING') {
+                missing.push(`${key} (not STRING type)`);
+                return;
+            }
+
+            if (checkValue) {
+                let stringValue;
+
+                if (productValue && productValue.struct_value && productValue.struct_value.fields) {
+                    const field = productValue.struct_value.fields[key];
+                    if (field && field.string_value) {
+                        stringValue = field.string_value;
+                    }
+                }
+
+                if (!stringValue) {
+                    emptyValues.push(`${key} (no value found)`);
+                } else if (stringValue.trim() === '') {
+                    emptyValues.push(`${key} (empty string value)`);
+                }
+            }
+        }
+    });
+
+    const allIssues = [...missing.map(p => `${p} (missing field)`), ...emptyValues];
+
+    if (allIssues.length > 0 && !disableMandatoryEnforcement) {
+        throw new Error(`Invalid mandatory product parameters: ${allIssues.join(', ')}`);
+    }
+}
+
 try {
     const validator = new Validator(options.schema);
     console.log(`Applying schema '${deviceName}' to file '${options.deviceModel}'`);
     const isValid = validator.validate(deviceName, options.deviceModel);
-    console.log(isValid.valid ? '✅ Validation succeeded.' : '❌ Validation failed.');
     if (isValid.data) {
-        const CodeGen =  require(`../../tools/codegen/${options.language}/${options.language}gen.js`);
         const dm = new DeviceModel(options.deviceModel, validator, isValid.data);
-        const codeGen = new CodeGen(dm, options.output);
+
+        areAllRequiredParamsPresent(dm.desc.params, options.disableMandatoryEnforcement);
+
+        console.log('✅ Validation succeeded.');
         console.log("Generating code...");
+        const CodeGen = require(`../../tools/codegen/${options.language}/${options.language}gen.js`);
+        const codeGen = new CodeGen(dm, options.output);
+
         codeGen.generate();
         console.log('✅ Code generation completed.');
+    } else {
+        console.log('❌ Schema validation failed.');
+        process.exit(1);
     }
 } catch (err) {
     console.error(`Error: ${err.message}`);
