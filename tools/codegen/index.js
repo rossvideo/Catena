@@ -44,8 +44,10 @@ if (options.disableMandatoryEnforcement) {
     console.log(`Mandatory parameter enforcement disabled`);
 }
 
+// import the fs libraries
 const fs = require('fs');
 
+// verify input file exists
 if (!fs.existsSync(options.deviceModel)) {
     console.log(`Cannot open file at ${options.deviceModel}`);
     process.exit(1);
@@ -78,8 +80,8 @@ class DeviceModel {
           throw new Error(`File must be a device model, not ${schemaName}`);
         }
         this.deviceName = info[1];
-     }
- 
+      }
+
       /**
        * @brief open a param.*.json file and return the parsed json object
        * @param {string} importArg the path to the param.*.json file relative to the directory containing the device model file
@@ -88,13 +90,13 @@ class DeviceModel {
        * @todo add support for other import types 
        */
       importParam(importArg) {
-         if ("file" in importArg) {
+          if ("file" in importArg) {
             const importDir = path.dirname(this.filePath);
             const importPath = `${importDir}/${importArg.file}`;
             if (!fs.existsSync(importPath)) {
               throw new Error(`Cannot open file at ${importArg.file}`);
             }
-
+            // Determining if the file is yaml or json and parsing accordingly.
             const importData = (() => {
                 const extension = path.extname(importPath);
                 if (extension === ".yaml" || extension === ".yml") {
@@ -104,10 +106,10 @@ class DeviceModel {
                 }
             })();
             return importData;
-
-        } else {
+      
+          } else {
             throw new Error(`Unsupported import type: ${importArg}`);
-        }
+          }
     }
 }
 
