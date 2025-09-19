@@ -14,11 +14,8 @@
 * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 
-//
 // Converts Catena compatible Device Models to computer code in a variety of languages
-//
 
-// load the command line parser
 const { program } = require('commander');
 program
     .option('-s, --schema <string>', 'path to schema definitions', '../../smpte/interface/schemata/device.json')
@@ -41,10 +38,7 @@ if (options.language) {
 if (options.output) {
     console.log(`output: ${options.output}`);
 }
-if(options.mandatoryParams) {
-    console.log(`mandatoryParams: ${options.mandatoryParams}`);
-}
-if(options.disableMandatoryEnforcement) {
+if (options.disableMandatoryEnforcement) {
     console.log(`Mandatory parameter enforcement disabled`);
 }
 
@@ -64,15 +58,14 @@ const yaml = require('yaml')
  * @class DeviceModel
  * @brief Holds the information parsed from a json device model file
  */
-
 class DeviceModel {
-  /**
-   * @brief Construct a new DeviceModel object
-   * @param {string} filePath the path to the device model file
-   * @param {Validator} validator the json validator object
-   * @param {object} desc the parsed json object
-   */
-  constructor(filePath, validator, desc) {
+    /**
+     * @brief Construct a new DeviceModel object
+     * @param {string} filePath the path to the device model file
+     * @param {Validator} validator the json validator object
+     * @param {object} desc the parsed json object
+     */
+    constructor(filePath, validator, desc) {
         this.filePath = filePath;
         this.validator = validator;
         this.desc = desc;
@@ -80,156 +73,126 @@ class DeviceModel {
         const info = this.baseFilename.split(".");
         const schemaName = info[0];
         if (schemaName !== "device") {
-          throw new Error(`File must be a device model, not ${schemaName}`);
+            throw new Error(`File must be a device model, not ${schemaName}`);
         }
         this.deviceName = info[1];
-      }
+    }
 
-      /**
-       * @brief open a param.*.json file and return the parsed json object
-       * @param {string} importArg the path to the param.*.json file relative to the directory containing the device model file
-       * @returns the parsed json object
-       * @throws {Error} if the file cannot be opened or the data is invalid against the schema
-       * @todo add support for other import types 
-       */
-      importParam(importArg) {
-          if ("file" in importArg) {
+    /**
+     * @brief open a param.*.json file and return the parsed json object
+     * @param {string} importArg the path to the param.*.json file relative to the directory containing the device model file
+     * @returns the parsed json object
+     * @throws {Error} if the file cannot be opened or the data is invalid against the schema
+     * @todo add support for other import types 
+     */
+    importParam(importArg) {
+        if ("file" in importArg) {
             const importDir = path.dirname(this.filePath);
             const importPath = `${importDir}/${importArg.file}`;
             if (!fs.existsSync(importPath)) {
-              throw new Error(`Cannot open file at ${importArg.file}`);
+                throw new Error(`Cannot open file at ${importArg.file}`);
             }
-            // Determining if the file is yaml or json and parsing accordingly.
+
             const importData = (() => {
                 const extension = path.extname(importPath);
                 if (extension === ".yaml" || extension === ".yml") {
                     return yaml.parse(fs.readFileSync(importPath, 'utf8'));
-                } else { // Default
+                } else { 
                     return JSON.parse(fs.readFileSync(importPath));
                 }
             })();
             return importData;
-      
-          } else {
+
+        } else {
             throw new Error(`Unsupported import type: ${importArg}`);
-          }
-      }
+        }
+    }
 }
 
-// extract schema name from input filename
-const deviceName = path.parse(options.deviceModel).name.split('.')[0]; //Extracts the name prefix (eg device.minimal.json -> device)
-console.log(`Validating device model '${deviceName}' from file '${options.deviceModel}' against schema file '${options.schema}'...`); //Begins validation
+const deviceName = path.parse(options.deviceModel).name.split('.')[0];
 
+/**
+ * @brief Validates that all mandatory product parameters are present and have valid values
+ * @param {object} deviceParams The device parameters object from the device model
+ * @param {boolean} disableMandatoryEnforcement If true, skip validation and return early
+ * @throws {Error} If mandatory parameters are missing or have invalid values (when enforcement enabled)
+ */
 function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement = false) {
-  const REQUIRED_PARAMS = [
-    "name",
-    "vendor",
-    "version",
-    "catena_sdk",
-    "catena_sdk_version",
-    "serial_number"
-  ];
-
-  if (!deviceParams || !deviceParams.product) {
-    if (!disableMandatoryEnforcement) {
-      throw new Error(`Missing mandatory product struct in params`);
+    if (disableMandatoryEnforcement) {
+        return;
     }
-    return;
-  }
+    const REQUIRED_PARAMS = {
+        "name": true,
+        "vendor": true,
+        "version": true,
+        "catena_sdk": false,
+        "catena_sdk_version": false,
+        "serial_number": true
+    };
 
-  const productParams = deviceParams.product.params || {};
-  const productValue = deviceParams.product.value; 
-  const missing = [];
-  const emptyValues = [];
-
-  REQUIRED_PARAMS.forEach(key => {
-    const param = productParams[key];
-    
-    if (!param) {
-      missing.push(key);
-    } else if (key !== 'catena_sdk_version' && key !== 'catena_sdk') { 
-    let stringValue;
-
-    if (param.value && param.value.string_value) {
-        stringValue = param.value.string_value;
+    if (!deviceParams || !deviceParams.product) {
+        return;
     }
 
-    else if (productValue && productValue.struct_value && productValue.struct_value.fields) {
-        const field = productValue.struct_value.fields[key];
-        if (field && field.string_value) {
-            stringValue = field.string_value;
+    const productParams = deviceParams.product.params || {};
+    const productValue = deviceParams.product.value;
+    const missing = [];
+    const emptyValues = [];
+
+    Object.entries(REQUIRED_PARAMS).forEach(([key, checkValue]) => {
+        const param = productParams[key];
+
+        if (!param) {
+            missing.push(key);
+        } else if (checkValue) {
+            if (param.type !== 'STRING') {
+                missing.push(`${key} (not STRING type)`);
+                return;
+            }
+
+            let stringValue;
+
+            if (productValue && productValue.struct_value && productValue.struct_value.fields) {
+                const field = productValue.struct_value.fields[key];
+                if (field && field.string_value) {
+                    stringValue = field.string_value;
+                }
+            }
+
+            if (!stringValue) {
+                emptyValues.push(`${key} (no value found)`);
+            } else if (stringValue.trim() === '') {
+                emptyValues.push(`${key} (empty string value)`);
+            }
         }
+    });
+
+    const allIssues = [...missing.map(p => `${p} (missing field)`), ...emptyValues];
+
+    if (allIssues.length > 0 && !disableMandatoryEnforcement) {
+        throw new Error(`Invalid mandatory product parameters: ${allIssues.join(', ')}`);
     }
-
-        if (!stringValue) {
-            emptyValues.push(`${key} (no value found)`);
-        } else if (stringValue.trim() === '') {
-            emptyValues.push(`${key} (empty string value)`);
-        }
-    }
-  });
-
-  const allIssues = [...missing.map(p => `${p} (missing field)`), ...emptyValues];
-  
-  if (allIssues.length > 0 && !disableMandatoryEnforcement) {
-    throw new Error(`Invalid mandatory product parameters: ${allIssues.join(', ')}`);
-  }
-
-  console.log('✅ All mandatory product parameters present');
 }
 
 try {
     const validator = new Validator(options.schema);
-    console.log(`Applying schema '${deviceName}' to file '${options.deviceModel}'`);
     const isValid = validator.validate(deviceName, options.deviceModel);
-    
-    let validationPassed = isValid.valid;
-    let mandatoryParamsValid = true;
-    
+
     if (isValid.data) {
         const dm = new DeviceModel(options.deviceModel, validator, isValid.data);
-        
-        // Check mandatory parameters 
-        try {
-            areAllRequiredParamsPresent(dm.desc.params, options.disableMandatoryEnforcement);
-        } catch (err) {
-            mandatoryParamsValid = false;
-            console.log(`❌ ${err.message}`);
-            validationPassed = false;
-        }
-        
-        // Show overall validation result and exit early if failed
-        const shouldContinue = validationPassed && (mandatoryParamsValid || options.disableMandatoryEnforcement);
-        
-        if (shouldContinue) {
-            if (validationPassed && mandatoryParamsValid) {
-                console.log('✅ Validation succeeded.');
-            } else if (options.disableMandatoryEnforcement && !mandatoryParamsValid) {
-                console.log('⚠️  Validation issues found but enforcement disabled - continuing with code generation.');
-            }
-        } else {
-            console.log('❌ Validation failed.');
-            if (!validationPassed) {
-                console.log('❌ Code generation stopped due to schema validation errors.');
-            } else {
-                console.log('❌ Code generation stopped due to mandatory parameter errors.');
-            }
-            process.exit(1);
-        }
-        
-        // Continue with code generation even if mandatory params are missing (build compatibility)
-        const CodeGen =  require(`../../tools/codegen/${options.language}/${options.language}gen.js`);
-        const codeGen = new CodeGen(dm, options.output);
-        
-        if (!mandatoryParamsValid) {
-            console.log('ℹ️  Code generation will continue - this may affect runtime functionality');
-        }
-            
+
+        areAllRequiredParamsPresent(dm.desc.params, options.disableMandatoryEnforcement);
+
+        console.log('✅ Validation succeeded.');
         console.log("Generating code...");
+        const CodeGen = require(`../../tools/codegen/${options.language}/${options.language}gen.js`);
+        const codeGen = new CodeGen(dm, options.output);
+
         codeGen.generate();
         console.log('✅ Code generation completed.');
     } else {
-        console.log('❌ Validation failed.');
+        console.log('❌ Schema validation failed.');
+        process.exit(1);
     }
 } catch (err) {
     console.error(`Error: ${err.message}`);
