@@ -214,7 +214,6 @@ try {
     const validator = new Validator(options.schema);
     console.log(`Applying schema '${deviceName}' to file '${options.deviceModel}'`);
     const isValid = validator.validate(deviceName, options.deviceModel);
-    console.log(isValid.valid ? '✅ Validation succeeded.' : '❌ Validation failed.');
     if (isValid.data) {
         const dm = new DeviceModel(options.deviceModel, validator, isValid.data);
 
