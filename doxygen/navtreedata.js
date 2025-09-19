@@ -129,14 +129,14 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "AddLanguage_8h.html",
-"UpdateSubscriptions_8h.html",
-"classcatena_1_1REST_1_1SocketReader.html#aa77a5dcf3caf0ae527fa88e73dc3fdf1",
-"classcatena_1_1common_1_1Device.html#af5f40f541475501a826c99332131e180",
-"classcatena_1_1common_1_1IParam.html#a5d48dd676d9bdf9333f8cee83b3af164",
-"classcatena_1_1common_1_1ParamDescriptor.html#add31947f6660315d28e10fd564ef75f3",
-"classcatena_1_1gRPC_1_1Connect.html#adc8adac57a8ced65b53c8142839c42a6",
-"classcatena_1_1patterns_1_1EnumDecorator.html#a1b38861ecab835aef36eb0722de4d1c7",
-"namespacecatena.html#a274b596fd164b9f6c1ec6dfe8c278efc"
+"Variant_8h_source.html",
+"classcatena_1_1REST_1_1SocketReader.html#ab5edbce738e945acf8e9ec25239a6a02",
+"classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#ad4ecf53a730d118a682846ca17e63e35",
+"classcatena_1_1common_1_1IParamDescriptor.html#a14a921fffd4c9d68847f37046168bcab",
+"classcatena_1_1common_1_1ParamWithValue.html#a302feec9677b9cdf1181bbfeef73eafa",
+"classcatena_1_1gRPC_1_1IServiceImpl.html",
+"classcatena_1_1patterns_1_1GenericFactory.html#a13b282a35244b1cf432404ccea6a92bd",
+"namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009ab9bd4b7bbc4fbe61cec6edd5bad6496d"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
