@@ -38,6 +38,7 @@ set(TEST_FILES
     Device_test.cpp
     ConnectionQueue_test.cpp
     Heartbeat_test.cpp
+    NmosNode_test.cpp
 )
 
 foreach(test_file ${TEST_FILES})
@@ -55,6 +56,18 @@ foreach(test_file ${TEST_FILES})
     add_test(NAME common.${test_name} COMMAND common_${test_name})
 endforeach()
 
+#special avahi linking for NmosNode_test
+target_link_options(common_NmosNode_test PRIVATE
+    -Wl,--wrap=avahi_service_resolver_new
+    -Wl,--wrap=avahi_service_resolver_free
+)
+target_include_directories(common_NmosNode_test PUBLIC
+    ${AVAHI_CLIENT_INCLUDE_DIRS}
+)
+target_link_libraries(common_NmosNode_test PRIVATE
+    ${AVAHI_CLIENT_LIBRARIES}
+)
+
 # ParamWithValue_test subdir: one executable for all files
 file(GLOB PARAMWITHVALUE_TESTS "tests/ParamWithValue_test/*.cpp")
 add_executable(common_ParamWithValue ${PARAMWITHVALUE_TESTS})
@@ -67,4 +80,5 @@ target_link_libraries(common_ParamWithValue PRIVATE
     GTest::gmock_main
     ${common_lib}
 )
+
 add_test(NAME common.ParamWithValue COMMAND common_ParamWithValue)
