@@ -116,6 +116,30 @@ class DeviceModel {
 
 // extract schema name from input filename
 const deviceName = path.parse(options.deviceModel).name.split('.')[0];
+console.log(`Validating device model '${deviceName}' from file '${options.deviceModel}' against schema file '${options.schema}'...`);
+
+// try {
+//     // Determining if the file is yaml or json and parsing accordingly.
+//     const data = (() => {
+//         const extension = path.extname(options.deviceModel);
+//         if (extension === ".yaml" || extension === ".yml") {
+//             return yaml.parse(fs.readFileSync(options.deviceModel, 'utf8'));
+//         } else { // Default
+//             return JSON.parse(fs.readFileSync(options.deviceModel));
+//         }
+//     })();
+//     if (validator.validateDevice(data)) {
+//         const CodeGen =  require(`./${options.language}/${options.language}gen.js`);
+//         const dm = new DeviceModel(options.deviceModel, validator, data);
+//         const codeGen = new CodeGen(dm, options.output);
+//         codeGen.generate();
+//     }
+
+// } catch (why) {  
+//     console.log(why.message);
+//     process.exit(typeof why.error === 'number' ? why.error : 1);
+// }
+
 
 /**
  * @brief Validates that all mandatory product parameters are present and have valid values
@@ -137,7 +161,11 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
     };
 
     if (!deviceParams || !deviceParams.product) {
-        return;
+        throw new Error(`Missing mandatory product struct in params`);
+    }
+
+    if (deviceParams.product.type !== 'STRUCT') {
+        throw new Error(`Product parameter must be STRUCT type, not ${deviceParams.product.type}`);
     }
 
     const productParams = deviceParams.product.params || {};
@@ -150,25 +178,27 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
 
         if (!param) {
             missing.push(key);
-        } else if (checkValue) {
+        } else {
             if (param.type !== 'STRING') {
                 missing.push(`${key} (not STRING type)`);
                 return;
             }
 
-            let stringValue;
+            if (checkValue) {
+                let stringValue;
 
-            if (productValue && productValue.struct_value && productValue.struct_value.fields) {
-                const field = productValue.struct_value.fields[key];
-                if (field && field.string_value) {
-                    stringValue = field.string_value;
+                if (productValue && productValue.struct_value && productValue.struct_value.fields) {
+                    const field = productValue.struct_value.fields[key];
+                    if (field && field.string_value) {
+                        stringValue = field.string_value;
+                    }
                 }
-            }
 
-            if (!stringValue) {
-                emptyValues.push(`${key} (no value found)`);
-            } else if (stringValue.trim() === '') {
-                emptyValues.push(`${key} (empty string value)`);
+                if (!stringValue) {
+                    emptyValues.push(`${key} (no value found)`);
+                } else if (stringValue.trim() === '') {
+                    emptyValues.push(`${key} (empty string value)`);
+                }
             }
         }
     });
