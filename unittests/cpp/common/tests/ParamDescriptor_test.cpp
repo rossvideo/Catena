@@ -380,12 +380,8 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_CommandErrUnhandled) {
 }
 
 /*
- * TEST 11 - Testing ParamDescriptor readOnly passed down from parent where readOnly() = true.
+ * TEST 11 - Testing ParamDescriptor readOnly passed down from parent where readOnly() is true and false.
  */
-
-// TO-DO:
-// - Check multiple levels of so make sure readOnly() is passed down on all levels.
-// - Verify the mock readOnly() is calling the through the parents readonly() function.
 
 TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyTrue) {
     // Adding sub parameters.
@@ -402,8 +398,7 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyTrue) {
 
     // Test readOnly is true on children
     EXPECT_TRUE(pd->readOnly());
-    EXPECT_EQ(pd->readOnly(), subPd1.readOnly());
-    EXPECT_EQ(pd->readOnly(), subPd2.readOnly());
+    EXPECT_EQ(pd->readOnly(), (subPd1.readOnly() && subPd2.readOnly()));
 
     // Swap parent to readOnly = false
     pd->readOnly(false);
@@ -416,7 +411,45 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyTrue) {
 
     // Test readOnly is false on children
     EXPECT_FALSE(pd->readOnly());
-    EXPECT_EQ(pd->readOnly(), subPd1.readOnly());
-    EXPECT_EQ(pd->readOnly(), subPd2.readOnly());
+    EXPECT_EQ(pd->readOnly(), (subPd1.readOnly() && subPd2.readOnly()));
 }
 
+/*
+ * TEST 12 - Testing ParamDescriptor readOnly passed down multiple levels.
+ */
+
+TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyMultipleLevels) {
+    // Adding sub parameters.
+    MockParamDescriptor subPd, subsubPd;
+    std::string subPdOid = "subPd", subsubPdOid = "subsubPd";
+
+    // Create the hierarchy.
+    pd->addSubParam(subPdOid, &subPd);
+
+    // Set up expectation for the mock subPd to accept the sub-sub parameter
+    EXPECT_CALL(subPd, addSubParam(subsubPdOid, &subsubPd)).Times(1);
+    subPd.addSubParam(subsubPdOid, &subsubPd);
+
+    // Setting expectations. All children should return the same readOnly value as the parent.
+    EXPECT_CALL(subPd, readOnly())
+        .WillRepeatedly(testing::Return(pd->readOnly()));
+    EXPECT_CALL(subsubPd, readOnly())
+        .WillRepeatedly(testing::Return((pd->readOnly() && subPd.readOnly())));
+
+    // Test readOnly is true on children
+    EXPECT_TRUE(pd->readOnly());
+    EXPECT_EQ(pd->readOnly(), (subsubPd.readOnly() && subPd.readOnly()));
+
+    // Swap parent to readOnly = false
+    pd->readOnly(false);
+
+    // Check expectations.
+    EXPECT_CALL(subPd, readOnly())
+        .WillRepeatedly(testing::Return(pd->readOnly()));
+    EXPECT_CALL(subsubPd, readOnly())
+        .WillRepeatedly(testing::Return((pd->readOnly() && subPd.readOnly())));
+
+    // Test readOnly is false on children
+    EXPECT_FALSE(pd->readOnly());
+    EXPECT_EQ(pd->readOnly(), (subsubPd.readOnly() && subPd.readOnly()));
+}
