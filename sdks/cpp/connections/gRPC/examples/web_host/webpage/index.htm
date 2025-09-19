@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catena gRPC Web Host</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Catena gRPC Web Host</h1>
+        </header>
+    <main>
+        <span id="counter">0</span>
+        <form id="form">
+            <button type="button" onclick="sendCommand('default')">set to default</button>
+        </form>
+        <form id="sliderForm">
+            <label for="slider">Set slider value:</label>
+            <input type="range" id="slider" name="slider" min="0" max="100" value="50">
+        </form>
+        <span id="coolData">
+            <canvas id="coolCanvas" width="400" height="200"></canvas>
+        </span>
+
+<script>
+function sendCommand(cmd) {
+    if (cmd === 'default') {
+        fetch('/api/set_default', {
+            method: 'POST'
+        });
+    }
+}
+const counterSpan = document.getElementById('counter');
+const evtSourceCounter = new EventSource('/api/counter-stream');
+evtSourceCounter.onmessage = function(event) {
+    counterSpan.textContent = event.data;
+};
+const sliderElem = document.getElementById('slider');
+let lastSliderValue = sliderElem.value;
+let ignoreNextInput = false;
+
+// Listen for SSE updates from backend
+const evtSourceSlider = new EventSource('/api/slider-stream');
+evtSourceSlider.onmessage = function(event) {
+    const backendValue = event.data;
+    if (sliderElem.value !== backendValue) {
+        ignoreNextInput = true;
+        sliderElem.value = backendValue;
+        lastSliderValue = backendValue;
+    }
+};
+
+// Only send POST if user changed the slider
+function sendSliderValueIfUserChanged() {
+    if (ignoreNextInput) {
+        ignoreNextInput = false;
+        return;
+    }
+    if (sliderElem.value !== lastSliderValue) {
+        fetch('/api/slider', {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: sliderElem.value
+        });
+        lastSliderValue = sliderElem.value;
+    }
+}
+function sendSliderValueAlways() {
+    fetch('/api/slider', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: sliderElem.value
+    });
+    lastSliderValue = sliderElem.value;
+}
+sliderElem.addEventListener('input', sendSliderValueIfUserChanged);
+sliderElem.addEventListener('change', sendSliderValueAlways);
+</script>
+</body>
+</html>
