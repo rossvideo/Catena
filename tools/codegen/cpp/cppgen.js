@@ -86,7 +86,7 @@ class CppGen {
    * @param {DeviceModel} deviceModel to the device model's top-level json file
    * @param {string} outputDir folder for generated code
    */
-  constructor(deviceModel, outputDir,) {
+  constructor(deviceModel, outputDir) {
     this.headerFilename = `${deviceModel.baseFilename}.h`;
     let header = fs.openSync(path.join(outputDir, `${this.headerFilename}`), "w");
     let body = fs.openSync(path.join(outputDir, `${deviceModel.baseFilename}.cpp`), "w");
@@ -180,8 +180,8 @@ class CppGen {
    */
   languagePacks() {
     let languagePacks = new LanguagePacks(this.device.desc);
-    let packs = languagePacks.getLanguagePacks();
-    bloc(`using catena::common::LanguagePack;`);
+    let packs = languagePacks.getLanguagePacks();    
+    bloc (`using catena::common::LanguagePack;`);
     for (let pack in packs) {
       let lang = packs[pack];
       let keyWordPairs = Object.keys(lang.words);
@@ -210,7 +210,7 @@ class CppGen {
       bloc(`MenuGroup _${group}Group {\n  "${group}", `);
       bloc(`  {\n    ${groupNamePairs.map((key) => { return `{ "${key}", "${groupName[key]}" }` }).join(",\n    ")}`);
       bloc(`  },\n  dm\n};`);
-
+      
       let menus = menuGroups[group].menus;
       for (let menu in menus) {
         let paramOids = menus[menu].param_oids.map(oid => `"${oid}"`).join(", ");
@@ -240,7 +240,7 @@ class CppGen {
       let constraints = this.device.desc.constraints;
       for (let oid in constraints) {
         this.device.constraints[oid] = new Constraint(oid, constraints[oid]);
-        bloc(this.device.constraints[oid].getInitializer());
+        bloc(this.device.constraints[oid] .getInitializer());
       }
     }
   }
@@ -262,8 +262,8 @@ class CppGen {
         cloc(`#define TO_STRING(x) STRINGIFY(x)`);
         cloc(`constexpr const char* real_sdk_version = TO_STRING(CATENA_CPP_VERSION);`);
         cloc(`${this.device.namespace}::Product& initialize_sdk_version(${this.device.namespace}::Product& p) {`);
-        cloc(`p.catena_sdk_version = real_sdk_version;`, 1);
-        cloc(`return p;`, 1);
+        cloc(`p.catena_sdk_version = real_sdk_version;`,1);
+        cloc(`return p;`,1);
         cloc(`}`);
         cloc(`${this.device.namespace}::Product dummy = initialize_sdk_version(product);`);
       }
@@ -312,7 +312,7 @@ class CppGen {
       ploc(`using Type = std::tuple<${param.getFieldInfoTypes()}>;`, pindent);
       ploc(`static constexpr Type fields = {${param.getFieldInfoInit()}};`, pindent);
       ploc(`};`, --pindent);
-
+      
 
     } else if (param.isVariantType() && !param.isTemplated()) {
       // define subparams for the variant
@@ -341,12 +341,12 @@ class CppGen {
     }
   }
 
-  /**
-  * Recursively writes the constraints and descriptors for a param and its subparams
-  * @param {Param} param the param to write constraints and descriptors for
-  * @param {string} parentVarName the variable name of the parent param
-  */
-  writeConstraintsAndDescriptors(param, parentVarName = "") {
+   /**
+   * Recursively writes the constraints and descriptors for a param and its subparams
+   * @param {Param} param the param to write constraints and descriptors for
+   * @param {string} parentVarName the variable name of the parent param
+   */
+   writeConstraintsAndDescriptors(param, parentVarName = "") {
     if (param.constraint != undefined && !param.constraint.isInitialized()) {
       bloc(param.constraint.getInitializer());
     }
