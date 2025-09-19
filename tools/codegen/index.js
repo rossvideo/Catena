@@ -168,6 +168,10 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
         throw new Error(`Product parameter must be STRUCT type, not ${deviceParams.product.type}`);
     }
 
+    if (!deviceParams.product.read_only) {
+        throw new Error(`Product parameter must be read_only`);
+    }
+
     const productParams = deviceParams.product.params || {};
     const productValue = deviceParams.product.value;
     const missing = [];
