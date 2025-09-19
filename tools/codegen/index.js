@@ -62,11 +62,11 @@ const yaml = require('yaml')
  */
 class DeviceModel {
     /**
-     * @brief Construct a new DeviceModel object
-     * @param {string} filePath the path to the device model file
-     * @param {Validator} validator the json validator object
-     * @param {object} desc the parsed json object
-     */
+    * @brief Construct a new DeviceModel object
+    * @param {string} filePath the path to the device model file
+    * @param {Validator} validator the json validator object
+    * @param {object} desc the parsed json object
+    */
     constructor(filePath, validator, desc) {
         this.filePath = filePath;
         this.validator = validator;
@@ -75,42 +75,43 @@ class DeviceModel {
         const info = this.baseFilename.split(".");
         const schemaName = info[0];
         if (schemaName !== "device") {
-            throw new Error(`File must be a device model, not ${schemaName}`);
+          throw new Error(`File must be a device model, not ${schemaName}`);
         }
         this.deviceName = info[1];
-    }
+     }
 
-    /**
-     * @brief open a param.*.json file and return the parsed json object
-     * @param {string} importArg the path to the param.*.json file relative to the directory containing the device model file
-     * @returns the parsed json object
-     * @throws {Error} if the file cannot be opened or the data is invalid against the schema
-     * @todo add support for other import types 
-     */
-    importParam(importArg) {
-        if ("file" in importArg) {
+     /**
+      * @brief open a param.*.json file and return the parsed json object
+      * @param {string} importArg the path to the param.*.json file relative to the directory containing the device model file
+      * @returns the parsed json object
+      * @throws {Error} if the file cannot be opened or the data is invalid against the schema
+      * @todo add support for other import types 
+      */
+     importParam(importArg) {
+         if ("file" in importArg) {
             const importDir = path.dirname(this.filePath);
             const importPath = `${importDir}/${importArg.file}`;
             if (!fs.existsSync(importPath)) {
-                throw new Error(`Cannot open file at ${importArg.file}`);
+              throw new Error(`Cannot open file at ${importArg.file}`);
             }
 
             const importData = (() => {
                 const extension = path.extname(importPath);
                 if (extension === ".yaml" || extension === ".yml") {
                     return yaml.parse(fs.readFileSync(importPath, 'utf8'));
-                } else { 
+                } else { // Default
                     return JSON.parse(fs.readFileSync(importPath));
                 }
             })();
             return importData;
-
-        } else {
+      
+         } else {
             throw new Error(`Unsupported import type: ${importArg}`);
-        }
-    }
+         }
+     }
 }
 
+// extract schema name from input filename
 const deviceName = path.parse(options.deviceModel).name.split('.')[0];
 
 /**
