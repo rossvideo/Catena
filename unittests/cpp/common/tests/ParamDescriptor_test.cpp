@@ -45,6 +45,7 @@
 #include "MockAuthorizer.h"
 
 // gtest
+#include "gmock/gmock.h"
 #include <gtest/gtest.h>
 
 using namespace catena::common;
@@ -74,6 +75,37 @@ class ParamDescriptorTest : public ::testing::Test {
         // authz_ by default has read and write authz.
         EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(*pd)))).WillRepeatedly(testing::Return(true));
         EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(*pd)))).WillRepeatedly(testing::Return(true));
+    }
+
+    /*
+     * Helper function to create a real ParamDescriptor with minimal required parameters.
+     * Useful for testing without needing to specify all constructor parameters.
+     */
+    std::unique_ptr<ParamDescriptor> createRealParamDescriptor(
+        const std::string& paramOid,
+        const std::string& paramName = "test_param",
+        bool paramReadOnly = false,  // Default to false so parent readOnly can propagate
+        IParamDescriptor* paramParent = nullptr
+    ) {
+        return std::make_unique<ParamDescriptor>(
+            st2138::ParamType::EMPTY,                           
+            ParamDescriptor::OidAliases{},                      
+            PolyglotText::ListInitializer{{"en", paramName}},  
+            "widget",                                           
+            "scope",                                           
+            paramReadOnly,                                     
+            paramOid,                                           
+            "",                                                 
+            nullptr,                                           
+            false,                                             
+            true,                                              
+            dm,                                                
+            0,                                                 
+            0,                                                 
+            2,                                                 
+            false,                                             
+            paramParent                                        
+        );
     }
 
     std::unique_ptr<ParamDescriptor> pd = nullptr;
@@ -376,4 +408,72 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_CommandErrUnhandled) {
     EXPECT_THROW(response = responder->getNext(), std::runtime_error) << "Responder should rethrow error when command execution fails";
     EXPECT_FALSE(responder->hasMore())                                << "Responder should not have any more responses after an error.";
     EXPECT_FALSE(response.has_response())                             << "Response should not have a response after an error.";
+}
+
+/*
+ * TEST 11 - Testing ParamDescriptor readOnly passed down from parent where readOnly() is true.
+ */
+
+TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyTrue) {
+    // Create sub-parameters with readOnly = false so they inherit parent's readOnly status
+    std::string subOid1 = "sub_oid1", subOid2 = "sub_oid2";
+    auto subPd1 = createRealParamDescriptor(subOid1, "sub1", false, pd.get());
+    auto subPd2 = createRealParamDescriptor(subOid2, "sub2", false, pd.get());
+
+    // Test readOnly is true on children 
+    EXPECT_TRUE(pd->readOnly());
+    EXPECT_TRUE(subPd1->readOnly());  
+    EXPECT_TRUE(subPd2->readOnly());  
+}
+
+/*
+ * TEST 12 - Testing ParamDescriptor readOnly passed down from parent where readOnly() is false.
+ */
+TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyFalse) {
+    // Create sub-parameters with readOnly = false so they inherit parent's readOnly status
+    std::string subOid1 = "sub_oid1", subOid2 = "sub_oid2";
+    auto subPd1 = createRealParamDescriptor(subOid1, "sub1", false, pd.get());
+    auto subPd2 = createRealParamDescriptor(subOid2, "sub2", false, pd.get());
+
+    // Swap parent to readOnly = false
+    pd->readOnly(false);
+
+    // Test readOnly is false on children
+    EXPECT_FALSE(pd->readOnly());
+    EXPECT_FALSE(subPd1->readOnly());  
+    EXPECT_FALSE(subPd2->readOnly());  
+}
+
+/*
+ * TEST 12 - Testing ParamDescriptor readOnly passed down multiple levels when readOnly() is true.
+ */
+
+TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyMultipleLevels) {
+    // Create sub-parameter hierarchy
+    std::string subPdOid = "subPd", subsubPdOid = "subsubPd";
+    auto subPd1 = createRealParamDescriptor(subPdOid, "subPd", false, pd.get());
+    auto subPd2 = createRealParamDescriptor(subsubPdOid, "subsubPd", false, subPd1.get());
+
+    // Test readOnly is true on all levels of the hierarchy
+    EXPECT_TRUE(pd->readOnly());
+    EXPECT_TRUE(subPd1->readOnly());
+    EXPECT_TRUE(subPd2->readOnly());
+}
+
+/*
+ * TEST 13 - Testing ParamDescriptor readOnly passed down multiple levels when readOnly() is false.
+ */
+TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyMultipleLevelsFalse) {
+    // Create sub-parameter hierarchy
+    std::string subPdOid = "subPd", subsubPdOid = "subsubPd";
+    auto subPd1 = createRealParamDescriptor(subPdOid, "subPd", false, pd.get());
+    auto subPd2 = createRealParamDescriptor(subsubPdOid, "subsubPd", false, subPd1.get());
+
+    // Swap parent to readOnly = false
+    pd->readOnly(false);
+
+    // Test readOnly is false on all levels of the hierarchy
+    EXPECT_FALSE(pd->readOnly());
+    EXPECT_FALSE(subPd1->readOnly());
+    EXPECT_FALSE(subPd2->readOnly());
 }
