@@ -213,7 +213,8 @@ class CppGen {
       
       let menus = menuGroups[group].menus;
       for (let menu in menus) {
-        let paramOids = menus[menu].param_oids.map(oid => `"${oid}"`).join(", ");
+        let paramOids = (menus[menu].param_oids || []).map(oid => `"${oid}"`).join(", ");
+        let commandOids = (menus[menu].command_oids || []).map(oid => `"${oid}"`).join(", ");
         let menuName = menus[menu].name.display_strings;
         let menuNamePairs = Object.keys(menuName);
         let clientHints = menus[menu].client_hints;
@@ -227,6 +228,7 @@ class CppGen {
         bloc(`    ${menuNamePairs.map((key) => { return `{ "${key}", "${menuName[key]}" }` }).join(",\n    ")}\n  },`);
         bloc(`  false, false, `);
         bloc(`  {${paramOids}}, `);
+        bloc(`  {${commandOids}}, `);
         bloc(`  {}, {${clientHintsStr}}, "${menu}", _${group}Group\n};`);
       }
     }
