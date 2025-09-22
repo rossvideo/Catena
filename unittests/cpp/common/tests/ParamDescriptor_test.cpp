@@ -77,6 +77,37 @@ class ParamDescriptorTest : public ::testing::Test {
         EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(*pd)))).WillRepeatedly(testing::Return(true));
     }
 
+    /*
+     * Helper function to create a real ParamDescriptor with minimal required parameters.
+     * Useful for testing without needing to specify all constructor parameters.
+     */
+    std::unique_ptr<ParamDescriptor> createRealParamDescriptor(
+        const std::string& paramOid,
+        const std::string& paramName = "test_param",
+        bool paramReadOnly = false,  // Default to false so parent readOnly can propagate
+        IParamDescriptor* paramParent = nullptr
+    ) {
+        return std::make_unique<ParamDescriptor>(
+            st2138::ParamType::EMPTY,                           
+            ParamDescriptor::OidAliases{},                      
+            PolyglotText::ListInitializer{{"en", paramName}},  
+            "widget",                                           
+            "scope",                                           
+            paramReadOnly,                                     
+            paramOid,                                           
+            "",                                                 
+            nullptr,                                           
+            false,                                             
+            true,                                              
+            dm,                                                
+            0,                                                 
+            0,                                                 
+            2,                                                 
+            false,                                             
+            paramParent                                        
+        );
+    }
+
     std::unique_ptr<ParamDescriptor> pd = nullptr;
 
     st2138::ParamType type = st2138::ParamType::EMPTY;
@@ -383,35 +414,24 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_CommandErrUnhandled) {
  * TEST 11 - Testing ParamDescriptor readOnly passed down from parent where readOnly() is true and false.
  */
 
-TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyTrue) {
-    // Adding sub parameters.
-    MockParamDescriptor subPd1, subPd2;
+    TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyTrue) {
+    // Create sub-parameters with readOnly = false so they inherit parent's readOnly status
     std::string subOid1 = "sub_oid1", subOid2 = "sub_oid2";
-    pd->addSubParam(subOid1, &subPd1);
-    pd->addSubParam(subOid2, &subPd2);
+    auto subPd1 = createRealParamDescriptor(subOid1, "sub1", false, pd.get());
+    auto subPd2 = createRealParamDescriptor(subOid2, "sub2", false, pd.get());
 
-    // Setting expectations.
-    EXPECT_CALL(subPd1, readOnly())
-        .WillRepeatedly(testing::Return(pd->readOnly()));
-    EXPECT_CALL(subPd2, readOnly())
-        .WillRepeatedly(testing::Return(pd->readOnly()));
-
-    // Test readOnly is true on children
+    // Test readOnly is true on children 
     EXPECT_TRUE(pd->readOnly());
-    EXPECT_EQ(pd->readOnly(), (subPd1.readOnly() && subPd2.readOnly()));
+    EXPECT_TRUE(subPd1->readOnly());  
+    EXPECT_TRUE(subPd2->readOnly());  
 
     // Swap parent to readOnly = false
     pd->readOnly(false);
 
-    // Check expectations.
-    EXPECT_CALL(subPd1, readOnly())
-        .WillRepeatedly(testing::Return(pd->readOnly()));
-    EXPECT_CALL(subPd2, readOnly())
-        .WillRepeatedly(testing::Return(pd->readOnly()));
-
-    // Test readOnly is false on children
+    // Test readOnly is false on children (parent is readOnly=false, children inherit it)
     EXPECT_FALSE(pd->readOnly());
-    EXPECT_EQ(pd->readOnly(), (subPd1.readOnly() && subPd2.readOnly()));
+    EXPECT_FALSE(subPd1->readOnly()); 
+    EXPECT_FALSE(subPd2->readOnly());  
 }
 
 /*
@@ -419,37 +439,23 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyTrue) {
  */
 
 TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyMultipleLevels) {
-    // Adding sub parameters.
-    MockParamDescriptor subPd, subsubPd;
+    // Create sub-parameter hierarchy
     std::string subPdOid = "subPd", subsubPdOid = "subsubPd";
+    auto subPd1 = createRealParamDescriptor(subPdOid, "subPd", false, pd.get());
+    auto subPd2 = createRealParamDescriptor(subsubPdOid, "subsubPd", false, subPd1.get());
 
-    // Create the hierarchy.
-    pd->addSubParam(subPdOid, &subPd);
-
-    // Set up expectation for the mock subPd to accept the sub-sub parameter
-    EXPECT_CALL(subPd, addSubParam(subsubPdOid, &subsubPd)).Times(1);
-    subPd.addSubParam(subsubPdOid, &subsubPd);
-
-    // Setting expectations. All children should return the same readOnly value as the parent.
-    EXPECT_CALL(subPd, readOnly())
-        .WillRepeatedly(testing::Return(pd->readOnly()));
-    EXPECT_CALL(subsubPd, readOnly())
-        .WillRepeatedly(testing::Return((pd->readOnly() && subPd.readOnly())));
-
-    // Test readOnly is true on children
+    // Test readOnly is true on all levels of the hierarchy
     EXPECT_TRUE(pd->readOnly());
-    EXPECT_EQ(pd->readOnly(), (subsubPd.readOnly() && subPd.readOnly()));
+    EXPECT_TRUE(subPd1->readOnly());
+    EXPECT_TRUE(subPd2->readOnly());
 
     // Swap parent to readOnly = false
     pd->readOnly(false);
 
-    // Check expectations.
-    EXPECT_CALL(subPd, readOnly())
-        .WillRepeatedly(testing::Return(pd->readOnly()));
-    EXPECT_CALL(subsubPd, readOnly())
-        .WillRepeatedly(testing::Return((pd->readOnly() && subPd.readOnly())));
-
-    // Test readOnly is false on children
+    // Test readOnly is false on all levels of the hierarchy
     EXPECT_FALSE(pd->readOnly());
-    EXPECT_EQ(pd->readOnly(), (subsubPd.readOnly() && subPd.readOnly()));
+    EXPECT_FALSE(subPd1->readOnly());
+    EXPECT_FALSE(subPd2->readOnly());
 }
+    
+
