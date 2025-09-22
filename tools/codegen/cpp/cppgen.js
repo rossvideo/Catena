@@ -224,12 +224,13 @@ class CppGen {
           clientHintsStr = clientHintsKeys.map((key) => { return `{ "${key}", "${clientHints[key]}" }` }).join(", ");
         }
 
-        bloc(`Menu _${group}Group_${menu}Menu {\n  {    `);
-        bloc(`    ${menuNamePairs.map((key) => { return `{ "${key}", "${menuName[key]}" }` }).join(",\n    ")}\n  },`);
-        bloc(`  false, false, `);
-        bloc(`  {${paramOids}}, `);
-        bloc(`  {${commandOids}}, `);
-        bloc(`  {}, {${clientHintsStr}}, "${menu}", _${group}Group\n};`);
+        bloc(`Menu _${group}Group_${menu}Menu {`);
+        bloc(`  { ${menuNamePairs.map((key) => { return `{ "${key}", "${menuName[key]}" }` }).join(", ")} },`);
+        bloc(`  false, false,`);
+        bloc(`  { ${paramOids} },`);
+        bloc(`  { ${commandOids} },`);
+        bloc(`  { ${clientHintsStr} }, "${menu}", _${group}Group`);
+        bloc(`};`);
       }
     }
   }
