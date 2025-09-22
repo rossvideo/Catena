@@ -411,10 +411,10 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_CommandErrUnhandled) {
 }
 
 /*
- * TEST 11 - Testing ParamDescriptor readOnly passed down from parent where readOnly() is true and false.
+ * TEST 11 - Testing ParamDescriptor readOnly passed down from parent where readOnly() is true.
  */
 
-    TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyTrue) {
+TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyTrue) {
     // Create sub-parameters with readOnly = false so they inherit parent's readOnly status
     std::string subOid1 = "sub_oid1", subOid2 = "sub_oid2";
     auto subPd1 = createRealParamDescriptor(subOid1, "sub1", false, pd.get());
@@ -424,18 +424,28 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_CommandErrUnhandled) {
     EXPECT_TRUE(pd->readOnly());
     EXPECT_TRUE(subPd1->readOnly());  
     EXPECT_TRUE(subPd2->readOnly());  
+}
+
+/*
+ * TEST 12 - Testing ParamDescriptor readOnly passed down from parent where readOnly() is false.
+ */
+TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyFalse) {
+    // Create sub-parameters with readOnly = false so they inherit parent's readOnly status
+    std::string subOid1 = "sub_oid1", subOid2 = "sub_oid2";
+    auto subPd1 = createRealParamDescriptor(subOid1, "sub1", false, pd.get());
+    auto subPd2 = createRealParamDescriptor(subOid2, "sub2", false, pd.get());
 
     // Swap parent to readOnly = false
     pd->readOnly(false);
 
-    // Test readOnly is false on children (parent is readOnly=false, children inherit it)
+    // Test readOnly is false on children
     EXPECT_FALSE(pd->readOnly());
-    EXPECT_FALSE(subPd1->readOnly()); 
+    EXPECT_FALSE(subPd1->readOnly());  
     EXPECT_FALSE(subPd2->readOnly());  
 }
 
 /*
- * TEST 12 - Testing ParamDescriptor readOnly passed down multiple levels.
+ * TEST 12 - Testing ParamDescriptor readOnly passed down multiple levels when readOnly() is true.
  */
 
 TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyMultipleLevels) {
@@ -448,6 +458,16 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyMultipleLevels) {
     EXPECT_TRUE(pd->readOnly());
     EXPECT_TRUE(subPd1->readOnly());
     EXPECT_TRUE(subPd2->readOnly());
+}
+
+/*
+ * TEST 13 - Testing ParamDescriptor readOnly passed down multiple levels when readOnly() is false.
+ */
+TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyMultipleLevelsFalse) {
+    // Create sub-parameter hierarchy
+    std::string subPdOid = "subPd", subsubPdOid = "subsubPd";
+    auto subPd1 = createRealParamDescriptor(subPdOid, "subPd", false, pd.get());
+    auto subPd2 = createRealParamDescriptor(subsubPdOid, "subsubPd", false, subPd1.get());
 
     // Swap parent to readOnly = false
     pd->readOnly(false);
@@ -457,5 +477,3 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyMultipleLevels) {
     EXPECT_FALSE(subPd1->readOnly());
     EXPECT_FALSE(subPd2->readOnly());
 }
-    
-
