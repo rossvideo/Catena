@@ -85,10 +85,10 @@ void catena::REST::Connect::proceed() {
     }
 
     // kWrite: Waiting for updates to send to the client.
-    std::unique_lock<std::mutex> lock{mtx_, std::defer_lock};
+    std::unique_lock<std::mutex> connect_lock{mtx_, std::defer_lock};
     while (socket_.is_open() && !shutdown_) {
-        lock.lock();
-        cv_.wait(lock, [this] { return hasUpdate_; });
+        connect_lock.lock();
+        cv_.wait(connect_lock, [this] { return hasUpdate_; });
         hasUpdate_ = false;
         writeConsole_(CallStatus::kWrite, true);
         try {
@@ -106,7 +106,7 @@ void catena::REST::Connect::proceed() {
         } catch (...) {
             socket_.close();
         }
-        lock.unlock();
+        connect_lock.unlock();
     }
 
     // Writing the final status to the console.

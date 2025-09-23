@@ -7,7 +7,7 @@ params:
   nested_struct:
     type: STRUCT
     name: { display_strings: { en: "Nested Struct" } }
-    access_scope: st2158:op
+    access_scope: st2138:op
     params:
       num_1:
         type: INT32
