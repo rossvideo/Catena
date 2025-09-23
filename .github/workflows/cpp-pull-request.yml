@@ -7,11 +7,14 @@ on:
     paths:
       - 'sdks/cpp/**'
       - 'unittests/cpp/**'
+      - 'tools/codegen/**'
   pull_request:
     paths:
       - 'sdks/cpp/**'
       - 'unittests/cpp/**'
+      - 'tools/codegen/**'
       - '.github/workflows/cpp-pull-request.yml'
+  workflow_dispatch:
 
 jobs:
   Trivy:
@@ -202,7 +205,7 @@ jobs:
         language: ['c-cpp']
 
     env:
-      CMAKE_BUILD_TYPE: 
+      CMAKE_BUILD_TYPE: ''
       CONNECTIONS: gRPC
       BUILD_TARGET: build/cpp
 
