@@ -162,76 +162,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_Normal) {
 }
 
 /*
- * TEST 3 - ExternalObjectRequest with empty file.
- */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_EmptyFile) {
-    // Create empty test file
-    createTestFile("/empty_file.txt", "");
-    
-    // Initialize request payload
-    initPayload("/empty_file.txt");
-    expPayload("");
-    
-    // Send the RPC
-    testRPC();
-    
-    // Cleanup
-    cleanupTestFiles();
-}
-
-/*
- * TEST 4 - ExternalObjectRequest file not found error.
- */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_FileNotFound) {
-    // Initialize request payload with non-existent file
-    initPayload("/nonexistent_file.txt");
-    
-    // Set expected error - the actual error message includes function signature
-    expRc_ = catena::exception_with_status("virtual void catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile '/nonexistent_file.txt' not found", catena::StatusCode::NOT_FOUND);
-    
-    // Send the RPC
-    testRPC();
-}
-
-/*
- * TEST 5 - ExternalObjectRequest OID validation - missing '/' prefix.
- */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_MissingSlashPrefix) {
-    // Initialize request payload with OID missing '/' prefix
-    initPayload("test_file_no_slash.txt");
-    
-    // Set expected error with hint about missing '/' prefix - includes function signature
-    expRc_ = catena::exception_with_status("virtual void catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile 'test_file_no_slash.txt' not found. HINT: Make sure oid starts with '/' prefix.", catena::StatusCode::NOT_FOUND);
-    
-    // Send the RPC
-    testRPC();
-}
-
-/*
- * TEST 6 - ExternalObjectRequest with large file content.
- */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_LargeFile) {
-    // Create test file with large content (1MB)
-    std::string largeContent;
-    largeContent.reserve(1024 * 1024);
-    for (int i = 0; i < 1024 * 1024; ++i) {
-        largeContent += static_cast<char>('A' + (i % 26));
-    }
-    createTestFile("/large_file.txt", largeContent);
-    
-    // Initialize request payload
-    initPayload("/large_file.txt");
-    expPayload(largeContent);
-    
-    // Send the RPC
-    testRPC();
-    
-    // Cleanup
-    cleanupTestFiles();
-}
-
-/*
- * TEST 7 - ExternalObjectRequest with nested directory structure.
+ * TEST 3 - ExternalObjectRequest with nested directory structure.
  */
 TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_NestedDirectory) {
     // Create nested directory structure
@@ -253,7 +184,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_NestedDirectory) {
 }
 
 /*
- * TEST 8 - ExternalObjectRequest with special characters in filename.
+ * TEST 4 - ExternalObjectRequest with special characters in filename.
  */
 TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_SpecialCharacters) {
     // Create test file with special characters in name
@@ -264,6 +195,75 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_SpecialCharacters) 
     // Initialize request payload
     initPayload(specialPath);
     expPayload(testContent);
+    
+    // Send the RPC
+    testRPC();
+    
+    // Cleanup
+    cleanupTestFiles();
+}
+
+/*
+ * TEST 5 - ExternalObjectRequest with empty file.
+ */
+TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_EmptyFile) {
+    // Create empty test file
+    createTestFile("/empty_file.txt", "");
+    
+    // Initialize request payload
+    initPayload("/empty_file.txt");
+    expPayload("");
+    
+    // Send the RPC
+    testRPC();
+    
+    // Cleanup
+    cleanupTestFiles();
+}
+
+/*
+ * TEST 6 - ExternalObjectRequest file not found error.
+ */
+TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_FileNotFound) {
+    // Initialize request payload with non-existent file
+    initPayload("/nonexistent_file.txt");
+    
+    // Set expected error - the actual error message includes function signature
+    expRc_ = catena::exception_with_status("virtual void catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile '/nonexistent_file.txt' not found", catena::StatusCode::NOT_FOUND);
+    
+    // Send the RPC
+    testRPC();
+}
+
+/*
+ * TEST 7 - ExternalObjectRequest OID validation - missing '/' prefix.
+ */
+TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_MissingSlashPrefix) {
+    // Initialize request payload with OID missing '/' prefix
+    initPayload("test_file_no_slash.txt");
+    
+    // Set expected error with hint about missing '/' prefix - includes function signature
+    expRc_ = catena::exception_with_status("virtual void catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile 'test_file_no_slash.txt' not found. HINT: Make sure oid starts with '/' prefix.", catena::StatusCode::NOT_FOUND);
+    
+    // Send the RPC
+    testRPC();
+}
+
+/*
+ * TEST 8 - ExternalObjectRequest with large file content.
+ */
+TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_LargeFile) {
+    // Create test file with large content (1MB)
+    std::string largeContent;
+    largeContent.reserve(1024 * 1024);
+    for (int i = 0; i < 1024 * 1024; ++i) {
+        largeContent += static_cast<char>('A' + (i % 26));
+    }
+    createTestFile("/large_file.txt", largeContent);
+    
+    // Initialize request payload
+    initPayload("/large_file.txt");
+    expPayload(largeContent);
     
     // Send the RPC
     testRPC();
@@ -309,7 +309,31 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_PathTraversal) {
 }
 
 /*
- * TEST 11 - ExternalObjectRequest with very long filename.
+ * TEST 11 - ExternalObjectRequest with file I/O exception (generic exception handling).
+ */
+TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_FileIOException) {
+    // Create a file that exists but will cause an I/O exception when read
+    // We'll create a directory with the same name as the file to trigger an exception
+    std::string problematicPath = "/problematic_file.txt";
+    
+    // Create a directory instead of a file to cause std::ifstream to fail
+    std::filesystem::create_directories(testEOPath_ + problematicPath);
+    
+    // Initialize request payload
+    initPayload(problematicPath);
+    
+    // Set expected error - generic exception should result in CANCELLED status
+    expRc_ = catena::exception_with_status("", catena::StatusCode::CANCELLED);
+    
+    // Send the RPC
+    testRPC();
+    
+    // Cleanup
+    cleanupTestFiles();
+}
+
+/*
+ * TEST 12 - ExternalObjectRequest with very long filename.
  */
 TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_LongFilename) {
     // Create test file with long filename (but within filesystem limits)
@@ -334,7 +358,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_LongFilename) {
 }
 
 /*
- * TEST 12 - ExternalObjectRequest with Unicode filename.
+ * TEST 14 - ExternalObjectRequest with Unicode filename.
  */
 TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_UnicodeFilename) {
     // Create test file with Unicode characters in name
@@ -354,31 +378,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_UnicodeFilename) {
 }
 
 /*
- * TEST 13 - ExternalObjectRequest with file I/O exception (generic exception handling).
- */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_FileIOException) {
-    // Create a file that exists but will cause an I/O exception when read
-    // We'll create a directory with the same name as the file to trigger an exception
-    std::string problematicPath = "/problematic_file.txt";
-    
-    // Create a directory instead of a file to cause std::ifstream to fail
-    std::filesystem::create_directories(testEOPath_ + problematicPath);
-    
-    // Initialize request payload
-    initPayload(problematicPath);
-    
-    // Set expected error - generic exception should result in CANCELLED status
-    expRc_ = catena::exception_with_status("", catena::StatusCode::CANCELLED);
-    
-    // Send the RPC
-    testRPC();
-    
-    // Cleanup
-    cleanupTestFiles();
-}
-
-/*
- * TEST 14 - ExternalObjectRequest with file containing null bytes.
+ * TEST 15 - ExternalObjectRequest with file containing null bytes.
  */
 TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_NullByteFile) {
     // Create a file with null bytes and other binary data
@@ -404,7 +404,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_NullByteFile) {
 }
 
 /*
- * TEST 15 - ExternalObjectRequest with symlink file.
+ * TEST 16 - ExternalObjectRequest with symlink file.
  */
 TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_SymlinkFile) {
     // Create a regular file first
@@ -434,84 +434,4 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_SymlinkFile) {
     
     // Cleanup
     cleanupTestFiles();
-}
-
-/*
-    * TEST 16 - ExternalObjectRequest with concurrent file access.
- */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_ConcurrentAccess) {
-    // Create a test file
-    std::string concurrentPath = "/concurrent_file.txt";
-    std::string content = "Content for concurrent access test";
-    createTestFile(concurrentPath, content);
-    
-    // Initialize request payload
-    initPayload(concurrentPath);
-    expPayload(content);
-    
-    // Send the RPC (this tests if the file can be read while potentially being accessed)
-    testRPC();
-    
-    // Cleanup
-    cleanupTestFiles();
-}
-
-/*
- * TEST 17 - ExternalObjectRequest to test cancellation during processing.
- */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_ProcessingCancellation) {
-    // Create a normal file
-    std::string normalPath = "/normal_cancel_test.txt";
-    std::string content = "Content for cancellation test";
-    createTestFile(normalPath, content);
-    
-    // Initialize request payload
-    initPayload(normalPath);
-    
-    // This test primarily ensures we don't crash during normal operation
-    // The cancellation path is tested through the ok=false parameter in proceed()
-    expPayload(content);
-    
-    // Send the RPC
-    testRPC();
-    
-    // Cleanup
-    cleanupTestFiles();
-}
-
-/*
- * TEST 18 - ExternalObjectRequest comprehensive state coverage test.
- * 
- * Note: The default case in the proceed() switch statement (lines 163-166) is designed
- * to be unreachable under normal circumstances. It represents an "illegal state" that
- * would only occur due to memory corruption or undefined behavior.
- * 
- * This case is typically marked with GCOVR_EXCL_START/STOP in production code because
- * it cannot be safely triggered in a unit test environment without risking undefined
- * behavior or crashes.
- * 
- * This test documents the limitation and ensures all reachable states are covered.
- */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_StateTransitionCoverage) {
-    // Test normal state transitions: kCreate -> kProcess -> kWrite -> kPostWrite -> kFinish
-    // This test ensures we have comprehensive coverage of all normal state paths
-    
-    // Create a file for normal processing
-    std::string testPath = "/state_coverage_test.txt";
-    std::string content = "Content for state transition coverage test";
-    createTestFile(testPath, content);
-    
-    // Initialize request payload
-    initPayload(testPath);
-    expPayload(content);
-    
-    // Send the RPC - this will exercise the normal state machine transitions
-    testRPC();
-    
-    // Cleanup
-    cleanupTestFiles();
-    
-    // Note: The default case (illegal state) cannot be safely tested without
-    // undefined behavior. It exists as a safety mechanism for impossible states.
-    EXPECT_TRUE(true); // Test passes if no crashes occur during state transitions
 }
