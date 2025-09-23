@@ -23,6 +23,7 @@ cmake_minimum_required(VERSION 3.20)
 project(CATENA_LITE_EXAMPLES C CXX)
 add_dependencies(${target} build_openapi)
 
+<<<<<<< HEAD
 option(BARE_EXAMPLES "Build only one_of_everything examples" OFF)
 if(BARE_EXAMPLES)
     add_subdirectory("one_of_everything")
@@ -36,3 +37,14 @@ else()
     add_subdirectory("use_menus")
     # ...add other examples as needed
 endif()
+=======
+add_subdirectory("external_object_request")
+add_subdirectory("one_of_everything")
+add_subdirectory("status_update")
+add_subdirectory("structs_with_authz")
+add_subdirectory("structs_with_authz_yaml")
+add_subdirectory("use_commands")
+add_subdirectory("use_menus")
+add_subdirectory("web_host")
+add_subdirectory("visual_audio_deck")
+>>>>>>> 35ab19db6 (Had something working then lsot all my work. Saving for now.)
