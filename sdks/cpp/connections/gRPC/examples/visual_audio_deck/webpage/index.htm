@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Audio Deck - Catena gRPC</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/x-icon" href="assets/catena_logo_16x16.png">
+</head>
+<body>
+    <header>
+        <h1>Visual Audio Deck</h1>
+        <div class="status">
+            <span id="status">Connecting...</span>
+        </div>
+    </header>
+    
+    <main>
+        <!-- Main Section -->
+        <section class="main-section">
+            <h2>Main Controls</h2>
+            <div class="main-controls">
+                <div class="control-group">
+                    <label>Main Output:</label>
+                    <span id="main-output" class="value">0.000000</span>
+                </div>
+                <div class="control-group">
+                    <label>Main Slider:</label>
+                    <span id="main-slider" class="value">-20.0</span>
+                </div>
+                <div class="control-group">
+                    <label>Select:</label>
+                    <span id="main-select" class="boolean">false</span>
+                </div>
+                <div class="control-group">
+                    <label>Solo:</label>
+                    <span id="main-solo" class="boolean">false</span>
+                </div>
+                <div class="control-group">
+                    <label>Mute:</label>
+                    <span id="main-mute" class="boolean">false</span>
+                </div>
+                <div class="control-group">
+                    <label>Display Mode:</label>
+                    <span id="main-display-mode" class="value">LR</span>
+                </div>
+                <div class="control-group">
+                    <label>Display Text:</label>
+                    <span id="main-display-text" class="value">main</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Channels Section -->
+        <section class="channels-section">
+            <h2>Audio Channels</h2>
+            <div class="channels-grid" id="channels-grid">
+                <!-- Channels will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Raw Data Section -->
+        <section class="raw-data-section">
+            <h2>Raw Parameter Data</h2>
+            <button id="toggle-raw-data">Show Raw Data</button>
+            <pre id="raw-data" style="display: none;"></pre>
+        </section>
+    </main>
+
+<script>
+let paramsData = null;
+
+// Fetch and display all parameters
+async function fetchParams() {
+    try {
+        const response = await fetch('/api/params');
+        if (!response.ok) throw new Error('Failed to fetch parameters');
+        
+        paramsData = await response.json();
+        updateDisplay();
+        document.getElementById('status').textContent = 'Connected';
+        document.getElementById('status').className = 'connected';
+    } catch (error) {
+        console.error('Error fetching parameters:', error);
+        document.getElementById('status').textContent = 'Connection Error';
+        document.getElementById('status').className = 'error';
+    }
+}
+
+// Update the display with current parameter values
+function updateDisplay() {
+    if (!paramsData) return;
+
+    // Update main controls
+    document.getElementById('main-output').textContent = paramsData.main.data.output.toFixed(6);
+    document.getElementById('main-slider').textContent = paramsData.main.slider_m.toFixed(1);
+    document.getElementById('main-select').textContent = paramsData.main.select_m;
+    document.getElementById('main-solo').textContent = paramsData.main.solo_m;
+    document.getElementById('main-mute').textContent = paramsData.main.mute_m;
+    document.getElementById('main-display-mode').textContent = paramsData.main.display_m.mode;
+    document.getElementById('main-display-text').textContent = paramsData.main.display_m.text;
+
+    // Update boolean styling
+    document.getElementById('main-select').className = paramsData.main.select_m ? 'boolean true' : 'boolean false';
+    document.getElementById('main-solo').className = paramsData.main.solo_m ? 'boolean true' : 'boolean false';
+    document.getElementById('main-mute').className = paramsData.main.mute_m ? 'boolean true' : 'boolean false';
+
+    // Update channels
+    updateChannelsDisplay();
+
+    // Update raw data
+    document.getElementById('raw-data').textContent = JSON.stringify(paramsData, null, 2);
+}
+
+// Update channels display
+function updateChannelsDisplay() {
+    const channelsGrid = document.getElementById('channels-grid');
+    channelsGrid.innerHTML = '';
+
+    paramsData.channels.forEach((channel, index) => {
+        const channelDiv = document.createElement('div');
+        channelDiv.className = 'channel';
+        channelDiv.innerHTML = `
+            <h3>Channel ${index + 1}</h3>
+            <div class="channel-data">
+                <div class="data-group">
+                    <h4>Signal Data</h4>
+                    <div class="param">
+                        <label>Signal:</label>
+                        <span class="signal-value">${channel.data.signal.toFixed(6)}</span>
+                    </div>
+                    <div class="param">
+                        <label>Volume:</label>
+                        <span>${channel.data.volume.toFixed(3)}</span>
+                    </div>
+                    <div class="param">
+                        <label>Base Freq (f0):</label>
+                        <span>${channel.data.frequencies.f0.toFixed(2)} Hz</span>
+                    </div>
+                    <div class="param">
+                        <label>Alpha:</label>
+                        <span>${channel.data.frequencies.alpha.toFixed(3)}</span>
+                    </div>
+                    <div class="param">
+                        <label>Name:</label>
+                        <span>${channel.data.name}</span>
+                    </div>
+                </div>
+
+                <div class="data-group">
+                    <h4>Controls</h4>
+                    <div class="param">
+                        <label>Select:</label>
+                        <span class="${channel.select ? 'boolean true' : 'boolean false'}">${channel.select}</span>
+                    </div>
+                    <div class="param">
+                        <label>Solo:</label>
+                        <span class="${channel.solo ? 'boolean true' : 'boolean false'}">${channel.solo}</span>
+                    </div>
+                    <div class="param">
+                        <label>Mute:</label>
+                        <span class="${channel.mute ? 'boolean true' : 'boolean false'}">${channel.mute}</span>
+                    </div>
+                    <div class="param">
+                        <label>Slider:</label>
+                        <span>${channel.slider.toFixed(1)} dB</span>
+                    </div>
+                </div>
+
+                <div class="data-group">
+                    <h4>Warnings</h4>
+                    <div class="param">
+                        <label>COMP:</label>
+                        <span class="${channel.warning.comp ? 'warning true' : 'warning false'}">${channel.warning.comp}</span>
+                    </div>
+                    <div class="param">
+                        <label>CLIP:</label>
+                        <span class="${channel.warning.clip > 0 ? 'warning true' : 'warning false'}">${channel.warning.clip}</span>
+                    </div>
+                    <div class="param">
+                        <label>Freq Modified:</label>
+                        <span class="${channel.warning.freq ? 'warning true' : 'warning false'}">${channel.warning.freq}</span>
+                    </div>
+                </div>
+
+                <div class="data-group">
+                    <h4>Display</h4>
+                    <div class="param">
+                        <label>Mode:</label>
+                        <span>${channel.display.mode}</span>
+                    </div>
+                    <div class="param">
+                        <label>Subtext:</label>
+                        <span>${channel.display.subtext}</span>
+                    </div>
+                </div>
+
+                <div class="data-group">
+                    <h4>Frequency Values</h4>
+                    <div class="freq-grid">
+                        <div class="param"><label>10 Hz:</label><span>${channel.data.freq_values.freq_10.toFixed(3)}</span></div>
+                        <div class="param"><label>21 Hz:</label><span>${channel.data.freq_values.freq_21.toFixed(3)}</span></div>
+                        <div class="param"><label>42 Hz:</label><span>${channel.data.freq_values.freq_42.toFixed(3)}</span></div>
+                        <div class="param"><label>83 Hz:</label><span>${channel.data.freq_values.freq_83.toFixed(3)}</span></div>
+                        <div class="param"><label>166 Hz:</label><span>${channel.data.freq_values.freq_166.toFixed(3)}</span></div>
+                        <div class="param"><label>333 Hz:</label><span>${channel.data.freq_values.freq_333.toFixed(3)}</span></div>
+                        <div class="param"><label>577 Hz:</label><span>${channel.data.freq_values.freq_577.toFixed(3)}</span></div>
+                        <div class="param"><label>1000 Hz:</label><span>${channel.data.freq_values.freq_1000.toFixed(3)}</span></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        channelsGrid.appendChild(channelDiv);
+    });
+}
+
+// Toggle raw data display
+document.getElementById('toggle-raw-data').addEventListener('click', function() {
+    const rawData = document.getElementById('raw-data');
+    const button = document.getElementById('toggle-raw-data');
+    
+    if (rawData.style.display === 'none') {
+        rawData.style.display = 'block';
+        button.textContent = 'Hide Raw Data';
+    } else {
+        rawData.style.display = 'none';
+        button.textContent = 'Show Raw Data';
+    }
+});
+
+// Auto-refresh parameters every 100ms for real-time updates
+function startAutoRefresh() {
+    setInterval(fetchParams, 100);
+}
+
+// Initialize
+fetchParams();
+startAutoRefresh();
+</script>
+</body>
+</html>

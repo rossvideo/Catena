@@ -19,103 +19,207 @@
         "read_only": true,
         "value": { "string_value": "eo://catena_logo_16x16.png" }
       },
-      "eq": {
+      "main": {
         "type": "STRUCT",
-        "name": { "display_strings": { "en": "EQ" } },
+        "name": { "display_strings": { "en": "Main" } },
         "params": {
-          "response": {
-            "type": "INT32",
-            "name": { "display_strings": { "en": "Response" } },
-            "access_scope": "st2138:mon",
-            "constraint": {
-              "type": "INT_RANGE",
-              "int32_range": {"min_value": 0, "max_value": 100, "step": 2}
-            },
-            "widget": "wheel"
+          "data": {
+            "type": "STRUCT",
+            "name": { "display_strings": { "en": "Main Data" } },
+            "params": {
+              "output": {
+                "type": "FLOAT32",
+                "name": { "display_strings": { "en": "Output" } },
+                "read_only": true,
+                "value": { "float32_value": 0.0 }
+              }
+            }
           },
-          "frequency": {
+          "slider_m": {
             "type": "FLOAT32",
-            "name": { "display_strings": { "en": "Frequency" } },
-            "access_scope": "st2138:op",
+            "name": { "display_strings": { "en": "Main Slider" } },
             "constraint": {
               "type": "FLOAT_RANGE",
-              "float32_range": {"min_value":20, "display_min": 20,  "max_value": 20000, "display_max": 20000}
+              "float32_range": {"min_value": -80.0, "max_value": 10.0, "step": 0.1}
             },
-            "widget": "wheel"
+            "widget": "fader",
+            "value": { "float32_value": -20.0 }
           },
-          "gain": {
-            "type": "FLOAT32",
-            "name": { "display_strings": { "en": "Gain" } },
-            "access_scope": "st2138:cfg",
-            "constraint": {
-              "type": "FLOAT_RANGE",
-              "float32_range": {"min_value":0,  "max_value": 10.0, "step": 0.1}
-            },
-            "widget": "wheel"
+          "select_m": {
+            "type": "BOOL",
+            "name": { "display_strings": { "en": "Main Select" } },
+            "value": { "bool_value": false }
           },
-          "q_factor": {
-            "type": "FLOAT32",
-            "name": { "display_strings": { "en": "Q Factor" } },
-            "access_scope": "st2138:adm",
-            "constraint": {
-              "type": "FLOAT_RANGE",
-              "float32_range": {"min_value":0,  "max_value": 10.0, "step": 0.1}
-            },
-            "widget": "wheel"
-          }
-        }
-      },
-      "audio_channel": {
-        "type": "STRUCT",
-        "name": { "display_strings": { "en": "Audio Channel" } },
-        "params": {
-          "fader": {
-            "type": "FLOAT32",
-            "name": { "display_strings": { "en": "Fader" } },
-            "constraint": {
-              "type": "FLOAT_RANGE",
-              "float32_range": {"min_value":0,  "max_value": 1.00, "display_min":0, "display_max":1.00, "step": 0.01}
-            },
-            "precision": 3,
-            "widget": "fader"
+          "solo_m": {
+            "type": "BOOL",
+            "name": { "display_strings": { "en": "Main Solo" } },
+            "value": { "bool_value": false }
           },
-          "eq_list": {
-            "type": "STRUCT_ARRAY",
-            "name": { "display_strings": { "en": "EQ List" } },
-            "template_oid": "/eq",
-            "value": {
-              "struct_array_values": {
-                "struct_values": [
-                  {
-                    "struct_value": {
-                      "fields": {
-                        "response": {"int32_value": 0},
-                        "frequency": {"float32_value": 0},
-                        "gain": {"float32_value": 0},
-                        "q_factor": {"float32_value": 0}
-                      }
-                    }
-                  },
-                  {
-                    "struct_value": {
-                      "fields": {
-                        "response": {"int32_value": 0},
-                        "frequency": {"float32_value": 0},
-                        "gain": {"float32_value": 0},
-                        "q_factor": {"float32_value": 0}
-                      }
-                    }
-                  }
-                ]
+          "mute_m": {
+            "type": "BOOL",
+            "name": { "display_strings": { "en": "Main Mute" } },
+            "value": { "bool_value": false }
+          },
+          "clear_m": {
+            "type": "COMMAND",
+            "name": { "display_strings": { "en": "Clear All" } }
+          },
+          "display_m": {
+            "type": "STRUCT",
+            "name": { "display_strings": { "en": "Main Display" } },
+            "params": {
+              "img": {
+                "type": "STRING",
+                "name": { "display_strings": { "en": "Image" } },
+                "value": { "string_value": "eo://catena_logo_16x16.png" }
+              },
+              "mode": {
+                "type": "STRING",
+                "name": { "display_strings": { "en": "Mode" } },
+                "value": { "string_value": "LR" }
+              },
+              "text": {
+                "type": "STRING",
+                "name": { "display_strings": { "en": "Text" } },
+                "value": { "string_value": "main" }
               }
             }
           }
         }
       },
-      "audio_deck": {
+      "channel": {
+        "type": "STRUCT",
+        "name": { "display_strings": { "en": "Channel Template" } },
+        "params": {
+          "data": {
+            "type": "STRUCT",
+            "name": { "display_strings": { "en": "Channel Data" } },
+            "params": {
+              "signal": {
+                "type": "FLOAT32",
+                "name": { "display_strings": { "en": "Signal" } },
+                "read_only": true,
+                "value": { "float32_value": 0.0 }
+              },
+              "volume": {
+                "type": "FLOAT32",
+                "name": { "display_strings": { "en": "Volume" } },
+                "constraint": {
+                  "type": "FLOAT_RANGE",
+                  "float32_range": {"min_value": 0.0, "max_value": 1.0, "step": 0.01}
+                },
+                "value": { "float32_value": 0.5 }
+              },
+              "frequencies": {
+                "type": "STRUCT",
+                "name": { "display_strings": { "en": "Frequencies" } },
+                "params": {
+                  "f0": {
+                    "type": "FLOAT32",
+                    "name": { "display_strings": { "en": "Base Frequency" } },
+                    "value": { "float32_value": 440.0 }
+                  },
+                  "alpha": {
+                    "type": "FLOAT32",
+                    "name": { "display_strings": { "en": "Alpha" } },
+                    "value": { "float32_value": 0.1 }
+                  }
+                }
+              },
+              "freq_values": {
+                "type": "STRUCT",
+                "name": { "display_strings": { "en": "Frequency Values" } },
+                "params": {
+                  "freq_10": { "type": "FLOAT32", "name": { "display_strings": { "en": "10 Hz" } }, "value": { "float32_value": 0.0 } },
+                  "freq_21": { "type": "FLOAT32", "name": { "display_strings": { "en": "21 Hz" } }, "value": { "float32_value": 0.0 } },
+                  "freq_42": { "type": "FLOAT32", "name": { "display_strings": { "en": "42 Hz" } }, "value": { "float32_value": 0.0 } },
+                  "freq_83": { "type": "FLOAT32", "name": { "display_strings": { "en": "83 Hz" } }, "value": { "float32_value": 0.0 } },
+                  "freq_166": { "type": "FLOAT32", "name": { "display_strings": { "en": "166 Hz" } }, "value": { "float32_value": 0.0 } },
+                  "freq_333": { "type": "FLOAT32", "name": { "display_strings": { "en": "333 Hz" } }, "value": { "float32_value": 0.0 } },
+                  "freq_577": { "type": "FLOAT32", "name": { "display_strings": { "en": "577 Hz" } }, "value": { "float32_value": 0.0 } },
+                  "freq_1000": { "type": "FLOAT32", "name": { "display_strings": { "en": "1000 Hz" } }, "value": { "float32_value": 0.0 } }
+                }
+              },
+              "name": {
+                "type": "STRING",
+                "name": { "display_strings": { "en": "Channel Name" } },
+                "value": { "string_value": "Channel" }
+              }
+            }
+          },
+          "select": {
+            "type": "BOOL",
+            "name": { "display_strings": { "en": "Select" } },
+            "value": { "bool_value": false }
+          },
+          "solo": {
+            "type": "BOOL",
+            "name": { "display_strings": { "en": "Solo" } },
+            "value": { "bool_value": false }
+          },
+          "mute": {
+            "type": "BOOL",
+            "name": { "display_strings": { "en": "Mute" } },
+            "value": { "bool_value": false }
+          },
+          "warning": {
+            "type": "STRUCT",
+            "name": { "display_strings": { "en": "Warning" } },
+            "params": {
+              "comp": {
+                "type": "BOOL",
+                "name": { "display_strings": { "en": "COMP" } },
+                "value": { "bool_value": false }
+              },
+              "clip": {
+                "type": "INT32",
+                "name": { "display_strings": { "en": "CLIP" } },
+                "value": { "int32_value": 0 }
+              },
+              "freq": {
+                "type": "BOOL",
+                "name": { "display_strings": { "en": "Freq Modified" } },
+                "value": { "bool_value": false }
+              }
+            }
+          },
+          "slider": {
+            "type": "FLOAT32",
+            "name": { "display_strings": { "en": "Channel Slider" } },
+            "constraint": {
+              "type": "FLOAT_RANGE",
+              "float32_range": {"min_value": -80.0, "max_value": 10.0, "step": 0.1}
+            },
+            "widget": "fader",
+            "value": { "float32_value": -20.0 }
+          },
+          "display": {
+            "type": "STRUCT",
+            "name": { "display_strings": { "en": "Channel Display" } },
+            "params": {
+              "img": {
+                "type": "STRING",
+                "name": { "display_strings": { "en": "Image" } },
+                "value": { "string_value": "eo://signal_wave.png" }
+              },
+              "mode": {
+                "type": "STRING",
+                "name": { "display_strings": { "en": "Mode" } },
+                "value": { "string_value": "1" }
+              },
+              "subtext": {
+                "type": "STRING",
+                "name": { "display_strings": { "en": "Subtext" } },
+                "value": { "string_value": "Channel 1" }
+              }
+            }
+          }
+        }
+      },
+      "channels": {
         "type": "STRUCT_ARRAY",
-        "name": { "display_strings": { "en": "Audio Deck" } },
-        "template_oid": "/audio_channel",
+        "name": { "display_strings": { "en": "Channels" } },
+        "template_oid": "/channel",
         "minimal_set": true,
         "value": {
           "struct_array_values": {
@@ -123,31 +227,57 @@
               {
                 "struct_value": {
                   "fields": {
-                    "fader":{"float32_value": 0.0},
-                    "eq_list": {
-                      "struct_array_values": {
-                        "struct_values": [
-                          {
+                    "data": {
+                      "struct_value": {
+                        "fields": {
+                          "signal": { "float32_value": 0.0 },
+                          "volume": { "float32_value": 0.5 },
+                          "frequencies": {
                             "struct_value": {
                               "fields": {
-                                "response": {"int32_value": 10},
-                                "frequency": {"float32_value": 0.8},
-                                "gain": {"float32_value": 2.5},
-                                "q_factor": {"float32_value": 8.4}
+                                "f0": { "float32_value": 440.0 },
+                                "alpha": { "float32_value": 0.1 }
                               }
                             }
                           },
-                          {
+                          "freq_values": {
                             "struct_value": {
                               "fields": {
-                                "response": {"int32_value": 20},
-                                "frequency": {"float32_value": 4.7},
-                                "gain": {"float32_value": 3.7},
-                                "q_factor": {"float32_value": 5.6}
+                                "freq_10": { "float32_value": 0.0 },
+                                "freq_21": { "float32_value": 0.0 },
+                                "freq_42": { "float32_value": 0.0 },
+                                "freq_83": { "float32_value": 0.0 },
+                                "freq_166": { "float32_value": 0.0 },
+                                "freq_333": { "float32_value": 0.0 },
+                                "freq_577": { "float32_value": 0.0 },
+                                "freq_1000": { "float32_value": 0.0 }
                               }
                             }
-                          }
-                        ]
+                          },
+                          "name": { "string_value": "Channel 1" }
+                        }
+                      }
+                    },
+                    "select": { "bool_value": false },
+                    "solo": { "bool_value": false },
+                    "mute": { "bool_value": false },
+                    "warning": {
+                      "struct_value": {
+                        "fields": {
+                          "comp": { "bool_value": false },
+                          "clip": { "int32_value": 0 },
+                          "freq": { "bool_value": false }
+                        }
+                      }
+                    },
+                    "slider": { "float32_value": -20.0 },
+                    "display": {
+                      "struct_value": {
+                        "fields": {
+                          "img": { "string_value": "eo://signal_wave.png" },
+                          "mode": { "string_value": "1" },
+                          "subtext": { "string_value": "Channel 1" }
+                        }
                       }
                     }
                   }
@@ -156,31 +286,57 @@
               {
                 "struct_value": {
                   "fields": {
-                    "fader":{"float32_value": 0.1},
-                    "eq_list": {
-                      "struct_array_values": {
-                        "struct_values": [
-                          {
+                    "data": {
+                      "struct_value": {
+                        "fields": {
+                          "signal": { "float32_value": 0.0 },
+                          "volume": { "float32_value": 0.6 },
+                          "frequencies": {
                             "struct_value": {
                               "fields": {
-                                "response": {"int32_value": 30},
-                                "frequency": {"float32_value": 0.8},
-                                "gain": {"float32_value": 2.5},
-                                "q_factor": {"float32_value": 9.3}
+                                "f0": { "float32_value": 523.25 },
+                                "alpha": { "float32_value": 0.15 }
                               }
                             }
                           },
-                          {
+                          "freq_values": {
                             "struct_value": {
                               "fields": {
-                                "response": {"int32_value": 40},
-                                "frequency": {"float32_value": 1.9},
-                                "gain": {"float32_value": 0.5},
-                                "q_factor": {"float32_value": 1.2}
+                                "freq_10": { "float32_value": 0.0 },
+                                "freq_21": { "float32_value": 0.0 },
+                                "freq_42": { "float32_value": 0.0 },
+                                "freq_83": { "float32_value": 0.0 },
+                                "freq_166": { "float32_value": 0.0 },
+                                "freq_333": { "float32_value": 0.0 },
+                                "freq_577": { "float32_value": 0.0 },
+                                "freq_1000": { "float32_value": 0.0 }
                               }
                             }
-                          }
-                        ]
+                          },
+                          "name": { "string_value": "Channel 2" }
+                        }
+                      }
+                    },
+                    "select": { "bool_value": false },
+                    "solo": { "bool_value": false },
+                    "mute": { "bool_value": false },
+                    "warning": {
+                      "struct_value": {
+                        "fields": {
+                          "comp": { "bool_value": false },
+                          "clip": { "int32_value": 0 },
+                          "freq": { "bool_value": false }
+                        }
+                      }
+                    },
+                    "slider": { "float32_value": -15.0 },
+                    "display": {
+                      "struct_value": {
+                        "fields": {
+                          "img": { "string_value": "eo://signal_wave.png" },
+                          "mode": { "string_value": "2" },
+                          "subtext": { "string_value": "Channel 2" }
+                        }
                       }
                     }
                   }
@@ -189,31 +345,57 @@
               {
                 "struct_value": {
                   "fields": {
-                    "fader":{"float32_value": 0.2},
-                    "eq_list": {
-                      "struct_array_values": {
-                        "struct_values": [
-                          {
+                    "data": {
+                      "struct_value": {
+                        "fields": {
+                          "signal": { "float32_value": 0.0 },
+                          "volume": { "float32_value": 0.4 },
+                          "frequencies": {
                             "struct_value": {
                               "fields": {
-                                "response": {"int32_value": 50},
-                                "frequency": {"float32_value": 1.1},
-                                "gain": {"float32_value": 3.8},
-                                "q_factor": {"float32_value": 0.9}
+                                "f0": { "float32_value": 659.25 },
+                                "alpha": { "float32_value": 0.2 }
                               }
                             }
                           },
-                          {
+                          "freq_values": {
                             "struct_value": {
                               "fields": {
-                                "response": {"int32_value": 60},
-                                "frequency": {"float32_value": 4.2},
-                                "gain": {"float32_value": 4.6},
-                                "q_factor": {"float32_value": 0.3}
+                                "freq_10": { "float32_value": 0.0 },
+                                "freq_21": { "float32_value": 0.0 },
+                                "freq_42": { "float32_value": 0.0 },
+                                "freq_83": { "float32_value": 0.0 },
+                                "freq_166": { "float32_value": 0.0 },
+                                "freq_333": { "float32_value": 0.0 },
+                                "freq_577": { "float32_value": 0.0 },
+                                "freq_1000": { "float32_value": 0.0 }
                               }
                             }
-                          }
-                        ]
+                          },
+                          "name": { "string_value": "Channel 3" }
+                        }
+                      }
+                    },
+                    "select": { "bool_value": false },
+                    "solo": { "bool_value": false },
+                    "mute": { "bool_value": false },
+                    "warning": {
+                      "struct_value": {
+                        "fields": {
+                          "comp": { "bool_value": false },
+                          "clip": { "int32_value": 0 },
+                          "freq": { "bool_value": false }
+                        }
+                      }
+                    },
+                    "slider": { "float32_value": -25.0 },
+                    "display": {
+                      "struct_value": {
+                        "fields": {
+                          "img": { "string_value": "eo://signal_wave.png" },
+                          "mode": { "string_value": "3" },
+                          "subtext": { "string_value": "Channel 3" }
+                        }
                       }
                     }
                   }
@@ -222,366 +404,299 @@
               {
                 "struct_value": {
                   "fields": {
-                    "fader":{"float32_value": 0.3},
-                    "eq_list": {
-                      "struct_array_values": {
-                        "struct_values": [
-                          {
+                    "data": {
+                      "struct_value": {
+                        "fields": {
+                          "signal": { "float32_value": 0.0 },
+                          "volume": { "float32_value": 0.7 },
+                          "frequencies": {
                             "struct_value": {
                               "fields": {
-                                "response": {"int32_value": 70},
-                                "frequency": {"float32_value": 1.4},
-                                "gain": {"float32_value": 4.5},
-                                "q_factor": {"float32_value": 0.1}
+                                "f0": { "float32_value": 783.99 },
+                                "alpha": { "float32_value": 0.12 }
                               }
                             }
                           },
-                          {
+                          "freq_values": {
                             "struct_value": {
                               "fields": {
-                                "response": {"int32_value": 80},
-                                "frequency": {"float32_value": 6.1},
-                                "gain": {"float32_value": 4.8},
-                                "q_factor": {"float32_value": 9.9}
+                                "freq_10": { "float32_value": 0.0 },
+                                "freq_21": { "float32_value": 0.0 },
+                                "freq_42": { "float32_value": 0.0 },
+                                "freq_83": { "float32_value": 0.0 },
+                                "freq_166": { "float32_value": 0.0 },
+                                "freq_333": { "float32_value": 0.0 },
+                                "freq_577": { "float32_value": 0.0 },
+                                "freq_1000": { "float32_value": 0.0 }
                               }
                             }
-                          }
-                        ]
+                          },
+                          "name": { "string_value": "Channel 4" }
+                        }
                       }
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        }
-      },
-      "eq_graph_0":{
-        "type": "STRING",
-        "name": { "display_strings": { "en": "EQ Graph 0"}},
-        "widget": "eq_graph",
-        "constraint": {
-          "type": "STRING_STRING_CHOICE",
-          "string_string_choice": {
-            "choices": [
-              {
-                "name": { "display_strings": { "en": "audio_deck.0.eq_list.0.frequency" }},
-                "value": "1.f"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.0.eq_list.0.gain" }},
-                "value": "1.g"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.0.eq_list.0.q_factor" }},
-                "value": "1.q"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.0.eq_list.1.frequency" }},
-                "value": "2.f"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.0.eq_list.1.gain" }},
-                "value": "2.g"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.0.eq_list.1.q_factor" }},
-                "value": "2.q"
-              }
-            ]
-          }
-        },
-        "value": { "string_value": "" }
-      },
-      "eq_graph_1":{
-        "type": "STRING",
-        "name": { "display_strings": { "en": "EQ Graph 1"}},
-        "widget": "eq_graph",
-        "constraint": {
-          "type": "STRING_STRING_CHOICE",
-          "string_string_choice": {
-            "choices": [
-              {
-                "name": { "display_strings": { "en": "audio_deck.1.eq_list.0.frequency" }},
-                "value": "1.f"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.1.eq_list.0.gain" }},
-                "value": "1.g"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.1.eq_list.0.q_factor" }},
-                "value": "1.q"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.1.eq_list.1.frequency" }},
-                "value": "2.f"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.1.eq_list.1.gain" }},
-                "value": "2.g"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.1.eq_list.1.q_factor" }},
-                "value": "2.q"
-              }
-            ]
-          }
-        },
-        "value": { "string_value": "" }
-      },
-      "eq_graph_2": {
-        "type": "STRING",
-        "name": { "display_strings": { "en": "EQ Graph 2"}},
-        "widget": "eq_graph",
-        "constraint": {
-          "type": "STRING_STRING_CHOICE",
-          "string_string_choice": {
-            "choices": [
-              {
-                "name": { "display_strings": { "en": "audio_deck.2.eq_list.0.frequency" }},
-                "value": "1.f"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.2.eq_list.0.gain" }},
-                "value": "1.g"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.2.eq_list.0.q_factor" }},
-                "value": "1.q"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.2.eq_list.1.frequency" }},
-                "value": "2.f"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.2.eq_list.1.gain" }},
-                "value": "2.g"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.2.eq_list.1.q_factor" }},
-                "value": "2.q"
-              }
-            ]
-          }
-        },
-        "value": { "string_value": "" }
-      },
-      "eq_graph_3": {
-        "type": "STRING",
-        "name": { "display_strings": { "en": "EQ Graph 3"}},
-        "widget": "eq_graph",
-        "constraint": {
-          "type": "STRING_STRING_CHOICE",
-          "string_string_choice": {
-            "choices": [
-              {
-                "name": { "display_strings": { "en": "audio_deck.3.eq_list.0.frequency" }},
-                "value": "1.f"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.3.eq_list.0.gain" }},
-                "value": "1.g"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.3.eq_list.0.q_factor" }},
-                "value": "1.q"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.3.eq_list.1.frequency" }},
-                "value": "2.f"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.3.eq_list.1.gain" }},
-                "value": "2.g"
-              },
-              {
-                "name": { "display_strings": { "en": "audio_deck.3.eq_list.1.q_factor" }},
-                "value": "2.q"
-              }
-            ]
-          }
-        },
-        "value": { "string_value": "" }
-      },
-      "effect_settings": {
-        "type": "STRUCT_VARIANT",
-        "name": { "display_strings": { "en": "Effect Settings" } },
-        "params": {
-          "reverb": {
-            "type": "STRUCT",
-            "name": { "display_strings": { "en": "Reverb" } },
-            "params": {
-              "room_size": {
-                "type": "FLOAT32",
-                "name": { "display_strings": { "en": "Room Size" } }
-              },
-              "damping": {
-                "type": "FLOAT32",
-                "name": { "display_strings": { "en": "Damping" } }
-              }
-            }
-          },
-          "delay": {
-            "type": "STRUCT",
-            "name": { "display_strings": { "en": "Delay" } },
-            "params": {
-              "time": {
-                "type": "FLOAT32",
-                "name": { "display_strings": { "en": "Time" } }
-              },
-              "feedback": {
-                "type": "FLOAT32",
-                "name": { "display_strings": { "en": "Feedback" } }
-              }
-            }
-          }
-        },
-        "value": {
-          "struct_variant_value": {
-            "struct_variant_type": "reverb",
-            "value": {
-              "struct_value": {
-                "fields": {
-                  "room_size": { "float32_value": 0.7 },
-                  "damping": { "float32_value": 0.3 }
-                }
-              }
-            }
-          }
-        }
-      },
-      "effect_chain": {
-        "type": "STRUCT_VARIANT_ARRAY",
-        "name": { "display_strings": { "en": "Effect Chain" } },
-        "template_oid": "/effect_settings",
-        "value": {
-          "struct_variant_array_values": {
-            "struct_variants": [
-              {
-                "struct_variant_value": {
-                  "struct_variant_type": "reverb",
-                  "value": {
-                    "struct_value": {
-                      "fields": {
-                        "room_size": { "float32_value": 0.8 },
-                        "damping": { "float32_value": 0.3 }
+                    },
+                    "select": { "bool_value": false },
+                    "solo": { "bool_value": false },
+                    "mute": { "bool_value": false },
+                    "warning": {
+                      "struct_value": {
+                        "fields": {
+                          "comp": { "bool_value": false },
+                          "clip": { "int32_value": 0 },
+                          "freq": { "bool_value": false }
+                        }
+                      }
+                    },
+                    "slider": { "float32_value": -10.0 },
+                    "display": {
+                      "struct_value": {
+                        "fields": {
+                          "img": { "string_value": "eo://signal_wave.png" },
+                          "mode": { "string_value": "4" },
+                          "subtext": { "string_value": "Channel 4" }
+                        }
                       }
                     }
                   }
                 }
               },
               {
-                "struct_variant_value": {
-                  "struct_variant_type": "delay",
-                  "value": {
-                    "struct_value": {
-                      "fields": {
-                        "room_size": { "float32_value": 0.4 },
-                        "damping": { "float32_value": 0.6 }
+                "struct_value": {
+                  "fields": {
+                    "data": {
+                      "struct_value": {
+                        "fields": {
+                          "signal": { "float32_value": 0.0 },
+                          "volume": { "float32_value": 0.3 },
+                          "frequencies": {
+                            "struct_value": {
+                              "fields": {
+                                "f0": { "float32_value": 880.0 },
+                                "alpha": { "float32_value": 0.08 }
+                              }
+                            }
+                          },
+                          "freq_values": {
+                            "struct_value": {
+                              "fields": {
+                                "freq_10": { "float32_value": 0.0 },
+                                "freq_21": { "float32_value": 0.0 },
+                                "freq_42": { "float32_value": 0.0 },
+                                "freq_83": { "float32_value": 0.0 },
+                                "freq_166": { "float32_value": 0.0 },
+                                "freq_333": { "float32_value": 0.0 },
+                                "freq_577": { "float32_value": 0.0 },
+                                "freq_1000": { "float32_value": 0.0 }
+                              }
+                            }
+                          },
+                          "name": { "string_value": "Channel 5" }
+                        }
+                      }
+                    },
+                    "select": { "bool_value": false },
+                    "solo": { "bool_value": false },
+                    "mute": { "bool_value": false },
+                    "warning": {
+                      "struct_value": {
+                        "fields": {
+                          "comp": { "bool_value": false },
+                          "clip": { "int32_value": 0 },
+                          "freq": { "bool_value": false }
+                        }
+                      }
+                    },
+                    "slider": { "float32_value": -30.0 },
+                    "display": {
+                      "struct_value": {
+                        "fields": {
+                          "img": { "string_value": "eo://signal_wave.png" },
+                          "mode": { "string_value": "5" },
+                          "subtext": { "string_value": "Channel 5" }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "struct_value": {
+                  "fields": {
+                    "data": {
+                      "struct_value": {
+                        "fields": {
+                          "signal": { "float32_value": 0.0 },
+                          "volume": { "float32_value": 0.8 },
+                          "frequencies": {
+                            "struct_value": {
+                              "fields": {
+                                "f0": { "float32_value": 1046.5 },
+                                "alpha": { "float32_value": 0.25 }
+                              }
+                            }
+                          },
+                          "freq_values": {
+                            "struct_value": {
+                              "fields": {
+                                "freq_10": { "float32_value": 0.0 },
+                                "freq_21": { "float32_value": 0.0 },
+                                "freq_42": { "float32_value": 0.0 },
+                                "freq_83": { "float32_value": 0.0 },
+                                "freq_166": { "float32_value": 0.0 },
+                                "freq_333": { "float32_value": 0.0 },
+                                "freq_577": { "float32_value": 0.0 },
+                                "freq_1000": { "float32_value": 0.0 }
+                              }
+                            }
+                          },
+                          "name": { "string_value": "Channel 6" }
+                        }
+                      }
+                    },
+                    "select": { "bool_value": false },
+                    "solo": { "bool_value": false },
+                    "mute": { "bool_value": false },
+                    "warning": {
+                      "struct_value": {
+                        "fields": {
+                          "comp": { "bool_value": false },
+                          "clip": { "int32_value": 0 },
+                          "freq": { "bool_value": false }
+                        }
+                      }
+                    },
+                    "slider": { "float32_value": -5.0 },
+                    "display": {
+                      "struct_value": {
+                        "fields": {
+                          "img": { "string_value": "eo://signal_wave.png" },
+                          "mode": { "string_value": "6" },
+                          "subtext": { "string_value": "Channel 6" }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "struct_value": {
+                  "fields": {
+                    "data": {
+                      "struct_value": {
+                        "fields": {
+                          "signal": { "float32_value": 0.0 },
+                          "volume": { "float32_value": 0.45 },
+                          "frequencies": {
+                            "struct_value": {
+                              "fields": {
+                                "f0": { "float32_value": 1174.66 },
+                                "alpha": { "float32_value": 0.18 }
+                              }
+                            }
+                          },
+                          "freq_values": {
+                            "struct_value": {
+                              "fields": {
+                                "freq_10": { "float32_value": 0.0 },
+                                "freq_21": { "float32_value": 0.0 },
+                                "freq_42": { "float32_value": 0.0 },
+                                "freq_83": { "float32_value": 0.0 },
+                                "freq_166": { "float32_value": 0.0 },
+                                "freq_333": { "float32_value": 0.0 },
+                                "freq_577": { "float32_value": 0.0 },
+                                "freq_1000": { "float32_value": 0.0 }
+                              }
+                            }
+                          },
+                          "name": { "string_value": "Channel 7" }
+                        }
+                      }
+                    },
+                    "select": { "bool_value": false },
+                    "solo": { "bool_value": false },
+                    "mute": { "bool_value": false },
+                    "warning": {
+                      "struct_value": {
+                        "fields": {
+                          "comp": { "bool_value": false },
+                          "clip": { "int32_value": 0 },
+                          "freq": { "bool_value": false }
+                        }
+                      }
+                    },
+                    "slider": { "float32_value": -18.0 },
+                    "display": {
+                      "struct_value": {
+                        "fields": {
+                          "img": { "string_value": "eo://signal_wave.png" },
+                          "mode": { "string_value": "7" },
+                          "subtext": { "string_value": "Channel 7" }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "struct_value": {
+                  "fields": {
+                    "data": {
+                      "struct_value": {
+                        "fields": {
+                          "signal": { "float32_value": 0.0 },
+                          "volume": { "float32_value": 0.65 },
+                          "frequencies": {
+                            "struct_value": {
+                              "fields": {
+                                "f0": { "float32_value": 1318.51 },
+                                "alpha": { "float32_value": 0.22 }
+                              }
+                            }
+                          },
+                          "freq_values": {
+                            "struct_value": {
+                              "fields": {
+                                "freq_10": { "float32_value": 0.0 },
+                                "freq_21": { "float32_value": 0.0 },
+                                "freq_42": { "float32_value": 0.0 },
+                                "freq_83": { "float32_value": 0.0 },
+                                "freq_166": { "float32_value": 0.0 },
+                                "freq_333": { "float32_value": 0.0 },
+                                "freq_577": { "float32_value": 0.0 },
+                                "freq_1000": { "float32_value": 0.0 }
+                              }
+                            }
+                          },
+                          "name": { "string_value": "Channel 8" }
+                        }
+                      }
+                    },
+                    "select": { "bool_value": false },
+                    "solo": { "bool_value": false },
+                    "mute": { "bool_value": false },
+                    "warning": {
+                      "struct_value": {
+                        "fields": {
+                          "comp": { "bool_value": false },
+                          "clip": { "int32_value": 0 },
+                          "freq": { "bool_value": false }
+                        }
+                      }
+                    },
+                    "slider": { "float32_value": -12.0 },
+                    "display": {
+                      "struct_value": {
+                        "fields": {
+                          "img": { "string_value": "eo://signal_wave.png" },
+                          "mode": { "string_value": "8" },
+                          "subtext": { "string_value": "Channel 8" }
+                        }
                       }
                     }
                   }
                 }
               }
             ]
-          }
-        }
-      },
-      "delay_effect": {
-        "type": "STRUCT",
-        "name": { "display_strings": { "en": "Delay Effect" } },
-        "params": {
-          "time": {
-            "type": "FLOAT32",
-            "name": { "display_strings": { "en": "Time" } }
-          },
-          "feedback": {
-            "type": "FLOAT32",
-            "name": { "display_strings": { "en": "Feedback" } }
-          }
-        }
-      },
-      "delay_effects": {
-        "type": "STRUCT_ARRAY",
-        "name": { "display_strings": { "en": "Delay Effects" } },
-        "template_oid": "/delay_effect"
-      },
-      "dynamic_effect": {
-        "type": "STRUCT_VARIANT",
-        "name": { "display_strings": { "en": "Dynamic Effect" } },
-        "params": {
-          "single": {
-            "type": "STRUCT",
-            "name": { "display_strings": { "en": "Single Effect" } },
-            "template_oid": "/delay_effect"
-          },
-          "multi": {
-            "type": "STRUCT_ARRAY",
-            "name": { "display_strings": { "en": "Multi Effect" } },
-            "template_oid": "/delay_effects"
-          }
-        },
-        "value": {
-          "struct_variant_value": {
-            "struct_variant_type": "multi",
-            "value": {
-              "struct_array_values": {
-                "struct_values": [
-                  {
-                    "struct_value": {
-                      "fields": {
-                        "time": { "float32_value": 0.3 },
-                        "feedback": { "float32_value": 0.5 }
-                      }
-                    }
-                  },
-                  {
-                    "struct_value": {
-                      "fields": {
-                        "time": { "float32_value": 0.6 },
-                        "feedback": { "float32_value": 0.4 }
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
-      "product": {
-        "type": "STRUCT",
-        "read_only": true,
-        "value": {
-          "struct_value": {
-            "fields": {
-              "name": { "string_value": "Audio Deck" },
-              "vendor": { "string_value": "Ross Video" },
-              "version": { "string_value": "1.0.0" },
-              "catena_sdk": { "string_value": "https://github.com/rossvideo/Catena.git" },
-              "serial_number": { "string_value": "SN-7K9M-2024-XR485-BLU" }
-            }
-          }
-        },
-        "params": {
-          "name": {
-            "type": "STRING"
-          },
-          "vendor": {
-            "type": "STRING"
-          },
-          "version": {
-            "type": "STRING"
-          },
-          "catena_sdk": {
-            "type": "STRING"
-          },
-          "catena_sdk_version": {
-            "type": "STRING"
-          },
-          "serial_number": {
-            "type": "STRING"
           }
         }
       }
