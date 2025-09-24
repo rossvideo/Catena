@@ -12,7 +12,7 @@ COPY toolchain-cpp.env /root/toolchain.env
 
 # Source the toolchain.env file
 RUN . /root/toolchain.env \
-    && apt-get update && apt-get install -y \
+    && apt-get update && apt-get install --no-install-recommends -y \
     build-essential sudo \
     cmake=$CMAKE_VERSION \
     nodejs=$NODEJS_VERSION \
@@ -56,25 +56,25 @@ RUN . /root/toolchain.env \
 
 # Install Google Test
 RUN cd /usr/src/gtest \
-    && sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local/.local CMakeLists.txt \
-    && sudo make && sudo cp lib/*.a /usr/lib
+    && cmake -DCMAKE_INSTALL_PREFIX=/usr/local/.local CMakeLists.txt \
+    && make && cp lib/*.a /usr/lib
 
 # Install Docker & Docker Compose
 RUN . /root/toolchain.env \
-    && sudo apt-get update \
-    && sudo apt-get install ca-certificates curl \
-    && sudo install -m 0755 -d /etc/apt/keyrings \
-    && sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc \
-    && sudo chmod a+r /etc/apt/keyrings/docker.asc \
+    && apt-get update \
+    && apt-get install --no-install-recommends -y ca-certificates curl \
+    && install -m 0755 -d /etc/apt/keyrings \
+    && curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc \
+    && chmod a+r /etc/apt/keyrings/docker.asc \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null \
-    && sudo apt-get update \
-    && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    && apt-get update \
+    && apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 # Install Python and gcovr for coverage reports
-RUN sudo apt-get update && sudo apt-get install -y python3-pip \
-    && sudo pip3 install --no-cache-dir gcovr --break-system-packages \
-    && sudo apt-get clean \
-    && sudo rm -rf /var/cache/apt/archives/ /var/lib/apt/lists/*
+RUN apt-get update && apt-get install --no-install-recommends -y python3-pip \
+    && pip3 install --no-cache-dir gcovr --break-system-packages \
+    && apt-get clean \
+    && rm -rf /var/cache/apt/archives/ /var/lib/apt/lists/*
 
 # Build OpenAPI
 COPY smpte/install-tooling.sh /root/smpte/install-tooling.sh

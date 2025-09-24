@@ -38,10 +38,10 @@ RUN groupadd -g $USER_GID $USER_NAME && \
 RUN echo "${USER_NAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 
-USER ${USER_NAME}
+
 
 # Install Docker & Docker Compose
-RUN sudo apt-get update
+RUN apt-get update
 
 # remove the docker group if it exists
 # RUN if getent group docker; then sudo groupdel docker; fi
@@ -57,8 +57,8 @@ RUN sudo apt-get update
 WORKDIR /home/${USER_NAME}/Catena
 
 # Install glog
-RUN sudo apt-get install -y libgoogle-glog-dev
-
+RUN apt-get install --no-install-recommends -y libgoogle-glog-dev
+USER ${USER_NAME}
 ENTRYPOINT ["/bin/sh", "-c", "/bin/bash"]
 
 # nothing yet, but this is where we would add any additional devcontainer-specific setup
