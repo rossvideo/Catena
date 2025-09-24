@@ -10,6 +10,8 @@ TRIVY_BIN="$SCRIPT_DIR/bin/trivy"
 REPORT_DIR="reports"
 SECURITY_REPORT="$REPORT_DIR/SECURITY_REPORT.md"
 JSON_REPORT="$REPORT_DIR/security-scan.json"
+CPP_JSON_REPORT="$REPORT_DIR/cpp-dependencies-scan.json"
+SYSTEM_JSON_REPORT="$REPORT_DIR/system-packages-scan.json"
 HTML_REPORT="$REPORT_DIR/security-report.html"
 
 # === Ensure Trivy is installed ===
@@ -28,15 +30,23 @@ echo "📍 Directory: $(pwd)"
 
 # === Run comprehensive security scan ===
 echo "🔍 Running filesystem vulnerability scan..."
-"$TRIVY_BIN" fs . --format table
+"$TRIVY_BIN" fs . --format table --skip-files unittests/cpp/common/CommonTestHelpers.h
+
+echo ""
+echo "🔍 Scanning C++ build dependencies..."
+if [ -d "build/cpp" ]; then
+    "$TRIVY_BIN" fs build/cpp --scanners vuln --format table --skip-files unittests/cpp/common/CommonTestHelpers.h
+    "$TRIVY_BIN" fs build/cpp --scanners vuln --format json --output "$CPP_JSON_REPORT" --skip-files unittests/cpp/common/CommonTestHelpers.h
+fi
+
+echo ""
+echo "🔍 Scanning system packages for C++ libraries..."
+"$TRIVY_BIN" rootfs /usr --scanners vuln --format table
+"$TRIVY_BIN" rootfs /usr --scanners vuln --format json --output "$SYSTEM_JSON_REPORT"
 
 echo ""
 echo "🔍 Generating detailed JSON report..."
-"$TRIVY_BIN" fs . --scanners vuln,secret,misconfig --format json --output "$JSON_REPORT"
-
-echo ""
-echo "🔍 Checking for secrets and misconfigurations..."
-"$TRIVY_BIN" fs . --scanners secret,misconfig --format table
+"$TRIVY_BIN" fs . --scanners vuln,secret,misconfig --format json --output "$JSON_REPORT" --skip-files unittests/cpp/common/CommonTestHelpers.h
 
 # === Generate/Update Security Report ===
 echo ""
@@ -48,22 +58,37 @@ if [ -f "$JSON_REPORT" ]; then
     VULN_COUNTS=$(python3 -c "
 import json
 import sys
+import os
 try:
-    with open('$JSON_REPORT', 'r') as f:
-        data = json.load(f)
-    
-    # Collect all findings (vulnerabilities, misconfigurations, secrets)
     all_findings = []
-    for r in data.get('Results', []):
-        # Add vulnerabilities
-        if 'Vulnerabilities' in r:
-            all_findings.extend(r['Vulnerabilities'])
-        # Add misconfigurations
-        if 'Misconfigurations' in r:
-            all_findings.extend(r['Misconfigurations'])
-        # Add secrets
-        if 'Secrets' in r:
-            all_findings.extend(r['Secrets'])
+    
+    # Parse main filesystem scan
+    if os.path.exists('$JSON_REPORT'):
+        with open('$JSON_REPORT', 'r') as f:
+            data = json.load(f)
+        for r in data.get('Results', []):
+            if 'Vulnerabilities' in r:
+                all_findings.extend(r['Vulnerabilities'])
+            if 'Misconfigurations' in r:
+                all_findings.extend(r['Misconfigurations'])
+            if 'Secrets' in r:
+                all_findings.extend(r['Secrets'])
+    
+    # Parse C++ build dependencies scan
+    if os.path.exists('$CPP_JSON_REPORT'):
+        with open('$CPP_JSON_REPORT', 'r') as f:
+            data = json.load(f)
+        for r in data.get('Results', []):
+            if 'Vulnerabilities' in r:
+                all_findings.extend(r['Vulnerabilities'])
+    
+    # Parse system packages scan
+    if os.path.exists('$SYSTEM_JSON_REPORT'):
+        with open('$SYSTEM_JSON_REPORT', 'r') as f:
+            data = json.load(f)
+        for r in data.get('Results', []):
+            if 'Vulnerabilities' in r:
+                all_findings.extend(r['Vulnerabilities'])
     
     critical = sum(1 for f in all_findings if f.get('Severity') == 'CRITICAL')
     high = sum(1 for f in all_findings if f.get('Severity') == 'HIGH') 
@@ -96,7 +121,13 @@ cat > "$SECURITY_REPORT" << EOF
 
 ## Executive Summary
 
-The security scan identified **$TOTAL_VULNS total vulnerabilities** in the project dependencies and filesystem.
+The security scan identified **$TOTAL_VULNS total vulnerabilities** in the project dependencies, filesystem, C++ build dependencies, and system packages.
+
+### Scan Coverage
+- 📁 **Filesystem:** Project files and configurations
+- 🔧 **C++ Dependencies:** Build artifacts and CMake dependencies  
+- 📦 **System Packages:** Installed C++ libraries (gRPC, Protocol Buffers, etc.)
+- 🔐 **Secrets:** JWT tokens and API keys (excluding test files)
 
 ### Vulnerability Breakdown
 - 🔴 **Critical:** $CRITICAL_COUNT
@@ -126,58 +157,67 @@ if [ -f "$JSON_REPORT" ] && [ $TOTAL_VULNS -gt 0 ]; then
     python3 -c "
 import json
 import sys
+import os
 
 try:
-    with open('$JSON_REPORT', 'r') as f:
-        data = json.load(f)
-    
-    # Collect all findings (vulnerabilities, misconfigurations, secrets)
     all_findings = []
-    for result in data.get('Results', []):
-        target = result.get('Target', 'N/A')
-        result_type = result.get('Type', 'N/A')
+    
+    # Process all JSON reports
+    json_files = ['$JSON_REPORT', '$CPP_JSON_REPORT', '$SYSTEM_JSON_REPORT']
+    
+    for json_file in json_files:
+        if not os.path.exists(json_file):
+            continue
+            
+        with open(json_file, 'r') as f:
+            data = json.load(f)
         
-        # Handle vulnerabilities (dependencies)
-        if 'Vulnerabilities' in result and result['Vulnerabilities']:
-            for vuln in result['Vulnerabilities']:
-                all_findings.append({
-                    'id': vuln.get('VulnerabilityID', 'N/A'),
-                    'severity': vuln.get('Severity', 'N/A'),
-                    'package': vuln.get('PkgName', 'N/A'),
-                    'installed': vuln.get('InstalledVersion', 'N/A'),
-                    'fixed': vuln.get('FixedVersion', ''),
-                    'title': vuln.get('Title', 'N/A')[:70] + ('...' if len(vuln.get('Title', '')) > 70 else ''),
-                    'target': target,
-                    'type': 'vulnerability'
-                })
-        
-        # Handle misconfigurations (Docker, etc.)
-        if 'Misconfigurations' in result and result['Misconfigurations']:
-            for misconfig in result['Misconfigurations']:
-                all_findings.append({
-                    'id': misconfig.get('ID', 'N/A'),
-                    'severity': misconfig.get('Severity', 'N/A'),
-                    'package': target.split('/')[-1] if '/' in target else target,
-                    'installed': 'N/A',
-                    'fixed': '🔧 Manual fix required',
-                    'title': misconfig.get('Title', 'N/A')[:70] + ('...' if len(misconfig.get('Title', '')) > 70 else ''),
-                    'target': target,
-                    'type': 'misconfiguration'
-                })
-        
-        # Handle secrets
-        if 'Secrets' in result and result['Secrets']:
-            for secret in result['Secrets']:
-                all_findings.append({
-                    'id': secret.get('RuleID', 'SECRET'),
-                    'severity': secret.get('Severity', 'MEDIUM'),
-                    'package': target.split('/')[-1] if '/' in target else target,
-                    'installed': 'N/A',
-                    'fixed': '🔐 Remove/mask secret',
-                    'title': secret.get('Title', 'Secret detected')[:70] + ('...' if len(secret.get('Title', '')) > 70 else ''),
-                    'target': target,
-                    'type': 'secret'
-                })
+        # Collect all findings (vulnerabilities, misconfigurations, secrets)
+        for result in data.get('Results', []):
+            target = result.get('Target', 'N/A')
+            result_type = result.get('Type', 'N/A')
+            
+            # Handle vulnerabilities (dependencies)
+            if 'Vulnerabilities' in result and result['Vulnerabilities']:
+                for vuln in result['Vulnerabilities']:
+                    all_findings.append({
+                        'id': vuln.get('VulnerabilityID', 'N/A'),
+                        'severity': vuln.get('Severity', 'N/A'),
+                        'package': vuln.get('PkgName', 'N/A'),
+                        'installed': vuln.get('InstalledVersion', 'N/A'),
+                        'fixed': vuln.get('FixedVersion', ''),
+                        'title': vuln.get('Title', 'N/A')[:70] + ('...' if len(vuln.get('Title', '')) > 70 else ''),
+                        'target': target,
+                        'type': 'vulnerability'
+                    })
+            
+            # Handle misconfigurations (Docker, etc.) - only in main report
+            if json_file == '$JSON_REPORT' and 'Misconfigurations' in result and result['Misconfigurations']:
+                for misconfig in result['Misconfigurations']:
+                    all_findings.append({
+                        'id': misconfig.get('ID', 'N/A'),
+                        'severity': misconfig.get('Severity', 'N/A'),
+                        'package': target.split('/')[-1] if '/' in target else target,
+                        'installed': 'N/A',
+                        'fixed': '🔧 Manual fix required',
+                        'title': misconfig.get('Title', 'N/A')[:70] + ('...' if len(misconfig.get('Title', '')) > 70 else ''),
+                        'target': target,
+                        'type': 'misconfiguration'
+                    })
+            
+            # Handle secrets - only in main report
+            if json_file == '$JSON_REPORT' and 'Secrets' in result and result['Secrets']:
+                for secret in result['Secrets']:
+                    all_findings.append({
+                        'id': secret.get('RuleID', 'SECRET'),
+                        'severity': secret.get('Severity', 'MEDIUM'),
+                        'package': target.split('/')[-1] if '/' in target else target,
+                        'installed': 'N/A',
+                        'fixed': '🔐 Remove/mask secret',
+                        'title': secret.get('Title', 'Secret detected')[:70] + ('...' if len(secret.get('Title', '')) > 70 else ''),
+                        'target': target,
+                        'type': 'secret'
+                    })
     
     # Sort by severity (Critical > High > Medium > Low)
     severity_order = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
@@ -294,7 +334,7 @@ fi)
 cat $JSON_REPORT | python3 -m json.tool
 
 # Check for specific vulnerability
-./bin/trivy fs . --format table | grep -i "CVE-XXXX-XXXX"
+./bin/trivy fs . --format table --skip-files unittests/cpp/common/CommonTestHelpers.h | grep -i "CVE-XXXX-XXXX"
 \`\`\`
 
 ---
@@ -319,6 +359,12 @@ echo "   🔶 Medium: $MEDIUM_COUNT"
 echo "   🔵 Low: $LOW_COUNT"
 echo "   📝 Report: $SECURITY_REPORT"
 echo "   📋 JSON: $JSON_REPORT"
+if [ -f "$CPP_JSON_REPORT" ]; then
+    echo "   🔧 C++ Deps: $CPP_JSON_REPORT"
+fi
+if [ -f "$SYSTEM_JSON_REPORT" ]; then
+    echo "   📦 System Packages: $SYSTEM_JSON_REPORT"
+fi
 if [ -f "$HTML_REPORT" ]; then
     echo "   🌐 HTML: $HTML_REPORT"
 fi
