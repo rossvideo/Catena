@@ -65,8 +65,15 @@ protected:
       public:
         using Device::Device;  // Inherit constructors
 
-        static MockHeartbeat* mockHeartbeat;
-        static bool mockHeartbeatOwned;
+        // Constructed and destructed by setUp() and tearDown()
+        // because I don't want to have to override the constructors
+        // to set up the mock heartbeat I just want to inherit them
+        MockHeartbeat* mockHeartbeat;
+        // Ownership flag to know if we should delete the mockHeartbeat
+        // in the destructor. If initHeartbeat is called, the ownership
+        // is transferred to the unique_ptr in Device and will be deleted
+        // automatically.
+        bool mockHeartbeatOwned;
 
         IHeartbeat* getHeartbeat() { return heartbeat_.get(); }
 
@@ -122,8 +129,8 @@ protected:
             *device_
         );
 
-        DeviceTest::DummyDevice::mockHeartbeat = new MockHeartbeat();
-        DeviceTest::DummyDevice::mockHeartbeatOwned = true;
+        device_->mockHeartbeat = new MockHeartbeat();
+        device_->mockHeartbeatOwned = true;
 
         // Add a minimal set parameter to the device
         auto minimalSetParam = std::make_shared<MockParam>();
@@ -161,11 +168,11 @@ protected:
     }
 
     void TearDown() override {
-        if (DeviceTest::DummyDevice::mockHeartbeatOwned && DeviceTest::DummyDevice::mockHeartbeat) {
-            delete DeviceTest::DummyDevice::mockHeartbeat;
+        if (device_->mockHeartbeatOwned && device_->mockHeartbeat) {
+            delete device_->mockHeartbeat;
         }
-        DeviceTest::DummyDevice::mockHeartbeat = nullptr;
-        DeviceTest::DummyDevice::mockHeartbeatOwned = false;
+        device_->mockHeartbeat = nullptr;
+        device_->mockHeartbeatOwned = false;
     }
 
     std::unique_ptr<DummyDevice> device_;
@@ -302,10 +309,6 @@ protected:
 };
 
 // ======== 0. Initial Setup ========
-
-// Static member definitions for DummyDevice
-MockHeartbeat* DeviceTest::DummyDevice::mockHeartbeat = nullptr;
-bool DeviceTest::DummyDevice::mockHeartbeatOwned = false;
 
 // 0.1 - Test device creation
 TEST_F(DeviceTest, Device_Create) {
@@ -2626,7 +2629,7 @@ TEST_F(DeviceTest, StartHeartbeat) {
     device_->addItem("testParam", mockParam.get());
     device_->setHeartbeatParam("/testParam");
 
-    EXPECT_CALL(*DummyDevice::mockHeartbeat, start((int32_t)2222)).Times(1);
+    EXPECT_CALL(*device_->mockHeartbeat, start((int32_t)2222)).Times(1);
 
     // Start heartbeat
     device_->startHeartbeat(2222);
@@ -2644,7 +2647,7 @@ TEST_F(DeviceTest, StartHeartbeatDefaultInterval) {
     device_->addItem("testParam", mockParam.get());
     device_->setHeartbeatParam("/testParam");
 
-    EXPECT_CALL(*DummyDevice::mockHeartbeat, start((int32_t)5000)).Times(1);
+    EXPECT_CALL(*device_->mockHeartbeat, start((int32_t)5000)).Times(1);
 
     // Start heartbeat
     device_->startHeartbeat();
@@ -2668,7 +2671,7 @@ TEST_F(DeviceTest, StartHeartbeatAlreadyStarted) {
     device_->initHeartbeat();
     EXPECT_NE(device_->getHeartbeat(), nullptr);
     // will still call start on the existing heartbeat
-    EXPECT_CALL(*DummyDevice::mockHeartbeat, start((int32_t)3333)).Times(1);
+    EXPECT_CALL(*device_->mockHeartbeat, start((int32_t)3333)).Times(1);
     device_->startHeartbeat(3333);
     // should not clean up the heartbeat
     EXPECT_NE(device_->getHeartbeat(), nullptr);
@@ -2688,7 +2691,7 @@ TEST_F(DeviceTest, StopHeartbeat) {
     device_->initHeartbeat();
     EXPECT_NE(device_->getHeartbeat(), nullptr);
     // Expect the stop method to be called once
-    EXPECT_CALL(*DummyDevice::mockHeartbeat, stop()).Times(1);
+    EXPECT_CALL(*device_->mockHeartbeat, stop()).Times(1);
     // Stopping heartbeat when started should stop up the heartbeat
     device_->stopHeartbeat();
     // should not clean up the heartbeat
