@@ -82,9 +82,6 @@ var hierarchy =
     [ "catena::common::IDevice::IDeviceSerializer", "classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html", [
       [ "catena::common::Device::DeviceSerializer", "classcatena_1_1common_1_1Device_1_1DeviceSerializer.html", null ]
     ] ],
-    [ "catena::common::IHeartbeat", "classcatena_1_1common_1_1IHeartbeat.html", [
-      [ "catena::common::Heartbeat", "classcatena_1_1common_1_1Heartbeat.html", null ]
-    ] ],
     [ "catena::common::ILanguagePack", "classcatena_1_1common_1_1ILanguagePack.html", [
       [ "catena::common::LanguagePack", "classcatena_1_1common_1_1LanguagePack.html", null ]
     ] ],
@@ -93,6 +90,9 @@ var hierarchy =
     ] ],
     [ "catena::common::IMenuGroup", "classcatena_1_1common_1_1IMenuGroup.html", [
       [ "catena::common::MenuGroup", "classcatena_1_1common_1_1MenuGroup.html", null ]
+    ] ],
+    [ "catena::common::INmosNode", "classcatena_1_1common_1_1INmosNode.html", [
+      [ "catena::common::NmosNode", "classcatena_1_1common_1_1NmosNode.html", null ]
     ] ],
     [ "catena::common::IParam", "classcatena_1_1common_1_1IParam.html", [
       [ "catena::common::ParamWithValue< T >", "classcatena_1_1common_1_1ParamWithValue.html", null ]
@@ -134,6 +134,8 @@ var hierarchy =
     [ "catena::patterns::Singleton< T >::Protector", "structcatena_1_1patterns_1_1Singleton_1_1Protector.html", null ],
     [ "catena::meta::PushFrontT< L, T >", "classcatena_1_1meta_1_1PushFrontT.html", null ],
     [ "catena::meta::PushFrontT< TypeList< Ts... >, T >", "classcatena_1_1meta_1_1PushFrontT_3_01TypeList_3_01Ts_8_8_8_01_4_00_01T_01_4.html", null ],
+    [ "catena::common::INmosNode::RegistryCandidate", "structcatena_1_1common_1_1INmosNode_1_1RegistryCandidate.html", null ],
+    [ "catena::common::INmosNode::RegistrySelection", "structcatena_1_1common_1_1INmosNode_1_1RegistrySelection.html", null ],
     [ "std::runtime_error", null, [
       [ "catena::exception_with_status", "structcatena_1_1exception__with__status.html", null ]
     ] ],
