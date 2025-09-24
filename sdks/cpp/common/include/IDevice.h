@@ -163,13 +163,7 @@ class IDevice {
      * heartbeat set up. For a more complex implementation, consider using the Heartbeat class directly.
      * @param interval The interval in milliseconds between heartbeats. Default is 5000ms.
      */
-    virtual void startHeartbeat(int32_t interval) = 0;
-
-    /**
-     * @brief Start sending heartbeat updates for a parameter at the default interval of 5000ms. This is a simple
-     * heartbeat set up. For a more complex implementation, consider using the Heartbeat class directly.
-     */
-    virtual void startHeartbeat() = 0;
+    virtual void startHeartbeat(int32_t interval = 5000) = 0;
 
     /**
      * @brief Stop sending the heartbeat.

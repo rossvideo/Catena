@@ -167,9 +167,7 @@ class Device : public IDevice {
 
     void sendHeartbeat() override;
 
-    void startHeartbeat() override { startHeartbeat(5000); }
-
-    void startHeartbeat(int32_t interval) override;
+    void startHeartbeat(int32_t interval = 5000) override;
 
     void stopHeartbeat() override;
 
