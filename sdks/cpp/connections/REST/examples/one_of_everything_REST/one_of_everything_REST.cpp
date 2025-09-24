@@ -304,7 +304,10 @@ void RunRESTServer() {
 
         std::thread loop(startCounter);
 
+        dm.setHeartbeatParam("/product/version");
+        dm.startHeartbeat();
         api.run();
+        dm.stopHeartbeat();
 
         if (fibThread) { fibThread->join(); }
         loop.join();

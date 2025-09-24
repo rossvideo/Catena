@@ -111,7 +111,10 @@ void RunRESTServer() {
             DEBUG_LOG << "*** signal received: " << oid << " has been changed by client";
         });
 
+        dm.setHeartbeatParam("/product/version");
+        dm.startHeartbeat();
         api.run();
+        dm.stopHeartbeat();
         dm.getValueSetByClient().disconnect(valueSetByClientId);
 
     } catch (std::exception &why) {

@@ -121,10 +121,15 @@ void RunRPCServer(std::string addr)
         uint32_t valueSetByClientId = dm.getValueSetByClient().connect([](const std::string& oid, const IParam* p) {
             DEBUG_LOG << "*** signal received: " << oid << " has been changed by client";
         });
+        
+        // start the heartbeat on the device
+        dm.setHeartbeatParam("/product/version");
+        dm.startHeartbeat();
 
         // wait for the server to shutdown and tidy up
         server->Wait();
         dm.getValueSetByClient().disconnect(valueSetByClientId);
+        dm.stopHeartbeat();
 
         cq->Shutdown();
         cq_thread.join();
