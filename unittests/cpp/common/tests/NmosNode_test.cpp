@@ -2,50 +2,16 @@
 #include "NmosNode.h"
 #include <atomic>
 #include <thread>
-#include <string>
 #include <cstring>
 #include <chrono>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <avahi-client/lookup.h>
+#include "WrapAvahiClient.h"
+
+inline AvahiTestControl g_avahi_test_control;
 
 using namespace catena::common;
-
-extern "C" {
-// Immediately “resolve” to 127.0.0.1:3210 and call the provided callback.
-AvahiServiceResolver*
-__wrap_avahi_service_resolver_new(AvahiClient *c,
-                                  AvahiIfIndex interface,
-                                  AvahiProtocol protocol,
-                                  const char *name,
-                                  const char *type,
-                                  const char *domain,
-                                  AvahiProtocol aproto,
-                                  AvahiLookupFlags flags,
-                                  AvahiServiceResolverCallback cb,
-                                  void *userdata) {
-    (void)c; (void)aproto; (void)flags;
-    cb(/*resolver*/NULL,
-       interface,
-       protocol,
-       AVAHI_RESOLVER_FOUND,
-       name,
-       type,
-       domain,
-       "127.0.0.1",          // host_name
-       /*address*/NULL,       // keep NULL so your code skips avahi_address_snprint
-       3210,                  // port to match the fake HTTP server
-       /*txt*/NULL,           // no TXT → parse_txt loop is skipped
-       /*lookup flags*/(AvahiLookupResultFlags)0,
-       userdata);
-    return (AvahiServiceResolver*)0x1; // any non-null
-}
-
-void __wrap_avahi_service_resolver_free(AvahiServiceResolver *r) {
-    (void)r; // no-op
-}
-}
 
 struct FakeRegistry {
     std::atomic<int> resource_posts{0};
@@ -92,6 +58,7 @@ struct FakeRegistry {
                 } else if (method == "POST" &&
                            path.rfind("/x-nmos/registration/v1.3/health/nodes/", 0) == 0) {
                     heartbeats++; write_resp(fd, 200);
+                    std::cout << "Heartbeat received: " << heartbeats << "\n";
                 } else {
                     write_resp(fd, 404);
                 }
@@ -111,6 +78,12 @@ struct FakeRegistry {
 // A test double that inherits from NmosNode
 class TestableNmosNode : public NmosNode {
 public:
+    TestableNmosNode(const std::string& device_name = "Test Catena Device", const std::string& node_name = "Test Catena Node",
+          const std::string& device_desc = "A Test Catena example Node", const std::string& model_name = "Test Catena Model") : 
+      NmosNode(device_name, node_name, device_desc, model_name)
+    {
+        discoveryDuration = std::chrono::milliseconds(10);
+    };
     // inject fake network identity instead of calling get_node_iface()
     void set_network_identity(const std::string& ip,
                               const std::string& iface,
@@ -128,23 +101,24 @@ public:
     using NmosNode::make_node_json;
     using NmosNode::make_device_json;
     using NmosNode::random_uuid;
+    using NmosNode::stop_;
 
     // or a helper to register against a fake base
     bool register_against(const std::string& base,
                           std::chrono::milliseconds hb_interval = std::chrono::milliseconds(100),
                           const std::string& bearer = {}) {
-        std::string node_id = random_uuid();
-        std::string dev_id  = random_uuid();
+        node_id_ = random_uuid();
+        dev_id_  = random_uuid();
 
-        std::string node_json = make_node_json(node_id, 8080);
-        std::string dev_json  = make_device_json(dev_id, node_id, 8080);
+        std::string node_json = make_node_json(8080);
+        std::string dev_json  = make_device_json(8080);
 
         const std::string resource_url = base + "/resource";
         bool ok1 = http_post_json(resource_url, node_json, bearer);
         bool ok2 = http_post_json(resource_url, dev_json,  bearer);
 
-        std::thread hb([this, base, node_id, bearer, hb_interval] {
-            this->heartbeat_thread(base, node_id, bearer, hb_interval);
+        std::thread hb([this, base, bearer, hb_interval] {
+            this->heartbeat_thread(base, node_id_, bearer, hb_interval);
         });
             
         std::this_thread::sleep_for(hb_interval * 3);
@@ -155,19 +129,146 @@ public:
         return ok1 && ok2;
     }
 };
+class NmosNodeTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        g_avahi_test_control.reset();
+    }
 
-TEST(NmosNodeTest, RegistersAgainstNoRegistry) {
+    void TearDown() override {
+    }
+};
+
+
+TEST_F(NmosNodeTest, SimplePollCreationFail) {
+    TestableNmosNode node;
+    g_avahi_test_control.simple_poll_new_return = nullptr; // force failure
+    EXPECT_FALSE(node.init());
+}
+
+TEST_F(NmosNodeTest, ClientCreationInstanceFail) {
+    TestableNmosNode node;
+    g_avahi_test_control.client_new_return = nullptr; // force failure
+    EXPECT_FALSE(node.init());
+}
+
+TEST_F(NmosNodeTest, ClientCreationCbFail) {
+    TestableNmosNode node;
+    g_avahi_test_control.client_state = AVAHI_CLIENT_FAILURE; // force failure in callback
+    //verify poll quit
+    EXPECT_FALSE(node.init());
+}
+
+TEST_F(NmosNodeTest, BrowserCreationFail) {
+    TestableNmosNode node;
+    g_avahi_test_control.service_browser_new_return = nullptr; // normal
+    EXPECT_FALSE(node.init());
+}
+
+TEST_F(NmosNodeTest, SelectRegistryCandidateFailed) {
+    //by default the wrapped avahi functions will not have populated registry candidates list yet
+    //so init() should fail due to no candidates found during runDiscovery()
+    TestableNmosNode node;
+    EXPECT_FALSE(node.init());
+}
+
+TEST_F(NmosNodeTest, DiscoveredRegistryButNoIface) {
+    TestableNmosNode node;
+
+    g_avahi_test_control.discovered_service = true;
+    g_avahi_test_control.has_iface = false; // force get_node_iface() to fail
+    
+    EXPECT_FALSE(node.init());
+}
+
+TEST_F(NmosNodeTest, DiscoveredRegistryFailedRequests) {
+    TestableNmosNode node;
+
+    g_avahi_test_control.discovered_service = true;
+    g_avahi_test_control.has_iface = true;
+
+    EXPECT_FALSE(node.init());
+}
+
+TEST_F(NmosNodeTest, NmosNodeTest_DiscoveredRegistryBrowseFail) {
+    TestableNmosNode node;
+
+    g_avahi_test_control.discovered_service = true;
+    g_avahi_test_control.has_iface = true;
+    g_avahi_test_control.browse_event = AVAHI_BROWSER_FAILURE; // force browse failure
+
+    EXPECT_FALSE(node.init());
+}
+
+TEST_F(NmosNodeTest, DiscoveredRegistryNoHeartbeat) {
+    TestableNmosNode node;
+    FakeRegistry reg;
+    node.stop_.store(true); // prevent heartbeat thread from running
+
+    g_avahi_test_control.discovered_service = true;
+    g_avahi_test_control.has_iface = true;
+
+    ASSERT_TRUE(reg.start());
+    EXPECT_TRUE(node.init());
+
+    reg.stop_and_join();
+}
+
+TEST_F(NmosNodeTest, DiscoveredRegistryHeartbeat) {
+    TestableNmosNode node;
+    FakeRegistry reg;
+
+    g_avahi_test_control.discovered_service = true;
+    g_avahi_test_control.has_iface = true;
+
+    //start thread that kills heartbeat after a couple beats
+    std::thread killer([&]{
+        while (reg.heartbeats.load() < 2) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        node.stop_.store(true);
+         // stop heartbeat thread
+    });
+
+    ASSERT_TRUE(reg.start());
+    EXPECT_TRUE(node.init(std::chrono::milliseconds(20)));
+
+    node.stop_.store(true); // stop heartbeat thread
+    reg.stop_and_join();
+
+    if (killer.joinable()) killer.join();
+    EXPECT_GE(reg.heartbeats.load(), 2);
+}
+
+TEST_F(NmosNodeTest, AvahiBrowseWrongHost) {
+    // Start fake registry
+    FakeRegistry reg;
+    ASSERT_TRUE(reg.start());
+
+    // Prepare node (no Avahi daemon, set identity directly)
     TestableNmosNode node;
     node.set_network_identity("127.0.0.1", "lo", "aa-bb-cc-dd-ee-ff", "chassis-123");
 
-    const std::string base = "http://127.0.0.1:3210/x-nmos/registration/v1.3";
+    // Simulate Avahi browse NEW event (this calls avahi_service_resolver_new)
+    // Our --wrap immediately fires resolve_cb with host=127.0.0.1, port=3210
+    node.browse_cb(/*b*/nullptr,
+                   /*iface*/AVAHI_IF_UNSPEC,
+                   /*proto*/AVAHI_PROTO_UNSPEC,
+                   /*event*/AVAHI_BROWSER_NEW,
+                   /*name*/"reg-1",
+                   /*type*/"fake_nonexistant_type",
+                   /*domain*/"local",
+                   /*flags*/(AvahiLookupResultFlags)0,
+                   /*userdata*/&node);
 
-    // run against fake HTTP registry (httplib or your mock server)
-    bool ok = node.register_against(base);
-    EXPECT_FALSE(ok);
+    // Build base URL from discovered candidate
+    auto sel = node.choose_registry_and_build_base(8080);
+    ASSERT_FALSE(sel.has_value());
+
+    reg.stop_and_join();
 }
 
-TEST(NmosNodeTest, Avahi_BrowseThenResolve_ThenRegisterAndHeartbeat) {
+TEST_F(NmosNodeTest, AvahiBrowseThenResolveTrue) {
     // Start fake registry
     FakeRegistry reg;
     ASSERT_TRUE(reg.start());
@@ -201,3 +302,5 @@ TEST(NmosNodeTest, Avahi_BrowseThenResolve_ThenRegisterAndHeartbeat) {
 
     reg.stop_and_join();
 }
+
+

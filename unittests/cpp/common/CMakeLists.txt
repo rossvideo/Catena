@@ -58,8 +58,17 @@ endforeach()
 
 #special avahi linking for NmosNode_test
 target_link_options(common_NmosNode_test PRIVATE
+    -Wl,--wrap=avahi_client_errno
+    -Wl,--wrap=avahi_simple_poll_new
+    -Wl,--wrap=avahi_simple_poll_free
+    -Wl,--wrap=avahi_simple_poll_loop
+    -Wl,--wrap=avahi_simple_poll_quit
+    -Wl,--wrap=avahi_client_new
+    -Wl,--wrap=avahi_client_free
     -Wl,--wrap=avahi_service_resolver_new
     -Wl,--wrap=avahi_service_resolver_free
+    -Wl,--wrap=avahi_service_browser_new
+    -Wl,--wrap=avahi_service_browser_free
 )
 target_include_directories(common_NmosNode_test PUBLIC
     ${AVAHI_CLIENT_INCLUDE_DIRS}

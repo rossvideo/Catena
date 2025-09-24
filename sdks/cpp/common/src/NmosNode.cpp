@@ -74,50 +74,68 @@ bool NmosNode::init(std::chrono::milliseconds heartbeatInterval) {
     DEBUG_LOG << "Service browser created successfully.";
 
     // Run discovery for a short window (e.g., 2 seconds) then proceed
-    auto start = std::chrono::steady_clock::now();
-    std::thread loop_thr([&](){ avahi_simple_poll_loop(simple_poll_); });
-    while (std::chrono::steady_clock::now() - start < std::chrono::seconds(2)) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        if (stop_.load()) break;
-    }
-    avahi_simple_poll_quit(simple_poll_);
-    loop_thr.join();
+    runDiscovery();
 
     // Choose a registry
     auto sel = choose_registry_and_build_base(8080);
-    if (!sel) { LOG(ERROR) << "No registry discovered. Exiting.\n"; return false; }
-
-    const char* bearerChars = std::getenv("NMOS_BEARER");
-    std::string bearer = bearerChars ? std::string(bearerChars) : std::string();
-
-    // Compose minimal resources
-    std::string node_id = random_uuid();
-    std::string dev_id = random_uuid();
+    if (!sel) {
+        LOG(ERROR) << "No registry discovered. Exiting.\n";
+        return false;
+    }
 
     if (!get_node_iface(candidates_[0].addr)) return false;
 
-    json node_json = make_node_json(node_id, 8080);
-    json dev_json = make_device_json(dev_id, node_id, 8080);
-    std::string resource_url = sel->base + "/resource";
+    // Compose minimal resources
+    node_id_ = random_uuid();
+    dev_id_ = random_uuid();
 
-    // Register Node then Device (dependency order)
-    if (!http_post_json(resource_url, node_json, bearer)) {
-        LOG(ERROR) << "Failed to register Node\n";
-    }
-    if (!http_post_json(resource_url, dev_json, bearer)) {
-        LOG(ERROR) << "Failed to register Device\n";
+    //send jsons
+    if (!sendRequests(sel->base + "/resource", 8080)) {
+        LOG(ERROR) << "Failed to register resources. Exiting.\n";
+        return false;
     }
 
     // Start heartbeat loop
-    std::thread hb(&NmosNode::heartbeat_thread, this, sel->base, node_id, bearer, heartbeatInterval);
+    std::thread hb(&NmosNode::heartbeat_thread, this, sel->base, node_id_, bearer_token_, heartbeatInterval);
 
-    DEBUG_LOG << "Registered Node " << node_id << ". Heartbeating. Press Ctrl+C to exit.";
+    DEBUG_LOG << "Registered Node " << node_id_ << ". Heartbeating. Press Ctrl+C to exit.";
 
     // Wait for signal
     while (!stop_.load()) std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
     if (hb.joinable()) hb.join();
+                                                                                                                                                                                                                                                                       
+    return true;
+}
 
+void NmosNode::runDiscovery() {
+    auto start = std::chrono::steady_clock::now();
+    std::thread loop_thr([&](){ avahi_simple_poll_loop(simple_poll_); });
+    while (std::chrono::steady_clock::now() - start < discoveryDuration) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        if (stop_.load()) break;
+    }
+    avahi_simple_poll_quit(simple_poll_);
+    loop_thr.join();
+}
+
+bool NmosNode::sendRequests(std::string url, int node_port) {
+    json node_json = make_node_json(node_port);
+    json dev_json = make_device_json(node_port);
+
+    //create bearer tokens
+    const char* bearerChars = std::getenv("NMOS_BEARER");
+    bearer_token_ = bearerChars ? std::string(bearerChars) : std::string();
+
+    // Register Node then Device (dependency order)
+    if (!http_post_json(url, node_json, bearer_token_)) {
+        LOG(ERROR) << "Failed to register Node\n";
+        return false;
+    }
+    if (!http_post_json(url, dev_json, bearer_token_)) {
+        LOG(ERROR) << "Failed to register Device\n";
+        return false;
+    }
     return true;
 }
 
@@ -131,16 +149,6 @@ std::string NmosNode::now_is04_version() {
     return fmt("%lld:%09lld",
         (long long)secs.time_since_epoch().count(),
         (long long)ns);
-}
-
-std::string NmosNode::now_version_ts() {
-    using namespace std::chrono;
-    auto tp = system_clock::now();
-    auto s = time_point_cast<seconds>(tp);
-    auto t = system_clock::to_time_t(s);
-    char buf[32]{};
-    std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", std::gmtime(&t));
-    return buf;
 }
 
 std::string NmosNode::random_uuid() {
@@ -239,12 +247,12 @@ void NmosNode::parse_txt_into_candidate(AvahiStringList* txt, NmosNode::Registry
     }
 }
 
-std::string NmosNode::make_node_json(const std::string& node_id, int node_port) {
+std::string NmosNode::make_node_json(int node_port) {
     json node_json;
 
     node_json["type"] = "node";
     node_json["data"] = json::object();
-    node_json["data"]["id"] = node_id;
+    node_json["data"]["id"] = node_id_;
     node_json["data"]["version"] = now_is04_version();
     node_json["data"]["label"] = node_name_;
     node_json["data"]["description"] = device_desc_;
@@ -286,14 +294,14 @@ std::string NmosNode::make_node_json(const std::string& node_id, int node_port) 
 }
 
 // make_device_json: builds a minimal IS-04 Device object
-std::string NmosNode::make_device_json(const std::string& dev_id, const std::string& node_id, int node_port) {
+std::string NmosNode::make_device_json(int node_port) {
     json dev_json;
 
     dev_json["type"] = "device";
     dev_json["data"] = json::object();
-    dev_json["data"]["id"] = dev_id;
+    dev_json["data"]["id"] = dev_id_;
     dev_json["data"]["version"] = now_is04_version();
-    dev_json["data"]["node_id"] = node_id;
+    dev_json["data"]["node_id"] = node_id_;
     dev_json["data"]["label"] = device_name_;
     dev_json["data"]["description"] = device_desc_;
     dev_json["data"]["type"] = "urn:x-nmos:device:generic";

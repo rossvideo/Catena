@@ -148,9 +148,11 @@ class NmosNode : public INmosNode {
     AvahiClient* getClient() { return client_; }
 
   protected:
-    static std::string now_is04_version();
+    void runDiscovery() override;
 
-    static std::string now_version_ts();
+    bool sendRequests(std::string url, int node_port) override;
+
+    static std::string now_is04_version();
 
     static std::string random_uuid();
 
@@ -160,9 +162,9 @@ class NmosNode : public INmosNode {
 
     static void parse_txt_into_candidate(AvahiStringList* txt, RegistryCandidate& c);
 
-    std::string make_node_json(const std::string& node_id, int node_port) override;
+    std::string make_node_json(int node_port) override;
 
-    std::string make_device_json(const std::string& dev_id, const std::string& node_id, int node_port) override;
+    std::string make_device_json(int node_port) override;
 
     static void resolve_cb(
         AvahiServiceResolver *r,
@@ -210,6 +212,10 @@ class NmosNode : public INmosNode {
     std::string node_name_;
     std::string device_desc_;
     std::string model_name_;
+    std::string node_id_;
+    std::string dev_id_;
+    std::string bearer_token_;
+    std::chrono::milliseconds discoveryDuration = std::chrono::seconds(2);
 };
 
 } // namespace common

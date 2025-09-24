@@ -98,26 +98,30 @@ class INmosNode {
      */
     virtual ~INmosNode() = default;
 
-    virtual bool init(std::chrono::milliseconds heartbeatInterval) = 0;
+    virtual bool init(std::chrono::milliseconds) = 0;
 
     virtual AvahiSimplePoll* getPoll() = 0;
 
-    virtual void addCandidate(RegistryCandidate&& c) = 0;
+    virtual void addCandidate(RegistryCandidate&&) = 0;
 
     virtual std::vector<RegistryCandidate> getCandidates() = 0;
 
     virtual AvahiClient* getClient() = 0;
 
-    virtual bool get_node_iface(const std::string& reg_addr) = 0;
+    virtual bool get_node_iface(const std::string&) = 0;
 
-    virtual std::string make_node_json(const std::string& node_id, int node_port) = 0;
+    virtual std::string make_node_json(int) = 0;
 
-    virtual std::string make_device_json(const std::string& dev_id, const std::string& node_id, int node_port) = 0;
+    virtual std::string make_device_json(int) = 0;
 
   protected:
-    virtual std::optional<RegistrySelection> choose_registry_and_build_base(int node_port) = 0;
+    virtual void runDiscovery() = 0;
+
+    virtual bool sendRequests(std::string, int) = 0;
+
+    virtual std::optional<RegistrySelection> choose_registry_and_build_base(int) = 0;
     
-    virtual void heartbeat_thread(std::string base, std::string node_id, std::string bearer, std::chrono::milliseconds interval) = 0;
+    virtual void heartbeat_thread(std::string base, std::string, std::string, std::chrono::milliseconds) = 0;
 };
 
 } // namespace common
