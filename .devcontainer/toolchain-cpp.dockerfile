@@ -12,11 +12,12 @@ COPY toolchain-cpp.env /root/toolchain.env
 
 # Source the toolchain.env file
 RUN . /root/toolchain.env \
-    && apt-get update && apt-get install --no-install-recommends -y \
-    build-essential sudo \
+    && apt-get update \
+    && apt-get install --no-install-recommends -y \
+    build-essential \
+    sudo \
     cmake=$CMAKE_VERSION \
-    nodejs=$NODEJS_VERSION \
-    npm git \
+    git \
     libssl-dev=$OPENSSL_VERSION \
     doxygen=$DOXYGEN_VERSION \
     graphviz=$GRAPHVIZ_VERSION \
@@ -28,6 +29,12 @@ RUN . /root/toolchain.env \
     gdb=$GNU_DEBUGGER_VERSION \
     valgrind=$VALGRIND_VERSION \
     curl=$CURL_VERSION \
+    ca-certificates \
+    && curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x -o /tmp/nodesource_setup.sh \
+    && cat /tmp/nodesource_setup.sh \
+    && bash /tmp/nodesource_setup.sh \
+    && apt-get install -y nodejs \
+    && rm -f /tmp/nodesource_setup.sh \
     && npm install -g n \
     && apt-get install -y libgoogle-glog-dev \
     && apt-get clean \
@@ -80,3 +87,5 @@ RUN apt-get update && apt-get install --no-install-recommends -y python3-pip \
 COPY smpte/install-tooling.sh /root/smpte/install-tooling.sh
 RUN cd /root/smpte \
     && ./install-tooling.sh
+
+USER ubuntu
