@@ -267,6 +267,11 @@ std::unique_ptr<IParam> Device::getParam(catena::common::Path& path, catena::exc
         return nullptr;
     }
     if (path.front_is_string()) {
+        /**
+         * Top level param objects are defined in the device models generated cpp body file and exist for the lifetime of 
+         * the program. The device has a map of pointers to these params. These are not unique pointers because the 
+         * lifetime of the top level params does not need to be managed.
+         */
         IParam* param = getItem<common::ParamTag>(path.front_as_string());
         if (!param) {
             status = catena::exception_with_status("Param " + path.fqoid() + " does not exist", catena::StatusCode::NOT_FOUND);

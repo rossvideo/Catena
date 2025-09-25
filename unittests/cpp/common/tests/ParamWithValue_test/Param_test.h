@@ -51,9 +51,6 @@
 // gtest
 #include <gtest/gtest.h>
 
-// std
-#include <unordered_map>
-
 using namespace catena::common;
 
 template <typename T>
@@ -98,8 +95,6 @@ class ParamTest : public ::testing::Test {
             EXPECT_CALL(*pd, max_length()).WillRepeatedly(testing::Return(1000));
             EXPECT_CALL(*pd, total_length()).WillRepeatedly(testing::Return(1000));
             EXPECT_CALL(*pd, type()).WillRepeatedly(testing::Return(type()));
-            // For scalar parameters, return empty sub-parameters map
-            EXPECT_CALL(*pd, getAllSubParams()).WillRepeatedly(testing::ReturnRef(emptySubParams_));
             EXPECT_CALL(*pd, toProto(testing::An<st2138::Param&>(), testing::_))
                 .WillRepeatedly(testing::Invoke([this](st2138::Param& p, const IAuthorizer&) {
                     p.set_template_oid(oid_);
@@ -158,6 +153,4 @@ class ParamTest : public ::testing::Test {
 
     catena::exception_with_status rc_{"", catena::StatusCode::OK};
     std::string oid_ = "test_oid";
-    // Empty sub-parameters map for scalar parameters
-    std::unordered_map<std::string, IParamDescriptor*> emptySubParams_;
 };

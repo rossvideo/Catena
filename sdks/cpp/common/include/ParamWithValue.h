@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,7 +36,7 @@
  * @author John R. Naylor
  * @author John Danen
  * @date 2024-08-20
- * @copyright Copyright (c) 2024 Ross Video
+ * @copyright Copyright (c) 2025 Ross Video
  */
 
 // common
@@ -506,13 +506,11 @@ class ParamWithValue : public catena::common::IParam {
         const auto& subParams = descriptor_.getAllSubParams();
         if (!subParams.empty()) {
             status = catena::exception_with_status("DESCRIPTOR_NAVIGATION_NEEDED", catena::StatusCode::UNIMPLEMENTED);
-            return nullptr;
         }
         
         if (descriptor_.hasTemplateOid()) {
             const std::string& templateOid = descriptor_.templateOid();
             status = catena::exception_with_status("TEMPLATE_NAVIGATION_NEEDED:" + templateOid, catena::StatusCode::UNIMPLEMENTED);
-            return nullptr;
         }
         
         status = catena::exception_with_status("No sub-params for this generic type", catena::StatusCode::INVALID_ARGUMENT);
