@@ -1,3 +1,4 @@
+
 /*Copyright 2024 Ross Video Ltd
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -401,13 +402,7 @@ class Param {
    */
   initializeValue() {
     if (!this.hasValue()) {
-      if (this.hasTypeInfo()) {
-        return `${this.objectType()} ${this.oid}{};`;
-      } else if (this.isTemplated() && this.template_param.hasTypeInfo()) {
-        return `${this.objectType()} ${this.oid}{};`;
-      } else {
-        return `${this.objectType()} ${this.oid};`;
-      }
+      return `${this.objectType()} ${this.oid};`;
     }
     let param = this.template_param || this;
     return `${this.objectType()} ${this.oid}${this.valueInitializer(this.value, this.type, param)};`;
@@ -523,9 +518,6 @@ class Param {
    */
   initializeParamWithValue() {
     if (!this.isCommand && this.hasValue())  {
-      return `catena::common::ParamWithValue<${this.objectNamespaceType()}> ` +
-           `_${this.oid}Param(${this.oid}, _${this.oid}Descriptor, dm, ${this.isCommand});`;
-    } else if (!this.isCommand && (this.hasTypeInfo() || (this.isTemplated() && this.template_param.hasTypeInfo()))) {
       return `catena::common::ParamWithValue<${this.objectNamespaceType()}> ` +
            `_${this.oid}Param(${this.oid}, _${this.oid}Descriptor, dm, ${this.isCommand});`;
     } else {

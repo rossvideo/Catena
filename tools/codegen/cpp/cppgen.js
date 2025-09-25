@@ -279,7 +279,7 @@ class CppGen {
         this.writeTypeInfo(param);
       }
       // write param initial value
-      if (param.hasValue() || param.hasTypeInfo() || (param.isTemplated() && param.template_param.hasTypeInfo())) {
+      if (param.hasValue()) {
         bloc(param.initializeValue());
       }
       // write param descriptors
