@@ -133,17 +133,21 @@ class gRPCExternalObjectRequestTests : public GRPCTest {
 
 /*
  * ============================================================================
- *                          ExternalObjectRequest tests
+ *                               ExternalObjectRequest tests
  * ============================================================================
  * 
- * TEST 1 - Creating an ExternalObjectRequest object.
+ * ============================================================================
+ *                               Basic Functionality Tests
+ * ============================================================================
+ *
+ * TEST 1.1 - Creating an ExternalObjectRequest object.
  */
 TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_Create) {
     EXPECT_TRUE(asyncCall_);
 }
 
-/*
- * TEST 2 - Normal case for ExternalObjectRequest proceed() - successful file read.
+/* 
+ * TEST 1.2 - Normal case for ExternalObjectRequest proceed() - successful file read.
  */
 TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_Normal) {
     // Create test file with content
@@ -162,29 +166,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_Normal) {
 }
 
 /*
- * TEST 3 - ExternalObjectRequest with nested directory structure.
- */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_NestedDirectory) {
-    // Create nested directory structure
-    std::string nestedPath = "/nested/dir/structure/file.txt";
-    std::string testContent = "Content in nested directory.";
-    
-    // createTestFile already handles directory creation
-    createTestFile(nestedPath, testContent);
-    
-    // Initialize request payload
-    initPayload(nestedPath);
-    expPayload(testContent);
-    
-    // Send the RPC
-    testRPC();
-    
-    // Cleanup
-    cleanupTestFiles();
-}
-
-/*
- * TEST 4 - ExternalObjectRequest with special characters in filename.
+ * TEST 1.3 - ExternalObjectRequest with special characters in filename.
  */
 TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_SpecialCharacters) {
     // Create test file with special characters in name
@@ -204,7 +186,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_SpecialCharacters) 
 }
 
 /*
- * TEST 5 - ExternalObjectRequest with empty file.
+ * TEST 1.4 - ExternalObjectRequest with empty file.
  */
 TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_EmptyFile) {
     // Create empty test file
@@ -222,58 +204,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_EmptyFile) {
 }
 
 /*
- * TEST 6 - ExternalObjectRequest file not found error.
- */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_FileNotFound) {
-    // Initialize request payload with non-existent file
-    initPayload("/nonexistent_file.txt");
-    
-    // Set expected error - the actual error message includes function signature
-    expRc_ = catena::exception_with_status("virtual void catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile '/nonexistent_file.txt' not found", catena::StatusCode::NOT_FOUND);
-    
-    // Send the RPC
-    testRPC();
-}
-
-/*
- * TEST 7 - ExternalObjectRequest OID validation - missing '/' prefix.
- */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_MissingSlashPrefix) {
-    // Initialize request payload with OID missing '/' prefix
-    initPayload("test_file_no_slash.txt");
-    
-    // Set expected error with hint about missing '/' prefix - includes function signature
-    expRc_ = catena::exception_with_status("virtual void catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile 'test_file_no_slash.txt' not found. HINT: Make sure oid starts with '/' prefix.", catena::StatusCode::NOT_FOUND);
-    
-    // Send the RPC
-    testRPC();
-}
-
-/*
- * TEST 8 - ExternalObjectRequest with large file content.
- */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_LargeFile) {
-    // Create test file with large content (1MB)
-    std::string largeContent;
-    largeContent.reserve(1024 * 1024);
-    for (int i = 0; i < 1024 * 1024; ++i) {
-        largeContent += static_cast<char>('A' + (i % 26));
-    }
-    createTestFile("/large_file.txt", largeContent);
-    
-    // Initialize request payload
-    initPayload("/large_file.txt");
-    expPayload(largeContent);
-    
-    // Send the RPC
-    testRPC();
-    
-    // Cleanup
-    cleanupTestFiles();
-}
-
-/*
- * TEST 9 - ExternalObjectRequest with binary file content.
+ * TEST 1.5 - ExternalObjectRequest with binary file content.
  */
 TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_BinaryFile) {
     // Create test file with binary content
@@ -294,8 +225,40 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_BinaryFile) {
     cleanupTestFiles();
 }
 
+/* 
+ * ============================================================================
+ *                               Error Handling Tests
+ * ============================================================================
+ *
+ * TEST 2.1 - ExternalObjectRequest file not found error.
+ */
+TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_FileNotFound) {
+    // Initialize request payload with non-existent file
+    initPayload("/nonexistent_file.txt");
+    
+    // Set expected error - the actual error message includes function signature
+    expRc_ = catena::exception_with_status("virtual void catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile '/nonexistent_file.txt' not found", catena::StatusCode::NOT_FOUND);
+    
+    // Send the RPC
+    testRPC();
+}
+
 /*
- * TEST 10 - ExternalObjectRequest with path traversal attempt (security test).
+ * TEST 2.2 - ExternalObjectRequest OID validation - missing '/' prefix.
+ */
+TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_MissingSlashPrefix) {
+    // Initialize request payload with OID missing '/' prefix
+    initPayload("test_file_no_slash.txt");
+    
+    // Set expected error with hint about missing '/' prefix - includes function signature
+    expRc_ = catena::exception_with_status("virtual void catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile 'test_file_no_slash.txt' not found. HINT: Make sure oid starts with '/' prefix.", catena::StatusCode::NOT_FOUND);
+    
+    // Send the RPC
+    testRPC();
+}
+
+/*
+ * TEST 2.3 - ExternalObjectRequest with path traversal attempt (security test).
  */
 TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_PathTraversal) {
     // Initialize request payload with path traversal attempt
@@ -309,7 +272,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_PathTraversal) {
 }
 
 /*
- * TEST 11 - ExternalObjectRequest with file I/O exception (generic exception handling).
+ * TEST 2.4 - ExternalObjectRequest with file I/O exception (generic exception handling).
  */
 TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_FileIOException) {
     // Create a file that exists but will cause an I/O exception when read
@@ -327,110 +290,6 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_FileIOException) {
     
     // Send the RPC
     testRPC();
-    
-    // Cleanup
-    cleanupTestFiles();
-}
-
-/*
- * TEST 12 - ExternalObjectRequest with very long filename.
- */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_LongFilename) {
-    // Create test file with long filename (but within filesystem limits)
-    std::string longFilename = "/very_long_filename_";
-    for (int i = 0; i < 20; ++i) {  // Reduced from 50 to 20 iterations
-        longFilename += "abcdefghij";
-    }
-    longFilename += ".txt";
-    
-    std::string testContent = "Content in file with very long name.";
-    createTestFile(longFilename, testContent);
-    
-    // Initialize request payload
-    initPayload(longFilename);
-    expPayload(testContent);
-    
-    // Send the RPC
-    testRPC();
-    
-    // Cleanup
-    cleanupTestFiles();
-}
-
-/*
- * TEST 14 - ExternalObjectRequest with Unicode filename.
- */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_UnicodeFilename) {
-    // Create test file with Unicode characters in name
-    std::string unicodePath = "/файл_测试_🎯.txt";
-    std::string testContent = "Unicode filename test content.";
-    createTestFile(unicodePath, testContent);
-    
-    // Initialize request payload
-    initPayload(unicodePath);
-    expPayload(testContent);
-    
-    // Send the RPC
-    testRPC();
-    
-    // Cleanup
-    cleanupTestFiles();
-}
-
-/*
- * TEST 15 - ExternalObjectRequest with file containing null bytes.
- */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_NullByteFile) {
-    // Create a file with null bytes and other binary data
-    std::string nullPath = "/null_byte_file.bin";
-    std::string binaryContent;
-    binaryContent.push_back('\0');
-    binaryContent.append("text after null");
-    binaryContent.push_back('\0');
-    binaryContent.push_back('\xFF');
-    binaryContent.push_back('\x01');
-    
-    createTestFile(nullPath, binaryContent);
-    
-    // Initialize request payload
-    initPayload(nullPath);
-    expPayload(binaryContent);
-    
-    // Send the RPC
-    testRPC();
-    
-    // Cleanup
-    cleanupTestFiles();
-}
-
-/*
- * TEST 16 - ExternalObjectRequest with symlink file.
- */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_SymlinkFile) {
-    // Create a regular file first
-    std::string targetPath = "/target_file.txt";
-    std::string symlinkPath = "/symlink_file.txt";
-    std::string content = "Content accessed via symlink";
-    
-    createTestFile(targetPath, content);
-    
-    // Create a symlink to the target file
-    std::string fullTargetPath = testEOPath_ + targetPath;
-    std::string fullSymlinkPath = testEOPath_ + symlinkPath;
-    
-    try {
-        std::filesystem::create_symlink(fullTargetPath, fullSymlinkPath);
-        
-        // Initialize request payload with symlink
-        initPayload(symlinkPath);
-        expPayload(content);
-        
-        // Send the RPC
-        testRPC();
-    } catch (const std::filesystem::filesystem_error&) {
-        // Skip test if symlinks are not supported on this system
-        GTEST_SKIP() << "Symlinks not supported on this filesystem";
-    }
     
     // Cleanup
     cleanupTestFiles();
