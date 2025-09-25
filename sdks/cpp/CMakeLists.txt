@@ -8,311 +8,135 @@
 #
 # 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
 # INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
 # INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 #
+# Catena C++ SDK Main CMake Configuration
+# 
+# This is the main CMake file for the Catena C++ SDK. It orchestrates the build process
+# by including modular configuration files and setting up the build environment.
 #
-# cmake build file for C++ SDKs and examples.
+# Usage:
+#   cmake -DCONNECTIONS="gRPC;REST" -DCMAKE_BUILD_TYPE=Release <source_dir>
 #
-# Assumes protobuf and gRPC have been installed using cmake.
-# See here for the quickstart guide to do this:
-#
-#  https://grpc.io/docs/languages/cpp/quickstart/
-#
+# Key Options:
+#   - CONNECTIONS: List of connection types to enable (gRPC, REST)  
+#   - UNIT_TESTING: Enable/disable unit tests (default: ON)
+#   - ONLY_DOCS: Build only documentation (default: OFF)
 #
 
 cmake_minimum_required(VERSION 3.20)
-set(CMAKE_OSX_DEPLOYMENT_TARGET "14.5" CACHE STRING "Minimum OS X deployment version")
 
+# Project declaration
 project(Catena_cpp VERSION 0.0.1 LANGUAGES C CXX)
 
-# set up the CATENA_CPP_ROOT_DIR variable for use in the rest of the build
-get_filename_component(CATENA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.. ABSOLUTE)
-set(CATENA_CPP_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+# Add cmake modules to path
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-find_package(glog REQUIRED)
+#
+# Phase 1: Project Configuration
+#
+include(ProjectConfig)
+configure_catena_project()
 
-# Set default log directory if not provided
-if(NOT DEFINED GLOG_LOGGING_DIR)
-    set(GLOG_LOGGING_DIR "${CATENA_ROOT_DIR}/logs")
+# Early exit for documentation-only builds
+if(ONLY_DOCS)
+    include(${CATENA_CPP_ROOT_DIR}/CatenaFunctions.cmake)
+    build_docs()
+    return()
 endif()
 
-# If logs dir doesn't exist, create it
-if(NOT EXISTS "${GLOG_LOGGING_DIR}")
-    file(MAKE_DIRECTORY "${GLOG_LOGGING_DIR}")
-endif()
-message(STATUS "Using glog logging directory: ${GLOG_LOGGING_DIR}")
+#
+# Phase 2: Platform and Compiler Setup  
+#
+include(PlatformConfig)
+setup_platform_config()
+setup_compiler_config()
 
-# Add the glog logging directory to the compile definitions
-add_compile_definitions(GLOG_LOGGING_DIR="${GLOG_LOGGING_DIR}")
+#
+# Phase 3: External Dependencies
+#
+include(ExternalDependencies)
 
-# Check if npm did its Installs 
+#
+# Phase 4: Connection Type Configuration
+#
+# Include core functions first (needed by connection setup)
+include(CatenaFunctions)
+# Now include connection-specific setup
+include(ConnectionTypes)
 
+#
+# Phase 5: Core Build Functions
+#
+# (CatenaFunctions.cmake already included in Phase 4)
 
-# Add custom targets to run npm install in tools and smpte/tools only if package.json changes
-find_program(NPM_EXECUTABLE npm REQUIRED)
-
-# tools npm install
-add_custom_command(
-  OUTPUT ${CATENA_ROOT_DIR}/tools/node_modules.stamp
-  COMMAND ${NPM_EXECUTABLE} install --yes
-  COMMAND ${CMAKE_COMMAND} -E touch ${CATENA_ROOT_DIR}/tools/node_modules.stamp
-  WORKING_DIRECTORY ${CATENA_ROOT_DIR}/tools
-  DEPENDS ${CATENA_ROOT_DIR}/tools/codegen/package.json
-  COMMENT "Running npm install in tools directory if package.json changed"
-)
-add_custom_target(npm_tools ALL DEPENDS ${CATENA_ROOT_DIR}/tools/node_modules.stamp)
-
-# smpte/tools npm install
-add_custom_command(
-  OUTPUT ${CATENA_ROOT_DIR}/tools/smpte_node_modules.stamp
-  COMMAND ${NPM_EXECUTABLE} install --yes
-  COMMAND ${CMAKE_COMMAND} -E touch ${CATENA_ROOT_DIR}/tools/smpte_node_modules.stamp
-  WORKING_DIRECTORY ${CATENA_ROOT_DIR}/smpte/tools
-  DEPENDS ${CATENA_ROOT_DIR}/smpte/tools/package.json
-  COMMENT "Running npm install in smpte/tools directory if package.json changed"
-)
-add_custom_target(npm_smpte_tools ALL DEPENDS ${CATENA_ROOT_DIR}/tools/smpte_node_modules.stamp)
-
-
-# Ensure openapi.yaml exists, generate if missing
-add_custom_command(
-  OUTPUT ${CATENA_ROOT_DIR}/smpte/interface/openapi.yaml
-  COMMAND ${CATENA_ROOT_DIR}/smpte/build-openapi.sh
-  WORKING_DIRECTORY ${CATENA_ROOT_DIR}/smpte
-  COMMENT "Generating openapi.yaml if missing"
-)
-
-# run build_openapi.sh if openapi.yaml changes
-file(GLOB INTERFACE_FILES "${CATENA_ROOT_DIR}/smpte/interface/*")
-add_custom_command(
-  OUTPUT ${CATENA_ROOT_DIR}/tools/openapi.stamp
-  COMMAND ${CATENA_ROOT_DIR}/smpte/build-openapi.sh
-  COMMAND ${CMAKE_COMMAND} -E touch ${CATENA_ROOT_DIR}/tools/openapi.stamp
-  WORKING_DIRECTORY ${CATENA_ROOT_DIR}/smpte
-  DEPENDS ${CATENA_ROOT_DIR}/smpte/interface/openapi.yaml
-  DEPENDS ${CATENA_ROOT_DIR}/tools/smpte_node_modules.stamp
-  DEPENDS ${INTERFACE_FILES}
-  COMMENT "Running build-openapi.sh if openapi.yaml changed"
-)
-add_custom_target(build_openapi ALL DEPENDS ${CATENA_ROOT_DIR}/tools/openapi.stamp)
-
-
-# Set the default max number of connections
-set(DEFAULT_MAX_CONNECTIONS 16 CACHE STRING "Default max connections")
-add_compile_definitions(DEFAULT_MAX_CONNECTIONS=${DEFAULT_MAX_CONNECTIONS})
-
-add_compile_options(--coverage)
-add_link_options(--coverage)
-
-option(UNIT_TESTING "Build the unit tests" ON)
-
-# enable testing
-enable_testing()
-
-# set up the CATENA_CPP_VERSION and CATENA_CPP_TIMESTAMP variables for use
-# in the rest of the build.
-# The format of the version string is "cpp-vX.Y.Z-0-<timestamp>"
-# We want to extract the version number and the timestamp.
-file(READ ${CATENA_CPP_ROOT_DIR}/VERSION.txt VERSION_STRING)
-string(STRIP ${VERSION_STRING} VERSION_STRING) # strip any whitespace
-string(FIND "${VERSION_STRING}" "-" SPLIT_AT REVERSE)
-string(SUBSTRING "${VERSION_STRING}" 0 ${SPLIT_AT} CATENA_CPP_VERSION)
-math(EXPR TIMESTAMP_START "${SPLIT_AT} + 1")
-string(SUBSTRING "${VERSION_STRING}" ${TIMESTAMP_START} -1 CATENA_CPP_TIMESTAMP)
-add_compile_definitions(CATENA_CPP_VERSION=${CATENA_CPP_VERSION})
-message(STATUS "Catena C++ SDK version: ${CATENA_CPP_VERSION}")
-message(STATUS "Catena C++ SDK timestamp: ${CATENA_CPP_TIMESTAMP}")
-
-# pull in Catena build functions
-include(${CATENA_CPP_ROOT_DIR}/CatenaFunctions.cmake)
-
-# if only building the documentation, then do that and return
-option(ONLY_DOCS "Only build the documentation" OFF)
-if (ONLY_DOCS)
-  build_docs()
-  return()
-endif(ONLY_DOCS)
-
-option(DOCKER "Build Docker Images of various services, only works on Linux" OFF)
-# force DOCKER option to be off, if we're not running on Linux
-if (NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  if(DOCKER)
-    message(WARNING "Docker option only works on Linux, forcing off")
-  endif(DOCKER)
-  set(DOCKER OFF)
-endif (NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
-
-get_filename_component(CODEGEN_DIR "${CATENA_ROOT_DIR}/tools/codegen" ABSOLUTE) 
-get_filename_component(SCHEMA_LOCATION "${CATENA_ROOT_DIR}/smpte/interface/schemata" ABSOLUTE)
-
-# install node modules if it hasn't been done yet
-if(NOT EXISTS "${CODEGEN_DIR}/node_modules")
-  find_program(NPM npm REQUIRED)
-  message(STATUS "Installing Catena codegen node modules")
-  message("codegen_dir: ${CODEGEN_DIR}")
-  execute_process(
-      COMMAND ${NPM} install
-      WORKING_DIRECTORY "${CODEGEN_DIR}"
-  )
-endif()
-
-# Set these variable globally so that they are available when catena is attached as a submodule
-set(CATENA_CODEGEN "${CODEGEN_DIR}" CACHE STRING "Path to Catena codegen tools" FORCE)
-set(CATENA_SCHEMA "${SCHEMA_LOCATION}" CACHE STRING "Path to Catena schema file" FORCE)
-
-# export compile_commands.json
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-# Define standard installation directories for the target system
-include(GNUInstallDirs)
-
-if (APPLE)
-  # set up for MacOS
-  set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
-  set(CMAKE_OSX_FRAMEWORK_PATH "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
-  set(GRPC_LIB_CMAKE "$ENV{HOME}/.local/lib/cmake")
-  set(CMAKE_PREFIX_PATH "${GRPC_LIB_CMAKE}/protobuf;${GRPC_LIB_CMAKE}/grpc;${GRPC_LIB_CMAKE}/grpc/modules;${GRPC_LIB_CMAKE}/absl;${GRPC_LIB_CMAKE}/utf8_range")
-
-  set(CPP_OPTS -E -x c -P)
-endif (APPLE)
-
-# was in if(APPLE) moved here to troublshoot build failure on Ubuntu VM
-include_directories("$ENV{HOME}/.local/include")
-
-# find the c preprocessor and set the options to use with it
-if (APPLE)
-  set(CPP clang)
-
-  # clang complains (a lot!) about braced scalar initialization, so disable that warning
-  add_compile_options(-Wno-braced-scalar-init)
-
-  set(cpp_opts -E -P -x c)
-else()
-  find_program(CPP cpp)
-  set(cpp_opts -P -C)
-endif(APPLE)
-if (NOT CPP)
-  message(FATAL_ERROR "CPP not set")
-else()
-  message(STATUS "CPP = ${CPP}")
-endif()
-
-# Check for invalid connection types
-set(ALLOWED_CONNECTIONS "gRPC;REST")
-foreach(conn ${CONNECTIONS})
-  list(FIND ALLOWED_CONNECTIONS "${conn}" _IDX)
-  if(${_IDX} EQUAL -1)
-    message(FATAL_ERROR "Error: '${conn}' is not a valid connection type. Allowed types are ${ALLOWED_CONNECTIONS}.")
-  endif()
-endforeach()
-
-# create enabled flags for gRPC, REST and WSS to indicate which connections are enabled
-message(STATUS "Connections: ${CONNECTIONS}")
-list(FIND CONNECTIONS "gRPC" _gRPC)
-list(FIND CONNECTIONS "REST" _REST)
-list(FIND CONNECTIONS "WSS" _WSS)
-if (${_gRPC} GREATER -1)
-  message(STATUS "gRPC connection enabled")
-  set(gRPC_enabled TRUE)
-endif()
-if (${_REST} GREATER -1)
-  message(STATUS "REST connection enabled")
-  set(REST_enabled TRUE)
-endif()
-if (${_WSS} GREATER -1)
-  message(STATUS "WSS connection enabled")
-  set(WSS_enabled TRUE)
-endif()
-
-# Check that at least one connection type is specified
-if (NOT (gRPC_enabled OR REST_enabled OR WSS_enabled))
-  message(ERROR "Error: At least one connection type must be specified.")
-  return()
-endif()
-
-# find the protobuf package; needed by all connection types
-set(protobuf_MODULE_COMPATIBLE TRUE)
-find_package(Protobuf CONFIG REQUIRED)
-message(STATUS "Using protobuf ${Protobuf_VERSION}")
-
-# Locate the input proto files
-set (relative_interface "../../smpte/interface/proto/")
-cmake_path(ABSOLUTE_PATH relative_interface OUTPUT_VARIABLE interface)
-cmake_path(SET catena_interface_dir NORMALIZE ${interface})
-
-# this is the list of proto files to convert to implementations in
-# various languages
-set(interface_proto_stems 
-  "language"
-  "param"
-  "externalobject"
-  "constraint"
-  "device"
-  "menu"
-)
-
-# conditionally set up the gRPC targets
-if (gRPC_enabled)
-  include(${CATENA_CPP_ROOT_DIR}/gRPC.cmake)
-  set_up_gRPC_targets()
-endif(gRPC_enabled)
-
-# conditionally set up the REST targets
-if (REST_enabled)
-  include(${CATENA_CPP_ROOT_DIR}/proto_interface.cmake)
-  set_up_proto_targets()
-endif(REST_enabled)
-
-# add the common and connections directories
+#
+# Phase 6: Build Core Libraries and Components
+#
 add_subdirectory("common")
 add_subdirectory("connections")
 
-
 #
+# Phase 7: Package and Installation Setup
 #
-# Package and install the Catena C++ SDK
-
 include(${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
 install_catena_codegen()
 
+# Define standard installation directories
+include(GNUInstallDirs)
+
+# Export targets
 install(
-  EXPORT Catena_cppTargets
-  FILE Catena_cppTargets.cmake
-  NAMESPACE Catena_cpp::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
+    EXPORT Catena_cppTargets
+    FILE Catena_cppTargets.cmake
+    NAMESPACE Catena_cpp::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
 )
 
+# Package configuration
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/Catena_cppConfig.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfig.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
-  PATH_VARS CATENA_SCHEMA_JSON CATENA_CODEGEN_INSTALL_DIR
+    ${CMAKE_CURRENT_SOURCE_DIR}/Catena_cppConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
+    PATH_VARS CATENA_SCHEMA_JSON CATENA_CODEGEN_INSTALL_DIR
 )
 
 write_basic_package_version_file(
-  ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfigVersion.cmake
-  VERSION ${PROJECT_VERSION}
-  COMPATIBILITY AnyNewerVersion
+    ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
 )
 
 install(
-  FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfig.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfigVersion.cmake
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
+    FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
 )
 
 #
+# Phase 8: Documentation and Testing
 #
-# Build the documentation with Doxygen
 build_docs()
 
-if (UNIT_TESTING)
-  set(CATENA_UNITTESTS_DIR ${CMAKE_SOURCE_DIR}/../../unittests)
-  add_compile_definitions(CATENA_UNITTESTS_DIR="${CATENA_UNITTESTS_DIR}")
-  add_subdirectory("${CATENA_UNITTESTS_DIR}/cpp/" ${CMAKE_SOURCE_DIR}/../../$ENV{BUILD_TARGET}/unittests/)
-endif (UNIT_TESTING)
+if(UNIT_TESTING)
+    set(CATENA_UNITTESTS_DIR ${CMAKE_SOURCE_DIR}/../../unittests)
+    add_compile_definitions(CATENA_UNITTESTS_DIR="${CATENA_UNITTESTS_DIR}")
+    add_subdirectory("${CATENA_UNITTESTS_DIR}/cpp/" ${CMAKE_SOURCE_DIR}/../../$ENV{BUILD_TARGET}/unittests/)
+endif()
+
+#
+# Build Summary
+#
+message(STATUS "========================================")
+message(STATUS "Catena C++ SDK Build Configuration:")
+message(STATUS "  Version: ${CATENA_CPP_VERSION}")
+message(STATUS "  Connections: ${CONNECTIONS}")
+message(STATUS "  Unit Testing: ${UNIT_TESTING}")
+message(STATUS "  Platform: ${CMAKE_SYSTEM_NAME}")
+message(STATUS "========================================")

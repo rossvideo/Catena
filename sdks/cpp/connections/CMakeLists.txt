@@ -29,8 +29,3 @@ endif()
 if (REST_enabled)
     add_subdirectory("REST")
 endif()
-
-# optionally make docker images
-if (DOCKER)
-  add_subdirectory("docker")
-endif()
