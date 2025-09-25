@@ -125,9 +125,12 @@ install(
 build_docs()
 
 if(UNIT_TESTING)
+    enable_testing()
     set(CATENA_UNITTESTS_DIR ${CMAKE_SOURCE_DIR}/../../unittests)
+    message(STATUS "Adding unittests from: ${CATENA_UNITTESTS_DIR}/cpp/")
+    message(STATUS "Binary dir for unittests: ${CMAKE_BINARY_DIR}/unittests/")
     add_compile_definitions(CATENA_UNITTESTS_DIR="${CATENA_UNITTESTS_DIR}")
-    add_subdirectory("${CATENA_UNITTESTS_DIR}/cpp/" ${CMAKE_SOURCE_DIR}/../../$ENV{BUILD_TARGET}/unittests/)
+    add_subdirectory("${CATENA_UNITTESTS_DIR}/cpp/" "${CMAKE_BINARY_DIR}/unittests/")
 endif()
 
 #

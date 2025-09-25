@@ -68,7 +68,6 @@ function(setup_testing_config)
     option(UNIT_TESTING "Build the unit tests" ON)
     
     if(UNIT_TESTING)
-        enable_testing()
         message(STATUS "Unit testing enabled")
     else()
         message(STATUS "Unit testing disabled")
