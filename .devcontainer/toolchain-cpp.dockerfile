@@ -1,4 +1,4 @@
-FROM library/ubuntu:24.04 AS builder
+FROM library/ubuntu:24.04 AS base
 LABEL org.opencontainers.image.title=$IMAGE_TITLE
 LABEL org.opencontainers.image.description=$IMAGE_DESCRIPTION
 LABEL org.opencontainers.image.version=$IMAGE_VERSION
@@ -40,6 +40,8 @@ RUN . /root/toolchain.env \
     && apt-get clean \
     && rm -rf /var/cache/apt/archives/ /var/lib/apt/lists/*
 
+FROM base AS builder
+
 # Install gRPC
 RUN . /root/toolchain.env \
     && git clone -b $GRPC_VERSION https://github.com/grpc/grpc /usr/local/grpc \
@@ -49,26 +51,24 @@ RUN . /root/toolchain.env \
 WORKDIR /usr/local/grpc/cmake/build
 RUN . /root/toolchain.env \
     && cmake /usr/local/grpc -DCMAKE_BUILD_TYPE=Release -DgRPC_INSTALL=ON -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
-    && make -j4 install \
-    # Clean up gRPC source directory
-    && rm -rf /usr/local/grpc
+    && make -j4 install
 
 # Install jwt-cpp
 RUN . /root/toolchain.env \
     && git clone -b $JWT_CPP_VERSION https://github.com/Thalhammer/jwt-cpp /usr/local/jwt-cpp \
-    && mkdir /usr/local/jwt-cpp/build
+    && mkdir -p /usr/local/jwt-cpp/build
 
 WORKDIR /usr/local/jwt-cpp/build
 RUN . /root/toolchain.env \
     && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/.local /usr/local/jwt-cpp \
-    && make && make install \
-    # Clean up jwt-cpp source directory
-    && rm -rf /usr/local/jwt-cpp
+    && make && make install
 
 # Install Google Test
 WORKDIR /usr/src/gtest
 RUN cmake -DCMAKE_INSTALL_PREFIX=/usr/local/.local CMakeLists.txt \
-    && make && cp lib/*.a /usr/lib
+    && make
+
+FROM base AS final
 
 # Install Docker & Docker Compose
 RUN . /root/toolchain.env \
@@ -92,4 +92,10 @@ COPY smpte/install-tooling.sh /root/smpte/install-tooling.sh
 WORKDIR /root/smpte
 RUN ./install-tooling.sh
 
+# this is the dir our builder stage CMAKE_INSTALL_PREFIX is set to
+COPY --from=builder /usr/local/.local /usr/local/.local
+# gtest doesn't have a make install target, so we have to copy the files manually
+COPY --from=builder /usr/src/gtest/lib/*.a /usr/lib/
+
 USER ubuntu
+WORKDIR /home/ubuntu
