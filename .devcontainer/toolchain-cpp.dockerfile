@@ -43,9 +43,11 @@ RUN . /root/toolchain.env \
 # Install gRPC
 RUN . /root/toolchain.env \
     && git clone -b $GRPC_VERSION https://github.com/grpc/grpc /usr/local/grpc \
-    && cd /usr/local/grpc && git submodule update --recursive --init \
-    && mkdir -p /usr/local/grpc/cmake/build \
-    && cd /usr/local/grpc/cmake/build \
+    && git -C /usr/local/grpc submodule update --recursive --init \
+    && mkdir -p /usr/local/grpc/cmake/build
+
+WORKDIR /usr/local/grpc/cmake/build
+RUN . /root/toolchain.env \
     && cmake /usr/local/grpc -DCMAKE_BUILD_TYPE=Release -DgRPC_INSTALL=ON -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
     && make -j4 install \
     # Clean up gRPC source directory
@@ -54,16 +56,18 @@ RUN . /root/toolchain.env \
 # Install jwt-cpp
 RUN . /root/toolchain.env \
     && git clone -b $JWT_CPP_VERSION https://github.com/Thalhammer/jwt-cpp /usr/local/jwt-cpp \
-    && mkdir /usr/local/jwt-cpp/build \
-    && cd /usr/local/jwt-cpp/build \
+    && mkdir /usr/local/jwt-cpp/build
+
+WORKDIR /usr/local/jwt-cpp/build
+RUN . /root/toolchain.env \
     && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/.local /usr/local/jwt-cpp \
     && make && make install \
     # Clean up jwt-cpp source directory
     && rm -rf /usr/local/jwt-cpp
 
 # Install Google Test
-RUN cd /usr/src/gtest \
-    && cmake -DCMAKE_INSTALL_PREFIX=/usr/local/.local CMakeLists.txt \
+WORKDIR /usr/src/gtest
+RUN cmake -DCMAKE_INSTALL_PREFIX=/usr/local/.local CMakeLists.txt \
     && make && cp lib/*.a /usr/lib
 
 # Install Docker & Docker Compose
@@ -85,7 +89,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y python3-pip \
 
 # Build OpenAPI
 COPY smpte/install-tooling.sh /root/smpte/install-tooling.sh
-RUN cd /root/smpte \
-    && ./install-tooling.sh
+WORKDIR /root/smpte
+RUN ./install-tooling.sh
 
 USER ubuntu

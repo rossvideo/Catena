@@ -30,7 +30,7 @@ echo "📍 Directory: $(pwd)"
 
 # === Run comprehensive security scan ===
 echo "🔍 Running filesystem vulnerability scan..."
-"$TRIVY_BIN" fs . --format table --skip-files unittests/cpp/common/CommonTestHelpers.h
+"$TRIVY_BIN" fs . --format table --skip-files unittests/cpp/common/CommonTestHelpers.h --ignorefile .trivyignore
 
 echo ""
 echo "🔍 Scanning C++ build dependencies..."
@@ -46,7 +46,7 @@ echo "🔍 Scanning system packages for C++ libraries..."
 
 echo ""
 echo "🔍 Generating detailed JSON report..."
-"$TRIVY_BIN" fs . --scanners vuln,secret,misconfig --format json --output "$JSON_REPORT" --skip-files unittests/cpp/common/CommonTestHelpers.h
+"$TRIVY_BIN" fs . --scanners vuln,secret,misconfig --format json --output "$JSON_REPORT" --skip-files unittests/cpp/common/CommonTestHelpers.h --ignorefile .trivyignore
 
 # === Generate/Update Security Report ===
 echo ""
