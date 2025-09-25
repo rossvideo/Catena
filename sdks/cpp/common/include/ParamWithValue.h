@@ -502,7 +502,19 @@ class ParamWithValue : public catena::common::IParam {
      */
     template <typename U>
     std::unique_ptr<IParam> getParam_(Path& oid, U& value, const IAuthorizer& authz, catena::exception_with_status& status) {
-        // This type is not a CatenaStruct or CatenaStructArray so it has no sub-params
+        // Check if this parameter has sub-parameters defined in its descriptor
+        const auto& subParams = descriptor_.getAllSubParams();
+        if (!subParams.empty()) {
+            status = catena::exception_with_status("DESCRIPTOR_NAVIGATION_NEEDED", catena::StatusCode::UNIMPLEMENTED);
+            return nullptr;
+        }
+        
+        if (descriptor_.hasTemplateOid()) {
+            const std::string& templateOid = descriptor_.templateOid();
+            status = catena::exception_with_status("TEMPLATE_NAVIGATION_NEEDED:" + templateOid, catena::StatusCode::UNIMPLEMENTED);
+            return nullptr;
+        }
+        
         status = catena::exception_with_status("No sub-params for this generic type", catena::StatusCode::INVALID_ARGUMENT);
         return nullptr;
     }

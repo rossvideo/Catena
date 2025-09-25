@@ -267,11 +267,6 @@ std::unique_ptr<IParam> Device::getParam(catena::common::Path& path, catena::exc
         return nullptr;
     }
     if (path.front_is_string()) {
-        /**
-         * Top level param objects are defined in the device models generated cpp body file and exist for the lifetime of 
-         * the program. The device has a map of pointers to these params. These are not unique pointers because the 
-         * lifetime of the top level params does not need to be managed.
-         */
         IParam* param = getItem<common::ParamTag>(path.front_as_string());
         if (!param) {
             status = catena::exception_with_status("Param " + path.fqoid() + " does not exist", catena::StatusCode::NOT_FOUND);
@@ -290,10 +285,45 @@ std::unique_ptr<IParam> Device::getParam(catena::common::Path& path, catena::exc
              */
             return param->copy();
         } else {
-            /**
-             * Sub-param objects are created by the getParam function so the lifetime of the object is managed by the caller.
-             */
-            return param->getParam(path, authz, status);
+            auto result = param->getParam(path, authz, status);
+            
+            if (!result) {
+                std::string statusMessage(status.what());
+                if (statusMessage == "DESCRIPTOR_NAVIGATION_NEEDED") {
+                    if (!path.front_is_string()) {
+                        status = catena::exception_with_status("Expected string in path " + path.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
+                        return nullptr;
+                    }
+                    
+                    std::string childName = path.front_as_string();
+                    path.pop();
+                    
+                    const auto& subParams = param->getDescriptor().getAllSubParams();
+                    auto it = subParams.find(childName);
+                    
+                    if (it == subParams.end()) {
+                        status = catena::exception_with_status("Param " + childName + " does not exist", catena::StatusCode::NOT_FOUND);
+                        return nullptr;
+                    }
+                    
+                    IParamDescriptor* childDescriptor = it->second;
+                    
+                    if (!authz.readAuthz(*childDescriptor)) {
+                        status = catena::exception_with_status("Not authorized to read param " + childName, catena::StatusCode::PERMISSION_DENIED);
+                        return nullptr;
+                    }
+                    
+                    auto childParam = std::make_unique<ParamWithValue<EmptyValue>>(emptyValue, *childDescriptor);
+                    
+                    if (path.empty()) {
+                        return childParam; // end of path
+                    } else {
+                        return childParam->getParam(path, authz, status); // Continue navigation recursively  
+                    }
+                }
+            }
+            
+            return result;
         }
     } else {
         status = catena::exception_with_status("Invalid json pointer " + path.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
@@ -559,4 +589,3 @@ bool Device::shouldSendParam(const IParam& param, bool is_subscribed, const IAut
 
     return should_send;
 }
-
