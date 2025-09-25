@@ -95,6 +95,25 @@ params:
         step: 1
     name: { display_strings: { en: "Main Mute (0=false, 1=true)" } }
 
+  # Main display components
+  main_display_img:
+    type: STRING
+    value: { string_value: "eo://ross_video_icon.png" }
+    read_only: true
+    name: { display_strings: { en: "Main Display Image" } }
+
+  main_display_text:
+    type: STRING
+    value: { string_value: "main" }
+    read_only: true
+    name: { display_strings: { en: "Main Display Text" } }
+
+  main_display_mode:
+    type: STRING
+    value: { string_value: "LR" }
+    read_only: true
+    name: { display_strings: { en: "Main Display Mode" } }
+
   # Channel 1
   ch1_signal:
     type: FLOAT32
@@ -102,26 +121,22 @@ params:
     read_only: true
     name: { display_strings: { en: "Channel 1 Signal" } }
 
-  ch1_volume:
-    type: FLOAT32
-    value: { float32_value: 0.5 }
-    constraint:
-      type: FLOAT_RANGE
-      float32_range:
-        min_value: 0.0
-        max_value: 1.0
-        step: 0.01
-    name: { display_strings: { en: "Channel 1 Volume" } }
 
   ch1_frequency:
     type: FLOAT32
     value: { float32_value: 440.0 }
     name: { display_strings: { en: "Channel 1 Base Frequency" } }
 
-  ch1_alpha:
+  ch1_volume:
     type: FLOAT32
-    value: { float32_value: 0.1 }
-    name: { display_strings: { en: "Channel 1 Alpha" } }
+    value: { float32_value: 1.0 }
+    name: { display_strings: { en: "Channel 1 Volume" } }
+
+  ch1_name:
+    type: STRING
+    value: { string_value: "Channel 1" }
+    name: { display_strings: { en: "Channel 1 Name" } }
+
 
   ch1_select:
     type: INT32
@@ -168,6 +183,43 @@ params:
     name: { display_strings: { en: "Channel 1 Slider" } }
     widget: fader
 
+  ch1_warning_comp:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 1 COMP Warning (0=false, 1=true)" } }
+
+  ch1_warning_clip:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 1 CLIP Warning (percentage over 1.0)" } }
+
+  ch1_warning_freq:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 1 Freq Warning (0=false, 1=true)" } }
+
+  # Channel 1 display components
+  ch1_display_img:
+    type: STRING
+    value: { string_value: "eo://volume_icon.png" }
+    read_only: true
+    name: { display_strings: { en: "Channel 1 Display Image" } }
+
+  ch1_display_text:
+    type: STRING
+    value: { string_value: "Channel 1" }
+    read_only: true
+    name: { display_strings: { en: "Channel 1 Display Text" } }
+
+  ch1_display_mode:
+    type: STRING
+    value: { string_value: "1" }
+    read_only: true
+    name: { display_strings: { en: "Channel 1 Display Mode" } }
+
   # Channel 2
   ch2_signal:
     type: FLOAT32
@@ -175,26 +227,21 @@ params:
     read_only: true
     name: { display_strings: { en: "Channel 2 Signal" } }
 
-  ch2_volume:
-    type: FLOAT32
-    value: { float32_value: 0.6 }
-    constraint:
-      type: FLOAT_RANGE
-      float32_range:
-        min_value: 0.0
-        max_value: 1.0
-        step: 0.01
-    name: { display_strings: { en: "Channel 2 Volume" } }
-
   ch2_frequency:
     type: FLOAT32
     value: { float32_value: 523.25 }
     name: { display_strings: { en: "Channel 2 Base Frequency" } }
 
-  ch2_alpha:
+  ch2_volume:
     type: FLOAT32
-    value: { float32_value: 0.15 }
-    name: { display_strings: { en: "Channel 2 Alpha" } }
+    value: { float32_value: 1.0 }
+    name: { display_strings: { en: "Channel 2 Volume" } }
+
+  ch2_name:
+    type: STRING
+    value: { string_value: "Channel 2" }
+    name: { display_strings: { en: "Channel 2 Name" } }
+
 
   ch2_select:
     type: INT32
@@ -241,6 +288,43 @@ params:
     name: { display_strings: { en: "Channel 2 Slider" } }
     widget: fader
 
+  ch2_warning_comp:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 2 COMP Warning (0=false, 1=true)" } }
+
+  ch2_warning_clip:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 2 CLIP Warning (percentage over 1.0)" } }
+
+  ch2_warning_freq:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 2 Freq Warning (0=false, 1=true)" } }
+
+  # Channel 2 display components
+  ch2_display_img:
+    type: STRING
+    value: { string_value: "eo://volume_icon.png" }
+    read_only: true
+    name: { display_strings: { en: "Channel 2 Display Image" } }
+
+  ch2_display_text:
+    type: STRING
+    value: { string_value: "Channel 2" }
+    read_only: true
+    name: { display_strings: { en: "Channel 2 Display Text" } }
+
+  ch2_display_mode:
+    type: STRING
+    value: { string_value: "2" }
+    read_only: true
+    name: { display_strings: { en: "Channel 2 Display Mode" } }
+
   # Channel 3
   ch3_signal:
     type: FLOAT32
@@ -248,26 +332,21 @@ params:
     read_only: true
     name: { display_strings: { en: "Channel 3 Signal" } }
 
-  ch3_volume:
-    type: FLOAT32
-    value: { float32_value: 0.4 }
-    constraint:
-      type: FLOAT_RANGE
-      float32_range:
-        min_value: 0.0
-        max_value: 1.0
-        step: 0.01
-    name: { display_strings: { en: "Channel 3 Volume" } }
-
   ch3_frequency:
     type: FLOAT32
     value: { float32_value: 659.25 }
     name: { display_strings: { en: "Channel 3 Base Frequency" } }
 
-  ch3_alpha:
+  ch3_volume:
     type: FLOAT32
-    value: { float32_value: 0.2 }
-    name: { display_strings: { en: "Channel 3 Alpha" } }
+    value: { float32_value: 1.0 }
+    name: { display_strings: { en: "Channel 3 Volume" } }
+
+  ch3_name:
+    type: STRING
+    value: { string_value: "Channel 3" }
+    name: { display_strings: { en: "Channel 3 Name" } }
+
 
   ch3_select:
     type: INT32
@@ -314,6 +393,43 @@ params:
     name: { display_strings: { en: "Channel 3 Slider" } }
     widget: fader
 
+  ch3_warning_comp:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 3 COMP Warning (0=false, 1=true)" } }
+
+  ch3_warning_clip:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 3 CLIP Warning (percentage over 1.0)" } }
+
+  ch3_warning_freq:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 3 Freq Warning (0=false, 1=true)" } }
+
+  # Channel 3 display components
+  ch3_display_img:
+    type: STRING
+    value: { string_value: "eo://volume_icon.png" }
+    read_only: true
+    name: { display_strings: { en: "Channel 3 Display Image" } }
+
+  ch3_display_text:
+    type: STRING
+    value: { string_value: "Channel 3" }
+    read_only: true
+    name: { display_strings: { en: "Channel 3 Display Text" } }
+
+  ch3_display_mode:
+    type: STRING
+    value: { string_value: "3" }
+    read_only: true
+    name: { display_strings: { en: "Channel 3 Display Mode" } }
+
   # Channel 4
   ch4_signal:
     type: FLOAT32
@@ -321,26 +437,21 @@ params:
     read_only: true
     name: { display_strings: { en: "Channel 4 Signal" } }
 
-  ch4_volume:
-    type: FLOAT32
-    value: { float32_value: 0.7 }
-    constraint:
-      type: FLOAT_RANGE
-      float32_range:
-        min_value: 0.0
-        max_value: 1.0
-        step: 0.01
-    name: { display_strings: { en: "Channel 4 Volume" } }
-
   ch4_frequency:
     type: FLOAT32
     value: { float32_value: 783.99 }
     name: { display_strings: { en: "Channel 4 Base Frequency" } }
 
-  ch4_alpha:
+  ch4_volume:
     type: FLOAT32
-    value: { float32_value: 0.12 }
-    name: { display_strings: { en: "Channel 4 Alpha" } }
+    value: { float32_value: 1.0 }
+    name: { display_strings: { en: "Channel 4 Volume" } }
+
+  ch4_name:
+    type: STRING
+    value: { string_value: "Channel 4" }
+    name: { display_strings: { en: "Channel 4 Name" } }
+
 
   ch4_select:
     type: INT32
@@ -387,7 +498,570 @@ params:
     name: { display_strings: { en: "Channel 4 Slider" } }
     widget: fader
 
+  ch4_warning_comp:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 4 COMP Warning (0=false, 1=true)" } }
+
+  ch4_warning_clip:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 4 CLIP Warning (percentage over 1.0)" } }
+
+  ch4_warning_freq:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 4 Freq Warning (0=false, 1=true)" } }
+
+  # Channel 4 display components
+  ch4_display_img:
+    type: STRING
+    value: { string_value: "eo://volume_icon.png" }
+    read_only: true
+    name: { display_strings: { en: "Channel 4 Display Image" } }
+
+  ch4_display_text:
+    type: STRING
+    value: { string_value: "Channel 4" }
+    read_only: true
+    name: { display_strings: { en: "Channel 4 Display Text" } }
+
+  ch4_display_mode:
+    type: STRING
+    value: { string_value: "4" }
+    read_only: true
+    name: { display_strings: { en: "Channel 4 Display Mode" } }
+
+  ch5_signal:
+    type: FLOAT32
+    value: { float32_value: 0.0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 5 Signal" } }
+
+  ch5_frequency:
+    type: FLOAT32
+    value: { float32_value: 880.00 }
+    name: { display_strings: { en: "Channel 5 Base Frequency" } }
+
+  ch5_volume:
+    type: FLOAT32
+    value: { float32_value: 1.0 }
+    name: { display_strings: { en: "Channel 5 Volume" } }
+
+  ch5_name:
+    type: STRING
+    value: { string_value: "Channel 5" }
+    name: { display_strings: { en: "Channel 5 Name" } }
+
+
+  ch5_select:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 5 Select (0=false, 1=true)" } }
+
+  ch5_solo:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 5 Solo (0=false, 1=true)" } }
+
+  ch5_mute:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 5 Mute (0=false, 1=true)" } }
+
+  ch5_slider:
+    type: FLOAT32
+    value: { float32_value: -12.0 }
+    constraint:
+      type: FLOAT_RANGE
+      float32_range:
+        min_value: -80.0
+        max_value: 10.0
+        step: 0.1
+    name: { display_strings: { en: "Channel 5 Slider" } }
+    widget: fader
+
+  ch5_warning_comp:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 5 COMP Warning (0=false, 1=true)" } }
+
+  ch5_warning_clip:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 5 CLIP Warning (percentage over 1.0)" } }
+
+  ch5_warning_freq:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 5 Freq Warning (0=false, 1=true)" } }
+
+  # Channel 5 display components
+  ch5_display_img:
+    type: STRING
+    value: { string_value: "eo://volume_icon.png" }
+    read_only: true
+    name: { display_strings: { en: "Channel 5 Display Image" } }
+
+  ch5_display_text:
+    type: STRING
+    value: { string_value: "Channel 5" }
+    read_only: true
+    name: { display_strings: { en: "Channel 5 Display Text" } }
+
+  ch5_display_mode:
+    type: STRING
+    value: { string_value: "5" }
+    read_only: true
+    name: { display_strings: { en: "Channel 5 Display Mode" } }
+
+  ch6_signal:
+    type: FLOAT32
+    value: { float32_value: 0.0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 6 Signal" } }
+
+  ch6_frequency:
+    type: FLOAT32
+    value: { float32_value: 987.77 }
+    name: { display_strings: { en: "Channel 6 Base Frequency" } }
+
+  ch6_volume:
+    type: FLOAT32
+    value: { float32_value: 1.0 }
+    name: { display_strings: { en: "Channel 6 Volume" } }
+
+  ch6_name:
+    type: STRING
+    value: { string_value: "Channel 6" }
+    name: { display_strings: { en: "Channel 6 Name" } }
+
+
+  ch6_select:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 6 Select (0=false, 1=true)" } }
+
+  ch6_solo:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 6 Solo (0=false, 1=true)" } }
+
+  ch6_mute:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 6 Mute (0=false, 1=true)" } }
+
+  ch6_slider:
+    type: FLOAT32
+    value: { float32_value: -8.0 }
+    constraint:
+      type: FLOAT_RANGE
+      float32_range:
+        min_value: -80.0
+        max_value: 10.0
+        step: 0.1
+    name: { display_strings: { en: "Channel 6 Slider" } }
+    widget: fader
+
+  ch6_warning_comp:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 6 COMP Warning (0=false, 1=true)" } }
+
+  ch6_warning_clip:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 6 CLIP Warning (percentage over 1.0)" } }
+
+  ch6_warning_freq:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 6 Freq Warning (0=false, 1=true)" } }
+
+  # Channel 6 display components
+  ch6_display_img:
+    type: STRING
+    value: { string_value: "eo://volume_icon.png" }
+    read_only: true
+    name: { display_strings: { en: "Channel 6 Display Image" } }
+
+  ch6_display_text:
+    type: STRING
+    value: { string_value: "Channel 6" }
+    read_only: true
+    name: { display_strings: { en: "Channel 6 Display Text" } }
+
+  ch6_display_mode:
+    type: STRING
+    value: { string_value: "6" }
+    read_only: true
+    name: { display_strings: { en: "Channel 6 Display Mode" } }
+
+  ch7_signal:
+    type: FLOAT32
+    value: { float32_value: 0.0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 7 Signal" } }
+
+  ch7_frequency:
+    type: FLOAT32
+    value: { float32_value: 1108.73 }
+    name: { display_strings: { en: "Channel 7 Base Frequency" } }
+
+  ch7_volume:
+    type: FLOAT32
+    value: { float32_value: 1.0 }
+    name: { display_strings: { en: "Channel 7 Volume" } }
+
+  ch7_name:
+    type: STRING
+    value: { string_value: "Channel 7" }
+    name: { display_strings: { en: "Channel 7 Name" } }
+
+
+  ch7_select:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 7 Select (0=false, 1=true)" } }
+
+  ch7_solo:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 7 Solo (0=false, 1=true)" } }
+
+  ch7_mute:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 7 Mute (0=false, 1=true)" } }
+
+  ch7_slider:
+    type: FLOAT32
+    value: { float32_value: -15.0 }
+    constraint:
+      type: FLOAT_RANGE
+      float32_range:
+        min_value: -80.0
+        max_value: 10.0
+        step: 0.1
+    name: { display_strings: { en: "Channel 7 Slider" } }
+    widget: fader
+
+  ch7_warning_comp:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 7 COMP Warning (0=false, 1=true)" } }
+
+  ch7_warning_clip:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 7 CLIP Warning (percentage over 1.0)" } }
+
+  ch7_warning_freq:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 7 Freq Warning (0=false, 1=true)" } }
+
+  # Channel 7 display components
+  ch7_display_img:
+    type: STRING
+    value: { string_value: "eo://volume_icon.png" }
+    read_only: true
+    name: { display_strings: { en: "Channel 7 Display Image" } }
+
+  ch7_display_text:
+    type: STRING
+    value: { string_value: "Channel 7" }
+    read_only: true
+    name: { display_strings: { en: "Channel 7 Display Text" } }
+
+  ch7_display_mode:
+    type: STRING
+    value: { string_value: "7" }
+    read_only: true
+    name: { display_strings: { en: "Channel 7 Display Mode" } }
+
+  ch8_signal:
+    type: FLOAT32
+    value: { float32_value: 0.0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 8 Signal" } }
+
+  ch8_frequency:
+    type: FLOAT32
+    value: { float32_value: 1244.51 }
+    name: { display_strings: { en: "Channel 8 Base Frequency" } }
+
+  ch8_volume:
+    type: FLOAT32
+    value: { float32_value: 1.0 }
+    name: { display_strings: { en: "Channel 8 Volume" } }
+
+  ch8_name:
+    type: STRING
+    value: { string_value: "Channel 8" }
+    name: { display_strings: { en: "Channel 8 Name" } }
+
+
+  ch8_select:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 8 Select (0=false, 1=true)" } }
+
+  ch8_solo:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 8 Solo (0=false, 1=true)" } }
+
+  ch8_mute:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 8 Mute (0=false, 1=true)" } }
+
+  ch8_slider:
+    type: FLOAT32
+    value: { float32_value: -18.0 }
+    constraint:
+      type: FLOAT_RANGE
+      float32_range:
+        min_value: -80.0
+        max_value: 10.0
+        step: 0.1
+    name: { display_strings: { en: "Channel 8 Slider" } }
+    widget: fader
+
+  ch8_warning_comp:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 8 COMP Warning (0=false, 1=true)" } }
+
+  ch8_warning_clip:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 8 CLIP Warning (percentage over 1.0)" } }
+
+  ch8_warning_freq:
+    type: INT32
+    value: { int32_value: 0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 8 Freq Warning (0=false, 1=true)" } }
+
+  # Channel 8 display components
+  ch8_display_img:
+    type: STRING
+    value: { string_value: "eo://volume_icon.png" }
+    read_only: true
+    name: { display_strings: { en: "Channel 8 Display Image" } }
+
+  ch8_display_text:
+    type: STRING
+    value: { string_value: "Channel 8" }
+    read_only: true
+    name: { display_strings: { en: "Channel 8 Display Text" } }
+
+  ch8_display_mode:
+    type: STRING
+    value: { string_value: "8" }
+    read_only: true
+    name: { display_strings: { en: "Channel 8 Display Mode" } }
+
 commands:
   clear_all:
     type: EMPTY
     name: { display_strings: { en: "Clear All Solos" } }
+
+  # Main commands
+  main_select_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Main Select Command" } }
+
+  main_solo_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Main Solo Command" } }
+
+  main_mute_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Main Mute Command" } }
+
+  # Channel commands
+  ch1_select_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 1 Select Command" } }
+
+  ch1_solo_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 1 Solo Command" } }
+
+  ch1_mute_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 1 Mute Command" } }
+
+  ch2_select_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 2 Select Command" } }
+
+  ch2_solo_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 2 Solo Command" } }
+
+  ch2_mute_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 2 Mute Command" } }
+
+  ch3_select_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 3 Select Command" } }
+
+  ch3_solo_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 3 Solo Command" } }
+
+  ch3_mute_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 3 Mute Command" } }
+
+  ch4_select_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 4 Select Command" } }
+
+  ch4_solo_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 4 Solo Command" } }
+
+  ch4_mute_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 4 Mute Command" } }
+
+  ch5_select_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 5 Select Command" } }
+
+  ch5_solo_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 5 Solo Command" } }
+
+  ch5_mute_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 5 Mute Command" } }
+
+  ch6_select_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 6 Select Command" } }
+
+  ch6_solo_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 6 Solo Command" } }
+
+  ch6_mute_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 6 Mute Command" } }
+
+  ch7_select_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 7 Select Command" } }
+
+  ch7_solo_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 7 Solo Command" } }
+
+  ch7_mute_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 7 Mute Command" } }
+
+  ch8_select_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 8 Select Command" } }
+
+  ch8_solo_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 8 Solo Command" } }
+
+  ch8_mute_cmd:
+    type: EMPTY
+    name: { display_strings: { en: "Channel 8 Mute Command" } }
