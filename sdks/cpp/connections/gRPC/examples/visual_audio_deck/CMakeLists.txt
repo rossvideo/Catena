@@ -52,7 +52,7 @@ add_custom_command(TARGET ${TARGET} POST_BUILD
 include (${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
 
 generate_catena_device(
-    DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.AudioDeck.json
+    DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.${TARGET}.yaml
     TARGET ${TARGET}
 )
 

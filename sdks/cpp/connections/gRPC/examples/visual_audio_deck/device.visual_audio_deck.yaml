@@ -1,0 +1,393 @@
+slot: 0
+multi_set_enabled: true
+detail_level: FULL
+access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
+default_scope: st2138:mon
+
+params:
+  dashboard_UI:
+    type: STRING
+    oid_aliases: ["0xFF0E"]
+    read_only: true
+    value: { string_value: "eo://AudioDeck.grid" }
+
+  dashboard_icon:
+    type: STRING
+    oid_aliases: ["0xFF0C"]
+    read_only: true
+    value: { string_value: "eo://catena_logo_16x16.png" }
+
+  product:
+    type: STRUCT
+    read_only: true
+    value: 
+      struct_value:
+        fields:
+          name: { string_value: "Visual Audio Deck" }
+          vendor: { string_value: "Ross Video" }
+          version: { string_value: "1.0.0" }
+          catena_sdk: { string_value: "https://github.com/rossvideo/Catena.git" }
+          serial_number: { string_value: "SN-7K9M-2024-XR485-BLU" }
+    params:
+      name: 
+        type: STRING  
+      vendor:
+        type: STRING
+      version:
+        type: STRING
+      catena_sdk:
+        type: STRING
+      catena_sdk_version:
+        type: STRING
+      serial_number:
+        type: STRING
+
+  # Main components
+  main_output:
+    type: FLOAT32
+    value: { float32_value: 0.0 }
+    read_only: true
+    name: { display_strings: { en: "Main Output" } }
+
+  main_slider:
+    type: FLOAT32
+    value: { float32_value: -20.0 }
+    constraint:
+      type: FLOAT_RANGE
+      float32_range:
+        min_value: -80.0
+        max_value: 10.0
+        step: 0.1
+    name: { display_strings: { en: "Main Slider" } }
+    widget: fader
+
+  # Using INT32 instead of BOOL for boolean-like parameters
+  main_select:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Main Select (0=false, 1=true)" } }
+
+  main_solo:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Main Solo (0=false, 1=true)" } }
+
+  main_mute:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Main Mute (0=false, 1=true)" } }
+
+  # Channel 1
+  ch1_signal:
+    type: FLOAT32
+    value: { float32_value: 0.0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 1 Signal" } }
+
+  ch1_volume:
+    type: FLOAT32
+    value: { float32_value: 0.5 }
+    constraint:
+      type: FLOAT_RANGE
+      float32_range:
+        min_value: 0.0
+        max_value: 1.0
+        step: 0.01
+    name: { display_strings: { en: "Channel 1 Volume" } }
+
+  ch1_frequency:
+    type: FLOAT32
+    value: { float32_value: 440.0 }
+    name: { display_strings: { en: "Channel 1 Base Frequency" } }
+
+  ch1_alpha:
+    type: FLOAT32
+    value: { float32_value: 0.1 }
+    name: { display_strings: { en: "Channel 1 Alpha" } }
+
+  ch1_select:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 1 Select (0=false, 1=true)" } }
+
+  ch1_solo:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 1 Solo (0=false, 1=true)" } }
+
+  ch1_mute:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 1 Mute (0=false, 1=true)" } }
+
+  ch1_slider:
+    type: FLOAT32
+    value: { float32_value: -20.0 }
+    constraint:
+      type: FLOAT_RANGE
+      float32_range:
+        min_value: -80.0
+        max_value: 10.0
+        step: 0.1
+    name: { display_strings: { en: "Channel 1 Slider" } }
+    widget: fader
+
+  # Channel 2
+  ch2_signal:
+    type: FLOAT32
+    value: { float32_value: 0.0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 2 Signal" } }
+
+  ch2_volume:
+    type: FLOAT32
+    value: { float32_value: 0.6 }
+    constraint:
+      type: FLOAT_RANGE
+      float32_range:
+        min_value: 0.0
+        max_value: 1.0
+        step: 0.01
+    name: { display_strings: { en: "Channel 2 Volume" } }
+
+  ch2_frequency:
+    type: FLOAT32
+    value: { float32_value: 523.25 }
+    name: { display_strings: { en: "Channel 2 Base Frequency" } }
+
+  ch2_alpha:
+    type: FLOAT32
+    value: { float32_value: 0.15 }
+    name: { display_strings: { en: "Channel 2 Alpha" } }
+
+  ch2_select:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 2 Select (0=false, 1=true)" } }
+
+  ch2_solo:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 2 Solo (0=false, 1=true)" } }
+
+  ch2_mute:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 2 Mute (0=false, 1=true)" } }
+
+  ch2_slider:
+    type: FLOAT32
+    value: { float32_value: -15.0 }
+    constraint:
+      type: FLOAT_RANGE
+      float32_range:
+        min_value: -80.0
+        max_value: 10.0
+        step: 0.1
+    name: { display_strings: { en: "Channel 2 Slider" } }
+    widget: fader
+
+  # Channel 3
+  ch3_signal:
+    type: FLOAT32
+    value: { float32_value: 0.0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 3 Signal" } }
+
+  ch3_volume:
+    type: FLOAT32
+    value: { float32_value: 0.4 }
+    constraint:
+      type: FLOAT_RANGE
+      float32_range:
+        min_value: 0.0
+        max_value: 1.0
+        step: 0.01
+    name: { display_strings: { en: "Channel 3 Volume" } }
+
+  ch3_frequency:
+    type: FLOAT32
+    value: { float32_value: 659.25 }
+    name: { display_strings: { en: "Channel 3 Base Frequency" } }
+
+  ch3_alpha:
+    type: FLOAT32
+    value: { float32_value: 0.2 }
+    name: { display_strings: { en: "Channel 3 Alpha" } }
+
+  ch3_select:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 3 Select (0=false, 1=true)" } }
+
+  ch3_solo:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 3 Solo (0=false, 1=true)" } }
+
+  ch3_mute:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 3 Mute (0=false, 1=true)" } }
+
+  ch3_slider:
+    type: FLOAT32
+    value: { float32_value: -25.0 }
+    constraint:
+      type: FLOAT_RANGE
+      float32_range:
+        min_value: -80.0
+        max_value: 10.0
+        step: 0.1
+    name: { display_strings: { en: "Channel 3 Slider" } }
+    widget: fader
+
+  # Channel 4
+  ch4_signal:
+    type: FLOAT32
+    value: { float32_value: 0.0 }
+    read_only: true
+    name: { display_strings: { en: "Channel 4 Signal" } }
+
+  ch4_volume:
+    type: FLOAT32
+    value: { float32_value: 0.7 }
+    constraint:
+      type: FLOAT_RANGE
+      float32_range:
+        min_value: 0.0
+        max_value: 1.0
+        step: 0.01
+    name: { display_strings: { en: "Channel 4 Volume" } }
+
+  ch4_frequency:
+    type: FLOAT32
+    value: { float32_value: 783.99 }
+    name: { display_strings: { en: "Channel 4 Base Frequency" } }
+
+  ch4_alpha:
+    type: FLOAT32
+    value: { float32_value: 0.12 }
+    name: { display_strings: { en: "Channel 4 Alpha" } }
+
+  ch4_select:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 4 Select (0=false, 1=true)" } }
+
+  ch4_solo:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 4 Solo (0=false, 1=true)" } }
+
+  ch4_mute:
+    type: INT32
+    value: { int32_value: 0 }
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 1
+        step: 1
+    name: { display_strings: { en: "Channel 4 Mute (0=false, 1=true)" } }
+
+  ch4_slider:
+    type: FLOAT32
+    value: { float32_value: -10.0 }
+    constraint:
+      type: FLOAT_RANGE
+      float32_range:
+        min_value: -80.0
+        max_value: 10.0
+        step: 0.1
+    name: { display_strings: { en: "Channel 4 Slider" } }
+    widget: fader
+
+commands:
+  clear_all:
+    type: EMPTY
+    name: { display_strings: { en: "Clear All Solos" } }
