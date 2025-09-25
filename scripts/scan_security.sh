@@ -6,8 +6,9 @@ set -e  # Stop on error
 
 # === Configuration ===
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TRIVY_BIN="$SCRIPT_DIR/bin/trivy"
-REPORT_DIR="reports"
+TRIVY_DIR="$SCRIPT_DIR/bin"
+TRIVY_BIN="$TRIVY_DIR/trivy"
+REPORT_DIR="$SCRIPT_DIR/reports"
 SECURITY_REPORT="$REPORT_DIR/SECURITY_REPORT.md"
 JSON_REPORT="$REPORT_DIR/security-scan.json"
 CPP_JSON_REPORT="$REPORT_DIR/cpp-dependencies-scan.json"
@@ -17,8 +18,8 @@ HTML_REPORT="$REPORT_DIR/security-report.html"
 # === Ensure Trivy is installed ===
 if [ ! -f "$TRIVY_BIN" ]; then
     echo "🔧 Installing Trivy..."
-    mkdir -p ./bin
-    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b ./bin
+    mkdir -p "$TRIVY_DIR"
+    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b "$TRIVY_DIR"
 fi
 
 # === Create reports directory ===
