@@ -290,45 +290,10 @@ std::unique_ptr<IParam> Device::getParam(catena::common::Path& path, catena::exc
              */
             return param->copy();
         } else {
-            auto result = param->getParam(path, authz, status);
-            
-            if (!result) {
-                std::string statusMessage(status.what());
-                if (statusMessage == "DESCRIPTOR_NAVIGATION_NEEDED") {
-                    if (!path.front_is_string()) {
-                        status = catena::exception_with_status("Expected string in path " + path.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
-                        return nullptr;
-                    }
-                    
-                    std::string childName = path.front_as_string();
-                    path.pop();
-                    
-                    const auto& subParams = param->getDescriptor().getAllSubParams();
-                    auto it = subParams.find(childName);
-                    
-                    if (it == subParams.end()) {
-                        status = catena::exception_with_status("Param " + childName + " does not exist", catena::StatusCode::NOT_FOUND);
-                        return nullptr;
-                    }
-                    
-                    IParamDescriptor* childDescriptor = it->second;
-                    
-                    if (!authz.readAuthz(*childDescriptor)) {
-                        status = catena::exception_with_status("Not authorized to read param " + childName, catena::StatusCode::PERMISSION_DENIED);
-                        return nullptr;
-                    }
-                    
-                    auto childParam = std::make_unique<ParamWithValue<EmptyValue>>(emptyValue, *childDescriptor);
-                    
-                    if (path.empty()) {
-                        return childParam; // end of path
-                    } else {
-                        return childParam->getParam(path, authz, status); // Continue navigation recursively  
-                    }
-                }
-            }
-            
-            return result;
+            /**
+             * Sub-param objects are created by the getParam function so the lifetime of the object is managed by the caller.
+             */
+            return param->getParam(path, authz, status);
         }
     } else {
         status = catena::exception_with_status("Invalid json pointer " + path.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
