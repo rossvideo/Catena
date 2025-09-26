@@ -26,6 +26,8 @@ ENV CONNECTIONS=${CONNECTIONS}
 ENV BUILD_TARGET=${BUILD_TARGET}
 ENV CMAKE_COMMAND="cmake -G Ninja -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCONNECTIONS=${CONNECTIONS} -DCMAKE_CXX_FLAGS='--coverage' -DCMAKE_C_FLAGS='--coverage' -DCMAKE_EXE_LINKER_FLAGS='--coverage' -DCMAKE_INSTALL_PREFIX=/usr/local/.local -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE -DGLOG_LOGGING_DIR=~/Catena/logs -B ~/Catena/${BUILD_TARGET} -S ~/Catena/sdks/cpp"
 
+USER root
+
 RUN if getent passwd $USER_UID > /dev/null; then userdel $(getent passwd $USER_UID | cut -d: -f1); fi
 
 RUN if getent group $USER_GID > /dev/null; then groupdel $(getent group $USER_GID | cut -d: -f1); fi
@@ -38,10 +40,9 @@ RUN groupadd -g $USER_GID $USER_NAME && \
 RUN echo "${USER_NAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 
-USER ${USER_NAME}
+
 
 # Install Docker & Docker Compose
-RUN sudo apt-get update
 
 # remove the docker group if it exists
 # RUN if getent group docker; then sudo groupdel docker; fi
@@ -56,9 +57,7 @@ RUN sudo apt-get update
 # Set the working directory
 WORKDIR /home/${USER_NAME}/Catena
 
-# Install glog
-RUN sudo apt-get install -y libgoogle-glog-dev
-
+USER ${USER_NAME}
 ENTRYPOINT ["/bin/sh", "-c", "/bin/bash"]
 
 # nothing yet, but this is where we would add any additional devcontainer-specific setup

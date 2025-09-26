@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
-
+      options: --user root:root
     env:
       CMAKE_BUILD_TYPE: Debug
       CONNECTIONS: gRPC;REST
@@ -195,6 +195,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
+      options: --user root:root
     permissions:
       security-events: write
       actions: read
