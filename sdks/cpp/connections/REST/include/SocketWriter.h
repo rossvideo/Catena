@@ -168,6 +168,7 @@ const std::map<catena::StatusCode, http_exception_with_status> codeMap_ {
     {catena::StatusCode::SERVICE_UNAVAILABLE, {503, "Service Unavailable"}},
     {catena::StatusCode::UNAVAILABLE,         {503, "Service Unavailable"}},
     {catena::StatusCode::GATEWAY_TIMEOUT,     {504, "Gateway Timeout"}},
+    {catena::StatusCode::I_AM_A_TEAPOT,       {418, "I'm a teapot"}}
 };
 
 }; // Namespace REST
