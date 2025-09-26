@@ -62,6 +62,12 @@ class gRPCExternalObjectRequestTests : public GRPCTest {
         google::ShutdownGoogleLogging();
     }
 
+    // Called after each individual test
+    void TearDown() override {
+        cleanupTestFiles();
+        GRPCTest::TearDown();
+    }
+
     // Creates an ExternalObjectRequest handler object.
     void makeOne() override { new ExternalObjectRequest(&service_, dms_, true); }
 
@@ -160,9 +166,6 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_Normal) {
     
     // Send the RPC
     testRPC();
-    
-    // Cleanup
-    cleanupTestFiles();
 }
 
 /*
@@ -180,9 +183,6 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_SpecialCharacters) 
     
     // Send the RPC
     testRPC();
-    
-    // Cleanup
-    cleanupTestFiles();
 }
 
 /*
@@ -198,9 +198,6 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_EmptyFile) {
     
     // Send the RPC
     testRPC();
-    
-    // Cleanup
-    cleanupTestFiles();
 }
 
 /*
@@ -220,9 +217,6 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_BinaryFile) {
     
     // Send the RPC
     testRPC();
-    
-    // Cleanup
-    cleanupTestFiles();
 }
 
 /* 
@@ -290,7 +284,4 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_FileIOException) {
     
     // Send the RPC
     testRPC();
-    
-    // Cleanup
-    cleanupTestFiles();
 }
