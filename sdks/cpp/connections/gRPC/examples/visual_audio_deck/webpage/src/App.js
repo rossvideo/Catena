@@ -32,6 +32,58 @@ function App() {
 
   const [connectionStatus, setConnectionStatus] = useState('Connecting...');
 
+  // API utility functions
+  const sendCommand = useCallback(async (command) => {
+    try {
+      console.log(`🔵 Sending command: ${command}`);
+      const response = await fetch('/api/command', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `command=${encodeURIComponent(command)}`
+      });
+      
+      console.log(`🔵 Response status: ${response.status}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`🔴 Command failed: ${response.status} - ${errorText}`);
+        throw new Error(`Command failed: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log(`🟢 Command ${command} result:`, result);
+      return result;
+    } catch (error) {
+      console.error(`🔴 Error executing command ${command}:`, error);
+      throw error;
+    }
+  }, []);
+
+  const updateParameter = useCallback(async (param, value) => {
+    try {
+      const response = await fetch('/api/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `param=${encodeURIComponent(param)}&value=${encodeURIComponent(value)}`
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Parameter update failed: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log(`Parameter ${param} updated to ${value}:`, result);
+      return result;
+    } catch (error) {
+      console.error(`Error updating parameter ${param}:`, error);
+      throw error;
+    }
+  }, []);
+
   // Fetch parameters from the C++ backend API
   const fetchParams = useCallback(async () => {
     try {
@@ -96,37 +148,60 @@ function App() {
   }, [fetchParams]);
 
   // Handle updates from individual channels
-  const handleChannelUpdate = useCallback((channelId, updateData) => {
-    setChannelStates(prev => 
-      prev.map(channel => 
-        channel.id === channelId 
-          ? { ...channel, ...updateData }
-          : channel
-      )
-    );
-  }, []);
+  const handleChannelUpdate = useCallback(async (channelId, updateInfo) => {
+    console.log(`Channel ${channelId} update received:`, updateInfo);
+    try {
+      switch (updateInfo.type) {
+        case 'CHANNEL_SELECT':
+          console.log(`Sending ch${channelId}_select_cmd`);
+          await sendCommand(`ch${channelId}_select_cmd`);
+          break;
+        case 'CHANNEL_SOLO':
+          console.log(`Sending ch${channelId}_solo_cmd`);
+          await sendCommand(`ch${channelId}_solo_cmd`);
+          break;
+        case 'CHANNEL_MUTE':
+          console.log(`Sending ch${channelId}_mute_cmd`);
+          await sendCommand(`ch${channelId}_mute_cmd`);
+          break;
+        case 'CHANNEL_SLIDER_UPDATE':
+          console.log(`Updating ch${channelId}_slider to:`, updateInfo.value);
+          await updateParameter(`ch${channelId}_slider`, updateInfo.value);
+          break;
+        case 'CHANNEL_FREQUENCY_UPDATE':
+          console.log(`Updating ch${channelId}_frequency to:`, updateInfo.value);
+          await updateParameter(`ch${channelId}_frequency`, updateInfo.value);
+          break;
+      }
+    } catch (error) {
+      console.error(`Error handling channel ${channelId} update:`, error);
+    }
+  }, [sendCommand, updateParameter]);
 
   // Handle updates from main mixer
-  const handleMainMixerUpdate = useCallback((updateInfo) => {
-    switch (updateInfo.type) {
-      case 'MAIN_SELECT_ON':
-        setChannelStates(prev =>
-          prev.map(channel => ({
-            ...channel,
-            select: false
-          }))
-        );
-        break;
-      case 'CLEAR_ALL_SOLOS':
-        setChannelStates(prev =>
-          prev.map(channel => ({
-            ...channel,
-            solo: false
-          }))
-        );
-        break;
+  const handleMainMixerUpdate = useCallback(async (updateInfo) => {
+    try {
+      switch (updateInfo.type) {
+        case 'MAIN_SELECT':
+          await sendCommand('main_select_cmd');
+          break;
+        case 'MAIN_SOLO':
+          await sendCommand('main_solo_cmd');
+          break;
+        case 'MAIN_MUTE':
+          await sendCommand('main_mute_cmd');
+          break;
+        case 'CLEAR_ALL_SOLOS':
+          await sendCommand('clear_all');
+          break;
+        case 'MAIN_SLIDER_UPDATE':
+          await updateParameter('main_slider', updateInfo.value);
+          break;
+      }
+    } catch (error) {
+      console.error('Error handling main mixer update:', error);
     }
-  }, []);
+  }, [sendCommand, updateParameter]);
 
   // Prepare channel inputs for main mixer
   const channelInputs = channelStates.map(channel => ({
@@ -141,12 +216,6 @@ function App() {
       <header className="top-header">
         <img src="/src/assets/logo.png" alt="AudioDeck" />
         <h1>AudioDeck</h1>
-        <div className="connection-status">
-          Status: <span style={{
-            color: connectionStatus === 'Connected' ? 'green' : 'red',
-            fontWeight: 'bold'
-          }}>{connectionStatus}</span>
-        </div>
       </header>
       
       <main className="app-main">

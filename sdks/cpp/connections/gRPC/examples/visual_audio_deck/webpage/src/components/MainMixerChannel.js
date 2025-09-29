@@ -1,16 +1,31 @@
 const { useState, useEffect, useRef } = React;
 
-function MainMixerChannel({ channelInputs = [], onChannelUpdate = () => {} }) {
-  // Main mixer state
-  const [volume_m, setVolume_m] = useState(0); // -80.0 to 10.0
-  const [select_m, setSelect_m] = useState(false);
-  const [solo_m, setSolo_m] = useState(false);
-  const [mute_m, setMute_m] = useState(false);
+function MainMixerChannel({ channelInputs = [], mainData = {}, onChannelUpdate = () => {} }) {
+  // Main mixer state - use backend data when available
+  const [volume_m, setVolume_m] = useState(mainData.slider || 0);
+  const [select_m, setSelect_m] = useState(mainData.select || false);
+  const [solo_m, setSolo_m] = useState(mainData.solo || false);
+  const [mute_m, setMute_m] = useState(mainData.mute || false);
   const [display_m, setDisplay_m] = useState({
-    img: 'src/assets/signal-wave.png',
-    mode: 'LR',
-    text: 'main'
+    img: mainData.display_img || 'src/assets/signal-wave.png',
+    mode: mainData.display_mode || 'LR',
+    text: mainData.display_text || 'main'
   });
+
+  // Update state when mainData changes
+  useEffect(() => {
+    if (mainData.slider !== undefined) setVolume_m(mainData.slider);
+    if (mainData.select !== undefined) setSelect_m(mainData.select);
+    if (mainData.solo !== undefined) setSolo_m(mainData.solo);
+    if (mainData.mute !== undefined) setMute_m(mainData.mute);
+    if (mainData.display_img || mainData.display_mode || mainData.display_text) {
+      setDisplay_m({
+        img: mainData.display_img || 'src/assets/signal-wave.png',
+        mode: mainData.display_mode || 'LR',
+        text: mainData.display_text || 'main'
+      });
+    }
+  }, [mainData]);
 
   // Convert linear slider value to logarithmic dB scale
   const linearToLog = (linear) => {
@@ -26,58 +41,65 @@ function MainMixerChannel({ channelInputs = [], onChannelUpdate = () => {} }) {
     return Math.pow(normalized, 4) * 100; // Inverse of the log curve
   };
 
-  // Calculate main output (sum of channel inputs * master volume)
-  const calculateMainOutput = () => {
+  // Use backend main output data directly, or calculate as fallback
+  const getMainOutput = () => {
+    // Use backend data if available
+    if (mainData.output !== undefined) {
+      return mainData.output;
+    }
+    
+    // Fallback calculation if backend data not available
     const mainVolumeMultiplier = mute_m ? 0 : Math.pow(10, volume_m / 20);
-    return channelInputs.reduce((sum, input) => sum + input.signal, 0) * mainVolumeMultiplier;
+    return channelInputs.reduce((sum, input) => {
+      const signal = input.signal || 0;
+      return sum + signal;
+    }, 0) * mainVolumeMultiplier;
   };
 
   // Main mixer controls
   const handleSelectMain = () => {
-    const newSelectState = !select_m;
-    setSelect_m(newSelectState);
-    
-    if (newSelectState) {
-      // Turning on main select
-      setDisplay_m({
-        img: 'src/assets/signal-wave.png',
-        mode: 'LR',
-        text: 'main'
-      });
-      
-      // Notify parent to turn off all channel selects and set to volume mode
-      onChannelUpdate({
-        type: 'MAIN_SELECT_ON',
-        payload: {}
-      });
-    } else {
-      // Turning off main select
-      setDisplay_m({
-        img: 'src/assets/signal-wave.png',
-        mode: 'MAIN',
-        text: 'master'
-      });
-    }
+    console.log('🎛️ Main Select clicked');
+    onChannelUpdate({
+      type: 'MAIN_SELECT'
+    });
   };
 
   const handleSoloMain = () => {
-    setSolo_m(!solo_m);
+    console.log('🎛️ Main Solo clicked');
+    onChannelUpdate({
+      type: 'MAIN_SOLO'
+    });
   };
 
   const handleMuteMain = () => {
-    setMute_m(!mute_m);
+    console.log('🎛️ Main Mute clicked');
+    onChannelUpdate({
+      type: 'MAIN_MUTE'
+    });
   };
 
   const handleClearMain = () => {
-    // Notify parent to clear all channel solos
+    console.log('🎛️ Clear All clicked');
     onChannelUpdate({
-      type: 'CLEAR_ALL_SOLOS',
-      payload: {}
+      type: 'CLEAR_ALL_SOLOS'
+    });
+  };
+
+  const handleSliderChange = (value) => {
+    const dbValue = linearToLog(value);
+    setVolume_m(dbValue); // Update UI immediately
+  };
+
+  const handleSliderRelease = (value) => {
+    const dbValue = linearToLog(value);
+    onChannelUpdate({
+      type: 'MAIN_SLIDER_UPDATE',
+      value: dbValue
     });
   };
 
 
-  const mainOutput = calculateMainOutput();
+  const mainOutput = getMainOutput();
 
   return (
     <div className="mixer-channel main-channel">
@@ -123,10 +145,10 @@ function MainMixerChannel({ channelInputs = [], onChannelUpdate = () => {} }) {
       {/* 5. Freq Screen (Output Meter) */}
       <div className="main-output-meter">
         <div className="output-level" style={{
-          height: `${Math.min(100, Math.abs(mainOutput) * 50)}%`,
+          height: `${isNaN(mainOutput) ? 0 : Math.min(100, Math.abs(mainOutput) * 50)}%`,
           backgroundColor: Math.abs(mainOutput) > 1 ? '#ff4444' : '#44ff44'
         }}></div>
-        <span className="output-value">{mainOutput.toFixed(2)}</span>
+        <span className="output-value">{isNaN(mainOutput) ? '0.00' : mainOutput.toFixed(6)}</span>
       </div>
 
       {/* 6. MUTE Button */}
@@ -146,7 +168,9 @@ function MainMixerChannel({ channelInputs = [], onChannelUpdate = () => {} }) {
           min="0"
           max="100"
           value={logToLinear(volume_m)}
-          onChange={(e) => setVolume_m(linearToLog(e.target.value))}
+          onChange={(e) => handleSliderChange(e.target.value)}
+          onMouseUp={(e) => handleSliderRelease(e.target.value)}
+          onTouchEnd={(e) => handleSliderRelease(e.target.value)}
           className="vertical-slider"
           orient="vertical"
         />

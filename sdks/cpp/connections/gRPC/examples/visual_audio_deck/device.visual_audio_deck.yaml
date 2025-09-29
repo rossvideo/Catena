@@ -185,7 +185,7 @@ params:
 
   ch1_warning_comp:
     type: INT32
-    value: { int32_value: 0 }
+    value: { int32_value: 1 }
     read_only: true
     name: { display_strings: { en: "Channel 1 COMP Warning (0=false, 1=true)" } }
 
@@ -290,7 +290,7 @@ params:
 
   ch2_warning_comp:
     type: INT32
-    value: { int32_value: 0 }
+    value: { int32_value: 1 }
     read_only: true
     name: { display_strings: { en: "Channel 2 COMP Warning (0=false, 1=true)" } }
 
@@ -395,7 +395,7 @@ params:
 
   ch3_warning_comp:
     type: INT32
-    value: { int32_value: 0 }
+    value: { int32_value: 1 }
     read_only: true
     name: { display_strings: { en: "Channel 3 COMP Warning (0=false, 1=true)" } }
 
@@ -500,7 +500,7 @@ params:
 
   ch4_warning_comp:
     type: INT32
-    value: { int32_value: 0 }
+    value: { int32_value: 1 }
     read_only: true
     name: { display_strings: { en: "Channel 4 COMP Warning (0=false, 1=true)" } }
 
@@ -604,7 +604,7 @@ params:
 
   ch5_warning_comp:
     type: INT32
-    value: { int32_value: 0 }
+    value: { int32_value: 1 }
     read_only: true
     name: { display_strings: { en: "Channel 5 COMP Warning (0=false, 1=true)" } }
 
@@ -708,7 +708,7 @@ params:
 
   ch6_warning_comp:
     type: INT32
-    value: { int32_value: 0 }
+    value: { int32_value: 1 }
     read_only: true
     name: { display_strings: { en: "Channel 6 COMP Warning (0=false, 1=true)" } }
 
@@ -812,7 +812,7 @@ params:
 
   ch7_warning_comp:
     type: INT32
-    value: { int32_value: 0 }
+    value: { int32_value: 1 }
     read_only: true
     name: { display_strings: { en: "Channel 7 COMP Warning (0=false, 1=true)" } }
 
@@ -916,7 +916,7 @@ params:
 
   ch8_warning_comp:
     type: INT32
-    value: { int32_value: 0 }
+    value: { int32_value: 1 }
     read_only: true
     name: { display_strings: { en: "Channel 8 COMP Warning (0=false, 1=true)" } }
 

@@ -3,6 +3,7 @@ const { useState, useEffect, useRef } = React;
 function MixerChannel({ 
   channelNumber = 1, 
   initialVolume = 75, 
+  channelData = {},
   onUpdate = () => {},
   mainSelectActive = false,
   clearSoloTrigger = false 
@@ -26,16 +27,12 @@ function MixerChannel({
   const [freqEditMode, setFreqEditMode] = useState(false);
   const [channelName] = useState(`Channel ${channelNumber}`);
   
-  // Warning states
+  // Warning states - now driven by backend data
   const [warnings, setWarnings] = useState({
-    COMP: false,
-    CLIP: 0,
-    Freq: false
+    COMP: channelData.warning_comp || false,
+    CLIP: channelData.warning_clip || 0,
+    Freq: channelData.warning_freq || false
   });
-  
-  // Warning cooldown refs
-  const warningUpdateRef = useRef(0);
-  const lastWarningUpdateRef = useRef(0);
   
   // Display state
   const [display, setDisplay] = useState({
@@ -46,6 +43,32 @@ function MixerChannel({
 
   const animationRef = useRef();
   const timeRef = useRef(0);
+
+  // Update component state when channelData changes
+  useEffect(() => {
+    if (channelData.signal !== undefined) setSignal(channelData.signal);
+    if (channelData.volume !== undefined) setVolume(channelData.volume);
+    if (channelData.frequency !== undefined) setFrequencies(prev => ({ ...prev, [selectedFreq]: channelData.frequency }));
+    if (channelData.select !== undefined) setIsSelected(channelData.select);
+    if (channelData.solo !== undefined) setIsSolo(channelData.solo);
+    if (channelData.mute !== undefined) setIsMuted(channelData.mute);
+    
+    // Update warnings from backend
+    setWarnings({
+      COMP: channelData.warning_comp || false,
+      CLIP: channelData.warning_clip || 0,
+      Freq: channelData.warning_freq || false
+    });
+    
+    // Update display info
+    if (channelData.display_img || channelData.display_text || channelData.display_mode) {
+      setDisplay({
+        img: channelData.display_img || 'src/assets/signal-wave.png',
+        mode: channelData.display_mode || channelNumber.toString(),
+        text: channelData.display_text || `Channel ${channelNumber}`
+      });
+    }
+  }, [channelData, selectedFreq, channelNumber]);
 
   // Convert linear slider value to logarithmic dB scale
   const linearToLog = (linear) => {
@@ -65,72 +88,17 @@ function MixerChannel({
     setVolume(linearToLog(initialVolume));
   }, [initialVolume]);
 
-  // Signal generation at 60Hz
+  // Update parent component when state changes (signal now comes from backend)
   useEffect(() => {
-    const generateSignal = () => {
-      timeRef.current += 1/60; // 60Hz update
-      const t = timeRef.current;
-      
-      let newSignal = 0;
-      const f0 = 440 + (channelNumber * 50); // Different base frequency per channel
-      const alpha = 0.1;
-      
-      // Generate complex signal: sum of harmonics with decay
-      for (let n = 1; n <= 6; n++) {
-        newSignal += (1/n) * Math.sin(2 * Math.PI * n * (f0 + n * 10) * t);
-      }
-      newSignal *= Math.sin(-alpha * t);
-      
-      // Apply frequency filtering
-      let filteredSignal = newSignal;
-      Object.entries(frequencies).forEach(([freq, level]) => {
-        if (level !== 0) {
-          const freqNum = parseInt(freq);
-          const filterEffect = level / 100;
-          filteredSignal += newSignal * filterEffect * Math.sin(2 * Math.PI * freqNum * t * 0.001);
-        }
-      });
-      
-      // Calculate warnings with cooldown (update every 200ms)
-      const currentTime = Date.now();
-      if (currentTime - lastWarningUpdateRef.current >= 200) {
-        const newWarnings = { ...warnings };
-        
-        if (Math.abs(filteredSignal) > 1) {
-          newWarnings.CLIP = Math.round((Math.abs(filteredSignal) - 1) * 100);
-        } else {
-          newWarnings.CLIP = 0;
-        }
-        
-        newWarnings.COMP = Math.abs(filteredSignal) > 0.8;
-        
-        setWarnings(newWarnings);
-        lastWarningUpdateRef.current = currentTime;
-      }
-      
-      setSignal(filteredSignal);
-      
-      // Update parent with signal and volume
-      const volumeMultiplier = isMuted ? 0 : Math.pow(10, volume / 20);
-      onUpdate({
-        signal: filteredSignal * volumeMultiplier,
-        volume: volume,
-        select: isSelected,
-        solo: isSolo,
-        mute: isMuted
-      });
-      
-      animationRef.current = requestAnimationFrame(generateSignal);
-    };
-    
-    animationRef.current = requestAnimationFrame(generateSignal);
-    
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [volume, isMuted, isSelected, isSolo, frequencies, channelNumber, onUpdate]);
+    const volumeMultiplier = isMuted ? 0 : Math.pow(10, volume / 20);
+    onUpdate({
+      signal: signal * volumeMultiplier,
+      volume: volume,
+      select: isSelected,
+      solo: isSolo,
+      mute: isMuted
+    });
+  }, [signal, volume, isMuted, isSelected, isSolo, onUpdate]);
 
   // Clear solo when triggered from main mixer
   useEffect(() => {
@@ -141,58 +109,55 @@ function MixerChannel({
 
   const handleVolumeChange = (e) => {
     const dBValue = linearToLog(e.target.value);
-    setVolume(dBValue);
+    setVolume(dBValue); // Update UI immediately
+  };
+
+  const handleVolumeRelease = (e) => {
+    const dBValue = linearToLog(e.target.value);
+    onUpdate({
+      type: 'CHANNEL_SLIDER_UPDATE',
+      value: dBValue
+    });
   };
 
   const toggleMute = () => {
-    setIsMuted(!isMuted);
+    console.log(`Channel ${channelNumber} Mute clicked`);
+    onUpdate({
+      type: 'CHANNEL_MUTE'
+    });
   };
 
   const toggleSolo = () => {
+    console.log(`Channel ${channelNumber} Solo clicked`);
     if (isSelected && !freqEditMode) {
-      // Enter frequency edit mode
-      setIsSolo(true);
+      // Enter frequency edit mode - just toggle solo
+      onUpdate({
+        type: 'CHANNEL_SOLO'
+      });
       setFreqEditMode(true);
-      setDisplay({
-        img: 'src/assets/freq-edit-icon.png',
-        mode: 'SET FREQ',
-        text: selectedFreq.toString()
-      });
     } else if (isSelected && freqEditMode) {
-      // Exit frequency edit mode
-      setIsSolo(false);
-      setFreqEditMode(false);
-      setWarnings(prev => ({ ...prev, Freq: true }));
-      setDisplay({
-        img: 'src/assets/signal-wave.png',
-        mode: 'Freq',
-        text: Object.keys(frequencies)[0]
+      // Exit frequency edit mode - toggle solo and save frequency
+      onUpdate({
+        type: 'CHANNEL_SOLO'
       });
+      onUpdate({
+        type: 'CHANNEL_FREQUENCY_UPDATE',
+        value: frequencies[selectedFreq]
+      });
+      setFreqEditMode(false);
     } else {
       // Normal solo toggle
-      setIsSolo(!isSolo);
+      onUpdate({
+        type: 'CHANNEL_SOLO'
+      });
     }
   };
 
   const toggleSelect = () => {
-    const newSelectState = !isSelected;
-    setIsSelected(newSelectState);
-    
-    if (newSelectState) {
-      // Set to frequency mode
-      setDisplay({
-        img: 'src/assets/signal-wave.png',
-        mode: 'Freq',
-        text: Object.keys(frequencies)[0]
-      });
-    } else {
-      // Return to channel mode
-      setDisplay({
-        img: 'src/assets/signal-wave.png',
-        mode: channelNumber.toString(),
-        text: channelName
-      });
-    }
+    console.log(`Channel ${channelNumber} Select clicked`);
+    onUpdate({
+      type: 'CHANNEL_SELECT'
+    });
   };
 
   const handleFrequencyChange = (sliderIndex, value) => {
@@ -304,6 +269,8 @@ function MixerChannel({
           max="100"
           value={logToLinear(volume)}
           onChange={handleVolumeChange}
+          onMouseUp={handleVolumeRelease}
+          onTouchEnd={handleVolumeRelease}
           className="vertical-slider"
           orient="vertical"
         />

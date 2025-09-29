@@ -140,6 +140,7 @@ void defineCommands() {
 
     clearCommand->defineCommand([](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> {
         return std::make_unique<ParamDescriptor::CommandResponder>([](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+            DEBUG_LOG << "CLEAR_ALL command is being executed!";
             catena::exception_with_status err{"", catena::StatusCode::OK};
             st2138::CommandResponse response;
             
@@ -179,6 +180,7 @@ void defineCommands() {
 
     mainSelectCommand->defineCommand([](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> {
         return std::make_unique<ParamDescriptor::CommandResponder>([](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+            DEBUG_LOG << "MAIN_SELECT command is being executed!";
             catena::exception_with_status err{"", catena::StatusCode::OK};
             st2138::CommandResponse response;
             
@@ -996,6 +998,112 @@ void RunWebServer(const std::string& exeDir, int port) {
         
         res.set_header("Content-Type", "application/json");
         res.set_content(json.str(), "application/json");
+    });
+
+    // API endpoint for executing commands
+    globalWebServer->Post("/api/command", [](const httplib::Request& req, httplib::Response& res) {
+        catena::exception_with_status err{"", catena::StatusCode::OK};
+        
+        // Parse JSON request body
+        std::string command = req.get_param_value("command");
+        DEBUG_LOG << "Received command request: " << command;
+        
+        if (command.empty()) {
+            DEBUG_LOG << "Command parameter is empty";
+            res.status = 400;
+            res.set_content("{\"error\": \"Missing command parameter\"}", "application/json");
+            return;
+        }
+        
+        std::string fullCommand = "/" + command;
+        DEBUG_LOG << "Looking for command: " << fullCommand;
+        
+        // Execute the command
+        std::unique_ptr<IParam> cmdParam = dm.getCommand(fullCommand, err);
+        if (cmdParam) {
+            DEBUG_LOG << "Command found, executing: " << fullCommand;
+            st2138::Value emptyValue;
+            
+            try {
+                auto responder = cmdParam->executeCommand(emptyValue, false);
+                if (responder) {
+                    DEBUG_LOG << "Command responder created successfully: " << fullCommand;
+                    // For HTTP API, we don't need to wait for the coroutine response
+                    // The command should execute immediately
+                    res.set_header("Content-Type", "application/json");
+                    res.set_content("{\"status\": \"success\"}", "application/json");
+                } else {
+                    DEBUG_LOG << "Command responder creation failed: " << fullCommand;
+                    res.status = 500;
+                    res.set_content("{\"error\": \"Command responder creation failed\"}", "application/json");
+                }
+            } catch (const std::exception& e) {
+                DEBUG_LOG << "Exception during command execution: " << fullCommand << " - " << e.what();
+                res.status = 500;
+                res.set_content("{\"error\": \"Command execution exception\"}", "application/json");
+            }
+        } else {
+            DEBUG_LOG << "Command not found: " << fullCommand;
+            res.status = 404;
+            res.set_content("{\"error\": \"Command not found\"}", "application/json");
+        }
+    });
+
+    // API endpoint for updating parameters
+    globalWebServer->Post("/api/update", [](const httplib::Request& req, httplib::Response& res) {
+        catena::exception_with_status err{"", catena::StatusCode::OK};
+        
+        std::string param = req.get_param_value("param");
+        std::string value = req.get_param_value("value");
+        
+        DEBUG_LOG << "Received parameter update: " << param << " = " << value;
+        
+        if (param.empty() || value.empty()) {
+            DEBUG_LOG << "Missing param or value";
+            res.status = 400;
+            res.set_content("{\"error\": \"Missing param or value\"}", "application/json");
+            return;
+        }
+        
+        std::string fullParam = "/" + param;
+        DEBUG_LOG << "Looking for parameter: " << fullParam;
+        
+        // Update the parameter
+        std::unique_ptr<IParam> paramPtr = dm.getParam(fullParam, err);
+        if (paramPtr) {
+            DEBUG_LOG << "Parameter found: " << fullParam;
+            // Handle different parameter types
+            if (auto* floatParam = dynamic_cast<ParamWithValue<float>*>(paramPtr.get())) {
+                std::lock_guard lg(dm.mutex());
+                floatParam->get() = std::stof(value);
+                dm.getValueSetByServer().emit(fullParam, floatParam);
+                DEBUG_LOG << "Float parameter updated: " << fullParam << " = " << value;
+                res.set_header("Content-Type", "application/json");
+                res.set_content("{\"status\": \"success\"}", "application/json");
+            } else if (auto* intParam = dynamic_cast<ParamWithValue<int32_t>*>(paramPtr.get())) {
+                std::lock_guard lg(dm.mutex());
+                intParam->get() = std::stoi(value);
+                dm.getValueSetByServer().emit(fullParam, intParam);
+                DEBUG_LOG << "Int parameter updated: " << fullParam << " = " << value;
+                res.set_header("Content-Type", "application/json");
+                res.set_content("{\"status\": \"success\"}", "application/json");
+            } else if (auto* stringParam = dynamic_cast<ParamWithValue<std::string>*>(paramPtr.get())) {
+                std::lock_guard lg(dm.mutex());
+                stringParam->get() = value;
+                dm.getValueSetByServer().emit(fullParam, stringParam);
+                DEBUG_LOG << "String parameter updated: " << fullParam << " = " << value;
+                res.set_header("Content-Type", "application/json");
+                res.set_content("{\"status\": \"success\"}", "application/json");
+            } else {
+                DEBUG_LOG << "Unsupported parameter type: " << fullParam;
+                res.status = 400;
+                res.set_content("{\"error\": \"Unsupported parameter type\"}", "application/json");
+            }
+        } else {
+            DEBUG_LOG << "Parameter not found: " << fullParam;
+            res.status = 404;
+            res.set_content("{\"error\": \"Parameter not found\"}", "application/json");
+        }
     });
     
     webServerRunning = true;
