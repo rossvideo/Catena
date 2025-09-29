@@ -210,8 +210,13 @@ void RunRPCServer(std::string addr)
 
         std::thread counterLoop(statusUpdateExample);
 
+        // start the heartbeat on the device
+        dm.setHeartbeatParam("/product/version");
+        dm.startHeartbeat();
+
         // wait for the server to shutdown and tidy up
         server->Wait();
+        dm.stopHeartbeat();
 
         counterLoop.join();
 
