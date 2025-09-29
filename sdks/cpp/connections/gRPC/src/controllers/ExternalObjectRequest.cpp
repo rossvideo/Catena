@@ -160,9 +160,10 @@ void ExternalObjectRequest::proceed(bool ok) {
             break;
 
         // Throws an error if the state is not recognized
-        default:
+        default: // GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             writer_.Finish(errorStatus, this);
+            // GCOVR_EXCL_STOP
     }
 }
