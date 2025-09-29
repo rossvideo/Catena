@@ -82,6 +82,9 @@ var hierarchy =
     [ "catena::common::IDevice::IDeviceSerializer", "classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html", [
       [ "catena::common::Device::DeviceSerializer", "classcatena_1_1common_1_1Device_1_1DeviceSerializer.html", null ]
     ] ],
+    [ "catena::common::IHeartbeat", "classcatena_1_1common_1_1IHeartbeat.html", [
+      [ "catena::common::Heartbeat", "classcatena_1_1common_1_1Heartbeat.html", null ]
+    ] ],
     [ "catena::common::ILanguagePack", "classcatena_1_1common_1_1ILanguagePack.html", [
       [ "catena::common::LanguagePack", "classcatena_1_1common_1_1LanguagePack.html", null ]
     ] ],
