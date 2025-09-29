@@ -1,0 +1,8 @@
+# Trivy Ignore File
+# This file contains security findings that should be ignored during scans
+# Format: One finding ID per line, with optional comments
+
+# DS001: ':latest' tag used in devcontainer.dockerfile
+# Note: We don't create other tags for the catena-toolchain-cpp Docker image
+# as it's an internal development container that always uses the latest version
+DS001
