@@ -733,7 +733,7 @@ void RunWebServer(const std::string& exeDir, int port) {
     
     // Serve index.html for root
     globalWebServer->Get(R"(/)", [webpage_dir](const httplib::Request&, httplib::Response& res) {
-        std::string file_path = webpage_dir + "index.htm";
+        std::string file_path = webpage_dir + "index.html";
         std::ifstream file(file_path, std::ios::in | std::ios::binary);
         if (file) {
             std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
@@ -758,10 +758,18 @@ void RunWebServer(const std::string& exeDir, int port) {
                 res.set_header("Content-Type", "text/html");
             } else if (rel_path.size() >= 4 && rel_path.substr(rel_path.size()-4) == ".css") {
                 res.set_header("Content-Type", "text/css");
+            } else if (rel_path.size() >= 3 && rel_path.substr(rel_path.size()-3) == ".js") {
+                res.set_header("Content-Type", "application/javascript");
             } else if (rel_path.size() >= 4 && rel_path.substr(rel_path.size()-4) == ".ico") {
                 res.set_header("Content-Type", "image/x-icon");
             } else if (rel_path.size() >= 4 && rel_path.substr(rel_path.size()-4) == ".png") {
                 res.set_header("Content-Type", "image/png");
+            } else if (rel_path.size() >= 4 && rel_path.substr(rel_path.size()-4) == ".jpg") {
+                res.set_header("Content-Type", "image/jpeg");
+            } else if (rel_path.size() >= 5 && rel_path.substr(rel_path.size()-5) == ".jpeg") {
+                res.set_header("Content-Type", "image/jpeg");
+            } else if (rel_path.size() >= 4 && rel_path.substr(rel_path.size()-4) == ".svg") {
+                res.set_header("Content-Type", "image/svg+xml");
             } else {
                 res.set_header("Content-Type", "application/octet-stream");
             }

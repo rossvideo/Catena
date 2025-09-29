@@ -1,0 +1,13 @@
+{
+  "name": "audiodeck",
+  "version": "1.0.0",
+  "description": "A simple React web application",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 3000",
+    "serve": "python3 -m http.server 8000"
+  },
+  "keywords": ["react", "components"],
+  "author": "",
+  "license": "MIT"
+}

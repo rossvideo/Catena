@@ -1,0 +1,575 @@
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #111111 0%, #1a1a1a 50%, #111111 100%);
+  color: #ffffff;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.app {
+  text-align: center;
+  min-height: 100vh;
+}
+
+/* Top Header */
+.top-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #111111 0%, #1a1a1a 50%, #111111 100%);
+  padding: 30px;
+  color: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: none;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.top-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.top-header h1 {
+  margin: 0;
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #e0e0e0 0%, #666666 50%, #333333 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+  position: relative;
+  z-index: 1;
+}
+
+.top-header img {
+  margin: 10px;
+  width: 15%;
+  height: 15%;
+}
+
+/* App Main */
+.app-main {
+  padding: 0 30px 60px 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Mixer Channel Component */
+.mixer-channel {
+  background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 50%, #0f0f0f 100%);
+  border: 2px solid #333;
+  border-radius: 12px;
+  padding: 15px 10px;
+  width: 120px;
+  height: 650px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 
+    inset 0 2px 4px rgba(255, 255, 255, 0.1),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+.mixer-channel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+
+
+/* Individual Button Containers */
+.top-button, .solo-button, .mute-button, .clear-button {
+  width: 100%;
+  margin: 4px 0;
+}
+
+
+.control-btn {
+  background: linear-gradient(145deg, #333 0%, #222 50%, #111 100%);
+  border: 1px solid #555;
+  color: #ccc;
+  padding: 6px 12px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.5px;
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.control-btn:hover {
+  background: linear-gradient(145deg, #444 0%, #333 50%, #222 100%);
+  border-color: #666;
+}
+
+.control-btn:active {
+  transform: translateY(1px);
+  box-shadow: 
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.mute-btn.active {
+  background: linear-gradient(145deg, #ff4444 0%, #cc3333 50%, #aa2222 100%);
+  color: white;
+  border-color: #ff6666;
+  box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+}
+
+.solo-btn.active {
+  background: linear-gradient(145deg, #ffaa00 0%, #cc8800 50%, #aa6600 100%);
+  color: white;
+  border-color: #ffcc33;
+  box-shadow: 0 0 10px rgba(255, 170, 0, 0.3);
+}
+
+/* Volume Fader */
+/* Volume fader container - takes up remaining vertical space in the mixer channel
+   and centers the slider and scale elements horizontally with spacing between them */
+.volume-fader {      
+  flex: 1;                    /* Expands to fill available space in the flex container */
+  display: flex;              /* Creates a horizontal flex layout */
+  align-items: center;        /* Centers child elements vertically */
+  gap: 8px;                   /* Adds 8px spacing between the slider and volume scale */
+  width: 100%;                /* Takes full width of parent container */
+  position: relative;         /* Allows for absolute positioning of child elements if needed */
+}
+
+.vertical-slider {
+  writing-mode: bt-lr; /* IE */
+  -webkit-appearance: slider-vertical; /* WebKit */
+  appearance: slider-vertical; /* Standard */
+  width: 30px;
+  height: 180px;
+  background: #222;
+  border: 1px solid #555;
+  border-radius: 15px;
+  outline: none;
+  cursor: pointer;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 -2px 4px rgba(255, 255, 255, 0.05);
+}
+
+.vertical-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 26px;
+  height: 15px;
+  border-radius: 4px;
+  background: linear-gradient(145deg, #888 0%, #bbb 50%, #888 100%);
+  cursor: pointer;
+  border: 1px solid #333;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.vertical-slider::-webkit-slider-thumb:hover {
+  background: linear-gradient(145deg, #999 0%, #ccc 50%, #999 100%);
+}
+
+.volume-scale {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 180px;
+  font-size: 0.6rem;
+  color: #666;
+  font-family: monospace;
+  padding: 2px 0;
+}
+
+.channel-label {
+  background: #111;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 4px 8px;
+  width: 100%;
+  text-align: center;
+}
+
+.channel-label span {
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: #aaa;
+  letter-spacing: 0.5px;
+}
+
+/* Mixer Board Container */
+.mixer-board {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 30px 20px;
+  background: linear-gradient(145deg, #1a1a1a 0%, #0f0f0f 50%, #050505 100%);
+  border-radius: 20px;
+  border: 2px solid #333;
+  box-shadow: 
+    inset 0 4px 8px rgba(255, 255, 255, 0.05),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: visible;
+  min-height: 720px;
+}
+
+.mixer-board::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(139, 92, 246, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.02) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+
+.main-channel {
+  background: linear-gradient(145deg, #3a3a3a 0%, #2a2a2a 50%, #1f1f1f 100%);
+  border: 3px solid #555;
+  height: 650px;
+  width: 130px;
+  box-shadow: 
+    inset 0 2px 4px rgba(255, 255, 255, 0.15),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.4),
+    0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+
+.display-section {
+  width: 100%;
+  margin: 8px 0;
+}
+
+.display-screen {
+  background: #000;
+  border: 2px solid #333;
+  border-radius: 6px;
+  padding: 8px;
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.display-img {
+  width: 16px;
+  height: 16px;
+  margin-bottom: 2px;
+  opacity: 0.8;
+  border-radius: 2px;
+}
+
+.display-mode {
+  font-size: 0.6rem;
+  color: #0f0;
+  font-family: monospace;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.display-text {
+  font-size: 0.7rem;
+  color: #0f0;
+  font-family: monospace;
+  margin-top: 2px;
+  text-align: center;
+}
+
+.main-output-meter {
+  width: 100%;
+  height: 80px;
+  background: #222;
+  border: 2px solid #444;
+  border-radius: 4px;
+  position: relative;
+  margin: 8px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 4px;
+}
+
+.output-level {
+  width: 100%;
+  background: #44ff44;
+  border-radius: 2px;
+  transition: all 0.1s ease;
+  min-height: 2px;
+}
+
+.output-value {
+  position: absolute;
+  top: 2px;
+  font-size: 0.6rem;
+  color: #fff;
+  font-family: monospace;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 1px 3px;
+  border-radius: 2px;
+}
+
+.warning-indicators {
+  position: relative;
+  height: 20px;
+  width: 100%;
+  margin: 4px 0;
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.warning-light {
+  font-size: 0.5rem;
+  padding: 1px 3px;
+  border-radius: 2px;
+  font-weight: bold;
+  text-align: center;
+  min-width: 25px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.3s ease-in-out;
+  opacity: 1;
+}
+
+.warning-light.comp {
+  background: #ff8800;
+  color: #000;
+}
+
+.warning-light.clip {
+  background: #ff4444;
+  color: #fff;
+  animation: blink 1s ease-in-out infinite;
+}
+
+.warning-light.freq {
+  background: #4444ff;
+  color: #fff;
+}
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+.frequency-section {
+  width: 100%;
+  margin: 8px 0;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.freq-slider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2px 0;
+}
+
+.freq-slider label {
+  font-size: 0.5rem;
+  color: #ccc;
+  margin-bottom: 1px;
+}
+
+.freq-range {
+  width: 80px;
+  height: 4px;
+  background: #333;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.freq-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #666 0%, #999 50%, #666 100%);
+  cursor: pointer;
+  border: 1px solid #444;
+}
+
+.freq-edit-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 8px 0;
+  padding: 8px;
+  background: rgba(0, 255, 0, 0.1);
+  border: 1px solid #0f0;
+  border-radius: 4px;
+}
+
+.freq-edit-slider {
+  width: 90px;
+  height: 6px;
+  background: #333;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
+.freq-edit-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0f0 0%, #0a0 50%, #0f0 100%);
+  cursor: pointer;
+  border: 2px solid #333;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.freq-display {
+  font-size: 0.7rem;
+  color: #0f0;
+  font-family: monospace;
+  font-weight: bold;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid #0f0;
+}
+
+.select-btn.active {
+  background: linear-gradient(145deg, #00ff00 0%, #00cc00 50%, #00aa00 100%);
+  color: black;
+  border-color: #00ff00;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+}
+
+.clear-btn {
+  background: linear-gradient(145deg, #666 0%, #444 50%, #222 100%);
+  border: 1px solid #777;
+}
+
+.clear-btn:hover {
+  background: linear-gradient(145deg, #777 0%, #555 50%, #333 100%);
+  border-color: #888;
+}
+
+@media (max-width: 768px) {
+  .top-header {
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    border-radius: 0 0 16px 16px;
+  }
+  
+  .top-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .app-main {
+    padding: 0 20px 40px 20px;
+  }
+  
+  .mixer-board {
+    padding: 15px;
+    gap: 6px;
+    min-height: 620px;
+  }
+  
+  .mixer-channel {
+    width: 100px;
+    height: 550px;
+    padding: 12px 8px;
+    gap: 6px;
+  }
+  
+  .main-channel {
+    width: 110px;
+    height: 550px;
+  }
+  
+  .display-screen {
+    height: 50px;
+  }
+  
+  .main-output-meter {
+    height: 60px;
+  }
+  
+  .frequency-section {
+    max-height: 80px;
+  }
+  
+  .vertical-slider {
+    height: 140px;
+  }
+  
+  .volume-scale {
+    height: 140px;
+  }
+}
