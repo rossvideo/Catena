@@ -327,8 +327,13 @@ void RunRPCServer(std::string addr)
 
         std::thread loop(startCounter);
 
+        // start the heartbeat on the device
+        dm.setHeartbeatParam("/product/version");
+        dm.startHeartbeat();
+
         // wait for the server to shutdown and tidy up
         server->Wait();
+        dm.stopHeartbeat();
 
         if (fibThread) { fibThread->join(); }
         loop.join();
