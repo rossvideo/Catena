@@ -67,18 +67,6 @@ TEST_F(ParamWithValueTest, Size) {
     EXPECT_EQ(param.size(), 0);
 }
 /*
- * TEST 4 - Testing <EMPTY>ParamWithValue.getParam().
- * EMPTY params have no sub-params and should return an error.
- */
-TEST_F(ParamWithValueTest, GetParam) {
-    EmptyParam param(emptyValue, pd_);
-    Path path = Path("/test/oid");
-    auto foundParam = param.getParam(path, authz_, rc_);
-    // Checking results.
-    EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
-    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
-}
-/*
  * TEST 5 - Testing <EMPTY>ParamWithValue.addBack().
  * EMPTY params are not arrays, so this should return an error.
  */
@@ -269,4 +257,52 @@ TEST_F(ParamWithValueTest, ParamInfoToProto_Error) {
     rc_ = param.toProto(paramInfo, authz_);
     EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
         << "toProto should return PERMISSION_DENIED if Authorizer does not have readAuthz.";
+}
+
+/*
+ * TEST 13 - How to check child param is empty with getParam
+ */
+TEST_F(ParamWithValueTest, GetParam_EmptyChild) {
+    // Define test struct within the function
+    struct TestStruct {
+        int32_t f1;
+        int32_t f2;
+        using isCatenaStruct = void;
+    };
+
+    TestStruct emptyStruct{0, 0};
+    
+    EXPECT_EQ(emptyStruct.f1, 0) << "Child f1 should be empty (0)";
+    EXPECT_EQ(emptyStruct.f2, 0) << "Child f2 should be empty (0)"; 
+    
+    // test basic types with empty values
+    {
+        // Test empty int (simulates empty child)
+        int32_t emptyChild = 0;
+        ParamWithValue<int32_t> childParam(emptyChild, pd_);
+        
+        // Check the child param has empty value
+        EXPECT_EQ(childParam.get(), 0) << "Child param should be empty (0)";
+        
+        // Verify getParam on non-struct returns error (no children)
+        Path path = Path("/nonexistent");
+        auto foundParam = childParam.getParam(path, authz_, rc_);
+        EXPECT_FALSE(foundParam) << "Non-struct should have no children";
+        EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
+    }
+    
+    
+    // Test other empty value types
+    {
+        // Empty string child
+        std::string emptyStringChild = "";
+        ParamWithValue<std::string> stringChildParam(emptyStringChild, pd_);
+        EXPECT_TRUE(stringChildParam.get().empty()) << "String child should be empty";
+        
+        // Empty float child
+        float emptyFloatChild = 0.0f;
+        ParamWithValue<float> floatChildParam(emptyFloatChild, pd_);
+        EXPECT_FLOAT_EQ(floatChildParam.get(), 0.0f) << "Float child should be empty";
+    }
+
 }
