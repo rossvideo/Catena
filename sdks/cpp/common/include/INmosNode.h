@@ -108,10 +108,13 @@ class INmosNode {
 
     virtual AvahiClient* getClient() = 0;
 
+    // get network interface info for given address
     virtual bool get_node_iface(const std::string&) = 0;
 
+    // builds a minimal IS-04 Node object
     virtual std::string make_node_json(int) = 0;
 
+    // builds a minimal IS-04 Device object
     virtual std::string make_device_json(int) = 0;
 
   protected:

@@ -158,14 +158,17 @@ class NmosNode : public INmosNode {
 
     bool get_node_iface(const std::string& reg_addr) override;
 
+    // HTTP POST helper
     static bool http_post_json(const std::string& url, const std::string& jsonObj, const std::string& bearer);
 
+    // fills out a RegistryCandidate from AvahiStringList
     static void parse_txt_into_candidate(AvahiStringList* txt, RegistryCandidate& c);
 
     std::string make_node_json(int node_port) override;
 
     std::string make_device_json(int node_port) override;
 
+    // Callback for resolved service
     static void resolve_cb(
         AvahiServiceResolver *r,
         AvahiIfIndex interface,
@@ -181,6 +184,7 @@ class NmosNode : public INmosNode {
         AvahiLookupResultFlags flags,
         void* userdata);
 
+    // Callback for discovered service
     static void browse_cb(
         AvahiServiceBrowser *b,
         AvahiIfIndex interface,
@@ -192,8 +196,10 @@ class NmosNode : public INmosNode {
         AvahiLookupResultFlags flags,
         void* userdata);
 
+    // Callback for Avahi client state change
     static void client_cb(AvahiClient *client, AvahiClientState state, void* userdata);
     
+    // Choose best candidate and build base URL
     std::optional<RegistrySelection> choose_registry_and_build_base(int node_port) override;
     
     void heartbeat_thread(std::string base, std::string node_id, std::string bearer, std::chrono::milliseconds interval = std::chrono::seconds(5)) override;

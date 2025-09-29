@@ -101,6 +101,7 @@ public:
     using NmosNode::make_node_json;
     using NmosNode::make_device_json;
     using NmosNode::random_uuid;
+    using NmosNode::parse_txt_into_candidate;
     using NmosNode::stop_;
 
     // or a helper to register against a fake base
@@ -303,4 +304,16 @@ TEST_F(NmosNodeTest, AvahiBrowseThenResolveTrue) {
     reg.stop_and_join();
 }
 
+TEST_F(NmosNodeTest, ParseTxtIntoCandidate) {
+    // Create a dummy AvahiStringList with one key-value pair for parse_txt_into_candidate
+    AvahiStringList* txt = avahi_string_list_new("api_ver=v1.0,v1.1,v1.2,v1.3", nullptr);
+    NmosNode::RegistryCandidate c;
+    TestableNmosNode::parse_txt_into_candidate(txt, c);
+    avahi_string_list_free(txt);
 
+    EXPECT_EQ(c.api_versions.size(), 4);
+    EXPECT_EQ(c.api_versions[0], "v1.0");
+    EXPECT_EQ(c.api_versions[1], "v1.1");
+    EXPECT_EQ(c.api_versions[2], "v1.2");
+    EXPECT_EQ(c.api_versions[3], "v1.3");
+}

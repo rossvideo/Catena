@@ -240,7 +240,13 @@ void NmosNode::parse_txt_into_candidate(AvahiStringList* txt, NmosNode::Registry
             else if (key == "pri") { try { c.priority = std::stoi(val); } catch(...){} }
             else if (key == "api_ver") {
                 // comma-separated e.g. "v1.0,v1.1,v1.2,v1.3"
-                size_t start = 0; while (start < val.size()) { auto pos = val.find(',', start); c.api_versions.emplace_back(val.substr(start, pos - start)); if (pos == std::string::npos) break; start = pos + 1; }
+                size_t start = 0;
+                while (start < val.size()) {
+                    auto pos = val.find(',', start);
+                    c.api_versions.emplace_back(val.substr(start, pos - start));
+                    if (pos == std::string::npos) break; 
+                    start = pos + 1;
+                }
             }
         }
         if (k) avahi_free(k); if (v) avahi_free(v);
