@@ -87,6 +87,19 @@ struct StructInfo<TestNestedStruct> {
     static constexpr Type fields = {{"f1", &TestNestedStruct::f1}, {"f2", &TestNestedStruct::f2}};
 };
 /*
+ * A test CatenaStruct with three levels of nesting using existing structs.
+ */
+struct TestThreeLevelStruct {
+    TestNestedStruct f1;  // Level 1: Contains TestStruct1 and TestStruct2
+    TestStruct1 f2;       // Level 1: Contains int32_t f1, f2
+    using isCatenaStruct = void;
+};
+template<>
+struct StructInfo<TestThreeLevelStruct> {
+    using Type = std::tuple<FieldInfo<TestNestedStruct, TestThreeLevelStruct>, FieldInfo<TestStruct1, TestThreeLevelStruct>>;
+    static constexpr Type fields = {{"f1", &TestThreeLevelStruct::f1}, {"f2", &TestThreeLevelStruct::f2}};
+};
+/*
  * A test CatenaStruct variant which can be a TestStruct1 or a TestStruct2.
  */
 using TestVariantStruct = std::variant<TestStruct1, TestStruct2>;
