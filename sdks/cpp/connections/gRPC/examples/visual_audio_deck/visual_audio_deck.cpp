@@ -1025,18 +1025,200 @@ void RunWebServer(const std::string& exeDir, int port) {
             st2138::Value emptyValue;
             
             try {
-                auto responder = cmdParam->executeCommand(emptyValue, false);
-                if (responder) {
-                    DEBUG_LOG << "Command responder created successfully: " << fullCommand;
-                    // For HTTP API, we don't need to wait for the coroutine response
-                    // The command should execute immediately
-                    res.set_header("Content-Type", "application/json");
-                    res.set_content("{\"status\": \"success\"}", "application/json");
+                // For HTTP API, let's try a direct approach
+                // Instead of using the coroutine mechanism, let's implement the command logic directly
+                DEBUG_LOG << "Executing command directly: " << fullCommand;
+                
+                if (fullCommand == "/clear_all") {
+                    DEBUG_LOG << "Executing CLEAR_ALL command directly";
+                    // Clear all channel solos
+                    for (int i = 1; i <= 8; i++) {
+                        std::string soloOid = "/ch" + std::to_string(i) + "_solo";
+                        std::unique_ptr<IParam> soloParam = dm.getParam(soloOid, err);
+                        if (soloParam) {
+                            auto* solo = dynamic_cast<ParamWithValue<int32_t>*>(soloParam.get());
+                            if (solo) {
+                                std::lock_guard lg(dm.mutex());
+                                solo->get() = 0; // false
+                                dm.getValueSetByServer().emit(soloOid, solo);
+                                DEBUG_LOG << "Cleared solo for channel " << i;
+                            }
+                        }
+                    }
+                    
+                    // Clear main solo
+                    std::unique_ptr<IParam> mainSoloParam = dm.getParam("/main_solo", err);
+                    if (mainSoloParam) {
+                        auto* mainSolo = dynamic_cast<ParamWithValue<int32_t>*>(mainSoloParam.get());
+                        if (mainSolo) {
+                            std::lock_guard lg(dm.mutex());
+                            mainSolo->get() = 0; // false
+                            dm.getValueSetByServer().emit("/main_solo", mainSolo);
+                            DEBUG_LOG << "Cleared main solo";
+                        }
+                    }
+                } else if (fullCommand == "/main_select_cmd") {
+                    DEBUG_LOG << "Executing MAIN_SELECT command directly";
+                    // Turn on main select
+                    std::unique_ptr<IParam> mainSelectParam = dm.getParam("/main_select", err);
+                    if (mainSelectParam) {
+                        auto* mainSelect = dynamic_cast<ParamWithValue<int32_t>*>(mainSelectParam.get());
+                        if (mainSelect) {
+                            std::lock_guard lg(dm.mutex());
+                            mainSelect->get() = 1; // true
+                            dm.getValueSetByServer().emit("/main_select", mainSelect);
+                            DEBUG_LOG << "Set main select to true";
+                        }
+                    }
+                    
+                    // Turn off all channel selects
+                    for (int i = 1; i <= 8; i++) {
+                        std::string selectOid = "/ch" + std::to_string(i) + "_select";
+                        std::unique_ptr<IParam> selectParam = dm.getParam(selectOid, err);
+                        if (selectParam) {
+                            auto* select = dynamic_cast<ParamWithValue<int32_t>*>(selectParam.get());
+                            if (select) {
+                                std::lock_guard lg(dm.mutex());
+                                select->get() = 0; // false
+                                dm.getValueSetByServer().emit(selectOid, select);
+                            }
+                        }
+                    }
+                    
+                    // Update display parameters
+                    updateDisplayParameters("/main_display_img", "eo://ross_video_icon.png",
+                                          "/main_display_text", "main",
+                                          "/main_display_mode", "LR");
+                } else if (fullCommand == "/main_solo_cmd") {
+                    DEBUG_LOG << "Executing MAIN_SOLO command directly";
+                    // Toggle main solo
+                    std::unique_ptr<IParam> mainSoloParam = dm.getParam("/main_solo", err);
+                    if (mainSoloParam) {
+                        auto* mainSolo = dynamic_cast<ParamWithValue<int32_t>*>(mainSoloParam.get());
+                        if (mainSolo) {
+                            std::lock_guard lg(dm.mutex());
+                            mainSolo->get() = (mainSolo->get() == 0) ? 1 : 0; // toggle
+                            dm.getValueSetByServer().emit("/main_solo", mainSolo);
+                            DEBUG_LOG << "Toggled main solo to: " << mainSolo->get();
+                        }
+                    }
+                } else if (fullCommand == "/main_mute_cmd") {
+                    DEBUG_LOG << "Executing MAIN_MUTE command directly";
+                    // Toggle main mute
+                    std::unique_ptr<IParam> mainMuteParam = dm.getParam("/main_mute", err);
+                    if (mainMuteParam) {
+                        auto* mainMute = dynamic_cast<ParamWithValue<int32_t>*>(mainMuteParam.get());
+                        if (mainMute) {
+                            std::lock_guard lg(dm.mutex());
+                            mainMute->get() = (mainMute->get() == 0) ? 1 : 0; // toggle
+                            dm.getValueSetByServer().emit("/main_mute", mainMute);
+                            DEBUG_LOG << "Toggled main mute to: " << mainMute->get();
+                        }
+                    }
+                } else if (fullCommand.find("_select_cmd") != std::string::npos) {
+                    // Handle channel select commands (ch1_select_cmd, ch2_select_cmd, etc.)
+                    std::string channelStr = fullCommand.substr(3, fullCommand.find("_select_cmd") - 3);
+                    int channelNum = std::stoi(channelStr);
+                    DEBUG_LOG << "Executing CHANNEL_SELECT command for channel " << channelNum;
+                    
+                    // Turn on this channel's select
+                    std::string selectOid = "/ch" + std::to_string(channelNum) + "_select";
+                    std::unique_ptr<IParam> selectParam = dm.getParam(selectOid, err);
+                    if (selectParam) {
+                        auto* select = dynamic_cast<ParamWithValue<int32_t>*>(selectParam.get());
+                        if (select) {
+                            std::lock_guard lg(dm.mutex());
+                            select->get() = 1; // true
+                            dm.getValueSetByServer().emit(selectOid, select);
+                            DEBUG_LOG << "Set channel " << channelNum << " select to true";
+                        }
+                    }
+                    
+                    // Turn off main select
+                    std::unique_ptr<IParam> mainSelectParam = dm.getParam("/main_select", err);
+                    if (mainSelectParam) {
+                        auto* mainSelect = dynamic_cast<ParamWithValue<int32_t>*>(mainSelectParam.get());
+                        if (mainSelect) {
+                            std::lock_guard lg(dm.mutex());
+                            mainSelect->get() = 0; // false
+                            dm.getValueSetByServer().emit("/main_select", mainSelect);
+                        }
+                    }
+                    
+                    // Turn off all other channel selects
+                    for (int i = 1; i <= 8; i++) {
+                        if (i != channelNum) {
+                            std::string otherSelectOid = "/ch" + std::to_string(i) + "_select";
+                            std::unique_ptr<IParam> otherSelectParam = dm.getParam(otherSelectOid, err);
+                            if (otherSelectParam) {
+                                auto* otherSelect = dynamic_cast<ParamWithValue<int32_t>*>(otherSelectParam.get());
+                                if (otherSelect) {
+                                    std::lock_guard lg(dm.mutex());
+                                    otherSelect->get() = 0; // false
+                                    dm.getValueSetByServer().emit(otherSelectOid, otherSelect);
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Update display parameters for frequency mode
+                    std::string displayImg = "eo://signal_wave_icon.png";
+                    std::string displayText = std::to_string(channelNum);
+                    std::string displayMode = "Freq";
+                    
+                    updateDisplayParameters("/ch" + std::to_string(channelNum) + "_display_img", displayImg,
+                                          "/ch" + std::to_string(channelNum) + "_display_text", displayText,
+                                          "/ch" + std::to_string(channelNum) + "_display_mode", displayMode);
+                    
+                } else if (fullCommand.find("_solo_cmd") != std::string::npos) {
+                    // Handle channel solo commands
+                    std::string channelStr = fullCommand.substr(3, fullCommand.find("_solo_cmd") - 3);
+                    int channelNum = std::stoi(channelStr);
+                    DEBUG_LOG << "Executing CHANNEL_SOLO command for channel " << channelNum;
+                    
+                    // Toggle this channel's solo
+                    std::string soloOid = "/ch" + std::to_string(channelNum) + "_solo";
+                    std::unique_ptr<IParam> soloParam = dm.getParam(soloOid, err);
+                    if (soloParam) {
+                        auto* solo = dynamic_cast<ParamWithValue<int32_t>*>(soloParam.get());
+                        if (solo) {
+                            std::lock_guard lg(dm.mutex());
+                            solo->get() = (solo->get() == 0) ? 1 : 0; // toggle
+                            dm.getValueSetByServer().emit(soloOid, solo);
+                            DEBUG_LOG << "Toggled channel " << channelNum << " solo to: " << solo->get();
+                        }
+                    }
+                    
+                } else if (fullCommand.find("_mute_cmd") != std::string::npos) {
+                    // Handle channel mute commands
+                    std::string channelStr = fullCommand.substr(3, fullCommand.find("_mute_cmd") - 3);
+                    int channelNum = std::stoi(channelStr);
+                    DEBUG_LOG << "Executing CHANNEL_MUTE command for channel " << channelNum;
+                    
+                    // Toggle this channel's mute
+                    std::string muteOid = "/ch" + std::to_string(channelNum) + "_mute";
+                    std::unique_ptr<IParam> muteParam = dm.getParam(muteOid, err);
+                    if (muteParam) {
+                        auto* mute = dynamic_cast<ParamWithValue<int32_t>*>(muteParam.get());
+                        if (mute) {
+                            std::lock_guard lg(dm.mutex());
+                            mute->get() = (mute->get() == 0) ? 1 : 0; // toggle
+                            dm.getValueSetByServer().emit(muteOid, mute);
+                            DEBUG_LOG << "Toggled channel " << channelNum << " mute to: " << mute->get();
+                        }
+                    }
+                    
                 } else {
-                    DEBUG_LOG << "Command responder creation failed: " << fullCommand;
-                    res.status = 500;
-                    res.set_content("{\"error\": \"Command responder creation failed\"}", "application/json");
+                    DEBUG_LOG << "Command not implemented in direct execution: " << fullCommand;
+                    res.status = 501;
+                    res.set_content("{\"error\": \"Command not implemented\"}", "application/json");
+                    return;
                 }
+                
+                DEBUG_LOG << "Command executed successfully: " << fullCommand;
+                res.set_header("Content-Type", "application/json");
+                res.set_content("{\"status\": \"success\"}", "application/json");
+                
             } catch (const std::exception& e) {
                 DEBUG_LOG << "Exception during command execution: " << fullCommand << " - " << e.what();
                 res.status = 500;
