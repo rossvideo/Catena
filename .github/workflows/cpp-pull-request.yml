@@ -137,7 +137,7 @@ jobs:
       - name: Generate Coverage Report
         run: |
           gcovr --root ~/Catena \
-          --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' -e '(.+/)?examples/' \
+          --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' -e '(.+/)?examples/' -e '(.+/)?vdk/' \
           --lcov=coverage.info \
           --cobertura=coverage.xml \
           --html=index.html \
