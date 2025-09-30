@@ -21,7 +21,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(CATENA_REST_EXAMPLES C CXX)
-
+add_dependencies(${target} build_openapi)
 add_subdirectory("asset_request_REST")
 add_subdirectory("one_of_everything_REST")
 add_subdirectory("status_update_REST")

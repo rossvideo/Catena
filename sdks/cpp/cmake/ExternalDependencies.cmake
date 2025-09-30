@@ -30,25 +30,23 @@ add_custom_target(npm_smpte_tools DEPENDS ${CATENA_ROOT_DIR}/tools/smpte_node_mo
 
 # Setup OpenAPI generation with proper dependencies
 add_custom_command(
-    OUTPUT ${CATENA_ROOT_DIR}/smpte/interface/openapi.yaml
-    COMMAND ${CATENA_ROOT_DIR}/smpte/build-openapi.sh
-    WORKING_DIRECTORY ${CATENA_ROOT_DIR}/smpte
-    DEPENDS ${CATENA_ROOT_DIR}/tools/smpte_node_modules.stamp
-    COMMENT "Generating openapi.yaml if missing"
-)
-
-# Rebuild openapi.yaml when specific interface files change
-add_custom_command(
     OUTPUT ${CATENA_ROOT_DIR}/tools/openapi.stamp
-    COMMAND ${CATENA_ROOT_DIR}/smpte/build-openapi.sh
+    COMMAND bash ${CATENA_ROOT_DIR}/smpte/build-openapi.sh
     COMMAND ${CMAKE_COMMAND} -E touch ${CATENA_ROOT_DIR}/tools/openapi.stamp
     WORKING_DIRECTORY ${CATENA_ROOT_DIR}/smpte
-    DEPENDS ${CATENA_ROOT_DIR}/smpte/interface/openapi.yaml
-    DEPENDS ${CATENA_ROOT_DIR}/smpte/interface/schemata/device.json
-    DEPENDS ${CATENA_ROOT_DIR}/tools/smpte_node_modules.stamp
-    COMMENT "Rebuilding OpenAPI specification"
+    DEPENDS
+        ${CATENA_ROOT_DIR}/smpte/build-openapi.sh
+        ${CATENA_ROOT_DIR}/tools/smpte_node_modules.stamp
+        ${CATENA_ROOT_DIR}/smpte/interface/openapi/openapi.yaml
+    COMMENT "Running build-openapi.sh to generate OpenAPI files"
 )
+
 add_custom_target(build_openapi DEPENDS ${CATENA_ROOT_DIR}/tools/openapi.stamp)
+
+# To ensure build_openapi runs first in Ninja, add this to each target:
+# add_dependencies(<your_target> build_openapi)
+# Example for hello_world:
+# add_dependencies(hello_world build_openapi)
 
 # Setup codegen tools
 get_filename_component(CODEGEN_DIR "${CATENA_ROOT_DIR}/tools/codegen" ABSOLUTE)
