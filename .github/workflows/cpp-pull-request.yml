@@ -234,7 +234,6 @@ jobs:
           git config --global --add safe.directory /__w/Catena/Catena
           cmake -G Ninja \
             -DUNIT_TESTING=OFF \
-            -DBARE_EXAMPLES=ON \
             -DBUILD_DOC=OFF \
             -DCATENA_MODEL="lite" \
             -DCONNECTIONS=${CONNECTIONS} \
