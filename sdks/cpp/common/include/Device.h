@@ -53,6 +53,7 @@
 #include <Status.h>
 #include <IMenu.h>
 #include <IMenuGroup.h>
+#include <rpc/IHeartbeat.h>
 
 // Interface
 #include <IDevice.h>
@@ -159,6 +160,16 @@ class Device : public IDevice {
      * @return The default total length for this device's string array params.
      */
     inline uint32_t default_total_length() const override {return default_total_length_;}
+
+    const std::string& getHeartbeatParam() const override { return heartbeatParam_; }
+
+    void setHeartbeatParam(const std::string& fqoid) override { heartbeatParam_ = fqoid; }
+
+    void sendHeartbeat() override;
+
+    void startHeartbeat(int32_t interval = 5000) override;
+
+    void stopHeartbeat() override;
 
     /**
      * @brief Sets the default max length for this device's array params.
@@ -599,6 +610,24 @@ class Device : public IDevice {
      * @return The signal.
      */
      vdk::signal<void(const std::string&, const IAuthorizer*)>& getDeleteAssetRequest() override { return deleteAssetRequest_; }
+
+  protected:
+    /**
+     * @brief The heartbeat object. starts as null, and is created when
+     * startHeartbeat() is called.
+     */
+    std::unique_ptr<IHeartbeat> heartbeat_;
+
+    /**
+     * @brief The param fqoid used for the heartbeat.
+     */
+    std::string heartbeatParam_;
+
+    /**
+     * @brief Initializes the heartbeat object. Can be overridden by derived
+     * classes to provide a custom heartbeat implementation.
+     */
+    virtual void initHeartbeat();
 
   private:
     /**

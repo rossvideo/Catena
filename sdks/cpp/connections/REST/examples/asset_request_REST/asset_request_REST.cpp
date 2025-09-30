@@ -180,8 +180,11 @@ void RunRESTServer() {
         globalApi = &api;
         DEBUG_LOG << "API Version: " << api.version();
         DEBUG_LOG << "REST on 0.0.0.0:" << config.port;
-                
+
+        dm.setHeartbeatParam("/product/version");
+        dm.startHeartbeat();
         api.run();
+        dm.stopHeartbeat();
     } catch (std::exception &why) {
         LOG(ERROR) << "Problem: " << why.what();
     }

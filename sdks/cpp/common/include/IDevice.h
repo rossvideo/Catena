@@ -141,6 +141,36 @@ class IDevice {
     virtual void set_default_total_length(const uint32_t default_total_length) = 0;
 
     /**
+     * @brief Get the heartbeat param fqoid.
+     * @return The heartbeat param fqoid.
+     */
+    virtual const std::string& getHeartbeatParam() const = 0;
+
+    /**
+     * @brief Sets the heartbeat param fqoid.
+     * @param fqoid The heartbeat param fqoid.
+     */
+    virtual void setHeartbeatParam(const std::string& fqoid) = 0;
+
+    /**
+     * @brief Cause the device to send a heartbeat update using the parameter
+     * set by setHeartbeatParam.
+     */
+    virtual void sendHeartbeat() = 0;
+
+    /**
+     * @brief Start sending heartbeat updates for a parameter at the specified interval. This is a simple
+     * heartbeat set up. For a more complex implementation, consider using the Heartbeat class directly.
+     * @param interval The interval in milliseconds between heartbeats. Default is 5000ms.
+     */
+    virtual void startHeartbeat(int32_t interval = 5000) = 0;
+
+    /**
+     * @brief Stop sending the heartbeat.
+     */
+    virtual void stopHeartbeat() = 0;
+
+    /**
      * @brief Create a protobuf representation of the device.
      * @param dst the protobuf representation of the device.
      * @param shallow if true, only the top-level info is copied, params,
@@ -193,8 +223,7 @@ class IDevice {
     using ComponentLanguagePack = st2138::DeviceComponent_ComponentLanguagePack;
     /**
      * @brief Finds and returns a language pack based on languageId.
-     * @param languageId The language id of the language pack to get
-     * (e.g. "en").
+     * @param languageId The language id of the language pack to get (e.g. "en").
      * @param pack Output var containing the found LanguagePack.
      * @return exception_with_status containing the status of the operation.
      */
