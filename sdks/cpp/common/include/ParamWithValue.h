@@ -910,5 +910,6 @@ template<typename T>
 inline T& getParamValue(catena::common::IParam* param) {
   return dynamic_cast<ParamWithValue<T>*>(param)->get();
 }
+
 }; // namespace common
 }; // namespace catena
