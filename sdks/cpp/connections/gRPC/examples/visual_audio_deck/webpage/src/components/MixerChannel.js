@@ -36,7 +36,7 @@ function MixerChannel({
   
   // Display state
   const [display, setDisplay] = useState({
-    img: 'src/assets/signal-wave.png',
+    img: '/src/assets/signal-wave.png',
     mode: channelNumber.toString(),
     text: `Channel ${channelNumber}`
   });
@@ -49,7 +49,26 @@ function MixerChannel({
     if (channelData.signal !== undefined) setSignal(channelData.signal);
     if (channelData.volume !== undefined) setVolume(channelData.volume);
     if (channelData.frequency !== undefined) setFrequencies(prev => ({ ...prev, [selectedFreq]: channelData.frequency }));
-    if (channelData.select !== undefined) setIsSelected(channelData.select);
+    if (channelData.select !== undefined) {
+      setIsSelected(channelData.select);
+      
+      // Update display based on selection state
+      if (channelData.select) {
+        // Channel is selected - show frequency mode
+        setDisplay({
+          img: '/src/assets/freq-edit-icon.png',
+          mode: 'Freq',
+          text: `Channel ${channelNumber}`
+        });
+      } else {
+        // Channel is not selected - show channel mode
+        setDisplay({
+          img: '/src/assets/signal-wave.png',
+          mode: channelNumber.toString(),
+          text: `Channel ${channelNumber}`
+        });
+      }
+    }
     if (channelData.solo !== undefined) setIsSolo(channelData.solo);
     if (channelData.mute !== undefined) setIsMuted(channelData.mute);
     
@@ -60,15 +79,27 @@ function MixerChannel({
       Freq: channelData.warning_freq || false
     });
     
-    // Update display info
-    if (channelData.display_img || channelData.display_text || channelData.display_mode) {
+    // Update display info from backend (but only if not overridden by selection logic above)
+    if (!channelData.select && (channelData.display_img || channelData.display_text || channelData.display_mode)) {
       setDisplay({
-        img: channelData.display_img || 'src/assets/signal-wave.png',
+        img: channelData.display_img || '/src/assets/signal-wave.png',
         mode: channelData.display_mode || channelNumber.toString(),
         text: channelData.display_text || `Channel ${channelNumber}`
       });
     }
   }, [channelData, selectedFreq, channelNumber]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (sliderUpdateTimer.current) {
+        clearTimeout(sliderUpdateTimer.current);
+      }
+      if (frequencyUpdateTimer.current) {
+        clearTimeout(frequencyUpdateTimer.current);
+      }
+    };
+  }, []);
 
   // Convert linear slider value to logarithmic dB scale
   const linearToLog = (linear) => {
@@ -107,13 +138,32 @@ function MixerChannel({
     }
   }, [clearSoloTrigger, isSolo]);
 
+  // Debounce timer for slider updates
+  const sliderUpdateTimer = useRef(null);
+
   const handleVolumeChange = (e) => {
     const dBValue = linearToLog(e.target.value);
     setVolume(dBValue); // Update UI immediately
+    
+    // Debounce server updates - only send after user stops moving slider for 150ms
+    if (sliderUpdateTimer.current) {
+      clearTimeout(sliderUpdateTimer.current);
+    }
+    
+    sliderUpdateTimer.current = setTimeout(() => {
+      onUpdate({
+        type: 'CHANNEL_SLIDER_UPDATE',
+        value: dBValue
+      });
+    }, 150);
   };
 
   const handleVolumeRelease = (e) => {
     const dBValue = linearToLog(e.target.value);
+    // Clear any pending debounced update and send immediately on release
+    if (sliderUpdateTimer.current) {
+      clearTimeout(sliderUpdateTimer.current);
+    }
     onUpdate({
       type: 'CHANNEL_SLIDER_UPDATE',
       value: dBValue
@@ -122,6 +172,10 @@ function MixerChannel({
 
   const toggleMute = () => {
     console.log(`Channel ${channelNumber} Mute clicked`);
+    // Optimistic update - toggle immediately
+    setIsMuted(prev => !prev);
+    
+    // Then update server
     onUpdate({
       type: 'CHANNEL_MUTE'
     });
@@ -130,13 +184,32 @@ function MixerChannel({
   const toggleSolo = () => {
     console.log(`Channel ${channelNumber} Solo clicked`);
     if (isSelected && !freqEditMode) {
-      // Enter frequency edit mode - just toggle solo
+      // Enter frequency edit mode - optimistic update first
+      setIsSolo(true);
+      setFreqEditMode(true);
+      setDisplay(prev => ({
+        ...prev,
+        mode: 'SET FREQ',
+        img: '/src/assets/freq-edit-icon.png',
+        text: selectedFreq.toString()
+      }));
+      
+      // Then update server
       onUpdate({
         type: 'CHANNEL_SOLO'
       });
-      setFreqEditMode(true);
     } else if (isSelected && freqEditMode) {
-      // Exit frequency edit mode - toggle solo and save frequency
+      // Exit frequency edit mode - optimistic update first
+      setIsSolo(false);
+      setFreqEditMode(false);
+      setDisplay(prev => ({
+        ...prev,
+        mode: channelNumber.toString(),
+        img: '/src/assets/signal-wave.png',
+        text: `Channel ${channelNumber}`
+      }));
+      
+      // Then update server
       onUpdate({
         type: 'CHANNEL_SOLO'
       });
@@ -144,9 +217,11 @@ function MixerChannel({
         type: 'CHANNEL_FREQUENCY_UPDATE',
         value: frequencies[selectedFreq]
       });
-      setFreqEditMode(false);
     } else {
-      // Normal solo toggle
+      // Normal solo toggle - optimistic update first
+      setIsSolo(prev => !prev);
+      
+      // Then update server
       onUpdate({
         type: 'CHANNEL_SOLO'
       });
@@ -155,10 +230,15 @@ function MixerChannel({
 
   const toggleSelect = () => {
     console.log(`Channel ${channelNumber} Select clicked`);
+    // Don't do optimistic update here - let the parent handle it
+    // This ensures proper coordination between all channels and main
     onUpdate({
       type: 'CHANNEL_SELECT'
     });
   };
+
+  // Debounce timer for frequency updates
+  const frequencyUpdateTimer = useRef(null);
 
   const handleFrequencyChange = (sliderIndex, value) => {
     const freq = sliderToFreq[sliderIndex];
@@ -167,6 +247,18 @@ function MixerChannel({
       [freq]: value
     }));
     setWarnings(prev => ({ ...prev, Freq: true }));
+    
+    // Debounce frequency updates - only send after user stops moving slider for 300ms
+    if (frequencyUpdateTimer.current) {
+      clearTimeout(frequencyUpdateTimer.current);
+    }
+    
+    frequencyUpdateTimer.current = setTimeout(() => {
+      onUpdate({
+        type: 'CHANNEL_FREQUENCY_UPDATE',
+        value: value
+      });
+    }, 300);
   };
 
   const handleFrequencyEdit = (newFreq) => {

@@ -209,8 +209,8 @@ void defineCommands() {
                 }
             }
             
-            // Set main display: mode="LR", text="main", img="ross_video_icon.png"
-            updateDisplayParameters("/main_display_img", "eo://ross_video_icon.png",
+            // Set main display: mode="LR", text="main", img="logo.png"
+            updateDisplayParameters("/main_display_img", "/src/assets/logo.png",
                                   "/main_display_text", "main",
                                   "/main_display_mode", "LR");
             
@@ -295,7 +295,7 @@ void defineCommands() {
                 std::string displayTextOid = "/ch" + std::to_string(channelNum) + "_display_text";
                 std::string displayModeOid = "/ch" + std::to_string(channelNum) + "_display_mode";
                 
-                updateDisplayParameters(displayImgOid, "eo://signal_wave_icon.png",
+                updateDisplayParameters(displayImgOid, "/src/assets/freq-edit-icon.png",
                                       displayTextOid, channelName,
                                       displayModeOid, "Freq");
                 
@@ -405,7 +405,7 @@ void defineCommands() {
                                 }
                             }
                             
-                            updateDisplayParameters(displayImgOid, "eo://nice_icon.png",
+                            updateDisplayParameters(displayImgOid, "/src/assets/freq-edit-icon.png",
                                                   displayTextOid, freqText,
                                                   displayModeOid, "SET FREQ");
                         } else {
@@ -1086,7 +1086,7 @@ void RunWebServer(const std::string& exeDir, int port) {
                     }
                     
                     // Update display parameters
-                    updateDisplayParameters("/main_display_img", "eo://ross_video_icon.png",
+                    updateDisplayParameters("/main_display_img", "/src/assets/logo.png",
                                           "/main_display_text", "main",
                                           "/main_display_mode", "LR");
                 } else if (fullCommand == "/main_solo_cmd") {
@@ -1162,7 +1162,7 @@ void RunWebServer(const std::string& exeDir, int port) {
                     }
                     
                     // Update display parameters for frequency mode
-                    std::string displayImg = "eo://signal_wave_icon.png";
+                    std::string displayImg = "/src/assets/freq-edit-icon.png";
                     std::string displayText = std::to_string(channelNum);
                     std::string displayMode = "Freq";
                     

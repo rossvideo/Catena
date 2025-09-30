@@ -140,10 +140,10 @@ function App() {
     }
   }, []);
 
-  // Auto-refresh parameters every 500ms for real-time updates
+  // Auto-refresh parameters every 1000ms for real-time updates (reduced frequency since we use optimistic updates)
   useEffect(() => {
     fetchParams(); // Initial fetch
-    const interval = setInterval(fetchParams, 500);
+    const interval = setInterval(fetchParams, 1000);
     return () => clearInterval(interval);
   }, [fetchParams]);
 
@@ -153,18 +153,27 @@ function App() {
     try {
       switch (updateInfo.type) {
         case 'CHANNEL_SELECT':
+          // Update local state optimistically - this channel selected, main and other channels deselected
+          setChannelStates(prev => prev.map(ch => ({ 
+            ...ch, 
+            select: ch.id === channelId 
+          })));
+          setMainState(prev => ({ ...prev, select: false }));
           console.log(`Sending ch${channelId}_select_cmd`);
           await sendCommand(`ch${channelId}_select_cmd`);
           break;
         case 'CHANNEL_SOLO':
+          // Optimistic update handled in component
           console.log(`Sending ch${channelId}_solo_cmd`);
           await sendCommand(`ch${channelId}_solo_cmd`);
           break;
         case 'CHANNEL_MUTE':
+          // Optimistic update handled in component
           console.log(`Sending ch${channelId}_mute_cmd`);
           await sendCommand(`ch${channelId}_mute_cmd`);
           break;
         case 'CHANNEL_SLIDER_UPDATE':
+          // Optimistic update handled in component
           console.log(`Updating ch${channelId}_slider to:`, updateInfo.value);
           await updateParameter(`ch${channelId}_slider`, updateInfo.value);
           break;
@@ -183,18 +192,27 @@ function App() {
     try {
       switch (updateInfo.type) {
         case 'MAIN_SELECT':
+          // Update local state optimistically - main selected, all channels deselected
+          setMainState(prev => ({ ...prev, select: true }));
+          setChannelStates(prev => prev.map(ch => ({ ...ch, select: false })));
           await sendCommand('main_select_cmd');
           break;
         case 'MAIN_SOLO':
+          // Optimistic update handled in component
           await sendCommand('main_solo_cmd');
           break;
         case 'MAIN_MUTE':
+          // Optimistic update handled in component
           await sendCommand('main_mute_cmd');
           break;
         case 'CLEAR_ALL_SOLOS':
+          // Update local state optimistically - clear all solos
+          setMainState(prev => ({ ...prev, solo: false }));
+          setChannelStates(prev => prev.map(ch => ({ ...ch, solo: false })));
           await sendCommand('clear_all');
           break;
         case 'MAIN_SLIDER_UPDATE':
+          // Optimistic update handled in component
           await updateParameter('main_slider', updateInfo.value);
           break;
       }

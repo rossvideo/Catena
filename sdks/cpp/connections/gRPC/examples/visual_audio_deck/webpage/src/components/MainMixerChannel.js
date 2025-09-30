@@ -7,7 +7,7 @@ function MainMixerChannel({ channelInputs = [], mainData = {}, onChannelUpdate =
   const [solo_m, setSolo_m] = useState(mainData.solo || false);
   const [mute_m, setMute_m] = useState(mainData.mute || false);
   const [display_m, setDisplay_m] = useState({
-    img: mainData.display_img || 'src/assets/signal-wave.png',
+    img: mainData.display_img || '/src/assets/signal-wave.png',
     mode: mainData.display_mode || 'LR',
     text: mainData.display_text || 'main'
   });
@@ -15,17 +15,47 @@ function MainMixerChannel({ channelInputs = [], mainData = {}, onChannelUpdate =
   // Update state when mainData changes
   useEffect(() => {
     if (mainData.slider !== undefined) setVolume_m(mainData.slider);
-    if (mainData.select !== undefined) setSelect_m(mainData.select);
+    if (mainData.select !== undefined) {
+      setSelect_m(mainData.select);
+      
+      // Update display based on selection state
+      if (mainData.select) {
+        // Main is selected - show main mode (use logo as placeholder for ross-video-icon)
+        setDisplay_m({
+          img: '/src/assets/logo.png',
+          mode: 'LR',
+          text: 'main'
+        });
+      } else {
+        // Main is not selected - show default mode
+        setDisplay_m({
+          img: '/src/assets/signal-wave.png',
+          mode: 'LR',
+          text: 'main'
+        });
+      }
+    }
     if (mainData.solo !== undefined) setSolo_m(mainData.solo);
     if (mainData.mute !== undefined) setMute_m(mainData.mute);
-    if (mainData.display_img || mainData.display_mode || mainData.display_text) {
+    
+    // Update display info from backend (but only if not overridden by selection logic above)
+    if (!mainData.select && (mainData.display_img || mainData.display_mode || mainData.display_text)) {
       setDisplay_m({
-        img: mainData.display_img || 'src/assets/signal-wave.png',
+        img: mainData.display_img || '/src/assets/signal-wave.png',
         mode: mainData.display_mode || 'LR',
         text: mainData.display_text || 'main'
       });
     }
   }, [mainData]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (sliderUpdateTimer.current) {
+        clearTimeout(sliderUpdateTimer.current);
+      }
+    };
+  }, []);
 
   // Convert linear slider value to logarithmic dB scale
   const linearToLog = (linear) => {
@@ -56,9 +86,11 @@ function MainMixerChannel({ channelInputs = [], mainData = {}, onChannelUpdate =
     }, 0) * mainVolumeMultiplier;
   };
 
-  // Main mixer controls
+  // Main mixer controls - with optimistic updates
   const handleSelectMain = () => {
     console.log('🎛️ Main Select clicked');
+    // Don't do optimistic update here - let the parent handle it
+    // This ensures proper coordination between main and all channels
     onChannelUpdate({
       type: 'MAIN_SELECT'
     });
@@ -66,6 +98,10 @@ function MainMixerChannel({ channelInputs = [], mainData = {}, onChannelUpdate =
 
   const handleSoloMain = () => {
     console.log('🎛️ Main Solo clicked');
+    // Optimistic update - toggle immediately
+    setSolo_m(prev => !prev);
+    
+    // Then update server
     onChannelUpdate({
       type: 'MAIN_SOLO'
     });
@@ -73,6 +109,10 @@ function MainMixerChannel({ channelInputs = [], mainData = {}, onChannelUpdate =
 
   const handleMuteMain = () => {
     console.log('🎛️ Main Mute clicked');
+    // Optimistic update - toggle immediately
+    setMute_m(prev => !prev);
+    
+    // Then update server
     onChannelUpdate({
       type: 'MAIN_MUTE'
     });
@@ -80,18 +120,41 @@ function MainMixerChannel({ channelInputs = [], mainData = {}, onChannelUpdate =
 
   const handleClearMain = () => {
     console.log('🎛️ Clear All clicked');
+    // Optimistic update - clear solo immediately
+    setSolo_m(false);
+    
+    // Then update server
     onChannelUpdate({
       type: 'CLEAR_ALL_SOLOS'
     });
   };
 
+  // Debounce timer for slider updates
+  const sliderUpdateTimer = useRef(null);
+
   const handleSliderChange = (value) => {
     const dbValue = linearToLog(value);
     setVolume_m(dbValue); // Update UI immediately
+    
+    // Debounce server updates - only send after user stops moving slider for 150ms
+    if (sliderUpdateTimer.current) {
+      clearTimeout(sliderUpdateTimer.current);
+    }
+    
+    sliderUpdateTimer.current = setTimeout(() => {
+      onChannelUpdate({
+        type: 'MAIN_SLIDER_UPDATE',
+        value: dbValue
+      });
+    }, 150);
   };
 
   const handleSliderRelease = (value) => {
     const dbValue = linearToLog(value);
+    // Clear any pending debounced update and send immediately on release
+    if (sliderUpdateTimer.current) {
+      clearTimeout(sliderUpdateTimer.current);
+    }
     onChannelUpdate({
       type: 'MAIN_SLIDER_UPDATE',
       value: dbValue
