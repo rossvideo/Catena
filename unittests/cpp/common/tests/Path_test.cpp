@@ -42,8 +42,22 @@
 // common
 #include "Path.h"
 #include "Status.h"
+#include "Logger.h"
 
 using namespace catena::common;
+
+// Test fixture class for Path tests
+class PathTest : public ::testing::Test {
+protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("PathTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+};
 
 /*
  * TEST 1 - Testing Path constructor with valid paths. 

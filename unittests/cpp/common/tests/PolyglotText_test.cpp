@@ -40,8 +40,22 @@
 #include <gmock/gmock.h>
 
 #include "PolyglotText.h"
+#include "Logger.h"
 
 using namespace catena::common;
+
+// Test fixture class for PolyglotText tests
+class PolyglotTextTest : public ::testing::Test {
+protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("PolyglotTextTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+};
 
 /*
  * TEST 1 - Testing PolyglotText constructors.

@@ -40,10 +40,24 @@
 #include <gmock/gmock.h>
 
 #include "MockDevice.h"
+#include "Logger.h"
 
 #include "RangeConstraint.h"
 
 using namespace catena::common;
+
+// Test fixture class for RangeConstraint tests
+class RangeConstraintTest : public ::testing::Test {
+protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RangeConstraintTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+};
 
 /* 
  * TEST 0.1 - Testing RangeConstraint constructor when the type is not int or float

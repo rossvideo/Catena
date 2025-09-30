@@ -40,10 +40,24 @@
 #include <gmock/gmock.h>
 
 #include "MockDevice.h"
+#include "Logger.h"
 
 #include "ChoiceConstraint.h"
 
 using namespace catena::common;
+
+// Test fixture class for ChoiceConstraint tests
+class ChoiceConstraintTest : public ::testing::Test {
+protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("ChoiceConstraintTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+};
 
 /* ============================================================================
  *                                    INT

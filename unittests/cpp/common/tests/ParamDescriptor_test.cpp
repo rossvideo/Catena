@@ -38,6 +38,7 @@
 #include "ParamDescriptor.h"
 #include "PolyglotText.h"
 #include "Enums.h"
+#include "Logger.h"
 
 #include "MockConstraint.h"
 #include "MockDevice.h"
@@ -52,6 +53,15 @@ using namespace catena::common;
 
 class ParamDescriptorTest : public ::testing::Test {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("ParamDescriptorTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
     /*
      * Initializes pd with default values used in most tests.
      */

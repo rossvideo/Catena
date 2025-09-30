@@ -41,6 +41,7 @@
 
 // Mock objects
 #include "MockMenuGroup.h"
+#include "Logger.h"
 
 // common
 #include "Menu.h"
@@ -48,6 +49,15 @@
 using namespace catena::common;
 
 class MenuTest : public ::testing::Test {
+protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("MenuTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
   protected:
     // Creates a Menu for testing.
     void SetUp() override {

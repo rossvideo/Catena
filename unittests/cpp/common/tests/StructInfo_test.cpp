@@ -43,6 +43,7 @@
 #include <mocks/MockParamDescriptor.h>
 #include <mocks/MockConstraint.h>
 #include <mocks/MockAuthorizer.h>
+#include "Logger.h"
 
 // common
 #include "CommonTestHelpers.h"
@@ -53,6 +54,15 @@ using namespace catena::common;
 // Fixture
 class StructInfoTest : public ::testing::Test {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("StructInfoTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
     /*
      * Sets up default expectations for pd_.
      */

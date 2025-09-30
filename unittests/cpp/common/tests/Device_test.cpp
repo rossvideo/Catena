@@ -40,6 +40,7 @@
 #include <Authorizer.h>
 #include <Status.h>
 #include <LanguagePack.h>
+#include <Logger.h>
 #include <interface/device.pb.h>
 #include <mocks/MockLanguagePack.h>
 #include <mocks/MockParam.h>
@@ -54,6 +55,14 @@ using namespace catena::common;
 
 class DeviceTest : public ::testing::Test {
 protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("DeviceTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
 
     DeviceTest() 
         : adminScope_(Scopes().getForwardMap().at(Scopes_e::kAdmin))
