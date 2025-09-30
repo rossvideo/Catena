@@ -139,7 +139,10 @@ void RunRESTServer() {
         
         std::thread counterLoop(statusUpdateExample);
 
+        dm.setHeartbeatParam("/product/version");
+        dm.startHeartbeat();
         api.run();
+        dm.stopHeartbeat();
 
         counterLoop.join();
 

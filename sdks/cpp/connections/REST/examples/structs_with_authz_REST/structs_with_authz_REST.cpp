@@ -135,7 +135,10 @@ void RunRESTServer() {
             }
         });
         
+        dm.setHeartbeatParam("/product/version");
+        dm.startHeartbeat();
         api.run();
+        dm.stopHeartbeat();
     } catch (std::exception &why) {
         LOG(ERROR) << "Problem: " << why.what();
     }

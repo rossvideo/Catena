@@ -146,9 +146,14 @@ void RunRPCServer(std::string addr)
                 handlers[front](jptr.toString(true), p);
             }
         });
+        
+        // start the heartbeat on the device
+        dm.setHeartbeatParam("/product/version");
+        dm.startHeartbeat();
 
         // wait for the server to shutdown and tidy up
         server->Wait();
+        dm.stopHeartbeat();
 
         cq->Shutdown();
         cq_thread.join();

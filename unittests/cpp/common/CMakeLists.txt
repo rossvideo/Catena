@@ -37,6 +37,7 @@ set(TEST_FILES
     ParamDescriptor_test.cpp
     Device_test.cpp
     ConnectionQueue_test.cpp
+    Heartbeat_test.cpp
 )
 
 foreach(test_file ${TEST_FILES})
