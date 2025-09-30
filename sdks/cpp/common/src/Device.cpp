@@ -36,7 +36,6 @@
 #include <IParamDescriptor.h>
 #include <IMenuGroup.h> 
 #include <Menu.h>
-#include <rpc/Heartbeat.h>
 
 #include <cassert>
 #include <sstream>
