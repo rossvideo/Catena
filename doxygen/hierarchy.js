@@ -126,6 +126,7 @@ var hierarchy =
     [ "catena::meta::NthElementT< L, N >", "classcatena_1_1meta_1_1NthElementT.html", null ],
     [ "catena::common::ParamTag", "structcatena_1_1common_1_1ParamTag.html", null ],
     [ "catena::common::Path", "classcatena_1_1common_1_1Path.html", null ],
+    [ "catena::gRPC::PeerInfo", "classcatena_1_1gRPC_1_1PeerInfo.html", null ],
     [ "catena::meta::PopFrontT< L >", "classcatena_1_1meta_1_1PopFrontT.html", null ],
     [ "catena::meta::PopFrontT< TypeList< Head, Tail... > >", "classcatena_1_1meta_1_1PopFrontT_3_01TypeList_3_01Head_00_01Tail_8_8_8_01_4_01_4.html", null ],
     [ "catena::common::Device::DeviceSerializer::promise_type", "structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html", null ],
@@ -144,6 +145,9 @@ var hierarchy =
     ] ],
     [ "catena::patterns::Singleton< GenericFactory< P, K, Ms... > >", "classcatena_1_1patterns_1_1Singleton.html", [
       [ "catena::patterns::GenericFactory< P, K, Ms >", "classcatena_1_1patterns_1_1GenericFactory.html", null ]
+    ] ],
+    [ "catena::patterns::Singleton< PeerManager >", "classcatena_1_1patterns_1_1Singleton.html", [
+      [ "catena::gRPC::PeerManager", "classcatena_1_1gRPC_1_1PeerManager.html", null ]
     ] ],
     [ "catena::common::StructInfo< T >", "structcatena_1_1common_1_1StructInfo.html", null ],
     [ "std::true_type", null, [
