@@ -43,24 +43,27 @@ else()
     endif(REST_enabled)
 endif(gRPC_enabled)
 
+option(BARE_EXAMPLES "Build only one_of_everything examples" OFF)
+if(BARE_EXAMPLES)
+else()
+    # Add all example subdirectories
+    add_subdirectory("factory")
+    add_subdirectory("enum_decorator")
+    add_subdirectory("path")
+    add_subdirectory("hello_world")
+    add_subdirectory("use_constraints")
+    add_subdirectory("use_variants")
+    add_subdirectory("use_struct_arrays")
+    add_subdirectory("use_structs")
+    add_subdirectory("import_params")
+    add_subdirectory("use_templates")
 
-# Add all example subdirectories
-add_subdirectory("factory")
-add_subdirectory("enum_decorator")
-add_subdirectory("path")
-add_subdirectory("hello_world")
-add_subdirectory("use_constraints")
-add_subdirectory("use_variants")
-add_subdirectory("use_struct_arrays")
-add_subdirectory("use_structs")
-add_subdirectory("import_params")
-add_subdirectory("use_templates")
+    # After all example targets are created, add build_openapi dependency for each if it exists
+    foreach(example IN ITEMS factory enum_decorator path hello_world use_constraints use_variants use_struct_arrays use_structs import_params use_templates)
+        if(TARGET ${example})
+            add_dependencies(${example} build_openapi)
+        endif()
+    endforeach()
 
-# After all example targets are created, add build_openapi dependency for each if it exists
-foreach(example IN ITEMS factory enum_decorator path hello_world use_constraints use_variants use_struct_arrays use_structs import_params use_templates)
-    if(TARGET ${example})
-        add_dependencies(${example} build_openapi)
-    endif()
-endforeach()
-
+endif()
 
