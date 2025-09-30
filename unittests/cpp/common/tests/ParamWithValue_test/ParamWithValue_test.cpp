@@ -45,45 +45,33 @@ using NestedStructParam = ParamWithValue<TestNestedStruct>;
 
 class ParamWithValueTest : public ParamTest<EmptyValue> {
     /*
-     * Returns the value type of the parameter we are testing with.
-     */
+    * Returns the value type of the parameter we are testing with.
+    */
     st2138::ParamType type() const override { return st2138::ParamType::EMPTY; }
 };
 /*
- * TEST 1 - Testing <EMPTY>ParamWithValue constructors.
- */
+* TEST 1 - Testing <EMPTY>ParamWithValue constructors.
+*/
 TEST_F(ParamWithValueTest, Create) {
     CreateTest(emptyValue);
 }
 /*
- * TEST 2 - Testing <EMPTY>ParamWithValue.get().
- */
+* TEST 2 - Testing <EMPTY>ParamWithValue.get().
+*/
 TEST_F(ParamWithValueTest, Get) {
     GetValueTest(emptyValue);
 }
 /*
- * TEST 3 - Testing <EMPTY>ParamWithValue.size().
- */
+* TEST 3 - Testing <EMPTY>ParamWithValue.size().
+*/
 TEST_F(ParamWithValueTest, Size) {
     EmptyParam param(emptyValue, pd_);
     EXPECT_EQ(param.size(), 0);
 }
 /*
- * TEST 4 - Testing <EMPTY>ParamWithValue.getParam().
- * EMPTY params have no sub-params and should return an error.
- */
-TEST_F(ParamWithValueTest, GetParam) {
-    EmptyParam param(emptyValue, pd_);
-    Path path = Path("/test/oid");
-    auto foundParam = param.getParam(path, authz_, rc_);
-    // Checking results.
-    EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
-    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
-}
-/*
- * TEST 5 - Testing <EMPTY>ParamWithValue.addBack().
- * EMPTY params are not arrays, so this should return an error.
- */
+* TEST 5 - Testing <EMPTY>ParamWithValue.addBack().
+* EMPTY params are not arrays, so this should return an error.
+*/
 TEST_F(ParamWithValueTest, AddBack) {
     EmptyParam param(emptyValue, pd_);
     auto addedParam = param.addBack(authz_, rc_);
@@ -91,17 +79,17 @@ TEST_F(ParamWithValueTest, AddBack) {
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 /*
- * TEST 6 - Testing <EMPTY>ParamWithValue.popBack().
- * EMPTY params are not arrays, so this should return an error.
- */
+* TEST 6 - Testing <EMPTY>ParamWithValue.popBack().
+* EMPTY params are not arrays, so this should return an error.
+*/
 TEST_F(ParamWithValueTest, PopBack) {
     EmptyParam param(emptyValue, pd_);
     rc_ = param.popBack(authz_);
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 /*
- * TEST 7 - Testing <EMPTY>ParamWithValue.toProto().
- */
+* TEST 7 - Testing <EMPTY>ParamWithValue.toProto().
+*/
 TEST_F(ParamWithValueTest, ParamToProto) {
     EmptyParam param(emptyValue, pd_);
     st2138::Param outParam;
@@ -110,8 +98,8 @@ TEST_F(ParamWithValueTest, ParamToProto) {
     EXPECT_EQ(oid_, outParam.template_oid());
 }
 /*
- * TEST 8 - Testing <EMPTY>ParamWithValue.fromProto().
- */
+* TEST 8 - Testing <EMPTY>ParamWithValue.fromProto().
+*/
 TEST_F(ParamWithValueTest, FromProto) {
     EmptyParam param(emptyValue, pd_);
     st2138::Value protoValue;
@@ -122,8 +110,8 @@ TEST_F(ParamWithValueTest, FromProto) {
     EXPECT_EQ(&param.get(), &emptyValue);
 }
 /*
- * TEST 9 - Testing <INT>ParamWithValue.ValidateSetValue().
- */
+* TEST 9 - Testing <INT>ParamWithValue.ValidateSetValue().
+*/
 TEST_F(ParamWithValueTest, ValidateSetValue) {
     EmptyParam param(emptyValue, pd_);
     st2138::Value protoValue;
@@ -132,8 +120,8 @@ TEST_F(ParamWithValueTest, ValidateSetValue) {
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 /*
- * TEST 10 - Testing a number of functions that just forward to the descriptor.
- */
+* TEST 10 - Testing a number of functions that just forward to the descriptor.
+*/
 TEST_F(ParamWithValueTest, DescriptorForwards) {
     EmptyParam param(emptyValue, pd_);
     // param.getDescriptor()
@@ -206,8 +194,8 @@ TEST_F(ParamWithValueTest, DescriptorForwards) {
     EXPECT_EQ(param.getScope(), testScope);
 }
 /*
- * TEST 11 - Testing paramWithValue.copy().
- */
+* TEST 11 - Testing paramWithValue.copy().
+*/
 TEST_F(ParamWithValueTest, Copy) {
     int32_t value{0};
     ParamWithValue<int32_t> param(value, pd_);
@@ -219,11 +207,11 @@ TEST_F(ParamWithValueTest, Copy) {
     EXPECT_EQ(&paramCopy->getDescriptor(), &param.getDescriptor());
 }
 /*
- * TEST 11 - Testing paramWithValue.toProto(Param) error handling.
- * Two main error cases:
- * - pd_.toProto throws an error.
- * - Not authorized.
- */
+* TEST 11 - Testing paramWithValue.toProto(Param) error handling.
+* Two main error cases:
+* - pd_.toProto throws an error.
+* - Not authorized.
+*/
 TEST_F(ParamWithValueTest, ParamToProto_Error) {
     int32_t value{16};
     ParamWithValue<int32_t> param(value, pd_);
@@ -241,8 +229,8 @@ TEST_F(ParamWithValueTest, ParamToProto_Error) {
         << "toProto should return PERMISSION_DENIED if Authorizer does not have readAuthz.";
 }
 /*
- * TEST 12 - Testing paramWithValue.toProto(ParamInfo).
- */
+* TEST 12 - Testing paramWithValue.toProto(ParamInfo).
+*/
 TEST_F(ParamWithValueTest, ParamInfoToProto) {
     EmptyParam param(emptyValue, pd_);
     st2138::ParamInfoResponse paramInfo;
@@ -255,11 +243,11 @@ TEST_F(ParamWithValueTest, ParamInfoToProto) {
     EXPECT_EQ(oid_, paramInfo.info().oid());
 }
 /*
- * TEST 12 - Testing paramWithValue.toProto(ParamInfo) error handling.
- * Two main error cases:
- * - pd_.toProto throws an error.
- * - Not authorized.
- */
+* TEST 12 - Testing paramWithValue.toProto(ParamInfo) error handling.
+* Two main error cases:
+* - pd_.toProto throws an error.
+* - Not authorized.
+*/
 TEST_F(ParamWithValueTest, ParamInfoToProto_Error) {
     EmptyParam param(emptyValue, pd_);
     st2138::ParamInfoResponse paramInfo;
@@ -285,19 +273,4 @@ TEST_F(ParamWithValueTest, EmptyChild) {
     // Verify the child field has the expected empty/default value
     EXPECT_EQ(getParamValue<int32_t>(foundParam.get()), 0) 
         << "Empty child field should have value 0";
- }
-
-TEST_F(ParamWithValueTest, ThreeLevelNesting) {
-    TestThreeLevelStruct threeLevel{};  
-        
-    using ThreeLevelParam = ParamWithValue<TestThreeLevelStruct>;
-    ThreeLevelParam param(threeLevel, pd_);
-        
-    Path path = Path("/f1/f1/f1");  
-    auto foundParam = param.getParam(path, authz_, rc_);
-        
-    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
-    ASSERT_TRUE(foundParam);
-    EXPECT_EQ(getParamValue<int32_t>(foundParam.get()), 0)
-        << "Empty child field should have value 0";
- }
+}

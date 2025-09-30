@@ -355,43 +355,6 @@ std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exc
     return command;
 }
 
-void Device::initHeartbeat() {
-    // if heartbeat already initialized, do nothing
-    if (heartbeat_) return;
-    // create heartbeat and connect signal to sendHeartbeat
-    heartbeat_ = std::make_unique<Heartbeat>();
-    heartbeat_->getHeartbeatSignal().connect(this, &Device::sendHeartbeat);
-}
-
-void Device::sendHeartbeat() {
-    // output param has to be initialized with something
-    catena::exception_with_status err{"", catena::StatusCode::UNKNOWN};
-    std::unique_ptr<IParam> param = getParam(heartbeatParam_, err);
-    if (param == nullptr) {
-        // if param is null, getParam set err to something useful
-        throw err;
-    }
-    // have a valid param, emit signal
-    // don't catch, let it propagate to Heartbeat or Business logic
-    valueSetByServer_.emit(heartbeatParam_, param.get());
-}
-
-void Device::startHeartbeat(int32_t interval) {
-    // initialize heartbeat if not already done
-    initHeartbeat();
-    // start heartbeat with specified interval
-    // heartbeat protects against multiple calls to start
-    heartbeat_->start(interval);
-}
-
-void Device::stopHeartbeat() {
-    if (heartbeat_) {
-        // stop heartbeat if it was initialized
-        // heartbeat protects against multiple calls to stop
-        heartbeat_->stop();
-    }
-}
-
 void Device::toProto(::st2138::Device& dst, const IAuthorizer& authz, bool shallow) const {
     dst.set_slot(slot_);
     dst.set_detail_level(detail_level_);
