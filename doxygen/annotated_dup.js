@@ -60,8 +60,6 @@ var annotated_dup =
         [ "ListLanguages", "classcatena_1_1gRPC_1_1ListLanguages.html", "classcatena_1_1gRPC_1_1ListLanguages" ],
         [ "MultiSetValue", "classcatena_1_1gRPC_1_1MultiSetValue.html", "classcatena_1_1gRPC_1_1MultiSetValue" ],
         [ "ParamInfoRequest", "classcatena_1_1gRPC_1_1ParamInfoRequest.html", "classcatena_1_1gRPC_1_1ParamInfoRequest" ],
-        [ "PeerInfo", "classcatena_1_1gRPC_1_1PeerInfo.html", "classcatena_1_1gRPC_1_1PeerInfo" ],
-        [ "PeerManager", "classcatena_1_1gRPC_1_1PeerManager.html", "classcatena_1_1gRPC_1_1PeerManager" ],
         [ "ServiceConfig", "classcatena_1_1gRPC_1_1ServiceConfig.html", "classcatena_1_1gRPC_1_1ServiceConfig" ],
         [ "ServiceImpl", "classcatena_1_1gRPC_1_1ServiceImpl.html", "classcatena_1_1gRPC_1_1ServiceImpl" ],
         [ "SetValue", "classcatena_1_1gRPC_1_1SetValue.html", "classcatena_1_1gRPC_1_1SetValue" ],
