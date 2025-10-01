@@ -26,23 +26,32 @@ program
     .option('-l, --language <string>', 'Language to generate code for', 'cpp')
     .option('-o, --output <string>', 'Output folder for generated code', '.')
     .option('--disable-mandatory-enforcement', 'Disable enforcement of mandatory parameters during code generation')
+    .option('-q, --quiet', 'Suppress non-error console output', false)
 
 program.parse(process.argv);
 const options = program.opts();
+const log = options.quiet ? function() {} : function (message) {
+    console.log(message);
+}
+
+function error(message) {
+    console.error(message);
+}
+
 if (options.schema) {
-    console.log(`schema: ${options.schema}`);
+    log(`schema: ${options.schema}`);
 }
 if (options.deviceModel) {
-    console.log(`deviceModel: ${options.deviceModel}`);
+    log(`deviceModel: ${options.deviceModel}`);
 }
 if (options.language) {
-    console.log(`language: ${options.language}`);
+    log(`language: ${options.language}`);
 }
 if (options.output) {
-    console.log(`output: ${options.output}`);
+    log(`output: ${options.output}`);
 }
 if (options.disableMandatoryEnforcement) {
-    console.log(`Mandatory parameter enforcement disabled`);
+    log(`Mandatory parameter enforcement disabled`);
 }
 
 // import the fs libraries
@@ -50,12 +59,11 @@ const fs = require('fs');
 
 // verify input file exists
 if (!fs.existsSync(options.deviceModel)) {
-    console.log(`Cannot open file at ${options.deviceModel}`);
+    error(`Cannot open file at ${options.deviceModel}`);
     process.exit(1);
 }
 
 const Validator = require('smpte-validator');
-const validator = new Validator(options.schema);
 const path = require("node:path");
 const yaml = require('yaml')
 
@@ -116,30 +124,7 @@ class DeviceModel {
 
 // extract schema name from input filename
 const deviceName = path.parse(options.deviceModel).name.split('.')[0];
-console.log(`Validating device model '${deviceName}' from file '${options.deviceModel}' against schema file '${options.schema}'...`);
-
-// try {
-//     // Determining if the file is yaml or json and parsing accordingly.
-//     const data = (() => {
-//         const extension = path.extname(options.deviceModel);
-//         if (extension === ".yaml" || extension === ".yml") {
-//             return yaml.parse(fs.readFileSync(options.deviceModel, 'utf8'));
-//         } else { // Default
-//             return JSON.parse(fs.readFileSync(options.deviceModel));
-//         }
-//     })();
-//     if (validator.validateDevice(data)) {
-//         const CodeGen =  require(`./${options.language}/${options.language}gen.js`);
-//         const dm = new DeviceModel(options.deviceModel, validator, data);
-//         const codeGen = new CodeGen(dm, options.output);
-//         codeGen.generate();
-//     }
-
-// } catch (why) {
-//     console.log(why.message);
-//     process.exit(typeof why.error === 'number' ? why.error : 1);
-// }
-
+log(`Validating device model '${deviceName}' from file '${options.deviceModel}' against schema file '${options.schema}'...`);
 
 /**
  * @brief Validates that all mandatory product parameters are present and have valid values
@@ -216,25 +201,25 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
 
 try {
     const validator = new Validator(options.schema);
-    console.log(`Applying schema '${deviceName}' to file '${options.deviceModel}'`);
+    log(`Applying schema '${deviceName}' to file '${options.deviceModel}'`);
     const isValid = validator.validate(deviceName, options.deviceModel);
     if (isValid.data) {
         const dm = new DeviceModel(options.deviceModel, validator, isValid.data);
 
         areAllRequiredParamsPresent(dm.desc.params, options.disableMandatoryEnforcement);
 
-        console.log('✅ Validation succeeded.');
-        console.log("Generating code...");
+        log('✅ Validation succeeded.');
+        log("Generating code...");
         const CodeGen = require(`../../tools/codegen/${options.language}/${options.language}gen.js`);
         const codeGen = new CodeGen(dm, options.output);
 
         codeGen.generate();
-        console.log('✅ Code generation completed.');
+        log('✅ Code generation completed.');
     } else {
-        console.log('❌ Schema validation failed.');
+        error('❌ Schema validation failed.');
         process.exit(1);
     }
 } catch (err) {
-    console.error(`Error: ${err.message}`);
+    error(`Error: ${err.message}`);
     process.exit(err.error || 1);
 }
