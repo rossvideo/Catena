@@ -274,3 +274,18 @@ TEST_F(ParamWithValueTest, EmptyChild) {
     EXPECT_EQ(getParamValue<int32_t>(foundParam.get()), 0) 
         << "Empty child field should have value 0";
 }
+
+TEST_F(ParamWithValueTest, ThreeLevelNesting) {
+    TestThreeLevelStruct threeLevel{};  
+
+    using ThreeLevelParam = ParamWithValue<TestThreeLevelStruct>;
+    ThreeLevelParam param(threeLevel, pd_);
+
+    Path path = Path("/f1/f1/f1");  
+    auto foundParam = param.getParam(path, authz_, rc_);
+
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+    ASSERT_TRUE(foundParam);
+    EXPECT_EQ(getParamValue<int32_t>(foundParam.get()), 0)
+        << "Empty child field should have value 0";
+}
