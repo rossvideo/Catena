@@ -60,7 +60,7 @@ protected:
 /*
  * TEST 1 - Testing PolyglotText constructors.
  */
-TEST(PolyglotTextTest, PolyglotText_Create) {
+TEST_F(PolyglotTextTest, PolyglotText_Create) {
     // Default constructor
     PolyglotText pt;
     EXPECT_TRUE(pt.displayStrings().empty()) << "Failed to create PolyglotText with default constructor";
@@ -76,7 +76,7 @@ TEST(PolyglotTextTest, PolyglotText_Create) {
 /*
  * TEST 2 - Testing PolyglotText toProto.
  */
-TEST(PolyglotTextTest, PolyglotText_Move) {
+TEST_F(PolyglotTextTest, PolyglotText_Move) {
     // Creating PolyglotText;
     PolyglotText::DisplayStrings displayStrings = {{"en", "Name"}, {"fr", "Nom"}};
     PolyglotText pt(displayStrings);
@@ -86,7 +86,7 @@ TEST(PolyglotTextTest, PolyglotText_Move) {
 /*
  * TEST 3 - Testing PolyglotText toProto.
  */
-TEST(PolyglotTextTest, PolyglotText_ToProto) {
+TEST_F(PolyglotTextTest, PolyglotText_ToProto) {
     // Creating PolyglotText;
     PolyglotText::DisplayStrings displayStrings = {{"en", "Name"}, {"fr", "Nom"}};
     PolyglotText pt(displayStrings);
@@ -97,7 +97,7 @@ TEST(PolyglotTextTest, PolyglotText_ToProto) {
 /*
  * TEST 4 - Testing PolyglotText toProto with no displayStrings.
  */
-TEST(PolyglotTextTest, PolyglotText_ToProtoEmpty) {
+TEST_F(PolyglotTextTest, PolyglotText_ToProtoEmpty) {
     // Creating PolyglotText;
     PolyglotText pt;
     st2138::PolyglotText dst;

@@ -62,7 +62,7 @@ protected:
 /* 
  * TEST 0.1 - Testing RangeConstraint constructor when the type is not int or float
  */
-TEST(RangeConstraintTest, RangeConstraint_InvalidCreate) {
+TEST_F(RangeConstraintTest, RangeConstraint_InvalidCreate) {
     { // Without device
     EXPECT_THROW(RangeConstraint<std::string> constraint("min", "max", "step", "test_oid", false), std::runtime_error)
         << "Constructor should throw an error when defined with a type other than int and float";
@@ -93,7 +93,7 @@ TEST(RangeConstraintTest, RangeConstraint_InvalidCreate) {
  * 
  * TEST 1.1 - Testing Int RangeConstraint constructors
  */
-TEST(RangeConstraintTest, RangeConstraint_IntCreate) {
+TEST_F(RangeConstraintTest, RangeConstraint_IntCreate) {
     bool shared = false;
     std::string oid = "test_oid";
     { // Without device
@@ -134,7 +134,7 @@ TEST(RangeConstraintTest, RangeConstraint_IntCreate) {
 /* 
  * TEST 1.2 - Testing Int RangeConstraint satisfied
  */
-TEST(RangeConstraintTest, RangeConstraint_IntSatisfied) {
+TEST_F(RangeConstraintTest, RangeConstraint_IntSatisfied) {
     RangeConstraint<int32_t> constraint(0, 10, 2, "test_oid", false);
     st2138::Value src;
     // Valid
@@ -153,7 +153,7 @@ TEST(RangeConstraintTest, RangeConstraint_IntSatisfied) {
 /* 
  * TEST 1.3 - Testing Int RangeConstraint apply
  */
-TEST(RangeConstraintTest, RangeConstraint_IntApply) {
+TEST_F(RangeConstraintTest, RangeConstraint_IntApply) {
     int32_t min = 0, max = 10, step = 2;
     RangeConstraint<int32_t> constraint(min, max, step, "test_oid", false);
     st2138::Value src;
@@ -181,7 +181,7 @@ TEST(RangeConstraintTest, RangeConstraint_IntApply) {
 /* 
  * TEST 1.4 - Testing Int RangeConstraint toProto
  */
-TEST(RangeConstraintTest, RangeConstraint_IntToProto) {
+TEST_F(RangeConstraintTest, RangeConstraint_IntToProto) {
     int32_t min = 0, max = 10, step = 2, displayMin = 2, displayMax = 8;
     RangeConstraint<int32_t> constraint(min, max, step, displayMin, displayMax, "test_oid", false);
     st2138::Constraint protoConstraint;
@@ -203,7 +203,7 @@ TEST(RangeConstraintTest, RangeConstraint_IntToProto) {
  * 
  * TEST 2.1 - Testing FLOAT RangeConstraint constructors
  */
-TEST(RangeConstraintTest, RangeConstraint_FloatCreate) {
+TEST_F(RangeConstraintTest, RangeConstraint_FloatCreate) {
     bool shared = false;
     std::string oid = "test_oid";
     { // Without device
@@ -244,7 +244,7 @@ TEST(RangeConstraintTest, RangeConstraint_FloatCreate) {
 /* 
  * TEST 2.2 - Testing Float RangeConstraint satisfied
  */
-TEST(RangeConstraintTest, RangeConstraint_FloatSatisfied) {
+TEST_F(RangeConstraintTest, RangeConstraint_FloatSatisfied) {
     RangeConstraint<float> constraint(0.5, 9.5, 0.5, "test_oid", false);
     st2138::Value src;
     // Valid
@@ -263,7 +263,7 @@ TEST(RangeConstraintTest, RangeConstraint_FloatSatisfied) {
 /* 
  * TEST 2.3 - Testing Float RangeConstraint apply
  */
-TEST(RangeConstraintTest, RangeConstraint_FloatApply) {
+TEST_F(RangeConstraintTest, RangeConstraint_FloatApply) {
     float min = 0.5, max = 9.5, step = 0.5;
     RangeConstraint<float> constraint(min, max, step, "test_oid", false);
     st2138::Value src;
@@ -291,7 +291,7 @@ TEST(RangeConstraintTest, RangeConstraint_FloatApply) {
 /* 
  * TEST 2.4 - Testing Float RangeConstraint toProto
  */
-TEST(RangeConstraintTest, RangeConstraint_FloatToProto) {
+TEST_F(RangeConstraintTest, RangeConstraint_FloatToProto) {
     int32_t min = 0.5, max = 9.5, step = 0.5, displayMin = 2, displayMax = 8;
     RangeConstraint<float> constraint(min, max, step, displayMin, displayMax, "test_oid", false);
     st2138::Constraint protoConstraint;
