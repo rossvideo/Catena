@@ -30,12 +30,12 @@ program
 
 program.parse(process.argv);
 const options = program.opts();
-const log = options.quiet ? function() {} : function (message) {
-    console.log(message);
+const log = options.quiet ? function() {} : function () {
+    console.log.apply(console, arguments);
 }
 
-function error(message) {
-    console.error(message);
+function error() {
+    console.error.apply(console, arguments);
 }
 
 if (options.schema) {
