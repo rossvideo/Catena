@@ -30,8 +30,9 @@
 
 /**
  * @brief Unit tests for Device.cpp
- * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com) | Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2025-07-10 | 2025-10-01
+ * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com) 
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com) 
+ * @date 2025-10-01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 

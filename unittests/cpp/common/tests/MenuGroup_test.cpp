@@ -30,8 +30,9 @@
 
 /**
  * @brief This file is for testing the MenuGroup.cpp file.
- * @author benjamin.whitten@rossvideo.com | Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 25/06/26 | 25/10/01
+ * @author benjamin.whitten@rossvideo.com 
+ * @author (Nelson Daniels) nelson.daniels@rossvideo.com 
+ * @date 25/10/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 

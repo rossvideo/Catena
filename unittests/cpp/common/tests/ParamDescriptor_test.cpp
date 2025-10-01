@@ -30,8 +30,9 @@
 
 /**
  * @brief This file is for testing the ParamDescriptor.cpp file.
- * @author benjamin.whitten@rossvideo.com | Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 25/05/20 | 25/10/01
+ * @author benjamin.whitten@rossvideo.com 
+ * @author (Nelson Daniels) nelson.daniels@rossvideo.com 
+ * @date 25/10/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
