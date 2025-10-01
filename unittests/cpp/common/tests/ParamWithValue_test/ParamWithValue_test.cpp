@@ -29,263 +29,327 @@
  */
 
 /**
- * @brief This file is for testing the ParamWithValue class.
- * Also test ParamWithEmptyValue.
+ * @brief This file is for testing the ParamWithValue class with various value types.
+ * Tests include EmptyValue, primitive types, nested structs, and deeply nested structures.
+ * Verifies default initialization, path navigation, and protocol buffer serialization.
  * @author benjamin.whitten@rossvideo.com
  * @date 25/08/08
+ * @updated 01/10/25 - Added tests for primitive types and nested structs with empty values
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-#include "Param_test.h"
-#include "CommonTestHelpers.h"
+ #include "Param_test.h"
+ #include "CommonTestHelpers.h"
+ 
+ using namespace catena::common;
+ using EmptyParam = ParamWithValue<EmptyValue>;
+ using NestedStructParam = ParamWithValue<TestNestedStruct>;
+ 
+ class ParamWithValueTest : public ParamTest<EmptyValue> {
+     /*
+     * Returns the value type of the parameter we are testing with.
+     */
+     st2138::ParamType type() const override { return st2138::ParamType::EMPTY; }
+ };
+ /*
+ * TEST 1 - Testing <EMPTY>ParamWithValue constructors.
+ */
+ TEST_F(ParamWithValueTest, Create) {
+     CreateTest(emptyValue);
+ }
+ /*
+ * TEST 2 - Testing <EMPTY>ParamWithValue.get().
+ */
+ TEST_F(ParamWithValueTest, Get) {
+     GetValueTest(emptyValue);
+ }
+ /*
+ * TEST 3 - Testing <EMPTY>ParamWithValue.size().
+ */
+ TEST_F(ParamWithValueTest, Size) {
+     EmptyParam param(emptyValue, pd_);
+     EXPECT_EQ(param.size(), 0);
+ }
+ /*
+ * TEST 5 - Testing <EMPTY>ParamWithValue.addBack().
+ * EMPTY params are not arrays, so this should return an error.
+ */
+ TEST_F(ParamWithValueTest, AddBack) {
+     EmptyParam param(emptyValue, pd_);
+     auto addedParam = param.addBack(authz_, rc_);
+     EXPECT_FALSE(addedParam) << "Added a value to non-array parameter";
+     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
+ }
+ /*
+ * TEST 6 - Testing <EMPTY>ParamWithValue.popBack().
+ * EMPTY params are not arrays, so this should return an error.
+ */
+ TEST_F(ParamWithValueTest, PopBack) {
+     EmptyParam param(emptyValue, pd_);
+     rc_ = param.popBack(authz_);
+     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
+ }
+ /*
+ * TEST 7 - Testing <EMPTY>ParamWithValue.toProto().
+ */
+ TEST_F(ParamWithValueTest, ParamToProto) {
+     EmptyParam param(emptyValue, pd_);
+     st2138::Param outParam;
+     rc_ = param.toProto(outParam, authz_);
+     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+     EXPECT_EQ(oid_, outParam.template_oid());
+ }
+ /*
+ * TEST 8 - Testing <EMPTY>ParamWithValue.fromProto().
+ */
+ TEST_F(ParamWithValueTest, FromProto) {
+     EmptyParam param(emptyValue, pd_);
+     st2138::Value protoValue;
+     protoValue.empty_value();
+     rc_ = param.fromProto(protoValue, authz_);
+     // Checking results.
+     EXPECT_EQ(rc_.status,  catena::StatusCode::OK);
+     EXPECT_EQ(&param.get(), &emptyValue);
+ }
+ /*
+ * TEST 9 - Testing <INT>ParamWithValue.ValidateSetValue().
+ */
+ TEST_F(ParamWithValueTest, ValidateSetValue) {
+     EmptyParam param(emptyValue, pd_);
+     st2138::Value protoValue;
+     protoValue.empty_value();
+     EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_));
+     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
+ }
+ /*
+ * TEST 10 - Testing a number of functions that just forward to the descriptor.
+ */
+ TEST_F(ParamWithValueTest, DescriptorForwards) {
+     EmptyParam param(emptyValue, pd_);
+     // param.getDescriptor()
+     EXPECT_EQ(&param.getDescriptor(), &pd_);
+     // param.type()
+     EXPECT_CALL(pd_, type()).Times(1).WillOnce(testing::Return(st2138::ParamType::EMPTY));
+     EXPECT_EQ(param.type().value(), st2138::ParamType::EMPTY);
+     // param.getOid()
+     EXPECT_CALL(pd_, getOid()).Times(1).WillOnce(testing::ReturnRef(oid_));
+     EXPECT_EQ(param.getOid(), oid_);
+     // param.setOid()
+     std::string newOid = "new_oid";
+     EXPECT_CALL(pd_, setOid(newOid)).Times(1).WillOnce(testing::Return());
+     EXPECT_NO_THROW(param.setOid(newOid););
+     // param.readOnly()
+     EXPECT_CALL(pd_, readOnly()).Times(1).WillOnce(testing::Return(true));
+     EXPECT_TRUE(param.readOnly());
+     // param.readOnly(flag)
+     EXPECT_CALL(pd_, readOnly(false)).Times(1).WillOnce(testing::Return());
+     EXPECT_NO_THROW(param.readOnly(false););
+     // param.defineCommand()
+     EXPECT_CALL(pd_, defineCommand(testing::_)).Times(1).WillOnce(testing::Return());
+     EXPECT_NO_THROW(param.defineCommand(
+         [](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+             return nullptr;
+         }););
+     // param.executeCommand()
+     st2138::Value testVal;
+     testVal.set_string_value("test");
+     EXPECT_CALL(pd_, executeCommand(testing::_, testing::_)).Times(1)
+         .WillOnce(testing::Invoke([&testVal](st2138::Value value, const bool respond){
+         EXPECT_EQ(value.string_value(), testVal.string_value());
+         return nullptr;
+     }));
+     EXPECT_FALSE(param.executeCommand(testVal, true));
+     // param.addParam()
+     std::string subOid = "sub_oid";
+     MockParamDescriptor subPd;
+     EXPECT_CALL(pd_, addSubParam(subOid, &subPd)).Times(1).WillOnce(testing::Return());
+     EXPECT_NO_THROW(param.addParam(subOid, &subPd););
+     // param.isArrayType()
+     for (auto [type, expected] : std::vector<std::pair<st2138::ParamType, bool>>{
+         {st2138::ParamType::UNDEFINED, false},
+         {st2138::ParamType::EMPTY, false},
+         {st2138::ParamType::INT32, false},
+         {st2138::ParamType::FLOAT32, false},
+         {st2138::ParamType::STRING, false},
+         {st2138::ParamType::STRUCT, false},
+         {st2138::ParamType::STRUCT_VARIANT, false},
+         {st2138::ParamType::INT32_ARRAY, true},
+         {st2138::ParamType::FLOAT32_ARRAY, true},
+         {st2138::ParamType::STRING_ARRAY, true},
+         {st2138::ParamType::BINARY, false},
+         {st2138::ParamType::STRUCT_ARRAY, true},
+         {st2138::ParamType::STRUCT_VARIANT_ARRAY, true},
+         {st2138::ParamType::DATA, false}
+     }) {
+         MockParamDescriptor typeTestPd_;
+         EmptyParam typeTestParam(emptyValue, typeTestPd_);
+         EXPECT_CALL(typeTestPd_, type()).WillOnce(testing::Return(type));
+         EXPECT_EQ(typeTestParam.isArrayType(), expected);
+     }
+     // param.getConstraint()
+     MockConstraint testConstraint;
+     EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(&testConstraint));
+     EXPECT_EQ(param.getConstraint(), &testConstraint);
+     // param.getScope()
+     std::string testScope = "test_scope";
+     EXPECT_CALL(pd_, getScope()).Times(1).WillOnce(testing::ReturnRef(testScope));
+     EXPECT_EQ(param.getScope(), testScope);
+ }
+ /*
+ * TEST 11 - Testing paramWithValue.copy().
+ */
+ TEST_F(ParamWithValueTest, Copy) {
+     int32_t value{0};
+     ParamWithValue<int32_t> param(value, pd_);
+     std::unique_ptr<IParam> paramCopy = nullptr;
+     // Copying param and checking its values.
+     EXPECT_NO_THROW(paramCopy = param.copy()) << "Failed to copy ParamWithValue using copy()";
+     ASSERT_TRUE(paramCopy) << "ParamWithValue copy is nullptr";
+     EXPECT_EQ(&getParamValue<int32_t>(paramCopy.get()), &param.get());
+     EXPECT_EQ(&paramCopy->getDescriptor(), &param.getDescriptor());
+ }
+ /*
+ * TEST 11 - Testing paramWithValue.toProto(Param) error handling.
+ * Two main error cases:
+ * - pd_.toProto throws an error.
+ * - Not authorized.
+ */
+ TEST_F(ParamWithValueTest, ParamToProto_Error) {
+     int32_t value{16};
+     ParamWithValue<int32_t> param(value, pd_);
+     st2138::Param outParam;
+     // pd_.toProto throws an error
+     EXPECT_CALL(pd_, toProto(testing::An<st2138::Param&>(), testing::_)).WillOnce(testing::Throw(std::runtime_error("Test error")));
+     EXPECT_THROW(param.toProto(outParam, authz_), std::runtime_error);
+     // Not authorized
+     outParam.Clear();
+     EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
+     rc_ = param.toProto(outParam, authz_);
+     EXPECT_FALSE(outParam.value().has_int32_value())
+         << "toProto should not set value if Authorizer does not have readAuthz.";
+     EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
+         << "toProto should return PERMISSION_DENIED if Authorizer does not have readAuthz.";
+ }
+ /*
+ * TEST 12 - Testing paramWithValue.toProto(ParamInfo).
+ */
+ TEST_F(ParamWithValueTest, ParamInfoToProto) {
+     EmptyParam param(emptyValue, pd_);
+     st2138::ParamInfoResponse paramInfo;
+     EXPECT_CALL(pd_, toProto(testing::An<st2138::ParamInfo&>(), testing::_)).Times(1)
+         .WillOnce(testing::Invoke([this](st2138::ParamInfo& p, const IAuthorizer&) {
+             p.set_oid(oid_);
+         }));
+     rc_ = param.toProto(paramInfo, authz_);
+     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+     EXPECT_EQ(oid_, paramInfo.info().oid());
+ }
+ /*
+ * TEST 12 - Testing paramWithValue.toProto(ParamInfo) error handling.
+ * Two main error cases:
+ * - pd_.toProto throws an error.
+ * - Not authorized.
+ */
+ TEST_F(ParamWithValueTest, ParamInfoToProto_Error) {
+     EmptyParam param(emptyValue, pd_);
+     st2138::ParamInfoResponse paramInfo;
+     // pd_.toProto throws an error
+     EXPECT_CALL(pd_, toProto(testing::An<st2138::ParamInfo&>(), testing::_)).WillOnce(testing::Throw(std::runtime_error("Test error")));
+     EXPECT_THROW(param.toProto(paramInfo, authz_), std::runtime_error);
+     // No read authz
+     EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
+     rc_ = param.toProto(paramInfo, authz_);
+     EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
+         << "toProto should return PERMISSION_DENIED if Authorizer does not have readAuthz.";
+ }
+ 
+/*
+ * TEST 13 - Testing primitive type with default initialization.
+ * Verifies that a simple int32_t parameter defaults to 0 when value-initialized.
+ */
+TEST_F(ParamWithValueTest, PrimitiveTypeDefaultValue) {
+    // Create a primitive int32_t with value-initialization (defaults to 0)
+    int32_t value{};  // non-struct, just a plain int, default = 0
+    
+    // Define the parameter type and create the parameter instance
+    using IntParam = ParamWithValue<int32_t>;
+    IntParam param(value, pd_);
 
-using namespace catena::common;
-using EmptyParam = ParamWithValue<EmptyValue>;
-using NestedStructParam = ParamWithValue<TestNestedStruct>;
+    // Verify the parameter has the expected default value of 0
+    EXPECT_EQ(param.get(), 0) << "Flat int param should default to 0";
+    
+    // Verify the parameter size is 0 (non-array types have size 0)
+    EXPECT_EQ(param.size(), 0) << "Flat int param should have size 0";
 
-class ParamWithValueTest : public ParamTest<EmptyValue> {
-    /*
-    * Returns the value type of the parameter we are testing with.
-    */
-    st2138::ParamType type() const override { return st2138::ParamType::EMPTY; }
-};
-/*
-* TEST 1 - Testing <EMPTY>ParamWithValue constructors.
-*/
-TEST_F(ParamWithValueTest, Create) {
-    CreateTest(emptyValue);
-}
-/*
-* TEST 2 - Testing <EMPTY>ParamWithValue.get().
-*/
-TEST_F(ParamWithValueTest, Get) {
-    GetValueTest(emptyValue);
-}
-/*
-* TEST 3 - Testing <EMPTY>ParamWithValue.size().
-*/
-TEST_F(ParamWithValueTest, Size) {
-    EmptyParam param(emptyValue, pd_);
-    EXPECT_EQ(param.size(), 0);
-}
-/*
-* TEST 5 - Testing <EMPTY>ParamWithValue.addBack().
-* EMPTY params are not arrays, so this should return an error.
-*/
-TEST_F(ParamWithValueTest, AddBack) {
-    EmptyParam param(emptyValue, pd_);
-    auto addedParam = param.addBack(authz_, rc_);
-    EXPECT_FALSE(addedParam) << "Added a value to non-array parameter";
-    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
-}
-/*
-* TEST 6 - Testing <EMPTY>ParamWithValue.popBack().
-* EMPTY params are not arrays, so this should return an error.
-*/
-TEST_F(ParamWithValueTest, PopBack) {
-    EmptyParam param(emptyValue, pd_);
-    rc_ = param.popBack(authz_);
-    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
-}
-/*
-* TEST 7 - Testing <EMPTY>ParamWithValue.toProto().
-*/
-TEST_F(ParamWithValueTest, ParamToProto) {
-    EmptyParam param(emptyValue, pd_);
+    // Test protocol buffer serialization with the default value
     st2138::Param outParam;
     rc_ = param.toProto(outParam, authz_);
+    
+    // Verify serialization was successful
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
     EXPECT_EQ(oid_, outParam.template_oid());
-}
-/*
-* TEST 8 - Testing <EMPTY>ParamWithValue.fromProto().
-*/
-TEST_F(ParamWithValueTest, FromProto) {
-    EmptyParam param(emptyValue, pd_);
-    st2138::Value protoValue;
-    protoValue.empty_value();
-    rc_ = param.fromProto(protoValue, authz_);
-    // Checking results.
-    EXPECT_EQ(rc_.status,  catena::StatusCode::OK);
-    EXPECT_EQ(&param.get(), &emptyValue);
-}
-/*
-* TEST 9 - Testing <INT>ParamWithValue.ValidateSetValue().
-*/
-TEST_F(ParamWithValueTest, ValidateSetValue) {
-    EmptyParam param(emptyValue, pd_);
-    st2138::Value protoValue;
-    protoValue.empty_value();
-    EXPECT_FALSE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_));
-    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
-}
-/*
-* TEST 10 - Testing a number of functions that just forward to the descriptor.
-*/
-TEST_F(ParamWithValueTest, DescriptorForwards) {
-    EmptyParam param(emptyValue, pd_);
-    // param.getDescriptor()
-    EXPECT_EQ(&param.getDescriptor(), &pd_);
-    // param.type()
-    EXPECT_CALL(pd_, type()).Times(1).WillOnce(testing::Return(st2138::ParamType::EMPTY));
-    EXPECT_EQ(param.type().value(), st2138::ParamType::EMPTY);
-    // param.getOid()
-    EXPECT_CALL(pd_, getOid()).Times(1).WillOnce(testing::ReturnRef(oid_));
-    EXPECT_EQ(param.getOid(), oid_);
-    // param.setOid()
-    std::string newOid = "new_oid";
-    EXPECT_CALL(pd_, setOid(newOid)).Times(1).WillOnce(testing::Return());
-    EXPECT_NO_THROW(param.setOid(newOid););
-    // param.readOnly()
-    EXPECT_CALL(pd_, readOnly()).Times(1).WillOnce(testing::Return(true));
-    EXPECT_TRUE(param.readOnly());
-    // param.readOnly(flag)
-    EXPECT_CALL(pd_, readOnly(false)).Times(1).WillOnce(testing::Return());
-    EXPECT_NO_THROW(param.readOnly(false););
-    // param.defineCommand()
-    EXPECT_CALL(pd_, defineCommand(testing::_)).Times(1).WillOnce(testing::Return());
-    EXPECT_NO_THROW(param.defineCommand(
-        [](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-            return nullptr;
-        }););
-    // param.executeCommand()
-    st2138::Value testVal;
-    testVal.set_string_value("test");
-    EXPECT_CALL(pd_, executeCommand(testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([&testVal](st2138::Value value, const bool respond){
-        EXPECT_EQ(value.string_value(), testVal.string_value());
-        return nullptr;
-    }));
-    EXPECT_FALSE(param.executeCommand(testVal, true));
-    // param.addParam()
-    std::string subOid = "sub_oid";
-    MockParamDescriptor subPd;
-    EXPECT_CALL(pd_, addSubParam(subOid, &subPd)).Times(1).WillOnce(testing::Return());
-    EXPECT_NO_THROW(param.addParam(subOid, &subPd););
-    // param.isArrayType()
-    for (auto [type, expected] : std::vector<std::pair<st2138::ParamType, bool>>{
-        {st2138::ParamType::UNDEFINED, false},
-        {st2138::ParamType::EMPTY, false},
-        {st2138::ParamType::INT32, false},
-        {st2138::ParamType::FLOAT32, false},
-        {st2138::ParamType::STRING, false},
-        {st2138::ParamType::STRUCT, false},
-        {st2138::ParamType::STRUCT_VARIANT, false},
-        {st2138::ParamType::INT32_ARRAY, true},
-        {st2138::ParamType::FLOAT32_ARRAY, true},
-        {st2138::ParamType::STRING_ARRAY, true},
-        {st2138::ParamType::BINARY, false},
-        {st2138::ParamType::STRUCT_ARRAY, true},
-        {st2138::ParamType::STRUCT_VARIANT_ARRAY, true},
-        {st2138::ParamType::DATA, false}
-    }) {
-        MockParamDescriptor typeTestPd_;
-        EmptyParam typeTestParam(emptyValue, typeTestPd_);
-        EXPECT_CALL(typeTestPd_, type()).WillOnce(testing::Return(type));
-        EXPECT_EQ(typeTestParam.isArrayType(), expected);
-    }
-    // param.getConstraint()
-    MockConstraint testConstraint;
-    EXPECT_CALL(pd_, getConstraint()).Times(1).WillOnce(testing::Return(&testConstraint));
-    EXPECT_EQ(param.getConstraint(), &testConstraint);
-    // param.getScope()
-    std::string testScope = "test_scope";
-    EXPECT_CALL(pd_, getScope()).Times(1).WillOnce(testing::ReturnRef(testScope));
-    EXPECT_EQ(param.getScope(), testScope);
-}
-/*
-* TEST 11 - Testing paramWithValue.copy().
-*/
-TEST_F(ParamWithValueTest, Copy) {
-    int32_t value{0};
-    ParamWithValue<int32_t> param(value, pd_);
-    std::unique_ptr<IParam> paramCopy = nullptr;
-    // Copying param and checking its values.
-    EXPECT_NO_THROW(paramCopy = param.copy()) << "Failed to copy ParamWithValue using copy()";
-    ASSERT_TRUE(paramCopy) << "ParamWithValue copy is nullptr";
-    EXPECT_EQ(&getParamValue<int32_t>(paramCopy.get()), &param.get());
-    EXPECT_EQ(&paramCopy->getDescriptor(), &param.getDescriptor());
-}
-/*
-* TEST 11 - Testing paramWithValue.toProto(Param) error handling.
-* Two main error cases:
-* - pd_.toProto throws an error.
-* - Not authorized.
-*/
-TEST_F(ParamWithValueTest, ParamToProto_Error) {
-    int32_t value{16};
-    ParamWithValue<int32_t> param(value, pd_);
-    st2138::Param outParam;
-    // pd_.toProto throws an error
-    EXPECT_CALL(pd_, toProto(testing::An<st2138::Param&>(), testing::_)).WillOnce(testing::Throw(std::runtime_error("Test error")));
-    EXPECT_THROW(param.toProto(outParam, authz_), std::runtime_error);
-    // Not authorized
-    outParam.Clear();
-    EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
-    rc_ = param.toProto(outParam, authz_);
-    EXPECT_FALSE(outParam.value().has_int32_value())
-        << "toProto should not set value if Authorizer does not have readAuthz.";
-    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
-        << "toProto should return PERMISSION_DENIED if Authorizer does not have readAuthz.";
-}
-/*
-* TEST 12 - Testing paramWithValue.toProto(ParamInfo).
-*/
-TEST_F(ParamWithValueTest, ParamInfoToProto) {
-    EmptyParam param(emptyValue, pd_);
-    st2138::ParamInfoResponse paramInfo;
-    EXPECT_CALL(pd_, toProto(testing::An<st2138::ParamInfo&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([this](st2138::ParamInfo& p, const IAuthorizer&) {
-            p.set_oid(oid_);
-        }));
-    rc_ = param.toProto(paramInfo, authz_);
-    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
-    EXPECT_EQ(oid_, paramInfo.info().oid());
-}
-/*
-* TEST 12 - Testing paramWithValue.toProto(ParamInfo) error handling.
-* Two main error cases:
-* - pd_.toProto throws an error.
-* - Not authorized.
-*/
-TEST_F(ParamWithValueTest, ParamInfoToProto_Error) {
-    EmptyParam param(emptyValue, pd_);
-    st2138::ParamInfoResponse paramInfo;
-    // pd_.toProto throws an error
-    EXPECT_CALL(pd_, toProto(testing::An<st2138::ParamInfo&>(), testing::_)).WillOnce(testing::Throw(std::runtime_error("Test error")));
-    EXPECT_THROW(param.toProto(paramInfo, authz_), std::runtime_error);
-    // No read authz
-    EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(pd_)))).WillOnce(testing::Return(false));
-    rc_ = param.toProto(paramInfo, authz_);
-    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
-        << "toProto should return PERMISSION_DENIED if Authorizer does not have readAuthz.";
+    
+    // Verify the serialized value contains the correct int32_value
+    EXPECT_TRUE(outParam.value().has_int32_value());
+    EXPECT_EQ(outParam.value().int32_value(), 0);
 }
 
-TEST_F(ParamWithValueTest, EmptyChild) {
+/*
+ * TEST 14 - Testing nested struct with explicitly initialized empty child fields.
+ * Verifies that struct fields can be explicitly set to empty values and accessed via path.
+ */
+TEST_F(ParamWithValueTest, NestedStructWithEmptyChildFields) {
+    // Create a nested struct with explicitly initialized empty values
+    // TestNestedStruct contains TestStruct1 f1 and TestStruct2 f2
+    // Each struct is initialized with {0,0} to explicitly set empty values
     TestNestedStruct nestedValue({0,0}, {0, 0});
+    
+    // Define the parameter type and create the parameter instance
     using NestedStructParam = ParamWithValue<TestNestedStruct>;
     NestedStructParam param(nestedValue, pd_);
+    
+    // Navigate to a specific field in the nested structure
+    // Path "/f1/f2" means: go to field f1, then to field f2 within that
+    // This accesses the f2 field of the TestStruct1 inside f1
     Path path = Path("/f1/f2");
     auto foundParam = param.getParam(path, authz_, rc_);
-    // Add verification that empty child is empty
+    
+    // Verify the path navigation was successful
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
     ASSERT_TRUE(foundParam) << "Did not find a parameter when one was expected";
-    // Verify the child field has the expected empty/default value
+    
+    // Verify the child field has the expected empty/default value of 0
     EXPECT_EQ(getParamValue<int32_t>(foundParam.get()), 0) 
         << "Empty child field should have value 0";
 }
 
-TEST_F(ParamWithValueTest, ThreeLevelNesting) {
+/*
+ * TEST 15 - Testing three-level nested struct with default initialization.
+ * Verifies that deeply nested structs with default-initialized values work correctly.
+ */
+TEST_F(ParamWithValueTest, ThreeLevelNestedStructDefaultValues) {
+    // Create a three-level nested struct with default initialization
+    // TestThreeLevelStruct contains TestNestedStruct f1 and TestStruct1 f2
+    // Using {} means all fields are default-initialized to 0
     TestThreeLevelStruct threeLevel{};  
 
+    // Define the parameter type and create the parameter instance
     using ThreeLevelParam = ParamWithValue<TestThreeLevelStruct>;
     ThreeLevelParam param(threeLevel, pd_);
 
+    // Navigate through three levels of nesting to access a deeply nested field
+    // Path "/f1/f1/f1" means:
+    // - Go to field f1 (TestNestedStruct)
+    // - Within that, go to field f1 (TestStruct1) 
+    // - Within that, go to field f1 (int32_t)
     Path path = Path("/f1/f1/f1");  
     auto foundParam = param.getParam(path, authz_, rc_);
 
+    // Verify the deep path navigation was successful
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
     ASSERT_TRUE(foundParam);
+    
+    // Verify the deeply nested field has the expected default value of 0
     EXPECT_EQ(getParamValue<int32_t>(foundParam.get()), 0)
         << "Empty child field should have value 0";
 }
