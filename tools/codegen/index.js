@@ -30,13 +30,10 @@ program
 
 program.parse(process.argv);
 const options = program.opts();
-const log = options.quiet ? function() {} : function () {
-    console.log.apply(console, arguments);
-}
-
-function error() {
-    console.error.apply(console, arguments);
-}
+// define our logging functions to be used throughout
+// if quiet mode is enabled, log does nothing
+const log = options.quiet ? function() {} : console.log;
+const error = console.error;
 
 if (options.schema) {
     log(`schema: ${options.schema}`);
