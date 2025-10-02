@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="UTF-8"?><abs contexttype="opengear" id="_top" keepalive="false" style="bg#tablezebra;">
+   <meta>
+      <api id="controller" immediate="true" name="Controller" src="small_knob_controller.grid.js"/>
+
+      <params>
+         <param access="1" constraint="20.0;20000.0;20.0;20000.0" constrainttype="FLOAT_RANGE" name="" oid="freq" precision="0" type="FLOAT32" value="10706.589" widget="text"/>
+      </params>
+      <widgets>
+         <widgetdescriptor id="small_knob">
+            <config>
+               <params>
+                  <param access="1" constraint="0;16383;1;" constrainttype="INT_STEP_RANGE" oid="idx" type="INT16" value="0" widget="wheel"/>
+               </params>
+            </config>
+            <oglml>
+               <simplegrid rows="3">
+                  <param height="30" oid="idx" width="30">
+                    <task tasktype="onchange">  
+                       ctrl.event('wheel', this);
+                    </task>
+                  </param>
+                  <label height="15" name="Freq" style="txt-align:center;font:bold;" width="60"/>
+                  <param height="20" oid="freq" value="20" width="60">
+                     <config key="w.style">background-color: #333333; color: white; font:bold; border-radius: 8px; border: 2px solid #666666; text-align: center;</config>
+                  </param>
+               </simplegrid>
+            </oglml>
+         </widgetdescriptor>
+      </widgets>
+   </meta>
+
+
+
+
+   <!-- Channel Grid -->
+   <simplegrid cols="8" height="720" hspace="10" left="20" rows="1" top="206" width="1510">
+      <!-- Channel 1 -->
+      <abs height="720" left="25" name="Channel 1" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
+         <!-- Channel Label -->
+         <label header="true" height="20" left="30" name="Channel 1" style="txt-align:center;bdr#lightdivider;bdr:round;" top="20" width="120"/>
+         <!-- Solo and Select buttons -->
+         <table height="74" left="10" maxperrow="1" top="55" width="160">
+            <tr>
+               <button buttontype="toggle" colspan="1" fill="both" insets="2,2,2,2" name="SOLO" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+            </tr>
+            <tr>
+               <button buttontype="toggle" colspan="1" fill="both" insets="2,2,2,2" name="SELECT" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#timerfg;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+            </tr>
+         </table>
+         <!-- Bottom Button Panel - Centered with individual tables -->
+         <abs height="160" left="10" style="m:5,5,5,5;" top="540" width="160">
+            <!-- Top Row: Off and Reset -->
+            <table height="35" left="0" top="0" width="160">
+               <tr>
+                  <button buttontype="toggle" colspan="1" fill="both" height="35" insets="2,2,2,2" name="On/Off" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#red;" weightx="1.0" weighty="1.0" width="45"/>
+                  <button buttontype="push" colspan="1" fill="both" height="35" insets="2,2,2,2" name="Reset" rowspan="1" style="bdr#darkdivider;bdr:round;bg#readonlyborder;" weightx="1.0" weighty="1.0" width="45"/>
+               </tr>
+            </table>
+            <!-- Effect Type Buttons Row -->
+            <table height="70" left="0" style="m:sdsds;" top="45" width="160">
+               <tr>
+                  <button buttontype="toggle" colspan="1" fill="both" insets="2,2,2,2" name="Eq" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                  <button buttontype="toggle" colspan="1" fill="both" insets="2,2,2,2" name="Flt" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                  <button buttontype="toggle" colspan="1" fill="both" insets="2,2,2,2" name="Dyn" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                  <button buttontype="toggle" colspan="1" fill="both" insets="2,2,2,2" name="Fx" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+               </tr>
+               <tr>
+                  <button buttontype="toggle" colspan="1" fill="both" insets="2,2,2,2" name="1" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                  <button buttontype="toggle" colspan="1" fill="both" insets="2,2,2,2" name="2" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                  <button buttontype="toggle" colspan="1" fill="both" insets="2,2,2,2" name="3" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                  <button buttontype="toggle" colspan="1" fill="both" insets="2,2,2,2" name="4" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+               </tr>
+            </table>
+            <!-- Bottom Row: Off and Reset -->
+            <table height="35" left="0" top="125" width="160">
+               <tr>
+                  <button buttontype="toggle" colspan="1" fill="both" height="35" insets="2,2,2,2" name="On/Off" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#red;" weightx="1.0" weighty="1.0" width="45"/>
+                  <button buttontype="push" colspan="1" fill="both" height="35" insets="2,2,2,2" name="Reset" rowspan="1" style="bdr#darkdivider;bdr:round;bg#readonlyborder;" weightx="1.0" weighty="1.0" width="45"/>
+               </tr>
+            </table>
+         </abs>
+
+      <!-- Dials -->
+       <simplegrid cols="1" height="400" left="10" name="Dials" rows="4" top="135" width="80">
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="14901"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="4096"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12288"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="16383"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+         </simplegrid>
+      </abs>
+       
+       <!-- Channel 2 -->
+       <abs height="720" left="25" name="Channel 2" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
+          <!-- Channel Label -->
+          <label header="true" height="20" left="30" name="Channel 2" style="txt-align:center;bdr#lightdivider;bdr:round;" top="20" width="120"/>
+          <!-- Solo and Select buttons -->
+          <table height="74" left="10" maxperrow="1" top="55" width="160">
+             <tr>
+                <button buttontype="toggle" colspan="1" fill="both" name="SOLO" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+             </tr>
+             <tr>
+                <button buttontype="toggle" colspan="1" fill="both" name="SELECT" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#timerfg;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+             </tr>
+          </table>
+          <!-- Bottom Button Panel - Centered with individual tables -->
+          <abs height="160" left="10" top="540" width="160">
+             <!-- Top Row: Off and Reset -->
+             <table height="35" left="0" top="0" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" height="35" name="On/Off" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#red;" weightx="1.0" weighty="1.0" width="45"/>
+                   <button buttontype="push" colspan="1" fill="both" height="35" name="Reset" rowspan="1" style="bdr#darkdivider;bdr:round;bg#readonlyborder;" weightx="1.0" weighty="1.0" width="45"/>
+                </tr>
+             </table>
+             <!-- Effect Type Buttons Row -->
+             <table height="70" left="0" top="45" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Eq" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Flt" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Dyn" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Fx" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                </tr>
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" name="1" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="2" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="3" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="4" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                </tr>
+             </table>
+             <!-- Bottom Row: Off and Reset -->
+             <table height="35" left="0" top="125" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" height="35" name="On/Off" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#red;" weightx="1.0" weighty="1.0" width="45"/>
+                   <button buttontype="push" colspan="1" fill="both" height="35" name="Reset" rowspan="1" style="bdr#darkdivider;bdr:round;bg#readonlyborder;" weightx="1.0" weighty="1.0" width="45"/>
+                </tr>
+             </table>
+          </abs>
+       </abs>
+       
+       <!-- Channel 3 -->
+       <abs height="720" left="25" name="Channel 3" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
+          <!-- Channel Label -->
+          <label header="true" height="20" left="30" name="Channel 3" style="txt-align:center;bdr#lightdivider;bdr:round;" top="20" width="120"/>
+          <!-- Solo and Select buttons -->
+          <table height="74" left="10" maxperrow="1" top="55" width="160">
+             <tr>
+                <button buttontype="toggle" colspan="1" fill="both" name="SOLO" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+             </tr>
+             <tr>
+                <button buttontype="toggle" colspan="1" fill="both" name="SELECT" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#timerfg;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+             </tr>
+          </table>
+          <!-- Bottom Button Panel - Centered with individual tables -->
+          <abs height="160" left="10" top="540" width="160">
+             <!-- Top Row: Off and Reset -->
+             <table height="35" left="0" top="0" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" height="35" name="On/Off" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#red;" weightx="1.0" weighty="1.0" width="45"/>
+                   <button buttontype="push" colspan="1" fill="both" height="35" name="Reset" rowspan="1" style="bdr#darkdivider;bdr:round;bg#readonlyborder;" weightx="1.0" weighty="1.0" width="45"/>
+                </tr>
+             </table>
+             <!-- Effect Type Buttons Row -->
+             <table height="70" left="0" top="45" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Eq" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Flt" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Dyn" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Fx" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                </tr>
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" name="1" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="2" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="3" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="4" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                </tr>
+             </table>
+             <!-- Bottom Row: Off and Reset -->
+             <table height="35" left="0" top="125" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" height="35" name="On/Off" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#red;" weightx="1.0" weighty="1.0" width="45"/>
+                   <button buttontype="push" colspan="1" fill="both" height="35" name="Reset" rowspan="1" style="bdr#darkdivider;bdr:round;bg#readonlyborder;" weightx="1.0" weighty="1.0" width="45"/>
+                </tr>
+             </table>
+          </abs>
+       </abs>
+       
+       <!-- Channel 4 -->
+       <abs height="720" left="25" name="Channel 4" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
+          <!-- Channel Label -->
+          <label header="true" height="20" left="30" name="Channel 4" style="txt-align:center;bdr#lightdivider;bdr:round;" top="20" width="120"/>
+          <!-- Solo and Select buttons -->
+          <table height="74" left="10" maxperrow="1" top="55" width="160">
+             <tr>
+                <button buttontype="toggle" colspan="1" fill="both" name="SOLO" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+             </tr>
+             <tr>
+                <button buttontype="toggle" colspan="1" fill="both" name="SELECT" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#timerfg;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+             </tr>
+          </table>
+          <!-- Bottom Button Panel - Centered with individual tables -->
+          <abs height="160" left="10" top="540" width="160">
+             <!-- Top Row: Off and Reset -->
+             <table height="35" left="0" top="0" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" height="35" name="On/Off" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#red;" weightx="1.0" weighty="1.0" width="45"/>
+                   <button buttontype="push" colspan="1" fill="both" height="35" name="Reset" rowspan="1" style="bdr#darkdivider;bdr:round;bg#readonlyborder;" weightx="1.0" weighty="1.0" width="45"/>
+                </tr>
+             </table>
+             <!-- Effect Type Buttons Row -->
+             <table height="70" left="0" top="45" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Eq" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Flt" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Dyn" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Fx" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                </tr>
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" name="1" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="2" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="3" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="4" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                </tr>
+             </table>
+             <!-- Bottom Row: Off and Reset -->
+             <table height="35" left="0" top="125" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" height="35" name="On/Off" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#red;" weightx="1.0" weighty="1.0" width="45"/>
+                   <button buttontype="push" colspan="1" fill="both" height="35" name="Reset" rowspan="1" style="bdr#darkdivider;bdr:round;bg#readonlyborder;" weightx="1.0" weighty="1.0" width="45"/>
+                </tr>
+             </table>
+          </abs>
+       </abs>
+       
+       <!-- Channel 5 -->
+       <abs height="720" left="25" name="Channel 5" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
+          <!-- Channel Label -->
+          <label header="true" height="20" left="30" name="Channel 5" style="txt-align:center;bdr#lightdivider;bdr:round;" top="20" width="120"/>
+          <!-- Solo and Select buttons -->
+          <table height="74" left="10" maxperrow="1" top="55" width="160">
+             <tr>
+                <button buttontype="toggle" colspan="1" fill="both" name="SOLO" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+             </tr>
+             <tr>
+                <button buttontype="toggle" colspan="1" fill="both" name="SELECT" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#timerfg;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+             </tr>
+          </table>
+          <!-- Bottom Button Panel - Centered with individual tables -->
+          <abs height="160" left="10" top="540" width="160">
+             <!-- Top Row: Off and Reset -->
+             <table height="35" left="0" top="0" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" height="35" name="On/Off" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#red;" weightx="1.0" weighty="1.0" width="45"/>
+                   <button buttontype="push" colspan="1" fill="both" height="35" name="Reset" rowspan="1" style="bdr#darkdivider;bdr:round;bg#readonlyborder;" weightx="1.0" weighty="1.0" width="45"/>
+                </tr>
+             </table>
+             <!-- Effect Type Buttons Row -->
+             <table height="70" left="0" top="45" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Eq" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Flt" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Dyn" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Fx" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                </tr>
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" name="1" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="2" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="3" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="4" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                </tr>
+             </table>
+             <!-- Bottom Row: Off and Reset -->
+             <table height="35" left="0" top="125" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" height="35" name="On/Off" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#red;" weightx="1.0" weighty="1.0" width="45"/>
+                   <button buttontype="push" colspan="1" fill="both" height="35" name="Reset" rowspan="1" style="bdr#darkdivider;bdr:round;bg#readonlyborder;" weightx="1.0" weighty="1.0" width="45"/>
+                </tr>
+             </table>
+          </abs>
+       </abs>
+       
+       <!-- Channel 6 -->
+       <abs height="720" left="25" name="Channel 6" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
+          <!-- Channel Label -->
+          <label header="true" height="20" left="30" name="Channel 6" style="txt-align:center;bdr#lightdivider;bdr:round;" top="20" width="120"/>
+          <!-- Solo and Select buttons -->
+          <table height="74" left="10" maxperrow="1" top="55" width="160">
+             <tr>
+                <button buttontype="toggle" colspan="1" fill="both" name="SOLO" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+             </tr>
+             <tr>
+                <button buttontype="toggle" colspan="1" fill="both" name="SELECT" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#timerfg;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+             </tr>
+          </table>
+          <!-- Bottom Button Panel - Centered with individual tables -->
+          <abs height="160" left="10" top="540" width="160">
+             <!-- Top Row: Off and Reset -->
+             <table height="35" left="0" top="0" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" height="35" name="On/Off" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#red;" weightx="1.0" weighty="1.0" width="45"/>
+                   <button buttontype="push" colspan="1" fill="both" height="35" name="Reset" rowspan="1" style="bdr#darkdivider;bdr:round;bg#readonlyborder;" weightx="1.0" weighty="1.0" width="45"/>
+                </tr>
+             </table>
+             <!-- Effect Type Buttons Row -->
+             <table height="70" left="0" top="45" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Eq" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Flt" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Dyn" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Fx" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                </tr>
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" name="1" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="2" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="3" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="4" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                </tr>
+             </table>
+             <!-- Bottom Row: Off and Reset -->
+             <table height="35" left="0" top="125" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" height="35" name="On/Off" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#red;" weightx="1.0" weighty="1.0" width="45"/>
+                   <button buttontype="push" colspan="1" fill="both" height="35" name="Reset" rowspan="1" style="bdr#darkdivider;bdr:round;bg#readonlyborder;" weightx="1.0" weighty="1.0" width="45"/>
+                </tr>
+             </table>
+          </abs>
+       </abs>
+       
+       <!-- Channel 7 -->
+       <abs height="720" left="25" name="Channel 7" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
+          <!-- Channel Label -->
+          <label header="true" height="20" left="30" name="Channel 7" style="txt-align:center;bdr#lightdivider;bdr:round;" top="20" width="120"/>
+          <!-- Solo and Select buttons -->
+          <table height="74" left="10" maxperrow="1" top="55" width="160">
+             <tr>
+                <button buttontype="toggle" colspan="1" fill="both" name="SOLO" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+             </tr>
+             <tr>
+                <button buttontype="toggle" colspan="1" fill="both" name="SELECT" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#timerfg;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+             </tr>
+          </table>
+          <!-- Bottom Button Panel - Centered with individual tables -->
+          <abs height="160" left="10" top="540" width="160">
+             <!-- Top Row: Off and Reset -->
+             <table height="35" left="0" top="0" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" height="35" name="On/Off" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#red;" weightx="1.0" weighty="1.0" width="45"/>
+                   <button buttontype="push" colspan="1" fill="both" height="35" name="Reset" rowspan="1" style="bdr#darkdivider;bdr:round;bg#readonlyborder;" weightx="1.0" weighty="1.0" width="45"/>
+                </tr>
+             </table>
+             <!-- Effect Type Buttons Row -->
+             <table height="70" left="0" top="45" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Eq" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Flt" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Dyn" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Fx" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                </tr>
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" name="1" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="2" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="3" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="4" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                </tr>
+             </table>
+             <!-- Bottom Row: Off and Reset -->
+             <table height="35" left="0" top="125" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" height="35" name="On/Off" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#red;" weightx="1.0" weighty="1.0" width="45"/>
+                   <button buttontype="push" colspan="1" fill="both" height="35" name="Reset" rowspan="1" style="bdr#darkdivider;bdr:round;bg#readonlyborder;" weightx="1.0" weighty="1.0" width="45"/>
+                </tr>
+             </table>
+          </abs>
+       </abs>
+       
+       <!-- Channel 8 -->
+       <abs height="720" left="25" name="Channel 8" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
+          <!-- Channel Label -->
+          <label header="true" height="20" left="30" name="Channel 8" style="txt-align:center;bdr#lightdivider;bdr:round;" top="20" width="120"/>
+          <!-- Solo and Select buttons -->
+          <table height="74" left="10" maxperrow="1" top="55" width="160">
+             <tr>
+                <button buttontype="toggle" colspan="1" fill="both" name="SOLO" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+             </tr>
+             <tr>
+                <button buttontype="toggle" colspan="1" fill="both" name="SELECT" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#timerfg;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+             </tr>
+          </table>
+          <!-- Bottom Button Panel - Centered with individual tables -->
+          <abs height="160" left="10" top="540" width="160">
+             <!-- Top Row: Off and Reset -->
+             <table height="35" left="0" top="0" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" height="35" name="On/Off" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#red;" weightx="1.0" weighty="1.0" width="45"/>
+                   <button buttontype="push" colspan="1" fill="both" height="35" name="Reset" rowspan="1" style="bdr#darkdivider;bdr:round;bg#readonlyborder;" weightx="1.0" weighty="1.0" width="45"/>
+                </tr>
+             </table>
+             <!-- Effect Type Buttons Row -->
+             <table height="70" left="0" top="45" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Eq" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Flt" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Dyn" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="Fx" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                </tr>
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" name="1" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="2" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="3" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                   <button buttontype="toggle" colspan="1" fill="both" name="4" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#readonlyborder;" weightx="1.0" weighty="1.0"/>
+                </tr>
+             </table>
+             <!-- Bottom Row: Off and Reset -->
+             <table height="35" left="0" top="125" width="160">
+                <tr>
+                   <button buttontype="toggle" colspan="1" fill="both" height="35" name="On/Off" rowspan="1" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#red;" weightx="1.0" weighty="1.0" width="45"/>
+                   <button buttontype="push" colspan="1" fill="both" height="35" name="Reset" rowspan="1" style="bdr#darkdivider;bdr:round;bg#readonlyborder;" weightx="1.0" weighty="1.0" width="45"/>
+                </tr>
+             </table>
+          </abs>
+       </abs>
+    </simplegrid>
+
+</abs>
