@@ -66,6 +66,20 @@ namespace catena {
  */
 namespace common {
 
+  /**
+   * @brief Status codes for NmosNode operations
+   */
+enum class NodeCode {
+  OK = 0,
+  POLL_FAILED = 1,
+  CLIENT_FAILED = 2,
+  REGISTRATION_FAILED = 3,
+  NO_SERVICE_BROWSER = 4,
+  NO_IFACE = 5,
+  NO_CANDIDATES = 6,
+  REGISTRY_NOT_FOUND = 7
+};
+
 /**
  * @brief Class for handling authorization information.
  * 
@@ -98,33 +112,63 @@ class INmosNode {
      */
     virtual ~INmosNode() = default;
 
-    virtual bool init(std::chrono::milliseconds) = 0;
+    /**
+     * @brief Initializes the NmosNode, starts mDNS discovery and heartbeats.
+     * @param port The port number the node is listening on.
+     * @param heartbeatInterval The interval between heartbeats.
+     * @return true if initialization was successful, false otherwise.
+     */
+    virtual NodeCode init(int port, std::chrono::milliseconds heartbeatInterval) = 0;
 
+    /**
+     * @brief Get the Poll object
+     * @return The AvahiSimplePoll object
+     */
     virtual AvahiSimplePoll* getPoll() = 0;
 
+    /**
+     * @brief Add a discovered registry candidate
+     * @param candidate The discovered registry candidate to add
+     */
     virtual void addCandidate(RegistryCandidate&&) = 0;
 
+    /**
+     * @brief Get the list of discovered registry candidates
+     * @return A vector of discovered registry candidates
+     */
     virtual std::vector<RegistryCandidate> getCandidates() = 0;
 
+    /**
+     * @brief Get the AvahiClient object
+     * @return The AvahiClient object
+     */
     virtual AvahiClient* getClient() = 0;
 
-    // get network interface info for given address
+    /**
+     * @brief Gets the network interface information for the node.
+     * @param iface The network interface to use (e.g. "eth0").
+     * @return true if the interface was found and information retrieved, false otherwise.
+     */
     virtual bool get_node_iface(const std::string&) = 0;
 
-    // builds a minimal IS-04 Node object
-    virtual std::string make_node_json(int) = 0;
-
-    // builds a minimal IS-04 Device object
-    virtual std::string make_device_json(int) = 0;
+    /**
+     * @brief Choose best candidate and build base URL
+     * @return An optional RegistrySelection containing the chosen registry base URL and version, or std::nullopt if no candidates are available
+     */
+    virtual std::optional<RegistrySelection> choose_registry_and_build_base(std::string) = 0;
 
   protected:
-    virtual void runDiscovery() = 0;
-
-    virtual bool sendRequests(std::string, int) = 0;
-
-    virtual std::optional<RegistrySelection> choose_registry_and_build_base(int) = 0;
     
-    virtual void heartbeat_thread(std::string base, std::string, std::string, std::chrono::milliseconds) = 0;
+    /**
+     * @brief The heartbeat thread function.
+     * This function will run in a separate thread and send heartbeats to the
+     * registry at the specified interval.
+     * @param base The base URL of the registry.
+     * @param node_id The ID of the node.
+     * @param bearer The bearer token for authentication.
+     * @param interval The interval between heartbeats.
+     */
+    virtual void run_heartbeat(std::string base, std::string, std::string, std::chrono::milliseconds) = 0;
 };
 
 } // namespace common

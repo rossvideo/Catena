@@ -29,7 +29,7 @@ std::string catena::readFile(std::filesystem::path path) {
     try { 
         if (!std::filesystem::exists(path)) return ""; 
     } catch (const std::exception& e) { 
-        LOG(ERROR) << "File does not exist: " << e.what(); 
+        LOG(ERROR) << "Exception when checking if file exists: " << e.what(); 
         return ""; 
     }
     std::ifstream file(path, std::ios::in | std::ios::binary);  // lock the file

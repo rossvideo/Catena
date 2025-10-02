@@ -15,6 +15,7 @@ struct AvahiTestControl {
     bool discovered_service;
     std::shared_ptr<AvahiAddress> avahi_address;
     bool has_iface;
+    int simple_poll_quit;
     std::string expected_type;
 
     void reset() {
@@ -26,6 +27,7 @@ struct AvahiTestControl {
         browse_event = AVAHI_BROWSER_NEW;
         discovered_service = false;
         avahi_address = std::make_shared<AvahiAddress>();
+        simple_poll_quit = 0;
         has_iface = true;
         expected_type = "_nmos-registration._tcp";
     }
@@ -53,6 +55,7 @@ int __wrap_avahi_simple_poll_loop(AvahiSimplePoll *s) {
 }
 void __wrap_avahi_simple_poll_quit(AvahiSimplePoll *s) {
     (void)s; // no-op
+    g_avahi_test_control.simple_poll_quit++;
 }
 
 AvahiClient* __wrap_avahi_client_new(
@@ -106,7 +109,7 @@ __wrap_avahi_service_resolver_new(AvahiClient *c,
        "127.0.0.1",          // host_name
        g_avahi_test_control.avahi_address.get(), // address
        3210,                  // port to match the fake HTTP server
-       /*txt*/NULL,           // no TXT → parse_txt loop is skipped
+       /*txt*/avahi_string_list_new("api_ver=v1.3", nullptr),           // no TXT → parse_txt loop is skipped
        /*lookup flags*/(AvahiLookupResultFlags)0,
        userdata);
     return (AvahiServiceResolver*)0x1; // any non-null

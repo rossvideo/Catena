@@ -31,15 +31,11 @@
  */
 
 /**
- * @file Authorizer.h
- * @brief Class for handling authorization information
- * @author John R. Naylor john.naylor@rossvideo.com
- * @author John Danen
- * @date 2024-09-18
- * @author Ben Whitten benjamin.whitten@rossvideo.com
- * @author Zuhayr Sarker zuhayr.sarker@rossvideo.com
- * @date 2025-02-20
- * @copyright Copyright (c) 2024 Ross Video
+ * @file NmoNode.h
+ * @brief Class for NMOS Node functionality
+ * @author Christian Twarog christian.twarog@rossvideo.com
+ * @date 2025-09-29
+ * @copyright Copyright (c) 2025 Ross Video
  */
 
 #include <curl/curl.h>
@@ -128,11 +124,15 @@ class NmosNode : public INmosNode {
         avahi_service_browser_free(sb_);
         sb_ = nullptr;
       }
-      stop_ = true;
+      stop_.store(true);
+      // wait for heartbeat thread to exit
+      if (heartbeat_thread_.joinable()) {
+        heartbeat_thread_.join();
+      }
       curl_global_cleanup();
     }
 
-    bool init(std::chrono::milliseconds heartbeatInterval = std::chrono::seconds(1)) override;
+    NodeCode init(int port = 8080, std::chrono::milliseconds heartbeatInterval = std::chrono::seconds(1)) override;
 
     AvahiSimplePoll* getPoll() override { return simple_poll_; }
 
@@ -146,29 +146,87 @@ class NmosNode : public INmosNode {
     }
 
     AvahiClient* getClient() { return client_; }
-
+    
+    std::optional<RegistrySelection> choose_registry_and_build_base(std::string) override;
+    
+    //Flags
+    std::atomic<bool> CLIENT_FAILURE = false;
   protected:
-    void runDiscovery() override;
+    /**
+     * @brief Runs the mDNS discovery process for a set duration.
+     * This function will block for the duration of the discovery.
+     * The duration is set by the discoveryDuration member variable.
+     */
+    void runDiscovery();
 
-    bool sendRequests(std::string url, int node_port) override;
+    /**
+     * @brief Sends the registration requests to the registry.
+     * @param url The base URL of the registry.
+     * @param node_port The port number the node is listening on.
+     * @return true if all requests were successful, false otherwise.
+     */
+    bool sendRequests(std::string, int);
 
+    /**
+     * @brief Get the current time in IS-04 version format
+     * @return A string representing the current time in IS-04 version format
+     */
     static std::string now_is04_version();
 
+    /**
+     * @brief Generate a random UUID string
+     * @return A string representing a random UUID
+     */
     static std::string random_uuid();
 
     bool get_node_iface(const std::string& reg_addr) override;
 
-    // HTTP POST helper
+    /**
+     * @brief Perform an HTTP POST with a JSON body
+     * @param url The URL to post to
+     * @param jsonObj The JSON object to send as the body
+     * @param bearer Optional bearer token for authorization
+     * @return true if the POST was successful (HTTP 200, 201, 202, or 204), false otherwise
+     */
     static bool http_post_json(const std::string& url, const std::string& jsonObj, const std::string& bearer);
 
-    // fills out a RegistryCandidate from AvahiStringList
+    /**
+     * @brief Parse an Avahi TXT record into a RegistryCandidate structure
+     * @param txt The Avahi TXT record to parse
+     * @param c The RegistryCandidate structure to populate
+     */
     static void parse_txt_into_candidate(AvahiStringList* txt, RegistryCandidate& c);
 
-    std::string make_node_json(int node_port) override;
+    /**
+     * @brief Create the JSON representation of the Node resource
+     * @param node_port The port number the node is listening on
+     * @return A string containing the JSON representation of the Node resource
+     */
+    std::string make_node_json(int node_port);
 
-    std::string make_device_json(int node_port) override;
+    /**
+     * @brief Create the JSON representation of the Device resource
+     * @param node_port The port number the node is listening on
+     * @return A string containing the JSON representation of the Device resource
+     */
+    std::string make_device_json(int node_port);
 
-    // Callback for resolved service
+    /**
+     * @brief Callback for resolving a service
+     * @param r The AvahiServiceResolver object
+     * @param interface The network interface index
+     * @param protocol The network protocol
+     * @param event The AvahiResolverEvent type
+     * @param name The service name
+     * @param type The service type
+     * @param domain The service domain
+     * @param host_name The resolved host name
+     * @param address The resolved address
+     * @param port The resolved port
+     * @param txt The resolved TXT record
+     * @param flags The AvahiLookupResultFlags
+     * @param userdata Pointer to user data (should be a NmosNode instance)
+     */
     static void resolve_cb(
         AvahiServiceResolver *r,
         AvahiIfIndex interface,
@@ -184,7 +242,18 @@ class NmosNode : public INmosNode {
         AvahiLookupResultFlags flags,
         void* userdata);
 
-    // Callback for discovered service
+    /**
+     * @brief Callback for browsing services
+     * @param b The AvahiServiceBrowser object
+     * @param interface The network interface index
+     * @param protocol The network protocol
+     * @param event The AvahiBrowserEvent type
+     * @param name The service name
+     * @param type The service type
+     * @param domain The service domain
+     * @param flags The AvahiLookupResultFlags
+     * @param userdata Pointer to user data (should be a NmosNode instance)
+     */
     static void browse_cb(
         AvahiServiceBrowser *b,
         AvahiIfIndex interface,
@@ -196,13 +265,15 @@ class NmosNode : public INmosNode {
         AvahiLookupResultFlags flags,
         void* userdata);
 
-    // Callback for Avahi client state change
+    /**
+     * @brief Callback for Avahi client state changes
+     * @param client The AvahiClient object
+     * @param state The new AvahiClientState
+     * @param userdata Pointer to user data (should be a NmosNode instance)
+     */
     static void client_cb(AvahiClient *client, AvahiClientState state, void* userdata);
     
-    // Choose best candidate and build base URL
-    std::optional<RegistrySelection> choose_registry_and_build_base(int node_port) override;
-    
-    void heartbeat_thread(std::string base, std::string node_id, std::string bearer, std::chrono::milliseconds interval = std::chrono::seconds(5)) override;
+    void run_heartbeat(std::string base, std::string node_id, std::string bearer, std::chrono::milliseconds interval = std::chrono::seconds(5)) override;
 
 	  AvahiSimplePoll *simple_poll_ = nullptr;
     AvahiClient* client_ = nullptr;
@@ -210,6 +281,7 @@ class NmosNode : public INmosNode {
     std::atomic<bool> stop_ = false;
     std::mutex cand_mtx_;
     std::vector<RegistryCandidate> candidates_;
+    std::thread heartbeat_thread_;
     std::string iface_ = "eth0"; //default interface
     std::string mac_ = "00-00-00-00-00-00"; //default mac
     std::string ipv4_ = "127.0.0.1"; //default ip
@@ -222,7 +294,8 @@ class NmosNode : public INmosNode {
     std::string dev_id_;
     std::string bearer_token_;
     std::chrono::milliseconds discoveryDuration = std::chrono::seconds(2);
-};
+
+  };
 
 } // namespace common
 } // namespace catena

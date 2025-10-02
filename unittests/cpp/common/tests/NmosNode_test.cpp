@@ -97,6 +97,7 @@ public:
 
     // thin wrapper to call protected/private methods if you need them
     using NmosNode::browse_cb;
+    using NmosNode::resolve_cb;
     using NmosNode::choose_registry_and_build_base;
     using NmosNode::make_node_json;
     using NmosNode::make_device_json;
@@ -119,7 +120,7 @@ public:
         bool ok2 = http_post_json(resource_url, dev_json,  bearer);
 
         std::thread hb([this, base, bearer, hb_interval] {
-            this->heartbeat_thread(base, node_id_, bearer, hb_interval);
+            this->run_heartbeat(base, node_id_, bearer, hb_interval);
         });
             
         std::this_thread::sleep_for(hb_interval * 3);
@@ -138,39 +139,50 @@ protected:
 
     void TearDown() override {
     }
+
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("NmosNodeTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
 };
 
 
 TEST_F(NmosNodeTest, SimplePollCreationFail) {
     TestableNmosNode node;
     g_avahi_test_control.simple_poll_new_return = nullptr; // force failure
-    EXPECT_FALSE(node.init());
+    EXPECT_EQ(node.init(), NodeCode::POLL_FAILED);
 }
 
 TEST_F(NmosNodeTest, ClientCreationInstanceFail) {
     TestableNmosNode node;
     g_avahi_test_control.client_new_return = nullptr; // force failure
-    EXPECT_FALSE(node.init());
+    EXPECT_EQ(node.init(), NodeCode::CLIENT_FAILED);
 }
 
 TEST_F(NmosNodeTest, ClientCreationCbFail) {
     TestableNmosNode node;
     g_avahi_test_control.client_state = AVAHI_CLIENT_FAILURE; // force failure in callback
-    //verify poll quit
-    EXPECT_FALSE(node.init());
+    //verify client_cb AVAHI_CLIENT_FAILURE case is executed
+    EXPECT_EQ(node.init(), NodeCode::CLIENT_FAILED);
+    EXPECT_EQ(g_avahi_test_control.simple_poll_quit, 1);
 }
 
 TEST_F(NmosNodeTest, BrowserCreationFail) {
     TestableNmosNode node;
     g_avahi_test_control.service_browser_new_return = nullptr; // normal
-    EXPECT_FALSE(node.init());
+    EXPECT_EQ(node.init(), NodeCode::NO_SERVICE_BROWSER);
 }
 
 TEST_F(NmosNodeTest, SelectRegistryCandidateFailed) {
     //by default the wrapped avahi functions will not have populated registry candidates list yet
     //so init() should fail due to no candidates found during runDiscovery()
     TestableNmosNode node;
-    EXPECT_FALSE(node.init());
+    EXPECT_EQ(node.init(), NodeCode::REGISTRY_NOT_FOUND);
+    EXPECT_EQ(node.getCandidates().size(), 0);
 }
 
 TEST_F(NmosNodeTest, DiscoveredRegistryButNoIface) {
@@ -179,7 +191,7 @@ TEST_F(NmosNodeTest, DiscoveredRegistryButNoIface) {
     g_avahi_test_control.discovered_service = true;
     g_avahi_test_control.has_iface = false; // force get_node_iface() to fail
     
-    EXPECT_FALSE(node.init());
+    EXPECT_EQ(node.init(), NodeCode::NO_IFACE);
 }
 
 TEST_F(NmosNodeTest, DiscoveredRegistryFailedRequests) {
@@ -188,17 +200,51 @@ TEST_F(NmosNodeTest, DiscoveredRegistryFailedRequests) {
     g_avahi_test_control.discovered_service = true;
     g_avahi_test_control.has_iface = true;
 
-    EXPECT_FALSE(node.init());
+    EXPECT_EQ(node.init(), NodeCode::REGISTRATION_FAILED);
 }
 
-TEST_F(NmosNodeTest, NmosNodeTest_DiscoveredRegistryBrowseFail) {
+TEST_F(NmosNodeTest, NmosNodeTest_DiscoveredRegistryBrowserFailure) {
     TestableNmosNode node;
 
     g_avahi_test_control.discovered_service = true;
     g_avahi_test_control.has_iface = true;
     g_avahi_test_control.browse_event = AVAHI_BROWSER_FAILURE; // force browse failure
 
-    EXPECT_FALSE(node.init());
+    EXPECT_EQ(node.init(), NodeCode::REGISTRY_NOT_FOUND);
+    EXPECT_EQ(g_avahi_test_control.simple_poll_quit, 2);
+}
+
+TEST_F(NmosNodeTest, NmosNodeTest_DiscoveredRegistryBrowserRemove) {
+    TestableNmosNode node;
+
+    g_avahi_test_control.discovered_service = true;
+    g_avahi_test_control.has_iface = true;
+    g_avahi_test_control.browse_event = AVAHI_BROWSER_REMOVE; // force browse failure
+
+    EXPECT_EQ(node.init(), NodeCode::REGISTRY_NOT_FOUND);
+    EXPECT_EQ(g_avahi_test_control.simple_poll_quit, 2);
+}
+
+TEST_F(NmosNodeTest, NmosNodeTest_DiscoveredRegistryBrowserCacheExhausted) {
+    TestableNmosNode node;
+
+    g_avahi_test_control.discovered_service = true;
+    g_avahi_test_control.has_iface = true;
+    g_avahi_test_control.browse_event = AVAHI_BROWSER_CACHE_EXHAUSTED; // force browse failure
+
+    EXPECT_EQ(node.init(), NodeCode::REGISTRY_NOT_FOUND);
+    EXPECT_EQ(g_avahi_test_control.simple_poll_quit, 2);
+}
+
+TEST_F(NmosNodeTest, NmosNodeTest_DiscoveredRegistryBrowserAllForNow) {
+    TestableNmosNode node;
+
+    g_avahi_test_control.discovered_service = true;
+    g_avahi_test_control.has_iface = true;
+    g_avahi_test_control.browse_event = AVAHI_BROWSER_ALL_FOR_NOW ; // force browse failure
+
+    EXPECT_EQ(node.init(), NodeCode::REGISTRY_NOT_FOUND);
+    EXPECT_EQ(g_avahi_test_control.simple_poll_quit, 2);
 }
 
 TEST_F(NmosNodeTest, DiscoveredRegistryNoHeartbeat) {
@@ -210,7 +256,9 @@ TEST_F(NmosNodeTest, DiscoveredRegistryNoHeartbeat) {
     g_avahi_test_control.has_iface = true;
 
     ASSERT_TRUE(reg.start());
-    EXPECT_TRUE(node.init());
+    EXPECT_EQ(node.init(8080, std::chrono::milliseconds(20)), NodeCode::OK);
+    EXPECT_EQ(reg.resource_posts.load(), 2); // node + device
+    EXPECT_EQ(reg.heartbeats.load(), 0); // no heartbeat thread
 
     reg.stop_and_join();
 }
@@ -228,14 +276,11 @@ TEST_F(NmosNodeTest, DiscoveredRegistryHeartbeat) {
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
         }
         node.stop_.store(true);
-         // stop heartbeat thread
+        reg.stop_and_join();
     });
 
     ASSERT_TRUE(reg.start());
-    EXPECT_TRUE(node.init(std::chrono::milliseconds(20)));
-
-    node.stop_.store(true); // stop heartbeat thread
-    reg.stop_and_join();
+    EXPECT_EQ(node.init(8080, std::chrono::milliseconds(20)), NodeCode::OK);
 
     if (killer.joinable()) killer.join();
     EXPECT_GE(reg.heartbeats.load(), 2);
@@ -263,7 +308,7 @@ TEST_F(NmosNodeTest, AvahiBrowseWrongHost) {
                    /*userdata*/&node);
 
     // Build base URL from discovered candidate
-    auto sel = node.choose_registry_and_build_base(8080);
+    auto sel = node.choose_registry_and_build_base("v1.3");
     ASSERT_FALSE(sel.has_value());
 
     reg.stop_and_join();
@@ -291,7 +336,7 @@ TEST_F(NmosNodeTest, AvahiBrowseThenResolveTrue) {
                    /*userdata*/&node);
 
     // Build base URL from discovered candidate
-    auto sel = node.choose_registry_and_build_base(8080);
+    auto sel = node.choose_registry_and_build_base("v1.3");
     ASSERT_TRUE(sel.has_value());
     EXPECT_EQ(sel->base, "http://127.0.0.1:3210/x-nmos/registration/v1.3");
 
@@ -306,7 +351,7 @@ TEST_F(NmosNodeTest, AvahiBrowseThenResolveTrue) {
 
 TEST_F(NmosNodeTest, ParseTxtIntoCandidate) {
     // Create a dummy AvahiStringList with one key-value pair for parse_txt_into_candidate
-    AvahiStringList* txt = avahi_string_list_new("api_ver=v1.0,v1.1,v1.2,v1.3", nullptr);
+    AvahiStringList* txt = avahi_string_list_new("api_ver=v1.0,v1.1,v1.2,v1.3", "pri=150", nullptr);
     NmosNode::RegistryCandidate c;
     TestableNmosNode::parse_txt_into_candidate(txt, c);
     avahi_string_list_free(txt);
@@ -316,4 +361,187 @@ TEST_F(NmosNodeTest, ParseTxtIntoCandidate) {
     EXPECT_EQ(c.api_versions[1], "v1.1");
     EXPECT_EQ(c.api_versions[2], "v1.2");
     EXPECT_EQ(c.api_versions[3], "v1.3");
+    EXPECT_EQ(c.priority, 150);
+}
+
+//Add a manual call to resolve_cb with event != AVAHI_RESOLVER_FOUND to get free coverage on the else of the if in resolve_cb
+TEST_F(NmosNodeTest, AvahiResolveFailure) {
+    // Prepare node (no Avahi daemon, set identity directly)
+    TestableNmosNode node;
+    node.set_network_identity("127.0.0.1", "lo", "aa-bb-cc-dd-ee-ff", "chassis-123");
+    // Call resolve_cb with event != AVAHI_RESOLVER_FOUND
+    // Create AvahiServiceResolver* to pass in, as it needs to be a real object for else case
+    struct DummyAvahiServiceResolver { int dummy; } dummy_resolver;
+    AvahiServiceResolver* r = reinterpret_cast<AvahiServiceResolver*>(&dummy_resolver);
+    node.resolve_cb(/*r*/r,
+                       /*iface*/AVAHI_IF_UNSPEC,
+                       /*proto*/AVAHI_PROTO_UNSPEC,
+                       /*event*/AVAHI_RESOLVER_FAILURE,
+                       /*name*/"reg-1",
+                       /*type*/"_nmos-registration._tcp",
+                       /*domain*/"local",
+                       /*host_name*/nullptr,
+                       /*address*/nullptr,
+                       /*port*/0,
+                       /*txt*/nullptr,
+                       /*flags*/(AvahiLookupResultFlags)0,
+                       /*userdata*/&node);
+}
+
+TEST_F(NmosNodeTest, AvahiResolveMultipleCandidatesPrio) {
+    // Prepare node (no Avahi daemon, set identity directly)
+    TestableNmosNode node;
+    node.set_network_identity("127.0.0.1", "lo", "aa-bb-cc-dd-ee-ff", "chassis-123");
+    // Call resolve_cb with event == AVAHI_RESOLVER_FOUND and different candidates'
+
+    // Candidate 1: priority 50, supports v1.3
+    AvahiStringList* txt1 = avahi_string_list_new("api_ver=v1.3", "pri=150", nullptr);
+    node.resolve_cb(/*r*/nullptr,
+                       /*iface*/AVAHI_IF_UNSPEC,
+                       /*proto*/AVAHI_PROTO_UNSPEC,
+                       /*event*/AVAHI_RESOLVER_FOUND,
+                       /*name*/"reg-1",
+                       /*type*/"_nmos-registration._tcp",
+                       /*domain*/"local",
+                       /*host_name*/"reg-1.local",
+                       /*address*/nullptr,
+                       /*port*/3210,
+                       /*txt*/txt1,
+                       /*flags*/(AvahiLookupResultFlags)0,
+                       /*userdata*/&node);
+    avahi_string_list_free(txt1);
+    
+    // Candidate 2: priority 100, supports v1.3
+    AvahiStringList* txt2 = avahi_string_list_new("api_ver=v1.3", "pri=100", nullptr);
+    node.resolve_cb(/*r*/nullptr,
+                       /*iface*/AVAHI_IF_UNSPEC,
+                       /*proto*/AVAHI_PROTO_UNSPEC,
+                       /*event*/AVAHI_RESOLVER_FOUND,
+                       /*name*/"reg-2",
+                       /*type*/"_nmos-registration._tcp",
+                       /*domain*/"local",
+                       /*host_name*/"reg-2.local",
+                       /*address*/nullptr,
+                       /*port*/3211,
+                       /*txt*/txt2,
+                       /*flags*/(AvahiLookupResultFlags)0,
+                       /*userdata*/&node);
+    avahi_string_list_free(txt2);
+
+    // Candidate 3: priority 50, supports v1.3
+    AvahiStringList* txt3 = avahi_string_list_new("api_ver=v1.3", "pri=50", nullptr);
+    node.resolve_cb(/*r*/nullptr,
+                       /*iface*/AVAHI_IF_UNSPEC,
+                       /*proto*/AVAHI_PROTO_UNSPEC,
+                       /*event*/AVAHI_RESOLVER_FOUND,
+                       /*name*/"reg-3",
+                       /*type*/"_nmos-registration._tcp",
+                       /*domain*/"local",
+                          /*host_name*/"reg-3.local",
+                          /*address*/nullptr,
+                            /*port*/3212,
+                            /*txt*/txt3,
+                            /*flags*/(AvahiLookupResultFlags)0,
+                            /*userdata*/&node);
+    avahi_string_list_free(txt3);
+
+    // Build base URL from discovered candidates
+    auto sel = node.choose_registry_and_build_base("v1.3");
+    ASSERT_TRUE(sel.has_value());
+    
+    // Candidate 3 should be chosen as it has the lowest priority (50) and supports v1.3
+    EXPECT_EQ(sel->base, "http://reg-3.local:3212/x-nmos/registration/v1.3");
+}
+
+TEST_F(NmosNodeTest, AvahiResolveMultipleCandidatesVer) {
+    // Prepare node (no Avahi daemon, set identity directly)
+    TestableNmosNode node;
+    node.set_network_identity("127.0.0.1", "lo", "aa-bb-cc-dd-ee-ff", "chassis-123");
+    // Call resolve_cb with event == AVAHI_RESOLVER_FOUND and different candidates'
+
+    // Candidate 1: priority 50, supports v1.3
+    AvahiStringList* txt1 = avahi_string_list_new("api_ver=v1.3", "pri=50", nullptr);
+    node.resolve_cb(/*r*/nullptr,
+                       /*iface*/AVAHI_IF_UNSPEC,
+                       /*proto*/AVAHI_PROTO_UNSPEC,
+                       /*event*/AVAHI_RESOLVER_FOUND,
+                       /*name*/"reg-1",
+                       /*type*/"_nmos-registration._tcp",
+                       /*domain*/"local",
+                       /*host_name*/"reg-1.local",
+                       /*address*/nullptr,
+                       /*port*/3210,
+                       /*txt*/txt1,
+                       /*flags*/(AvahiLookupResultFlags)0,
+                       /*userdata*/&node);
+    avahi_string_list_free(txt1);
+    
+    // Candidate 2: priority 100, supports v1.3
+    AvahiStringList* txt2 = avahi_string_list_new("api_ver=v1.2", "pri=100", nullptr);
+    node.resolve_cb(/*r*/nullptr,
+                       /*iface*/AVAHI_IF_UNSPEC,
+                       /*proto*/AVAHI_PROTO_UNSPEC,
+                       /*event*/AVAHI_RESOLVER_FOUND,
+                       /*name*/"reg-2",
+                       /*type*/"_nmos-registration._tcp",
+                       /*domain*/"local",
+                       /*host_name*/"reg-2.local",
+                       /*address*/nullptr,
+                       /*port*/3211,
+                       /*txt*/txt2,
+                       /*flags*/(AvahiLookupResultFlags)0,
+                       /*userdata*/&node);
+    avahi_string_list_free(txt2);
+
+    // Build base URL from discovered candidates
+    auto sel = node.choose_registry_and_build_base("v1.2");
+    ASSERT_TRUE(sel.has_value());
+    
+    // Candidate 2 should be chosen as it has a higher priority (100) but supports v1.3
+    EXPECT_EQ(sel->base, "http://reg-2.local:3211/x-nmos/registration/v1.2");
+}
+
+TEST_F(NmosNodeTest, AvahiResolveMultipleCandidatesNone) {
+    // Prepare node (no Avahi daemon, set identity directly)
+    TestableNmosNode node;
+    node.set_network_identity("127.0.0.1", "lo", "aa-bb-cc-dd-ee-ff", "chassis-123");
+    // Call resolve_cb with event == AVAHI_RESOLVER_FOUND and different candidates'
+
+    // Candidate 1: priority 50, supports v1.3
+    AvahiStringList* txt1 = avahi_string_list_new("api_ver=v1.3", nullptr);
+    node.resolve_cb(/*r*/nullptr,
+                       /*iface*/AVAHI_IF_UNSPEC,
+                       /*proto*/AVAHI_PROTO_UNSPEC,
+                       /*event*/AVAHI_RESOLVER_FOUND,
+                       /*name*/"reg-1",
+                       /*type*/"_nmos-registration._tcp",
+                       /*domain*/"local",
+                       /*host_name*/"reg-1.local",
+                       /*address*/nullptr,
+                       /*port*/3210,
+                       /*txt*/txt1,
+                       /*flags*/(AvahiLookupResultFlags)0,
+                       /*userdata*/&node);
+    avahi_string_list_free(txt1);
+    
+    // Candidate 2: priority 100, supports v1.3
+    AvahiStringList* txt2 = avahi_string_list_new("api_ver=v1.3", nullptr);
+    node.resolve_cb(/*r*/nullptr,
+                       /*iface*/AVAHI_IF_UNSPEC,
+                       /*proto*/AVAHI_PROTO_UNSPEC,
+                       /*event*/AVAHI_RESOLVER_FOUND,
+                       /*name*/"reg-2",
+                       /*type*/"_nmos-registration._tcp",
+                       /*domain*/"local",
+                       /*host_name*/"reg-2.local",
+                       /*address*/nullptr,
+                       /*port*/3211,
+                       /*txt*/txt2,
+                       /*flags*/(AvahiLookupResultFlags)0,
+                       /*userdata*/&node);
+    avahi_string_list_free(txt2);
+
+    // Build base URL from discovered candidates
+    auto sel = node.choose_registry_and_build_base("v1.2");
+    ASSERT_FALSE(sel.has_value());
 }

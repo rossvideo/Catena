@@ -119,3 +119,18 @@ TEST(UtilsTest, Split_OverwriteVector) {
     catena::split(out, str, ",");
     EXPECT_EQ(out, ans);
 }
+
+TEST(UtilsTest, Fmt_NormalCase) {
+    std::string result = catena::fmt("Hello, %s! You have %d new messages.", "Alice", 5);
+    EXPECT_EQ(result, "Hello, Alice! You have 5 new messages.");
+}
+
+TEST(UtilsTest, Fmt_EmptyFormat) {
+    std::string result = catena::fmt("");
+    EXPECT_EQ(result, "");
+}
+
+TEST(UtilsTest, Fmt_NoArgs) {
+    std::string result = catena::fmt("Hello, World!");
+    EXPECT_EQ(result, "Hello, World!");
+}

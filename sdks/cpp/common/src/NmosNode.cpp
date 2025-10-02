@@ -30,11 +30,11 @@
 
 #include <NmosNode.h>
 #include <sys/ioctl.h>
+#include <jwt-cpp/jwt.h>
 
-using json = nlohmann::json;
 using namespace catena::common;
 
-bool NmosNode::init(std::chrono::milliseconds heartbeatInterval) {
+NodeCode NmosNode::init(int port, std::chrono::milliseconds heartbeatInterval) {
     curl_global_init(CURL_GLOBAL_ALL);
     DEBUG_LOG << "Starting Catena REST Discovery Example";
 
@@ -42,7 +42,7 @@ bool NmosNode::init(std::chrono::milliseconds heartbeatInterval) {
     simple_poll_ = avahi_simple_poll_new();
     if (!simple_poll_) {
         LOG(ERROR) << "Failed to create simple poll object.";
-        return false;
+        return NodeCode::POLL_FAILED;
     }
 
     DEBUG_LOG << "Starting mDNS discovery for _nmos-registration._tcp services...";
@@ -54,21 +54,24 @@ bool NmosNode::init(std::chrono::milliseconds heartbeatInterval) {
 
     if (!client_) {
         LOG(ERROR) << "Failed to create client: " << avahi_strerror(error);
-        return false;
+        return NodeCode::CLIENT_FAILED;
     }
 
     DEBUG_LOG << "Avahi client created successfully.";
 
-    // Browse for _http._tcp services, change as needed
-    sb_ = avahi_service_browser_new(
-        client_, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC,
-        "_nmos-registration._tcp", nullptr, (AvahiLookupFlags)0, browse_cb, this);
+    // Browse for _nmos-registration services, change as needed
+    if (!CLIENT_FAILURE) {
+        sb_ = avahi_service_browser_new(
+            client_, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC,
+            "_nmos-registration._tcp", nullptr, (AvahiLookupFlags)0, browse_cb, this);
+    }
+    else return NodeCode::CLIENT_FAILED;
 
     DEBUG_LOG << "Starting service browser for _nmos-registration._tcp...";
 
     if (!sb_) {
         LOG(ERROR) << "Failed to create service browser: " << avahi_strerror(avahi_client_errno(client_));
-        return false;
+        return NodeCode::NO_SERVICE_BROWSER;
     }
 
     DEBUG_LOG << "Service browser created successfully.";
@@ -77,41 +80,36 @@ bool NmosNode::init(std::chrono::milliseconds heartbeatInterval) {
     runDiscovery();
 
     // Choose a registry
-    auto sel = choose_registry_and_build_base(8080);
+    auto sel = choose_registry_and_build_base("v1.3");
     if (!sel) {
         LOG(ERROR) << "No registry discovered. Exiting.\n";
-        return false;
+        return NodeCode::REGISTRY_NOT_FOUND;
     }
 
-    if (!get_node_iface(candidates_[0].addr)) return false;
+    if (!get_node_iface(candidates_[0].addr)) return NodeCode::NO_IFACE;
 
     // Compose minimal resources
     node_id_ = random_uuid();
     dev_id_ = random_uuid();
 
     //send jsons
-    if (!sendRequests(sel->base + "/resource", 8080)) {
+    if (!sendRequests(sel->base + "/resource", port)) {
         LOG(ERROR) << "Failed to register resources. Exiting.\n";
-        return false;
+        return NodeCode::REGISTRATION_FAILED;
     }
-
-    // Start heartbeat loop
-    std::thread hb(&NmosNode::heartbeat_thread, this, sel->base, node_id_, bearer_token_, heartbeatInterval);
 
     DEBUG_LOG << "Registered Node " << node_id_ << ". Heartbeating. Press Ctrl+C to exit.";
 
-    // Wait for signal
-    while (!stop_.load()) std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    // Start heartbeat loop
+    heartbeat_thread_ = std::thread(&NmosNode::run_heartbeat, this, sel->base, node_id_, bearer_token_, heartbeatInterval);
 
-    if (hb.joinable()) hb.join();
-                                                                                                                                                                                                                                                                       
-    return true;
+    return NodeCode::OK;
 }
 
 void NmosNode::runDiscovery() {
-    auto start = std::chrono::steady_clock::now();
+    auto end = std::chrono::steady_clock::now() + discoveryDuration;
     std::thread loop_thr([&](){ avahi_simple_poll_loop(simple_poll_); });
-    while (std::chrono::steady_clock::now() - start < discoveryDuration) {
+    while (std::chrono::steady_clock::now() < end) {
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         if (stop_.load()) break;
     }
@@ -120,8 +118,8 @@ void NmosNode::runDiscovery() {
 }
 
 bool NmosNode::sendRequests(std::string url, int node_port) {
-    json node_json = make_node_json(node_port);
-    json dev_json = make_device_json(node_port);
+    std::string node_json = make_node_json(node_port);
+    std::string dev_json = make_device_json(node_port);
 
     //create bearer tokens
     const char* bearerChars = std::getenv("NMOS_BEARER");
@@ -254,78 +252,90 @@ void NmosNode::parse_txt_into_candidate(AvahiStringList* txt, NmosNode::Registry
 }
 
 std::string NmosNode::make_node_json(int node_port) {
-    json node_json;
+    picojson::object node_json;
+    node_json["type"] = picojson::value("node");
 
-    node_json["type"] = "node";
-    node_json["data"] = json::object();
-    node_json["data"]["id"] = node_id_;
-    node_json["data"]["version"] = now_is04_version();
-    node_json["data"]["label"] = node_name_;
-    node_json["data"]["description"] = device_desc_;
-    node_json["data"]["href"] = fmt("http://%s:%d/x-nmos/node/v1.3/", ipv4_.c_str(), node_port);
-    node_json["data"]["caps"] = json::object();
-    node_json["data"]["tags"] = json::object();
-    node_json["data"]["services"] = json::array({
-        {
-            {"href", fmt("http://%s:%d/x-catena/status/", ipv4_.c_str(), node_port)},
-            {"type", "urn:x-catena:service:status"}
-        }
-    });
-    node_json["data"]["api"] = {
-        {"versions", json::array({"v1.3"})},
-        {"endpoints", json::array({
-            {
-                {"host", ipv4_},
-                {"port", node_port},
-                {"protocol", "http"},
-                {"authorization", false}
-            }
-        })}
-    };
-    node_json["data"]["clocks"] = json::array({
-        {
-            {"name", "clk0"},
-            {"ref_type", "internal"}
-        }
-    });
-    node_json["data"]["interfaces"] = json::array({
-        {
-            {"name", iface_},
-            {"chassis_id", chassis_id_},
-            {"port_id", mac_}
-        }
-    });
-    
-    return node_json.dump();
+    picojson::object data;
+    data["id"] = picojson::value(node_id_);
+    data["version"] = picojson::value(now_is04_version());
+    data["label"] = picojson::value(node_name_);
+    data["description"] = picojson::value(device_desc_);
+    data["href"] = picojson::value(fmt("http://%s:%d/x-nmos/node/v1.3/", ipv4_.c_str(), node_port));
+    data["caps"] = picojson::value(picojson::object());
+    data["tags"] = picojson::value(picojson::object());
+
+    picojson::array services;
+    picojson::object service;
+    service["href"] = picojson::value(fmt("http://%s:%d/x-catena/status/", ipv4_.c_str(), node_port));
+    service["type"] = picojson::value("urn:x-catena:service:status");
+    services.push_back(picojson::value(service));
+    data["services"] = picojson::value(services);
+
+    picojson::object api;
+    picojson::array versions;
+    versions.push_back(picojson::value("v1.3"));
+    api["versions"] = picojson::value(versions);
+
+    picojson::array endpoints;
+    picojson::object endpoint;
+    endpoint["host"] = picojson::value(ipv4_);
+    endpoint["port"] = picojson::value(double(node_port));
+    endpoint["protocol"] = picojson::value("http");
+    endpoint["authorization"] = picojson::value(false);
+    endpoints.push_back(picojson::value(endpoint));
+    api["endpoints"] = picojson::value(endpoints);
+    data["api"] = picojson::value(api);
+
+    picojson::array clocks;
+    picojson::object clock;
+    clock["name"] = picojson::value("clk0");
+    clock["ref_type"] = picojson::value("internal");
+    clocks.push_back(picojson::value(clock));
+    data["clocks"] = picojson::value(clocks);
+
+    picojson::array interfaces;
+    picojson::object iface;
+    iface["name"] = picojson::value(iface_);
+    iface["chassis_id"] = picojson::value(chassis_id_);
+    iface["port_id"] = picojson::value(mac_);
+    interfaces.push_back(picojson::value(iface));
+    data["interfaces"] = picojson::value(interfaces);
+
+    node_json["data"] = picojson::value(data);
+
+    return picojson::value(node_json).serialize();
 }
 
-// make_device_json: builds a minimal IS-04 Device object
 std::string NmosNode::make_device_json(int node_port) {
-    json dev_json;
+    picojson::object dev_json;
+    dev_json["type"] = picojson::value("device");
 
-    dev_json["type"] = "device";
-    dev_json["data"] = json::object();
-    dev_json["data"]["id"] = dev_id_;
-    dev_json["data"]["version"] = now_is04_version();
-    dev_json["data"]["node_id"] = node_id_;
-    dev_json["data"]["label"] = device_name_;
-    dev_json["data"]["description"] = device_desc_;
-    dev_json["data"]["type"] = "urn:x-nmos:device:generic";
-    dev_json["data"]["senders"] = json::array();
-    dev_json["data"]["receivers"] = json::array();
-    dev_json["data"]["controls"] = json::array({
-        {
-            {"type", "urn:x-nmos:control:sr-ctrl/v1.1"},
-            {"href", fmt("http://%s:%d/x-catena/connection/v1.1/", ipv4_.c_str(), node_port)}
-        }
-    });
-    dev_json["data"]["tags"] = {
-        {"vendor", json::array({"RossVideo"})},
-        {"model_name", json::array({model_name_})},
-        {"device_name", json::array({device_name_})}
-    };
+    picojson::object data;
+    data["id"] = picojson::value(dev_id_);
+    data["version"] = picojson::value(now_is04_version());
+    data["node_id"] = picojson::value(node_id_);
+    data["label"] = picojson::value(device_name_);
+    data["description"] = picojson::value(device_desc_);
+    data["type"] = picojson::value("urn:x-nmos:device:generic");
+    data["senders"] = picojson::value(picojson::array());
+    data["receivers"] = picojson::value(picojson::array());
 
-    return dev_json.dump();
+    picojson::array controls;
+    picojson::object control;
+    control["type"] = picojson::value("urn:x-nmos:control:sr-ctrl/v1.1");
+    control["href"] = picojson::value(fmt("http://%s:%d/x-catena/connection/v1.1/", ipv4_.c_str(), node_port));
+    controls.push_back(picojson::value(control));
+    data["controls"] = picojson::value(controls);
+
+    picojson::object tags;
+    tags["vendor"] = picojson::value(picojson::array{picojson::value("RossVideo")});
+    tags["model_name"] = picojson::value(picojson::array{picojson::value(model_name_)});
+    tags["device_name"] = picojson::value(picojson::array{picojson::value(device_name_)});
+    data["tags"] = picojson::value(tags);
+
+    dev_json["data"] = picojson::value(data);
+
+    return picojson::value(dev_json).serialize();
 }
 
 // Callback for resolving a service
@@ -388,12 +398,11 @@ void NmosNode::browse_cb(
             }
             break;
         case AVAHI_BROWSER_FAILURE:
-            LOG(ERROR) << "browse failure: " << avahi_strerror(avahi_client_errno(node->getClient())) << "\n";
-            avahi_simple_poll_quit(node->getPoll());
-            break;
         case AVAHI_BROWSER_REMOVE:
         case AVAHI_BROWSER_CACHE_EXHAUSTED:
         case AVAHI_BROWSER_ALL_FOR_NOW:
+            LOG(ERROR) << "browse failure: " << avahi_strerror(avahi_client_errno(node->getClient())) << "\n";
+            avahi_simple_poll_quit(node->getPoll());
             break;
     }
 }
@@ -404,30 +413,35 @@ void NmosNode::client_cb(AvahiClient *client, AvahiClientState state, void* user
     auto* node = static_cast<NmosNode*>(userdata);
     DEBUG_LOG << "Avahi client state changed: " << (int)state;
     if (state == AVAHI_CLIENT_FAILURE) {
+        //log and (TBI) close node ONLY IF not registered
         LOG(ERROR) << "Client failure: " << avahi_strerror(avahi_client_errno(client));
         avahi_simple_poll_quit(node->getPoll());
+        node->CLIENT_FAILURE.store(true);
     }
 }
 
 // ---------------------- Registration + heartbeat ----------------------
 
-std::optional<NmosNode::RegistrySelection> NmosNode::choose_registry_and_build_base(int node_port) {
+std::optional<NmosNode::RegistrySelection> NmosNode::choose_registry_and_build_base(std::string ver) {
     std::lock_guard<std::mutex> lk(cand_mtx_);
     if (candidates_.empty()) return std::nullopt;
     // Prefer lowest priority number, then IPv4 first, then first seen
     std::sort(candidates_.begin(), candidates_.end(), [](const NmosNode::RegistryCandidate& a, const NmosNode::RegistryCandidate& b){
         return a.priority < b.priority;
     });
-    const NmosNode::RegistryCandidate& c = candidates_.front();
-    std::string ver = "v1.3";
-    std::string scheme = c.https ? "https" : "http";
-    // We use c.host (SRV target). Some registries advertise by mDNS name, which DNS should resolve.
-    std::string base = fmt("%s://%s:%u/x-nmos/registration/%s", scheme.c_str(), c.host.c_str(), c.port, ver.c_str());
-    LOG(ERROR) << "Chosen registry base: " << base << "\n";
-    return NmosNode::RegistrySelection{base, ver};
+    //choose first element in candidates with version == ver
+    for (const auto& c : candidates_) {
+        if (std::find(c.api_versions.begin(), c.api_versions.end(), ver) != c.api_versions.end()) {
+            std::string scheme = c.https ? "https" : "http";
+            std::string base = fmt("%s://%s:%u/x-nmos/registration/%s", scheme.c_str(), c.host.c_str(), c.port, ver.c_str());
+            DEBUG_LOG << "Chosen registry base: " << base << "\n";
+            return NmosNode::RegistrySelection{base, ver};
+        }
+    }
+    return std::nullopt;
 }
 
-void NmosNode::heartbeat_thread(std::string base, std::string node_id, std::string bearer, std::chrono::milliseconds interval) {
+void NmosNode::run_heartbeat(std::string base, std::string node_id, std::string bearer, std::chrono::milliseconds interval) {
     std::string url = base + "/health/nodes/" + node_id;
     while (!stop_.load()) {
         (void)http_post_json(url, "{}", bearer);
