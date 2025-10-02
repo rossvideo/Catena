@@ -508,6 +508,45 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     /**
+     * @brief Specialized getParam_ for EmptyValue - handles template parameters with descriptor structure
+     * @param oid the path to the child parameter  
+     * @param value the EmptyValue (unused but required for template specialization)
+     * @param authz The Authorizer object containing the client's scopes
+     * @param status The status of the operation
+     * @return a unique pointer to the child parameter, or nullptr if navigation should be handled elsewhere
+     */
+    std::unique_ptr<IParam> getParam_(Path& oid, EmptyValue& value, const IAuthorizer& authz, catena::exception_with_status& status) {
+        std::unique_ptr<IParam> returnParam = nullptr;
+        // Make sure the front is a field name.
+        if (!oid.front_is_string()) {
+            status = catena::exception_with_status("Expected string in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
+        } else {
+            std::string oidStr = oid.front_as_string();
+            oid.pop();
+            
+            // Check if this parameter has sub-parameters defined in its descriptor
+            const auto& subParams = descriptor_.getAllSubParams();
+            auto it = subParams.find(oidStr);
+            if (it != subParams.end()) {
+                // Found sub-parameter in descriptor, create a ParamWithValue for it
+                returnParam = std::make_unique<ParamWithValue<EmptyValue>>(value, *it->second);
+                // The path has more segments, keep recursing
+                if (!oid.empty()) {
+                    returnParam = returnParam->getParam(oid, authz, status);
+                // If we're at the end of path make sure we have readAuthz for the gotten param before returning.
+                } else if (!authz.readAuthz(*returnParam)) {
+                    status = catena::exception_with_status("Not authorized to read param " + oid.fqoid(), catena::StatusCode::PERMISSION_DENIED);
+                    returnParam = nullptr;
+                }
+            } else {
+                // Param does not exist, return nullptr
+                status = catena::exception_with_status("Param " + oidStr + " does not exist", catena::StatusCode::NOT_FOUND);
+            }
+        }
+        return returnParam;
+    }
+
+    /**
      * @brief get the child parameter that oid points to
      * @tparam U the type of the value that we are getting the child parameter from
      * @param oid the path to the child parameter
