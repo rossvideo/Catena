@@ -15,8 +15,8 @@ This directory contains a maven project which:
    Download into your `eclipse/dropins` folder the [os-maven-plugin-x.y.z.jar](https://repo1.maven.org/maven2/kr/motd/maven/os-maven-plugin/).
 
 ## Compiling and generating the jars
-Simply run: `mvn clean package` in the `Catena/sdks/java` directory.  
-Resulting jars will be in `Catena/sdks/java/target` directory.
+Simply run: `mvn clean package` in the `Catena` project root directory.  
+Resulting jars will be in `Catena/build/java` directory.
 
 ## Running the test applications
 
@@ -24,23 +24,23 @@ Resulting jars will be in `Catena/sdks/java/target` directory.
 The Client application connect to a server on the localhost and performs some predefined operations on it.
 
 1. Open a terminal
-2. Navigate to `Catena/sdks/java`
-3. Run `java -cp target/catena-java-0.0.1-SNAPSHOT-shaded.jar com.rossvideo.catena.example.main.ServerMain`  
+2. Navigate to `Catena/build/java`
+3. Run `java -cp catena-java-0.0.1-SNAPSHOT-shaded.jar com.rossvideo.catena.example.main.ServerMain`  
 The server will wait for a connection from a client.  Use Ctrl+C to exit.
 
 ### Running the client-only test application
 The Client application connect to a server on the localhost and performs some predefined operations on it.
 
 1. Open a terminal
-2. Navigate to `Catena/sdks/java`
-3. Run `java -cp target/catena-java-0.0.1-SNAPSHOT-shaded.jar com.rossvideo.catena.example.main.ClientMain`  
+2. Navigate to `Catena/build/java`
+3. Run `java -cp catena-java-0.0.1-SNAPSHOT-shaded.jar com.rossvideo.catena.example.main.ClientMain`  
 The Client will try to connect to the server, perform operations and exit.
 
 ### Running the Server-Client test application
 This single application launches in separate threads, a server and a client.  The client connects to the server to perform predefined operations.  
 Once complete the server and client are shutdown.
 1. Open a terminal
-2. Navigate to `Catena/sdks/java`
-3. Run `java -cp target/catena-java-0.0.1-SNAPSHOT-shaded.jar com.rossvideo.catena.example.main.ServerClientMain`  
+2. Navigate to `Catena/build/java`
+3. Run `java -cp catena-java-0.0.1-SNAPSHOT-shaded.jar com.rossvideo.catena.example.main.ServerClientMain`  
 
 

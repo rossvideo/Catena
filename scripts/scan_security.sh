@@ -10,7 +10,6 @@ TRIVY_DIR="$SCRIPT_DIR/bin"
 TRIVY_BIN="$TRIVY_DIR/trivy"
 REPORT_DIR="$SCRIPT_DIR/reports"
 SECURITY_REPORT="$REPORT_DIR/SECURITY_REPORT.md"
-JSON_REPORT="$REPORT_DIR/security-scan.json"
 CPP_JSON_REPORT="$REPORT_DIR/cpp-dependencies-scan.json"
 SYSTEM_JSON_REPORT="$REPORT_DIR/system-packages-scan.json"
 HTML_REPORT="$REPORT_DIR/security-report.html"
@@ -52,23 +51,23 @@ echo "🔍 Scanning system packages for C++ libraries..."
 "$TRIVY_BIN" rootfs /usr --scanners vuln --format table
 "$TRIVY_BIN" rootfs /usr --scanners vuln --format json --output "$SYSTEM_JSON_REPORT"
 
-echo ""
-echo "🔍 Generating detailed JSON report..."
-"$TRIVY_BIN" fs . --scanners vuln,secret,misconfig --format json --output "$JSON_REPORT" --skip-files unittests/cpp/common/CommonTestHelpers.h --ignorefile $SCRIPT_DIR/.trivyignore
+# echo ""
+# echo "🔍 Generating detailed JSON report..."
+# "$TRIVY_BIN" fs . --scanners vuln,secret,misconfig --format json --output "$JSON_REPORT" --skip-files unittests/cpp/common/CommonTestHelpers.h --ignorefile $SCRIPT_DIR/.trivyignore
 
 # === Generate/Update Security Report ===
 echo ""
 echo "📝 Generating security report..."
 
 # Get vulnerability counts from JSON
-if [ -f "$JSON_REPORT" ] || [ -f "$JAVA_JSON_REPORT" ]; then
+if [ -f "$CPP_JSON_REPORT" ] || [ -f "$JAVA_JSON_REPORT" ] || [ -f "$SYSTEM_JSON_REPORT" ]; then
     VULN_COUNTS=$(python3 -c "
 import json
 import sys
 import os
 try:
     all_findings = []
-    for json_file in ['$JSON_REPORT', '$CPP_JSON_REPORT', '$SYSTEM_JSON_REPORT', '$JAVA_JSON_REPORT']:
+    for json_file in [ '$CPP_JSON_REPORT', '$JAVA_JSON_REPORT', '$SYSTEM_JSON_REPORT']:
         if os.path.exists(json_file):
             with open(json_file, 'r') as f:
                 data = json.load(f)
@@ -137,7 +136,7 @@ The security scan identified **$TOTAL_VULNS total vulnerabilities** in the proje
 EOF
 
 # Add detailed vulnerability information if JSON report exists
-if { [ -f "$JSON_REPORT" ] || [ -f "$JAVA_JSON_REPORT" ]; } && [ $TOTAL_VULNS -gt 0 ]; then
+if { [ -f "$CPP_JSON_REPORT" ] || [ -f "$JAVA_JSON_REPORT" ] || [ -f "$SYSTEM_JSON_REPORT" ]; } && [ $TOTAL_VULNS -gt 0 ]; then
     # Add vulnerability summary table
     echo "### 🚨 Vulnerability Summary Table" >> "$SECURITY_REPORT"
     echo "" >> "$SECURITY_REPORT"
@@ -147,10 +146,18 @@ import sys
 import os
 
 try:
-    all_findings = []
-    # Process all JSON reports (including Java)
-    json_files = ['$JSON_REPORT', '$CPP_JSON_REPORT', '$SYSTEM_JSON_REPORT', '$JAVA_JSON_REPORT']
-    for json_file in json_files:
+    cpp_findings = []
+    java_findings = []
+    system_findings = []
+    
+    # Process all JSON reports
+    json_files = [
+        ('$CPP_JSON_REPORT', cpp_findings),
+        ('$JAVA_JSON_REPORT', java_findings), 
+        ('$SYSTEM_JSON_REPORT', system_findings)
+    ]
+    
+    for json_file, findings_list in json_files:
         if not os.path.exists(json_file):
             continue
             
@@ -165,7 +172,7 @@ try:
             # Handle vulnerabilities (dependencies)
             if 'Vulnerabilities' in result and result['Vulnerabilities']:
                 for vuln in result['Vulnerabilities']:
-                    all_findings.append({
+                    findings_list.append({
                         'id': vuln.get('VulnerabilityID', 'N/A'),
                         'severity': vuln.get('Severity', 'N/A'),
                         'package': vuln.get('PkgName', 'N/A'),
@@ -176,10 +183,10 @@ try:
                         'type': 'vulnerability'
                     })
             
-            # Handle misconfigurations (Docker, etc.) - only in main report
-            if json_file == '$JSON_REPORT' and 'Misconfigurations' in result and result['Misconfigurations']:
+            # Handle misconfigurations (Docker, etc.)
+            if 'Misconfigurations' in result and result['Misconfigurations']:
                 for misconfig in result['Misconfigurations']:
-                    all_findings.append({
+                    findings_list.append({
                         'id': misconfig.get('ID', 'N/A'),
                         'severity': misconfig.get('Severity', 'N/A'),
                         'package': target.split('/')[-1] if '/' in target else target,
@@ -190,10 +197,10 @@ try:
                         'type': 'misconfiguration'
                     })
             
-            # Handle secrets - only in main report
-            if json_file == '$JSON_REPORT' and 'Secrets' in result and result['Secrets']:
+            # Handle secrets
+            if 'Secrets' in result and result['Secrets']:
                 for secret in result['Secrets']:
-                    all_findings.append({
+                    findings_list.append({
                         'id': secret.get('RuleID', 'SECRET'),
                         'severity': secret.get('Severity', 'MEDIUM'),
                         'package': target.split('/')[-1] if '/' in target else target,
@@ -204,31 +211,44 @@ try:
                         'type': 'secret'
                     })
     
-    # Sort by severity (Critical > High > Medium > Low)
+    # Sort findings by severity within each category
     severity_order = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
-    all_findings.sort(key=lambda x: severity_order.get(x['severity'], 4))
+    for findings_list in [cpp_findings, java_findings, system_findings]:
+        findings_list.sort(key=lambda x: severity_order.get(x['severity'], 4))
     
     # Print table header
     print('| Severity | CVE/ID | Package/File | Installed | Fixed | Issue |')
     print('|----------|--------|--------------|-----------|-------|-------|')
     
-    for finding in all_findings:
-        severity_icon = {
-            'CRITICAL': '🔴',
-            'HIGH': '🟠',
-            'MEDIUM': '🔶', 
-            'LOW': '🔵'
-        }.get(finding['severity'], '⚪')
-        
-        fixed_status = finding['fixed'] if finding['fixed'] else '❌ Not fixed'
-        package_info = finding['package'] if finding['package'] != 'N/A' else finding['target']
-        
-        print(f\"| {severity_icon} {finding['severity']} | {finding['id']} | {package_info} | {finding['installed']} | {fixed_status} | {finding['title']} |\")
+    # Print findings by source
+    sources = [
+        ('C++ Dependencies', cpp_findings), 
+        ('Java Dependencies', java_findings), 
+        ('System Packages', system_findings)
+    ]
     
+    for source_name, findings in sources:
+        if findings:
+            print(f'| **Source:** {source_name} |  |  |  |  |  |')
+            for finding in findings:
+                severity_icon = {
+                    'CRITICAL': '🔴',
+                    'HIGH': '🟠',
+                    'MEDIUM': '🔶', 
+                    'LOW': '🔵'
+                }.get(finding['severity'], '⚪')
+                
+                fixed_status = finding['fixed'] if finding['fixed'] else '❌ Not fixed'
+                package_info = finding['package'] if finding['package'] != 'N/A' else finding['target']
+                
+                print(f\"| {severity_icon} {finding['severity']} | {finding['id']} | {package_info} | {finding['installed']} | {fixed_status} | {finding['title']} |\")
+
     print()
     
 except Exception as e:
-    print('Error generating vulnerability table')
+    print(f'Error generating vulnerability table: {e}')
+    import traceback
+    traceback.print_exc()
     sys.exit(0)
 " >> "$SECURITY_REPORT" 2>/dev/null || echo "Error generating vulnerability table" >> "$SECURITY_REPORT"
 
@@ -241,7 +261,8 @@ import json
 import sys
 import os
 try:
-    for json_file in ['$JSON_REPORT', '$JAVA_JSON_REPORT']:
+    json_files = ['$CPP_JSON_REPORT', '$JAVA_JSON_REPORT', '$SYSTEM_JSON_REPORT']
+    for json_file in json_files:
         if not os.path.exists(json_file):
             continue
         with open(json_file, 'r') as f:
@@ -272,7 +293,9 @@ try:
                     print()
             
 except Exception as e:
-    print('Error parsing vulnerability details')
+    print(f'Error parsing vulnerability details: {e}')
+    import traceback
+    traceback.print_exc()
     sys.exit(0)
 " >> "$SECURITY_REPORT" 2>/dev/null || echo "Error parsing vulnerability details" >> "$SECURITY_REPORT"
 else
@@ -308,7 +331,10 @@ fi)
 
 - **Scan Type:** Filesystem vulnerability and secret scanning
 - **Files Scanned:** All project files and dependencies
-- **Report Location:** \`$JSON_REPORT\`
+- **Report Locations:** 
+  - C++ Dependencies: \`$CPP_JSON_REPORT\`
+  - Java Dependencies: \`$JAVA_JSON_REPORT\`  
+  - System Packages: \`$SYSTEM_JSON_REPORT\`
 - **Last Updated:** $(date)
 
 ## Quick Commands
@@ -317,8 +343,10 @@ fi)
 # Re-run security scan
 ./scan_security.sh
 
-# View detailed JSON report
-cat $JSON_REPORT | python3 -m json.tool
+# View detailed JSON reports
+cat $CPP_JSON_REPORT | python3 -m json.tool
+cat $JAVA_JSON_REPORT | python3 -m json.tool
+cat $SYSTEM_JSON_REPORT | python3 -m json.tool
 
 # Check for specific vulnerability
 ./bin/trivy fs . --format table --skip-files unittests/cpp/common/CommonTestHelpers.h | grep -i "CVE-XXXX-XXXX"
@@ -345,7 +373,6 @@ echo "   🟠 High: $HIGH_COUNT"
 echo "   🔶 Medium: $MEDIUM_COUNT"
 echo "   🔵 Low: $LOW_COUNT"
 echo "   📝 Report: $SECURITY_REPORT"
-echo "   📋 JSON: $JSON_REPORT"
 if [ -f "$CPP_JSON_REPORT" ]; then
     echo "   🔧 C++ Deps: $CPP_JSON_REPORT"
 fi
