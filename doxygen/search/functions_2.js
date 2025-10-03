@@ -4,6 +4,5 @@ var searchData=
   ['back_5fas_5fstring_1',['back_as_string',['../classcatena_1_1common_1_1Path.html#aee8036a35a13fe883796c8dabfdfb2f0',1,'catena::common::Path']]],
   ['back_5fis_5findex_2',['back_is_index',['../classcatena_1_1common_1_1Path.html#aef917e2e6824eb8a6e2f4215a4bb0656',1,'catena::common::Path']]],
   ['back_5fis_5fstring_3',['back_is_string',['../classcatena_1_1common_1_1Path.html#ad55f7fcb7d9d1c6ef012bd5b72ea6bcd',1,'catena::common::Path']]],
-  ['begin_4',['begin',['../classcatena_1_1common_1_1ILanguagePack.html#ab5984be8118c831717492c632efc07b1',1,'catena::common::ILanguagePack::begin()'],['../classcatena_1_1common_1_1LanguagePack.html#a9807b22bc41d90ae89ff65476878f789',1,'catena::common::LanguagePack::begin()']]],
-  ['browse_5fcb_5',['browse_cb',['../classcatena_1_1common_1_1NmosNode.html#ac6deabaf68ec09f493a1c616e5e52327',1,'catena::common::NmosNode']]]
+  ['begin_4',['begin',['../classcatena_1_1common_1_1ILanguagePack.html#ab5984be8118c831717492c632efc07b1',1,'catena::common::ILanguagePack::begin()'],['../classcatena_1_1common_1_1LanguagePack.html#a9807b22bc41d90ae89ff65476878f789',1,'catena::common::LanguagePack::begin()']]]
 ];
