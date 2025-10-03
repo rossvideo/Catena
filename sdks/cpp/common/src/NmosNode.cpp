@@ -107,7 +107,7 @@ NodeCode NmosNode::init(int port, std::chrono::milliseconds heartbeatInterval) {
 }
 
 void NmosNode::runDiscovery() {
-    auto end = std::chrono::steady_clock::now() + discoveryDuration;
+    auto end = std::chrono::steady_clock::now() + discoveryDuration_;
     std::thread loop_thr([&](){ avahi_simple_poll_loop(simple_poll_); });
     while (std::chrono::steady_clock::now() < end) {
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -365,8 +365,8 @@ void NmosNode::resolve_cb(
         c.port = port;
         parse_txt_into_candidate(txt, c);
         node->addCandidate(std::move(c));
-        LOG(ERROR) << "Registry candidate: " << name << " @ " << addr_str << ":" << port
-        << " https=" << (node->getCandidates().back().https?"yes":"no") << " pri=" << node->getCandidates().back().priority << "\n";
+        DEBUG_LOG << "Registry candidate: " << name << " @ " << addr_str << ":" << port
+        << " https=" << (node->getCandidates().back().https?"yes":"no") << " pri=" << node->getCandidates().back().priority;
     } else {
         LOG(ERROR) << "Failed to resolve service: " << avahi_strerror(avahi_client_errno(avahi_service_resolver_get_client(r)));
     }
@@ -398,11 +398,12 @@ void NmosNode::browse_cb(
             }
             break;
         case AVAHI_BROWSER_FAILURE:
+            LOG(ERROR) << "browse failure: " << avahi_strerror(avahi_client_errno(node->getClient())) << "\n";
+            avahi_simple_poll_quit(node->getPoll());
+            break;
         case AVAHI_BROWSER_REMOVE:
         case AVAHI_BROWSER_CACHE_EXHAUSTED:
         case AVAHI_BROWSER_ALL_FOR_NOW:
-            LOG(ERROR) << "browse failure: " << avahi_strerror(avahi_client_errno(node->getClient())) << "\n";
-            avahi_simple_poll_quit(node->getPoll());
             break;
     }
 }
@@ -434,7 +435,7 @@ std::optional<NmosNode::RegistrySelection> NmosNode::choose_registry_and_build_b
         if (std::find(c.api_versions.begin(), c.api_versions.end(), ver) != c.api_versions.end()) {
             std::string scheme = c.https ? "https" : "http";
             std::string base = fmt("%s://%s:%u/x-nmos/registration/%s", scheme.c_str(), c.host.c_str(), c.port, ver.c_str());
-            DEBUG_LOG << "Chosen registry base: " << base << "\n";
+            DEBUG_LOG << "Chosen registry base: " << base;
             return NmosNode::RegistrySelection{base, ver};
         }
     }

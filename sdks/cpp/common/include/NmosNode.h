@@ -41,7 +41,6 @@
 #include <curl/curl.h>
 #include <netdb.h> 
 #include "INmosNode.h"
-#include <nlohmann/json.hpp>
 
 //common
 #include <utils.h>
@@ -155,7 +154,7 @@ class NmosNode : public INmosNode {
     /**
      * @brief Runs the mDNS discovery process for a set duration.
      * This function will block for the duration of the discovery.
-     * The duration is set by the discoveryDuration member variable.
+     * The duration is set by the discoveryDuration_ member variable.
      */
     void runDiscovery();
 
@@ -293,7 +292,7 @@ class NmosNode : public INmosNode {
     std::string node_id_;
     std::string dev_id_;
     std::string bearer_token_;
-    std::chrono::milliseconds discoveryDuration = std::chrono::seconds(2);
+    std::chrono::milliseconds discoveryDuration_ = std::chrono::seconds(2);
 
   };
 

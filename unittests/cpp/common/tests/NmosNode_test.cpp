@@ -82,7 +82,7 @@ public:
           const std::string& device_desc = "A Test Catena example Node", const std::string& model_name = "Test Catena Model") : 
       NmosNode(device_name, node_name, device_desc, model_name)
     {
-        discoveryDuration = std::chrono::milliseconds(10);
+        discoveryDuration_ = std::chrono::milliseconds(10);
     };
     // inject fake network identity instead of calling get_node_iface()
     void set_network_identity(const std::string& ip,
@@ -222,7 +222,7 @@ TEST_F(NmosNodeTest, NmosNodeTest_DiscoveredRegistryBrowserRemove) {
     g_avahi_test_control.browse_event = AVAHI_BROWSER_REMOVE; // force browse failure
 
     EXPECT_EQ(node.init(), NodeCode::REGISTRY_NOT_FOUND);
-    EXPECT_EQ(g_avahi_test_control.simple_poll_quit, 2);
+    EXPECT_EQ(g_avahi_test_control.simple_poll_quit, 1);
 }
 
 TEST_F(NmosNodeTest, NmosNodeTest_DiscoveredRegistryBrowserCacheExhausted) {
@@ -233,7 +233,7 @@ TEST_F(NmosNodeTest, NmosNodeTest_DiscoveredRegistryBrowserCacheExhausted) {
     g_avahi_test_control.browse_event = AVAHI_BROWSER_CACHE_EXHAUSTED; // force browse failure
 
     EXPECT_EQ(node.init(), NodeCode::REGISTRY_NOT_FOUND);
-    EXPECT_EQ(g_avahi_test_control.simple_poll_quit, 2);
+    EXPECT_EQ(g_avahi_test_control.simple_poll_quit, 1);
 }
 
 TEST_F(NmosNodeTest, NmosNodeTest_DiscoveredRegistryBrowserAllForNow) {
@@ -244,7 +244,7 @@ TEST_F(NmosNodeTest, NmosNodeTest_DiscoveredRegistryBrowserAllForNow) {
     g_avahi_test_control.browse_event = AVAHI_BROWSER_ALL_FOR_NOW ; // force browse failure
 
     EXPECT_EQ(node.init(), NodeCode::REGISTRY_NOT_FOUND);
-    EXPECT_EQ(g_avahi_test_control.simple_poll_quit, 2);
+    EXPECT_EQ(g_avahi_test_control.simple_poll_quit, 1);
 }
 
 TEST_F(NmosNodeTest, DiscoveredRegistryNoHeartbeat) {
