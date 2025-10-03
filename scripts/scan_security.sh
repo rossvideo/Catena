@@ -14,6 +14,8 @@ JSON_REPORT="$REPORT_DIR/security-scan.json"
 CPP_JSON_REPORT="$REPORT_DIR/cpp-dependencies-scan.json"
 SYSTEM_JSON_REPORT="$REPORT_DIR/system-packages-scan.json"
 HTML_REPORT="$REPORT_DIR/security-report.html"
+JAVA_DIR="$SCRIPT_DIR/../sdks/java"
+JAVA_JSON_REPORT="$REPORT_DIR/java-security-scan.json"
 
 # === Ensure Trivy is installed ===
 if [ ! -f "$TRIVY_BIN" ]; then
@@ -33,6 +35,11 @@ echo "📍 Directory: $(pwd)"
 echo "🔍 Running filesystem vulnerability scan..."
 "$TRIVY_BIN" fs . --format table --skip-files unittests/cpp/common/CommonTestHelpers.h --ignorefile $SCRIPT_DIR/.trivyignore
 
+echo ""
+echo "🔍 Scanning Java dependencies in sdks/java..."
+if [ -d "$JAVA_DIR" ]; then
+    "$TRIVY_BIN" fs "$JAVA_DIR" --scanners vuln --format json --output "$JAVA_JSON_REPORT"
+fi
 echo ""
 echo "🔍 Scanning C++ build dependencies..."
 if [ -d "build/cpp" ]; then
@@ -54,48 +61,28 @@ echo ""
 echo "📝 Generating security report..."
 
 # Get vulnerability counts from JSON
-if [ -f "$JSON_REPORT" ]; then
-    # Use Python to parse JSON since jq might not be available
+if [ -f "$JSON_REPORT" ] || [ -f "$JAVA_JSON_REPORT" ]; then
     VULN_COUNTS=$(python3 -c "
 import json
 import sys
 import os
 try:
     all_findings = []
-    
-    # Parse main filesystem scan
-    if os.path.exists('$JSON_REPORT'):
-        with open('$JSON_REPORT', 'r') as f:
-            data = json.load(f)
-        for r in data.get('Results', []):
-            if 'Vulnerabilities' in r:
-                all_findings.extend(r['Vulnerabilities'])
-            if 'Misconfigurations' in r:
-                all_findings.extend(r['Misconfigurations'])
-            if 'Secrets' in r:
-                all_findings.extend(r['Secrets'])
-    
-    # Parse C++ build dependencies scan
-    if os.path.exists('$CPP_JSON_REPORT'):
-        with open('$CPP_JSON_REPORT', 'r') as f:
-            data = json.load(f)
-        for r in data.get('Results', []):
-            if 'Vulnerabilities' in r:
-                all_findings.extend(r['Vulnerabilities'])
-    
-    # Parse system packages scan
-    if os.path.exists('$SYSTEM_JSON_REPORT'):
-        with open('$SYSTEM_JSON_REPORT', 'r') as f:
-            data = json.load(f)
-        for r in data.get('Results', []):
-            if 'Vulnerabilities' in r:
-                all_findings.extend(r['Vulnerabilities'])
-    
+    for json_file in ['$JSON_REPORT', '$CPP_JSON_REPORT', '$SYSTEM_JSON_REPORT', '$JAVA_JSON_REPORT']:
+        if os.path.exists(json_file):
+            with open(json_file, 'r') as f:
+                data = json.load(f)
+            for r in data.get('Results', []):
+                if 'Vulnerabilities' in r:
+                    all_findings.extend(r['Vulnerabilities'])
+                if 'Misconfigurations' in r:
+                    all_findings.extend(r['Misconfigurations'])
+                if 'Secrets' in r:
+                    all_findings.extend(r['Secrets'])
     critical = sum(1 for f in all_findings if f.get('Severity') == 'CRITICAL')
-    high = sum(1 for f in all_findings if f.get('Severity') == 'HIGH') 
+    high = sum(1 for f in all_findings if f.get('Severity') == 'HIGH')
     medium = sum(1 for f in all_findings if f.get('Severity') == 'MEDIUM')
     low = sum(1 for f in all_findings if f.get('Severity') == 'LOW')
-    
     print(f'{critical} {high} {medium} {low}')
 except Exception as e:
     print('0 0 0 0')
@@ -117,7 +104,7 @@ cat > "$SECURITY_REPORT" << EOF
 # Security Assessment Report
 **Project:** Catena SDK Project  
 **Scan Date:** $(date "+%B %d, %Y at %H:%M %Z")  
-**Scanner:** Trivy $(./bin/trivy --version | head -1 | cut -d' ' -f2)  
+**Scanner:** Trivy $($TRIVY_BIN --version | head -1 | cut -d' ' -f2)  
 **Scan Directory:** $(pwd)
 
 ## Executive Summary
@@ -150,11 +137,10 @@ The security scan identified **$TOTAL_VULNS total vulnerabilities** in the proje
 EOF
 
 # Add detailed vulnerability information if JSON report exists
-if [ -f "$JSON_REPORT" ] && [ $TOTAL_VULNS -gt 0 ]; then
+if { [ -f "$JSON_REPORT" ] || [ -f "$JAVA_JSON_REPORT" ]; } && [ $TOTAL_VULNS -gt 0 ]; then
     # Add vulnerability summary table
     echo "### 🚨 Vulnerability Summary Table" >> "$SECURITY_REPORT"
     echo "" >> "$SECURITY_REPORT"
-    
     python3 -c "
 import json
 import sys
@@ -162,10 +148,8 @@ import os
 
 try:
     all_findings = []
-    
-    # Process all JSON reports
-    json_files = ['$JSON_REPORT', '$CPP_JSON_REPORT', '$SYSTEM_JSON_REPORT']
-    
+    # Process all JSON reports (including Java)
+    json_files = ['$JSON_REPORT', '$CPP_JSON_REPORT', '$SYSTEM_JSON_REPORT', '$JAVA_JSON_REPORT']
     for json_file in json_files:
         if not os.path.exists(json_file):
             continue
@@ -255,35 +239,37 @@ except Exception as e:
     python3 -c "
 import json
 import sys
-
+import os
 try:
-    with open('$JSON_REPORT', 'r') as f:
-        data = json.load(f)
+    for json_file in ['$JSON_REPORT', '$JAVA_JSON_REPORT']:
+        if not os.path.exists(json_file):
+            continue
+        with open(json_file, 'r') as f:
+            data = json.load(f)
     
-    for result in data.get('Results', []):
-        if 'Vulnerabilities' in result and result['Vulnerabilities']:
-            print(f\"**Target:** {result['Target']}  \")
-            print(f\"**Type:** {result.get('Type', 'N/A')}  \")
-            print(f\"**Vulnerabilities:** {len(result['Vulnerabilities'])}\")
-            print()
-            
-            for vuln in result['Vulnerabilities']:
-                vuln_id = vuln.get('VulnerabilityID', 'N/A')
-                severity = vuln.get('Severity', 'N/A')
-                pkg_name = vuln.get('PkgName', 'N/A')
-                installed_ver = vuln.get('InstalledVersion', 'N/A')
-                title = vuln.get('Title', 'N/A')
-                fixed_ver = vuln.get('FixedVersion', '')
-                references = vuln.get('References', [])
-                reference = references[0] if references else 'N/A'
-                
-                print(f\"- **{vuln_id}** ({severity})  \")
-                print(f\"  **Library:** {pkg_name} {installed_ver}  \")
-                print(f\"  **Issue:** {title}  \")
-                if fixed_ver:
-                    print(f\"  **Fixed in:** {fixed_ver}  \")
-                print(f\"  **Reference:** {reference}\")
+        for result in data.get('Results', []):
+            if 'Vulnerabilities' in result and result['Vulnerabilities']:
+                print(f\"**Target:** {result['Target']}  \")
+                print(f\"**Type:** {result.get('Type', 'N/A')}  \")
+                print(f\"**Vulnerabilities:** {len(result['Vulnerabilities'])}\")
                 print()
+            
+                for vuln in result['Vulnerabilities']:
+                    vuln_id = vuln.get('VulnerabilityID', 'N/A')
+                    severity = vuln.get('Severity', 'N/A')
+                    pkg_name = vuln.get('PkgName', 'N/A')
+                    installed_ver = vuln.get('InstalledVersion', 'N/A')
+                    title = vuln.get('Title', 'N/A')
+                    fixed_ver = vuln.get('FixedVersion', '')
+                    references = vuln.get('References', [])
+                    reference = references[0] if references else 'N/A'
+                    print(f\"- **{vuln_id}** ({severity})  \")
+                    print(f\"  **Library:** {pkg_name} {installed_ver}  \")
+                    print(f\"  **Issue:** {title}  \")
+                    if fixed_ver:
+                        print(f\"  **Fixed in:** {fixed_ver}  \")
+                    print(f\"  **Reference:** {reference}\")
+                    print()
             
 except Exception as e:
     print('Error parsing vulnerability details')
