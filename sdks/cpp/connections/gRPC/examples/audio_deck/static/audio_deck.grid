@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?><abs contexttype="opengear" id="_top" keepalive="false" style="bg#tablezebra;">
    <meta>
-      <api id="controller" immediate="true" name="Controller" src="small_knob_controller.grid.js"/>
+      <api id="controller" immediate="true" name="Controller" src="volume_controller.grid.js"/>
 
       <params>
-         <param access="1" constraint="20.0;20000.0;20.0;20000.0" constrainttype="FLOAT_RANGE" name="" oid="freq" precision="0" type="FLOAT32" value="10706.589" widget="text"/>
+         <param access="1" constraint="20.0;20000.0;20.0;20000.0" constrainttype="FLOAT_RANGE" name="" oid="freq" precision="0" type="FLOAT32" value="23.112078" widget="text"/>
+         <param access="1" constraint="0.0;100.0;0.10000000149011612;100.0" constrainttype="FLOAT_RANGE" name="" oid="volume" precision="1" type="FLOAT32" value="46.0" widget="text"/>
       </params>
       <widgets>
          <widgetdescriptor id="small_knob">
@@ -26,6 +27,32 @@
                </simplegrid>
             </oglml>
          </widgetdescriptor>
+        <api id="controller" immediate="true" name="Controller" src="volume_controller.grid.js"/>
+
+
+         <!-- Volume Slider -->
+         <params>
+            <param access="1" constraint="0;100;" constrainttype="FLOAT_RANGE" name="Volume" oid="volume" precision="0" type="FLOAT32" value="50"/>
+         </params>
+         <widgets>
+            <widgetdescriptor id="volume_slider">
+               <config>
+                  <params>
+                     <param access="1" constraint="0;100;" constrainttype="FLOAT_RANGE" oid="volume" type="FLOAT32" value="50"/>
+                  </params>
+               </config>
+               <oglml>
+                  <abs height="400" width="60">
+                     <!-- Vertical slider itself -->
+                     <param height="400" oid="volume" widget="slider-vertical-nolabel" width="60">
+                           <task tasktype="onchange">  
+                              ctrl.event('volume_change', this);
+                           </task>
+                     </param>
+                  </abs>
+               </oglml>
+            </widgetdescriptor>
+         </widgets>
       </widgets>
    </meta>
 
@@ -33,9 +60,9 @@
 
 
    <!-- Channel Grid -->
-   <simplegrid cols="8" height="720" hspace="10" left="20" rows="1" top="206" width="1510">
+   <simplegrid cols="8" height="840" hspace="10" left="20" rows="1" top="206" width="1510">
       <!-- Channel 1 -->
-      <abs height="720" left="25" name="Channel 1" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
+      <abs height="840" left="25" name="Channel 1" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
          <!-- Channel Label -->
          <label header="true" height="20" left="30" name="Channel 1" style="txt-align:center;bdr#lightdivider;bdr:round;" top="20" width="120"/>
          <!-- Solo and Select buttons -->
@@ -48,7 +75,7 @@
             </tr>
          </table>
          <!-- Bottom Button Panel - Centered with individual tables -->
-         <abs height="160" left="10" style="m:5,5,5,5;" top="540" width="160">
+         <abs height="160" left="10" style="m:5,5,5,5;" top="660" width="160">
             <!-- Top Row: Off and Reset -->
             <table height="35" left="0" top="0" width="160">
                <tr>
@@ -81,12 +108,12 @@
          </abs>
 
       <!-- Dials -->
-       <simplegrid cols="1" height="400" left="10" name="Dials" rows="4" top="135" width="80">
+       <simplegrid cols="1" height="400" left="10" name="Dials" rows="4" top="235" width="80">
             <abs>
                <widget height="100" widgetid="small_knob" width="80">
                   <config>
                      <params>
-                        <param oid="idx" value="14901"/>
+                        <param oid="idx" value="343"/>
                      </params>
                   </config>
                </widget>
@@ -95,7 +122,7 @@
                <widget height="100" widgetid="small_knob" width="80">
                   <config>
                      <params>
-                        <param oid="idx" value="4096"/>
+                        <param oid="idx" value="12238"/>
                      </params>
                   </config>
                </widget>
@@ -113,16 +140,34 @@
                <widget height="100" widgetid="small_knob" width="80">
                   <config>
                      <params>
-                        <param oid="idx" value="16383"/>
+                        <param oid="idx" value="12430"/>
                      </params>
                   </config>
                </widget>
             </abs>
          </simplegrid>
+         
+         <!-- Volume Slider -->
+         <widget height="400" left="100" right="1348" top="235" widgetid="volume_slider" width="60">
+            <config>
+               <params>
+                  <param oid="volume" value="50"/>
+               </params>
+            </config>
+         </widget>
+
+         <!-- Screen -->
+         <abs height="80" left="10" style="bg#darkdivider;bdr:round;bdr#buttonbg;fg#green;txt-align:center;" top="140" width="160">
+            <label height="15" left="0" name="Channel 1" style="txt-align:center" top="60" width="160"/>
+            <label height="15" left="0" name="Mode" style="txt-align:center" top="35" width="160"/>
+            <label height="15" left="0" name="img" style="txt-align:center" top="10" width="160"/>
+         </abs>
+         
+         <abs left="361" top="89"/>
       </abs>
        
        <!-- Channel 2 -->
-       <abs height="720" left="25" name="Channel 2" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
+       <abs height="840" left="25" name="Channel 2" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
           <!-- Channel Label -->
           <label header="true" height="20" left="30" name="Channel 2" style="txt-align:center;bdr#lightdivider;bdr:round;" top="20" width="120"/>
           <!-- Solo and Select buttons -->
@@ -135,7 +180,7 @@
              </tr>
           </table>
           <!-- Bottom Button Panel - Centered with individual tables -->
-          <abs height="160" left="10" top="540" width="160">
+          <abs height="160" left="10" style="m:5,5,5,5;" top="660" width="160">
              <!-- Top Row: Off and Reset -->
              <table height="35" left="0" top="0" width="160">
                 <tr>
@@ -166,10 +211,68 @@
                 </tr>
              </table>
           </abs>
+
+      <!-- Dials -->
+       <simplegrid cols="1" height="400" left="10" name="Dials" rows="4" top="235" width="80">
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="343"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12238"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12288"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12430"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+         </simplegrid>
+         
+         <!-- Volume Slider -->
+         <widget height="400" left="100" right="1348" top="235" widgetid="volume_slider" width="60">
+            <config>
+               <params>
+                  <param oid="volume" value="50"/>
+               </params>
+            </config>
+         </widget>
+
+         <!-- Screen -->
+         <abs height="80" left="10" style="bg#darkdivider;bdr:round;bdr#buttonbg;fg#green;txt-align:center;" top="140" width="160">
+            <label height="15" left="0" name="Channel 2" style="txt-align:center" top="60" width="160"/>
+            <label height="15" left="0" name="Mode" style="txt-align:center" top="35" width="160"/>
+            <label height="15" left="0" name="img" style="txt-align:center" top="10" width="160"/>
+         </abs>
+         
+         <abs left="361" top="89"/>
        </abs>
        
        <!-- Channel 3 -->
-       <abs height="720" left="25" name="Channel 3" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
+       <abs height="840" left="25" name="Channel 3" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
           <!-- Channel Label -->
           <label header="true" height="20" left="30" name="Channel 3" style="txt-align:center;bdr#lightdivider;bdr:round;" top="20" width="120"/>
           <!-- Solo and Select buttons -->
@@ -182,7 +285,7 @@
              </tr>
           </table>
           <!-- Bottom Button Panel - Centered with individual tables -->
-          <abs height="160" left="10" top="540" width="160">
+          <abs height="160" left="10" style="m:5,5,5,5;" top="660" width="160">
              <!-- Top Row: Off and Reset -->
              <table height="35" left="0" top="0" width="160">
                 <tr>
@@ -213,10 +316,68 @@
                 </tr>
              </table>
           </abs>
+
+      <!-- Dials -->
+       <simplegrid cols="1" height="400" left="10" name="Dials" rows="4" top="235" width="80">
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="343"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12238"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12288"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12430"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+         </simplegrid>
+         
+         <!-- Volume Slider -->
+         <widget height="400" left="100" right="1348" top="235" widgetid="volume_slider" width="60">
+            <config>
+               <params>
+                  <param oid="volume" value="50"/>
+               </params>
+            </config>
+         </widget>
+
+         <!-- Screen -->
+         <abs height="80" left="10" style="bg#darkdivider;bdr:round;bdr#buttonbg;fg#green;txt-align:center;" top="140" width="160">
+            <label height="15" left="0" name="Channel 3" style="txt-align:center" top="60" width="160"/>
+            <label height="15" left="0" name="Mode" style="txt-align:center" top="35" width="160"/>
+            <label height="15" left="0" name="img" style="txt-align:center" top="10" width="160"/>
+         </abs>
+         
+         <abs left="361" top="89"/>
        </abs>
        
        <!-- Channel 4 -->
-       <abs height="720" left="25" name="Channel 4" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
+       <abs height="840" left="25" name="Channel 4" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
           <!-- Channel Label -->
           <label header="true" height="20" left="30" name="Channel 4" style="txt-align:center;bdr#lightdivider;bdr:round;" top="20" width="120"/>
           <!-- Solo and Select buttons -->
@@ -229,7 +390,7 @@
              </tr>
           </table>
           <!-- Bottom Button Panel - Centered with individual tables -->
-          <abs height="160" left="10" top="540" width="160">
+          <abs height="160" left="10" style="m:5,5,5,5;" top="660" width="160">
              <!-- Top Row: Off and Reset -->
              <table height="35" left="0" top="0" width="160">
                 <tr>
@@ -260,10 +421,68 @@
                 </tr>
              </table>
           </abs>
+
+      <!-- Dials -->
+       <simplegrid cols="1" height="400" left="10" name="Dials" rows="4" top="235" width="80">
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="343"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12238"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12288"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12430"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+         </simplegrid>
+         
+         <!-- Volume Slider -->
+         <widget height="400" left="100" right="1348" top="235" widgetid="volume_slider" width="60">
+            <config>
+               <params>
+                  <param oid="volume" value="50"/>
+               </params>
+            </config>
+         </widget>
+
+         <!-- Screen -->
+         <abs height="80" left="10" style="bg#darkdivider;bdr:round;bdr#buttonbg;fg#green;txt-align:center;" top="140" width="160">
+            <label height="15" left="0" name="Channel 4" style="txt-align:center" top="60" width="160"/>
+            <label height="15" left="0" name="Mode" style="txt-align:center" top="35" width="160"/>
+            <label height="15" left="0" name="img" style="txt-align:center" top="10" width="160"/>
+         </abs>
+         
+         <abs left="361" top="89"/>
        </abs>
        
        <!-- Channel 5 -->
-       <abs height="720" left="25" name="Channel 5" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
+       <abs height="840" left="25" name="Channel 5" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
           <!-- Channel Label -->
           <label header="true" height="20" left="30" name="Channel 5" style="txt-align:center;bdr#lightdivider;bdr:round;" top="20" width="120"/>
           <!-- Solo and Select buttons -->
@@ -276,7 +495,7 @@
              </tr>
           </table>
           <!-- Bottom Button Panel - Centered with individual tables -->
-          <abs height="160" left="10" top="540" width="160">
+          <abs height="160" left="10" style="m:5,5,5,5;" top="660" width="160">
              <!-- Top Row: Off and Reset -->
              <table height="35" left="0" top="0" width="160">
                 <tr>
@@ -307,10 +526,68 @@
                 </tr>
              </table>
           </abs>
+
+      <!-- Dials -->
+       <simplegrid cols="1" height="400" left="10" name="Dials" rows="4" top="235" width="80">
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="343"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12238"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12288"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12430"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+         </simplegrid>
+         
+         <!-- Volume Slider -->
+         <widget height="400" left="100" right="1348" top="235" widgetid="volume_slider" width="60">
+            <config>
+               <params>
+                  <param oid="volume" value="50"/>
+               </params>
+            </config>
+         </widget>
+
+         <!-- Screen -->
+         <abs height="80" left="10" style="bg#darkdivider;bdr:round;bdr#buttonbg;fg#green;txt-align:center;" top="140" width="160">
+            <label height="15" left="0" name="Channel 5" style="txt-align:center" top="60" width="160"/>
+            <label height="15" left="0" name="Mode" style="txt-align:center" top="35" width="160"/>
+            <label height="15" left="0" name="img" style="txt-align:center" top="10" width="160"/>
+         </abs>
+         
+         <abs left="361" top="89"/>
        </abs>
        
        <!-- Channel 6 -->
-       <abs height="720" left="25" name="Channel 6" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
+       <abs height="840" left="25" name="Channel 6" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
           <!-- Channel Label -->
           <label header="true" height="20" left="30" name="Channel 6" style="txt-align:center;bdr#lightdivider;bdr:round;" top="20" width="120"/>
           <!-- Solo and Select buttons -->
@@ -323,7 +600,7 @@
              </tr>
           </table>
           <!-- Bottom Button Panel - Centered with individual tables -->
-          <abs height="160" left="10" top="540" width="160">
+          <abs height="160" left="10" style="m:5,5,5,5;" top="660" width="160">
              <!-- Top Row: Off and Reset -->
              <table height="35" left="0" top="0" width="160">
                 <tr>
@@ -354,10 +631,68 @@
                 </tr>
              </table>
           </abs>
+
+      <!-- Dials -->
+       <simplegrid cols="1" height="400" left="10" name="Dials" rows="4" top="235" width="80">
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="343"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12238"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12288"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12430"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+         </simplegrid>
+         
+         <!-- Volume Slider -->
+         <widget height="400" left="100" right="1348" top="235" widgetid="volume_slider" width="60">
+            <config>
+               <params>
+                  <param oid="volume" value="50"/>
+               </params>
+            </config>
+         </widget>
+
+         <!-- Screen -->
+         <abs height="80" left="10" style="bg#darkdivider;bdr:round;bdr#buttonbg;fg#green;txt-align:center;" top="140" width="160">
+            <label height="15" left="0" name="Channel 6" style="txt-align:center" top="60" width="160"/>
+            <label height="15" left="0" name="Mode" style="txt-align:center" top="35" width="160"/>
+            <label height="15" left="0" name="img" style="txt-align:center" top="10" width="160"/>
+         </abs>
+         
+         <abs left="361" top="89"/>
        </abs>
        
        <!-- Channel 7 -->
-       <abs height="720" left="25" name="Channel 7" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
+       <abs height="840" left="25" name="Channel 7" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
           <!-- Channel Label -->
           <label header="true" height="20" left="30" name="Channel 7" style="txt-align:center;bdr#lightdivider;bdr:round;" top="20" width="120"/>
           <!-- Solo and Select buttons -->
@@ -370,7 +705,7 @@
              </tr>
           </table>
           <!-- Bottom Button Panel - Centered with individual tables -->
-          <abs height="160" left="10" top="540" width="160">
+          <abs height="160" left="10" style="m:5,5,5,5;" top="660" width="160">
              <!-- Top Row: Off and Reset -->
              <table height="35" left="0" top="0" width="160">
                 <tr>
@@ -401,10 +736,68 @@
                 </tr>
              </table>
           </abs>
+
+      <!-- Dials -->
+       <simplegrid cols="1" height="400" left="10" name="Dials" rows="4" top="235" width="80">
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="343"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12238"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12288"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12430"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+         </simplegrid>
+         
+         <!-- Volume Slider -->
+         <widget height="400" left="100" right="1348" top="235" widgetid="volume_slider" width="60">
+            <config>
+               <params>
+                  <param oid="volume" value="50"/>
+               </params>
+            </config>
+         </widget>
+
+         <!-- Screen -->
+         <abs height="80" left="10" style="bg#darkdivider;bdr:round;bdr#buttonbg;fg#green;txt-align:center;" top="140" width="160">
+            <label height="15" left="0" name="Channel 7" style="txt-align:center" top="60" width="160"/>
+            <label height="15" left="0" name="Mode" style="txt-align:center" top="35" width="160"/>
+            <label height="15" left="0" name="img" style="txt-align:center" top="10" width="160"/>
+         </abs>
+         
+         <abs left="361" top="89"/>
        </abs>
        
        <!-- Channel 8 -->
-       <abs height="720" left="25" name="Channel 8" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
+       <abs height="840" left="25" name="Channel 8" style="bg#panelbg;bdr#buttonbg;bdr:round;look:round;" top="50" width="180">
           <!-- Channel Label -->
           <label header="true" height="20" left="30" name="Channel 8" style="txt-align:center;bdr#lightdivider;bdr:round;" top="20" width="120"/>
           <!-- Solo and Select buttons -->
@@ -417,7 +810,7 @@
              </tr>
           </table>
           <!-- Bottom Button Panel - Centered with individual tables -->
-          <abs height="160" left="10" top="540" width="160">
+          <abs height="160" left="10" style="m:5,5,5,5;" top="660" width="160">
              <!-- Top Row: Off and Reset -->
              <table height="35" left="0" top="0" width="160">
                 <tr>
@@ -448,7 +841,64 @@
                 </tr>
              </table>
           </abs>
-       </abs>
-    </simplegrid>
 
+      <!-- Dials -->
+       <simplegrid cols="1" height="400" left="10" name="Dials" rows="4" top="235" width="80">
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="343"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12238"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12288"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+            <abs>
+               <widget height="100" widgetid="small_knob" width="80">
+                  <config>
+                     <params>
+                        <param oid="idx" value="12430"/>
+                     </params>
+                  </config>
+               </widget>
+            </abs>
+         </simplegrid>
+         
+         <!-- Volume Slider -->
+         <widget height="400" left="100" right="1348" top="235" widgetid="volume_slider" width="60">
+            <config>
+               <params>
+                  <param oid="volume" value="50"/>
+               </params>
+            </config>
+         </widget>
+
+         <!-- Screen -->
+         <abs height="80" left="10" style="bg#darkdivider;bdr:round;bdr#buttonbg;fg#green;txt-align:center;" top="140" width="160">
+            <label height="15" left="0" name="Channel 8" style="txt-align:center" top="60" width="160"/>
+            <label height="15" left="0" name="Mode" style="txt-align:center" top="35" width="160"/>
+            <label height="15" left="0" name="img" style="txt-align:center" top="10" width="160"/>
+         </abs>
+         
+         <abs left="361" top="89"/>
+       </abs>
+   </simplegrid>
 </abs>
