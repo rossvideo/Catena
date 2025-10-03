@@ -133,194 +133,193 @@ $(document).ready(function(){initNavTree('NmosNode_8h_source.html',''); initResi
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="preprocessor">#include &lt;curl/curl.h&gt;</span></div>
 <div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span><span class="preprocessor">#include &lt;netdb.h&gt;</span> </div>
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span><span class="preprocessor">#include &quot;INmosNode.h&quot;</span></div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="preprocessor">#include &lt;nlohmann/json.hpp&gt;</span></div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="comment">//common</span></div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="preprocessor">#include &lt;<a class="code" href="utils_8h.html">utils.h</a>&gt;</span></div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="preprocessor">#include &lt;<a class="code" href="Device_8h.html">Device.h</a>&gt;</span></div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><span class="preprocessor">#include &lt;<a class="code" href="ParamWithValue_8h.html">ParamWithValue.h</a>&gt;</span></div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="preprocessor">#include &lt;cstring&gt;</span></div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> </div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="preprocessor">#include &quot;absl/flags/parse.h&quot;</span></div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="preprocessor">#include &quot;absl/flags/usage.h&quot;</span></div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="preprocessor">#include &quot;absl/strings/str_format.h&quot;</span></div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span><span class="preprocessor">#include &lt;iomanip&gt;</span></div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="preprocessor">#include &lt;memory&gt;</span></div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="preprocessor">#include &lt;regex&gt;</span></div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="preprocessor">#include &lt;stdexcept&gt;</span></div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="preprocessor">#include &lt;string&gt;</span></div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="preprocessor">#include &lt;thread&gt;</span></div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="preprocessor">#include &lt;chrono&gt;</span></div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span><span class="preprocessor">#include &lt;signal.h&gt;</span></div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span><span class="preprocessor">#include &lt;functional&gt;</span></div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="preprocessor">#include &lt;<a class="code" href="Logger_8h.html">Logger.h</a>&gt;</span></div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span><span class="preprocessor">#include &lt;<a class="code" href="IAuthorizer_8h.html">IAuthorizer.h</a>&gt;</span></div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span><span class="preprocessor">#include &lt;dirent.h&gt;</span></div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="preprocessor">#include &lt;sys/types.h&gt;</span></div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="preprocessor">#include &lt;sys/stat.h&gt;</span></div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="preprocessor">#include &lt;ifaddrs.h&gt;</span></div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="preprocessor">#include &lt;net/if.h&gt;</span></div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="preprocessor">#include &lt;arpa/inet.h&gt;</span></div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacecatena.html">catena</a> {</div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="keyword">namespace </span>common {</div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span> </div>
-<div class="foldopen" id="foldopen00096" data-start="{" data-end="};">
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html">   96</a></span><span class="keyword">class </span><a class="code hl_class" href="classcatena_1_1common_1_1NmosNode.html">NmosNode</a> : <span class="keyword">public</span> <a class="code hl_class" href="classcatena_1_1common_1_1INmosNode.html">INmosNode</a> {</div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>  <span class="keyword">public</span>:</div>
-<div class="foldopen" id="foldopen00103" data-start="{" data-end="}">
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#aa6219a768173ed9a7dee3afdc378fb85">  103</a></span>    <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#aa6219a768173ed9a7dee3afdc378fb85">NmosNode</a>(<span class="keyword">const</span> std::string&amp; device_name = <span class="stringliteral">&quot;Catena Device&quot;</span>, <span class="keyword">const</span> std::string&amp; node_name = <span class="stringliteral">&quot;Catena Node&quot;</span>,</div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>          <span class="keyword">const</span> std::string&amp; device_desc = <span class="stringliteral">&quot;A Catena example Node&quot;</span>, <span class="keyword">const</span> std::string&amp; model_name = <span class="stringliteral">&quot;Catena Model&quot;</span>) : </div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>      device_name_(device_name),</div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>      node_name_(node_name),</div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>      device_desc_(device_desc),</div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>      model_name_(model_name) {};</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="comment">//common</span></div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="preprocessor">#include &lt;<a class="code" href="utils_8h.html">utils.h</a>&gt;</span></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="preprocessor">#include &lt;<a class="code" href="Device_8h.html">Device.h</a>&gt;</span></div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="preprocessor">#include &lt;<a class="code" href="ParamWithValue_8h.html">ParamWithValue.h</a>&gt;</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="preprocessor">#include &lt;cstring&gt;</span></div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="preprocessor">#include &quot;absl/flags/parse.h&quot;</span></div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="preprocessor">#include &quot;absl/flags/usage.h&quot;</span></div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="preprocessor">#include &quot;absl/strings/str_format.h&quot;</span></div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="preprocessor">#include &lt;iomanip&gt;</span></div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="preprocessor">#include &lt;memory&gt;</span></div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="preprocessor">#include &lt;regex&gt;</span></div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="preprocessor">#include &lt;stdexcept&gt;</span></div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="preprocessor">#include &lt;thread&gt;</span></div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="preprocessor">#include &lt;chrono&gt;</span></div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="preprocessor">#include &lt;signal.h&gt;</span></div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span><span class="preprocessor">#include &lt;functional&gt;</span></div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span><span class="preprocessor">#include &lt;<a class="code" href="Logger_8h.html">Logger.h</a>&gt;</span></div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="preprocessor">#include &lt;<a class="code" href="IAuthorizer_8h.html">IAuthorizer.h</a>&gt;</span></div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span><span class="preprocessor">#include &lt;dirent.h&gt;</span></div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span><span class="preprocessor">#include &lt;sys/types.h&gt;</span></div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="preprocessor">#include &lt;sys/stat.h&gt;</span></div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="preprocessor">#include &lt;ifaddrs.h&gt;</span></div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="preprocessor">#include &lt;net/if.h&gt;</span></div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="preprocessor">#include &lt;arpa/inet.h&gt;</span></div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacecatena.html">catena</a> {</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span><span class="keyword">namespace </span>common {</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span> </div>
+<div class="foldopen" id="foldopen00095" data-start="{" data-end="};">
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html">   95</a></span><span class="keyword">class </span><a class="code hl_class" href="classcatena_1_1common_1_1NmosNode.html">NmosNode</a> : <span class="keyword">public</span> <a class="code hl_class" href="classcatena_1_1common_1_1INmosNode.html">INmosNode</a> {</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>  <span class="keyword">public</span>:</div>
+<div class="foldopen" id="foldopen00102" data-start="{" data-end="}">
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#aa6219a768173ed9a7dee3afdc378fb85">  102</a></span>    <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#aa6219a768173ed9a7dee3afdc378fb85">NmosNode</a>(<span class="keyword">const</span> std::string&amp; device_name = <span class="stringliteral">&quot;Catena Device&quot;</span>, <span class="keyword">const</span> std::string&amp; node_name = <span class="stringliteral">&quot;Catena Node&quot;</span>,</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>          <span class="keyword">const</span> std::string&amp; device_desc = <span class="stringliteral">&quot;A Catena example Node&quot;</span>, <span class="keyword">const</span> std::string&amp; model_name = <span class="stringliteral">&quot;Catena Model&quot;</span>) : </div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>      device_name_(device_name),</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>      node_name_(node_name),</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>      device_desc_(device_desc),</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>      model_name_(model_name) {};</div>
 </div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span> </div>
-<div class="foldopen" id="foldopen00113" data-start="{" data-end="}">
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a51e60e6996e16acd2836b51b92268e75">  113</a></span>    <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a51e60e6996e16acd2836b51b92268e75">~NmosNode</a>()</div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    {</div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>      <span class="keywordflow">if</span> (simple_poll_) {</div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>        avahi_simple_poll_free(simple_poll_);</div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>        simple_poll_ = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>      }</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>      <span class="keywordflow">if</span> (client_) {</div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>        avahi_client_free(client_);</div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>        client_ = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>      }</div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>      <span class="keywordflow">if</span> (sb_) {</div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>        avahi_service_browser_free(sb_);</div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>        sb_ = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>      }</div>
-<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>      stop_.store(<span class="keyword">true</span>);</div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>      <span class="comment">// wait for heartbeat thread to exit</span></div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>      <span class="keywordflow">if</span> (heartbeat_thread_.joinable()) {</div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>        heartbeat_thread_.join();</div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>      }</div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>      curl_global_cleanup();</div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    }</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
+<div class="foldopen" id="foldopen00112" data-start="{" data-end="}">
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a51e60e6996e16acd2836b51b92268e75">  112</a></span>    <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a51e60e6996e16acd2836b51b92268e75">~NmosNode</a>()</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    {</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>      <span class="keywordflow">if</span> (simple_poll_) {</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>        avahi_simple_poll_free(simple_poll_);</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>        simple_poll_ = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>      }</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>      <span class="keywordflow">if</span> (client_) {</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>        avahi_client_free(client_);</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>        client_ = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>      }</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>      <span class="keywordflow">if</span> (sb_) {</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>        avahi_service_browser_free(sb_);</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>        sb_ = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>      }</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>      stop_.store(<span class="keyword">true</span>);</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>      <span class="comment">// wait for heartbeat thread to exit</span></div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>      <span class="keywordflow">if</span> (heartbeat_thread_.joinable()) {</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>        heartbeat_thread_.join();</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>      }</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>      curl_global_cleanup();</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>    }</div>
 </div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span> </div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a52509a1f6dd44bc55743e9305ecc51fa">  135</a></span>    <a class="code hl_enumeration" href="namespacecatena_1_1common.html#a39956cd1eb9cc3e56518c795362fb636">NodeCode</a> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a52509a1f6dd44bc55743e9305ecc51fa">init</a>(<span class="keywordtype">int</span> port = 8080, std::chrono::milliseconds heartbeatInterval = std::chrono::seconds(1)) <span class="keyword">override</span>;</div>
-<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span> </div>
-<div class="line"><a id="l00137" name="l00137"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a3fbf07df7cc3197a33392bdb9e8730ce">  137</a></span>    AvahiSimplePoll* <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a3fbf07df7cc3197a33392bdb9e8730ce">getPoll</a>()<span class="keyword"> override </span>{ <span class="keywordflow">return</span> simple_poll_; }</div>
-<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span> </div>
-<div class="foldopen" id="foldopen00139" data-start="{" data-end="}">
-<div class="line"><a id="l00139" name="l00139"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a852d46f19410394b6e0db6dfe02345e2">  139</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a852d46f19410394b6e0db6dfe02345e2">addCandidate</a>(<a class="code hl_struct" href="structcatena_1_1common_1_1INmosNode_1_1RegistryCandidate.html">RegistryCandidate</a>&amp;&amp; c)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>      std::lock_guard&lt;std::mutex&gt; lk(cand_mtx_);</div>
-<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>      candidates_.push_back(std::move(c));</div>
-<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>    }</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span> </div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a52509a1f6dd44bc55743e9305ecc51fa">  134</a></span>    <a class="code hl_enumeration" href="namespacecatena_1_1common.html#a39956cd1eb9cc3e56518c795362fb636">NodeCode</a> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a52509a1f6dd44bc55743e9305ecc51fa">init</a>(<span class="keywordtype">int</span> port = 8080, std::chrono::milliseconds heartbeatInterval = std::chrono::seconds(1)) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span> </div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a3fbf07df7cc3197a33392bdb9e8730ce">  136</a></span>    AvahiSimplePoll* <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a3fbf07df7cc3197a33392bdb9e8730ce">getPoll</a>()<span class="keyword"> override </span>{ <span class="keywordflow">return</span> simple_poll_; }</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span> </div>
+<div class="foldopen" id="foldopen00138" data-start="{" data-end="}">
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a852d46f19410394b6e0db6dfe02345e2">  138</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a852d46f19410394b6e0db6dfe02345e2">addCandidate</a>(<a class="code hl_struct" href="structcatena_1_1common_1_1INmosNode_1_1RegistryCandidate.html">RegistryCandidate</a>&amp;&amp; c)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>      std::lock_guard&lt;std::mutex&gt; lk(cand_mtx_);</div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>      candidates_.push_back(std::move(c));</div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>    }</div>
 </div>
-<div class="foldopen" id="foldopen00143" data-start="{" data-end="}">
-<div class="line"><a id="l00143" name="l00143"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a0ca48d609d266ff4c5a3547baed885cd">  143</a></span>    std::vector&lt;RegistryCandidate&gt; <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a0ca48d609d266ff4c5a3547baed885cd">getCandidates</a>()<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>      std::lock_guard&lt;std::mutex&gt; lk(cand_mtx_);</div>
-<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>      <span class="keywordflow">return</span> candidates_;</div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>    }</div>
+<div class="foldopen" id="foldopen00142" data-start="{" data-end="}">
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a0ca48d609d266ff4c5a3547baed885cd">  142</a></span>    std::vector&lt;RegistryCandidate&gt; <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a0ca48d609d266ff4c5a3547baed885cd">getCandidates</a>()<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>      std::lock_guard&lt;std::mutex&gt; lk(cand_mtx_);</div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>      <span class="keywordflow">return</span> candidates_;</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>    }</div>
 </div>
-<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span> </div>
-<div class="line"><a id="l00148" name="l00148"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a0481d8d24c29a7e004913fa2bc5c3891">  148</a></span>    AvahiClient* <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a0481d8d24c29a7e004913fa2bc5c3891">getClient</a>() { <span class="keywordflow">return</span> client_; }</div>
-<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>    </div>
-<div class="line"><a id="l00150" name="l00150"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#ae4bd9c02d483454214a0596365b92a7e">  150</a></span>    std::optional&lt;RegistrySelection&gt; <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#ae4bd9c02d483454214a0596365b92a7e">choose_registry_and_build_base</a>(std::string) <span class="keyword">override</span>;</div>
-<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>    </div>
-<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>    <span class="comment">//Flags</span></div>
-<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>    std::atomic&lt;bool&gt; CLIENT_FAILURE = <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>  <span class="keyword">protected</span>:</div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a9ac224a448cb22885aee8a6afe7e6446">  160</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a9ac224a448cb22885aee8a6afe7e6446">runDiscovery</a>();</div>
-<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span> </div>
-<div class="line"><a id="l00168" name="l00168"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a54ebd920fdcd55e982580abfc9650a81">  168</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a54ebd920fdcd55e982580abfc9650a81">sendRequests</a>(std::string, <span class="keywordtype">int</span>);</div>
-<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span> </div>
-<div class="line"><a id="l00174" name="l00174"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a79ec6e7ee4f33d70f2492dddb5770ebe">  174</a></span>    <span class="keyword">static</span> std::string <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a79ec6e7ee4f33d70f2492dddb5770ebe">now_is04_version</a>();</div>
-<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span> </div>
-<div class="line"><a id="l00180" name="l00180"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#afead2c77175c496f298e016b9cd4b84f">  180</a></span>    <span class="keyword">static</span> std::string <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#afead2c77175c496f298e016b9cd4b84f">random_uuid</a>();</div>
-<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span> </div>
-<div class="line"><a id="l00182" name="l00182"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a8b8b20ba4c52e525cd1e8839e8cbee84">  182</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a8b8b20ba4c52e525cd1e8839e8cbee84">get_node_iface</a>(<span class="keyword">const</span> std::string&amp; reg_addr) <span class="keyword">override</span>;</div>
-<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span> </div>
-<div class="line"><a id="l00191" name="l00191"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a7481b770f7250039618d287e16b9886b">  191</a></span>    <span class="keyword">static</span> <span class="keywordtype">bool</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a7481b770f7250039618d287e16b9886b">http_post_json</a>(<span class="keyword">const</span> std::string&amp; url, <span class="keyword">const</span> std::string&amp; jsonObj, <span class="keyword">const</span> std::string&amp; bearer);</div>
-<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span> </div>
-<div class="line"><a id="l00198" name="l00198"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#aabc35dd7c6c109c53c6578fa0e4043f6">  198</a></span>    <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#aabc35dd7c6c109c53c6578fa0e4043f6">parse_txt_into_candidate</a>(AvahiStringList* txt, <a class="code hl_struct" href="structcatena_1_1common_1_1INmosNode_1_1RegistryCandidate.html">RegistryCandidate</a>&amp; c);</div>
-<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span> </div>
-<div class="line"><a id="l00205" name="l00205"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#afbcdf633b1673217ac02c86cecae0c60">  205</a></span>    std::string <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#afbcdf633b1673217ac02c86cecae0c60">make_node_json</a>(<span class="keywordtype">int</span> node_port);</div>
-<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span> </div>
-<div class="line"><a id="l00212" name="l00212"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a621d0104c0cb7e2b1592f0cea647ec23">  212</a></span>    std::string <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a621d0104c0cb7e2b1592f0cea647ec23">make_device_json</a>(<span class="keywordtype">int</span> node_port);</div>
-<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span> </div>
-<div class="line"><a id="l00230" name="l00230"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#ac7dc66034d8d5db5017b2e482552e9e6">  230</a></span>    <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#ac7dc66034d8d5db5017b2e482552e9e6">resolve_cb</a>(</div>
-<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>        AvahiServiceResolver *r,</div>
-<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>        AvahiIfIndex interface,</div>
-<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>        AvahiProtocol protocol,</div>
-<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>        AvahiResolverEvent event,</div>
-<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> *name,</div>
-<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> *type,</div>
-<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> *domain,</div>
-<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> *host_name,</div>
-<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>        <span class="keyword">const</span> AvahiAddress *address,</div>
-<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>        uint16_t port,</div>
-<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>        AvahiStringList *txt,</div>
-<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>        AvahiLookupResultFlags flags,</div>
-<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span>        <span class="keywordtype">void</span>* userdata);</div>
-<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span> </div>
-<div class="line"><a id="l00257" name="l00257"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#ac6deabaf68ec09f493a1c616e5e52327">  257</a></span>    <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#ac6deabaf68ec09f493a1c616e5e52327">browse_cb</a>(</div>
-<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>        AvahiServiceBrowser *b,</div>
-<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>        AvahiIfIndex interface,</div>
-<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>        AvahiProtocol protocol,</div>
-<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>        AvahiBrowserEvent event,</div>
-<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> *name,</div>
-<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> *type,</div>
-<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> *domain,</div>
-<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>        AvahiLookupResultFlags flags,</div>
-<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>        <span class="keywordtype">void</span>* userdata);</div>
-<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span> </div>
-<div class="line"><a id="l00274" name="l00274"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a412e8931139c3cd2da30d2f1e2d48e58">  274</a></span>    <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a412e8931139c3cd2da30d2f1e2d48e58">client_cb</a>(AvahiClient *client, AvahiClientState state, <span class="keywordtype">void</span>* userdata);</div>
-<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>    </div>
-<div class="line"><a id="l00276" name="l00276"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#ad7db202407818be49f75481ea5424ea0">  276</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#ad7db202407818be49f75481ea5424ea0">run_heartbeat</a>(std::string base, std::string node_id, std::string bearer, std::chrono::milliseconds interval = std::chrono::seconds(5)) <span class="keyword">override</span>;</div>
-<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span> </div>
-<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span>      AvahiSimplePoll *simple_poll_ = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span>    AvahiClient* client_ = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>    AvahiServiceBrowser *sb_ = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span>    std::atomic&lt;bool&gt; stop_ = <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>    std::mutex cand_mtx_;</div>
-<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span>    std::vector&lt;RegistryCandidate&gt; candidates_;</div>
-<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>    std::thread heartbeat_thread_;</div>
-<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>    std::string iface_ = <span class="stringliteral">&quot;eth0&quot;</span>; <span class="comment">//default interface</span></div>
-<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span>    std::string mac_ = <span class="stringliteral">&quot;00-00-00-00-00-00&quot;</span>; <span class="comment">//default mac</span></div>
-<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span>    std::string ipv4_ = <span class="stringliteral">&quot;127.0.0.1&quot;</span>; <span class="comment">//default ip</span></div>
-<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>    std::string chassis_id_ = <span class="stringliteral">&quot;00-00-00-00-00-00&quot;</span>; <span class="comment">//default chassis id</span></div>
-<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>    std::string device_name_;</div>
-<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span>    std::string node_name_;</div>
-<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span>    std::string device_desc_;</div>
-<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>    std::string model_name_;</div>
-<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>    std::string node_id_;</div>
-<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span>    std::string dev_id_;</div>
-<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>    std::string bearer_token_;</div>
-<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span>    std::chrono::milliseconds discoveryDuration = std::chrono::seconds(2);</div>
-<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span> </div>
-<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>  };</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span> </div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a0481d8d24c29a7e004913fa2bc5c3891">  147</a></span>    AvahiClient* <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a0481d8d24c29a7e004913fa2bc5c3891">getClient</a>() { <span class="keywordflow">return</span> client_; }</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>    </div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#ae4bd9c02d483454214a0596365b92a7e">  149</a></span>    std::optional&lt;RegistrySelection&gt; <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#ae4bd9c02d483454214a0596365b92a7e">choose_registry_and_build_base</a>(std::string) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>    </div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>    <span class="comment">//Flags</span></div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>    std::atomic&lt;bool&gt; CLIENT_FAILURE = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>  <span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a9ac224a448cb22885aee8a6afe7e6446">  159</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a9ac224a448cb22885aee8a6afe7e6446">runDiscovery</a>();</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span> </div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a54ebd920fdcd55e982580abfc9650a81">  167</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a54ebd920fdcd55e982580abfc9650a81">sendRequests</a>(std::string, <span class="keywordtype">int</span>);</div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span> </div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a79ec6e7ee4f33d70f2492dddb5770ebe">  173</a></span>    <span class="keyword">static</span> std::string <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a79ec6e7ee4f33d70f2492dddb5770ebe">now_is04_version</a>();</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span> </div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#afead2c77175c496f298e016b9cd4b84f">  179</a></span>    <span class="keyword">static</span> std::string <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#afead2c77175c496f298e016b9cd4b84f">random_uuid</a>();</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span> </div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a8b8b20ba4c52e525cd1e8839e8cbee84">  181</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a8b8b20ba4c52e525cd1e8839e8cbee84">get_node_iface</a>(<span class="keyword">const</span> std::string&amp; reg_addr) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span> </div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a7481b770f7250039618d287e16b9886b">  190</a></span>    <span class="keyword">static</span> <span class="keywordtype">bool</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a7481b770f7250039618d287e16b9886b">http_post_json</a>(<span class="keyword">const</span> std::string&amp; url, <span class="keyword">const</span> std::string&amp; jsonObj, <span class="keyword">const</span> std::string&amp; bearer);</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span> </div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#aabc35dd7c6c109c53c6578fa0e4043f6">  197</a></span>    <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#aabc35dd7c6c109c53c6578fa0e4043f6">parse_txt_into_candidate</a>(AvahiStringList* txt, <a class="code hl_struct" href="structcatena_1_1common_1_1INmosNode_1_1RegistryCandidate.html">RegistryCandidate</a>&amp; c);</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span> </div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#afbcdf633b1673217ac02c86cecae0c60">  204</a></span>    std::string <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#afbcdf633b1673217ac02c86cecae0c60">make_node_json</a>(<span class="keywordtype">int</span> node_port);</div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span> </div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a621d0104c0cb7e2b1592f0cea647ec23">  211</a></span>    std::string <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a621d0104c0cb7e2b1592f0cea647ec23">make_device_json</a>(<span class="keywordtype">int</span> node_port);</div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span> </div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#ac7dc66034d8d5db5017b2e482552e9e6">  229</a></span>    <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#ac7dc66034d8d5db5017b2e482552e9e6">resolve_cb</a>(</div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>        AvahiServiceResolver *r,</div>
+<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>        AvahiIfIndex interface,</div>
+<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>        AvahiProtocol protocol,</div>
+<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>        AvahiResolverEvent event,</div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> *name,</div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> *type,</div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> *domain,</div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> *host_name,</div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>        <span class="keyword">const</span> AvahiAddress *address,</div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>        uint16_t port,</div>
+<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>        AvahiStringList *txt,</div>
+<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>        AvahiLookupResultFlags flags,</div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>        <span class="keywordtype">void</span>* userdata);</div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span> </div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#ac6deabaf68ec09f493a1c616e5e52327">  256</a></span>    <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#ac6deabaf68ec09f493a1c616e5e52327">browse_cb</a>(</div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>        AvahiServiceBrowser *b,</div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>        AvahiIfIndex interface,</div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>        AvahiProtocol protocol,</div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>        AvahiBrowserEvent event,</div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> *name,</div>
+<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> *type,</div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> *domain,</div>
+<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>        AvahiLookupResultFlags flags,</div>
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>        <span class="keywordtype">void</span>* userdata);</div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span> </div>
+<div class="line"><a id="l00273" name="l00273"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#a412e8931139c3cd2da30d2f1e2d48e58">  273</a></span>    <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#a412e8931139c3cd2da30d2f1e2d48e58">client_cb</a>(AvahiClient *client, AvahiClientState state, <span class="keywordtype">void</span>* userdata);</div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>    </div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1NmosNode.html#ad7db202407818be49f75481ea5424ea0">  275</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1NmosNode.html#ad7db202407818be49f75481ea5424ea0">run_heartbeat</a>(std::string base, std::string node_id, std::string bearer, std::chrono::milliseconds interval = std::chrono::seconds(5)) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span> </div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>      AvahiSimplePoll *simple_poll_ = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span>    AvahiClient* client_ = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span>    AvahiServiceBrowser *sb_ = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>    std::atomic&lt;bool&gt; stop_ = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span>    std::mutex cand_mtx_;</div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>    std::vector&lt;RegistryCandidate&gt; candidates_;</div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span>    std::thread heartbeat_thread_;</div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>    std::string iface_ = <span class="stringliteral">&quot;eth0&quot;</span>; <span class="comment">//default interface</span></div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>    std::string mac_ = <span class="stringliteral">&quot;00-00-00-00-00-00&quot;</span>; <span class="comment">//default mac</span></div>
+<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span>    std::string ipv4_ = <span class="stringliteral">&quot;127.0.0.1&quot;</span>; <span class="comment">//default ip</span></div>
+<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span>    std::string chassis_id_ = <span class="stringliteral">&quot;00-00-00-00-00-00&quot;</span>; <span class="comment">//default chassis id</span></div>
+<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>    std::string device_name_;</div>
+<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>    std::string node_name_;</div>
+<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span>    std::string device_desc_;</div>
+<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span>    std::string model_name_;</div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>    std::string node_id_;</div>
+<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>    std::string dev_id_;</div>
+<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span>    std::string bearer_token_;</div>
+<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>    std::chrono::milliseconds discoveryDuration_ = std::chrono::seconds(2);</div>
+<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span> </div>
+<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span>  };</div>
 </div>
-<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span> </div>
-<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span>} <span class="comment">// namespace common</span></div>
-<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span>} <span class="comment">// namespace catena</span></div>
+<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span> </div>
+<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span>} <span class="comment">// namespace common</span></div>
+<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span>} <span class="comment">// namespace catena</span></div>
 <div class="ttc" id="aDevice_8h_html"><div class="ttname"><a href="Device_8h.html">Device.h</a></div><div class="ttdoc">Device class definition.</div></div>
 <div class="ttc" id="aIAuthorizer_8h_html"><div class="ttname"><a href="IAuthorizer_8h.html">IAuthorizer.h</a></div><div class="ttdoc">Interface for the Authorizer class.</div></div>
 <div class="ttc" id="aLogger_8h_html"><div class="ttname"><a href="Logger_8h.html">Logger.h</a></div><div class="ttdoc">Logger class.</div></div>
 <div class="ttc" id="aParamWithValue_8h_html"><div class="ttname"><a href="ParamWithValue_8h.html">ParamWithValue.h</a></div><div class="ttdoc">Interface for acessing parameter values.</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1INmosNode_html"><div class="ttname"><a href="classcatena_1_1common_1_1INmosNode.html">catena::common::INmosNode</a></div><div class="ttdoc">Class for handling authorization information.</div><div class="ttdef"><b>Definition</b> INmosNode.h:91</div></div>
-<div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html">catena::common::NmosNode</a></div><div class="ttdoc">Class for handling authorization information.</div><div class="ttdef"><b>Definition</b> NmosNode.h:96</div></div>
-<div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a0481d8d24c29a7e004913fa2bc5c3891"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a0481d8d24c29a7e004913fa2bc5c3891">catena::common::NmosNode::getClient</a></div><div class="ttdeci">AvahiClient * getClient()</div><div class="ttdoc">Get the AvahiClient object.</div><div class="ttdef"><b>Definition</b> NmosNode.h:148</div></div>
-<div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a0ca48d609d266ff4c5a3547baed885cd"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a0ca48d609d266ff4c5a3547baed885cd">catena::common::NmosNode::getCandidates</a></div><div class="ttdeci">std::vector&lt; RegistryCandidate &gt; getCandidates() override</div><div class="ttdoc">Get the list of discovered registry candidates.</div><div class="ttdef"><b>Definition</b> NmosNode.h:143</div></div>
-<div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a3fbf07df7cc3197a33392bdb9e8730ce"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a3fbf07df7cc3197a33392bdb9e8730ce">catena::common::NmosNode::getPoll</a></div><div class="ttdeci">AvahiSimplePoll * getPoll() override</div><div class="ttdoc">Get the Poll object.</div><div class="ttdef"><b>Definition</b> NmosNode.h:137</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html">catena::common::NmosNode</a></div><div class="ttdoc">Class for handling authorization information.</div><div class="ttdef"><b>Definition</b> NmosNode.h:95</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a0481d8d24c29a7e004913fa2bc5c3891"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a0481d8d24c29a7e004913fa2bc5c3891">catena::common::NmosNode::getClient</a></div><div class="ttdeci">AvahiClient * getClient()</div><div class="ttdoc">Get the AvahiClient object.</div><div class="ttdef"><b>Definition</b> NmosNode.h:147</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a0ca48d609d266ff4c5a3547baed885cd"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a0ca48d609d266ff4c5a3547baed885cd">catena::common::NmosNode::getCandidates</a></div><div class="ttdeci">std::vector&lt; RegistryCandidate &gt; getCandidates() override</div><div class="ttdoc">Get the list of discovered registry candidates.</div><div class="ttdef"><b>Definition</b> NmosNode.h:142</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a3fbf07df7cc3197a33392bdb9e8730ce"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a3fbf07df7cc3197a33392bdb9e8730ce">catena::common::NmosNode::getPoll</a></div><div class="ttdeci">AvahiSimplePoll * getPoll() override</div><div class="ttdoc">Get the Poll object.</div><div class="ttdef"><b>Definition</b> NmosNode.h:136</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a412e8931139c3cd2da30d2f1e2d48e58"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a412e8931139c3cd2da30d2f1e2d48e58">catena::common::NmosNode::client_cb</a></div><div class="ttdeci">static void client_cb(AvahiClient *client, AvahiClientState state, void *userdata)</div><div class="ttdoc">Callback for Avahi client state changes.</div></div>
-<div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a51e60e6996e16acd2836b51b92268e75"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a51e60e6996e16acd2836b51b92268e75">catena::common::NmosNode::~NmosNode</a></div><div class="ttdeci">~NmosNode()</div><div class="ttdoc">Destroy the NmosNode object.</div><div class="ttdef"><b>Definition</b> NmosNode.h:113</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a51e60e6996e16acd2836b51b92268e75"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a51e60e6996e16acd2836b51b92268e75">catena::common::NmosNode::~NmosNode</a></div><div class="ttdeci">~NmosNode()</div><div class="ttdoc">Destroy the NmosNode object.</div><div class="ttdef"><b>Definition</b> NmosNode.h:112</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a52509a1f6dd44bc55743e9305ecc51fa"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a52509a1f6dd44bc55743e9305ecc51fa">catena::common::NmosNode::init</a></div><div class="ttdeci">NodeCode init(int port=8080, std::chrono::milliseconds heartbeatInterval=std::chrono::seconds(1)) override</div><div class="ttdoc">Initializes the NmosNode, starts mDNS discovery and heartbeats.</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a54ebd920fdcd55e982580abfc9650a81"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a54ebd920fdcd55e982580abfc9650a81">catena::common::NmosNode::sendRequests</a></div><div class="ttdeci">bool sendRequests(std::string, int)</div><div class="ttdoc">Sends the registration requests to the registry.</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a621d0104c0cb7e2b1592f0cea647ec23"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a621d0104c0cb7e2b1592f0cea647ec23">catena::common::NmosNode::make_device_json</a></div><div class="ttdeci">std::string make_device_json(int node_port)</div><div class="ttdoc">Create the JSON representation of the Device resource.</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a7481b770f7250039618d287e16b9886b"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a7481b770f7250039618d287e16b9886b">catena::common::NmosNode::http_post_json</a></div><div class="ttdeci">static bool http_post_json(const std::string &amp;url, const std::string &amp;jsonObj, const std::string &amp;bearer)</div><div class="ttdoc">Perform an HTTP POST with a JSON body.</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a79ec6e7ee4f33d70f2492dddb5770ebe"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a79ec6e7ee4f33d70f2492dddb5770ebe">catena::common::NmosNode::now_is04_version</a></div><div class="ttdeci">static std::string now_is04_version()</div><div class="ttdoc">Get the current time in IS-04 version format.</div></div>
-<div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a852d46f19410394b6e0db6dfe02345e2"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a852d46f19410394b6e0db6dfe02345e2">catena::common::NmosNode::addCandidate</a></div><div class="ttdeci">void addCandidate(RegistryCandidate &amp;&amp;c) override</div><div class="ttdoc">Add a discovered registry candidate.</div><div class="ttdef"><b>Definition</b> NmosNode.h:139</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a852d46f19410394b6e0db6dfe02345e2"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a852d46f19410394b6e0db6dfe02345e2">catena::common::NmosNode::addCandidate</a></div><div class="ttdeci">void addCandidate(RegistryCandidate &amp;&amp;c) override</div><div class="ttdoc">Add a discovered registry candidate.</div><div class="ttdef"><b>Definition</b> NmosNode.h:138</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a8b8b20ba4c52e525cd1e8839e8cbee84"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a8b8b20ba4c52e525cd1e8839e8cbee84">catena::common::NmosNode::get_node_iface</a></div><div class="ttdeci">bool get_node_iface(const std::string &amp;reg_addr) override</div><div class="ttdoc">Gets the network interface information for the node.</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_a9ac224a448cb22885aee8a6afe7e6446"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#a9ac224a448cb22885aee8a6afe7e6446">catena::common::NmosNode::runDiscovery</a></div><div class="ttdeci">void runDiscovery()</div><div class="ttdoc">Runs the mDNS discovery process for a set duration. This function will block for the duration of the ...</div></div>
-<div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_aa6219a768173ed9a7dee3afdc378fb85"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#aa6219a768173ed9a7dee3afdc378fb85">catena::common::NmosNode::NmosNode</a></div><div class="ttdeci">NmosNode(const std::string &amp;device_name=&quot;Catena Device&quot;, const std::string &amp;node_name=&quot;Catena Node&quot;, const std::string &amp;device_desc=&quot;A Catena example Node&quot;, const std::string &amp;model_name=&quot;Catena Model&quot;)</div><div class="ttdoc">Construct a new NmosNode object.</div><div class="ttdef"><b>Definition</b> NmosNode.h:103</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_aa6219a768173ed9a7dee3afdc378fb85"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#aa6219a768173ed9a7dee3afdc378fb85">catena::common::NmosNode::NmosNode</a></div><div class="ttdeci">NmosNode(const std::string &amp;device_name=&quot;Catena Device&quot;, const std::string &amp;node_name=&quot;Catena Node&quot;, const std::string &amp;device_desc=&quot;A Catena example Node&quot;, const std::string &amp;model_name=&quot;Catena Model&quot;)</div><div class="ttdoc">Construct a new NmosNode object.</div><div class="ttdef"><b>Definition</b> NmosNode.h:102</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_aabc35dd7c6c109c53c6578fa0e4043f6"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#aabc35dd7c6c109c53c6578fa0e4043f6">catena::common::NmosNode::parse_txt_into_candidate</a></div><div class="ttdeci">static void parse_txt_into_candidate(AvahiStringList *txt, RegistryCandidate &amp;c)</div><div class="ttdoc">Parse an Avahi TXT record into a RegistryCandidate structure.</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_ac6deabaf68ec09f493a1c616e5e52327"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#ac6deabaf68ec09f493a1c616e5e52327">catena::common::NmosNode::browse_cb</a></div><div class="ttdeci">static void browse_cb(AvahiServiceBrowser *b, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const char *name, const char *type, const char *domain, AvahiLookupResultFlags flags, void *userdata)</div><div class="ttdoc">Callback for browsing services.</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1NmosNode_html_ac7dc66034d8d5db5017b2e482552e9e6"><div class="ttname"><a href="classcatena_1_1common_1_1NmosNode.html#ac7dc66034d8d5db5017b2e482552e9e6">catena::common::NmosNode::resolve_cb</a></div><div class="ttdeci">static void resolve_cb(AvahiServiceResolver *r, AvahiIfIndex interface, AvahiProtocol protocol, AvahiResolverEvent event, const char *name, const char *type, const char *domain, const char *host_name, const AvahiAddress *address, uint16_t port, AvahiStringList *txt, AvahiLookupResultFlags flags, void *userdata)</div><div class="ttdoc">Callback for resolving a service.</div></div>

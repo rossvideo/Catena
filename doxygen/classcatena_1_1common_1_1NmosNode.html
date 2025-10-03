@@ -159,7 +159,7 @@ std::atomic&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>
 Protected Member Functions</h2></td></tr>
 <tr class="memitem:a9ac224a448cb22885aee8a6afe7e6446" id="r_a9ac224a448cb22885aee8a6afe7e6446"><td class="memItemLeft" align="right" valign="top"><a id="a9ac224a448cb22885aee8a6afe7e6446" name="a9ac224a448cb22885aee8a6afe7e6446"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>runDiscovery</b> ()</td></tr>
-<tr class="memdesc:a9ac224a448cb22885aee8a6afe7e6446"><td class="mdescLeft">&#160;</td><td class="mdescRight">Runs the mDNS discovery process for a set duration. This function will block for the duration of the discovery. The duration is set by the discoveryDuration member variable. <br /></td></tr>
+<tr class="memdesc:a9ac224a448cb22885aee8a6afe7e6446"><td class="mdescLeft">&#160;</td><td class="mdescRight">Runs the mDNS discovery process for a set duration. This function will block for the duration of the discovery. The duration is set by the discoveryDuration_ member variable. <br /></td></tr>
 <tr class="separator:a9ac224a448cb22885aee8a6afe7e6446"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a54ebd920fdcd55e982580abfc9650a81" id="r_a54ebd920fdcd55e982580abfc9650a81"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1NmosNode.html#a54ebd920fdcd55e982580abfc9650a81">sendRequests</a> (std::string, int)</td></tr>
 <tr class="memdesc:a54ebd920fdcd55e982580abfc9650a81"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sends the registration requests to the registry.  <br /></td></tr>
@@ -257,9 +257,9 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><b>dev_id_</b></t
 <tr class="memitem:a6a191ddd6e049946684c998cc7dc5670" id="r_a6a191ddd6e049946684c998cc7dc5670"><td class="memItemLeft" align="right" valign="top"><a id="a6a191ddd6e049946684c998cc7dc5670" name="a6a191ddd6e049946684c998cc7dc5670"></a>
 std::string&#160;</td><td class="memItemRight" valign="bottom"><b>bearer_token_</b></td></tr>
 <tr class="separator:a6a191ddd6e049946684c998cc7dc5670"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae947a7510fe54c5ce8fdb9e94e340045" id="r_ae947a7510fe54c5ce8fdb9e94e340045"><td class="memItemLeft" align="right" valign="top"><a id="ae947a7510fe54c5ce8fdb9e94e340045" name="ae947a7510fe54c5ce8fdb9e94e340045"></a>
-std::chrono::milliseconds&#160;</td><td class="memItemRight" valign="bottom"><b>discoveryDuration</b> = std::chrono::seconds(2)</td></tr>
-<tr class="separator:ae947a7510fe54c5ce8fdb9e94e340045"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae45e00722bd28acb3f6c266172b9ede6" id="r_ae45e00722bd28acb3f6c266172b9ede6"><td class="memItemLeft" align="right" valign="top"><a id="ae45e00722bd28acb3f6c266172b9ede6" name="ae45e00722bd28acb3f6c266172b9ede6"></a>
+std::chrono::milliseconds&#160;</td><td class="memItemRight" valign="bottom"><b>discoveryDuration_</b> = std::chrono::seconds(2)</td></tr>
+<tr class="separator:ae45e00722bd28acb3f6c266172b9ede6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class for handling authorization information. </p>
