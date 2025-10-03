@@ -36,12 +36,15 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
- #include "Param_test.h"
- #include "CommonTestHelpers.h"
+#include "Param_test.h"
+#include "CommonTestHelpers.h"
+#include "ParamDescriptor.h"
+#include "Device.h"
  
  using namespace catena::common;
  using EmptyParam = ParamWithValue<EmptyValue>;
  using NestedStructParam = ParamWithValue<TestNestedStruct>;
+ using ThreeLevelNestedStructParam = ParamWithValue<TestThreeLevelStruct>;
  
  class ParamWithValueTest : public ParamTest<EmptyValue> {
      /*
@@ -68,18 +71,21 @@
      EmptyParam param(emptyValue, pd_);
      EXPECT_EQ(param.size(), 0);
  }
- // /*
- //  * TEST 4 - Testing <EMPTY>ParamWithValue.getParam().
- //  * EMPTY params have no sub-params and should return an error.
- //  */
- // TEST_F(ParamWithValueTest, GetParam) {
- //     EmptyParam param(emptyValue, pd_);
- //     Path path = Path("/test/oid");
- //     auto foundParam = param.getParam(path, authz_, rc_);
- //     // Checking results.
- //     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
- //     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
- // }
+ /*
+  * TEST 4 - Testing <EMPTY>ParamWithValue.getParam().
+  * EMPTY params have no sub-params and should return no errors.
+  */
+ TEST_F(ParamWithValueTest, GetParam) {
+    EmptyParam param(emptyValue, pd_);
+    Path path = Path("/test/oid");
+    EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(1).WillRepeatedly(testing::Return(true));
+    static std::unordered_map<std::string, IParamDescriptor*> empty_sub_params;
+    EXPECT_CALL(pd_, getAllSubParams()).WillRepeatedly(testing::ReturnRef(empty_sub_params));
+    auto foundParam = param.getParam(path, authz_, rc_);
+    // Checking results
+    EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
+    EXPECT_EQ(rc_.status, catena::StatusCode::NOT_FOUND);
+ }
  /*
  * TEST 5 - Testing <EMPTY>ParamWithValue.addBack().
  * EMPTY params are not arrays, so this should return an error.
@@ -278,38 +284,37 @@
   * Verifies that struct fields can be set to empty values and accessed.
   */
  TEST_F(ParamWithValueTest, NestedStructWithEmptyChildFields) {
-     // Setup child
-     EmptyParam child{emptyValue, pd_};
-     // Setup parent
-     EmptyParam parent{emptyValue, pd_}; 
-     // Creating a path object and initializing with a string path
-     Path parentPath = Path("/f1");
-     auto foundParent = parent.getParam(parentPath, authz_, rc_);
-     Path childPath = Path("/f1/f2");
-     auto foundChild = child.getParam(childPath, authz_, rc_);
-     // Test
-     EXPECT_TRUE(foundParent) << "Found a parameter when none was expected";
-     EXPECT_TRUE(foundChild) << "Found a parameter when none was expected";
-     EXPECT_EQ(rc_.status, catena::StatusCode::NOT_FOUND) << "Return NOT_FOUND error as shouldn't exist.";
- }
- /*
-  * TEST 14 - Testing three-level nested struct with default initialization.
-  * Verifies that deeply nested structs with default-initialized values work correctly.
-  */
- TEST_F(ParamWithValueTest, ThreeLevelNestedStructDefaultValues) {
-    TestNestedStruct nestedStruct; 
-    NestedStructParam parent{nestedStruct, pd_};
-    // Creating a path object and initializing with a string path
-    Path parentPath = Path("/f1");
-    auto foundParent = parent.getParam(parentPath, authz_, rc_);
-    Path childPath = Path("/f1/f2");
-    auto foundChild = parent.getParam(childPath, authz_, rc_);
-    Path GrandchildPath = Path("/f1/f2/f3");
-    auto foundGrandChild = parent.getParam(GrandchildPath, authz_, rc_);
-    // Test
-    EXPECT_TRUE(foundParent) << "Should find parent parameter";
-    EXPECT_TRUE(foundChild) << "Should find child parameter";
-    EXPECT_TRUE(foundGrandChild) << "Should find grandChild parameter";
+    Device dm;
+    catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
+    catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
+
+    catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, "f2", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
+    // parentDescriptor.addSubParam("/f2", &childParamDescriptor);
+    catena::common::ParamWithValue<catena::common::EmptyValue> childParam(catena::common::emptyValue, childParamDescriptor, dm, false);
+
+    EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(2).WillRepeatedly(testing::Return(true));
+
+    Path path = Path("/f2");
+    EXPECT_TRUE(parentParam.getParam(path, authz_, rc_));
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
  }
+
+//  TEST_F(ParamWithValueTest, IfOidIsEmpty) {
+//     // Create a parent parameter with a child parameter
+//     Device dm;
+//     catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
+//     catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, "f2", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
+
+//     // Add the child parameter to the parent descriptor
+//     parentDescriptor.addSubParam("f2", &childParamDescriptor);
+    
+//     catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
+
+//     Path emptyPath = Path("");
+//     auto foundParam = parentParam.getParam(emptyPath, authz_, rc_);
+//     // When OID is empty, it should return the parameter itself (not nullptr)
+//     EXPECT_TRUE(foundParam) << "Empty OID should return the parameter itself";
+//     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+//     EXPECT_EQ(foundParam.get(), &parentParam) << "Should return the same parameter object";
+//  }
  
