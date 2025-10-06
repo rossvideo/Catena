@@ -574,7 +574,7 @@ class ParamWithValue : public catena::common::IParam {
                 status = catena::exception_with_status("Index " + std::to_string(oidIndex) + " out of bounds in path " + oid.fqoid(), catena::StatusCode::OUT_OF_RANGE);
             // we reached the end of the path, return the element
             } else if (oid.empty()) {
-                returnParam = std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
+                returnParam = std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_); //Use a reference
             // The path has more segments, keep recursing
             } else if constexpr (CatenaStruct<ElemType> || meta::IsVariant<ElemType>) {
                 // The path has more segments, keep recursing
