@@ -38,14 +38,11 @@
 
 #include "Param_test.h"
 
-#include "CommonTestHelpers.h"
 #include "ParamDescriptor.h"
 #include "Device.h"
  
 using namespace catena::common;
 using EmptyParam = ParamWithValue<EmptyValue>;
-using NestedStructParam = ParamWithValue<TestNestedStruct>;
-using ThreeLevelNestedStructParam = ParamWithValue<TestThreeLevelStruct>;
 
 class ParamWithValueTest : public ParamTest<EmptyValue> {
     /*
@@ -74,18 +71,18 @@ TEST_F(ParamWithValueTest, Size) {
 }
 /*
  * TEST 4 - Testing <EMPTY>ParamWithValue.getParam().
- * EMPTY params have no sub-params and should return no errors.
+ * EMPTY params have no sub-params and should return no error.
  */
-TEST_F(ParamWithValueTest, GetParam) {
-EmptyParam param(emptyValue, pd_);
-Path path = Path("/test/oid");
-EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(1).WillRepeatedly(testing::Return(true));
-static std::unordered_map<std::string, IParamDescriptor*> empty_sub_params;
-EXPECT_CALL(pd_, getAllSubParams()).WillRepeatedly(testing::ReturnRef(empty_sub_params));
-auto foundParam = param.getParam(path, authz_, rc_);
-// Checking results
-EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
-EXPECT_EQ(rc_.status, catena::StatusCode::NOT_FOUND);
+    TEST_F(ParamWithValueTest, GetParam) {
+    EmptyParam param(emptyValue, pd_);
+    Path path = Path("/test/oid");
+    EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(1).WillRepeatedly(testing::Return(true));
+    static std::unordered_map<std::string, IParamDescriptor*> empty_sub_params;
+    EXPECT_CALL(pd_, getAllSubParams()).WillRepeatedly(testing::ReturnRef(empty_sub_params));
+    auto foundParam = param.getParam(path, authz_, rc_);
+    // Checking results
+    EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
+    EXPECT_EQ(rc_.status, catena::StatusCode::NOT_FOUND);
 }
 /*
  * TEST 5 - Testing <EMPTY>ParamWithValue.addBack().
@@ -302,10 +299,9 @@ TEST_F(ParamWithValueTest, NestedStructWithEmptyChildFields) {
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
 }
 /*
- * TEST 15 Testing empty path behaviour.
- * Verifies that getParam returns the parameter itself when given an empty path.
+ * TEST 15 Tests that getParam returns nullptr and sets INVALID_ARGUMENT status when called with an empty path.
  */
-TEST_F(ParamWithValueTest, EmptyPathReturnsSelf) {
+TEST_F(ParamWithValueTest, EmptyPathReturnsInvalidArgument) {
     // Create a parent parameter with a child parameter
     Device dm;
     catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
@@ -322,15 +318,13 @@ TEST_F(ParamWithValueTest, EmptyPathReturnsSelf) {
     auto foundParam = parentParam.getParam(emptyPath, authz_, rc_);
     
     // When OID is empty, it should return nullptr and set INVALID_ARGUMENT status
-    EXPECT_FALSE(foundParam) << "Empty OID should return the parameter itself";
+    EXPECT_FALSE(foundParam) << "Empty OID should return nullptr";
     EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
 }
 /*
- * TEST 16 - Testing getParam when oid is empty
- * This test verifies the behavior when the Path oid is empty in the getParam method.
- * When oid is empty, the method should not recurse further and should check authorization.
+ * TEST 16 - Testing if getParam can correctly navigate a multi-level path.
  */
-TEST_F(ParamWithValueTest, IfPathIsEmpty) {
+TEST_F(ParamWithValueTest, MultiLevelPathNavigation) {
     // Create a parent parameter with a child parameter
     Device dm;
     
@@ -367,7 +361,7 @@ TEST_F(ParamWithValueTest, IfIndexIsEmpty) {
     catena::common::ParamWithValue<catena::common::EmptyValue> childParam(catena::common::emptyValue, childParamDescriptor, dm, false);
     
     // Authorization should be checked even for invalid access attempts
-    EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(1).WillRepeatedly(testing::Return(true));
     
     // Test: Try to access struct parameter by numeric index "/0" - this should fail
     Path path = Path("/0");
@@ -389,7 +383,7 @@ TEST_F(ParamWithValueTest, AuthzFailureCheck) {
     catena::common::ParamWithValue<catena::common::EmptyValue> childParam(catena::common::emptyValue, childParamDescriptor, dm, false);
     
     // Passes Authz Once then fails the rest
-    EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).WillOnce(testing::Return(true)).WillRepeatedly(testing::Return(false));
+    EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(2).WillOnce(testing::Return(true)).WillRepeatedly(testing::Return(false));
     
     // Test: Try to access child parameter without proper authorization
     Path path = Path("/f2");
