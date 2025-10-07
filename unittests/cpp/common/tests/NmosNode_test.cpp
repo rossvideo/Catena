@@ -107,7 +107,7 @@ public:
 
     // or a helper to register against a fake base
     bool register_against(const std::string& base,
-                          std::chrono::milliseconds hb_interval = std::chrono::milliseconds(100),
+                          int32_t hb_interval = 100,
                           const std::string& bearer = {}) {
         node_id_ = random_uuid();
         dev_id_  = random_uuid();
@@ -119,14 +119,7 @@ public:
         bool ok1 = http_post_json(resource_url, node_json, bearer);
         bool ok2 = http_post_json(resource_url, dev_json,  bearer);
 
-        std::thread hb([this, base, bearer, hb_interval] {
-            this->run_heartbeat(base, node_id_, bearer, hb_interval);
-        });
-            
-        std::this_thread::sleep_for(hb_interval * 3);
-        stop_.store(true);
-        if (hb.joinable()) hb.join();
-        stop_.store(false); // reset
+        startHeartbeat(base, hb_interval);
 
         return ok1 && ok2;
     }
@@ -247,22 +240,6 @@ TEST_F(NmosNodeTest, NmosNodeTest_DiscoveredRegistryBrowserAllForNow) {
     EXPECT_EQ(g_avahi_test_control.simple_poll_quit, 1);
 }
 
-TEST_F(NmosNodeTest, DiscoveredRegistryNoHeartbeat) {
-    TestableNmosNode node;
-    FakeRegistry reg;
-    node.stop_.store(true); // prevent heartbeat thread from running
-
-    g_avahi_test_control.discovered_service = true;
-    g_avahi_test_control.has_iface = true;
-
-    ASSERT_TRUE(reg.start());
-    EXPECT_EQ(node.init(8080, std::chrono::milliseconds(20)), NodeCode::OK);
-    EXPECT_EQ(reg.resource_posts.load(), 2); // node + device
-    EXPECT_EQ(reg.heartbeats.load(), 0); // no heartbeat thread
-
-    reg.stop_and_join();
-}
-
 TEST_F(NmosNodeTest, DiscoveredRegistryHeartbeat) {
     TestableNmosNode node;
     FakeRegistry reg;
@@ -280,7 +257,7 @@ TEST_F(NmosNodeTest, DiscoveredRegistryHeartbeat) {
     });
 
     ASSERT_TRUE(reg.start());
-    EXPECT_EQ(node.init(8080, std::chrono::milliseconds(20)), NodeCode::OK);
+    EXPECT_EQ(node.init(8080, 20), NodeCode::OK);
 
     if (killer.joinable()) killer.join();
     EXPECT_GE(reg.heartbeats.load(), 2);
@@ -341,8 +318,12 @@ TEST_F(NmosNodeTest, AvahiBrowseThenResolveTrue) {
     EXPECT_EQ(sel->base, "http://127.0.0.1:3210/x-nmos/registration/v1.3");
 
     // Register + heartbeat against the fake server
-    bool ok = node.register_against(sel->base, std::chrono::milliseconds(120));
+    bool ok = node.register_against(sel->base, 20);
     EXPECT_TRUE(ok);
+
+    //wait for heartbeats
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
     EXPECT_GE(reg.resource_posts.load(), 2); // node + device
     EXPECT_GE(reg.heartbeats.load(), 1);
 

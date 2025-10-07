@@ -34,8 +34,7 @@
 
 using namespace catena::common;
 
-NodeCode NmosNode::init(int port, std::chrono::milliseconds heartbeatInterval) {
-    curl_global_init(CURL_GLOBAL_ALL);
+NodeCode NmosNode::init(int port, int32_t heartbeatInterval) {
     DEBUG_LOG << "Starting Catena REST Discovery Example";
 
     int error;
@@ -100,8 +99,7 @@ NodeCode NmosNode::init(int port, std::chrono::milliseconds heartbeatInterval) {
 
     DEBUG_LOG << "Registered Node " << node_id_ << ". Heartbeating. Press Ctrl+C to exit.";
 
-    // Start heartbeat loop
-    heartbeat_thread_ = std::thread(&NmosNode::run_heartbeat, this, sel->base, node_id_, bearer_token_, heartbeatInterval);
+    startHeartbeat(sel->base, heartbeatInterval);
 
     return NodeCode::OK;
 }
@@ -442,10 +440,11 @@ std::optional<NmosNode::RegistrySelection> NmosNode::choose_registry_and_build_b
     return std::nullopt;
 }
 
-void NmosNode::run_heartbeat(std::string base, std::string node_id, std::string bearer, std::chrono::milliseconds interval) {
-    std::string url = base + "/health/nodes/" + node_id;
-    while (!stop_.load()) {
-        (void)http_post_json(url, "{}", bearer);
-        std::this_thread::sleep_for(interval);
-    }
+void NmosNode::startHeartbeat(std::string base, int32_t interval) {
+    std::string url = base + "/health/nodes/" + node_id_;
+    heartbeat_->getHeartbeatSignal().connect([this, url]() {
+        DEBUG_LOG << "Heartbeat sent for Node " << this->node_id_;
+        http_post_json(url, "{}", this->bearer_token_);
+    });
+    heartbeat_->start(interval);
 }

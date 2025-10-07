@@ -41,6 +41,7 @@
 #include <curl/curl.h>
 #include <netdb.h> 
 #include "INmosNode.h"
+#include "rpc/Heartbeat.h"
 
 //common
 #include <utils.h>
@@ -104,34 +105,34 @@ class NmosNode : public INmosNode {
       device_name_(device_name),
       node_name_(node_name),
       device_desc_(device_desc),
-      model_name_(model_name) {};
+      model_name_(model_name) {
+        heartbeat_ = std::make_unique<Heartbeat>();
+        curl_global_init(CURL_GLOBAL_ALL);
+    }
 
     /**
      * @brief Destroy the NmosNode object
      */
     ~NmosNode()
     {
-      if (simple_poll_) {
-        avahi_simple_poll_free(simple_poll_);
-        simple_poll_ = nullptr;
+      stop_.store(true);
+      if (sb_) {
+        avahi_service_browser_free(sb_);
+        sb_ = nullptr;
       }
       if (client_) {
         avahi_client_free(client_);
         client_ = nullptr;
       }
-      if (sb_) {
-        avahi_service_browser_free(sb_);
-        sb_ = nullptr;
+      if (simple_poll_) {
+        avahi_simple_poll_free(simple_poll_);
+        simple_poll_ = nullptr;
       }
-      stop_.store(true);
-      // wait for heartbeat thread to exit
-      if (heartbeat_thread_.joinable()) {
-        heartbeat_thread_.join();
-      }
+      heartbeat_->stop();
       curl_global_cleanup();
     }
 
-    NodeCode init(int port = 8080, std::chrono::milliseconds heartbeatInterval = std::chrono::seconds(1)) override;
+    NodeCode init(int port = 8080, int32_t heartbeatInterval = 5000) override;
 
     AvahiSimplePoll* getPoll() override { return simple_poll_; }
 
@@ -272,7 +273,7 @@ class NmosNode : public INmosNode {
      */
     static void client_cb(AvahiClient *client, AvahiClientState state, void* userdata);
     
-    void run_heartbeat(std::string base, std::string node_id, std::string bearer, std::chrono::milliseconds interval = std::chrono::seconds(5)) override;
+    void startHeartbeat(std::string base, int32_t interval) override;
 
 	  AvahiSimplePoll *simple_poll_ = nullptr;
     AvahiClient* client_ = nullptr;
@@ -280,7 +281,7 @@ class NmosNode : public INmosNode {
     std::atomic<bool> stop_ = false;
     std::mutex cand_mtx_;
     std::vector<RegistryCandidate> candidates_;
-    std::thread heartbeat_thread_;
+    std::unique_ptr<Heartbeat> heartbeat_;
     std::string iface_ = "eth0"; //default interface
     std::string mac_ = "00-00-00-00-00-00"; //default mac
     std::string ipv4_ = "127.0.0.1"; //default ip

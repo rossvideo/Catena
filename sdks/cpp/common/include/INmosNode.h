@@ -118,7 +118,7 @@ class INmosNode {
      * @param heartbeatInterval The interval between heartbeats.
      * @return true if initialization was successful, false otherwise.
      */
-    virtual NodeCode init(int port, std::chrono::milliseconds heartbeatInterval) = 0;
+    virtual NodeCode init(int port, int32_t heartbeatInterval) = 0;
 
     /**
      * @brief Get the Poll object
@@ -161,14 +161,12 @@ class INmosNode {
     
     /**
      * @brief The heartbeat thread function.
-     * This function will run in a separate thread and send heartbeats to the
+     * This function will register a callback in Heartbeat to send heartbeats to the
      * registry at the specified interval.
      * @param base The base URL of the registry.
-     * @param node_id The ID of the node.
-     * @param bearer The bearer token for authentication.
      * @param interval The interval between heartbeats.
      */
-    virtual void run_heartbeat(std::string base, std::string, std::string, std::chrono::milliseconds) = 0;
+    virtual void startHeartbeat(std::string, int32_t) = 0;
 };
 
 } // namespace common

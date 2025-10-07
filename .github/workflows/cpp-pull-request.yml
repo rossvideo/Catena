@@ -70,8 +70,6 @@ jobs:
             ./build-openapi.sh
             echo "Done building OpenAPI"
 
-            sudo apt update && sudo apt install -y libavahi-client-dev libavahi-common-dev pkg-config libcurl4-openssl-dev
-
             mkdir -p ~/Catena/${BUILD_TARGET}
             cmake -G Ninja \
               -DBUILD_DOC=OFF \
@@ -223,8 +221,6 @@ jobs:
           cd ${GITHUB_WORKSPACE}/smpte
           ./build-openapi.sh
           echo "Done building OpenAPI"
-
-          sudo apt update && sudo apt install -y libavahi-client-dev libavahi-common-dev pkg-config libcurl4-openssl-dev
 
           mkdir -p ~/Catena/${BUILD_TARGET}
           git config --global --add safe.directory /__w/Catena/Catena
