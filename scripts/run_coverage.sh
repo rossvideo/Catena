@@ -12,11 +12,37 @@ done
 
 if [ "$clean" = true ]; then
   echo "Cleaning build directory..."
-  ninja clean
+  find ../../ -type f -name '*.gcov' -delete
+  rm -rf *
+  $CMAKE_COMMAND
   echo "Build directory cleaned."
 fi
 
-ninja -j16
+# Set number of parallel jobs for ninja based on available memory 
+ninja_jobs=0
+need_j_value=0
+for arg in "$@"; do
+  if [[ $need_j_value -eq 1 ]]; then
+    ninja_jobs="$arg"
+    break
+  fi
+  if [[ "$arg" == "-j" ]]; then
+    need_j_value=1
+  elif [[ "$arg" == -j* ]]; then
+    ninja_jobs="${arg:2}"
+    break
+  fi
+done
+if [ $ninja_jobs -eq 0 ]; then
+  ninja_jobs=$(($(nproc) - 1))
+  if [ $(free -m | awk '/^Mem:/{print $2}') -le 8192 ]; then
+    ninja_jobs=1
+  elif [ $(free -m | awk '/^Mem:/{print $2}') -le 16384 ]; then
+    ninja_jobs=$(($ninja_jobs - ($ninja_jobs / 4)))
+  fi
+fi
+echo "Using $ninja_jobs parallel jobs for ninja build."
+ninja -j $ninja_jobs
 # Check for -V argument
 verbose=false
 for arg in "$@"; do
@@ -28,9 +54,9 @@ done
 
 # Run tests with verbose output if -V flag is present
 if [ "$verbose" = true ]; then
-  ctest -V
+  ctest --output-on-failure -V || ctest --rerun-failed --output-on-failure -V
 else
-  ctest
+  ctest --output-on-failure || ctest --rerun-failed --output-on-failure
 fi
 
 cd ~/Catena/
