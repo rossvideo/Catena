@@ -31,6 +31,6 @@ class LanguagePacks {
     }
 }
 
-module.exports = LanguagePacks;
+export default LanguagePacks;
 
 

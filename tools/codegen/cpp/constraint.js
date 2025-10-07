@@ -23,7 +23,7 @@
 
 "use strict";
 
-const CppCtor = require("./cppctor");
+import CppCtor from "./cppctor.js";
 
 /**
  *
@@ -309,4 +309,4 @@ class Constraint extends CppCtor {
   }
 }
 
-module.exports = Constraint;
+export default Constraint;

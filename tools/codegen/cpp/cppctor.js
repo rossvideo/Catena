@@ -34,4 +34,4 @@ class CppCtor {
     }
 }
 
-module.exports = CppCtor;
+export default CppCtor;
