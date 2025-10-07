@@ -71,7 +71,7 @@ TEST_F(ParamWithValueTest, Size) {
 }
 /*
  * TEST 4 - Testing <EMPTY>ParamWithValue.getParam().
- * EMPTY params have no sub-params and should return no error.
+ * EMPTY params have no sub-params and should return an error.
  */
     TEST_F(ParamWithValueTest, GetParam) {
     EmptyParam param(emptyValue, pd_);
@@ -80,7 +80,7 @@ TEST_F(ParamWithValueTest, Size) {
     static std::unordered_map<std::string, IParamDescriptor*> empty_sub_params;
     EXPECT_CALL(pd_, getAllSubParams()).WillRepeatedly(testing::ReturnRef(empty_sub_params));
     auto foundParam = param.getParam(path, authz_, rc_);
-    // Checking results
+    // Checking results.
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
     EXPECT_EQ(rc_.status, catena::StatusCode::NOT_FOUND);
 }

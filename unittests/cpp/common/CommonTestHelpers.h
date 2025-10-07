@@ -86,7 +86,6 @@ struct StructInfo<TestNestedStruct> {
     using Type = std::tuple<FieldInfo<TestStruct1, TestNestedStruct>, FieldInfo<TestStruct2, TestNestedStruct>>;
     static constexpr Type fields = {{"f1", &TestNestedStruct::f1}, {"f2", &TestNestedStruct::f2}};
 };
-
 /*
  * A test CatenaStruct variant which can be a TestStruct1 or a TestStruct2.
  */
