@@ -17,6 +17,7 @@
  * file: constraint.js
  * brief: Collect C++ information for a constraint
  * author: isaac.robert@rossvideo.com
+ * author: andrew.brown@rossvideo.com
  * date: 2025-10-07
  * Copyright (c) 2025 Ross Video
  */
