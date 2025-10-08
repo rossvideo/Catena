@@ -343,9 +343,7 @@ TEST_F(ParamWithValueTest, TwoLevelPathAccess) {
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
  }
 /*
- * TEST 17 - Testing getParam when index is empty
- * This test verifies the behavior when index is empty in the getParam method.
- * When index is empty, the method should not recurse further and should check authorization.
+ * TEST 17 - Testing getParam with numeric index on struct parameter.
  */
 TEST_F(ParamWithValueTest, NumericIndexOnStructParameterFails) {
     // Create a parent parameter with a child parameter
@@ -375,7 +373,7 @@ TEST_F(ParamWithValueTest, UnauthorizedParameterAccessDenied) {
 
     catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, "f2", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
     
-    // Passes Authz twice then fails the rest
+    // Passes Authz once then fails the rest
     EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(2).WillOnce(testing::Return(true)).WillRepeatedly(testing::Return(false));
     
     // Test: Try to access child parameter without proper authorization
