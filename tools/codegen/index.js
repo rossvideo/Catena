@@ -1,26 +1,35 @@
-/*Copyright 2024 Ross Video Ltd
-*
-* Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-*
-* 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-*
-* 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-*
-* 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
-* INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-* INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
-* CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+/*Copyright 2025 Ross Video Ltd
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
+import { program } from 'commander';
+import fs from 'fs';
+import path from "path";
+
+import packageJson from './package.json' with { type: "json" };;
+import { DeviceModel } from './DeviceModel.js';
+import Validator from 'smpte-validator';
 
 //
 // Converts Catena compatible Device Models to computer code in a variety of languages
 //
 
 // load the command line parser
-const { program } = require('commander');
 program
+    .description(packageJson.description)
+    .version(packageJson.version)
     .option('-s, --schema <string>', 'path to schema definitions', '../../smpte/interface/schemata/device.json')
     .option('-d, --device-model <string>', 'Catena device model to process', '../../example_device_models/device.minimal.json')
     .option('-l, --language <string>', 'Language to generate code for', 'cpp')
@@ -28,7 +37,7 @@ program
     .option('--disable-mandatory-enforcement', 'Disable enforcement of mandatory parameters during code generation')
     .option('-q, --quiet', 'Suppress non-error console output', false)
 
-program.parse(process.argv);
+program.parse();
 const options = program.opts();
 // define our logging functions to be used throughout
 // if quiet mode is enabled, log does nothing
@@ -51,72 +60,10 @@ if (options.disableMandatoryEnforcement) {
     log(`Mandatory parameter enforcement disabled`);
 }
 
-// import the fs libraries
-const fs = require('fs');
-
 // verify input file exists
 if (!fs.existsSync(options.deviceModel)) {
     error(`Cannot open file at ${options.deviceModel}`);
     process.exit(1);
-}
-
-const Validator = require('smpte-validator');
-const path = require("node:path");
-const yaml = require('yaml')
-
-/**
- * @class DeviceModel
- * @brief Holds the information parsed from a json device model file
- */
-class DeviceModel {
-  /**
-   * @brief Construct a new DeviceModel object
-   * @param {string} filePath the path to the device model file
-   * @param {Validator} validator the json validator object
-   * @param {object} desc the parsed json object
-   */
-  constructor(filePath, validator, desc) {
-        this.filePath = filePath;
-        this.validator = validator;
-        this.desc = desc;
-        this.baseFilename = path.basename(filePath);
-        const info = this.baseFilename.split(".");
-        const schemaName = info[0];
-        if (schemaName !== "device") {
-          throw new Error(`File must be a device model, not ${schemaName}`);
-        }
-        this.deviceName = info[1];
-      }
-
-      /**
-       * @brief open a param.*.json file and return the parsed json object
-       * @param {string} importArg the path to the param.*.json file relative to the directory containing the device model file
-       * @returns the parsed json object
-       * @throws {Error} if the file cannot be opened or the data is invalid against the schema
-       * @todo add support for other import types 
-       */
-      importParam(importArg) {
-          if ("file" in importArg) {
-            const importDir = path.dirname(this.filePath);
-            const importPath = `${importDir}/${importArg.file}`;
-            if (!fs.existsSync(importPath)) {
-              throw new Error(`Cannot open file at ${importArg.file}`);
-            }
-            // Determining if the file is yaml or json and parsing accordingly.
-            const importData = (() => {
-                const extension = path.extname(importPath);
-                if (extension === ".yaml" || extension === ".yml") {
-                    return yaml.parse(fs.readFileSync(importPath, 'utf8'));
-                } else { // Default
-                    return JSON.parse(fs.readFileSync(importPath));
-                }
-            })();
-            return importData;
-      
-          } else {
-            throw new Error(`Unsupported import type: ${importArg}`);
-          }
-      }
 }
 
 // extract schema name from input filename
@@ -196,7 +143,7 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
     }
 }
 
-try {
+(async () => {
     const validator = new Validator(options.schema);
     log(`Applying schema '${deviceName}' to file '${options.deviceModel}'`);
     const isValid = validator.validate(deviceName, options.deviceModel);
@@ -207,7 +154,7 @@ try {
 
         log('✅ Validation succeeded.');
         log("Generating code...");
-        const CodeGen = require(`../../tools/codegen/${options.language}/${options.language}gen.js`);
+        const { default: CodeGen } = await import(`../../tools/codegen/${options.language}/${options.language}gen.js`);
         const codeGen = new CodeGen(dm, options.output);
 
         codeGen.generate();
@@ -216,7 +163,7 @@ try {
         error('❌ Schema validation failed.');
         process.exit(1);
     }
-} catch (err) {
+})().catch((err) => {
     error(`Error: ${err.message}`);
     process.exit(err.error || 1);
-}
+});
