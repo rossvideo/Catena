@@ -83,7 +83,7 @@
                   <simplegrid cols="2" rows="1">
                      <simplegrid cols="1" height="80" rows="2" width="80">
                         <label name="Roll Off" style="txt-align:left;font:bold;"/>
-                        <param oid="roll_off" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" value="12.2" widget="label"/>
+                        <param oid="roll_off" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" value="12.2" widget="spinner"/>
                      </simplegrid>
                      <param height="80" oid="roll_off" widget="wheel" width="80">
                         <task tasktype="onchange">ctrl.event('wheel', this);</task>
@@ -105,7 +105,7 @@
                   <simplegrid cols="2" rows="1">
                      <simplegrid cols="1" height="80" rows="2" width="80">
                         <label name="Freq" style="txt-align:left;font:bold;"/>
-                        <param oid="frequency" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" value="12.2" widget="label"/>
+                        <param oid="frequency" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" value="12.2" widget="spinner"/>
                      </simplegrid>
                      <param height="80" oid="frequency" widget="wheel" width="80">
                         <task tasktype="onchange">ctrl.event('wheel', this);</task>
@@ -127,7 +127,7 @@
                   <simplegrid cols="2" rows="1">
                      <simplegrid cols="1" height="80" rows="2" width="80">
                         <label name="Ripple" style="txt-align:left;font:bold;"/>
-                        <param oid="ripple" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" value="12.2" widget="label"/>
+                        <param oid="ripple" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" value="12.2" widget="spinner"/>
                      </simplegrid>
                      <param height="80" oid="ripple" widget="wheel" width="80">
                         <task tasktype="onchange">ctrl.event('wheel', this);</task>
@@ -149,7 +149,7 @@
                   <simplegrid cols="2" rows="1">
                      <simplegrid cols="1" height="80" rows="2" width="80">
                         <label name="Resp" style="txt-align:left;font:bold;"/>
-                        <param oid="resp" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" value="12.2" widget="label"/>
+                        <param oid="resp" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" value="12.2" widget="spinner"/>
                      </simplegrid>
                      <param height="80" oid="resp" widget="wheel" width="80">
                         <task tasktype="onchange">ctrl.event('wheel', this);</task>
@@ -290,9 +290,16 @@
    <!-- UI Section -->
    <tab bottom="10" left="10" right="10" top="10">
       <abs name="Channel Grid">
-         <abs height="1590" left="50" top="50" width="1440">
+         <simplegrid cols="8" left="50" top="50" height="1640">
             <widget height="1590" widgetid="channel" width="180"/>
-         </abs>
+            <widget height="1590" widgetid="channel" width="180"/>
+            <widget height="1590" widgetid="channel" width="180"/>
+            <widget height="1590" widgetid="channel" width="180"/>
+            <widget height="1590" widgetid="channel" width="180"/>
+            <widget height="1590" widgetid="channel" width="180"/>
+            <widget height="1590" widgetid="channel" width="180"/>
+            <widget height="1590" widgetid="channel" width="180"/>
+         </simplegrid>
       </abs>
       <abs name="Raw Data">
          <simplegrid cols="3" rows="3" left="50" top="50" hspace="20" vspace="20">

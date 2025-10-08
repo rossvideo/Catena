@@ -4,7 +4,7 @@ var v = 0
 
 function updateMeter(baseOID) {
     var min = -10, max = 10;
-    v = (min + Math.random() * (max - min)) + gain;
+    v = ((min + 3)+ Math.random() * (7)) + gain;
 
     if (inverted) {
         v = -v;
