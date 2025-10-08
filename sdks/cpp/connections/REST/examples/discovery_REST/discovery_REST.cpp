@@ -29,9 +29,8 @@
  */
 
 /**
- * @brief Example program to demonstrate Catena external object request
- * the REST API.
- * @file external_object_request_REST.cpp
+ * @brief Example program to demonstrate NMos discovery through a Catena device
+ * @file discovery_REST.cpp
  * @copyright Copyright © 2025 Ross Video Ltd
  * @author Christian Twarog
  */

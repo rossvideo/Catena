@@ -31,15 +31,11 @@
  */
 
 /**
- * @file Authorizer.h
- * @brief Class for handling authorization information
- * @author John R. Naylor john.naylor@rossvideo.com
- * @author John Danen
- * @date 2024-09-18
- * @author Ben Whitten benjamin.whitten@rossvideo.com
- * @author Zuhayr Sarker zuhayr.sarker@rossvideo.com
- * @date 2025-02-20
- * @copyright Copyright (c) 2024 Ross Video
+ * @file INmosNode.h
+ * @brief Interface definition for Nmos Node functionality
+ * @author Christian Twarog christian.twarog@rossvideo.com
+ * @date 2025-10-08
+ * @copyright Copyright (c) 2025 Ross Video
  */
 
 // device model
