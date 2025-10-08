@@ -223,7 +223,7 @@
                   "common/examples/use_struct_arrays/use_struct_arrays",
                   "common/examples/use_structs/use_structs",
                   "common/examples/use_templates/use_templates",
-                  "common/examples/use_variants/use_variants"
+                  "common/examples/use_variants/use_variants",
                 ],
       "default": "common/examples/hello_world/hello_world"
     },
@@ -250,6 +250,7 @@
         "unittests/common/common_Menu_test",
         "unittests/common/common_ParamVisitor_test",
         "unittests/common/common_Heartbeat_test",
+        "unittests/common/common_NmosNode_test",
         "unittests/gRPC/gRPC_ParamInfoRequest_test",
         "unittests/gRPC/gRPC_UpdateSubscriptions_test",
         "unittests/gRPC/gRPC_DeviceRequest_test",
@@ -291,6 +292,7 @@
       "options": [
                 //"api_only", // unimplemented
         "asset_request_REST",
+        "discovery_REST",
         "status_update_REST",
         "status_update_JSON_REST",
         "use_commands_REST",

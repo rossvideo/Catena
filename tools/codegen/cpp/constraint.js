@@ -1,4 +1,4 @@
-/*Copyright 2024 Ross Video Ltd
+/*Copyright 2025 Ross Video Ltd
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 *
@@ -17,13 +17,14 @@
  * file: constraint.js
  * brief: Collect C++ information for a constraint
  * author: isaac.robert@rossvideo.com
- * date: 2024-08-21
- * Copyright (c) 2024 Ross Video
+ * author: andrew.brown@rossvideo.com
+ * date: 2025-10-07
+ * Copyright (c) 2025 Ross Video
  */
 
 "use strict";
 
-const CppCtor = require("./cppctor");
+import CppCtor from "./cppctor.js";
 
 /**
  *
@@ -309,4 +310,4 @@ class Constraint extends CppCtor {
   }
 }
 
-module.exports = Constraint;
+export default Constraint;
