@@ -20,7 +20,6 @@ var namespacecatena_1_1common =
     [ "ILanguagePack", "classcatena_1_1common_1_1ILanguagePack.html", "classcatena_1_1common_1_1ILanguagePack" ],
     [ "IMenu", "classcatena_1_1common_1_1IMenu.html", "classcatena_1_1common_1_1IMenu" ],
     [ "IMenuGroup", "classcatena_1_1common_1_1IMenuGroup.html", "classcatena_1_1common_1_1IMenuGroup" ],
-    [ "INmosNode", "classcatena_1_1common_1_1INmosNode.html", "classcatena_1_1common_1_1INmosNode" ],
     [ "IParam", "classcatena_1_1common_1_1IParam.html", "classcatena_1_1common_1_1IParam" ],
     [ "IParamDescriptor", "classcatena_1_1common_1_1IParamDescriptor.html", "classcatena_1_1common_1_1IParamDescriptor" ],
     [ "IParamVisitor", "classcatena_1_1common_1_1IParamVisitor.html", "classcatena_1_1common_1_1IParamVisitor" ],
@@ -32,7 +31,6 @@ var namespacecatena_1_1common =
     [ "MenuGroup", "classcatena_1_1common_1_1MenuGroup.html", "classcatena_1_1common_1_1MenuGroup" ],
     [ "MenuGroupTag", "structcatena_1_1common_1_1MenuGroupTag.html", null ],
     [ "MenuTag", "structcatena_1_1common_1_1MenuTag.html", null ],
-    [ "NmosNode", "classcatena_1_1common_1_1NmosNode.html", "classcatena_1_1common_1_1NmosNode" ],
     [ "ParamDescriptor", "classcatena_1_1common_1_1ParamDescriptor.html", "classcatena_1_1common_1_1ParamDescriptor" ],
     [ "ParamTag", "structcatena_1_1common_1_1ParamTag.html", null ],
     [ "ParamVisitor", "classcatena_1_1common_1_1ParamVisitor.html", "classcatena_1_1common_1_1ParamVisitor" ],
@@ -47,16 +45,6 @@ var namespacecatena_1_1common =
     [ "IsVariantArray", "conceptcatena_1_1common_1_1IsVariantArray.html", null ],
     [ "SignalMap", "namespacecatena_1_1common.html#a2167b391607d3775a33d0e4e49dfc5c7", null ],
     [ "SlotMap", "namespacecatena_1_1common.html#a118a88218f9509068efa0f46414ee018", null ],
-    [ "NodeCode", "namespacecatena_1_1common.html#a39956cd1eb9cc3e56518c795362fb636", [
-      [ "OK", "namespacecatena_1_1common.html#a39956cd1eb9cc3e56518c795362fb636ae0aa021e21dddbd6d8cecec71e9cf564", null ],
-      [ "POLL_FAILED", "namespacecatena_1_1common.html#a39956cd1eb9cc3e56518c795362fb636a871ea28924808a487c7babadd2dc7610", null ],
-      [ "CLIENT_FAILED", "namespacecatena_1_1common.html#a39956cd1eb9cc3e56518c795362fb636ae85d6c5a4f59d854c5065652d730a353", null ],
-      [ "REGISTRATION_FAILED", "namespacecatena_1_1common.html#a39956cd1eb9cc3e56518c795362fb636aa26dbff8bff8497feccc5352b8ab4d37", null ],
-      [ "NO_SERVICE_BROWSER", "namespacecatena_1_1common.html#a39956cd1eb9cc3e56518c795362fb636a3bd1e3962270432d508155bdc1a0770c", null ],
-      [ "NO_IFACE", "namespacecatena_1_1common.html#a39956cd1eb9cc3e56518c795362fb636a7fe3c2e7acf5eca06168003f3ef49821", null ],
-      [ "NO_CANDIDATES", "namespacecatena_1_1common.html#a39956cd1eb9cc3e56518c795362fb636abce9abaf39f291651f27e013dfc91c8d", null ],
-      [ "REGISTRY_NOT_FOUND", "namespacecatena_1_1common.html#a39956cd1eb9cc3e56518c795362fb636a5ff483895b5222389bad46a10f5fe532", null ]
-    ] ],
     [ "Scopes_e", "namespacecatena_1_1common.html#a52e17ef3ce00a51e608afb060211e3a8", [
       [ "kUndefined", "namespacecatena_1_1common.html#a52e17ef3ce00a51e608afb060211e3a8a7934d40c7c17315d892e8d5d745b1c66", null ],
       [ "kMonitor", "namespacecatena_1_1common.html#a52e17ef3ce00a51e608afb060211e3a8a371b131e5e8ab58eefe1bd1b5df26c55", null ],
