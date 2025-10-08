@@ -33,6 +33,8 @@
  * Also test ParamWithEmptyValue.
  * @author benjamin.whitten@rossvideo.com
  * @date 25/08/08
+ *@author benjamin.whitten@rossvideo.com
+ * @date 25/08/08
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -73,7 +75,7 @@ TEST_F(ParamWithValueTest, Size) {
  * TEST 4 - Testing <EMPTY>ParamWithValue.getParam().
  * EMPTY params have no sub-params and should return an error.
  */
-    TEST_F(ParamWithValueTest, GetParam) {
+TEST_F(ParamWithValueTest, GetParam) {
     EmptyParam param(emptyValue, pd_);
     Path path = Path("/test/oid");
     EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(1).WillRepeatedly(testing::Return(true));
@@ -281,16 +283,15 @@ TEST_F(ParamWithValueTest, ParamInfoToProto_Error) {
  * TEST 14 - Testing nested struct with explicitly initialized empty child fields.
  * Verifies that struct fields can be set to empty values and accessed.
  */
-TEST_F(ParamWithValueTest, NestedStructWithEmptyChildFields) {
+TEST_F(ParamWithValueTest, NestedParameterAccess) {
     // Create a parent parameter with a child parameter
     Device dm;
     catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
     catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
 
     catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, "f2", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
-    catena::common::ParamWithValue<catena::common::EmptyValue> childParam(catena::common::emptyValue, childParamDescriptor, dm, false);
     
-    // Expect 2 authorization checks (one for parent, one for child) - both should pass
+    // Expect two authorization checks (one for parent, one for child) - both should pass
     EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(2).WillRepeatedly(testing::Return(true));
     
     // Test: Try to get child parameter from parent
@@ -301,16 +302,13 @@ TEST_F(ParamWithValueTest, NestedStructWithEmptyChildFields) {
 /*
  * TEST 15 Tests that getParam returns nullptr and sets INVALID_ARGUMENT status when called with an empty path.
  */
-TEST_F(ParamWithValueTest, EmptyPathReturnsInvalidArgument) {
+TEST_F(ParamWithValueTest, EmptyPathValidation) {
     // Create a parent parameter with a child parameter
     Device dm;
     catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
     catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
 
-    catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, "f2", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
-    catena::common::ParamWithValue<catena::common::EmptyValue> childParam(catena::common::emptyValue, childParamDescriptor, dm, false);
-    
-    // Expect 1 authorization check for the empty path scenario
+    // Expect one authorization check for the empty path scenario
     EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(1).WillRepeatedly(testing::Return(true));
     
     // Test: Empty path should be invalid and return error
@@ -324,7 +322,7 @@ TEST_F(ParamWithValueTest, EmptyPathReturnsInvalidArgument) {
 /*
  * TEST 16 - Testing if getParam can correctly navigate a multi-level path.
  */
-TEST_F(ParamWithValueTest, MultiLevelPathNavigation) {
+TEST_F(ParamWithValueTest, TwoLevelPathAccess) {
     // Create a parent parameter with a child parameter
     Device dm;
     
@@ -338,7 +336,7 @@ TEST_F(ParamWithValueTest, MultiLevelPathNavigation) {
     catena::common::ParamWithValue<catena::common::EmptyValue> child2Param(catena::common::emptyValue, child2ParamDescriptor, dm, false);
     
     // Expect authorization checks for each level
-    EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(3).WillRepeatedly(testing::Return(true));
     
     // Test: Navigate through multi-level path
     Path path = Path("/f2/f3");
@@ -350,16 +348,13 @@ TEST_F(ParamWithValueTest, MultiLevelPathNavigation) {
  * This test verifies the behavior when index is empty in the getParam method.
  * When index is empty, the method should not recurse further and should check authorization.
  */
-TEST_F(ParamWithValueTest, IfIndexIsEmpty) {
+TEST_F(ParamWithValueTest, NumericIndexOnStructParameterFails) {
     // Create a parent parameter with a child parameter
     Device dm;
     
     catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
     catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
 
-    catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, "f2", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
-    catena::common::ParamWithValue<catena::common::EmptyValue> childParam(catena::common::emptyValue, childParamDescriptor, dm, false);
-    
     // Authorization should be checked even for invalid access attempts
     EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(1).WillRepeatedly(testing::Return(true));
     
@@ -372,7 +367,7 @@ TEST_F(ParamWithValueTest, IfIndexIsEmpty) {
  * TEST 18 - Testing getParam's authorization failure.
  * Verifies that getParam returns PERMISSION_DENIED when authorization check fails
  */
-TEST_F(ParamWithValueTest, AuthzFailureCheck) {
+TEST_F(ParamWithValueTest, UnauthorizedParameterAccessDenied) {
     // Create a parent parameter with a child parameter
     Device dm;
     
@@ -380,9 +375,8 @@ TEST_F(ParamWithValueTest, AuthzFailureCheck) {
     catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
 
     catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, "f2", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
-    catena::common::ParamWithValue<catena::common::EmptyValue> childParam(catena::common::emptyValue, childParamDescriptor, dm, false);
     
-    // Passes Authz Once then fails the rest
+    // Passes Authz twice then fails the rest
     EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(2).WillOnce(testing::Return(true)).WillRepeatedly(testing::Return(false));
     
     // Test: Try to access child parameter without proper authorization

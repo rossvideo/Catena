@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,7 +36,9 @@
  * @author John R. Naylor
  * @author John Danen
  * @date 2024-08-20
- * @copyright Copyright (c) 2024 Ross Video
+ * @author jason.chen@rossvideo.com
+ * @date 25/10/98
+ * @copyright Copyright (c) 2025 Ross Video
  */
 
 // common
