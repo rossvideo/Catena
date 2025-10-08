@@ -1,4 +1,4 @@
-/*Copyright 2024 Ross Video Ltd
+/*Copyright 2025 Ross Video Ltd
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 *
@@ -14,7 +14,7 @@
 * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 
-const CppCtor = require('./cppctor');
+import CppCtor from './cppctor.js';
 
 /**
  * @param {object} desc 
@@ -144,4 +144,4 @@ class Device extends CppCtor {
 
 }
 
-module.exports = Device;
+export default Device;
