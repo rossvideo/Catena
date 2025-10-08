@@ -32,9 +32,8 @@
  * @brief This file is for testing the ParamWithValue class.
  * Also test ParamWithEmptyValue.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/08/08
- *@author benjamin.whitten@rossvideo.com
- * @date 25/08/08
+ * @author jason.chen@rossvideo.com
+ * @date 25/10/08
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 

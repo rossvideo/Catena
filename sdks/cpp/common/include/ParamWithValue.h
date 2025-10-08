@@ -35,9 +35,8 @@
  * @brief Interface for acessing parameter values
  * @author John R. Naylor
  * @author John Danen
- * @date 2024-08-20
  * @author jason.chen@rossvideo.com
- * @date 25/10/98
+ * @date 2024-10-08
  * @copyright Copyright (c) 2025 Ross Video
  */
 
