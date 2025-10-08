@@ -1,4 +1,4 @@
-/*Copyright 2024 Ross Video Ltd
+/*Copyright 2025 Ross Video Ltd
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 *
@@ -16,14 +16,12 @@
 
 "use strict";
 
-const fs = require("fs");
-const { get } = require("http");
-const path = require("node:path");
-const Device = require("./device");
-const Param = require("./param");
-const LanguagePacks = require("../language");
-const Constraint = require("./constraint");
-const { type } = require("os");
+import fs from "fs";
+import path from "path";
+import Device from "./device.js";
+import Param from "./param.js";
+import LanguagePacks from "../language.js";
+import Constraint from "./constraint.js";
 
 /**
  * writes a line of code to the file descriptor constructed
@@ -397,4 +395,4 @@ class CppGen {
   };
 }
 
-module.exports = CppGen;
+export default CppGen;

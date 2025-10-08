@@ -66,6 +66,7 @@ target_include_directories(
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
+        ${AVAHI_CLIENT_INCLUDE_DIRS}
 )
 
 # Link Boost.System to your target
@@ -78,6 +79,7 @@ target_link_libraries(${target}
         catena_proto_common
         absl::flags_parse
         ZLIB::ZLIB
+        ${AVAHI_CLIENT_LIBRARIES}
 )
 
 target_compile_features(${target} PUBLIC cxx_std_20)

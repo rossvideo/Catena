@@ -17,7 +17,7 @@
 
 // common
 #include <utils.h>
-
+#include <Logger.h>
 #include <cassert>
 #include <exception>
 #include <fstream>
@@ -26,6 +26,12 @@
 #include <cstring>
 
 std::string catena::readFile(std::filesystem::path path) {
+    try { 
+        if (!std::filesystem::exists(path)) return ""; 
+    } catch (const std::exception& e) { 
+        LOG(ERROR) << "Exception when checking if file exists: " << e.what(); 
+        return ""; 
+    }
     std::ifstream file(path, std::ios::in | std::ios::binary);  // lock the file
     const auto sz = std::filesystem::file_size(path);           // get its size
     std::string ans(sz, '\0');                                  // create our buffer
@@ -118,4 +124,10 @@ std::string catena::from_base64(const std::string& encoded) {
         }
     }
     return decoded;
+}
+
+std::string catena::fmt(const char* f, ...) {
+    va_list ap; va_start(ap, f);
+    char buf[4096]; vsnprintf(buf, sizeof(buf), f, ap); va_end(ap);
+    return std::string(buf);
 }

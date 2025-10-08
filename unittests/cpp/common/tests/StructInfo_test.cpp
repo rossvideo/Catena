@@ -30,8 +30,9 @@
 
 /**
  * @brief This file is for testing the StructInfo.cpp file.
- * @author benjamin.whitten@rossvideo.com
- * @date 25/06/26
+ * @author benjamin.whitten@rossvideo.com 
+ * @author (Nelson Daniels) nelson.daniels@rossvideo.com 
+ * @date 25/10/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -43,6 +44,7 @@
 #include <mocks/MockParamDescriptor.h>
 #include <mocks/MockConstraint.h>
 #include <mocks/MockAuthorizer.h>
+#include "Logger.h"
 
 // common
 #include "CommonTestHelpers.h"
@@ -53,6 +55,15 @@ using namespace catena::common;
 // Fixture
 class StructInfoTest : public ::testing::Test {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("StructInfoTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
     /*
      * Sets up default expectations for pd_.
      */
