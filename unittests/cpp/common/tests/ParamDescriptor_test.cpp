@@ -30,14 +30,16 @@
 
 /**
  * @brief This file is for testing the ParamDescriptor.cpp file.
- * @author benjamin.whitten@rossvideo.com
- * @date 25/05/20
+ * @author benjamin.whitten@rossvideo.com 
+ * @author (Nelson Daniels) nelson.daniels@rossvideo.com 
+ * @date 25/10/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #include "ParamDescriptor.h"
 #include "PolyglotText.h"
 #include "Enums.h"
+#include "Logger.h"
 
 #include "MockConstraint.h"
 #include "MockDevice.h"
@@ -52,6 +54,15 @@ using namespace catena::common;
 
 class ParamDescriptorTest : public ::testing::Test {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("ParamDescriptorTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
     /*
      * Initializes pd with default values used in most tests.
      */

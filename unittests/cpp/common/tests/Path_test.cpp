@@ -30,8 +30,9 @@
 
 /**
  * @brief This file is for testing the Path.cpp file.
- * @author benjamin.whitten@rossvideo.com
- * @date 25/06/26
+ * @author benjamin.whitten@rossvideo.com 
+ * @author (Nelson Daniels) nelson.daniels@rossvideo.com 
+ * @date 25/10/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -42,13 +43,27 @@
 // common
 #include "Path.h"
 #include "Status.h"
+#include "Logger.h"
 
 using namespace catena::common;
+
+// Test fixture class for Path tests
+class PathTest : public ::testing::Test {
+protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("PathTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+};
 
 /*
  * TEST 1 - Testing Path constructor with valid paths. 
  */
-TEST(PathTest, Path_CreateValid) {
+TEST_F(PathTest, Path_CreateValid) {
     std::vector<std::string> paths = {
         "/test", "/test/path", "/0", "/test/0", "/test/0/path", "/-", "/test/-"
     };
@@ -60,7 +75,7 @@ TEST(PathTest, Path_CreateValid) {
 /*
  * TEST 2 - Testing Path constructor with invalid paths. 
  */
-TEST(PathTest, Path_CreateInvalid) {
+TEST_F(PathTest, Path_CreateInvalid) {
     std::vector<std::string> paths = {
         "/1test", "/test/1path", "/test-path", "/test//path", "test/path"
     };
@@ -71,7 +86,7 @@ TEST(PathTest, Path_CreateInvalid) {
 /*
  * TEST 3 - Testing Path literal constructor. 
  */
-TEST(PathTest, Path_CreateLiteral) {
+TEST_F(PathTest, Path_CreateLiteral) {
      std::vector<std::string> paths = {
         "/test", "/test/path", "/0", "/test/0", "/test/0/path", "/-",
         "/test/-", "/1test", "/test/1path", "/test-path", "/test//path"
@@ -84,7 +99,7 @@ TEST(PathTest, Path_CreateLiteral) {
 /*
  * TEST 4 - Testing Path pop(), size(), walked(), unpop(), rewind(), and empty(). 
  */
-TEST(PathTest, Path_Pop) {
+TEST_F(PathTest, Path_Pop) {
     // Initializing path.
     Path p("/test/path/1/-");
     Path::Index size = p.size();
@@ -120,7 +135,7 @@ TEST(PathTest, Path_Pop) {
 /*
  * TEST 5 - Testing Path popBack(), size(), walked(), and empty(). 
  */
-TEST(PathTest, Path_PopBack) {
+TEST_F(PathTest, Path_PopBack) {
     // Initializing path.
     Path p("/test/path/1/-");
     Path::Index size = p.size();
@@ -143,7 +158,7 @@ TEST(PathTest, Path_PopBack) {
  * TEST 6 - Testing Path FrontIsString(), FrontIsIndex(), FrontAsString(),
  *          FrontAsIndex() with string segments.
  */
-TEST(PathTest, Path_FrontIsAsString) {
+TEST_F(PathTest, Path_FrontIsAsString) {
     std::vector<std::string> segments = { "test", "path" };
     Path p("/test/path");
     for (auto& segment : segments) {
@@ -160,7 +175,7 @@ TEST(PathTest, Path_FrontIsAsString) {
  * TEST 7 - Testing Path FrontIsString(), FrontIsIndex(), FrontAsString(),
  *          FrontAsIndex() with index segments. 
  */
-TEST(PathTest, Path_FrontIsAsIndex) {
+TEST_F(PathTest, Path_FrontIsAsIndex) {
     using Segments = std::vector<Path::Index>;
     std::vector<std::pair<std::string, Segments>> tests = {
         {"/1/2/3", {1, 2, 3}}, {"/-", {Path::kEnd}}
@@ -182,7 +197,7 @@ TEST(PathTest, Path_FrontIsAsIndex) {
  * TEST 8 - Testing Path BackIsString(), BackIsIndex(), BackAsString(),
  *          BackAsIndex() with string segments.
  */
-TEST(PathTest, Path_BackIsAsString) {
+TEST_F(PathTest, Path_BackIsAsString) {
     std::vector<std::string> segments = { "path", "test" };
     Path p("/test/path");
     for (auto& segment : segments) {
@@ -199,7 +214,7 @@ TEST(PathTest, Path_BackIsAsString) {
  * TEST 9 - Testing Path BackIsString(), BackIsIndex(), BackAsString(),
  *          BackAsIndex() with index segments. 
  */
-TEST(PathTest, Path_BackIsAsIndex) {
+TEST_F(PathTest, Path_BackIsAsIndex) {
     using Segments = std::vector<Path::Index>;
     std::vector<std::pair<std::string, Segments>> tests = {
         {"/1/2/3", {3, 2, 1}}, {"/-", {Path::kEnd}}
@@ -220,7 +235,7 @@ TEST(PathTest, Path_BackIsAsIndex) {
 /*
  * TEST 10 - Testing Path toString() and fqoid()
  */
-TEST(PathTest, Path_ToString) {
+TEST_F(PathTest, Path_ToString) {
     Path p("/test/path/1/-");
     // Testing before pop().
     EXPECT_EQ(p.toString(true), "/test/path/1/-") << "toString(true) should have a leading slash";
@@ -235,7 +250,7 @@ TEST(PathTest, Path_ToString) {
 /*
  * TEST 11 - Testing Path push_back()
  */
-TEST(PathTest, Path_PushBack) {
+TEST_F(PathTest, Path_PushBack) {
     Path p("/test/path");
     // Pushing back a string segment.
     p.push_back("new_segment");
@@ -256,7 +271,7 @@ TEST(PathTest, Path_PushBack) {
 /*
  * TEST 12 - Testing Path user-defined literal operator.
  */
-TEST(PathTest, Path_Operator) {
+TEST_F(PathTest, Path_Operator) {
     Path p1 = "/test/path/1/-"_path;
     Path p2("/test/path/1/-");
     EXPECT_EQ(p1.fqoid(), p2.fqoid());

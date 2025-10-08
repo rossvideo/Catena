@@ -69,6 +69,15 @@ set(CATENA_SCHEMA "${SCHEMA_LOCATION}" CACHE STRING "Path to Catena schema file"
 # Core dependencies
 find_package(glog REQUIRED)
 
+# Additional dependencies
+find_package(PkgConfig REQUIRED)
+
+# Avahi for mDNS/DNS-SD
+pkg_check_modules(AVAHI_CLIENT REQUIRED avahi-client)
+
+# CURL for HTTP client functionality
+find_package(CURL REQUIRED)
+
 # Try to find Protobuf using CONFIG first, then MODULE
 find_package(Protobuf CONFIG QUIET)
 if(NOT Protobuf_FOUND)
