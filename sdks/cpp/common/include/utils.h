@@ -40,6 +40,7 @@
 #include <filesystem>
 #include <string>
 #include <vector>
+#include <cstdarg>
 
 namespace catena {
 
@@ -93,5 +94,10 @@ std::string to_base64(const std::string& binary);
  * @return The decoded binary string.
  */
 std::string from_base64(const std::string& encoded);
+
+/**
+ *  @brief A printf style formatting function that returns a std::string.
+ */
+std::string fmt(const char* f, ...);
 
 }  // namespace catena

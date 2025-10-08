@@ -29,6 +29,10 @@ RUN . /root/toolchain.env \
     gdb=$GNU_DEBUGGER_VERSION \
     valgrind=$VALGRIND_VERSION \
     curl=$CURL_VERSION \
+    libcurl4-openssl-dev=$LIBCURL_VERSION \
+    libavahi-client-dev=$AVAHI_CLIENT_VERSION \
+    libavahi-common-dev=$AVAHI_COMMON_VERSION \
+    pkg-config=$PKG_CONFIG_VERSION \
     ca-certificates \
     && curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x -o /tmp/nodesource_setup.sh \
     && cat /tmp/nodesource_setup.sh \
