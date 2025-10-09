@@ -121,9 +121,10 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
             }
 
             // Validate the scope for mandatory parameters
+            const productScope = deviceParams.product.access_scope;
             if (param.access_scope && param.access_scope !== REQUIRED_SCOPES) {
                 invalidScopes.push(`${key} (has '${param.access_scope}' scope, must be '${REQUIRED_SCOPES}')`);
-            } else if (!param.access_scope) {
+            } else if (!param.access_scope && !productScope) {
                 invalidScopes.push(`${key} (missing access_scope, must be '${REQUIRED_SCOPES}')`);
             }
 
