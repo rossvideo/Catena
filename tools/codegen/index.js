@@ -89,6 +89,8 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
         "serial_number": true
     };
 
+    const REQUIRED_SCOPES = "st2138:mon";
+
     if (!deviceParams || !deviceParams.product) {
         throw new Error(`Missing mandatory product struct in params`);
     }
@@ -105,6 +107,7 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
     const productValue = deviceParams.product.value;
     const missing = [];
     const emptyValues = [];
+    const invalidScopes = [];
 
     Object.entries(REQUIRED_PARAMS).forEach(([key, checkValue]) => {
         const param = productParams[key];
@@ -115,6 +118,13 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
             if (param.type !== 'STRING') {
                 missing.push(`${key} (not STRING type)`);
                 return;
+            }
+
+            // Validate the scope for mandatory parameters
+            if (param.access_scope && param.access_scope !== REQUIRED_SCOPES) {
+                invalidScopes.push(`${key} (has '${param.access_scope}' scope, must be '${REQUIRED_SCOPES}')`);
+            } else if (!param.access_scope) {
+                invalidScopes.push(`${key} (missing access_scope, must be '${REQUIRED_SCOPES}')`);
             }
 
             if (checkValue) {
@@ -136,7 +146,7 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
         }
     });
 
-    const allIssues = [...missing.map(p => `${p} (missing field)`), ...emptyValues];
+    const allIssues = [...missing.map(p => `${p} (missing field)`), ...emptyValues, ...invalidScopes];
 
     if (allIssues.length > 0 && !disableMandatoryEnforcement) {
         throw new Error(`Invalid mandatory product parameters: ${allIssues.join(', ')}`);
