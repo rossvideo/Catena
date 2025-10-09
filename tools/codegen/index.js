@@ -120,7 +120,7 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
                 return;
             }
 
-            // Validates the scope for mandatory parameters
+            // Validate the scope for mandatory parameters
             if (param.access_scope && param.access_scope !== REQUIRED_SCOPES) {
                 invalidScopes.push(`${key} (has '${param.access_scope}' scope, must be '${REQUIRED_SCOPES}')`);
             } else if (!param.access_scope) {
