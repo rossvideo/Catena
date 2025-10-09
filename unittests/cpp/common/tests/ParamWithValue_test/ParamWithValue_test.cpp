@@ -32,12 +32,16 @@
  * @brief This file is for testing the ParamWithValue class.
  * Also test ParamWithEmptyValue.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/08/08
+ * @author jason.chen@rossvideo.com
+ * @date 25/10/08
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #include "Param_test.h"
 
+#include "ParamDescriptor.h"
+#include "Device.h"
+ 
 using namespace catena::common;
 using EmptyParam = ParamWithValue<EmptyValue>;
 
@@ -73,10 +77,13 @@ TEST_F(ParamWithValueTest, Size) {
 TEST_F(ParamWithValueTest, GetParam) {
     EmptyParam param(emptyValue, pd_);
     Path path = Path("/test/oid");
+    EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(1).WillRepeatedly(testing::Return(true));
+    static std::unordered_map<std::string, IParamDescriptor*> empty_sub_params;
+    EXPECT_CALL(pd_, getAllSubParams()).WillRepeatedly(testing::ReturnRef(empty_sub_params));
     auto foundParam = param.getParam(path, authz_, rc_);
     // Checking results.
     EXPECT_FALSE(foundParam) << "Found a parameter when none was expected";
-    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
+    EXPECT_EQ(rc_.status, catena::StatusCode::NOT_FOUND);
 }
 /*
  * TEST 5 - Testing <EMPTY>ParamWithValue.addBack().
@@ -253,7 +260,7 @@ TEST_F(ParamWithValueTest, ParamInfoToProto) {
     EXPECT_EQ(oid_, paramInfo.info().oid());
 }
 /*
- * TEST 12 - Testing paramWithValue.toProto(ParamInfo) error handling.
+ * TEST 13 - Testing paramWithValue.toProto(ParamInfo) error handling.
  * Two main error cases:
  * - pd_.toProto throws an error.
  * - Not authorized.
@@ -269,4 +276,108 @@ TEST_F(ParamWithValueTest, ParamInfoToProto_Error) {
     rc_ = param.toProto(paramInfo, authz_);
     EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED)
         << "toProto should return PERMISSION_DENIED if Authorizer does not have readAuthz.";
+}
+ 
+/*
+ * TEST 14 - Testing nested struct with explicitly initialized empty child fields.
+ * Verifies that struct fields can be set to empty values and accessed.
+ */
+TEST_F(ParamWithValueTest, NestedParameterAccess) {
+    // Create a parent parameter with a child parameter
+    Device dm;
+    catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
+    catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
+
+    catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, "f2", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
+    
+    // Expect two authorization checks (one for parent, one for child) - both should pass
+    EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(2).WillRepeatedly(testing::Return(true));
+    
+    // Test: Try to get child parameter from parent
+    Path path = Path("/f2");
+    EXPECT_TRUE(parentParam.getParam(path, authz_, rc_));
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+}
+/*
+ * TEST 15 Tests that getParam returns nullptr and sets INVALID_ARGUMENT status when called with an empty path.
+ */
+TEST_F(ParamWithValueTest, EmptyPathValidation) {
+    // Create a parent parameter with a child parameter
+    Device dm;
+    catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
+    catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
+
+    // Expect one authorization check for the empty path scenario
+    EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(1).WillRepeatedly(testing::Return(true));
+    
+    // Test: Empty path should be invalid and return error
+    Path emptyPath = Path("");
+    auto foundParam = parentParam.getParam(emptyPath, authz_, rc_);
+    
+    // When OID is empty, it should return nullptr and set INVALID_ARGUMENT status
+    EXPECT_FALSE(foundParam) << "Empty OID should return nullptr";
+    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
+}
+/*
+ * TEST 16 - Testing if getParam can correctly navigate a multi-level path.
+ */
+TEST_F(ParamWithValueTest, TwoLevelPathAccess) {
+    // Create a parent parameter with a child parameter
+    Device dm;
+    
+    catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
+    catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
+
+    catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, "f2", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
+    catena::common::ParamWithValue<catena::common::EmptyValue> childParam(catena::common::emptyValue, childParamDescriptor, dm, false);
+    
+    catena::common::ParamDescriptor child2ParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List2"}}, "", "", false, "f3", "", nullptr, false, false, dm, 0, 0, 2, false, &childParamDescriptor);
+    catena::common::ParamWithValue<catena::common::EmptyValue> child2Param(catena::common::emptyValue, child2ParamDescriptor, dm, false);
+    
+    // Expect authorization checks for each level
+    EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(3).WillRepeatedly(testing::Return(true));
+    
+    // Test: Navigate through multi-level path
+    Path path = Path("/f2/f3");
+    EXPECT_TRUE(parentParam.getParam(path, authz_, rc_));
+    EXPECT_EQ(rc_.status, catena::StatusCode::OK);
+ }
+/*
+ * TEST 17 - Testing getParam with numeric index on struct parameter.
+ */
+TEST_F(ParamWithValueTest, NumericIndexOnStructParameterFails) {
+    // Create a parent parameter with a child parameter
+    Device dm;
+    
+    catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
+    catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
+
+    // Authorization should be checked even for invalid access attempts
+    EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(1).WillRepeatedly(testing::Return(true));
+    
+    // Test: Try to access struct parameter by numeric index "/0" - this should fail
+    Path path = Path("/0");
+    EXPECT_FALSE(parentParam.getParam(path, authz_, rc_));
+    EXPECT_EQ(rc_.status, catena::StatusCode::INVALID_ARGUMENT);
+}
+/*
+ * TEST 18 - Testing getParam's authorization failure.
+ * Verifies that getParam returns PERMISSION_DENIED when authorization check fails
+ */
+TEST_F(ParamWithValueTest, UnauthorizedParameterAccessDenied) {
+    // Create a parent parameter with a child parameter
+    Device dm;
+    
+    catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
+    catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
+
+    catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, "f2", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
+    
+    // Passes Authz once then fails the rest
+    EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(2).WillOnce(testing::Return(true)).WillRepeatedly(testing::Return(false));
+    
+    // Test: Try to access child parameter without proper authorization
+    Path path = Path("/f2");
+    EXPECT_FALSE(parentParam.getParam(path, authz_, rc_));
+    EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED);
 }
