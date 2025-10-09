@@ -135,18 +135,24 @@ params:
           catena_sdk: { string_value: "https://github.com/rossvideo/Catena.git" }
           serial_number: { string_value: "SN-7K9M-2024-XR485-BLU" }
     params:
-      name: 
-        type: STRING  
+      name:
+        type: STRING
+        access_scope: "st2138:mon"
       vendor:
         type: STRING
+        access_scope: "st2138:mon"
       version:
         type: STRING
+        access_scope: "st2138:mon"
       catena_sdk:
         type: STRING
+        access_scope: "st2138:mon"
       catena_sdk_version:
         type: STRING
+        access_scope: "st2138:mon"
       serial_number:
         type: STRING
+        access_scope: "st2138:mon"
 
 menu_groups:
   status:

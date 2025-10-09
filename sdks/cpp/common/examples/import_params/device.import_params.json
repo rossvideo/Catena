@@ -26,22 +26,28 @@
       },
       "params": {
         "name": {
-          "type": "STRING"
+          "type": "STRING",
+          "access_scope": "st2138:mon"
         },
         "vendor": {
-          "type": "STRING"
+          "type": "STRING",
+          "access_scope": "st2138:mon"
         },
         "version": {
-          "type": "STRING"
+          "type": "STRING",
+          "access_scope": "st2138:mon"
         },
         "catena_sdk": {
-          "type": "STRING"
+          "type": "STRING",
+          "access_scope": "st2138:mon"
         },
         "catena_sdk_version": {
-          "type": "STRING"
+          "type": "STRING",
+          "access_scope": "st2138:mon"
         },
         "serial_number": {
-          "type": "STRING"
+          "type": "STRING",
+          "access_scope": "st2138:mon"
         }
       }
     },
