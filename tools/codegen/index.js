@@ -120,14 +120,6 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
                 return;
             }
 
-            // // Validate scope for mandatory parameters
-            // if (param.access_scope && param.access_scope !== MONITOR_SCOPE) {
-            //     invalidScopes.push(`${key} (has '${param.access_scope}' scope, must be '${MONITOR_SCOPE}')`);
-            // } else if (!param.access_scope) {
-            //     // If no access_scope is specified, it should default to monitor scope
-            //     // We can either warn or enforce that it must be explicitly set
-            //     invalidScopes.push(`${key} (missing access_scope, must be '${MONITOR_SCOPE}')`);
-            // }
             // Validate the scope for mandatory parameters
             if (param.access_scope && param.access_scope !== REQUIRED_SCOPES) {
                 invalidScopes.push(`${key} (has '${param.access_scope}' scope, must be '${REQUIRED_SCOPES}')`);
