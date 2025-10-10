@@ -79,7 +79,7 @@ fi
 rm -rf coverage/*
 # Conditionally generate HTML report
 if [ "$html_report" = true ]; then
-  gcovr --root ~/Catena --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' -e '(.+/)?examples/' -e '(.+/)?vdk/' --delete --html=coverage/index.html --html-details --lcov=coverage/coverage.info --xml=coverage/coverage.xml
+  gcovr --html=coverage/index.html --html-details
 else
-  gcovr --root ~/Catena --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' -e '(.+/)?examples/' -e '(.+/)?vdk/' --delete --lcov=coverage/coverage.info --xml=coverage/coverage.xml
+  gcovr
 fi
