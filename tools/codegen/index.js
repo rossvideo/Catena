@@ -91,20 +91,20 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
 
     const REQUIRED_SCOPES = "st2138:mon";
 
-    if (!deviceParams || !deviceParams.product) {
+    if (!deviceParams || !deviceParams.params || !deviceParams.params.product) {
         throw new Error(`Missing mandatory product struct in params`);
     }
 
-    if (deviceParams.product.type !== 'STRUCT') {
+    if (deviceParams.params.product.type !== 'STRUCT') {
         throw new Error(`Product parameter must be STRUCT type, not ${deviceParams.product.type}`);
     }
 
-    if (!deviceParams.product.read_only) {
+    if (!deviceParams.params.product.read_only) {
         throw new Error(`Product parameter must be read_only`);
     }
 
-    const productParams = deviceParams.product.params || {};
-    const productValue = deviceParams.product.value;
+    const productParams = deviceParams.params.product.params || {};
+    const productValue = deviceParams.params.product.value;
     const missing = [];
     const emptyValues = [];
     const invalidScopes = [];
@@ -121,10 +121,13 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
             }
 
             // Validate the scope for mandatory parameters
-            const productScope = deviceParams.product.access_scope;
+            const productScope = deviceParams.params.product.access_scope;
+            const globalScope = deviceParams.access_scopes || [];
+            const hasGlobalRequiredScope = globalScope.includes(REQUIRED_SCOPES);
+            
             if (param.access_scope && param.access_scope !== REQUIRED_SCOPES) {
                 invalidScopes.push(`${key} (has '${param.access_scope}' scope, must be '${REQUIRED_SCOPES}')`);
-            } else if (!param.access_scope && !productScope) {
+            } else if (!param.access_scope && !productScope && !hasGlobalRequiredScope) {
                 invalidScopes.push(`${key} (missing access_scope, must be '${REQUIRED_SCOPES}')`);
             }
 
@@ -161,7 +164,7 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
     if (isValid.data) {
         const dm = new DeviceModel(options.deviceModel, validator, isValid.data);
 
-        areAllRequiredParamsPresent(dm.desc.params, options.disableMandatoryEnforcement);
+        areAllRequiredParamsPresent(dm.desc, options.disableMandatoryEnforcement);
 
         log('✅ Validation succeeded.');
         log("Generating code...");
