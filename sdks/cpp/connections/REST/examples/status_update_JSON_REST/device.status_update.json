@@ -90,6 +90,7 @@
     },
     "product": {
       "type": "STRUCT",
+      "access_scope": "st2138:mon",
       "read_only": true,
       "value": {
         "struct_value": {
@@ -104,28 +105,22 @@
       },
       "params": {
         "name": {
-          "type": "STRING",
-          "access_scope": "st2138:mon"
+          "type": "STRING"
         },
         "vendor": {
-          "type": "STRING",
-          "access_scope": "st2138:mon"
+          "type": "STRING"
         },
         "version": {
-          "type": "STRING",
-          "access_scope": "st2138:mon"
+          "type": "STRING"
         },
         "catena_sdk": {
-          "type": "STRING",
-          "access_scope": "st2138:mon"
+          "type": "STRING"
         },
         "catena_sdk_version": {
-          "type": "STRING",
-          "access_scope": "st2138:mon"
+          "type": "STRING"
         },
         "serial_number": {
-          "type": "STRING",
-          "access_scope": "st2138:mon"
+          "type": "STRING"
         }
       }
     }

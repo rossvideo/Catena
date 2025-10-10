@@ -8,6 +8,7 @@ default_scope: st2138:mon
 params:
   product:
     type: STRUCT
+    access_scope: st2138:mon
     read_only: true
     value: 
       struct_value:
@@ -20,22 +21,16 @@ params:
     params:
       name: 
         type: STRING
-        access_scope: "st2138:mon"
       vendor:
         type: STRING
-        access_scope: "st2138:mon"
       version:
         type: STRING
-        access_scope: "st2138:mon"
       catena_sdk:
         type: STRING
-        access_scope: "st2138:mon"
       catena_sdk_version:
         type: STRING
-        access_scope: "st2138:mon"
       serial_number:
         type: STRING
-        access_scope: "st2138:mon"
 
   number_example: 
     type: INT32
