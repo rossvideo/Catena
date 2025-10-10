@@ -8,7 +8,7 @@ LABEL org.opencontainers.image.vendor=$IMAGE_VENDOR
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Copy the toolchain.env file
-COPY toolchain-cpp.env /root/toolchain.env
+COPY .devcontainer/toolchain-cpp.env /root/toolchain.env
 
 # Source the toolchain.env file
 RUN . /root/toolchain.env \
