@@ -85,9 +85,11 @@ RUN . /root/toolchain.env \
     && apt-get update \
     && apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
+COPY .devcontainer/toolchain-cpp.requirements.txt /root/requirements.txt
+
 # Install Python and gcovr for coverage reports
 RUN apt-get update && apt-get install --no-install-recommends -y python3-pip \
-    && pip3 install --no-cache-dir gcovr --break-system-packages \
+    && pip3 install --no-cache-dir -r /root/requirements.txt --break-system-packages \
     && apt-get clean \
     && rm -rf /var/cache/apt/archives/ /var/lib/apt/lists/*
 
