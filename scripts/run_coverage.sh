@@ -77,9 +77,10 @@ fi
 
 # clean the coverage directory before generating new reports
 rm -rf coverage/*
+COVERAGE_FILES="--lcov=coverage/coverage.info --xml=coverage/coverage.xml"
 # Conditionally generate HTML report
 if [ "$html_report" = true ]; then
-  gcovr --html=coverage/index.html --html-details
+  gcovr $COVERAGE_FILES --html=coverage/index.html --html-details
 else
-  gcovr
+  gcovr $COVERAGE_FILES
 fi

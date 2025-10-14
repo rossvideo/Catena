@@ -127,6 +127,8 @@ jobs:
       - name: Generate Coverage Report
         run: |
           gcovr \
+          --lcov=coverage.info \
+          --cobertura=coverage.xml \
           --html=index.html \
           --html-details
 
