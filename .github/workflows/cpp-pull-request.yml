@@ -126,9 +126,8 @@ jobs:
 
       - name: Generate Coverage Report
         run: |
-          cd ~/Catena
-          # we run gcovr from here so that the paths in the report are relative to the repo root
-          gcovr \
+          find . ~/Catena
+          gcovr --root ~/Catena \
           --lcov=coverage.info \
           --cobertura=coverage.xml \
           --html=index.html \
