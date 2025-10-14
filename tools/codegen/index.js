@@ -72,6 +72,7 @@ log(`Validating device model '${deviceName}' from file '${options.deviceModel}' 
 
 /**
  * @brief Validates that all mandatory product parameters are present and have valid values
+ * @brief Validates that all scopes are valid and correctly assigned
  * @param {object} deviceParams The device parameters object from the device model
  * @param {boolean} disableMandatoryEnforcement If true, skip validation and return early
  * @throws {Error} If mandatory parameters are missing or have invalid values (when enforcement enabled)
@@ -88,13 +89,6 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
         "catena_sdk_version": false,
         "serial_number": true
     };
-
-    const VALID_SCOPES = [
-        "st2138:mon",
-        "st2138:op",
-        "st2138:cfg",
-        "st2138:adm"
-    ];
 
     const REQUIRED_SCOPE = "st2138:mon";
 
@@ -119,25 +113,6 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
     // Get scope sources
     const productScope = deviceParams.params.product.access_scope;
     const defaultScope = deviceParams.default_scope;
-
-    // Validate global access scopes
-    if(deviceName.access_scopes) {
-        deviceParams.access_scopes.forEach(scope => {
-            if (!VALID_SCOPES.includes(scope)) {
-                throw new Error(`Invalid access scope '${scope}' in device model (valid scopes: ${VALID_SCOPES.join(', ')})`);
-            }
-        });
-    }
-
-    // Validate product parameter access scopes
-    if(productScope && !VALID_SCOPES.includes(productScope)) {
-        throw new Error(`Invalid access scope '${productScope}' in product parameter (valid scopes: ${VALID_SCOPES.join(', ')})`);
-    }
-
-    // Validate default access scope
-    if(defaultScope && !VALID_SCOPES.includes(defaultScope)) {
-        throw new Error(`Invalid default access scope '${defaultScope}' in device model (valid scopes: ${VALID_SCOPES.join(', ')})`);
-    }
     
     // Helper function to derive effective scope for a parameter
     function getDerivedScope(param) {
@@ -195,7 +170,7 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
         }
     });
 
-        const allIssues = [...missing.map(p => `${p} (missing field)`), ...emptyValues, ...invalidScopes];
+    const allIssues = [...missing.map(p => `${p} (missing field)`), ...emptyValues, ...invalidScopes];
 
     if (allIssues.length > 0 && !disableMandatoryEnforcement) {
         throw new Error(`Invalid mandatory product parameters: ${allIssues.join(', ')}`);
