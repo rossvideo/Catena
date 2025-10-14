@@ -89,6 +89,13 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
         "serial_number": true
     };
 
+    const VALID_SCOPES = [
+        "st2138:mon",
+        "st2138:op",
+        "st2138:cfg",
+        "st2138:adm"
+    ];
+
     const REQUIRED_SCOPE = "st2138:mon";
 
     if (!deviceParams || !deviceParams.params || !deviceParams.params.product) {
@@ -113,25 +120,42 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
     const productScope = deviceParams.params.product.access_scope;
     const defaultScope = deviceParams.default_scope;
 
+    // Validate global access scopes
+    if(deviceName.access_scopes) {
+        deviceParams.access_scopes.forEach(scope => {
+            if (!VALID_SCOPES.includes(scope)) {
+                throw new Error(`Invalid access scope '${scope}' in device model (valid scopes: ${VALID_SCOPES.join(', ')})`);
+            }
+        });
+    }
+
+    // Validate product parameter access scopes
+    if(productScope && !VALID_SCOPES.includes(productScope)) {
+        throw new Error(`Invalid access scope '${productScope}' in product parameter (valid scopes: ${VALID_SCOPES.join(', ')})`);
+    }
+
+    // Validate default access scope
+    if(defaultScope && !VALID_SCOPES.includes(defaultScope)) {
+        throw new Error(`Invalid default access scope '${defaultScope}' in device model (valid scopes: ${VALID_SCOPES.join(', ')})`);
+    }
+    
     // Helper function to derive effective scope for a parameter
     function getDerivedScope(param) {
-        // 1. Check if scope is defined on the param
         if (param.access_scope) {
             return param.access_scope;
         }
         
-        // 2. Check if scope is defined on product
         if (productScope) {
             return productScope;
         }
         
-        // 3. Check default scope
         if (defaultScope) {
             return defaultScope;
         }
-        
-        // 4. Default to "st2138:mon" if nothing else is defined
-        return "st2138:mon";
+
+        else {
+            return "st2138:mon";
+        }
     }
 
     Object.entries(REQUIRED_PARAMS).forEach(([key, checkValue]) => {
