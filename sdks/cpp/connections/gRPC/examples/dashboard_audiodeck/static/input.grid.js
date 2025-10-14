@@ -1,28 +1,24 @@
-var inverted = false;
-var gain = 0;
 var v = 0
+var gain = 0;
 
 function updateMeter(baseOID) {
+    var gain = params.getValue(baseOID + ".gain", 0);
+    //var inverted = params.getValue(baseOID + ".inverted", 0);
+    
     var min = -10, max = 10;
     v = ((min + 3)+ Math.random() * (7)) + gain;
 
-    if (inverted) {
+    if (getInverted(baseOID) == 1) {
         v = -v;
     }
+
     params.setValue(baseOID + ".input", 0, v);
-    setRawInput();
 }
 
-function setInverted() {
-    inverted = !inverted;
+function getInverted(baseOID) {
+    return params.getValue(baseOID + ".invert", 0);
 }
 
-function setGain(value) {
-    gain = value;
-}
-  
-function setRawInput() {
-    params.setValue("raw_input", 0, Math.round(v * 10) / 10);
-    params.setValue("raw_gain", 0, Math.round(gain * 10) / 10);
-    params.setValue("raw_inverted", 0, inverted);
+function setStereo(value) {
+    stereo = value;
 }

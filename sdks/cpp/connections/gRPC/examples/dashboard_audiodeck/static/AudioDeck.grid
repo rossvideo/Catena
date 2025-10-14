@@ -2,25 +2,63 @@
    <meta>
       <!-- Meter Tick Timer-->
       <api id="meter-api" immediate="true" src="input.grid.js"/>
+      <api id="add-api" immediate="true" src="add.grid.js"/>
 
       <params>
-         <param access="1" constraint="-10.0;10.0;-10.0;10.0" constrainttype="FLOAT_RANGE" name="" oid="sim.input" precision="2" type="FLOAT32" value="-7.6784015" widget="default"/>
+         <param access="1" constraint="-10.0;10.0;-10.0;10.0" constrainttype="FLOAT_RANGE" name="" oid="main.gain" precision="1" type="FLOAT32" value="0.0" widget="default"/>
+         <param access="1" constraint="-10.0;10.0;-10.0;10.0" constrainttype="FLOAT_RANGE" name="" oid="main.input" precision="2" type="FLOAT32" value="0.0" widget="default"/>
+         <param access="1" constrainttype="STRING_CHOICE" maxlength="0" oid="main.gain_type" readonly="true" type="STRING" value="Gain" widget="spinner">
+            <constraint>Gain</constraint>
+            <constraint>Stereo</constraint>
+         </param>
+         <param access="1" oid="main.inputLabel" type="STRING" value="Test Channel"/>
+         <param access="1" oid="main.channelLabel" type="STRING" value="MAIN"/>
+         <param access="1" constraintstrict="false" constrainttype="STRING_STRING_CHOICE" maxlength="0" oid="main.invert" type="STRING" value="0" widget="toggle">
+            <constraint key="0">Invert</constraint>
+            <constraint key="1">Invert</constraint>
+         </param>
+
+         <param access="1" maxlength="0" name="InputName:" oid="InputName" type="STRING" value="" widget="text"/>
+      
+         <param access="1" constrainttype="FLOAT_NULL" name="raw_input" oid="raw_input" precision="1" type="FLOAT32" value="-3.0" widget="default"/>
+         <param access="1" constrainttype="FLOAT_NULL" name="raw_gain" oid="raw_gain" precision="1" type="FLOAT32" value="0.0" widget="default"/>
+         <param access="1" name="raw_inverted" oid="raw_inverted" type="BOOL" value="false" widget="default"/>
+
+         <param access="1" constraint="-10.0;10.0;-10.0;10.0" constrainttype="FLOAT_RANGE" name="" oid="gain" precision="1" type="FLOAT32" value="0.0" widget="default"/>
+         <param access="1" constraint="-10.0;10.0;-10.0;10.0" constrainttype="FLOAT_RANGE" name="" oid="input" precision="2" type="FLOAT32" value="0.0" widget="default"/>
+         <param access="1" constrainttype="STRING_CHOICE" maxlength="0" oid="gain_type" readonly="true" type="STRING" value="Gain" widget="spinner">
+            <constraint>Gain</constraint>
+            <constraint>Stereo</constraint>
+         </param>
+         <param access="1" oid="inputLabel" type="STRING" value="Test Channel"/>
+         <param access="1" constraintstrict="false" constrainttype="STRING_STRING_CHOICE" maxlength="0" oid="invert" type="STRING" value="0" widget="toggle">
+            <constraint key="0">Invert</constraint>
+            <constraint key="1">Invert</constraint>
+         </param>
+
+         <param access="1" constrainttype="STRING_CHOICE" maxlength="0" oid="chanList" type="STRING" value="Channel 1" widget="combo">
+            <constraint>Channel 1</constraint>
+            <constraint>Channel 2</constraint>
+            <constraint>Channel 3</constraint>
+            <constraint>Channel 4</constraint>
+            <constraint>Channel 5</constraint>
+            <constraint>Channel 6</constraint>
+            <constraint>Channel 7</constraint>
+            <constraint>Channel 8</constraint>
+         </param>
       </params>
 
       <timer autostart="true" delay="0" id="meterTick" rate="100"/>
       <!-- END Meter Tick Timer-->
 
-      <!-- Raw Data Params -->
-      <params>
-         <param access="1" oid="raw_input" precision="2" type="STRING" value="0" widget="default"/>
-         <param access="1" oid="raw_gain" precision="2" type="STRING" value="0" widget="default"/>
-         <param access="1" oid="raw_inverted" precision="2" type="STRING" value="false" widget="default"/>
-      </params>
-
-      <!-- Interactive Widgets -->
       <widgets>
          <!-- Audio Meter -->
          <widgetdescriptor id="audio_meter">
+            <config>
+               <params>
+                  <param access="1" oid=".input" relative="true" type="FLOAT32" value="0" widget="level-meter"/>
+               </params>
+            </config>
             <oglml>
                <abs height="100" width="160">
                   <param expand="true" oid=".input" relative="true" showlabel="false" widget="level-meter"/>
@@ -32,22 +70,24 @@
             </oglml>
          </widgetdescriptor>
 
-         <!-- Gain Knob -->
+         <!-- Gain Knob/Stereo Knob -->
          <widgetdescriptor id="gain_knob">
             <config>
                <params>
-                  <param access="1" constraint="-10.0;10.0;" constrainttype="FLOAT_STEP_RANGE" oid="gain" precision="2" type="FLOAT32" value="3.0" widget="default"/>
+                  <param access="1" constraint="-10.0;10.0;" constrainttype="FLOAT_STEP_RANGE" oid=".gain" precision="2" type="FLOAT32" value="3.0" widget="default"/>
+                  <param access="1" constraint="-10.0;10.0;" constrainttype="FLOAT_STEP_RANGE" oid=".stereo" precision="2" type="FLOAT32" value="3.0" widget="default"/>
+                  <param access="1" constrainttype="STRING_CHOICE" maxlength="0" name="TextParamList" oid=".TextParamList" readonly="true" type="STRING" value="Gain" widget="spinner">
+                     <constraint>Gain</constraint>
+                     <constraint>Stereo</constraint>
+                  </param>
                </params>
             </config>
             <oglml>
-               <abs height="140" width="160">
-                  <param height="100" oid="gain" widget="wheel" width="160">
-                     <task tasktype="onchange">ctrl.event('wheel', this);</task>
-                     <task tasktype="onchange">setGain(this.getValue());</task>
-                  </param>
-                  <simplegrid cols="2" rows="1" top="120" width="140">
-                     <label name="Gain" style="txt-align:left;font:bold;"/>
-                     <param height="20" oid="gain" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" value="3.0" widget="spinner" width="80"/>
+               <abs height="120" name="Gain" width="160">
+                  <param height="100" oid=".gain" widget="wheel" width="160"/>
+                  <simplegrid cols="2" hspace="10" rows="1" top="120" width="160">
+                     <label name="Gain" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;"/>
+                     <param height="20" oid=".gain" relative="true" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" widget="spinner"/>
                   </simplegrid>
                </abs>
             </oglml>
@@ -56,16 +96,16 @@
          <!-- Input Raw Data -->
          <widgetdescriptor id="input_raw_data">
             <oglml>
-               <table height="30" width="180" rows="2" cols="3" style="bg#tablezebra;look:label;bdr#darkdivider;bdr:round;">
+               <table cols="3" height="30" rows="2" style="bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" width="180">
                   <tr>
-                     <label name="Input" style="txt-align:center;font:bold;" height="15" width="60"/>
-                     <label name="Gain" style="txt-align:center;font:bold;" height="15" width="60"/>
-                     <label name="Inverted" style="txt-align:center;font:bold;" height="15" width="60"/>
+                     <label height="15" name="Input" style="txt-align:center;font:bold;" width="60"/>
+                     <label height="15" name="Gain" style="txt-align:center;font:bold;" width="60"/>
+                     <label height="15" name="Inverted" style="txt-align:center;font:bold;" width="60"/>
                   </tr>
                   <tr>
-                     <param oid="raw_input" style="txt-align:center;" widget="label" height="15" width="60"/>
-                     <param oid="raw_gain" style="txt-align:center;" widget="label" height="15" width="60"/>
-                     <param oid="raw_inverted" style="txt-align:center;" widget="label" height="15" width="60"/>
+                     <param height="15" oid="raw_input" style="txt-align:center;" widget="label" width="60"/>
+                     <param height="15" oid="raw_gain" style="txt-align:center;" widget="label" width="60"/>
+                     <param height="15" oid="raw_inverted" style="txt-align:center;" widget="label" width="60"/>
                   </tr>
                </table>
             </oglml>
@@ -75,7 +115,7 @@
          <widgetdescriptor id="roll_off_knob">
             <config>
                <params>
-                  <param access="1" constraint="-10.0;10.0;" constrainttype="FLOAT_STEP_RANGE" oid="roll_off" precision="2" type="FLOAT32" value="3.0" widget="default"/>
+                  <param access="1" constraint="-30.0;30.0;-30.0;30.0;" constrainttype="FLOAT_STEP_RANGE" oid="roll_off" precision="1" type="FLOAT32" value="24.0" widget="default"/>
                </params>
             </config>
             <oglml>
@@ -97,7 +137,7 @@
          <widgetdescriptor id="frequency_knob">
             <config>
                <params>
-                  <param access="1" constraint="-10.0;10.0;" constrainttype="FLOAT_STEP_RANGE" oid="frequency" precision="2" type="FLOAT32" value="3.0" widget="default"/>
+                  <param access="1" constraint="0.0;500.0;0.0;500.0;" constrainttype="FLOAT_STEP_RANGE" oid="frequency" precision="0" type="FLOAT32" value="85" widget="default"/>
                </params>
             </config>
             <oglml>
@@ -119,7 +159,7 @@
          <widgetdescriptor id="ripple_knob">
             <config>
                <params>
-                  <param access="1" constraint="-10.0;10.0;" constrainttype="FLOAT_STEP_RANGE" oid="ripple" precision="2" type="FLOAT32" value="3.0" widget="default"/>
+                  <param access="1" constraint="-30.0;30.0;-30.0;30.0;" constrainttype="FLOAT_STEP_RANGE" oid="ripple" precision="1" type="FLOAT32" value="3.0" widget="default"/>
                </params>
             </config>
             <oglml>
@@ -141,7 +181,18 @@
          <widgetdescriptor id="resp_knob">
             <config>
                <params>
-                  <param access="1" constraint="-10.0;10.0;" constrainttype="FLOAT_STEP_RANGE" oid="resp" precision="2" type="FLOAT32" value="3.0" widget="default"/>
+                  <param access="1" constrainttype="STRING_CHOICE" maxlength="0" oid="resp" type="STRING" value="Cheb II" widget="default">
+                     <constraint>Cheb I</constraint>
+                     <constraint>Cheb II</constraint>
+                     <constraint>Cheb III</constraint>
+                     <constraint>Cheb IV</constraint>
+                     <constraint>Cheb V</constraint>
+                     <constraint>Cheb VI</constraint>
+                     <constraint>Cheb VII</constraint>
+                     <constraint>Cheb VIII</constraint>
+                     <constraint>Cheb IX</constraint>
+                     <constraint>Cheb X</constraint>
+                  </param>
                </params>
             </config>
             <oglml>
@@ -149,7 +200,7 @@
                   <simplegrid cols="2" rows="1">
                      <simplegrid cols="1" height="80" rows="2" width="80">
                         <label name="Resp" style="txt-align:left;font:bold;"/>
-                        <param oid="resp" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" value="12.2" widget="spinner"/>
+                        <param oid="resp" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" widget="spinner"/>
                      </simplegrid>
                      <param height="80" oid="resp" widget="wheel" width="80">
                         <task tasktype="onchange">ctrl.event('wheel', this);</task>
@@ -179,7 +230,13 @@
          <widgetdescriptor id="fader_knob">
             <config>
                <params>
-                  <param access="1" constraint="-10.0;10.0;" constrainttype="FLOAT_STEP_RANGE" oid="fader" precision="2" type="FLOAT32" value="3.0" widget="default"/>
+                  <param access="1" constrainttype="STRING_CHOICE" maxlength="0" oid="fader" type="STRING" value="Center" widget="default">
+                     <constraint>Top</constraint>
+                     <constraint>Right</constraint>
+                     <constraint>Bottom</constraint>
+                     <constraint>Left</constraint>
+                     <constraint>Center</constraint>
+                  </param>
                </params>
             </config>   
             <oglml>
@@ -189,7 +246,7 @@
                   </param>
                   <simplegrid cols="2" height="30" rows="1" top="80" vspace="20" width="160">
                      <label name="Pan" style="txt-align:center;font:bold;"/>
-                     <param oid="fader" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" value="0.0" widget="label"/>
+                     <param oid="fader" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" widget="spinner"/>
                   </simplegrid>
                </abs>
             </oglml>
@@ -223,19 +280,43 @@
       </widgets>
       <!-- Cluster Widgets-->
       <widgets>
-         <!-- Input Cluster -->
-         <widgetdescriptor id="input_cluster">
+         <!-- Main Cluster -->
+         <widgetdescriptor id="main_cluster">
+            <config>
+               <params>
+                  <param oid=".invert" relative="true" type="STRING" value="Invert"/>
+               </params>
+            </config>
             <oglml>
                <abs height="360" style="bg#panelbg;look:round;bdr#buttonbg;bdr:round;" width="180">
                   <widget baseoid="sim" left="10" top="10" widgetid="audio_meter"/>
-                  <label height="30" left="10" name="Bass Guitar" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" top="130" width="160"/>
+                  <label height="30" left="10" name="MAIN" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" top="130" width="160"/>
                   <widget height="140" left="10" top="170" widgetid="gain_knob" width="160"/>
                   <simplegrid cols="2" height="30" hspace="10" left="10" rows="1" top="320" width="160">
-                     <button buttontype="toggle" name="Invert" style="t:bg#yellow;f:bg#buttonbg;">
-                        <task tasktype="onclick">
-                           setInverted();
-                        </task>
-                     </button>
+                     <param oid=".invert" style="t:bg#yellow;f:bg#buttonbg;" widget="toggle" width="300"/>
+                     <button buttontype="toggle" name="Tone" style="t:bg#yellow;f:bg#buttonbg;"/>
+                  </simplegrid>
+               </abs>
+            </oglml>
+         </widgetdescriptor>
+         <!-- Input Cluster -->
+         <widgetdescriptor id="input_cluster">
+            <config>
+               <params>
+                  <param oid=".inputLabel" relative="true" type="STRING" value="Test Channel"/>
+                  <param access="1" constraintstrict="false" constrainttype="STRING_STRING_CHOICE" maxlength="0" oid=".invert" type="STRING" value="0" widget="default">
+                     <constraint key="0">Invert</constraint>
+                     <constraint key="1">Invert</constraint>
+                  </param>
+               </params>
+            </config>
+            <oglml>
+               <abs height="360" style="bg#panelbg;look:round;bdr#buttonbg;bdr:round;" width="180">
+                  <widget baseoid="%baseoid%" left="10" top="10" widgetid="audio_meter"/>
+                  <param oid=".inputLabel" relative="true" height="30" left="10" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" top="130" width="160" widget="label"/>
+                  <widget baseoid="%baseoid%" height="140" left="10" top="170" widgetid="gain_knob" width="160"/>
+                  <simplegrid cols="2" height="30" hspace="10" left="10" rows="1" top="320" width="160">
+                     <param oid=".invert" style="t:bg#yellow;f:bg#buttonbg;" widget="toggle"/>
                      <button buttontype="toggle" name="Tone" style="t:bg#yellow;f:bg#buttonbg;"/>
                   </simplegrid>
                </abs>
@@ -272,14 +353,37 @@
             </oglml>
          </widgetdescriptor>
       </widgets>
+
       <!-- Channel Widgets-->
       <widgets>
-         <widgetdescriptor id="channel">
+         <widgetdescriptor id="input_raw">
             <oglml>
-               <abs height="1590" width="180">
-                  <widget height="360" widgetid="input_cluster" width="180"/>
-                  <widget height="570" top="360" widgetid="chanquad_cluster" width="180"/>
-                  <widget height="660" top="930" widgetid="fader_cluster" width="180"/>
+               <abs height="100" width="180">
+                  <param oid=".channelLabel" relative="true" height="20" left="10" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" widget="label" width="160"/>
+                  <param oid=".inputLabel" relative="true" height="20" left="10" top="25" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" widget="label" width="160"/>
+                  <simplegrid cols="2" height="70" hspace="10" left="10" rows="3" top="50" width="160">
+                     <label name="Input" style="txt-align:left;font:bold;"/>
+                     <param oid=".input" relative="true" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" widget="label"/>
+                     <label name="Gain" style="txt-align:left;font:bold;"/>
+                     <param oid=".gain" relative="true" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" widget="label"/>
+                     <label name="Invert" style="txt-align:left;font:bold;"/>
+                     <param oid=".invert" relative="true" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" widget="label"/>
+                  </simplegrid>
+               </abs>
+            </oglml>
+         </widgetdescriptor>
+         <widgetdescriptor id="test_channel">
+            <config>
+               <params>
+                  <param oid=".channelLabel" relative="true" type="STRING"/>
+               </params>
+            </config>
+            <oglml>
+               <abs height="420" width="180">
+                  <param height="30" oid=".channelLabel" relative="true" style="txt-align:center;bg#panelbg;look:label;bdr#buttonbg;bdr:round;font:bold;" widget="label" width="160" left="10"/>
+                  <widget baseoid="%baseoid%" height="360" widgetid="input_cluster" width="180" top="50"/>
+                  <widget baseoid="%baseoid%" height="570" widgetid="chanquad_cluster" width="180" top="410"/>
+                  <widget baseoid="%baseoid%" height="660" widgetid="fader_cluster" width="180" top="980"/>
                </abs>
             </oglml>
          </widgetdescriptor>
@@ -288,38 +392,40 @@
 
 
    <!-- UI Section -->
-   <tab bottom="10" left="10" right="10" top="10">
-      <abs name="Channel Grid">
-         <simplegrid cols="8" left="50" top="50" height="1640">
-            <widget height="1590" widgetid="channel" width="180"/>
-            <widget height="1590" widgetid="channel" width="180"/>
-            <widget height="1590" widgetid="channel" width="180"/>
-            <widget height="1590" widgetid="channel" width="180"/>
-            <widget height="1590" widgetid="channel" width="180"/>
-            <widget height="1590" widgetid="channel" width="180"/>
-            <widget height="1590" widgetid="channel" width="180"/>
-            <widget height="1590" widgetid="channel" width="180"/>
-         </simplegrid>
+   <tab width="1300">
+      <abs name="Add Channel">
+         <abs height="1720" id="channelHost" top="10" left="10" width="1300"/>
       </abs>
       <abs name="Raw Data">
-         <simplegrid cols="3" rows="3" left="50" top="50" hspace="20" vspace="20">
-            <label name="Input" style="txt-align:center;font:bold;" height="15" width="60"/>
-            <label name="QuadChan" style="txt-align:center;font:bold;" height="15" width="60"/>
-            <label name="Fader" style="txt-align:center;font:bold;" height="15" width="60"/>
-            <widget widgetid="input_raw_data" width="180" height="90" left="50" top="50" />
-            <label name="Not implemented" style="txt-align:center;font:bold;" height="15" width="60"/>
-            <label name="Not implemented" style="txt-align:center;font:bold;" height="15" width="60"/>
-            <param colspan="1" expand="true" fill="none" oid="sim.input" rowspan="1" showlabel="false" weightx="1.0" weighty="1.0" widget="chart" width="180" height="100"/>
-            <label name="Not implemented" style="txt-align:center;font:bold;" height="15" width="60"/>
-            <label name="Not implemented" style="txt-align:center;font:bold;" height="15" width="60"/>
-         </simplegrid>
+         <abs height="1720" id="rawHost" top="10" left="10" width="400"/>
       </abs>
-      <abs name="All Widgets">
-         <abs height="1590" width="1440">
-            <widget baseoid="sim" height="360" left="200" top="200" widgetid="input_cluster" width="180"/>
-            <widget height="90" left="200" top="60" widgetid="input_raw_data" width="180"/>
-            <widget height="570" left="500" top="200" widgetid="chanquad_cluster" width="180"/>
-            <widget height="660" left="800" top="200" widgetid="fader_cluster" width="180"/>
+   </tab>
+   <tab left="1300" width="240">
+      <abs name="Controls">
+         <abs height="400" left="10" top="10" width="220" style="bdr:etched;">
+            <simplegrid cols="1" height="80" vspace="10" rows="2" top="10" left="10" width="200">
+               <label name="Channel Controls" style="txt-align:center;font:bold;"/>
+               <button buttontype="push" left="10" name="Add Channel" top="10">
+                  <task tasktype="ogscript">
+                     add();
+                  </task>
+               </button>
+            </simplegrid>
+            <abs top="110" rows="2" cols="1" width="220">
+               <label height="20" left="10" width="50" name="Name:" style="txt-align:left" widget="label"/>
+               <param height="20" width="150" left="60" oid="InputName" showlabel="false" style="txt-align:right;bg#darkdivider;look:label;bdr#darkdivider;bdr:round;" widget="text"/>
+            </abs>
+            <button buttontype="push" left="10" name="Remove Channel" top="170" height="35" width="200">
+               <task tasktype="ogscript">
+                  removeSelectedChannel();
+               </task>
+            </button>
+            <abs id="chanListHost" left="10" top="220" width="200" height="170"/>
+         </abs>
+      </abs>
+      <abs name="Main">
+         <abs height="1720" width="180" left="30" top="10">
+            <widget baseoid="main" height="1720" widgetid="test_channel" width="180"/>
          </abs>
       </abs>
    </tab>
