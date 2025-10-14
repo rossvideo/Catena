@@ -89,14 +89,14 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
         "serial_number": true
     };
 
-    const REQUIRED_SCOPES = "st2138:mon";
+    const REQUIRED_SCOPE = "st2138:mon";
 
     if (!deviceParams || !deviceParams.params || !deviceParams.params.product) {
         throw new Error(`Missing mandatory product struct in params`);
     }
 
     if (deviceParams.params.product.type !== 'STRUCT') {
-        throw new Error(`Product parameter must be STRUCT type, not ${deviceParams.product.type}`);
+        throw new Error(`Product parameter must be STRUCT type, not ${deviceParams.params.product.type}`);
     }
 
     if (!deviceParams.params.product.read_only) {
@@ -109,6 +109,31 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
     const emptyValues = [];
     const invalidScopes = [];
 
+    // Get scope sources
+    const productScope = deviceParams.params.product.access_scope;
+    const defaultScope = deviceParams.default_scope;
+
+    // Helper function to derive effective scope for a parameter
+    function getDerivedScope(param) {
+        // 1. Check if scope is defined on the param
+        if (param.access_scope) {
+            return param.access_scope;
+        }
+        
+        // 2. Check if scope is defined on product
+        if (productScope) {
+            return productScope;
+        }
+        
+        // 3. Check default scope
+        if (defaultScope) {
+            return defaultScope;
+        }
+        
+        // 4. Default to "st2138:mon" if nothing else is defined
+        return "st2138:mon";
+    }
+
     Object.entries(REQUIRED_PARAMS).forEach(([key, checkValue]) => {
         const param = productParams[key];
 
@@ -120,15 +145,11 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
                 return;
             }
 
-            // Validate the scope for mandatory parameters
-            const productScope = deviceParams.params.product.access_scope;
-            const globalScope = deviceParams.access_scopes || [];
-            const hasGlobalRequiredScope = globalScope.includes(REQUIRED_SCOPES);
+            // Derive the effective scope and check if it's correct
+            const derivedScope = getDerivedScope(param);
             
-            if (param.access_scope && param.access_scope !== REQUIRED_SCOPES) {
-                invalidScopes.push(`${key} (has '${param.access_scope}' scope, must be '${REQUIRED_SCOPES}')`);
-            } else if (!param.access_scope && !productScope && !hasGlobalRequiredScope) {
-                invalidScopes.push(`${key} (missing access_scope, must be '${REQUIRED_SCOPES}')`);
+            if (derivedScope !== REQUIRED_SCOPE) {
+                invalidScopes.push(`${key} (derived scope '${derivedScope}', must be '${REQUIRED_SCOPE}')`);
             }
 
             if (checkValue) {
@@ -150,7 +171,7 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
         }
     });
 
-    const allIssues = [...missing.map(p => `${p} (missing field)`), ...emptyValues, ...invalidScopes];
+        const allIssues = [...missing.map(p => `${p} (missing field)`), ...emptyValues, ...invalidScopes];
 
     if (allIssues.length > 0 && !disableMandatoryEnforcement) {
         throw new Error(`Invalid mandatory product parameters: ${allIssues.join(', ')}`);
