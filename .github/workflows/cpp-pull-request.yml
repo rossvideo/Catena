@@ -126,7 +126,7 @@ jobs:
 
       - name: Generate Coverage Report
         run: |
-          gcovr \
+          gcovr --root ~/Catena \
           --lcov=coverage.info \
           --cobertura=coverage.xml \
           --html=index.html \
