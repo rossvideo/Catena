@@ -54,7 +54,7 @@ jobs:
     env:
       CMAKE_BUILD_TYPE: Debug
       CONNECTIONS: gRPC;REST
-      BUILD_TARGET: ${{github.workspace}}/build/cpp
+      BUILD_TARGET: ${{ github.workspace }}/build/cpp
 
     steps:
       - name: Checkout code
@@ -198,7 +198,7 @@ jobs:
     env:
       CMAKE_BUILD_TYPE: ''
       CONNECTIONS: gRPC
-      BUILD_TARGET: build/cpp
+      BUILD_TARGET: ${{ github.workspace }}/build/cpp
 
     steps:
       - name: Checkout code
