@@ -73,7 +73,7 @@ log(`Validating device model '${deviceName}' from file '${options.deviceModel}' 
 /**
  * @brief Validates that all mandatory product parameters are present and have valid values
  * @brief Validates that all scopes are valid and correctly assigned
- * @param {object} deviceParams The device parameters object from the device model
+ * @param {object} deviceParams The complete device model object (includes top-level properties and params)
  * @param {boolean} disableMandatoryEnforcement If true, skip validation and return early
  * @throws {Error} If mandatory parameters are missing or have invalid values (when enforcement enabled)
  */
@@ -116,21 +116,25 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
     
     // Helper function to derive effective scope for a parameter
     function getDerivedScope(param) {
-        if (param.access_scope) {
+        if (param.access_scope == REQUIRED_SCOPE) {
             return param.access_scope;
         }
         
-        if (productScope) {
+        else if (productScope == REQUIRED_SCOPE) {
             return productScope;
         }
         
-        if (defaultScope) {
+        else if (defaultScope == REQUIRED_SCOPE) {
             return defaultScope;
         }
 
-        else {
-            return "st2138:mon";
+        else if (param.access_scope == null && productScope == null && defaultScope == null) {
+            return REQUIRED_SCOPE;
         }
+
+        else {
+            return "INVALID";
+        } 
     }
 
     Object.entries(REQUIRED_PARAMS).forEach(([key, checkValue]) => {
@@ -147,8 +151,8 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
             // Derive the effective scope and check if it's correct
             const derivedScope = getDerivedScope(param);
             
-            if (derivedScope !== REQUIRED_SCOPE) {
-                invalidScopes.push(`${key} (derived scope '${derivedScope}', must be '${REQUIRED_SCOPE}')`);
+            if (derivedScope == "INVALID") {
+                invalidScopes.push(`${key} (derived scope is invalid, must be ('${REQUIRED_SCOPE}')`);
             }
 
             if (checkValue) {
