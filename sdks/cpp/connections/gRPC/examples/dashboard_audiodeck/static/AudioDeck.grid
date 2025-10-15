@@ -103,7 +103,7 @@
                      <label height="15" name="Inverted" style="txt-align:center;font:bold;" width="60"/>
                   </tr>
                   <tr>
-                     <param height="15" oid="raw_input" style="txt-align:center;" widget="label" width="60"/>
+                     <param height="15" oid="raw_input" precision="2" style="txt-align:center;" widget="label" width="60"/>
                      <param height="15" oid="raw_gain" style="txt-align:center;" widget="label" width="60"/>
                      <param height="15" oid="raw_inverted" style="txt-align:center;" widget="label" width="60"/>
                   </tr>
@@ -363,7 +363,7 @@
                   <param oid=".inputLabel" relative="true" height="20" left="10" top="25" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" widget="label" width="160"/>
                   <simplegrid cols="2" height="70" hspace="10" left="10" rows="3" top="50" width="160">
                      <label name="Input" style="txt-align:left;font:bold;"/>
-                     <param oid=".input" relative="true" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" widget="label"/>
+                     <param oid=".input" precision="2" relative="true" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" widget="label"/>
                      <label name="Gain" style="txt-align:left;font:bold;"/>
                      <param oid=".gain" relative="true" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" widget="label"/>
                      <label name="Invert" style="txt-align:left;font:bold;"/>

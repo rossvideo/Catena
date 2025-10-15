@@ -9,6 +9,7 @@ var maxChannels = 8;
 
 var channels = [];
 var channelIndexByInput = {}; // InputName -> baseoid
+var selectedChannelIndex = -1;
 
 function debug(message, data) {
     var log = message + " | " + JSON.stringify(data);
@@ -94,7 +95,7 @@ var rawVSpace = 10;
 
 function makeRawWidget(baseoid) {
     var xml = '<widget widgetid="input_raw" baseoid="' + baseoid + '" left="' + rawLeft + '" top="' + rawTop + '"/>';
-    rawTop += 110; // stack vertically
+    rawLeft += width + rawVSpace; // stack horizontally
     return xml;
 }
 
@@ -104,16 +105,22 @@ function appendRaw(xml) {
 
 // Selection list rendering (chanList as a list of input names)
 function renderChannelList() {
-    // rebuild simple list widget each time, using INT_CHOICE keys (0..n-1)
-    var selected = '0';
-    var listXml = '<param oid="chanListUi" widget="list" constrainttype="INT_CHOICE" width="200" height="170" left="0" top="0" value="' + (channels.length > 0 ? selected : '') + '">';
+    var itemHeight = 28;
+    var vspace = 6;
+    var xml = '<abs id="chanListInner" width="200" height="170">';
+    var topPos = 0;
     for (var i = 0; i < channels.length; i++) {
-        var name = channels[i].inputName || channels[i].channelName;
-        var key = '' + i;
-        listXml += '<constraint key="' + key + '">' + escapeXml(name) + '</constraint>';
+        var isSelected = (i === selectedChannelIndex);
+        var name = escapeXml(channels[i].inputName || channels[i].channelName);
+        var style = 't:bg#yellow;f:bg#buttonbg;' + (isSelected ? 'font:bold;' : '');
+        xml += '<button buttontype="toggle" left="0" top="' + topPos + '" width="200" height="' + itemHeight + '" name="' + name + '" style="' + style + '">\n'
+            + '  <task tasktype="ogscript">selectChannel(' + i + ');</task>\n'
+            + '</button>';
+        topPos += itemHeight + vspace;
     }
-    listXml += '</param>';
-    ogscript.setObjectHtml('chanListHost', listXml);
+    xml += '</abs>';
+    clearContainer('chanListHost');
+    ogscript.appendXML('chanListHost', xml);
 }
 
 function escapeXml(unsafe) {
@@ -122,20 +129,29 @@ function escapeXml(unsafe) {
 }
 
 // Remove currently selected channel from list
+function selectChannel(idx) {
+    // Toggle behavior: clicking selected item unselects it
+    if (selectedChannelIndex === idx) {
+        selectedChannelIndex = -1;
+    } else {
+        selectedChannelIndex = idx;
+    }
+    renderChannelList();
+}
+
 function removeSelectedChannel() {
-    var selectedIdx = params.getValue('chanListUi', 0);
-    if (selectedIdx === undefined || selectedIdx === null || selectedIdx === '') {
+    var idx = selectedChannelIndex;
+    if (idx === undefined || idx === null || idx === -1) {
         ogscript.debug('No selection to remove');
         return;
     }
-    // selectedIdx corresponds to constraint key (we built keys as 0..n-1)
-    var idx = parseInt(selectedIdx, 10);
-    if (isNaN(idx) || idx < 0 || idx >= channels.length) {
-        ogscript.debug('Selection index out of range: ' + selectedIdx);
+    if (idx < 0 || idx >= channels.length) {
+        ogscript.debug('Selection index out of range: ' + idx);
         return;
     }
     var ch = channels[idx];
     removeChannelByBaseoid(ch.baseoid);
+    selectedChannelIndex = -1;
 }
 
 function removeChannelByBaseoid(baseoid) {
@@ -180,7 +196,7 @@ function removeWidgetsByBase(containerId, baseoid) {
 
 function relayoutChannels() {
     // clear and rebuild channelHost from channels[]
-    ogscript.setObjectHtml('channelHost', '');
+    clearContainer('channelHost');
     left = 10;
     for (var i = 0; i < channels.length; i++) {
         var xml = makeWidget(channels[i].baseoid);
@@ -190,10 +206,23 @@ function relayoutChannels() {
 
 function relayoutRaw() {
     // clear and rebuild rawHost from channels[]
-    ogscript.setObjectHtml('rawHost', '');
+    clearContainer('rawHost');
     rawTop = 10;
     for (var i = 0; i < channels.length; i++) {
         var xml = makeRawWidget(channels[i].baseoid);
         ogscript.appendXML('rawHost', xml);
+    }
+}
+
+function clearContainer(containerId) {
+    var xmlObj = ogscript.getObject(containerId);
+    if (!xmlObj) return;
+    var children = xmlObj.getChildNodes();
+    for (var i = children.getLength() - 1; i >= 0; i--) {
+        var node = children.item(i);
+        var parent = node.getParentNode();
+        if (parent) {
+            parent.removeChild(node);
+        }
     }
 }
