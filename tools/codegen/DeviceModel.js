@@ -16,9 +16,12 @@
 
 import { existsSync, readFileSync } from 'fs';
 import { basename, dirname, extname } from "path";
-import { parse } from 'yaml';
+import yaml from 'yaml';
 
 import Validator from 'smpte-validator';
+
+// TODO get the max depth from the smpte spec
+const MAX_RESOLVE_DEPTH = 100;
 
 /**
  * @class DeviceModel
@@ -45,6 +48,44 @@ export class DeviceModel {
     }
 
     /**
+     * Walk through the param and command hierarchy and resolve any imports. Note that
+     * for simplicity in the schemata/protos, commands and params are both Param types.
+     * @param {object} params the params or commands object to walk through
+     * @todo this will change when smpte updates with a different param definition.
+     * The top level params and commands objects will still exist, but sub-params
+     * and sub-commands will be combined into a single 'typedef' object.
+     */
+    resolveImports() {
+        const walk = (params, depth = 0) => {
+            if (depth > MAX_RESOLVE_DEPTH) {
+                throw new Error(`Max resolve depth exceeded`);
+            }
+            depth++;
+            for (let [name, param] of Object.entries(params)) {
+                if (param.import) {
+                    param = this.importParam(param.import);
+                    params[name] = param;
+                }
+                // recurse into sub-params and sub-commands
+                // this is the part will change to typedefs when smpte updates
+                if (param.params) {
+                    walk(param.params);
+                }
+                if (param.commands) {
+                    walk(param.commands);
+                }
+            }
+        }
+        // go through the top level params and commands
+        if (this.desc.params) {
+            walk(this.desc.params);
+        }
+        if (this.desc.commands) {
+            walk(this.desc.commands);
+        }
+    }
+
+    /**
      * @brief open a param.*.json file and return the parsed json object
      * @param {string} importArg the path to the param.*.json file relative to the directory containing the device model file
      * @returns the parsed json object
@@ -62,7 +103,7 @@ export class DeviceModel {
             const importData = (() => {
                 const extension = extname(importPath);
                 if (extension === ".yaml" || extension === ".yml") {
-                    return parse(readFileSync(importPath, 'utf8'));
+                    return yaml.parse(readFileSync(importPath, 'utf8'));
                 } else { // Default
                     return JSON.parse(readFileSync(importPath));
                 }
