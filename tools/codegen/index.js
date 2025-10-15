@@ -116,23 +116,10 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
     
     // Helper function to derive effective scope for a parameter
     function getDerivedScope(param) {
-        if (param.access_scope == REQUIRED_SCOPE) {
-            return param.access_scope;
-        }
-        
-        else if (productScope == REQUIRED_SCOPE) {
-            return productScope;
-        }
-        
-        else if (defaultScope == REQUIRED_SCOPE) {
-            return defaultScope;
-        }
-
-        else if (param.access_scope == null && productScope == null && defaultScope == null) {
-            return REQUIRED_SCOPE;
-        }
-
-        else {
+        const dScope = param.access_scope || productScope || defaultScope || REQUIRED_SCOPE;
+        if (dScope == REQUIRED_SCOPE) {
+            return dScope;
+        } else {
             return "INVALID";
         } 
     }
