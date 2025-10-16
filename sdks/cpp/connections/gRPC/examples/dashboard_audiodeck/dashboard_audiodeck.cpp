@@ -36,7 +36,7 @@
  */
 
 // device model
-#include "device.AudioDeck.json.h" 
+#include "device.audiodeck.json" 
 
 //common
 #include <utils.h>
@@ -51,3 +51,146 @@
 #include <interface/service.grpc.pb.h>
 
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
+#include <grpcpp/grpcpp.h>
+#include <grpcpp/health_check_service_interface.h>
+
+#include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
+#include "absl/strings/str_format.h"
+
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <regex>
+#include <stdexcept>
+#include <string>
+#include <thread>
+#include <chrono>
+#include <signal.h>
+#include <Logger.h>
+
+using grpc::Server;
+using catena::gRPC::ServiceConfig;
+using catena::gRPC::ServiceImpl;
+
+using namespace catena::common;
+
+
+Server *globalServer = nullptr;
+std::atomic<bool> globalLoop = true;
+
+// handle SIGINT
+void handle_signal(int sig) {
+    std::thread t([sig]() {
+        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
+        globalLoop = false;
+        if (globalServer != nullptr) {
+            globalServer->Shutdown();
+            globalServer = nullptr;
+        }
+    });
+    t.join();
+}
+
+
+void statusUpdateExample(){   
+    // this is the "receiving end" of the status update example
+    dm.getValueSetByClient().connect([](const std::string& oid, const IParam* p) {
+        // all we do here is print out the oid of the parameter that was changed
+        // your biz logic would do something _even_more_ interesting!
+        DEBUG_LOG << "*** signal received: " << oid << " has been changed by client" << '\n';
+    });
+
+    // The rest is the "sending end" of the status update example
+    IParam* param = dm.getItem<ParamTag>("counter");
+    if (param == nullptr) {
+        std::stringstream why;
+        why << __PRETTY_FUNCTION__ << "\nparam 'counter' not found";
+        throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
+    }
+
+    // downcast the IParam to a ParamWithValue<int32_t>
+    auto& counter = *dynamic_cast<ParamWithValue<int32_t>*>(param);
+
+    while (globalLoop) {
+        // update the counter once per second, and emit the event
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        {
+            std::lock_guard lg(dm.mutex());
+            counter.get()++;
+            DEBUG_LOG << counter.getOid() << " set to " << counter.get();
+            dm.getValueSetByServer().emit("/counter", &counter);
+        }
+    }
+}
+
+void RunRPCServer(std::string addr)
+{
+    // install signal handlers
+    signal(SIGINT, handle_signal);
+    signal(SIGTERM, handle_signal);
+    signal(SIGKILL, handle_signal);
+
+    try {
+
+        grpc::ServerBuilder builder;
+        // set some grpc options
+        grpc::EnableDefaultHealthCheckService(true);
+
+        builder.AddListeningPort(addr, catena::gRPC::getServerCredentials());
+        std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
+        ServiceConfig config = ServiceConfig()
+            .set_EOPath(absl::GetFlag(FLAGS_static_root))
+            .set_authz(absl::GetFlag(FLAGS_authz))
+            .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
+            .set_cq(cq.get())
+            .add_dm(&dm);
+        ServiceImpl service(config);
+
+        builder.RegisterService(&service);
+
+        std::unique_ptr<Server> server(builder.BuildAndStart());
+        DEBUG_LOG << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
+
+        globalServer = server.get();
+
+        service.init();
+        std::thread cq_thread([&]() { service.processEvents(); });
+
+        std::thread counterLoop(statusUpdateExample);
+
+        // start the heartbeat on the device
+        dm.setHeartbeatParam("/product/version");
+        dm.startHeartbeat();
+
+        // wait for the server to shutdown and tidy up
+        server->Wait();
+        dm.stopHeartbeat();
+
+        counterLoop.join();
+
+        cq->Shutdown();
+        cq_thread.join();
+
+    } catch (std::exception &why) {
+        LOG(ERROR) << "Problem: " << why.what();
+    }
+}
+
+int main(int argc, char* argv[])
+{
+    Logger::StartLogging(argc, argv);
+
+    std::string addr;
+    absl::SetProgramUsageMessage("Runs the Catena Service");
+    absl::ParseCommandLine(argc, argv);
+  
+    addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
+  
+    std::thread catenaRpcThread(RunRPCServer, addr);
+    catenaRpcThread.join();
+    
+    // Shutdown Google Logging
+    google::ShutdownGoogleLogging();
+    return 0;
+}
