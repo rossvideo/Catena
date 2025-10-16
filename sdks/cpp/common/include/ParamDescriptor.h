@@ -409,7 +409,7 @@ class ParamDescriptor : public IParamDescriptor {
      * If executeCommand is called for a command that has not been defined, then the returned
      * command response will be an exception with type UNIMPLEMENTED
      */
-    std::unique_ptr<ICommandResponder> executeCommand(const catena::Value& value, const bool respond, catena::exception_with_status& rc, const IAuthorizer& authz) override {
+    std::unique_ptr<ICommandResponder> executeCommand(const st2138::Value& value, const bool respond, catena::exception_with_status& rc, const IAuthorizer& authz) override {
       std::unique_ptr<ICommandResponder> responder = nullptr;
       // Make sure the client has write access.
       if (!authz.writeAuthz(*this)) {

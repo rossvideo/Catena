@@ -166,11 +166,11 @@ TEST_F(ParamWithValueTest, DescriptorForwards) {
             return nullptr;
         }););
     // param.executeCommand()
-    catena::Value testVal;
+    st2138::Value testVal;
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     testVal.set_string_value("test");
     EXPECT_CALL(pd_, executeCommand(testing::_, testing::_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([&testVal](catena::Value value, const bool respond, catena::exception_with_status& rc, const IAuthorizer& authz) {
+        .WillOnce(testing::Invoke([&testVal](const st2138::Value& value, const bool respond, catena::exception_with_status& rc, const IAuthorizer& authz) {
         EXPECT_EQ(value.string_value(), testVal.string_value());
         return nullptr;
     }));

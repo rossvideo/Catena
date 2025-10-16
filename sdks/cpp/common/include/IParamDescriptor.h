@@ -257,7 +257,7 @@ class IParamDescriptor {
      * if executeCommand is called for a command that has not been defined, then the returned
      * command response will be an exception with type UNIMPLEMENTED
      */
-    virtual std::unique_ptr<ICommandResponder> executeCommand(const catena::Value& value, const bool respond, catena::exception_with_status& rc, const IAuthorizer& authz) = 0;
+    virtual std::unique_ptr<ICommandResponder> executeCommand(const st2138::Value& value, const bool respond, catena::exception_with_status& rc, const IAuthorizer& authz) = 0;
 
     /**
      * @brief return true if this is a command parameter

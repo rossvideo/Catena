@@ -216,7 +216,7 @@ class IParam {
      * @param authz The Authorizer to check permissions with.
      * @return The CommandResponder from the command implementation.
      */
-    virtual std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommand(const catena::Value& value, const bool respond, catena::exception_with_status& rc, const IAuthorizer& authz) const = 0;
+    virtual std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommand(const st2138::Value& value, const bool respond, catena::exception_with_status& rc, const IAuthorizer& authz) const = 0;
 
     /**
      * @brief Gets the parameter's descriptor.

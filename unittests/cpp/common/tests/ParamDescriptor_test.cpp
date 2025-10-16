@@ -403,7 +403,7 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_CommandErrNoWriteAuthz) {
     // Creating command ParamDescriptor.
     isCommand = true;
     create();
-    catena::Value input;
+    st2138::Value input;
     bool respond = true;
     catena::exception_with_status status{"", catena::StatusCode::OK};
     EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(*pd)))).Times(1).WillOnce(testing::Return(false));
