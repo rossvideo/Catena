@@ -51,10 +51,6 @@ jobs:
           echo "tags: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}:latest"
           echo "labels: ${{ steps.meta.outputs.labels }}"
 
-      - name: copy env file
-        run: |
-          cp .devcontainer/toolchain-cpp.env toolchain-cpp.env
-
       - name: Paths Changes Filter
         id: changes
         uses: dorny/paths-filter@v3.0.2

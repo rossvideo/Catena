@@ -54,7 +54,7 @@ jobs:
     env:
       CMAKE_BUILD_TYPE: Debug
       CONNECTIONS: gRPC;REST
-      BUILD_TARGET: ~/Catena/build/cpp
+      BUILD_TARGET: ${{ github.workspace }}/build/cpp
 
     steps:
       - name: Checkout code
@@ -64,35 +64,33 @@ jobs:
 
       - name: Build (incremental, clean only if needed)
         run: |
-          if [ ! -d ~/Catena/${BUILD_TARGET} ]; then
+          if [ ! -d ${BUILD_TARGET} ]; then
             echo "Building OpenAPI"
             cd ${GITHUB_WORKSPACE}/smpte
             ./build-openapi.sh
             echo "Done building OpenAPI"
 
-            mkdir -p ~/Catena/${BUILD_TARGET}
+            mkdir -p ${BUILD_TARGET}
             cmake -G Ninja \
               -DBUILD_DOC=OFF \
               -DBARE_EXAMPLES=ON \
               -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
               -DCONNECTIONS=${CONNECTIONS} \
-              -DCMAKE_CXX_FLAGS="--coverage" \
-              -DCMAKE_C_FLAGS="--coverage" \
-              -DCMAKE_EXE_LINKER_FLAGS="--coverage" \
+              -DCOVERAGE=ON \
               -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
               -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
               -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
-              -B ~/Catena/${BUILD_TARGET} \
+              -B ${BUILD_TARGET} \
               -S ${GITHUB_WORKSPACE}/sdks/cpp
           fi
-          cd ~/Catena/${BUILD_TARGET}
+          cd ${BUILD_TARGET}
           ninja
 
       - name: Run Tests
         run: |
-          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^common\.' --output-junit /common_test_results.xml
-          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^gRPC\.' --output-junit /grpc_test_results.xml
-          ctest --test-dir ~/Catena/${BUILD_TARGET} -R '^REST\.' --output-junit /rest_test_results.xml
+          ctest --test-dir ${BUILD_TARGET} -R '^common\.' --output-junit /common_test_results.xml
+          ctest --test-dir ${BUILD_TARGET} -R '^gRPC\.' --output-junit /grpc_test_results.xml
+          ctest --test-dir ${BUILD_TARGET} -R '^REST\.' --output-junit /rest_test_results.xml
 
       - name: Copy files
         if: always()
@@ -128,8 +126,7 @@ jobs:
 
       - name: Generate Coverage Report
         run: |
-          gcovr --root ~/Catena \
-          --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' -e '(.+/)?examples/' -e '(.+/)?vdk/' \
+          gcovr \
           --lcov=coverage.info \
           --cobertura=coverage.xml \
           --html=index.html \
@@ -201,7 +198,7 @@ jobs:
     env:
       CMAKE_BUILD_TYPE: ''
       CONNECTIONS: gRPC
-      BUILD_TARGET: build/cpp
+      BUILD_TARGET: ${{ github.workspace }}/build/cpp
 
     steps:
       - name: Checkout code
@@ -222,7 +219,7 @@ jobs:
           ./build-openapi.sh
           echo "Done building OpenAPI"
 
-          mkdir -p ~/Catena/${BUILD_TARGET}
+          mkdir -p ${BUILD_TARGET}
           git config --global --add safe.directory /__w/Catena/Catena
           cmake -G Ninja \
             -DUNIT_TESTING=OFF \
@@ -232,10 +229,10 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
             -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
-            -B ~/Catena/${BUILD_TARGET} \
+            -B ${BUILD_TARGET} \
             -S ${GITHUB_WORKSPACE}/sdks/cpp
-          cd ~/Catena/${BUILD_TARGET}
-          ninja -C ~/Catena/${BUILD_TARGET}
+          cd ${BUILD_TARGET}
+          ninja -C ${BUILD_TARGET}
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
