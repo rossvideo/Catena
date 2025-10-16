@@ -69,8 +69,8 @@ class gRPCExecuteCommandTests : public GRPCTest {
      * This is a test class which makes an async RPC to the MockServer on
      * construction and compares the streamed-back response.
      */
-    using StreamReader = catena::gRPC::test::StreamReader<catena::CommandResponse, catena::ExecuteCommandPayload, 
-        std::function<void(grpc::ClientContext*, const catena::ExecuteCommandPayload*, grpc::ClientReadReactor<catena::CommandResponse>*)>>;
+    using StreamReader = catena::gRPC::test::StreamReader<st2138::CommandResponse, st2138::ExecuteCommandPayload, 
+        std::function<void(grpc::ClientContext*, const st2138::ExecuteCommandPayload*, grpc::ClientReadReactor<st2138::CommandResponse>*)>>;
 
     /*
      * Streamlines the creation of executeCommandPayloads. 
@@ -87,14 +87,14 @@ class gRPCExecuteCommandTests : public GRPCTest {
     * Adds a response to the expected values.
     */
     void expResponse(const std::string& stringVal) {
-        expVals_.push_back(catena::CommandResponse());
+        expVals_.push_back(st2138::CommandResponse());
         expVals_.back().mutable_response()->set_string_value(stringVal);
     }
     /* 
     * Adds an exception to the expected values.
     */
     void expException(const std::string& type, const std::string& details) {
-        expVals_.push_back(catena::CommandResponse());
+        expVals_.push_back(st2138::CommandResponse());
         expVals_.back().mutable_exception()->set_type(type);
         expVals_.back().mutable_exception()->set_details(details);
     }
@@ -102,7 +102,7 @@ class gRPCExecuteCommandTests : public GRPCTest {
     * Adds a no_response to the expected values.
     */
     void expNoResponse() {
-        expVals_.push_back(catena::CommandResponse());
+        expVals_.push_back(st2138::CommandResponse());
         expVals_.back().mutable_no_response();
     }
 
@@ -133,10 +133,10 @@ class gRPCExecuteCommandTests : public GRPCTest {
     }
 
     // in/out val
-    catena::ExecuteCommandPayload inVal_;
-    std::vector<catena::CommandResponse> outVals_;
+    st2138::ExecuteCommandPayload inVal_;
+    std::vector<st2138::CommandResponse> outVals_;
     // Expected variables
-    std::vector<catena::CommandResponse> expVals_;
+    std::vector<st2138::CommandResponse> expVals_;
     bool respond_ = false;
 
     std::unique_ptr<MockParam> mockCommand_ = std::make_unique<MockParam>();
@@ -525,7 +525,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
     EXPECT_CALL(*mockResponder_, getNext()).Times(1)
         .WillOnce(::testing::Invoke([this]() {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
-            return catena::CommandResponse();
+            return st2138::CommandResponse();
         }));
     // Sending the RPC
     testRPC();

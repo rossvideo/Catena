@@ -111,7 +111,7 @@ class Connect : public IConnect {
     Connect(SlotMap& dms, ISubscriptionManager& subscriptionManager) : 
         dms_{dms}, 
         subscriptionManager_{subscriptionManager},
-        detailLevel_{catena::Device_DetailLevel_UNSET} {}
+        detailLevel_{st2138::Device_DetailLevel_UNSET} {}
     /**
      * @brief Connect does not have copy semantics
      */
@@ -141,34 +141,35 @@ class Connect : public IConnect {
             // Send a push update if the client has read authorization.
             } else if (authz_->readAuthz(*p)) {
                 // Map of detail levels to their update logic
-                const std::unordered_map<catena::Device_DetailLevel, std::function<bool()>> detailLevelMap {
-                    {catena::Device_DetailLevel_FULL, [&]() {
+                const std::unordered_map<st2138::Device_DetailLevel, std::function<bool()>> detailLevelMap {
+                    {st2138::Device_DetailLevel_FULL, [&]() {
                         // Always update for FULL detail level
                         return true;
                     }},
-                    {catena::Device_DetailLevel_MINIMAL, [&]() {
+                    {st2138::Device_DetailLevel_MINIMAL, [&]() {
                         // For MINIMAL, only update if it's in the minimal set
                         return p->getDescriptor().minimalSet();
                     }},
-                    {catena::Device_DetailLevel_SUBSCRIPTIONS, [&]() {
+                    {st2138::Device_DetailLevel_SUBSCRIPTIONS, [&]() {
                         // Update if OID is subscribed or in minimal set
                         return p->getDescriptor().minimalSet() || (dms_[slot] && subscriptionManager_.isSubscribed(oid, *dms_[slot]));
                     }},
-                    {catena::Device_DetailLevel_COMMANDS, [&]() {
+                    {st2138::Device_DetailLevel_COMMANDS, [&]() {
                         // For COMMANDS, only update command parameters
                         return p->getDescriptor().isCommand();
                     }},
-                    {catena::Device_DetailLevel_NONE, [&]() {
+                    {st2138::Device_DetailLevel_NONE, [&]() {
                         // Don't send any updates
                         return false;
                     }}
                 };
 
                 if (detailLevelMap.contains(detailLevel_) && detailLevelMap.at(detailLevel_)()) {
+                    std::lock_guard<std::mutex> res_lock(mtx_);
                     res_.Clear();
                     res_.set_slot(slot);
                     res_.mutable_value()->set_oid(oid);    
-                    catena::Value* value = res_.mutable_value()->mutable_value();
+                    st2138::Value* value = res_.mutable_value()->mutable_value();
             
                     catena::exception_with_status rc{"", catena::StatusCode::OK};
                     rc = p->toProto(*value, *authz_);
@@ -184,7 +185,8 @@ class Connect : public IConnect {
             DEBUG_LOG << "Failed to send SetValue update: " << why.what();
         }
     }
-    
+
+
     /**
      * @brief Updates the response message with an ILanguagePack if the client
      * has monitor scope.
@@ -222,11 +224,9 @@ class Connect : public IConnect {
      * If authz == false, the authorizer is instead set to the kAuthzDisabled
      * object and their priority is left at 0.
      * 
-     * A client's priority is calculated based on the their highest scope as
-     * well as whether they have force connection set to True (only relevant
-     * for adm:w clients).
+     * A client's priority is calculated based on the their highest scope.
      * 
-     * priority_ = scope * 2 + write + (adm:w && forceConnection)
+     * priority_ = scope * 2 + write 
      * 
      * @param jwsToken The client's jws token to create the authorizer with.
      * @param authz True if authorization is enabled, False otherwise.
@@ -235,15 +235,11 @@ class Connect : public IConnect {
         if (authz) {
             sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
             authz_ = sharedAuthz_.get();
-            // Throw error for non-admin clients trying to force a connection.
-            if (forceConnection_ && !authz_->writeAuthz(Scopes_e::kAdmin)) {
-                throw catena::exception_with_status("adm:w scope required to force a connection", catena::StatusCode::PERMISSION_DENIED);
-            }
             // Setting up their connection priority.
             for (uint32_t i = static_cast<uint32_t>(Scopes_e::kAdmin); i >= static_cast<uint32_t>(Scopes_e::kMonitor); i -= 1) {             
                 // Client has read
                 if (authz_->readAuthz(static_cast<Scopes_e>(i))) {
-                    priority_ = 2 * i + forceConnection_;
+                    priority_ = 2 * i;
                     // Also has write
                     if (authz_->writeAuthz(static_cast<Scopes_e>(i))) {
                         priority_ += 1;
@@ -259,7 +255,7 @@ class Connect : public IConnect {
     /**
      * @brief The priority of the connection.
      * 
-     * priority_ = scope * 2 + write + (adm:w && forceConnection)
+     * priority_ = scope * 2 + write
      */
     uint32_t priority_ = 0;
     /**
@@ -273,11 +269,15 @@ class Connect : public IConnect {
     /**
      * @brief A map of slots to ptrs to their corresponding device.
      */
-    SlotMap& dms_;
+    catena::common::SlotMap& dms_;
     /**
      * @brief Bool indicating whether the child has an update to write.
      */
     bool hasUpdate_ = false;
+    /**
+     * @brief The mutex to lock the RPC while writing.
+     */
+    std::mutex mtx_;
     /**
      * @brief A condition variable used to wait for an update.
      */
@@ -285,7 +285,7 @@ class Connect : public IConnect {
     /**
      * @brief Server response (updates).
      */
-    catena::PushUpdates res_;
+    st2138::PushUpdates res_;
     /**
      * @brief The language of the response.
      */
@@ -293,7 +293,7 @@ class Connect : public IConnect {
     /**
      * @brief The detail level of the response.
      */
-    catena::Device_DetailLevel detailLevel_;
+    st2138::Device_DetailLevel detailLevel_;
     /**
      * @brief The subscription manager.
      */
@@ -304,12 +304,6 @@ class Connect : public IConnect {
      * No idea what this is used for and if its even needed here.
      */
     std::string userAgent_;
-    /**
-     * @brief Flag to force a connection.
-     * 
-     * Only applicable if client has adm:w scope.
-     */
-    bool forceConnection_;
     /**
      * @brief Flag indicating whether to shut down the connection.
      */

@@ -53,6 +53,7 @@
 #include <Status.h>
 #include <IMenu.h>
 #include <IMenuGroup.h>
+#include <rpc/IHeartbeat.h>
 
 // Interface
 #include <IDevice.h>
@@ -85,7 +86,7 @@ class Device : public IDevice {
      * @brief convenience type aliases to types of objects contained in the
      * device.
      */
-    using DetailLevel_e = catena::Device_DetailLevel;
+    using DetailLevel_e = st2138::Device_DetailLevel;
 
     /**
      * @brief Constructs a new Device object.
@@ -95,7 +96,7 @@ class Device : public IDevice {
     /**
      * @brief Constructs a new Device object.
      */
-    Device(uint32_t slot, Device_DetailLevel detail_level, std::vector<std::string> access_scopes,
+    Device(uint32_t slot, st2138::Device_DetailLevel detail_level, std::vector<std::string> access_scopes,
       std::string default_scope, bool multi_set_enabled, bool subscriptions)
       : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
       default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled},
@@ -160,6 +161,16 @@ class Device : public IDevice {
      */
     inline uint32_t default_total_length() const override {return default_total_length_;}
 
+    const std::string& getHeartbeatParam() const override { return heartbeatParam_; }
+
+    void setHeartbeatParam(const std::string& fqoid) override { heartbeatParam_ = fqoid; }
+
+    void sendHeartbeat() override;
+
+    void startHeartbeat(int32_t interval = 5000) override;
+
+    void stopHeartbeat() override;
+
     /**
      * @brief Sets the default max length for this device's array params.
      * If default_max_length <= 0, then it reverts default_max_length_ to
@@ -192,20 +203,20 @@ class Device : public IDevice {
      * to ensure that the device is not modified while this method is running.
      * This class provides a LockGuard helper class to make this easier.
      */
-    void toProto(::catena::Device& dst, const IAuthorizer& authz, bool shallow = true) const override;
+    void toProto(::st2138::Device& dst, const IAuthorizer& authz, bool shallow = true) const override;
 
     /**
      * @brief Creates a protobuf representation of the device's language packs.
      * @param packs the protobuf representation of the language packs.
      */
-    void toProto(::catena::LanguagePacks& packs) const override;
+    void toProto(::st2138::LanguagePacks& packs) const override;
 
     /**
      * @brief Populates a protobuf LanguageList with the language IDs of the
      * device's supported languages.
      * @param list The protobuf language list object.
      */
-    void toProto(::catena::LanguageList& list) const override;
+    void toProto(::st2138::LanguageList& list) const override;
 
     /**
      * @brief Returns true if device supports the specified language.
@@ -222,7 +233,7 @@ class Device : public IDevice {
      * @return An exception_with_status with status set OK if successful,
      * otherwise an error.
      */
-    catena::exception_with_status addLanguage(catena::AddLanguagePayload& language, const IAuthorizer& authz = Authorizer::kAuthzDisabled) override;
+    catena::exception_with_status addLanguage(st2138::AddLanguagePayload& language, const IAuthorizer& authz = Authorizer::kAuthzDisabled) override;
 
     /**
      * @brief Removes a language pack from the device. Requires client to have
@@ -234,7 +245,7 @@ class Device : public IDevice {
      */
     catena::exception_with_status removeLanguage(const std::string& languageId, const IAuthorizer& authz = Authorizer::kAuthzDisabled) override;
 
-    using ComponentLanguagePack = catena::DeviceComponent_ComponentLanguagePack;
+    using ComponentLanguagePack = st2138::DeviceComponent_ComponentLanguagePack;
     /**
      * @brief Finds and returns a language pack based on languageId.
      * @param languageId The language id of the language pack to get
@@ -291,7 +302,7 @@ class Device : public IDevice {
              * It stores the yielded DeviceComponent then suspends the
              * coroutine.
              */
-            inline std::suspend_always yield_value(catena::DeviceComponent& component) { 
+            inline std::suspend_always yield_value(st2138::DeviceComponent& component) { 
               deviceMessage = component;
               return {}; 
             }
@@ -301,7 +312,7 @@ class Device : public IDevice {
              * It stores the returned DeviceComponent. The coroutine is then
              * set as done.
              */
-            inline void return_value(catena::DeviceComponent component) { this->deviceMessage = component; }
+            inline void return_value(st2138::DeviceComponent component) { this->deviceMessage = component; }
 
             /**
              * @brief Called if an exception is thrown in the coroutine. It
@@ -324,7 +335,7 @@ class Device : public IDevice {
             /**
              * @brief The current deviceComponent returned by the coroutine.
              */
-            catena::DeviceComponent deviceMessage{};
+            st2138::DeviceComponent deviceMessage{};
             /**
              * @brief The caught exception if one was thrown in the coroutine.
              */
@@ -374,7 +385,7 @@ class Device : public IDevice {
          * If the coroutine is done and there are no more components to
          * serialize then an empty DeviceComponent is returned.
          */
-        catena::DeviceComponent getNext() override;
+        st2138::DeviceComponent getNext() override;
 
       private:
         /**
@@ -398,7 +409,7 @@ class Device : public IDevice {
      * the whole device will be returned in one message.
      * @return A DeviceSerializer object.
      */
-    std::unique_ptr<IDeviceSerializer> getComponentSerializer(const IAuthorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow = false) const override;
+    std::unique_ptr<IDeviceSerializer> getComponentSerializer(const IAuthorizer& authz, const std::set<std::string>& subscribedOids, st2138::Device_DetailLevel dl, bool shallow = false) const override;
     /**
      * @brief This is a helper function for the shared IDevice function
      * getComponentSerializer to return a DeviceSerializer object. It can be
@@ -410,7 +421,7 @@ class Device : public IDevice {
      * @param shallow If true, the device will be returned in parts, otherwise
      * the whole device will be returned in one message
      */
-    DeviceSerializer getDeviceSerializer(const IAuthorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow = false) const;
+    DeviceSerializer getDeviceSerializer(const IAuthorizer& authz, const std::set<std::string>& subscribedOids, st2138::Device_DetailLevel dl, bool shallow = false) const;
     /**
      * @brief add an item to one of the collections owned by the device.
      * Overload for parameters and commands.
@@ -502,7 +513,6 @@ class Device : public IDevice {
      * @param status Will contain an error message if the command does not
      * exist.
      * @return A unique pointer to the command, or nullptr if it does not exist.
-     * @todo Add authorization checking.
      */
     std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const override;
 
@@ -514,7 +524,7 @@ class Device : public IDevice {
      * @param authz The IAuthorizer to test with.
      * @returns True if the call is valid.
      */
-    bool tryMultiSetValue(catena::MultiSetValuePayload src, catena::exception_with_status& ans, const IAuthorizer& authz = Authorizer::kAuthzDisabled) override;
+    bool tryMultiSetValue(st2138::MultiSetValuePayload src, catena::exception_with_status& ans, const IAuthorizer& authz = Authorizer::kAuthzDisabled) override;
     
     /**
      * @brief Sets the values of a device's parameter's using a
@@ -525,7 +535,7 @@ class Device : public IDevice {
      * @param authz The Authroizer with the client's scopes.
      * @returns An exception_with_status with status set OK if successful.
      */
-    catena::exception_with_status commitMultiSetValue(catena::MultiSetValuePayload src, const IAuthorizer& authz) override;
+    catena::exception_with_status commitMultiSetValue(st2138::MultiSetValuePayload src, const IAuthorizer& authz) override;
 
     /**
      * @brief Deserialize a protobuf value object into the parameter value
@@ -540,7 +550,7 @@ class Device : public IDevice {
      * and commitMultiSetValue().
      * It remains to support the old way of setting values.
      */
-    catena::exception_with_status setValue(const std::string& jptr, catena::Value& src, const IAuthorizer& authz = Authorizer::kAuthzDisabled) override;
+    catena::exception_with_status setValue(const std::string& jptr, st2138::Value& src, const IAuthorizer& authz = Authorizer::kAuthzDisabled) override;
 
     /**
      * @brief Serialize the parameter value to protobuf.
@@ -550,7 +560,7 @@ class Device : public IDevice {
      * @return An exception_with_status with status set OK if successful,
      * otherwise an error.
      */
-    catena::exception_with_status getValue(const std::string& jptr, catena::Value& value, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const override;
+    catena::exception_with_status getValue(const std::string& jptr, st2138::Value& value, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const override;
 
     /**
      * @brief Check if a parameter should be sent based on detail level and
@@ -601,6 +611,24 @@ class Device : public IDevice {
      */
      vdk::signal<void(const std::string&, const IAuthorizer*)>& getDeleteAssetRequest() override { return deleteAssetRequest_; }
 
+  protected:
+    /**
+     * @brief The heartbeat object. starts as null, and is created when
+     * startHeartbeat() is called.
+     */
+    std::unique_ptr<IHeartbeat> heartbeat_;
+
+    /**
+     * @brief The param fqoid used for the heartbeat.
+     */
+    std::string heartbeatParam_;
+
+    /**
+     * @brief Initializes the heartbeat object. Can be overridden by derived
+     * classes to provide a custom heartbeat implementation.
+     */
+    virtual void initHeartbeat();
+
   private:
     /**
      * @brief Signal emitted when a value is set by the client.
@@ -642,7 +670,7 @@ class Device : public IDevice {
     /**
      * @brief The default detail level of the device.
      */
-    Device_DetailLevel detail_level_;
+    st2138::Device_DetailLevel detail_level_;
     /**
      * @brief The device's constraints.
      */

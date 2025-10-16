@@ -65,7 +65,7 @@ class IDevice {
      * @brief convenience type aliases to types of objects contained in the
      * device
      */
-    using DetailLevel_e = catena::Device_DetailLevel;
+    using DetailLevel_e = st2138::Device_DetailLevel;
     
     /**
      * @brief Constructs a new Device object.
@@ -141,6 +141,36 @@ class IDevice {
     virtual void set_default_total_length(const uint32_t default_total_length) = 0;
 
     /**
+     * @brief Get the heartbeat param fqoid.
+     * @return The heartbeat param fqoid.
+     */
+    virtual const std::string& getHeartbeatParam() const = 0;
+
+    /**
+     * @brief Sets the heartbeat param fqoid.
+     * @param fqoid The heartbeat param fqoid.
+     */
+    virtual void setHeartbeatParam(const std::string& fqoid) = 0;
+
+    /**
+     * @brief Cause the device to send a heartbeat update using the parameter
+     * set by setHeartbeatParam.
+     */
+    virtual void sendHeartbeat() = 0;
+
+    /**
+     * @brief Start sending heartbeat updates for a parameter at the specified interval. This is a simple
+     * heartbeat set up. For a more complex implementation, consider using the Heartbeat class directly.
+     * @param interval The interval in milliseconds between heartbeats. Default is 5000ms.
+     */
+    virtual void startHeartbeat(int32_t interval = 5000) = 0;
+
+    /**
+     * @brief Stop sending the heartbeat.
+     */
+    virtual void stopHeartbeat() = 0;
+
+    /**
      * @brief Create a protobuf representation of the device.
      * @param dst the protobuf representation of the device.
      * @param shallow if true, only the top-level info is copied, params,
@@ -148,20 +178,20 @@ class IDevice {
      * stream their parameters instead of sending a huge device model in one
      * big lump.
      */
-    virtual void toProto(::catena::Device& dst, const IAuthorizer& authz, bool shallow = true) const = 0;
+    virtual void toProto(::st2138::Device& dst, const IAuthorizer& authz, bool shallow = true) const = 0;
 
     /**
      * @brief Creates a protobuf representation of the device's language packs.
      * @param packs the protobuf representation of the language packs.
      */
-    virtual void toProto(::catena::LanguagePacks& packs) const = 0;
+    virtual void toProto(::st2138::LanguagePacks& packs) const = 0;
 
     /**
      * @brief Populates a protobuf LanguageList with the language IDs of the
      * device's supported languages.
      * @param list The protobuf language list object.
      */
-    virtual void toProto(::catena::LanguageList& list) const = 0;
+    virtual void toProto(::st2138::LanguageList& list) const = 0;
 
     /**
      * @brief Returns true if device supports the specified language.
@@ -178,7 +208,7 @@ class IDevice {
      * @return An exception_with_status with status set OK if successful,
      * otherwise an error.
      */
-    virtual catena::exception_with_status addLanguage(catena::AddLanguagePayload& language, const IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
+    virtual catena::exception_with_status addLanguage(st2138::AddLanguagePayload& language, const IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
 
     /**
      * @brief Removes a language pack from the device. Requires client to have
@@ -190,11 +220,10 @@ class IDevice {
      */
     virtual catena::exception_with_status removeLanguage(const std::string& languageId, const IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
 
-    using ComponentLanguagePack = catena::DeviceComponent_ComponentLanguagePack;
+    using ComponentLanguagePack = st2138::DeviceComponent_ComponentLanguagePack;
     /**
      * @brief Finds and returns a language pack based on languageId.
-     * @param languageId The language id of the language pack to get
-     * (e.g. "en").
+     * @param languageId The language id of the language pack to get (e.g. "en").
      * @param pack Output var containing the found LanguagePack.
      * @return exception_with_status containing the status of the operation.
      */
@@ -233,7 +262,7 @@ class IDevice {
          * If the coroutine is done and there are no more components to
          * serialize then an empty DeviceComponent is returned.
          */
-        virtual catena::DeviceComponent getNext() = 0;
+        virtual st2138::DeviceComponent getNext() = 0;
     };
 
     /**
@@ -246,7 +275,7 @@ class IDevice {
      * the whole device will be returned in one message.
      * @return A DeviceSerializer object.
      */
-    virtual std::unique_ptr<IDeviceSerializer> getComponentSerializer(const IAuthorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow = false) const = 0;
+    virtual std::unique_ptr<IDeviceSerializer> getComponentSerializer(const IAuthorizer& authz, const std::set<std::string>& subscribedOids, st2138::Device_DetailLevel dl, bool shallow = false) const = 0;
 
     /**
      * @brief add an item to one of the collections owned by the device.
@@ -329,7 +358,7 @@ class IDevice {
      * @param authz The IAuthorizer to test with.
      * @returns True if the call is valid.
      */
-    virtual bool tryMultiSetValue (catena::MultiSetValuePayload src, catena::exception_with_status& ans, const IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
+    virtual bool tryMultiSetValue (st2138::MultiSetValuePayload src, catena::exception_with_status& ans, const IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
     
     /**
      * @brief Sets the values of a device's parameter's using a
@@ -340,7 +369,7 @@ class IDevice {
      * @param authz The Authroizer with the client's scopes.
      * @returns An exception_with_status with status set OK if successful.
      */
-    virtual catena::exception_with_status commitMultiSetValue (catena::MultiSetValuePayload src, const IAuthorizer& authz) = 0;
+    virtual catena::exception_with_status commitMultiSetValue (st2138::MultiSetValuePayload src, const IAuthorizer& authz) = 0;
 
     /**
      * @brief Deserialize a protobuf value object into the parameter value
@@ -351,7 +380,7 @@ class IDevice {
      * @return An exception_with_status with status set OK if successful,
      * otherwise an error.
      */
-    virtual catena::exception_with_status setValue (const std::string& jptr, catena::Value& src, const IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
+    virtual catena::exception_with_status setValue (const std::string& jptr, st2138::Value& src, const IAuthorizer& authz = Authorizer::kAuthzDisabled) = 0;
 
     /**
      * @brief Serialize the parameter value to protobuf.
@@ -361,7 +390,7 @@ class IDevice {
      * @return An exception_with_status with status set OK if successful,
      * otherwise an error.
      */
-    virtual catena::exception_with_status getValue (const std::string& jptr, catena::Value& value, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const = 0;
+    virtual catena::exception_with_status getValue (const std::string& jptr, st2138::Value& value, const IAuthorizer& authz = Authorizer::kAuthzDisabled) const = 0;
 
     /**
      * @brief Check if a parameter should be sent based on detail level and

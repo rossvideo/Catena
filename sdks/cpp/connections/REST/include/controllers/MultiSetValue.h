@@ -151,7 +151,7 @@ class MultiSetValue : public ICallData {
     /**
      * @brief The MultiSetValuePayload from the request.
      */
-    catena::MultiSetValuePayload reqs_;
+    st2138::MultiSetValuePayload reqs_;
 
     /**
      * @brief The object's unique id.

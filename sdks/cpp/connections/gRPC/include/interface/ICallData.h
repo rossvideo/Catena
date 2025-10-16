@@ -61,7 +61,7 @@ class ICallData {
     /**
      * @brief Destructor for the CallData class.
      */
-    virtual ~ICallData() {}
+    virtual ~ICallData() = default;
   protected:
     /**
      * @brief Extracts the JWS Bearer token from the client's metadata.

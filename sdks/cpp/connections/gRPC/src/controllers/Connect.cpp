@@ -67,7 +67,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
         status_ = CallStatus::kFinish;
     }
 
-    std::unique_lock<std::mutex> lock{mtx_, std::defer_lock};
+    std::unique_lock<std::mutex> connect_lock{mtx_, std::defer_lock};
     switch (status_) {
         /** 
          * kCreate: Updates status to kProcess and requests the Connect command
@@ -93,11 +93,10 @@ void catena::gRPC::Connect::proceed(bool ok) {
             try {
                 // Initialize authz and add connection to the priority queue.
                 detailLevel_ = req_.detail_level();
-                forceConnection_ = req_.force_connection();
                 initAuthz_(jwsToken_(), service_->authorizationEnabled());
                 if (service_->connectionQueue().registerConnection(this)) {
                     // Connecting to each device in dms_.
-                    catena::PushUpdates populatedSlots;
+                    st2138::PushUpdates populatedSlots;
                     for (auto [slot, dm] : dms_) {
                         if (dm) {
                             // Waiting for a value set by server to be sent to execute code.
@@ -138,8 +137,8 @@ void catena::gRPC::Connect::proceed(bool ok) {
          * end the process.
          */
         case CallStatus::kWrite:
-            lock.lock();
-            cv_.wait(lock, [this] { return hasUpdate_; });
+            connect_lock.lock();
+            cv_.wait(connect_lock, [this] { return hasUpdate_; });
             hasUpdate_ = false;
             // If connect was cancelled set state to kFinish.
             if (shutdown_ || context_.IsCancelled()) {
@@ -156,9 +155,14 @@ void catena::gRPC::Connect::proceed(bool ok) {
                 } else {
                     writer_.Write(res_, this);
                 }
-                lock.unlock();
-                break; // Fall through if nothing was sent to the client.
             }
+            connect_lock.unlock();
+            if (shutdown_ && context_.IsCancelled()) {
+                // in the case when we are shutting down AND the connection was already terminated by the client
+                // we need to manually call proceed to move to the finish state. The completion queue won't do it for us.
+                proceed(false);
+            }
+            break;
         /**
          * kFinish: Ends the connection.
          */

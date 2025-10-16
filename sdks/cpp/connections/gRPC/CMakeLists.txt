@@ -28,7 +28,6 @@ endif(APPLE)
 set(target catena_connections_grpc)
 
 set(sources 
-    "src/PeerInfo.cpp"
     "src/ServiceCredentials.cpp"
     "src/ServiceImpl.cpp" 
     "src/controllers/AddLanguage.cpp"

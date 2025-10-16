@@ -30,8 +30,9 @@
 
 /**
  * @brief Unit tests for Device.cpp
- * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
- * @date 2025-07-10
+ * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com) 
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com) 
+ * @date 2025-10-01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -40,6 +41,7 @@
 #include <Authorizer.h>
 #include <Status.h>
 #include <LanguagePack.h>
+#include <Logger.h>
 #include <interface/device.pb.h>
 #include <mocks/MockLanguagePack.h>
 #include <mocks/MockParam.h>
@@ -48,22 +50,65 @@
 #include <mocks/MockMenuGroup.h>
 #include <mocks/MockMenu.h>
 #include <CommonTestHelpers.h>
+#include <mocks/MockHeartbeat.h>
 
 using namespace catena::common;
 
 class DeviceTest : public ::testing::Test {
 protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("DeviceTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
 
     DeviceTest() 
         : adminScope_(Scopes().getForwardMap().at(Scopes_e::kAdmin))
         , monitorScope_(Scopes().getForwardMap().at(Scopes_e::kMonitor)) {
     }
+
+    // Helper class that provides access to connectionQueue_ vector
+    class DummyDevice : public ::catena::common::Device {
+      public:
+        using Device::Device;  // Inherit constructors
+
+        // Constructed and destructed by setUp() and tearDown()
+        // because I don't want to have to override the constructors
+        // to set up the mock heartbeat I just want to inherit them
+        MockHeartbeat* mockHeartbeat;
+        // Ownership flag to know if we should delete the mockHeartbeat
+        // in the destructor. If initHeartbeat is called, the ownership
+        // is transferred to the unique_ptr in Device and will be deleted
+        // automatically.
+        bool mockHeartbeatOwned;
+
+        IHeartbeat* getHeartbeat() { return heartbeat_.get(); }
+
+        void initHeartbeat() override {
+            if (heartbeat_ != nullptr) {
+                // Heartbeat already initialized, do nothing
+                return;
+            }
+            // Use the mockHeartbeat instance
+            heartbeat_ = std::unique_ptr<IHeartbeat>(mockHeartbeat);
+            // transfer ownership to heartbeat_, mark mockHeartbeat no longer owned
+            mockHeartbeatOwned = false;
+        }
+
+        // Exposes the protected initHeartbeat method for testing
+        void coverInitHeartbeat() {
+            Device::initHeartbeat();
+        }
+    };
     
     void SetUp() override {
         // Create a device with basic parameters
-        device_ = std::make_unique<Device>(
+        device_ = std::make_unique<DummyDevice>(
             1,  // slot
-            catena::Device_DetailLevel_FULL,  // detail_level
+            st2138::Device_DetailLevel_FULL,  // detail_level
             std::vector<std::string>{"admin"},  // access_scopes
             "admin",  // default_scope
             true,  // multi_set_enabled
@@ -93,7 +138,10 @@ protected:
             },
             *device_
         );
-        
+
+        device_->mockHeartbeat = new MockHeartbeat();
+        device_->mockHeartbeatOwned = true;
+
         // Add a minimal set parameter to the device
         auto minimalSetParam = std::make_shared<MockParam>();
         auto minimalSetDescriptor = std::make_shared<MockParamDescriptor>();
@@ -108,9 +156,9 @@ protected:
             .WillRepeatedly(testing::ReturnRef(empty_sub_params));
         EXPECT_CALL(*minimalSetParam, getDescriptor())
             .WillRepeatedly(testing::ReturnRef(*minimalSetDescriptor));
-        EXPECT_CALL(*minimalSetParam, toProto(testing::An<catena::Param&>(), testing::_))
-            .WillRepeatedly(testing::Invoke([](catena::Param& param, const IAuthorizer& authz) {
-                param.set_type(catena::ParamType::INT32);
+        EXPECT_CALL(*minimalSetParam, toProto(testing::An<st2138::Param&>(), testing::_))
+            .WillRepeatedly(testing::Invoke([](st2138::Param& param, const IAuthorizer& authz) {
+                param.set_type(st2138::ParamType::INT32);
                 return catena::exception_with_status("", catena::StatusCode::OK);
             }));
         device_->addItem("minimalSetParam", minimalSetParam.get());
@@ -129,7 +177,15 @@ protected:
 
     }
 
-    std::unique_ptr<Device> device_;
+    void TearDown() override {
+        if (device_->mockHeartbeatOwned && device_->mockHeartbeat) {
+            delete device_->mockHeartbeat;
+        }
+        device_->mockHeartbeat = nullptr;
+        device_->mockHeartbeatOwned = false;
+    }
+
+    std::unique_ptr<DummyDevice> device_;
     std::unique_ptr<Authorizer> adminAuthz_;
     std::unique_ptr<Authorizer> monitorAuthz_;
     std::shared_ptr<LanguagePack> englishPack_;
@@ -160,7 +216,7 @@ protected:
                 if (errorMsg.empty()) {
                     // Success case - no error message
                     EXPECT_CALL(*mock, validateSetValue(testing::_, testing::_, testing::_, testing::_))
-                        .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, const IAuthorizer&, catena::exception_with_status& status) {
+                        .WillOnce(testing::Invoke([](const st2138::Value&, catena::common::Path::Index, const IAuthorizer&, catena::exception_with_status& status) {
                             status = catena::exception_with_status("", catena::StatusCode::OK);
                             return true;
                         }));
@@ -170,7 +226,7 @@ protected:
                 } else {
                     // Validation failure case - return false with error message
                     EXPECT_CALL(*mock, validateSetValue(testing::_, testing::_, testing::_, testing::_))
-                        .WillOnce(testing::Invoke([errorMsg](const catena::Value&, catena::common::Path::Index, const IAuthorizer&, catena::exception_with_status& status) {
+                        .WillOnce(testing::Invoke([errorMsg](const st2138::Value&, catena::common::Path::Index, const IAuthorizer&, catena::exception_with_status& status) {
                             status = catena::exception_with_status(errorMsg, catena::StatusCode::INVALID_ARGUMENT);
                             return false;
                         }));
@@ -203,8 +259,8 @@ protected:
                 
                 if (errorMsg.empty()) {
                     // Success case
-                    EXPECT_CALL(*copiedMock, toProto(testing::Matcher<catena::Value&>(testing::_), testing::_))
-                        .WillOnce(testing::Invoke([returnValue, returnInt](catena::Value& dst, const IAuthorizer&) {
+                    EXPECT_CALL(*copiedMock, toProto(testing::Matcher<st2138::Value&>(testing::_), testing::_))
+                        .WillOnce(testing::Invoke([returnValue, returnInt](st2138::Value& dst, const IAuthorizer&) {
                             if (!returnValue.empty()) {
                                 dst.set_string_value(returnValue);
                             } else {
@@ -214,12 +270,12 @@ protected:
                         }));
                 } else if (throwException) {
                     // Exception case
-                    EXPECT_CALL(*copiedMock, toProto(testing::Matcher<catena::Value&>(testing::_), testing::_))
+                    EXPECT_CALL(*copiedMock, toProto(testing::Matcher<st2138::Value&>(testing::_), testing::_))
                         .WillOnce(testing::Throw(std::runtime_error(errorMsg)));
                 } else {
                     // Error case
-                    EXPECT_CALL(*copiedMock, toProto(testing::Matcher<catena::Value&>(testing::_), testing::_))
-                        .WillOnce(testing::Invoke([errorMsg](catena::Value&, const IAuthorizer&) {
+                    EXPECT_CALL(*copiedMock, toProto(testing::Matcher<st2138::Value&>(testing::_), testing::_))
+                        .WillOnce(testing::Invoke([errorMsg](st2138::Value&, const IAuthorizer&) {
                             return catena::exception_with_status(errorMsg, catena::StatusCode::PERMISSION_DENIED);
                         }));
                 }
@@ -242,8 +298,8 @@ protected:
     };
     
     // Helper function to create a MultiSetValuePayload from a vector of values
-    catena::MultiSetValuePayload createMultiSetPayload(const std::vector<MultiSetPayloadValue>& values) {
-        catena::MultiSetValuePayload payload;
+    st2138::MultiSetValuePayload createMultiSetPayload(const std::vector<MultiSetPayloadValue>& values) {
+        st2138::MultiSetValuePayload payload;
         
         for (const auto& val : values) {
             auto* setValue = payload.add_values();
@@ -267,7 +323,7 @@ protected:
 // 0.1 - Test device creation
 TEST_F(DeviceTest, Device_Create) {
     EXPECT_EQ(device_->slot(), 1);
-    EXPECT_EQ(device_->detail_level(), catena::Device_DetailLevel_FULL);
+    EXPECT_EQ(device_->detail_level(), st2138::Device_DetailLevel_FULL);
     EXPECT_TRUE(device_->subscriptions());
     EXPECT_EQ(device_->getDefaultScope(), "admin");
 }
@@ -315,7 +371,7 @@ TEST_F(DeviceTest, TryMultiSetValue_MultiSetDisabled) {
     // Create a device with multi-set disabled
     auto deviceDisabled = std::make_unique<Device>(
         1,  // slot
-        catena::Device_DetailLevel_FULL,  // detail_level
+        st2138::Device_DetailLevel_FULL,  // detail_level
         std::vector<std::string>{"admin"},  // access_scopes
         "admin",  // default_scope
         false,  // multi_set_enabled - DISABLED
@@ -444,7 +500,7 @@ TEST_F(DeviceTest, CommitMultiSetValue_SingleValue) {
         .WillOnce(testing::Invoke([]() { 
             auto mock = std::make_unique<MockParam>();
             EXPECT_CALL(*mock, fromProto(testing::_, testing::_))
-                .WillOnce(testing::Invoke([](const catena::Value&, const IAuthorizer&) {
+                .WillOnce(testing::Invoke([](const st2138::Value&, const IAuthorizer&) {
                     return catena::exception_with_status("", catena::StatusCode::OK);
                 }));
             EXPECT_CALL(*mock, resetValidate())
@@ -483,7 +539,7 @@ TEST_F(DeviceTest, CommitMultiSetValue_RegularParams) {
         .WillOnce(testing::Invoke([]() { 
             auto mock = std::make_unique<MockParam>();
             EXPECT_CALL(*mock, fromProto(testing::_, testing::_))
-                .WillOnce(testing::Invoke([](const catena::Value&, const IAuthorizer&) {
+                .WillOnce(testing::Invoke([](const st2138::Value&, const IAuthorizer&) {
                     return catena::exception_with_status("", catena::StatusCode::OK);
                 }));
             EXPECT_CALL(*mock, resetValidate())
@@ -494,7 +550,7 @@ TEST_F(DeviceTest, CommitMultiSetValue_RegularParams) {
         .WillOnce(testing::Invoke([]() { 
             auto mock = std::make_unique<MockParam>();
             EXPECT_CALL(*mock, fromProto(testing::_, testing::_))
-                .WillOnce(testing::Invoke([](const catena::Value&, const IAuthorizer&) {
+                .WillOnce(testing::Invoke([](const st2138::Value&, const IAuthorizer&) {
                     return catena::exception_with_status("", catena::StatusCode::OK);
                 }));
             EXPECT_CALL(*mock, resetValidate())
@@ -558,7 +614,7 @@ TEST_F(DeviceTest, CommitMultiSetValue_ArrayAppend) {
                     status = catena::exception_with_status("", catena::StatusCode::OK);
                     auto appendedMock = std::make_unique<MockParam>();
                     EXPECT_CALL(*appendedMock, fromProto(testing::_, testing::_))
-                        .WillOnce(testing::Invoke([](const catena::Value&, const IAuthorizer&) {
+                        .WillOnce(testing::Invoke([](const st2138::Value&, const IAuthorizer&) {
                             return catena::exception_with_status("", catena::StatusCode::OK);
                         }));
                     return std::unique_ptr<IParam>(std::move(appendedMock));
@@ -621,7 +677,7 @@ TEST_F(DeviceTest, CommitMultiSetValue_ArrayParams) {
                     status = catena::exception_with_status("", catena::StatusCode::OK);
                     auto elementMock = std::make_unique<MockParam>();
                     EXPECT_CALL(*elementMock, fromProto(testing::_, testing::_))
-                        .WillOnce(testing::Invoke([](const catena::Value&, const IAuthorizer&) {
+                        .WillOnce(testing::Invoke([](const st2138::Value&, const IAuthorizer&) {
                             return catena::exception_with_status("", catena::StatusCode::OK);
                         }));
                     return std::unique_ptr<IParam>(std::move(elementMock));
@@ -709,7 +765,7 @@ TEST_F(DeviceTest, SetValue_String) {
             auto mock = std::make_unique<MockParam>();
             // First copy is for validation - expect validateSetValue
             EXPECT_CALL(*mock, validateSetValue(testing::_, testing::_, testing::_, testing::_))
-                .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, const IAuthorizer&, catena::exception_with_status& status) {
+                .WillOnce(testing::Invoke([](const st2138::Value&, catena::common::Path::Index, const IAuthorizer&, catena::exception_with_status& status) {
                     status = catena::exception_with_status("", catena::StatusCode::OK);
                     return true;
                 }));
@@ -726,7 +782,7 @@ TEST_F(DeviceTest, SetValue_String) {
             auto mock = std::make_unique<MockParam>();
             // Third copy is for commit - expect fromProto and resetValidate
             EXPECT_CALL(*mock, fromProto(testing::_, testing::_))
-                .WillOnce(testing::Invoke([](const catena::Value&, const IAuthorizer&) {
+                .WillOnce(testing::Invoke([](const st2138::Value&, const IAuthorizer&) {
                     return catena::exception_with_status("", catena::StatusCode::OK);
                 }));
             EXPECT_CALL(*mock, resetValidate())
@@ -737,7 +793,7 @@ TEST_F(DeviceTest, SetValue_String) {
     device_->addItem("setParam", mockParam.get());
 
     // Create value to set
-    catena::Value value;
+    st2138::Value value;
     value.set_string_value("new_value");
 
     // Test setting the value
@@ -762,7 +818,7 @@ TEST_F(DeviceTest, SetValue_Integer) {
             auto mock = std::make_unique<MockParam>();
             // First copy is for validation - expect validateSetValue
             EXPECT_CALL(*mock, validateSetValue(testing::_, testing::_, testing::_, testing::_))
-                .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, const IAuthorizer&, catena::exception_with_status& status) {
+                .WillOnce(testing::Invoke([](const st2138::Value&, catena::common::Path::Index, const IAuthorizer&, catena::exception_with_status& status) {
                     status = catena::exception_with_status("", catena::StatusCode::OK);
                     return true;
                 }));
@@ -779,7 +835,7 @@ TEST_F(DeviceTest, SetValue_Integer) {
             auto mock = std::make_unique<MockParam>();
             // Third copy is for commit - expect fromProto and resetValidate
             EXPECT_CALL(*mock, fromProto(testing::_, testing::_))
-                .WillOnce(testing::Invoke([](const catena::Value&, const IAuthorizer&) {
+                .WillOnce(testing::Invoke([](const st2138::Value&, const IAuthorizer&) {
                     return catena::exception_with_status("", catena::StatusCode::OK);
                 }));
             EXPECT_CALL(*mock, resetValidate())
@@ -790,7 +846,7 @@ TEST_F(DeviceTest, SetValue_Integer) {
     device_->addItem("intSetParam", mockParam.get());
     
     // Create value to set
-    catena::Value value;
+    st2138::Value value;
     value.set_int32_value(100);
     
     // Test setting the value
@@ -815,7 +871,7 @@ TEST_F(DeviceTest, SetValue_ValidationFailed) {
             auto mock = std::make_unique<MockParam>();
             // First copy is for validation - expect validateSetValue to fail
             EXPECT_CALL(*mock, validateSetValue(testing::_, testing::_, testing::_, testing::_))
-                .WillOnce(testing::Invoke([](const catena::Value&, catena::common::Path::Index, const IAuthorizer&, catena::exception_with_status& status) {
+                .WillOnce(testing::Invoke([](const st2138::Value&, catena::common::Path::Index, const IAuthorizer&, catena::exception_with_status& status) {
                     status = catena::exception_with_status("Validation failed", catena::StatusCode::INVALID_ARGUMENT);
                     return false;
                 }));
@@ -832,7 +888,7 @@ TEST_F(DeviceTest, SetValue_ValidationFailed) {
     device_->addItem("invalidParam", mockParam.get());
     
     // Create value to set
-    catena::Value value;
+    st2138::Value value;
     value.set_string_value("invalid_value");
     
     // Test setting the value - should fail validation
@@ -852,7 +908,7 @@ TEST_F(DeviceTest, GetValue_String) {
     device_->addItem("testParam", mockParam.get());
 
     // Test getting the value
-    catena::Value result;
+    st2138::Value result;
     auto status = device_->getValue("/testParam", result, *adminAuthz_);
 
     EXPECT_EQ(status.status, catena::StatusCode::OK);
@@ -866,7 +922,7 @@ TEST_F(DeviceTest, GetValue_Integer) {
     device_->addItem("intParam", mockParam.get());
 
     // Test getting the value
-    catena::Value result;
+    st2138::Value result;
     auto status = device_->getValue("/intParam", result, *adminAuthz_);
 
     EXPECT_EQ(status.status, catena::StatusCode::OK);
@@ -875,7 +931,7 @@ TEST_F(DeviceTest, GetValue_Integer) {
 
 // 2.6: Error Case - Get Value Invalid Json Pointer
 TEST_F(DeviceTest, GetValue_InvalidJsonPointer) {
-    catena::Value result;
+    st2138::Value result;
     auto status = device_->getValue("invalid/pointer", result, *adminAuthz_);
     
     EXPECT_EQ(status.status, catena::StatusCode::INVALID_ARGUMENT);
@@ -883,7 +939,7 @@ TEST_F(DeviceTest, GetValue_InvalidJsonPointer) {
 
 // 2.7: Error Case - Get Value Path Not Found
 TEST_F(DeviceTest, GetValue_PathNotFound) {
-    catena::Value result;
+    st2138::Value result;
     auto status = device_->getValue("/nonexistent", result, *adminAuthz_);
     
     EXPECT_EQ(status.status, catena::StatusCode::NOT_FOUND);
@@ -894,7 +950,7 @@ TEST_F(DeviceTest, GetValue_PathNotFound) {
 TEST_F(DeviceTest, GetValue_NotAuthorized) {
     auto mockParam = createGetValueMockParam("/authParam", "", 0, "Not authorized");
     device_->addItem("authParam", mockParam.get());
-    catena::Value result;
+    st2138::Value result;
     auto status = device_->getValue("/authParam", result, *monitorAuthz_);
     
     EXPECT_EQ(status.status, catena::StatusCode::PERMISSION_DENIED);
@@ -903,7 +959,7 @@ TEST_F(DeviceTest, GetValue_NotAuthorized) {
 
 // 2.9: Error Case - Get Value Index Out of Bounds
 TEST_F(DeviceTest, GetValue_IndexOutOfBounds) {
-    catena::Value result;
+    st2138::Value result;
     auto status = device_->getValue("/param/-", result, *adminAuthz_);
     
     EXPECT_EQ(status.status, catena::StatusCode::OUT_OF_RANGE);
@@ -916,7 +972,7 @@ TEST_F(DeviceTest, GetValue_InternalException) {
     auto mockParam = createGetValueMockParam("/errorParam", "", 0, "Internal error in toProto", true);
     device_->addItem("errorParam", mockParam.get());
     
-    catena::Value result;
+    st2138::Value result;
     auto status = device_->getValue("/errorParam", result, *adminAuthz_);
     
     EXPECT_EQ(status.status, catena::StatusCode::INTERNAL);
@@ -935,8 +991,8 @@ TEST_F(DeviceTest, GetValue_UnknownException) {
     EXPECT_CALL(*mockParam, copy())
         .WillRepeatedly(testing::Invoke([]() { 
             auto copiedMock = std::make_unique<MockParam>();
-            EXPECT_CALL(*copiedMock, toProto(testing::Matcher<catena::Value&>(testing::_), testing::_))
-                .WillOnce(testing::Invoke([](catena::Value&, const IAuthorizer&) -> catena::exception_with_status {
+            EXPECT_CALL(*copiedMock, toProto(testing::Matcher<st2138::Value&>(testing::_), testing::_))
+                .WillOnce(testing::Invoke([](st2138::Value&, const IAuthorizer&) -> catena::exception_with_status {
                     throw 42; // Throw an int (unknown exception type)
                 }));
             return copiedMock;
@@ -944,7 +1000,7 @@ TEST_F(DeviceTest, GetValue_UnknownException) {
     
     device_->addItem("unknownParam", mockParam.get());
     
-    catena::Value result;
+    st2138::Value result;
     auto status = device_->getValue("/unknownParam", result, *adminAuthz_);
     
     EXPECT_EQ(status.status, catena::StatusCode::UNKNOWN);
@@ -1000,7 +1056,7 @@ TEST_F(DeviceTest, LanguagePack_Get_InternalError) {
     // Create a mock language pack that throws std::exception
     auto mockLanguagePack = std::make_shared<MockLanguagePack>();
     EXPECT_CALL(*mockLanguagePack, toProto(testing::_))
-        .WillOnce(testing::Invoke([](catena::LanguagePack&) {
+        .WillOnce(testing::Invoke([](st2138::LanguagePack&) {
             throw std::runtime_error("Internal error in toProto");
         }));
     
@@ -1018,7 +1074,7 @@ TEST_F(DeviceTest, LanguagePack_Get_UnknownError) {
     // Create a mock language pack that throws unknown exception
     auto mockLanguagePack = std::make_shared<MockLanguagePack>();
     EXPECT_CALL(*mockLanguagePack, toProto(testing::_))
-        .WillOnce(testing::Invoke([](catena::LanguagePack&) {
+        .WillOnce(testing::Invoke([](st2138::LanguagePack&) {
             throw 42; // Throw an int (unknown exception type)
         }));
     
@@ -1036,8 +1092,8 @@ TEST_F(DeviceTest, LanguagePack_Get_UnknownError) {
 // 3.7: Success Case - Language Pack Add
 TEST_F(DeviceTest, LanguagePack_Add) {
     // Create a language pack payload for a new language
-    catena::AddLanguagePayload payload;
-    payload.set_id("es");
+    st2138::AddLanguagePayload payload;
+    payload.set_language("es");
     auto* languagePack = payload.mutable_language_pack();
     languagePack->set_name("Spanish");
     
@@ -1049,8 +1105,8 @@ TEST_F(DeviceTest, LanguagePack_Add) {
 // 3.8: Error Case - Language Pack Add Not Authorized
 TEST_F(DeviceTest, LanguagePack_Add_NotAuthorized) {
     // Try to add a language pack with monitor permissions (should fail)
-    catena::AddLanguagePayload payload;
-    payload.set_id("es");
+    st2138::AddLanguagePayload payload;
+    payload.set_language("es");
     auto* languagePack = payload.mutable_language_pack();
     languagePack->set_name("Spanish");
     
@@ -1061,8 +1117,8 @@ TEST_F(DeviceTest, LanguagePack_Add_NotAuthorized) {
 
 // 3.9: Error Case - Language Pack Add Invalid
 TEST_F(DeviceTest, LanguagePack_Add_Invalid) {
-    catena::AddLanguagePayload payload;
-    payload.set_id(""); // Empty ID should cause INVALID_ARGUMENT
+    st2138::AddLanguagePayload payload;
+    payload.set_language(""); // Empty ID should cause INVALID_ARGUMENT
     auto* languagePack = payload.mutable_language_pack();
     languagePack->set_name("Spanish");
     
@@ -1074,8 +1130,8 @@ TEST_F(DeviceTest, LanguagePack_Add_Invalid) {
 // 3.10: Error Case - Language Pack Add Cannot Overwrite Shipped Language
 TEST_F(DeviceTest, LanguagePack_Add_NoOverwrite) {
     // Try to add a language pack with the same ID as a shipped language pack
-    catena::AddLanguagePayload payload;
-    payload.set_id("en");
+    st2138::AddLanguagePayload payload;
+    payload.set_language("en");
     auto* languagePack = payload.mutable_language_pack();
     languagePack->set_name("English Override");
     
@@ -1089,8 +1145,8 @@ TEST_F(DeviceTest, LanguagePack_Add_NoOverwrite) {
 // 3.11: Success Case - Language Pack Removal
 TEST_F(DeviceTest, LanguagePack_Remove) {
     // First add a language pack that can be removed
-    catena::AddLanguagePayload payload;
-    payload.set_id("es");
+    st2138::AddLanguagePayload payload;
+    payload.set_language("es");
     auto* languagePack = payload.mutable_language_pack();
     languagePack->set_name("Spanish");  
 
@@ -1428,7 +1484,28 @@ TEST_F(DeviceTest, GetCommand_NotFound) {
     EXPECT_EQ(result, nullptr);
 }
 
-// 4.18: Error Case - Get Command with Sub-commands (Unimplemented)
+// 4.18: Error Case - Get Command With Read Authz.
+TEST_F(DeviceTest, GetCommand_NoReadAuthz) {
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    // Create a mock command and add it to the device
+    MockParam mockCommand;
+    MockParamDescriptor mockDescriptor;
+    setupMockParam(mockCommand, "/testCommand", mockDescriptor, false, 0, adminScope_);
+    
+    // Setup expectations for command
+    EXPECT_CALL(mockDescriptor, isCommand())
+        .WillRepeatedly(testing::Return(true));
+    
+    device_->addItem("testCommand", &mockCommand);
+    
+    // Test getting the command
+    auto result = device_->getCommand("/testCommand", status, *monitorAuthz_);
+    
+    EXPECT_EQ(status.status, catena::StatusCode::PERMISSION_DENIED);
+    EXPECT_EQ(result, nullptr);
+}
+
+// 4.19: Error Case - Get Command with Sub-commands (Unimplemented)
 TEST_F(DeviceTest, GetCommand_SubCommandsUnimplemented) {
     // Create a mock command and add it to the device
     auto mockCommand = std::make_shared<MockParam>();
@@ -1453,7 +1530,7 @@ TEST_F(DeviceTest, GetCommand_SubCommandsUnimplemented) {
     EXPECT_EQ(result, nullptr);
 }
 
-// 4.19: Error Case - Get Command with Invalid Json Pointer
+// 4.20: Error Case - Get Command with Invalid Json Pointer
 TEST_F(DeviceTest, GetCommand_InvalidJsonPointer) {
     catena::exception_with_status status{"", catena::StatusCode::OK};
     auto result = device_->getCommand("/invalid[", status, *adminAuthz_);
@@ -1462,7 +1539,7 @@ TEST_F(DeviceTest, GetCommand_InvalidJsonPointer) {
     EXPECT_EQ(result, nullptr);
 }
 
-// 4.20: Error Case - Get Command with Non-String Front Element
+// 4.21: Error Case - Get Command with Non-String Front Element
 TEST_F(DeviceTest, GetCommand_NonStringFrontElement) {
     catena::exception_with_status status{"", catena::StatusCode::OK};
     auto result = device_->getCommand("/123", status, *adminAuthz_);
@@ -1472,7 +1549,7 @@ TEST_F(DeviceTest, GetCommand_NonStringFrontElement) {
     EXPECT_EQ(result, nullptr);
 }
 
-// 4.21: Error Case - Get Command with Exception
+// 4.22: Error Case - Get Command with Exception
 TEST_F(DeviceTest, GetCommand_Exception) {
     // Create a mock command that throws an exception
     auto mockCommand = std::make_shared<MockParam>();
@@ -1504,11 +1581,11 @@ TEST_F(DeviceTest, GetCommand_Exception) {
 // 5.1 - Success Case: toProto with shallow vs deep serialization
 TEST_F(DeviceTest, Device_ToProtoShallowVsDeep) {
     // Test shallow copy - should only serialize basic properties
-    catena::Device shallowProto;
+    st2138::Device shallowProto;
     device_->toProto(shallowProto, *adminAuthz_, true); // shallow copy
     
     EXPECT_EQ(shallowProto.slot(), 1);
-    EXPECT_EQ(shallowProto.detail_level(), catena::Device_DetailLevel_FULL);
+    EXPECT_EQ(shallowProto.detail_level(), st2138::Device_DetailLevel_FULL);
     EXPECT_TRUE(shallowProto.multi_set_enabled());
     EXPECT_TRUE(shallowProto.subscriptions());
     EXPECT_EQ(shallowProto.default_scope(), "admin");
@@ -1521,11 +1598,11 @@ TEST_F(DeviceTest, Device_ToProtoShallowVsDeep) {
     EXPECT_EQ(shallowProto.language_packs().packs_size(), 0);
     
     // Test deep copy - should serialize everything
-    catena::Device deepProto;
+    st2138::Device deepProto;
     device_->toProto(deepProto, *adminAuthz_, false); // deep copy
     
     EXPECT_EQ(deepProto.slot(), 1);
-    EXPECT_EQ(deepProto.detail_level(), catena::Device_DetailLevel_FULL);
+    EXPECT_EQ(deepProto.detail_level(), st2138::Device_DetailLevel_FULL);
     EXPECT_TRUE(deepProto.multi_set_enabled());
     EXPECT_TRUE(deepProto.subscriptions());
     EXPECT_EQ(deepProto.default_scope(), "admin");
@@ -1555,26 +1632,26 @@ TEST_F(DeviceTest, Device_ToProtoParams) {
         .WillRepeatedly(testing::ReturnRef(*mockDescriptor2));
     
     // Only the authorized param should be serialized with monitor authorization
-    EXPECT_CALL(*mockAuthorizedParam, toProto(testing::An<catena::Param&>(), testing::_))
-        .WillOnce(testing::Invoke([](catena::Param& param, const IAuthorizer& authz) {
-            param.set_type(catena::ParamType::INT32);
+    EXPECT_CALL(*mockAuthorizedParam, toProto(testing::An<st2138::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](st2138::Param& param, const IAuthorizer& authz) {
+            param.set_type(st2138::ParamType::INT32);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockUnauthorizedParam, toProto(testing::An<catena::Param&>(), testing::_))
+    EXPECT_CALL(*mockUnauthorizedParam, toProto(testing::An<st2138::Param&>(), testing::_))
         .Times(0); // Should not be called
     
     device_->addItem("authorizedParam", mockAuthorizedParam.get());
     device_->addItem("unauthorizedParam", mockUnauthorizedParam.get());
     
     // Test with monitor authorization - should only serialize authorized parameters
-    catena::Device proto;
+    st2138::Device proto;
     device_->toProto(proto, *monitorAuthz_, false);
     
     // Verify only authorized parameters were serialized
     EXPECT_EQ(proto.params_size(), 2); // +1 for minimal set param
     EXPECT_TRUE(proto.params().contains("authorizedParam"));
     EXPECT_FALSE(proto.params().contains("unauthorizedParam"));
-    EXPECT_EQ(proto.params().at("authorizedParam").type(), catena::ParamType::INT32);
+    EXPECT_EQ(proto.params().at("authorizedParam").type(), st2138::ParamType::INT32);
 }
 
 // 5.3 - Success Case: toProto with commands serialization
@@ -1600,29 +1677,29 @@ TEST_F(DeviceTest, Device_ToProtoCommands) {
     EXPECT_CALL(*mockDescriptor2, isCommand())
         .WillRepeatedly(testing::Return(true));
     
-    EXPECT_CALL(*mockCommand1, toProto(testing::An<catena::Param&>(), testing::_))
-        .WillOnce(testing::Invoke([](catena::Param& param, const IAuthorizer& authz) {
-            param.set_type(catena::ParamType::INT32);
+    EXPECT_CALL(*mockCommand1, toProto(testing::An<st2138::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](st2138::Param& param, const IAuthorizer& authz) {
+            param.set_type(st2138::ParamType::INT32);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockCommand2, toProto(testing::An<catena::Param&>(), testing::_))
-        .WillOnce(testing::Invoke([](catena::Param& param, const IAuthorizer& authz) {
-            param.set_type(catena::ParamType::STRING);
+    EXPECT_CALL(*mockCommand2, toProto(testing::An<st2138::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](st2138::Param& param, const IAuthorizer& authz) {
+            param.set_type(st2138::ParamType::STRING);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
     
     device_->addItem("command1", mockCommand1.get());
     device_->addItem("command2", mockCommand2.get());
     
-    catena::Device proto;
+    st2138::Device proto;
     device_->toProto(proto, *adminAuthz_, false);
     
     // Verify commands were serialized
     EXPECT_EQ(proto.commands_size(), 2);
     EXPECT_TRUE(proto.commands().contains("command1"));
     EXPECT_TRUE(proto.commands().contains("command2"));
-    EXPECT_EQ(proto.commands().at("command1").type(), catena::ParamType::INT32);
-    EXPECT_EQ(proto.commands().at("command2").type(), catena::ParamType::STRING);
+    EXPECT_EQ(proto.commands().at("command1").type(), st2138::ParamType::INT32);
+    EXPECT_EQ(proto.commands().at("command2").type(), st2138::ParamType::STRING);
 }
 
 // 5.4 - Success Case: toProto with constraints serialization
@@ -1631,19 +1708,19 @@ TEST_F(DeviceTest, Device_ToProtoConstraints) {
     auto mockConstraint1 = std::make_shared<MockConstraint>();
     auto mockConstraint2 = std::make_shared<MockConstraint>();
     
-    EXPECT_CALL(*mockConstraint1, toProto(testing::An<catena::Constraint&>()))
-        .WillOnce(testing::Invoke([](catena::Constraint& constraint) {
+    EXPECT_CALL(*mockConstraint1, toProto(testing::An<st2138::Constraint&>()))
+        .WillOnce(testing::Invoke([](st2138::Constraint& constraint) {
             constraint.set_ref_oid("constraint1");
         }));
-    EXPECT_CALL(*mockConstraint2, toProto(testing::An<catena::Constraint&>()))
-        .WillOnce(testing::Invoke([](catena::Constraint& constraint) {
+    EXPECT_CALL(*mockConstraint2, toProto(testing::An<st2138::Constraint&>()))
+        .WillOnce(testing::Invoke([](st2138::Constraint& constraint) {
             constraint.set_ref_oid("constraint2");
         }));
     
     device_->addItem("constraint1", mockConstraint1.get());
     device_->addItem("constraint2", mockConstraint2.get());
     
-    catena::Device proto;
+    st2138::Device proto;
     device_->toProto(proto, *adminAuthz_, false);
     
     // Verify constraints were serialized
@@ -1657,7 +1734,7 @@ TEST_F(DeviceTest, Device_ToProtoConstraints) {
 // 5.5 - Success Case: toProto with language packs serialization
 TEST_F(DeviceTest, Device_ToProtoLanguagePacks) {
     // Language packs are already set up in SetUp()
-    catena::Device proto;
+    st2138::Device proto;
     device_->toProto(proto, *adminAuthz_, false);
     
     // Verify language packs were serialized
@@ -1674,13 +1751,13 @@ TEST_F(DeviceTest, Device_ToProtoMenuGroups) {
     auto mockMenuGroup1 = std::make_shared<MockMenuGroup>();
     auto mockMenuGroup2 = std::make_shared<MockMenuGroup>();
     
-    EXPECT_CALL(*mockMenuGroup1, toProto(testing::An<catena::MenuGroup&>(), false))
-        .WillOnce(testing::Invoke([](catena::MenuGroup& menuGroup, bool shallow) {
+    EXPECT_CALL(*mockMenuGroup1, toProto(testing::An<st2138::MenuGroup&>(), false))
+        .WillOnce(testing::Invoke([](st2138::MenuGroup& menuGroup, bool shallow) {
             auto* name = menuGroup.mutable_name();
             name->mutable_display_strings()->insert({"en", "Menu Group 1"});
         }));
-    EXPECT_CALL(*mockMenuGroup2, toProto(testing::An<catena::MenuGroup&>(), false))
-        .WillOnce(testing::Invoke([](catena::MenuGroup& menuGroup, bool shallow) {
+    EXPECT_CALL(*mockMenuGroup2, toProto(testing::An<st2138::MenuGroup&>(), false))
+        .WillOnce(testing::Invoke([](st2138::MenuGroup& menuGroup, bool shallow) {
             auto* name = menuGroup.mutable_name();
             name->mutable_display_strings()->insert({"en", "Menu Group 2"});
         }));
@@ -1688,7 +1765,7 @@ TEST_F(DeviceTest, Device_ToProtoMenuGroups) {
     device_->addItem("menuGroup1", mockMenuGroup1.get());
     device_->addItem("menuGroup2", mockMenuGroup2.get());
     
-    catena::Device proto;
+    st2138::Device proto;
     device_->toProto(proto, *adminAuthz_, false);
     
     // Verify menu groups were serialized
@@ -1704,7 +1781,7 @@ TEST_F(DeviceTest, Device_ToProtoMinimal) {
     // Create a device with minimal detail level
     auto minimalDevice = std::make_unique<Device>(
         2,  // slot
-        catena::Device_DetailLevel_MINIMAL,  // detail_level
+        st2138::Device_DetailLevel_MINIMAL,  // detail_level
         std::vector<std::string>{"admin"},  // access_scopes
         "admin",  // default_scope
         true,  // multi_set_enabled
@@ -1724,12 +1801,12 @@ TEST_F(DeviceTest, Device_ToProtoMinimal) {
     minimalDevice->addItem("constraint1", mockConstraint.get());
     minimalDevice->addItem("menuGroup1", mockMenuGroup.get());
     
-    catena::Device proto;
+    st2138::Device proto;
     minimalDevice->toProto(proto, *adminAuthz_, false);
     
     // Verify basic properties are still serialized
     EXPECT_EQ(proto.slot(), 2);
-    EXPECT_EQ(proto.detail_level(), catena::Device_DetailLevel_MINIMAL);
+    EXPECT_EQ(proto.detail_level(), st2138::Device_DetailLevel_MINIMAL);
     EXPECT_TRUE(proto.multi_set_enabled());
     EXPECT_TRUE(proto.subscriptions());
     EXPECT_EQ(proto.default_scope(), "admin");
@@ -1744,7 +1821,7 @@ TEST_F(DeviceTest, Device_ToProtoMinimal) {
 // 5.8 - Success Case: toProto with LanguagePacks serialization
 TEST_F(DeviceTest, LanguagePacks_ToProto) {
     // Language packs are already set up in SetUp() with English and French
-    catena::LanguagePacks packs;
+    st2138::LanguagePacks packs;
     device_->toProto(packs);
     
     // Verify language packs were serialized correctly
@@ -1772,7 +1849,7 @@ TEST_F(DeviceTest, LanguagePacks_ToProto) {
 // 5.9 - Success Case: toProto with LanguageList serialization
 TEST_F(DeviceTest, LanguageList_ToProto) {
     // Language packs are already set up in SetUp() with English and French
-    catena::LanguageList list;
+    st2138::LanguageList list;
     device_->toProto(list);
     
     // Verify language list was serialized correctly
@@ -1799,7 +1876,7 @@ TEST_F(DeviceTest, Language_ToProtoEmpty) {
     // Create a device with no language packs
     auto emptyDevice = std::make_unique<Device>(
         10,  // slot
-        catena::Device_DetailLevel_FULL,  // detail_level
+        st2138::Device_DetailLevel_FULL,  // detail_level
         std::vector<std::string>{"admin"},  // access_scopes
         "admin",  // default_scope
         true,  // multi_set_enabled
@@ -1807,12 +1884,12 @@ TEST_F(DeviceTest, Language_ToProtoEmpty) {
     );
     
     // Test LanguagePacks serialization with empty device
-    catena::LanguagePacks packs;
+    st2138::LanguagePacks packs;
     emptyDevice->toProto(packs);
     EXPECT_EQ(packs.packs_size(), 0);
     
     // Test LanguageList serialization with empty device
-    catena::LanguageList list;
+    st2138::LanguageList list;
     emptyDevice->toProto(list);
     EXPECT_EQ(list.languages_size(), 0);
 }
@@ -1838,12 +1915,12 @@ TEST_F(DeviceTest, GetDeviceSerializer_Parameters) {
         .WillRepeatedly(testing::Return(false));
     
     // Only the authorized param should be serialized with monitor authorization
-    EXPECT_CALL(*mockAuthorizedParam, toProto(testing::An<catena::Param&>(), testing::_))
-        .WillOnce(testing::Invoke([](catena::Param& param, const IAuthorizer& authz) {
-            param.set_type(catena::ParamType::INT32);
+    EXPECT_CALL(*mockAuthorizedParam, toProto(testing::An<st2138::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](st2138::Param& param, const IAuthorizer& authz) {
+            param.set_type(st2138::ParamType::INT32);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockUnauthorizedParam, toProto(testing::An<catena::Param&>(), testing::_))
+    EXPECT_CALL(*mockUnauthorizedParam, toProto(testing::An<st2138::Param&>(), testing::_))
         .Times(0); // Should not be called
     
     device_->addItem("authorizedParam", mockAuthorizedParam.get());
@@ -1853,7 +1930,7 @@ TEST_F(DeviceTest, GetDeviceSerializer_Parameters) {
     std::set<std::string> subscribedOids = {};
     
     // Get device serializer with monitor authorization
-    auto serializer = device_->getDeviceSerializer(*monitorAuthz_, subscribedOids, catena::Device_DetailLevel_FULL, false);
+    auto serializer = device_->getDeviceSerializer(*monitorAuthz_, subscribedOids, st2138::Device_DetailLevel_FULL, false);
     
     // Test that we can iterate through components
     int componentCount = 0;
@@ -1906,12 +1983,12 @@ TEST_F(DeviceTest, GetDeviceSerializer_Commands) {
         .WillRepeatedly(testing::Return(true));
     
     // Only the authorized command should be serialized with monitor authorization
-    EXPECT_CALL(*mockAuthorizedCommand, toProto(testing::An<catena::Param&>(), testing::_))
-        .WillOnce(testing::Invoke([](catena::Param& param, const IAuthorizer& authz) {
-            param.set_type(catena::ParamType::INT32);
+    EXPECT_CALL(*mockAuthorizedCommand, toProto(testing::An<st2138::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](st2138::Param& param, const IAuthorizer& authz) {
+            param.set_type(st2138::ParamType::INT32);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockUnauthorizedCommand, toProto(testing::An<catena::Param&>(), testing::_))
+    EXPECT_CALL(*mockUnauthorizedCommand, toProto(testing::An<st2138::Param&>(), testing::_))
         .Times(0); // Should not be called
     
     device_->addItem("authorizedCommand", mockAuthorizedCommand.get());
@@ -1921,7 +1998,7 @@ TEST_F(DeviceTest, GetDeviceSerializer_Commands) {
     std::set<std::string> subscribedOids = {};
     
     // Get device serializer with COMMANDS detail level
-    auto serializer = device_->getDeviceSerializer(*monitorAuthz_, subscribedOids, catena::Device_DetailLevel_COMMANDS, false);
+    auto serializer = device_->getDeviceSerializer(*monitorAuthz_, subscribedOids, st2138::Device_DetailLevel_COMMANDS, false);
     
     // Test that we can iterate through components
     int componentCount = 0;
@@ -1983,14 +2060,14 @@ TEST_F(DeviceTest, GetDeviceSerializer_Subscriptions) {
         .WillRepeatedly(testing::Return(false));
     
     // Set up expectations for toProto calls
-    EXPECT_CALL(*mockAuthorizedSubscribedParam, toProto(testing::An<catena::Param&>(), testing::_))
-        .WillOnce(testing::Invoke([](catena::Param& param, const IAuthorizer& authz) {
-            param.set_type(catena::ParamType::INT32);
+    EXPECT_CALL(*mockAuthorizedSubscribedParam, toProto(testing::An<st2138::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](st2138::Param& param, const IAuthorizer& authz) {
+            param.set_type(st2138::ParamType::INT32);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(*mockUnauthorizedSubscribedParam, toProto(testing::An<catena::Param&>(), testing::_))
+    EXPECT_CALL(*mockUnauthorizedSubscribedParam, toProto(testing::An<st2138::Param&>(), testing::_))
         .Times(0); // Should not be called - unauthorized
-    EXPECT_CALL(*mockAuthorizedUnsubscribedParam, toProto(testing::An<catena::Param&>(), testing::_))
+    EXPECT_CALL(*mockAuthorizedUnsubscribedParam, toProto(testing::An<st2138::Param&>(), testing::_))
         .Times(0); // Should not be called - unsubscribed
     
     device_->addItem("authorizedSubscribedParam", mockAuthorizedSubscribedParam.get());
@@ -2001,7 +2078,7 @@ TEST_F(DeviceTest, GetDeviceSerializer_Subscriptions) {
     std::set<std::string> subscribedOids = {"/authorizedSubscribedParam", "/unauthorizedSubscribedParam"};
     
     // Get device serializer with SUBSCRIPTIONS detail level and monitor authorization
-    auto serializer = device_->getDeviceSerializer(*monitorAuthz_, subscribedOids, catena::Device_DetailLevel_SUBSCRIPTIONS, false);
+    auto serializer = device_->getDeviceSerializer(*monitorAuthz_, subscribedOids, st2138::Device_DetailLevel_SUBSCRIPTIONS, false);
     
     // Test that we can iterate through components
     int componentCount = 0;
@@ -2043,7 +2120,7 @@ TEST_F(DeviceTest, GetDeviceSerializer_SubscriptionsDisabled) {
     // Create a device with subscriptions disabled
     auto deviceDisabled = std::make_unique<Device>(
         1,  // slot
-        catena::Device_DetailLevel_FULL,  // detail_level
+        st2138::Device_DetailLevel_FULL,  // detail_level
         std::vector<std::string>{"admin"},  // access_scopes
         "admin",  // default_scope
         true,  // multi_set_enabled
@@ -2055,12 +2132,12 @@ TEST_F(DeviceTest, GetDeviceSerializer_SubscriptionsDisabled) {
     
     // Should throw exception when trying to get serializer with SUBSCRIPTIONS detail level
     EXPECT_THROW({
-        auto serializer = deviceDisabled->getComponentSerializer(*adminAuthz_, subscribedOids, catena::Device_DetailLevel_SUBSCRIPTIONS, false);
+        auto serializer = deviceDisabled->getComponentSerializer(*adminAuthz_, subscribedOids, st2138::Device_DetailLevel_SUBSCRIPTIONS, false);
     }, catena::exception_with_status);
     
     // Test the specific exception message and status
     try {
-        auto serializer = deviceDisabled->getComponentSerializer(*adminAuthz_, subscribedOids, catena::Device_DetailLevel_SUBSCRIPTIONS, false);
+        auto serializer = deviceDisabled->getComponentSerializer(*adminAuthz_, subscribedOids, st2138::Device_DetailLevel_SUBSCRIPTIONS, false);
         FAIL() << "Expected exception was not thrown";
     } catch (const catena::exception_with_status& e) {
         EXPECT_EQ(e.status, catena::StatusCode::INVALID_ARGUMENT);
@@ -2074,15 +2151,15 @@ TEST_F(DeviceTest, GetDeviceSerializer_Menus) {
     auto mockMenuGroup = std::make_shared<MockMenuGroup>();
     auto mockMenu = std::make_unique<MockMenu>();
 
-    EXPECT_CALL(*mockMenuGroup, toProto(testing::An<catena::MenuGroup&>(), true))
-        .WillOnce(testing::Invoke([](catena::MenuGroup& menuGroup, bool shallow) {
+    EXPECT_CALL(*mockMenuGroup, toProto(testing::An<st2138::MenuGroup&>(), true))
+        .WillOnce(testing::Invoke([](st2138::MenuGroup& menuGroup, bool shallow) {
             auto* name = menuGroup.mutable_name();
             name->mutable_display_strings()->insert({"en", "Test Menu Group"});
         }));
     
     // Set up expectations for menu toProto
-    EXPECT_CALL(*mockMenu, toProto(testing::An<catena::Menu&>()))
-        .WillOnce(testing::Invoke([](catena::Menu& menu) {
+    EXPECT_CALL(*mockMenu, toProto(testing::An<st2138::Menu&>()))
+        .WillOnce(testing::Invoke([](st2138::Menu& menu) {
             auto* name = menu.mutable_name();
             name->mutable_display_strings()->insert({"en", "Test Menu"});
         }));
@@ -2100,7 +2177,7 @@ TEST_F(DeviceTest, GetDeviceSerializer_Menus) {
     std::set<std::string> subscribedOids = {};
     
     // Get device serializer with FULL detail level
-    auto serializer = device_->getDeviceSerializer(*monitorAuthz_, subscribedOids, catena::Device_DetailLevel_FULL, false);
+    auto serializer = device_->getDeviceSerializer(*monitorAuthz_, subscribedOids, st2138::Device_DetailLevel_FULL, false);
     
     // Test that we can iterate through components
     int componentCount = 0;
@@ -2135,7 +2212,7 @@ TEST_F(DeviceTest, GetDeviceSerializer_LanguagePacks) {
     std::set<std::string> subscribedOids = {};
     
     // Get device serializer with FULL detail level
-    auto serializer = device_->getDeviceSerializer(*monitorAuthz_, subscribedOids, catena::Device_DetailLevel_FULL, false);
+    auto serializer = device_->getDeviceSerializer(*monitorAuthz_, subscribedOids, st2138::Device_DetailLevel_FULL, false);
     
     // Test that we can iterate through components
     int componentCount = 0;
@@ -2166,8 +2243,8 @@ TEST_F(DeviceTest, GetDeviceSerializer_Constraints) {
     auto mockConstraint = std::make_shared<MockConstraint>();
     
     // Set up expectations for constraint toProto
-    EXPECT_CALL(*mockConstraint, toProto(testing::An<catena::Constraint&>()))
-        .WillOnce(testing::Invoke([](catena::Constraint& constraint) {
+    EXPECT_CALL(*mockConstraint, toProto(testing::An<st2138::Constraint&>()))
+        .WillOnce(testing::Invoke([](st2138::Constraint& constraint) {
             constraint.set_ref_oid("testConstraint");
         }));
     
@@ -2177,7 +2254,7 @@ TEST_F(DeviceTest, GetDeviceSerializer_Constraints) {
     std::set<std::string> subscribedOids = {};
     
     // Get device serializer with FULL detail level
-    auto serializer = device_->getDeviceSerializer(*monitorAuthz_, subscribedOids, catena::Device_DetailLevel_FULL, false);
+    auto serializer = device_->getDeviceSerializer(*monitorAuthz_, subscribedOids, st2138::Device_DetailLevel_FULL, false);
     
     // Test that we can iterate through components
     int componentCount = 0;
@@ -2212,8 +2289,8 @@ TEST_F(DeviceTest, UnhandledException) {
     setupMockParam(*mockParam, "/exceptionParam", *mockDescriptor);
     
     // Override toProto to throw an exception
-    EXPECT_CALL(*mockParam, toProto(testing::An<catena::Param&>(), testing::_))
-        .WillOnce(testing::Invoke([](catena::Param&, const IAuthorizer&) -> catena::exception_with_status {
+    EXPECT_CALL(*mockParam, toProto(testing::An<st2138::Param&>(), testing::_))
+        .WillOnce(testing::Invoke([](st2138::Param&, const IAuthorizer&) -> catena::exception_with_status {
             throw std::runtime_error("Test exception from toProto");
         }));
     
@@ -2225,7 +2302,7 @@ TEST_F(DeviceTest, UnhandledException) {
 
     // Create a serializer that will encounter the exception during execution
     std::set<std::string> subscribedOids = {};
-    auto serializer = device_->getComponentSerializer(*monitorAuthz_, subscribedOids, catena::Device_DetailLevel_FULL, false);
+    auto serializer = device_->getComponentSerializer(*monitorAuthz_, subscribedOids, st2138::Device_DetailLevel_FULL, false);
 
     // The first call to getNext should work (returns device info)
     EXPECT_TRUE(serializer->hasMore());
@@ -2259,7 +2336,7 @@ TEST_F(DeviceTest, UnhandledException) {
 TEST_F(DeviceTest, GetNext) {
     // Create a simple serializer to test getNext with FULL detail level
     std::set<std::string> subscribedOids = {};
-    auto serializer = device_->getComponentSerializer(*monitorAuthz_, subscribedOids, catena::Device_DetailLevel_FULL, false);
+    auto serializer = device_->getComponentSerializer(*monitorAuthz_, subscribedOids, st2138::Device_DetailLevel_FULL, false);
     
     // Test that getNext returns components when hasMore is true
     EXPECT_TRUE(serializer->hasMore());
@@ -2284,20 +2361,20 @@ TEST_F(DeviceTest, GetComponentSerializer) {
     // Create empty subscribed OIDs set - FULL detail level should include all components
     std::set<std::string> subscribedOids = {};
     // Test shallow copy
-    auto serializer0 = device_->getComponentSerializer(*monitorAuthz_, subscribedOids, catena::Device_DetailLevel_FULL, true);
+    auto serializer0 = device_->getComponentSerializer(*monitorAuthz_, subscribedOids, st2138::Device_DetailLevel_FULL, true);
     EXPECT_NE(serializer0, nullptr);
     // Test different detail levels
-    auto serializer1 = device_->getComponentSerializer(*monitorAuthz_, subscribedOids, catena::Device_DetailLevel_FULL, false);
+    auto serializer1 = device_->getComponentSerializer(*monitorAuthz_, subscribedOids, st2138::Device_DetailLevel_FULL, false);
     EXPECT_NE(serializer1, nullptr);
-    auto serializer2 = device_->getComponentSerializer(*monitorAuthz_, subscribedOids, catena::Device_DetailLevel_COMMANDS, false);
+    auto serializer2 = device_->getComponentSerializer(*monitorAuthz_, subscribedOids, st2138::Device_DetailLevel_COMMANDS, false);
     EXPECT_NE(serializer2, nullptr);
-    auto serializer3 = device_->getComponentSerializer(*monitorAuthz_, subscribedOids, catena::Device_DetailLevel_SUBSCRIPTIONS, false);
+    auto serializer3 = device_->getComponentSerializer(*monitorAuthz_, subscribedOids, st2138::Device_DetailLevel_SUBSCRIPTIONS, false);
     EXPECT_NE(serializer3, nullptr);
-    auto serializer4 = device_->getComponentSerializer(*monitorAuthz_, subscribedOids, catena::Device_DetailLevel_NONE, false);
+    auto serializer4 = device_->getComponentSerializer(*monitorAuthz_, subscribedOids, st2138::Device_DetailLevel_NONE, false);
     EXPECT_NE(serializer4, nullptr);
     // Test with empty subscriptions
     std::set<std::string> emptySubscribedOids = {};
-    auto serializer5 = device_->getComponentSerializer(*monitorAuthz_, emptySubscribedOids, catena::Device_DetailLevel_FULL, false);
+    auto serializer5 = device_->getComponentSerializer(*monitorAuthz_, emptySubscribedOids, st2138::Device_DetailLevel_FULL, false);
     EXPECT_NE(serializer5, nullptr);
 }
 
@@ -2320,25 +2397,25 @@ TEST_F(DeviceTest, ShouldSendParam) {
         .WillRepeatedly(testing::Return(true));
     
     // Test different detail levels with the same parameters
-    device_->detail_level(catena::Device_DetailLevel_FULL); // FULL should send all
+    device_->detail_level(st2138::Device_DetailLevel_FULL); // FULL should send all
     EXPECT_TRUE(device_->shouldSendParam(*mockParam, false, *monitorAuthz_)); 
     EXPECT_TRUE(device_->shouldSendParam(*mockCommand, false, *monitorAuthz_));
     EXPECT_TRUE(device_->shouldSendParam(*mockParams_[0], false, *monitorAuthz_)); // fixture minimal set param
 
-    device_->detail_level(catena::Device_DetailLevel_COMMANDS); // COMMANDS should send commands
+    device_->detail_level(st2138::Device_DetailLevel_COMMANDS); // COMMANDS should send commands
     EXPECT_FALSE(device_->shouldSendParam(*mockParam, false, *monitorAuthz_)); // not a command
     EXPECT_TRUE(device_->shouldSendParam(*mockCommand, false, *monitorAuthz_)); // is a command
 
-    device_->detail_level(catena::Device_DetailLevel_MINIMAL); // MINIMAL should send minimal
+    device_->detail_level(st2138::Device_DetailLevel_MINIMAL); // MINIMAL should send minimal
     EXPECT_FALSE(device_->shouldSendParam(*mockParam, false, *monitorAuthz_)); // not minimal
     EXPECT_TRUE(device_->shouldSendParam(*mockParams_[0], false, *monitorAuthz_)); // fixture minimal set param
 
-    device_->detail_level(catena::Device_DetailLevel_SUBSCRIPTIONS); // SUBSCRIPTIONS should send subscribed
+    device_->detail_level(st2138::Device_DetailLevel_SUBSCRIPTIONS); // SUBSCRIPTIONS should send subscribed
     EXPECT_FALSE(device_->shouldSendParam(*mockParam, false, *monitorAuthz_)); // not subscribed, not minimal
     EXPECT_TRUE(device_->shouldSendParam(*mockParam, true, *monitorAuthz_)); // subscribed
     EXPECT_TRUE(device_->shouldSendParam(*mockParams_[0], false, *monitorAuthz_)); // fixture minimal set param
 
-    device_->detail_level(catena::Device_DetailLevel_NONE); // NONE should send nothing
+    device_->detail_level(st2138::Device_DetailLevel_NONE); // NONE should send nothing
     EXPECT_FALSE(device_->shouldSendParam(*mockParam, false, *monitorAuthz_));
     EXPECT_FALSE(device_->shouldSendParam(*mockCommand, false, *monitorAuthz_));
     EXPECT_FALSE(device_->shouldSendParam(*mockParams_[0], false, *monitorAuthz_)); // fixture minimal set param
@@ -2433,4 +2510,208 @@ TEST_F(DeviceTest, GetDeleteAssetRequest) {
     auto& signal = device_->getDeleteAssetRequest();
     // Test that the signal is not blocked (default state)
     EXPECT_FALSE(signal.blocked());
+}
+
+// ==== Device Heartbeat Tests ====
+
+// cover the getter and setter for heartbeat param
+TEST_F(DeviceTest, GetHeartbeatParam) {
+    std::string paramName = "/testParam";
+    EXPECT_NO_THROW(device_->setHeartbeatParam(paramName));
+    EXPECT_EQ(device_->getHeartbeatParam(), paramName);
+}
+
+// test send heartbeat emits a value set by server signal
+TEST_F(DeviceTest, SendHeartbeat) {
+    bool signalEmitted = false;
+    auto connection = device_->getValueSetByServer().connect(
+        [&signalEmitted](const std::string& oid, const IParam* p){ signalEmitted = true; });
+
+    // Create a mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope_);
+    // getParam (called by sendHeartbeat) uses copy, so we need to set that expectation
+    EXPECT_CALL(*mockParam, copy())
+        .WillOnce(testing::Return(std::make_unique<MockParam>()));
+    device_->addItem("testParam", mockParam.get());
+    device_->setHeartbeatParam("/testParam");
+
+    device_->sendHeartbeat();
+
+    EXPECT_TRUE(signalEmitted);
+}
+
+TEST_F(DeviceTest, SendHeartbeatNoParam) {
+    bool signalEmitted = false;
+    auto connection = device_->getValueSetByServer().connect(
+        [&signalEmitted](const std::string& oid, const IParam* p){ signalEmitted = true; });
+
+    // No heartbeat param set, so sending heartbeat should not emit signal
+    EXPECT_THAT([&](){ device_->sendHeartbeat(); }, 
+        testing::Throws<catena::exception_with_status>(
+            testing::Field("status", &catena::exception_with_status::status,
+                // make sure its not the uninitialized error
+                testing::Ne(catena::StatusCode::UNKNOWN)
+            )
+        )
+    );
+
+    EXPECT_FALSE(signalEmitted);
+}
+
+TEST_F(DeviceTest, SendHeartbeatParamNotFound) {
+    bool signalEmitted = false;
+    auto connection = device_->getValueSetByServer().connect(
+        [&signalEmitted](const std::string& oid, const IParam* p){ signalEmitted = true; });
+
+    // Heartbeat param set to a non-existent param, so sending heartbeat should throw
+    device_->setHeartbeatParam("/nonExistentParam");
+    EXPECT_THAT([&](){ device_->sendHeartbeat(); }, 
+        testing::Throws<catena::exception_with_status>(
+            testing::Field("status", &catena::exception_with_status::status,
+                // make sure its not the uninitialized error
+                testing::Ne(catena::StatusCode::UNKNOWN)
+            )
+        )
+    );
+
+    EXPECT_FALSE(signalEmitted);
+}
+
+TEST_F(DeviceTest, SendHeartbeatEmitThrows) {
+    // Create a mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope_);
+    // getParam (called by sendHeartbeat) uses copy, so we need to set that expectation
+    EXPECT_CALL(*mockParam, copy())
+        .WillOnce(testing::Return(std::make_unique<MockParam>()));
+    device_->addItem("testParam", mockParam.get());
+    device_->setHeartbeatParam("/testParam");
+
+    // Connect to the signal and have the slot throw an exception
+    auto connection = device_->getValueSetByServer().connect(
+        [](const std::string& oid, const IParam* p){ throw std::runtime_error("test_exception"); });
+
+    // Sending heartbeat should allow the exception to propagate
+    EXPECT_THAT([&](){ device_->sendHeartbeat(); }, 
+        testing::ThrowsMessage<std::runtime_error>(testing::Eq("test_exception")));
+}
+
+// mostly just for code coverage, since initHeartbeat is called by startHeartbeat
+TEST_F(DeviceTest, InitHeartbeat) {
+    // Create a mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope_);
+    // getParam (called by sendHeartbeat) uses copy, so we need to set that expectation
+    EXPECT_CALL(*mockParam, copy())
+        .WillOnce(testing::Return(std::make_unique<MockParam>()));
+    device_->addItem("testParam", mockParam.get());
+    device_->setHeartbeatParam("/testParam");
+
+    // run the base classes initHeartbeat
+    EXPECT_EQ(device_->getHeartbeat(), nullptr);
+    device_->coverInitHeartbeat();
+    EXPECT_NE(device_->getHeartbeat(), nullptr);
+    // run it a second time to cover the already initialized case
+    device_->coverInitHeartbeat();
+    EXPECT_NE(device_->getHeartbeat(), nullptr);
+    // and no errors or anything
+
+    // connect to the value set by server signal to verify it works
+    bool signalEmitted = false;
+    auto connection = device_->getValueSetByServer().connect(
+        [&signalEmitted](const std::string& oid, const IParam* p){ signalEmitted = true; });
+    
+    // fire the heartbeat to ensure it works
+    device_->getHeartbeat()->getHeartbeatSignal().emit();
+    EXPECT_TRUE(signalEmitted);
+}
+
+// test initializing the heartbeat and starting it
+TEST_F(DeviceTest, StartHeartbeat) {
+    // Create a mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope_);
+    device_->addItem("testParam", mockParam.get());
+    device_->setHeartbeatParam("/testParam");
+
+    EXPECT_CALL(*device_->mockHeartbeat, start((int32_t)2222)).Times(1);
+
+    // Start heartbeat
+    device_->startHeartbeat(2222);
+
+    // Since we cannot directly check private members, we assume if no exceptions were thrown, it worked
+    EXPECT_NE(device_->getHeartbeat(), nullptr);
+}
+
+// test start Heartbeat with default interval
+TEST_F(DeviceTest, StartHeartbeatDefaultInterval) {
+    // Create a mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope_);
+    device_->addItem("testParam", mockParam.get());
+    device_->setHeartbeatParam("/testParam");
+
+    EXPECT_CALL(*device_->mockHeartbeat, start((int32_t)5000)).Times(1);
+
+    // Start heartbeat
+    device_->startHeartbeat();
+
+    // Since we cannot directly check private members, we assume if no exceptions were thrown, it worked
+    EXPECT_NE(device_->getHeartbeat(), nullptr);
+}
+
+
+// test starting the heartbeat when it's already initialized
+TEST_F(DeviceTest, StartHeartbeatAlreadyStarted) {
+    // Create a mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope_);
+    device_->addItem("testParam", mockParam.get());
+    device_->setHeartbeatParam("/testParam");
+
+    // simulate a started heartbeat by assigning a mock heartbeat instance
+    EXPECT_EQ(device_->getHeartbeat(), nullptr);
+    device_->initHeartbeat();
+    EXPECT_NE(device_->getHeartbeat(), nullptr);
+    // will still call start on the existing heartbeat
+    EXPECT_CALL(*device_->mockHeartbeat, start((int32_t)3333)).Times(1);
+    device_->startHeartbeat(3333);
+    // should not clean up the heartbeat
+    EXPECT_NE(device_->getHeartbeat(), nullptr);
+}
+
+// test stopping the heartbeat when it's started
+TEST_F(DeviceTest, StopHeartbeat) {
+    // Create a mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    setupMockParam(*mockParam, "/testParam", *mockDescriptor, false, 0, adminScope_);
+    device_->addItem("testParam", mockParam.get());
+    device_->setHeartbeatParam("/testParam");
+
+    // simulate a started heartbeat by assigning a mock heartbeat instance
+    EXPECT_EQ(device_->getHeartbeat(), nullptr);
+    device_->initHeartbeat();
+    EXPECT_NE(device_->getHeartbeat(), nullptr);
+    // Expect the stop method to be called once
+    EXPECT_CALL(*device_->mockHeartbeat, stop()).Times(1);
+    // Stopping heartbeat when started should stop up the heartbeat
+    device_->stopHeartbeat();
+    // should not clean up the heartbeat
+    EXPECT_NE(device_->getHeartbeat(), nullptr);
+}
+
+// test stopping the heartbeat when it's not started
+TEST_F(DeviceTest, StopHeartbeatNotStarted) {
+    // Stopping heartbeat when not started should not throw or crash
+    device_->stopHeartbeat();
+    // and the heartbeat should still be nullptr
+    EXPECT_EQ(device_->getHeartbeat(), nullptr);
 }

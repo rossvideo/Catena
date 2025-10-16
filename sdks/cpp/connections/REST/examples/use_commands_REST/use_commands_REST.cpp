@@ -111,7 +111,10 @@ void RunRESTServer() {
             DEBUG_LOG << "*** signal received: " << oid << " has been changed by client";
         });
 
+        dm.setHeartbeatParam("/product/version");
+        dm.startHeartbeat();
         api.run();
+        dm.stopHeartbeat();
         dm.getValueSetByClient().disconnect(valueSetByClientId);
 
     } catch (std::exception &why) {
@@ -128,11 +131,11 @@ void defineCommands() {
     assert(playCommand != nullptr);
 
     // Define a lambda function to be executed when the command is called
-    // The lambda function must take a catena::Value as an argument and return a catena::CommandResponse
-    playCommand->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+    // The lambda function must take a st2138::Value as an argument and return a catena::CommandResponse
+    playCommand->defineCommand([](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
             catena::exception_with_status err{"", catena::StatusCode::OK};
-            catena::CommandResponse response;
+            st2138::CommandResponse response;
             std::unique_ptr<IParam> stateParam = dm.getParam("/state", err);
             
             // If the state parameter does not exist, return an exception
@@ -155,10 +158,10 @@ void defineCommands() {
 
     std::unique_ptr<IParam> pauseCommand = dm.getCommand("/pause", err);
     assert(pauseCommand != nullptr);
-    pauseCommand->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+    pauseCommand->defineCommand([](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
             catena::exception_with_status err{"", catena::StatusCode::OK};
-            catena::CommandResponse response;
+            st2138::CommandResponse response;
             std::unique_ptr<IParam> stateParam = dm.getParam("/state", err);
             
             // If the state parameter does not exist, return an exception

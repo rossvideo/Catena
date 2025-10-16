@@ -90,7 +90,7 @@ class IParamDescriptor {
     /**
      * @brief get the parameter type
      */
-    virtual ParamType type() const = 0;
+    virtual st2138::ParamType type() const = 0;
 
     /**
      * @brief get the parameter name
@@ -169,7 +169,7 @@ class IParamDescriptor {
      * with the information from the ParamDescriptor
      * 
      */
-    virtual void toProto(catena::Param &param, const IAuthorizer& authz) const = 0;
+    virtual void toProto(st2138::Param &param, const IAuthorizer& authz) const = 0;
 
 
     /**
@@ -180,7 +180,7 @@ class IParamDescriptor {
      * this function will populate all non-value fields of the protobuf param message 
      * with the information from the ParamDescriptor
      */
-    virtual void toProto(catena::ParamInfo &paramInfo, const IAuthorizer& authz) const = 0;
+    virtual void toProto(st2138::ParamInfo &paramInfo, const IAuthorizer& authz) const = 0;
 
     /**
      * @brief get the parameter name by language
@@ -233,7 +233,7 @@ class IParamDescriptor {
         /**
          * @brief Resumes the coroutine and returns a CommandResponse object.
          */
-        virtual catena::CommandResponse getNext() = 0;
+        virtual st2138::CommandResponse getNext() = 0;
     };
 
     /**
@@ -243,7 +243,7 @@ class IParamDescriptor {
      * The passed function will be executed when executeCommand is called on this param object.
      * If this is not a command parameter, an exception will be thrown.
      */
-    virtual void defineCommand(std::function<std::unique_ptr<ICommandResponder>(const catena::Value&, const bool)> commandImpl) = 0;
+    virtual void defineCommand(std::function<std::unique_ptr<ICommandResponder>(const st2138::Value&, const bool)> commandImpl) = 0;
 
     /**
      * @brief execute the command

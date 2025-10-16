@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,8 +35,9 @@
  * @brief Interface for acessing parameter values
  * @author John R. Naylor
  * @author John Danen
- * @date 2024-08-20
- * @copyright Copyright (c) 2024 Ross Video
+ * @author jason.chen@rossvideo.com
+ * @date 2025-10-08
+ * @copyright Copyright (c) 2025 Ross Video
  */
 
 // common
@@ -160,7 +161,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param value the protobuf object to serialize to.
      * @param authz the authorizer object containing the client's scopes.
      */
-    catena::exception_with_status toProto(catena::Value& value, const IAuthorizer& authz) const override {
+    catena::exception_with_status toProto(st2138::Value& value, const IAuthorizer& authz) const override {
         return catena::common::toProto<T>(value, &value_.get(), descriptor_, authz);
     }
 
@@ -170,7 +171,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param param The protobuf object to serialize to.
      * @param authz The authorizer object containing the client's scopes.
      */
-    catena::exception_with_status toProto(catena::Param& param, const IAuthorizer& authz) const override {
+    catena::exception_with_status toProto(st2138::Param& param, const IAuthorizer& authz) const override {
         // toProto checks authz.
         catena::exception_with_status rc = toProto(*param.mutable_value(), authz);
         if (rc.status == catena::StatusCode::OK) {
@@ -184,7 +185,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param paramInfo The protobuf value to serialize to.
      * @param authz The authorization information.
      */
-    catena::exception_with_status toProto(catena::ParamInfoResponse& paramInfo, const IAuthorizer& authz) const override {
+    catena::exception_with_status toProto(st2138::ParamInfoResponse& paramInfo, const IAuthorizer& authz) const override {
         catena::exception_with_status ans{"", catena::StatusCode::OK};
         if (!authz.readAuthz(*this)) {
             ans = catena::exception_with_status("Not authorized to read param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
@@ -199,7 +200,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param dst The protobuf value to serialize to.
      * @param authz The authorizer object to containing the client's scopes.
      */
-    catena::exception_with_status fromProto(const catena::Value& value, const IAuthorizer& authz) override {
+    catena::exception_with_status fromProto(const st2138::Value& value, const IAuthorizer& authz) override {
         return catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
     }
 
@@ -265,7 +266,7 @@ class ParamWithValue : public catena::common::IParam {
      * @brief Defines the parameter's command implementation.
      * @param commandImpl The new command implementation.
      */
-    void defineCommand(std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(const catena::Value&, const bool)> commandImpl) {
+    void defineCommand(std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(const st2138::Value&, const bool)> commandImpl) {
         descriptor_.defineCommand(commandImpl);
     }
 
@@ -322,12 +323,12 @@ class ParamWithValue : public catena::common::IParam {
      * FLOAT32_ARRAY, STRING_ARRAY, STRUCT_ARRAY, or STRUCT_VARIANT_ARRAY).
      */
     bool isArrayType() const override {
-        catena::ParamType paramType = type().value();
-        return (paramType == catena::ParamType::STRUCT_ARRAY ||
-                paramType == catena::ParamType::INT32_ARRAY ||
-                paramType == catena::ParamType::FLOAT32_ARRAY ||
-                paramType == catena::ParamType::STRING_ARRAY ||
-                paramType == catena::ParamType::STRUCT_VARIANT_ARRAY);
+        st2138::ParamType paramType = type().value();
+        return (paramType == st2138::ParamType::STRUCT_ARRAY ||
+                paramType == st2138::ParamType::INT32_ARRAY ||
+                paramType == st2138::ParamType::FLOAT32_ARRAY ||
+                paramType == st2138::ParamType::STRING_ARRAY ||
+                paramType == st2138::ParamType::STRUCT_VARIANT_ARRAY);
     }
 
     /**
@@ -355,7 +356,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param ans Catena::exception_with_status output.
      * @returns true if valid.
      */
-    bool validateSetValue(const catena::Value& value, Path::Index index, const IAuthorizer& authz, catena::exception_with_status& ans) override {
+    bool validateSetValue(const st2138::Value& value, Path::Index index, const IAuthorizer& authz, catena::exception_with_status& ans) override {
         if (validateSetValueMap_.contains(value.kind_case())) {
             // Updating trackers.
             ans = validateSetValueMap_.at(value.kind_case())(value, index, authz);
@@ -507,6 +508,45 @@ class ParamWithValue : public catena::common::IParam {
         // This type is not a CatenaStruct or CatenaStructArray so it has no sub-params
         status = catena::exception_with_status("No sub-params for this generic type", catena::StatusCode::INVALID_ARGUMENT);
         return nullptr;
+    }
+
+    /**
+     * @brief Specialized getParam_ for EmptyValue - handles template parameters with descriptor structure
+     * @param oid the path to the child parameter  
+     * @param value the EmptyValue (unused but required for template specialization)
+     * @param authz The Authorizer object containing the client's scopes
+     * @param status The status of the operation
+     * @return a unique pointer to the child parameter, or nullptr if navigation should be handled elsewhere
+     */
+    std::unique_ptr<IParam> getParam_(Path& oid, EmptyValue& value, const IAuthorizer& authz, catena::exception_with_status& status) {
+        std::unique_ptr<IParam> returnParam = nullptr;
+        // Make sure the front is a field name.
+        if (!oid.front_is_string()) {
+            status = catena::exception_with_status("Expected string in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
+        } else {
+            std::string oidStr = oid.front_as_string();
+            oid.pop();
+            
+            // Check if this parameter has sub-parameters defined in its descriptor
+            const auto& subParams = descriptor_.getAllSubParams();
+            auto it = subParams.find(oidStr);
+            if (it != subParams.end()) {
+                // Found sub-parameter in descriptor, create a ParamWithValue for it
+                returnParam = std::make_unique<ParamWithValue<EmptyValue>>(value, *it->second);
+                // The path has more segments, keep recursing
+                if (!oid.empty()) {
+                    returnParam = returnParam->getParam(oid, authz, status);
+                // If we're at the end of path make sure we have readAuthz for the gotten param before returning.
+                } else if (!authz.readAuthz(*returnParam)) {
+                    status = catena::exception_with_status("Not authorized to read param " + oid.fqoid(), catena::StatusCode::PERMISSION_DENIED);
+                    returnParam = nullptr;
+                }
+            } else {
+                // Param does not exist, return nullptr
+                status = catena::exception_with_status("Param " + oidStr + " does not exist", catena::StatusCode::NOT_FOUND);
+            }
+        }
+        return returnParam;
     }
 
     /**
@@ -707,7 +747,7 @@ class ParamWithValue : public catena::common::IParam {
      * @returns catena::exception_with_status.
      */
     template<typename U, typename V>
-    catena::exception_with_status validateSetValue_(U& oldVal, const V& newVal, const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+    catena::exception_with_status validateSetValue_(U& oldVal, const V& newVal, const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
         // Index cannot be defined.
         if (index != Path::kNone) {
@@ -737,7 +777,7 @@ class ParamWithValue : public catena::common::IParam {
      * @returns catena::exception_with_status.
      */
     template<typename U, typename V> requires (!meta::IsVector<V>)
-    catena::exception_with_status validateSetValue_(std::vector<U>& arrayVal, const V& memVal, const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+    catena::exception_with_status validateSetValue_(std::vector<U>& arrayVal, const V& memVal, const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
         // Initializing mSizeTracker_ and tSizeTracker if they're not already.
         if (!mSizeTracker_) {
@@ -789,7 +829,7 @@ class ParamWithValue : public catena::common::IParam {
 
         return ans;
     }
-    using Kind = catena::Value::KindCase;
+    using Kind = st2138::Value::KindCase;
     /**
      * @brief A map to help routing to the validateSetValue_ functions above.
      * Protobuf is great in that you need to use a seperate function to get
@@ -801,45 +841,45 @@ class ParamWithValue : public catena::common::IParam {
      * @param authz The authorizer object for checking kWrite permissions.
      * @returns catena::exception_with_status.
      */
-    const std::unordered_map<Kind, std::function<catena::exception_with_status(const catena::Value&, Path::Index, const IAuthorizer&)>> validateSetValueMap_ {
-        {Kind::kInt32Value, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+    const std::unordered_map<Kind, std::function<catena::exception_with_status(const st2138::Value&, Path::Index, const IAuthorizer&)>> validateSetValueMap_ {
+        {Kind::kInt32Value, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             return this->validateSetValue_(this->get(), protoVal.int32_value(), protoVal, index, authz);
         }},
-        {Kind::kFloat32Value, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kFloat32Value, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             return this->validateSetValue_(this->get(), protoVal.float32_value(), protoVal, index, authz);
         }},
-        {Kind::kStringValue, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kStringValue, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             return this->validateSetValue_(this->get(), protoVal.string_value(), protoVal, index, authz);
         }},
-        {Kind::kStructValue, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kStructValue, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             return this->validateSetValue_(this->get(), protoVal.struct_value(), protoVal, index, authz);
         }},
-        {Kind::kStructVariantValue, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kStructVariantValue, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             return this->validateSetValue_(this->get(), protoVal.struct_variant_value(), protoVal, index, authz);
         }},
-        {Kind::kInt32ArrayValues, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kInt32ArrayValues, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             auto ints = protoVal.int32_array_values().ints();
             auto protoVector = std::vector<int>(ints.begin(), ints.end());
             return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }},
-        {Kind::kFloat32ArrayValues, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kFloat32ArrayValues, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             auto floats = protoVal.float32_array_values().floats();
             auto protoVector = std::vector<float>(floats.begin(), floats.end());
             return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }},
-        {Kind::kStringArrayValues, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kStringArrayValues, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             auto strings = protoVal.string_array_values().strings();
             auto protoVector = std::vector<std::string>(strings.begin(), strings.end());
             return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }},
-        {Kind::kStructArrayValues, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kStructArrayValues, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             auto structs = protoVal.struct_array_values().struct_values();
-            auto protoVector = std::vector<catena::StructValue>(structs.begin(), structs.end());
+            auto protoVector = std::vector<st2138::StructValue>(structs.begin(), structs.end());
             return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }},
-        {Kind::kStructVariantArrayValues, [this](const catena::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
+        {Kind::kStructVariantArrayValues, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             auto structs = protoVal.struct_variant_array_values().struct_variants();
-            auto protoVector = std::vector<catena::StructVariantValue>(structs.begin(), structs.end());
+            auto protoVector = std::vector<st2138::StructVariantValue>(structs.begin(), structs.end());
             return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }}
     };

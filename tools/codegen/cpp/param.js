@@ -1,4 +1,4 @@
-/*Copyright 2024 Ross Video Ltd
+/*Copyright 2025 Ross Video Ltd
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 *
@@ -13,7 +13,7 @@
 * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
 * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
-const Constraint = require("./constraint");
+import Constraint from "./constraint.js";
 
 /**
  *
@@ -54,6 +54,7 @@ function typeArg(type) {
  */
 function valueTypeArg(type) {
   const types = {
+    EMPTY: "empty_value",
     STRING: `string_value`,
     INT32: `int32_value`,
     FLOAT32: `float32_value`,
@@ -63,6 +64,7 @@ function valueTypeArg(type) {
     STRUCT: `struct_value`,
     STRUCT_ARRAY: `struct_array_values`,
     STRUCT_VARIANT: `struct_variant_value`,
+    STRUCT_VARIANTS: `struct_variants`,
     STRUCT_VARIANT_ARRAY: `struct_variant_array_values`,
   };
 
@@ -94,7 +96,7 @@ class Descriptor {
   constructor(desc, oid, constraint, parentOid = "", isCommand) {
     const args = {
       type: () => { 
-        return `catena::ParamType::${desc.type}`;
+        return `st2138::ParamType::${desc.type}`;
       },
       oid_aliases: () => {
         return `{${(desc.oid_aliases ?? []).map((alias) => `{"${alias}"}`).join(", ")}}`;
@@ -416,6 +418,7 @@ class Param {
    */
   valueInitializer(value, type, param) {
     const valueObject = {
+      empty_value: () => '',
       string_value: (typeValue) => {
         return `"${typeValue}"`;
       },
@@ -485,9 +488,16 @@ class Param {
         return `${paramDef.objectNamespaceType()}${this.valueInitializer(typeValue.value, subParam.type, paramDef)}`;
       },
 
+      struct_variants: (typeValue) => {
+        if (typeValue.struct_variant_value == undefined) {
+          throw new Error("struct_variants must have struct_variant_type");
+        }
+        return `{${valueObject.struct_variant_value(typeValue.struct_variant_value)}}`;
+      },
+
       struct_variant_array_values: (typeValue) => {
         let arr = typeValue.struct_variants;
-        let mappedArr = arr.map(valueObject.struct_variant_value);
+        let mappedArr = arr.map(valueObject.struct_variants);
         return `${mappedArr.join(",")}`;
       },
 
@@ -602,4 +612,4 @@ class Param {
   }
 }
 
-module.exports = Param;
+export default Param;

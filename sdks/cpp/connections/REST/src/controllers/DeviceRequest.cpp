@@ -47,10 +47,10 @@ void DeviceRequest::proceed() {
             }
 
             // req_.detail_level defaults to FULL
-            catena::Device_DetailLevel dl = context_.detailLevel();
+            st2138::Device_DetailLevel dl = context_.detailLevel();
 
             // Getting subscribed oids if dl == SUBSCRIPTIONS.
-            if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
+            if (dl == st2138::Device_DetailLevel_SUBSCRIPTIONS) {
                 auto& subscriptionManager = context_.subscriptionManager();
                 subscribedOids_ = subscriptionManager.getAllSubscribedOids(*dm);
             }
@@ -62,7 +62,7 @@ void DeviceRequest::proceed() {
             if (serializer_) {
                 while (serializer_->hasMore()) {
                     writeConsole_(CallStatus::kWrite, socket_.is_open());
-                    catena::DeviceComponent component{};
+                    st2138::DeviceComponent component{};
                     {
                         std::lock_guard lg(dm->mutex());
                         component = serializer_->getNext();

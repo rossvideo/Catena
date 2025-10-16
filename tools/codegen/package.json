@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Code Generator. Converts Catena JSON device models into source code representations in various languages.",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -28,6 +29,7 @@
     "commander": "^12.0.0",
     "json-source-map": "^0.6.1",
     "node": "^20.7.0",
+    "smpte-validator": "file:../../smpte/tools",
     "yaml": "^2.7.0"
   }
 }

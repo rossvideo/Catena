@@ -89,7 +89,7 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
     * Adds a response to the expected values.
     */
     void expResponse(const std::string& stringVal) {
-        expVals_.push_back(catena::CommandResponse());
+        expVals_.push_back(st2138::CommandResponse());
         expVals_.back().mutable_response()->set_string_value(stringVal);
     }
 
@@ -97,7 +97,7 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
     * Adds an exception to the expected values.
     */
     void expException(const std::string& type, const std::string& details) {
-        expVals_.push_back(catena::CommandResponse());
+        expVals_.push_back(st2138::CommandResponse());
         expVals_.back().mutable_exception()->set_type(type);
         expVals_.back().mutable_exception()->set_details(details);
     }
@@ -106,7 +106,7 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
     * Adds a no_response to the expected values.
     */
     void expNoResponse() {
-        expVals_.push_back(catena::CommandResponse());
+        expVals_.push_back(st2138::CommandResponse());
         expVals_.back().mutable_no_response();
     }
     
@@ -132,10 +132,10 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
     }
 
     // in variables
-    catena::Value inVal_;
+    st2138::Value inVal_;
     bool respond_ = false;
     // Expected variables
-    std::vector<catena::CommandResponse> expVals_;
+    std::vector<st2138::CommandResponse> expVals_;
 
     std::unique_ptr<MockParam> mockCommand_ = std::make_unique<MockParam>();
     std::unique_ptr<MockCommandResponder> mockResponder_ = std::make_unique<MockCommandResponder>();
@@ -637,7 +637,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
     EXPECT_CALL(*mockResponder_, getNext()).Times(1)
         .WillOnce(testing::Invoke([this]() {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
-            return catena::CommandResponse();
+            return st2138::CommandResponse();
         }));
     EXPECT_CALL(*mockResponder_, hasMore()).Times(1).WillOnce(testing::Return(true));
     // Calling proceed and testing the output

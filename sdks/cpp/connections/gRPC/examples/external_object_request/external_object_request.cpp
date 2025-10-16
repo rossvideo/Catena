@@ -125,8 +125,13 @@ void RunRPCServer(std::string addr)
         service.init();
         std::thread cq_thread([&]() { service.processEvents(); });
 
+        // start the heartbeat on the device
+        dm.setHeartbeatParam("/product/version");
+        dm.startHeartbeat();
+
         // wait for the server to shutdown and tidy up
         server->Wait();
+        dm.stopHeartbeat();
 
         cq->Shutdown();
         cq_thread.join();

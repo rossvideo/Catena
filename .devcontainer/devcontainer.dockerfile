@@ -1,4 +1,4 @@
-FROM ghcr.io/rossvideo/catena-toolchain-cpp:latest AS base
+FROM ghcr.io/rossvideo/catena-toolchain-cpp:latest
 
 # Declare build arguments
 ARG USER_UID=1000
@@ -24,6 +24,9 @@ ENV USER_NAME=${USER_NAME}
 ENV CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 ENV CONNECTIONS=${CONNECTIONS}
 ENV BUILD_TARGET=${BUILD_TARGET}
+ENV CMAKE_COMMAND="cmake -G Ninja -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCONNECTIONS=${CONNECTIONS} -DCMAKE_CXX_FLAGS='--coverage' -DCMAKE_C_FLAGS='--coverage' -DCMAKE_EXE_LINKER_FLAGS='--coverage' -DCMAKE_INSTALL_PREFIX=/usr/local/.local -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE -DGLOG_LOGGING_DIR=~/Catena/logs -B ~/Catena/${BUILD_TARGET} -S ~/Catena/sdks/cpp"
+
+USER root
 
 RUN if getent passwd $USER_UID > /dev/null; then userdel $(getent passwd $USER_UID | cut -d: -f1); fi
 
@@ -37,10 +40,9 @@ RUN groupadd -g $USER_GID $USER_NAME && \
 RUN echo "${USER_NAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 
-USER ${USER_NAME}
+
 
 # Install Docker & Docker Compose
-RUN sudo apt-get update
 
 # remove the docker group if it exists
 # RUN if getent group docker; then sudo groupdel docker; fi
@@ -55,31 +57,8 @@ RUN sudo apt-get update
 # Set the working directory
 WORKDIR /home/${USER_NAME}/Catena
 
-# Install glog
-RUN sudo apt-get install -y libgoogle-glog-dev
-
+USER ${USER_NAME}
 ENTRYPOINT ["/bin/sh", "-c", "/bin/bash"]
-
-FROM base AS devcontainer
 
 # nothing yet, but this is where we would add any additional devcontainer-specific setup
 # such as installing VS Code extensions or additional tools
-
-FROM base AS final
-
-# Clone Catena repository
-RUN mkdir -p ~/Catena \
-    && cd ~/Catena \
-    && git init \
-    && git remote add origin https://github.com/rossvideo/Catena.git \
-    && git pull origin develop \
-    && git submodule update --init --recursive
-
-# Build Catena
-RUN mkdir -p ~/Catena/${BUILD_TARGET} \
-    && cd ~/Catena/${BUILD_TARGET} \
-    && cmake -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DCONNECTIONS=$CONNECTIONS -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage" -DCMAKE_EXE_LINKER_FLAGS="--coverage" -DCMAKE_INSTALL_PREFIX=/usr/local/.local -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE -DGLOG_LOGGING_DIR=${HOME}/Catena/logs -B ~/Catena/${BUILD_TARGET} ~/Catena/sdks/cpp  \
-    && ninja -j16
-# cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCONNECTIONS='gRPC;REST' -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage" -DCMAKE_EXE_LINKER_FLAGS="--coverage"  -DCMAKE_INSTALL_PREFIX=/usr/local/.local ~/Catena/sdks/cpp
-RUN cd ~/Catena/ \
-    && ./scripts/run_coverage.sh --html --verbose

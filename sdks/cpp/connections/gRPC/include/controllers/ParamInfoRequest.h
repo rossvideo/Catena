@@ -109,15 +109,15 @@ class ParamInfoRequest : public CallData {
      * 
      * - A flag signifying whether to include sub-parameters.
      */
-    catena::ParamInfoRequestPayload req_;
+    st2138::ParamInfoRequestPayload req_;
     /**
      * @brief The response payload.
      */
-    catena::PushUpdates res_;
+    st2138::PushUpdates res_;
     /**
      * @brief The RPC response writer for writing back to the client.
      */
-    ServerAsyncWriter<catena::ParamInfoResponse> writer_;
+    ServerAsyncWriter<st2138::ParamInfoResponse> writer_;
     /**
      * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */
@@ -143,7 +143,7 @@ class ParamInfoRequest : public CallData {
     /**
      * @brief The vector of ParamInfoResponse objects.
      */
-    std::vector<catena::ParamInfoResponse> responses_;
+    std::vector<st2138::ParamInfoResponse> responses_;
     /**
      * @brief The current response index.
      */
@@ -172,7 +172,7 @@ class ParamInfoRequest : public CallData {
          * @param request The request
          */
         ParamInfoVisitor(catena::common::IDevice& device, catena::common::Authorizer& authz,
-                            std::vector<catena::ParamInfoResponse>& responses,
+                            std::vector<st2138::ParamInfoResponse>& responses,
                             ParamInfoRequest& request)
             : device_(device), authz_(authz), responses_(responses), request_(request) {}
 
@@ -205,7 +205,7 @@ class ParamInfoRequest : public CallData {
         /**
          * @brief The vector of responses within the visitor
          */
-        std::vector<catena::ParamInfoResponse>& responses_;
+        std::vector<st2138::ParamInfoResponse>& responses_;
 
         /**
          * @brief The request payload within the visitor

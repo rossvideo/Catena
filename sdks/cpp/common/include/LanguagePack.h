@@ -90,13 +90,13 @@ class LanguagePack : public common::ILanguagePack {
      * @brief Deserializes a language pack from a protobuf message
      * @param pack The protobuf message
      */
-    void fromProto(const ::catena::LanguagePack& pack) override;
+    void fromProto(const ::st2138::LanguagePack& pack) override;
 
     /**
      * @brief Serializes a language pack to a protobuf message
      * @param pack The protobuf message
      */
-    void toProto(::catena::LanguagePack& pack) const override;
+    void toProto(::st2138::LanguagePack& pack) const override;
 
     /**
      * @brief Gets the begin iterator to the key/word pairs

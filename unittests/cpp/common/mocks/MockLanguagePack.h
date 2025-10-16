@@ -46,8 +46,8 @@ namespace common {
 // Mock implementation for the ILanguagePack class.
 class MockLanguagePack : public ILanguagePack {
   public:
-    MOCK_METHOD(void, toProto, (catena::LanguagePack&), (const, override));
-    MOCK_METHOD(void, fromProto, (const catena::LanguagePack&), (override));
+    MOCK_METHOD(void, toProto, (st2138::LanguagePack&), (const, override));
+    MOCK_METHOD(void, fromProto, (const st2138::LanguagePack&), (override));
     MOCK_METHOD(const_iterator, begin, (), (const, override));
     MOCK_METHOD(const_iterator, end, (), (const, override));
 };

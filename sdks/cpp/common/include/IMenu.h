@@ -58,7 +58,7 @@ class IMenu {
      * @brief Serializes a menu to a protobuf message.
      * @param menu The protobuf message.
      */
-    virtual void toProto(catena::Menu& menu) const = 0;
+    virtual void toProto(st2138::Menu& menu) const = 0;
 
 };
 

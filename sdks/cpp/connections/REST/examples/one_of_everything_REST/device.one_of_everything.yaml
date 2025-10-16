@@ -6,6 +6,31 @@ access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
 default_scope: st2138:mon
 
 params:
+  product:
+    type: STRUCT
+    read_only: true
+    value: 
+      struct_value:
+        fields:
+          name: { string_value: "One of Everything" }
+          vendor: { string_value: "Ross Video" }
+          version: { string_value: "1.0.0" }
+          catena_sdk: { string_value: "https://github.com/rossvideo/Catena.git" }
+          serial_number: { string_value: "SN-7K9M-2024-XR485-BLU" }
+    params:
+      name: 
+        type: STRING  
+      vendor:
+        type: STRING
+      version:
+        type: STRING
+      catena_sdk:
+        type: STRING
+      catena_sdk_version:
+        type: STRING
+      serial_number:
+        type: STRING
+
   number_example: 
     type: INT32
     value: { int32_value: 0 }
@@ -43,7 +68,6 @@ params:
     type: FLOAT32_ARRAY
     value: { float32_array_values: { floats: [1.1, 2.2, 3.3, 4.4] } }
     name: { display_strings: { en: "Float Array Example" } }
-    max_length: 128
     precision: 3
 
   string_array:
@@ -76,6 +100,7 @@ menu_groups:
         name: {display_strings: { en: "Product" } }
         param_oids:
           - /number_example
+    order: 0
   config:
     name: { display_strings: { en: "Config" } }
     menus:
@@ -84,6 +109,7 @@ menu_groups:
         param_oids:
           - /float_example
           - /string_example
+    order: 1
 
 commands:
   fib_start:

@@ -100,8 +100,8 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
                     return std::move(params_[i]);
                 }));
             EXPECT_CALL(*params_.back(), getOid()).WillRepeatedly(testing::ReturnRefOfCopy(oids_[i]));
-            EXPECT_CALL(*params_.back(), toProto(testing::An<catena::Param&>(), testing::_)).WillRepeatedly(testing::Invoke(
-                [this, i](catena::Param &param, const IAuthorizer &authz) {
+            EXPECT_CALL(*params_.back(), toProto(testing::An<st2138::Param&>(), testing::_)).WillRepeatedly(testing::Invoke(
+                [this, i](st2138::Param &param, const IAuthorizer &authz) {
                     // Make sure authz is correctly passed in.
                     EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
                     param.CopyFrom(responses_[i].param());
@@ -174,11 +174,11 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
     }
 
     // in vals
-    catena::UpdateSubscriptionsPayload inVal_;
+    st2138::UpdateSubscriptionsPayload inVal_;
     // Test params_.
     std::vector<std::string> oids_{"param1", "param2"};
     std::vector<std::unique_ptr<MockParam>> params_;
-    std::vector<catena::DeviceComponent_ComponentParam> responses_;
+    std::vector<st2138::DeviceComponent_ComponentParam> responses_;
     std::vector<std::string> responsesJson_;
     // Trackers for calls to add/remove subscriptions.
     uint32_t addedOids_ = 0;
@@ -342,8 +342,8 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETToProtoReturnErr) {
             return std::move(errParam);
         }));
     EXPECT_CALL(*errParam, getOid()).WillRepeatedly(testing::ReturnRef(oids_[0]));
-    EXPECT_CALL(*errParam, toProto(testing::An<catena::Param&>(), testing::_)).WillRepeatedly(testing::Invoke(
-        [](catena::Param &param, const IAuthorizer &authz) {
+    EXPECT_CALL(*errParam, toProto(testing::An<st2138::Param&>(), testing::_)).WillRepeatedly(testing::Invoke(
+        [](st2138::Param &param, const IAuthorizer &authz) {
             // Simulating an error in conversion.
             return catena::exception_with_status("Failed to convert to proto", catena::StatusCode::UNKNOWN);
         }));
@@ -365,8 +365,8 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETToProtoThrowCatena) {
             return std::move(errParam);
         }));
     EXPECT_CALL(*errParam, getOid()).WillRepeatedly(testing::ReturnRef(oids_[0]));
-    EXPECT_CALL(*errParam, toProto(testing::An<catena::Param&>(), testing::_)).WillRepeatedly(testing::Invoke(
-        [this](catena::Param &param, const IAuthorizer &authz) {
+    EXPECT_CALL(*errParam, toProto(testing::An<st2138::Param&>(), testing::_)).WillRepeatedly(testing::Invoke(
+        [this](st2138::Param &param, const IAuthorizer &authz) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -388,7 +388,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETToProtoThrowUnknown) {
             return std::move(errParam);
         }));
     EXPECT_CALL(*errParam, getOid()).WillRepeatedly(testing::ReturnRef(oids_[0]));
-    EXPECT_CALL(*errParam, toProto(testing::An<catena::Param&>(), testing::_))
+    EXPECT_CALL(*errParam, toProto(testing::An<st2138::Param&>(), testing::_))
         .WillRepeatedly(testing::Throw(std::runtime_error("Unknown error")));
     // Calling proceed and testing the output
     testCall();

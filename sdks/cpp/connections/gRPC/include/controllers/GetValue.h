@@ -81,11 +81,11 @@ class GetValue : public CallData{
      * 
      * - The oid of the paramter to retrieve the value from.
      */
-    catena::GetValuePayload req_;
+    st2138::GetValuePayload req_;
     /**
      * @brief The RPC response writer for writing back to the client.
      */
-    ServerAsyncResponseWriter<::catena::Value> responder_;
+    ServerAsyncResponseWriter<::st2138::Value> responder_;
     /**
      * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */

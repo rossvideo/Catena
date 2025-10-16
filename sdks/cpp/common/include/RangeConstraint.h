@@ -126,7 +126,7 @@ class RangeConstraint : public catena::common::IConstraint {
      * 
      * If the step size is not 0, the value must also be a multiple of the step size.
      */
-    bool satisfied(const catena::Value& src) const override {
+    bool satisfied(const st2138::Value& src) const override {
         bool ans = false;
         if constexpr(std::is_same<T, int32_t>::value) {
             ans = src.int32_value() >= min_ 
@@ -142,16 +142,16 @@ class RangeConstraint : public catena::common::IConstraint {
     }
 
     /**
-     * @brief applies range constraint to a catena::Value
-     * @param src a catena::Value to apply the constraint to
-     * @return a catena::Value with the constraint applied
+     * @brief applies range constraint to a st2138::Value
+     * @param src a st2138::Value to apply the constraint to
+     * @return a st2138::Value with the constraint applied
      * 
      * If the value is outside the range, the value will be constrained
      * to be within the range. If the step size is not 0, the value will
      * be constrained to be a multiple of the step size.
      */
-    catena::Value apply(const catena::Value& src) const override {
-        catena::Value constrainedVal;
+    st2138::Value apply(const st2138::Value& src) const override {
+        st2138::Value constrainedVal;
         if constexpr(std::is_same<T, int32_t>::value) {
             // return empty value if src is not valid
             if (src.has_int32_value()) {
@@ -191,10 +191,10 @@ class RangeConstraint : public catena::common::IConstraint {
      * @brief serialize the constraint to a protobuf message
      * @param constraint the protobuf message to populate
      */
-    void toProto(catena::Constraint& constraint) const override {
+    void toProto(st2138::Constraint& constraint) const override {
         // Int range constraint
         if constexpr(std::is_same<T, int32_t>::value) {
-            constraint.set_type(catena::Constraint::INT_RANGE);
+            constraint.set_type(st2138::Constraint::INT_RANGE);
             constraint.mutable_int32_range()->set_min_value(min_);
             constraint.mutable_int32_range()->set_max_value(max_);
             constraint.mutable_int32_range()->set_step(step_);
@@ -203,7 +203,7 @@ class RangeConstraint : public catena::common::IConstraint {
         }
         // Float range constraint
         else if constexpr(std::is_same<T, float>::value) {
-            constraint.set_type(catena::Constraint::FLOAT_RANGE);
+            constraint.set_type(st2138::Constraint::FLOAT_RANGE);
             constraint.mutable_float_range()->set_min_value(min_);
             constraint.mutable_float_range()->set_max_value(max_);
             constraint.mutable_float_range()->set_step(step_);

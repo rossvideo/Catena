@@ -82,10 +82,10 @@ class gRPCGetPopulatedSlotsTests : public GRPCTest {
     }
 
     // in/out val
-    catena::Empty inVal_;
-    catena::SlotList outVal_;
+    st2138::Empty inVal_;
+    st2138::SlotList outVal_;
     // Expected variables
-    catena::SlotList expVal_;
+    st2138::SlotList expVal_;
 };
 
 /*

@@ -40,25 +40,25 @@ using namespace catena::common;
 EmptyValue catena::common::emptyValue;
 
 template<>
-catena::exception_with_status catena::common::toProto<EmptyValue>(catena::Value& dst, const EmptyValue* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
+catena::exception_with_status catena::common::toProto<EmptyValue>(st2138::Value& dst, const EmptyValue* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
     // do nothing
     return catena::exception_with_status{"", catena::StatusCode::OK};
 }
 
 template<>
-bool catena::common::validFromProto<EmptyValue>(const catena::Value& src, const EmptyValue* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
+bool catena::common::validFromProto<EmptyValue>(const st2138::Value& src, const EmptyValue* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
     // do nothing
     return true;
 }
 
 template<>
-catena::exception_with_status catena::common::fromProto<EmptyValue>(const catena::Value& src, EmptyValue* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
+catena::exception_with_status catena::common::fromProto<EmptyValue>(const st2138::Value& src, EmptyValue* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
     // do nothing
     return catena::exception_with_status{"", catena::StatusCode::OK};
 }
 
 template<>
-catena::exception_with_status catena::common::toProto<int32_t>(catena::Value& dst, const int32_t* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
+catena::exception_with_status catena::common::toProto<int32_t>(st2138::Value& dst, const int32_t* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     // Must have read authorization
     if (!authz.readAuthz(pd)) {
@@ -70,7 +70,7 @@ catena::exception_with_status catena::common::toProto<int32_t>(catena::Value& ds
 }
 
 template<>
-bool catena::common::validFromProto<int32_t>(const catena::Value& src, const int32_t* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
+bool catena::common::validFromProto<int32_t>(const st2138::Value& src, const int32_t* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
     const IConstraint* constraint = pd.getConstraint();
     // Must have write authorization
     if (!authz.writeAuthz(pd)) {
@@ -86,7 +86,7 @@ bool catena::common::validFromProto<int32_t>(const catena::Value& src, const int
 }
 
 template<>
-catena::exception_with_status catena::common::fromProto<int32_t>(const catena::Value& src, int32_t* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
+catena::exception_with_status catena::common::fromProto<int32_t>(const st2138::Value& src, int32_t* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     if (validFromProto(src, dst, pd, rc, authz)) {
         const IConstraint* constraint = pd.getConstraint();
@@ -101,7 +101,7 @@ catena::exception_with_status catena::common::fromProto<int32_t>(const catena::V
 }
 
 template<>
-catena::exception_with_status catena::common::toProto<float>(catena::Value& dst, const float* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
+catena::exception_with_status catena::common::toProto<float>(st2138::Value& dst, const float* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     // Must have read authorization
     if (!authz.readAuthz(pd)) {
@@ -113,7 +113,7 @@ catena::exception_with_status catena::common::toProto<float>(catena::Value& dst,
 }
 
 template<>
-bool catena::common::validFromProto<float>(const catena::Value& src, const float* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
+bool catena::common::validFromProto<float>(const st2138::Value& src, const float* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
     const IConstraint* constraint = pd.getConstraint();
     // Must have write authorization
     if (!authz.writeAuthz(pd)) {
@@ -129,7 +129,7 @@ bool catena::common::validFromProto<float>(const catena::Value& src, const float
 }
 
 template<>
-catena::exception_with_status catena::common::fromProto<float>(const catena::Value& src, float* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
+catena::exception_with_status catena::common::fromProto<float>(const st2138::Value& src, float* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     if (validFromProto(src, dst, pd, rc, authz)) {
         const IConstraint* constraint = pd.getConstraint();
@@ -144,7 +144,7 @@ catena::exception_with_status catena::common::fromProto<float>(const catena::Val
 }
 
 template<>
-catena::exception_with_status catena::common::toProto<std::string>(catena::Value& dst, const std::string* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
+catena::exception_with_status catena::common::toProto<std::string>(st2138::Value& dst, const std::string* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     // Must have read authorization
     if (!authz.readAuthz(pd)) {
@@ -156,7 +156,7 @@ catena::exception_with_status catena::common::toProto<std::string>(catena::Value
 }
 
 template<>
-bool catena::common::validFromProto<std::string>(const catena::Value& src, const std::string* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
+bool catena::common::validFromProto<std::string>(const st2138::Value& src, const std::string* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
     const IConstraint* constraint = pd.getConstraint();
     // Must have write authorization
     if (!authz.writeAuthz(pd)) {
@@ -165,7 +165,7 @@ bool catena::common::validFromProto<std::string>(const catena::Value& src, const
     } else if (!src.has_string_value()) {
         rc = catena::exception_with_status("Type mismatch between value and string " + pd.getOid(), catena::StatusCode::INVALID_ARGUMENT);
     // If pd has type string it must not exceed max_length
-    } else if (pd.type() == ParamType::STRING && src.string_value().size() > pd.total_length()) {
+    } else if (pd.type() == st2138::ParamType::STRING && src.string_value().size() > pd.total_length()) {
         rc = catena::exception_with_status("Param " + pd.getOid() + " exceeds maximum capacity", catena::StatusCode::OUT_OF_RANGE);
     // Must satisfy present constraint
     } else if (constraint && !constraint->satisfied(src)) {
@@ -175,7 +175,7 @@ bool catena::common::validFromProto<std::string>(const catena::Value& src, const
 }
 
 template<>
-catena::exception_with_status catena::common::fromProto<std::string>(const catena::Value& src, std::string* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
+catena::exception_with_status catena::common::fromProto<std::string>(const st2138::Value& src, std::string* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     if (validFromProto(src, dst, pd, rc, authz)) {
         *dst = src.string_value();
@@ -184,14 +184,14 @@ catena::exception_with_status catena::common::fromProto<std::string>(const caten
 }
 
 template<>
-catena::exception_with_status catena::common::toProto<std::vector<int32_t>>(catena::Value& dst, const std::vector<int32_t>* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
+catena::exception_with_status catena::common::toProto<std::vector<int32_t>>(st2138::Value& dst, const std::vector<int32_t>* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     // Must have read authorization
     if (!authz.readAuthz(pd)) {
         rc = catena::exception_with_status("Not authorized to read param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
     } else {
         dst.clear_int32_array_values();
-        catena::Int32List& int_array = *dst.mutable_int32_array_values();
+        st2138::Int32List& int_array = *dst.mutable_int32_array_values();
         for (const int32_t& i : *src) {
             int_array.add_ints(i);
         }
@@ -200,7 +200,7 @@ catena::exception_with_status catena::common::toProto<std::vector<int32_t>>(cate
 }
 
 template<>
-bool catena::common::validFromProto<std::vector<int32_t>>(const catena::Value& src, const std::vector<int32_t>* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
+bool catena::common::validFromProto<std::vector<int32_t>>(const st2138::Value& src, const std::vector<int32_t>* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
     // Must have write authorization
     if (!authz.writeAuthz(pd)) {
         rc = catena::exception_with_status("Not authorized to write to param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
@@ -215,7 +215,7 @@ bool catena::common::validFromProto<std::vector<int32_t>>(const catena::Value& s
         // All values must satisfy present constraint
         if (constraint && !constraint->isRange()) {
             for (int32_t i : src.int32_array_values().ints()) {
-                catena::Value item;
+                st2138::Value item;
                 item.set_int32_value(i);
                 if (!constraint->satisfied(item)) {
                     rc = catena::exception_with_status(pd.getOid() + " constraint not met", catena::StatusCode::INVALID_ARGUMENT);
@@ -228,13 +228,13 @@ bool catena::common::validFromProto<std::vector<int32_t>>(const catena::Value& s
 }
 
 template<>
-catena::exception_with_status catena::common::fromProto<std::vector<int32_t>>(const Value& src, std::vector<int32_t>* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
+catena::exception_with_status catena::common::fromProto<std::vector<int32_t>>(const st2138::Value& src, std::vector<int32_t>* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     if (validFromProto(src, dst, pd, rc, authz)) {
         dst->clear();
         const IConstraint* constraint = pd.getConstraint();
         for (int32_t i : src.int32_array_values().ints()) {
-            catena::Value item;
+            st2138::Value item;
             item.set_int32_value(i);
             if (!constraint || !constraint->isRange()) {
                 dst->push_back(i);
@@ -248,14 +248,14 @@ catena::exception_with_status catena::common::fromProto<std::vector<int32_t>>(co
 }
 
 template<>
-catena::exception_with_status catena::common::toProto<std::vector<float>>(catena::Value& dst, const std::vector<float>* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
+catena::exception_with_status catena::common::toProto<std::vector<float>>(st2138::Value& dst, const std::vector<float>* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     // Must have read authorization
     if (!authz.readAuthz(pd)) {
         rc = catena::exception_with_status("Not authorized to read param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
     } else {
         dst.clear_float32_array_values();
-        catena::Float32List& float_array = *dst.mutable_float32_array_values();
+        st2138::Float32List& float_array = *dst.mutable_float32_array_values();
         for (const float& f : *src) {
             float_array.add_floats(f);
         }
@@ -264,7 +264,7 @@ catena::exception_with_status catena::common::toProto<std::vector<float>>(catena
 }
 
 template<>
-bool catena::common::validFromProto<std::vector<float>>(const catena::Value& src, const std::vector<float>* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
+bool catena::common::validFromProto<std::vector<float>>(const st2138::Value& src, const std::vector<float>* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
     // Must have write authorization
     if (!authz.writeAuthz(pd)) {
         rc = catena::exception_with_status("Not authorized to write to param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
@@ -279,7 +279,7 @@ bool catena::common::validFromProto<std::vector<float>>(const catena::Value& src
         // All values must satisfy present constraint
         if (constraint && !constraint->isRange()) {
             for (float i : src.float32_array_values().floats()) {
-                catena::Value item;
+                st2138::Value item;
                 item.set_float32_value(i);
                 if (!constraint->satisfied(item)) {
                     rc = catena::exception_with_status(pd.getOid() + " constraint not met", catena::StatusCode::INVALID_ARGUMENT);
@@ -292,13 +292,13 @@ bool catena::common::validFromProto<std::vector<float>>(const catena::Value& src
 }
 
 template<>
-catena::exception_with_status catena::common::fromProto<std::vector<float>>(const Value& src, std::vector<float>* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
+catena::exception_with_status catena::common::fromProto<std::vector<float>>(const st2138::Value& src, std::vector<float>* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     if (validFromProto(src, dst, pd, rc, authz)) {
         dst->clear();
         const IConstraint* constraint = pd.getConstraint();
         for (float f : src.float32_array_values().floats()) {
-            catena::Value item;
+            st2138::Value item;
             item.set_float32_value(f);
             if (!constraint || !constraint->isRange()) {
                 dst->push_back(f);
@@ -312,14 +312,14 @@ catena::exception_with_status catena::common::fromProto<std::vector<float>>(cons
 }
 
 template<>
-catena::exception_with_status catena::common::toProto<std::vector<std::string>>(catena::Value& dst, const std::vector<std::string>* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
+catena::exception_with_status catena::common::toProto<std::vector<std::string>>(st2138::Value& dst, const std::vector<std::string>* src, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     // Must have read authorization
     if (!authz.readAuthz(pd)) {
         rc = catena::exception_with_status("Not authorized to read param " + pd.getOid(), catena::StatusCode::PERMISSION_DENIED);
     } else {
         dst.clear_string_array_values();
-        catena::StringList& string_array = *dst.mutable_string_array_values();
+        st2138::StringList& string_array = *dst.mutable_string_array_values();
         for (const std::string& s :*src) {
             string_array.add_strings(s);
         }
@@ -328,7 +328,7 @@ catena::exception_with_status catena::common::toProto<std::vector<std::string>>(
 }
 
 template<>
-bool catena::common::validFromProto<std::vector<std::string>>(const catena::Value& src, const std::vector<std::string>* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
+bool catena::common::validFromProto<std::vector<std::string>>(const st2138::Value& src, const std::vector<std::string>* dst, const IParamDescriptor& pd, catena::exception_with_status& rc, const IAuthorizer& authz) {
     std::size_t total_length = 0;
     // Must have write authorization
     if (!authz.writeAuthz(pd)) {
@@ -345,7 +345,7 @@ bool catena::common::validFromProto<std::vector<std::string>>(const catena::Valu
             total_length += s.length();
             // All values must satisfy present constraint
             if (constraint) {
-                catena::Value item;
+                st2138::Value item;
                 item.set_string_value(s);
                 if (!constraint->satisfied(item)) {
                     rc = catena::exception_with_status(pd.getOid() + " constraint not met", catena::StatusCode::INVALID_ARGUMENT);
@@ -362,7 +362,7 @@ bool catena::common::validFromProto<std::vector<std::string>>(const catena::Valu
 }
 
 template<>
-catena::exception_with_status catena::common::fromProto<std::vector<std::string>>(const Value& src, std::vector<std::string>* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
+catena::exception_with_status catena::common::fromProto<std::vector<std::string>>(const st2138::Value& src, std::vector<std::string>* dst, const IParamDescriptor& pd, const IAuthorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     if (validFromProto(src, dst, pd, rc, authz)) {
         dst->clear();

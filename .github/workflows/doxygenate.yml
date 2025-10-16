@@ -3,8 +3,6 @@ name: "Doxygen and Markdown GitHub Pages Deploy Action"
 on:
     push:
       branches: [ "develop", "main", "doxygen" ]
-    pull_request:
-      branches: [ "develop", "main" ]
     schedule:
       - cron: '25 16 * * 2'
 
@@ -18,7 +16,7 @@ jobs:
             - name: Install Toolchain
               run: |
                   sudo apt-get update -y
-                  sudo apt-get install -y -qq wget doxygen graphviz ninja-build
+                  sudo apt-get install -y -qq wget doxygen graphviz ninja-build libavahi-client-dev libavahi-common-dev pkg-config libcurl4-openssl-dev
                   wget https://github.com/jgm/pandoc/releases/download/3.1.2/pandoc-3.1.2-linux-amd64.tar.gz
                   tar -xvf pandoc-3.1.2-linux-amd64.tar.gz
                   sudo mv pandoc-3.1.2/bin/pandoc /usr/local/bin/

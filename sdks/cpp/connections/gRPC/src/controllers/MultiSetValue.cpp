@@ -115,6 +115,10 @@ void MultiSetValue::proceed(bool ok) {
                     // Trying and commiting the multiSetValue.
                     if (dm->tryMultiSetValue(reqs_, rc, *authz)) {
                         rc = dm->commitMultiSetValue(reqs_, *authz);
+                    } else { // debug log new
+                        DEBUG_LOG << "MultiSetValue: tryMultiSetValue failed for slot " << reqs_.slot()
+                                  << " status=" << static_cast<int>(rc.status)
+                                  << " msg=\"" << rc.what() << "\"";
                     }
                 }
             // ERROR
@@ -126,7 +130,7 @@ void MultiSetValue::proceed(bool ok) {
             // Changing state to kFinish and writing response to client.
             status_ = CallStatus::kFinish;
             if (rc.status == catena::StatusCode::OK) {
-                responder_.Finish(catena::Empty{}, Status::OK, this);
+                responder_.Finish(st2138::Empty{}, Status::OK, this);
             } else {
                 responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
             }
