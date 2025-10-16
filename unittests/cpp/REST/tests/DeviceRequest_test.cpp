@@ -283,3 +283,63 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_GetSerializerThrowUnknown) {
     testCall();
 }
 
+// TEST_F(RESTDeviceRequestTests, YourTestName) {
+//     // The fixture automatically provides:
+//     // - endpoint_ (created via makeOne())
+//     // - context_ (mocked ISocketReader)
+//     // - dms_ (device map with devices at slots 0 and 1)
+//     // - serverSocket_ (boost socket)
+// }
+
+// Test 3.6: Test endpoint setup with different slot values
+TEST_F(RESTDeviceRequestTests, endpointSetupExample) {
+    {
+        // Set the target slot
+        slot_ = 0; 
+        
+        // Configure what the mock context will return
+        EXPECT_CALL(context_, slot())
+            .WillRepeatedly(testing::Return(0));
+        
+        // Recreate endpoint with new configuration
+        endpoint_.reset(makeOne());
+        
+        // Verify setup succeeded
+        ASSERT_TRUE(endpoint_) << "Endpoint should be created successfully";
+
+        // Verify device exisits at slot 0
+        EXPECT_TRUE(dms_.find(0) != dms_.end());
+
+        // Test that endpoint can access the device successfully
+        EXPECT_NO_THROW({
+            auto device = dms_[0];
+            EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
+        }) << "Slot 0 should pass validation";
+    }
+
+    {
+        // Set the target slot
+        slot_ = 99; 
+        
+        // Configure what the mock context will return
+        EXPECT_CALL(context_, slot())
+            .WillRepeatedly(testing::Return(99));
+        
+        // Recreate endpoint with new configuration
+        endpoint_.reset(makeOne());
+        
+        // Verify setup succeeded
+        ASSERT_TRUE(endpoint_) << "Endpoint should be created successfully";
+
+        // But proceed() should fail because slot 99 doesn't have proper setup
+        expRc_ = catena::exception_with_status("device not found in slot 99", catena::StatusCode::NOT_FOUND);
+
+        // Set expectation that dm1_ won't be called (because it should fail)
+        EXPECT_CALL(dm1_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
+
+        // Test that slot 99 fails during proceed()
+        EXPECT_THROW({
+            endpoint_->proceed();
+        }, catena::exception_with_status) << "Slot 99 should fail validation";
+    }
+}
