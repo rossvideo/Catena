@@ -3,8 +3,9 @@
   "multi_set_enabled": true,
   "detail_level": "FULL",
   "access_scopes": ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
-  "default_scope": "st2138:op",
   "subscriptions": true,
+  "detail_level": "FULL",
+  "default_scope": "st2138:op",
   "language_packs": {},
   "params": {
     "dashboard_UI": {
@@ -14,14 +15,112 @@
       "read_only": true,
       "value": { "string_value": "eo://AudioDeck.grid" }
     },
-    "panel": {
+    "dashboard_icon": {
+      "type": "STRING",
+      "oid_aliases": ["0xFF0C"],
+      "read_only": true,
+      "value": { "string_value": "eo://catena_logo_16x16.png" }
+    },
+    "eq": {
       "type": "STRUCT",
+      "name": { "display_strings": { "en": "EQ" } },
       "params": {
-        "type": {
-          "type": "STRING"
+        "response": {
+          "type": "INT32",
+          "name": { "display_strings": { "en": "Response" } },
+          "access_scope": "st2138:mon",
+          "constraint": {
+            "type": "INT_RANGE",
+            "int32_range": {"min_value": 0, "max_value": 100, "step": 2}
+          },
+          "widget": "wheel"
         },
-        "name": {
-          "type": "STRING"
+        "frequency": {
+          "type": "FLOAT32",
+          "name": { "display_strings": { "en": "Frequency" } },
+          "access_scope": "st2138:op",
+          "constraint": {
+            "type": "FLOAT_RANGE",
+            "float32_range": {"min_value":20, "display_min": 20,  "max_value": 20000, "display_max": 20000}
+          },
+          "widget": "wheel"
+        },
+        "gain": {
+          "type": "FLOAT32",
+          "name": { "display_strings": { "en": "Gain" } },
+          "access_scope": "st2138:cfg",
+          "constraint": {
+            "type": "FLOAT_RANGE",
+            "float32_range": {"min_value":0,  "max_value": 10.0, "step": 0.1}
+          },
+          "widget": "wheel"
+        },
+        "q_factor": {
+          "type": "FLOAT32",
+          "name": { "display_strings": { "en": "Q Factor" } },
+          "access_scope": "st2138:adm",
+          "constraint": {
+            "type": "FLOAT_RANGE",
+            "float32_range": {"min_value":0,  "max_value": 10.0, "step": 0.1}
+          },
+          "widget": "wheel"
+        }
+      }
+    },
+    "audio_channel": {
+      "type": "STRUCT",
+      "name": { "display_strings": { "en": "Audio Channel" } },
+      "params": {
+        "fader": {
+          "type": "FLOAT32",
+          "name": { "display_strings": { "en": "Fader" } },
+          "constraint": {
+            "type": "FLOAT_RANGE",
+            "float32_range": {"min_value":0,  "max_value": 1.00, "display_min":0, "display_max":1.00, "step": 0.01}
+          },
+          "precision": 3,
+          "widget": "fader"
+        },
+        "eq_list": {
+          "type": "STRUCT_ARRAY",
+          "name": { "display_strings": { "en": "EQ List" } },
+          "template_oid": "/eq",
+          "value": {
+            "struct_array_values": {
+              "struct_values": [
+                {"struct_value": {"fields": {"response": {"int32_value": 0}, "frequency": {"float32_value": 0}, "gain": {"float32_value": 0}, "q_factor": {"float32_value": 0}}}},
+                {"struct_value": {"fields": {"response": {"int32_value": 0}, "frequency": {"float32_value": 0}, "gain": {"float32_value": 0}, "q_factor": {"float32_value": 0}}}}
+              ]
+            }
+          }
+        }
+      }
+    },
+    "audio_deck": {
+      "type": "STRUCT_ARRAY",
+      "name": { "display_strings": { "en": "Audio Deck" } },
+      "template_oid": "/audio_channel",
+      "minimal_set": true,
+      "value": {
+        "struct_array_values": {
+          "struct_values": [
+            {"struct_value": {"fields": {"fader": {"float32_value": 0.0}, "eq_list": {"struct_array_values": {"struct_values": [
+              {"struct_value": {"fields": {"response": {"int32_value": 10}, "frequency": {"float32_value": 0.8}, "gain": {"float32_value": 2.5}, "q_factor": {"float32_value": 8.4}}}},
+              {"struct_value": {"fields": {"response": {"int32_value": 20}, "frequency": {"float32_value": 4.7}, "gain": {"float32_value": 3.7}, "q_factor": {"float32_value": 5.6}}}}
+            ]}}}}},
+            {"struct_value": {"fields": {"fader": {"float32_value": 0.1}, "eq_list": {"struct_array_values": {"struct_values": [
+              {"struct_value": {"fields": {"response": {"int32_value": 30}, "frequency": {"float32_value": 0.8}, "gain": {"float32_value": 2.5}, "q_factor": {"float32_value": 9.3}}}},
+              {"struct_value": {"fields": {"response": {"int32_value": 40}, "frequency": {"float32_value": 1.9}, "gain": {"float32_value": 0.5}, "q_factor": {"float32_value": 1.2}}}}
+            ]}}}}},
+            {"struct_value": {"fields": {"fader": {"float32_value": 0.2}, "eq_list": {"struct_array_values": {"struct_values": [
+              {"struct_value": {"fields": {"response": {"int32_value": 50}, "frequency": {"float32_value": 1.1}, "gain": {"float32_value": 3.8}, "q_factor": {"float32_value": 0.9}}}},
+              {"struct_value": {"fields": {"response": {"int32_value": 60}, "frequency": {"float32_value": 4.2}, "gain": {"float32_value": 4.6}, "q_factor": {"float32_value": 0.3}}}}
+            ]}}}}},
+            {"struct_value": {"fields": {"fader": {"float32_value": 0.3}, "eq_list": {"struct_array_values": {"struct_values": [
+              {"struct_value": {"fields": {"response": {"int32_value": 70}, "frequency": {"float32_value": 1.4}, "gain": {"float32_value": 4.5}, "q_factor": {"float32_value": 0.1}}}},
+              {"struct_value": {"fields": {"response": {"int32_value": 80}, "frequency": {"float32_value": 6.1}, "gain": {"float32_value": 4.8}, "q_factor": {"float32_value": 9.9}}}}
+            ]}}}}}
+          ]
         }
       }
     },

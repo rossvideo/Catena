@@ -36,7 +36,7 @@
  */
 
 // device model
-#include "device.audiodeck.json" 
+#include "device.audiodeck.json.h" 
 
 //common
 #include <utils.h>
@@ -92,34 +92,16 @@ void handle_signal(int sig) {
     t.join();
 }
 
-
-void statusUpdateExample(){   
-    // this is the "receiving end" of the status update example
-    dm.getValueSetByClient().connect([](const std::string& oid, const IParam* p) {
-        // all we do here is print out the oid of the parameter that was changed
-        // your biz logic would do something _even_more_ interesting!
-        DEBUG_LOG << "*** signal received: " << oid << " has been changed by client" << '\n';
-    });
-
-    // The rest is the "sending end" of the status update example
-    IParam* param = dm.getItem<ParamTag>("counter");
-    if (param == nullptr) {
-        std::stringstream why;
-        why << __PRETTY_FUNCTION__ << "\nparam 'counter' not found";
-        throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
-    }
-
-    // downcast the IParam to a ParamWithValue<int32_t>
-    auto& counter = *dynamic_cast<ParamWithValue<int32_t>*>(param);
-
-    while (globalLoop) {
-        // update the counter once per second, and emit the event
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        {
-            std::lock_guard lg(dm.mutex());
-            counter.get()++;
-            DEBUG_LOG << counter.getOid() << " set to " << counter.get();
-            dm.getValueSetByServer().emit("/counter", &counter);
+void audioDeckUpdateHandler(const std::string& jptr, const IParam* p) {
+    Path oid(jptr);
+    if (oid.empty()) {
+        DEBUG_LOG << "*** Whole struct array was updated";
+    } else {
+        std::size_t index = oid.front_as_index();
+        if (index == Path::kEnd) {
+            DEBUG_LOG << "*** Index is \"-\", new element added to struct array";
+        } else {
+            DEBUG_LOG << "*** audio_deck[" << index << "] was updated";
         }
     }
 }
@@ -157,7 +139,21 @@ void RunRPCServer(std::string addr)
         service.init();
         std::thread cq_thread([&]() { service.processEvents(); });
 
-        std::thread counterLoop(statusUpdateExample);
+        // route client-set updates for specific top-level params to handlers
+        std::map<std::string, std::function<void(const std::string&, const IParam*)>> handlers;
+        handlers["audio_deck"] = audioDeckUpdateHandler;
+
+        dm.getValueSetByClient().connect([&handlers](const std::string& oid, const IParam* p) {
+            DEBUG_LOG << "signal received: " << oid << " has been changed by client";
+
+            Path jptr(oid);
+            std::string front = jptr.front_as_string();
+            jptr.pop();
+
+            if (handlers.contains(front)) {
+                handlers[front](jptr.toString(true), p);
+            }
+        });
 
         // start the heartbeat on the device
         dm.setHeartbeatParam("/product/version");
@@ -166,8 +162,6 @@ void RunRPCServer(std::string addr)
         // wait for the server to shutdown and tidy up
         server->Wait();
         dm.stopHeartbeat();
-
-        counterLoop.join();
 
         cq->Shutdown();
         cq_thread.join();

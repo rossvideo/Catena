@@ -35,5 +35,6 @@ else()
     add_subdirectory("use_commands")
     add_subdirectory("use_menus")
     add_subdirectory("simple_dashboard_audiodeck")
+    add_subdirectory("dashboard_audiodeck")
     # ...add other examples as needed
 endif()
