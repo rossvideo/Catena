@@ -76,7 +76,7 @@ log(`Validating device model '${deviceName}' from file '${options.deviceModel}' 
  * @param {boolean} disableMandatoryEnforcement If true, skip validation and return early
  * @throws {Error} If mandatory parameters are missing or have invalid values (when enforcement enabled)
  */
-function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement = false) {
+function validateRequiredParamsAndScopes(deviceParams, disableMandatoryEnforcement = false) {
     if (disableMandatoryEnforcement) {
         return;
     }
@@ -163,7 +163,7 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
     const allIssues = [...missing.map(p => `${p} (missing field)`), ...emptyValues, ...invalidScopes];
 
     if (allIssues.length > 0 && !disableMandatoryEnforcement) {
-        throw new Error(`Invalid mandatory product parameters: ${allIssues.join(', ')}`);
+        throw new Error(`Invalid mandatory product paramSeters: ${allIssues.join(', ')}`);
     }
 }
 
@@ -174,7 +174,7 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
     if (isValid.data) {
         const dm = new DeviceModel(options.deviceModel, validator, isValid.data);
 
-        areAllRequiredParamsPresent(dm.desc, options.disableMandatoryEnforcement);
+        validateRequiredParamsAndScopes(dm.desc, options.disableMandatoryEnforcement);
 
         log('✅ Validation succeeded.');
         log("Generating code...");
