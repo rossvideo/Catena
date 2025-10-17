@@ -211,8 +211,10 @@ class CppGen {
       
       let menus = menuGroups[group].menus;
       for (let menu in menus) {
-        let paramOids = (menus[menu].param_oids || []).map(oid => `"${oid}"`).join(", ");
-        let commandOids = (menus[menu].command_oids || []).map(oid => `"${oid}"`).join(", ");
+        let paramList = Array.isArray(menus[menu].param_oids) ? menus[menu].param_oids : [];
+        let commandList = Array.isArray(menus[menu].command_oids) ? menus[menu].command_oids : [];
+        let paramOids = paramList.map(oid => `"${oid}"`).join(", ");
+        let commandOids = commandList.map(oid => `"${oid}"`).join(", ");
         let menuName = menus[menu].name.display_strings;
         let menuNamePairs = Object.keys(menuName);
         let clientHints = menus[menu].client_hints;
@@ -250,7 +252,7 @@ class CppGen {
    * generate the code to instantiate the params
    */
   params() {
-    if (!"params" in this.device.desc) {
+    if (!("params" in this.device.desc)) {
       return;
     }
     for (let oid in this.device.desc.params) {
@@ -364,7 +366,7 @@ class CppGen {
    * generate the code to instantiate the commands
    */
   commands() {
-    if (!"commands" in this.device.desc) {
+    if (!("commands" in this.device.desc)) {
       return;
     }
     for (let oid in this.device.desc.commands) {
