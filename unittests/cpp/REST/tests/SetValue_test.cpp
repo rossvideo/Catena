@@ -49,11 +49,10 @@ class RESTSetValueTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTSetValueTest");
+        Logger::init("RESTSetValueTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     RESTSetValueTests() : RESTEndpointTest() {

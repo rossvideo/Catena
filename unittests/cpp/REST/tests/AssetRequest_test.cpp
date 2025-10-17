@@ -71,11 +71,10 @@ class RESTAssetRequestTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTAssetRequestTests");
+        Logger::init("RESTAssetRequestTests");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     RESTAssetRequestTests() : RESTEndpointTest() {

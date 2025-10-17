@@ -49,11 +49,10 @@ class gRPCGetPopulatedSlotsTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("gRPCGetPopulatedSlotsTest");
+        Logger::init("gRPCGetPopulatedSlotsTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     /*

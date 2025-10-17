@@ -53,11 +53,10 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTExecuteCommandTest");
+        Logger::init("RESTExecuteCommandTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     /*

@@ -53,11 +53,10 @@ class gRPCDeviceRequestTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("gRPCDeviceRequestTest");
+        Logger::init("gRPCDeviceRequestTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     /*

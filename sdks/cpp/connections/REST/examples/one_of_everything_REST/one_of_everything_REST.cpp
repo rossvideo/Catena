@@ -77,7 +77,7 @@ std::atomic<bool> counterLoop = true;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
+        LOG(INFO) << "Caught signal " << sig << ", shutting down";
         fibLoop = false;
         counterLoop = false;
         if (globalApi != nullptr) {
@@ -138,7 +138,7 @@ void defineCommands() {
                     }
                 });
 
-                DEBUG_LOG << "Fibonacci sequence start";
+                LOG(INFO) << "Fibonacci sequence start";
                 response.mutable_no_response();
             }
             co_return response;
@@ -156,7 +156,7 @@ void defineCommands() {
                 fibLoop = false;
                 fibThread->join();
                 fibThread = nullptr;
-                DEBUG_LOG << "Fibonacci sequence stop";
+                LOG(INFO) << "Fibonacci sequence stop";
                 response.mutable_no_response();
             } else {
                 response.mutable_exception()->set_type("Invalid Command");
@@ -208,7 +208,7 @@ void defineCommands() {
                     randomNum = std::round(randomNum * 1000) / 1000;
                     randomArray.push_back(randomNum);
                 }
-                DEBUG_LOG << "Randomized float array";
+                LOG(INFO) << "Randomized float array";
                 response.mutable_no_response();
             }
             
@@ -224,30 +224,30 @@ void defineCommands() {
             catena::exception_with_status err{"", catena::StatusCode::OK};
             st2138::CommandResponse response;
             // Locating
-            DEBUG_LOG << "Locating tape...";
+            LOG(INFO) << "Locating tape...";
             response.mutable_response()->set_string_value("Locating tape...");
             co_yield response;
             std::this_thread::sleep_for(std::chrono::seconds(2));
             // Loading
-            DEBUG_LOG << "Tape found, loading...";
+            LOG(INFO) << "Tape found, loading...";
             response.Clear();
             response.mutable_response()->set_string_value("Tape found, loading...");
             co_yield response;
             std::this_thread::sleep_for(std::chrono::seconds(2));
             // Seeking
-            DEBUG_LOG << "Tape loaded, seeking...";
+            LOG(INFO) << "Tape loaded, seeking...";
             response.Clear();
             response.mutable_response()->set_string_value("Tape loaded, seeking...");
             co_yield response;
             std::this_thread::sleep_for(std::chrono::seconds(2));
             // Reading
-            DEBUG_LOG << "File loaded, reading...";
+            LOG(INFO) << "File loaded, reading...";
             response.Clear();
             response.mutable_response()->set_string_value("File loaded, reading...");
             co_yield response;
             std::this_thread::sleep_for(std::chrono::seconds(2));
             // Done
-            DEBUG_LOG << "File loaded.";
+            LOG(INFO) << "File loaded.";
             response.Clear();
             response.mutable_response()->set_string_value("File loaded.");
             co_return response;
@@ -275,7 +275,7 @@ void startCounter() {
             if (counter.get()++ >= 200) {
                 counter.get() = 0; // Reset counter to 0 when it reaches 200
             }
-            DEBUG_LOG << counter.getOid() << " set to " << counter.get();
+            LOG(INFO) << counter.getOid() << " set to " << counter.get();
             dm.getValueSetByServer().emit("/counter", &counter);
         }
     }
@@ -299,8 +299,8 @@ void RunRESTServer() {
         // Creating and running the REST service.
         ServiceImpl api(config);
         globalApi = &api;
-        DEBUG_LOG << "API Version: " << api.version();
-        DEBUG_LOG << "REST on 0.0.0.0:" << config.port;
+        LOG(INFO) << "API Version: " << api.version();
+        LOG(INFO) << "REST on 0.0.0.0:" << config.port;
 
         std::thread loop(startCounter);
 
@@ -318,21 +318,13 @@ void RunRESTServer() {
 
 int main(int argc, char* argv[])
 {
-    Logger::StartLogging(argc, argv);
+    Logger::init(argc, argv, "one_of_everything_REST");
 
-    std::string addr;
-    absl::SetProgramUsageMessage("Runs the Catena Service");
-    absl::ParseCommandLine(argc, argv);
-  
-    addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
-  
-    // commands should be defined before starting the RPC server 
+    // commands should be defined before starting the RPC server
     defineCommands();
 
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
     
-    // Shutdown Google Logging
-    google::ShutdownGoogleLogging();
     return 0;
 }

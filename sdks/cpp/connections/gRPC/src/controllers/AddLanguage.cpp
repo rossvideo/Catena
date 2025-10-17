@@ -44,13 +44,13 @@ AddLanguage::AddLanguage(IServiceImpl *service, SlotMap& dms, bool ok)
 }
 
 void AddLanguage::proceed(bool ok) { 
-    DEBUG_LOG << "AddLanguage::proceed[" << objectId_ << "]: " << timeNow()
+    LOG(INFO) << "AddLanguage::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        DEBUG_LOG << "AddLanguage[" << objectId_ << "] cancelled";
+        LOG(INFO) << "AddLanguage[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
     
@@ -119,7 +119,7 @@ void AddLanguage::proceed(bool ok) {
          * ServiceImpl.
          */
         case CallStatus::kFinish:
-            DEBUG_LOG << "AddLanguage[" << objectId_ << "] finished";
+            LOG(INFO) << "AddLanguage[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

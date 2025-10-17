@@ -190,7 +190,7 @@ void ParamInfoRequest::proceed() {
     
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    DEBUG_LOG << "ParamInfoRequest[" << objectId_ << "] finished\n";
+    LOG(INFO) << "ParamInfoRequest[" << objectId_ << "] finished\n";
 }
 
 // Helper method to add a parameter to the responses

@@ -66,17 +66,17 @@ void printCoordinate(const Coordinates_elem& coord) {
     std::visit([](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, Cartesian>) {
-            DEBUG_LOG << "Cartesian: " << arg.x << ", " << arg.y << ", " << arg.z;
+            LOG(INFO) << "Cartesian: " << arg.x << ", " << arg.y << ", " << arg.z;
         } else if constexpr (std::is_same_v<T, _coordinates::Cylindrical>) {
-            DEBUG_LOG << "Cylindrical: " << arg.rho << ", " << arg.phi << "°, " << arg.z;
+            LOG(INFO) << "Cylindrical: " << arg.rho << ", " << arg.phi << "°, " << arg.z;
         } else if constexpr (std::is_same_v<T, _coordinates::Spherical>) {
-            DEBUG_LOG << "Spherical: " << arg.r << ", " << arg.theta << "°, " << arg.phi << "°";
+            LOG(INFO) << "Spherical: " << arg.r << ", " << arg.theta << "°, " << arg.phi << "°";
         }
     }, coord);
 }
 
 int main (int argc, char** argv) {
-    Logger::StartLogging(argc, argv);
+    Logger::init(argc, argv, "use_variants");
     
     // // lock the model
     std::lock_guard lg(dm.mutex());
@@ -91,12 +91,12 @@ int main (int argc, char** argv) {
     }
     st2138::Param numberParam;
     ip->toProto(numberParam, Authorizer::kAuthzDisabled);
-    DEBUG_LOG << numberParam.DebugString();
+    LOG(INFO) << numberParam.DebugString();
 
     use_variants::Number& number = getParamValue<use_variants::Number>(ip.get());
     number = "five";
     ip->toProto(numberParam, Authorizer::kAuthzDisabled);
-    DEBUG_LOG << "Updated Number:\n" << numberParam.DebugString();
+    LOG(INFO) << "Updated Number:\n" << numberParam.DebugString();
 
     // get the coordinates param
     ip = dm.getParam("/coordinates", err);
@@ -106,7 +106,7 @@ int main (int argc, char** argv) {
     }
     st2138::Param coordinatesParam;
     ip->toProto(coordinatesParam, Authorizer::kAuthzDisabled);
-    DEBUG_LOG << coordinatesParam.DebugString();
+    LOG(INFO) << coordinatesParam.DebugString();
 
     ip = dm.getParam("/coordinates/2", err);
     if (!ip) {
@@ -114,8 +114,8 @@ int main (int argc, char** argv) {
         return EXIT_FAILURE;
     }
     use_variants::Coordinates_elem& coord = getParamValue<use_variants::Coordinates_elem>(ip.get());
-    DEBUG_LOG;
-    DEBUG_LOG << "Coordinate/2: ";
+    LOG(INFO);
+    LOG(INFO) << "Coordinate/2: ";
     printCoordinate(coord);
 
     ip = dm.getParam("/cartesian", err);
@@ -127,17 +127,17 @@ int main (int argc, char** argv) {
     value.mutable_struct_variant_value()->set_struct_variant_type("cartesian");
     dm.getValue("/cartesian", *value.mutable_struct_variant_value()->mutable_value());
     dm.setValue("/coordinates/2", value);
-    DEBUG_LOG << "Updated Coordinate/2: ";
+    LOG(INFO) << "Updated Coordinate/2: ";
     printCoordinate(coord);
 
-    DEBUG_LOG;
+    LOG(INFO);
     ip = dm.getParam("/coordinates/0", err);
     if (!ip) {
         LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    DEBUG_LOG << value.DebugString();
+    LOG(INFO) << value.DebugString();
 
     value.set_int32_value(42);
     dm.setValue("/coordinates/0/cartesian/z", value);
@@ -148,14 +148,12 @@ int main (int argc, char** argv) {
         return EXIT_FAILURE;
     }
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    DEBUG_LOG << value.DebugString();
+    LOG(INFO) << value.DebugString();
     use_variants::Cartesian& cartesian = getParamValue<use_variants::Cartesian>(ip.get());
-    DEBUG_LOG;
-    DEBUG_LOG << "Updated Coordinates/0/cartesian: ";
+    LOG(INFO);
+    LOG(INFO) << "Updated Coordinates/0/cartesian: ";
     printCoordinate(cartesian);
 
-    // Shutdown Google Logging
-    google::ShutdownGoogleLogging();
     return EXIT_SUCCESS;
 }
 

@@ -33,6 +33,7 @@ RUN . /root/toolchain.env \
     libavahi-client-dev=$AVAHI_CLIENT_VERSION \
     libavahi-common-dev=$AVAHI_COMMON_VERSION \
     pkg-config=$PKG_CONFIG_VERSION \
+    libabsl-dev=$ABSEIL_VERSION \
     ca-certificates \
     && curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x -o /tmp/nodesource_setup.sh \
     && cat /tmp/nodesource_setup.sh \
@@ -40,7 +41,6 @@ RUN . /root/toolchain.env \
     && apt-get install -y nodejs \
     && rm -f /tmp/nodesource_setup.sh \
     && npm install -g n \
-    && apt-get install -y libgoogle-glog-dev \
     && apt-get clean \
     && rm -rf /var/cache/apt/archives/ /var/lib/apt/lists/*
 

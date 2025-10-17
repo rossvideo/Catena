@@ -71,11 +71,10 @@ class AuthorizationTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("AuthorizationTest");
+        Logger::init("AuthorizationTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 };
 

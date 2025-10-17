@@ -50,11 +50,10 @@ class RESTMultiSetValueTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTMultiSetValueTest");
+        Logger::init("RESTMultiSetValueTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     RESTMultiSetValueTests() : RESTEndpointTest() {

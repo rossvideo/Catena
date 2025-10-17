@@ -58,11 +58,10 @@ class DeviceTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("DeviceTest");
+        Logger::init("DeviceTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     DeviceTest() 

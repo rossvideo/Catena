@@ -54,11 +54,10 @@ class MenuGroupTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("MenuGroupTest");
+        Logger::init("MenuGroupTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     // Creates a MenuGroup for testing.

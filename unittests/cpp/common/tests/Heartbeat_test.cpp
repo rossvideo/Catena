@@ -51,11 +51,10 @@ class HeartbeatTest : public ::testing::Test {
     
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("HeartbeatTest");
+        Logger::init("HeartbeatTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     void SetUp() override {

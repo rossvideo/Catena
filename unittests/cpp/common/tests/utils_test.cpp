@@ -20,11 +20,10 @@ class UtilsTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("UtilsTest");
+        Logger::init("UtilsTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 };
 

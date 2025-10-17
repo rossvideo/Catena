@@ -57,11 +57,10 @@ class StructInfoTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("StructInfoTest");
+        Logger::init("StructInfoTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     /*

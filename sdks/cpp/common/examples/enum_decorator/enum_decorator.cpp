@@ -95,49 +95,49 @@ const Primes::FwdMap Primes::fwdMap_ = {
 };
 
 int main (int argc, char** argv) {
-    Logger::StartLogging(argc, argv);
+    Logger::init(argc, argv, "enum_decorator");
     
     // default constructor, sets value to zero
     Counter c0;
-    DEBUG_LOG << "c0: " << c0.toString() << " has value: " << Counter::utype(c0);
+    LOG(INFO) << "c0: " << c0.toString() << " has value: " << Counter::utype(c0);
 
     // construct from enum value
     Counter c1(Counter_e::kOne);
-    DEBUG_LOG << "c1: " << c1.toString();
+    LOG(INFO) << "c1: " << c1.toString();
 
     // construct from string
     Counter c2("two");
-    DEBUG_LOG << "c2: " << Counter::utype(c2);
+    LOG(INFO) << "c2: " << Counter::utype(c2);
 
     // construct from integer
     Counter c3(2);
-    DEBUG_LOG << "c3: " << c3.toString() << " has value: " << Counter::utype(c3);
+    LOG(INFO) << "c3: " << c3.toString() << " has value: " << Counter::utype(c3);
 
     // construct from invalid string
     Counter c4("three");
-    DEBUG_LOG << "c4: " << c4.toString() << " has value: " << Counter::utype(c4);
+    LOG(INFO) << "c4: " << c4.toString() << " has value: " << Counter::utype(c4);
 
     // construct from invalid integer
     Counter c5(-1);
-    DEBUG_LOG << "c5: " << c5.toString() << " has value: " << Counter::utype(c5);
+    LOG(INFO) << "c5: " << c5.toString() << " has value: " << Counter::utype(c5);
 
     // inequality
-    DEBUG_LOG << std::boolalpha << "c1 == c2: " << (c1 == c2);
+    LOG(INFO) << std::boolalpha << "c1 == c2: " << (c1 == c2);
 
     // equality
-    DEBUG_LOG << std::boolalpha << "c2 == c3: " << (c2 == c3);
+    LOG(INFO) << std::boolalpha << "c2 == c3: " << (c2 == c3);
 
     // cast to string
-    DEBUG_LOG << "c3: " << std::string(c3);
+    LOG(INFO) << "c3: " << std::string(c3);
 
     // Using the hand-built EnumDecorator for Primes
     // default constructor, demonstrates that the default value is zero
     // so it's recommended to use this behaviour to flag an undefined or invalid EnumDecorator
     Primes p0; 
-    DEBUG_LOG << "p0: " << p0.toString() << " = " << Primes::utype(p0);
+    LOG(INFO) << "p0: " << p0.toString() << " = " << Primes::utype(p0);
 
     Primes p5(Primes_e::kFive);
-    DEBUG_LOG << "p5: " << p5.toString() << " = " << Primes::utype(p5);
+    LOG(INFO) << "p5: " << p5.toString() << " = " << Primes::utype(p5);
 }
 
 /* Possible Output

@@ -45,7 +45,7 @@
 using catena::common::Path;
 
 void document(Path& p) {
-    DEBUG_LOG << "path: " << p.fqoid() << "\nhas length: " << p.size();
+    LOG(INFO) << "path: " << p.fqoid() << "\nhas length: " << p.size();
     while (p.size()) {
         if (p.front_is_index()) {
             Path::Index idx = p.front_as_index();
@@ -55,17 +55,17 @@ void document(Path& p) {
             } else {
               debugString += std::to_string(idx);
             }
-            DEBUG_LOG << debugString;
+            LOG(INFO) << debugString;
         }
         if (p.front_is_string()) {
-            DEBUG_LOG << "segment " << p.walked() << " has type string and value: " << p.front_as_string();
+            LOG(INFO) << "segment " << p.walked() << " has type string and value: " << p.front_as_string();
         }
         p.pop();
     }
 }
 
 int main (int argc, char** argv) {
-    Logger::StartLogging(argc, argv);
+    Logger::init(argc, argv, "path");
 
     Path top_level_oid("/top_level_oid");
     document(top_level_oid);
@@ -81,19 +81,19 @@ int main (int argc, char** argv) {
     document(struct_array);
 
     // The document method consumes the Path passed to it
-    DEBUG_LOG;
-    DEBUG_LOG << "jptr should be empty";
+    LOG(INFO);
+    LOG(INFO) << "jptr should be empty";
     document(struct_array);
     
     // we can reverse this 2 ways - reverse the last pop operation
-    DEBUG_LOG;
-    DEBUG_LOG << "jptr should have its last segment";
+    LOG(INFO);
+    LOG(INFO) << "jptr should have its last segment";
     struct_array.unpop();
     document(struct_array);
 
     // or rewind to the very beginning
-    DEBUG_LOG;
-    DEBUG_LOG << "jptr should be fully restored";
+    LOG(INFO);
+    LOG(INFO) << "jptr should be fully restored";
     struct_array.rewind();
     document(struct_array);
 
@@ -101,8 +101,8 @@ int main (int argc, char** argv) {
     document(struct_array_element_field);
 
     // Adds a new segment to the Path
-    DEBUG_LOG;
-    DEBUG_LOG << "jptr should have additional segment \"grandChild\"";
+    LOG(INFO);
+    LOG(INFO) << "jptr should have additional segment \"grandChild\"";
     struct_array_element_field.rewind();
     struct_array_element_field.push_back("grandChild");
     document(struct_array_element_field);

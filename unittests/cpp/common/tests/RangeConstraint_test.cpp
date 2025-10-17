@@ -52,11 +52,10 @@ class RangeConstraintTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RangeConstraintTest");
+        Logger::init("RangeConstraintTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 };
 

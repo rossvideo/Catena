@@ -68,7 +68,7 @@ std::atomic<bool> globalLoop = true;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
+        LOG(INFO) << "Caught signal " << sig << ", shutting down";
         globalLoop = false;
         if (globalServer != nullptr) {
             globalServer->Shutdown();
@@ -110,7 +110,7 @@ void RunRPCServer(std::string addr)
         builder.RegisterService(&service);
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
-        DEBUG_LOG << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
+        LOG(INFO) << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
 
         globalServer = server.get();
 
@@ -119,7 +119,7 @@ void RunRPCServer(std::string addr)
 
         // Notifies the console when a value is set by the client.
         uint32_t valueSetByClientId = dm.getValueSetByClient().connect([](const std::string& oid, const IParam* p) {
-            DEBUG_LOG << "*** signal received: " << oid << " has been changed by client";
+            LOG(INFO) << "*** signal received: " << oid << " has been changed by client";
         });
         
         // start the heartbeat on the device
@@ -166,7 +166,7 @@ void defineCommands() {
                     state = "playing";
                     dm.getValueSetByServer().emit("/state", stateParam.get());
                 }
-                DEBUG_LOG << "video is " << state;
+                LOG(INFO) << "video is " << state;
                 response.mutable_no_response();
             }
             co_return response;
@@ -192,7 +192,7 @@ void defineCommands() {
                     state = "paused";
                     dm.getValueSetByServer().emit("/state", stateParam.get());
                 }
-                DEBUG_LOG << "video is " << state;
+                LOG(INFO) << "video is " << state;
                 response.mutable_no_response();
             }
             co_return response;
@@ -265,7 +265,7 @@ void defineCommands() {
 
 int main(int argc, char* argv[])
 {
-    Logger::StartLogging(argc, argv);
+    Logger::init(argc, argv, "use_commands");
 
     std::string addr;
     absl::SetProgramUsageMessage("Runs the Catena Service");
@@ -279,7 +279,5 @@ int main(int argc, char* argv[])
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
     
-    // Shutdown Google Logging
-    google::ShutdownGoogleLogging();
     return 0;
 }

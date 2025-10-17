@@ -55,11 +55,10 @@ protected:
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTConnectTest");
+        Logger::init("RESTConnectTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     RESTConnectTest() : RESTEndpointTest() {

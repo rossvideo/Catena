@@ -50,11 +50,10 @@ class PolyglotTextTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("PolyglotTextTest");
+        Logger::init("PolyglotTextTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 };
 

@@ -56,11 +56,10 @@ class RESTServiceImplTests : public testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTServiceImplTest");
+        Logger::init("RESTServiceImplTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     /*

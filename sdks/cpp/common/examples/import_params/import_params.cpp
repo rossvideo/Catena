@@ -72,7 +72,7 @@ std::string locationToString(const City::Location& location) {
 }
 
 int main (int argc, char** argv) {
-    Logger::StartLogging(argc, argv);
+    Logger::init(argc, argv, "import_params");
 
     // lock the model
     std::lock_guard lg(dm.mutex());
@@ -89,18 +89,18 @@ int main (int argc, char** argv) {
         return EXIT_FAILURE;
     }
     Plane_ticket& plane_ticket = getParamValue<Plane_ticket>(p.get());
-    DEBUG_LOG << "Departure: " << plane_ticket.departure.name << " (" << locationToString(plane_ticket.departure.location) << ")";
-    DEBUG_LOG << "Destination: " << plane_ticket.destination.name << " (" << locationToString(plane_ticket.destination.location) << ")";
+    LOG(INFO) << "Departure: " << plane_ticket.departure.name << " (" << locationToString(plane_ticket.departure.location) << ")";
+    LOG(INFO) << "Destination: " << plane_ticket.destination.name << " (" << locationToString(plane_ticket.destination.location) << ")";
 
     /**
      * When a new Plane_ticket is created, the departure subparam is initialized with the value defined in the 
      * departure param. Destination does not have a default value so its name is left empty and its location is
      * the default value defined in the location param.
      */
-    DEBUG_LOG;
+    LOG(INFO);
     Plane_ticket new_plane_ticket;
-    DEBUG_LOG << "Departure: " << new_plane_ticket.departure.name << " (" << locationToString(new_plane_ticket.departure.location) << ")";
-    DEBUG_LOG << "Destination: " << new_plane_ticket.destination.name << " (" << locationToString(new_plane_ticket.destination.location) << ")";
+    LOG(INFO) << "Departure: " << new_plane_ticket.departure.name << " (" << locationToString(new_plane_ticket.departure.location) << ")";
+    LOG(INFO) << "Destination: " << new_plane_ticket.destination.name << " (" << locationToString(new_plane_ticket.destination.location) << ")";
 
     return EXIT_SUCCESS;
 }

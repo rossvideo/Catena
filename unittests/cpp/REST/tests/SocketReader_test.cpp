@@ -54,11 +54,10 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTSocketReaderTest");
+        Logger::init("RESTSocketReaderTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     // Defining the in/out sockets.

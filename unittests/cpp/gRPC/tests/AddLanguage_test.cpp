@@ -50,11 +50,10 @@ class gRPCAddLanguageTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("gRPCAddLanguageTest");
+        Logger::init("gRPCAddLanguageTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     /*

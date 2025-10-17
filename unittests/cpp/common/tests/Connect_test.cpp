@@ -65,11 +65,10 @@ class CommonConnectTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("ConnectTest");
+        Logger::init("ConnectTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     void SetUp() override {

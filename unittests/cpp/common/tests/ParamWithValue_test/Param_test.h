@@ -63,11 +63,10 @@ class ParamTest : public ::testing::Test {
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("ParamWithValueTest");
+        Logger::init("ParamWithValueTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     /*

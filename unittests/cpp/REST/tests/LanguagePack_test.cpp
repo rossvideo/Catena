@@ -52,11 +52,10 @@ class RESTLanguagePackTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTLanguagePackTest");
+        Logger::init("RESTLanguagePackTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
     
     RESTLanguagePackTests() : RESTEndpointTest() {

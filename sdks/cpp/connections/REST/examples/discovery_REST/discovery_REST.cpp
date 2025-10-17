@@ -70,7 +70,7 @@ static ServiceImpl *globalApi = nullptr;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
+        LOG(INFO) << "Caught signal " << sig << ", shutting down";
         if (globalApi != nullptr) {
             globalApi->Shutdown();
             globalApi = nullptr;
@@ -98,8 +98,8 @@ void RunRESTServer() {
         // Creating and running the REST service.
         ServiceImpl api(config);
         globalApi = &api;
-        DEBUG_LOG << "API Version: " << api.version();
-        DEBUG_LOG << "REST on 0.0.0.0:" << config.port;
+        LOG(INFO) << "API Version: " << api.version();
+        LOG(INFO) << "REST on 0.0.0.0:" << config.port;
                 
         api.run();
     } catch (std::exception &why) {
@@ -108,10 +108,7 @@ void RunRESTServer() {
 }
 
 int main(int argc, char* argv[]) {
-    Logger::StartLogging(argc, argv);
-
-    absl::SetProgramUsageMessage("Runs the Catena Service");
-    absl::ParseCommandLine(argc, argv);
+    Logger::init(argc, argv, "discovery_REST");
 
     NmosNode node("Catena Device", "Catena Node", "A Catena example Node", "discovery_REST");
     node.init();
@@ -119,7 +116,5 @@ int main(int argc, char* argv[]) {
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
     
-    // Shutdown Google Logging
-    google::ShutdownGoogleLogging();
     return 0;
 }

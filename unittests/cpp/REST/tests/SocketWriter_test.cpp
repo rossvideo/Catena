@@ -51,11 +51,10 @@ class RESTSocketWriterTests : public testing::Test, public RESTTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTSocketWriterTest");
+        Logger::init("RESTSocketWriterTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
     
     RESTSocketWriterTests() : RESTTest(&serverSocket_, &clientSocket_) {

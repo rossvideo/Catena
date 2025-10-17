@@ -44,13 +44,13 @@ LanguagePackRequest::LanguagePackRequest(IServiceImpl *service, SlotMap& dms, bo
 }
 
 void LanguagePackRequest::proceed(bool ok) {
-    DEBUG_LOG << "LanguagePackRequest::proceed[" << objectId_ << "]: "
+    LOG(INFO) << "LanguagePackRequest::proceed[" << objectId_ << "]: "
               << timeNow() << " status: " << static_cast<int>(status_)
               << ", ok: " << std::boolalpha << ok;
     
     // If the process is cancelled, finish the process
     if (!ok) {
-        DEBUG_LOG << "LanguagePackRequest[" << objectId_ << "] cancelled";
+        LOG(INFO) << "LanguagePackRequest[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -108,7 +108,7 @@ void LanguagePackRequest::proceed(bool ok) {
          * ServiceImpl.
          */
         case CallStatus::kFinish:
-            DEBUG_LOG << "LanguagePackRequest[" << objectId_ << "] finished";
+            LOG(INFO) << "LanguagePackRequest[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

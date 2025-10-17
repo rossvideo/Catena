@@ -54,11 +54,10 @@ class gRPCGetParamTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("gRPCGetParamTest");
+        Logger::init("gRPCGetParamTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     /*

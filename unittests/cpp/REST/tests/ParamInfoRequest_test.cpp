@@ -53,11 +53,10 @@ protected:
     
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTParamInfoRequestTest");
+        Logger::init("RESTParamInfoRequestTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     RESTParamInfoRequestTests() : RESTEndpointTest() {

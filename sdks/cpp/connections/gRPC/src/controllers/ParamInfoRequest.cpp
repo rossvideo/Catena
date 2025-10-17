@@ -44,13 +44,13 @@ ParamInfoRequest::ParamInfoRequest(IServiceImpl *service, SlotMap& dms, bool ok)
 }
 
 void ParamInfoRequest::proceed(bool ok) {
-    DEBUG_LOG << "ParamInfoRequest::proceed[" << objectId_ << "]: "
+    LOG(INFO) << "ParamInfoRequest::proceed[" << objectId_ << "]: "
               << timeNow() << " status: " << static_cast<int>(status_)
               << ", ok: " << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        DEBUG_LOG << "ParamInfoRequest[" << objectId_ << "] cancelled";
+        LOG(INFO) << "ParamInfoRequest[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -208,7 +208,7 @@ void ParamInfoRequest::proceed(bool ok) {
             break;
 
         case CallStatus::kFinish:
-            DEBUG_LOG << "[" << objectId_ << "] finished with status: " 
+            LOG(INFO) << "[" << objectId_ << "] finished with status: " 
                       << (context_.IsCancelled() ? "CANCELLED" : "OK");
             service_->deregisterItem(this);
             break;

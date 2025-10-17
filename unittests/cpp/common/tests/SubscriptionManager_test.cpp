@@ -53,11 +53,10 @@ class SubscriptionManagerTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("SubscriptionManagerTest");
+        Logger::init("SubscriptionManagerTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     SubscriptionManagerTest() : authz_(jwsToken_) {}

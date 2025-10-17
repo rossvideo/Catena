@@ -55,11 +55,10 @@ class gRPCExternalObjectRequestTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("gRPCExternalObjectRequestTest");
+        Logger::init("gRPCExternalObjectRequestTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     // Called after each individual test

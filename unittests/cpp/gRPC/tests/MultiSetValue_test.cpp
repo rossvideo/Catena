@@ -50,11 +50,10 @@ class gRPCMultiSetValueTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("gRPCMultiSetValueTest");
+        Logger::init("gRPCMultiSetValueTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     /*

@@ -56,11 +56,10 @@ class ParamDescriptorTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("ParamDescriptorTest");
+        Logger::init("ParamDescriptorTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     /*

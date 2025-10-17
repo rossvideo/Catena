@@ -53,11 +53,10 @@ class MenuTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("MenuTest");
+        Logger::init("MenuTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   protected:
     // Creates a Menu for testing.

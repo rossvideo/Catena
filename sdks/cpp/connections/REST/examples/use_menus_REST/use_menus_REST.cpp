@@ -75,7 +75,7 @@ std::atomic<bool> globalLoop = true;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
+        LOG(INFO) << "Caught signal " << sig << ", shutting down";
         globalLoop = false;
         if (globalApi != nullptr) {
             globalApi->Shutdown();
@@ -90,7 +90,7 @@ void statusUpdateExample(){
     dm.getValueSetByClient().connect([](const std::string& oid, const IParam* p) {
         // all we do here is print out the oid of the parameter that was changed
         // your biz logic would do something _even_more_ interesting!
-        DEBUG_LOG << "*** signal received: " << oid << " has been changed by client";
+        LOG(INFO) << "*** signal received: " << oid << " has been changed by client";
     });
 
     // The rest is the "sending end" of the status update example
@@ -110,7 +110,7 @@ void statusUpdateExample(){
         {
             std::lock_guard lg(dm.mutex());
             counter.get()++;
-            DEBUG_LOG << counter.getOid() << " set to " << counter.get();
+            LOG(INFO) << counter.getOid() << " set to " << counter.get();
             dm.getValueSetByServer().emit("/counter", &counter);
         }
     }
@@ -134,8 +134,8 @@ void RunRESTServer() {
         // Creating and running the REST service.
         ServiceImpl api(config);
         globalApi = &api;
-        DEBUG_LOG << "API Version: " << api.version();
-        DEBUG_LOG << "REST on 0.0.0.0:" << config.port;
+        LOG(INFO) << "API Version: " << api.version();
+        LOG(INFO) << "REST on 0.0.0.0:" << config.port;
         
         std::thread counterLoop(statusUpdateExample);
 
@@ -152,15 +152,10 @@ void RunRESTServer() {
 }
 
 int main(int argc, char* argv[]) {
-    Logger::StartLogging(argc, argv);
-
-    absl::SetProgramUsageMessage("Runs the Catena Service");
-    absl::ParseCommandLine(argc, argv);
+    Logger::init(argc, argv, "use_menus_REST");
     
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
     
-    // Shutdown Google Logging
-    google::ShutdownGoogleLogging();
     return 0;
 } 

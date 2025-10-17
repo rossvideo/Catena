@@ -63,7 +63,7 @@ using namespace use_structs;
 using catena::common::ParamTag;
 
 int main (int argc, char** argv) {
-    Logger::StartLogging(argc, argv);
+    Logger::init(argc, argv, "use_structs");
 
     // lock the model
     std::lock_guard lg(dm.mutex());
@@ -77,20 +77,20 @@ int main (int argc, char** argv) {
     auto& locationParam = *dynamic_cast<ParamWithValue<Location>*>(ip.get());
     Location& loc = locationParam.get();
 
-    DEBUG_LOG << "Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
+    LOG(INFO) << "Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
               << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
               << "' " << loc.longitude.seconds << "\")";
 
     st2138::Value value;
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    DEBUG_LOG << "Location: " << value.DebugString();
+    LOG(INFO) << "Location: " << value.DebugString();
 
     // this line is for demonstrating the fromProto method
     // this should never be done in a real device
     value.mutable_struct_value()->mutable_fields()->at("latitude").mutable_struct_value()->mutable_fields()->at("degrees").set_float32_value(100);
     ip->fromProto(value, Authorizer::kAuthzDisabled);
 
-    DEBUG_LOG << "New Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
+    LOG(INFO) << "New Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
               << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
               << "' " << loc.longitude.seconds << "\")";
 
@@ -101,7 +101,7 @@ int main (int argc, char** argv) {
     }
     value.Clear();
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    DEBUG_LOG << "Latitude: " << value.DebugString();
+    LOG(INFO) << "Latitude: " << value.DebugString();
 
     ip = dm.getParam("/location/latitude/degrees", err);
     if (ip == nullptr){
@@ -110,7 +110,7 @@ int main (int argc, char** argv) {
     }
     value.Clear();
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    DEBUG_LOG << "Latitude degrees: " << value.DebugString();
+    LOG(INFO) << "Latitude degrees: " << value.DebugString();
 
     ip = dm.getParam("/location/longitude/seconds", err);
     if (ip == nullptr){
@@ -119,7 +119,7 @@ int main (int argc, char** argv) {
     }
     value.Clear();
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    DEBUG_LOG << "Longitude seconds: " << value.DebugString();
+    LOG(INFO) << "Longitude seconds: " << value.DebugString();
 
     return EXIT_SUCCESS;
 }

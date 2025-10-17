@@ -51,11 +51,10 @@ class ConnectionQueueTest : public testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("ConnectionQueueTest");
+      Logger::init("ConnectionQueueTest", ABSL_LOG_DIR);
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     // Helper class that provides access to connectionQueue_ vector

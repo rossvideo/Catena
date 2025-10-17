@@ -52,11 +52,10 @@ class RESTGetParamTests : public RESTEndpointTest {
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTGetParamTest");
+        Logger::init("RESTGetParamTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
     
     RESTGetParamTests() : RESTEndpointTest() {

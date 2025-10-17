@@ -53,7 +53,7 @@ void MultiSetValue::proceed() {
             if (dm->tryMultiSetValue(reqs_, rc, *authz)) {
                 rc = dm->commitMultiSetValue(reqs_, *authz);
             } else { // debug log (new)
-                DEBUG_LOG << "MultiSetValue: tryMultiSetValue failed for slot " << reqs_.slot()
+                LOG(INFO) << "MultiSetValue: tryMultiSetValue failed for slot " << reqs_.slot()
                         << " status=" << static_cast<int>(rc.status)
                         << " msg=\"" << rc.what() << "\"";
             }
@@ -72,5 +72,5 @@ void MultiSetValue::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    DEBUG_LOG << typeName_ << "SetValue[" << objectId_ << "] finished\n";
+    LOG(INFO) << typeName_ << "SetValue[" << objectId_ << "] finished\n";
 }

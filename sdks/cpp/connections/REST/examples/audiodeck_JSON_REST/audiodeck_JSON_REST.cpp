@@ -73,7 +73,7 @@ std::atomic<bool> globalLoop = true;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
+        LOG(INFO) << "Caught signal " << sig << ", shutting down";
         globalLoop = false;
         if (globalApi != nullptr) {
             globalApi->Shutdown();
@@ -86,13 +86,13 @@ void handle_signal(int sig) {
 void audioDeckUpdateHandler(const std::string& jptr, const IParam* p) {
     Path oid(jptr);
     if(oid.empty()){
-        DEBUG_LOG << "*** Whole struct array was updated";
+        LOG(INFO) << "*** Whole struct array was updated";
     } else{
         std::size_t index = oid.front_as_index();
         if (index == Path::kEnd) {
-            DEBUG_LOG << "*** Index is \"-\", new element added to struct array";
+            LOG(INFO) << "*** Index is \"-\", new element added to struct array";
         } else {
-            DEBUG_LOG << "*** audio_channel[" << index << "] was updated";
+            LOG(INFO) << "*** audio_channel[" << index << "] was updated";
         }
     }
 }
@@ -116,14 +116,14 @@ void RunRESTServer() {
         ServiceImpl api(config);
         globalApi = &api;
 
-        DEBUG_LOG << "API Version: " << api.version();
-        DEBUG_LOG << "REST on 0.0.0.0:" << config.port;
+        LOG(INFO) << "API Version: " << api.version();
+        LOG(INFO) << "REST on 0.0.0.0:" << config.port;
         
         std::map<std::string, std::function<void(const std::string&, const IParam*)>> handlers;
         handlers["audio_deck"] = audioDeckUpdateHandler;
 
         dm.getValueSetByClient().connect([&handlers](const std::string& oid, const IParam* p) {
-            DEBUG_LOG << "signal received: " << oid << " has been changed by client";
+            LOG(INFO) << "signal received: " << oid << " has been changed by client";
 
             // make a copy of the path that we can safely pop segments from
             Path jptr(oid); 
@@ -145,15 +145,10 @@ void RunRESTServer() {
 }
 
 int main(int argc, char* argv[]) {
-    Logger::StartLogging(argc, argv);
-
-    absl::SetProgramUsageMessage("Runs the Catena Service");
-    absl::ParseCommandLine(argc, argv);
+    Logger::init(argc, argv, "structs_with_authz_JSON_REST");
     
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
     
-    // Shutdown Google Logging
-    google::ShutdownGoogleLogging();
     return 0;
 } 

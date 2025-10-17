@@ -54,7 +54,7 @@ struct is_streamable : std::false_type {};
 
 /**
  * @brief type trait to determine if a type is streamable.
- * Types with operator DEBUG_LOG << defined are streamable.
+ * Types with operator LOG(INFO) << defined are streamable.
  */
 template <typename T>
 struct is_streamable<T, std::void_t<decltype(std::cout << std::declval<T>())>> : std::true_type {};

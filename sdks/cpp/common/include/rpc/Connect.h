@@ -182,7 +182,7 @@ class Connect : public IConnect {
             }
         } catch(catena::exception_with_status& why) {
             // if an error is thrown, no update is pushed to the client
-            DEBUG_LOG << "Failed to send SetValue update: " << why.what();
+            LOG(INFO) << "Failed to send SetValue update: " << why.what();
         }
     }
 
@@ -213,7 +213,7 @@ class Connect : public IConnect {
             }
         } catch(catena::exception_with_status& why){
             // if an error is thrown, no update is pushed to the client
-            DEBUG_LOG << "Failed to send language pack update: " << why.what();
+            LOG(INFO) << "Failed to send language pack update: " << why.what();
         }
     }
 

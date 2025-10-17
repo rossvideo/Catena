@@ -56,11 +56,10 @@ protected:
     
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("ParamVisitorTest");
+        Logger::init("ParamVisitorTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     void SetUp() override {

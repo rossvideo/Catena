@@ -85,7 +85,7 @@ std::atomic<bool> counterLoop = true;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
+        LOG(INFO) << "Caught signal " << sig << ", shutting down";
         fibLoop = false;
         counterLoop = false;
         if (globalServer != nullptr) {
@@ -146,7 +146,7 @@ void defineCommands() {
                     }
                 });
 
-                DEBUG_LOG << "Fibonacci sequence start";
+                LOG(INFO) << "Fibonacci sequence start";
                 response.mutable_no_response();
             }
             co_return response;
@@ -164,7 +164,7 @@ void defineCommands() {
                 fibLoop = false;
                 fibThread->join();
                 fibThread = nullptr;
-                DEBUG_LOG << "Fibonacci sequence stop";
+                LOG(INFO) << "Fibonacci sequence stop";
                 response.mutable_no_response();
             } else {
                 response.mutable_exception()->set_type("Invalid Command");
@@ -216,7 +216,7 @@ void defineCommands() {
                     randomNum = std::round(randomNum * 1000) / 1000;
                     randomArray.push_back(randomNum);
                 }
-                DEBUG_LOG << "Randomized float array";
+                LOG(INFO) << "Randomized float array";
                 response.mutable_no_response();
             }
             
@@ -232,30 +232,30 @@ void defineCommands() {
             catena::exception_with_status err{"", catena::StatusCode::OK};
             st2138::CommandResponse response;
             // Locating
-            DEBUG_LOG << "Locating tape...";
+            LOG(INFO) << "Locating tape...";
             response.mutable_response()->set_string_value("Locating tape...");
             co_yield response;
             std::this_thread::sleep_for(std::chrono::seconds(2));
             // Loading
-            DEBUG_LOG << "Tape found, loading...";
+            LOG(INFO) << "Tape found, loading...";
             response.Clear();
             response.mutable_response()->set_string_value("Tape found, loading...");
             co_yield response;
             std::this_thread::sleep_for(std::chrono::seconds(2));
             // Seeking
-            DEBUG_LOG << "Tape loaded, seeking...";
+            LOG(INFO) << "Tape loaded, seeking...";
             response.Clear();
             response.mutable_response()->set_string_value("Tape loaded, seeking...");
             co_yield response;
             std::this_thread::sleep_for(std::chrono::seconds(2));
             // Reading
-            DEBUG_LOG << "File loaded, reading...";
+            LOG(INFO) << "File loaded, reading...";
             response.Clear();
             response.mutable_response()->set_string_value("File loaded, reading...");
             co_yield response;
             std::this_thread::sleep_for(std::chrono::seconds(2));
             // Done
-            DEBUG_LOG << "File loaded.";
+            LOG(INFO) << "File loaded.";
             response.Clear();
             response.mutable_response()->set_string_value("File loaded.");
             co_return response;
@@ -283,7 +283,7 @@ void startCounter() {
             if (counter.get()++ >= 200) {
                 counter.get() = 0; // Reset counter to 0 when it reaches 200
             }
-            DEBUG_LOG << counter.getOid() << " set to " << counter.get();
+            LOG(INFO) << counter.getOid() << " set to " << counter.get();
             dm.getValueSetByServer().emit("/counter", &counter);
         }
     }
@@ -318,7 +318,7 @@ void RunRPCServer(std::string addr)
 
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
-        DEBUG_LOG << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
+        LOG(INFO) << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
 
         globalServer = server.get();
 
@@ -348,7 +348,7 @@ void RunRPCServer(std::string addr)
 
 int main(int argc, char* argv[])
 {
-    Logger::StartLogging(argc, argv);
+    Logger::init(argc, argv, "one_of_everything_REST");
 
     std::string addr;
     absl::SetProgramUsageMessage("Runs the Catena Service");
@@ -362,7 +362,5 @@ int main(int argc, char* argv[])
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
     
-    // Shutdown Google Logging
-    google::ShutdownGoogleLogging();
     return 0;
 }

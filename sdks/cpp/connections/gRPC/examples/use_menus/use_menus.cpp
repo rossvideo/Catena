@@ -70,7 +70,7 @@ std::atomic<bool> globalLoop = true;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
+        LOG(INFO) << "Caught signal " << sig << ", shutting down";
         globalLoop = false;
         if (globalServer != nullptr) {
             globalServer->Shutdown();
@@ -86,7 +86,7 @@ void statusUpdateExample(){
     dm.getValueSetByClient().connect([](const std::string& oid, const IParam* p) {
         // all we do here is print out the oid of the parameter that was changed
         // your biz logic would do something _even_more_ interesting!
-        DEBUG_LOG << "*** signal received: " << oid << " has been changed by client" << '\n';
+        LOG(INFO) << "*** signal received: " << oid << " has been changed by client" << '\n';
     });
 
     // The rest is the "sending end" of the status update example
@@ -106,7 +106,7 @@ void statusUpdateExample(){
         {
             std::lock_guard lg(dm.mutex());
             counter.get()++;
-            DEBUG_LOG << counter.getOid() << " set to " << counter.get();
+            LOG(INFO) << counter.getOid() << " set to " << counter.get();
             dm.getValueSetByServer().emit("/counter", &counter);
         }
     }
@@ -138,7 +138,7 @@ void RunRPCServer(std::string addr)
         builder.RegisterService(&service);
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
-        DEBUG_LOG << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
+        LOG(INFO) << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
 
         globalServer = server.get();
 
@@ -167,7 +167,7 @@ void RunRPCServer(std::string addr)
 
 int main(int argc, char* argv[])
 {
-    Logger::StartLogging(argc, argv);
+    Logger::init(argc, argv, "use_menus");
 
     std::string addr;
     absl::SetProgramUsageMessage("Runs the Catena Service");
@@ -178,7 +178,5 @@ int main(int argc, char* argv[])
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
     
-    // Shutdown Google Logging
-    google::ShutdownGoogleLogging();
     return 0;
 }

@@ -53,11 +53,10 @@ class gRPCExecuteCommandTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("gRPCExecuteCommandTest");
+        Logger::init("gRPCExecuteCommandTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     /*

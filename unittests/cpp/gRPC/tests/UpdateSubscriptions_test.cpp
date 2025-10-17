@@ -64,11 +64,10 @@ class gRPCUpdateSubscriptionsTests : public GRPCTest {
 
         // Set up and tear down Google Logging
         static void SetUpTestSuite() {
-            Logger::StartLogging("gRPCUpdateSubscriptionsTest");
+            Logger::init("gRPCUpdateSubscriptionsTest");
         }
 
         static void TearDownTestSuite() {
-            google::ShutdownGoogleLogging();
         }
 
         /*

@@ -66,11 +66,10 @@ class gRPCServiceImplTests : public testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("gRPCServiceImplTest");
+        Logger::init("gRPCServiceImplTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     /*

@@ -52,11 +52,10 @@ class ChoiceConstraintTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("ChoiceConstraintTest");
+        Logger::init("ChoiceConstraintTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 };
 

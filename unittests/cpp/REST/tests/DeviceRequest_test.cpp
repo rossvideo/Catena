@@ -54,11 +54,10 @@ class RESTDeviceRequestTests : public RESTEndpointTest {
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTDeviceRequestTest");
+        Logger::init("RESTDeviceRequestTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     /*

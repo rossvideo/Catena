@@ -53,13 +53,13 @@ DeviceRequest::DeviceRequest(IServiceImpl *service, SlotMap& dms, bool ok)
  * handling errors and responses accordingly 
  */
 void DeviceRequest::proceed(bool ok) {
-    DEBUG_LOG << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
+    LOG(INFO) << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok;
     
     // If the process is cancelled, finish the process
     if (!ok) {
-        DEBUG_LOG << "DeviceRequest[" << objectId_ << "] cancelled";
+        LOG(INFO) << "DeviceRequest[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
     
@@ -184,7 +184,7 @@ void DeviceRequest::proceed(bool ok) {
          * the process
          */
         case CallStatus::kFinish:
-            DEBUG_LOG << "DeviceRequest[" << objectId_ << "] finished";
+            LOG(INFO) << "DeviceRequest[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
 

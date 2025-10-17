@@ -116,7 +116,7 @@ class ParamInfoRequest : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      DEBUG_LOG << "ParamInfoRequest::proceed[" << objectId_ << "]: "
+      LOG(INFO) << "ParamInfoRequest::proceed[" << objectId_ << "]: "
                 << timeNow() << " status: "<< static_cast<int>(status)
                 <<", ok: "<< std::boolalpha << ok;
     }

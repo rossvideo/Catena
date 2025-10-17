@@ -52,11 +52,10 @@ class LanguagePackTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("LanguagePackTest");
+        Logger::init("LanguagePackTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
     // Initializes testPack
     void SetUp() override {
