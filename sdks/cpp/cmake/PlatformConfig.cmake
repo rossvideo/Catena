@@ -47,15 +47,13 @@ function(setup_compiler_config)
         set(CMAKE_EXPORT_COMPILE_COMMANDS ON PARENT_SCOPE)
     endif()
     
-    # Coverage flags - only add if not already provided via CMAKE_CXX_FLAGS
-    string(FIND "${CMAKE_CXX_FLAGS}" "--coverage" COVERAGE_FOUND)
-    if(COVERAGE_FOUND EQUAL -1)
-        message(STATUS "Adding coverage flags automatically")
+    # Coverage flags - only add if COVERAGE is enabled
+    option(COVERAGE "Enable code coverage flags" OFF)
+    set(COVERAGE ${COVERAGE} PARENT_SCOPE)
+    if(COVERAGE)
         add_compile_options(--coverage)
         add_link_options(--coverage)
-    else()
-        message(STATUS "Coverage flags already present in CMAKE_CXX_FLAGS")
-    endif()
+    endif(COVERAGE)
     
     # Set default max connections
     if(NOT DEFINED DEFAULT_MAX_CONNECTIONS)

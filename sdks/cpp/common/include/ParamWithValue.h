@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,8 +35,9 @@
  * @brief Interface for acessing parameter values
  * @author John R. Naylor
  * @author John Danen
- * @date 2024-08-20
- * @copyright Copyright (c) 2024 Ross Video
+ * @author jason.chen@rossvideo.com
+ * @date 2025-10-08
+ * @copyright Copyright (c) 2025 Ross Video
  */
 
 // common
@@ -271,13 +272,15 @@ class ParamWithValue : public catena::common::IParam {
 
     /**
      * @brief Exectutes the parameter's command implementation.
-     * @param value the value to pass to the command implementation.
+     * @param value the value to pass to the command implementation
      * @param respond Flag indicating whether the command should respond with
      * a CommandResponse.
+     * @param rc The return status of the operation.
+     * @param authz The Authorizer to check permissions with.
      * @return The CommandResponder from the command implementation.
      */
-    std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommand(const st2138::Value& value, const bool respond) const override {
-        return descriptor_.executeCommand(value, respond);
+    std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommand(const st2138::Value& value, const bool respond, catena::exception_with_status& rc, const IAuthorizer& authz) const override {
+        return descriptor_.executeCommand(value, respond, rc, authz);
     }
 
     /**
@@ -505,6 +508,45 @@ class ParamWithValue : public catena::common::IParam {
         // This type is not a CatenaStruct or CatenaStructArray so it has no sub-params
         status = catena::exception_with_status("No sub-params for this generic type", catena::StatusCode::INVALID_ARGUMENT);
         return nullptr;
+    }
+
+    /**
+     * @brief Specialized getParam_ for EmptyValue - handles template parameters with descriptor structure
+     * @param oid the path to the child parameter  
+     * @param value the EmptyValue (unused but required for template specialization)
+     * @param authz The Authorizer object containing the client's scopes
+     * @param status The status of the operation
+     * @return a unique pointer to the child parameter, or nullptr if navigation should be handled elsewhere
+     */
+    std::unique_ptr<IParam> getParam_(Path& oid, EmptyValue& value, const IAuthorizer& authz, catena::exception_with_status& status) {
+        std::unique_ptr<IParam> returnParam = nullptr;
+        // Make sure the front is a field name.
+        if (!oid.front_is_string()) {
+            status = catena::exception_with_status("Expected string in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
+        } else {
+            std::string oidStr = oid.front_as_string();
+            oid.pop();
+            
+            // Check if this parameter has sub-parameters defined in its descriptor
+            const auto& subParams = descriptor_.getAllSubParams();
+            auto it = subParams.find(oidStr);
+            if (it != subParams.end()) {
+                // Found sub-parameter in descriptor, create a ParamWithValue for it
+                returnParam = std::make_unique<ParamWithValue<EmptyValue>>(value, *it->second);
+                // The path has more segments, keep recursing
+                if (!oid.empty()) {
+                    returnParam = returnParam->getParam(oid, authz, status);
+                // If we're at the end of path make sure we have readAuthz for the gotten param before returning.
+                } else if (!authz.readAuthz(*returnParam)) {
+                    status = catena::exception_with_status("Not authorized to read param " + oid.fqoid(), catena::StatusCode::PERMISSION_DENIED);
+                    returnParam = nullptr;
+                }
+            } else {
+                // Param does not exist, return nullptr
+                status = catena::exception_with_status("Param " + oidStr + " does not exist", catena::StatusCode::NOT_FOUND);
+            }
+        }
+        return returnParam;
     }
 
     /**
@@ -799,6 +841,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param authz The authorizer object for checking kWrite permissions.
      * @returns catena::exception_with_status.
      */
+    // GCOVR_EXCL_START
     const std::unordered_map<Kind, std::function<catena::exception_with_status(const st2138::Value&, Path::Index, const IAuthorizer&)>> validateSetValueMap_ {
         {Kind::kInt32Value, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             return this->validateSetValue_(this->get(), protoVal.int32_value(), protoVal, index, authz);
@@ -841,6 +884,7 @@ class ParamWithValue : public catena::common::IParam {
             return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }}
     };
+    // GCOVR_EXCL_STOP
 
     /**
      * @brief The parameter's descriptor object.

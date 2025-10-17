@@ -333,7 +333,8 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ParamToProto) {
 TEST_F(ParamDescriptorTest, ParamDescriptor_ExecuteCommand) {
     st2138::Value input;
     bool respond = false;
-    auto responder = pd->executeCommand(input, respond);
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto responder = pd->executeCommand(input, respond, status, authz_);
     auto response = responder->getNext();
     EXPECT_TRUE(response.has_exception()) << "Default command definition should return an \"UNIMPLEMENTED\" exception.";
     EXPECT_EQ(response.exception().type(), "UNIMPLEMENTED");
@@ -353,7 +354,8 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_DefineCommand) {
     // Testing response
     st2138::Value input;
     bool respond = true;
-    auto responder = pd->executeCommand(input, respond);
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto responder = pd->executeCommand(input, respond, status, authz_);
     auto response = responder->getNext();
     EXPECT_TRUE(response.has_exception()) << "Non-command param should retain the default command definition.";
     EXPECT_EQ(response.exception().type(), "UNIMPLEMENTED");
@@ -379,7 +381,8 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_DefineCommand) {
     st2138::Value input;
     input.set_string_value("Test input");
     bool respond = true;
-    auto responder = pd->executeCommand(input, respond);
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto responder = pd->executeCommand(input, respond, status, authz_);
     // Testing response.
     st2138::CommandResponse response;
     for (auto returnVal : {"Command response 1", "Command response 2"}) {
@@ -394,7 +397,23 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_DefineCommand) {
     }
 }
 /*
- * TEST 10 - Testing ParamDescriptor CommandResponded when an error is thrown.
+ * TEST 10 - Testing ParamDescriptor CommandResponder when client does not have write authz.
+ */
+TEST_F(ParamDescriptorTest, ParamDescriptor_CommandErrNoWriteAuthz) {    
+    // Creating command ParamDescriptor.
+    isCommand = true;
+    create();
+    st2138::Value input;
+    bool respond = true;
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(*pd)))).Times(1).WillOnce(testing::Return(false));
+    auto responder = pd->executeCommand(input, respond, status, authz_);
+    // Testing response.
+    EXPECT_FALSE(responder) << "Responder should be nullptr when client does not have write authz.";
+    EXPECT_EQ(status.status, catena::StatusCode::PERMISSION_DENIED) << "Status should be PERMISSION_DENIED when client does not have write authz.";
+}
+/*
+ * TEST 11 - Testing ParamDescriptor CommandResponded when an error is thrown.
  */
 TEST_F(ParamDescriptorTest, ParamDescriptor_CommandErrUnhandled) {    
     // Creating command ParamDescriptor.
@@ -412,7 +431,8 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_CommandErrUnhandled) {
     });
     st2138::Value input;
     bool respond = true;
-    auto responder = pd->executeCommand(input, respond);
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto responder = pd->executeCommand(input, respond, status, authz_);
     // Testing response.
     st2138::CommandResponse response;
     EXPECT_TRUE(responder->hasMore())                                 << "Responder should have at least 1 response.";
