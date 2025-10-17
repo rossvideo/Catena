@@ -71,8 +71,7 @@ const deviceName = path.parse(options.deviceModel).name.split('.')[0];
 log(`Validating device model '${deviceName}' from file '${options.deviceModel}' against schema file '${options.schema}'...`);
 
 /**
- * @brief Validates that all mandatory product parameters are present and have valid values
- * @brief Validates that all scopes are valid and correctly assigned
+ * @brief Validates that all mandatory product parameters and scopes are present and have valid values
  * @param {object} deviceParams The complete device model object (includes top-level properties and params)
  * @param {boolean} disableMandatoryEnforcement If true, skip validation and return early
  * @throws {Error} If mandatory parameters are missing or have invalid values (when enforcement enabled)
