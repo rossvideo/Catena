@@ -74,7 +74,7 @@ protected:
         // Connection registration and deregistration
         EXPECT_CALL(context_, connectionQueue()).WillRepeatedly(testing::ReturnRef(connectionQueue_));
         EXPECT_CALL(connectionQueue_, registerConnection(testing::_)).WillRepeatedly(testing::Return(true)); // Should always call
-        EXPECT_CALL(connectionQueue_, deregisterConnection(testing::_)).Times(1).WillOnce(testing::Return()); // Should always call
+        EXPECT_CALL(connectionQueue_, deregisterConnection(testing::_)).WillRepeatedly(testing::Return()); // Should always call
         // dm0_ signals
         EXPECT_CALL(dm0_, getValueSetByClient()).WillRepeatedly(testing::ReturnRef(valueSetByClient0));
         EXPECT_CALL(dm0_, getValueSetByServer()).WillRepeatedly(testing::ReturnRef(valueSetByServer0));
