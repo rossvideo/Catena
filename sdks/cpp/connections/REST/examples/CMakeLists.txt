@@ -35,8 +35,8 @@ else()
     add_subdirectory("status_update_JSON_REST")
     add_subdirectory("use_commands_REST")
     add_subdirectory("use_menus_REST")
-    add_subdirectory("structs_with_authz_REST")
-    add_subdirectory("structs_with_authz_JSON_REST")
+    add_subdirectory("audiodeck_REST")
+    add_subdirectory("audiodeck_JSON_REST")
 
 endif()
 
