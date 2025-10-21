@@ -47,7 +47,7 @@ class ParamWithVariantTest : public ParamTest<TestVariantStruct> {
     /*
      * Returns the value type of the parameter we are testing with.
      */
-    catena::ParamType type() const override { return catena::ParamType::STRUCT_VARIANT; }
+    st2138::ParamType type() const override { return st2138::ParamType::STRUCT_VARIANT; }
 
     TestVariantStruct value_{TestStruct1{.f1{16}, .f2{32}}};
 };
@@ -164,7 +164,7 @@ TEST_F(ParamWithVariantTest, PopBack) {
  */
 TEST_F(ParamWithVariantTest, ParamToProto) {
     VariantParam param(value_, pd_);
-    catena::Param outParam;
+    st2138::Param outParam;
     rc_ = param.toProto(outParam, authz_);
     // Checking results.
     ASSERT_TRUE(outParam.value().has_struct_variant_value());
@@ -183,7 +183,7 @@ TEST_F(ParamWithVariantTest, ParamToProto) {
 TEST_F(ParamWithVariantTest, FromProto) {
     TestVariantStruct emptyVal{TestStruct2{0, 0}};
     VariantParam param(emptyVal, pd_);
-    catena::Value protoValue;
+    st2138::Value protoValue;
     ASSERT_EQ(toProto(protoValue, &value_, pd_, authz_).status, catena::StatusCode::OK)
         << "toProto failed, cannot continue test.";
     rc_ = param.fromProto(protoValue, authz_);
@@ -199,7 +199,7 @@ TEST_F(ParamWithVariantTest, FromProto) {
 TEST_F(ParamWithVariantTest, ValidateSetValue) {
     VariantParam param(value_, pd_);
     TestVariantStruct newValue{TestStruct1{48, 64}};
-    catena::Value protoValue;
+    st2138::Value protoValue;
     ASSERT_EQ(toProto(protoValue, &newValue, pd_, authz_).status, catena::StatusCode::OK)
         << "toProto failed, cannot continue test.";
     EXPECT_TRUE(param.validateSetValue(protoValue, Path::kNone, authz_, rc_));
@@ -213,7 +213,7 @@ TEST_F(ParamWithVariantTest, ValidateSetValue) {
 TEST_F(ParamWithVariantTest, ValidateSetValue_Error) {
     VariantParam param(value_, pd_);
     TestVariantStruct newValue{TestStruct1{48, 64}};
-    catena::Value protoValue;
+    st2138::Value protoValue;
     ASSERT_EQ(toProto(protoValue, &newValue, pd_, authz_).status, catena::StatusCode::OK)
         << "toProto failed, cannot continue test.";
     // Defined index w non-array

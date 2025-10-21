@@ -10,6 +10,42 @@
   ],
   "default_scope": "st2138:op",
   "params": {
+    "product": {
+      "type": "STRUCT",
+      "access_scope": "st2138:mon",
+      "read_only": true,
+      "value": {
+        "struct_value": {
+          "fields": {
+            "name": { "string_value": "External Object Request" },
+            "vendor": { "string_value": "Ross Video" },
+            "version": { "string_value": "1.0.0" },
+            "catena_sdk": { "string_value": "https://github.com/rossvideo/Catena.git" },
+            "serial_number": { "string_value": "SN-7K9M-2024-XR485-BLU" }
+          }
+        }
+      },
+      "params": {
+        "name": {
+          "type": "STRING"
+        },
+        "vendor": {
+          "type": "STRING"
+        },
+        "version": {
+          "type": "STRING"
+        },
+        "catena_sdk": {
+          "type": "STRING"
+        },
+        "catena_sdk_version": {
+          "type": "STRING"
+        },
+        "serial_number": {
+          "type": "STRING"
+        }
+      }
+    },
     "number": {
       "type": "STRUCT_VARIANT",
       "params" : {
@@ -113,37 +149,43 @@
         "struct_variant_array_values": {
           "struct_variants": [
             {
-              "struct_variant_type": "cartesian",
-              "value": {
-                "struct_value": {
-                  "fields": {
-                    "x": {"int32_value": 1},
-                    "y": {"int32_value": 2},
-                    "z": {"int32_value": 3}
+              "struct_variant_value": {
+                "struct_variant_type": "cartesian",
+                "value": {
+                  "struct_value": {
+                    "fields": {
+                      "x": {"int32_value": 1},
+                      "y": {"int32_value": 2},
+                      "z": {"int32_value": 3}
+                    }
                   }
                 }
               }
             },
             {
-              "struct_variant_type": "cylindrical",
-              "value": {
-                "struct_value": {
-                  "fields": {
-                    "rho": {"int32_value": 1},
-                    "phi": {"int32_value": 90},
-                    "z": {"int32_value": 3}
+              "struct_variant_value": {
+                "struct_variant_type": "cylindrical",
+                "value": {
+                  "struct_value": {
+                    "fields": {
+                      "rho": {"int32_value": 1},
+                      "phi": {"int32_value": 90},
+                      "z": {"int32_value": 3}
+                    }
                   }
                 }
               }
             },
             {
-              "struct_variant_type": "spherical",
-              "value": {
-                "struct_value": {
-                  "fields": {
-                    "r": {"int32_value": 1},
-                    "theta": {"int32_value": 90},
-                    "phi": {"int32_value": 180}
+              "struct_variant_value": {
+                "struct_variant_type": "spherical",
+                "value": {
+                  "struct_value": {
+                    "fields": {
+                      "r": {"int32_value": 1},
+                      "theta": {"int32_value": 90},
+                      "phi": {"int32_value": 180}
+                    }
                   }
                 }
               }

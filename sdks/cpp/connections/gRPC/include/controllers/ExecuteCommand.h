@@ -86,11 +86,11 @@ class ExecuteCommand : public CallData {
      * - A flag indicating whether the client wants a response stream from the
      * command.
      */
-    catena::ExecuteCommandPayload req_;
+    st2138::ExecuteCommandPayload req_;
     /**
      * @brief The RPC response writer for writing back to the client. 
      */
-    ServerAsyncWriter<catena::CommandResponse> writer_;
+    ServerAsyncWriter<st2138::CommandResponse> writer_;
     /**
      * @brief The command's response coroutine recieved from a call to
      * Command.executeCommand().

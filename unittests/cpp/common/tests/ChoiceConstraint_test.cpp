@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the ChoiceConstraint.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/07/02
+ * @author (Nelson Daniels) nelson.daniels@rossvideo.com 
+ * @date 25/10/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -40,10 +41,24 @@
 #include <gmock/gmock.h>
 
 #include "MockDevice.h"
+#include "Logger.h"
 
 #include "ChoiceConstraint.h"
 
 using namespace catena::common;
+
+// Test fixture class for ChoiceConstraint tests
+class ChoiceConstraintTest : public ::testing::Test {
+protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("ChoiceConstraintTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+};
 
 /* ============================================================================
  *                                    INT
@@ -51,11 +66,11 @@ using namespace catena::common;
  * 
  * TEST 1.1 - Testing Int ChoiceConstraint constructors
  */
-TEST(ChoiceConstraintTest, ChoiceConstraint_IntCreate) {
+TEST_F(ChoiceConstraintTest, ChoiceConstraint_IntCreate) {
     bool shared = false;
     std::string oid = "test_oid";
     { // int32 constructor with no device
-    ChoiceConstraint<int32_t, catena::Constraint::INT_CHOICE> constraint({{1, {{"en", "one"}}}, {2, {{"en", "two"}}}}, true, oid, shared);
+    ChoiceConstraint<int32_t, st2138::Constraint::INT_CHOICE> constraint({{1, {{"en", "one"}}}, {2, {{"en", "two"}}}}, true, oid, shared);
     EXPECT_EQ(constraint.getOid(), oid);
     EXPECT_EQ(constraint.isShared(), shared);
     EXPECT_FALSE(constraint.isRange()) << "ChoiceConstraint should not be a range constraint";
@@ -66,7 +81,7 @@ TEST(ChoiceConstraintTest, ChoiceConstraint_IntCreate) {
         testing::Invoke([](const std::string &key, IConstraint *item){
             EXPECT_TRUE(item) << "No item passed into dm.addItem()";
         }));
-    ChoiceConstraint<int32_t, catena::Constraint::INT_CHOICE> constraint({{1, {{"en", "one"}}}, {2, {{"en", "two"}}}}, true, oid, shared, dm);
+    ChoiceConstraint<int32_t, st2138::Constraint::INT_CHOICE> constraint({{1, {{"en", "one"}}}, {2, {{"en", "two"}}}}, true, oid, shared, dm);
     EXPECT_EQ(constraint.getOid(), oid);
     EXPECT_EQ(constraint.isShared(), shared);
     EXPECT_FALSE(constraint.isRange()) << "ChoiceConstraint should not be a range constraint";
@@ -75,9 +90,9 @@ TEST(ChoiceConstraintTest, ChoiceConstraint_IntCreate) {
 /* 
  * TEST 1.2 - Testing Int ChoiceConstraint satisfied
  */
-TEST(ChoiceConstraintTest, ChoiceConstraint_IntSatisfied) {
-    ChoiceConstraint<int32_t, catena::Constraint::INT_CHOICE> constraint({{1, {}}, {2, {}}}, true, "test_oid", false);
-    catena::Value src;
+TEST_F(ChoiceConstraintTest, ChoiceConstraint_IntSatisfied) {
+    ChoiceConstraint<int32_t, st2138::Constraint::INT_CHOICE> constraint({{1, {}}, {2, {}}}, true, "test_oid", false);
+    st2138::Value src;
     // Valid
     src.set_int32_value(1);
     EXPECT_TRUE(constraint.satisfied(src)) << "Constraint should be satisfied by valid value 1";
@@ -91,10 +106,10 @@ TEST(ChoiceConstraintTest, ChoiceConstraint_IntSatisfied) {
 /* 
  * TEST 1.3 - Testing Int ChoiceConstraint apply
  */
-TEST(ChoiceConstraintTest, ChoiceConstraint_IntApply) {
-    ChoiceConstraint<int32_t, catena::Constraint::INT_CHOICE> constraint({{1, {}}, {2, {}}}, true, "test_oid", false);
-    catena::Value src;
-    catena::Value res;
+TEST_F(ChoiceConstraintTest, ChoiceConstraint_IntApply) {
+    ChoiceConstraint<int32_t, st2138::Constraint::INT_CHOICE> constraint({{1, {}}, {2, {}}}, true, "test_oid", false);
+    st2138::Value src;
+    st2138::Value res;
     src.set_int32_value(1);
     res = constraint.apply(src);
     EXPECT_EQ(res.SerializeAsString(), "") << "Apply should return an empty value for int32 ChoiceConstraint";
@@ -102,17 +117,17 @@ TEST(ChoiceConstraintTest, ChoiceConstraint_IntApply) {
 /* 
  * TEST 1.4 - Testing Int ChoiceConstraint toProto
  */
-TEST(ChoiceConstraintTest, ChoiceConstraint_IntToProto) {
-    ChoiceConstraint<int32_t, catena::Constraint::INT_CHOICE>::ListInitializer choicesInit = {
+TEST_F(ChoiceConstraintTest, ChoiceConstraint_IntToProto) {
+    ChoiceConstraint<int32_t, st2138::Constraint::INT_CHOICE>::ListInitializer choicesInit = {
         {1, PolyglotText::ListInitializer{{"en", "one"}}},
         {2, PolyglotText::ListInitializer{{"en", "two"}}}
     };
-    ChoiceConstraint<int32_t, catena::Constraint::INT_CHOICE>::Choices choices(choicesInit.begin(), choicesInit.end());
-    ChoiceConstraint<int32_t, catena::Constraint::INT_CHOICE> constraint({{1, {{"en", "one"}}}, {2, {{"en", "two"}}}}, true, "test_oid", false);
-    catena::Constraint protoConstraint;
+    ChoiceConstraint<int32_t, st2138::Constraint::INT_CHOICE>::Choices choices(choicesInit.begin(), choicesInit.end());
+    ChoiceConstraint<int32_t, st2138::Constraint::INT_CHOICE> constraint({{1, {{"en", "one"}}}, {2, {{"en", "two"}}}}, true, "test_oid", false);
+    st2138::Constraint protoConstraint;
     constraint.toProto(protoConstraint);
     // Comparing results
-    EXPECT_EQ(protoConstraint.type(), catena::Constraint_ConstraintType_INT_CHOICE);
+    EXPECT_EQ(protoConstraint.type(), st2138::Constraint_ConstraintType_INT_CHOICE);
     EXPECT_EQ(choices.size(), protoConstraint.int32_choice().choices_size());
     for (const auto& protoChoice : protoConstraint.int32_choice().choices()) {
         ASSERT_TRUE(choices.contains(protoChoice.value())) << "Choice value should be in the choices map";
@@ -129,11 +144,11 @@ TEST(ChoiceConstraintTest, ChoiceConstraint_IntToProto) {
  * 
  * TEST 2.1 - Testing STRING_CHOICE ChoiceConstraint constructors
  */
-TEST(ChoiceConstraintTest, ChoiceConstraint_StringCreate) {
+TEST_F(ChoiceConstraintTest, ChoiceConstraint_StringCreate) {
     bool shared = false;
     std::string oid = "test_oid";
     { // STRING_CHOICE constructor with no device
-    ChoiceConstraint<std::string, catena::Constraint::STRING_CHOICE> constraint({{"Choice1", {}}, {"Choice2", {}}}, true, oid, shared);
+    ChoiceConstraint<std::string, st2138::Constraint::STRING_CHOICE> constraint({{"Choice1", {}}, {"Choice2", {}}}, true, oid, shared);
     EXPECT_EQ(constraint.getOid(), oid);
     EXPECT_EQ(constraint.isShared(), shared);
     EXPECT_FALSE(constraint.isRange()) << "ChoiceConstraint should not be a range constraint";
@@ -144,7 +159,7 @@ TEST(ChoiceConstraintTest, ChoiceConstraint_StringCreate) {
         testing::Invoke([](const std::string &key, IConstraint *item){
             EXPECT_TRUE(item) << "No item passed into dm.addItem()";
         }));
-    ChoiceConstraint<std::string, catena::Constraint::STRING_CHOICE> constraint({{"Choice1", {}}, {"Choice2", {}}}, true, oid, shared, dm);
+    ChoiceConstraint<std::string, st2138::Constraint::STRING_CHOICE> constraint({{"Choice1", {}}, {"Choice2", {}}}, true, oid, shared, dm);
     EXPECT_EQ(constraint.getOid(), oid);
     EXPECT_EQ(constraint.isShared(), shared);
     EXPECT_FALSE(constraint.isRange()) << "ChoiceConstraint should not be a range constraint";
@@ -153,11 +168,11 @@ TEST(ChoiceConstraintTest, ChoiceConstraint_StringCreate) {
 /* 
  * TEST 2.2 - Testing STRING_STRING_CHOICE ChoiceConstraint constructors
  */
-TEST(ChoiceConstraintTest, ChoiceConstraint_StringStringCreate) {
+TEST_F(ChoiceConstraintTest, ChoiceConstraint_StringStringCreate) {
     bool shared = false;
     std::string oid = "test_oid";
     { // STRING_STRING_CHOICE constructor with no device
-    ChoiceConstraint<std::string, catena::Constraint::STRING_CHOICE> constraint({{"Choice1", {{"en", "Choice 1"}}}, {"Choice2", {{"en", "Choice 2"}}}}, true, oid, shared);
+    ChoiceConstraint<std::string, st2138::Constraint::STRING_CHOICE> constraint({{"Choice1", {{"en", "Choice 1"}}}, {"Choice2", {{"en", "Choice 2"}}}}, true, oid, shared);
     EXPECT_EQ(constraint.getOid(), oid);
     EXPECT_EQ(constraint.isShared(), shared);
     EXPECT_FALSE(constraint.isRange()) << "ChoiceConstraint should not be a range constraint";
@@ -168,7 +183,7 @@ TEST(ChoiceConstraintTest, ChoiceConstraint_StringStringCreate) {
         testing::Invoke([](const std::string &key, IConstraint *item){
             EXPECT_TRUE(item) << "No item passed into dm.addItem()";
         }));
-    ChoiceConstraint<std::string, catena::Constraint::STRING_CHOICE> constraint({{"Choice1", {{"en", "Choice 1"}}}, {"Choice2", {{"en", "Choice 2"}}}}, true, oid, shared, dm);
+    ChoiceConstraint<std::string, st2138::Constraint::STRING_CHOICE> constraint({{"Choice1", {{"en", "Choice 1"}}}, {"Choice2", {{"en", "Choice 2"}}}}, true, oid, shared, dm);
     EXPECT_EQ(constraint.getOid(), oid);
     EXPECT_EQ(constraint.isShared(), shared);
     EXPECT_FALSE(constraint.isRange()) << "ChoiceConstraint should not be a range constraint";
@@ -177,9 +192,9 @@ TEST(ChoiceConstraintTest, ChoiceConstraint_StringStringCreate) {
 /*
  * TEST 2.3 - Testing String ChoiceConstraint satified with strict set to true
  */
-TEST(ChoiceConstraintTest, ChoiceConstraint_StringSatisfiedStrict) {
-    ChoiceConstraint<std::string, catena::Constraint::STRING_CHOICE> constraint({{"Choice1", {}}, {"Choice2", {}}}, true, "test_oid", false);
-    catena::Value src;
+TEST_F(ChoiceConstraintTest, ChoiceConstraint_StringSatisfiedStrict) {
+    ChoiceConstraint<std::string, st2138::Constraint::STRING_CHOICE> constraint({{"Choice1", {}}, {"Choice2", {}}}, true, "test_oid", false);
+    st2138::Value src;
     // Valid
     src.set_string_value("Choice1");
     EXPECT_TRUE(constraint.satisfied(src)) << "Constraint should be satisfied by valid value Choice1";
@@ -193,9 +208,9 @@ TEST(ChoiceConstraintTest, ChoiceConstraint_StringSatisfiedStrict) {
 /* 
  * TEST 2.4 - Testing String ChoiceConstraint satified with strict set to false
  */
-TEST(ChoiceConstraintTest, ChoiceConstraint_StringSatisfiedNotStrict) {
-    ChoiceConstraint<std::string, catena::Constraint::STRING_CHOICE> constraint({{"Choice1", {}}, {"Choice2", {}}}, false, "test_oid", false);
-    catena::Value src;
+TEST_F(ChoiceConstraintTest, ChoiceConstraint_StringSatisfiedNotStrict) {
+    ChoiceConstraint<std::string, st2138::Constraint::STRING_CHOICE> constraint({{"Choice1", {}}, {"Choice2", {}}}, false, "test_oid", false);
+    st2138::Value src;
     // Valid
     src.set_string_value("Choice1");
     EXPECT_TRUE(constraint.satisfied(src)) << "Constraint should be satisfied by valid value Choice1";
@@ -209,10 +224,10 @@ TEST(ChoiceConstraintTest, ChoiceConstraint_StringSatisfiedNotStrict) {
 /* 
  * TEST 2.5 - Testing String ChoiceConstraint apply
  */
-TEST(ChoiceConstraintTest, ChoiceConstraint_StringApply) {
-    ChoiceConstraint<std::string, catena::Constraint::STRING_CHOICE> constraint({{"Choice1", {}}, {"Choice2", {}}}, true, "test_oid", false);
-    catena::Value src;
-    catena::Value res;
+TEST_F(ChoiceConstraintTest, ChoiceConstraint_StringApply) {
+    ChoiceConstraint<std::string, st2138::Constraint::STRING_CHOICE> constraint({{"Choice1", {}}, {"Choice2", {}}}, true, "test_oid", false);
+    st2138::Value src;
+    st2138::Value res;
     src.set_string_value("SomeChoice");
     res = constraint.apply(src);
     EXPECT_EQ(res.SerializeAsString(), "") << "Apply should return an empty value for string ChoiceConstraint";
@@ -220,17 +235,17 @@ TEST(ChoiceConstraintTest, ChoiceConstraint_StringApply) {
 /* 
  * TEST 2.6 - Testing String ChoiceConstraint toProto
  */
-TEST(ChoiceConstraintTest, ChoiceConstraint_StringToProto) {
-    ChoiceConstraint<std::string, catena::Constraint::STRING_CHOICE>::ListInitializer choicesInit = {
+TEST_F(ChoiceConstraintTest, ChoiceConstraint_StringToProto) {
+    ChoiceConstraint<std::string, st2138::Constraint::STRING_CHOICE>::ListInitializer choicesInit = {
         {"Choice1", PolyglotText::ListInitializer{}},
         {"Choice2", PolyglotText::ListInitializer{}}
     };
-    ChoiceConstraint<std::string, catena::Constraint::STRING_CHOICE>::Choices choices(choicesInit.begin(), choicesInit.end());
-    ChoiceConstraint<std::string, catena::Constraint::STRING_CHOICE> constraint({{"Choice1", {}}, {"Choice2", {}}}, true, "test_oid", false);
-    catena::Constraint protoConstraint;
+    ChoiceConstraint<std::string, st2138::Constraint::STRING_CHOICE>::Choices choices(choicesInit.begin(), choicesInit.end());
+    ChoiceConstraint<std::string, st2138::Constraint::STRING_CHOICE> constraint({{"Choice1", {}}, {"Choice2", {}}}, true, "test_oid", false);
+    st2138::Constraint protoConstraint;
     constraint.toProto(protoConstraint);
     // Comparing results
-    EXPECT_EQ(protoConstraint.type(), catena::Constraint::STRING_CHOICE);
+    EXPECT_EQ(protoConstraint.type(), st2138::Constraint::STRING_CHOICE);
     EXPECT_EQ(choices.size(), protoConstraint.string_choice().choices_size());
     for (const auto& protoChoice : protoConstraint.string_choice().choices()) {
         EXPECT_TRUE(choices.contains(protoChoice)) << "Choice value should be in the choices map";
@@ -239,17 +254,17 @@ TEST(ChoiceConstraintTest, ChoiceConstraint_StringToProto) {
 /* 
  * TEST 2.7 - Testing STRING_STRING_CHOICE ChoiceConstraint toProto
  */
-TEST(ChoiceConstraintTest, ChoiceConstraint_StringStringToProto) {
-    ChoiceConstraint<std::string, catena::Constraint::STRING_STRING_CHOICE>::ListInitializer choicesInit = {
+TEST_F(ChoiceConstraintTest, ChoiceConstraint_StringStringToProto) {
+    ChoiceConstraint<std::string, st2138::Constraint::STRING_STRING_CHOICE>::ListInitializer choicesInit = {
         {"Choice1", PolyglotText::ListInitializer{{"en", "one"}}},
         {"Choice2", PolyglotText::ListInitializer{{"en", "two"}}}
     };
-    ChoiceConstraint<std::string, catena::Constraint::STRING_STRING_CHOICE>::Choices choices(choicesInit.begin(), choicesInit.end());
-    ChoiceConstraint<std::string, catena::Constraint::STRING_STRING_CHOICE> constraint({{"Choice1", {{"en", "one"}}}, {"Choice2", {{"en", "two"}}}}, true, "test_oid", false);
-    catena::Constraint protoConstraint;
+    ChoiceConstraint<std::string, st2138::Constraint::STRING_STRING_CHOICE>::Choices choices(choicesInit.begin(), choicesInit.end());
+    ChoiceConstraint<std::string, st2138::Constraint::STRING_STRING_CHOICE> constraint({{"Choice1", {{"en", "one"}}}, {"Choice2", {{"en", "two"}}}}, true, "test_oid", false);
+    st2138::Constraint protoConstraint;
     constraint.toProto(protoConstraint);
     // Comparing results
-    EXPECT_EQ(protoConstraint.type(), catena::Constraint::STRING_STRING_CHOICE);
+    EXPECT_EQ(protoConstraint.type(), st2138::Constraint::STRING_STRING_CHOICE);
     EXPECT_EQ(choices.size(), protoConstraint.string_string_choice().choices_size());
     for (const auto& protoChoice : protoConstraint.string_string_choice().choices()) {
         ASSERT_TRUE(choices.contains(protoChoice.value())) << "Choice value should be in the choices map";

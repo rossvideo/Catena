@@ -30,8 +30,9 @@
 
 /**
  * @brief This file is for testing the MenuGroup.cpp file.
- * @author benjamin.whitten@rossvideo.com
- * @date 25/06/26
+ * @author benjamin.whitten@rossvideo.com 
+ * @author (Nelson Daniels) nelson.daniels@rossvideo.com 
+ * @date 25/10/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -42,6 +43,7 @@
 // Mock objects
 #include <mocks/MockDevice.h>
 #include <mocks/MockMenu.h>
+#include "Logger.h"
 
 // common
 #include "MenuGroup.h"
@@ -50,6 +52,15 @@ using namespace catena::common;
 
 class MenuGroupTest : public ::testing::Test {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("MenuGroupTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
     // Creates a MenuGroup for testing.
     void SetUp() override {
         EXPECT_CALL(dm_, addItem(oid_, testing::An<IMenuGroup*>())).Times(1).WillOnce(
@@ -128,7 +139,7 @@ TEST_F(MenuGroupTest, MenuGroup_ToProto) {
     for (auto& oid : menus) {
         std::unique_ptr<MockMenu> menu = std::make_unique<MockMenu>();
         EXPECT_CALL(*menu, toProto(::testing::_)).Times(1)
-            .WillOnce(::testing::Invoke([&oid](catena::Menu& menu) {
+            .WillOnce(::testing::Invoke([&oid](st2138::Menu& menu) {
                 // Just enough to ensure its copying the proper menu.
                 auto& name = *menu.mutable_name();
                 name.mutable_display_strings()->insert({"en", oid});
@@ -136,7 +147,7 @@ TEST_F(MenuGroupTest, MenuGroup_ToProto) {
         menuGroup_->addMenu(oid, std::move(menu));
     }
     // Calling toProto
-    catena::MenuGroup protoMenuGroup;
+    st2138::MenuGroup protoMenuGroup;
     menuGroup_->toProto(protoMenuGroup, false);
     // Comparing names and menus
     for (auto& [lang, name] : name_) {
@@ -159,7 +170,7 @@ TEST_F(MenuGroupTest, MenuGroup_ToProtoShallow) {
         menuGroup_->addMenu(oid, std::move(menu));
     }
     // Calling toProto
-    catena::MenuGroup protoMenuGroup;
+    st2138::MenuGroup protoMenuGroup;
     menuGroup_->toProto(protoMenuGroup, true);
     // Comparing names and menus
     for (auto& [lang, name] : name_) {
@@ -178,6 +189,6 @@ TEST_F(MenuGroupTest, MenuGroup_ErrMenuToProto) {
         .WillOnce(::testing::Throw(std::runtime_error("Menu toProto error")));
     menuGroup_->addMenu("menu1", std::move(menu));
     // Calling toProto
-    catena::MenuGroup protoMenuGroup;
+    st2138::MenuGroup protoMenuGroup;
     EXPECT_THROW(menuGroup_->toProto(protoMenuGroup, false), std::runtime_error) << "Expected to throw on menu toProto";
 }

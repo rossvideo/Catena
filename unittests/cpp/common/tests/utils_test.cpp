@@ -50,7 +50,7 @@ TEST(UtilsTest, ReadFile_FileNotFound) {
     fs::path test_path = "non_existent_file.txt";
     
     // Expect an exception since the file doesn't exist
-    EXPECT_THROW(catena::readFile(test_path), std::filesystem::filesystem_error);
+    EXPECT_EQ(catena::readFile(test_path), "");
 }
 
 // SUBS TESTS
@@ -118,4 +118,19 @@ TEST(UtilsTest, Split_OverwriteVector) {
     std::vector<std::string> ans = {"comma", "seperated", "values"};
     catena::split(out, str, ",");
     EXPECT_EQ(out, ans);
+}
+
+TEST(UtilsTest, Fmt_NormalCase) {
+    std::string result = catena::fmt("Hello, %s! You have %d new messages.", "Alice", 5);
+    EXPECT_EQ(result, "Hello, Alice! You have 5 new messages.");
+}
+
+TEST(UtilsTest, Fmt_EmptyFormat) {
+    std::string result = catena::fmt("");
+    EXPECT_EQ(result, "");
+}
+
+TEST(UtilsTest, Fmt_NoArgs) {
+    std::string result = catena::fmt("Hello, World!");
+    EXPECT_EQ(result, "Hello, World!");
 }

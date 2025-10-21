@@ -15,7 +15,7 @@ GetPopulatedSlots::GetPopulatedSlots(tcp::socket& socket, ISocketReader& context
 void GetPopulatedSlots::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
     // Getting slot from dm.
-    SlotList slotList;
+    st2138::SlotList slotList;
     for (auto [slot, dm] : dms_) {
         // If a devices exists at the slot, add it to the response.
         if (dm) {

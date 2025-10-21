@@ -1,4 +1,4 @@
-/*Copyright 2024 Ross Video Ltd
+/*Copyright 2025 Ross Video Ltd
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 *
@@ -17,13 +17,14 @@
  * file: constraint.js
  * brief: Collect C++ information for a constraint
  * author: isaac.robert@rossvideo.com
- * date: 2024-08-21
- * Copyright (c) 2024 Ross Video
+ * author: andrew.brown@rossvideo.com
+ * date: 2025-10-07
+ * Copyright (c) 2025 Ross Video
  */
 
 "use strict";
 
-const CppCtor = require("./cppctor");
+import CppCtor from "./cppctor.js";
 
 /**
  *
@@ -51,7 +52,7 @@ function minArg(desc) {
   if (this.type === "int32_t") {
     return desc.int32_range.min_value;
   } else {
-    return desc.float_range.min_value;
+    return desc.float32_range.min_value;
   }
 }
 
@@ -64,7 +65,7 @@ function maxArg(desc) {
   if (this.type === "int32_t") {
     return desc.int32_range.max_value;
   } else {
-    return desc.float_range.max_value;
+    return desc.float32_range.max_value;
   }
 }
 
@@ -79,8 +80,8 @@ function stepArg(desc) {
   let ans = 0;
   if (this.type == "int32_t" && "step" in desc.int32_range) {
     ans = desc.int32_range.step;
-  } else if (this.type == "float" && "step" in desc.float_range) {
-    ans = desc.float_range.step;
+  } else if (this.type == "float" && "step" in desc.float32_range) {
+    ans = desc.float32_range.step;
   }
   return ans;
 }
@@ -100,10 +101,10 @@ function displayMinArg(desc) {
       ans = desc.int32_range.min_value;
     }
   } else {
-    if ("display_min" in desc.float_range) {
-      ans = desc.float_range.display_min;
+    if ("display_min" in desc.float32_range) {
+      ans = desc.float32_range.display_min;
     } else {
-      ans = desc.float_range.min_value;
+      ans = desc.float32_range.min_value;
     }
   }
   return ans;
@@ -124,10 +125,10 @@ function displayMaxArg(desc) {
       ans = desc.int32_range.max_value
     }
   } else {
-    if ("display_max" in desc.float_range) {
-      ans = desc.float_range.display_max;
+    if ("display_max" in desc.float32_range) {
+      ans = desc.float32_range.display_max;
     } else {
-      ans = desc.float_range.max_value;
+      ans = desc.float32_range.max_value;
     }
   }
   return ans;
@@ -302,11 +303,11 @@ class Constraint extends CppCtor {
   getInitializer() {
     this.initialized = true;
     if (this.constraintType === "ChoiceConstraint") {
-      return `catena::common::${this.constraintType}<${this.type}, catena::Constraint::${this.desc.type}> ${this.variableName()}(${this.arguments.map((arg) => arg(this.desc)).join(", ")});`;
+      return `catena::common::${this.constraintType}<${this.type}, st2138::Constraint::${this.desc.type}> ${this.variableName()}(${this.arguments.map((arg) => arg(this.desc)).join(", ")});`;
     } else {
       return `catena::common::${this.constraintType}<${this.type}> ${this.variableName()}(${this.arguments.map((arg) => arg(this.desc)).join(", ")});`;
     }
   }
 }
 
-module.exports = Constraint;
+export default Constraint;

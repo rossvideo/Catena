@@ -30,8 +30,9 @@
 
 /**
  * @brief This file is for testing the RangeConstraint.cpp file.
- * @author benjamin.whitten@rossvideo.com
- * @date 25/07/02
+ * @author benjamin.whitten@rossvideo.com 
+ * @author (Nelson Daniels) nelson.daniels@rossvideo.com 
+ * @date 25/10/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -40,15 +41,29 @@
 #include <gmock/gmock.h>
 
 #include "MockDevice.h"
+#include "Logger.h"
 
 #include "RangeConstraint.h"
 
 using namespace catena::common;
 
+// Test fixture class for RangeConstraint tests
+class RangeConstraintTest : public ::testing::Test {
+protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("RangeConstraintTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+};
+
 /* 
  * TEST 0.1 - Testing RangeConstraint constructor when the type is not int or float
  */
-TEST(RangeConstraintTest, RangeConstraint_InvalidCreate) {
+TEST_F(RangeConstraintTest, RangeConstraint_InvalidCreate) {
     { // Without device
     EXPECT_THROW(RangeConstraint<std::string> constraint("min", "max", "step", "test_oid", false), std::runtime_error)
         << "Constructor should throw an error when defined with a type other than int and float";
@@ -79,7 +94,7 @@ TEST(RangeConstraintTest, RangeConstraint_InvalidCreate) {
  * 
  * TEST 1.1 - Testing Int RangeConstraint constructors
  */
-TEST(RangeConstraintTest, RangeConstraint_IntCreate) {
+TEST_F(RangeConstraintTest, RangeConstraint_IntCreate) {
     bool shared = false;
     std::string oid = "test_oid";
     { // Without device
@@ -120,9 +135,9 @@ TEST(RangeConstraintTest, RangeConstraint_IntCreate) {
 /* 
  * TEST 1.2 - Testing Int RangeConstraint satisfied
  */
-TEST(RangeConstraintTest, RangeConstraint_IntSatisfied) {
+TEST_F(RangeConstraintTest, RangeConstraint_IntSatisfied) {
     RangeConstraint<int32_t> constraint(0, 10, 2, "test_oid", false);
-    catena::Value src;
+    st2138::Value src;
     // Valid
     src.set_int32_value(4);
     EXPECT_TRUE(constraint.satisfied(src)) << "Constraint should be satisfied by valid value 4";
@@ -139,41 +154,41 @@ TEST(RangeConstraintTest, RangeConstraint_IntSatisfied) {
 /* 
  * TEST 1.3 - Testing Int RangeConstraint apply
  */
-TEST(RangeConstraintTest, RangeConstraint_IntApply) {
+TEST_F(RangeConstraintTest, RangeConstraint_IntApply) {
     int32_t min = 0, max = 10, step = 2;
     RangeConstraint<int32_t> constraint(min, max, step, "test_oid", false);
-    catena::Value src;
+    st2138::Value src;
     { // Valid - do nothing
     src.set_int32_value(4);
-    catena::Value res = constraint.apply(src);
+    st2138::Value res = constraint.apply(src);
     EXPECT_EQ(res.int32_value(), src.int32_value()) << "Constraint should not change valid value 4";
     }
     { // Invalid - < min
     src.set_int32_value(-2);
-    catena::Value res = constraint.apply(src);
+    st2138::Value res = constraint.apply(src);
     EXPECT_EQ(res.int32_value(), min) << "Constraint should set invalid value -2 to min 0";
     }
     { // Invalid - > max
     src.set_int32_value(12);
-    catena::Value res = constraint.apply(src);
+    st2138::Value res = constraint.apply(src);
     EXPECT_EQ(res.int32_value(), max) << "Constraint should set invalid value 12 to max 10";
     }
     { // Invalid - % step != 0
     src.set_int32_value(3);
-    catena::Value res = constraint.apply(src);
+    st2138::Value res = constraint.apply(src);
     EXPECT_EQ(res.int32_value(), 2) << "Constraint should set invalid value 3 to 2";
     }
 }
 /* 
  * TEST 1.4 - Testing Int RangeConstraint toProto
  */
-TEST(RangeConstraintTest, RangeConstraint_IntToProto) {
+TEST_F(RangeConstraintTest, RangeConstraint_IntToProto) {
     int32_t min = 0, max = 10, step = 2, displayMin = 2, displayMax = 8;
     RangeConstraint<int32_t> constraint(min, max, step, displayMin, displayMax, "test_oid", false);
-    catena::Constraint protoConstraint;
+    st2138::Constraint protoConstraint;
     constraint.toProto(protoConstraint);
     // Comparing results
-    EXPECT_EQ(protoConstraint.type(), catena::Constraint::INT_RANGE);
+    EXPECT_EQ(protoConstraint.type(), st2138::Constraint::INT_RANGE);
     EXPECT_EQ(protoConstraint.int32_range().min_value(), min);
     EXPECT_EQ(protoConstraint.int32_range().max_value(), max);
     EXPECT_EQ(protoConstraint.int32_range().step(), step);
@@ -189,7 +204,7 @@ TEST(RangeConstraintTest, RangeConstraint_IntToProto) {
  * 
  * TEST 2.1 - Testing FLOAT RangeConstraint constructors
  */
-TEST(RangeConstraintTest, RangeConstraint_FloatCreate) {
+TEST_F(RangeConstraintTest, RangeConstraint_FloatCreate) {
     bool shared = false;
     std::string oid = "test_oid";
     { // Without device
@@ -230,9 +245,9 @@ TEST(RangeConstraintTest, RangeConstraint_FloatCreate) {
 /* 
  * TEST 2.2 - Testing Float RangeConstraint satisfied
  */
-TEST(RangeConstraintTest, RangeConstraint_FloatSatisfied) {
+TEST_F(RangeConstraintTest, RangeConstraint_FloatSatisfied) {
     RangeConstraint<float> constraint(0.5, 9.5, 0.5, "test_oid", false);
-    catena::Value src;
+    st2138::Value src;
     // Valid
     src.set_float32_value(4.5);
     EXPECT_TRUE(constraint.satisfied(src)) << "Constraint should be satisfied by valid value 4.5";
@@ -249,41 +264,41 @@ TEST(RangeConstraintTest, RangeConstraint_FloatSatisfied) {
 /* 
  * TEST 2.3 - Testing Float RangeConstraint apply
  */
-TEST(RangeConstraintTest, RangeConstraint_FloatApply) {
+TEST_F(RangeConstraintTest, RangeConstraint_FloatApply) {
     float min = 0.5, max = 9.5, step = 0.5;
     RangeConstraint<float> constraint(min, max, step, "test_oid", false);
-    catena::Value src;
+    st2138::Value src;
     { // Valid - do nothing
     src.set_float32_value(4.5);
-    catena::Value res = constraint.apply(src);
+    st2138::Value res = constraint.apply(src);
     EXPECT_EQ(res.float32_value(), src.float32_value()) << "Constraint should not change valid value 4.5";
     }
     { // Invalid - < min
     src.set_float32_value(0);
-    catena::Value res = constraint.apply(src);
+    st2138::Value res = constraint.apply(src);
     EXPECT_EQ(res.float32_value(), min) << "Constraint should set invalid value 0 to min 0.5";
     }
     { // Invalid - > max
     src.set_float32_value(10);
-    catena::Value res = constraint.apply(src);
+    st2138::Value res = constraint.apply(src);
     EXPECT_EQ(res.float32_value(), max) << "Constraint should set invalid value 10 to max 9.5";
     }
     { // Invalid - % step != 0
     src.set_float32_value(3.25);
-    catena::Value res = constraint.apply(src);
+    st2138::Value res = constraint.apply(src);
     EXPECT_EQ(res.float32_value(), 3) << "Constraint should set invalid value 3.25 to 3";
     }
 }
 /* 
  * TEST 2.4 - Testing Float RangeConstraint toProto
  */
-TEST(RangeConstraintTest, RangeConstraint_FloatToProto) {
+TEST_F(RangeConstraintTest, RangeConstraint_FloatToProto) {
     int32_t min = 0.5, max = 9.5, step = 0.5, displayMin = 2, displayMax = 8;
     RangeConstraint<float> constraint(min, max, step, displayMin, displayMax, "test_oid", false);
-    catena::Constraint protoConstraint;
+    st2138::Constraint protoConstraint;
     constraint.toProto(protoConstraint);
     // Comparing results
-    EXPECT_EQ(protoConstraint.type(), catena::Constraint::FLOAT_RANGE);
+    EXPECT_EQ(protoConstraint.type(), st2138::Constraint::FLOAT_RANGE);
     EXPECT_EQ(protoConstraint.float_range().min_value(), min);
     EXPECT_EQ(protoConstraint.float_range().max_value(), max);
     EXPECT_EQ(protoConstraint.float_range().step(), step);

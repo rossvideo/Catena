@@ -30,14 +30,16 @@
 
 /**
  * @brief This file is for testing the ParamDescriptor.cpp file.
- * @author benjamin.whitten@rossvideo.com
- * @date 25/05/20
+ * @author benjamin.whitten@rossvideo.com 
+ * @author (Nelson Daniels) nelson.daniels@rossvideo.com 
+ * @date 25/10/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #include "ParamDescriptor.h"
 #include "PolyglotText.h"
 #include "Enums.h"
+#include "Logger.h"
 
 #include "MockConstraint.h"
 #include "MockDevice.h"
@@ -45,12 +47,22 @@
 #include "MockAuthorizer.h"
 
 // gtest
+#include "gmock/gmock.h"
 #include <gtest/gtest.h>
 
 using namespace catena::common;
 
 class ParamDescriptorTest : public ::testing::Test {
   protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("ParamDescriptorTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+
     /*
      * Initializes pd with default values used in most tests.
      */
@@ -76,9 +88,40 @@ class ParamDescriptorTest : public ::testing::Test {
         EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(*pd)))).WillRepeatedly(testing::Return(true));
     }
 
+    /*
+     * Helper function to create a real ParamDescriptor with minimal required parameters.
+     * Useful for testing without needing to specify all constructor parameters.
+     */
+    std::unique_ptr<ParamDescriptor> createRealParamDescriptor(
+        const std::string& paramOid,
+        const std::string& paramName = "test_param",
+        bool paramReadOnly = false,  // Default to false so parent readOnly can propagate
+        IParamDescriptor* paramParent = nullptr
+    ) {
+        return std::make_unique<ParamDescriptor>(
+            st2138::ParamType::EMPTY,                           
+            ParamDescriptor::OidAliases{},                      
+            PolyglotText::ListInitializer{{"en", paramName}},  
+            "widget",                                           
+            "scope",                                           
+            paramReadOnly,                                     
+            paramOid,                                           
+            "",                                                 
+            nullptr,                                           
+            false,                                             
+            true,                                              
+            dm,                                                
+            0,                                                 
+            0,                                                 
+            2,                                                 
+            false,                                             
+            paramParent                                        
+        );
+    }
+
     std::unique_ptr<ParamDescriptor> pd = nullptr;
 
-    catena::ParamType type = catena::ParamType::EMPTY;
+    st2138::ParamType type = st2138::ParamType::EMPTY;
     ParamDescriptor::OidAliases oidAliases = {"oid_alias1", "oid_alias2"};
     PolyglotText::DisplayStrings name = {{"en", "name"}, {"fr", "nom"}};
     std::string widget = "widget";
@@ -214,7 +257,7 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_SubParams) {
  * TEST 7 - Testing ParamDescriptor toProto with ParamInfo object.
  */
 TEST_F(ParamDescriptorTest, ParamDescriptor_ParamInfoToProto) {
-    catena::ParamInfo paramInfo;
+    st2138::ParamInfo paramInfo;
     pd->toProto(paramInfo, authz_);
     EXPECT_EQ(paramInfo.type(), type);
     EXPECT_EQ(paramInfo.oid(), oid);
@@ -240,22 +283,22 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ParamToProto) {
         .WillOnce(testing::Return(false)); // Unique constraint on second test.
     EXPECT_CALL(constraint, getOid()).Times(1).WillOnce(testing::ReturnRef(constraintOid));
     EXPECT_CALL(constraint, toProto(testing::_)).Times(1)
-        .WillOnce(testing::Invoke([](catena::Constraint &constraint){
+        .WillOnce(testing::Invoke([](st2138::Constraint &constraint){
             constraint.set_ref_oid("constraint_oid");
         }));
 
     EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(subPd1)))).WillRepeatedly(testing::Return(true));
-    EXPECT_CALL(subPd1, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([&subOid1](catena::Param& param, const IAuthorizer& authz) {
+    EXPECT_CALL(subPd1, toProto(testing::An<st2138::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([&subOid1](st2138::Param& param, const IAuthorizer& authz) {
             param.add_oid_aliases(subOid1);
         }));
     EXPECT_CALL(authz_, readAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(subPd2)))).WillRepeatedly(testing::Return(true));
-    EXPECT_CALL(subPd2, toProto(testing::An<catena::Param&>(), testing::_)).Times(1)
-        .WillOnce(testing::Invoke([&subOid2](catena::Param& param, const IAuthorizer& authz) {
+    EXPECT_CALL(subPd2, toProto(testing::An<st2138::Param&>(), testing::_)).Times(1)
+        .WillOnce(testing::Invoke([&subOid2](st2138::Param& param, const IAuthorizer& authz) {
             param.add_oid_aliases(subOid2);
         }));
     // Calling toProto and checking the result.
-    catena::Param param;
+    st2138::Param param;
     pd->toProto(param, authz_);
     EXPECT_EQ(param.type(), type);
     EXPECT_EQ(param.read_only(), readOnly);
@@ -288,9 +331,10 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ParamToProto) {
  * TEST 9 - Testing ParamDescriptor ExecuteCommand default command definition.
  */
 TEST_F(ParamDescriptorTest, ParamDescriptor_ExecuteCommand) {
-    catena::Value input;
+    st2138::Value input;
     bool respond = false;
-    auto responder = pd->executeCommand(input, respond);
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto responder = pd->executeCommand(input, respond, status, authz_);
     auto response = responder->getNext();
     EXPECT_TRUE(response.has_exception()) << "Default command definition should return an \"UNIMPLEMENTED\" exception.";
     EXPECT_EQ(response.exception().type(), "UNIMPLEMENTED");
@@ -301,16 +345,17 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ExecuteCommand) {
 TEST_F(ParamDescriptorTest, ParamDescriptor_DefineCommand) {    
     {
     // Calling defineCommand with non-command parameter.
-    EXPECT_THROW(pd->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
-            catena::CommandResponse response;
+    EXPECT_THROW(pd->defineCommand([](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+            st2138::CommandResponse response;
             co_return response;
         }(value, respond));
     });, std::runtime_error) << "defineCommand() should throw an error if the param isCommand == False";
     // Testing response
-    catena::Value input;
+    st2138::Value input;
     bool respond = true;
-    auto responder = pd->executeCommand(input, respond);
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto responder = pd->executeCommand(input, respond, status, authz_);
     auto response = responder->getNext();
     EXPECT_TRUE(response.has_exception()) << "Non-command param should retain the default command definition.";
     EXPECT_EQ(response.exception().type(), "UNIMPLEMENTED");
@@ -320,10 +365,10 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_DefineCommand) {
     isCommand = true;
     create();
     // Defining command and executing.
-    pd->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+    pd->defineCommand([](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
             EXPECT_EQ(value.string_value(), "Test input") << "Input value not passed correctly to command.";
-            catena::CommandResponse response;
+            st2138::CommandResponse response;
             // Response #1
             response.mutable_response()->set_string_value("Command response 1");
             co_yield response;
@@ -333,12 +378,13 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_DefineCommand) {
             co_return response;
         }(value, respond));
     });
-    catena::Value input;
+    st2138::Value input;
     input.set_string_value("Test input");
     bool respond = true;
-    auto responder = pd->executeCommand(input, respond);
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto responder = pd->executeCommand(input, respond, status, authz_);
     // Testing response.
-    catena::CommandResponse response;
+    st2138::CommandResponse response;
     for (auto returnVal : {"Command response 1", "Command response 2"}) {
         EXPECT_TRUE(responder->hasMore())    << "Responder should have 2 responses.";
         response = responder->getNext();
@@ -351,29 +397,114 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_DefineCommand) {
     }
 }
 /*
- * TEST 10 - Testing ParamDescriptor CommandResponded when an error is thrown.
+ * TEST 10 - Testing ParamDescriptor CommandResponder when client does not have write authz.
+ */
+TEST_F(ParamDescriptorTest, ParamDescriptor_CommandErrNoWriteAuthz) {    
+    // Creating command ParamDescriptor.
+    isCommand = true;
+    create();
+    st2138::Value input;
+    bool respond = true;
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    EXPECT_CALL(authz_, writeAuthz(testing::Matcher<const IParamDescriptor&>(testing::Ref(*pd)))).Times(1).WillOnce(testing::Return(false));
+    auto responder = pd->executeCommand(input, respond, status, authz_);
+    // Testing response.
+    EXPECT_FALSE(responder) << "Responder should be nullptr when client does not have write authz.";
+    EXPECT_EQ(status.status, catena::StatusCode::PERMISSION_DENIED) << "Status should be PERMISSION_DENIED when client does not have write authz.";
+}
+/*
+ * TEST 11 - Testing ParamDescriptor CommandResponded when an error is thrown.
  */
 TEST_F(ParamDescriptorTest, ParamDescriptor_CommandErrUnhandled) {    
     // Creating command ParamDescriptor.
     isCommand = true;
     create();
     // Defining command that throws an error and executing.
-    pd->defineCommand([](const catena::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
-        return std::make_unique<ParamDescriptor::CommandResponder>([](const catena::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+    pd->defineCommand([](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
             throw std::runtime_error("Test error");
 
-            catena::CommandResponse response;
+            st2138::CommandResponse response;
             response.mutable_response()->set_string_value("Error should be thrown before recieving a response.");
             co_return response;
         }(value, respond));
     });
-    catena::Value input;
+    st2138::Value input;
     bool respond = true;
-    auto responder = pd->executeCommand(input, respond);
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    auto responder = pd->executeCommand(input, respond, status, authz_);
     // Testing response.
-    catena::CommandResponse response;
+    st2138::CommandResponse response;
     EXPECT_TRUE(responder->hasMore())                                 << "Responder should have at least 1 response.";
     EXPECT_THROW(response = responder->getNext(), std::runtime_error) << "Responder should rethrow error when command execution fails";
     EXPECT_FALSE(responder->hasMore())                                << "Responder should not have any more responses after an error.";
     EXPECT_FALSE(response.has_response())                             << "Response should not have a response after an error.";
+}
+
+/*
+ * TEST 11 - Testing ParamDescriptor readOnly passed down from parent where readOnly() is true.
+ */
+
+TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyTrue) {
+    // Create sub-parameters with readOnly = false so they inherit parent's readOnly status
+    std::string subOid1 = "sub_oid1", subOid2 = "sub_oid2";
+    auto subPd1 = createRealParamDescriptor(subOid1, "sub1", false, pd.get());
+    auto subPd2 = createRealParamDescriptor(subOid2, "sub2", false, pd.get());
+
+    // Test readOnly is true on children 
+    EXPECT_TRUE(pd->readOnly());
+    EXPECT_TRUE(subPd1->readOnly());  
+    EXPECT_TRUE(subPd2->readOnly());  
+}
+
+/*
+ * TEST 12 - Testing ParamDescriptor readOnly passed down from parent where readOnly() is false.
+ */
+TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyFalse) {
+    // Create sub-parameters with readOnly = false so they inherit parent's readOnly status
+    std::string subOid1 = "sub_oid1", subOid2 = "sub_oid2";
+    auto subPd1 = createRealParamDescriptor(subOid1, "sub1", false, pd.get());
+    auto subPd2 = createRealParamDescriptor(subOid2, "sub2", false, pd.get());
+
+    // Swap parent to readOnly = false
+    pd->readOnly(false);
+
+    // Test readOnly is false on children
+    EXPECT_FALSE(pd->readOnly());
+    EXPECT_FALSE(subPd1->readOnly());  
+    EXPECT_FALSE(subPd2->readOnly());  
+}
+
+/*
+ * TEST 12 - Testing ParamDescriptor readOnly passed down multiple levels when readOnly() is true.
+ */
+
+TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyMultipleLevels) {
+    // Create sub-parameter hierarchy
+    std::string subPdOid = "subPd", subsubPdOid = "subsubPd";
+    auto subPd1 = createRealParamDescriptor(subPdOid, "subPd", false, pd.get());
+    auto subPd2 = createRealParamDescriptor(subsubPdOid, "subsubPd", false, subPd1.get());
+
+    // Test readOnly is true on all levels of the hierarchy
+    EXPECT_TRUE(pd->readOnly());
+    EXPECT_TRUE(subPd1->readOnly());
+    EXPECT_TRUE(subPd2->readOnly());
+}
+
+/*
+ * TEST 13 - Testing ParamDescriptor readOnly passed down multiple levels when readOnly() is false.
+ */
+TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyMultipleLevelsFalse) {
+    // Create sub-parameter hierarchy
+    std::string subPdOid = "subPd", subsubPdOid = "subsubPd";
+    auto subPd1 = createRealParamDescriptor(subPdOid, "subPd", false, pd.get());
+    auto subPd2 = createRealParamDescriptor(subsubPdOid, "subsubPd", false, subPd1.get());
+
+    // Swap parent to readOnly = false
+    pd->readOnly(false);
+
+    // Test readOnly is false on all levels of the hierarchy
+    EXPECT_FALSE(pd->readOnly());
+    EXPECT_FALSE(subPd1->readOnly());
+    EXPECT_FALSE(subPd2->readOnly());
 }

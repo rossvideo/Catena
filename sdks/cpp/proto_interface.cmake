@@ -39,11 +39,9 @@ function(set_up_proto_targets)
     set(PROTO_TARGET "proto_interface") 
     set(PROTO_INTERFACE_DIR "${CMAKE_BINARY_DIR}/${PROTO_TARGET}")
 
-    # The input to the protoc compiler is a set of preprocessed
-    # .proto files. We need to make protoc's output depend on them
-    add_custom_target(proto_preprocessor_target
-        COMMAND ${CMAKE_COMMAND} -E echo "Added custom target proto_preprocessor_target"
-    )
+    # Create a target for the preprocessed proto files
+    # This target serves as a container for the preprocessed proto dependencies
+    add_custom_target(proto_preprocessor_target)
 
     # Process the proto files, produces list called proto_preprocessor_target_output
     preprocess_protobuf_files(
@@ -58,7 +56,7 @@ function(set_up_proto_targets)
 
     # declare our target
     # NB the sources are set in the call to preprocess_protobuf_files
-    # Make protobuf_generate depend on preprocess_protobuf_files_target
+    # Make the library depend on the preprocessor target to ensure sources are generated
     add_library(${PROTO_TARGET} STATIC)
     add_dependencies(${PROTO_TARGET} proto_preprocessor_target)
     target_compile_features(${PROTO_TARGET} PUBLIC cxx_std_20)

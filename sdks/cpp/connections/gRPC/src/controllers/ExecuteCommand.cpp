@@ -104,7 +104,7 @@ void ExecuteCommand::proceed(bool ok) {
                     std::unique_ptr<IParam> command = dm->getCommand(req_.oid(), rc, *authz_);
                     // Executing the command if found.
                     if (command != nullptr) {
-                        responder_ = command->executeCommand(req_.value(), req_.respond());
+                        responder_ = command->executeCommand(req_.value(), req_.respond(), rc, *authz_);
                         status_ = CallStatus::kWrite; 
                     }
                 }
@@ -129,7 +129,7 @@ void ExecuteCommand::proceed(bool ok) {
         case CallStatus::kWrite:
             { // rc scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
-            catena::CommandResponse res{};
+            st2138::CommandResponse res{};
             do {
                 if (!responder_) {
                     // It should not be possible to get here

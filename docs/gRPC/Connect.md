@@ -13,8 +13,6 @@ message ConnectPayload {
   Device.DetailLevel detail_level = 2; // The detail level for the responses.
   string user_agent = 3;               /* Description of the client type and
                                         * version */
-  bool force_connection = 4;           /* True to request access if connection
-                                        * had been previously refused */
 }
 ```
 

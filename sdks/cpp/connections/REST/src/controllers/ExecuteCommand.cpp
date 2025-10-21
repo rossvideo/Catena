@@ -25,7 +25,7 @@ void ExecuteCommand::proceed() {
     bool respond = context_.hasField("respond");
 
     try {
-        catena::Value val;
+        st2138::Value val;
         IDevice* dm = nullptr;
 
         // Getting device at specified slot.
@@ -60,21 +60,23 @@ void ExecuteCommand::proceed() {
             // If the command is not found, return an error
             if (command != nullptr) {
                 // Execute the command and write response if respond = true.
-                std::unique_ptr<CommandResponder> responder = command->executeCommand(val, respond);
-                if (!responder) {
-                    rc = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
-                } else {
-                    while (responder->hasMore()) {
-                        writeConsole_(CallStatus::kWrite, socket_.is_open());
-                        // Check if token is expired.
-                        if (authz->isExpired()) {
-                            rc = catena::exception_with_status{"JWS token expired", catena::StatusCode::UNAUTHENTICATED};
-                            break;
-                        // If not expired, get the next response.
-                        } else {
-                            catena::CommandResponse res = responder->getNext();
-                            if (respond) {
-                                writer_->sendResponse(rc, res);
+                std::unique_ptr<CommandResponder> responder = command->executeCommand(val, respond, rc, *authz);
+                if (rc.status == catena::StatusCode::OK) {
+                    if (!responder) {
+                        rc = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
+                    } else {
+                        while (responder->hasMore()) {
+                            writeConsole_(CallStatus::kWrite, socket_.is_open());
+                            // Check if token is expired.
+                            if (authz->isExpired()) {
+                                rc = catena::exception_with_status{"JWS token expired", catena::StatusCode::UNAUTHENTICATED};
+                                break;
+                            // If not expired, get the next response.
+                            } else {
+                                st2138::CommandResponse res = responder->getNext();
+                                if (respond) {
+                                    writer_->sendResponse(rc, res);
+                                }
                             }
                         }
                     }

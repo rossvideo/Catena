@@ -39,14 +39,14 @@ LanguagePack::LanguagePack(const std::string& languageCode, const std::string& n
     dev.addItem(languageCode, this);
 }
 
-void LanguagePack::fromProto(const catena::LanguagePack& pack) {
+void LanguagePack::fromProto(const st2138::LanguagePack& pack) {
     name_ = pack.name();
     for (const auto& [key, value] : pack.words()) {
         words_[key] = value;
     }
 }
 
-void LanguagePack::toProto(catena::LanguagePack& pack) const {
+void LanguagePack::toProto(st2138::LanguagePack& pack) const {
     pack.set_name(name_);
     for (const auto& [key, value] : words_) {
         (*pack.mutable_words())[key] = value;

@@ -31,7 +31,7 @@
 #include <PolyglotText.h>
 using catena::common::PolyglotText;
 
-void PolyglotText::toProto(catena::PolyglotText& dst) const {
+void PolyglotText::toProto(st2138::PolyglotText& dst) const {
     dst.clear_display_strings();
     for (const auto& [key, value] : display_strings_) {
         dst.mutable_display_strings()->insert({key, value});

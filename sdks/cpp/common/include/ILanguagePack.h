@@ -43,6 +43,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <interface/language.pb.h>
 
 namespace catena {
 namespace common {
@@ -70,13 +71,13 @@ public:
      * @brief Deserializes a language pack from a protobuf message
      * @param pack The protobuf message
      */
-    virtual void fromProto(const catena::LanguagePack& pack) = 0;
+    virtual void fromProto(const st2138::LanguagePack& pack) = 0;
 
     /**
      * @brief Serializes a language pack to a protobuf message
      * @param pack The protobuf message
      */
-    virtual void toProto(catena::LanguagePack& pack) const = 0;
+    virtual void toProto(st2138::LanguagePack& pack) const = 0;
 
     /**
      * @brief Gets the begin iterator to the key/word pairs

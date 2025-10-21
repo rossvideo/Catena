@@ -21,11 +21,22 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(CATENA_REST_EXAMPLES C CXX)
+add_dependencies(${target} build_openapi)
 
-add_subdirectory("asset_request_REST")
-add_subdirectory("one_of_everything_REST")
-add_subdirectory("status_update_REST")
-add_subdirectory("status_update_JSON_REST")
-add_subdirectory("use_commands_REST")
-add_subdirectory("use_menus_REST")
-add_subdirectory("structs_with_authz_REST")
+option(BARE_EXAMPLES "Build only one_of_everything examples" OFF)
+
+if(BARE_EXAMPLES)
+    add_subdirectory("one_of_everything_REST")
+else()
+    add_subdirectory("asset_request_REST")
+    add_subdirectory("discovery_REST")
+    add_subdirectory("one_of_everything_REST")
+    add_subdirectory("status_update_REST")
+    add_subdirectory("status_update_JSON_REST")
+    add_subdirectory("use_commands_REST")
+    add_subdirectory("use_menus_REST")
+    add_subdirectory("audiodeck_REST")
+    add_subdirectory("audiodeck_JSON_REST")
+
+endif()
+

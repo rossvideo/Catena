@@ -76,11 +76,11 @@ class GetPopulatedSlots : public CallData{
     /**
      * @brief The client's request, which in empty in this case.
      */
-    catena::Empty req_;
+    st2138::Empty req_;
     /**
      * @brief The RPC response writer for writing back to the client.
      */
-    ServerAsyncResponseWriter<::catena::SlotList> responder_;
+    ServerAsyncResponseWriter<::st2138::SlotList> responder_;
     /**
      * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */

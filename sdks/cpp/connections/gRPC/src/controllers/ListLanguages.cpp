@@ -73,7 +73,7 @@ void ListLanguages::proceed(bool ok) {
             context_.AsyncNotifyWhenDone(this);
             { // rc scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
-            catena::LanguageList ans;
+            st2138::LanguageList ans;
             try {
                 IDevice* dm = nullptr;
                 // Getting device at specified slot.

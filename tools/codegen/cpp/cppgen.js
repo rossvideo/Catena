@@ -1,4 +1,4 @@
-/*Copyright 2024 Ross Video Ltd
+/*Copyright 2025 Ross Video Ltd
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 *
@@ -16,14 +16,12 @@
 
 "use strict";
 
-const fs = require("fs");
-const { get } = require("http");
-const path = require("node:path");
-const Device = require("./device");
-const Param = require("./param");
-const LanguagePacks = require("../language");
-const Constraint = require("./constraint");
-const { type } = require("os");
+import fs from "fs";
+import path from "path";
+import Device from "./device.js";
+import Param from "./param.js";
+import LanguagePacks from "../language.js";
+import Constraint from "./constraint.js";
 
 /**
  * writes a line of code to the file descriptor constructed
@@ -149,7 +147,7 @@ class CppGen {
     bloc(`#include <functional>`);
     bloc(`#include <Menu.h>`);
     bloc(`#include <MenuGroup.h>`);
-    bloc(`using catena::Device_DetailLevel;`);
+    bloc(`using st2138::Device_DetailLevel;`);
     bloc(`using DetailLevel = catena::common::DetailLevel;`);
     bloc(`using catena::common::Scopes_e;`);
     bloc(`using Scope = typename catena::patterns::EnumDecorator<Scopes_e>;`);
@@ -213,7 +211,8 @@ class CppGen {
       
       let menus = menuGroups[group].menus;
       for (let menu in menus) {
-        let paramOids = menus[menu].param_oids.map(oid => `"${oid}"`).join(", ");
+        let paramOids = (menus[menu].param_oids || []).map(oid => `"${oid}"`).join(", ");
+        let commandOids = (menus[menu].command_oids || []).map(oid => `"${oid}"`).join(", ");
         let menuName = menus[menu].name.display_strings;
         let menuNamePairs = Object.keys(menuName);
         let clientHints = menus[menu].client_hints;
@@ -223,11 +222,13 @@ class CppGen {
           clientHintsStr = clientHintsKeys.map((key) => { return `{ "${key}", "${clientHints[key]}" }` }).join(", ");
         }
 
-        bloc(`Menu _${group}Group_${menu}Menu {\n  {    `);
-        bloc(`    ${menuNamePairs.map((key) => { return `{ "${key}", "${menuName[key]}" }` }).join(",\n    ")}\n  },`);
-        bloc(`  false, false, `);
-        bloc(`  {${paramOids}}, `);
-        bloc(`  {}, {${clientHintsStr}}, "${menu}", _${group}Group\n};`);
+        bloc(`Menu _${group}Group_${menu}Menu {`);
+        bloc(`  { ${menuNamePairs.map((key) => { return `{ "${key}", "${menuName[key]}" }` }).join(", ")} },`);
+        bloc(`  false, false,`);
+        bloc(`  { ${paramOids} },`);
+        bloc(`  { ${commandOids} },`);
+        bloc(`  { ${clientHintsStr} }, "${menu}", _${group}Group`);
+        bloc(`};`);
       }
     }
   }
@@ -394,4 +395,4 @@ class CppGen {
   };
 }
 
-module.exports = CppGen;
+export default CppGen;

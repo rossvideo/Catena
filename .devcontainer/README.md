@@ -57,9 +57,9 @@ CTRL + SHIFT + P -> Dev Containers: Rebuild without cache and Reopen in Containe
 
 From inside the WSL shell in Cursor
 ```sh
+cd ~/Catena/smpte
+./build-openapi.sh
 cd  ~/Catena/build/cpp
-cmake -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DCONNECTIONS=$CONNECTIONS -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage" -DCMAKE_EXE_LINKER_FLAGS="--coverage" -DCMAKE_INSTALL_PREFIX=/usr/local/.local -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE -DGLOG_LOGGING_DIR=${HOME}/Catena/logs -B ~/Catena/${BUILD_TARGET} ~/Catena/sdks/cpp
-ninja clean
 ninja
 ```
 6. your good to dev now :D

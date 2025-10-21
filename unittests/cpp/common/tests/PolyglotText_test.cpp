@@ -30,8 +30,9 @@
 
 /**
  * @brief This file is for testing the PolyglotText.cpp file.
- * @author benjamin.whitten@rossvideo.com
- * @date 25/07/02
+ * @author benjamin.whitten@rossvideo.com 
+ * @author (Nelson Daniels) nelson.daniels@rossvideo.com 
+ * @date 25/10/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -40,13 +41,27 @@
 #include <gmock/gmock.h>
 
 #include "PolyglotText.h"
+#include "Logger.h"
 
 using namespace catena::common;
+
+// Test fixture class for PolyglotText tests
+class PolyglotTextTest : public ::testing::Test {
+protected:
+    // Set up and tear down Google Logging
+    static void SetUpTestSuite() {
+        Logger::StartLogging("PolyglotTextTest");
+    }
+
+    static void TearDownTestSuite() {
+        google::ShutdownGoogleLogging();
+    }
+};
 
 /*
  * TEST 1 - Testing PolyglotText constructors.
  */
-TEST(PolyglotTextTest, PolyglotText_Create) {
+TEST_F(PolyglotTextTest, PolyglotText_Create) {
     // Default constructor
     PolyglotText pt;
     EXPECT_TRUE(pt.displayStrings().empty()) << "Failed to create PolyglotText with default constructor";
@@ -62,7 +77,7 @@ TEST(PolyglotTextTest, PolyglotText_Create) {
 /*
  * TEST 2 - Testing PolyglotText toProto.
  */
-TEST(PolyglotTextTest, PolyglotText_Move) {
+TEST_F(PolyglotTextTest, PolyglotText_Move) {
     // Creating PolyglotText;
     PolyglotText::DisplayStrings displayStrings = {{"en", "Name"}, {"fr", "Nom"}};
     PolyglotText pt(displayStrings);
@@ -72,21 +87,21 @@ TEST(PolyglotTextTest, PolyglotText_Move) {
 /*
  * TEST 3 - Testing PolyglotText toProto.
  */
-TEST(PolyglotTextTest, PolyglotText_ToProto) {
+TEST_F(PolyglotTextTest, PolyglotText_ToProto) {
     // Creating PolyglotText;
     PolyglotText::DisplayStrings displayStrings = {{"en", "Name"}, {"fr", "Nom"}};
     PolyglotText pt(displayStrings);
-    catena::PolyglotText dst;
+    st2138::PolyglotText dst;
     pt.toProto(dst);
     EXPECT_EQ(PolyglotText::DisplayStrings(dst.display_strings().begin(), dst.display_strings().end()), displayStrings);
 }
 /*
  * TEST 4 - Testing PolyglotText toProto with no displayStrings.
  */
-TEST(PolyglotTextTest, PolyglotText_ToProtoEmpty) {
+TEST_F(PolyglotTextTest, PolyglotText_ToProtoEmpty) {
     // Creating PolyglotText;
     PolyglotText pt;
-    catena::PolyglotText dst;
+    st2138::PolyglotText dst;
     pt.toProto(dst);
     EXPECT_TRUE(dst.display_strings().empty()) << "Protobuf object should be empty";
 }

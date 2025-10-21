@@ -74,7 +74,7 @@ class SocketWriter : public ISocketWriter {
      * @param msg The protobuf message to write (if status is OK).
      * @param err The error status to of the response.
      */
-    void sendResponse(const catena::exception_with_status& err, const google::protobuf::Message& msg = catena::Empty()) override;
+    void sendResponse(const catena::exception_with_status& err, const google::protobuf::Message& msg = st2138::Empty()) override;
 
   private:
     /**
@@ -119,7 +119,7 @@ class SSEWriter : public ISocketWriter {
      * @param msg The protobuf message to write as JSON.
      * @param err The error status of the response.
      */
-    void sendResponse(const catena::exception_with_status& err, const google::protobuf::Message& msg = catena::Empty()) override;
+    void sendResponse(const catena::exception_with_status& err, const google::protobuf::Message& msg = st2138::Empty()) override;
 
   private:
     /**

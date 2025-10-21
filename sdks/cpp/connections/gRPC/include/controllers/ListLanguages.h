@@ -75,11 +75,11 @@ class ListLanguages : public CallData {
      * @brief The client's request, which in a slot specifying the device to
      * list the supported languages of.
      */
-    catena::Slot req_;
+    st2138::Slot req_;
     /**
      * @brief The RPC response writer for writing back to the client.
      */
-    grpc::ServerAsyncResponseWriter<::catena::LanguageList> responder_;
+    grpc::ServerAsyncResponseWriter<::st2138::LanguageList> responder_;
     /**
      * @brief The RPC's state (kCreate, kProcess, kFinish, etc.).
      */

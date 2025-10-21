@@ -85,7 +85,7 @@ void GetParam::proceed( bool ok) {
             { // var scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             std::unique_ptr<IParam> param = nullptr;
-            catena::DeviceComponent_ComponentParam res;
+            st2138::DeviceComponent_ComponentParam res;
             std::shared_ptr<catena::common::Authorizer> sharedAuthz;
             catena::common::Authorizer* authz;
             IDevice* dm = nullptr;

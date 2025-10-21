@@ -43,10 +43,12 @@ function(cmake_catena_grpc_common)
             $<BUILD_INTERFACE:${GRPC_SERVICE_DIR}>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/grpc_service>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
+            ${AVAHI_CLIENT_INCLUDE_DIRS}
     )
 
     # link against the gRPC interface
-    target_link_libraries(${target} PUBLIC ${GRPC_TARGET})
+    target_link_libraries(${target} PUBLIC ${GRPC_TARGET} 
+        ${AVAHI_CLIENT_LIBRARIES} CURL::libcurl)
     target_compile_features(${target} PUBLIC cxx_std_20)
 
     # add dependencies

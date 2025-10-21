@@ -1,6 +1,5 @@
-cmake_minimum_required(VERSION 3.20)
 
-set(This common_unit_tests)
+cmake_minimum_required(VERSION 3.20)
 
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
@@ -20,39 +19,68 @@ else()
     endif(REST_enabled)
 endif(gRPC_enabled)
 
-set(SOURCES 
-    tests/utils_test.cpp
-    tests/SubscriptionManager_test.cpp
-    tests/ParamVisitor_test.cpp
-    tests/Authorizer_test.cpp
-    tests/Connect_test.cpp
-    tests/MenuGroup_test.cpp
-    tests/Menu_test.cpp
-    tests/StructInfo_test.cpp
-    tests/LanguagePack_test.cpp
-    tests/Path_test.cpp
-    tests/PolyglotText_test.cpp
-    tests/ChoiceConstraint_test.cpp
-    tests/RangeConstraint_test.cpp
-    tests/ParamDescriptor_test.cpp
-    tests/Device_test.cpp
-    tests/ConnectionQueue_test.cpp
-    tests/ParamWithValue_test/ParamWithValue_test.cpp
-    tests/ParamWithValue_test/ParamWithInt_test.cpp
-    tests/ParamWithValue_test/ParamWithFloat_test.cpp
-    tests/ParamWithValue_test/ParamWithString_test.cpp
-    tests/ParamWithValue_test/ParamWithIntArray_test.cpp
-    tests/ParamWithValue_test/ParamWithFloatArray_test.cpp
-    tests/ParamWithValue_test/ParamWithStringArray_test.cpp
-    tests/ParamWithValue_test/ParamWithStruct_test.cpp
-    tests/ParamWithValue_test/ParamWithStructArray_test.cpp
-    tests/ParamWithValue_test/ParamWithVariant_test.cpp
-    tests/ParamWithValue_test/ParamWithVariantArray_test.cpp
+# List all test files in tests/ (excluding ParamWithValue_test subdir)
+set(TEST_FILES
+    utils_test.cpp
+    SubscriptionManager_test.cpp
+    ParamVisitor_test.cpp
+    Authorizer_test.cpp
+    Connect_test.cpp
+    MenuGroup_test.cpp
+    Menu_test.cpp
+    StructInfo_test.cpp
+    LanguagePack_test.cpp
+    Path_test.cpp
+    PolyglotText_test.cpp
+    ChoiceConstraint_test.cpp
+    RangeConstraint_test.cpp
+    ParamDescriptor_test.cpp
+    Device_test.cpp
+    ConnectionQueue_test.cpp
+    Heartbeat_test.cpp
+    NmosNode_test.cpp
 )
 
-add_executable(${This} ${SOURCES})
+foreach(test_file ${TEST_FILES})
+    get_filename_component(test_name ${test_file} NAME_WE)
+    add_executable(common_${test_name} tests/${test_file})
+    target_link_libraries(common_${test_name} PRIVATE
+        ${GTEST_BOTH_LIBRARIES}
+        glog::glog
+        GTest::GTest
+        GTest::Main
+        GTest::gmock
+        GTest::gmock_main
+        ${common_lib}
+    )
+    add_test(NAME common.${test_name} COMMAND common_${test_name})
+endforeach()
 
-target_link_libraries(${This} PRIVATE
+#special avahi linking for NmosNode_test
+target_link_options(common_NmosNode_test PRIVATE
+    -Wl,--wrap=avahi_client_errno
+    -Wl,--wrap=avahi_simple_poll_new
+    -Wl,--wrap=avahi_simple_poll_free
+    -Wl,--wrap=avahi_simple_poll_loop
+    -Wl,--wrap=avahi_simple_poll_quit
+    -Wl,--wrap=avahi_client_new
+    -Wl,--wrap=avahi_client_free
+    -Wl,--wrap=avahi_service_resolver_new
+    -Wl,--wrap=avahi_service_resolver_free
+    -Wl,--wrap=avahi_service_browser_new
+    -Wl,--wrap=avahi_service_browser_free
+)
+target_include_directories(common_NmosNode_test PUBLIC
+    ${AVAHI_CLIENT_INCLUDE_DIRS}
+)
+target_link_libraries(common_NmosNode_test PRIVATE
+    ${AVAHI_CLIENT_LIBRARIES}
+)
+
+# ParamWithValue_test subdir: one executable for all files
+file(GLOB PARAMWITHVALUE_TESTS "tests/ParamWithValue_test/*.cpp")
+add_executable(common_ParamWithValue ${PARAMWITHVALUE_TESTS})
+target_link_libraries(common_ParamWithValue PRIVATE
     ${GTEST_BOTH_LIBRARIES}
     glog::glog
     GTest::GTest
@@ -62,7 +90,4 @@ target_link_libraries(${This} PRIVATE
     ${common_lib}
 )
 
-add_test(
-    NAME common_unit_tests
-    COMMAND ${This}
-)
+add_test(NAME common.ParamWithValue COMMAND common_ParamWithValue)

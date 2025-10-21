@@ -4,7 +4,7 @@
 
 # Param Descriptors
 
-> Defined in `interface/param.proto`
+> Defined in `smpte/interface/proto/param.proto`
 
 ![alt](images/Catena%20UML%20-%20Param.svg)
 

@@ -87,11 +87,11 @@ class DeviceRequest : public CallData {
      * - Optionally a set of specific param oids to get from the device if the
      * detail level is set to SUBSCRIPTIONS.
      */
-    catena::DeviceRequestPayload req_;
+    st2138::DeviceRequestPayload req_;
     /**
      * @brief The RPC response writer for writing back to the client.
      */
-    ServerAsyncWriter<catena::DeviceComponent> writer_;
+    ServerAsyncWriter<st2138::DeviceComponent> writer_;
     /**
      * @brief The device serializer coroutine recieved from a call to
      * Device.getComponentSerializer().
