@@ -156,10 +156,12 @@ void catena::gRPC::Connect::proceed(bool ok) {
                     writer_.Write(res_, this);
                 }
             }
+            // unlock before potentially finishing
             connect_lock.unlock();
-            if (shutdown_ && context_.IsCancelled()) {
-                // in the case when we are shutting down AND the connection was already terminated by the client
-                // we need to manually call proceed to move to the finish state. The completion queue won't do it for us.
+            if (context_.IsCancelled()) {
+                // in the case where the connection is cancelled by the client,
+                // we need to manually call proceed to move to the finish state.
+                // The completion queue won't do it for us.
                 proceed(false);
             }
             break;
