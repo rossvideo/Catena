@@ -346,7 +346,7 @@ public class CatenaServer extends CatenaServiceImplBase
     }
 
     @Override
-    public void getPopulatedSlots(EmptyPayload request, StreamObserver<SlotList> responseObserver)
+    public void getPopulatedSlots(Empty request, StreamObserver<SlotList> responseObserver)
     {
         responseObserver.onNext(buildPopulatedSlots());
         responseObserver.onCompleted();
