@@ -15,10 +15,28 @@ This directory contains a maven project which:
    Download into your `eclipse/dropins` folder the [os-maven-plugin-x.y.z.jar](https://repo1.maven.org/maven2/kr/motd/maven/os-maven-plugin/).
 
 ## Compiling and generating the jars
-Simply run: `mvn clean package` in the `Catena` project root directory.  
-Resulting jars will be in `Catena/build/java` directory.
+1. Open Terminal
+2. Navigate to the script directory using `cd ~/Catena/sdks/java/scripts`
+3. Run the build script using `./build.sh`
 
 ## Running the test applications
+
+1. Open Terminal
+2. Navigate to the script directory using `cd ~/Catena/sdks/java/scripts`
+3. Run the test script using `./run_tests.sh`
+
+NOTE: Use of one of the following args are required for this script
+- `--server`
+- `--client`
+- `--server-client`
+- `--help` (Description of each arg)
+
+
+### (--- Tests and Compiling below are deprecated ---)
+
+## Compiling and generating the jars
+Simply run: `mvn clean package` in the `Catena` project root directory.  
+Resulting jars will be in `Catena/build/java` directory.
 
 ### Running the server-only test application (Device simulator)
 The Client application connect to a server on the localhost and performs some predefined operations on it.
