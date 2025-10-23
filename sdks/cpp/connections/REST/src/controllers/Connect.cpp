@@ -105,8 +105,8 @@ void catena::REST::Connect::proceed() {
                     // Send actual update
                     writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), res_);
                 } else {
-                    // Idle: send SSE heartbeat (handled as empty OK by SSEWriter)
-                    writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK));
+                    // Idle: send SSE heartbeat without data to preserve response expectations
+                    writer_.sendHeartbeat();
                 }
             }
         }
