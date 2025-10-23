@@ -48,7 +48,12 @@ void SocketWriter::sendResponse(const catena::exception_with_status& err, const 
                  << "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
                  << "Access-Control-Allow-Credentials: true\r\n\r\n"
                  << jsonBody_;
-        boost::asio::write(socket_, boost::asio::buffer(response.str()));
+        // Use non-throwing write; on error, close socket to signal disconnect
+        boost::system::error_code ec;
+        boost::asio::write(socket_, boost::asio::buffer(response.str()), ec);
+        if (ec) {
+            socket_.close();
+        }
     }
 }
 
@@ -85,10 +90,20 @@ void SSEWriter::sendResponse(const catena::exception_with_status& err, const goo
         headers_sent_ = true;
     }
 
-    // Only send SSE event if we have valid data
-    if (httpStatus.first < 300 && !jsonOutput.empty()) {
-        response << "data: " << jsonOutput << "\n\n";
+    // Only send SSE event if we have valid data, otherwise send a heartbeat comment
+    if (httpStatus.first < 300) {
+        if (!jsonOutput.empty()) {
+            response << "data: " << jsonOutput << "\n\n";
+        } else {
+            // SSE heartbeat to keep connection alive and detect disconnects
+            response << ":\n\n";
+        }
     }
 
-    boost::asio::write(socket_, boost::asio::buffer(response.str()));
+    // Use non-throwing write; on error, close socket to signal disconnect
+    boost::system::error_code ec;
+    boost::asio::write(socket_, boost::asio::buffer(response.str()), ec);
+    if (ec) {
+        socket_.close();
+    }
 }

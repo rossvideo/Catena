@@ -19,6 +19,13 @@ using catena::REST::ServiceImpl;
 
 using catena::REST::Connect;
 
+#if !defined(_WIN32)
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/tcp.h>
+#include <netinet/in.h>
+#endif
+
 // Defining the port flag from SharedFlags.h
 ABSL_FLAG(uint16_t, port, 443, "Catena REST service port");
 
@@ -90,6 +97,20 @@ void ServiceImpl::run() {
         // Waiting for a connection.
         tcp::socket socket(io_context_);
         acceptor_.accept(socket);
+        // Enable TCP keepalive to detect half-open connections
+        try {
+            socket.set_option(boost::asio::socket_base::keep_alive(true));
+#if !defined(_WIN32)
+            int yes = 1;
+            int idle = 30;     // seconds before sending keepalive probes
+            int intvl = 10;    // interval between keepalive probes
+            int cnt = 3;       // probes before declaring dead
+            ::setsockopt(socket.native_handle(), SOL_SOCKET, SO_KEEPALIVE, &yes, sizeof(yes));
+            ::setsockopt(socket.native_handle(), IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(idle));
+            ::setsockopt(socket.native_handle(), IPPROTO_TCP, TCP_KEEPINTVL, &intvl, sizeof(intvl));
+            ::setsockopt(socket.native_handle(), IPPROTO_TCP, TCP_KEEPCNT, &cnt, sizeof(cnt));
+#endif
+        } catch (...) { /* best-effort keepalive */ }
         // Once a connection is made, increment activeRequests and handle async.
         {
             std::lock_guard<std::mutex> lock(activeRequestMutex_);
