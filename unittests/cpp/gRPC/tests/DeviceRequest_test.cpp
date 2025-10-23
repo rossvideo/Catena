@@ -59,6 +59,12 @@ class gRPCDeviceRequestTests : public GRPCTest {
 
     static void TearDownTestSuite() {
     }
+    
+    void SetUp() override {
+        GRPCTest::SetUp();
+        // Recreate mockSerializer_ for each test
+        mockSerializer_ = std::make_unique<MockDeviceSerializer>();
+    }
   
     /*
      * Creates a DeviceRequest handler object.
@@ -366,5 +372,41 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowUnknown) {
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
     EXPECT_CALL(*mockSerializer_, hasMore()).Times(2).WillRepeatedly(::testing::Return(true));
     // Sending the RPC
+    testRPC();
+}
+
+TEST_F(gRPCDeviceRequestTests, endpointSetupValid) {
+    initPayload(0, st2138::Device_DetailLevel::Device_DetailLevel_MINIMAL, {});
+    initExpVal(1);
+
+    // Create a new MockDeviceSerializer for this test
+    auto serializer = std::make_unique<MockDeviceSerializer>();
+    
+    // Set expectations on the serializer first
+    EXPECT_CALL(*serializer, getNext()).Times(1).WillOnce(::testing::Return(expVals_[0]));
+    EXPECT_CALL(*serializer, hasMore()).Times(1).WillOnce(::testing::Return(false));
+    
+    // Now set expectations for the component serializer to return our serializer
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, inVal_.detail_level(), true)).Times(1)
+        .WillOnce(::testing::Return(std::move(serializer)));
+
+    // Verify RPC succeeds with valid slot
+    testRPC();
+}
+
+TEST_F(gRPCDeviceRequestTests, endpointSetupInvalid) {
+    initPayload(dms_.size(), st2138::Device_DetailLevel::Device_DetailLevel_MINIMAL, {});
+    
+    // Set expected error for invalid slot
+    expRc_ = catena::exception_with_status(
+        "device not found in slot " + std::to_string(dms_.size()), 
+        catena::StatusCode::NOT_FOUND
+    );
+    
+    // Expectations - no serializer calls should happen for invalid slot
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    
+    // Verify RPC fails with appropriate error
     testRPC();
 }

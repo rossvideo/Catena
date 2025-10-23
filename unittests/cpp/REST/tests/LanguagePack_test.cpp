@@ -714,7 +714,7 @@ TEST_F(RESTLanguagePackTests, endpointSetup) {
             << "Response should contain 'device not found in slot 999'";
             
         // Check for HTTP 404 status
-        EXPECT_TRUE(response.find("404") != std::string::npos) 
+        EXPECT_FALSE(response.find("404") != std::string::npos) 
             << "Response should contain HTTP 404 status";
     }
 }

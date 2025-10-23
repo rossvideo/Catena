@@ -283,47 +283,43 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_GetSerializerThrowUnknown) {
     testCall();
 }
 
-// Test 3.6: Test endpoint setup with different slot values
-TEST_F(RESTDeviceRequestTests, endpointSetup) {
+// Test 3.6: Test endpoint setup with a valid slot
+TEST_F(RESTDeviceRequestTests, endpointSetupValid) {
+    slot_ = 0; 
 
-    // Testing with valid slot
-    {
-        slot_ = 0; 
+    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(0));
+    endpoint_.reset(makeOne());
+    ASSERT_TRUE(endpoint_) << "Endpoint should be created successfully";
+    EXPECT_TRUE(dms_.find(0) != dms_.end());
 
-        EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(0));
-        endpoint_.reset(makeOne());
-        ASSERT_TRUE(endpoint_) << "Endpoint should be created successfully";
-        EXPECT_TRUE(dms_.find(0) != dms_.end());
+    // Test that endpoint can access the device successfully
+    EXPECT_NO_THROW({
+        auto device = dms_[0];
+        EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
+    }) << "Slot 0 should pass validation";
+}
 
-        // Test that endpoint can access the device successfully
-        EXPECT_NO_THROW({
-            auto device = dms_[0];
-            EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
-        }) << "Slot 0 should pass validation";
-    }
-
-    // Testing with invalid slot
-    {
-        slot_ = 999;
+// Test 3.7: Test endpoint setup with an invalid slot
+TEST_F(RESTDeviceRequestTests, endpointSetupInvalid) {
+    slot_ = 999;
+    
+    expRc_ = catena::exception_with_status("device not found in slot 999", catena::StatusCode::NOT_FOUND);
+    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(999));
+    
+    // No device serializer should be called for invalid slot
+    EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
+    
+    endpoint_.reset(makeOne());
+    endpoint_->proceed();
+    std::string response = readResponse();
+    std::cout << "Actual response: " << response << std::endl;
+    
+    // Check if response contains the expected error message
+    EXPECT_FALSE(response.find("device not found in slot 999") != std::string::npos) 
+        << "Response should contain 'device not found in slot 999'";
         
-        expRc_ = catena::exception_with_status("device not found in slot 999", catena::StatusCode::NOT_FOUND);
-        EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(999));
-        
-        // No device serializer should be called for invalid slot
-        EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
-        EXPECT_CALL(dm1_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
-        
-        endpoint_.reset(makeOne());
-        endpoint_->proceed();
-        std::string response = readResponse();
-        std::cout << "Actual response: " << response << std::endl;
-        
-        // Check if response contains the expected error message
-        EXPECT_FALSE(response.find("device not found in slot 999") != std::string::npos) 
-            << "Response should contain 'device not found in slot 999'";
-            
-        // Check for HTTP 404 status
-        EXPECT_TRUE(response.find("404") != std::string::npos) 
-            << "Response should contain HTTP 404 status";
-    }
+    // Check for HTTP 404 status
+    EXPECT_TRUE(response.find("404") != std::string::npos) 
+        << "Response should contain HTTP 404 status";
 }
