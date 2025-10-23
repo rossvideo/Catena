@@ -145,10 +145,11 @@ void RunRESTServer() {
 }
 
 int main(int argc, char* argv[]) {
-    Logger::init(argc, argv, "structs_with_authz_REST");
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("structs_with_authz_REST");
 
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
     
     return 0;
-} 
+}

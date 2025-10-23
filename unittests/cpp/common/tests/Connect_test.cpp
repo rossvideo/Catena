@@ -37,6 +37,7 @@
 #include <rpc/Connect.h>
 #include <iostream>
 #include <Logger.h>
+#include "SharedFlags.h"
 
 using namespace catena::common;
 
@@ -65,6 +66,7 @@ class CommonConnectTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
         Logger::init("ConnectTest");
     }
 

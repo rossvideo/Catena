@@ -193,11 +193,9 @@ void RunRESTServer() {
 }
 
 int main(int argc, char* argv[]) {
-    Logger::init(argc, argv, "status_update_REST");
-
-    absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
-    
+    Logger::init("status_update_REST");
+
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
     

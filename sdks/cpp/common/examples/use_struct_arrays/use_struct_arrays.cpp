@@ -56,13 +56,15 @@
 
 #include <iostream>
 #include <Logger.h>
+#include <absl/flags/parse.h>
 
 using namespace catena::common;
 using namespace AudioDeck;
 using catena::common::ParamTag;
 
 int main (int argc, char** argv) {
-    Logger::init(argc, argv, "use_struct_arrays");
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("use_struct_arrays");
 
     // lock the model
     std::lock_guard lg(dm.mutex());

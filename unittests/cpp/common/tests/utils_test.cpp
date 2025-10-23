@@ -13,6 +13,7 @@
 #include <tuple>
 #include <Logger.h>
 #include "../src/utils.cpp" // Include the file to test
+#include "SharedFlags.h"
 
 namespace fs = std::filesystem;
 
@@ -20,6 +21,7 @@ class UtilsTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
         Logger::init("UtilsTest");
     }
 

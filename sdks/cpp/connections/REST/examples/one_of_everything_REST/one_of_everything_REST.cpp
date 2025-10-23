@@ -318,7 +318,8 @@ void RunRESTServer() {
 
 int main(int argc, char* argv[])
 {
-    Logger::init(argc, argv, "one_of_everything_REST");
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("one_of_everything_REST");
 
     // commands should be defined before starting the RPC server
     defineCommands();

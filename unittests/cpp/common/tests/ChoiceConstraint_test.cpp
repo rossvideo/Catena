@@ -42,6 +42,7 @@
 
 #include "MockDevice.h"
 #include "Logger.h"
+#include "SharedFlags.h"
 
 #include "ChoiceConstraint.h"
 
@@ -52,6 +53,7 @@ class ChoiceConstraintTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
         Logger::init("ChoiceConstraintTest");
     }
 

@@ -184,13 +184,14 @@ void defineCommands() {
 }
 
 int main(int argc, char* argv[]) {
-    Logger::init(argc, argv, "use_commands_REST");
-    
-    // commands should be defined before starting the REST server 
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("use_commands_REST");
+
+    // commands should be defined before starting the REST server
     defineCommands();
     
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
     
     return 0;
-} 
+}

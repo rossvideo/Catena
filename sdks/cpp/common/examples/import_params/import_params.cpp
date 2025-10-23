@@ -54,6 +54,7 @@
 
 #include <iostream>
 #include <Logger.h>
+#include <absl/flags/parse.h>
 
 using namespace catena::common;
 using namespace import_params;
@@ -72,7 +73,8 @@ std::string locationToString(const City::Location& location) {
 }
 
 int main (int argc, char** argv) {
-    Logger::init(argc, argv, "import_params");
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("import_params");
 
     // lock the model
     std::lock_guard lg(dm.mutex());

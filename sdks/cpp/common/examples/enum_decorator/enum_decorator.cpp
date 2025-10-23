@@ -39,6 +39,7 @@
 #include <patterns/EnumDecorator.h>
 #include <Logger.h>
 #include <iostream>
+#include <absl/flags/parse.h>
 
 // example using the ENUMDECORATOR macros
 // DRY by defining a macro as an argument for the ENUMDECORATOR macros
@@ -95,7 +96,8 @@ const Primes::FwdMap Primes::fwdMap_ = {
 };
 
 int main (int argc, char** argv) {
-    Logger::init(argc, argv, "enum_decorator");
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("enum_decorator");
     
     // default constructor, sets value to zero
     Counter c0;

@@ -21,15 +21,15 @@ function(setup_project_directories)
 endfunction()
 
 # Setup logging configuration  
-function(setup_logging_config CATENA_ROOT_DIR)
+function(setup_logging_config)
     # Set default log directory - respect command line override
-    if(DEFINED ABSL_LOG_DIR)
+    if(DEFINED LOG_DIR)
         # Expand tilde if present
-        string(REGEX REPLACE "^~" "$ENV{HOME}" ABSL_LOG_DIR "${ABSL_LOG_DIR}")
-        message(STATUS "Using specified ABSL logging directory: ${ABSL_LOG_DIR}")
+        string(REGEX REPLACE "^~" "$ENV{HOME}" LOG_DIR "${LOG_DIR}")
+        message(STATUS "Using specified ABSL logging directory: ${LOG_DIR}")
     endif()
 
-    add_compile_definitions(ABSL_LOG_DIR="${ABSL_LOG_DIR}")
+    add_compile_definitions(LOG_DIR="${LOG_DIR}")
 endfunction()
 
 # Parse version information from VERSION.txt

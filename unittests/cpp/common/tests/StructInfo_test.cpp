@@ -44,11 +44,12 @@
 #include <mocks/MockParamDescriptor.h>
 #include <mocks/MockConstraint.h>
 #include <mocks/MockAuthorizer.h>
-#include "Logger.h"
 
 // common
 #include "CommonTestHelpers.h"
 #include "Enums.h"
+#include "Logger.h"
+#include "SharedFlags.h"
 
 using namespace catena::common;
 
@@ -57,6 +58,7 @@ class StructInfoTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
         Logger::init("StructInfoTest");
     }
 

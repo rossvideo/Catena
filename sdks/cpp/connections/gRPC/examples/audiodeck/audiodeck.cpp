@@ -168,11 +168,9 @@ void RunRPCServer(std::string addr)
 
 int main(int argc, char* argv[])
 {
-    Logger::init(argc, argv, "structs_with_authz_REST");
-
     std::string addr;
-    absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
+    Logger::init("structs_with_authz_REST");
   
     addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
   

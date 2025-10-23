@@ -45,6 +45,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include "WrapAvahiClient.h"
+#include "SharedFlags.h"
 
 inline AvahiTestControl g_avahi_test_control;
 
@@ -172,6 +173,7 @@ protected:
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
         Logger::init("NmosNodeTest");
     }
 

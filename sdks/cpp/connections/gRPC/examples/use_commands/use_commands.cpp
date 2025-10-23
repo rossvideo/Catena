@@ -265,12 +265,10 @@ void defineCommands() {
 
 int main(int argc, char* argv[])
 {
-    Logger::init(argc, argv, "use_commands");
-
     std::string addr;
-    absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
-  
+    Logger::init("use_commands");
+
     addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
 
     // commands should be defined before starting the RPC server 

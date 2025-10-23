@@ -36,6 +36,8 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
+#include <SharedFlags.h>
+
 // Test helpers
 #include "RESTTest.h"
 #include "MockSubscriptionManager.h"
@@ -55,6 +57,7 @@ protected:
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
         Logger::init("RESTConnectTest");
     }
 

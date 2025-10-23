@@ -61,6 +61,7 @@ using namespace use_variants;
 using catena::common::ParamTag;
 #include <iostream>
 #include <Logger.h>
+#include <absl/flags/parse.h>
 
 void printCoordinate(const Coordinates_elem& coord) {
     std::visit([](auto&& arg) {
@@ -76,8 +77,9 @@ void printCoordinate(const Coordinates_elem& coord) {
 }
 
 int main (int argc, char** argv) {
-    Logger::init(argc, argv, "use_variants");
-    
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("use_variants");
+
     // // lock the model
     std::lock_guard lg(dm.mutex());
     catena::exception_with_status err{"", catena::StatusCode::OK};

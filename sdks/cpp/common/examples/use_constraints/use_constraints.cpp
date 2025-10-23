@@ -57,6 +57,7 @@
 
 #include <iostream>
 #include <Logger.h>
+#include <absl/flags/parse.h>
 
 using namespace catena::common;
 using namespace use_constraints;
@@ -64,7 +65,8 @@ using catena::common::ParamTag;
 using catena::common::getParamValue;
 
 int main (int argc, char** argv) {
-    Logger::init(argc, argv, "use_constraints");
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("use_constraints");
 
     // lock the model
     std::lock_guard lg(dm.mutex());

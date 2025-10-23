@@ -38,6 +38,7 @@
 #include "interface/param.pb.h"
 #include <fstream>
 #include <sys/stat.h>
+#include <SharedFlags.h>
 
 // Test helpers
 #include "RESTTest.h"
@@ -71,6 +72,7 @@ class RESTAssetRequestTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
         Logger::init("RESTAssetRequestTests");
     }
 

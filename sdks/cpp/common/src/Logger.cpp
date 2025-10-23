@@ -37,15 +37,17 @@
 
 // common
 #include <Logger.h>
+#include <SharedFlags.h>
 
-void Logger::init(const std::string& appName, const std::string& logDir) {
+void Logger::init(const std::string& appName) {
     static std::once_flag flag;
     std::call_once(flag, [&]() {
         absl::InitializeLog();
 
+        auto test = absl::GetFlag(FLAGS_log_dir);
         // Optionally set log dir via env or here
-        if (!std::filesystem::exists(logDir)) {
-            std::filesystem::create_directories(logDir);
+        if (!std::filesystem::exists(absl::GetFlag(FLAGS_log_dir))) {
+            std::filesystem::create_directories(absl::GetFlag(FLAGS_log_dir));
         }
 
 #ifdef NDEBUG
@@ -55,6 +57,9 @@ void Logger::init(const std::string& appName, const std::string& logDir) {
         // Debug mode: log to stdout + file
         absl::SetStderrThreshold(absl::LogSeverity::kInfo);
 #endif
+        if (absl::GetFlag(FLAGS_silent)) {
+            absl::SetMinLogLevel(absl::LogSeverityAtLeast::kError);
+        }
 
         //append date and time to the front of file name in YYYYMMDD_HHMMSS format
         auto now = std::chrono::system_clock::now();
@@ -64,23 +69,8 @@ void Logger::init(const std::string& appName, const std::string& logDir) {
         char datetime[32];
         std::strftime(datetime, sizeof(datetime), "%Y%m%d_%H%M%S", &tm_buf);
 
-        std::string log_file = logDir + "/" + datetime + std::string("_") + appName + ".log";
+        std::string log_file = absl::GetFlag(FLAGS_log_dir) + "/" + datetime + std::string("_") + appName + ".log";
         instance().fileLogSink_ = std::make_unique<FileLogSink>(log_file);
         absl::AddLogSink(instance().fileLogSink_.get());
     });
-}
-
-void Logger::init(int argc, char** argv, const std::string& appName) {
-    std::string logDir = "./logs"; //default log dir
-
-    for (int i = 1; i < argc; ++i) {
-      if (std::string(argv[i]) == "--silent") {
-        absl::SetMinLogLevel(absl::LogSeverityAtLeast::kError);
-      }
-      else if (std::string(argv[i]) == "--logdir" && i + 1 < argc) {
-        logDir = argv[i + 1];
-      }
-    }
-
-    init(appName, logDir);
 }

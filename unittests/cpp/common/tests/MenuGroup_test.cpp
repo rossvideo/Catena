@@ -43,10 +43,11 @@
 // Mock objects
 #include <mocks/MockDevice.h>
 #include <mocks/MockMenu.h>
-#include "Logger.h"
 
 // common
 #include "MenuGroup.h"
+#include "Logger.h"
+#include "SharedFlags.h"
 
 using namespace catena::common;
 
@@ -54,6 +55,7 @@ class MenuGroupTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
         Logger::init("MenuGroupTest");
     }
 

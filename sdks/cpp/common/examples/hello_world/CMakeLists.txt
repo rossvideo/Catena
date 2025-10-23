@@ -50,6 +50,7 @@ target_sources(${target}
 
 target_link_libraries(${target}
     ${common_lib}
+    absl::flags_parse
 )
 
 target_compile_features(${target}

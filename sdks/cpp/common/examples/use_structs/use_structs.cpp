@@ -57,13 +57,15 @@
 
 #include <iostream>
 #include <Logger.h>
+#include <absl/flags/parse.h>
 
 using namespace catena::common;
 using namespace use_structs;
 using catena::common::ParamTag;
 
 int main (int argc, char** argv) {
-    Logger::init(argc, argv, "use_structs");
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("use_structs");
 
     // lock the model
     std::lock_guard lg(dm.mutex());

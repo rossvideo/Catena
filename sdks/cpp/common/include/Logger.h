@@ -78,23 +78,11 @@ private:
  */
 class Logger {
 public:
-  /*
+  /**
   * @brief Initialize the logger.
   * @param appName The name of the application.
-  * @param logDir The directory where log files will be created.
   */
-  static void init(const std::string& appName, const std::string& logDir = ABSL_LOG_DIR);
-
-  /**
-   * @brief Initialize the logger with command line arguments.
-   * @param argc Argument count from main.
-   * @param argv Argument vector from main.
-   * @param appName The name of the application.
-   * @note Recognizes --silent to set log level to ERROR and --logdir <dir> to set log directory.
-   * If no arguments are provided, defaults to log directory "./logs".
-   * @note This function is intended for use in example executables.
-   */
-  static void init(int argc, char** argv, const std::string& appName);
+  static void init(const std::string& appName);
 
   ~Logger() {
     if (fileLogSink_) {

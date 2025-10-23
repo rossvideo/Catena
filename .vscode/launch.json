@@ -72,7 +72,7 @@
         "type": "cppdbg",
         "request": "launch",
         "program": "${workspaceFolder}/${env:BUILD_TARGET}/${input:pickExample}", // Path to the full_service executable
-        "args": [], // Any command-line arguments go here
+        "args": ["--log_dir", "${workspaceFolder}/logs"], // Any command-line arguments go here
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
         "environment": [],
@@ -93,7 +93,8 @@
         "program": "${workspaceFolder}/${env:BUILD_TARGET}/connections/gRPC/examples/${input:pickService}/${input:pickService}", // Path to the full_service executable
         "args": ["--static_root", "${workspaceFolder}/sdks/cpp/connections/gRPC/examples/${input:pickService}/static", 
                 //  "--secure_comms", "tls",
-                "--authz"
+                "--authz",
+                "--log_dir", "${workspaceFolder}/logs"
         ], // Any command-line arguments go here
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}/${env:BUILD_TARGET}",
@@ -157,6 +158,7 @@
         "--static_root", "${workspaceFolder}/sdks/cpp/connections/REST/examples/${input:pickRestService}/static",
         //  "--secure_comms", "tls", // Unsure if this is functional
         "--authz",
+        "--log_dir", "${workspaceFolder}/logs",
         "--port=6254"
       ],
       "stopAtEntry": false,

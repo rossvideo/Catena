@@ -152,10 +152,11 @@ void RunRESTServer() {
 }
 
 int main(int argc, char* argv[]) {
-    Logger::init(argc, argv, "use_menus_REST");
-    
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("use_menus_REST");
+
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
     
     return 0;
-} 
+}

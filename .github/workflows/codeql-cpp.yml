@@ -176,7 +176,7 @@ jobs:
         cd ./work/Catena/Catena/
         mkdir -p build/cpp
         cd build/cpp
-        cmake -DUNIT_TESTING=OFF -DBUILD_DOC=OFF -DCONNECTIONS=gRPC -DCATENA_MODEL="lite" -G Ninja -DABSL_LOG_DIR=${HOME}/Catena/logs -B ~/work/Catena/Catena/build/cpp -S ~/work/Catena/Catena/sdks/cpp
+        cmake -DUNIT_TESTING=OFF -DBUILD_DOC=OFF -DCONNECTIONS=gRPC -DCATENA_MODEL="lite" -G Ninja -DLOG_DIR=${HOME}/Catena/logs -B ~/work/Catena/Catena/build/cpp -S ~/work/Catena/Catena/sdks/cpp
         ninja
 
     - name: Perform CodeQL Analysis

@@ -191,7 +191,8 @@ void RunRESTServer() {
 }
 
 int main(int argc, char* argv[]) {
-    Logger::init(argc, argv, "asset_request_REST");
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("asset_request_REST");
     
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();

@@ -108,7 +108,8 @@ void RunRESTServer() {
 }
 
 int main(int argc, char* argv[]) {
-    Logger::init(argc, argv, "discovery_REST");
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("discovery_REST");
 
     NmosNode node("Catena Device", "Catena Node", "A Catena example Node", "discovery_REST");
     node.init();

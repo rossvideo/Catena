@@ -41,6 +41,7 @@
 #include <iostream>
 #include <memory>
 #include <utility>
+#include <absl/flags/parse.h>
 
 using catena::common::Path;
 
@@ -65,7 +66,8 @@ void document(Path& p) {
 }
 
 int main (int argc, char** argv) {
-    Logger::init(argc, argv, "path");
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("path");
 
     Path top_level_oid("/top_level_oid");
     document(top_level_oid);

@@ -143,11 +143,9 @@ void RunRPCServer(std::string addr)
 
 int main(int argc, char* argv[])
 {
-    Logger::init(argc, argv, "external_object_request");
-
     std::string addr;
-    absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
+    Logger::init("external_object_request");
   
     addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
   

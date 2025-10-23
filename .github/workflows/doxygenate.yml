@@ -25,7 +25,7 @@ jobs:
               run: |
                   mkdir -p build/cpp
                   cd build/cpp
-                  cmake -DONLY_DOCS=ON -G Ninja -DABSL_LOG_DIR=${HOME}/Catena/logs -B ~/work/Catena/Catena/build/cpp -S ~/work/Catena/Catena/sdks/cpp
+                  cmake -DONLY_DOCS=ON -G Ninja -DLOG_DIR=${HOME}/Catena/logs -B ~/work/Catena/Catena/build/cpp -S ~/work/Catena/Catena/sdks/cpp
                   ninja doxygen
 
             # Copy Doxygen files to a "doxygen" subdirectory for GitHub Pages

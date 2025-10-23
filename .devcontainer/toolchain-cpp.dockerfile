@@ -33,7 +33,6 @@ RUN . /root/toolchain.env \
     libavahi-client-dev=$AVAHI_CLIENT_VERSION \
     libavahi-common-dev=$AVAHI_COMMON_VERSION \
     pkg-config=$PKG_CONFIG_VERSION \
-    libabsl-dev=$ABSEIL_VERSION \
     ca-certificates \
     && curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x -o /tmp/nodesource_setup.sh \
     && cat /tmp/nodesource_setup.sh \
@@ -50,6 +49,7 @@ FROM base AS builder
 RUN . /root/toolchain.env \
     && git clone -b $GRPC_VERSION https://github.com/grpc/grpc /usr/local/grpc \
     && git -C /usr/local/grpc submodule update --recursive --init \
+    && git -C /usr/local/grpc/third_party/abseil-cpp checkout $ABSEIL_VERSION \
     && mkdir -p /usr/local/grpc/cmake/build
 
 WORKDIR /usr/local/grpc/cmake/build
@@ -85,11 +85,9 @@ RUN . /root/toolchain.env \
     && apt-get update \
     && apt-get install -y docker-ce-cli docker-buildx-plugin docker-compose-plugin
 
-COPY .devcontainer/toolchain-cpp.requirements.txt /root/requirements.txt
-
 # Install Python and gcovr for coverage reports
 RUN apt-get update && apt-get install --no-install-recommends -y python3-pip \
-    && pip3 install --no-cache-dir -r /root/requirements.txt --break-system-packages \
+    && pip3 install --no-cache-dir gcovr --break-system-packages \
     && apt-get clean \
     && rm -rf /var/cache/apt/archives/ /var/lib/apt/lists/*
 

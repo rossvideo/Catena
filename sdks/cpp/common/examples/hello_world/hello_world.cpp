@@ -62,10 +62,12 @@
 
 #include <Logger.h>
 #include <iostream>
+#include <absl/flags/parse.h>
 
 using namespace catena::common;
 int main (int argc, char** argv) {
-    Logger::init(argc, argv, "hello_world");
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("hello_world");
 
     // The client code, below, directly accesses parts of the device model
     // so we assert a lock on the device model's mutex to ensure threadsafe 

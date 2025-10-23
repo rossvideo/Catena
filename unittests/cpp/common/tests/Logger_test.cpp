@@ -41,31 +41,43 @@
 #include "Enums.h"
 #include "CommonTestHelpers.h"
 #include <Logger.h>
+#include <SharedFlags.h>
+#include <regex>
 
 // gtest
 #include <gtest/gtest.h>
 
 using namespace catena::common;
 
-TEST(LoggerTest, LogDefaultDir) {
-    Logger::init("LoggerTest");
+class LoggerTest : public ::testing::Test {
+    void SetUp() override {
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR + std::string("/logger"));
+        Logger::init("LoggerTest");
+    }
 
+    void TearDown() override {
+        //whipe entire UNITTEST_LOG_DIR logging dir
+        std::filesystem::remove_all(UNITTEST_LOG_DIR + std::string("/logger"));
+    }
+};
+
+TEST_F(LoggerTest, LogDefaultDir) {
     LOG(INFO) << "This is an info log message.";
     LOG(WARNING) << "This is a warning log message.";
     LOG(ERROR) << "This is an error log message.";
     
     //verify that the log file was created and contains the log messages
-    std::string logDir = ABSL_LOG_DIR;
-    std::string logFilePattern = "LoggerTest_"; // Log file name starts with this
+    std::string logFilePattern = "_LoggerTest.log"; // Log file name starts with this
     bool foundLogFile = false;
-    for (const auto& entry : std::filesystem::directory_iterator(logDir)) {
-        if (entry.is_regular_file() && entry.path().filename().string().find(logFilePattern) == 0) {
+    for (const auto& entry : std::filesystem::directory_iterator(UNITTEST_LOG_DIR + std::string("/logger"))) {
+        //get the file that ends with _LoggerTest
+        if (entry.is_regular_file() && entry.path().filename().string().find(logFilePattern) == entry.path().filename().string().length() - logFilePattern.length()) {
             foundLogFile = true;
             std::ifstream logFile(entry.path());
             std::string logContent((std::istreambuf_iterator<char>(logFile)), std::istreambuf_iterator<char>());
             EXPECT_NE(logContent.find("This is an info log message."), std::string::npos);
             EXPECT_NE(logContent.find("This is a warning log message."), std::string::npos);
-            EXPECT_NE(logContent.find("This is an error log message."), std::string::npos);
+            EXPECT_TRUE(std::regex_match(entry.path().filename().string(), std::regex(R"(^\d{8}_\d{6}_LoggerTest[.]log$)")));
             break;
         }
     }

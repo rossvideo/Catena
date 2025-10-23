@@ -41,6 +41,7 @@
 #include <iostream>
 #include <memory>
 #include <utility>
+#include <absl/flags/parse.h>
 
 /*
  * Factories are useful to create objects based on values that are only known
@@ -196,7 +197,8 @@ UniDiDog::~ConcreteDog() {
 }
 
 int main (int argc, char** argv) {
-    Logger::init(argc, argv, "factory");
+  absl::ParseCommandLine(argc, argv);
+  Logger::init("factory");
 
   try {
     // get instance of the Dog Factory
