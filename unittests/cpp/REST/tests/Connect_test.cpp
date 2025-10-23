@@ -399,3 +399,25 @@ TEST_F(RESTConnectTest, Connect_AuthzExpired) {
 
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, {slotJson}));
 }
+
+// Test 3.6: Detect client disconnect via heartbeat when idle
+TEST_F(RESTConnectTest, Connect_DetectsDisconnectWithHeartbeat) {
+    authzEnabled_ = true;
+
+    // Run proceed() in a separate thread since it blocks
+    std::thread proceed_thread([this]() {
+        endpoint_->proceed();
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    // Close client without sending any updates; server should detect on heartbeat
+    clientSocket_.close();
+
+    // Wait longer than heartbeat interval (2s) to allow detection
+    std::this_thread::sleep_for(std::chrono::milliseconds(2100));
+
+    EXPECT_FALSE(serverSocket_.is_open());
+
+    catena::REST::Connect::shutdownSignal_.emit();
+    proceed_thread.join();
+}
