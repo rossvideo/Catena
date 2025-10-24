@@ -378,7 +378,6 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowUnknown) {
 TEST_F(gRPCDeviceRequestTests, endpointSetupValid) {
     initPayload(0, st2138::Device_DetailLevel::Device_DetailLevel_MINIMAL, {});
     initExpVal(1);
-
     // Create a new MockDeviceSerializer for this test
     auto serializer = std::make_unique<MockDeviceSerializer>();
     
@@ -395,13 +394,11 @@ TEST_F(gRPCDeviceRequestTests, endpointSetupValid) {
 }
 
 TEST_F(gRPCDeviceRequestTests, endpointSetupInvalid) {
-    initPayload(dms_.size(), st2138::Device_DetailLevel::Device_DetailLevel_MINIMAL, {});
+    // Use an invalid slot
+    initPayload(2, st2138::Device_DetailLevel::Device_DetailLevel_MINIMAL, {});
     
     // Set expected error for invalid slot
-    expRc_ = catena::exception_with_status(
-        "device not found in slot " + std::to_string(dms_.size()), 
-        catena::StatusCode::NOT_FOUND
-    );
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
     
     // Expectations - no serializer calls should happen for invalid slot
     EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
