@@ -71,12 +71,12 @@ const deviceName = path.parse(options.deviceModel).name.split('.')[0];
 log(`Validating device model '${deviceName}' from file '${options.deviceModel}' against schema file '${options.schema}'...`);
 
 /**
- * @brief Validates that all mandatory product parameters are present and have valid values
- * @param {object} deviceParams The device parameters object from the device model
+ * @brief Validates that all mandatory product parameters and scopes are present and have valid values
+ * @param {object} deviceDesc The complete device model object (includes top-level properties and params)
  * @param {boolean} disableMandatoryEnforcement If true, skip validation and return early
  * @throws {Error} If mandatory parameters are missing or have invalid values (when enforcement enabled)
  */
-function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement = false) {
+function validateRequiredParamsAndScopes(deviceDesc, disableMandatoryEnforcement = false) {
     if (disableMandatoryEnforcement) {
         return;
     }
@@ -89,22 +89,39 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
         "serial_number": true
     };
 
-    if (!deviceParams || !deviceParams.product) {
+    const REQUIRED_SCOPE = "st2138:mon";
+
+    if (!deviceDesc || !deviceDesc.params || !deviceDesc.params.product) {
         throw new Error(`Missing mandatory product struct in params`);
     }
 
-    if (deviceParams.product.type !== 'STRUCT') {
-        throw new Error(`Product parameter must be STRUCT type, not ${deviceParams.product.type}`);
+    if (deviceDesc.params.product.type !== 'STRUCT') {
+        throw new Error(`Product parameter must be STRUCT type, not ${deviceDesc.params.product.type}`);
     }
 
-    if (!deviceParams.product.read_only) {
+    if (!deviceDesc.params.product.read_only) {
         throw new Error(`Product parameter must be read_only`);
     }
 
-    const productParams = deviceParams.product.params || {};
-    const productValue = deviceParams.product.value;
+    const productParams = deviceDesc.params.product.params || {};
+    const productValue = deviceDesc.params.product.value;
     const missing = [];
     const emptyValues = [];
+    const invalidScopes = [];
+
+    // Get scope sources
+    const productScope = deviceDesc.params.product.access_scope;
+    const defaultScope = deviceDesc.default_scope;
+
+    // Helper function to derive effective scope for a parameter
+    function getDerivedScope(param) {
+        const dScope = param.access_scope || productScope || defaultScope || REQUIRED_SCOPE;
+        if (dScope == REQUIRED_SCOPE) {
+            return dScope;
+        } else {
+            return "INVALID";
+        } 
+    }
 
     Object.entries(REQUIRED_PARAMS).forEach(([key, checkValue]) => {
         const param = productParams[key];
@@ -115,6 +132,13 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
             if (param.type !== 'STRING') {
                 missing.push(`${key} (not STRING type)`);
                 return;
+            }
+
+            // Derive the effective scope and check if it's correct
+            const derivedScope = getDerivedScope(param);
+            
+            if (derivedScope == "INVALID") {
+                invalidScopes.push(`${key} (derived scope is invalid, must be ('${REQUIRED_SCOPE}')`);
             }
 
             if (checkValue) {
@@ -136,7 +160,7 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
         }
     });
 
-    const allIssues = [...missing.map(p => `${p} (missing field)`), ...emptyValues];
+    const allIssues = [...missing.map(p => `${p} (missing field)`), ...emptyValues, ...invalidScopes];
 
     if (allIssues.length > 0 && !disableMandatoryEnforcement) {
         throw new Error(`Invalid mandatory product parameters: ${allIssues.join(', ')}`);
@@ -150,7 +174,7 @@ function areAllRequiredParamsPresent(deviceParams, disableMandatoryEnforcement =
     if (isValid.data) {
         const dm = new DeviceModel(options.deviceModel, validator, isValid.data);
 
-        areAllRequiredParamsPresent(dm.desc.params, options.disableMandatoryEnforcement);
+        validateRequiredParamsAndScopes(dm.desc, options.disableMandatoryEnforcement);
 
         log('✅ Validation succeeded.');
         log("Generating code...");

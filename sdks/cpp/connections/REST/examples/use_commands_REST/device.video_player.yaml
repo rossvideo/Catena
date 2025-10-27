@@ -41,6 +41,7 @@ params:
     read_only: true
   product:
     type: STRUCT
+    access_scope: st2138:mon
     read_only: true
     value: 
       struct_value:
@@ -52,7 +53,7 @@ params:
           serial_number: { string_value: "SN-7K9M-2024-XR485-BLU" }
     params:
       name: 
-        type: STRING  
+        type: STRING
       vendor:
         type: STRING
       version:
@@ -78,3 +79,4 @@ commands:
     type: STRING
   eject:
     type: EMPTY
+    
