@@ -43,9 +43,7 @@ void Logger::init(const std::string& appName) {
     static std::once_flag flag;
     std::call_once(flag, [&]() {
         absl::InitializeLog();
-
-        auto test = absl::GetFlag(FLAGS_log_dir);
-        // Optionally set log dir via env or here
+        
         if (!std::filesystem::exists(absl::GetFlag(FLAGS_log_dir))) {
             std::filesystem::create_directories(absl::GetFlag(FLAGS_log_dir));
         }

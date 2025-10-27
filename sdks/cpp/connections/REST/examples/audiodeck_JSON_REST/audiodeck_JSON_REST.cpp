@@ -146,7 +146,7 @@ void RunRESTServer() {
 
 int main(int argc, char* argv[]) {
     absl::ParseCommandLine(argc, argv);
-    Logger::init("structs_with_authz_JSON_REST");
+    Logger::init("audiodeck_JSON_REST");
 
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();

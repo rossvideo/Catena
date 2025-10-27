@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
 {
     std::string addr;
     absl::ParseCommandLine(argc, argv);
-    Logger::init("structs_with_authz_REST");
+    Logger::init("audiodeck_REST");
 
     addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
   

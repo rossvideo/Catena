@@ -31,7 +31,7 @@
 /**
  * @brief Example program to demonstrate setting up a full Catena service with
  * the REST API.
- * @file structs_with_authz_REST.cpp
+ * @file audiodeck_REST.cpp
  * @copyright Copyright © 2025 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
  * @author John Danen (john.danen@rossvideo.com)
@@ -146,7 +146,7 @@ void RunRESTServer() {
 
 int main(int argc, char* argv[]) {
     absl::ParseCommandLine(argc, argv);
-    Logger::init("structs_with_authz_REST");
+    Logger::init("audiodeck_REST");
 
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();

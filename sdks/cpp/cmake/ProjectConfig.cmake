@@ -26,7 +26,13 @@ function(setup_logging_config)
     if(DEFINED LOG_DIR)
         # Expand tilde if present
         string(REGEX REPLACE "^~" "$ENV{HOME}" LOG_DIR "${LOG_DIR}")
-        message(STATUS "Using specified ABSL logging directory: ${LOG_DIR}")
+        message(STATUS "Using specified logging directory: ${LOG_DIR}")
+    endif()
+
+    #if default log directory not set, use a standard location
+    if(NOT DEFINED LOG_DIR)
+        set(LOG_DIR "${CATENA_ROOT_DIR}/logs")
+        message(STATUS "Using default logging directory: ${LOG_DIR}")
     endif()
 
     add_compile_definitions(LOG_DIR="${LOG_DIR}")
