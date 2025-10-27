@@ -40,6 +40,7 @@
 #include <Logger.h>
 #include <iostream>
 #include <absl/flags/parse.h>
+#include <absl/flags/usage.h>
 
 // example using the ENUMDECORATOR macros
 // DRY by defining a macro as an argument for the ENUMDECORATOR macros
@@ -96,6 +97,7 @@ const Primes::FwdMap Primes::fwdMap_ = {
 };
 
 int main (int argc, char** argv) {
+    absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
     Logger::init("enum_decorator");
     

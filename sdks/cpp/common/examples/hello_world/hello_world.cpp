@@ -66,6 +66,7 @@
 
 using namespace catena::common;
 int main (int argc, char** argv) {
+    absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
     Logger::init("hello_world");
 

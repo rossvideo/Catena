@@ -349,6 +349,7 @@ void RunRPCServer(std::string addr)
 int main(int argc, char* argv[])
 {
     std::string addr;
+    absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
     Logger::init("one_of_everything");
   

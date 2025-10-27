@@ -266,6 +266,7 @@ void defineCommands() {
 int main(int argc, char* argv[])
 {
     std::string addr;
+    absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
     Logger::init("use_commands");
 

@@ -114,11 +114,17 @@ menu_groups:
 commands:
   fib_start:
     type: EMPTY
+    response: false
   fib_stop:
     type: EMPTY
+    response: false
   fib_set:
     type: INT32
+    response: false
   randomize:
     type: EMPTY
+    response: false
   tape_bot:
     type: EMPTY
+    response: false
+    

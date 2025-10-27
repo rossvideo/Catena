@@ -64,6 +64,7 @@ using namespace use_structs;
 using catena::common::ParamTag;
 
 int main (int argc, char** argv) {
+    absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
     Logger::init("use_structs");
 

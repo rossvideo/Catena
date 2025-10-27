@@ -197,6 +197,7 @@ UniDiDog::~ConcreteDog() {
 }
 
 int main (int argc, char** argv) {
+  absl::SetProgramUsageMessage("Runs the Catena Service");
   absl::ParseCommandLine(argc, argv);
   Logger::init("factory");
 

@@ -73,6 +73,7 @@ std::string locationToString(const City::Location& location) {
 }
 
 int main (int argc, char** argv) {
+    absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
     Logger::init("import_params");
 
