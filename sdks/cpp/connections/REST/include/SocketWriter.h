@@ -121,11 +121,7 @@ class SSEWriter : public ISocketWriter {
      */
     void sendResponse(const catena::exception_with_status& err, const google::protobuf::Message& msg = st2138::Empty()) override;
 
-    /**
-     * @brief Sends an SSE heartbeat comment to keep the connection alive.
-     *        This does not emit a data event.
-     */
-    void sendHeartbeat();
+    // explicit heartbeat method removed; use existing heartbeat elsewhere
 
   private:
     /**

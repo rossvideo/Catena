@@ -90,37 +90,12 @@ void SSEWriter::sendResponse(const catena::exception_with_status& err, const goo
         headers_sent_ = true;
     }
 
-    // Only send SSE event if we have valid data. Do not emit heartbeats here to
-    // preserve test expectations; use sendHeartbeat() explicitly for heartbeats.
+    // Only send SSE event if we have valid data.
     if (httpStatus.first < 300 && !jsonOutput.empty()) {
         response << "data: " << jsonOutput << "\n\n";
     }
 
     // Use non-throwing write; on error, close socket to signal disconnect
-    boost::system::error_code ec;
-    boost::asio::write(socket_, boost::asio::buffer(response.str()), ec);
-    if (ec) {
-        socket_.close();
-    }
-}
-
-void SSEWriter::sendHeartbeat() {
-    std::stringstream response;
-    if (!headers_sent_) {
-        // minimal headers to establish SSE stream
-        auto httpStatus = codeMap_.at(catena::StatusCode::OK);
-        response << "HTTP/1.1 " << httpStatus.first << " " << httpStatus.second << "\r\n"
-                 << "Content-Type: text/event-stream\r\n"
-                 << "Cache-Control: no-cache\r\n"
-                 << "Connection: keep-alive\r\n"
-                 << "Access-Control-Allow-Origin: " << origin_ << "\r\n"
-                 << "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-                 << "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
-                 << "Access-Control-Allow-Credentials: true\r\n\r\n";
-        headers_sent_ = true;
-    }
-    // SSE heartbeat comment
-    response << ":\n\n";
     boost::system::error_code ec;
     boost::asio::write(socket_, boost::asio::buffer(response.str()), ec);
     if (ec) {

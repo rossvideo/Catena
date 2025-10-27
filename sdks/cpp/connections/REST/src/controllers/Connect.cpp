@@ -1,6 +1,5 @@
 // connections/REST
 #include <controllers/Connect.h>
-#include <chrono>
 using catena::common::ILanguagePack;
 
 // Initializes the object counter for Connect to 0.
@@ -89,28 +88,19 @@ void catena::REST::Connect::proceed() {
     std::unique_lock<std::mutex> connect_lock{mtx_, std::defer_lock};
     while (socket_.is_open() && !shutdown_) {
         connect_lock.lock();
-        // Timed wait to allow periodic heartbeats when idle
-        auto woke_by_update = cv_.wait_for(connect_lock, std::chrono::seconds(2), [this] { return hasUpdate_; });
-        bool had_update = hasUpdate_;
+        cv_.wait(connect_lock, [this] { return hasUpdate_; });
         hasUpdate_ = false;
         writeConsole_(CallStatus::kWrite, true);
         if (socket_.is_open()) {
             if (shutdown_) {
                 writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::CANCELLED));
-            } else if (authz_ && authz_->isExpired()) {
+            } else if (authz_->isExpired()) {
                 writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::UNAUTHENTICATED));
                 shutdown_ = true;
             } else {
-                if (woke_by_update && had_update) {
-                    // Send actual update
-                    writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), res_);
-                } else {
-                    // Idle: send SSE heartbeat without data to preserve response expectations
-                    writer_.sendHeartbeat();
-                }
+                writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), res_);
             }
         }
-        // SSEWriter uses non-throwing writes; if the peer closed, socket_ will be closed
         connect_lock.unlock();
     }
 

@@ -23,7 +23,6 @@ using catena::REST::Connect;
 #include <sys/socket.h>
 #include <netinet/tcp.h>
 #include <netinet/in.h>
-#endif
 
 // Defining the port flag from SharedFlags.h
 ABSL_FLAG(uint16_t, port, 443, "Catena REST service port");
@@ -99,7 +98,6 @@ void ServiceImpl::run() {
         // Enable TCP keepalive to detect half-open connections
         try {
             socket.set_option(boost::asio::socket_base::keep_alive(true));
-#if !defined(_WIN32)
             int yes = 1;
             int idle = 30;     // seconds before sending keepalive probes
             int intvl = 10;    // interval between keepalive probes
@@ -108,7 +106,6 @@ void ServiceImpl::run() {
             ::setsockopt(socket.native_handle(), IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(idle));
             ::setsockopt(socket.native_handle(), IPPROTO_TCP, TCP_KEEPINTVL, &intvl, sizeof(intvl));
             ::setsockopt(socket.native_handle(), IPPROTO_TCP, TCP_KEEPCNT, &cnt, sizeof(cnt));
-#endif
         } catch (...) { /* best-effort keepalive */ }
         // Once a connection is made, increment activeRequests and handle async.
         {
