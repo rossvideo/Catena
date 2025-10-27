@@ -40,7 +40,6 @@ RUN . /root/toolchain.env \
     && apt-get install -y nodejs \
     && rm -f /tmp/nodesource_setup.sh \
     && npm install -g n \
-    && apt-get install -y libgoogle-glog-dev \
     && apt-get clean \
     && rm -rf /var/cache/apt/archives/ /var/lib/apt/lists/*
 
@@ -50,6 +49,7 @@ FROM base AS builder
 RUN . /root/toolchain.env \
     && git clone -b $GRPC_VERSION https://github.com/grpc/grpc /usr/local/grpc \
     && git -C /usr/local/grpc submodule update --recursive --init \
+    && git -C /usr/local/grpc/third_party/abseil-cpp checkout $ABSEIL_VERSION \
     && mkdir -p /usr/local/grpc/cmake/build
 
 WORKDIR /usr/local/grpc/cmake/build
