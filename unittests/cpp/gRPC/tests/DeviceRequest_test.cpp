@@ -281,7 +281,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzJWSNotFound) {
 /*
  * TEST 7 - No device in the specified slot.
  */
-TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
+TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrEmptyuSlot) {
     initPayload(dms_.size(), st2138::Device_DetailLevel_FULL, {});
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     // Setting expectations
@@ -292,7 +292,21 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
 }
 
 /*
- * TEST 8 - dm.getComponentSerializer() returns nullptr.
+ * TEST 8 - endpoint setup with an invalid slot
+ */
+TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
+    initPayload(2, st2138::Device_DetailLevel::Device_DetailLevel_MINIMAL, {});
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC
+    testRPC();
+}
+
+
+/*
+ * TEST 9 - dm.getComponentSerializer() returns nullptr.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerIllegalState) {
     expRc_ = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
@@ -304,7 +318,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerIllegalState) {
 }
 
 /*
- * TEST 9 - dm.getComponentSerializer() throws a catena::exception_with_status.
+ * TEST 10 - dm.getComponentSerializer() throws a catena::exception_with_status.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowCatena) {
     expRc_ = catena::exception_with_status("Component not found", catena::StatusCode::INVALID_ARGUMENT);
@@ -320,7 +334,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowCatena) {
 }
 
 /*
- * TEST 10 - dm.getComponentSerializer() throws a std::runtime_exception.
+ * TEST 11 - dm.getComponentSerializer() throws a std::runtime_exception.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -333,7 +347,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowUnknown) {
 }
 
 /*
- * TEST 11 - serializer.getNext() throws a catena::exception_with_status.
+ * TEST 12 - serializer.getNext() throws a catena::exception_with_status.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowCatena) {
     expRc_ = catena::exception_with_status("Component not found", catena::StatusCode::INVALID_ARGUMENT);
@@ -356,7 +370,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowCatena) {
 }
 
 /*
- * TEST 12 - serializer.getNext() throws a std::runtime_exception.
+ * TEST 13 - serializer.getNext() throws a std::runtime_exception.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -372,38 +386,5 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowUnknown) {
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
     EXPECT_CALL(*mockSerializer_, hasMore()).Times(2).WillRepeatedly(::testing::Return(true));
     // Sending the RPC
-    testRPC();
-}
-
-TEST_F(gRPCDeviceRequestTests, endpointSetupValid) {
-    initPayload(0, st2138::Device_DetailLevel::Device_DetailLevel_MINIMAL, {});
-    initExpVal(1);
-    // Create a new MockDeviceSerializer for this test
-    auto serializer = std::make_unique<MockDeviceSerializer>();
-    
-    // Set expectations on the serializer first
-    EXPECT_CALL(*serializer, getNext()).Times(1).WillOnce(::testing::Return(expVals_[0]));
-    EXPECT_CALL(*serializer, hasMore()).Times(1).WillOnce(::testing::Return(false));
-    
-    // Now set expectations for the component serializer to return our serializer
-    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, inVal_.detail_level(), true)).Times(1)
-        .WillOnce(::testing::Return(std::move(serializer)));
-
-    // Verify RPC succeeds with valid slot
-    testRPC();
-}
-
-TEST_F(gRPCDeviceRequestTests, endpointSetupInvalid) {
-    // Use an invalid slot
-    initPayload(2, st2138::Device_DetailLevel::Device_DetailLevel_MINIMAL, {});
-    
-    // Set expected error for invalid slot
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
-    
-    // Expectations - no serializer calls should happen for invalid slot
-    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
-    
-    // Verify RPC fails with appropriate error
     testRPC();
 }

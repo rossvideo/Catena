@@ -345,7 +345,24 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_RemoveReturnErr) {
     testRPC();
 }
 
-// 2.3: Error Case - UpdateSubscriptions add subscription throws catena::exception_with_status.
+// 2.3: Error Case - Endpoint has an invalid slot input returns error.
+TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_InvalidSlotErr) {
+    initPayload(2, {"param1"}, {});
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
+
+    // Setting expectations - no subscription operations should happen for invalid slot
+    EXPECT_CALL(subManager_, addSubscription(testing::_, testing::_, testing::_, testing::_)).Times(0);
+    EXPECT_CALL(subManager_, removeSubscription(testing::_, testing::_, testing::_)).Times(0);
+    
+    // Calling proceed and testing the output
+    testRPC();
+
+    // Verify no subscription operations were performed
+    EXPECT_EQ(addedOids_, 0);
+    EXPECT_EQ(removedOids_, 0);
+}
+
+// 2.4: Error Case - UpdateSubscriptions add subscription throws catena::exception_with_status.
 TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_AddThrowCatena) {
     initPayload(0, {"errParam", "param1"}, {});
     expRc_ = catena::exception_with_status("Failed to add subscription", catena::StatusCode::INVALID_ARGUMENT);
@@ -362,7 +379,7 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_AddThrowCatena) {
     testRPC();
 }
 
-// 2.4: Error Case - UpdateSubscriptions remove subscription throws catena::exception_with_status.
+// 2.5: Error Case - UpdateSubscriptions remove subscription throws catena::exception_with_status.
 TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_RemoveThrowCatena) {
     initPayload(0, {}, {"errParam", "param1"});
     expRc_ = catena::exception_with_status("Failed to remove subscription", catena::StatusCode::INVALID_ARGUMENT);
@@ -379,7 +396,7 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_RemoveThrowCatena) {
     testRPC();
 }
 
-// 2.5: Error Case - UpdateSubscriptions add subscription throws std::runtime_error.
+// 2.6: Error Case - UpdateSubscriptions add subscription throws std::runtime_error.
 TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_AddThrowUnknown) {
     initPayload(0, {"errParam", "param1"}, {});
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -392,7 +409,7 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_AddThrowUnknown) {
     testRPC();
 }
 
-// 2.6: Error Case - UpdateSubscriptions remove subscription throws std::runtime_error.
+// 2.7: Error Case - UpdateSubscriptions remove subscription throws std::runtime_error.
 TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_RemoveThrowUnknown) {
     initPayload(0, {}, {"errParam", "param1"});
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);

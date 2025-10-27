@@ -285,3 +285,17 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_FileIOException) {
     // Send the RPC
     testRPC();
 }
+
+/*
+ * TEST 2.5 - ExternalObjectRequest with file that doesn't exist.
+ */
+TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_ErrFileNotFound) {
+    // Initialize request payload with non-existent file
+    initPayload("/nonexistent_endpoint_test.txt");
+    
+    // Set expected error for file not found
+    expRc_ = catena::exception_with_status("virtual void catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile '/nonexistent_endpoint_test.txt' not found", catena::StatusCode::NOT_FOUND);
+
+    // Send to RPC
+    testRPC();
+}

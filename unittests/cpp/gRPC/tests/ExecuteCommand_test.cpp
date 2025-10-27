@@ -370,9 +370,22 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzExpired) {
 /*
  * TEST 10 - No device in the specified slot.
  */
-TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
+TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ErrEmptySlot) {
     initPayload(dms_.size(), "test_command", "test_value", true);
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC
+    testRPC();
+}
+
+/*
+ * TEST 11 - Endpoint setup with an invalid slot
+ */
+TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
+    initPayload(2, "test_command", "test_value", true);
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
@@ -553,3 +566,28 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
     // Sending the RPC
     testRPC();
 }
+
+// /*
+//  * TEST 20 - endpoint setup with a valid slot
+//  */
+// TEST_F(gRPCExecuteCommandTests, endpointSetupValid) {
+//     initPayload(0, "test_command", "test_value", true);
+//     expNoResponse();
+//     // Setting expectations
+//     EXPECT_CALL(dm0_, getCommand(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
+//         .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
+//             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+//             status = catena::exception_with_status(expRc_.what(), expRc_.status);
+//             return std::move(mockCommand_);
+//         }));
+//     EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+//     EXPECT_CALL(*mockCommand_, executeCommand(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
+//         .WillOnce(::testing::Invoke([this](const st2138::Value& value, const bool respond, catena::exception_with_status& status, const IAuthorizer& authz) {
+//             EXPECT_EQ(value.string_value(), "test_value");
+//             return std::move(mockResponder_);
+//         }));
+//     EXPECT_CALL(*mockResponder_, getNext()).Times(1).WillOnce(::testing::Return(expVals_[0]));
+//     EXPECT_CALL(*mockResponder_, hasMore()).Times(1).WillOnce(::testing::Return(false));
+//     // Sending the RPC
+//     testRPC();
+// }

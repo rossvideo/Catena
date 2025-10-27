@@ -173,11 +173,19 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_AuthzInvalid) {
     testRPC();
 }
 
-// 0.3: Error Case - Authorization test with invalid slot
-TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_InvalidSlot) {
+// 0.3: Error Case - Authorization test with an empty slot
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_EmptySlot) {
     initPayload(dms_.size()); // Use invalid slot
     expRc_ = catena::exception_with_status("Device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
 
+    testRPC();
+}
+
+// 0.4: Authorization test with invalid slot
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_InvalidSlot) {
+    initPayload(2);
+    expRc_ = catena::exception_with_status("Device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
+    
     testRPC();
 }
 

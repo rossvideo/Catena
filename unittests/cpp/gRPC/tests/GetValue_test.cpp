@@ -184,7 +184,7 @@ TEST_F(gRPCGetValueTests, GetValue_AuthzJWSNotFound) {
 /*
  * TEST 6 - No device in the specified slot.
  */
-TEST_F(gRPCGetValueTests, GetValue_ErrInvalidSlot) {
+TEST_F(gRPCGetValueTests, GetValue_ErrEmptySlot) {
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     initPayload(dms_.size(), "/test_oid");
     // Setting expectations
@@ -194,9 +194,21 @@ TEST_F(gRPCGetValueTests, GetValue_ErrInvalidSlot) {
     testRPC();
 }
 
+/*
+ * TEST 7 - Endpoint setup with an invalid slot
+ */
+TEST_F(gRPCGetValueTests, GetValue_ErrInvalidSlot) {
+    initPayload(2, "/test_oid");
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC.
+    testRPC();
+}
 
 /*
- * TEST 7 - dm.getValue() returns a catena::exception_with_status.
+ * TEST 8 - dm.getValue() returns a catena::exception_with_status.
  */
 TEST_F(gRPCGetValueTests, GetValue_ErrReturnCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -212,7 +224,7 @@ TEST_F(gRPCGetValueTests, GetValue_ErrReturnCatena) {
 }
 
 /*
- * TEST 8 - dm.getValue() throws a catena::exception_with_status.
+ * TEST 9 - dm.getValue() throws a catena::exception_with_status.
  */
 TEST_F(gRPCGetValueTests, GetValue_ErrThrowCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -229,7 +241,7 @@ TEST_F(gRPCGetValueTests, GetValue_ErrThrowCatena) {
 }
 
 /*
- * TEST 9 - dm.getValue() throws a std::runtime_exception.
+ * TEST 10 - dm.getValue() throws a std::runtime_exception.
  */
 TEST_F(gRPCGetValueTests, GetValue_ErrThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);

@@ -116,7 +116,7 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_Normal) {
     auto languagePack = expVal_.mutable_language_pack();
     languagePack->set_name("English");
     (*languagePack->mutable_words())["greeting"] = "Hello";
-    // Setting expecteations
+    // Setting expectations
     EXPECT_CALL(dm0_, getLanguagePack(inVal_.language(), ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](const std::string &languageId, st2138::DeviceComponent_ComponentLanguagePack &pack){
             pack.CopyFrom(expVal_);
@@ -130,10 +130,10 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_Normal) {
 /* 
  * TEST 3 - No device in the specified slot.
  */
-TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrInvalidSlot) {
+TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrEmptySlot) {
     initPayload(dms_.size(), "en");
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
-    // Setting expecteations
+    // Setting expectations
     EXPECT_CALL(dm0_, getLanguagePack(::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm1_, getLanguagePack(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
@@ -141,11 +141,24 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrInvalidSlot) {
 }
 
 /* 
- * TEST 4 - dm.getLanguagePack returns a catena::Exception_With_Status.
+ * TEST 4 - Endpoint setup with an invalid slot
+ */
+TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrInvalidSlot) {
+    initPayload(2, "en");
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getLanguagePack(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getLanguagePack(::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC.
+    testRPC();
+}
+
+/* 
+ * TEST 5 - dm.getLanguagePack returns a catena::Exception_With_Status.
  */
 TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrReturn) {
     expRc_ = catena::exception_with_status("Language pack en not found", catena::StatusCode::NOT_FOUND);    
-    // Setting expecteations
+    // Setting expectations
     EXPECT_CALL(dm0_, getLanguagePack(inVal_.language(), ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](const std::string &languageId, st2138::DeviceComponent_ComponentLanguagePack &pack){
             return catena::exception_with_status(expRc_.what(), expRc_.status);
@@ -156,11 +169,11 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrReturn) {
 }
 
 /* 
- * TEST 5 - dm.getLanguagePack throws a catena::Exception_With_Status.
+ * TEST 6 - dm.getLanguagePack throws a catena::Exception_With_Status.
  */
 TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrThrow) {
     expRc_ = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
-    // Setting expecteations
+    // Setting expectations
     EXPECT_CALL(dm0_, getLanguagePack(inVal_.language(), ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](const std::string &languageId, st2138::DeviceComponent_ComponentLanguagePack &pack){
             throw catena::exception_with_status(expRc_.what(), expRc_.status);

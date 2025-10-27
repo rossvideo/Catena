@@ -212,7 +212,7 @@ TEST_F(gRPCGetParamTests, GetParam_AuthzJWSNotFound) {
 /*
  * TEST 6 - No device in the specified slot.
  */
-TEST_F(gRPCGetParamTests, GetParam_ErrInvalidSlot) {
+TEST_F(gRPCGetParamTests, GetParam_ErrEmptySlot) {
     initPayload(dms_.size(), "/test_oid");
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     // Setting expectations
@@ -223,7 +223,20 @@ TEST_F(gRPCGetParamTests, GetParam_ErrInvalidSlot) {
 }
 
 /*
- * TEST 7 - dm.getParam() returns a catena::exception_with_status.
+ * TEST 7 - Endpoint setup with an invalid slot
+ */
+TEST_F(gRPCGetParamTests, GetParam_ErrInvalidSlot) {
+    initPayload(2, "/test_oid");
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC.
+    testRPC();
+}
+
+/*
+ * TEST 8 - dm.getParam() returns a catena::exception_with_status.
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrGetParamReturnCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -240,7 +253,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrGetParamReturnCatena) {
 }
 
 /*
- * TEST 8 - dm.getParam() throws a catena::exception_with_status.
+ * TEST 9 - dm.getParam() throws a catena::exception_with_status.
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrGetParamThrowCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -257,7 +270,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrGetParamThrowCatena) {
 }
 
 /*
- * TEST 9 - dm.getParam() throws a std::runtime_exception.
+ * TEST 10 - dm.getParam() throws a std::runtime_exception.
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrGetParamThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -271,7 +284,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrGetParamThrowUnknown) {
 }
 
 /*
- * TEST 10 - param->toProto() returns a catena::exception_with_status.
+ * TEST 11 - param->toProto() returns a catena::exception_with_status.
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrToProtoReturnCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -288,7 +301,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoReturnCatena) {
 }
 
 /*
- * TEST 11 - param->toProto() throws a catena::exception_with_status.
+ * TEST 12 - param->toProto() throws a catena::exception_with_status.
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -308,7 +321,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowCatena) {
 }
 
 /*
- * TEST 12 - param->toProto() throws a std::runtime_exception.
+ * TEST 13 - param->toProto() throws a std::runtime_exception.
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
