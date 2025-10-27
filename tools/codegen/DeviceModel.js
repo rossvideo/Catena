@@ -14,104 +14,94 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { existsSync, readFileSync } from 'fs';
-import { basename, dirname, extname } from "path";
-import yaml from 'yaml';
-
+import { basename } from "path";
 import Validator from 'smpte-validator';
+import { fileURLToPath } from 'url';
 
 // TODO get the max depth from the smpte spec
 const MAX_RESOLVE_DEPTH = 100;
 
-/**
- * @class DeviceModel
- * @brief Holds the information parsed from a json device model file
- */
 export class DeviceModel {
     /**
-     * @brief Construct a new DeviceModel object
-     * @param {string} filePath the path to the device model file
-     * @param {Validator} validator the json validator object
-     * @param {object} desc the parsed json object
+     * Create a new DeviceModel instance. To load the model from file, call load().
+     * @param {string} url the path to the device model file
+     * @param {Validator} validator the validator to use
      */
-    constructor(filePath, validator, desc) {
-        this.filePath = filePath;
+    constructor(url, validator) {
+        this.url = url;
+        this.baseFilename = null;
+        this.deviceName = null;
         this.validator = validator;
-        this.desc = desc;
-        this.baseFilename = basename(filePath);
+        this.desc = null;
+    }
+
+    /**
+     * @brief Load the device model from file
+     * @param {bool} resolveImports if true, resolve any imports in the model
+     * @throws {Error} if the file is not a device model
+     * @todo this will change when smpte updates with a different param definition.
+     * The top level params and commands objects will still exist, but sub-params
+     * and sub-commands will be combined into a single 'typedef' object.
+     */
+    load(resolveImports) {
+        this.baseFilename = basename(this.url);
         const info = this.baseFilename.split(".");
         const schemaName = info[0];
         if (schemaName !== "device") {
             throw new Error(`File must be a device model, not ${schemaName}`);
         }
         this.deviceName = info[1];
+        this.desc = this._load(schemaName, this.url, resolveImports, 0);
     }
 
     /**
-     * Walk through the param and command hierarchy and resolve any imports. Note that
-     * for simplicity in the schemata/protos, commands and params are both Param types.
-     * @param {object} params the params or commands object to walk through
-     * @todo this will change when smpte updates with a different param definition.
-     * The top level params and commands objects will still exist, but sub-params
-     * and sub-commands will be combined into a single 'typedef' object.
+     * Load a resource from a uri, validate it and return the parsed object.
+     * @param {string} schemaName the schema name to validate against
+     * @param {string} url the uri to load
+     * @param {bool} resolveImports if true, resolve any imports in the object
+     * @param {number} depth the current recursion depth
+     * @returns {object} the parsed object
+     * @throws {Error} if the resource cannot be loaded or is invalid
      */
-    resolveImports() {
-        const walk = (params, depth = 0) => {
-            if (depth > MAX_RESOLVE_DEPTH) {
-                throw new Error(`Max resolve depth exceeded`);
+    _load(schemaName, url, resolveImports, depth) {
+        const { valid, data } = this.validator.validate(schemaName, url);
+        if (!valid) {
+            throw new Error(`Resource ${url} is invalid`);
+        }
+        if (resolveImports) {
+            if (data.params) {
+                this._walk(data.params, depth + 1, url);
             }
-            depth++;
-            for (let [name, param] of Object.entries(params)) {
-                if (param.import) {
-                    param = this.importParam(param.import);
-                    params[name] = param;
-                }
-                // recurse into sub-params and sub-commands
-                // this is the part will change to typedefs when smpte updates
-                if (param.params) {
-                    walk(param.params);
-                }
-                if (param.commands) {
-                    walk(param.commands);
-                }
+            // istanbul ignore next, going away
+            if (data.commands) {
+                this._walk(data.commands, depth + 1, url);
             }
         }
-        // go through the top level params and commands
-        if (this.desc.params) {
-            walk(this.desc.params);
-        }
-        if (this.desc.commands) {
-            walk(this.desc.commands);
-        }
+        return data;
     }
 
-    /**
-     * @brief open a param.*.json file and return the parsed json object
-     * @param {string} importArg the path to the param.*.json file relative to the directory containing the device model file
-     * @returns the parsed json object
-     * @throws {Error} if the file cannot be opened or the data is invalid against the schema
-     * @todo add support for other import types 
-     */
-    importParam(importArg) {
-        if ("file" in importArg) {
-            const importDir = dirname(this.filePath);
-            const importPath = `${importDir}/${importArg.file}`;
-            if (!existsSync(importPath)) {
-                throw new Error(`Cannot open file at ${importArg.file}`);
-            }
-            // Determining if the file is yaml or json and parsing accordingly.
-            const importData = (() => {
-                const extension = extname(importPath);
-                if (extension === ".yaml" || extension === ".yml") {
-                    return yaml.parse(readFileSync(importPath, 'utf8'));
-                } else { // Default
-                    return JSON.parse(readFileSync(importPath));
+    _walk(params, depth, currentUrl) {
+        if (depth > MAX_RESOLVE_DEPTH) {
+            throw new Error("Maximum import depth exceeded");
+        }
+        for (let [name, param] of Object.entries(params)) {
+            if (param.import) {
+                const importUrl = new URL(param.import.file, "file://" + currentUrl).toString();
+                const path = fileURLToPath(importUrl);
+                if (!basename(path).startsWith("param.")) {
+                    throw new Error(`Imported file ${param.import.file} is not a param file`);
                 }
-            })();
-            return importData;
-
-        } else {
-            throw new Error(`Unsupported import type: ${importArg}`);
+                params[name] = param = this._load("param", path, true, depth);
+            }
+            // recurse into sub-params and sub-commands
+            // this is the part will change to typedefs when smpte updates
+            if (param.params) {
+                this._walk(param.params, depth + 1, currentUrl);
+            }
+            // istanbul ignore next, going away
+            if (param.commands) {
+                this._walk(param.commands, depth + 1, currentUrl);
+            }
         }
     }
 }

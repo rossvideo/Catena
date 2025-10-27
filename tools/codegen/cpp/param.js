@@ -190,11 +190,6 @@ class Descriptor {
  */
 class Param {
   constructor(oid, desc, namespace, device, parent = undefined, isCommand = false) {
-    if ("import" in desc) {
-      // overwrite desc with the imported param description
-      desc = device.deviceModel.importParam(desc.import);
-    }
-
     this.oid = oid;
     this.namespace = namespace;
     this.subParams = {};
