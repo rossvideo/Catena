@@ -119,7 +119,7 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_Normal) {
 /*
  * TEST 2 - No device in the specified slot.
  */
-TEST_F(gRPCListLanguagesTests, ListLanguages_ErrEmptySlot) {
+TEST_F(gRPCListLanguagesTests, ListLanguages_ErrInvalidSlot) {
     inVal_.set_slot(dms_.size());
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     // Setting expectations
@@ -132,7 +132,7 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_ErrEmptySlot) {
 /* 
  * TEST 3 - Endpoint setup with an invalid slot
  */
-TEST_F(gRPCListLanguagesTests, ListLanguages_ErrInvalidSlot) {
+TEST_F(gRPCListLanguagesTests, ListLanguages_ErrInvalidSlotSetup) {
     inVal_.set_slot(2);
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
     // Setting expectations

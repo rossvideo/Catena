@@ -233,7 +233,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Subscriptions) {
 
 // --- 3. EXCEPTION TESTS ---
 // Test 3.1: Test proceed with an empty slot.
-TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrEmptySlot) {
+TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
     slot_ = dms_.size();
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
     // Setting expectations.
@@ -259,7 +259,7 @@ TEST_F(RESTDeviceRequestTests, endpointSetupValid) {
 }
 
 // Test 3.7: Test endpoint setup with an invalid slot
-TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
+TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrInvalidSlotSetup) {
     slot_ = 999;
 
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);

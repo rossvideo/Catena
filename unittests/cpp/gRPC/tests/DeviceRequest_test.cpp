@@ -281,7 +281,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzJWSNotFound) {
 /*
  * TEST 7 - No device in the specified slot.
  */
-TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrEmptyuSlot) {
+TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
     initPayload(dms_.size(), st2138::Device_DetailLevel_FULL, {});
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     // Setting expectations
@@ -294,7 +294,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrEmptyuSlot) {
 /*
  * TEST 8 - endpoint setup with an invalid slot
  */
-TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
+TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrInvalidSlotSetup) {
     initPayload(2, st2138::Device_DetailLevel::Device_DetailLevel_MINIMAL, {});
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
     // Setting expectations

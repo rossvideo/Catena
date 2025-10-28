@@ -185,7 +185,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_AuthzInvalid) {
 /*
  * TEST 5 - No device in the specified slot.
  */
-TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrEmptySlot) {
+TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlot) {
     initPayload(dms_.size(), {});
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
     // Setting expectations
@@ -200,7 +200,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrEmptySlot) {
 /*
  * TEST 6 - No device in the specified slot.
  */
-TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlot) {
+TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlotSetup) {
     initPayload(2, {});
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
     // Setting expectations
@@ -215,7 +215,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlot) {
 /*
  * TEST 6 - Endpoint setup with an invalid slot.
  */
-TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlot2) {
+TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlotSetup) {
     initPayload(2, {});
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
     // Setting expectations

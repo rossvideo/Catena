@@ -191,7 +191,7 @@ TEST_F(RESTGetParamTests, GetParam_AuthzInvalid) {
 /*
  * TEST 5 - No device in the specified slot.
  */
-TEST_F(RESTGetParamTests, GetParam_ErrEmptySlot) {
+TEST_F(RESTGetParamTests, GetParam_ErrInvalidSlot) {
     initPayload(dms_.size(), "/test_oid");
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
     // Setting expectations
@@ -204,7 +204,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrEmptySlot) {
 /*
  * TEST 6 - Endpoint setup with invalid slot.
  */
-TEST_F(RESTGetParamTests, GetParam_ErrInvalidSlot) {
+TEST_F(RESTGetParamTests, GetParam_ErrInvalidSlotSetup) {
     slot_ = 999;
     initPayload(slot_, "/test_oid");
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);

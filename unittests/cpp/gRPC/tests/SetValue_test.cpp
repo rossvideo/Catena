@@ -143,7 +143,7 @@ TEST_F(gRPCSetValueTests, SetValue_Normal) {
  * TEST 3 - Endpoint setup with an invalid slot.
  * This tests both create_() and toMulti_().
  */
-TEST_F(gRPCSetValueTests, SetValue_ErrInvalidSlot) {
+TEST_F(gRPCSetValueTests, SetValue_ErrInvalidSlotSetup) {
     initPayload(2, "/test_oid", "test_value");
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
     // Setting expectations

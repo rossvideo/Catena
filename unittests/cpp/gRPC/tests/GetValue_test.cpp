@@ -184,7 +184,7 @@ TEST_F(gRPCGetValueTests, GetValue_AuthzJWSNotFound) {
 /*
  * TEST 6 - No device in the specified slot.
  */
-TEST_F(gRPCGetValueTests, GetValue_ErrEmptySlot) {
+TEST_F(gRPCGetValueTests, GetValue_ErrInvalidSlot) {
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     initPayload(dms_.size(), "/test_oid");
     // Setting expectations
@@ -197,7 +197,7 @@ TEST_F(gRPCGetValueTests, GetValue_ErrEmptySlot) {
 /*
  * TEST 7 - Endpoint setup with an invalid slot
  */
-TEST_F(gRPCGetValueTests, GetValue_ErrInvalidSlot) {
+TEST_F(gRPCGetValueTests, GetValue_ErrInvalidSlotSetup) {
     initPayload(2, "/test_oid");
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
     // Setting expectations

@@ -203,7 +203,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrReturnCatena) {
 /*
  * TEST 7 - No device in the specified slot.
  */
-TEST_F(gRPCAddLanguageTests, AddLanguage_ErrEmptySlot) {
+TEST_F(gRPCAddLanguageTests, AddLanguage_ErrInvalidSlot) {
     initPayload(dms_.size(), "", "", {});
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     // Setting expectations
@@ -216,7 +216,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrEmptySlot) {
 /*
  * TEST 8 - Endpoint with an invalid slot.
  */
-TEST_F(gRPCAddLanguageTests, AddLanguage_ErrInvalidSlot) {
+TEST_F(gRPCAddLanguageTests, AddLanguage_ErrInvalidSlotSetup) {
     initPayload(2, "fr", "French", {{"greeting", "Bonjour"}});
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
     // Setting expectations

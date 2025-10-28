@@ -479,7 +479,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzExpired) {
 /*
  * TEST 12 - No device in the specified slot.
  */
-TEST_F(RESTExecuteCommandTests, ExecuteCommand_ErrEmptySlot) {
+TEST_F(RESTExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
     initPayload(dms_.size(), "test_command", "test_value", true);
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
     // Setting expectations
@@ -492,7 +492,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ErrEmptySlot) {
 /*
  * TEST 13 - Endpoint setup with invalid slot value.
  */
-TEST_F(RESTExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
+TEST_F(RESTExecuteCommandTests, ExecuteCommand_ErrInvalidSlotSetup) {
     slot_ = 999;
     initPayload(slot_, "test_command", "test_value", true);
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);

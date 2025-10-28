@@ -370,7 +370,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzExpired) {
 /*
  * TEST 10 - No device in the specified slot.
  */
-TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ErrEmptySlot) {
+TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
     initPayload(dms_.size(), "test_command", "test_value", true);
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     // Setting expectations
@@ -383,7 +383,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ErrEmptySlot) {
 /*
  * TEST 11 - Endpoint setup with an invalid slot
  */
-TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
+TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ErrInvalidSlotSetup) {
     initPayload(2, "test_command", "test_value", true);
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
     // Setting expectations
