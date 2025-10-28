@@ -198,21 +198,6 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlot) {
 }
 
 /*
- * TEST 6 - No device in the specified slot.
- */
-TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlotSetup) {
-    initPayload(2, {});
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
-    // Setting expectations
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
-    // Calling proceed and testing the output
-    testCall();
-}
-
-/*
  * TEST 6 - Endpoint setup with an invalid slot.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlotSetup) {
