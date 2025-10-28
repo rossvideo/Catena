@@ -1,4 +1,5 @@
 #include <SocketWriter.h>
+#include <glog/logging.h>
 using catena::REST::SocketWriter;
 using catena::REST::SSEWriter;
 
@@ -52,6 +53,7 @@ void SocketWriter::sendResponse(const catena::exception_with_status& err, const 
         boost::system::error_code ec;
         boost::asio::write(socket_, boost::asio::buffer(response.str()), ec);
         if (ec) {
+            LOG(WARNING) << "Socket write error (" << ec.value() << "): " << ec.message();
             socket_.close();
         }
     }
@@ -99,6 +101,7 @@ void SSEWriter::sendResponse(const catena::exception_with_status& err, const goo
     boost::system::error_code ec;
     boost::asio::write(socket_, boost::asio::buffer(response.str()), ec);
     if (ec) {
+        LOG(WARNING) << "SSE write error (" << ec.value() << "): " << ec.message();
         socket_.close();
     }
 }
