@@ -53,6 +53,12 @@
 using namespace catena::common;
 using namespace catena::REST;
 
+#include <atomic>
+
+namespace {
+    std::atomic<uint16_t> s_next_port{50050};
+}
+
 class RESTServiceImplTests : public testing::Test {
   protected:
     // Set up and tear down Google Logging
@@ -70,6 +76,8 @@ class RESTServiceImplTests : public testing::Test {
     void SetUp() override {
         oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
         EXPECT_CALL(dm_, slot()).WillRepeatedly(testing::Return(0));
+        // Assign a unique port per test instance
+        port_ = s_next_port.fetch_add(1);
         ServiceConfig config = ServiceConfig()
             .add_dm(&dm_)
             .set_EOPath(EOPath_)
@@ -113,7 +121,7 @@ class RESTServiceImplTests : public testing::Test {
     std::stringstream MockConsole_;
     std::streambuf* oldCout_;
 
-    uint16_t port_ = 50050;
+    uint16_t port_ = 0;
     bool authzEnabled_ = false;
     std::string EOPath_ = "path/to/extenal/object";
 

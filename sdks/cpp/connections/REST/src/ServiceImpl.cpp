@@ -45,7 +45,7 @@ ServiceImpl::ServiceImpl(const ServiceConfig& config)
       EOPath_{config.EOPath},
       port_{config.port},
       authorizationEnabled_{config.authz},
-      acceptor_{io_context_},
+      acceptor_{io_context_, tcp::endpoint(tcp::v4(), config.port)},
       router_{Router::getInstance()},
       connectionQueue_{config.maxConnections} {
 
