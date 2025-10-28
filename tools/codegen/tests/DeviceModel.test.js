@@ -29,7 +29,29 @@ test("load simple", () => {
     expect(dm.desc).toEqual({ slot: 555 });
     expect(dm.baseFilename).toBe("device.TestDevice.json");
     expect(dm.deviceName).toBe("TestDevice");
-    expect(validateFnMock).toHaveBeenCalledWith("device", "/path/to/device.TestDevice.json");
+    expect(validateFnMock).toHaveBeenCalledWith("device", new URL("file:///path/to/device.TestDevice.json"));
+    expect(validateFnMock).toHaveBeenCalledTimes(1);
+});
+
+test("load relative path", () => {
+    validateFnMock.mockReturnValue({ valid: true, data: { slot: 555 } });
+    const dm = new DeviceModel("device.TestDevice.json", validatorMock);
+    dm.load();
+    expect(dm.desc).toEqual({ slot: 555 });
+    expect(dm.baseFilename).toBe("device.TestDevice.json");
+    expect(dm.deviceName).toBe("TestDevice");
+    expect(validateFnMock).toHaveBeenCalledWith("device", new URL(`file://${process.cwd()}/device.TestDevice.json`));
+    expect(validateFnMock).toHaveBeenCalledTimes(1);
+});
+
+test("load url", () => {
+    validateFnMock.mockReturnValue({ valid: true, data: { slot: 555 } });
+    const dm = new DeviceModel("http://example.com/absolute/path/to/device.TestDevice.json", validatorMock);
+    dm.load();
+    expect(dm.desc).toEqual({ slot: 555 });
+    expect(dm.baseFilename).toBe("device.TestDevice.json");
+    expect(dm.deviceName).toBe("TestDevice");
+    expect(validateFnMock).toHaveBeenCalledWith("device", new URL("http://example.com/absolute/path/to/device.TestDevice.json"));
     expect(validateFnMock).toHaveBeenCalledTimes(1);
 });
 
@@ -44,8 +66,8 @@ test("load invalid schema", () => {
 test("load invalid data", () => {
     validateFnMock.mockReturnValue({ valid: false });
     const dm = new DeviceModel("/path/to/device.TestDevice.json", validatorMock);
-    expect(() => dm.load()).toThrow("Resource /path/to/device.TestDevice.json is invalid");
-    expect(validateFnMock).toHaveBeenCalledWith("device", "/path/to/device.TestDevice.json");
+    expect(() => dm.load()).toThrow("Resource file:///path/to/device.TestDevice.json is invalid");
+    expect(validateFnMock).toHaveBeenCalledWith("device", new URL("file:///path/to/device.TestDevice.json"));
     expect(validateFnMock).toHaveBeenCalledTimes(1);
 });
 
@@ -56,7 +78,7 @@ test("load with imports", () => {
             valid: true, data: {
                 params: {
                     ParamA: {
-                        import: { file: "params/param.ParamA.json" }
+                        import: { url: "params/param.ParamA.json" }
                     },
                     ParamB: {
                         type: "INT32",
@@ -86,8 +108,8 @@ test("load with imports", () => {
             }
         }
     });
-    expect(validateFnMock).toHaveBeenNthCalledWith(1, "device", "/path/to/device.TestDevice.json");
-    expect(validateFnMock).toHaveBeenNthCalledWith(2, "param", "/path/to/params/param.ParamA.json");
+    expect(validateFnMock).toHaveBeenNthCalledWith(1, "device", new URL("file:///path/to/device.TestDevice.json"));
+    expect(validateFnMock).toHaveBeenNthCalledWith(2, "param", new URL("file:///path/to/params/param.ParamA.json"));
     expect(validateFnMock).toHaveBeenCalledTimes(2);
 });
 
@@ -100,7 +122,7 @@ test("load deeper imports", () => {
                     struct: {
                         params: {
                             ParamA: {
-                                import: { file: "params/param.ParamA.json" }
+                                import: { url: "params/param.ParamA.json" }
                             }
                         }
                     }
@@ -111,7 +133,7 @@ test("load deeper imports", () => {
             valid: true, data: {
                 params: {
                     SubParamA1: {
-                        import: { file: "param.SubParamA1.json" }
+                        import: { url: "param.SubParamA1.json" }
                     }
                 }
             }
@@ -141,9 +163,9 @@ test("load deeper imports", () => {
             }
         }
     });
-    expect(validateFnMock).toHaveBeenNthCalledWith(1, "device", "/path/to/device.TestDevice.json");
-    expect(validateFnMock).toHaveBeenNthCalledWith(2, "param", "/path/to/params/param.ParamA.json");
-    expect(validateFnMock).toHaveBeenNthCalledWith(3, "param", "/path/to/params/param.SubParamA1.json");
+    expect(validateFnMock).toHaveBeenNthCalledWith(1, "device", new URL("file:///path/to/device.TestDevice.json"));
+    expect(validateFnMock).toHaveBeenNthCalledWith(2, "param", new URL("file:///path/to/params/param.ParamA.json"));
+    expect(validateFnMock).toHaveBeenNthCalledWith(3, "param", new URL("file:///path/to/params/param.SubParamA1.json"));
     expect(validateFnMock).toHaveBeenCalledTimes(3);
 });
 
@@ -153,7 +175,7 @@ test("load import wrong schema", () => {
         valid: true, data: {
             params: {
                 ParamA: {
-                    import: { file: "commands/command.CommandA.json" }
+                    import: { url: "commands/command.CommandA.json" }
                 }
             }
         }
@@ -161,7 +183,7 @@ test("load import wrong schema", () => {
 
     const dm = new DeviceModel("/path/to/device.TestDevice.json", validatorMock);
     expect(() => dm.load(true)).toThrow("Imported file commands/command.CommandA.json is not a param file");
-    expect(validateFnMock).toHaveBeenNthCalledWith(1, "device", "/path/to/device.TestDevice.json");
+    expect(validateFnMock).toHaveBeenNthCalledWith(1, "device", new URL("file:///path/to/device.TestDevice.json"));
     expect(validateFnMock).toHaveBeenCalledTimes(1);
 });
 
@@ -172,7 +194,7 @@ test("load import invalid data", () => {
             valid: true, data: {
                 params: {
                     ParamA: {
-                        import: { file: "params/param.ParamA.json" }
+                        import: { url: "params/param.ParamA.json" }
                     }
                 }
             }
@@ -182,9 +204,9 @@ test("load import invalid data", () => {
         });
 
     const dm = new DeviceModel("/path/to/device.TestDevice.json", validatorMock);
-    expect(() => dm.load(true)).toThrow("Resource /path/to/params/param.ParamA.json is invalid");
-    expect(validateFnMock).toHaveBeenNthCalledWith(1, "device", "/path/to/device.TestDevice.json");
-    expect(validateFnMock).toHaveBeenNthCalledWith(2, "param", "/path/to/params/param.ParamA.json");
+    expect(() => dm.load(true)).toThrow("Resource file:///path/to/params/param.ParamA.json is invalid");
+    expect(validateFnMock).toHaveBeenNthCalledWith(1, "device", new URL("file:///path/to/device.TestDevice.json"));
+    expect(validateFnMock).toHaveBeenNthCalledWith(2, "param", new URL("file:///path/to/params/param.ParamA.json"));
     expect(validateFnMock).toHaveBeenCalledTimes(2);
 });
 
@@ -194,7 +216,7 @@ test("load excessive import depth", () => {
         valid: true, data: {
             params: {
                 ParamA: {
-                    import: { file: "params/param.ParamA.json" }
+                    import: { url: "params/param.ParamA.json" }
                 }
             }
         }
@@ -205,9 +227,9 @@ test("load excessive import depth", () => {
     // one more than max depth cause it doesn't count the first param level
     expect(validateFnMock).toHaveBeenCalledTimes(101);
     // first call is the device
-    expect(validateFnMock).toHaveBeenNthCalledWith(1, "device", "/path/to/device.TestDevice.json");
+    expect(validateFnMock).toHaveBeenNthCalledWith(1, "device", new URL("file:///path/to/device.TestDevice.json"));
     // the rest of them should be for the param imports
     for (const call of validateFnMock.mock.calls.slice(1)) {
-        expect(call).toEqual(["param", expect.stringContaining("param.ParamA.json")]);
+        expect(call[0]).toBe("param");
     }
 });

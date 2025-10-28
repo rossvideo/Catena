@@ -14,9 +14,8 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { basename } from "path";
+import { basename, resolve } from "path";
 import Validator from 'smpte-validator';
-import { fileURLToPath } from 'url';
 
 // TODO get the max depth from the smpte spec
 const MAX_RESOLVE_DEPTH = 100;
@@ -51,13 +50,18 @@ export class DeviceModel {
             throw new Error(`File must be a device model, not ${schemaName}`);
         }
         this.deviceName = info[1];
+        if (this.url.indexOf("://") === -1) {
+            this.url = new URL(resolve(this.url), "file://");
+        } else {
+            this.url = new URL(this.url);
+        }
         this.desc = this._load(schemaName, this.url, resolveImports, 0);
     }
 
     /**
      * Load a resource from a uri, validate it and return the parsed object.
      * @param {string} schemaName the schema name to validate against
-     * @param {string} url the uri to load
+     * @param {URL} url the uri to load
      * @param {bool} resolveImports if true, resolve any imports in the object
      * @param {number} depth the current recursion depth
      * @returns {object} the parsed object
@@ -80,18 +84,23 @@ export class DeviceModel {
         return data;
     }
 
+    /**
+     * Walk the parameters and resolve any imports.
+     * @param {object} params params to walk
+     * @param {number} depth current recursion depth
+     * @param {URL} currentUrl URL to put paths against
+     */
     _walk(params, depth, currentUrl) {
         if (depth > MAX_RESOLVE_DEPTH) {
             throw new Error("Maximum import depth exceeded");
         }
         for (let [name, param] of Object.entries(params)) {
             if (param.import) {
-                const importUrl = new URL(param.import.file, "file://" + currentUrl).toString();
-                const path = fileURLToPath(importUrl);
-                if (!basename(path).startsWith("param.")) {
-                    throw new Error(`Imported file ${param.import.file} is not a param file`);
+                const importUrl = new URL(param.import.url, currentUrl);
+                if (!basename(importUrl.pathname).startsWith("param.")) {
+                    throw new Error(`Imported file ${param.import.url} is not a param file`);
                 }
-                params[name] = param = this._load("param", path, true, depth);
+                params[name] = param = this._load("param", importUrl, true, depth);
             }
             // recurse into sub-params and sub-commands
             // this is the part will change to typedefs when smpte updates
