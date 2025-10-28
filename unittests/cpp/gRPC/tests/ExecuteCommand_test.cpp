@@ -566,28 +566,3 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
     // Sending the RPC
     testRPC();
 }
-
-// /*
-//  * TEST 20 - endpoint setup with a valid slot
-//  */
-// TEST_F(gRPCExecuteCommandTests, endpointSetupValid) {
-//     initPayload(0, "test_command", "test_value", true);
-//     expNoResponse();
-//     // Setting expectations
-//     EXPECT_CALL(dm0_, getCommand(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
-//         .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
-//             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
-//             status = catena::exception_with_status(expRc_.what(), expRc_.status);
-//             return std::move(mockCommand_);
-//         }));
-//     EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
-//     EXPECT_CALL(*mockCommand_, executeCommand(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
-//         .WillOnce(::testing::Invoke([this](const st2138::Value& value, const bool respond, catena::exception_with_status& status, const IAuthorizer& authz) {
-//             EXPECT_EQ(value.string_value(), "test_value");
-//             return std::move(mockResponder_);
-//         }));
-//     EXPECT_CALL(*mockResponder_, getNext()).Times(1).WillOnce(::testing::Return(expVals_[0]));
-//     EXPECT_CALL(*mockResponder_, hasMore()).Times(1).WillOnce(::testing::Return(false));
-//     // Sending the RPC
-//     testRPC();
-// }
