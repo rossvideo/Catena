@@ -42,7 +42,7 @@ export class DeviceModel {
      * The top level params and commands objects will still exist, but sub-params
      * and sub-commands will be combined into a single 'typedef' object.
      */
-    load(resolveImports) {
+    async load(resolveImports) {
         this.baseFilename = basename(this.url);
         const info = this.baseFilename.split(".");
         const schemaName = info[0];
@@ -55,7 +55,7 @@ export class DeviceModel {
         } else {
             this.url = new URL(this.url);
         }
-        this.desc = this._load(schemaName, this.url, resolveImports, 0);
+        this.desc = await this._load(schemaName, this.url, resolveImports, 0);
     }
 
     /**
@@ -64,21 +64,21 @@ export class DeviceModel {
      * @param {URL} url the uri to load
      * @param {bool} resolveImports if true, resolve any imports in the object
      * @param {number} depth the current recursion depth
-     * @returns {object} the parsed object
+     * @returns {Promise<object>} the parsed object
      * @throws {Error} if the resource cannot be loaded or is invalid
      */
-    _load(schemaName, url, resolveImports, depth) {
-        const { valid, data } = this.validator.validate(schemaName, url);
+    async _load(schemaName, url, resolveImports, depth) {
+        const { valid, data } = await this.validator.validate(schemaName, url);
         if (!valid) {
             throw new Error(`Resource ${url} is invalid`);
         }
         if (resolveImports) {
             if (data.params) {
-                this._walk(data.params, depth + 1, url);
+                await this._walk(data.params, depth + 1, url);
             }
             // istanbul ignore next, going away
             if (data.commands) {
-                this._walk(data.commands, depth + 1, url);
+                await this._walk(data.commands, depth + 1, url);
             }
         }
         return data;
@@ -90,7 +90,7 @@ export class DeviceModel {
      * @param {number} depth current recursion depth
      * @param {URL} currentUrl URL to put paths against
      */
-    _walk(params, depth, currentUrl) {
+    async _walk(params, depth, currentUrl) {
         if (depth > MAX_RESOLVE_DEPTH) {
             throw new Error("Maximum import depth exceeded");
         }
@@ -100,16 +100,16 @@ export class DeviceModel {
                 if (!basename(importUrl.pathname).startsWith("param.")) {
                     throw new Error(`Imported file ${param.import.url} is not a param file`);
                 }
-                params[name] = param = this._load("param", importUrl, true, depth);
+                params[name] = param = await this._load("param", importUrl, true, depth);
             }
             // recurse into sub-params and sub-commands
             // this is the part will change to typedefs when smpte updates
             if (param.params) {
-                this._walk(param.params, depth + 1, currentUrl);
+                await this._walk(param.params, depth + 1, currentUrl);
             }
             // istanbul ignore next, going away
             if (param.commands) {
-                this._walk(param.commands, depth + 1, currentUrl);
+                await this._walk(param.commands, depth + 1, currentUrl);
             }
         }
     }

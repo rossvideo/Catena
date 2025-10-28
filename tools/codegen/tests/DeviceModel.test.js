@@ -22,10 +22,10 @@ test("constructor", () => {
 });
 
 // do a simple load with no imports
-test("load simple", () => {
-    validateFnMock.mockReturnValue({ valid: true, data: { slot: 555 } });
+test("load simple", async () => {
+    validateFnMock.mockResolvedValue({ valid: true, data: { slot: 555 } });
     const dm = new DeviceModel("/path/to/device.TestDevice.json", validatorMock);
-    dm.load();
+    await dm.load();
     expect(dm.desc).toEqual({ slot: 555 });
     expect(dm.baseFilename).toBe("device.TestDevice.json");
     expect(dm.deviceName).toBe("TestDevice");
@@ -33,10 +33,10 @@ test("load simple", () => {
     expect(validateFnMock).toHaveBeenCalledTimes(1);
 });
 
-test("load relative path", () => {
-    validateFnMock.mockReturnValue({ valid: true, data: { slot: 555 } });
+test("load relative path", async () => {
+    validateFnMock.mockResolvedValue({ valid: true, data: { slot: 555 } });
     const dm = new DeviceModel("device.TestDevice.json", validatorMock);
-    dm.load();
+    await dm.load();
     expect(dm.desc).toEqual({ slot: 555 });
     expect(dm.baseFilename).toBe("device.TestDevice.json");
     expect(dm.deviceName).toBe("TestDevice");
@@ -44,10 +44,10 @@ test("load relative path", () => {
     expect(validateFnMock).toHaveBeenCalledTimes(1);
 });
 
-test("load url", () => {
-    validateFnMock.mockReturnValue({ valid: true, data: { slot: 555 } });
+test("load url", async () => {
+    validateFnMock.mockResolvedValue({ valid: true, data: { slot: 555 } });
     const dm = new DeviceModel("http://example.com/absolute/path/to/device.TestDevice.json", validatorMock);
-    dm.load();
+    await dm.load();
     expect(dm.desc).toEqual({ slot: 555 });
     expect(dm.baseFilename).toBe("device.TestDevice.json");
     expect(dm.deviceName).toBe("TestDevice");
@@ -56,25 +56,25 @@ test("load url", () => {
 });
 
 // Test for loading an invalid schema
-test("load invalid schema", () => {
+test("load invalid schema", async () => {
     const dm = new DeviceModel("/path/to/invalid.TestDevice.json", validatorMock);
-    expect(() => dm.load()).toThrow("File must be a device model, not invalid");
+    await expect(dm.load()).rejects.toThrow("File must be a device model, not invalid");
     expect(validateFnMock).not.toHaveBeenCalled();
 });
 
 // Test for loading when the validator returns invalid
-test("load invalid data", () => {
-    validateFnMock.mockReturnValue({ valid: false });
+test("load invalid data", async () => {
+    validateFnMock.mockResolvedValue({ valid: false });
     const dm = new DeviceModel("/path/to/device.TestDevice.json", validatorMock);
-    expect(() => dm.load()).toThrow("Resource file:///path/to/device.TestDevice.json is invalid");
+    await expect(dm.load()).rejects.toThrow("Resource file:///path/to/device.TestDevice.json is invalid");
     expect(validateFnMock).toHaveBeenCalledWith("device", new URL("file:///path/to/device.TestDevice.json"));
     expect(validateFnMock).toHaveBeenCalledTimes(1);
 });
 
 // more complex load with imports
-test("load with imports", () => {
+test("load with imports", async () => {
     validateFnMock
-        .mockReturnValueOnce({
+        .mockResolvedValueOnce({
             valid: true, data: {
                 params: {
                     ParamA: {
@@ -87,7 +87,7 @@ test("load with imports", () => {
                 }
             }
         })
-        .mockReturnValueOnce({
+        .mockResolvedValueOnce({
             valid: true, data: {
                 type: "INT32",
                 value: 66
@@ -95,7 +95,7 @@ test("load with imports", () => {
         });
 
     const dm = new DeviceModel("/path/to/device.TestDevice.json", validatorMock);
-    dm.load(true);
+    await dm.load(true);
     expect(dm.desc).toEqual({
         params: {
             ParamA: {
@@ -114,9 +114,9 @@ test("load with imports", () => {
 });
 
 // test for loading an import that itself has an import
-test("load deeper imports", () => {
+test("load deeper imports", async () => {
     validateFnMock
-        .mockReturnValueOnce({
+        .mockResolvedValueOnce({
             valid: true, data: {
                 params: {
                     struct: {
@@ -129,7 +129,7 @@ test("load deeper imports", () => {
                 }
             }
         })
-        .mockReturnValueOnce({
+        .mockResolvedValueOnce({
             valid: true, data: {
                 params: {
                     SubParamA1: {
@@ -138,7 +138,7 @@ test("load deeper imports", () => {
                 }
             }
         })
-        .mockReturnValueOnce({
+        .mockResolvedValueOnce({
             valid: true, data: {
                 type: "STRING",
                 value: "Hello"
@@ -146,7 +146,7 @@ test("load deeper imports", () => {
         });
 
     const dm = new DeviceModel("/path/to/device.TestDevice.json", validatorMock);
-    dm.load(true);
+    await dm.load(true);
     expect(dm.desc).toEqual({
         params: {
             struct: {
@@ -170,8 +170,8 @@ test("load deeper imports", () => {
 });
 
 // test for import with wrong schema
-test("load import wrong schema", () => {
-    validateFnMock.mockReturnValueOnce({
+test("load import wrong schema", async () => {
+    validateFnMock.mockResolvedValueOnce({
         valid: true, data: {
             params: {
                 ParamA: {
@@ -182,15 +182,15 @@ test("load import wrong schema", () => {
     });
 
     const dm = new DeviceModel("/path/to/device.TestDevice.json", validatorMock);
-    expect(() => dm.load(true)).toThrow("Imported file commands/command.CommandA.json is not a param file");
+    await expect(dm.load(true)).rejects.toThrow("Imported file commands/command.CommandA.json is not a param file");
     expect(validateFnMock).toHaveBeenNthCalledWith(1, "device", new URL("file:///path/to/device.TestDevice.json"));
     expect(validateFnMock).toHaveBeenCalledTimes(1);
 });
 
 // test for import that fails validation
-test("load import invalid data", () => {
+test("load import invalid data", async () => {
     validateFnMock
-        .mockReturnValueOnce({
+        .mockResolvedValueOnce({
             valid: true, data: {
                 params: {
                     ParamA: {
@@ -199,20 +199,20 @@ test("load import invalid data", () => {
                 }
             }
         })
-        .mockReturnValueOnce({
+        .mockResolvedValueOnce({
             valid: false
         });
 
     const dm = new DeviceModel("/path/to/device.TestDevice.json", validatorMock);
-    expect(() => dm.load(true)).toThrow("Resource file:///path/to/params/param.ParamA.json is invalid");
+    await expect(dm.load(true)).rejects.toThrow("Resource file:///path/to/params/param.ParamA.json is invalid");
     expect(validateFnMock).toHaveBeenNthCalledWith(1, "device", new URL("file:///path/to/device.TestDevice.json"));
     expect(validateFnMock).toHaveBeenNthCalledWith(2, "param", new URL("file:///path/to/params/param.ParamA.json"));
     expect(validateFnMock).toHaveBeenCalledTimes(2);
 });
 
 // test for excessive import depth, this one just loops on itself
-test("load excessive import depth", () => {
-    validateFnMock.mockReturnValue({
+test("load excessive import depth", async () => {
+    validateFnMock.mockResolvedValue({
         valid: true, data: {
             params: {
                 ParamA: {
@@ -223,7 +223,7 @@ test("load excessive import depth", () => {
     });
 
     const dm = new DeviceModel("/path/to/device.TestDevice.json", validatorMock);
-    expect(() => dm.load(true)).toThrow("Maximum import depth exceeded");
+    await expect(dm.load(true)).rejects.toThrow("Maximum import depth exceeded");
     // one more than max depth cause it doesn't count the first param level
     expect(validateFnMock).toHaveBeenCalledTimes(101);
     // first call is the device
