@@ -261,26 +261,14 @@ TEST_F(RESTDeviceRequestTests, endpointSetupValid) {
 // Test 3.7: Test endpoint setup with an invalid slot
 TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
     slot_ = 999;
-    
-    expRc_ = catena::exception_with_status("device not found in slot 999", catena::StatusCode::NOT_FOUND);
-    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(999));
-    
+
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+
     // No device serializer should be called for invalid slot
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
     EXPECT_CALL(dm1_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
-    
-    endpoint_.reset(makeOne());
-    endpoint_->proceed();
-    std::string response = readResponse();
-    std::cout << "Actual response: " << response << std::endl;
-    
-    // Check if response contains the expected error message
-    EXPECT_FALSE(response.find("device not found in slot 999") != std::string::npos) 
-        << "Response should contain 'device not found in slot 999'";
-        
-    // Check for HTTP 404 status
-    EXPECT_TRUE(response.find("404") != std::string::npos) 
-        << "Response should contain HTTP 404 status";
+    // Calling proceed and testing the output
+    testCall();
 }
 
 // Test 3.2: Test proceed with authz enabled and an invalid token.

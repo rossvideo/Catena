@@ -163,7 +163,7 @@ TEST_F(RESTGetValueTests, GetValue_AuthzInvalid) {
 /*
  * TEST 5 - No device in the specified slot.
  */
-TEST_F(RESTGetValueTests, GetValue_ErrInvalidSlot) {
+TEST_F(RESTGetValueTests, GetValue_ErrEmptySlot) {
     initPayload(dms_.size(), "/test_oid");
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
     // Setting expectations
@@ -174,7 +174,21 @@ TEST_F(RESTGetValueTests, GetValue_ErrInvalidSlot) {
 }
 
 /*
- * TEST 6 - dm.getValue() returns a catena::exception_with_status.
+ * TEST 6 - Test endpoint setup with invalid slot.
+ */
+TEST_F(RESTGetValueTests, GetValue_ErrInvalidSlot) {
+    slot_ = 999;
+    initPayload(slot_, "/test_oid");
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 7 - dm.getValue() returns a catena::exception_with_status.
  */
 TEST_F(RESTGetValueTests, GetValue_ErrReturnCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -189,7 +203,7 @@ TEST_F(RESTGetValueTests, GetValue_ErrReturnCatena) {
 }
 
 /*
- * TEST 7 - dm.getValue() throws a catena::exception_with_status.
+ * TEST 8 - dm.getValue() throws a catena::exception_with_status.
  */
 TEST_F(RESTGetValueTests, GetValue_ErrThrowCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -205,7 +219,7 @@ TEST_F(RESTGetValueTests, GetValue_ErrThrowCatena) {
 }
 
 /*
- * TEST 8 - dm.getValue() throws a std::runtime_exception.
+ * TEST 9 - dm.getValue() throws a std::runtime_exception.
  */
 TEST_F(RESTGetValueTests, GetValue_ErrThrowStd) {
     expRc_ = catena::exception_with_status("std error", catena::StatusCode::INTERNAL);
@@ -218,7 +232,7 @@ TEST_F(RESTGetValueTests, GetValue_ErrThrowStd) {
 }
 
 /*
- * TEST 9 - dm.getValue() throws an unknown error.
+ * TEST 10 - dm.getValue() throws an unknown error.
  */
 TEST_F(RESTGetValueTests, GetValue_ErrThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -228,51 +242,4 @@ TEST_F(RESTGetValueTests, GetValue_ErrThrowUnknown) {
         .WillOnce(testing::Throw(0));
     // Calling proceed and testing the output
     testCall();
-}
-
-/*
- * TEST 9 - Test endpoint setup with different slot values
- */
-TEST_F(RESTGetValueTests, endpointSetup) {
-
-    // Testing with valid slot
-    {
-        slot_ = 0; 
-
-        EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(0));
-        endpoint_.reset(makeOne());
-        ASSERT_TRUE(endpoint_) << "Endpoint should be created successfully";
-        EXPECT_TRUE(dms_.find(0) != dms_.end());
-
-        // Test that endpoint can access the device successfully
-        EXPECT_NO_THROW({
-            auto device = dms_[0];
-            EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
-        }) << "Slot 0 should pass validation";
-    }
-
-    // Testing with invalid slot
-    {
-        slot_ = 999;
-        
-        expRc_ = catena::exception_with_status("device not found in slot 999", catena::StatusCode::NOT_FOUND);
-        EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(999));
-        
-        // No device serializer should be called for invalid slot
-        EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
-        EXPECT_CALL(dm1_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
-        
-        endpoint_.reset(makeOne());
-        endpoint_->proceed();
-        std::string response = readResponse();
-        std::cout << "Actual response: " << response << std::endl;
-        
-        // Check if response contains the expected error message
-        EXPECT_FALSE(response.find("device not found in slot 999") != std::string::npos) 
-            << "Response should contain 'device not found in slot 999'";
-            
-        // Check for HTTP 404 status
-        EXPECT_TRUE(response.find("404") != std::string::npos) 
-            << "Response should contain HTTP 404 status";
-    }
 }

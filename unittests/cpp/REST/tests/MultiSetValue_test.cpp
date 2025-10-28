@@ -185,7 +185,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_AuthzInvalid) {
 /*
  * TEST 5 - No device in the specified slot.
  */
-TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlot) {
+TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrEmptySlot) {
     initPayload(dms_.size(), {});
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
     // Setting expectations
@@ -198,7 +198,37 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlot) {
 }
 
 /*
- * TEST 6 - MultiSetValue fails to parse the json body.
+ * TEST 6 - No device in the specified slot.
+ */
+TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlot) {
+    initPayload(2, {});
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 6 - Endpoint setup with an invalid slot.
+ */
+TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlot2) {
+    initPayload(2, {});
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 7 - MultiSetValue fails to parse the json body.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_FailParse) {
     initPayload(0, {});
@@ -211,7 +241,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_FailParse) {
 }
 
 /*
- * TEST 7 - dm.trySetValue returns a catena::Exception_With_Status.
+ * TEST 8 - dm.trySetValue returns a catena::Exception_With_Status.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrTryReturnCatena) {
     initPayload(0, {});
@@ -228,7 +258,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrTryReturnCatena) {
 }
 
 /*
- * TEST 8 - dm.trySetValue throws a catena::Exception_With_Status.
+ * TEST 9 - dm.trySetValue throws a catena::Exception_With_Status.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrTryThrowCatena) {
     initPayload(0, {});
@@ -245,7 +275,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrTryThrowCatena) {
 }
 
 /*
- * TEST 9 - dm.trySetValue throws a std::runtime_error.
+ * TEST 10 - dm.trySetValue throws a std::runtime_error.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrTryThrowUnknown) {
     initPayload(0, {});
@@ -258,7 +288,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrTryThrowUnknown) {
 }
 
 /*
- * TEST 10 - dm.commitSetValue returns a catena::Exception_With_Status.
+ * TEST 11 - dm.commitSetValue returns a catena::Exception_With_Status.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitReturnCatena) {
     initPayload(0, {});
@@ -275,7 +305,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitReturnCatena) {
 }
 
 /*
- * TEST 11 - dm.commitSetValue throws a catena::Exception_With_Status.
+ * TEST 12 - dm.commitSetValue throws a catena::Exception_With_Status.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitThrowCatena) {
     initPayload(0, {});
@@ -293,7 +323,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitThrowCatena) {
 }
 
 /*
- * TEST 12 - dm.commitSetValue throws a std::runtime_error.
+ * TEST 13 - dm.commitSetValue throws a std::runtime_error.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
     initPayload(0, {});
@@ -304,51 +334,4 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
         .WillOnce(testing::Throw(std::runtime_error(expRc_.what())));
     // Calling proceed and testing the output
     testCall();
-}
-
-/*
- * TEST 13 - Test endpoint setup with different slot values
- */
-TEST_F(RESTMultiSetValueTests, endpointSetup) {
-
-    // Testing with valid slot
-    {
-        slot_ = 0; 
-
-        EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(0));
-        endpoint_.reset(makeOne());
-        ASSERT_TRUE(endpoint_) << "Endpoint should be created successfully";
-        EXPECT_TRUE(dms_.find(0) != dms_.end());
-
-        // Test that endpoint can access the device successfully
-        EXPECT_NO_THROW({
-            auto device = dms_[0];
-            EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
-        }) << "Slot 0 should pass validation";
-    }
-
-    // Testing with invalid slot
-    {
-        slot_ = 999;
-        
-        expRc_ = catena::exception_with_status("device not found in slot 999", catena::StatusCode::NOT_FOUND);
-        EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(999));
-        
-        // No device serializer should be called for invalid slot
-        EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
-        EXPECT_CALL(dm1_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
-        
-        endpoint_.reset(makeOne());
-        endpoint_->proceed();
-        std::string response = readResponse();
-        std::cout << "Actual response: " << response << std::endl;
-        
-        // Check if response contains the expected error message
-        EXPECT_FALSE(response.find("device not found in slot 999") != std::string::npos) 
-            << "Response should contain 'device not found in slot 999'";
-            
-        // Check for HTTP 404 status
-        EXPECT_TRUE(response.find("404") != std::string::npos) 
-            << "Response should contain HTTP 404 status";
-    }
 }
