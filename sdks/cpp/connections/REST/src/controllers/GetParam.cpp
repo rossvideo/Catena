@@ -60,5 +60,5 @@ void GetParam::proceed() {
     writer_.sendResponse(rc, ans);
 
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    DEBUG_LOG << "GetParam[" << objectId_ << "] finished\n";
+    LOG(INFO) << "GetParam[" << objectId_ << "] finished\n";
 }

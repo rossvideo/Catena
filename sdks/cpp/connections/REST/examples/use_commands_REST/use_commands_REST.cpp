@@ -75,7 +75,7 @@ std::atomic<bool> globalLoop = true;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
+        LOG(INFO) << "Caught signal " << sig << ", shutting down";
         globalLoop = false;
         if (globalApi != nullptr) {
             globalApi->Shutdown();
@@ -103,12 +103,12 @@ void RunRESTServer() {
         // Creating and running the REST service.
         ServiceImpl api(config);
         globalApi = &api;
-        DEBUG_LOG << "API Version: " << api.version();
-        DEBUG_LOG << "REST on 0.0.0.0:" << config.port;
+        LOG(INFO) << "API Version: " << api.version();
+        LOG(INFO) << "REST on 0.0.0.0:" << config.port;
         
         // Notifies the console when a value is set by the client.
         uint32_t valueSetByClientId = dm.getValueSetByClient().connect([](const std::string& oid, const IParam* p) {
-            DEBUG_LOG << "*** signal received: " << oid << " has been changed by client";
+            LOG(INFO) << "*** signal received: " << oid << " has been changed by client";
         });
 
         dm.setHeartbeatParam("/product/version");
@@ -149,7 +149,7 @@ void defineCommands() {
                     state = "playing";
                     dm.getValueSetByServer().emit("/state", stateParam.get());
                 }
-                DEBUG_LOG << "video is " << state;
+                LOG(INFO) << "video is " << state;
                 response.mutable_no_response();
             }
             co_return response;
@@ -175,7 +175,7 @@ void defineCommands() {
                     state = "paused";
                     dm.getValueSetByServer().emit("/state", stateParam.get());
                 }
-                DEBUG_LOG << "video is " << state;
+                LOG(INFO) << "video is " << state;
                 response.mutable_no_response();
             }
             co_return response;
@@ -184,18 +184,15 @@ void defineCommands() {
 }
 
 int main(int argc, char* argv[]) {
-    Logger::StartLogging(argc, argv);
-
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
-    
-    // commands should be defined before starting the REST server 
+    Logger::init("use_commands_REST");
+
+    // commands should be defined before starting the REST server
     defineCommands();
     
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
     
-    // Shutdown Google Logging
-    google::ShutdownGoogleLogging();
     return 0;
-} 
+}

@@ -41,6 +41,7 @@
 #include "ParamWithValue.h"
 #include "StructInfo.h"
 #include "Logger.h"
+#include "SharedFlags.h"
 
 // mocks
 #include "MockParamDescriptor.h"
@@ -63,11 +64,11 @@ class ParamTest : public ::testing::Test {
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("ParamWithValueTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("ParamWithValueTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     /*

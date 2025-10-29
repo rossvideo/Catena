@@ -42,6 +42,7 @@
 
 #include "MockDevice.h"
 #include "Logger.h"
+#include "SharedFlags.h"
 
 #include "RangeConstraint.h"
 
@@ -52,11 +53,11 @@ class RangeConstraintTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RangeConstraintTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("RangeConstraintTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 };
 

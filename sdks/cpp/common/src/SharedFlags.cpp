@@ -14,3 +14,5 @@ ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to se
 ABSL_FLAG(uint32_t, default_max_array_size, catena::common::kDefaultMaxArrayLength, "use this to define the default max length for array and string params.");
 ABSL_FLAG(uint32_t, default_total_array_size, catena::common::kDefaultMaxArrayLength, "use this to define the default total length for string array params.");
 ABSL_FLAG(uint32_t, max_connections, DEFAULT_MAX_CONNECTIONS, "use this to define the total number of concurrent connections that can be made to a service.");
+ABSL_FLAG(std::string, log_dir, LOG_DIR, "Specify the directory for log files.");
+ABSL_FLAG(bool, silent, false, "use this to suppress all log output.");

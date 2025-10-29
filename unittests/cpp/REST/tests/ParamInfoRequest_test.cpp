@@ -36,6 +36,8 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
+#include <SharedFlags.h>
+
 // Test helpers
 #include "RESTTest.h"
 #include "MockParam.h"
@@ -53,11 +55,11 @@ protected:
     
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTParamInfoRequestTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("RESTParamInfoRequestTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     RESTParamInfoRequestTests() : RESTEndpointTest() {

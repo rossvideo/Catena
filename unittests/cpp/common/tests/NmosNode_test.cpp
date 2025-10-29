@@ -45,6 +45,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include "WrapAvahiClient.h"
+#include "SharedFlags.h"
 
 inline AvahiTestControl g_avahi_test_control;
 
@@ -95,7 +96,7 @@ struct FakeRegistry {
                 } else if (method == "POST" &&
                            path.rfind("/x-nmos/registration/v1.3/health/nodes/", 0) == 0) {
                     heartbeats++; write_resp(fd, 200);
-                    std::cout << "Heartbeat received: " << heartbeats << "\n";
+                    LOG(INFO) << "Heartbeat received: " << heartbeats << "\n";
                 } else {
                     write_resp(fd, 404);
                 }
@@ -172,11 +173,11 @@ protected:
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("NmosNodeTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("NmosNodeTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 };
 

@@ -79,7 +79,7 @@ jobs:
               -DCOVERAGE=ON \
               -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
               -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
-              -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
+              -DLOG_DIR=${HOME}/Catena/logs \
               -B ${BUILD_TARGET} \
               -S ${GITHUB_WORKSPACE}/sdks/cpp
           fi
@@ -228,7 +228,7 @@ jobs:
             -DCONNECTIONS=${CONNECTIONS} \
             -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
-            -DGLOG_LOGGING_DIR=${HOME}/Catena/logs \
+            -DLOG_DIR=${HOME}/Catena/logs \
             -B ${BUILD_TARGET} \
             -S ${GITHUB_WORKSPACE}/sdks/cpp
           cd ${BUILD_TARGET}

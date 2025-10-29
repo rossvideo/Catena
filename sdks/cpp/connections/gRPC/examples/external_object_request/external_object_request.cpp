@@ -74,7 +74,7 @@ Server *globalServer = nullptr;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
+        LOG(INFO) << "Caught signal " << sig << ", shutting down";
         if (globalServer != nullptr) {
             globalServer->Shutdown();
             globalServer = nullptr;
@@ -118,7 +118,7 @@ void RunRPCServer(std::string addr)
 
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
-        DEBUG_LOG << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
+        LOG(INFO) << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
 
         globalServer = server.get();
 
@@ -143,18 +143,15 @@ void RunRPCServer(std::string addr)
 
 int main(int argc, char* argv[])
 {
-    Logger::StartLogging(argc, argv);
-
     std::string addr;
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
+    Logger::init("external_object_request");
   
     addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
   
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
 
-    // Shutdown Google Logging
-    google::ShutdownGoogleLogging();
     return 0;
 }

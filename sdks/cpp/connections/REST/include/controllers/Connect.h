@@ -126,7 +126,7 @@ class Connect : public ICallData, public catena::common::Connect {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      DEBUG_LOG << "Connect::proceed[" << objectId_ << "]: "
+      LOG(INFO) << "Connect::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok;
     }

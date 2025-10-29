@@ -35,7 +35,10 @@ foreach(test_file ${GRPC_TEST_FILES})
         catena_connections_grpc
         pthread
         ${GTEST_BOTH_LIBRARIES}
-        glog::glog
+        absl::log
+        absl::log_globals
+        absl::log_initialize
+        absl::log_severity
         GTest::GTest
         GTest::Main
         GTest::gmock

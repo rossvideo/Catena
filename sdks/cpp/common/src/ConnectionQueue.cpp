@@ -81,5 +81,5 @@ void ConnectionQueue::deregisterConnection(const IConnect* cd) {
     if (it != connectionQueue_.end()) {
         connectionQueue_.erase(it);
     }
-    DEBUG_LOG << "Connected users remaining: " << connectionQueue_.size() << '\n';
+    LOG(INFO) << "Connected users remaining: " << connectionQueue_.size() << '\n';
 }

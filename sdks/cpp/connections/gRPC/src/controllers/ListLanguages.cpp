@@ -44,13 +44,13 @@ ListLanguages::ListLanguages(IServiceImpl *service, SlotMap& dms, bool ok)
 }
 
 void ListLanguages::proceed(bool ok) {
-    DEBUG_LOG << "ListLanguages::proceed[" << objectId_ << "]: " << timeNow()
+    LOG(INFO) << "ListLanguages::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok;
     
     // If the process is cancelled, finish the process
     if (!ok) {
-        DEBUG_LOG << "ListLanguages[" << objectId_ << "] cancelled";
+        LOG(INFO) << "ListLanguages[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -104,7 +104,7 @@ void ListLanguages::proceed(bool ok) {
          * ServiceImpl.
          */
         case CallStatus::kFinish:
-            DEBUG_LOG << "ListLanguages[" << objectId_ << "] finished";
+            LOG(INFO) << "ListLanguages[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

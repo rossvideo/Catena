@@ -58,6 +58,7 @@
 // common
 #include <Status.h>
 #include <Logger.h>
+#include <SharedFlags.h>
 
 namespace catena {
 namespace gRPC {

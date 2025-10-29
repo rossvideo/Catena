@@ -49,13 +49,13 @@ GetValue::GetValue(IServiceImpl *service, SlotMap& dms, bool ok) : CallData(serv
 
 // Manages gRPC command execution process using the state variable status.
 void GetValue::proceed( bool ok) {
-    DEBUG_LOG << "GetValue::proceed[" << objectId_ << "]: " << timeNow()
+    LOG(INFO) << "GetValue::proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: "
                 << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        DEBUG_LOG << "GetValue[" << objectId_ << "] cancelled";
+        LOG(INFO) << "GetValue[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -131,7 +131,7 @@ void GetValue::proceed( bool ok) {
          * ServiceImpl.
          */
         case CallStatus::kFinish:
-            DEBUG_LOG << "GetValue[" << objectId_ << "] finished";
+            LOG(INFO) << "GetValue[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

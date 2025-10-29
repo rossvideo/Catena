@@ -41,6 +41,7 @@
 #include <iostream>
 #include <memory>
 #include <utility>
+#include <absl/flags/parse.h>
 
 /*
  * Factories are useful to create objects based on values that are only known
@@ -77,7 +78,7 @@ class Dog {
   /*
    * Allow derived classes to override the destructor.
    */
-  virtual ~Dog() { DEBUG_LOG << " whimper..."; }
+  virtual ~Dog() { LOG(INFO) << " whimper..."; }
 
   /*
    * Use defaults for copying and assigning Dogs
@@ -132,7 +133,7 @@ class ConcreteDog : public Dog {
     for (uint32_t i = 0; i < _barkiness; ++i) {
       ans << "bark ";
     }
-    DEBUG_LOG << ans.str();
+    LOG(INFO) << ans.str();
   }
 
   /*
@@ -144,7 +145,7 @@ class ConcreteDog : public Dog {
   /*
    * Print out the breed name on destruction
    */
-  ~ConcreteDog() { DEBUG_LOG << _breed; }
+  ~ConcreteDog() { LOG(INFO) << _breed; }
 
   /*
    * Factory components must define a maker function that's static,
@@ -192,20 +193,22 @@ bool UniDiDog::_added = UniDiDog::registerWithFactory();
  */
 template <>
 UniDiDog::~ConcreteDog() {
-  DEBUG_LOG << _breed << " arrrroooooo!";
+  LOG(INFO) << _breed << " arrrroooooo!";
 }
 
 int main (int argc, char** argv) {
-  Logger::StartLogging(argc, argv);
+  absl::SetProgramUsageMessage("Runs the Catena Service");
+  absl::ParseCommandLine(argc, argv);
+  Logger::init("factory");
 
   try {
     // get instance of the Dog Factory
     Dog::Factory& df = Dog::Factory::getInstance();
 
     // print its inventory
-    // DEBUG_LOG << "Dog Factory\n" << df << endl;
+    // LOG(INFO) << "Dog Factory\n" << df << endl;
 
-    DEBUG_LOG << "Dog Tests";
+    LOG(INFO) << "Dog Tests";
 
     /*
      * Create 3 dogs of different types
@@ -222,26 +225,24 @@ int main (int argc, char** argv) {
     (*jackRussell)();
     rabid->operator()();  // alternative syntax
 
-    DEBUG_LOG;
-    DEBUG_LOG << "Factory Test";
+    LOG(INFO);
+    LOG(INFO) << "Factory Test";
     // verify that the factory cannot make goldfish.
     try {
       df.makeProduct("goldfish", "koi carp", 0);
     } catch (std::exception& why) {
-      DEBUG_LOG << "Problem: " << why.what();
+      LOG(INFO) << "Problem: " << why.what();
     }
 
-    DEBUG_LOG;
-    DEBUG_LOG << "Destructors here...";
+    LOG(INFO);
+    LOG(INFO) << "Destructors here...";
   } catch (std::exception& why) {
     // something went wrong with the example, so exit with non-zero error code
     // this should stop the build
-    DEBUG_LOG << "*** Example failed to run!" << why.what();
+    LOG(INFO) << "*** Example failed to run!" << why.what();
     return 1;
   }
   
-    // Shutdown Google Logging
-    google::ShutdownGoogleLogging();
     return 0;
 }
 

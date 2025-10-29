@@ -35,7 +35,7 @@ bool globalLoop;
 //
 dm.valueSetByClient_.connect([](const std::string& oid, const IParam* p) {
     auto value = p.get();
-    DEBUG_LOG << "Client set " << p.oid() << " to: " << value << '\n';
+    LOG(INFO) << "Client set " << p.oid() << " to: " << value << '\n';
     // a real service would do something with the value here
 });
 std::thread loop([&dm]() {
@@ -98,7 +98,7 @@ void RunRPCServer(std::string addr) {
 // Handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
+        LOG(INFO) << "Caught signal " << sig << ", shutting down";
         if (globalServer != nullptr) {
             // This call shuts down the server. This should be called at the
             // end of all buisness logic.
@@ -143,7 +143,7 @@ void RunRESTServer () {
 // Handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
+        LOG(INFO) << "Caught signal " << sig << ", shutting down";
         if (globalApi != nullptr) {
             // This call shuts down the server. This should be called at the
             // end of all buisness logic.

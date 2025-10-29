@@ -40,6 +40,7 @@
 #include "PolyglotText.h"
 #include "Enums.h"
 #include "Logger.h"
+#include "SharedFlags.h"
 
 #include "MockConstraint.h"
 #include "MockDevice.h"
@@ -56,11 +57,11 @@ class ParamDescriptorTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("ParamDescriptorTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("ParamDescriptorTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     /*

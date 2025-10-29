@@ -106,3 +106,13 @@ extern absl::Flag<uint32_t> FLAGS_default_total_array_size;
  * service.
  */
 extern absl::Flag<uint32_t> FLAGS_max_connections;
+
+/**
+ * @brief the directory where log files are stored.
+ */
+extern absl::Flag<std::string> FLAGS_log_dir;
+
+/**
+ * @brief whether to suppress all log output.
+ */
+extern absl::Flag<bool> FLAGS_silent;

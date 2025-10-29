@@ -56,12 +56,15 @@
 
 #include <iostream>
 #include <Logger.h>
+#include <absl/flags/parse.h>
 
 using namespace catena::common;
 using namespace use_templates;
 
 int main (int argc, char** argv) {
-    Logger::StartLogging(argc, argv);
+    absl::SetProgramUsageMessage("Runs the Catena Service");
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("use_templates");
 
     // lock the model
     std::lock_guard lg(dm.mutex());
@@ -75,7 +78,7 @@ int main (int argc, char** argv) {
     ip = dm.getParam("/city", ans);
     if (ip == nullptr){
         // /city Param does not exist
-        DEBUG_LOG << "/city " << ans.what();
+        LOG(INFO) << "/city " << ans.what();
     }
 
     /**
@@ -88,7 +91,7 @@ int main (int argc, char** argv) {
     }
     auto& canadasCapital = *dynamic_cast<ParamWithValue<City>*>(ip.get());
     City& city = canadasCapital.get();
-    DEBUG_LOG << "Canada's capital city is " << city.city_name
+    LOG(INFO) << "Canada's capital city is " << city.city_name
               << " at latitude " << city.latitude
               << " and longitude " << city.longitude
               << " with a population of " << city.population;
@@ -100,7 +103,7 @@ int main (int argc, char** argv) {
     }
     auto& ontariosCapital = *dynamic_cast<ParamWithValue<City>*>(ip.get());
     City& city2 = ontariosCapital.get();
-    DEBUG_LOG << "Ontario's capital city is " << city2.city_name
+    LOG(INFO) << "Ontario's capital city is " << city2.city_name
               << " at latitude " << city2.latitude
               << " and longitude " << city2.longitude
               << " with a population of " << city2.population;
