@@ -29,11 +29,11 @@ export async function serialize(deviceModel, options, metadata) {
     }
     const deviceBin = device.encode(protoObj).finish();
     const metadataStr = JSON.stringify({
+        ...metadata,
         payload: {
             size: deviceBin.length,
             sha256: createHash('sha256').update(deviceBin).digest('hex'),
         },
-        ...metadata
     });
     const metadataLen = Buffer.byteLength(metadataStr, "utf-8");
     const header = Buffer.alloc(8);
