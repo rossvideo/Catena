@@ -90,6 +90,7 @@ COPY .devcontainer/toolchain-cpp.requirements.txt /root/requirements.txt
 # Install Python and gcovr for coverage reports
 RUN apt-get update && apt-get install --no-install-recommends -y python3-pip \
     && pip3 install --no-cache-dir -r /root/requirements.txt --break-system-packages \
+    && python3 -m pip install --upgrade pip --break-system-packages \
     && apt-get clean \
     && rm -rf /var/cache/apt/archives/ /var/lib/apt/lists/*
 
