@@ -91,22 +91,30 @@ $(document).ready(function(){initNavTree('Logger_8h.html',''); initResizable(); 
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
-<a href="#define-members">Macros</a>  </div>
+<a href="#nested-classes">Classes</a>  </div>
   <div class="headertitle"><div class="title">Logger.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
 <p><a class="el" href="classLogger.html" title="Logger class for logging messages to both console and file.">Logger</a> class.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;glog/logging.h&gt;</code><br />
+<div class="textblock"><code>#include &quot;absl/log/log.h&quot;</code><br />
+<code>#include &quot;absl/log/log_sink.h&quot;</code><br />
+<code>#include &quot;absl/log/log_sink_registry.h&quot;</code><br />
+<code>#include &quot;absl/log/log_entry.h&quot;</code><br />
+<code>#include &quot;absl/log/check.h&quot;</code><br />
+<code>#include &quot;absl/log/initialize.h&quot;</code><br />
+<code>#include &quot;absl/log/globals.h&quot;</code><br />
+<code>#include &quot;absl/flags/usage.h&quot;</code><br />
+<code>#include &lt;mutex&gt;</code><br />
 <code>#include &lt;iostream&gt;</code><br />
+<code>#include &lt;fstream&gt;</code><br />
 <code>#include &lt;sstream&gt;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for Logger.h:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="Logger_8h__incl.svg" width="443" height="139"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="Logger_8h__incl.svg" width="100%" height="404"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 </div>
 </div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
@@ -118,15 +126,12 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classFileLogSink.html">FileLogSink</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A log sink that writes log messages to a specified file.  <a href="classFileLogSink.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLogger.html">Logger</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classLogger.html" title="Logger class for logging messages to both console and file.">Logger</a> class for logging messages to both console and file.  <a href="classLogger.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
-Macros</h2></td></tr>
-<tr class="memitem:a571d51360926bac393fcf9c972a5ffa8" id="r_a571d51360926bac393fcf9c972a5ffa8"><td class="memItemLeft" align="right" valign="top"><a id="a571d51360926bac393fcf9c972a5ffa8" name="a571d51360926bac393fcf9c972a5ffa8"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>DEBUG_LOG</b>&#160;&#160;&#160;<a class="el" href="classLogger.html">Logger</a>()</td></tr>
-<tr class="separator:a571d51360926bac393fcf9c972a5ffa8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classLogger.html" title="Logger class for logging messages to both console and file.">Logger</a> class. </p>

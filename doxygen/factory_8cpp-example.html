@@ -130,6 +130,7 @@ $(document).ready(function(){initNavTree('factory_8cpp-example.html',''); initRe
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;memory&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;utility&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;absl/flags/parse.h&gt;</span></div>
 <div class="line"> </div>
 <div class="line"><span class="comment">/*</span></div>
 <div class="line"><span class="comment"> * Factories are useful to create objects based on values that are only known</span></div>
@@ -166,7 +167,7 @@ $(document).ready(function(){initNavTree('factory_8cpp-example.html',''); initRe
 <div class="line">  <span class="comment">/*</span></div>
 <div class="line"><span class="comment">   * Allow derived classes to override the destructor.</span></div>
 <div class="line"><span class="comment">   */</span></div>
-<div class="line">  <span class="keyword">virtual</span> ~Dog() { DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot; whimper...&quot;</span>; }</div>
+<div class="line">  <span class="keyword">virtual</span> ~Dog() { LOG(INFO) &lt;&lt; <span class="stringliteral">&quot; whimper...&quot;</span>; }</div>
 <div class="line"> </div>
 <div class="line">  <span class="comment">/*</span></div>
 <div class="line"><span class="comment">   * Use defaults for copying and assigning Dogs</span></div>
@@ -221,7 +222,7 @@ $(document).ready(function(){initNavTree('factory_8cpp-example.html',''); initRe
 <div class="line">    <span class="keywordflow">for</span> (uint32_t i = 0; i &lt; _barkiness; ++i) {</div>
 <div class="line">      ans &lt;&lt; <span class="stringliteral">&quot;bark &quot;</span>;</div>
 <div class="line">    }</div>
-<div class="line">    DEBUG_LOG &lt;&lt; ans.str();</div>
+<div class="line">    LOG(INFO) &lt;&lt; ans.str();</div>
 <div class="line">  }</div>
 <div class="line"> </div>
 <div class="line">  <span class="comment">/*</span></div>
@@ -233,7 +234,7 @@ $(document).ready(function(){initNavTree('factory_8cpp-example.html',''); initRe
 <div class="line">  <span class="comment">/*</span></div>
 <div class="line"><span class="comment">   * Print out the breed name on destruction</span></div>
 <div class="line"><span class="comment">   */</span></div>
-<div class="line">  ~ConcreteDog() { DEBUG_LOG &lt;&lt; _breed; }</div>
+<div class="line">  ~ConcreteDog() { LOG(INFO) &lt;&lt; _breed; }</div>
 <div class="line"> </div>
 <div class="line">  <span class="comment">/*</span></div>
 <div class="line"><span class="comment">   * Factory components must define a maker function that&#39;s static,</span></div>
@@ -281,20 +282,22 @@ $(document).ready(function(){initNavTree('factory_8cpp-example.html',''); initRe
 <div class="line"><span class="comment"> */</span></div>
 <div class="line"><span class="keyword">template</span> &lt;&gt;</div>
 <div class="line">UniDiDog::~ConcreteDog() {</div>
-<div class="line">  DEBUG_LOG &lt;&lt; _breed &lt;&lt; <span class="stringliteral">&quot; arrrroooooo!&quot;</span>;</div>
+<div class="line">  LOG(INFO) &lt;&lt; _breed &lt;&lt; <span class="stringliteral">&quot; arrrroooooo!&quot;</span>;</div>
 <div class="line">}</div>
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">int</span> main (<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span>** argv) {</div>
-<div class="line">  Logger::StartLogging(argc, argv);</div>
+<div class="line">  absl::SetProgramUsageMessage(<span class="stringliteral">&quot;Runs the Catena Service&quot;</span>);</div>
+<div class="line">  absl::ParseCommandLine(argc, argv);</div>
+<div class="line">  <a id="a1" name="a1"></a><a class="code hl_function" href="classLogger.html#a96c9761055a82ecf51dfbabdf6b1984c">Logger::init</a>(<span class="stringliteral">&quot;factory&quot;</span>);</div>
 <div class="line"> </div>
 <div class="line">  <span class="keywordflow">try</span> {</div>
 <div class="line">    <span class="comment">// get instance of the Dog Factory</span></div>
 <div class="line">    Dog::Factory&amp; df = Dog::Factory::getInstance();</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// print its inventory</span></div>
-<div class="line">    <span class="comment">// DEBUG_LOG &lt;&lt; &quot;Dog Factory\n&quot; &lt;&lt; df &lt;&lt; endl;</span></div>
+<div class="line">    <span class="comment">// LOG(INFO) &lt;&lt; &quot;Dog Factory\n&quot; &lt;&lt; df &lt;&lt; endl;</span></div>
 <div class="line"> </div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;Dog Tests&quot;</span>;</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;Dog Tests&quot;</span>;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">/*</span></div>
 <div class="line"><span class="comment">     * Create 3 dogs of different types</span></div>
@@ -311,26 +314,24 @@ $(document).ready(function(){initNavTree('factory_8cpp-example.html',''); initRe
 <div class="line">    (*jackRussell)();</div>
 <div class="line">    rabid-&gt;operator()();  <span class="comment">// alternative syntax</span></div>
 <div class="line"> </div>
-<div class="line">    DEBUG_LOG;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;Factory Test&quot;</span>;</div>
+<div class="line">    LOG(INFO);</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;Factory Test&quot;</span>;</div>
 <div class="line">    <span class="comment">// verify that the factory cannot make goldfish.</span></div>
 <div class="line">    <span class="keywordflow">try</span> {</div>
 <div class="line">      df.makeProduct(<span class="stringliteral">&quot;goldfish&quot;</span>, <span class="stringliteral">&quot;koi carp&quot;</span>, 0);</div>
 <div class="line">    } <span class="keywordflow">catch</span> (std::exception&amp; why) {</div>
-<div class="line">      DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;Problem: &quot;</span> &lt;&lt; why.what();</div>
+<div class="line">      LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;Problem: &quot;</span> &lt;&lt; why.what();</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    DEBUG_LOG;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;Destructors here...&quot;</span>;</div>
+<div class="line">    LOG(INFO);</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;Destructors here...&quot;</span>;</div>
 <div class="line">  } <span class="keywordflow">catch</span> (std::exception&amp; why) {</div>
 <div class="line">    <span class="comment">// something went wrong with the example, so exit with non-zero error code</span></div>
 <div class="line">    <span class="comment">// this should stop the build</span></div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;*** Example failed to run!&quot;</span> &lt;&lt; why.what();</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;*** Example failed to run!&quot;</span> &lt;&lt; why.what();</div>
 <div class="line">    <span class="keywordflow">return</span> 1;</div>
 <div class="line">  }</div>
 <div class="line">  </div>
-<div class="line">    <span class="comment">// Shutdown Google Logging</span></div>
-<div class="line">    google::ShutdownGoogleLogging();</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 <div class="line"> </div>
@@ -350,6 +351,7 @@ $(document).ready(function(){initNavTree('factory_8cpp-example.html',''); initRe
 <div class="line"><span class="comment">*/</span></div>
 <div class="ttc" id="aGenericFactory_8h_html"><div class="ttname"><a href="GenericFactory_8h.html">GenericFactory.h</a></div><div class="ttdoc">Defines tools to create objects based on values that are only known at runtime.</div></div>
 <div class="ttc" id="aLogger_8h_html"><div class="ttname"><a href="Logger_8h.html">Logger.h</a></div><div class="ttdoc">Logger class.</div></div>
+<div class="ttc" id="aclassLogger_html_a96c9761055a82ecf51dfbabdf6b1984c"><div class="ttname"><a href="classLogger.html#a96c9761055a82ecf51dfbabdf6b1984c">Logger::init</a></div><div class="ttdeci">static void init(const std::string &amp;appName)</div><div class="ttdoc">Initialize the logger.</div></div>
 <div class="ttc" id="aclasscatena_1_1patterns_1_1GenericFactory_html"><div class="ttname"><a href="classcatena_1_1patterns_1_1GenericFactory.html">catena::patterns::GenericFactory</a></div><div class="ttdoc">Factory template with which client classes can register a &quot;Maker&quot; function together with a unique key...</div><div class="ttdef"><b>Definition</b> GenericFactory.h:77</div></div>
 </div><!-- fragment --> </div><!-- contents -->
 </div><!-- doc-content -->

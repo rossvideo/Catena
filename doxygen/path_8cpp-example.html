@@ -130,11 +130,12 @@ $(document).ready(function(){initNavTree('path_8cpp-example.html',''); initResiz
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;memory&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;utility&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;absl/flags/parse.h&gt;</span></div>
 <div class="line"> </div>
 <div class="line"><span class="keyword">using </span><a id="_a0" name="_a0"></a><a class="code hl_class" href="classcatena_1_1common_1_1Path.html">catena::common::Path</a>;</div>
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">void</span> document(Path&amp; p) {</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;path: &quot;</span> &lt;&lt; p.fqoid() &lt;&lt; <span class="stringliteral">&quot;\nhas length: &quot;</span> &lt;&lt; p.size();</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;path: &quot;</span> &lt;&lt; p.<a id="a1" name="a1"></a><a class="code hl_function" href="classcatena_1_1common_1_1Path.html#ac6322b03a662c484c09e83df0664ad48">fqoid</a>() &lt;&lt; <span class="stringliteral">&quot;\nhas length: &quot;</span> &lt;&lt; p.size();</div>
 <div class="line">    <span class="keywordflow">while</span> (p.size()) {</div>
 <div class="line">        <span class="keywordflow">if</span> (p.front_is_index()) {</div>
 <div class="line">            Path::Index idx = p.front_as_index();</div>
@@ -144,17 +145,19 @@ $(document).ready(function(){initNavTree('path_8cpp-example.html',''); initResiz
 <div class="line">            } <span class="keywordflow">else</span> {</div>
 <div class="line">              debugString += std::to_string(idx);</div>
 <div class="line">            }</div>
-<div class="line">            DEBUG_LOG &lt;&lt; debugString;</div>
+<div class="line">            LOG(INFO) &lt;&lt; debugString;</div>
 <div class="line">        }</div>
 <div class="line">        <span class="keywordflow">if</span> (p.front_is_string()) {</div>
-<div class="line">            DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;segment &quot;</span> &lt;&lt; p.walked() &lt;&lt; <span class="stringliteral">&quot; has type string and value: &quot;</span> &lt;&lt; p.front_as_string();</div>
+<div class="line">            LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;segment &quot;</span> &lt;&lt; p.walked() &lt;&lt; <span class="stringliteral">&quot; has type string and value: &quot;</span> &lt;&lt; p.front_as_string();</div>
 <div class="line">        }</div>
 <div class="line">        p.pop();</div>
 <div class="line">    }</div>
 <div class="line">}</div>
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">int</span> main (<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span>** argv) {</div>
-<div class="line">    Logger::StartLogging(argc, argv);</div>
+<div class="line">    absl::SetProgramUsageMessage(<span class="stringliteral">&quot;Runs the Catena Service&quot;</span>);</div>
+<div class="line">    absl::ParseCommandLine(argc, argv);</div>
+<div class="line">    <a id="a2" name="a2"></a><a class="code hl_function" href="classLogger.html#a96c9761055a82ecf51dfbabdf6b1984c">Logger::init</a>(<span class="stringliteral">&quot;path&quot;</span>);</div>
 <div class="line"> </div>
 <div class="line">    Path top_level_oid(<span class="stringliteral">&quot;/top_level_oid&quot;</span>);</div>
 <div class="line">    document(top_level_oid);</div>
@@ -170,19 +173,19 @@ $(document).ready(function(){initNavTree('path_8cpp-example.html',''); initResiz
 <div class="line">    document(struct_array);</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// The document method consumes the Path passed to it</span></div>
-<div class="line">    DEBUG_LOG;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;jptr should be empty&quot;</span>;</div>
+<div class="line">    LOG(INFO);</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;jptr should be empty&quot;</span>;</div>
 <div class="line">    document(struct_array);</div>
 <div class="line">    </div>
 <div class="line">    <span class="comment">// we can reverse this 2 ways - reverse the last pop operation</span></div>
-<div class="line">    DEBUG_LOG;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;jptr should have its last segment&quot;</span>;</div>
+<div class="line">    LOG(INFO);</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;jptr should have its last segment&quot;</span>;</div>
 <div class="line">    struct_array.unpop();</div>
 <div class="line">    document(struct_array);</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// or rewind to the very beginning</span></div>
-<div class="line">    DEBUG_LOG;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;jptr should be fully restored&quot;</span>;</div>
+<div class="line">    LOG(INFO);</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;jptr should be fully restored&quot;</span>;</div>
 <div class="line">    struct_array.rewind();</div>
 <div class="line">    document(struct_array);</div>
 <div class="line"> </div>
@@ -190,8 +193,8 @@ $(document).ready(function(){initNavTree('path_8cpp-example.html',''); initResiz
 <div class="line">    document(struct_array_element_field);</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// Adds a new segment to the Path</span></div>
-<div class="line">    DEBUG_LOG;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;jptr should have additional segment \&quot;grandChild\&quot;&quot;</span>;</div>
+<div class="line">    LOG(INFO);</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;jptr should have additional segment \&quot;grandChild\&quot;&quot;</span>;</div>
 <div class="line">    struct_array_element_field.rewind();</div>
 <div class="line">    struct_array_element_field.push_back(<span class="stringliteral">&quot;grandChild&quot;</span>);</div>
 <div class="line">    document(struct_array_element_field);</div>
@@ -247,7 +250,9 @@ $(document).ready(function(){initNavTree('path_8cpp-example.html',''); initResiz
 <div class="line"><span class="comment">*/</span></div>
 <div class="ttc" id="aLogger_8h_html"><div class="ttname"><a href="Logger_8h.html">Logger.h</a></div><div class="ttdoc">Logger class.</div></div>
 <div class="ttc" id="aPath_8h_html"><div class="ttname"><a href="Path_8h.html">Path.h</a></div><div class="ttdoc">Handles Path objects used to uniquely identify and access OIDs.</div></div>
+<div class="ttc" id="aclassLogger_html_a96c9761055a82ecf51dfbabdf6b1984c"><div class="ttname"><a href="classLogger.html#a96c9761055a82ecf51dfbabdf6b1984c">Logger::init</a></div><div class="ttdeci">static void init(const std::string &amp;appName)</div><div class="ttdoc">Initialize the logger.</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1Path_html"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html">catena::common::Path</a></div><div class="ttdoc">Converts json pointers to items within the data model to a path of &quot;segments&quot; that can be iterated ov...</div><div class="ttdef"><b>Definition</b> Path.h:66</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_ac6322b03a662c484c09e83df0664ad48"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#ac6322b03a662c484c09e83df0664ad48">catena::common::Path::fqoid</a></div><div class="ttdeci">std::string fqoid() const</div><div class="ttdoc">return a fully qualified oid</div></div>
 </div><!-- fragment --> </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

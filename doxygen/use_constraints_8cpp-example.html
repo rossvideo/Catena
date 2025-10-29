@@ -139,7 +139,7 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line"> </div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;<a class="code" href="Logger_8h.html">Logger.h</a>&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;glog/logging.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;absl/flags/parse.h&gt;</span></div>
 <div class="line"> </div>
 <div class="line"><span class="keyword">using namespace </span><a class="code hl_namespace" href="namespacecatena_1_1common.html">catena::common</a>;</div>
 <div class="line"><span class="keyword">using namespace </span>use_constraints;</div>
@@ -147,12 +147,14 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line"><span class="keyword">using </span>catena::common::getParamValue;</div>
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">int</span> main (<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span>** argv) {</div>
-<div class="line">    Logger::StartLogging(argc, argv);</div>
+<div class="line">    absl::SetProgramUsageMessage(<span class="stringliteral">&quot;Runs the Catena Service&quot;</span>);</div>
+<div class="line">    absl::ParseCommandLine(argc, argv);</div>
+<div class="line">    <a id="a1" name="a1"></a><a class="code hl_function" href="classLogger.html#a96c9761055a82ecf51dfbabdf6b1984c">Logger::init</a>(<span class="stringliteral">&quot;use_constraints&quot;</span>);</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// lock the model</span></div>
 <div class="line">    std::lock_guard lg(dm.mutex());</div>
 <div class="line"> </div>
-<div class="line">    <a id="_a1" name="_a1"></a><a class="code hl_struct" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> err{<span class="stringliteral">&quot;&quot;</span>, <a id="a2" name="a2"></a><a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::StatusCode::OK</a>};</div>
+<div class="line">    <a id="_a2" name="_a2"></a><a class="code hl_struct" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> err{<span class="stringliteral">&quot;&quot;</span>, <a id="a3" name="a3"></a><a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::StatusCode::OK</a>};</div>
 <div class="line">    st2138::Value value;</div>
 <div class="line">    std::string clientScope = <span class="stringliteral">&quot;operate&quot;</span>;</div>
 <div class="line">    std::string debugString;</div>
@@ -163,23 +165,23 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line">        <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">    }</div>
 <div class="line">    int32_t&amp; button = getParamValue&lt;int32_t&gt;(ip.get());</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;button initial value: &quot;</span> &lt;&lt; button; <span class="comment">// button initial value: 0</span></div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;button initial value: &quot;</span> &lt;&lt; button; <span class="comment">// button initial value: 0</span></div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// This is to mimic a setValue call coming from a client</span></div>
 <div class="line">    value.set_int32_value(1); <span class="comment">// &quot;On&quot;</span></div>
 <div class="line">    dm.setValue(<span class="stringliteral">&quot;/button&quot;</span>, value);</div>
 <div class="line">    <span class="comment">// setting button to one of the valid choices will work as usual</span></div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;button set to 1&quot;</span>;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;button value: &quot;</span> &lt;&lt; button; <span class="comment">// button value: 1</span></div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;button set to 1&quot;</span>;</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;button value: &quot;</span> &lt;&lt; button; <span class="comment">// button value: 1</span></div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// setting button to an invalid choice will do nothing</span></div>
 <div class="line">    value.set_int32_value(3); <span class="comment">// &quot;Invalid choice&quot;</span></div>
 <div class="line">    dm.setValue(<span class="stringliteral">&quot;/button&quot;</span>, value);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;button set to 3&quot;</span>;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;button value: &quot;</span> &lt;&lt; button; <span class="comment">// button value: 1</span></div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;button set to 3&quot;</span>;</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;button value: &quot;</span> &lt;&lt; button; <span class="comment">// button value: 1</span></div>
 <div class="line"> </div>
 <div class="line"> </div>
-<div class="line">    DEBUG_LOG;</div>
+<div class="line">    LOG(INFO);</div>
 <div class="line">    ip = dm.getParam(<span class="stringliteral">&quot;/odd_numbers&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
 <div class="line">        LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what();</div>
@@ -190,7 +192,7 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line">    <span class="keywordflow">for</span> (<span class="keyword">auto</span>&amp; num : odd_numbers) {</div>
 <div class="line">        debugString += std::to_string(num) + <span class="stringliteral">&quot; &quot;</span>;</div>
 <div class="line">    }</div>
-<div class="line">    DEBUG_LOG &lt;&lt; debugString; <span class="comment">// odd_numbers initial value: 0  2 4 6 8</span></div>
+<div class="line">    LOG(INFO) &lt;&lt; debugString; <span class="comment">// odd_numbers initial value: 0  2 4 6 8</span></div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// Setting an element to a value outside the range will cause it to be constrained to the max/min values</span></div>
 <div class="line">    value.set_int32_value(-2); <span class="comment">// below min</span></div>
@@ -200,38 +202,38 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line">        <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">    }</div>
 <div class="line">    <span class="comment">// setting odd_numbers[2] to a value below the min will cause it to be set to the min value</span></div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;odd_numbers[2] set to -2&quot;</span>;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;odd_numbers[2] value: &quot;</span> &lt;&lt; odd_numbers[2]; <span class="comment">// odd_numbers[2] value: 0</span></div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;odd_numbers[2] set to -2&quot;</span>;</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;odd_numbers[2] value: &quot;</span> &lt;&lt; odd_numbers[2]; <span class="comment">// odd_numbers[2] value: 0</span></div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// Constraints also apply when setting the value of the whole array</span></div>
 <div class="line">    std::vector&lt;int32_t&gt; newValue = {8, 12, -6, 3};</div>
 <div class="line">    value.mutable_int32_array_values()-&gt;mutable_ints()-&gt;Assign(newValue.begin(), newValue.end());</div>
 <div class="line">    dm.setValue(<span class="stringliteral">&quot;/odd_numbers&quot;</span>, value);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;odd_numbers set to 8 12 -6 3&quot;</span>;</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;odd_numbers set to 8 12 -6 3&quot;</span>;</div>
 <div class="line">    debugString = <span class="stringliteral">&quot;odd_numbers value: &quot;</span>;</div>
 <div class="line">    <span class="keywordflow">for</span> (<span class="keyword">auto</span>&amp; num : odd_numbers) {</div>
 <div class="line">        debugString += std::to_string(num) + <span class="stringliteral">&quot; &quot;</span>;</div>
 <div class="line">    }</div>
-<div class="line">    DEBUG_LOG &lt;&lt; debugString; <span class="comment">// odd_numbers value: 7 9 1 3 9</span></div>
+<div class="line">    LOG(INFO) &lt;&lt; debugString; <span class="comment">// odd_numbers value: 7 9 1 3 9</span></div>
 <div class="line"> </div>
 <div class="line"> </div>
-<div class="line">    DEBUG_LOG;</div>
+<div class="line">    LOG(INFO);</div>
 <div class="line">    ip = dm.getParam(<span class="stringliteral">&quot;/gain&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
 <div class="line">        LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what();</div>
 <div class="line">        <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">    }</div>
 <div class="line">    <span class="keywordtype">float</span>&amp; gain = getParamValue&lt;float&gt;(ip.get());</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;gain initial value: &quot;</span> &lt;&lt; gain; <span class="comment">// gain initial value: 0.5</span></div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;gain initial value: &quot;</span> &lt;&lt; gain; <span class="comment">// gain initial value: 0.5</span></div>
 <div class="line">    value.set_float32_value(1.5); <span class="comment">// within range</span></div>
 <div class="line">    dm.setValue(<span class="stringliteral">&quot;/gain&quot;</span>, value);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;gain set to 1.5&quot;</span>;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;gain value: &quot;</span> &lt;&lt; gain; <span class="comment">// gain value: 1.5</span></div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;gain set to 1.5&quot;</span>;</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;gain value: &quot;</span> &lt;&lt; gain; <span class="comment">// gain value: 1.5</span></div>
 <div class="line"> </div>
 <div class="line">    value.set_float32_value(10.5); <span class="comment">// above max</span></div>
 <div class="line">    dm.setValue(<span class="stringliteral">&quot;/gain&quot;</span>, value);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;gain set to 10.5&quot;</span>;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;gain value: &quot;</span> &lt;&lt; gain; <span class="comment">// gain value: 10</span></div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;gain set to 10.5&quot;</span>;</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;gain value: &quot;</span> &lt;&lt; gain; <span class="comment">// gain value: 10</span></div>
 <div class="line"> </div>
 <div class="line">    ip = dm.getParam(<span class="stringliteral">&quot;/volume_array&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
@@ -243,57 +245,57 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line">    <span class="keywordflow">for</span> (<span class="keyword">auto</span>&amp; vol : volume) {</div>
 <div class="line">        debugString += std::to_string(vol) + <span class="stringliteral">&quot; &quot;</span>;</div>
 <div class="line">    }</div>
-<div class="line">    DEBUG_LOG &lt;&lt; debugString; <span class="comment">// volume initial value: 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0</span></div>
+<div class="line">    LOG(INFO) &lt;&lt; debugString; <span class="comment">// volume initial value: 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0</span></div>
 <div class="line">    std::vector&lt;float&gt; newVolume = {0.5, 12, -4, 1, 2.1, 3.3, 4.51, 5.751};</div>
 <div class="line">    value.mutable_float32_array_values()-&gt;mutable_floats()-&gt;Assign(newVolume.begin(), newVolume.end());</div>
 <div class="line">    dm.setValue(<span class="stringliteral">&quot;/volume_array&quot;</span>, value);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;volume set to 0.5 12 -4 1 2.1 3.3 4.51 5.751&quot;</span>;</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;volume set to 0.5 12 -4 1 2.1 3.3 4.51 5.751&quot;</span>;</div>
 <div class="line">    debugString = <span class="stringliteral">&quot;volume value: &quot;</span>;</div>
 <div class="line">    <span class="keywordflow">for</span> (<span class="keyword">auto</span>&amp; vol : volume) {</div>
 <div class="line">        debugString += std::to_string(vol) + <span class="stringliteral">&quot; &quot;</span>;</div>
 <div class="line">    }</div>
-<div class="line">    DEBUG_LOG &lt;&lt; debugString; <span class="comment">// volume value: 0.5 10.0 0.0 1.0 2.0 3.25 4.5 5.75</span></div>
+<div class="line">    LOG(INFO) &lt;&lt; debugString; <span class="comment">// volume value: 0.5 10.0 0.0 1.0 2.0 3.25 4.5 5.75</span></div>
 <div class="line"> </div>
 <div class="line"> </div>
-<div class="line">    DEBUG_LOG;</div>
+<div class="line">    LOG(INFO);</div>
 <div class="line">    ip = dm.getParam(<span class="stringliteral">&quot;/display_size&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
 <div class="line">        LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what();</div>
 <div class="line">        <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">    }</div>
 <div class="line">    std::string&amp; display_size = getParamValue&lt;std::string&gt;(ip.get());</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;display_size initial value: &quot;</span> &lt;&lt; display_size;</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;display_size initial value: &quot;</span> &lt;&lt; display_size;</div>
 <div class="line">    value.set_string_value(<span class="stringliteral">&quot;small&quot;</span>); <span class="comment">// valid choice</span></div>
 <div class="line">    dm.setValue(<span class="stringliteral">&quot;/display_size&quot;</span>, value);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;display_size set to small&quot;</span>;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;display_size value: &quot;</span> &lt;&lt; display_size; <span class="comment">// display_size value: small</span></div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;display_size set to small&quot;</span>;</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;display_size value: &quot;</span> &lt;&lt; display_size; <span class="comment">// display_size value: small</span></div>
 <div class="line"> </div>
 <div class="line">    value.set_string_value(<span class="stringliteral">&quot;tiny&quot;</span>); <span class="comment">// invalid choice</span></div>
 <div class="line">    dm.setValue(<span class="stringliteral">&quot;/display_size&quot;</span>, value);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;display_size set to tiny&quot;</span>;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;display_size value: &quot;</span> &lt;&lt; display_size;</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;display_size set to tiny&quot;</span>;</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;display_size value: &quot;</span> &lt;&lt; display_size;</div>
 <div class="line"> </div>
 <div class="line"> </div>
-<div class="line">    DEBUG_LOG;</div>
+<div class="line">    LOG(INFO);</div>
 <div class="line">    ip = dm.getParam(<span class="stringliteral">&quot;/image&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
 <div class="line">        LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what();</div>
 <div class="line">        <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">    }</div>
 <div class="line">    std::string&amp; image = getParamValue&lt;std::string&gt;(ip.get());</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;image initial value: &quot;</span> &lt;&lt; image;</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;image initial value: &quot;</span> &lt;&lt; image;</div>
 <div class="line">    value.set_string_value(<span class="stringliteral">&quot;eo://dog.png&quot;</span>); <span class="comment">// valid choice</span></div>
 <div class="line">    dm.setValue(<span class="stringliteral">&quot;/image&quot;</span>, value);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;image set to dog&quot;</span>;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;image value: &quot;</span> &lt;&lt; image; <span class="comment">// image value: eo://dog.png</span></div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;image set to dog&quot;</span>;</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;image value: &quot;</span> &lt;&lt; image; <span class="comment">// image value: eo://dog.png</span></div>
 <div class="line"> </div>
 <div class="line">    value.set_string_value(<span class="stringliteral">&quot;eo://bird.png&quot;</span>); <span class="comment">// invalid choice</span></div>
 <div class="line">    dm.setValue(<span class="stringliteral">&quot;/image&quot;</span>, value);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;image set to bird&quot;</span>;</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;image value: &quot;</span> &lt;&lt; image; <span class="comment">// image value: eo://bird.png</span></div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;image set to bird&quot;</span>;</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;image value: &quot;</span> &lt;&lt; image; <span class="comment">// image value: eo://bird.png</span></div>
 <div class="line"> </div>
 <div class="line"> </div>
-<div class="line">    DEBUG_LOG;</div>
+<div class="line">    LOG(INFO);</div>
 <div class="line">    ip = dm.getParam(<span class="stringliteral">&quot;/button_array&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
 <div class="line">        LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what();</div>
@@ -304,17 +306,17 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line">    <span class="keywordflow">for</span> (<span class="keyword">auto</span>&amp; num : button_array) {</div>
 <div class="line">        debugString += std::to_string(num) + <span class="stringliteral">&quot; &quot;</span>;</div>
 <div class="line">    }</div>
-<div class="line">    DEBUG_LOG &lt;&lt; debugString; <span class="comment">// button_array initial value: 0 0 0 0</span></div>
+<div class="line">    LOG(INFO) &lt;&lt; debugString; <span class="comment">// button_array initial value: 0 0 0 0</span></div>
 <div class="line"> </div>
 <div class="line">    std::vector&lt;int32_t&gt; arrayVal = {0, 1, 0, 0, 0, 1};</div>
 <div class="line">    value.mutable_int32_array_values()-&gt;mutable_ints()-&gt;Assign(arrayVal.begin(), arrayVal.end());</div>
 <div class="line">    dm.setValue(<span class="stringliteral">&quot;/button_array&quot;</span>, value);</div>
-<div class="line">    DEBUG_LOG &lt;&lt; <span class="stringliteral">&quot;button_array set to 0 1 0 0 0 1&quot;</span>;</div>
+<div class="line">    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;button_array set to 0 1 0 0 0 1&quot;</span>;</div>
 <div class="line">    debugString = <span class="stringliteral">&quot;button_array value: &quot;</span>;</div>
 <div class="line">    <span class="keywordflow">for</span> (<span class="keyword">auto</span>&amp; num : button_array) {</div>
 <div class="line">        debugString += std::to_string(num) + <span class="stringliteral">&quot; &quot;</span>;</div>
 <div class="line">    }</div>
-<div class="line">    DEBUG_LOG &lt;&lt; debugString; <span class="comment">// button_array value: 0 1 0 0 0 1</span></div>
+<div class="line">    LOG(INFO) &lt;&lt; debugString; <span class="comment">// button_array value: 0 1 0 0 0 1</span></div>
 <div class="line"> </div>
 <div class="line">    <span class="keywordflow">return</span> EXIT_SUCCESS;</div>
 <div class="line">}</div>
@@ -363,6 +365,7 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="ttc" id="aParamWithValue_8h_html"><div class="ttname"><a href="ParamWithValue_8h.html">ParamWithValue.h</a></div><div class="ttdoc">Interface for acessing parameter values.</div></div>
 <div class="ttc" id="aPolyglotText_8h_html"><div class="ttname"><a href="PolyglotText_8h.html">PolyglotText.h</a></div><div class="ttdoc">Polyglot Text serialization and deserialization to protobuf.</div></div>
 <div class="ttc" id="aRangeConstraint_8h_html"><div class="ttname"><a href="RangeConstraint_8h.html">RangeConstraint.h</a></div><div class="ttdoc">A constraint that checks if a value is within a range.</div></div>
+<div class="ttc" id="aclassLogger_html_a96c9761055a82ecf51dfbabdf6b1984c"><div class="ttname"><a href="classLogger.html#a96c9761055a82ecf51dfbabdf6b1984c">Logger::init</a></div><div class="ttdeci">static void init(const std::string &amp;appName)</div><div class="ttdoc">Initialize the logger.</div></div>
 <div class="ttc" id="anamespacecatena_1_1common_html"><div class="ttname"><a href="namespacecatena_1_1common.html">catena::common</a></div><div class="ttdoc">Functionality that can be shared between the different connection management types.</div><div class="ttdef"><b>Definition</b> Authorizer.h:62</div></div>
 <div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a></div><div class="ttdeci">@ OK</div><div class="ttdoc">Not an error; returned on success.</div><div class="ttdef"><b>Definition</b> Status.h:63</div></div>
 <div class="ttc" id="astructcatena_1_1common_1_1ParamTag_html"><div class="ttname"><a href="structcatena_1_1common_1_1ParamTag.html">catena::common::ParamTag</a></div><div class="ttdoc">Alias for IParam used to improve readability.</div><div class="ttdef"><b>Definition</b> Tags.h:60</div></div>
