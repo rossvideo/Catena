@@ -299,3 +299,20 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_ErrFileNotFound) {
     // Send to RPC
     testRPC();
 }
+
+// /*
+//  * TEST 2.6 - ExternalObjectRequest with a valid file.
+//  */
+// TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_ValidFile) {
+//     // Create test file with content
+//     std::string testContent = "Valid slot 0 external object content.";
+//     const std::string filePath = "/valid_external_object.txt";
+//     createTestFile(filePath, testContent);
+//     // Explicit slot 0 (currently not used in controller but set for future slot validation)
+//     inVal_.set_slot(0);
+//     initPayload(filePath);
+//     expPayload(testContent);
+
+//     // Send the RPC
+//     testRPC();
+// }

@@ -226,8 +226,9 @@ TEST_F(gRPCGetParamTests, GetParam_ErrInvalidSlot) {
  * TEST 7 - Endpoint setup with an invalid slot
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrInvalidSlotSetup) {
-    initPayload(2, "/test_oid");
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
+    dms_.erase(1);
+    initPayload(1, "/slot1_should_error_param");
+    expRc_ = catena::exception_with_status("device not found in slot 1", catena::StatusCode::NOT_FOUND);
     // Setting expectations
     EXPECT_CALL(dm0_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
@@ -333,6 +334,33 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowUnknown) {
     EXPECT_CALL(*mockParam, getOid()).WillRepeatedly(::testing::ReturnRef(expVal_.oid()));
     EXPECT_CALL(*mockParam, toProto(::testing::An<st2138::Param&>(), ::testing::_)).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
+    // Sending the RPC.
+    testRPC();
+}
+
+/*
+ * TEST 14 - Valid slot expects a good response.
+ */
+TEST_F(gRPCGetParamTests, GetParam_SlotSuccess) {
+    dms_.erase(1);
+    initPayload(0, "/slot0_only_param");
+    initexpVal_("/slot0_only_param", "slot0_only_value", "slot0_only_alias", "Slot0 Only Param");
+    expRc_ = catena::exception_with_status("", catena::StatusCode::OK);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const std::string &fqoid, catena::exception_with_status &status, const IAuthorizer &authz) {
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            status = catena::exception_with_status(expRc_.what(), expRc_.status);
+            return std::move(mockParam);
+        }));
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(expVal_.oid()));
+    EXPECT_CALL(*mockParam, toProto(::testing::An<st2138::Param&>(), ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](st2138::Param &param, const IAuthorizer &authz){
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            param.CopyFrom(expVal_.param());
+            return catena::exception_with_status(expRc_.what(), expRc_.status);
+        }));
     // Sending the RPC.
     testRPC();
 }

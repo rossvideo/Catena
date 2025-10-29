@@ -388,3 +388,24 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowUnknown) {
     // Sending the RPC
     testRPC();
 }
+
+/*
+ * TEST 14 - Valid slot 0.
+ */
+TEST_F(gRPCDeviceRequestTests, DeviceRequest_ValidSlot) {
+    expRc_ = catena::exception_with_status("", catena::StatusCode::OK);
+    inVal_.Clear(); expVals_.clear(); outVals_.clear();
+    initPayload(0, st2138::Device_DetailLevel::Device_DetailLevel_MINIMAL, {});
+    initExpVal(1);
+    mockSerializer_ = std::make_unique<MockDeviceSerializer>();
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, inVal_.detail_level(), true)).Times(1)
+        .WillOnce(::testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            EXPECT_TRUE(subscribedOids.empty());
+            return std::move(mockSerializer_);
+        }));
+    EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(*mockSerializer_, getNext()).Times(1).WillOnce(::testing::Return(expVals_[0]));
+    EXPECT_CALL(*mockSerializer_, hasMore()).Times(1).WillOnce(::testing::Return(false));
+    testRPC();
+}

@@ -566,3 +566,29 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
     // Sending the RPC
     testRPC();
 }
+
+/*
+ * TEST 20 - Valid slot 0 basic success (mirrors DeviceRequest_ValidSlot0 pattern).
+ */
+TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ValidSlot0) {
+    expRc_ = catena::exception_with_status("", catena::StatusCode::OK);
+    initPayload(0, "test_command", "test_value", true);
+    expResponse("valid_response");
+    // Setting expectations
+    EXPECT_CALL(dm0_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return std::move(mockCommand_);
+        }));
+    EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const st2138::Value& value, const bool respond, catena::exception_with_status& status, const IAuthorizer& authz) {
+            EXPECT_TRUE(respond);
+            return std::move(mockResponder_);
+        }));
+    EXPECT_CALL(*mockResponder_, getNext()).Times(1)
+        .WillOnce(::testing::Return(expVals_[0]));
+    EXPECT_CALL(*mockResponder_, hasMore()).Times(1)
+        .WillOnce(::testing::Return(false));
+    testRPC();
+}
