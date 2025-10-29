@@ -51,6 +51,7 @@
 #include <mocks/MockMenu.h>
 #include <CommonTestHelpers.h>
 #include <mocks/MockHeartbeat.h>
+#include "SharedFlags.h"
 
 using namespace catena::common;
 
@@ -58,11 +59,11 @@ class DeviceTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("DeviceTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("DeviceTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     DeviceTest() 

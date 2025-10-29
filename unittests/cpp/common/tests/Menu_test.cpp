@@ -46,6 +46,7 @@
 
 // common
 #include "Menu.h"
+#include "SharedFlags.h"
 
 using namespace catena::common;
 
@@ -53,11 +54,11 @@ class MenuTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("MenuTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("MenuTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   protected:
     // Creates a Menu for testing.

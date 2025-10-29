@@ -67,7 +67,8 @@ set(CATENA_CODEGEN "${CODEGEN_DIR}" CACHE STRING "Path to Catena codegen tools" 
 set(CATENA_SCHEMA "${SCHEMA_LOCATION}" CACHE STRING "Path to Catena schema file" FORCE)
 
 # Core dependencies
-find_package(glog REQUIRED)
+find_package(absl REQUIRED LOGGING)
+
 
 # Additional dependencies
 find_package(PkgConfig REQUIRED)

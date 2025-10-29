@@ -37,6 +37,7 @@
 
 // common
 #include <Logger.h>
+#include <SharedFlags.h>
 
 // gtest
 #include <gtest/gtest.h>
@@ -56,11 +57,11 @@ class RESTServiceImplTests : public testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTServiceImplTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("RESTServiceImplTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     /*

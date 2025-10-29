@@ -52,13 +52,13 @@ GetParam::GetParam(IServiceImpl *service, SlotMap& dms, bool ok)
  * Manages the steps of the GetParam gRPC command through the state variable status.
  */
 void GetParam::proceed( bool ok) {
-    DEBUG_LOG << "GetParam::proceed[" << objectId_ << "]: " << timeNow()
+    LOG(INFO) << "GetParam::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        DEBUG_LOG << "GetParam[" << objectId_ << "] cancelled";
+        LOG(INFO) << "GetParam[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
     
@@ -138,7 +138,7 @@ void GetParam::proceed( bool ok) {
          * ServiceImpl.
          */
         case CallStatus::kFinish:
-            DEBUG_LOG << "GetParam[" << objectId_ << "] finished";
+            LOG(INFO) << "GetParam[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
 

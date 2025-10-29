@@ -36,6 +36,8 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
+#include <SharedFlags.h>
+
 // Test helpers
 #include "RESTTest.h"
 #include "MockDeviceSerializer.h"
@@ -54,11 +56,11 @@ class RESTDeviceRequestTests : public RESTEndpointTest {
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTDeviceRequestTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("RESTDeviceRequestTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     /*

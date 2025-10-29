@@ -35,6 +35,8 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
+#include <SharedFlags.h>
+
 // Test helpers
 #include "RESTTest.h"
 #include "CommonTestHelpers.h"
@@ -50,11 +52,11 @@ class RESTGetValueTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTGetValueTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("RESTGetValueTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
     
     RESTGetValueTests() : RESTEndpointTest() {

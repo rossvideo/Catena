@@ -56,13 +56,16 @@
 
 #include <iostream>
 #include <Logger.h>
+#include <absl/flags/parse.h>
 
 using namespace catena::common;
 using namespace AudioDeck;
 using catena::common::ParamTag;
 
 int main (int argc, char** argv) {
-    Logger::StartLogging(argc, argv);
+    absl::SetProgramUsageMessage("Runs the Catena Service");
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("use_struct_arrays");
 
     // lock the model
     std::lock_guard lg(dm.mutex());
@@ -75,7 +78,7 @@ int main (int argc, char** argv) {
     }
     st2138::Value value;
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    DEBUG_LOG << "audio_deck: " << value.DebugString();
+    LOG(INFO) << "audio_deck: " << value.DebugString();
 
     // this line is for demonstrating the fromProto method
     // this should never be done in a real device
@@ -89,7 +92,7 @@ int main (int argc, char** argv) {
     }
     value.Clear();
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    DEBUG_LOG << "audio_deck[2]: " << value.DebugString();
+    LOG(INFO) << "audio_deck[2]: " << value.DebugString();
 
 
     // Don't clear value, append copy of audio_deck[2] to audio_deck.
@@ -99,7 +102,7 @@ int main (int argc, char** argv) {
         LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
-    DEBUG_LOG << "new audio channel: " << value.DebugString();
+    LOG(INFO) << "new audio channel: " << value.DebugString();
 
     ip = dm.getParam("/audio_deck/3/eq_list/0/response", err);
     if (ip == nullptr){
@@ -108,7 +111,7 @@ int main (int argc, char** argv) {
     }
     value.Clear();
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    DEBUG_LOG << "/audio_deck/1/eq_list/1/response: " << value.DebugString();
+    LOG(INFO) << "/audio_deck/1/eq_list/1/response: " << value.DebugString();
 
     ip = dm.getParam("/audio_deck/2/eq_list/1/q_factor", err);
     if (ip == nullptr){
@@ -117,7 +120,7 @@ int main (int argc, char** argv) {
     }
     value.Clear();
     ip->toProto(value, Authorizer::kAuthzDisabled);
-    DEBUG_LOG << "/audio_deck/2/eq_list/1/q_factor: " << value.DebugString();
+    LOG(INFO) << "/audio_deck/2/eq_list/1/q_factor: " << value.DebugString();
 
     return EXIT_SUCCESS;
 }

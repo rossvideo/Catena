@@ -56,13 +56,13 @@ void MultiSetValue::create_(bool ok) {
 }
 
 void MultiSetValue::proceed(bool ok) { 
-    DEBUG_LOG << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
+    LOG(INFO) << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: "
                 << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        DEBUG_LOG << typeName << "[" << objectId_ << "] cancelled";
+        LOG(INFO) << typeName << "[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
     
@@ -116,7 +116,7 @@ void MultiSetValue::proceed(bool ok) {
                     if (dm->tryMultiSetValue(reqs_, rc, *authz)) {
                         rc = dm->commitMultiSetValue(reqs_, *authz);
                     } else { // debug log new
-                        DEBUG_LOG << "MultiSetValue: tryMultiSetValue failed for slot " << reqs_.slot()
+                        LOG(INFO) << "MultiSetValue: tryMultiSetValue failed for slot " << reqs_.slot()
                                   << " status=" << static_cast<int>(rc.status)
                                   << " msg=\"" << rc.what() << "\"";
                     }
@@ -141,7 +141,7 @@ void MultiSetValue::proceed(bool ok) {
          * ServiceImpl.
          */
         case CallStatus::kFinish:
-            DEBUG_LOG << typeName << "[" << objectId_ << "] finished";
+            LOG(INFO) << typeName << "[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

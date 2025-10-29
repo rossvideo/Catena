@@ -1,7 +1,5 @@
-#pragma once
-
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,77 +28,47 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /**
  * @brief Logger class.
- * @file Logger.h
+ * @file Logger.cpp
  * @copyright Copyright © 2025 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
  */
 
-#include "absl/log/log.h"
-#include "absl/log/log_sink.h"
-#include "absl/log/log_sink_registry.h"
-#include "absl/log/log_entry.h"
-#include "absl/log/check.h"
-#include "absl/log/initialize.h"
-#include "absl/log/globals.h"
-#include "absl/flags/usage.h"
-#include <mutex>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <filesystem>
+// common
+#include <Logger.h>
+#include <SharedFlags.h>
 
-/**
- * @brief A log sink that writes log messages to a specified file.
- */
-class FileLogSink : public absl::LogSink {
-public:
-  explicit FileLogSink(const std::string& filename) : log_file_(filename, std::ios_base::app) {
-    if (!log_file_.is_open()) {
-      std::cerr << "Error opening log file: " << filename << std::endl;
-    }
-  }
+void Logger::init(const std::string& appName) {
+    static std::once_flag flag;
+    std::call_once(flag, [&]() {
+        absl::InitializeLog();
+        
+        if (!std::filesystem::exists(absl::GetFlag(FLAGS_log_dir))) {
+            std::filesystem::create_directories(absl::GetFlag(FLAGS_log_dir));
+        }
 
-  void Send(const absl::LogEntry& entry) override {
-    if (log_file_.is_open()) {
-      log_file_ << entry.text_message_with_prefix_and_newline();
-      log_file_.flush(); // Ensure immediate write to file
-    }
-  }
+#ifdef NDEBUG
+        // Release mode: only log to file (suppress stderr/stdout)
+        absl::SetStderrThreshold(absl::LogSeverity::kFatal);
+#else
+        // Debug mode: log to stdout + file
+        absl::SetStderrThreshold(absl::LogSeverity::kInfo);
+#endif
+        if (absl::GetFlag(FLAGS_silent)) {
+            absl::SetMinLogLevel(absl::LogSeverityAtLeast::kError);
+        }
 
-private:
-  std::ofstream log_file_;
-};
+        //append date and time to the front of file name in YYYYMMDD_HHMMSS format
+        auto now = std::chrono::system_clock::now();
+        std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+        std::tm tm_buf;
+        localtime_r(&now_time, &tm_buf);
+        char datetime[32];
+        std::strftime(datetime, sizeof(datetime), "%Y%m%d_%H%M%S", &tm_buf);
 
-/**
- * @brief Logger class for logging messages to both console and file.
- */
-class Logger {
-public:
-  /**
-  * @brief Initialize the logger.
-  * @param appName The name of the application.
-  */
-  static void init(const std::string& appName);
-
-  ~Logger() {
-    if (fileLogSink_) {
-      absl::RemoveLogSink(fileLogSink_.get());
-    }
-  }
-
-private:
-  static Logger& instance() {
-    static Logger logger;
-    return logger;
-  }
-
-  Logger() = default;
-  Logger(const Logger&) = delete;
-  Logger& operator=(const Logger&) = delete;
-
-  std::ostringstream stream_;
-  std::unique_ptr<FileLogSink> fileLogSink_ = nullptr;
-};
+        std::string log_file = absl::GetFlag(FLAGS_log_dir) + "/" + datetime + std::string("_") + appName + ".log";
+        instance().fileLogSink_ = std::make_unique<FileLogSink>(log_file);
+        absl::AddLogSink(instance().fileLogSink_.get());
+    });
+}

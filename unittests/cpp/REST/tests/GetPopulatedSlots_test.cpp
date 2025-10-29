@@ -35,6 +35,8 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
+#include <SharedFlags.h>
+
 // Test helpers
 #include "RESTTest.h"
 
@@ -49,11 +51,11 @@ class RESTGetPopulatedSlotsTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTGetPopulatedSlotsTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("RESTGetPopulatedSlotsTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
     
     /*

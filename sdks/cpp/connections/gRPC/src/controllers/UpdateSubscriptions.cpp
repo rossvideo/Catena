@@ -44,13 +44,13 @@ UpdateSubscriptions::UpdateSubscriptions(IServiceImpl *service, SlotMap& dms, bo
 }
 
 void UpdateSubscriptions::proceed(bool ok) {
-    DEBUG_LOG << "UpdateSubscriptions proceed[" << objectId_ << "]: "
+    LOG(INFO) << "UpdateSubscriptions proceed[" << objectId_ << "]: "
               << timeNow() << " status: " << static_cast<int>(status_)
               << ", ok: " << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        DEBUG_LOG << "UpdateSubscriptions[" << objectId_ << "] cancelled";
+        LOG(INFO) << "UpdateSubscriptions[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -171,7 +171,7 @@ void UpdateSubscriptions::proceed(bool ok) {
             break;
 
         case CallStatus::kFinish:
-            DEBUG_LOG << "UpdateSubscriptions[" << objectId_ << "] finished";
+            LOG(INFO) << "UpdateSubscriptions[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

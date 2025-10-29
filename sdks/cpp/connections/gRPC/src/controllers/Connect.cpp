@@ -52,7 +52,7 @@ catena::gRPC::Connect::Connect(IServiceImpl *service, SlotMap& dms, bool ok)
 
 // Manages gRPC command execution process using the state variable status.
 void catena::gRPC::Connect::proceed(bool ok) {
-    DEBUG_LOG << "Connect proceed[" << objectId_ << "]: " << timeNow()
+    LOG(INFO) << "Connect proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: "
                 << std::boolalpha << ok;
 
@@ -61,8 +61,8 @@ void catena::gRPC::Connect::proceed(bool ok) {
      * client request) will send shutdown signal to cancel all open connections
      */
     if (!ok && status_ == CallStatus::kProcess) {
-        DEBUG_LOG << "Connect[" << objectId_ << "] cancelled";
-        DEBUG_LOG << "Cancelling all open connections";
+        LOG(INFO) << "Connect[" << objectId_ << "] cancelled";
+        LOG(INFO) << "Cancelling all open connections";
         shutdownSignal_.emit();
         status_ = CallStatus::kFinish;
     }
@@ -143,7 +143,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
             // If connect was cancelled set state to kFinish.
             if (shutdown_ || context_.IsCancelled()) {
                 status_ = CallStatus::kFinish;
-                DEBUG_LOG << "Connection[" << objectId_ << "] cancelled";
+                LOG(INFO) << "Connection[" << objectId_ << "] cancelled";
             }
             // Write to client if the context is not cancelled.
             if (!context_.IsCancelled()) {
@@ -169,7 +169,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
          * kFinish: Ends the connection.
          */
         case CallStatus::kFinish:
-            DEBUG_LOG << "Connect[" << objectId_ << "] finished";
+            LOG(INFO) << "Connect[" << objectId_ << "] finished";
             // Disconnecting all initialized listeners.
             if (shutdownSignalId_ != 0) {
                 shutdownSignal_.disconnect(shutdownSignalId_);

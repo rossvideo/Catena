@@ -73,7 +73,7 @@ ServiceImpl *globalApi = nullptr;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
+        LOG(INFO) << "Caught signal " << sig << ", shutting down";
         if (globalApi != nullptr) {
             globalApi->Shutdown();
             globalApi = nullptr;
@@ -84,7 +84,7 @@ void handle_signal(int sig) {
 
 void catenaAssetDownloadHandler(const std::string& fqoid, const IAuthorizer* authz) {
     //insert business logic here
-    DEBUG_LOG << "Asset fqoid: " << fqoid << " get operation complete";
+    LOG(INFO) << "Asset fqoid: " << fqoid << " get operation complete";
 }
 
 void catenaAssetUploadHandler(const std::string& fqoid, const IAuthorizer* authz) {
@@ -107,7 +107,7 @@ void catenaAssetUploadHandler(const std::string& fqoid, const IAuthorizer* authz
         //let manager know that the assets list has changed
     }
 
-    DEBUG_LOG << "Asset fqoid: " << fqoid << " upload operation complete";
+    LOG(INFO) << "Asset fqoid: " << fqoid << " upload operation complete";
 }
 
 void catenaAssetDeleteHandler(const std::string& fqoid, const IAuthorizer* authz) {
@@ -132,7 +132,7 @@ void catenaAssetDeleteHandler(const std::string& fqoid, const IAuthorizer* authz
         throw catena::exception_with_status("Asset not found in the list", catena::StatusCode::NOT_FOUND);
     }
 
-    DEBUG_LOG << "Asset fqoid: " << fqoid << " delete operation complete";
+    LOG(INFO) << "Asset fqoid: " << fqoid << " delete operation complete";
 }
 
 void RunRESTServer() {
@@ -146,7 +146,7 @@ void RunRESTServer() {
         try {
             catenaAssetDownloadHandler(fqoid, authz);
         } catch (catena::exception_with_status& err) {
-            DEBUG_LOG << "Asset download failed: " << err.what();
+            LOG(INFO) << "Asset download failed: " << err.what();
         }
     });
 
@@ -154,7 +154,7 @@ void RunRESTServer() {
         try {
             catenaAssetUploadHandler(fqoid, authz);
         } catch (catena::exception_with_status& err) {
-            DEBUG_LOG << "Asset upload failed: " << err.what();
+            LOG(INFO) << "Asset upload failed: " << err.what();
         }
     });
 
@@ -162,7 +162,7 @@ void RunRESTServer() {
         try {
             catenaAssetDeleteHandler(fqoid, authz);
         } catch (catena::exception_with_status& err) {
-            DEBUG_LOG << "Asset delete failed: " << err.what();
+            LOG(INFO) << "Asset delete failed: " << err.what();
         }
     });
 
@@ -178,8 +178,8 @@ void RunRESTServer() {
         // Creating and running the REST service.
         ServiceImpl api(config);
         globalApi = &api;
-        DEBUG_LOG << "API Version: " << api.version();
-        DEBUG_LOG << "REST on 0.0.0.0:" << config.port;
+        LOG(INFO) << "API Version: " << api.version();
+        LOG(INFO) << "REST on 0.0.0.0:" << config.port;
 
         dm.setHeartbeatParam("/product/version");
         dm.startHeartbeat();
@@ -191,15 +191,12 @@ void RunRESTServer() {
 }
 
 int main(int argc, char* argv[]) {
-    Logger::StartLogging(argc, argv);
-
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
+    Logger::init("asset_request_REST");
     
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
     
-    // Shutdown Google Logging
-    google::ShutdownGoogleLogging();
     return 0;
 }

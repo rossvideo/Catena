@@ -64,11 +64,11 @@ class gRPCUpdateSubscriptionsTests : public GRPCTest {
 
         // Set up and tear down Google Logging
         static void SetUpTestSuite() {
-            Logger::StartLogging("gRPCUpdateSubscriptionsTest");
+            absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+            Logger::init("gRPCUpdateSubscriptionsTest");
         }
 
         static void TearDownTestSuite() {
-            google::ShutdownGoogleLogging();
         }
 
         /*

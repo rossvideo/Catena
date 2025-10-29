@@ -53,13 +53,13 @@ ExecuteCommand::ExecuteCommand(IServiceImpl *service, SlotMap& dms, bool ok)
  * handling errors and responses accordingly 
  */
 void ExecuteCommand::proceed(bool ok) {
-    DEBUG_LOG << "ExecuteCommand proceed[" << objectId_ << "]: " << timeNow()
+    LOG(INFO) << "ExecuteCommand proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        DEBUG_LOG << "ExecuteCommand[" << objectId_ << "] cancelled";
+        LOG(INFO) << "ExecuteCommand[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -175,7 +175,7 @@ void ExecuteCommand::proceed(bool ok) {
          * process
          */
         case CallStatus::kFinish:
-            DEBUG_LOG << "ExecuteCommand[" << objectId_ << "] finished";
+            LOG(INFO) << "ExecuteCommand[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
 

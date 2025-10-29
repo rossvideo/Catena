@@ -87,5 +87,5 @@ void DeviceRequest::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    DEBUG_LOG << "DeviceRequest[" << objectId_ << "] finished\n";
+    LOG(INFO) << "DeviceRequest[" << objectId_ << "] finished\n";
 }

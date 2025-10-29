@@ -93,5 +93,5 @@ void ExecuteCommand::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    DEBUG_LOG << "ExecuteCommand[" << objectId_ << "] finished\n";
+    LOG(INFO) << "ExecuteCommand[" << objectId_ << "] finished\n";
 } 

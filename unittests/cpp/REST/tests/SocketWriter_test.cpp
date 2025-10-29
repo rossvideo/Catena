@@ -37,6 +37,7 @@
 
 // common
 #include <Logger.h>
+#include <SharedFlags.h>
 
 // Test helpers
 #include "RESTTest.h"
@@ -51,11 +52,11 @@ class RESTSocketWriterTests : public testing::Test, public RESTTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTSocketWriterTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("RESTSocketWriterTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
     
     RESTSocketWriterTests() : RESTTest(&serverSocket_, &clientSocket_) {
