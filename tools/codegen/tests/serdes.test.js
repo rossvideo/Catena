@@ -1,25 +1,25 @@
 import { fileURLToPath } from "url";
-import fs from "fs";
+import fs from "fs/promises";
 import path from "path";
-import Serdes from "../serdes/serdes";
+import { camelToSnake, deserialize, getDevice, serialize, snakeToCamel } from "../serdes/serdes";
 
 const PROTOS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "../../../smpte/interface/proto");
 const OUTPUT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "output");
 
-beforeAll(() => {
+beforeAll(async () => {
     // clean out everything but the .gitignore file from the output directory
-    const files = fs.readdirSync(OUTPUT_DIR);
+    const files = await fs.readdir(OUTPUT_DIR);
     for (const file of files) {
         if (file === ".gitignore") {
             continue;
         }
-        fs.rmSync(path.join(OUTPUT_DIR, file), { recursive: true, force: true });
+        await fs.rm(path.join(OUTPUT_DIR, file), { recursive: true, force: true });
     }
 });
 
-test("serdes", () => {
+test("serdes", async () => {
     // easiest to test by serializing and then deserializing and comparing results
-    const serdes = new Serdes({
+    const dm = {
         desc: {
             slot: 111,
             detail_level: "FULL",
@@ -27,16 +27,16 @@ test("serdes", () => {
             default_scope: "st2138:op",
         },
         deviceName: "TestDevice",
-    });
-    serdes.serialize({
+    };
+    await serialize(dm, {
         protos: PROTOS_DIR,
         output: OUTPUT_DIR,
     }, {
         version: 444,
     });
     const outputFile = path.join(OUTPUT_DIR, `device.TestDevice.bin`);
-    expect(fs.existsSync(outputFile)).toBe(true);
-    const [metadata, device] = serdes.deserialize({
+    expect(await fs.stat(outputFile)).toBeDefined();
+    const [metadata, device] = await deserialize({
         input: outputFile,
         protos: PROTOS_DIR,
     });
@@ -55,34 +55,27 @@ test("serdes", () => {
     });
 });
 
-test("derialize invalid file", () => {
-    const serdes = new Serdes({});
-    expect(() => {
-        serdes.deserialize({
-            input: path.join(OUTPUT_DIR, "nonexistent.bin"),
-            protos: PROTOS_DIR,
-        });
-    }).toThrow(/does not exist/);
+test("deserialize invalid file", async () => {
+    await expect(deserialize({
+        input: path.join(OUTPUT_DIR, "nonexistent.bin"),
+        protos: PROTOS_DIR,
+    })).rejects.toThrow(/nonexistent.bin/);
 });
 
-test("deserialize invalid magic", () => {
-    const serdes = new Serdes({});
+test("deserialize invalid magic", async () => {
     // create a file with invalid magic
     const invalidFile = path.join(OUTPUT_DIR, "invalid_magic.bin");
     const buffer = Buffer.alloc(8);
     buffer.write("BAD!", 0, 4, "utf-8"); // bad magic
     buffer.writeUInt32LE(0, 4); // zero metadata length
-    fs.writeFileSync(invalidFile, buffer, "binary");
-    expect(() => {
-        serdes.deserialize({
-            input: invalidFile,
-            protos: PROTOS_DIR,
-        });
-    }).toThrow(/Not a serialized Catena device, got 'BAD!'/);
+    await fs.writeFile(invalidFile, buffer, "binary");
+    await expect(deserialize({
+        input: invalidFile,
+        protos: PROTOS_DIR,
+    })).rejects.toThrow("Not a serialized Catena device, got 'BAD!'");
 });
 
-test("deserialize invalid size", () => {
-    const serdes = new Serdes({});
+test("deserialize invalid size", async () => {
     // create a file with valid magic but invalid size
     const invalidFile = path.join(OUTPUT_DIR, "invalid_size.bin");
     const header = Buffer.alloc(8);
@@ -98,17 +91,14 @@ test("deserialize invalid size", () => {
     header.writeUInt32LE(metadata.length, 4); // metadata length
     const deviceBin = Buffer.from([0x00, 0x01, 0x02]); // 3 bytes, but we'll say it's 5
     const outputBuffer = Buffer.concat([header, metadata, deviceBin]);
-    fs.writeFileSync(invalidFile, outputBuffer, "binary");
-    expect(() => {
-        serdes.deserialize({
-            input: invalidFile,
-            protos: PROTOS_DIR,
-        });
-    }).toThrow(/Protobuf size mismatch/);
+    await fs.writeFile(invalidFile, outputBuffer, "binary");
+    await expect(deserialize({
+        input: invalidFile,
+        protos: PROTOS_DIR,
+    })).rejects.toThrow("Protobuf size mismatch");
 });
 
-test("deserialize invalid sha256", () => {
-    const serdes = new Serdes({});
+test("deserialize invalid sha256", async () => {
     // create a file with valid magic but invalid sha256
     const invalidFile = path.join(OUTPUT_DIR, "invalid_sha256.bin");
     const header = Buffer.alloc(8);
@@ -124,17 +114,14 @@ test("deserialize invalid sha256", () => {
     header.writeUInt32LE(metadata.length, 4); // metadata length
     const deviceBin = Buffer.from([0x00, 0x01, 0x02]); // 3 bytes
     const outputBuffer = Buffer.concat([header, metadata, deviceBin]);
-    fs.writeFileSync(invalidFile, outputBuffer, "binary");
-    expect(() => {
-        serdes.deserialize({
-            input: invalidFile,
-            protos: PROTOS_DIR,
-        });
-    }).toThrow(/Protobuf SHA256 mismatch/);
+    await fs.writeFile(invalidFile, outputBuffer, "binary");
+    await expect(deserialize({
+        input: invalidFile,
+        protos: PROTOS_DIR,
+    })).rejects.toThrow("Protobuf SHA256 mismatch");
 });
 
 test("camelToSnake", () => {
-    const serdes = new Serdes({});
     const obj = {
         camelCase: 1,
         nestedObject: {
@@ -145,7 +132,7 @@ test("camelToSnake", () => {
             ],
         },
     };
-    const snakeObj = serdes._camelToSnake(obj);
+    const snakeObj = camelToSnake(obj);
     // make sure the keys have been converted to snake_case
     expect(snakeObj).toEqual({
         camel_case: 1,
@@ -163,25 +150,18 @@ test("camelToSnake", () => {
     expect(snakeObj.nested_object.array_of_objects).not.toBe(obj.nestedObject.arrayOfObjects);
 });
 
-test("getDevice throws on missing protos", () => {
-    const serdes = new Serdes({});
-    expect(() => {
-        serdes._getDevice("/nonexistent/path");
-    }).toThrow("Protos path '/nonexistent/path' does not exist");
+test("getDevice throws on missing protos", async () => {
+    await expect(getDevice("/nonexistent/path")).rejects.toThrow("Protos path '/nonexistent/path' does not exist");
 });
 
-test("getDevice protos missing Device", () => {
-    const serdes = new Serdes({});
+test("getDevice protos missing Device", async () => {
     // create an empty protos directory
     const emptyProtosDir = path.join(OUTPUT_DIR, "empty_protos");
-    fs.mkdirSync(emptyProtosDir, { recursive: true });
-    expect(() => {
-        serdes._getDevice(emptyProtosDir);
-    }).toThrow(/st2138.Device/);
+    await fs.mkdir(emptyProtosDir, { recursive: true });
+    await expect(getDevice(emptyProtosDir)).rejects.toThrow("st2138.Device");
 });
 
 test("snakeToCamel", () => {
-    const serdes = new Serdes({});
     const obj = {
         snake_case: 1,
         nested_object: {
@@ -192,7 +172,7 @@ test("snakeToCamel", () => {
             ],
         },
     };
-    const camelObj = serdes._snakeToCamel(obj);
+    const camelObj = snakeToCamel(obj);
     // make sure the keys have been converted to camelCase
     expect(camelObj).toEqual({
         snakeCase: 1,
