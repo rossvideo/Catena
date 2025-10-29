@@ -171,8 +171,7 @@
         "ja": "再生"
       }},
       "type":"EMPTY",
-      "widget": "button",
-      "response": false
+      "widget": "button"
     },
     "pause": {
       "name": {"display_strings": {
@@ -181,8 +180,7 @@
         "es": "Pausa",
         "ja": "一時停止"
       }},
-      "type":"EMPTY",
-      "response": false
+      "type":"EMPTY"
     },
     "stop": {
       "name": {"display_strings": {
@@ -191,8 +189,7 @@
         "es": "Detener",
         "ja": "停止"
       }},
-      "type":"EMPTY",
-      "response": false
+      "type":"EMPTY"
     },
     "rewind": {
       "name": {"display_strings": {
@@ -201,8 +198,7 @@
         "es": "Rebobinar",
         "ja": "巻き戻し"
       }},
-      "type": "EMPTY",
-      "response": false
+      "type": "EMPTY"
     },
     "fast_forward": {
       "name": {"display_strings": {
@@ -211,8 +207,7 @@
         "es": "Avance rápido",
         "ja": "早送り"
       }},
-      "type": "EMPTY",
-      "response": false
+      "type": "EMPTY"
     },
     "load": {
       "name": {"display_strings": {
@@ -222,8 +217,7 @@
         "ja": "ビデオを読み込む"
       }},
       "widget": "button",
-      "type":"STRING",
-      "response": false
+      "type":"STRING"
     },
     "eject": {
       "type":"STRING",
@@ -233,8 +227,7 @@
         "es": "Expulsar",
         "ja": "取り出す"
       }},
-      "widget": "button",
-      "response": false
+      "widget": "button"
     },
     "debug_counter": {
       "name": {"display_strings": {

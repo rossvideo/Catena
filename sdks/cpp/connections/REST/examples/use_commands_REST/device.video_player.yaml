@@ -67,22 +67,16 @@ params:
 commands:
   play:
     type: EMPTY
-    response: false
   pause:
     type: EMPTY
-    response: false
   stop:
     type: EMPTY
-    response: false
   rewind:
     type: EMPTY
-    response: false
   fast_forward:
     type: EMPTY
-    response: false
   load:
     type: STRING
-    response: false
   eject:
     type: EMPTY
-    response: false
+    
