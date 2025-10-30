@@ -226,7 +226,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrInvalidSlot) {
 }
 
 /*
- * TEST 9 - dm.trySetValue returns a catena::Exception_With_Status.
+ * TEST 7 - dm.trySetValue returns a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryReturnCatena) {
     expRc_ = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
@@ -245,7 +245,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryReturnCatena) {
 }
 
 /*
- * TEST 10 - dm.trySetValue throws a catena::Exception_With_Status.
+ * TEST 8 - dm.trySetValue throws a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowCatena) {
     expRc_ = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
@@ -264,7 +264,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowCatena) {
 }
 
 /*
- * TEST 11 - dm.trySetValue throws a std::runtime_error.
+ * TEST 9 - dm.trySetValue throws a std::runtime_error.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowUnknown) {
     expRc_ = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
@@ -279,7 +279,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowUnknown) {
 }
 
 /*
- * TEST 12 - dm.commitSetValue returns a catena::Exception_With_Status.
+ * TEST 10 - dm.commitSetValue returns a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitReturnCatena) {
     expRc_ = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
@@ -297,7 +297,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitReturnCatena) {
 }
 
 /*
- * TEST 13 - dm.commitSetValue throws a catena::Exception_With_Status.
+ * TEST 11 - dm.commitSetValue throws a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowCatena) {
     expRc_ = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
@@ -316,7 +316,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowCatena) {
 }
 
 /*
- * TEST 14 - dm.commitSetValue throws a std::runtime_error.
+ * TEST 12 - dm.commitSetValue throws a std::runtime_error.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
     expRc_ = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);

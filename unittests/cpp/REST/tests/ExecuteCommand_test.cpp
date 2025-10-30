@@ -53,20 +53,32 @@ using namespace catena::REST;
 class RESTExecuteCommandTests : public RESTEndpointTest {
   protected:
 
+    // Set up and tear down Google Logging
     static void SetUpTestSuite() {
         absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
         Logger::init("RESTExecuteCommandTest");
     }
 
-    static void TearDownTestSuite() {}
+    static void TearDownTestSuite() {
+    }
 
+    /*
+     * Sets default expectations for hasField("respond").
+     */
     RESTExecuteCommandTests() : RESTEndpointTest() {
         EXPECT_CALL(context_, hasField("respond")).WillRepeatedly(testing::Invoke([this]() { return respond_; }));
+         // Default expectations for the device model 1 (should not be called).
         EXPECT_CALL(dm1_, getCommand(testing::An<const std::string&>(), testing::_, testing::_)).Times(0);
     }
 
+    /*
+     * Creates an ExecuteCommand handler object.
+     */
     ICallData* makeOne() override { return ExecuteCommand::makeOne(serverSocket_, context_, dms_); }
 
+    /*
+     * Streamlines the creation of endpoint input. 
+     */
     void initPayload(uint32_t slot, const std::string& oid, const std::string& value, bool respond = true) {
         slot_ = slot;
         fqoid_ = oid;
@@ -75,22 +87,34 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
         respond_ = respond;
     }
 
+    /*
+    * Adds a response to the expected values.
+    */
     void expResponse(const std::string& stringVal) {
         expVals_.push_back(st2138::CommandResponse());
         expVals_.back().mutable_response()->set_string_value(stringVal);
     }
 
+    /* 
+    * Adds an exception to the expected values.
+    */
     void expException(const std::string& type, const std::string& details) {
         expVals_.push_back(st2138::CommandResponse());
         expVals_.back().mutable_exception()->set_type(type);
         expVals_.back().mutable_exception()->set_details(details);
     }
 
+    /*
+    * Adds a no_response to the expected values.
+    */
     void expNoResponse() {
         expVals_.push_back(st2138::CommandResponse());
         expVals_.back().mutable_no_response();
     }
-
+    
+    /*
+     * Calls proceed and tests the response.
+     */
     void testCall() {
         endpoint_->proceed();
         std::vector<std::string> jsonBodies;
@@ -101,6 +125,7 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
                 ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
             }
         }
+        // Response format based on stream or unary.
         if (stream_) {
             EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, jsonBodies));
         } else {
@@ -108,9 +133,12 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
         }
     }
 
+    // in variables
     st2138::Value inVal_;
     bool respond_ = false;
+    // Expected variables
     std::vector<st2138::CommandResponse> expVals_;
+
     std::unique_ptr<MockParam> mockCommand_ = std::make_unique<MockParam>();
     std::unique_ptr<MockCommandResponder> mockResponder_ = std::make_unique<MockCommandResponder>();
 };

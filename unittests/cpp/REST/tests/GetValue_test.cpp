@@ -174,7 +174,7 @@ TEST_F(RESTGetValueTests, GetValue_ErrInvalidSlot) {
 }
 
 /*
- * TEST 8 - dm.getValue() returns a catena::exception_with_status.
+ * TEST 6 - dm.getValue() returns a catena::exception_with_status.
  */
 TEST_F(RESTGetValueTests, GetValue_ErrReturnCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -189,7 +189,7 @@ TEST_F(RESTGetValueTests, GetValue_ErrReturnCatena) {
 }
 
 /*
- * TEST 9 - dm.getValue() throws a catena::exception_with_status.
+ * TEST 7 - dm.getValue() throws a catena::exception_with_status.
  */
 TEST_F(RESTGetValueTests, GetValue_ErrThrowCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -205,7 +205,7 @@ TEST_F(RESTGetValueTests, GetValue_ErrThrowCatena) {
 }
 
 /*
- * TEST 10 - dm.getValue() throws a std::runtime_exception.
+ * TEST 8 - dm.getValue() throws a std::runtime_exception.
  */
 TEST_F(RESTGetValueTests, GetValue_ErrThrowStd) {
     expRc_ = catena::exception_with_status("std error", catena::StatusCode::INTERNAL);
@@ -218,7 +218,7 @@ TEST_F(RESTGetValueTests, GetValue_ErrThrowStd) {
 }
 
 /*
- * TEST 11 - dm.getValue() throws an unknown error.
+ * TEST 9 - dm.getValue() throws an unknown error.
  */
 TEST_F(RESTGetValueTests, GetValue_ErrThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -231,7 +231,7 @@ TEST_F(RESTGetValueTests, GetValue_ErrThrowUnknown) {
 }
 
 /*
- * TEST 12 - Endpoint setup with invalid slot value.
+ * TEST 10 - Endpoint setup with invalid slot value.
  */
 TEST_F(RESTGetValueTests, GetValue_ErrInvalidSlotSetup) {
     slot_ = dms_.size();
@@ -245,7 +245,7 @@ TEST_F(RESTGetValueTests, GetValue_ErrInvalidSlotSetup) {
 }
 
 /*
- * TEST 13 - Endpoint setup with valid slot value.
+ * TEST 11 - Endpoint setup with valid slot value.
  */
 TEST_F(RESTGetValueTests, GetValue_ValidSlotSetup) {
     slot_ = 0;
