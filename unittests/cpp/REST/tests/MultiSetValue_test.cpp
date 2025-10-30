@@ -198,22 +198,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlot) {
 }
 
 /*
- * TEST 6 - Endpoint setup with an invalid slot.
- */
-TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlotSetup) {
-    initPayload(2, {});
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
-    // Setting expectations
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
-    // Calling proceed and testing the output
-    testCall();
-}
-
-/*
- * TEST 7 - MultiSetValue fails to parse the json body.
+ * TEST 6 - MultiSetValue fails to parse the json body.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_FailParse) {
     initPayload(0, {});
@@ -226,7 +211,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_FailParse) {
 }
 
 /*
- * TEST 8 - dm.trySetValue returns a catena::Exception_With_Status.
+ * TEST 7 - dm.trySetValue returns a catena::Exception_With_Status.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrTryReturnCatena) {
     initPayload(0, {});
@@ -243,7 +228,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrTryReturnCatena) {
 }
 
 /*
- * TEST 9 - dm.trySetValue throws a catena::Exception_With_Status.
+ * TEST 8 - dm.trySetValue throws a catena::Exception_With_Status.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrTryThrowCatena) {
     initPayload(0, {});
@@ -260,7 +245,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrTryThrowCatena) {
 }
 
 /*
- * TEST 10 - dm.trySetValue throws a std::runtime_error.
+ * TEST 9 - dm.trySetValue throws a std::runtime_error.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrTryThrowUnknown) {
     initPayload(0, {});
@@ -273,7 +258,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrTryThrowUnknown) {
 }
 
 /*
- * TEST 11 - dm.commitSetValue returns a catena::Exception_With_Status.
+ * TEST 10 - dm.commitSetValue returns a catena::Exception_With_Status.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitReturnCatena) {
     initPayload(0, {});
@@ -290,7 +275,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitReturnCatena) {
 }
 
 /*
- * TEST 12 - dm.commitSetValue throws a catena::Exception_With_Status.
+ * TEST 11 - dm.commitSetValue throws a catena::Exception_With_Status.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitThrowCatena) {
     initPayload(0, {});
@@ -308,7 +293,7 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitThrowCatena) {
 }
 
 /*
- * TEST 13 - dm.commitSetValue throws a std::runtime_error.
+ * TEST 12 - dm.commitSetValue throws a std::runtime_error.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
     initPayload(0, {});
@@ -320,3 +305,35 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
     // Calling proceed and testing the output
     testCall();
 }
+
+/*
+ * TEST 13 - Endpoint setup with an invalid slot.
+ */
+TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlotSetup) {
+    slot_ = dms_.size();
+    initPayload(slot_, {});
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 14 - Endpoint setup with valid slot.
+ */
+TEST_F(RESTMultiSetValueTests, MultiSetValue_ValidSlotSetup) {
+    slot_ = 0;
+    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(slot_));
+    endpoint_.reset(makeOne());
+    ASSERT_TRUE(endpoint_) << "Endpoint should be created successfully for slot 0";
+    ASSERT_TRUE(dms_.find(slot_) != dms_.end()) << "Slot 0 should exist in device map";
+    EXPECT_NO_THROW({
+        auto device = dms_[slot_];
+        EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
+    }) << "Accessing device at slot 0 should not throw";
+}
+

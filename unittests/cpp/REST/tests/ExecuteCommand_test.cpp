@@ -53,32 +53,20 @@ using namespace catena::REST;
 class RESTExecuteCommandTests : public RESTEndpointTest {
   protected:
 
-    // Set up and tear down Google Logging
     static void SetUpTestSuite() {
         absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
         Logger::init("RESTExecuteCommandTest");
     }
 
-    static void TearDownTestSuite() {
-    }
+    static void TearDownTestSuite() {}
 
-    /*
-     * Sets default expectations for hasField("respond").
-     */
     RESTExecuteCommandTests() : RESTEndpointTest() {
         EXPECT_CALL(context_, hasField("respond")).WillRepeatedly(testing::Invoke([this]() { return respond_; }));
-         // Default expectations for the device model 1 (should not be called).
         EXPECT_CALL(dm1_, getCommand(testing::An<const std::string&>(), testing::_, testing::_)).Times(0);
     }
 
-    /*
-     * Creates an ExecuteCommand handler object.
-     */
     ICallData* makeOne() override { return ExecuteCommand::makeOne(serverSocket_, context_, dms_); }
 
-    /*
-     * Streamlines the creation of endpoint input. 
-     */
     void initPayload(uint32_t slot, const std::string& oid, const std::string& value, bool respond = true) {
         slot_ = slot;
         fqoid_ = oid;
@@ -87,34 +75,22 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
         respond_ = respond;
     }
 
-    /*
-    * Adds a response to the expected values.
-    */
     void expResponse(const std::string& stringVal) {
         expVals_.push_back(st2138::CommandResponse());
         expVals_.back().mutable_response()->set_string_value(stringVal);
     }
 
-    /* 
-    * Adds an exception to the expected values.
-    */
     void expException(const std::string& type, const std::string& details) {
         expVals_.push_back(st2138::CommandResponse());
         expVals_.back().mutable_exception()->set_type(type);
         expVals_.back().mutable_exception()->set_details(details);
     }
 
-    /*
-    * Adds a no_response to the expected values.
-    */
     void expNoResponse() {
         expVals_.push_back(st2138::CommandResponse());
         expVals_.back().mutable_no_response();
     }
-    
-    /*
-     * Calls proceed and tests the response.
-     */
+
     void testCall() {
         endpoint_->proceed();
         std::vector<std::string> jsonBodies;
@@ -125,7 +101,6 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
                 ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
             }
         }
-        // Response format based on stream or unary.
         if (stream_) {
             EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, jsonBodies));
         } else {
@@ -133,12 +108,9 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
         }
     }
 
-    // in variables
     st2138::Value inVal_;
     bool respond_ = false;
-    // Expected variables
     std::vector<st2138::CommandResponse> expVals_;
-
     std::unique_ptr<MockParam> mockCommand_ = std::make_unique<MockParam>();
     std::unique_ptr<MockCommandResponder> mockResponder_ = std::make_unique<MockCommandResponder>();
 };
@@ -490,21 +462,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
 }
 
 /*
- * TEST 13 - Endpoint setup with invalid slot value.
- */
-TEST_F(RESTExecuteCommandTests, ExecuteCommand_ErrInvalidSlotSetup) {
-    slot_ = 999;
-    initPayload(slot_, "test_command", "test_value", true);
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
-    // Setting expectations
-    EXPECT_CALL(dm0_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    // Calling proceed and testing the output
-    testCall();
-}
-
-/*
- * TEST 14 - ExecuteCommand fails to parse the json body.
+ * TEST 13 - ExecuteCommand fails to parse the json body.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_InvalidJsonBody) {
     expRc_ = catena::exception_with_status("Failed to parse JSON body", catena::StatusCode::INVALID_ARGUMENT);
@@ -516,7 +474,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_InvalidJsonBody) {
 }
 
 /*
- * TEST 15 - getCommand does not find a command.
+ * TEST 14 - getCommand does not find a command.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
     expRc_ = catena::exception_with_status("Command not found", catena::StatusCode::INVALID_ARGUMENT);
@@ -531,7 +489,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
 }
 
 /*
- * TEST 16 - getCommand throws a catena::exception_with_status.
+ * TEST 15 - getCommand throws a catena::exception_with_status.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
     expRc_ = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
@@ -546,7 +504,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
 }
 
 /*
- * TEST 17 - getCommand throws an std::runtime error.
+ * TEST 16 - getCommand throws an std::runtime error.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -558,7 +516,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandThrowUnknown) {
 }
 
 /*
- * TEST 18 - executeCommand returns a nullptr.
+ * TEST 17 - executeCommand returns a nullptr.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandIllegalState) {
     expRc_ = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
@@ -577,7 +535,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandIllegalState) {
 }
 
 /*
- * TEST 19 - executeCommand returns a catena::exception_with_status.
+ * TEST 18 - executeCommand returns a catena::exception_with_status.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
     expRc_ = catena::exception_with_status("", catena::StatusCode::PERMISSION_DENIED);
@@ -598,7 +556,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
 }
 
 /*
- * TEST 20 - executeCommand throws a catena::exception_with_status.
+ * TEST 19 - executeCommand throws a catena::exception_with_status.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
     expRc_ = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
@@ -618,7 +576,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
 }
 
 /*
- * TEST 21 - executeCommand returns an std::runtime_error.
+ * TEST 20 - executeCommand returns an std::runtime_error.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -635,7 +593,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
 }
 
 /*
- * TEST 22 - getNext throws a catena::exception_with_status.
+ * TEST 21 - getNext throws a catena::exception_with_status.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
     expRc_ = catena::exception_with_status("Threw error", catena::StatusCode::INVALID_ARGUMENT);
@@ -661,7 +619,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
 }
 
 /*
- * TEST 23 - getNext throws a std::runtime_error.
+ * TEST 22 - getNext throws a std::runtime_error.
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -681,4 +639,33 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
     EXPECT_CALL(*mockResponder_, hasMore()).Times(1).WillOnce(testing::Return(true));
     // Calling proceed and testing the output
     testCall();
+}
+
+/*
+ * TEST 23 - Endpoint setup with invalid slot value.
+ */
+TEST_F(RESTExecuteCommandTests, ExecuteCommand_ErrInvalidSlotSetup) {
+    slot_ = dms_.size();
+    initPayload(slot_, "test_command", "test_value", false);
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 24 - Endpoint setup with valid slot value.
+ */
+TEST_F(RESTExecuteCommandTests, ExecuteCommand_ValidSlotSetup) {
+    slot_ = 0;
+    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(slot_));
+    endpoint_.reset(makeOne());
+    ASSERT_TRUE(endpoint_) << "Endpoint should be created successfully for slot 0";
+    ASSERT_TRUE(dms_.find(slot_) != dms_.end()) << "Slot 0 should exist in device map";
+    EXPECT_NO_THROW({
+        auto device = dms_[slot_];
+        EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
+    }) << "Accessing device at slot 0 should not throw";
 }

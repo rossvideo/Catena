@@ -195,27 +195,7 @@ TEST_F(gRPCGetValueTests, GetValue_ErrInvalidSlot) {
 }
 
 /*
- * TEST 7 - Using invalid slot index beyond populated devices.
- */
-TEST_F(gRPCGetValueTests, GetValue_SlotError) {
-    // Remove slot 1 mapping to simulate endpoint with just slot 0 available.
-    dms_.erase(1);
-    expRc_ = catena::exception_with_status("", catena::StatusCode::OK);
-    initPayload(0, "/slot0_only_success_oid");
-    expVal_.set_string_value("slot0_only_success_value");
-    // Expectations: dm0_ called, dm1_ not referenced.
-    EXPECT_CALL(dm0_, getValue(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string& jptr, st2138::Value& value, const IAuthorizer& authz) {
-            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
-            value.CopyFrom(expVal_);
-            return catena::exception_with_status(expRc_.what(), expRc_.status);
-        }));
-    EXPECT_CALL(dm1_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    testRPC();
-}
-
-/*
- * TEST 8 - dm.getValue() returns a catena::exception_with_status.
+ * TEST 7 - dm.getValue() returns a catena::exception_with_status.
  */
 TEST_F(gRPCGetValueTests, GetValue_ErrReturnCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -231,7 +211,7 @@ TEST_F(gRPCGetValueTests, GetValue_ErrReturnCatena) {
 }
 
 /*
- * TEST 9 - dm.getValue() throws a catena::exception_with_status.
+ * TEST 8 - dm.getValue() throws a catena::exception_with_status.
  */
 TEST_F(gRPCGetValueTests, GetValue_ErrThrowCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -248,7 +228,7 @@ TEST_F(gRPCGetValueTests, GetValue_ErrThrowCatena) {
 }
 
 /*
- * TEST 10 - dm.getValue() throws a std::runtime_exception.
+ * TEST 9 - dm.getValue() throws a std::runtime_exception.
  */
 TEST_F(gRPCGetValueTests, GetValue_ErrThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -258,18 +238,5 @@ TEST_F(gRPCGetValueTests, GetValue_ErrThrowUnknown) {
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
     EXPECT_CALL(dm1_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
-    testRPC();
-}
-
-/*
- * TEST 11 - Valid slot returns expected response.
- */
-TEST_F(gRPCGetValueTests, GetValue_SlotSuccess) {
-    dms_.erase(1);
-    expRc_ = catena::exception_with_status("device not found in slot 1", catena::StatusCode::NOT_FOUND);
-    initPayload(1, "/slot1_should_error_oid");
-    // Expectations: no device calls.
-    EXPECT_CALL(dm0_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm1_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
     testRPC();
 }

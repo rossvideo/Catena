@@ -148,3 +148,15 @@ TEST_F(RESTSetValueTests, SetValue_ErrInvalidSlot) {
     // Calling proceed and testing the output
     testCall();
 }
+
+/*
+ * TEST 5 - Endpoint setup with valid slot (construction only, no proceed)
+ */
+TEST_F(RESTSetValueTests, SetValue_ValidSlotSetup) {
+    slot_ = 0;
+    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(slot_));
+    endpoint_.reset(makeOne());
+    ASSERT_TRUE(endpoint_);
+    ASSERT_TRUE(dms_.find(slot_) != dms_.end());
+    EXPECT_NO_THROW({ auto &dev = dms_.at(slot_); (void)dev; });
+}

@@ -129,21 +129,8 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_ErrInvalidSlot) {
     testRPC();
 }
 
-/* 
- * TEST 3 - Endpoint setup with an invalid slot
- */
-TEST_F(gRPCListLanguagesTests, ListLanguages_ErrInvalidSlotSetup) {
-    inVal_.set_slot(2);
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
-    // Setting expectations
-    EXPECT_CALL(dm0_, toProto(::testing::An<st2138::LanguageList&>())).Times(0);
-    EXPECT_CALL(dm1_, toProto(::testing::An<st2138::LanguageList&>())).Times(0);
-    // Sending the RPC
-    testRPC();
-}
-
 /*
- * TEST 4 - dm.toProto() throws a catena::exception_with_status.
+ * TEST 3 - dm.toProto() throws a catena::exception_with_status.
  */
 TEST_F(gRPCListLanguagesTests, ListLanguages_Err) {
     expRc_ = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);

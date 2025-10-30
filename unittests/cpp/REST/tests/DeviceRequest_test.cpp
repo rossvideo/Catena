@@ -242,35 +242,6 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
     testCall();
 }
 
-// Test 3.6: Test endpoint setup with a valid slot
-TEST_F(RESTDeviceRequestTests, endpointSetupValid) {
-    slot_ = 0; 
-
-    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(0));
-    endpoint_.reset(makeOne());
-    ASSERT_TRUE(endpoint_) << "Endpoint should be created successfully";
-    EXPECT_TRUE(dms_.find(0) != dms_.end());
-
-    // Test that endpoint can access the device successfully
-    EXPECT_NO_THROW({
-        auto device = dms_[0];
-        EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
-    }) << "Slot 0 should pass validation";
-}
-
-// Test 3.7: Test endpoint setup with an invalid slot
-TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrInvalidSlotSetup) {
-    slot_ = 999;
-
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
-
-    // No device serializer should be called for invalid slot
-    EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
-    EXPECT_CALL(dm1_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
-    // Calling proceed and testing the output
-    testCall();
-}
-
 // Test 3.2: Test proceed with authz enabled and an invalid token.
 TEST_F(RESTDeviceRequestTests, DeviceRequest_AuthzInvalid) {
     expRc_ = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
@@ -308,6 +279,33 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_GetSerializerThrowUnknown) {
     // Setting expectations
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_))
         .Times(1).WillOnce(testing::Throw(42));
+    // Calling proceed and testing the output
+    testCall();
+}
+
+// Test 3.6: Test endpoint setup with a valid slot
+TEST_F(RESTDeviceRequestTests, endpointSetupValid) {
+    slot_ = 0; 
+    // Setting expectations
+    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(0));
+    endpoint_.reset(makeOne());
+    ASSERT_TRUE(endpoint_) << "Endpoint should be created successfully";
+    EXPECT_TRUE(dms_.find(0) != dms_.end());
+
+    EXPECT_NO_THROW({
+        auto device = dms_[0];
+        EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
+    }) << "Slot 0 should pass validation";
+}
+
+// Test 3.7: Test endpoint setup with an invalid slot (boundary = dms_.size())
+TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrInvalidSlotSetup) {
+    slot_ = dms_.size();
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(slot_));
+    EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
     // Calling proceed and testing the output
     testCall();
 }

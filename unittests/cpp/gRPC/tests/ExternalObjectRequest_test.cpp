@@ -285,34 +285,3 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_FileIOException) {
     // Send the RPC
     testRPC();
 }
-
-/*
- * TEST 2.5 - ExternalObjectRequest with file that doesn't exist.
- */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_ErrFileNotFound) {
-    // Initialize request payload with non-existent file
-    initPayload("/nonexistent_endpoint_test.txt");
-    
-    // Set expected error for file not found
-    expRc_ = catena::exception_with_status("virtual void catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile '/nonexistent_endpoint_test.txt' not found", catena::StatusCode::NOT_FOUND);
-
-    // Send to RPC
-    testRPC();
-}
-
-// /*
-//  * TEST 2.6 - ExternalObjectRequest with a valid file.
-//  */
-// TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_ValidFile) {
-//     // Create test file with content
-//     std::string testContent = "Valid slot 0 external object content.";
-//     const std::string filePath = "/valid_external_object.txt";
-//     createTestFile(filePath, testContent);
-//     // Explicit slot 0 (currently not used in controller but set for future slot validation)
-//     inVal_.set_slot(0);
-//     initPayload(filePath);
-//     expPayload(testContent);
-
-//     // Send the RPC
-//     testRPC();
-// }

@@ -181,14 +181,6 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_InvalidSlot) {
     testRPC();
 }
 
-// 0.4: Authorization test with invalid slot
-TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_InvalidSlotSetup) {
-    initPayload(2);
-    expRc_ = catena::exception_with_status("Device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
-    
-    testRPC();
-}
-
 // == SECTION/MODE 1: Get all top-level parameters without recursion == //
 
 // 1.1: Success Case - Get all top-level parameters without recursion

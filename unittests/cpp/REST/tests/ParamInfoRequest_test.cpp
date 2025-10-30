@@ -807,16 +807,31 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_catchUnknownException) {
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
 }
 
-// Test 4.4: Endpoint setup with invalid slots
-TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_invalidSlotsSetup) {
-    slot_ = 2;
+// Test 4.4: Endpoint setup with invalid slot (boundary)
+TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_invalidSlotSetup) {
+    slot_ = dms_.size();
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
     // Setting expectations
-    EXPECT_CALL(dm0_, getTopLevelParams(::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm1_, getTopLevelParams(::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm0_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(slot_));
+    EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getTopLevelParams(testing::_, testing::_)).Times(0);
+    EXPECT_CALL(dm0_, getParam(testing::An<const std::string&>(), testing::_, testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getParam(testing::An<const std::string&>(), testing::_, testing::_)).Times(0);
     endpoint_->proceed();
-    // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
 }
+
+// Test 4.5: Endpoint setup with valid slot (construction only, no proceed)
+TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_ValidSlotSetup) {
+    slot_ = 0;
+    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(slot_));
+    endpoint_.reset(makeOne());
+    ASSERT_TRUE(endpoint_) << "Endpoint should be created successfully for slot 0";
+    ASSERT_TRUE(dms_.find(slot_) != dms_.end()) << "Slot 0 should exist in device map";
+    EXPECT_NO_THROW({
+        auto device = dms_[slot_];
+        EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
+    }) << "Accessing device at slot 0 should not throw";
+}
+
+

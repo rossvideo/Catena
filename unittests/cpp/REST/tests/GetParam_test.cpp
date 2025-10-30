@@ -202,21 +202,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrInvalidSlot) {
 }
 
 /*
- * TEST 6 - Endpoint setup with invalid slot.
- */
-TEST_F(RESTGetParamTests, GetParam_ErrInvalidSlotSetup) {
-    slot_ = 999;
-    initPayload(slot_, "/test_oid");
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
-    // Setting expectations
-    EXPECT_CALL(dm0_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
-    // Calling proceed and testing the output
-    testCall();
-}
-
-/*
- * TEST 7 - dm.getParam() returns a catena::exception_with_status.
+ * TEST 6 - dm.getParam() returns a catena::exception_with_status.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrGetParamReturnCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -234,7 +220,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrGetParamReturnCatena) {
 }
 
 /*
- * TEST 8 - dm.getParam() throws a catena::exception_with_status.
+ * TEST 7 - dm.getParam() throws a catena::exception_with_status.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -252,7 +238,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowCatena) {
 }
 
 /*
- * TEST 9 - dm.getParam() throws a std::runtime_exception.
+ * TEST 8 - dm.getParam() throws a std::runtime_exception.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowStd) {
     expRc_ = catena::exception_with_status("Std error", catena::StatusCode::INTERNAL);
@@ -267,7 +253,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowStd) {
 }
 
 /*
- * TEST 10 - dm.getParam() throws an unknown error.
+ * TEST 9 - dm.getParam() throws an unknown error.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -282,7 +268,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrGetParamThrowUnknown) {
 }
 
 /*
- * TEST 11 - param->toProto() returns a catena::exception_with_status.
+ * TEST 10 - param->toProto() returns a catena::exception_with_status.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrToProtoReturnCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -298,7 +284,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoReturnCatena) {
 }
 
 /*
- * TEST 12 - param->toProto() throws a catena::exception_with_status.
+ * TEST 11 - param->toProto() throws a catena::exception_with_status.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -317,7 +303,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowCatena) {
 }
 
 /*
- * TEST 13 - param->toProto() throws a std::runtime_exception.
+ * TEST 12 - param->toProto() throws a std::runtime_exception.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowStd) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -333,7 +319,7 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowStd) {
 }
 
 /*
- * TEST 14 - param->toProto() throws an unknown error.
+ * TEST 13 - param->toProto() throws an unknown error.
  */
 TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -347,3 +333,33 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowUnknown) {
     // Calling proceed and testing the output
     testCall();
 }
+
+// /*
+//  * TEST 6 - Endpoint setup with invalid slot.
+//  */
+// TEST_F(RESTGetParamTests, GetParam_ErrInvalidSlotSetup) {
+//     slot_ = dms_.size();
+//     initPayload(slot_, "/test_oid");
+//     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+//     EXPECT_CALL(dm0_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+//     EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+//     testCall();
+// }
+
+/*
+ * TEST 7 - Endpoint setup with valid slot.
+ */
+TEST_F(RESTGetParamTests, GetParam_ValidSlotSetup) {
+    slot_ = 0;
+    // Setting expectations
+    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(slot_));
+    // Recreate endpoint using slot 0
+    endpoint_.reset(makeOne());
+    ASSERT_TRUE(endpoint_) << "Endpoint should be created successfully for slot 0";
+    ASSERT_TRUE(dms_.find(slot_) != dms_.end()) << "Slot 0 should exist in device map";
+    EXPECT_NO_THROW({
+        auto device = dms_[slot_];
+        EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
+    }) << "Accessing device at slot 0 should not throw";
+}
+

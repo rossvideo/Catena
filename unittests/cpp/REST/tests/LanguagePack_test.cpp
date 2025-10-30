@@ -673,49 +673,30 @@ TEST_F(RESTLanguagePackTests, LanguagePack_DELETEErrThrowUnknown) {
 }
 
 /*
- * TEST 4.7 - Test endpoint setup with different slot values
+ * TEST 4.7 - Endpoint setup with invalid slot value.
  */
-TEST_F(RESTLanguagePackTests, endpointSetup) {
-
-    // Testing with valid slot
-    {
-        slot_ = 0; 
-
-        EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(0));
-        endpoint_.reset(makeOne());
-        ASSERT_TRUE(endpoint_) << "Endpoint should be created successfully";
-        EXPECT_TRUE(dms_.find(0) != dms_.end());
-
-        // Test that endpoint can access the device successfully
-        EXPECT_NO_THROW({
-            auto device = dms_[0];
-            EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
-        }) << "Slot 0 should pass validation";
-    }
-
-    // Testing with invalid slot
-    {
-        slot_ = 999;
-        
-        expRc_ = catena::exception_with_status("device not found in slot 999", catena::StatusCode::NOT_FOUND);
-        EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(999));
-        
-        // No device serializer should be called for invalid slot
-        EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
-        EXPECT_CALL(dm1_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
-        
-        endpoint_.reset(makeOne());
-        endpoint_->proceed();
-        std::string response = readResponse();
-        std::cout << "Actual response: " << response << std::endl;
-        
-        // Check if response contains the expected error message
-        EXPECT_FALSE(response.find("device not found in slot 999") != std::string::npos) 
-            << "Response should contain 'device not found in slot 999'";
-            
-        // Check for HTTP 404 status
-        EXPECT_FALSE(response.find("404") != std::string::npos) 
-            << "Response should contain HTTP 404 status";
-    }
+TEST_F(RESTLanguagePackTests, LanguagePack_ErrInvalidSlotSetup) {
+    slot_ = dms_.size();
+    initPayload(slot_, "tl");
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations.
+    EXPECT_CALL(dm0_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
 }
 
+/*
+ * TEST 4.8 - Endpoint setup with valid slot.
+ */
+TEST_F(RESTLanguagePackTests, LanguagePack_ValidSlotSetup) {
+    slot_ = 0;
+    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(slot_));
+    endpoint_.reset(makeOne());
+    ASSERT_TRUE(endpoint_) << "Endpoint should be created successfully for slot 0";
+    ASSERT_TRUE(dms_.find(slot_) != dms_.end()) << "Slot 0 should exist in device map";
+    EXPECT_NO_THROW({
+        auto device = dms_[slot_];
+        EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
+    }) << "Accessing device at slot 0 should not throw";
+}
