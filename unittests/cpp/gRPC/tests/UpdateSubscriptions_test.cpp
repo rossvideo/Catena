@@ -396,7 +396,7 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_RemoveThrowCatena) {
     testRPC();
 }
 
-// 2.5 Error Case - UpdateSubscriptions add subscription throws std::runtime_error.
+// 2.5: Error Case - UpdateSubscriptions add subscription throws std::runtime_error.
 TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_AddThrowUnknown) {
     initPayload(0, {"errParam", "param1"}, {});
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
