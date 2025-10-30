@@ -19,11 +19,6 @@ using catena::REST::ServiceImpl;
 
 using catena::REST::Connect;
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/tcp.h>
-#include <netinet/in.h>
-
 // Defining the port flag from SharedFlags.h
 ABSL_FLAG(uint16_t, port, 443, "Catena REST service port");
 
@@ -95,7 +90,7 @@ void ServiceImpl::run() {
         // Waiting for a connection.
         tcp::socket socket(io_context_);
         acceptor_.accept(socket);
-    
+         // Once a connection is made, increment activeRequests and handle async.
         {
             std::lock_guard<std::mutex> lock(activeRequestMutex_);
             activeRequests_ += 1;
