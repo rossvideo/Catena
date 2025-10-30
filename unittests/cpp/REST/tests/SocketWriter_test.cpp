@@ -197,7 +197,6 @@ TEST_F(RESTSocketWriterTests, SocketWriter_BufferErrEnd) {
     EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
-
 /*
  * ============================================================================
  *                               SSEWriter tests
@@ -309,4 +308,42 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteErrEnd) {
 
     // Reading from clientSocket_ and checking the response.
     EXPECT_EQ(readResponse(), expectedSSEResponse(rc, msgs));
+}
+
+/* 
+ * TEST 6 - SocketWriter handles graceful shutdown when client disconnects.
+ * This test verifies that the bug fix properly handles socket write errors
+ * when the client disconnects unexpectedly. Tests that write errors don't
+ * cause crashes and are handled gracefully without throwing exceptions.
+ */
+TEST_F(RESTSocketWriterTests, GracefulShutdownOnClientDisconnect) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    st2138::Value msg1;
+    msg1.set_string_value("Test string 1");
+
+    // Initializing SocketWriter with serverSocket_ and writing first message.
+    SocketWriter writer(serverSocket_, origin_);
+    writer.sendResponse(rc, msg1);
+
+    // Reading first response to verify successful write.
+    std::string jsonBody1;
+    google::protobuf::util::JsonPrintOptions options;
+    auto status = google::protobuf::util::MessageToJsonString(msg1, &jsonBody1, options);
+    EXPECT_EQ(readResponse(), expectedResponse(rc, jsonBody1));
+
+    // Shutdown and close client socket to simulate unexpected client disconnect.
+    boost::system::error_code ec;
+    clientSocket_.shutdown(tcp::socket::shutdown_both, ec);
+    clientSocket_.close();
+
+    // Writing multiple messages to ensure the error is triggered.
+    for (int i = 0; i < 10; i++) {
+        st2138::Value msg;
+        msg.set_string_value("Test string " + std::to_string(i));
+        EXPECT_NO_THROW(writer.sendResponse(rc, msg));
+        // Once socket is closed due to error, subsequent writes should not throw.
+        if (!serverSocket_.is_open()) {
+            break;
+        }
+    }
 }
