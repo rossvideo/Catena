@@ -1,5 +1,5 @@
 #include <SocketWriter.h>
-#include <absl/log/log.h>
+#include <Logger.h>
 using catena::REST::SocketWriter;
 using catena::REST::SSEWriter;
 
