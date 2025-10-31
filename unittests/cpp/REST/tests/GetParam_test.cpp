@@ -334,18 +334,6 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowUnknown) {
     testCall();
 }
 
-// /*
-//  * TEST 6 - Endpoint setup with invalid slot.
-//  */
-// TEST_F(RESTGetParamTests, GetParam_ErrInvalidSlotSetup) {
-//     slot_ = dms_.size();
-//     initPayload(slot_, "/test_oid");
-//     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
-//     EXPECT_CALL(dm0_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
-//     EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
-//     testCall();
-// }
-
 /*
  * TEST 7 - Endpoint setup with valid slot.
  */
@@ -362,4 +350,3 @@ TEST_F(RESTGetParamTests, GetParam_ValidSlotSetup) {
         EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
     }) << "Accessing device at slot 0 should not throw";
 }
-

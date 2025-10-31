@@ -833,5 +833,3 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_ValidSlotSetup) {
         EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
     }) << "Accessing device at slot 0 should not throw";
 }
-
-
