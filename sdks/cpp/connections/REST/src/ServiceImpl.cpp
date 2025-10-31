@@ -19,11 +19,6 @@ using catena::REST::ServiceImpl;
 
 using catena::REST::Connect;
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/tcp.h>
-#include <netinet/in.h>
-
 // Defining the port flag from SharedFlags.h
 ABSL_FLAG(uint16_t, port, 443, "Catena REST service port");
 
