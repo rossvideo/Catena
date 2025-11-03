@@ -194,6 +194,7 @@ TEST_F(gRPCGetParamTests, GetParam_AuthzInvalid) {
     testRPC();
 }
 
+
 /*
  * TEST 5 - GetParam with authz on and invalid token.
  */
