@@ -91,7 +91,6 @@ void ServiceImpl::run() {
         tcp::socket socket(io_context_);
         acceptor_.accept(socket);
         // Once a connection is made, increment activeRequests and handle async.
-
         {
             std::lock_guard<std::mutex> lock(activeRequestMutex_);
             activeRequests_ += 1;
