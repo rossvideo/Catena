@@ -43,6 +43,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+// std
+#include <atomic>
+
 // mock classes
 #include "MockDevice.h"
 #include "MockConnect.h"
@@ -52,12 +55,6 @@
 
 using namespace catena::common;
 using namespace catena::REST;
-
-#include <atomic>
-
-namespace {
-    std::atomic<uint16_t> s_next_port{50050};
-}
 
 class RESTServiceImplTests : public testing::Test {
   protected:
@@ -127,7 +124,11 @@ class RESTServiceImplTests : public testing::Test {
 
     // We really don't care about uninteresting function errors here.
     testing::NiceMock<MockDevice> dm_;
+
+    static std::atomic<uint16_t> s_next_port;
 };
+
+std::atomic<uint16_t> RESTServiceImplTests::s_next_port{50050};
 
 /*
  * TEST 1 - Test ServiceConfig set_dms() and add_dm()

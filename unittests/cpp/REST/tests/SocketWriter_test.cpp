@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the SocketWriter.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/12
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @date 25/11/03
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -336,14 +337,19 @@ TEST_F(RESTSocketWriterTests, GracefulShutdownOnClientDisconnect) {
     clientSocket_.shutdown(tcp::socket::shutdown_both, ec);
     clientSocket_.close();
 
-    // Writing multiple messages to ensure the error is triggered.
+    // Write to server socket after peer closure. Due to TCP buffering, the first write
+    // may succeed (data accepted into OS send buffer) before the peer closure is detected.
+    // Subsequent writes will eventually trigger the error when the OS attempts to flush
+    // the buffer. The error handling in sendResponse() will then close the server socket.
+    bool socketClosed = false;
     for (int i = 0; i < 10; i++) {
         st2138::Value msg;
         msg.set_string_value("Test string " + std::to_string(i));
         EXPECT_NO_THROW(writer.sendResponse(rc, msg));
-        // Once socket is closed due to error, subsequent writes should not throw.
         if (!serverSocket_.is_open()) {
+            socketClosed = true;
             break;
         }
     }
+    EXPECT_TRUE(socketClosed) << "Socket should have been closed after detecting write error";
 }
