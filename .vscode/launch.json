@@ -120,8 +120,7 @@
       "args": [
           "${input:pickCodegenLanguage}",
           "--output",
-          "${workspaceFolder}/tools/codegen",
-          // "${workspaceFolder}/${env:BUILD_TARGET}/${input:pickDeviceModel}/..",
+          "${workspaceFolder}/${env:BUILD_TARGET}/${input:pickDeviceModel}/..",
           "${workspaceFolder}/sdks/cpp/${input:pickDeviceModel}"
       ],
     },
