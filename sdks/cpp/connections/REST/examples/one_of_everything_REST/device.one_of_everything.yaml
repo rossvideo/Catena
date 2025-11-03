@@ -78,19 +78,19 @@ params:
   # This is a struct reference imported from another file and used as a
   # template oid for struct_example and struct_array.
   ref_struct:
-    import: { file: /params/param.ref_struct.yaml }
+    import: { url: params/param.ref_struct.yaml }
 
   # Imports the parameter from the file specified below.
   struct_example:
-    import: { file: /params/param.struct_example.yaml }
+    import: { url: params/param.struct_example.yaml }
 
   # Imports the parameter from the file specified below.
   struct_array:
-    import: { file: /params/param.struct_array.yaml }
+    import: { url: params/param.struct_array.yaml }
 
   # This is a struct param containing examples of various constraints.
   constraint_examples:
-    import: { file: /constraints/param.constraint_examples.yaml }
+    import: { url: constraints/param.constraint_examples.yaml }
 
 menu_groups:
   status:
