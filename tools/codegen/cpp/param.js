@@ -460,7 +460,10 @@ class Param {
       struct_array_values: (typeValue) => {
         let arr = typeValue.struct_values;
         let mappedArr = arr.map((item) => {
-          return `{${valueObject.struct_value(item)}}`;
+          if (item.struct_value == undefined) {
+            throw new Error("struct_array_value must have struct_value field");
+          }
+          return `{${valueObject.struct_value(item.struct_value)}}`;
         });
         return `${mappedArr.join(",")}`;
       },
