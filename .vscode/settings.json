@@ -30,9 +30,6 @@
                 "/sdks/cpp/connections/REST/examples/**/param.*.json"
             ],
             "url": "./smpte/interface/schemata/param.json"
-            // "schema": {
-            //     "$ref": "file://home/abrown/Catena/smpte/interface/schemata/device.json#/$defs/param"
-            // }
         }
     ],
     "clangd.arguments": [
