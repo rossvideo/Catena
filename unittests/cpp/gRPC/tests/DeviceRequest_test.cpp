@@ -374,3 +374,16 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowUnknown) {
     // Sending the RPC
     testRPC();
 }
+
+/*
+ * TEST 13 - DeviceRequest with null socket/device model (should error)
+ */
+TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrNullSocket) {
+    inVal_.Clear(); 
+    expRc_ = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(nullptr));
+    EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC
+    testRPC();
+}
