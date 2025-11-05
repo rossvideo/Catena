@@ -45,6 +45,7 @@
 
 // std
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 using namespace catena::patterns;
@@ -89,6 +90,19 @@ public:
     ConcreteProductB(int value) : _value(value) {}
     int getValue() const override { return _value; }
     static TestProduct* make(int value) { return new ConcreteProductB(value); }
+};
+
+// Product with a maker function that throws an exception
+class ThrowingProduct : public TestProduct {
+private:
+    int _value;
+public:
+    ThrowingProduct(int value) : _value(value) {}
+    int getValue() const override { return _value; }
+    static TestProduct* make(int value) {
+        // Throw an exception to test the catch block in makeProduct
+        throw std::invalid_argument("Maker function threw an exception");
+    }
 };
 
 // Factory type alias for tests
@@ -158,5 +172,30 @@ TEST_F(GenericFactoryTest, CanMake_Exists) {
 TEST_F(GenericFactoryTest, CanMake_NotExists) {
     TestFactory& factory = TestFactory::getInstance();
     EXPECT_FALSE(factory.canMake("test6_nonExistent"));
+}
+
+/**
+ * TEST 7 - Test exception handling when maker function throws an exception
+ */
+TEST_F(GenericFactoryTest, MakeProduct_MakerThrowsException) {
+    TestFactory& factory = TestFactory::getInstance();
+    // Only add if not already registered (since factory is singleton)
+    if (!factory.canMake("test7_throwing")) {
+        factory.addProduct("test7_throwing", ThrowingProduct::make);
+    }
+    
+    // Should throw std::runtime_error (not the original exception)
+    EXPECT_THROW({
+        factory.makeProduct("test7_throwing", 42);
+    }, std::runtime_error);
+    
+    // Verify the exception message contains the original exception message
+    try {
+        factory.makeProduct("test7_throwing", 42);
+    } catch (const std::runtime_error& e) {
+        std::string errorMsg = e.what();
+        EXPECT_NE(errorMsg.find("caught exception"), std::string::npos);
+        EXPECT_NE(errorMsg.find("Maker function threw an exception"), std::string::npos);
+    }
 }
 
