@@ -336,7 +336,6 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrNullSocket) {
     inVal_.Clear();
     dms_.clear(); // No device managers available
-    inVal_.set_slot(0);
     expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
     // Setting expectations
     EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);

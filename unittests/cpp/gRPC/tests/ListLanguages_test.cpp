@@ -150,7 +150,6 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_Err) {
 TEST_F(gRPCListLanguagesTests, ListLanguages_ErrNullSocket) {
     inVal_.Clear();
     dms_.clear(); // No device managers available
-    inVal_.set_slot(0);
     expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
     // Setting expectations
     EXPECT_CALL(dm0_, toProto(::testing::An<st2138::LanguageList&>())).Times(0);

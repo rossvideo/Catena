@@ -185,8 +185,7 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_InvalidSlot) {
 TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_ErrNullSocket) {
     inVal_.Clear();
     dms_.clear(); // No device managers available
-    inVal_.set_slot(0);
-    expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
+    expRc_ = catena::exception_with_status("Device not found in slot 0", catena::StatusCode::NOT_FOUND);
     testRPC();
 }
 

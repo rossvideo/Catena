@@ -177,7 +177,6 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrThrow) {
 TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrNullSocket) {
     inVal_.Clear();
     dms_.clear(); // No device managers available
-    inVal_.set_slot(0);
     expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
     // Setting expectations
     EXPECT_CALL(dm0_, getLanguagePack(::testing::_, ::testing::_)).Times(0);
