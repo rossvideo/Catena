@@ -841,7 +841,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param authz The authorizer object for checking kWrite permissions.
      * @returns catena::exception_with_status.
      */
-    // GCOVR_EXCL_START
+    // LCOV_EXCL_START
     const std::unordered_map<Kind, std::function<catena::exception_with_status(const st2138::Value&, Path::Index, const IAuthorizer&)>> validateSetValueMap_ {
         {Kind::kInt32Value, [this](const st2138::Value& protoVal, Path::Index index, const IAuthorizer& authz) {
             return this->validateSetValue_(this->get(), protoVal.int32_value(), protoVal, index, authz);
@@ -884,7 +884,7 @@ class ParamWithValue : public catena::common::IParam {
             return this->validateSetValue_(this->get(), protoVector, protoVal, index, authz);
         }}
     };
-    // GCOVR_EXCL_STOP
+    // LCOV_EXCL_STOP
 
     /**
      * @brief The parameter's descriptor object.

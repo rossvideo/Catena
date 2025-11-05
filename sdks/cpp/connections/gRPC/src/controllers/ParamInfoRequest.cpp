@@ -213,11 +213,11 @@ void ParamInfoRequest::proceed(bool ok) {
             service_->deregisterItem(this);
             break;
 
-        default:  // GCOVR_EXCL_START
+        default:  // LCOV_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             writer_.Finish(errorStatus, this);
-            // GCOVR_EXCL_STOP
+            // LCOV_EXCL_STOP
     }
 }
 
