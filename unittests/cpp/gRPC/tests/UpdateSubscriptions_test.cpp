@@ -220,6 +220,20 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_InvalidSlot) {
     testRPC();
 }
 
+// 0.3: Error Case - DeviceRequest with null socket/device model (should error).
+TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_ErrNullSocket) {
+    inVal_.Clear();
+    dms_.clear(); // No device managers available
+    inVal_.set_slot(0);
+    expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
+    
+    // Setting expectations.
+    EXPECT_CALL(service_, getSubscriptionManager()).Times(0); // Should not call.
+    
+    // Calling proceed and testing the output
+    testRPC();
+}
+
 /*
  * ============================================================================
  *                            1. Normal Operation Tests

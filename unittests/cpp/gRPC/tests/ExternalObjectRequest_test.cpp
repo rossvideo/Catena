@@ -285,3 +285,15 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_FileIOException) {
     // Send the RPC
     testRPC();
 }
+
+/*
+ * TEST 2.5 - ExternalObjectRequest with a null socket.
+ */
+TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_NullSocket) {
+    inVal_.Clear();
+    dms_.clear(); // No device managers available
+    inVal_.set_slot(0);
+    expRc_ = catena::exception_with_status("virtual void catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile '' not found. HINT: Make sure oid starts with '/' prefix.",catena::StatusCode::NOT_FOUND);
+    // Sending the RPC.
+    testRPC();
+}

@@ -241,3 +241,18 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowUnknown) {
     // Sending the RPC
     testRPC();
 }
+
+/*
+ * TEST 7 - DeviceRequest with null socket/device model (should error).
+ */
+TEST_F(gRPCAddLanguageTests, AddLanguage_ErrNullSocket) {
+    inVal_.Clear();
+    dms_.clear(); // No device managers available
+    inVal_.set_slot(0);
+    expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, addLanguage(::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC
+    testRPC();
+}

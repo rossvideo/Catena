@@ -240,3 +240,18 @@ TEST_F(gRPCGetValueTests, GetValue_ErrThrowUnknown) {
     // Sending the RPC.
     testRPC();
 }
+
+/*
+ * TEST 3 - DeviceRequest with null socket/device model (should error).
+ */
+TEST_F(gRPCGetValueTests, GetValue_ErrNullSocket) {
+    inVal_.Clear();
+    dms_.clear(); // No device managers available
+    inVal_.set_slot(0);
+    expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC.
+    testRPC();
+}
