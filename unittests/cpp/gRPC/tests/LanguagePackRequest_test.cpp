@@ -172,14 +172,21 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrThrow) {
 }
 
 /* 
- * TEST 6 - DeviceRequest with null socket/device model (should error).
+ * TEST 6 - LanguagePackRequest with null slot, should handle as a normal case.
  */
-TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrNullSocket) {
-    inVal_.Clear();
-    dms_.clear(); // No device managers available
-    expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
+TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_NullSlotCase) {
+    initPayload(6767, "en");
+    inVal_.clear_slot();
+    expVal_.set_language(inVal_.language());
+    auto languagePack = expVal_.mutable_language_pack();
+    languagePack->set_name("English");
+    (*languagePack->mutable_words())["greeting"] = "Hello";
     // Setting expectations
-    EXPECT_CALL(dm0_, getLanguagePack(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, getLanguagePack(inVal_.language(), ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const std::string &languageId, st2138::DeviceComponent_ComponentLanguagePack &pack){
+            pack.CopyFrom(expVal_);
+            return catena::exception_with_status(expRc_.what(), expRc_.status);
+        }));
     EXPECT_CALL(dm1_, getLanguagePack(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();

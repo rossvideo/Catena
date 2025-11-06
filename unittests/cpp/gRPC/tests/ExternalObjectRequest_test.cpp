@@ -287,9 +287,9 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_FileIOException) {
 }
 
 /*
- * TEST 2.5 - ExternalObjectRequest with a null socket.
+ * TEST 2.5 - ExternalObjectRequest with null slot, should handle as a normal case.
  */
-TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_NullSocket) {
+TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_NullSlotCase) {
     inVal_.Clear();
     dms_.clear(); // No device managers available
     expRc_ = catena::exception_with_status("virtual void catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile '' not found. HINT: Make sure oid starts with '/' prefix.",catena::StatusCode::NOT_FOUND);

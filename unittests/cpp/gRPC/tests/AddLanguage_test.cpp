@@ -243,14 +243,20 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowUnknown) {
 }
 
 /*
- * TEST 7 - DeviceRequest with null socket/device model (should error).
+ * TEST 10 - AddLanguage with null slot, should handle as a normal case.
  */
-TEST_F(gRPCAddLanguageTests, AddLanguage_ErrNullSocket) {
-    inVal_.Clear();
-    dms_.clear(); // No device managers available
-    expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
-    // Setting expectations
-    EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(0);
+TEST_F(gRPCAddLanguageTests, AddLanguage_NullSlotCase) {
+    initPayload(69, "en", "English", {{"greeting", "Hello"}});
+    inVal_.clear_slot();
+    // Mocking kProcess and kFinish functions
+    EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](st2138::AddLanguagePayload &language, const IAuthorizer& authz) {
+            // Checking that function gets correct inputs.
+            EXPECT_EQ(language.SerializeAsString(), inVal_.SerializeAsString());
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            // Setting the output status and returning true.
+            return catena::exception_with_status(expRc_.what(), expRc_.status);
+        }));
     EXPECT_CALL(dm1_, addLanguage(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();

@@ -331,16 +331,31 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
 }
 
 /*
- * TEST 13 - DeviceRequest with null socket/device model (should error).
+ * TEST 13 - MultiSetValue with null slot, should handle as a normal case.
  */
-TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrNullSocket) {
-    inVal_.Clear();
-    dms_.clear(); // No device managers available
-    expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
+TEST_F(gRPCMultiSetValueTests, MultiSetValue_NullSlotCase) {
+    initPayload(41, {{"/test_oid_1", "test_value_1"},{"/test_oid_2", "test_value_2"}});
+    inVal_.clear_slot();
+    expRc_ = catena::exception_with_status("", catena::StatusCode::OK);
     // Setting expectations
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](st2138::MultiSetValuePayload src, catena::exception_with_status &ans, const IAuthorizer &authz) {
+            // Checking that function gets correct inputs.
+            EXPECT_EQ(src.SerializeAsString(), inVal_.SerializeAsString());
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            // Setting the output status and returning true.
+            ans = catena::exception_with_status(expRc_.what(), expRc_.status);
+            return true;
+        }));
     EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](st2138::MultiSetValuePayload src, const IAuthorizer &authz) {
+            // Checking that function gets correct inputs.
+            EXPECT_EQ(src.SerializeAsString(), inVal_.SerializeAsString());
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            // Setting the output status and returning true.
+            return catena::exception_with_status(expRc_.what(), expRc_.status);
+        }));
     EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();

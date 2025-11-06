@@ -326,12 +326,29 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowUnknown) {
 }
 
 /*
- * TEST 13 - ExternalObjectRequest with a null socket.
+ * TEST 13 - DeviceRequest with null slot, should handle as a normal case.
  */
-TEST_F(gRPCGetParamTests, GetParam_NullSocket) {
-    inVal_.Clear();
-    dms_.clear(); // No device managers available
-    expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
+TEST_F(gRPCGetParamTests, GetParam_NullSlotCase) {
+    initPayload(0, "/test_oid");
+    initexpVal_("/test_oid", "test_value", "test_alias", "Test Param");
+    inVal_.clear_slot();
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(inVal_.oid(), ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+        [this](const std::string &fqoid, catena::exception_with_status &status, const IAuthorizer &authz) {
+            // Checking that function gets correct inputs.
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            status = catena::exception_with_status(expRc_.what(), expRc_.status);
+            return std::move(mockParam);
+        }));
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(expVal_.oid()));
+    EXPECT_CALL(*mockParam, toProto(::testing::An<st2138::Param&>(), ::testing::_)).Times(1).WillOnce(::testing::Invoke(
+        [this](st2138::Param &param, const IAuthorizer &authz) {
+            // Checking that function gets correct inputs.
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            param.CopyFrom(expVal_.param());
+            return catena::exception_with_status(expRc_.what(), expRc_.status);
+        }));
     // Sending the RPC.
     testRPC();
 }

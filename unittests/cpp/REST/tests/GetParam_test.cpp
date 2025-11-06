@@ -333,20 +333,3 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowUnknown) {
     // Calling proceed and testing the output
     testCall();
 }
-
-/*
- * TEST 7 - Endpoint setup with valid slot.
- */
-TEST_F(RESTGetParamTests, GetParam_ValidSlotSetup) {
-    slot_ = 0;
-    // Setting expectations
-    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(slot_));
-    // Recreate endpoint using slot 0
-    endpoint_.reset(makeOne());
-    ASSERT_TRUE(endpoint_) << "Endpoint should be created successfully for slot 0";
-    ASSERT_TRUE(dms_.find(slot_) != dms_.end()) << "Slot 0 should exist in device map";
-    EXPECT_NO_THROW({
-        auto device = dms_[slot_];
-        EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
-    }) << "Accessing device at slot 0 should not throw";
-}

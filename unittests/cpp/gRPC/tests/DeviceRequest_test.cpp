@@ -59,13 +59,7 @@ class gRPCDeviceRequestTests : public GRPCTest {
 
     static void TearDownTestSuite() {
     }
-    
-    void SetUp() override {
-        GRPCTest::SetUp();
-        // Recreate mockSerializer_ for each test
-        mockSerializer_ = std::make_unique<MockDeviceSerializer>();
-    }
-  
+
     /*
      * Creates a DeviceRequest handler object.
      */
@@ -376,15 +370,34 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowUnknown) {
 }
 
 /*
- * TEST 13 - DeviceRequest with null socket/device model (should error)
+ * TEST 13 - DeviceRequest with null slot, should handle as a normal case.
  */
-TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrNullSocket) {
-    inVal_.Clear();
-    dms_.clear(); // No device managers available
-    expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
+TEST_F(gRPCDeviceRequestTests, DeviceRequest_NullSlotCase) {
+    initPayload(67, st2138::Device_DetailLevel::Device_DetailLevel_FULL, {});
+    inVal_.clear_slot();
+    initExpVal(6);
     // Setting expectations
-    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, inVal_.detail_level(), true)).Times(1)
+        .WillOnce(::testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
+            // Making sure the correct values were passed in
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            EXPECT_TRUE(subscribedOids.empty());
+            return std::move(mockSerializer_);
+        }));
+    EXPECT_CALL(*mockSerializer_, getNext()).Times(6)
+        .WillOnce(::testing::Return(expVals_[0]))
+        .WillOnce(::testing::Return(expVals_[1]))
+        .WillOnce(::testing::Return(expVals_[2]))
+        .WillOnce(::testing::Return(expVals_[3]))
+        .WillOnce(::testing::Return(expVals_[4]))
+        .WillOnce(::testing::Return(expVals_[5]));
+    EXPECT_CALL(*mockSerializer_, hasMore()).Times(6)
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(false));
     // Sending the RPC
     testRPC();
 }

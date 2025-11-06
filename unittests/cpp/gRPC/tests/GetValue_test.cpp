@@ -242,14 +242,20 @@ TEST_F(gRPCGetValueTests, GetValue_ErrThrowUnknown) {
 }
 
 /*
- * TEST 3 - DeviceRequest with null socket/device model (should error).
+ * TEST 10 - GetValue with null slot, should handle as a normal case.
  */
-TEST_F(gRPCGetValueTests, GetValue_ErrNullSocket) {
-    inVal_.Clear();
-    dms_.clear(); // No device managers available
-    expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
+TEST_F(gRPCGetValueTests, GetValue_NullSlotCase) {
+    initPayload(420, "/test_oid");
+    inVal_.clear_slot();
+    expVal_.set_string_value("test_value");
     // Setting expectations
-    EXPECT_CALL(dm0_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, getValue(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const std::string& jptr, st2138::Value& value, const IAuthorizer& authz) {
+            // Checking that function gets correct inputs.
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            value.CopyFrom(expVal_);
+            return catena::exception_with_status(expRc_.what(), expRc_.status);
+        }));
     EXPECT_CALL(dm1_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();

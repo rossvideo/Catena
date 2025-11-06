@@ -749,5 +749,4 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_catchUnknownException) {
         }));
 
     testRPC();
-
-    }
+}

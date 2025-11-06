@@ -220,7 +220,23 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_InvalidSlot_StreamEnabled) {
     fqoid_ = "/test_asset";
     slot_ = 0;
     authzEnabled_ = false;
-    expRc_ = catena::exception_with_status("AssetRequest[9999] for file: /test_asset not found", catena::StatusCode::NOT_FOUND);
+    expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 1.12 - GET asset request for a file with an invalid slot and stream disabled.
+ */
+TEST_F(RESTAssetRequestTests, GETAssetRequest_InvalidSlot_StreamDisabled) {
+    // establish expectations
+    stream_ = false;
+    endpoint_.reset(makeOne());
+    method_ = Method_GET;
+    fqoid_ = "/test_asset";
+    slot_ = 0;
+    authzEnabled_ = false;
+    expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
     // Calling proceed and testing the output
     testCall();
 }

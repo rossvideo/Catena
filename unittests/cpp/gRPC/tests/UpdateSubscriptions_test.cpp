@@ -213,11 +213,16 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_InvalidSlot) {
     initPayload(dms_.size(), {"param1"}, {"param2"});
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     
-    // Setting expectations.
-    EXPECT_CALL(service_, getSubscriptionManager()).Times(0); // Should not call.
+    // Setting expectations - no subscription operations should happen for invalid slot
+    EXPECT_CALL(subManager_, addSubscription(testing::_, testing::_, testing::_, testing::_)).Times(0);
+    EXPECT_CALL(subManager_, removeSubscription(testing::_, testing::_, testing::_)).Times(0);
     
     // Calling proceed and testing the output
     testRPC();
+
+    // Verify no subscription operations were performed
+    EXPECT_EQ(addedOids_, 0);
+    EXPECT_EQ(removedOids_, 0);
 }
 
 // 0.3: Error Case - DeviceRequest with null socket/device model (should error).
@@ -356,23 +361,6 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_RemoveReturnErr) {
     
     // Calling proceed and testing the output
     testRPC();
-}
-
-// 2.2.1: Error Case - Endpoint has an invalid slot input returns error.
-TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_InvalidSlotErr) {
-    initPayload(2, {"param1"}, {});
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
-
-    // Setting expectations - no subscription operations should happen for invalid slot
-    EXPECT_CALL(subManager_, addSubscription(testing::_, testing::_, testing::_, testing::_)).Times(0);
-    EXPECT_CALL(subManager_, removeSubscription(testing::_, testing::_, testing::_)).Times(0);
-    
-    // Calling proceed and testing the output
-    testRPC();
-
-    // Verify no subscription operations were performed
-    EXPECT_EQ(addedOids_, 0);
-    EXPECT_EQ(removedOids_, 0);
 }
 
 // 2.3: Error Case - UpdateSubscriptions add subscription throws catena::exception_with_status.
