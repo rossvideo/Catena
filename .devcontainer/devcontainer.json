@@ -33,6 +33,11 @@
   ],
   "remoteUser": "${localEnv:USER}",
   "workspaceFolder": "/home/${localEnv:USER}/Catena",
+  "containerEnv": {
+    // image does not contain locales package, restrict to C locale
+    // otherwise the host locale settings may cause issues
+    "LANG": "C.UTF-8"
+  },
   "customizations": {
     "vscode": {
       "settings": {

@@ -43,6 +43,17 @@ RUN . /root/toolchain.env \
     && apt-get clean \
     && rm -rf /var/cache/apt/archives/ /var/lib/apt/lists/*
 
+# install lcov without relying on apt since the version in the ubuntu repos is outdated
+RUN . /root/toolchain.env \
+    && curl -L --output /tmp/lcov-$LCOV_VERSION.tar.gz https://github.com/linux-test-project/lcov/releases/download/v$LCOV_VERSION/lcov-$LCOV_VERSION.tar.gz \
+    && tar -xzf /tmp/lcov-$LCOV_VERSION.tar.gz -C /tmp/ \
+    && make -C /tmp/lcov-$LCOV_VERSION install \
+    && rm -rf /tmp/lcov-$LCOV_VERSION /tmp/lcov-$LCOV_VERSION.tar.gz \
+    && PERL_MM_USE_DEFAULT=1 cpan install App::cpanminus \
+    && cpanm Capture::Tiny DateTime Date::Parse \
+    && rm -rf /root/.cpanm /root/.cpan \
+    && lcov --version
+
 FROM base AS builder
 
 # Install gRPC
