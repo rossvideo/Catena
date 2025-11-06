@@ -86,7 +86,7 @@ jobs:
           cd ${BUILD_TARGET}
           ninja
 
-      - name: Run Tests
+      - name: Run CPP Unit Tests
         run: |
           ctest --test-dir ${BUILD_TARGET} -R '^common\.' --output-junit /common_test_results.xml
           ctest --test-dir ${BUILD_TARGET} -R '^gRPC\.' --output-junit /grpc_test_results.xml
@@ -111,6 +111,11 @@ jobs:
             cat rest_test_results.xml
           fi
 
+      - name: Run Codegen Unit Tests and Coverage Report
+        run: |
+          cd ${GITHUB_WORKSPACE}/tools/codegen
+          npm install
+          npm test
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -121,13 +126,13 @@ jobs:
             common_test_results.xml
             grpc_test_results.xml
             rest_test_results.xml
+            tools/codegen/junit.xml
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-
-      - name: Generate Coverage Report
+      - name: Generate CPP Coverage Report
         run: |
           gcovr \
-          --lcov=coverage.info \
+          --lcov=gcovr.info \
           --cobertura=coverage.xml \
           --html=index.html \
           --html-details
@@ -136,12 +141,20 @@ jobs:
         id: coverage
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:
-          filename: coverage.xml
+          filename: coverage.xml,tools/codegen/coverage/cobertura-coverage.xml
           badge: true
           format: markdown
           hide_complexity: true
           output: both
-      
+
+      - name: Combined Code Coverage Results
+        run: |
+          lcov --config-file lcov.config \
+               --add-tracefile gcovr.info \
+               --add-tracefile tools/codegen/coverage/lcov.info \
+               --output-file coverage.info
+          genhtml --output-directory coverage_report coverage.info
+
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
         with:
