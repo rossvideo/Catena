@@ -250,6 +250,21 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_InvalidSlot) {
     testCall();
 }
 
+/* 
+ * TEST 0.5 - Subscriptions with an invalid slot and stream enabled.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_InvalidSlotStream) {
+    // Remaking with stream enabled.
+    stream_ = true;
+    endpoint_.reset(makeOne());
+    initPayload(dms_.size());
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations.
+    EXPECT_CALL(context_, subscriptionManager()).Times(0); // Should not call.
+    // Calling proceed and testing the output
+    testCall();
+}
+
 /*
  * ============================================================================
  *                              GET Subscriptions tests

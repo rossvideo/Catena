@@ -150,6 +150,20 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_InvalidSlot) {
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
 }
 
+// Test 0.31: Authorization test with invalid slot with stream response.
+TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_InvalidSlotStream) {
+    // Remaking with stream enabled.
+    stream_ = true;
+    endpoint_.reset(makeOne());
+    slot_ = dms_.size();
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+
+    endpoint_->proceed();
+
+    // Match expected and actual responses
+    EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
+}
+
 // Test 0.4: Error case - catena exception caused by recursion in unary response.
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_UnaryRecursionException) {
     expRc_ = catena::exception_with_status("Recursive parameter info request is not supported with unary response", catena::StatusCode::INVALID_ARGUMENT);
@@ -805,31 +819,4 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_catchUnknownException) {
 
     // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
-}
-
-// Test 4.4: Endpoint setup with invalid slot (boundary)
-TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_invalidSlotSetup) {
-    slot_ = dms_.size();
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
-    // Setting expectations
-    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(slot_));
-    EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_)).Times(0);
-    EXPECT_CALL(dm1_, getTopLevelParams(testing::_, testing::_)).Times(0);
-    EXPECT_CALL(dm0_, getParam(testing::An<const std::string&>(), testing::_, testing::_)).Times(0);
-    EXPECT_CALL(dm1_, getParam(testing::An<const std::string&>(), testing::_, testing::_)).Times(0);
-    endpoint_->proceed();
-    EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
-}
-
-// Test 4.5: Endpoint setup with valid slot (construction only, no proceed)
-TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_ValidSlotSetup) {
-    slot_ = 0;
-    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(slot_));
-    endpoint_.reset(makeOne());
-    ASSERT_TRUE(endpoint_) << "Endpoint should be created successfully for slot 0";
-    ASSERT_TRUE(dms_.find(slot_) != dms_.end()) << "Slot 0 should exist in device map";
-    EXPECT_NO_THROW({
-        auto device = dms_[slot_];
-        EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
-    }) << "Accessing device at slot 0 should not throw";
 }

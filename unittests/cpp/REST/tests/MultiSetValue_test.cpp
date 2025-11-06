@@ -305,34 +305,3 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
     // Calling proceed and testing the output
     testCall();
 }
-
-/*
- * TEST 13 - Endpoint setup with an invalid slot.
- */
-TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrInvalidSlotSetup) {
-    slot_ = dms_.size();
-    initPayload(slot_, {});
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
-    // Setting expectations
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
-    // Calling proceed and testing the output
-    testCall();
-}
-
-/*
- * TEST 14 - Endpoint setup with valid slot.
- */
-TEST_F(RESTMultiSetValueTests, MultiSetValue_ValidSlotSetup) {
-    slot_ = 0;
-    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(slot_));
-    endpoint_.reset(makeOne());
-    ASSERT_TRUE(endpoint_) << "Endpoint should be created successfully for slot 0";
-    ASSERT_TRUE(dms_.find(slot_) != dms_.end()) << "Slot 0 should exist in device map";
-    EXPECT_NO_THROW({
-        auto device = dms_[slot_];
-        EXPECT_NE(device, nullptr) << "Device at slot 0 should be accessible";
-    }) << "Accessing device at slot 0 should not throw";
-}

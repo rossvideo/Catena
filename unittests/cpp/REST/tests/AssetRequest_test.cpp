@@ -209,6 +209,22 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_DNE) {
     testCall();
 }
 
+/*
+ * TEST 1.11 - GET asset request for a file with an invalid slot and stream enabled.
+ */
+TEST_F(RESTAssetRequestTests, GETAssetRequest_InvalidSlot_StreamEnabled) {
+    // establish expectations
+    stream_ = true;
+    endpoint_.reset(makeOne());
+    method_ = Method_GET;
+    fqoid_ = "/test_asset";
+    slot_ = 0;
+    authzEnabled_ = false;
+    expRc_ = catena::exception_with_status("AssetRequest[9999] for file: /test_asset not found", catena::StatusCode::NOT_FOUND);
+    // Calling proceed and testing the output
+    testCall();
+}
+
 /* 
  * TEST 1.2 - GET asset request for a file that exists without authorization.
  */

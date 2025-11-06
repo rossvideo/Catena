@@ -242,15 +242,18 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
     testCall();
 }
 
-// // Test 3.1: Test proceed stream response with an invalid slot.
-// TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
-//     slot_ = dms_.size();
-//     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
-//     // Setting expectations.
-//     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
-//     // Calling proceed and testing the output
-//     testCall();
-// }
+// Test 3.11: Test proceed stream response with an invalid slot.
+TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrInvalidSlotStream) {
+    // Remaking with stream enabled.
+    stream_ = true;
+    endpoint_.reset(makeOne());
+    slot_ = dms_.size();
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations.
+    EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
 
 // Test 3.2: Test proceed with authz enabled and an invalid token.
 TEST_F(RESTDeviceRequestTests, DeviceRequest_AuthzInvalid) {

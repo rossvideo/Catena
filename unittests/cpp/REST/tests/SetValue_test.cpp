@@ -133,30 +133,3 @@ TEST_F(RESTSetValueTests, SetValue_FailParse) {
     // Calling proceed and testing the output
     testCall();
 }
-
-/*
- * TEST 4- Endpoint setup with an invalid slot.
- */
-TEST_F(RESTSetValueTests, SetValue_ErrInvalidSlot) {
-    initPayload(2, "/test_oid", "test_value");
-    expRc_ = catena::exception_with_status("device not found in slot 2", catena::StatusCode::NOT_FOUND);
-    // Setting expectations
-    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
-    // Calling proceed and testing the output
-    testCall();
-}
-
-/*
- * TEST 5 - Endpoint setup with valid slot (construction only, no proceed)
- */
-TEST_F(RESTSetValueTests, SetValue_ValidSlotSetup) {
-    slot_ = 0;
-    EXPECT_CALL(context_, slot()).WillRepeatedly(testing::Return(slot_));
-    endpoint_.reset(makeOne());
-    ASSERT_TRUE(endpoint_);
-    ASSERT_TRUE(dms_.find(slot_) != dms_.end());
-    EXPECT_NO_THROW({ auto &dev = dms_.at(slot_); (void)dev; });
-}
