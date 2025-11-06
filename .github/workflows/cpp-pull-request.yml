@@ -65,8 +65,7 @@ jobs:
       - name: Run Codegen Unit Tests and Coverage Report
         run: |
           cd ${GITHUB_WORKSPACE}/tools/codegen
-          node -v
-          npm -v
+          find .
           npm install
           npm test
 
