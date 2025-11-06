@@ -65,9 +65,8 @@ jobs:
       - name: Run Codegen Unit Tests and Coverage Report
         run: |
           cd ${GITHUB_WORKSPACE}/tools/codegen
-          find .
           npm install
-          npm test
+          npm test -- --ci
 
       - name: Build (incremental, clean only if needed)
         run: |
