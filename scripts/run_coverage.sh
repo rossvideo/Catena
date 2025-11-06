@@ -83,8 +83,7 @@ if [ "$verbose" = true ]; then
 fi
 npm test -- $JEST_ARGS
 
-# convert the jest coverage to absolute paths
-sed -i "s|SF:|SF:$CODEGEN_DIR/|g" coverage/lcov.info
+cd ~/Catena/
 
 lcov --config-file lcov.config \
      --add-tracefile coverage/gcovr.info \
