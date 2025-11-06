@@ -189,7 +189,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalResponse) {
 /*
  * TEST 2 - ExecuteCommand returns two CommandResponse responses.
  */
-TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalResponse) {
+TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalResponseStream) {
     // Remaking with stream enabled.
     stream_ = true;
     endpoint_.reset(makeOne());
