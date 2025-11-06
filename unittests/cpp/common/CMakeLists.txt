@@ -41,6 +41,7 @@ set(TEST_FILES
     NmosNode_test.cpp
     Logger_test.cpp
     GenericFactory_test.cpp
+    EnumDecorator_test.cpp
 )
 
 foreach(test_file ${TEST_FILES})
