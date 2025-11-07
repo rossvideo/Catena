@@ -66,7 +66,13 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}/tools/codegen
           npm install
-          node --experimental-vm-modules ./node_modules/.bin/jest --ci --verbose --no-coverage
+          echo "Testing individual test files first..."
+          echo "Running DeviceModel test:"
+          node --experimental-vm-modules ./node_modules/.bin/jest --no-coverage --runInBand tests/DeviceModel.test.js || echo "DeviceModel test failed"
+          echo "Running serdes test:"
+          node --experimental-vm-modules ./node_modules/.bin/jest --no-coverage --runInBand tests/serdes.test.js || echo "serdes test failed"
+          echo "Running all tests together with debug output:"
+          node --experimental-vm-modules ./node_modules/.bin/jest --ci --verbose --no-coverage --debug
 
       - name: Build (incremental, clean only if needed)
         run: |
