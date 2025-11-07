@@ -66,6 +66,13 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}/tools/codegen
           npm install
+          echo "=== Debugging Jest Config ==="
+          cat jest.config.js
+          echo "=== Testing simple import ==="
+          node --experimental-vm-modules -e "import('./DeviceModel.js').then(m => console.log('DeviceModel import OK:', Object.keys(m))).catch(e => console.error('DeviceModel import failed:', e.message))"
+          echo "=== Testing Jest with explicit config ==="
+          node --experimental-vm-modules ./node_modules/.bin/jest --config ./jest.config.js --verbose --runInBand tests/DeviceModel.test.js 2>&1 || echo "Single test failed"
+          echo "=== Running all tests ==="
           node --experimental-vm-modules ./node_modules/.bin/jest --ci --verbose
 
       - name: Build (incremental, clean only if needed)
