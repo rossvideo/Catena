@@ -63,12 +63,10 @@ jobs:
           submodules: 'recursive'
 
       - name: Run Codegen Unit Tests and Coverage Report
-        env:
-          NODE_OPTIONS: --experimental-vm-modules
         run: |
           cd ${GITHUB_WORKSPACE}/tools/codegen
           npm install
-          npm test -- --ci --verbose
+          node --experimental-vm-modules ./node_modules/.bin/jest --ci --verbose
 
       - name: Build (incremental, clean only if needed)
         run: |
