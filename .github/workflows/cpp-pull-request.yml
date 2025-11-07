@@ -160,7 +160,9 @@ jobs:
                --add-tracefile gcovr.info \
                --add-tracefile tools/codegen/coverage/lcov.info \
                --output-file coverage.info
-          genhtml --output-directory coverage_report coverage.info
+          genhtml --config-file lcov.config \
+                  --output-directory coverage_report \
+                  coverage.info
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
