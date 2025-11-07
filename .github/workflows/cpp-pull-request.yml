@@ -66,6 +66,7 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}/smpte/tools
           echo "=== Installing smpte tools dependencies ==="
+          git fetch origin
           git checkout 8b3d37bf9d5f69379ba67fc48323b90064d92a6f
           npm install
           cd ${GITHUB_WORKSPACE}/tools/codegen
