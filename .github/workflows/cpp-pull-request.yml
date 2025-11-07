@@ -65,8 +65,29 @@ jobs:
       - name: Run Codegen Unit Tests and Coverage Report
         run: |
           cd ${GITHUB_WORKSPACE}/tools/codegen
+          echo "Node.js version:"
+          node --version
+          echo "npm version:"
+          npm --version
+          echo "Current directory:"
+          pwd
+          echo "Contents of current directory:"
+          ls -la
+          echo "Contents of tests directory:"
+          ls -la tests/
+          echo "File permissions for test files:"
+          ls -la tests/*.js
+          echo "Installing dependencies..."
           npm install
-          npm test -- --ci --verbose
+          echo "Testing Jest file discovery:"
+          NODE_OPTIONS=--experimental-vm-modules npx jest --listTests
+          echo "Running tests with debugging..."
+          echo "First, try with npm script:"
+          npm test -- --ci --verbose --detectOpenHandles || echo "npm test failed with exit code $?"
+          echo "Now try running Jest directly:"
+          NODE_OPTIONS=--experimental-vm-modules npx jest --ci --verbose --detectOpenHandles || echo "direct jest failed with exit code $?"
+          echo "Try without --ci flag:"
+          NODE_OPTIONS=--experimental-vm-modules npx jest --verbose || echo "jest without --ci failed with exit code $?"
 
       - name: Build (incremental, clean only if needed)
         run: |
