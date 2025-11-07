@@ -1,7 +1,7 @@
 import { fileURLToPath } from "url";
 import fs from "fs/promises";
 import path from "path";
-import { camelToSnake, deserialize, getDevice, serialize, snakeToCamel } from "../serdes/serdes";
+import { camelToSnake, deserialize, getDevice, serialize, snakeToCamel } from "../serdes/serdes.js";
 
 describe("serdes", () => {
 
