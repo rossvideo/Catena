@@ -160,7 +160,6 @@ jobs:
           name: coverage-report
           path: |
             coverage_report/index.html
-            coverage_report/index.css
             coverage.xml
             coverage.info
             tools/codegen/coverage/cobertura-coverage.xml
