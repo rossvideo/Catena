@@ -62,19 +62,6 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Run Codegen Unit Tests and Coverage Report
-        run: |
-          cd ${GITHUB_WORKSPACE}/smpte/tools
-          echo "=== Installing smpte tools dependencies ==="
-          npm install
-          cd ..
-          ./build-openapi.sh
-          cd ${GITHUB_WORKSPACE}/tools/codegen
-          echo "=== Installing codegen dependencies ==="
-          npm install
-          echo "=== Running tests ==="
-          npm test -- --ci
-
       - name: Build (incremental, clean only if needed)
         run: |
           if [ ! -d ${BUILD_TARGET} ]; then
@@ -123,6 +110,11 @@ jobs:
             echo "------------REST"
             cat rest_test_results.xml
           fi
+
+      - name: Run Codegen Unit Tests and Coverage Report
+        run: |
+          cd ${GITHUB_WORKSPACE}/tools/codegen
+          npm test -- --ci
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
