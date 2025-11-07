@@ -1,9 +1,6 @@
 /** @type {import('jest').Config} */
 export default {
-    preset: null,
-    testEnvironment: 'node',
-    transform: {},
-    collectCoverage: false,
+    collectCoverage: true,
     coverageReporters: [
         ["lcov", { "projectRoot": "../../" }],
         ["cobertura", { "projectRoot": "../../" }],
@@ -11,8 +8,7 @@ export default {
         ["text", { "skipFull": false }]
     ],
     reporters: [
-        "summary",
+        "default",
         "jest-junit",
-        // ["github-actions", {silent: false}],
     ]
 }
