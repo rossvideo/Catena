@@ -181,14 +181,6 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_InvalidSlot) {
     testRPC();
 }
 
-// 0.4: Error Case - DeviceRequest with null socket/device model (should error).
-TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_ErrNullSocket) {
-    inVal_.Clear();
-    dms_.clear(); // No device managers available
-    expRc_ = catena::exception_with_status("Device not found in slot 0", catena::StatusCode::NOT_FOUND);
-    testRPC();
-}
-
 // == SECTION/MODE 1: Get all top-level parameters without recursion == //
 
 // 1.1: Success Case - Get all top-level parameters without recursion

@@ -326,7 +326,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowUnknown) {
 }
 
 /*
- * TEST 13 - DeviceRequest with null slot, should handle as a normal case.
+ * TEST 13 - GetParam with null slot, should handle as a normal case.
  */
 TEST_F(gRPCGetParamTests, GetParam_NullSlotCase) {
     initPayload(0, "/test_oid");

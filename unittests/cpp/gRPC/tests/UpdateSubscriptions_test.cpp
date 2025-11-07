@@ -225,19 +225,6 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_InvalidSlot) {
     EXPECT_EQ(removedOids_, 0);
 }
 
-// 0.3: Error Case - DeviceRequest with null socket/device model (should error).
-TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_ErrNullSocket) {
-    inVal_.Clear();
-    dms_.clear(); // No device managers available
-    expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
-    
-    // Setting expectations.
-    EXPECT_CALL(service_, getSubscriptionManager()).Times(0); // Should not call.
-    
-    // Calling proceed and testing the output
-    testRPC();
-}
-
 /*
  * ============================================================================
  *                            1. Normal Operation Tests
@@ -320,6 +307,33 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_AuthzValid) {
     
     // Calling proceed and testing the output
     testRPC();
+}
+
+// 1.5: Success Case - UpdateSubscriptions null slot case.
+TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_NullSlotCase) {
+    initPayload(1111, {"param1", "param2"}, {});
+    inVal_.clear_slot();
+    
+    // Setting expectations for add subscription operations
+    EXPECT_CALL(subManager_, addSubscription("param1", testing::Ref(dm0_), testing::_, testing::_)).WillOnce(testing::Invoke(
+        [this](const std::string& oid, catena::common::IDevice& dm, catena::exception_with_status& rc, const IAuthorizer& authz) -> bool {
+            addedOids_++;
+            rc = catena::exception_with_status("", catena::StatusCode::OK);
+            return true;
+        }));
+    EXPECT_CALL(subManager_, addSubscription("param2", testing::Ref(dm0_), testing::_, testing::_)).WillOnce(testing::Invoke(
+        [this](const std::string& oid, catena::common::IDevice& dm, catena::exception_with_status& rc, const IAuthorizer& authz) -> bool {
+            addedOids_++;
+            rc = catena::exception_with_status("", catena::StatusCode::OK);
+            return true;
+        }));
+
+    // Calling proceed and testing the output
+    testRPC();
+
+    // Verify subscription operations were called
+    EXPECT_EQ(addedOids_, 2);
+    EXPECT_EQ(removedOids_, 0);
 }
 
 /*

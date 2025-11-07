@@ -290,9 +290,15 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_FileIOException) {
  * TEST 2.5 - ExternalObjectRequest with null slot, should handle as a normal case.
  */
 TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_NullSlotCase) {
-    inVal_.Clear();
-    dms_.clear(); // No device managers available
-    expRc_ = catena::exception_with_status("virtual void catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile '' not found. HINT: Make sure oid starts with '/' prefix.",catena::StatusCode::NOT_FOUND);
-    // Sending the RPC.
+    // Create test file with content
+    std::string testContent = "This is test file content for external object.";
+    createTestFile("/test_file.txt", testContent);
+    
+    // Initialize request payload
+    initPayload("/test_file.txt");
+    inVal_.clear_slot();
+    expPayload(testContent);
+    
+    // Send the RPC
     testRPC();
 }

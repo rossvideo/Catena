@@ -218,7 +218,7 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_InvalidSlot_StreamEnabled) {
     endpoint_.reset(makeOne());
     method_ = Method_GET;
     fqoid_ = "/test_asset";
-    slot_ = 0;
+    slot_ = 99;
     authzEnabled_ = false;
     expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
     // Calling proceed and testing the output
@@ -234,9 +234,9 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_InvalidSlot_StreamDisabled) {
     endpoint_.reset(makeOne());
     method_ = Method_GET;
     fqoid_ = "/test_asset";
-    slot_ = 0;
+    slot_ = 99;
     authzEnabled_ = false;
-    expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
+    expRc_ = catena::exception_with_status("slot 0 not found", catena::StatusCode::NOT_FOUND);
     // Calling proceed and testing the output
     testCall();
 }
