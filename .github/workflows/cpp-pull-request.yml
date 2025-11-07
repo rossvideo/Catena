@@ -140,9 +140,7 @@ jobs:
         run: |
           gcovr \
           --lcov=gcovr.info \
-          --cobertura=coverage.xml \
-          --html=index.html \
-          --html-details
+          --cobertura=coverage.xml
 
       - name: Code Coverage Summary Report
         id: coverage
@@ -169,10 +167,11 @@ jobs:
         with:
           name: coverage-report
           path: |
-            index.html
-            index.css
+            coverage_report/index.html
+            coverage_report/index.css
             coverage.xml
             coverage.info
+            tools/codegen/coverage/cobertura-coverage.xml
           retention-days: 60
 
       # Build PR comment body for coverage
