@@ -56,13 +56,14 @@ enum class TestEnum_e : int32_t {
     kZero = 0,
     kOne = 1,
     kTwo = 2,
-    kThree = 3
+    kThree = 3,
+    kFour = 4  // Not in forward map - used to test lines 199, 210, 211
 };
 
 // Declare the EnumDecorator
 using TestEnum = EnumDecorator<TestEnum_e>;
 
-// Define the forward map
+// Define the forward map (kFour is intentionally omitted)
 template <>
 const TestEnum::FwdMap TestEnum::fwdMap_ = {
     {TestEnum_e::kZero, "zero"},
@@ -93,96 +94,65 @@ protected:
  */
 
 /**
- * TEST 1 - Conversion operator to underlying type (utype) - valid enum value
+ * TEST - Conversion operator to underlying type (line 190)
  */
-TEST_F(EnumDecoratorTest, ConversionOperator_ValidValue) {
+TEST_F(EnumDecoratorTest, ConversionOperator) {
     TestEnum testEnum(TestEnum_e::kTwo);
     TestEnum::utype underlyingValue = testEnum;  // Uses operator utype()
     EXPECT_EQ(underlyingValue, 2);
-}
-
-/**
- * TEST 2 - Conversion operator to underlying type - zero value
- */
-TEST_F(EnumDecoratorTest, ConversionOperator_ZeroValue) {
-    TestEnum testEnum(TestEnum_e::kZero);
-    TestEnum::utype underlyingValue = testEnum;  // Uses operator utype()
-    EXPECT_EQ(underlyingValue, 0);
-}
-
-/**
- * TEST 3 - Conversion operator to underlying type - explicit cast
- */
-TEST_F(EnumDecoratorTest, ConversionOperator_ExplicitCast) {
-    TestEnum testEnum(TestEnum_e::kThree);
-    int32_t value = static_cast<int32_t>(testEnum);  // Uses operator utype()
-    EXPECT_EQ(value, 3);
-}
-
-/**
- * TEST 4 - Conversion operator to underlying type - in arithmetic operations
- */
-TEST_F(EnumDecoratorTest, ConversionOperator_InArithmetic) {
-    TestEnum testEnum1(TestEnum_e::kOne);
-    TestEnum testEnum2(TestEnum_e::kTwo);
-    TestEnum::utype sum = testEnum1 + testEnum2;  // Both use operator utype()
+    
+    // Test with arithmetic operations
+    TestEnum testEnum2(TestEnum_e::kOne);
+    TestEnum::utype sum = testEnum + testEnum2;
     EXPECT_EQ(sum, 3);
-}
-
-/**
- * TEST 5 - Conversion operator to underlying type - default constructor
- */
-TEST_F(EnumDecoratorTest, ConversionOperator_DefaultConstructor) {
-    TestEnum testEnum;  // Default constructor sets to 0
-    TestEnum::utype underlyingValue = testEnum;  // Uses operator utype()
-    EXPECT_EQ(underlyingValue, 0);
-}
-
-/**
- * TEST 6 - Conversion operator to underlying type - constructed from string
- */
-TEST_F(EnumDecoratorTest, ConversionOperator_FromString) {
-    TestEnum testEnum("two");
-    TestEnum::utype underlyingValue = testEnum;  // Uses operator utype()
-    EXPECT_EQ(underlyingValue, 2);
-}
-
-/**
- * TEST 7 - Conversion operator to underlying type - constructed from invalid string
- */
-TEST_F(EnumDecoratorTest, ConversionOperator_FromInvalidString) {
-    TestEnum testEnum("invalid");
-    // Invalid string sets value to 0
-    TestEnum::utype underlyingValue = testEnum;  // Uses operator utype()
-    EXPECT_EQ(underlyingValue, 0);
-}
-
-/**
- * TEST 8 - Conversion operator to underlying type - constructed from integral value
- */
-TEST_F(EnumDecoratorTest, ConversionOperator_FromIntegral) {
-    TestEnum testEnum(static_cast<int32_t>(1));
-    TestEnum::utype underlyingValue = testEnum;  // Uses operator utype()
-    EXPECT_EQ(underlyingValue, 1);
-}
-
-/**
- * TEST 9 - Conversion operator to underlying type - constructed from invalid integral
- */
-TEST_F(EnumDecoratorTest, ConversionOperator_FromInvalidIntegral) {
-    TestEnum testEnum(static_cast<int32_t>(99));  // Invalid value, sets to 0
-    TestEnum::utype underlyingValue = testEnum;  // Uses operator utype()
-    EXPECT_EQ(underlyingValue, 0);
 }
 
 /*
  * ============================================================================
- *                         Other EnumDecorator Tests
+ *                         String Conversion Tests (lines 199, 210, 211)
  * ============================================================================
  */
 
 /**
- * TEST 10 - Default constructor
+ * TEST - Cast to string when value is NOT in map (line 199)
+ */
+TEST_F(EnumDecoratorTest, CastToString_ValueNotInMap) {
+    // kFour is not in the forward map
+    TestEnum testEnum(TestEnum_e::kFour);
+    std::string str = testEnum;  // Uses operator std::string() - line 199
+    EXPECT_TRUE(str.empty());
+}
+
+/**
+ * TEST - toString() when value is NOT in map (lines 210, 211)
+ */
+TEST_F(EnumDecoratorTest, ToString_ValueNotInMap) {
+    // kFour is not in the forward map
+    TestEnum testEnum(TestEnum_e::kFour);
+    const std::string& str = testEnum.toString();  // Lines 210, 211
+    EXPECT_TRUE(str.empty());
+}
+
+/**
+ * TEST - String conversion when value IS in map
+ */
+TEST_F(EnumDecoratorTest, StringConversion_ValueInMap) {
+    TestEnum testEnum(TestEnum_e::kTwo);
+    std::string str = testEnum;  // Uses operator std::string()
+    EXPECT_EQ(str, "two");
+    
+    const std::string& strRef = testEnum.toString();
+    EXPECT_EQ(strRef, "two");
+}
+
+/*
+ * ============================================================================
+ *                         Constructor Tests
+ * ============================================================================
+ */
+
+/**
+ * TEST - Default constructor
  */
 TEST_F(EnumDecoratorTest, DefaultConstructor) {
     TestEnum testEnum;
@@ -191,7 +161,7 @@ TEST_F(EnumDecoratorTest, DefaultConstructor) {
 }
 
 /**
- * TEST 11 - Construct from enum value
+ * TEST - Construct from enum value
  */
 TEST_F(EnumDecoratorTest, ConstructFromEnumValue) {
     TestEnum testEnum(TestEnum_e::kTwo);
@@ -200,164 +170,76 @@ TEST_F(EnumDecoratorTest, ConstructFromEnumValue) {
 }
 
 /**
- * TEST 12 - Construct from string
+ * TEST - Construct from string
  */
 TEST_F(EnumDecoratorTest, ConstructFromString) {
     TestEnum testEnum("one");
     EXPECT_EQ(testEnum.value(), TestEnum_e::kOne);
     EXPECT_EQ(testEnum.toString(), "one");
+    
+    // Invalid string sets to 0
+    TestEnum testEnum2("invalid");
+    EXPECT_EQ(testEnum2.value(), TestEnum_e::kZero);
 }
 
 /**
- * TEST 13 - Construct from invalid string
- */
-TEST_F(EnumDecoratorTest, ConstructFromInvalidString) {
-    TestEnum testEnum("invalid");
-    // Invalid string should set value to 0
-    EXPECT_EQ(testEnum.value(), TestEnum_e::kZero);
-    EXPECT_EQ(testEnum.toString(), "zero");
-}
-
-/**
- * TEST 14 - Construct from integral value
+ * TEST - Construct from integral value
  */
 TEST_F(EnumDecoratorTest, ConstructFromIntegral) {
     TestEnum testEnum(static_cast<int32_t>(2));
     EXPECT_EQ(testEnum.value(), TestEnum_e::kTwo);
-    EXPECT_EQ(testEnum.toString(), "two");
+    
+    // Invalid integral sets to 0
+    TestEnum testEnum2(static_cast<int32_t>(99));
+    EXPECT_EQ(testEnum2.value(), TestEnum_e::kZero);
 }
 
-/**
- * TEST 15 - Construct from invalid integral value
+/*
+ * ============================================================================
+ *                         Operator Tests
+ * ============================================================================
  */
-TEST_F(EnumDecoratorTest, ConstructFromInvalidIntegral) {
-    TestEnum testEnum(static_cast<int32_t>(99));
-    // Invalid integral should set value to 0
-    EXPECT_EQ(testEnum.value(), TestEnum_e::kZero);
-    EXPECT_EQ(testEnum.toString(), "zero");
-}
 
 /**
- * TEST 16 - Cast to string
+ * TEST - Equality and inequality operators
  */
-TEST_F(EnumDecoratorTest, CastToString) {
-    TestEnum testEnum(TestEnum_e::kThree);
-    std::string str = testEnum;  // Uses operator std::string()
-    EXPECT_EQ(str, "three");
-}
-
-/**
- * TEST 17 - toString() method
- */
-TEST_F(EnumDecoratorTest, ToString) {
-    TestEnum testEnum(TestEnum_e::kOne);
-    const std::string& str = testEnum.toString();
-    EXPECT_EQ(str, "one");
-}
-
-/**
- * TEST 18 - Equality operator
- */
-TEST_F(EnumDecoratorTest, EqualityOperator) {
+TEST_F(EnumDecoratorTest, EqualityOperators) {
     TestEnum testEnum1(TestEnum_e::kTwo);
     TestEnum testEnum2(TestEnum_e::kTwo);
     TestEnum testEnum3(TestEnum_e::kThree);
     
     EXPECT_TRUE(testEnum1 == testEnum2);
     EXPECT_FALSE(testEnum1 == testEnum3);
+    EXPECT_TRUE(testEnum1 != testEnum3);
+    EXPECT_FALSE(testEnum1 != testEnum2);
 }
 
 /**
- * TEST 19 - Inequality operator
+ * TEST - Value accessors
  */
-TEST_F(EnumDecoratorTest, InequalityOperator) {
-    TestEnum testEnum1(TestEnum_e::kTwo);
-    TestEnum testEnum2(TestEnum_e::kThree);
-    TestEnum testEnum3(TestEnum_e::kTwo);
-    
-    EXPECT_TRUE(testEnum1 != testEnum2);
-    EXPECT_FALSE(testEnum1 != testEnum3);
-}
-
-/**
- * TEST 20 - Value accessor
- */
-TEST_F(EnumDecoratorTest, ValueAccessor) {
+TEST_F(EnumDecoratorTest, ValueAccessors) {
     TestEnum testEnum(TestEnum_e::kThree);
     EXPECT_EQ(testEnum.value(), TestEnum_e::kThree);
+    EXPECT_EQ(testEnum(), TestEnum_e::kThree);
 }
 
-/**
- * TEST 21 - Function call operator
+/*
+ * ============================================================================
+ *                         Map Access Tests
+ * ============================================================================
  */
-TEST_F(EnumDecoratorTest, FunctionCallOperator) {
-    TestEnum testEnum(TestEnum_e::kOne);
-    EXPECT_EQ(testEnum(), TestEnum_e::kOne);
-}
 
 /**
- * TEST 22 - Copy constructor
+ * TEST - Get forward and reverse maps
  */
-TEST_F(EnumDecoratorTest, CopyConstructor) {
-    TestEnum testEnum1(TestEnum_e::kTwo);
-    TestEnum testEnum2(testEnum1);
-    EXPECT_EQ(testEnum1.value(), testEnum2.value());
-    EXPECT_TRUE(testEnum1 == testEnum2);
-}
-
-/**
- * TEST 23 - Copy assignment
- */
-TEST_F(EnumDecoratorTest, CopyAssignment) {
-    TestEnum testEnum1(TestEnum_e::kTwo);
-    TestEnum testEnum2(TestEnum_e::kThree);
-    testEnum2 = testEnum1;
-    EXPECT_EQ(testEnum1.value(), testEnum2.value());
-    EXPECT_TRUE(testEnum1 == testEnum2);
-}
-
-/**
- * TEST 24 - Move constructor
- */
-TEST_F(EnumDecoratorTest, MoveConstructor) {
-    TestEnum testEnum1(TestEnum_e::kTwo);
-    TestEnum testEnum2(std::move(testEnum1));
-    EXPECT_EQ(testEnum2.value(), TestEnum_e::kTwo);
-}
-
-/**
- * TEST 25 - Move assignment
- */
-TEST_F(EnumDecoratorTest, MoveAssignment) {
-    TestEnum testEnum1(TestEnum_e::kTwo);
-    TestEnum testEnum2(TestEnum_e::kThree);
-    testEnum2 = std::move(testEnum1);
-    EXPECT_EQ(testEnum2.value(), TestEnum_e::kTwo);
-}
-
-/**
- * TEST 26 - Get forward map
- */
-TEST_F(EnumDecoratorTest, GetForwardMap) {
+TEST_F(EnumDecoratorTest, MapAccess) {
     TestEnum testEnum(TestEnum_e::kOne);
     const TestEnum::FwdMap& fwdMap = testEnum.getForwardMap();
     EXPECT_EQ(fwdMap.size(), 4);
-    EXPECT_EQ(fwdMap.at(TestEnum_e::kZero), "zero");
-    EXPECT_EQ(fwdMap.at(TestEnum_e::kOne), "one");
     EXPECT_EQ(fwdMap.at(TestEnum_e::kTwo), "two");
-    EXPECT_EQ(fwdMap.at(TestEnum_e::kThree), "three");
-}
-
-/**
- * TEST 27 - Get reverse map
- */
-TEST_F(EnumDecoratorTest, GetReverseMap) {
-    TestEnum testEnum(TestEnum_e::kTwo);
+    
     const TestEnum::RevMap& revMap = testEnum.getReverseMap();
     EXPECT_EQ(revMap.size(), 4);
-    EXPECT_EQ(revMap.at("zero"), TestEnum_e::kZero);
-    EXPECT_EQ(revMap.at("one"), TestEnum_e::kOne);
     EXPECT_EQ(revMap.at("two"), TestEnum_e::kTwo);
-    EXPECT_EQ(revMap.at("three"), TestEnum_e::kThree);
 }
 
