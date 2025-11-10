@@ -36,7 +36,7 @@
  */
 
 // device model
-#include "device.audiodeck.json.h" 
+#include "device.dashboard_audiodeck.json.h" 
 
 //common
 #include <utils.h>
@@ -82,7 +82,7 @@ std::atomic<bool> globalLoop = true;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
+        LOG(INFO) << "Caught signal " << sig << ", shutting down";
         globalLoop = false;
         if (globalServer != nullptr) {
             globalServer->Shutdown();
@@ -95,13 +95,13 @@ void handle_signal(int sig) {
 void audioDeckUpdateHandler(const std::string& jptr, const IParam* p) {
     Path oid(jptr);
     if (oid.empty()) {
-        DEBUG_LOG << "*** Whole struct array was updated";
+        LOG(INFO) << "*** Whole struct array was updated";
     } else {
         std::size_t index = oid.front_as_index();
         if (index == Path::kEnd) {
-            DEBUG_LOG << "*** Index is \"-\", new element added to struct array";
+            LOG(INFO) << "*** Index is \"-\", new element added to struct array";
         } else {
-            DEBUG_LOG << "*** audio_deck[" << index << "] was updated";
+            LOG(INFO) << "*** audio_deck[" << index << "] was updated";
         }
     }
 }
@@ -132,7 +132,7 @@ void RunRPCServer(std::string addr)
         builder.RegisterService(&service);
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
-        DEBUG_LOG << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
+        LOG(INFO) << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
 
         globalServer = server.get();
 
@@ -144,7 +144,7 @@ void RunRPCServer(std::string addr)
         handlers["audio_deck"] = audioDeckUpdateHandler;
 
         dm.getValueSetByClient().connect([&handlers](const std::string& oid, const IParam* p) {
-            DEBUG_LOG << "signal received: " << oid << " has been changed by client";
+            LOG(INFO) << "signal received: " << oid << " has been changed by client";
 
             Path jptr(oid);
             std::string front = jptr.front_as_string();
@@ -173,18 +173,15 @@ void RunRPCServer(std::string addr)
 
 int main(int argc, char* argv[])
 {
-    Logger::StartLogging(argc, argv);
-
     std::string addr;
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
+    Logger::init("dashboard_audiodeck");
   
     addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
   
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
     
-    // Shutdown Google Logging
-    google::ShutdownGoogleLogging();
     return 0;
 }
