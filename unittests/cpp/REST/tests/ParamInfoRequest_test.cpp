@@ -820,3 +820,16 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_catchUnknownException) {
     // Match expected and actual responses
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
 }
+
+// Test 0.32: Invalid slot with specific fqoid and stream response.
+TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_InvalidSlotFqoidStream) {
+    stream_ = true;
+    slot_ = dms_.size();
+    fqoid_ = "test_param";
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+
+    endpoint_.reset(makeOne());
+    endpoint_->proceed();
+
+    EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
+}

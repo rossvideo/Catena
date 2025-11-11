@@ -210,9 +210,9 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_DNE) {
 }
 
 /*
- * TEST 1.11 - GET asset request for a file with an invalid slot and stream enabled.
+ * TEST 1.11 - GET asset request for a file that does not exist and stream enabled.
  */
-TEST_F(RESTAssetRequestTests, GETAssetRequest_InvalidSlot_StreamEnabled) {
+TEST_F(RESTAssetRequestTests, GETAssetRequest_DNE_StreamEnabled) {
     // establish expectations
     stream_ = true;
     endpoint_.reset(makeOne());
@@ -220,24 +220,7 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_InvalidSlot_StreamEnabled) {
     fqoid_ = "/test_asset";
     slot_ = 99;
     authzEnabled_ = false;
-    expRc_ = catena::exception_with_status("device not found in slot 0", catena::StatusCode::NOT_FOUND);
-    // Calling proceed and testing the output
-    testCall();
-}
-
-/*
- * TEST 1.12 - GET asset request for a file with an invalid slot and stream disabled.
- */
-TEST_F(RESTAssetRequestTests, GETAssetRequest_InvalidSlot_StreamDisabled) {
-    // establish expectations
-    stream_ = false;
-    endpoint_.reset(makeOne());
-    method_ = Method_GET;
-    fqoid_ = "/test_asset";
-    slot_ = 99;
-    authzEnabled_ = false;
-    expRc_ = catena::exception_with_status("slot 0 not found", catena::StatusCode::NOT_FOUND);
-    // Calling proceed and testing the output
+    expRc_ = catena::exception_with_status("AssetRequest[0] for file: /test_asset not found", catena::StatusCode::NOT_FOUND);
     testCall();
 }
 
@@ -283,6 +266,24 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_ExistsDeflate) {
             digestDeflate_, 1014, Scopes().getForwardMap().at(Scopes_e::kMonitor));
 }
 
+/*
+ * TEST 2.01 - POST asset request for a file that does not exist.
+ */
+TEST_F(RESTAssetRequestTests, POSTAssetRequest__DNE) {
+    //establish expectations
+    method_ = Method_POST;
+    fqoid_ = "/test_asset.jpg";
+    slot_ = 9999;
+    authzEnabled_ = true;
+    jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kOperate) + ":w");
+
+    // Setting the expected response
+    expRc_ = catena::exception_with_status("device not found in slot 9999", catena::StatusCode::NOT_FOUND);
+
+    // Calling proceed and testing the output
+    testCall();
+}
+
 /* 
  * TEST 2.1 - POST asset request for a file without authorization.
  */
@@ -304,7 +305,7 @@ TEST_F(RESTAssetRequestTests, POSTAssetRequest_NoAuthz) {
 /*
  * TEST 2.2 - POST asset request for a file that exists with authorization.
  */
-TEST_F(RESTAssetRequestTests, POSTAssetRequest_Exists) {
+TEST_F(RESTAssetRequestTests, POSTAssetRequest_ExistsAuthz) {
     //establish expectations
     method_ = Method_POST;
     fqoid_ = "/" + fileName_;
@@ -322,7 +323,7 @@ TEST_F(RESTAssetRequestTests, POSTAssetRequest_Exists) {
 /*
  * TEST 2.3 - POST asset request for a file that does not exist with authorization.
  */
-TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNE) {
+TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNEAuthz) {
     postAssetRequestTest(st2138::DataPayload::UNCOMPRESSED, "/catena_logo_up.png", payloadUncompressed_,
                 Scopes().getForwardMap().at(Scopes_e::kOperate) + ":w");
     ASSERT_TRUE(std::filesystem::remove(downloadFolder_ + fqoid_));
@@ -385,7 +386,7 @@ TEST_F(RESTAssetRequestTests, PUTAssetRequest_NoAuthz) {
 /*
  * TEST 3.3 - PUT asset request for a file that exists with authorization.
  */
-TEST_F(RESTAssetRequestTests, PUTAssetRequest_Exists) {
+TEST_F(RESTAssetRequestTests, PUTAssetRequest_ExistsAuthz) {
     //establish expectations
     method_ = Method_PUT;
     fqoid_ = "/catena_logo_up.png";
@@ -568,4 +569,14 @@ TEST_F(RESTAssetRequestTests, ExtractPayloadDNE) {
     } catch (const catena::exception_with_status& e) {
         EXPECT_EQ(e.status, catena::StatusCode::NOT_FOUND);
     }
+}
+
+/*
+ * TEST 1.31 - GET asset request for a file that exists with authorization with stream.
+ */
+TEST_F(RESTAssetRequestTests, GETAssetRequest_Exists_StreamEnabled) {
+    stream_ = true;
+    endpoint_.reset(makeOne());
+    getAssetRequestTest(st2138::DataPayload::UNCOMPRESSED, "/" + fileName_, payloadUncompressed_,
+            digestUncompressed_, 1088, Scopes().getForwardMap().at(Scopes_e::kMonitor));
 }

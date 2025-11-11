@@ -671,3 +671,36 @@ TEST_F(RESTLanguagePackTests, LanguagePack_DELETEErrThrowUnknown) {
     // Calling proceed and testing the output
     testCall();
 }
+
+/*
+ * TEST 5.1 - DELETE LanguagePack no device specified in slot.
+ */
+TEST_F(RESTLanguagePackTests, LanguagePack_DELETEInvalidSlot) {
+    expRc_ = catena::exception_with_status("No device specified in slot", catena::StatusCode::NOT_FOUND);
+    initPayload(2, "tl");
+    method_ = Method_DELETE;
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 5.2 - POST LanguagePack no device specified in slot.
+ */
+TEST_F(RESTLanguagePackTests, LanguagePack_POSTInvalidSlot) {
+    expRc_ = catena::exception_with_status("No device specified in slot", catena::StatusCode::NOT_FOUND);
+    initPayload(2, "tl");
+    method_ = Method_POST;
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 5.3 - GET LanguagePack no device specified in slot.
+ */
+TEST_F(RESTLanguagePackTests, LanguagePack_GETInvalidSlot) {
+    expRc_ = catena::exception_with_status("No device specified in slot", catena::StatusCode::NOT_FOUND);
+    initPayload(2, "tl");
+    method_ = Method_GET;
+    // Calling proceed and testing the output
+    testCall();
+}

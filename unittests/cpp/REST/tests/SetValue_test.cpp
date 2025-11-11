@@ -133,3 +133,14 @@ TEST_F(RESTSetValueTests, SetValue_FailParse) {
     // Calling proceed and testing the output
     testCall();
 }
+
+/*
+ * TEST 4 - SetValue has not device in the specified slot.
+ */
+TEST_F(RESTSetValueTests, SetValue_InvalidSlot) {
+    initPayload(22, "/test_oid", "test_value");
+    // Setting the expected response
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+    // Calling proceed and testing the output
+    testCall();
+}

@@ -301,6 +301,20 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETAuthzValid) {
 }
 
 /* 
+ * TEST 1.31 - GET Subscriptions with an invalid slot.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_GetInvalidSlot) {
+    initPayload(dms_.size());
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(context_, subscriptionManager()).Times(0);
+    EXPECT_CALL(dm0_, subscriptions()).Times(0);
+    EXPECT_CALL(dm0_, getParam(testing::Matcher<const std::string&>(testing::_),testing::_, testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/* 
  * TEST 1.4 - GET Subscriptions fail to retrieve a param.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_GETGetParamReturnErr) {
@@ -468,6 +482,20 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTFailParse) {
     jsonBody_ = "Not a JSON string";
     // Setting expectations.
     EXPECT_CALL(context_, jwsToken()).Times(0); // Authz false
+    // Calling proceed and testing the output
+    
+    testCall();
+}
+
+/* 
+ * TEST 2.51 - PUT Subscriptions with an invalid slot.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_PutInvalidSlot) {
+    method_ = Method_PUT;
+    initPayload(dms_.size());
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations.
+    EXPECT_CALL(context_, subscriptionManager()).Times(0); // Should not call.
     // Calling proceed and testing the output
     testCall();
 }
