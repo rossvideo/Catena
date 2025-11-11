@@ -302,3 +302,22 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_NullSlotCase) {
     // Send the RPC
     testRPC();
 }
+
+/*
+ *
+ */
+TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_InvalidSlot) {
+    // Create test file with content
+    std::string testContent = "This is test file content for external object.";
+    createTestFile("/test_file.txt", testContent);
+
+    // Initialize request payload
+    initPayload("/test_file.txt");
+    inVal_.set_slot(9999); 
+
+    // Expect NOT_FOUND error
+    expRc_ = catena::exception_with_status("Device not found in slot 9999", catena::StatusCode::NOT_FOUND);
+
+    // Send the RPC
+    testRPC();
+}
