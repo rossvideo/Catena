@@ -35,7 +35,8 @@
  * @brief Centralized manager for parameter subscriptions in Catena
  * @author zuhayr.sarker@rossvideo.com
  * @author benjamin.whitten@rossvideo.com
- * @date 2025-06-11
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @date 2025-11-06
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -133,6 +134,20 @@ class SubscriptionManager : public ISubscriptionManager {
              */
             void visit(catena::common::IParam* param, const std::string& path) override {
                 // Skip array elements (paths ending with indices) to prevent invalid paths
+                Path pathObj = Path(path);
+                if (!pathObj.back_is_index()) {
+                    oids_.insert(path);
+                }
+            }
+            
+            /**
+             * @brief Visit an array
+             * @param param The array to visit
+             * @param path The path of the array
+             * @param length The length of the array
+             */
+            void visitArray(catena::common::IParam* param, const std::string& path, uint32_t length) override {
+                // Add the array path itself (without indices) to the subscribed OIDs
                 Path pathObj = Path(path);
                 if (!pathObj.back_is_index()) {
                     oids_.insert(path);
