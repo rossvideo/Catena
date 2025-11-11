@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the GetParam.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/18
+ * @author jason.chen@rossvideo.com
+ * @date 25/11/11
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -329,7 +330,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowUnknown) {
  * TEST 13 - GetParam with null slot, should handle as a normal case.
  */
 TEST_F(gRPCGetParamTests, GetParam_NullSlotCase) {
-    initPayload(0, "/test_oid");
+    initPayload(123, "/test_oid");
     initexpVal_("/test_oid", "test_value", "test_alias", "Test Param");
     inVal_.clear_slot();
     // Setting expectations

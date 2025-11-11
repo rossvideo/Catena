@@ -32,7 +32,8 @@
  * @file UpdateSubscriptions_test.cpp
  * @brief This file is for testing the gRPC UpdateSubscriptions.cpp file.
  * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
- * @date 2025-08-07
+ * @author Jason Chen (jason.chen@rossvideo.com)
+ * @date 2025-11-11
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 

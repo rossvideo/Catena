@@ -32,7 +32,8 @@
  * @brief This file is for testing the DeviceRequest.cpp file.
  * @author zuhayr.sarker@rossvideo.com
  * @author benjamin.whitten@rossvideo.com
- * @date 2025-06-23
+ * @author jason.chen@rossvideo.com
+ * @date 2025-11-11
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 

@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the Subscriptions.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/16
+ * @author jason.chen@rossvideo.com
+ * @date 25/11/11
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 

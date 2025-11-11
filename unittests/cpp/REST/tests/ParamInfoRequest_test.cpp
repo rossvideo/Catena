@@ -32,7 +32,8 @@
  * @file ParamInfoRequest_test.cpp
  * @brief This file is for testing the ParamInfoRequest.cpp file.
  * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
- * @date 2025-05-20
+ * @author Jason Chen (jason.chen@rossvideo.com)
+ * @date 2025-11-11
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
