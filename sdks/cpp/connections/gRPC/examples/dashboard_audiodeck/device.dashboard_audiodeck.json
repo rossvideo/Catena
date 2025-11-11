@@ -4,13 +4,11 @@
   "detail_level": "FULL",
   "access_scopes": ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
   "subscriptions": true,
-  "detail_level": "FULL",
   "default_scope": "st2138:mon",
   "language_packs": {},
   "params": {
     "dashboard_UI": {
       "type": "STRING",
-      "minimal_set": true,
       "oid_aliases": ["0xFF0E"],
       "read_only": true,
       "value": { "string_value": "eo://AudioDeck.grid" }
@@ -169,7 +167,8 @@
         "ja": "再生"
       }},
       "type":"EMPTY",
-      "widget": "button"
+      "widget": "button",
+      "response": false
     },
     "pause": {
       "name": {"display_strings": {
@@ -178,7 +177,8 @@
         "es": "Pausa",
         "ja": "一時停止"
       }},
-      "type":"EMPTY"
+      "type":"EMPTY",
+      "response": false
     },
     "stop": {
       "name": {"display_strings": {
@@ -187,7 +187,8 @@
         "es": "Detener",
         "ja": "停止"
       }},
-      "type":"EMPTY"
+      "type":"EMPTY",
+      "response": false
     },
     "rewind": {
       "name": {"display_strings": {
@@ -196,7 +197,8 @@
         "es": "Rebobinar",
         "ja": "巻き戻し"
       }},
-      "type": "EMPTY"
+      "type": "EMPTY",
+      "response": false
     },
     "fast_forward": {
       "name": {"display_strings": {
@@ -205,7 +207,8 @@
         "es": "Avance rápido",
         "ja": "早送り"
       }},
-      "type": "EMPTY"
+      "type": "EMPTY",
+      "response": false
     },
     "load": {
       "name": {"display_strings": {
@@ -215,7 +218,8 @@
         "ja": "ビデオを読み込む"
       }},
       "widget": "button",
-      "type":"STRING"
+      "type":"STRING",
+      "response": false
     },
     "eject": {
       "type":"STRING",
@@ -225,7 +229,8 @@
         "es": "Expulsar",
         "ja": "取り出す"
       }},
-      "widget": "button"
+      "widget": "button",
+      "response": false
     },
     "debug_counter": {
       "name": {"display_strings": {
