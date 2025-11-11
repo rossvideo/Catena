@@ -305,7 +305,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_NullSlotCase) {
 }
 
 /*
- *
+ * TEST 2.6 - ExternalObjectRequest with invalid slot, should return NOT_FOUND.
  */
 TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_InvalidSlot) {
     // Create test file with content
