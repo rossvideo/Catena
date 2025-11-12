@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the DeviceRequest.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/18
+ * @author jason.chen@rossvideo.com
+ * @date 25/11/11
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -59,7 +60,7 @@ class gRPCDeviceRequestTests : public GRPCTest {
 
     static void TearDownTestSuite() {
     }
-  
+
     /*
      * Creates a DeviceRequest handler object.
      */
@@ -219,7 +220,40 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_Subscriptions) {
 }
 
 /*
- * TEST 4 - DeviceRequest with authz on and valid token.
+ * TEST 4 - DeviceRequest with null slot, should handle as a normal case.
+ */
+TEST_F(gRPCDeviceRequestTests, DeviceRequest_NullSlotCase) {
+    initPayload(67, st2138::Device_DetailLevel::Device_DetailLevel_FULL, {});
+    inVal_.clear_slot();
+    initExpVal(6);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, inVal_.detail_level(), true)).Times(1)
+        .WillOnce(::testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
+            // Making sure the correct values were passed in
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            EXPECT_TRUE(subscribedOids.empty());
+            return std::move(mockSerializer_);
+        }));
+    EXPECT_CALL(*mockSerializer_, getNext()).Times(6)
+        .WillOnce(::testing::Return(expVals_[0]))
+        .WillOnce(::testing::Return(expVals_[1]))
+        .WillOnce(::testing::Return(expVals_[2]))
+        .WillOnce(::testing::Return(expVals_[3]))
+        .WillOnce(::testing::Return(expVals_[4]))
+        .WillOnce(::testing::Return(expVals_[5]));
+    EXPECT_CALL(*mockSerializer_, hasMore()).Times(6)
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(false));
+    // Sending the RPC
+    testRPC();
+}
+
+/*
+ * TEST 5 - DeviceRequest with authz on and valid token.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzValid) {
     initPayload(0, st2138::Device_DetailLevel::Device_DetailLevel_MINIMAL, {});
@@ -244,7 +278,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzValid) {
 }
 
 /*
- * TEST 5 - DeviceRequest with authz on and invalid token.
+ * TEST 6 - DeviceRequest with authz on and invalid token.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzInvalid) {
     expRc_ = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
@@ -258,7 +292,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzInvalid) {
 }
 
 /*
- * TEST 6 - DeviceRequest with authz on and invalid token.
+ * TEST 7 - DeviceRequest with authz on and invalid token.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzJWSNotFound) {
     expRc_ = catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
@@ -273,7 +307,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzJWSNotFound) {
 }
 
 /*
- * TEST 7 - No device in the specified slot.
+ * TEST 8 - No device in the specified slot.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
     initPayload(dms_.size(), st2138::Device_DetailLevel_FULL, {});
@@ -286,7 +320,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
 }
 
 /*
- * TEST 8 - dm.getComponentSerializer() returns nullptr.
+ * TEST 9 - dm.getComponentSerializer() returns nullptr.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerIllegalState) {
     expRc_ = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
@@ -298,7 +332,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerIllegalState) {
 }
 
 /*
- * TEST 9 - dm.getComponentSerializer() throws a catena::exception_with_status.
+ * TEST 10 - dm.getComponentSerializer() throws a catena::exception_with_status.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowCatena) {
     expRc_ = catena::exception_with_status("Component not found", catena::StatusCode::INVALID_ARGUMENT);
@@ -314,7 +348,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowCatena) {
 }
 
 /*
- * TEST 10 - dm.getComponentSerializer() throws a std::runtime_exception.
+ * TEST 11 - dm.getComponentSerializer() throws a std::runtime_exception.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -327,7 +361,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetSerializerThrowUnknown) {
 }
 
 /*
- * TEST 11 - serializer.getNext() throws a catena::exception_with_status.
+ * TEST 12 - serializer.getNext() throws a catena::exception_with_status.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowCatena) {
     expRc_ = catena::exception_with_status("Component not found", catena::StatusCode::INVALID_ARGUMENT);
@@ -350,7 +384,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowCatena) {
 }
 
 /*
- * TEST 12 - serializer.getNext() throws a std::runtime_exception.
+ * TEST 13 - serializer.getNext() throws a std::runtime_exception.
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);

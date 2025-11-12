@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the SetValue.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/18
+ * @author jason.chen@rossvideo.com
+ * @date 25/11/11
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -134,6 +135,50 @@ TEST_F(gRPCSetValueTests, SetValue_Normal) {
             EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
             return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
+    EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC.
+    testRPC();
+}
+
+/*
+ * TEST 3 - SetValue with null slot, should handle as a normal case.
+ * This tests both create_() and toMulti_().
+ */
+TEST_F(gRPCSetValueTests, SetValue_NullSlotCase) {
+    initPayload(9999, "/test_oid", "test_value");
+    inVal_.clear_slot();
+    expMultiVal_.clear_slot();
+    // Setting expectations.
+    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](st2138::MultiSetValuePayload src, catena::exception_with_status &ans, const IAuthorizer &authz) {
+            EXPECT_EQ(src.SerializeAsString(), expMultiVal_.SerializeAsString());
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            return true;
+        }));
+    EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](st2138::MultiSetValuePayload src, const IAuthorizer &authz) {
+            // Checking that function gets correct inputs.
+            EXPECT_EQ(src.SerializeAsString(), expMultiVal_.SerializeAsString());
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            return catena::exception_with_status(expRc_.what(), expRc_.status);
+        }));
+    EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC.
+    testRPC();
+}
+
+/*
+ * TEST 4 - Endpoint setup with an invalid slot.
+ * This tests both create_() and toMulti_().
+ */
+TEST_F(gRPCSetValueTests, SetValue_ErrInvalidSlotSetup) {
+    initPayload(2, "/test_oid", "test_value");
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(2), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();

@@ -32,7 +32,8 @@
  * @file ParamInfoRequest_test.cpp
  * @brief This file is for testing the ParamInfoRequest.cpp file.
  * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
- * @date 2025-05-20
+ * @author Jason Chen (jason.chen@rossvideo.com)
+ * @date 2025-11-11
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -150,7 +151,34 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_InvalidSlot) {
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
 }
 
-// Test 0.4: Error case - catena exception caused by recursion in unary response.
+// Test 0.4: Authorization test with invalid slot with stream response.
+TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_InvalidSlotStream) {
+    // Remaking with stream enabled.
+    stream_ = true;
+    endpoint_.reset(makeOne());
+    slot_ = dms_.size();
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+
+    endpoint_->proceed();
+
+    // Match expected and actual responses
+    EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
+}
+
+// Test 0.5: Invalid slot with specific fqoid and stream response.
+TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_InvalidSlotFqoidStream) {
+    stream_ = true;
+    slot_ = dms_.size();
+    fqoid_ = "test_param";
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+
+    endpoint_.reset(makeOne());
+    endpoint_->proceed();
+
+    EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
+}
+
+// Test 0.6: Error case - catena exception caused by recursion in unary response.
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_UnaryRecursionException) {
     expRc_ = catena::exception_with_status("Recursive parameter info request is not supported with unary response", catena::StatusCode::INVALID_ARGUMENT);
     stream_ = false;
@@ -163,7 +191,7 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_UnaryRecursionException) {
     EXPECT_EQ(readResponse(), expectedResponse(expRc_));
 }
 
-// Test 0.5: Authorization test with valid token
+// Test 0.7: Authorization test with valid token
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_AuthzValid) {
     // Use a valid JWS token with monitor scope
     jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
