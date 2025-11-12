@@ -118,7 +118,25 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_Normal) {
 }
 
 /*
- * TEST 2 - No device in the specified slot.
+ * TEST 3 - ListLanguages with null slot, should handle as a normal case.
+ */
+TEST_F(gRPCListLanguagesTests, ListLanguages_NullSlotCase) {
+    *expVal_.add_languages() = "en";
+    *expVal_.add_languages() = "fr";
+    *expVal_.add_languages() = "es";
+    inVal_.clear_slot();
+    // Setting expectations
+    EXPECT_CALL(dm0_, toProto(::testing::An<st2138::LanguageList&>())).Times(1)
+        .WillOnce(::testing::Invoke([this](st2138::LanguageList &list){
+            list.CopyFrom(expVal_);
+        }));
+    EXPECT_CALL(dm1_, toProto(::testing::An<st2138::LanguageList&>())).Times(0);
+    // Sending the RPC.
+    testRPC();
+}
+
+/*
+ * TEST 4 - No device in the specified slot.
  */
 TEST_F(gRPCListLanguagesTests, ListLanguages_ErrInvalidSlot) {
     inVal_.set_slot(dms_.size());
@@ -131,7 +149,7 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_ErrInvalidSlot) {
 }
 
 /*
- * TEST 3 - dm.toProto() throws a catena::exception_with_status.
+ * TEST 5 - dm.toProto() throws a catena::exception_with_status.
  */
 TEST_F(gRPCListLanguagesTests, ListLanguages_Err) {
     expRc_ = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
@@ -139,24 +157,6 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_Err) {
     EXPECT_CALL(dm0_, toProto(::testing::An<st2138::LanguageList&>())).Times(1)
         .WillOnce(::testing::Invoke([this](st2138::LanguageList &list){
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
-        }));
-    EXPECT_CALL(dm1_, toProto(::testing::An<st2138::LanguageList&>())).Times(0);
-    // Sending the RPC.
-    testRPC();
-}
-
-/*
- * TEST 4 - ListLanguages with null slot, should handle as a normal case.
- */
-TEST_F(gRPCListLanguagesTests, ListLanguages_NullSlotCase) {
-    *expVal_.add_languages() = "en";
-    *expVal_.add_languages() = "fr";
-    *expVal_.add_languages() = "es";
-    inVal_.clear_slot();
-    // Setting expectations
-    EXPECT_CALL(dm0_, toProto(::testing::An<st2138::LanguageList&>())).Times(1)
-        .WillOnce(::testing::Invoke([this](st2138::LanguageList &list){
-            list.CopyFrom(expVal_);
         }));
     EXPECT_CALL(dm1_, toProto(::testing::An<st2138::LanguageList&>())).Times(0);
     // Sending the RPC.

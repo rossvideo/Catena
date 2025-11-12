@@ -191,7 +191,7 @@ class RESTAssetRequestTests : public RESTEndpointTest {
 
 /*
  * ============================================================================
- *                               AssetRequest tests
+ *                               GET AssetRequest tests
  * ============================================================================
  * 
  * TEST 1.1 - GET asset request for a file that does not exist.
@@ -211,7 +211,7 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_DNE) {
 }
 
 /*
- * TEST 1.11 - GET asset request for a file that does not exist and stream enabled.
+ * TEST 1.2 - GET asset request for a file that does not exist and stream enabled.
  */
 TEST_F(RESTAssetRequestTests, GETAssetRequest_DNE_StreamEnabled) {
     // establish expectations
@@ -226,7 +226,7 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_DNE_StreamEnabled) {
 }
 
 /* 
- * TEST 1.2 - GET asset request for a file that exists without authorization.
+ * TEST 1.3 - GET asset request for a file that exists without authorization.
  */
 TEST_F(RESTAssetRequestTests, GETAssetRequest_NoAuthz) {
     //establish expectations
@@ -244,7 +244,7 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_NoAuthz) {
 }
 
 /*
- * TEST 1.3 - GET asset request for a file that exists with authorization.
+ * TEST 1.4 - GET asset request for a file that exists with authorization.
  */
 TEST_F(RESTAssetRequestTests, GETAssetRequest_Exists) {
     getAssetRequestTest(st2138::DataPayload::UNCOMPRESSED, "/" + fileName_, payloadUncompressed_,
@@ -252,7 +252,17 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_Exists) {
 }
 
 /*
- * TEST 1.4 - GET asset request for a Gzip encoded file that exists with authorization.
+ * TEST 1.5 - GET asset request for a file that exists with authorization with stream.
+ */
+TEST_F(RESTAssetRequestTests, GETAssetRequest_Exists_StreamEnabled) {
+    stream_ = true;
+    endpoint_.reset(makeOne());
+    getAssetRequestTest(st2138::DataPayload::UNCOMPRESSED, "/" + fileName_, payloadUncompressed_,
+            digestUncompressed_, 1088, Scopes().getForwardMap().at(Scopes_e::kMonitor));
+}
+
+/*
+ * TEST 1.6 - GET asset request for a Gzip encoded file that exists with authorization.
  */
 TEST_F(RESTAssetRequestTests, GETAssetRequest_ExistsGzip) {
     getAssetRequestTest(st2138::DataPayload::GZIP, "/" + fileName_, payloadGzip_,
@@ -260,7 +270,7 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_ExistsGzip) {
 }
 
 /*
- * TEST 1.5 - GET asset request for a Deflate encoded file that exists with authorization.
+ * TEST 1.7 - GET asset request for a Deflate encoded file that exists with authorization.
  */
 TEST_F(RESTAssetRequestTests, GETAssetRequest_ExistsDeflate) {
     getAssetRequestTest(st2138::DataPayload::DEFLATE, "/" + fileName_, payloadDeflate_,
@@ -268,7 +278,11 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_ExistsDeflate) {
 }
 
 /*
- * TEST 2.01 - POST asset request for a file that does not exist.
+ * ============================================================================
+ *                               POST AssetRequest tests
+ * ============================================================================
+ * 
+ * TEST 2.1 - POST asset request for a file that does not exist.
  */
 TEST_F(RESTAssetRequestTests, POSTAssetRequest__DNE) {
     //establish expectations
@@ -286,7 +300,7 @@ TEST_F(RESTAssetRequestTests, POSTAssetRequest__DNE) {
 }
 
 /* 
- * TEST 2.1 - POST asset request for a file without authorization.
+ * TEST 2.2 - POST asset request for a file without authorization.
  */
 TEST_F(RESTAssetRequestTests, POSTAssetRequest_NoAuthz) {
     //establish expectations
@@ -304,7 +318,7 @@ TEST_F(RESTAssetRequestTests, POSTAssetRequest_NoAuthz) {
 }
 
 /*
- * TEST 2.2 - POST asset request for a file that exists with authorization.
+ * TEST 2.3 - POST asset request for a file that exists with authorization.
  */
 TEST_F(RESTAssetRequestTests, POSTAssetRequest_ExistsAuthz) {
     //establish expectations
@@ -322,7 +336,7 @@ TEST_F(RESTAssetRequestTests, POSTAssetRequest_ExistsAuthz) {
 }
 
 /*
- * TEST 2.3 - POST asset request for a file that does not exist with authorization.
+ * TEST 2.4 - POST asset request for a file that does not exist with authorization.
  */
 TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNEAuthz) {
     postAssetRequestTest(st2138::DataPayload::UNCOMPRESSED, "/catena_logo_up.png", payloadUncompressed_,
@@ -331,7 +345,7 @@ TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNEAuthz) {
 }
 
 /*
- * TEST 2.4 - POST asset request for a Gzip encoded file that does not exist with authorization.
+ * TEST 2.5 - POST asset request for a Gzip encoded file that does not exist with authorization.
  */
 TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNE_Gzip) {
     postAssetRequestTest(st2138::DataPayload::GZIP, "/catena_logo_up.png", payloadGzip_,
@@ -340,7 +354,7 @@ TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNE_Gzip) {
 }
 
 /*
- * TEST 2.5 - POST asset request for a Deflate encoded file that does not exist with authorization.
+ * TEST 2.6 - POST asset request for a Deflate encoded file that does not exist with authorization.
  */
 TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNE_Deflate) {
     postAssetRequestTest(st2138::DataPayload::DEFLATE, "/catena_logo_up.png", payloadDeflate_,
@@ -349,6 +363,10 @@ TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNE_Deflate) {
 }
 
 /*
+ * ============================================================================
+ *                               PUT AssetRequest tests
+ * ============================================================================
+ * 
  * TEST 3.1 - PUT asset request for a file that does not exist.
  */
 TEST_F(RESTAssetRequestTests, PUTAssetRequest_DNE) {
@@ -428,6 +446,10 @@ TEST_F(RESTAssetRequestTests, PUTAssetRequest_ExistsAuthz) {
 }
 
 /*
+ * ============================================================================
+ *                               DELETE AssetRequest tests
+ * ============================================================================
+ * 
  * TEST 4.1 - DELETE asset request for a file that does not exist.
  */
 TEST_F(RESTAssetRequestTests, DELETEAssetRequest_DNE) {
@@ -570,14 +592,4 @@ TEST_F(RESTAssetRequestTests, ExtractPayloadDNE) {
     } catch (const catena::exception_with_status& e) {
         EXPECT_EQ(e.status, catena::StatusCode::NOT_FOUND);
     }
-}
-
-/*
- * TEST 1.31 - GET asset request for a file that exists with authorization with stream.
- */
-TEST_F(RESTAssetRequestTests, GETAssetRequest_Exists_StreamEnabled) {
-    stream_ = true;
-    endpoint_.reset(makeOne());
-    getAssetRequestTest(st2138::DataPayload::UNCOMPRESSED, "/" + fileName_, payloadUncompressed_,
-            digestUncompressed_, 1088, Scopes().getForwardMap().at(Scopes_e::kMonitor));
 }

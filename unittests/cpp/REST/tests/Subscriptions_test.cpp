@@ -489,9 +489,9 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTFailParse) {
 }
 
 /* 
- * TEST 2.51 - PUT Subscriptions with an invalid slot.
+ * TEST 2.6 - PUT Subscriptions with an invalid slot.
  */
-TEST_F(RESTSubscriptionsTests, Subscriptions_PutInvalidSlot) {
+TEST_F(RESTSubscriptionsTests, Subscriptions_PUTInvalidSlot) {
     method_ = Method_PUT;
     initPayload(dms_.size());
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
@@ -502,7 +502,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PutInvalidSlot) {
 }
 
 /* 
- * TEST 2.6 - PUT Subscriptions add and remove return an error.
+ * TEST 2.7 - PUT Subscriptions add and remove return an error.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTReturnErr) {
     method_ = Method_PUT;
@@ -529,7 +529,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTReturnErr) {
 }
 
 /* 
- * TEST 2.7 - PUT Subscriptions remove throws a catena::exception_with_status.
+ * TEST 2.8 - PUT Subscriptions remove throws a catena::exception_with_status.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowCatena) {
     method_ = Method_PUT;
@@ -547,7 +547,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowCatena) {
 }
 
 /* 
- * TEST 2.8 - PUT Subscriptions remove throws a std::runtime_error.
+ * TEST 2.9 - PUT Subscriptions remove throws a std::runtime_error.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowUnknown) {
     method_ = Method_PUT;
@@ -561,7 +561,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowUnknown) {
 }
 
 /* 
- * TEST 2.9 - PUT Subscriptions add throws a catena::exception_with_status.
+ * TEST 2.10 - PUT Subscriptions add throws a catena::exception_with_status.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowCatena) {
     method_ = Method_PUT;
@@ -579,7 +579,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowCatena) {
 }
 
 /* 
- * TEST 2.10 - PUT Subscriptions add throws a std::runtime_error.
+ * TEST 2.11 - PUT Subscriptions add throws a std::runtime_error.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowUnknown) {
     method_ = Method_PUT;

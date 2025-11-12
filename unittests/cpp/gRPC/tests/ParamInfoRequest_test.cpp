@@ -252,7 +252,50 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsWithArray) {
     testRPC();
 }
 
-// 1.3: Error Case - Get top-level parameters with empty list returned from getTopLevelParams
+// 1.3: Success Case -ParamInfoRequest with null slot, should handle as a normal case.
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_NormalCaseNull) {
+    // Setup mock parameters
+    ParamInfo param1_info{ .oid = "param1", .type = st2138::ParamType::STRING };
+    ParamInfo param2_info{ .oid = "param2", .type = st2138::ParamType::STRING };
+    auto desc1 = ParamHierarchyBuilder::createDescriptor("/" + param1_info.oid);
+    auto desc2 = ParamHierarchyBuilder::createDescriptor("/" + param2_info.oid);
+
+    // Create ParamInfo structs
+    ParamInfo param1_info_struct{param1_info.oid, param1_info.type};
+    ParamInfo param2_info_struct{param2_info.oid, param2_info.type};
+
+    auto param1 = std::make_unique<MockParam>();
+    setupMockParamInfo(*param1, param1_info_struct, *desc1.descriptor);
+    auto param2 = std::make_unique<MockParam>();
+    setupMockParamInfo(*param2, param2_info_struct, *desc2.descriptor);
+
+    std::vector<std::unique_ptr<IParam>> top_level_params;
+    top_level_params.push_back(std::move(param1));
+    top_level_params.push_back(std::move(param2));
+
+    // Set up expected responses
+    expVals_.clear();
+    expVals_.emplace_back();
+    expVals_.back().mutable_info()->set_oid("param1");
+    expVals_.back().mutable_info()->set_type(st2138::ParamType::STRING);
+    expVals_.emplace_back();
+    expVals_.back().mutable_info()->set_oid("param2");
+    expVals_.back().mutable_info()->set_type(st2138::ParamType::STRING);
+
+    // Setup mock expectations
+    EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
+        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, const IAuthorizer&) -> std::vector<std::unique_ptr<IParam>> {
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return std::move(top_level_params);
+        }));
+
+    inVal_.clear_slot();
+
+    // Verify the call completed successfully
+    testRPC();
+}
+
+// 1.4: Error Case - Get top-level parameters with empty list returned from getTopLevelParams
 TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getEmptyTopLevelParams) {
     initPayload(0);
     expRc_ = catena::exception_with_status("No top-level parameters found", catena::StatusCode::NOT_FOUND);
@@ -267,7 +310,7 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getEmptyTopLevelParams) {
     testRPC();
 }
 
-// 1.4: Error Case - Get top-level parameters with error status in returned parameters (catena::exception_with_status)
+// 1.5: Error Case - Get top-level parameters with error status in returned parameters (catena::exception_with_status)
 TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsProcessingError) {
     expRc_ = catena::exception_with_status("Error processing parameter", catena::StatusCode::INTERNAL);
     
@@ -289,7 +332,7 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsProcessingEr
     testRPC();
 }
 
-// 1.5: Error Case - Get top-level parameters with exception thrown during parameter processing
+// 1.6: Error Case - Get top-level parameters with exception thrown during parameter processing
 TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsThrow) {
     expRc_ = catena::exception_with_status("Error getting top-level parameters", catena::StatusCode::INTERNAL);
     
@@ -741,48 +784,5 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_catchUnknownException) {
             throw 42; // Throw an int
         }));
 
-    testRPC();
-}
-
-// 1.1: ParamInfoRequest with null slot, should handle as a normal case.
-TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_NormalCaseNull) {
-    // Setup mock parameters
-    ParamInfo param1_info{ .oid = "param1", .type = st2138::ParamType::STRING };
-    ParamInfo param2_info{ .oid = "param2", .type = st2138::ParamType::STRING };
-    auto desc1 = ParamHierarchyBuilder::createDescriptor("/" + param1_info.oid);
-    auto desc2 = ParamHierarchyBuilder::createDescriptor("/" + param2_info.oid);
-
-    // Create ParamInfo structs
-    ParamInfo param1_info_struct{param1_info.oid, param1_info.type};
-    ParamInfo param2_info_struct{param2_info.oid, param2_info.type};
-
-    auto param1 = std::make_unique<MockParam>();
-    setupMockParamInfo(*param1, param1_info_struct, *desc1.descriptor);
-    auto param2 = std::make_unique<MockParam>();
-    setupMockParamInfo(*param2, param2_info_struct, *desc2.descriptor);
-
-    std::vector<std::unique_ptr<IParam>> top_level_params;
-    top_level_params.push_back(std::move(param1));
-    top_level_params.push_back(std::move(param2));
-
-    // Set up expected responses
-    expVals_.clear();
-    expVals_.emplace_back();
-    expVals_.back().mutable_info()->set_oid("param1");
-    expVals_.back().mutable_info()->set_type(st2138::ParamType::STRING);
-    expVals_.emplace_back();
-    expVals_.back().mutable_info()->set_oid("param2");
-    expVals_.back().mutable_info()->set_type(st2138::ParamType::STRING);
-
-    // Setup mock expectations
-    EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, const IAuthorizer&) -> std::vector<std::unique_ptr<IParam>> {
-            status = catena::exception_with_status("", catena::StatusCode::OK);
-            return std::move(top_level_params);
-        }));
-
-    inVal_.clear_slot();
-
-    // Verify the call completed successfully
     testRPC();
 }

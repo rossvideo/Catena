@@ -243,7 +243,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
     testCall();
 }
 
-// Test 3.11: Test proceed stream response with an invalid slot.
+// Test 3.2: Test proceed stream response with an invalid slot.
 TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrInvalidSlotStream) {
     // Remaking with stream enabled.
     stream_ = true;
@@ -256,7 +256,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrInvalidSlotStream) {
     testCall();
 }
 
-// Test 3.2: Test proceed with authz enabled and an invalid token.
+// Test 3.3: Test proceed with authz enabled and an invalid token.
 TEST_F(RESTDeviceRequestTests, DeviceRequest_AuthzInvalid) {
     expRc_ = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
     authzEnabled_ = true;
@@ -267,7 +267,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_AuthzInvalid) {
     testCall();
 }
 
-// Test 3.3: Testing dm.getComponentSerializer() returning a nullptr.
+// Test 3.4: Testing dm.getComponentSerializer() returning a nullptr.
 TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrGetSerializerIllegalState) {
     expRc_ = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
     // Setting expectations
@@ -277,7 +277,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_ErrGetSerializerIllegalState) {
     testCall();
 }
 
-// Test 3.4: Test catch(std::exception) handling
+// Test 3.5: Test catch(std::exception) handling
 TEST_F(RESTDeviceRequestTests, DeviceRequest_GetSerializerThrowStd) {
     expRc_ = catena::exception_with_status("Device request failed: std error", catena::StatusCode::INTERNAL);
     // Setting expectations
@@ -287,7 +287,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_GetSerializerThrowStd) {
     testCall();
 }
 
-// Test 3.5: Test catch (...) exception handling
+// Test 3.6: Test catch (...) exception handling
 TEST_F(RESTDeviceRequestTests, DeviceRequest_GetSerializerThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations

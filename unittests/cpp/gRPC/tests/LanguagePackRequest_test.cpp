@@ -129,7 +129,28 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_Normal) {
 }
 
 /* 
- * TEST 3 - No device in the specified slot.
+ * TEST 3 - LanguagePackRequest with null slot, should handle as a normal case.
+ */
+TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_NullSlotCase) {
+    initPayload(6767, "en");
+    inVal_.clear_slot();
+    expVal_.set_language(inVal_.language());
+    auto languagePack = expVal_.mutable_language_pack();
+    languagePack->set_name("English");
+    (*languagePack->mutable_words())["greeting"] = "Hello";
+    // Setting expectations
+    EXPECT_CALL(dm0_, getLanguagePack(inVal_.language(), ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const std::string &languageId, st2138::DeviceComponent_ComponentLanguagePack &pack){
+            pack.CopyFrom(expVal_);
+            return catena::exception_with_status(expRc_.what(), expRc_.status);
+        }));
+    EXPECT_CALL(dm1_, getLanguagePack(::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC.
+    testRPC();
+}
+
+/* 
+ * TEST 4 - No device in the specified slot.
  */
 TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrInvalidSlot) {
     initPayload(dms_.size(), "en");
@@ -142,7 +163,7 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrInvalidSlot) {
 }
 
 /* 
- * TEST 4 - dm.getLanguagePack returns a catena::Exception_With_Status.
+ * TEST 5 - dm.getLanguagePack returns a catena::Exception_With_Status.
  */
 TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrReturn) {
     expRc_ = catena::exception_with_status("Language pack en not found", catena::StatusCode::NOT_FOUND);    
@@ -157,7 +178,7 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrReturn) {
 }
 
 /* 
- * TEST 5 - dm.getLanguagePack throws a catena::Exception_With_Status.
+ * TEST 6 - dm.getLanguagePack throws a catena::Exception_With_Status.
  */
 TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrThrow) {
     expRc_ = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
@@ -166,27 +187,6 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrThrow) {
         .WillOnce(::testing::Invoke([this](const std::string &languageId, st2138::DeviceComponent_ComponentLanguagePack &pack){
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
-        }));
-    EXPECT_CALL(dm1_, getLanguagePack(::testing::_, ::testing::_)).Times(0);
-    // Sending the RPC.
-    testRPC();
-}
-
-/* 
- * TEST 6 - LanguagePackRequest with null slot, should handle as a normal case.
- */
-TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_NullSlotCase) {
-    initPayload(6767, "en");
-    inVal_.clear_slot();
-    expVal_.set_language(inVal_.language());
-    auto languagePack = expVal_.mutable_language_pack();
-    languagePack->set_name("English");
-    (*languagePack->mutable_words())["greeting"] = "Hello";
-    // Setting expectations
-    EXPECT_CALL(dm0_, getLanguagePack(inVal_.language(), ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this](const std::string &languageId, st2138::DeviceComponent_ComponentLanguagePack &pack){
-            pack.CopyFrom(expVal_);
-            return catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
     EXPECT_CALL(dm1_, getLanguagePack(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
