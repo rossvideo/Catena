@@ -407,7 +407,13 @@
                <label name="Channel Controls" style="txt-align:center;font:bold;"/>
                <button buttontype="push" left="10" name="Add Channel" top="10">
                   <task tasktype="ogscript">
-                     add();
+                     var inputName = params.getValue('InputName', 0);
+                     if (inputName != "") {
+                        params.executeCommand("add_channel", inputName, null);
+                        add();
+                     } else {
+                        ogscript.debug("No input name given");
+                     }
                   </task>
                </button>
             </simplegrid>

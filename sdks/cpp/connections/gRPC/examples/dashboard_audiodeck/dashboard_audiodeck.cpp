@@ -42,6 +42,7 @@
 #include <utils.h>
 #include <Device.h>
 #include <ParamWithValue.h>
+#include <ParamDescriptor.h>
 
 // connections/gRPC
 #include <ServiceImpl.h>
@@ -104,6 +105,40 @@ void audioDeckUpdateHandler(const std::string& jptr, const IParam* p) {
             LOG(INFO) << "*** audio_deck[" << index << "] was updated";
         }
     }
+}
+
+void defineCommands() {
+    catena::exception_with_status err{"", catena::StatusCode::OK};
+
+    // Define the add_channel command
+    std::unique_ptr<IParam> addChannel = dm.getCommand("/add_channel", err);
+    assert(addChannel != nullptr);
+
+    /* 
+     * Define a lambda function to be executed when the command is called
+     * The command accepts a string value containing the input name for the channel
+     */
+    addChannel->defineCommand([](const st2138::Value& value, const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+            catena::exception_with_status err{"", catena::StatusCode::OK};
+            st2138::CommandResponse response;
+            
+            // Extract the input name from the command value
+            std::string inputName = value.string_value();
+            
+            if (inputName.empty()) {
+                response.mutable_exception()->set_type("Invalid Command");
+                response.mutable_exception()->set_details("Input name cannot be empty");
+            } else {
+                LOG(INFO) << "Add Channel command called with input name: " << inputName;
+                // Here you can add server-side logic to handle channel creation
+                // For example, you could add an entry to the audio_deck struct array
+                response.mutable_no_response();
+            }
+            
+            co_return response;
+        }(value, respond));
+    });
 }
 
 void RunRPCServer(std::string addr)
@@ -180,6 +215,9 @@ int main(int argc, char* argv[])
   
     addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
   
+    // Commands should be defined before starting the RPC server
+    defineCommands();
+
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
     

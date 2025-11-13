@@ -263,6 +263,17 @@
           "type": "INT32"
         }
       }
+    },
+    "add_channel": {
+      "name": {"display_strings": {
+        "en": "Add Channel",
+        "fr": "Ajouter un canal",
+        "es": "Agregar canal",
+        "ja": "チャンネルを追加"
+      }},
+      "type": "STRING",
+      "widget": "button",
+      "response": false
     }
   },
   "menu_groups": {
