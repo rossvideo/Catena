@@ -36,17 +36,35 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-// Test helpers
-#include "GRPCTest.h"
-#include "CommonTestHelpers.h"
+// gtest
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
-// gRPC
-#include <include/ServiceCredentials.h>
+// std
+#include <string>
+
+#include "MockDevice.h"
+#include "MockConnect.h"
+#include "MockServiceCredentials.h"
+
+// protobuf
+#include <interface/device.pb.h>
+#include <interface/service.grpc.pb.h>
+#include <google/protobuf/util/json_util.h>
+#include <grpcpp/grpcpp.h>
+
+#include "ServiceImpl.h"
+
+// common
+#include <Status.h>
+#include <Logger.h>
 
 using namespace catena::common;
 using namespace catena::gRPC;
 
+// Fixture
 class gRPCServiceCredentialsTests : public GRPCTest {
+  protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
         absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
@@ -56,69 +74,19 @@ class gRPCServiceCredentialsTests : public GRPCTest {
     static void TearDownTestSuite() {
     }
 
-    gRPCServiceCredentialsTests() : GRPCTest() {
-        // Default expectations for the device model 1 (should not be called).
-        EXPECT_CALL(dm1_, getParam(testing::An<const std::string&>(), testing::_, testing::_)).Times(0);
-        EXPECT_CALL(dm1_, getTopLevelParams(testing::_, testing::_)).Times(0);
-    }
-
-    /*
-     * Creates a ParamInfoRequest handler object.
-     */
-    void makeOne() override { new ServiceCredentials(&service_, dms_, true); }
-
-    void initPayload(uint32_t slot, const std::string& oid_prefix = "", bool recursive = false) {
-        inVal_.set_slot(slot);
-        inVal_.set_oid_prefix(oid_prefix);
-        inVal_.set_recursive(recursive);
-    }
-
-    /*
-     * This is a test class which makes an async RPC to the MockServer on
-     * construction and returns the streamed-back response.
-     */
-    using StreamReader = catena::gRPC::test::StreamReader<st2138::ParamInfoResponse, st2138::ParamInfoRequestPayload, 
-        std::function<void(grpc::ClientContext*, const st2138::ParamInfoRequestPayload*, grpc::ClientReadReactor<st2138::ParamInfoResponse>*)>>;
-
-    /* 
-     * Makes an async RPC to the MockServer and waits for a response before
-     * comparing output.
-     */
-    void testRPC() {
-        // Creating the stream reader.
-        StreamReader reader(&outVals_, &outRc_);
-        // Making the RPC call.
-        reader.MakeCall(&clientContext_, &inVal_, [this](auto ctx, auto payload, auto reactor) {
-            client_->async()->ParamInfoRequest(ctx, payload, reactor);
-        });
-        // Waiting for the RPC to finish.
-        reader.Await();
-        // Comparing the results.
-        EXPECT_EQ(outRc_.error_code(), static_cast<grpc::StatusCode>(expRc_.status));
-        EXPECT_EQ(outRc_.error_message(), expRc_.what());
-        // Make sure another ParamInfoRequest handler was created.
-        EXPECT_TRUE(asyncCall_) << "Async handler was not created during runtime";
+    void SetUp() override {
         
-        // Validate response content if we have expected responses
-        if (!expVals_.empty()) {
-            ASSERT_EQ(outVals_.size(), expVals_.size()) << "Expected " << expVals_.size() << " responses, got " << outVals_.size();
-            for (size_t i = 0; i < outVals_.size(); i++) {
-                EXPECT_EQ(outVals_[i].SerializeAsString(), expVals_[i].SerializeAsString()) 
-                    << "Response " << i << " does not match expected";
-            }
-        }
     }
 
-    // In/out val
-    st2138::ParamInfoRequestPayload inVal_;
-    std::vector<st2138::ParamInfoResponse> outVals_;
-    std::vector<st2138::ParamInfoResponse> expVals_;
+    void TearDown() override {
+    }
+    
+    // Cout variables
+    
 };
 
-// == SECTION 0: Preliminary tests ==
-
-// 0.0 Preliminary test - Creation of ServiceCredentials handler
-TEST_F(gRPCServiceCredentialsTests, ServiceCredentials_Create) {
-    ASSERT_TRUE(asyncCall_);
+TEST_F(gRPCServiceCredentialsTests, ValidCredentials) {
 }
 
+TEST_F(gRPCServiceCredentialsTests, InvalidCredentials) {
+}
