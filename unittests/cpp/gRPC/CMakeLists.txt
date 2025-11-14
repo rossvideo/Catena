@@ -21,6 +21,7 @@ set(GRPC_TEST_FILES
     ListLanguages_test.cpp
     MultiSetValue_test.cpp
     ParamInfoRequest_test.cpp
+    ServiceCredentials_test.cpp
     ServiceImpl_test.cpp
     SetValue_test.cpp
     UpdateSubscriptions_test.cpp

@@ -40,7 +40,7 @@
 using catena::readFile;
 
 /* 
- * Test when authz is missing from auth_matadata (return PERMISSION_DENIED).
+ * Test when authz is missing from authz_metadata (return PERMISSION_DENIED).
  * Test with authz present but token is invalid (thrown and return PERMISSION_DENIED).
  * Test with a valid authz and valid token (decode and add claims, return OK).
  */
