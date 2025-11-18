@@ -46,6 +46,7 @@
 #include "MockDevice.h"
 #include "MockConnect.h"
 #include "MockServiceImpl.h"
+#include "MockAuthContext.h"
 
 // protobuf
 #include <interface/device.pb.h>
@@ -130,6 +131,7 @@ class gRPCServiceCredentialsTests : public testing::Test {
     OutputMetadata output_metadata;
     JWTAuthMetadataProcessor processor;
     grpc::ClientContext clientContext_;
+    MockAuthContext mockauthcontext_;
     // Server and service variables.
     grpc::ServerBuilder builder_;
     std::unique_ptr<grpc::Server> server_ = nullptr;
@@ -139,91 +141,130 @@ class gRPCServiceCredentialsTests : public testing::Test {
     bool authzEnabled_ = false;
 };
 
-// TEST_F(gRPCServiceCredentialsTests, ValidCredentials) {
-//     JWTAuthMetadataProcessor processor;
-//     OutputMetadata consumed, response; 
-//     // Adding authorization mockToken metadata.
-//     authzEnabled_ = true;
+/*
+ * TEST 1 -  Normal case for ServiceCredentials Process().
+ */
+TEST_F(gRPCServiceCredentialsTests, ValidCredentials) {
+    OutputMetadata consumed, response;
+    // Fetching JWT token
+    std::string token("Bearer " + getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
+    grpc::string_ref token_ref(token);
+    
+    // Adds the token to input metadata
+    input_metadata.emplace("authorization", token_ref);
+    EXPECT_CALL(mockauthcontext_, AddProperty("claims", ::testing::_)).Times(1);
+    grpc::Status status = processor.Process(input_metadata, &mockauthcontext_, &consumed, &response);
 
-//     // Generate a valid JWT token
-//     std::string valid_token = jwt::create()
-//         .set_payload_claim("sub", jwt::claim(std::string("testuser")))
-//         .sign(jwt::algorithm::hs256{"claims"});
-//     // Adds the token to input metadata
-//     input_metadata.emplace("authorization", "Bearer " + valid_token);
-//     grpc::Status status = processor.Process(input_metadata, nullptr, &consumed, &response);
-//     // Asserts that the status is OK
-//     EXPECT_EQ(status.error_code(), grpc::StatusCode::OK);
-// }
+    // Asserts that the status is OK
+    EXPECT_EQ(status.error_code(), grpc::StatusCode::OK);
+}
 
+/*
+ * TEST 2 - ServiceCredentials with missing Authorization metadata.
+ */
 TEST_F(gRPCServiceCredentialsTests, InvalidCredentialsAuthz) {
     OutputMetadata consumed, response; 
 
     grpc::Status status = processor.Process(input_metadata, nullptr, &consumed, &response);
+    
+    // Setting expectations
     EXPECT_EQ(status.error_code(), grpc::StatusCode::PERMISSION_DENIED);
     EXPECT_EQ(status.error_message(), "No bearer token provided");
 }
 
+/*
+ * TEST 3 - ServiceCredentials with invalid token in Authorization metadata.
+ */
 TEST_F(gRPCServiceCredentialsTests, InvalidTokenInAuthzMetadata) {
     OutputMetadata consumed, response;
     input_metadata.emplace("authorization", "Bearer not_a_valid_jwt_token");
 
     grpc::Status status = processor.Process(input_metadata, nullptr, &consumed, &response);
-
+    
+    // Setting expectations
     EXPECT_EQ(status.error_code(), grpc::StatusCode::PERMISSION_DENIED);
     EXPECT_EQ(status.error_message(), "Invalid bearer token");
 }
 
+/*
+ * TEST 4 - Test with a string containing environment variables (e.g. ${HOME}) and verify replacement.
+ */
 TEST(gRPCExpandEnvVariablesTest, ReplaceExistingEnvVar) {
     setenv("HOME", "/tmp/home", 1);
     std::string input = "Path: ${HOME}/data";
     catena::gRPC::expandEnvVariables(input);
+    
+    // Setting expectations
     EXPECT_EQ(input, "Path: /tmp/home/data");
     unsetenv("HOME");
 }
 
+/*
+ * TEST 5 - Test with a string containing an env variable that doesn't exist.
+ */
 TEST(gRPCExpandEnvVariablesTest, ReplaceNonExistingEnvVar) {
     unsetenv("DOES_NOT_EXIST");
     std::string input = "Path: ${DOES_NOT_EXIST}/data";
     catena::gRPC::expandEnvVariables(input);
+    
+    // Setting expectations
     EXPECT_EQ(input, "Path: /data");
 }
 
+/*
+ * TEST 6 - Test with a string containing no env variables.
+ */
 TEST(gRPCExpandEnvVariablesTest, NoEnvVarInString) {
     std::string input = "Path: /static/data";
     catena::gRPC::expandEnvVariables(input);
+    
+    // Setting expectations
     EXPECT_EQ(input, "Path: /static/data");
 }
 
+/*
+ * TEST 7 - Test with FLAGS_secure_comms set to off
+ */
 TEST_F(gRPCServiceCredentialsTests, FlagsSecureCommsOff) {
     absl::SetFlag(&FLAGS_secure_comms, "off");
 
+    // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
     auto insecure = grpc::InsecureServerCredentials();
     EXPECT_EQ(typeid(*creds), typeid(*insecure));
 }
 
+/*
+ * TEST 8 - Test with FLAGS_secure_comms set to tls and mutual_authc set to false.
+ */
 TEST_F(gRPCServiceCredentialsTests, FLAGS_mutual_authcFalse) {
     absl::SetFlag(&FLAGS_secure_comms, "tls");
     absl::SetFlag(&FLAGS_mutual_authc, false);
 
+    // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
     auto insecure = grpc::InsecureServerCredentials();
     EXPECT_NE(typeid(*creds), typeid(*insecure));
     EXPECT_NE(creds, nullptr);
 }
 
+/*
+ * TEST 9 - Test with FLAGS_secure_comms set to tls and mutual_authc set to true.
+ */
 TEST_F(gRPCServiceCredentialsTests, FLAGS_mutual_authcTrue) {
     absl::SetFlag(&FLAGS_secure_comms, "tls");
     absl::SetFlag(&FLAGS_mutual_authc, true);
 
+    // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
     auto insecure = grpc::InsecureServerCredentials();
     EXPECT_NE(typeid(*creds), typeid(*insecure));
     EXPECT_NE(creds, nullptr);
 }
 
-// New test cases for FLAGS_private_ca
+/*
+ * TEST 10 - Test with FLAGS_secure_comms set to tls and private_ca set to false.
+ */
 TEST_F(gRPCServiceCredentialsTests, FLAGS_private_caFalse) {
     absl::SetFlag(&FLAGS_secure_comms, "tls");
     absl::SetFlag(&FLAGS_private_ca, false);
@@ -232,12 +273,16 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_private_caFalse) {
     absl::SetFlag(&FLAGS_key_file, "server.key");
     absl::SetFlag(&FLAGS_cert_file, "server.crt");
 
+    // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
     auto insecure = grpc::InsecureServerCredentials();
     EXPECT_NE(typeid(*creds), typeid(*insecure));
     EXPECT_NE(creds, nullptr);
 }
 
+/*
+ * TEST 11 - Test with FLAGS_secure_comms set to tls and private_ca set to true.
+ */
 TEST_F(gRPCServiceCredentialsTests, FLAGS_private_caTrue) {
     absl::SetFlag(&FLAGS_secure_comms, "tls");
     absl::SetFlag(&FLAGS_private_ca, true);
@@ -246,37 +291,51 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_private_caTrue) {
     absl::SetFlag(&FLAGS_key_file, "server.key");
     absl::SetFlag(&FLAGS_cert_file, "server.crt");
 
+    // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
     auto insecure = grpc::InsecureServerCredentials();
     EXPECT_NE(typeid(*creds), typeid(*insecure));
     EXPECT_NE(creds, nullptr);
 }
 
+/*
+ * TEST 12 - Test with FLAGS_secure_comms set to tls and FLAGS_authz set to false.
+ */
 TEST_F(gRPCServiceCredentialsTests, FLAGS_authzFalse) {
     absl::SetFlag(&FLAGS_secure_comms, "tls");
     absl::SetFlag(&FLAGS_authz, false);
     absl::SetFlag(&FLAGS_certs, "/tmp/testcerts");
     absl::SetFlag(&FLAGS_key_file, "server.key");
     absl::SetFlag(&FLAGS_cert_file, "server.crt");
-
+    
+    // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
     EXPECT_NO_THROW(creds->SetAuthMetadataProcessor(nullptr));
     EXPECT_NE(creds, nullptr);
 }
 
+/*
+ * TEST 13 - Test with FLAGS_secure_comms set to tls and FLAGS_authz set to true.
+ */
 TEST_F(gRPCServiceCredentialsTests, FLAGS_authzTrue) {
     absl::SetFlag(&FLAGS_secure_comms, "tls");
     absl::SetFlag(&FLAGS_authz, true);
     absl::SetFlag(&FLAGS_certs, "/tmp/testcerts");
     absl::SetFlag(&FLAGS_key_file, "server.key");
     absl::SetFlag(&FLAGS_cert_file, "server.crt");
-
+    
+    // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
     EXPECT_NO_THROW(creds->SetAuthMetadataProcessor(nullptr));
     EXPECT_NE(creds, nullptr);
 }
 
+/*
+ * TEST 14 - Test with FLAGS_secure_comms set to an invalid value.
+ */
 TEST_F(gRPCServiceCredentialsTests, FLAGS_secure_commsInvalidValue) {
     absl::SetFlag(&FLAGS_secure_comms, "invalid_value");
+
+    // Setting expectations
     EXPECT_THROW(catena::gRPC::getServerCredentials(), std::invalid_argument);
 }

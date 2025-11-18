@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -39,12 +39,6 @@
 
 using catena::readFile;
 
-/* 
- * Test when authz is missing from authz_metadata (return PERMISSION_DENIED).
- * Test with authz present but token is invalid (thrown and return PERMISSION_DENIED).
- * Test with a valid authz and valid token (decode and add claims, return OK).
- */
-
 grpc::Status catena::gRPC::JWTAuthMetadataProcessor::Process(const InputMetadata& auth_metadata, grpc::AuthContext* context, 
     OutputMetadata* consumed_auth_metadata, OutputMetadata* response_metadata) {
 
@@ -56,7 +50,8 @@ grpc::Status catena::gRPC::JWTAuthMetadataProcessor::Process(const InputMetadata
     // remove the 'Bearer ' text from the beginning
     try {
         LOG(INFO)<<"Removed bearer text";
-        grpc::string_ref t = authz->second.substr(7);
+        constexpr size_t kPrefixLength {std::string("Bearer ").length()};
+        grpc::string_ref t = authz->second.substr(kPrefixLength);
         std::string token(t.begin(), t.end());
         auto decoded = jwt::decode(token);
         context->AddProperty("claims", decoded.get_payload());  
@@ -67,11 +62,7 @@ grpc::Status catena::gRPC::JWTAuthMetadataProcessor::Process(const InputMetadata
     return grpc::Status::OK;
 }
 
-/*
- * Test with a string containing environment variables (e.g. ${HOME}) and verify replacement.
- * Test with a string containing an env variable that doesn't exist (should replace with empty string).
- * Test with a string containing no env variables (should remain unchanged).
- */
+// expand env variables
 void catena::gRPC::expandEnvVariables(std::string &str) {
     static std::regex env{"\\$\\{([^}]+)\\}"};
     std::smatch match;
@@ -82,14 +73,7 @@ void catena::gRPC::expandEnvVariables(std::string &str) {
     }
 }
 
-/*
- * Test with FLAGS_secure_comms set to off (should return insecure credentials).
- * Test with FLAGS_secure_comms set to tls and FLAGS_mutual_authc true/false (should set correct SSL options).
- * Test with FLAGS_secure_comms set to tls and FLAGS_private_ca true/false (should read CA cert or not).
- * Test with FLAGS_secure_comms set to tls and Valid/invalid file paths for certs and keys (should read files, handle errors).
- * Test with FLAGS_secure_comms set to tls and FLAGS_authz true/false (should attach authz processor or not).
- * Test with FLAGS_secure_comms set to an invalid value (should throw invalid_argument).
- */
+// creates a Security Credentials object based on the command line options
 std::shared_ptr<grpc::ServerCredentials> catena::gRPC::getServerCredentials() {
     std::shared_ptr<::grpc::ServerCredentials> ans;
     if (absl::GetFlag(FLAGS_secure_comms).compare("off") == 0) {

@@ -74,12 +74,7 @@ class gRPCServiceImplTests : public testing::Test {
     }
   
     /*
-     * Redirects cout to a stringstream for capturing output.
-     * Sets up a mock expectation for device slots
-     * Builds and starts a gRPC server registers the ServiceImpl service and intializes it.
-     * Starts a thread to process gRPC events (service_->processEvents()).
-     * Creates a gRPC client stub for testing.
-     * Asserts that the expected number of CallData handlers are registered.
+     * Redirects cout and creates a grpc server around our service for testing.
      */
     void SetUp() override {
         // Redirecting cout to a stringstream for testing.
@@ -106,10 +101,7 @@ class gRPCServiceImplTests : public testing::Test {
     }
 
     /*
-     * Shuts down gRPC server and completion queue.
-     * Joins the event processing thread.
-     * Asserts that all CallData handlers are deregistered (ensuring no active RPCs remain).
-     * Restores cout.
+     * Restored cout and cleans up the server.
      */
     void TearDown() override {
         // Cleaning up the server.

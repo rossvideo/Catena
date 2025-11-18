@@ -151,7 +151,8 @@
         "format": "cpp",
         "shared_mutex": "cpp",
         "span": "cpp",
-        "typeindex": "cpp"
+        "typeindex": "cpp",
+        "*.inc": "cpp"
     },
     "java.compile.nullAnalysis.mode": "disabled"
 }

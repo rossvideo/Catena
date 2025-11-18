@@ -36,11 +36,6 @@ using catena::gRPC::ServiceImpl;
 // Defining the port flag from SharedFlags.h
 ABSL_FLAG(uint16_t, port, 6254, "Catena gRPC service port");
 
-/* 
- * Sets up the gRPC service implementation
- * Requires a completion queue and a list of device managers.
- * Throws Errors if the completion queue is missing or if there are duplicate device slots.
- */
 ServiceImpl::ServiceImpl(const ServiceConfig& config)
     : cq_{config.cq},
       EOPath_{config.EOPath}, 
@@ -60,9 +55,8 @@ ServiceImpl::ServiceImpl(const ServiceConfig& config)
     }
 }
 
-/*
- * Initializes the service by creating CallData objects for each gRPC command (GetValue, SetValue etc)
- * These objects handle incoming RPCs.
+/**
+ * Creates the CallData objects for each gRPC command.
  */
 void ServiceImpl::init() {
     new catena::gRPC::GetPopulatedSlots(this, dms_, true);
@@ -84,11 +78,7 @@ void ServiceImpl::init() {
 // Initializing the shutdown signal for all open connections.
 vdk::signal<void()> catena::gRPC::Connect::shutdownSignal_;
 
-/* 
- * Continually process events from the gRPC completion queue.
- * For each event, it spawns a thread to handle the RPC.
- * On shutdown, it waits for the all active RPCs to finish before exiting.
- */
+// Processes events in the server's completion queue.
 void ServiceImpl::processEvents() {
     void *tag;
     bool ok;
@@ -112,10 +102,7 @@ void ServiceImpl::processEvents() {
     }
 }
 
-/* 
- * Manages a registery of active CallData objects.
- * Items are added when an RPC starts and removed when it finishes.
- */
+//Registers current CallData object into the registry
 void ServiceImpl::registerItem(ICallData *cd) {
     std::lock_guard<std::mutex> lock(registryMutex_);
     this->registry_.push_back(RegistryItem(cd));
