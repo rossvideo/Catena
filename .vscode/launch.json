@@ -93,7 +93,7 @@
         "program": "${workspaceFolder}/${env:BUILD_TARGET}/connections/gRPC/examples/${input:pickService}/${input:pickService}", // Path to the full_service executable
         "args": ["--static_root", "${workspaceFolder}/sdks/cpp/connections/gRPC/examples/${input:pickService}/static", 
                 //  "--secure_comms", "tls",
-                "--authz",
+                //"--authz",
                 "--log_dir", "${workspaceFolder}/logs"
         ], // Any command-line arguments go here
         "stopAtEntry": false,
@@ -215,8 +215,8 @@
       "type": "pickString",
       "options": ["status_update",
                   "external_object_request",
-                  "structs_with_authz",
-                  "structs_with_authz_yaml",
+                  "audiodeck",
+                  "audiodeck_yaml",
                   "use_commands",
                   "one_of_everything",
                   "simple_dashboard_audiodeck"
