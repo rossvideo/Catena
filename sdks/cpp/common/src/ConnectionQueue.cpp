@@ -51,23 +51,12 @@ bool ConnectionQueue::registerConnection(IConnect* cd) {
                     return cancelled;
                 });
         }
-        // Find the index to insert the new connection based on priority.
-        auto it = std::find_if(connectionQueue_.begin(), connectionQueue_.end(),
-            [cd](const IConnect* connection) {
-                assert(connection);
-                return *cd < *connection;
-            });
-        // Based on the iterator, determine if we can add the connection.
+        // If still full after removing cancelled connections, fail to add.
         if (connectionQueue_.size() >= maxConnections_) {
-            if (it != connectionQueue_.begin()) {
-                // Forcefully shutting down lowest priority connection.
-                connectionQueue_.insert(it, cd);
-                connectionQueue_.front()->shutdown();
-                connectionQueue_.erase(connectionQueue_.begin());
-                added = true;
-            }
+            added = false;
         } else {
-            connectionQueue_.insert(it, cd);
+            // Append to the end (FIFO), no priority ordering or eviction.
+            connectionQueue_.push_back(cd);
             added = true;
         }
     }

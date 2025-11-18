@@ -33,6 +33,7 @@
  * @brief Implements the ConnectionQueue class which manages connections to a
  * service.
  * @author Ben Whitten (benjamin.whitten@rossvideo.com)
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @copyright Copyright (c) 2025 Ross Video
  */
 
@@ -51,9 +52,10 @@ namespace common {
 /**
  * @brief Class for managing connections to a service.
  * 
- * This class manages connections via a priority queue which will forcefully
- * disconnect lower priority connections which exceed the defined max.
- * Priority is determined by the IConnect object.
+ * This class maintains a bounded connection queue. When the queue reaches the
+ * configured maximum, it first removes cancelled connections. If the queue is
+ * still full, new connection registrations are rejected instead of evicting
+ * existing connections.
  */
 class ConnectionQueue : public IConnectionQueue {
   public:
@@ -64,11 +66,12 @@ class ConnectionQueue : public IConnectionQueue {
      */
     ConnectionQueue(uint32_t maxConnections) : maxConnections_(maxConnections) {}
     /**
-     * @brief Regesters a Connect CallData object into the priority queue.
+     * @brief Registers a Connect CallData object into the connection queue.
      * 
      * If the queue is full, the queue will first check for any cancelled
-     * connections it can remove. If none are found, it will then forcefully
-     * shutdown the lowest priority connection to make way for the new one.
+     * connections it can remove. If none are found, the registration is
+     * rejected and the function returns false. Otherwise, the connection is
+     * appended to the queue.
      * 
      * @param cd The Connect CallData object to register.
      * @return True if successfully registered, False otherwise.
@@ -93,11 +96,10 @@ class ConnectionQueue : public IConnectionQueue {
      */
     std::mutex mtx_;
     /**
-     * @brief The priority queue for Connect CallData objects.
+     * @brief The connection queue for Connect CallData objects.
      * 
-     * This is a vector instead of an actual priority queue object as
-     * individual access is required for deregistering connections at the end
-     * of their lifetime.
+     * This is a vector to allow individual access for deregistering connections
+     * at the end of their lifetime.
      */
     std::vector<IConnect*> connectionQueue_;
 };
