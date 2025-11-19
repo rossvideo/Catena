@@ -30,7 +30,7 @@
 
 /**
  * @brief Mock implementation for the gRPC AuthContext class.
- * @author jasonchen@ross.video.com
+ * @author jason.chen@rossvideo.com
  * @date 25/11/18
  * @copyright Copyright © 2025 Ross Video Ltd
  */

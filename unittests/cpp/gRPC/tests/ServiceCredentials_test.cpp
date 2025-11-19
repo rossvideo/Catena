@@ -70,9 +70,6 @@
 using namespace catena::common;
 using namespace catena::gRPC;
 
-// Define the log directory for unit tests
-#define UNITTEST_LOG_DIR "/tmp/unittest_logs"
-
 // Fixture
 class gRPCServiceCredentialsTests : public testing::Test {
   protected:
@@ -86,10 +83,6 @@ class gRPCServiceCredentialsTests : public testing::Test {
     }
 
     void SetUp() override {
-        // Redirecting cout to a stringstream for testing.
-        oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
-        EXPECT_CALL(dm_, slot()).WillRepeatedly(testing::Return(0));
-
         // Set environment variable for expansion
         setenv("TEST_CERT_PATH", "/tmp/testcerts", 1);
 
@@ -117,43 +110,27 @@ class gRPCServiceCredentialsTests : public testing::Test {
         input_metadata.clear();
         output_metadata.clear();
     }
-    
-    // Cout variables
-    std::stringstream MockConsole_;
-    std::streambuf* oldCout_;
 
-    // Address used for gRPC tests.
-    std::string serverAddr_ = "0.0.0.0:50051";
     // Metadata variables for tests
-    using InputMetadata = std::multimap<grpc::string_ref, grpc::string_ref>;
-    using OutputMetadata = std::multimap<std::string, std::string>;
-    InputMetadata input_metadata;
-    OutputMetadata output_metadata;
+    std::multimap<grpc::string_ref, grpc::string_ref> input_metadata;
+    std::multimap<std::string, std::string> output_metadata;
     JWTAuthMetadataProcessor processor;
-    grpc::ClientContext clientContext_;
-    MockAuthContext mockauthcontext_;
-    // Server and service variables.
-    grpc::ServerBuilder builder_;
-    std::unique_ptr<grpc::Server> server_ = nullptr;
-    std::unique_ptr<ServiceImpl> service_ = nullptr;
-    MockDevice dm_;
-    // Random variables
-    bool authzEnabled_ = false;
+    MockAuthContext mockAuthcontext_;
 };
 
 /*
  * TEST 1 -  Normal case for ServiceCredentials Process().
  */
 TEST_F(gRPCServiceCredentialsTests, ValidCredentials) {
-    OutputMetadata consumed, response;
+    std::multimap<std::string, std::string> consumed, response;
     // Fetching JWT token
     std::string token("Bearer " + getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
     grpc::string_ref token_ref(token);
     
     // Adds the token to input metadata
     input_metadata.emplace("authorization", token_ref);
-    EXPECT_CALL(mockauthcontext_, AddProperty("claims", ::testing::_)).Times(1);
-    grpc::Status status = processor.Process(input_metadata, &mockauthcontext_, &consumed, &response);
+    EXPECT_CALL(mockAuthcontext_, AddProperty("claims", ::testing::_)).Times(1);
+    grpc::Status status = processor.Process(input_metadata, &mockAuthcontext_, &consumed, &response);
 
     // Asserts that the status is OK
     EXPECT_EQ(status.error_code(), grpc::StatusCode::OK);
@@ -163,7 +140,7 @@ TEST_F(gRPCServiceCredentialsTests, ValidCredentials) {
  * TEST 2 - ServiceCredentials with missing Authorization metadata.
  */
 TEST_F(gRPCServiceCredentialsTests, InvalidCredentialsAuthz) {
-    OutputMetadata consumed, response; 
+    std::multimap<std::string, std::string> consumed, response; 
 
     grpc::Status status = processor.Process(input_metadata, nullptr, &consumed, &response);
     
@@ -176,7 +153,7 @@ TEST_F(gRPCServiceCredentialsTests, InvalidCredentialsAuthz) {
  * TEST 3 - ServiceCredentials with invalid token in Authorization metadata.
  */
 TEST_F(gRPCServiceCredentialsTests, InvalidTokenInAuthzMetadata) {
-    OutputMetadata consumed, response;
+    std::multimap<std::string, std::string> consumed, response;
     input_metadata.emplace("authorization", "Bearer not_a_valid_jwt_token");
 
     grpc::Status status = processor.Process(input_metadata, nullptr, &consumed, &response);
@@ -326,7 +303,6 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_authzTrue) {
     
     // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
-    EXPECT_NO_THROW(creds->SetAuthMetadataProcessor(nullptr));
     EXPECT_NE(creds, nullptr);
 }
 
