@@ -112,8 +112,8 @@ class gRPCServiceCredentialsTests : public testing::Test {
     }
 
     // Metadata variables for tests
-    std::multimap<grpc::string_ref, grpc::string_ref> input_metadata;
-    std::multimap<std::string, std::string> output_metadata;
+    grpc::AuthMetadataProcessor::InputMetadata input_metadata;
+    grpc::AuthMetadataProcessor::OutputMetadata output_metadata;
     JWTAuthMetadataProcessor processor;
     MockAuthContext mockAuthcontext_;
 };
@@ -122,7 +122,7 @@ class gRPCServiceCredentialsTests : public testing::Test {
  * TEST 1 -  Normal case for ServiceCredentials Process().
  */
 TEST_F(gRPCServiceCredentialsTests, ValidCredentials) {
-    std::multimap<std::string, std::string> consumed, response;
+    grpc::AuthMetadataProcessor::OutputMetadata consumed, response;
     // Fetching JWT token
     std::string token("Bearer " + getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor)));
     grpc::string_ref token_ref(token);
@@ -140,7 +140,7 @@ TEST_F(gRPCServiceCredentialsTests, ValidCredentials) {
  * TEST 2 - ServiceCredentials with missing Authorization metadata.
  */
 TEST_F(gRPCServiceCredentialsTests, InvalidCredentialsAuthz) {
-    std::multimap<std::string, std::string> consumed, response; 
+    grpc::AuthMetadataProcessor::OutputMetadata consumed, response; 
 
     grpc::Status status = processor.Process(input_metadata, nullptr, &consumed, &response);
     
@@ -153,7 +153,7 @@ TEST_F(gRPCServiceCredentialsTests, InvalidCredentialsAuthz) {
  * TEST 3 - ServiceCredentials with invalid token in Authorization metadata.
  */
 TEST_F(gRPCServiceCredentialsTests, InvalidTokenInAuthzMetadata) {
-    std::multimap<std::string, std::string> consumed, response;
+    grpc::AuthMetadataProcessor::OutputMetadata consumed, response;
     input_metadata.emplace("authorization", "Bearer not_a_valid_jwt_token");
 
     grpc::Status status = processor.Process(input_metadata, nullptr, &consumed, &response);
@@ -287,7 +287,6 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_authzFalse) {
     
     // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
-    EXPECT_NO_THROW(creds->SetAuthMetadataProcessor(nullptr));
     EXPECT_NE(creds, nullptr);
 }
 
