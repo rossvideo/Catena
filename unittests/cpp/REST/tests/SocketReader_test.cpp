@@ -278,3 +278,45 @@ TEST_F(RESTSocketReaderTests, SocketReader_LongJsonBody) {
 TEST_F(RESTSocketReaderTests, SocketReader_HeadersUnset) {
     testCall(catena::REST::Method_GET, 1, "/test-call", "/test/oid", false, {}, false, "", "*", st2138::Device_DetailLevel_UNSET, "", "");
 }
+
+/*
+ * TEST 15 - Headers are case-insensitive (per HTTP spec).
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_HeaderCaseInsensitive) {
+    // Authz false by default.
+    EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(false));
+    // Build and send request with non-canonical header casing
+    const RESTMethod method = catena::REST::Method_GET;
+    const uint32_t slot = 1;
+    const std::string endpoint = "/test-call";
+    const std::string fqoid = "/test/oid";
+    const bool stream = false;
+    const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
+    const std::string jwsToken = ""; // auth disabled
+    const std::string origin = "*";
+    const auto detailLevel = st2138::Device_DetailLevel_NONE;
+    const std::string language = "en";
+    const std::string jsonBody = "{test_json_body}";
+    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
+                                jwsToken, origin, detailLevel, language, jsonBody,
+                                "origin",            // lower-case
+                                "AUTHORIZATION",     // upper-case
+                                "dEtAiL-LeVeL",      // mixed-case
+                                "LANGUAGE",          // upper-case
+                                "content-length");   // lower-case
+    socketReader.read(serverSocket_);
+    // Validate results identical to normal case
+    EXPECT_EQ(socketReader.method(), method);
+    EXPECT_EQ(socketReader.slot(), slot);
+    EXPECT_EQ(socketReader.endpoint(), endpoint);
+    EXPECT_EQ(socketReader.fqoid(), fqoid);
+    for (auto [key, value] : fields) {
+        EXPECT_EQ(socketReader.hasField(key), true);
+        EXPECT_EQ(socketReader.fields(key), value);
+    }
+    EXPECT_EQ(socketReader.origin(), origin);
+    EXPECT_EQ(socketReader.detailLevel(), detailLevel);
+    EXPECT_EQ(socketReader.jsonBody(), jsonBody);
+    EXPECT_EQ(socketReader.authorizationEnabled(), false);
+    EXPECT_EQ(socketReader.stream(), stream);
+}

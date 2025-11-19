@@ -1,5 +1,7 @@
 
 #include <SocketReader.h>
+#include <algorithm>
+#include <cctype>
 using catena::REST::SocketReader;
 
 void SocketReader::read(tcp::socket& socket) {
@@ -77,28 +79,47 @@ void SocketReader::read(tcp::socket& socket) {
     // Looping through headers to retrieve JWS token and json body len.
     std::size_t contentLength = 0;
     while(std::getline(header_stream, header) && header != "\r") {
+        // Parse "<name>: <value>" and handle header name case-insensitively
+        std::size_t sep = header.find(':');
+        if (sep == std::string::npos) {
+            continue;
+        }
+        std::string nameLower = header.substr(0, sep);
+        std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(),
+                       [](unsigned char c){ return static_cast<char>(std::tolower(c)); });
+        std::string value = header.substr(sep + 1);
+        // Trim leading spaces
+        while (!value.empty() && (value.front() == ' ' || value.front() == '\t')) {
+            value.erase(0, 1);
+        }
+        // Trim trailing CR and spaces
+        while (!value.empty() && (value.back() == '\r' || value.back() == ' ' || value.back() == '\t')) {
+            value.pop_back();
+        }
+
         // Getting jwsToken.
-        if (service_->authorizationEnabled() && jwsToken_.empty() && header.starts_with("Authorization: Bearer ")) {
-            jwsToken_ = header.substr(std::string("Authorization: Bearer ").length());
-            // Removing newline.
-            jwsToken_.erase(jwsToken_.length() - 1);
+        if (service_->authorizationEnabled() && jwsToken_.empty() && nameLower == "authorization") {
+            // Expect "Bearer <token>" (keep scheme check case-sensitive as before)
+            static const std::string kBearerPrefix = "Bearer ";
+            if (value.rfind(kBearerPrefix, 0) == 0) {
+                jwsToken_ = value.substr(kBearerPrefix.length());
+            }
         }
         // Getting origin
-        else if (origin_.empty() && header.starts_with("Origin: ")) {
-            origin_ = header.substr(std::string("Origin: ").length());
+        else if (origin_.empty() && nameLower == "origin") {
+            origin_ = value;
         }
         // Getting detail level from header
-        else if (detailLevel_ == st2138::Device_DetailLevel_UNSET && header.starts_with("Detail-Level: ")) {
-            std::string dl = header.substr(std::string("Detail-Level: ").length());
-            dl.erase(dl.length() - 1); // Removing newline
+        else if (detailLevel_ == st2138::Device_DetailLevel_UNSET && nameLower == "detail-level") {
+            std::string dl = value;
             auto& dlMap = catena::common::DetailLevel().getReverseMap();
             if (dlMap.contains(dl)) {
                 detailLevel_ = dlMap.at(dl);
             }
         }
         // Getting body content-Length
-        else if (contentLength == 0 && header.starts_with("Content-Length: ")) {
-            contentLength = stoi(header.substr(std::string("Content-Length: ").length()));
+        else if (contentLength == 0 && nameLower == "content-length") {
+            contentLength = stoi(value);
         }
     }
     // If body exists, we need to handle leftover data and append the rest.

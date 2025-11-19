@@ -148,6 +148,69 @@ class RESTTest {
     }
 
     /*
+     * Writes a request allowing custom header names (to test case-insensitivity).
+     */
+    void writeRequestWithHeaderNames(RESTMethod method,
+                      uint32_t slot,
+                      const std::string& endpoint,
+                      const std::string& fqoid,
+                      bool stream,
+                      const std::unordered_map<std::string, std::string>& fields,
+                      const std::string& jwsToken,
+                      const std::string& origin,
+                      st2138::Device_DetailLevel detailLevel,
+                      const std::string& language,
+                      const std::string& jsonBody,
+                      const std::string& originHeaderName,
+                      const std::string& authorizationHeaderName,
+                      const std::string& detailLevelHeaderName,
+                      const std::string& languageHeaderName,
+                      const std::string& contentLengthHeaderName) {
+        std::string request = "";
+        // Path
+        request += RESTMethodMap().getForwardMap().at(method)
+                + " /st2138-api/v1";
+        if (slot != 0) {
+            request += "/" + std::to_string(slot);
+        }
+        request += endpoint;
+        if (!fqoid.empty()) {
+            request += fqoid;
+        }
+        if (stream) {
+            request += "/stream";
+        }
+        // Query parameters
+        std::string fieldsStr = "";
+        for (auto [fName, fValue] : fields) {
+            if (fieldsStr.empty()) {
+                fieldsStr += "?" + fName + "=" + fValue;
+            } else {
+                fieldsStr += "&" + fName + "=" + fValue;
+            }
+        }
+        request += fieldsStr;
+        // Headers (use provided header names as-is)
+        request += " HTTP/1.1\n"
+                   + originHeaderName + ": " + origin + "\n"
+                   "User-Agent: test_agent\n"
+                   + authorizationHeaderName + ": Bearer " + jwsToken + " \n";
+        if (detailLevel != st2138::Device_DetailLevel_UNSET) {
+            request += detailLevelHeaderName + ": "
+                    + catena::patterns::EnumDecorator<st2138::Device_DetailLevel>().getForwardMap().at(detailLevel)
+                    + " \n";
+        }
+        if (!language.empty()) {
+            request += languageHeaderName + ": " + language + " \n";
+        }
+        // Body
+        request += contentLengthHeaderName + ": " + std::to_string(jsonBody.length()) + "\r\n\r\n"
+                   + jsonBody + "\n"
+                   "\r\n\r\n";
+        boost::asio::write(*writeSocket_, boost::asio::buffer(request));
+    }
+
+    /*
      * Returns whatever has been writen to the readSocket_..
      *
      * Note: This only reads a limited amount of data (up to 4096 bytes). This
