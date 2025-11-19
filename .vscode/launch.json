@@ -196,6 +196,7 @@
                   "connections/gRPC/examples/use_menus/device.use_menus.json",
                   "connections/gRPC/examples/audiodeck/device.AudioDeck.json",
                   "connections/gRPC/examples/audiodeck_yaml/device.AudioDeck.yaml",
+                  "connections/gRPC/examples/simple_dashboard_audiodeck/device.simple_dashboard_audiodeck.json",
                   "connections/REST/examples/asset_request_REST/device.asset_request_REST.json",
                   "connections/REST/examples/audiodeck_JSON_REST/device.audiodeck.json",
                   "connections/REST/examples/audiodeck_REST/device.audiodeck.yaml",
@@ -217,7 +218,8 @@
                   "structs_with_authz",
                   "structs_with_authz_yaml",
                   "use_commands",
-                  "one_of_everything"
+                  "one_of_everything",
+                  "simple_dashboard_audiodeck"
                 ],
       "default": "status_update"
     },
