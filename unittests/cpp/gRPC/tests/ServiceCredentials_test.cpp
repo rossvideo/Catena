@@ -110,7 +110,7 @@ class gRPCServiceCredentialsTests : public testing::Test {
 
     // Metadata variables for tests
     grpc::AuthMetadataProcessor::InputMetadata input_metadata_;
-    JWTAuthMetadataProcessor processor;
+    JWTAuthMetadataProcessor processor_;
     MockAuthContext mockAuthcontext_;
 };
 
@@ -126,7 +126,7 @@ TEST_F(gRPCServiceCredentialsTests, ValidCredentials) {
     // Adds the token to input metadata
     input_metadata_.emplace("authorization", token_ref);
     EXPECT_CALL(mockAuthcontext_, AddProperty("claims", ::testing::_)).Times(1);
-    grpc::Status status = processor.Process(input_metadata_, &mockAuthcontext_, &consumed, &response);
+    grpc::Status status = processor_.Process(input_metadata_, &mockAuthcontext_, &consumed, &response);
 
     // Asserts that the status is OK
     EXPECT_EQ(status.error_code(), grpc::StatusCode::OK);
@@ -138,7 +138,7 @@ TEST_F(gRPCServiceCredentialsTests, ValidCredentials) {
 TEST_F(gRPCServiceCredentialsTests, InvalidCredentialsAuthz) {
     grpc::AuthMetadataProcessor::OutputMetadata consumed, response; 
 
-    grpc::Status status = processor.Process(input_metadata_, nullptr, &consumed, &response);
+    grpc::Status status = processor_.Process(input_metadata_, nullptr, &consumed, &response);
     
     // Setting expectations
     EXPECT_EQ(status.error_code(), grpc::StatusCode::PERMISSION_DENIED);
@@ -152,7 +152,7 @@ TEST_F(gRPCServiceCredentialsTests, InvalidTokenInAuthzMetadata) {
     grpc::AuthMetadataProcessor::OutputMetadata consumed, response;
     input_metadata_.emplace("authorization", "Bearer not_a_valid_jwt_token");
 
-    grpc::Status status = processor.Process(input_metadata_, nullptr, &consumed, &response);
+    grpc::Status status = processor_.Process(input_metadata_, nullptr, &consumed, &response);
     
     // Setting expectations
     EXPECT_EQ(status.error_code(), grpc::StatusCode::PERMISSION_DENIED);
