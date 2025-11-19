@@ -108,6 +108,28 @@ void audioDeckUpdateHandler(const std::string& jptr, const IParam* p) {
     }
 }
 
+// Simulate some audio meter levels
+void inputMeters() {
+    while (globalLoop) {
+        for (size_t ch = 0; ch < 8; ++ch) {
+            try {
+                st2138::Value value;
+                std::string inputOid = absl::StrFormat("/audio_deck/%d/input", ch);
+                std::string gainOid = absl::StrFormat("/audio_deck/%d/gain", ch);
+
+                dm.getValue(gainOid, value); // ensure param exists
+                float level = value.float32_value() + (static_cast<float>(rand() % 100) - 50) / 50.0f;
+
+                value.set_float32_value(level);
+                dm.setValue(inputOid, value);
+            } catch (const std::exception& e) {
+                LOG(ERROR) << "Error updating input meter for channel " << ch << ": " << e.what();
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+}
+
 void defineCommands() {
     catena::exception_with_status err{"", catena::StatusCode::OK};
 
@@ -180,6 +202,10 @@ void RunRPCServer(std::string addr)
         handlers["audio_deck"] = audioDeckUpdateHandler;
 
         dm.getValueSetByClient().connect([&handlers](const std::string& oid, const IParam* p) {
+            //only print if param isnt input meter
+            if (std::regex_match(oid, std::regex(R"(^/audio_deck/\d+/input$)"))) {
+                return;
+            }
             LOG(INFO) << "signal received: " << oid << " has been changed by client";
 
             Path jptr(oid);
@@ -191,6 +217,8 @@ void RunRPCServer(std::string addr)
             }
         });
 
+        std::thread businessLogicThread(inputMeters);
+        
         // start the heartbeat on the device
         dm.setHeartbeatParam("/product/version");
         dm.startHeartbeat();
@@ -198,6 +226,8 @@ void RunRPCServer(std::string addr)
         // wait for the server to shutdown and tidy up
         server->Wait();
         dm.stopHeartbeat();
+
+        businessLogicThread.join();
 
         cq->Shutdown();
         cq_thread.join();
