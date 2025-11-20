@@ -217,8 +217,8 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_mutual_authcFalse) {
     // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
     auto insecure = grpc::InsecureServerCredentials();
-    EXPECT_NE(typeid(*creds), typeid(*insecure));
     EXPECT_NE(creds, nullptr);
+    EXPECT_NE(typeid(*creds), typeid(*insecure));
 }
 
 /*
@@ -231,8 +231,8 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_mutual_authcTrue) {
     // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
     auto insecure = grpc::InsecureServerCredentials();
-    EXPECT_NE(typeid(*creds), typeid(*insecure));
     EXPECT_NE(creds, nullptr);
+    EXPECT_NE(typeid(*creds), typeid(*insecure));
 }
 
 /*
@@ -249,8 +249,8 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_private_caFalse) {
     // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
     auto insecure = grpc::InsecureServerCredentials();
-    EXPECT_NE(typeid(*creds), typeid(*insecure));
     EXPECT_NE(creds, nullptr);
+    EXPECT_NE(typeid(*creds), typeid(*insecure));
 }
 
 /*
@@ -267,8 +267,8 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_private_caTrue) {
     // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
     auto insecure = grpc::InsecureServerCredentials();
-    EXPECT_NE(typeid(*creds), typeid(*insecure));
     EXPECT_NE(creds, nullptr);
+    EXPECT_NE(typeid(*creds), typeid(*insecure));
 }
 
 /*
@@ -283,7 +283,9 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_authzFalse) {
     
     // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
+    auto insecure = grpc::InsecureServerCredentials();
     EXPECT_NE(creds, nullptr);
+    EXPECT_NE(typeid(*creds), typeid(*insecure));
 }
 
 /*
@@ -298,7 +300,9 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_authzTrue) {
     
     // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
+    auto insecure = grpc::InsecureServerCredentials();
     EXPECT_NE(creds, nullptr);
+    EXPECT_NE(typeid(*creds), typeid(*insecure));
 }
 
 /*
