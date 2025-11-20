@@ -67,19 +67,27 @@ void UpdateSubscriptions::proceed(bool ok) {
             { // rc scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             try {
-                // Getting device at specified slot.
-                if (dms_.contains(req_.slot())) {
-                    dm_ = dms_.at(req_.slot());
+                // Validate the slot range
+                if (req_.slot() < 0 || req_.slot() > 65535) {
+                    rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
                 }
-                // Making sure the device exists.
-                if (!dm_) {
-                    rc = catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
-
-                // Make sure subscriptions are enabled.
-                } else if (!dm_->subscriptions()) {
+                
+                // Only proceed to check device existence if slot is valid
+                if (rc.status == catena::StatusCode::OK) {
+                    // Getting device at specified slot.
+                    if (dms_.contains(req_.slot())) {
+                        dm_ = dms_.at(req_.slot());
+                    }
+                    // Making sure the device exists.
+                    if (!dm_) {
+                        rc = catena::exception_with_status("Device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
+                    }
+                    else if (!dm_->subscriptions()) {
                     rc = catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::FAILED_PRECONDITION);
+                    }
+                }
 
-                } else {
+                if (dm_ && rc.status == catena::StatusCode::OK) {
                     // Supressing errors.
                     catena::exception_with_status supressErr{"", catena::StatusCode::OK};
                     // Creating authorizer.

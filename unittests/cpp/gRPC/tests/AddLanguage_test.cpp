@@ -227,7 +227,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrReturnCatena) {
  */
 TEST_F(gRPCAddLanguageTests, AddLanguage_ErrInvalidSlot) {
     initPayload(dms_.size(), "", "", {});
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
+    expRc_ = catena::exception_with_status("Device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     // Setting expectations
     EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm1_, addLanguage(::testing::_, ::testing::_)).Times(0);
@@ -259,6 +259,19 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowUnknown) {
     // Setting expectations
     EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
+    EXPECT_CALL(dm1_, addLanguage(::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC
+    testRPC();
+}
+
+/* 
+ * TEST 11 - AddLanguage with slot number out of valid range.
+ */
+TEST_F(gRPCAddLanguageTests, AddLanguage_InvalidSlotOutOfBound) {
+    initPayload(65536, "en", "English", {{"greeting", "Hello"}});
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations - no device methods should be called
+    EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm1_, addLanguage(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();

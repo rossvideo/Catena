@@ -212,7 +212,7 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_NotSupported) {
 // 0.2: Error Case - UpdateSubscriptions with an invalid slot
 TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_InvalidSlot) {
     initPayload(dms_.size(), {"param1"}, {"param2"});
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
+    expRc_ = catena::exception_with_status("Device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     
     // Setting expectations - no subscription operations should happen for invalid slot
     EXPECT_CALL(subManager_, addSubscription(testing::_, testing::_, testing::_, testing::_)).Times(0);
@@ -473,4 +473,20 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_AuthzInvalid) {
     
     // Calling proceed and testing the output
     testRPC();
+}
+
+// 3.3: Error Case - UpdateSubscriptions with slot number out of valid range.
+TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_SlotOutOfBound) {
+    initPayload(65536, {"param1", "param2"}, {});
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations - no subscription operations should happen for invalid slot
+    EXPECT_CALL(subManager_, addSubscription(testing::_, testing::_, testing::_, testing::_)).Times(0);
+    EXPECT_CALL(subManager_, removeSubscription(testing::_, testing::_, testing::_)).Times(0);
+    
+    // Calling proceed and testing the output
+    testRPC();
+
+    // Verify no subscription operations were performed
+    EXPECT_EQ(addedOids_, 0);
+    EXPECT_EQ(removedOids_, 0);
 }

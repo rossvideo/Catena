@@ -206,7 +206,7 @@ TEST_F(gRPCGetValueTests, GetValue_AuthzJWSNotFound) {
  * TEST 7 - No device in the specified slot.
  */
 TEST_F(gRPCGetValueTests, GetValue_ErrInvalidSlot) {
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
+    expRc_ = catena::exception_with_status("Device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     initPayload(dms_.size(), "/test_oid");
     // Setting expectations
     EXPECT_CALL(dm0_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
@@ -258,6 +258,19 @@ TEST_F(gRPCGetValueTests, GetValue_ErrThrowUnknown) {
     EXPECT_CALL(dm0_, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
     EXPECT_CALL(dm1_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC.
+    testRPC();
+}
+
+/*
+ * TEST 11 - GetValue with slot number out of valid range.
+ */
+TEST_F(gRPCGetValueTests, GetValue_SlotOutOfBound) {
+    initPayload(65536, "/test_oid");
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getValue(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getValue(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }

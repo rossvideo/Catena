@@ -311,7 +311,7 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_AuthzJWSNotFound) {
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrInvalidSlot) {
     initPayload(dms_.size(), st2138::Device_DetailLevel_FULL, {});
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
+    expRc_ = catena::exception_with_status("Device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     // Setting expectations
     EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
@@ -399,6 +399,19 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowUnknown) {
         .WillOnce(::testing::Return(expVals_[1]))
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
     EXPECT_CALL(*mockSerializer_, hasMore()).Times(2).WillRepeatedly(::testing::Return(true));
+    // Sending the RPC
+    testRPC();
+}
+
+/* 
+ * TEST 14 - DeviceRequest with slot number out of valid range.
+ */
+TEST_F(gRPCDeviceRequestTests, DeviceRequest_SlotOutOfBound) {
+    initPayload(65536, st2138::Device_DetailLevel::Device_DetailLevel_FULL, {});
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations - no device methods should be called
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }

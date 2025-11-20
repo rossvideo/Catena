@@ -244,7 +244,7 @@ TEST_F(gRPCGetParamTests, GetParam_AuthzJWSNotFound) {
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrInvalidSlot) {
     initPayload(dms_.size(), "/test_oid");
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
+    expRc_ = catena::exception_with_status("Device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     // Setting expectations
     EXPECT_CALL(dm0_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
@@ -350,6 +350,19 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowUnknown) {
     EXPECT_CALL(*mockParam, getOid()).WillRepeatedly(::testing::ReturnRef(expVal_.oid()));
     EXPECT_CALL(*mockParam, toProto(::testing::An<st2138::Param&>(), ::testing::_)).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
+    // Sending the RPC.
+    testRPC();
+}
+
+/*
+ * TEST 14 - GetParam with slot number out of valid range.
+ */
+TEST_F(gRPCGetParamTests, GetParam_SlotOutOfBound) {
+    initPayload(65536, "/test_oid");
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }
