@@ -1,6 +1,5 @@
 
 #include <SocketReader.h>
-#include <algorithm>
 #include <cctype>
 using catena::REST::SocketReader;
 
