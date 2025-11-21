@@ -1,7 +1,33 @@
 
 #include <SocketReader.h>
-#include <cctype>
+#include <string_view>
 using catena::REST::SocketReader;
+
+namespace {
+static inline bool iequals_header_name(std::string_view a, std::string_view b) {
+    if (a.size() != b.size()) return false;
+    const unsigned char* pa = reinterpret_cast<const unsigned char*>(a.data());
+    const unsigned char* pb = reinterpret_cast<const unsigned char*>(b.data());
+    const std::size_t n = a.size();
+
+    for (std::size_t i = 0; i < n; ++i) {
+        unsigned char ca = pa[i];
+        unsigned char cb = pb[i]; // already lowercase
+
+        if (ca == cb) continue; // fast path
+
+        // Fold only 'A'..'Z' to 'a'..'z'
+        if (ca >= 'A' && ca <= 'Z') {
+            ca = static_cast<unsigned char>(ca | 0x20); // to lowercase
+            if (ca == cb) continue;
+        }
+
+        // If we get here, they are not equal
+        return false;
+    }
+    return true;
+}
+}
 
 void SocketReader::read(tcp::socket& socket) {
     // Resetting variables.
@@ -83,9 +109,7 @@ void SocketReader::read(tcp::socket& socket) {
         if (sep == std::string::npos) {
             continue;
         }
-        std::string nameLower = header.substr(0, sep);
-        std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(),
-                       [](unsigned char c){ return static_cast<char>(std::tolower(c)); });
+        std::string name = header.substr(0, sep);
         std::string value = header.substr(sep + 1);
         // Trim leading spaces
         while (!value.empty() && (value.front() == ' ' || value.front() == '\t')) {
@@ -97,7 +121,7 @@ void SocketReader::read(tcp::socket& socket) {
         }
 
         // Getting jwsToken.
-        if (service_->authorizationEnabled() && jwsToken_.empty() && nameLower == "authorization") {
+        if (service_->authorizationEnabled() && jwsToken_.empty() && iequals_header_name(name, "authorization")) {
             // Expect "Bearer <token>" (keep scheme check case-sensitive as before)
             static const std::string kBearerPrefix = "Bearer ";
             if (value.rfind(kBearerPrefix, 0) == 0) {
@@ -105,11 +129,11 @@ void SocketReader::read(tcp::socket& socket) {
             }
         }
         // Getting origin
-        else if (origin_.empty() && nameLower == "origin") {
+        else if (origin_.empty() && iequals_header_name(name, "origin")) {
             origin_ = value;
         }
         // Getting detail level from header
-        else if (detailLevel_ == st2138::Device_DetailLevel_UNSET && nameLower == "detail-level") {
+        else if (detailLevel_ == st2138::Device_DetailLevel_UNSET && iequals_header_name(name, "detail-level")) {
             std::string dl = value;
             auto& dlMap = catena::common::DetailLevel().getReverseMap();
             if (dlMap.contains(dl)) {
@@ -117,7 +141,7 @@ void SocketReader::read(tcp::socket& socket) {
             }
         }
         // Getting body content-Length
-        else if (contentLength == 0 && nameLower == "content-length") {
+        else if (contentLength == 0 && iequals_header_name(name, "content-length")) {
             contentLength = stoi(value);
         }
     }
