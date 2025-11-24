@@ -1,5 +1,3 @@
-#pragma once
-
 /*
  * Copyright 2025 Ross Video Ltd
  *
@@ -31,46 +29,32 @@
  */
 
 /**
- * @file IParamVisitor.h
- * @brief Implements Catena IParamVisitor
- * @author zuhayr.sarker@rossvideo.com
- * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2025-11-06
+ * @brief Mock implementation for the gRPC AuthContext class.
+ * @author jason.chen@rossvideo.com
+ * @date 25/11/18
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-#include <IParam.h>
-#include <Path.h>
-#include <IDevice.h>
+#pragma once
+
+#include <gmock/gmock.h>
+#include <grpcpp/grpcpp.h>
 
 namespace catena {
-namespace common {
+namespace gRPC {
 
-/**
- * @brief Interface for parameter visitors
- */
-class IParamVisitor {
-    public:
-        /**
-         * @brief Virtual destructor
-         */
-        virtual ~IParamVisitor() = default;
-        
-        /**
-         * @brief Visit a parameter
-         * @param param The parameter to visit
-         * @param path The path of the parameter
-         */
-        virtual void visit(IParam* param, const std::string& path) = 0;
-        
-        /**
-         * @brief Visit an array
-         * @param param The array to visit
-         * @param path The path of the array
-         * @param length The length of the array
-         */
-        virtual void visitArray(IParam* param, const std::string& path, uint32_t length) = 0;
+// Mock implementation for the gRPC AuthContext class.
+class MockAuthContext : public grpc::AuthContext {
+  public:
+    MOCK_METHOD(bool, IsPeerAuthenticated, (), (const, override));
+    MOCK_METHOD(std::vector<grpc::string_ref>, GetPeerIdentity, (), (const, override));
+    MOCK_METHOD(std::string, GetPeerIdentityPropertyName, (), (const, override));
+    MOCK_METHOD(std::vector<grpc::string_ref>, FindPropertyValues, (const std::string& name), (const, override));
+    MOCK_METHOD(grpc::AuthPropertyIterator, begin, (), (const, override));
+    MOCK_METHOD(grpc::AuthPropertyIterator, end, (), (const, override));
+    MOCK_METHOD(void, AddProperty, (const std::string& key, const grpc::string_ref& value), (override));
+    MOCK_METHOD(bool, SetPeerIdentityPropertyName, (const std::string& name), (override));
 };
 
-} // namespace common
-} // namespace catena 
+} // namespace gRPC
+} // namespace catena

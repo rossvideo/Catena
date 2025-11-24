@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -50,7 +50,8 @@ grpc::Status catena::gRPC::JWTAuthMetadataProcessor::Process(const InputMetadata
     // remove the 'Bearer ' text from the beginning
     try {
         LOG(INFO)<<"Removed bearer text";
-        grpc::string_ref t = authz->second.substr(7);
+        constexpr size_t kPrefixLength {std::string("Bearer ").length()};
+        grpc::string_ref t = authz->second.substr(kPrefixLength);
         std::string token(t.begin(), t.end());
         auto decoded = jwt::decode(token);
         context->AddProperty("claims", decoded.get_payload());  
@@ -60,7 +61,6 @@ grpc::Status catena::gRPC::JWTAuthMetadataProcessor::Process(const InputMetadata
 
     return grpc::Status::OK;
 }
-
 
 // expand env variables
 void catena::gRPC::expandEnvVariables(std::string &str) {

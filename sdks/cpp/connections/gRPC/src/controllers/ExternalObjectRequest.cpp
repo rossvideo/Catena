@@ -104,6 +104,17 @@ void ExternalObjectRequest::proceed(bool ok) {
          */
         case CallStatus::kWrite:
             try {
+                // Check for valid slot
+                IDevice* dm = nullptr;
+                if (dms_.contains(req_.slot())) {
+                    dm = dms_.at(req_.slot());
+                }
+                if (!dm) {
+                    std::stringstream why;
+                    why << "Device not found in slot " << req_.slot();
+                    throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
+                }
+
                 LOG(INFO) << "sending external object " << req_.oid() <<"\n";
                 std::string path = service_->EOPath();
                 path.append(req_.oid());

@@ -40,6 +40,8 @@ set(TEST_FILES
     Heartbeat_test.cpp
     NmosNode_test.cpp
     Logger_test.cpp
+    GenericFactory_test.cpp
+    EnumDecorator_test.cpp
 )
 
 foreach(test_file ${TEST_FILES})
