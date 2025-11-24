@@ -44,6 +44,24 @@
             </oglml>
          </widgetdescriptor>
 
+         <!-- Total Input Meter -->
+         <widgetdescriptor id="total_input_meter">
+            <config>
+               <params>
+                  <param access="1" oid=".input" relative="true" type="FLOAT32" value="0" widget="label"/>
+               </params>
+            </config>
+            <oglml>
+               <abs height="100" width="160">
+                  <param expand="true" oid=".input" relative="true" height="30" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" top="10" width="160" showlabel="false" widget="label"/>
+               </abs>
+
+               <timertask tasktype="ogscript" timerid="meterTick">
+                  updateTotalInput('%baseoid%');
+               </timertask>
+            </oglml>
+         </widgetdescriptor>
+
          <!-- Gain Knob/Stereo Knob -->
          <widgetdescriptor id="gain_knob">
             <config>
@@ -309,6 +327,28 @@
                </abs>
             </oglml>
          </widgetdescriptor>
+         <widgetdescriptor id="main_input_cluster">
+            <config>
+               <params>
+                  <param oid=".inputLabel" relative="true" type="STRING" value="Test Channel"/>
+                  <param access="1" constraintstrict="false" constrainttype="STRING_STRING_CHOICE" maxlength="0" oid=".invert" type="STRING" value="Invert" widget="default">
+                     <constraint key="0">Invert</constraint>
+                     <constraint key="1">Invert</constraint>
+                  </param>
+               </params>
+            </config>
+            <oglml>
+               <abs height="360" style="bg#panelbg;look:round;bdr#buttonbg;bdr:round;" width="180">
+                  <widget baseoid="%baseoid%" left="10" top="10" widgetid="total_input_meter"/>
+                  <param oid=".inputLabel" relative="true" height="30" left="10" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" top="130" width="160" widget="label"/>
+                  <widget baseoid="%baseoid%" height="140" left="10" top="170" widgetid="gain_knob" width="160"/>
+                  <simplegrid cols="2" height="30" hspace="10" left="10" rows="1" top="320" width="160">
+                     <param oid=".invert" style="t:bg#yellow;f:bg#buttonbg;" widget="toggle"/>
+                     <button buttontype="toggle" name="Tone" style="t:bg#yellow;f:bg#buttonbg;"/>
+                  </simplegrid>
+               </abs>
+            </oglml>
+         </widgetdescriptor>
       </widgets>
 
       <!-- Channel Widgets-->
@@ -338,13 +378,22 @@
                </abs>
             </oglml>
          </widgetdescriptor>
+         <widgetdescriptor id="main_channel">
+            <oglml>
+               <abs height="420" width="180">
+                  <widget baseoid="%baseoid%" height="360" widgetid="main_input_cluster" width="180" top="50"/>
+                  <widget baseoid="%baseoid%" height="570" widgetid="chanquad_cluster" width="180" top="410"/>
+                  <widget baseoid="%baseoid%" height="660" widgetid="fader_cluster" width="180" top="980"/>
+               </abs>
+            </oglml>
+         </widgetdescriptor>
       </widgets>
    </meta>
 
 
    <!-- UI Section -->
    <abs name="Main">
-      <abs height="1720" width="1800" left="30" top="10">
+      <abs height="1720" width="1440" left="30" top="10">
          <simplegrid cols="8" rows="1">
                <widget baseoid="audio_deck/0" height="1720" widgetid="channel" width="180"/>
                <widget baseoid="audio_deck/1" height="1720" widgetid="channel" width="180"/>
@@ -355,6 +404,9 @@
                <widget baseoid="audio_deck/6" height="1720" widgetid="channel" width="180"/>
                <widget baseoid="audio_deck/7" height="1720" widgetid="channel" width="180"/>
          </simplegrid>
+      </abs>
+      <abs height="1720" width="180" left="1500" top="10">
+        <widget baseoid="audio_deck/8" height="1720" widgetid="main_channel" width="180"/>
       </abs>
    </abs>
 </abs>

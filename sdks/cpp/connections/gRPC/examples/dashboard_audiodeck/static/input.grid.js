@@ -22,3 +22,13 @@ function getInverted(baseOID) {
 function setStereo(value) {
     stereo = value;
 }
+
+function updateTotalInput(baseOID) {
+    var total = 0;
+    for (var i = 0; i < 8; i++) {
+        var v = params.getValue("audio_deck/" + i + ".input", 0);
+        // Ensure numeric addition
+        total += (typeof v === 'number') ? v : parseFloat(v) || 0;
+    }
+    params.setValue(baseOID + ".input", 0, total);
+}

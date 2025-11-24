@@ -196,6 +196,25 @@
                   "fader": { "string_value": "Center" }
                 }
               }
+            },
+            {
+              "struct_value": {
+                "fields": {
+                  "gain": { "float32_value": 0.0 },
+                  "input": { "float32_value": 0.0 },
+                  "gain_type": { "string_value": "Gain" },
+                  "inputLabel": { "string_value": "Main" },
+                  "channelLabel": { "string_value": "Main" },
+                  "invert": { "string_value": "Invert" },
+                  "stereo": { "float32_value": 0.0 },
+                  "roll_off": { "float32_value": 24.0 },
+                  "frequency": { "float32_value": 85.0 },
+                  "ripple": { "float32_value": 3.0 },
+                  "resp": { "string_value": "Cheb II" },
+                  "volume": { "float32_value": 50.0 },
+                  "fader": { "string_value": "Center" }
+                }
+              }
             }
           ]
         }

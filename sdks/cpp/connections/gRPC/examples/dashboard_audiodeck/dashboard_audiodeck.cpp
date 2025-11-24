@@ -111,6 +111,7 @@ void audioDeckUpdateHandler(const std::string& jptr, const IParam* p) {
 // Simulate some audio meter levels
 void inputMeters() {
     while (globalLoop) {
+        float totalLevel = 0.0f;
         for (size_t ch = 0; ch < 8; ++ch) {
             try {
                 st2138::Value value;
@@ -122,9 +123,19 @@ void inputMeters() {
 
                 value.set_float32_value(level);
                 dm.setValue(inputOid, value);
+
+                totalLevel += level;
             } catch (const std::exception& e) {
                 LOG(ERROR) << "Error updating input meter for channel " << ch << ": " << e.what();
             }
+        }
+        // Update main channel (index 8) with total of inputs 0..7
+        try {
+            st2138::Value mainValue;
+            mainValue.set_float32_value(totalLevel);
+            dm.setValue("/audio_deck/8/input", mainValue);
+        } catch (const std::exception& e) {
+            LOG(ERROR) << "Error updating main input meter: " << e.what();
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
