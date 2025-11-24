@@ -48,12 +48,12 @@
          <widgetdescriptor id="total_input_meter">
             <config>
                <params>
-                  <param access="1" oid=".input" relative="true" type="FLOAT32" value="0" widget="label"/>
+                  <param access="1" oid=".input" relative="true" type="FLOAT32" value="0" widget="progress"/>
                </params>
             </config>
             <oglml>
                <abs height="100" width="160">
-                  <param expand="true" oid=".input" relative="true" height="30" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" top="10" width="160" showlabel="false" widget="label"/>
+                  <param expand="true" oid=".input" relative="true" height="50" top="10" width="160" showlabel="false" widget="progress"/>
                </abs>
 
                <timertask tasktype="ogscript" timerid="meterTick">
