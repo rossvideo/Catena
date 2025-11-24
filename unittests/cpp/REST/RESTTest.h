@@ -103,48 +103,23 @@ class RESTTest {
                       st2138::Device_DetailLevel detailLevel,
                       const std::string& language,
                       const std::string& jsonBody) {
-        // Compiling path:
-        std::string request = "";
-        request += RESTMethodMap().getForwardMap().at(method)
-                + " /st2138-api/v1";
-        if (slot != 0) {
-            request += "/" + std::to_string(slot);
-        }
-        request += endpoint;
-        if (!fqoid.empty()) {
-            request += fqoid;
-        }
-        if (stream) {
-            request += "/stream";
-        }
-        // compiling fields:
-        std::string fieldsStr = "";
-        for (auto [fName, fValue] : fields) {
-            if (fieldsStr.empty()) {
-                fieldsStr += "?" + fName + "=" + fValue;
-            } else {
-                fieldsStr += "&" + fName + "=" + fValue;
-            }
-        }
-        request += fieldsStr;
-        // Compiling headers:
-        request += " HTTP/1.1\n"
-                   "Origin: " + origin + "\n"
-                   "User-Agent: test_agent\n"
-                   "Authorization: Bearer " + jwsToken + " \n";
-        if (detailLevel != st2138::Device_DetailLevel_UNSET) {
-            request += "Detail-Level: "
-                    + catena::patterns::EnumDecorator<st2138::Device_DetailLevel>().getForwardMap().at(detailLevel)
-                    + " \n";
-        }
-        if (!language.empty()) {
-            request += "Language: " + language + " \n";
-        }
-        // Adding jsonBody.
-        request += "Content-Length: " + std::to_string(jsonBody.length()) + "\r\n\r\n"
-                   + jsonBody + "\n"
-                   "\r\n\r\n";
-        boost::asio::write(*writeSocket_, boost::asio::buffer(request));
+        // Delegate to header-name aware variant to avoid duplication.
+        writeRequestWithHeaderNames(method,
+                                    slot,
+                                    endpoint,
+                                    fqoid,
+                                    stream,
+                                    fields,
+                                    jwsToken,
+                                    origin,
+                                    detailLevel,
+                                    language,
+                                    jsonBody,
+                                    "Origin",
+                                    "Authorization",
+                                    "Detail-Level",
+                                    "Language",
+                                    "Content-Length");
     }
 
     /*
@@ -190,23 +165,22 @@ class RESTTest {
             }
         }
         request += fieldsStr;
-        // Headers (use provided header names as-is)
-        request += " HTTP/1.1\n"
-                   + originHeaderName + ": " + origin + "\n"
-                   "User-Agent: test_agent\n"
-                   + authorizationHeaderName + ": Bearer " + jwsToken + " \n";
+        // Headers (use provided header names as-is, CRLF per HTTP spec)
+        request += " HTTP/1.1\r\n";
+        request += originHeaderName + ": " + origin + "\r\n";
+        request += "User-Agent: test_agent\r\n";
+        request += authorizationHeaderName + ": Bearer " + jwsToken + "\r\n";
         if (detailLevel != st2138::Device_DetailLevel_UNSET) {
             request += detailLevelHeaderName + ": "
                     + catena::patterns::EnumDecorator<st2138::Device_DetailLevel>().getForwardMap().at(detailLevel)
-                    + " \n";
+                    + "\r\n";
         }
         if (!language.empty()) {
-            request += languageHeaderName + ": " + language + " \n";
+            request += languageHeaderName + ": " + language + "\r\n";
         }
         // Body
-        request += contentLengthHeaderName + ": " + std::to_string(jsonBody.length()) + "\r\n\r\n"
-                   + jsonBody + "\n"
-                   "\r\n\r\n";
+        request += contentLengthHeaderName + ": " + std::to_string(jsonBody.length()) + "\r\n\r\n";
+        request += jsonBody;
         boost::asio::write(*writeSocket_, boost::asio::buffer(request));
     }
 
