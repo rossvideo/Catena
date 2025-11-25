@@ -43,6 +43,11 @@ void ExecuteCommand::proceed() {
                 rc = catena::exception_with_status("Failed to parse JSON body", catena::StatusCode::INVALID_ARGUMENT);
             }
         }
+
+        // Validate the slot
+        if (context_.slot() < 0 || context_.slot() > 65535) {
+            rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+        }
         
         // Continue if the jsonBody was successfully parsed.
         if (rc.status == catena::StatusCode::OK) {

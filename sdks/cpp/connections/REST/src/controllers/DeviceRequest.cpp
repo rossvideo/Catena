@@ -73,6 +73,11 @@ void DeviceRequest::proceed() {
                 rc = catena::exception_with_status{"Illegal state", catena::StatusCode::INTERNAL};
             }
         }
+
+        // Validating slot number.
+        if (context_.slot() < 0 || context_.slot() > 65535) {
+            rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+        }
     // ERROR: Update rc.
     } catch (catena::exception_with_status& err) {
         rc = catena::exception_with_status{err.what(), err.status};

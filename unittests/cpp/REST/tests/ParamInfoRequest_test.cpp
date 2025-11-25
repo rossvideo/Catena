@@ -223,6 +223,18 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_AuthzValid) {
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, {jsonBody}));
 }
 
+// Test 0.8: Device with a slot out of valid range.
+TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_SlotOutOfRange) {
+    slot_ = 65536;
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+
+    endpoint_->proceed();
+
+    // Match expected and actual responses
+    EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
+}
+
+
 // == MODE 1 TESTS: Get all top-level parameters without recursion ==
 
 // Test 1.1: Get all top-level parameters without recursion as a stream response.

@@ -47,6 +47,12 @@ void GetParam::proceed() {
                 rc = param->toProto(*ans.mutable_param(), *authz);
             }
         }
+
+        // Validate the slot.
+        if (context_.slot() < 0 || context_.slot() > 65535) {
+            rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+        }
+        
     // ERROR
     } catch (const catena::exception_with_status& err) {
         rc = catena::exception_with_status(err.what(), err.status);

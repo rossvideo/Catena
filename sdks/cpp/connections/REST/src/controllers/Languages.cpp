@@ -40,6 +40,12 @@ void Languages::proceed() {
         } else {
             rc = catena::exception_with_status("", catena::StatusCode::UNIMPLEMENTED);
         }
+
+        // Validate the slot.
+        if (context_.slot() < 0 || context_.slot() > 65535) {
+            rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+        }
+        
     } catch (const catena::exception_with_status& err) {
         rc = catena::exception_with_status(std::string(err.what()), err.status);
     } catch (const std::exception& err) {

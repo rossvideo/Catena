@@ -296,3 +296,13 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_GetSerializerThrowUnknown) {
     // Calling proceed and testing the output
     testCall();
 }
+
+// Test 3.7: Test proceed with an out of range slot.
+TEST_F(RESTDeviceRequestTests, DeviceRequest_SlotOutOfBounds) {
+    slot_ = 65536;
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations.
+    EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}

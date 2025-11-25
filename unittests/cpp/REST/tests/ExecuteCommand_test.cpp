@@ -685,3 +685,16 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
     // Calling proceed and testing the output
     testCall();
 }
+
+/*
+ * TEST 24 - Check for a slot out of range. .
+ */
+TEST_F(RESTExecuteCommandTests, ExecuteCommand_SlotOutOfBounds) {
+    initPayload(65536, "test_command", "test_value", true);
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}

@@ -115,6 +115,18 @@ TEST_F(RESTLanguagesTests, Languages_InvalidSlot) {
     testCall();
 }
 
+/* 
+ * TEST 0.4 - Languages proceed() with an out of range slot.
+ */
+TEST_F(RESTLanguagesTests, Languages_SlotOutOfRange) {
+    slot_ = 65536;
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, toProto(testing::An<st2138::LanguageList&>())).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
+
 /*
  * ============================================================================
  *                               GET Languages tests

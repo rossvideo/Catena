@@ -333,3 +333,16 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowUnknown) {
     // Calling proceed and testing the output
     testCall();
 }
+
+/*
+ * TEST 5 - Device slot is out of range.
+ */
+TEST_F(RESTGetParamTests, GetParam_SlotOutOfBounds) {
+    initPayload(65536, "/test_oid");
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}

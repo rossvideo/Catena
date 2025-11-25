@@ -61,6 +61,7 @@ void ParamInfoRequest::proceed() {
         IDevice* dm = nullptr;
         // Get recursive from query parameters - presence alone means true
         recursive_ = context_.hasField("recursive");
+
         // Getting device at specified slot.
         if (dms_.contains(context_.slot())) {
             dm = dms_.at(context_.slot());
@@ -170,6 +171,11 @@ void ParamInfoRequest::proceed() {
                     }
                 }
             }
+        }
+
+        // Validate the slot.
+        if (context_.slot() < 0 || context_.slot() > 65535) {
+            rc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
         }
     } catch (const catena::exception_with_status& err) {
         rc_ = catena::exception_with_status(err.what(), err.status);

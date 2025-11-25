@@ -27,6 +27,7 @@ void MultiSetValue::proceed() {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     try {
         IDevice* dm = nullptr;
+
         // Getting device at specified slot.
         if (dms_.contains(context_.slot())) {
             dm = dms_.at(context_.slot());
@@ -61,6 +62,12 @@ void MultiSetValue::proceed() {
         } else {
             rc = catena::exception_with_status("Failed to convert JSON to protobuf", catena::StatusCode::INVALID_ARGUMENT);
         }
+
+        // Validate the slot.
+        if (context_.slot() < 0 || context_.slot() > 65535) {
+            rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+        }
+        
     // ERROR
     } catch (catena::exception_with_status& err) {
         rc = catena::exception_with_status(err.what(), err.status);

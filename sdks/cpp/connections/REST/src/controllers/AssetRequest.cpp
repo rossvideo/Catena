@@ -356,6 +356,11 @@ void AssetRequest::proceed() {
         else {
             rc = catena::exception_with_status("Invalid method", catena::StatusCode::INVALID_ARGUMENT);
         }
+
+        // Validating slot number.
+        if (context_.slot() < 0 || context_.slot() > 65535) {
+            rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+        }
     } catch (catena::exception_with_status& err) {
         rc = catena::exception_with_status(err.what(), err.status);
     } catch (const std::exception& e) {

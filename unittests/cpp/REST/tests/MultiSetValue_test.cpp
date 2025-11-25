@@ -305,3 +305,18 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
     // Calling proceed and testing the output
     testCall();
 }
+
+/*
+ * TEST 5 - No device in the specified slot.
+ */
+TEST_F(RESTMultiSetValueTests, MultiSetValue_SlotOutOfRange) {
+    initPayload(65536, {});
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
