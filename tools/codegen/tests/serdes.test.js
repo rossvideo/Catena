@@ -1,7 +1,7 @@
 import { fileURLToPath } from "url";
 import fs from "fs/promises";
 import path from "path";
-import { camelToSnake, deserialize, getDevice, serialize, snakeToCamel } from "../serdes/serdes.js";
+import { deserialize, getDevice, serialize } from "../serdes/serdes.js";
 
 describe("serdes", () => {
 
@@ -27,6 +27,14 @@ describe("serdes", () => {
                 detail_level: "FULL",
                 access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
                 default_scope: "st2138:op",
+                params: {
+                    param_with_Caps: {
+                        type: "INT32",
+                        value: {
+                            int32_value: 42,
+                        },
+                    },
+                },
             },
             deviceName: "TestDevice",
         };
@@ -54,6 +62,14 @@ describe("serdes", () => {
             detail_level: "FULL",
             access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
             default_scope: "st2138:op",
+            params: {
+                param_with_Caps: {
+                    type: "INT32",
+                    value: {
+                        int32_value: 42,
+                    },
+                },
+            },
         });
     });
 
@@ -123,35 +139,6 @@ describe("serdes", () => {
         })).rejects.toThrow("Protobuf SHA256 mismatch");
     });
 
-    test("camelToSnake", () => {
-        const obj = {
-            camelCase: 1,
-            nestedObject: {
-                anotherCamel: 2,
-                arrayOfObjects: [
-                    { arrayCamel: 3 },
-                    { arrayCamel: 4 },
-                ],
-            },
-        };
-        const snakeObj = camelToSnake(obj);
-        // make sure the keys have been converted to snake_case
-        expect(snakeObj).toEqual({
-            camel_case: 1,
-            nested_object: {
-                another_camel: 2,
-                array_of_objects: [
-                    { array_camel: 3 },
-                    { array_camel: 4 },
-                ],
-            },
-        });
-        // make sure the new object is a deep copy
-        expect(snakeObj).not.toBe(obj);
-        expect(snakeObj.nested_object).not.toBe(obj.nestedObject);
-        expect(snakeObj.nested_object.array_of_objects).not.toBe(obj.nestedObject.arrayOfObjects);
-    });
-
     test("getDevice throws on missing protos", async () => {
         await expect(getDevice("/nonexistent/path")).rejects.toThrow("Protos path '/nonexistent/path' does not exist");
     });
@@ -161,34 +148,5 @@ describe("serdes", () => {
         const emptyProtosDir = path.join(OUTPUT_DIR, "empty_protos");
         await fs.mkdir(emptyProtosDir, { recursive: true });
         await expect(getDevice(emptyProtosDir)).rejects.toThrow("st2138.Device");
-    });
-
-    test("snakeToCamel", () => {
-        const obj = {
-            snake_case: 1,
-            nested_object: {
-                another_snake: 2,
-                array_of_objects: [
-                    { array_snake: 3 },
-                    { array_snake: 4 },
-                ],
-            },
-        };
-        const camelObj = snakeToCamel(obj);
-        // make sure the keys have been converted to camelCase
-        expect(camelObj).toEqual({
-            snakeCase: 1,
-            nestedObject: {
-                anotherSnake: 2,
-                arrayOfObjects: [
-                    { arraySnake: 3 },
-                    { arraySnake: 4 },
-                ],
-            },
-        });
-        // make sure the new object is a deep copy
-        expect(camelObj).not.toBe(obj);
-        expect(camelObj.nestedObject).not.toBe(obj.nested_object);
-        expect(camelObj.nestedObject.arrayOfObjects).not.toBe(obj.nested_object.array_of_objects);
     });
 });

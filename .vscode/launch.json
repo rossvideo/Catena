@@ -211,7 +211,7 @@
       "type": "pickString",
       "options": [
         "cpp",
-        "serdes"
+        "ser"
       ],
       "default": "cpp"
     },
@@ -273,6 +273,7 @@
         "unittests/common/common_Logger_test",
         "unittests/common/common_GenericFactory_test",
         "unittests/common/common_EnumDecorator_test",
+        "unittests/common/common_DeviceFactory_test",
         "unittests/gRPC/gRPC_ParamInfoRequest_test",
         "unittests/gRPC/gRPC_UpdateSubscriptions_test",
         "unittests/gRPC/gRPC_DeviceRequest_test",

@@ -15,11 +15,7 @@ const MAGIC_STRING = "CTNA";
  * @param {object} metadata additional metadata to include in the serialized output
  */
 export async function serialize(deviceModel, options, metadata) {
-    // convert the device model object from snake_case keys to camelCase keys
-    // because protobufjs uses camelCase keys
-    // e.g. device_model -> deviceModel
-    //
-    const deviceDesc = snakeToCamel(deviceModel.desc);
+    const deviceDesc = deviceModel.desc;
     const device = await getDevice(options.protos);
     const protoObj = device.fromObject(deviceDesc);
     const errMsg = device.verify(protoObj);
@@ -79,26 +75,7 @@ export async function deserialize(options) {
     const deviceDesc = device.toObject(protoObj, {
         enums: String,
     });
-    return [metadata, camelToSnake(deviceDesc)];
-}
-
-/**
- * Recursively convert all keys in an object from camelCase to snake_case. Makes a deep copy.
- * @param {*} obj the object to convert
- * @returns {*} a new object with snake_case keys
- */
-export function camelToSnake(obj) {
-    if (Array.isArray(obj)) {
-        return obj.map(v => camelToSnake(v));
-    } else if (obj !== null && obj.constructor === Object) {
-        return Object.fromEntries(
-            Object.entries(obj).map(([k, v]) => [
-                k.replace(/([A-Z])/g, g => `_${g[0].toLowerCase()}`),
-                camelToSnake(v)
-            ])
-        );
-    }
-    return obj;
+    return [metadata, deviceDesc];
 }
 
 /**
@@ -114,27 +91,11 @@ export async function getDevice(protoPath) {
     // load all the proto files in the protos directory
     const files = await fs.readdir(protoPath);
     const protoFiles = files.filter(f => f.endsWith('.proto'));
-    const root = await protobuf.load(protoFiles.map(f => path.join(protoPath, f)));
+    const root = new protobuf.Root();
+    await root.load(protoFiles.map(f => path.join(protoPath, f)), {
+        keepCase: true, // so that protobufjs doesn't convert field names to camelCase
+    });
     // throws if not found
     const device = root.lookupType("st2138.Device");
     return device;
-}
-
-/**
- * Recursively convert all keys in an object from snake_case to camelCase. Makes a deep copy.
- * @param {*} obj the object to convert
- * @returns {*} a new object with camelCase keys
- */
-export function snakeToCamel(obj) {
-    if (Array.isArray(obj)) {
-        return obj.map(v => snakeToCamel(v));
-    } else if (obj !== null && obj.constructor === Object) {
-        return Object.fromEntries(
-            Object.entries(obj).map(([k, v]) => [
-                k.replace(/_([a-z])/g, g => g[1].toUpperCase()),
-                snakeToCamel(v)
-            ])
-        );
-    }
-    return obj;
 }
