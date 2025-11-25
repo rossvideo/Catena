@@ -103,6 +103,7 @@ class ParamDescriptor : public IParamDescriptor {
      * @param widget the parameter's widget
      * @param scope the parameter's access scope
      * @param read_only the parameter's read-only status
+     * @param stateless the parameter's stateless status
      * @param oid the parameter's oid
      * @param template_oid the parameter's template oid
      * @param constraint the parameter's constraint
@@ -122,6 +123,7 @@ class ParamDescriptor : public IParamDescriptor {
       const std::string& widget,
       const std::string& scope, 
       bool read_only, 
+      bool stateless,
       const std::string& oid, 
       const std::string& template_oid,
       catena::common::IConstraint* constraint,
@@ -134,7 +136,7 @@ class ParamDescriptor : public IParamDescriptor {
       bool minimal_set,
       IParamDescriptor* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget},
-        scope_{scope}, read_only_{read_only}, template_oid_{template_oid},
+        scope_{scope}, read_only_{read_only}, stateless_{stateless}, template_oid_{template_oid},
         constraint_{constraint}, isCommand_{isCommand}, response_{response},dev_{dm},
         max_length_{max_length}, total_length_{total_length},
         precision_{precision}, minimal_set_{minimal_set}, parent_{parent} {
@@ -432,6 +434,7 @@ class ParamDescriptor : public IParamDescriptor {
     std::string widget_;
     std::string scope_;
     bool read_only_;
+    bool stateless_;
 
     std::unordered_map<std::string, IParamDescriptor*> subParams_;
     std::unordered_map<std::string, catena::common::IParam*> commands_;

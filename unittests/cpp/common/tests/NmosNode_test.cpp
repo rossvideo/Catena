@@ -96,7 +96,7 @@ struct FakeRegistry {
                 } else if (method == "POST" &&
                            path.rfind("/x-nmos/registration/v1.3/health/nodes/", 0) == 0) {
                     heartbeats++; write_resp(fd, 200);
-                    LOG(INFO) << "Heartbeat received: " << heartbeats << "\n";
+                    VLOG(1) << "Heartbeat received: " << heartbeats << "\n";
                 } else {
                     write_resp(fd, 404);
                 }

@@ -37,6 +37,8 @@
 #include <IMenuGroup.h> 
 #include <Menu.h>
 #include <rpc/Heartbeat.h>
+#include <Logger.h>
+#include <utils.h>
 
 #include <cassert>
 #include <sstream>
@@ -126,6 +128,17 @@ catena::exception_with_status Device::commitMultiSetValue (st2138::MultiSetValue
             // Setting value and emitting signal.
             ans = param->fromProto(setValuePayload.value(), authz);
             valueSetByClient_.emit(setValuePayload.oid(), param.get());
+
+            //log value change
+            st2138::Param cp;
+            param->toProto(cp, authz);
+            if (!(cp.stateless())) {
+                LOG(INFO) << "Device::commitMultiSetValue: Param \"" << path.fqoid() << "\" set to new value: " << catena::param_value_string(cp.value());
+            }
+            else {
+                VLOG(1) << "Device::commitMultiSetValue: Param \"" << path.fqoid() << "\" set to new value: " << catena::param_value_string(cp.value());
+            }
+
             // Resetting trackers to match new value.
             if (parent) { parent->resetValidate();
             } else { param->resetValidate(); }

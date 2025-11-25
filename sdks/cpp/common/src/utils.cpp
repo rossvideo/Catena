@@ -131,3 +131,56 @@ std::string catena::fmt(const char* f, ...) {
     char buf[4096]; vsnprintf(buf, sizeof(buf), f, ap); va_end(ap);
     return std::string(buf);
 }
+
+std::string catena::param_value_string(const st2138::Value& value) {
+    switch (value.kind_case()) {
+        case st2138::Value::kEmptyValue:
+            return "";
+        case st2138::Value::kInt32Value:
+            return std::to_string(value.int32_value());
+        case st2138::Value::kFloat32Value:
+            return std::to_string(value.float32_value());
+        case st2138::Value::kStringValue:
+            return value.string_value();
+        case st2138::Value::kStructValue:
+            return value.struct_value().DebugString();
+        case st2138::Value::kInt32ArrayValues: {
+            std::ostringstream oss;
+            oss << "[";
+            for (int i = 0; i < value.int32_array_values().ints_size(); i++) {
+                if (i > 0) oss << ", ";
+                oss << value.int32_array_values().ints(i);
+            }
+            oss << "]";
+            return oss.str();
+        }
+        case st2138::Value::kFloat32ArrayValues: {
+            std::ostringstream oss;
+            oss << "[";
+            for (int i = 0; i < value.float32_array_values().floats_size(); i++) {
+                if (i > 0) oss << ", ";
+                oss << value.float32_array_values().floats(i);
+            }
+            oss << "]";
+            return oss.str();
+        }
+        case st2138::Value::kStringArrayValues: {
+            std::ostringstream oss;
+            oss << "[";
+            for (int i = 0; i < value.string_array_values().strings_size(); i++) {
+                if (i > 0) oss << ", ";
+                oss << "\"" << value.string_array_values().strings(i) << "\"";
+            }
+            oss << "]";
+            return oss.str();
+        }
+        case st2138::Value::kDataPayload:
+            return "[data payload]";
+        case st2138::Value::kStructVariantValue:
+            return "[struct variant value]";
+        case st2138::Value::kStructVariantArrayValues:
+            return "[struct variant array values]";
+        default:
+            return "[no value]";
+    }
+}

@@ -52,7 +52,7 @@ GetParam::GetParam(IServiceImpl *service, SlotMap& dms, bool ok)
  * Manages the steps of the GetParam gRPC command through the state variable status.
  */
 void GetParam::proceed( bool ok) {
-    LOG(INFO) << "GetParam::proceed[" << objectId_ << "]: " << timeNow()
+    VLOG(1) << "GetParam::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok;
 

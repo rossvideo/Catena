@@ -56,7 +56,7 @@ void MultiSetValue::create_(bool ok) {
 }
 
 void MultiSetValue::proceed(bool ok) { 
-    LOG(INFO) << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
+    VLOG(1) << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: "
                 << std::boolalpha << ok;
 
@@ -116,7 +116,7 @@ void MultiSetValue::proceed(bool ok) {
                     if (dm->tryMultiSetValue(reqs_, rc, *authz)) {
                         rc = dm->commitMultiSetValue(reqs_, *authz);
                     } else { // debug log new
-                        LOG(INFO) << "MultiSetValue: tryMultiSetValue failed for slot " << reqs_.slot()
+                        LOG(WARNING) << "MultiSetValue: tryMultiSetValue failed for slot " << reqs_.slot()
                                   << " status=" << static_cast<int>(rc.status)
                                   << " msg=\"" << rc.what() << "\"";
                     }

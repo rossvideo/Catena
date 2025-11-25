@@ -81,7 +81,7 @@ class ParamDescriptorTest : public ::testing::Test {
         IParamDescriptor* parentPtr = hasParent ? &parent : nullptr;
         pd = std::make_unique<ParamDescriptor>(
             type, oidAliases, PolyglotText::ListInitializer{{"en", "name"}, {"fr", "nom"}},
-            widget, scope, readOnly, oid, templateOid, constraintPtr, isCommand, respond,
+            widget, scope, readOnly, stateless, oid, templateOid, constraintPtr, isCommand, respond,
             dm, maxLength, totalLength, precision, minimalSet, parentPtr
         );
         // authz_ by default has read and write authz.
@@ -105,7 +105,8 @@ class ParamDescriptorTest : public ::testing::Test {
             PolyglotText::ListInitializer{{"en", paramName}},  
             "widget",                                           
             "scope",                                           
-            paramReadOnly,                                     
+            paramReadOnly,
+            false,                                    
             paramOid,                                           
             "",                                                 
             nullptr,                                           
@@ -128,6 +129,7 @@ class ParamDescriptorTest : public ::testing::Test {
     std::string widget = "widget";
     std::string scope = "scope";
     bool readOnly = true;
+    bool stateless = false;
     std::string oid = "oid";
     std::string templateOid = "template_oid";
     bool hasConstraint = true; // If false, nullptr will be passed into pd as the constraint.
