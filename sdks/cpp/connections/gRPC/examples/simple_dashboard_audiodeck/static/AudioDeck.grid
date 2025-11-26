@@ -184,17 +184,6 @@
 
          <!-- Fader Knob -->
          <widgetdescriptor id="fader_knob">
-            <config>
-               <params>
-                  <param access="1" constrainttype="STRING_CHOICE" maxlength="0" oid=".fader" relative="true" type="STRING" value="Center" widget="default">
-                     <constraint>Top</constraint>
-                     <constraint>Right</constraint>
-                     <constraint>Bottom</constraint>
-                     <constraint>Left</constraint>
-                     <constraint>Center</constraint>
-                  </param>
-               </params>
-            </config>   
             <oglml>
                <abs height="160" width="160">
                   <param height="80" left="50" oid=".fader" relative="true" widget="wheel" width="60">
