@@ -138,9 +138,22 @@ void AssetRequest::proceed() {
 
     try {
         IDevice* dm = nullptr;
-        // Getting device at specified slot.
-        if (dms_.contains(context_.slot())) {
-            dm = dms_.at(context_.slot());
+        // Validating slot number.
+        if (context_.slot() < 0 || context_.slot() > 65535) {
+            rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+        }
+
+        // Only proceed if slot validation passed
+        if (rc.status == catena::StatusCode::OK) {
+            // Getting device at specified slot.
+            if (dms_.contains(context_.slot())) {
+                dm = dms_.at(context_.slot());
+            }
+
+            // Making sure the device exists.
+            if (!dm) {
+                rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+            }
         }
 
         if (context_.authorizationEnabled()) {
@@ -151,216 +164,206 @@ void AssetRequest::proceed() {
             authz = &catena::common::Authorizer::kAuthzDisabled;
         }
 
-        // Making sure the device exists.
-        if (!dm) {
-            rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
-        }
-
         // GET/asset
-        else if (context_.method() == Method_GET) {
-            // Locking device and parsing object data.
-            LOG(INFO) << "sending asset: " << context_.fqoid();
-            std::string path = context_.EOPath();
-            path.append(context_.fqoid());
+        if (dm && rc.status == catena::StatusCode::OK && context_.method() == Method_GET) {
+                // Locking device and parsing object data.
+                LOG(INFO) << "sending asset: " << context_.fqoid();
+                std::string path = context_.EOPath();
+                path.append(context_.fqoid());
 
-            //check for any read access
-            //TODO: move to BL
-            if (!(authz->readAuthz(catena::common::Scopes_e::kOperate)
-                    || authz->readAuthz(catena::common::Scopes_e::kConfig)
-                    || authz->readAuthz(catena::common::Scopes_e::kAdmin)
-                    || authz->readAuthz(catena::common::Scopes_e::kMonitor))) {
-                //do something that indicates that the user is not authorized to download the asset
-                throw catena::exception_with_status("Not authorized to download asset", catena::StatusCode::PERMISSION_DENIED);
-            }
+                //check for any read access
+                //TODO: move to BL
+                if (!(authz->readAuthz(catena::common::Scopes_e::kOperate)
+                        || authz->readAuthz(catena::common::Scopes_e::kConfig)
+                        || authz->readAuthz(catena::common::Scopes_e::kAdmin)
+                        || authz->readAuthz(catena::common::Scopes_e::kMonitor))) {
+                    //do something that indicates that the user is not authorized to download the asset
+                    throw catena::exception_with_status("Not authorized to download asset", catena::StatusCode::PERMISSION_DENIED);
+                }
 
-            // Check if the file exists
-            if (!std::filesystem::exists(path)) {
-                std::string notFound = "AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fqoid() + " not found";
-                LOG(INFO) << notFound;
-                throw catena::exception_with_status(notFound, catena::StatusCode::NOT_FOUND);
-            }
+                // Check if the file exists
+                if (!std::filesystem::exists(path)) {
+                    std::string notFound = "AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fqoid() + " not found";
+                    LOG(INFO) << notFound;
+                    throw catena::exception_with_status(notFound, catena::StatusCode::NOT_FOUND);
+                }
 
-            // Read the file into a byte array
-            std::ifstream file(path, std::ios::binary);
-            if (!file.is_open()) {
-                std::string error = "AssetRequest[" + std::to_string(objectId_) + "] failed to open file: " + context_.fqoid() + "\n";
-                throw catena::exception_with_status(error, catena::StatusCode::INTERNAL);
-            }
-            std::vector<uint8_t> file_data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+                // Read the file into a byte array
+                std::ifstream file(path, std::ios::binary);
+                if (!file.is_open()) {
+                    std::string error = "AssetRequest[" + std::to_string(objectId_) + "] failed to open file: " + context_.fqoid() + "\n";
+                    throw catena::exception_with_status(error, catena::StatusCode::INTERNAL);
+                }
+                std::vector<uint8_t> file_data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
-            // Set the payload encoding and compress the data accordingly
-            if (context_.fields("compression") == "GZIP") {
-                LOG(INFO) << "AssetRequest[" + std::to_string(objectId_) + "] using GZIP compression";
-                obj.mutable_payload()->set_payload_encoding(st2138::DataPayload::GZIP);
-                gzip_compress(file_data);
+                // Set the payload encoding and compress the data accordingly
+                if (context_.fields("compression") == "GZIP") {
+                    LOG(INFO) << "AssetRequest[" + std::to_string(objectId_) + "] using GZIP compression";
+                    obj.mutable_payload()->set_payload_encoding(st2138::DataPayload::GZIP);
+                    gzip_compress(file_data);
 
-            } else if (context_.fields("compression") == "DEFLATE") {
-                LOG(INFO) << "AssetRequest[" + std::to_string(objectId_) + "] using DEFLATE compression";
-                obj.mutable_payload()->set_payload_encoding(st2138::DataPayload::DEFLATE);
-                deflate_compress(file_data);
+                } else if (context_.fields("compression") == "DEFLATE") {
+                    LOG(INFO) << "AssetRequest[" + std::to_string(objectId_) + "] using DEFLATE compression";
+                    obj.mutable_payload()->set_payload_encoding(st2138::DataPayload::DEFLATE);
+                    deflate_compress(file_data);
 
-            } else {
-                LOG(INFO) << "AssetRequest[" + std::to_string(objectId_) + "] using UNCOMPRESSED compression";
-                obj.mutable_payload()->set_payload_encoding(st2138::DataPayload::UNCOMPRESSED);
-            }
+                } else {
+                    LOG(INFO) << "AssetRequest[" + std::to_string(objectId_) + "] using UNCOMPRESSED compression";
+                    obj.mutable_payload()->set_payload_encoding(st2138::DataPayload::UNCOMPRESSED);
+                }
 
-            obj.mutable_payload()->set_payload(file_data.data(), file_data.size());
+                obj.mutable_payload()->set_payload(file_data.data(), file_data.size());
+                
+                //Set cacheable
+                obj.set_cachable(true);
+
+                // Set the metadata
+                auto metadata = obj.mutable_payload()->mutable_metadata();
+
+                metadata->insert({"filename", std::filesystem::path(path).filename().string()});
+                metadata->insert({"size", std::to_string(file_data.size())});
+                
+                std::time_t modified_time;
+                if (get_last_write_time(path, modified_time)) {
+                    metadata->insert({"last-modified", std::asctime(std::localtime(&modified_time))});
+                }
+                else {
+                    metadata->insert({"last-modified", "unknown"});
+                }
+
+                // Calculate SHA-256 digest
+                unsigned char digest[EVP_MAX_MD_SIZE];
+                unsigned int digest_len;
+                EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
+                EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL);
+                EVP_DigestUpdate(mdctx, file_data.data(), file_data.size());
+                EVP_DigestFinal_ex(mdctx, digest, &digest_len);
+                EVP_MD_CTX_free(mdctx);
+
+                // Set the digest using the digest array
+                obj.mutable_payload()->set_digest(digest, digest_len);
+
+                dm->getDownloadAssetRequest().emit(context_.fqoid(), authz);
             
-            //Set cacheable
-            obj.set_cachable(true);
-
-            // Set the metadata
-            auto metadata = obj.mutable_payload()->mutable_metadata();
-
-            metadata->insert({"filename", std::filesystem::path(path).filename().string()});
-            metadata->insert({"size", std::to_string(file_data.size())});
-            
-            std::time_t modified_time;
-            if (get_last_write_time(path, modified_time)) {
-                metadata->insert({"last-modified", std::asctime(std::localtime(&modified_time))});
             }
-            else {
-                metadata->insert({"last-modified", "unknown"});
-            }
-
-            // Calculate SHA-256 digest
-            unsigned char digest[EVP_MAX_MD_SIZE];
-            unsigned int digest_len;
-            EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
-            EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL);
-            EVP_DigestUpdate(mdctx, file_data.data(), file_data.size());
-            EVP_DigestFinal_ex(mdctx, digest, &digest_len);
-            EVP_MD_CTX_free(mdctx);
-
-            // Set the digest using the digest array
-            obj.mutable_payload()->set_digest(digest, digest_len);
-
-            dm->getDownloadAssetRequest().emit(context_.fqoid(), authz);
-        
-        }
 
         // POST/asset
-        else if (context_.method() == Method_POST) {
+        else if (dm && rc.status == catena::StatusCode::OK && context_.method() == Method_POST) {
             LOG(INFO) << "receiving asset: " << context_.fqoid();
 
-            //Check if the user has write authorization in any scope other than monitoring
-            //either authz have to be disabled or have write access to any scope other than monitor
-            //TODO: move to BL
-            if (!(authz->writeAuthz(catena::common::Scopes_e::kOperate)
-                    || authz->writeAuthz(catena::common::Scopes_e::kConfig)
-                    || authz->writeAuthz(catena::common::Scopes_e::kAdmin))) {
-                throw catena::exception_with_status("Not authorized to POST asset", catena::StatusCode::PERMISSION_DENIED);
+                //Check if the user has write authorization in any scope other than monitoring
+                //either authz have to be disabled or have write access to any scope other than monitor
+                //TODO: move to BL
+                if (!(authz->writeAuthz(catena::common::Scopes_e::kOperate)
+                        || authz->writeAuthz(catena::common::Scopes_e::kConfig)
+                        || authz->writeAuthz(catena::common::Scopes_e::kAdmin))) {
+                    throw catena::exception_with_status("Not authorized to POST asset", catena::StatusCode::PERMISSION_DENIED);
+                }
+
+                //examine authz if has write access in BL
+                //if not, dont post
+                //TODO: hook up business logic to handle asset upload
+                dm->getUploadAssetRequest().emit(context_.fqoid(), authz);
+
+                std::string filePath = context_.EOPath();
+                filePath.append(context_.fqoid());
+
+                // Check if the file exists
+                // Placeholder till BL hook is implemented
+                if (std::filesystem::exists(filePath)) {
+                    std::string found = "file: " + filePath + " already exists";
+                    LOG(INFO) << found;
+                    throw catena::exception_with_status(found, catena::StatusCode::ALREADY_EXISTS);
+                }
+            
+                extractPayload(filePath);
+            
+                LOG(INFO) << "AssetRequest[" + std::to_string(objectId_) + "] wrote file: " + filePath;
+            
+                // Set result status to OK
+                rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
             }
-
-            //examine authz if has write access in BL
-            //if not, dont post
-            //TODO: hook up business logic to handle asset upload
-            dm->getUploadAssetRequest().emit(context_.fqoid(), authz);
-
-            std::string filePath = context_.EOPath();
-            filePath.append(context_.fqoid());
-
-            // Check if the file exists
-            // Placeholder till BL hook is implemented
-            if (std::filesystem::exists(filePath)) {
-                std::string found = "file: " + filePath + " already exists";
-                LOG(INFO) << found;
-                throw catena::exception_with_status(found, catena::StatusCode::ALREADY_EXISTS);
-            }
-        
-            extractPayload(filePath);
-        
-            LOG(INFO) << "AssetRequest[" + std::to_string(objectId_) + "] wrote file: " + filePath;
-        
-            // Set result status to OK
-            rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
-        }
-        
+            
         // PUT/asset
-        else if (context_.method() == Method_PUT) {
+        else if (dm && rc.status == catena::StatusCode::OK && context_.method() == Method_PUT) {
             LOG(INFO) << "receiving asset: " << context_.fqoid();
 
-            //Check if the user has write authorization in any scope other than monitoring
-            //either authz have to be disabled or have write access to any scope other than monitor
-            //TODO: move to BL
-            if (!(authz->writeAuthz(catena::common::Scopes_e::kOperate)
-                    || authz->writeAuthz(catena::common::Scopes_e::kConfig)
-                    || authz->writeAuthz(catena::common::Scopes_e::kAdmin))) {
-                throw catena::exception_with_status("Not authorized to PUT asset", catena::StatusCode::PERMISSION_DENIED);
+                //Check if the user has write authorization in any scope other than monitoring
+                //either authz have to be disabled or have write access to any scope other than monitor
+                //TODO: move to BL
+                if (!(authz->writeAuthz(catena::common::Scopes_e::kOperate)
+                        || authz->writeAuthz(catena::common::Scopes_e::kConfig)
+                        || authz->writeAuthz(catena::common::Scopes_e::kAdmin))) {
+                    throw catena::exception_with_status("Not authorized to PUT asset", catena::StatusCode::PERMISSION_DENIED);
+                }
+
+                //examine authz if has write access in BL
+                //if not, dont post
+                //TODO: hook up business logic to handle asset upload
+                dm->getUploadAssetRequest().emit(context_.fqoid(), authz);
+
+                std::string filePath = context_.EOPath();
+                filePath.append(context_.fqoid());
+
+                // Check if the file exists
+                // Placeholder till BL hook is implemented
+                if (!std::filesystem::exists(filePath)) {
+                    std::string notFound = "file: " + filePath + " not found";
+                    LOG(INFO) << notFound;
+                    throw catena::exception_with_status(notFound, catena::StatusCode::NOT_FOUND);
+                }
+            
+                extractPayload(filePath);
+            
+                LOG(INFO) << "AssetRequest[" + std::to_string(objectId_) + "] wrote file: " + filePath;
+            
+                // Set result status to OK
+                rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
             }
-
-            //examine authz if has write access in BL
-            //if not, dont post
-            //TODO: hook up business logic to handle asset upload
-            dm->getUploadAssetRequest().emit(context_.fqoid(), authz);
-
-            std::string filePath = context_.EOPath();
-            filePath.append(context_.fqoid());
-
-            // Check if the file exists
-            // Placeholder till BL hook is implemented
-            if (!std::filesystem::exists(filePath)) {
-                std::string notFound = "file: " + filePath + " not found";
-                LOG(INFO) << notFound;
-                throw catena::exception_with_status(notFound, catena::StatusCode::NOT_FOUND);
-            }
-        
-            extractPayload(filePath);
-        
-            LOG(INFO) << "AssetRequest[" + std::to_string(objectId_) + "] wrote file: " + filePath;
-        
-            // Set result status to OK
-            rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
-        }
-        
+            
         // DELETE/asset
-        else if (context_.method() == Method_DELETE) {
+        else if (dm && rc.status == catena::StatusCode::OK && context_.method() == Method_DELETE) {
             LOG(INFO) << "deleting asset: " << context_.fqoid();
 
-            //Check if the user has write authorization in any scope other than monitoring
-            //either authz have to be disabled or have write access to any scope other than monitor
-            //TODO: move to BL
-            if (!(authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kOperate))
-                    || authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kConfig))
-                    || authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kAdmin)))) {
-                throw catena::exception_with_status("Not authorized to PUT asset", catena::StatusCode::PERMISSION_DENIED);
+                //Check if the user has write authorization in any scope other than monitoring
+                //either authz have to be disabled or have write access to any scope other than monitor
+                //TODO: move to BL
+                if (!(authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kOperate))
+                        || authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kConfig))
+                        || authz->writeAuthz(catena::common::Scopes().getForwardMap().at(catena::common::Scopes_e::kAdmin)))) {
+                    throw catena::exception_with_status("Not authorized to PUT asset", catena::StatusCode::PERMISSION_DENIED);
+                }
+
+                //examine authz if has write access in BL
+                //if not, dont post
+                //TODO: hook up business logic to handle asset delete
+                dm->getDeleteAssetRequest().emit(context_.fqoid(), authz);
+
+                std::string filePath = context_.EOPath();
+                filePath.append(context_.fqoid());
+
+                // Check if the file exists
+                if (!std::filesystem::exists(filePath)) {
+                    std::string notFound = "file: " + filePath + " not found";
+                    LOG(INFO) << notFound;
+                    throw catena::exception_with_status(notFound, catena::StatusCode::NOT_FOUND);
+                }
+
+                // Delete the file
+                if (std::filesystem::remove(filePath)) {
+                    LOG(INFO) << "AssetRequest[" + std::to_string(objectId_) + "] deleted file: " + filePath;
+                    rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
+                } else {
+                    std::string error = "AssetRequest[" + std::to_string(objectId_) + "] failed to delete file: " + filePath;
+                    LOG(INFO) << error;
+                    throw catena::exception_with_status(error, catena::StatusCode::INTERNAL);
+                }
             }
-
-            //examine authz if has write access in BL
-            //if not, dont post
-            //TODO: hook up business logic to handle asset delete
-            dm->getDeleteAssetRequest().emit(context_.fqoid(), authz);
-
-            std::string filePath = context_.EOPath();
-            filePath.append(context_.fqoid());
-
-            // Check if the file exists
-            if (!std::filesystem::exists(filePath)) {
-                std::string notFound = "file: " + filePath + " not found";
-                LOG(INFO) << notFound;
-                throw catena::exception_with_status(notFound, catena::StatusCode::NOT_FOUND);
+            
+            // ERROR - only set invalid method if no error has been set yet
+            else if (rc.status == catena::StatusCode::OK) {
+                rc = catena::exception_with_status("Invalid method", catena::StatusCode::INVALID_ARGUMENT);
             }
-
-            // Delete the file
-            if (std::filesystem::remove(filePath)) {
-                LOG(INFO) << "AssetRequest[" + std::to_string(objectId_) + "] deleted file: " + filePath;
-                rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
-            } else {
-                std::string error = "AssetRequest[" + std::to_string(objectId_) + "] failed to delete file: " + filePath;
-                LOG(INFO) << error;
-                throw catena::exception_with_status(error, catena::StatusCode::INTERNAL);
-            }
-        }
-        
-        // ERROR
-        else {
-            rc = catena::exception_with_status("Invalid method", catena::StatusCode::INVALID_ARGUMENT);
-        }
-
-        // Validating slot number.
-        if (context_.slot() < 0 || context_.slot() > 65535) {
-            rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
-        }
     } catch (catena::exception_with_status& err) {
         rc = catena::exception_with_status(err.what(), err.status);
     } catch (const std::exception& e) {
