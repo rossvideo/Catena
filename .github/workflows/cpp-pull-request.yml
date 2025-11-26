@@ -88,9 +88,9 @@ jobs:
 
       - name: Run CPP Unit Tests
         run: |
-          ctest --test-dir ${BUILD_TARGET} -R '^common\.' --output-junit /common_test_results.xml
-          ctest --test-dir ${BUILD_TARGET} -R '^gRPC\.' --output-junit /grpc_test_results.xml
-          ctest --test-dir ${BUILD_TARGET} -R '^REST\.' --output-junit /rest_test_results.xml
+          ctest --output-on-failure --test-dir ${BUILD_TARGET} -R '^common\.' --output-junit /common_test_results.xml
+          ctest --output-on-failure --test-dir ${BUILD_TARGET} -R '^gRPC\.' --output-junit /grpc_test_results.xml
+          ctest --output-on-failure --test-dir ${BUILD_TARGET} -R '^REST\.' --output-junit /rest_test_results.xml
 
       - name: Copy files
         if: always()

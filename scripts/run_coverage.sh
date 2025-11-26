@@ -55,11 +55,12 @@ for arg in "$@"; do
   fi
 done
 
+CTEST_FLAGS="--progress --output-on-failure"
 # Run tests with verbose output if -V flag is present
 if [ "$verbose" = true ]; then
-  ctest --output-on-failure -V || ctest --rerun-failed --output-on-failure -V
+  ctest $CTEST_FLAGS -V || ctest $CTEST_FLAGS --rerun-failed -V
 else
-  ctest --output-on-failure || ctest --rerun-failed --output-on-failure
+  ctest $CTEST_FLAGS || ctest $CTEST_FLAGS --rerun-failed
 fi
 
 cd ~/Catena/
