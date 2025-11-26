@@ -270,6 +270,8 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_InvalidSlotStream) {
  * TEST 0.7 - Subscriptions with slot out of valid range.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
     initPayload(65536);
     expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations.

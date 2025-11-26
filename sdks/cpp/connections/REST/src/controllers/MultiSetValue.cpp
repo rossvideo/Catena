@@ -27,45 +27,48 @@ void MultiSetValue::proceed() {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     try {
         IDevice* dm = nullptr;
-
-        // Getting device at specified slot.
-        if (dms_.contains(context_.slot())) {
-            dm = dms_.at(context_.slot());
-        }
-
-        // Making sure the device exists.
-        if (!dm) {
-            rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
-
-        // Converting to MultiSetValuePayload.
-        } else if (toMulti_()) {
-            // Setting up authorizer.
-            std::shared_ptr<catena::common::Authorizer> sharedAuthz;
-            catena::common::Authorizer* authz;
-            if (context_.authorizationEnabled()) {
-                sharedAuthz = std::make_shared<catena::common::Authorizer>(context_.jwsToken());
-                authz = sharedAuthz.get();
-            } else {
-                authz = &catena::common::Authorizer::kAuthzDisabled;
-            }
-            // Trying and commiting the multiSetValue.
-            {
-            std::lock_guard lg(dm->mutex());
-            if (dm->tryMultiSetValue(reqs_, rc, *authz)) {
-                rc = dm->commitMultiSetValue(reqs_, *authz);
-            } else { // debug log (new)
-                LOG(INFO) << "MultiSetValue: tryMultiSetValue failed for slot " << reqs_.slot()
-                        << " status=" << static_cast<int>(rc.status)
-                        << " msg=\"" << rc.what() << "\"";
-            }
-            }
-        } else {
-            rc = catena::exception_with_status("Failed to convert JSON to protobuf", catena::StatusCode::INVALID_ARGUMENT);
-        }
-
         // Validate the slot.
         if (context_.slot() < 0 || context_.slot() > 65535) {
             rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+        }
+
+        if (rc.status == catena::StatusCode::OK) {
+            // Getting device at specified slot.
+            if (dms_.contains(context_.slot())) {
+                dm = dms_.at(context_.slot());
+            }
+
+            // Making sure the device exists.
+            if (!dm) {
+                rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+            }
+        }
+        if (dm && rc.status == catena::StatusCode::OK) {
+            // Converting to MultiSetValuePayload.
+            if (toMulti_()) {
+                // Setting up authorizer.
+                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+                catena::common::Authorizer* authz;
+                if (context_.authorizationEnabled()) {
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(context_.jwsToken());
+                    authz = sharedAuthz.get();
+                } else {
+                    authz = &catena::common::Authorizer::kAuthzDisabled;
+                }
+                // Trying and commiting the multiSetValue.
+                {
+                std::lock_guard lg(dm->mutex());
+                if (dm->tryMultiSetValue(reqs_, rc, *authz)) {
+                    rc = dm->commitMultiSetValue(reqs_, *authz);
+                } else { // debug log (new)
+                    LOG(INFO) << "MultiSetValue: tryMultiSetValue failed for slot " << reqs_.slot()
+                            << " status=" << static_cast<int>(rc.status)
+                            << " msg=\"" << rc.what() << "\"";
+                }
+                }
+            } else {
+                rc = catena::exception_with_status("Failed to convert JSON to protobuf", catena::StatusCode::INVALID_ARGUMENT);
+            }
         }
         
     // ERROR

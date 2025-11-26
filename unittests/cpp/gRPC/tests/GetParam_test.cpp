@@ -357,7 +357,9 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowUnknown) {
 /*
  * TEST 14 - GetParam with slot number out of valid range.
  */
-TEST_F(gRPCGetParamTests, GetParam_SlotOutOfBound) {
+TEST_F(gRPCGetParamTests, GetParam_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
     initPayload(65536, "/test_oid");
     expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations

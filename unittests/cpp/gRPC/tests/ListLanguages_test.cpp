@@ -166,7 +166,9 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_Err) {
 /*
  * TEST 6 - ListLanguages with slot number out of valid range.
  */
-TEST_F(gRPCListLanguagesTests, ListLanguages_SlotOutOfBound) {
+TEST_F(gRPCListLanguagesTests, ListLanguages_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
     inVal_.set_slot(65536);
     expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations

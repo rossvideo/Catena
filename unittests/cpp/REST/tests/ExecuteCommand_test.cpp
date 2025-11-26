@@ -690,6 +690,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
  * TEST 24 - Check for a slot out of range. .
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_SlotOutOfBounds) {
+    dms_[65536] = &dm0_;
     initPayload(65536, "test_command", "test_value", true);
     expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations

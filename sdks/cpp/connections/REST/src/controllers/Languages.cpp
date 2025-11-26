@@ -20,32 +20,38 @@ void Languages::proceed() {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
         IDevice* dm = nullptr;
-        // Getting device at specified slot.
-        if (dms_.contains(context_.slot())) {
-            dm = dms_.at(context_.slot());
-        }
-
-        // Making sure the device exists.
-        if (!dm) {
-            rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
-
-        // GET/languages
-        } else if (context_.method() == Method_GET) {
-            std::lock_guard lg(dm->mutex());
-            dm->toProto(ans);
-            if (ans.languages().empty()) {
-                rc = catena::exception_with_status("No languages found", catena::StatusCode::NOT_FOUND);
-            }
-        // Invalid method.
-        } else {
-            rc = catena::exception_with_status("", catena::StatusCode::UNIMPLEMENTED);
-        }
-
         // Validate the slot.
         if (context_.slot() < 0 || context_.slot() > 65535) {
             rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
         }
-        
+
+        if (rc.status == catena::StatusCode::OK) {
+            // Getting device at specified slot.
+            if (dms_.contains(context_.slot())) {
+                dm = dms_.at(context_.slot());
+            }
+
+            // Making sure the device exists.
+            if (!dm) {
+                rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+            }
+        }
+
+        if (dm && rc.status == catena::StatusCode::OK) {
+            // GET/languages
+            if (context_.method() == Method_GET) {
+                std::lock_guard lg(dm->mutex());
+                dm->toProto(ans);
+                if (ans.languages().empty()) {
+                    rc = catena::exception_with_status("No languages found", catena::StatusCode::NOT_FOUND);
+                }
+            // Invalid method.
+            } else {
+                rc = catena::exception_with_status("", catena::StatusCode::UNIMPLEMENTED);
+            }
+        }
+    
+    // ERROR
     } catch (const catena::exception_with_status& err) {
         rc = catena::exception_with_status(std::string(err.what()), err.status);
     } catch (const std::exception& err) {

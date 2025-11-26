@@ -225,6 +225,9 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_AuthzValid) {
 
 // Test 0.8: Device with a slot out of valid range.
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_SlotOutOfRange) {
+    // Add device at the out-of-range slot to ensure slot validation is tested
+    dms_[65536] = &dm0_;
+    
     slot_ = 65536;
     expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
 

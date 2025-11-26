@@ -338,6 +338,8 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowUnknown) {
  * TEST 5 - Device slot is out of range.
  */
 TEST_F(RESTGetParamTests, GetParam_SlotOutOfBounds) {
+    dms_[65536] = &dm0_;
+    
     initPayload(65536, "/test_oid");
     expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations

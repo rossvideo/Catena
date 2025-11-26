@@ -406,7 +406,9 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowUnknown) {
 /* 
  * TEST 14 - DeviceRequest with slot number out of valid range.
  */
-TEST_F(gRPCDeviceRequestTests, DeviceRequest_SlotOutOfBound) {
+TEST_F(gRPCDeviceRequestTests, DeviceRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
     initPayload(65536, st2138::Device_DetailLevel::Device_DetailLevel_FULL, {});
     expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations - no device methods should be called

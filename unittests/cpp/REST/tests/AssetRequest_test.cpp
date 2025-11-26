@@ -281,6 +281,8 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_ExistsDeflate) {
  * TEST 1.8 - GET asset request for a slot out of range. 
  */
 TEST_F(RESTAssetRequestTests, GETAssetRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
     //establish expectations
     method_ = Method_GET;
     fqoid_ = "/test_asset.jpg";
@@ -384,6 +386,8 @@ TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNE_Deflate) {
  * TEST 2.7 - POST asset request for a slot out of range. 
  */
 TEST_F(RESTAssetRequestTests, POSTAssetRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+
     //establish expectations
     method_ = Method_POST;
     fqoid_ = "/test_asset.jpg";
@@ -485,6 +489,8 @@ TEST_F(RESTAssetRequestTests, PUTAssetRequest_ExistsAuthz) {
  * TEST 3.4 - PUT asset request for a slot out of range. 
  */
 TEST_F(RESTAssetRequestTests, PUTAssetRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+
     //establish expectations
     method_ = Method_PUT;
     fqoid_ = "/test_asset.jpg";
@@ -579,6 +585,8 @@ TEST_F(RESTAssetRequestTests, DELETEAssetRequest_Exists) {
  * TEST 4.4 - DELETE asset request for a slot out of range. 
  */
 TEST_F(RESTAssetRequestTests, DELETEAssetRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+
     //establish expectations
     method_ = Method_DELETE;
     fqoid_ = "/test_asset.jpg";

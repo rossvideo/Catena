@@ -267,7 +267,8 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowUnknown) {
 /* 
  * TEST 11 - AddLanguage with slot number out of valid range.
  */
-TEST_F(gRPCAddLanguageTests, AddLanguage_InvalidSlotOutOfBound) {
+TEST_F(gRPCAddLanguageTests, AddLanguage_InvalidSlotOutOfRange) {
+    dms_[65536] = &dm0_;
     initPayload(65536, "en", "English", {{"greeting", "Hello"}});
     expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations - no device methods should be called

@@ -476,7 +476,10 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_AuthzInvalid) {
 }
 
 // 3.3: Error Case - UpdateSubscriptions with slot number out of valid range.
-TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_SlotOutOfBound) {
+TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_SlotOutOfRange) {
+    // Add device at the out-of-range slot to ensure slot validation is tested
+    dms_[65536] = &dm0_;
+    
     initPayload(65536, {"param1", "param2"}, {});
     expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations - no subscription operations should happen for invalid slot

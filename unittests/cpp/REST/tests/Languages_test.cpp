@@ -119,6 +119,9 @@ TEST_F(RESTLanguagesTests, Languages_InvalidSlot) {
  * TEST 0.4 - Languages proceed() with an out of range slot.
  */
 TEST_F(RESTLanguagesTests, Languages_SlotOutOfRange) {
+    // Add device at the out-of-range slot to ensure slot validation is tested
+    dms_[65536] = &dm0_;
+    
     slot_ = 65536;
     expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations

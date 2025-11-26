@@ -265,7 +265,9 @@ TEST_F(gRPCGetValueTests, GetValue_ErrThrowUnknown) {
 /*
  * TEST 11 - GetValue with slot number out of valid range.
  */
-TEST_F(gRPCGetValueTests, GetValue_SlotOutOfBound) {
+TEST_F(gRPCGetValueTests, GetValue_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
     initPayload(65536, "/test_oid");
     expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations

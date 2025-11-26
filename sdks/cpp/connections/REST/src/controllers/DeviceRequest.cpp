@@ -28,15 +28,23 @@ void DeviceRequest::proceed() {
         std::shared_ptr<catena::common::Authorizer> sharedAuthz;
         catena::common::Authorizer* authz;
         IDevice* dm = nullptr;
-        // Getting device at specified slot.
-        if (dms_.contains(context_.slot())) {
-            dm = dms_.at(context_.slot());
+        // Validating slot number.
+        if (context_.slot() < 0 || context_.slot() > 65535) {
+            rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
         }
-        // Making sure the device exists.
-        if (!dm) {
-            rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
 
-        } else {
+        if (rc.status == catena::StatusCode::OK) {
+            // Getting device at specified slot.
+            if (dms_.contains(context_.slot())) {
+                dm = dms_.at(context_.slot());
+            }
+            // Making sure the device exists.
+            if (!dm) {
+                rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+
+            }
+        } 
+        if(dm && rc.status == catena::StatusCode::OK) {
             // Setting up authorizer object.
             if (context_.authorizationEnabled()) {
                 // Authorizer throws an error if invalid jws token
@@ -72,11 +80,6 @@ void DeviceRequest::proceed() {
             } else {
                 rc = catena::exception_with_status{"Illegal state", catena::StatusCode::INTERNAL};
             }
-        }
-
-        // Validating slot number.
-        if (context_.slot() < 0 || context_.slot() > 65535) {
-            rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
         }
     // ERROR: Update rc.
     } catch (catena::exception_with_status& err) {

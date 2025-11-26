@@ -164,8 +164,10 @@ void AssetRequest::proceed() {
             authz = &catena::common::Authorizer::kAuthzDisabled;
         }
 
-        // GET/asset
-        if (dm && rc.status == catena::StatusCode::OK && context_.method() == Method_GET) {
+        // Only process methods if device exists and no prior errors
+        if (dm && rc.status == catena::StatusCode::OK) {
+            // GET/asset
+            if (context_.method() == Method_GET) {
                 // Locking device and parsing object data.
                 LOG(INFO) << "sending asset: " << context_.fqoid();
                 std::string path = context_.EOPath();
@@ -244,12 +246,11 @@ void AssetRequest::proceed() {
                 obj.mutable_payload()->set_digest(digest, digest_len);
 
                 dm->getDownloadAssetRequest().emit(context_.fqoid(), authz);
-            
             }
 
-        // POST/asset
-        else if (dm && rc.status == catena::StatusCode::OK && context_.method() == Method_POST) {
-            LOG(INFO) << "receiving asset: " << context_.fqoid();
+            // POST/asset
+            else if (context_.method() == Method_POST) {
+                LOG(INFO) << "receiving asset: " << context_.fqoid();
 
                 //Check if the user has write authorization in any scope other than monitoring
                 //either authz have to be disabled or have write access to any scope other than monitor
@@ -280,13 +281,13 @@ void AssetRequest::proceed() {
             
                 LOG(INFO) << "AssetRequest[" + std::to_string(objectId_) + "] wrote file: " + filePath;
             
-                // Set result status to OK
-                rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
-            }
-            
-        // PUT/asset
-        else if (dm && rc.status == catena::StatusCode::OK && context_.method() == Method_PUT) {
-            LOG(INFO) << "receiving asset: " << context_.fqoid();
+                    // Set result status to OK
+                    rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
+                }
+                
+                // PUT/asset
+                else if (context_.method() == Method_PUT) {
+                    LOG(INFO) << "receiving asset: " << context_.fqoid();
 
                 //Check if the user has write authorization in any scope other than monitoring
                 //either authz have to be disabled or have write access to any scope other than monitor
@@ -321,9 +322,9 @@ void AssetRequest::proceed() {
                 rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
             }
             
-        // DELETE/asset
-        else if (dm && rc.status == catena::StatusCode::OK && context_.method() == Method_DELETE) {
-            LOG(INFO) << "deleting asset: " << context_.fqoid();
+            // DELETE/asset
+            else if (context_.method() == Method_DELETE) {
+                LOG(INFO) << "deleting asset: " << context_.fqoid();
 
                 //Check if the user has write authorization in any scope other than monitoring
                 //either authz have to be disabled or have write access to any scope other than monitor
@@ -360,10 +361,11 @@ void AssetRequest::proceed() {
                 }
             }
             
-            // ERROR - only set invalid method if no error has been set yet
-            else if (rc.status == catena::StatusCode::OK) {
+            // ERROR - invalid method
+            else {
                 rc = catena::exception_with_status("Invalid method", catena::StatusCode::INVALID_ARGUMENT);
             }
+        }
     } catch (catena::exception_with_status& err) {
         rc = catena::exception_with_status(err.what(), err.status);
     } catch (const std::exception& e) {

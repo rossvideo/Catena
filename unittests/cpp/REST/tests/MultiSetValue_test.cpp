@@ -310,6 +310,8 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
  * TEST 5 - No device in the specified slot.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
     initPayload(65536, {});
     expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations

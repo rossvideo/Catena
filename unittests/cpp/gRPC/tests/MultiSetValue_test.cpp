@@ -365,7 +365,9 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
 /*
  * TEST 14 - MulitSetValue with slot number out of valid range.
  */
-TEST_F(gRPCMultiSetValueTests, MultiSetValue_SlotOutOfBound) {
+TEST_F(gRPCMultiSetValueTests, MultiSetValue_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
     initPayload(65536, {});
     expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations

@@ -299,6 +299,9 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_GetSerializerThrowUnknown) {
 
 // Test 3.7: Test proceed with an out of range slot.
 TEST_F(RESTDeviceRequestTests, DeviceRequest_SlotOutOfBounds) {
+    // Add device at out of range slot
+    dms_[65536] = &dm0_;
+    
     slot_ = 65536;
     expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations.

@@ -788,7 +788,9 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_catchUnknownException) {
 }
 
 // 4.4: Error Case - ParamInfoRequest with slot number out of valid range.
-TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_SlotOutOfBound) {
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
     initPayload(65536); 
     expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Sending the RPC.
