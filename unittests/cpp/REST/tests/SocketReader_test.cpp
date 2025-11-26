@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the SocketWriter.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/12
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @date 2025/11/26
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -283,8 +284,8 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeadersUnset) {
  * TEST 15 - Headers are case-insensitive (per HTTP spec).
  */
 TEST_F(RESTSocketReaderTests, SocketReader_HeaderCaseInsensitive) {
-    // Authz false by default.
-    EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(false));
+    // Enable authz so Authorization header is parsed.
+    EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
     // Build and send request with non-canonical header casing
     const RESTMethod method = catena::REST::Method_GET;
     const uint32_t slot = 1;
@@ -292,7 +293,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderCaseInsensitive) {
     const std::string fqoid = "/test/oid";
     const bool stream = false;
     const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
-    const std::string jwsToken = ""; // auth disabled
+    const std::string jwsToken = "test-jws-token";
     const std::string origin = "*";
     const auto detailLevel = st2138::Device_DetailLevel_NONE;
     const std::string language = "en";
@@ -314,9 +315,11 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderCaseInsensitive) {
         EXPECT_EQ(socketReader.hasField(key), true);
         EXPECT_EQ(socketReader.fields(key), value);
     }
+    // Authorization header should be parsed despite header-name case differences
+    EXPECT_EQ(socketReader.jwsToken(), jwsToken);
     EXPECT_EQ(socketReader.origin(), origin);
     EXPECT_EQ(socketReader.detailLevel(), detailLevel);
     EXPECT_EQ(socketReader.jsonBody(), jsonBody);
-    EXPECT_EQ(socketReader.authorizationEnabled(), false);
+    EXPECT_EQ(socketReader.authorizationEnabled(), true);
     EXPECT_EQ(socketReader.stream(), stream);
 }

@@ -56,6 +56,7 @@ using boost::asio::ip::tcp;
 
 // std
 #include <string>
+#include <map>
 
 // common
 #include <Status.h>
@@ -141,6 +142,34 @@ class RESTTest {
                       const std::string& detailLevelHeaderName,
                       const std::string& languageHeaderName,
                       const std::string& contentLengthHeaderName) {
+        // Build headers map allowing injection of custom or extra headers
+        std::map<std::string, std::string> headers;
+        headers[originHeaderName] = origin;
+        headers["User-Agent"] = "test_agent";
+        headers[authorizationHeaderName] = "Bearer " + jwsToken;
+        if (detailLevel != st2138::Device_DetailLevel_UNSET) {
+            headers[detailLevelHeaderName] =
+                catena::patterns::EnumDecorator<st2138::Device_DetailLevel>().getForwardMap().at(detailLevel);
+        }
+        if (!language.empty()) {
+            headers[languageHeaderName] = language;
+        }
+        headers[contentLengthHeaderName] = std::to_string(jsonBody.length());
+        // Delegate to generic headers writer
+        writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers);
+    }
+
+    /*
+     * Writes a request with an explicit set of headers.
+     */
+    void writeRequestWithHeaders(RESTMethod method,
+                      uint32_t slot,
+                      const std::string& endpoint,
+                      const std::string& fqoid,
+                      bool stream,
+                      const std::unordered_map<std::string, std::string>& fields,
+                      const std::string& jsonBody,
+                      const std::map<std::string, std::string>& headers) {
         std::string request = "";
         // Path
         request += RESTMethodMap().getForwardMap().at(method)
@@ -165,21 +194,13 @@ class RESTTest {
             }
         }
         request += fieldsStr;
-        // Headers (use provided header names as-is, CRLF per HTTP spec)
+        // Headers (use provided headers map, CRLF per HTTP spec)
         request += " HTTP/1.1\r\n";
-        request += originHeaderName + ": " + origin + "\r\n";
-        request += "User-Agent: test_agent\r\n";
-        request += authorizationHeaderName + ": Bearer " + jwsToken + "\r\n";
-        if (detailLevel != st2138::Device_DetailLevel_UNSET) {
-            request += detailLevelHeaderName + ": "
-                    + catena::patterns::EnumDecorator<st2138::Device_DetailLevel>().getForwardMap().at(detailLevel)
-                    + "\r\n";
-        }
-        if (!language.empty()) {
-            request += languageHeaderName + ": " + language + "\r\n";
+        for (const auto& kv : headers) {
+            request += kv.first + ": " + kv.second + "\r\n";
         }
         // Body
-        request += contentLengthHeaderName + ": " + std::to_string(jsonBody.length()) + "\r\n\r\n";
+        request += "\r\n";
         request += jsonBody;
         boost::asio::write(*writeSocket_, boost::asio::buffer(request));
     }

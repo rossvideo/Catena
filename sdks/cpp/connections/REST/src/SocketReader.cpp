@@ -124,7 +124,7 @@ void SocketReader::read(tcp::socket& socket) {
         if (service_->authorizationEnabled() && jwsToken_.empty() && iequals_header_name(name, "authorization")) {
             // Expect "Bearer <token>" (keep scheme check case-sensitive as before)
             static const std::string kBearerPrefix = "Bearer ";
-            if (value.rfind(kBearerPrefix, 0) == 0) {
+            if (value.find(kBearerPrefix) == 0) {
                 jwsToken_ = value.substr(kBearerPrefix.length());
             }
         }
