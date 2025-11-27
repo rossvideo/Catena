@@ -153,6 +153,7 @@ jobs:
           genhtml --config-file lcov.config \
                   --prefix ${GITHUB_WORKSPACE} \
                   --output-directory coverage_report \
+                  --flat \
                   coverage.info
 
       - name: Upload coverage artifacts
