@@ -143,7 +143,7 @@ std::string catena::param_value_string(const st2138::Value& value) {
         case st2138::Value::kStringValue:
             return value.string_value();
         case st2138::Value::kStructValue:
-            return value.struct_value().DebugString();
+            return "[struct value]";
         case st2138::Value::kInt32ArrayValues: {
             std::ostringstream oss;
             oss << "[";
@@ -175,7 +175,7 @@ std::string catena::param_value_string(const st2138::Value& value) {
             return oss.str();
         }
         case st2138::Value::kDataPayload:
-            return "[data payload]";
+            return value.data_payload().payload();
         case st2138::Value::kStructVariantValue:
             return "[struct variant value]";
         case st2138::Value::kStructVariantArrayValues:
