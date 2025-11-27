@@ -142,7 +142,8 @@ class RESTTest {
                       const std::string& authorizationHeaderName,
                       const std::string& detailLevelHeaderName,
                       const std::string& languageHeaderName,
-                      const std::string& contentLengthHeaderName) {
+                      const std::string& contentLengthHeaderName,
+                      const std::vector<std::string>& extraHeaderLines = {}) {
         // Build headers map allowing injection of custom or extra headers
         std::map<std::string, std::string> headers;
         headers[originHeaderName] = origin;
@@ -164,7 +165,7 @@ class RESTTest {
             headers[decoyHeaderName] = "dummy";
         }
     
-        writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers);
+        writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, extraHeaderLines);
     }
 
     /*
@@ -177,7 +178,8 @@ class RESTTest {
                       bool stream,
                       const std::unordered_map<std::string, std::string>& fields,
                       const std::string& jsonBody,
-                      const std::map<std::string, std::string>& headers) {
+                      const std::map<std::string, std::string>& headers,
+                      const std::vector<std::string>& extraHeaderLines = {}) {
         std::string request = "";
         // Path
         request += RESTMethodMap().getForwardMap().at(method)
@@ -206,6 +208,10 @@ class RESTTest {
         request += " HTTP/1.1\r\n";
         for (const auto& kv : headers) {
             request += kv.first + ": " + kv.second + "\r\n";
+        }
+        // Append any raw header lines as-is (to inject malformed headers, etc.)
+        for (const auto& rawLine : extraHeaderLines) {
+            request += rawLine + "\r\n";
         }
         // Body
         request += "\r\n";
