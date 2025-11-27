@@ -31,7 +31,8 @@
 /**
  * @brief A parent class for REST test fixtures.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/12
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @date 2025-11-27
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -155,7 +156,14 @@ class RESTTest {
             headers[languageHeaderName] = language;
         }
         headers[contentLengthHeaderName] = std::to_string(jsonBody.length());
-        // Delegate to generic headers writer
+        // Add one decoy header with the same length as a real one to hit the
+        // iequals_header_name() false path (length equal, value differs).
+        if (!languageHeaderName.empty()) {
+            std::string decoyHeaderName = languageHeaderName;
+            decoyHeaderName.back() = (decoyHeaderName.back() == 'X') ? 'Y' : 'X';
+            headers[decoyHeaderName] = "dummy";
+        }
+    
         writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers);
     }
 

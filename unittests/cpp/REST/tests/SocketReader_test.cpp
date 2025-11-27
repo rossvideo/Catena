@@ -304,7 +304,8 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderCaseInsensitive) {
                                 "AUTHORIZATION",     // upper-case
                                 "dEtAiL-LeVeL",      // mixed-case
                                 "LANGUAGE",          // upper-case
-                                "content-length");   // lower-case
+                                "content-length");    // lower-case
+
     socketReader.read(serverSocket_);
     // Validate results identical to normal case
     EXPECT_EQ(socketReader.method(), method);
