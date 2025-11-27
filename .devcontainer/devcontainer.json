@@ -48,7 +48,15 @@
             "path": "/bin/bash"
           }
         }
-      }
+      },
+      "extensions": [
+        "redhat.vscode-yaml",
+        "ms-vscode.cpptools",
+        "mhutchie.git-graph",
+        "github.vscode-pull-request-github",
+        "ms-vscode.cmake-tools",
+        "ryanluker.vscode-coverage-gutters"
+      ]
     }
   },
   "mounts": [
