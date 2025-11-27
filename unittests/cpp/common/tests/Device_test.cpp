@@ -495,11 +495,13 @@ TEST_F(DeviceTest, CommitMultiSetValue_SingleValue) {
     
     // Set up authorization - admin token has st2138:adm:w scope
     setupMockParam(*mockParam, "/param1", *mockDescriptor, false, 0, adminScope_);
-    
+
     // Set up expectations for copy() - return mocks that handle fromProto and resetValidate
     EXPECT_CALL(*mockParam, copy())
-        .WillOnce(testing::Invoke([]() { 
+    //add adminScope_ to scope list
+        .WillOnce(testing::Invoke([mockDescriptor, this]() { 
             auto mock = std::make_unique<MockParam>();
+            setupMockParam(*mock, "/param1", *mockDescriptor, false, 0, adminScope_);
             EXPECT_CALL(*mock, fromProto(testing::_, testing::_))
                 .WillOnce(testing::Invoke([](const st2138::Value&, const IAuthorizer&) {
                     return catena::exception_with_status("", catena::StatusCode::OK);
@@ -537,8 +539,9 @@ TEST_F(DeviceTest, CommitMultiSetValue_RegularParams) {
     
     // Set up expectations for regular parameters (direct path access)
     EXPECT_CALL(*mockRegularParam1, copy())
-        .WillOnce(testing::Invoke([]() { 
+        .WillOnce(testing::Invoke([mockDescriptor1, this]() { 
             auto mock = std::make_unique<MockParam>();
+            setupMockParam(*mock, "/param1", *mockDescriptor1, false, 0, adminScope_);
             EXPECT_CALL(*mock, fromProto(testing::_, testing::_))
                 .WillOnce(testing::Invoke([](const st2138::Value&, const IAuthorizer&) {
                     return catena::exception_with_status("", catena::StatusCode::OK);
@@ -548,8 +551,9 @@ TEST_F(DeviceTest, CommitMultiSetValue_RegularParams) {
             return mock;
         }));
     EXPECT_CALL(*mockRegularParam2, copy())
-        .WillOnce(testing::Invoke([]() { 
+        .WillOnce(testing::Invoke([mockDescriptor2, this]() { 
             auto mock = std::make_unique<MockParam>();
+            setupMockParam(*mock, "/param2", *mockDescriptor2, false, 0, adminScope_);
             EXPECT_CALL(*mock, fromProto(testing::_, testing::_))
                 .WillOnce(testing::Invoke([](const st2138::Value&, const IAuthorizer&) {
                     return catena::exception_with_status("", catena::StatusCode::OK);
@@ -607,13 +611,15 @@ TEST_F(DeviceTest, CommitMultiSetValue_ArrayAppend) {
     
     // Set up expectations for array parameter copy
     EXPECT_CALL(*mockArrayParam, copy())
-        .WillOnce(testing::Invoke([]() { 
+        .WillOnce(testing::Invoke([arrayParamDescInfo, this]() { 
             auto mock = std::make_unique<MockParam>();
+            setupMockParam(*mock, "/arrayParam", *arrayParamDescInfo.descriptor, false, 5, adminScope_);
             // Set up expectations for the copied mock to handle array append operation
             EXPECT_CALL(*mock, addBack(testing::_, testing::_))
-                .WillOnce(testing::Invoke([](const IAuthorizer&, catena::exception_with_status& status) {
+                .WillOnce(testing::Invoke([arrayParamDescInfo, this](const IAuthorizer&, catena::exception_with_status& status) {
                     status = catena::exception_with_status("", catena::StatusCode::OK);
                     auto appendedMock = std::make_unique<MockParam>();
+                    setupMockParam(*appendedMock, "/arrayMember", *arrayParamDescInfo.descriptor, false, 0, adminScope_);
                     EXPECT_CALL(*appendedMock, fromProto(testing::_, testing::_))
                         .WillOnce(testing::Invoke([](const st2138::Value&, const IAuthorizer&) {
                             return catena::exception_with_status("", catena::StatusCode::OK);
@@ -662,21 +668,22 @@ TEST_F(DeviceTest, CommitMultiSetValue_ArrayParams) {
     
     // Create mock parameters with proper descriptors
     auto mockArrayParam = std::make_shared<MockParam>();
-    auto mockElementParam = std::make_shared<MockParam>();
     
     // Set up array parameter (isArray = true, size = 5)
     setupMockParam(*mockArrayParam, "/arrayParam", *arrayParamDescInfo.descriptor, true, 5, adminScope_);
-    setupMockParam(*mockElementParam, "/arrayParam/3", *arrayParamDescInfo.descriptor, false, 0, adminScope_);
     
     // Set up expectations for array parameter copy
     EXPECT_CALL(*mockArrayParam, copy())
-        .WillOnce(testing::Invoke([]() { 
+        .WillOnce(testing::Invoke([arrayParamDescInfo, this]() { 
             auto mock = std::make_unique<MockParam>();
+            setupMockParam(*mock, "/arrayParam", *arrayParamDescInfo.descriptor, false, 5, adminScope_);
+            
             // Set up expectations for the copied mock to handle array element access
             EXPECT_CALL(*mock, getParam(testing::_, testing::_, testing::_))
-                .WillOnce(testing::Invoke([](catena::common::Path& path, const IAuthorizer&, catena::exception_with_status& status) {
+                .WillOnce(testing::Invoke([arrayParamDescInfo, this](catena::common::Path& path, const IAuthorizer&, catena::exception_with_status& status) {
                     status = catena::exception_with_status("", catena::StatusCode::OK);
                     auto elementMock = std::make_unique<MockParam>();
+                    setupMockParam(*elementMock, "/arrayParam", *arrayParamDescInfo.descriptor, false, 5, adminScope_);
                     EXPECT_CALL(*elementMock, fromProto(testing::_, testing::_))
                         .WillOnce(testing::Invoke([](const st2138::Value&, const IAuthorizer&) {
                             return catena::exception_with_status("", catena::StatusCode::OK);
@@ -756,14 +763,12 @@ TEST_F(DeviceTest, SetValue_String) {
     auto mockParam = std::make_shared<MockParam>();
     auto mockDescriptor = std::make_shared<MockParamDescriptor>();
     setupMockParam(*mockParam, "/setParam", *mockDescriptor, false, 0, adminScope_);
-    
-    EXPECT_CALL(*mockParam, getDescriptor())
-        .WillRepeatedly(testing::ReturnRef(*mockDescriptor));
 
     // Setup 3 copies of the mock param: validation, reset, commit
     EXPECT_CALL(*mockParam, copy())
-        .WillOnce(testing::Invoke([]() {        
+        .WillOnce(testing::Invoke([mockDescriptor, this]() {        
             auto mock = std::make_unique<MockParam>();
+            setupMockParam(*mock, "/setParam", *mockDescriptor, false, 0, adminScope_);
             // First copy is for validation - expect validateSetValue
             EXPECT_CALL(*mock, validateSetValue(testing::_, testing::_, testing::_, testing::_))
                 .WillOnce(testing::Invoke([](const st2138::Value&, catena::common::Path::Index, const IAuthorizer&, catena::exception_with_status& status) {
@@ -772,15 +777,17 @@ TEST_F(DeviceTest, SetValue_String) {
                 }));
             return mock;
         }))
-        .WillOnce(testing::Invoke([]() { 
+        .WillOnce(testing::Invoke([mockDescriptor, this]() { 
             auto mock = std::make_unique<MockParam>();
+            setupMockParam(*mock, "/setParam", *mockDescriptor, false, 0, adminScope_);
             // Second copy is for reset in tryMultiSetValue cleanup - expect resetValidate
             EXPECT_CALL(*mock, resetValidate())
                 .Times(1);
             return mock;
         }))
-        .WillOnce(testing::Invoke([]() { 
+        .WillOnce(testing::Invoke([mockDescriptor, this]() { 
             auto mock = std::make_unique<MockParam>();
+            setupMockParam(*mock, "/setParam", *mockDescriptor, false, 0, adminScope_);
             // Third copy is for commit - expect fromProto and resetValidate
             EXPECT_CALL(*mock, fromProto(testing::_, testing::_))
                 .WillOnce(testing::Invoke([](const st2138::Value&, const IAuthorizer&) {
@@ -815,8 +822,9 @@ TEST_F(DeviceTest, SetValue_Integer) {
 
     // Setup 3 copies of the mock param: validation, reset, commit
     EXPECT_CALL(*mockParam, copy())
-        .WillOnce(testing::Invoke([]() { 
+        .WillOnce(testing::Invoke([mockDescriptor, this]() { 
             auto mock = std::make_unique<MockParam>();
+            setupMockParam(*mock, "/intSetParam", *mockDescriptor, false, 0, adminScope_);
             // First copy is for validation - expect validateSetValue
             EXPECT_CALL(*mock, validateSetValue(testing::_, testing::_, testing::_, testing::_))
                 .WillOnce(testing::Invoke([](const st2138::Value&, catena::common::Path::Index, const IAuthorizer&, catena::exception_with_status& status) {
@@ -825,15 +833,17 @@ TEST_F(DeviceTest, SetValue_Integer) {
                 }));
             return mock;
         }))
-        .WillOnce(testing::Invoke([]() { 
+        .WillOnce(testing::Invoke([mockDescriptor, this]() { 
             auto mock = std::make_unique<MockParam>();
+            setupMockParam(*mock, "/intSetParam", *mockDescriptor, false, 0, adminScope_);
             // Second copy is for reset in tryMultiSetValue cleanup - expect resetValidate
             EXPECT_CALL(*mock, resetValidate())
                 .Times(1);
             return mock;
         }))
-        .WillOnce(testing::Invoke([]() { 
+        .WillOnce(testing::Invoke([mockDescriptor, this]() { 
             auto mock = std::make_unique<MockParam>();
+            setupMockParam(*mock, "/intSetParam", *mockDescriptor, false, 0, adminScope_);
             // Third copy is for commit - expect fromProto and resetValidate
             EXPECT_CALL(*mock, fromProto(testing::_, testing::_))
                 .WillOnce(testing::Invoke([](const st2138::Value&, const IAuthorizer&) {

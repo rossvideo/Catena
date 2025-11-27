@@ -187,6 +187,11 @@ class ParamDescriptor : public IParamDescriptor {
      * @brief set the readOnly status of the parameter
      */
     inline void readOnly(bool flag) override { read_only_ = flag; }
+    
+    /**
+     * @brief return the stateless status of the parameter
+     */
+    inline bool stateless() const override { return stateless_; }
 
     /**
      * @brief get the access scope of the parameter

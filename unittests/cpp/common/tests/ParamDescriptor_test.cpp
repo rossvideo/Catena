@@ -175,6 +175,7 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_Getters) {
     EXPECT_EQ(!templateOid.empty(), pd->hasTemplateOid());
     EXPECT_EQ(templateOid, pd->templateOid());
     EXPECT_EQ(readOnly, pd->readOnly());
+    EXPECT_EQ(stateless, pd->stateless());
     EXPECT_EQ(precision, pd->precision());
     EXPECT_EQ(minimalSet, pd->minimalSet());
     EXPECT_EQ(&constraint, pd->getConstraint());
@@ -510,4 +511,20 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ReadOnlyMultipleLevelsFalse) {
     EXPECT_FALSE(pd->readOnly());
     EXPECT_FALSE(subPd1->readOnly());
     EXPECT_FALSE(subPd2->readOnly());
+}
+
+TEST_F(ParamDescriptorTest, ParamDescriptor_GettersWithStateless) {
+    stateless = true;
+    create();
+    EXPECT_EQ(type, pd->type());
+    EXPECT_EQ(name, pd->name());
+    EXPECT_EQ(name.at("en"), pd->name("en"));
+    EXPECT_EQ(name.at("fr"), pd->name("fr"));
+    EXPECT_EQ("", pd->name("unknown language"));
+    EXPECT_EQ(oid, pd->getOid());
+    EXPECT_EQ(readOnly, pd->readOnly());
+    EXPECT_EQ(stateless, pd->stateless());
+    EXPECT_EQ(precision, pd->precision());
+    EXPECT_EQ(minimalSet, pd->minimalSet());
+    EXPECT_EQ(&constraint, pd->getConstraint());
 }
