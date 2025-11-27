@@ -115,6 +115,7 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}/tools/codegen
           npm test -- --ci
+          npm run flatten-junit
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
