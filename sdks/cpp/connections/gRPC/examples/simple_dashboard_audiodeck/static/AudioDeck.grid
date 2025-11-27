@@ -3,25 +3,6 @@
       <!-- Meter Tick Timer-->
       <api id="meter-api" immediate="true" src="input.grid.js"/>
 
-      <params>
-         <param access="1" constraint="-10.0;10.0;-10.0;10.0" constrainttype="FLOAT_RANGE" name="" oid="main.gain" precision="1" type="FLOAT32" value="0.0" widget="default"/>
-         <param access="1" constraint="-10.0;10.0;-10.0;10.0" constrainttype="FLOAT_RANGE" name="" oid="main.input" precision="2" type="FLOAT32" value="0.0" widget="default"/>
-         <param access="1" constrainttype="STRING_CHOICE" maxlength="0" oid="main.gain_type" readonly="true" type="STRING" value="Gain" widget="spinner">
-            <constraint>Gain</constraint>
-            <constraint>Stereo</constraint>
-         </param>
-         <param access="1" oid="main.inputLabel" type="STRING" value="Test Channel"/>
-         <param access="1" oid="main.channelLabel" type="STRING" value="MAIN"/>
-         <param access="1" constraintstrict="false" constrainttype="STRING_STRING_CHOICE" maxlength="0" oid="main.invert" type="STRING" value="0" widget="toggle">
-            <constraint key="0">Invert</constraint>
-            <constraint key="1">Invert</constraint>
-         </param>
-
-         <!-- Input Meters -->
-         
-         
-      </params>
-
       <timer autostart="true" delay="0" id="meterTick" rate="100"/>
       <!-- END Meter Tick Timer-->
 
@@ -35,7 +16,7 @@
             </config>
             <oglml>
                <abs height="100" width="160">
-                  <param expand="true" oid=".input" relative="true" showlabel="false" widget="level-meter"/>
+                  <param expand="true" width="160" oid=".input" relative="true" showlabel="false" widget="level-meter"/>
                </abs>
 
                <timertask tasktype="ogscript" timerid="meterTick">
@@ -46,16 +27,6 @@
 
          <!-- Gain Knob/Stereo Knob -->
          <widgetdescriptor id="gain_knob">
-            <config>
-               <params>
-                  <param access="1" constraint="-10.0;10.0;" constrainttype="FLOAT_STEP_RANGE" oid=".gain" precision="2" type="FLOAT32" value="3.0" widget="default"/>
-                  <param access="1" constraint="-10.0;10.0;" constrainttype="FLOAT_STEP_RANGE" oid=".stereo" precision="2" type="FLOAT32" value="3.0" widget="default"/>
-                  <param access="1" constrainttype="STRING_CHOICE" maxlength="0" name="TextParamList" oid=".TextParamList" readonly="true" type="STRING" value="Gain" widget="spinner">
-                     <constraint>Gain</constraint>
-                     <constraint>Stereo</constraint>
-                  </param>
-               </params>
-            </config>
             <oglml>
                <abs height="120" name="Gain" width="160">
                   <param height="100" oid=".gain" widget="wheel" width="160"/>
@@ -69,11 +40,6 @@
 
          <!-- Roll Off Knob -->
          <widgetdescriptor id="roll_off_knob">
-            <config>
-               <params>
-                  <param access="1" constraint="-30.0;30.0;-30.0;30.0;" constrainttype="FLOAT_STEP_RANGE" oid=".roll_off" relative="true" precision="1" type="FLOAT32" value="24.0" widget="default"/>
-               </params>
-            </config>
             <oglml>
                <abs height="60" width="160">
                   <simplegrid cols="2" rows="1">
@@ -91,11 +57,6 @@
 
          <!-- Frequency Knob -->
          <widgetdescriptor id="frequency_knob">
-            <config>
-               <params>
-                  <param access="1" constraint="0.0;500.0;0.0;500.0;" constrainttype="FLOAT_STEP_RANGE" oid=".frequency" relative="true" precision="0" type="FLOAT32" value="85" widget="default"/>
-               </params>
-            </config>
             <oglml>
                <abs height="80" width="160">
                   <simplegrid cols="2" rows="1">
@@ -113,11 +74,6 @@
 
          <!-- Ripple Knob -->
          <widgetdescriptor id="ripple_knob">
-            <config>
-               <params>
-                  <param access="1" constraint="-30.0;30.0;-30.0;30.0;" constrainttype="FLOAT_STEP_RANGE" oid=".ripple" relative="true" precision="1" type="FLOAT32" value="3.0" widget="default"/>
-               </params>
-            </config>
             <oglml>
                <abs height="80" width="160">
                   <simplegrid cols="2" rows="1">
@@ -135,22 +91,6 @@
 
          <!-- Resp Knob -->
          <widgetdescriptor id="resp_knob">
-            <config>
-               <params>
-                  <param access="1" constrainttype="STRING_CHOICE" maxlength="0" oid=".resp" relative="true" type="STRING" value="Cheb II" widget="default">
-                     <constraint>Cheb I</constraint>
-                     <constraint>Cheb II</constraint>
-                     <constraint>Cheb III</constraint>
-                     <constraint>Cheb IV</constraint>
-                     <constraint>Cheb V</constraint>
-                     <constraint>Cheb VI</constraint>
-                     <constraint>Cheb VII</constraint>
-                     <constraint>Cheb VIII</constraint>
-                     <constraint>Cheb IX</constraint>
-                     <constraint>Cheb X</constraint>
-                  </param>
-               </params>
-            </config>
             <oglml>
                <abs height="80" width="160">
                   <simplegrid cols="2" rows="1">
@@ -168,11 +108,6 @@
 
          <!-- Volume Slider -->
          <widgetdescriptor id="volume_slider">
-            <config>
-               <params>
-                  <param access="1" constraint="0;100;" constrainttype="FLOAT_RANGE" oid=".volume" relative="true" type="FLOAT32" value="50"/>
-               </params>
-            </config>
             <oglml>
                <abs height="400" width="140">
                   <param height="400" oid=".volume" relative="true" widget="slider-vertical-nolabel" width="140">
