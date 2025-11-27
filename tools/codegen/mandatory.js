@@ -91,7 +91,7 @@ export function validateRequiredParamsAndScopes(deviceDesc, disableMandatoryEnfo
 
     const allIssues = [...missing.map(p => `${p} (missing field)`), ...emptyValues, ...invalidScopes];
 
-    if (allIssues.length > 0 && !disableMandatoryEnforcement) {
+    if (allIssues.length > 0) {
         throw new Error(`Invalid mandatory product parameters: ${allIssues.join(', ')}`);
     }
 }
