@@ -338,7 +338,7 @@ void AssetRequest::proceed() {
             // Check if the file exists
             if (!std::filesystem::exists(filePath)) {
                 std::string notFound = "file: " + filePath + " not found";
-                VLOG(1) << notFound;
+                LOG(ERROR) << notFound;
                 throw catena::exception_with_status(notFound, catena::StatusCode::NOT_FOUND);
             }
 
