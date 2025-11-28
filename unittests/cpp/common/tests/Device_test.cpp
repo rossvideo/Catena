@@ -201,13 +201,13 @@ protected:
     std::vector<std::shared_ptr<MockParamDescriptor>> mockDescriptors_;
  
     // Helper function for multi-set value tests
-    std::shared_ptr<MockParam> createMultiSetMockParam(const std::string& oid, const std::string& errorMsg = "") {
+    std::shared_ptr<MockParam> createMultiSetMockParam(const std::string& oid, const std::string& errorMsg = "", bool stateless = false) {
         auto mockParam = std::make_shared<MockParam>();
         auto mockDescriptor = std::make_shared<MockParamDescriptor>();
         mockParams_.push_back(mockParam);
         mockDescriptors_.push_back(mockDescriptor);
         
-        setupMockParam(*mockParam, oid, *mockDescriptor, false, 0, adminScope_);
+        setupMockParam(*mockParam, oid, *mockDescriptor, false, 0, adminScope_, stateless);
         
         EXPECT_CALL(*mockParam, getDescriptor())
             .WillRepeatedly(testing::ReturnRef(*mockDescriptor));
@@ -502,6 +502,45 @@ TEST_F(DeviceTest, CommitMultiSetValue_SingleValue) {
         .WillOnce(testing::Invoke([mockDescriptor, this]() { 
             auto mock = std::make_unique<MockParam>();
             setupMockParam(*mock, "/param1", *mockDescriptor, false, 0, adminScope_);
+            EXPECT_CALL(*mock, fromProto(testing::_, testing::_))
+                .WillOnce(testing::Invoke([](const st2138::Value&, const IAuthorizer&) {
+                    return catena::exception_with_status("", catena::StatusCode::OK);
+                }));
+            EXPECT_CALL(*mock, resetValidate())
+                .Times(1);
+            return mock;
+        }));
+    
+    device_->addItem("param1", mockParam.get());
+    
+    // Create a payload with single value
+    auto payload = createMultiSetPayload({
+        {"/param1", 42}
+    });
+    
+    // Test the commit
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    status = device_->commitMultiSetValue(payload, *adminAuthz_);
+    
+    // Should succeed
+    EXPECT_EQ(status.status, catena::StatusCode::OK);
+}
+
+// 1.9: Success Case - Test commitMultiSetValue with single value
+TEST_F(DeviceTest, CommitMultiSetValue_SingleValueStateless) {
+    // Create mock parameter and add it to the device
+    auto mockParam = std::make_shared<MockParam>();
+    auto mockDescriptor = std::make_shared<MockParamDescriptor>();
+    
+    // Set up authorization - admin token has st2138:adm:w scope
+    setupMockParam(*mockParam, "/param1", *mockDescriptor, false, 0, adminScope_, true);
+
+    // Set up expectations for copy() - return mocks that handle fromProto and resetValidate
+    EXPECT_CALL(*mockParam, copy())
+    //add adminScope_ to scope list
+        .WillOnce(testing::Invoke([mockDescriptor, this]() { 
+            auto mock = std::make_unique<MockParam>();
+            setupMockParam(*mock, "/param1", *mockDescriptor, false, 0, adminScope_, true);
             EXPECT_CALL(*mock, fromProto(testing::_, testing::_))
                 .WillOnce(testing::Invoke([](const st2138::Value&, const IAuthorizer&) {
                     return catena::exception_with_status("", catena::StatusCode::OK);
