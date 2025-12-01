@@ -26,7 +26,8 @@ import { createHash } from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
 import protobuf from 'protobufjs';
-import { DeviceModel } from '../DeviceModel.js';
+
+/** @typedef {import('../DeviceModel.js').DeviceModel} DeviceModel */
 
 const MAGIC_STRING = "CTNA";
 
