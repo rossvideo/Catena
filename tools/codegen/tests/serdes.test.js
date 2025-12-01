@@ -73,6 +73,28 @@ describe("serdes", () => {
         });
     });
 
+    test("serialize creates output directory", async () => {
+        const dm = {
+            desc: {
+                slot: 222,
+                detail_level: "FULL",
+                access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
+                default_scope: "st2138:op",
+                params: {},
+            },
+            deviceName: "TestDevice2",
+        };
+        const customOutputDir = path.join(OUTPUT_DIR, "custom_output_dir/subdir/nested");
+        await serialize(dm, {
+            protos: PROTOS_DIR,
+            output: customOutputDir,
+        }, {
+            version: 555,
+        });
+        const outputFile = path.join(customOutputDir, `device.TestDevice2.bin`);
+        expect(await fs.stat(outputFile)).toBeDefined();
+    });
+
     test("deserialize invalid file", async () => {
         await expect(deserialize({
             input: path.join(OUTPUT_DIR, "nonexistent.bin"),

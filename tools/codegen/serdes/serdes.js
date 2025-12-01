@@ -60,7 +60,7 @@ export async function serialize(deviceModel, options, metadata) {
     header.write(MAGIC_STRING, 0, 4, "utf-8"); // magic
     header.writeUInt32LE(metadataLen, 4); // metadata length
     const outputBuffer = Buffer.concat([header, Buffer.from(metadataStr, "utf-8"), Buffer.from(deviceBin)]);
-    await fs.mkdir(path.dirname(options.output), { recursive: true });
+    await fs.mkdir(options.output, { recursive: true });
     const outputFile = path.join(options.output, `device.${deviceModel.deviceName}.bin`);
     await fs.writeFile(outputFile, outputBuffer, "binary");
 }

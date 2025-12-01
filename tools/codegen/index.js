@@ -111,12 +111,14 @@ program
         log("Writing deserialized device model to output...");
         let output = "";
         let outputPath = options.output;
+        const inputFileName = path.basename(input);
+        const inputExt = path.extname(inputFileName);
         if (options.json && !options.yaml) {
             output = JSON.stringify(deviceModel, null, 4);
-            outputPath = path.join(outputPath, input.replace(path.extname(input), '.json'));
+            outputPath = path.join(outputPath, inputFileName.replace(inputExt, '.json'));
         } else {
             output = yaml.stringify(deviceModel);
-            outputPath = path.join(outputPath, input.replace(path.extname(input), '.yaml'));
+            outputPath = path.join(outputPath, inputFileName.replace(inputExt, '.yaml'));
         }
         await fs.mkdir(path.dirname(outputPath), { recursive: true });
         await fs.writeFile(outputPath, output, "utf-8");
