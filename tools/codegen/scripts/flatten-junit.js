@@ -3,6 +3,8 @@
 // Merges all <testsuite> elements in tools/codegen/junit.xml into a single suite.
 // Intended for CI usage only; does not run Jest itself.
 
+// this is AI code it "works"
+
 import fs from 'fs';
 import path from 'path';
 

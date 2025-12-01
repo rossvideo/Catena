@@ -1,4 +1,4 @@
-// GCOVR_EXCL_START
+// LCOV_EXCL_START
 #include <cstdlib>
 #include <SharedFlags.h>
 #include <Device.h>
@@ -17,4 +17,4 @@ ABSL_FLAG(uint32_t, default_total_array_size, catena::common::kDefaultMaxArrayLe
 ABSL_FLAG(uint32_t, max_connections, DEFAULT_MAX_CONNECTIONS, "use this to define the total number of concurrent connections that can be made to a service.");
 ABSL_FLAG(std::string, log_dir, LOG_DIR, "Specify the directory for log files.");
 ABSL_FLAG(bool, silent, false, "use this to suppress all log output.");
-// GCOVR_EXCL_STOP
+// LCOV_EXCL_STOP
