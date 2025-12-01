@@ -157,10 +157,11 @@ class RESTTest {
             headers[languageHeaderName] = language;
         }
         headers[contentLengthHeaderName] = std::to_string(jsonBody.length());
-        // Add one decoy header with the same length as a real one to hit the
-        // iequals_header_name() false path (length equal, value differs).
-        if (!languageHeaderName.empty()) {
-            std::string decoyHeaderName = languageHeaderName;
+        // Add one decoy header with the same length as a real, recognized one
+        // to hit the iequals_header_name() false path (length equal, value differs).
+        // Use the Origin header so the parser will compare it.
+        if (!originHeaderName.empty()) {
+            std::string decoyHeaderName = originHeaderName;
             decoyHeaderName.back() = (decoyHeaderName.back() == 'X') ? 'Y' : 'X';
             headers[decoyHeaderName] = "dummy";
         }
