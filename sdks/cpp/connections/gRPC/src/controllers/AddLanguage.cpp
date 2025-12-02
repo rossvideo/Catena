@@ -44,7 +44,7 @@ AddLanguage::AddLanguage(IServiceImpl *service, SlotMap& dms, bool ok)
 }
 
 void AddLanguage::proceed(bool ok) { 
-    LOG(INFO) << "AddLanguage::proceed[" << objectId_ << "]: " << timeNow()
+    VLOG(1) << "AddLanguage::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok;
 

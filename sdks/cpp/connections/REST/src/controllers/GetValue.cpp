@@ -49,5 +49,6 @@ void GetValue::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    LOG(INFO) << "GetValue[" << objectId_ << "] finished\n";
+    LOG(INFO) << RESTMethodMap().getForwardMap().at(context_.method())
+            << "GetValue[" << objectId_ << "] finished\n";
 }

@@ -87,5 +87,6 @@ void DeviceRequest::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    LOG(INFO) << "DeviceRequest[" << objectId_ << "] finished\n";
+    VLOG(1) << RESTMethodMap().getForwardMap().at(context_.method())
+            << "DeviceRequest[" << objectId_ << "] finished\n";
 }

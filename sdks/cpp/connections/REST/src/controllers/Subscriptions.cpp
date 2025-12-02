@@ -135,5 +135,5 @@ void Subscriptions::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    LOG(INFO) << context_.method() << " Subscriptions[" << objectId_ << "] finished\n";
+    VLOG(1) << context_.method() << " Subscriptions[" << objectId_ << "] finished\n";
 }

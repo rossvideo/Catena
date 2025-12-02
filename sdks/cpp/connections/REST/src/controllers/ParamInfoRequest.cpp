@@ -190,7 +190,8 @@ void ParamInfoRequest::proceed() {
     
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    LOG(INFO) << "ParamInfoRequest[" << objectId_ << "] finished\n";
+    LOG(INFO) << RESTMethodMap().getForwardMap().at(context_.method())
+            << "ParamInfoRequest[" << objectId_ << "] finished\n";
 }
 
 // Helper method to add a parameter to the responses

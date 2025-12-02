@@ -152,7 +152,7 @@ void statusUpdateExample(){
         {
             std::lock_guard lg(dm.mutex());
             counter.get()++;
-            LOG(INFO) << counter.getOid() << " set to " << counter.get();
+            VLOG(1) << counter.getOid() << " set to " << counter.get();
             dm.getValueSetByServer().emit("/counter", &counter);
         }
     }

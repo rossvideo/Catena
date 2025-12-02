@@ -60,5 +60,6 @@ void GetParam::proceed() {
     writer_.sendResponse(rc, ans);
 
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    LOG(INFO) << "GetParam[" << objectId_ << "] finished\n";
+    LOG(INFO) << RESTMethodMap().getForwardMap().at(context_.method())
+            << "GetParam[" << objectId_ << "] finished\n";
 }
