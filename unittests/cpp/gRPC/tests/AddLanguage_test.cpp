@@ -269,8 +269,8 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowUnknown) {
  */
 TEST_F(gRPCAddLanguageTests, AddLanguage_SlotOutOfRange) {
     dms_[65536] = &dm0_;
-    initPayload(dms_.size(), "", "", {});
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
+    initPayload(65536, "", "", {});
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
     EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm1_, addLanguage(::testing::_, ::testing::_)).Times(0);
