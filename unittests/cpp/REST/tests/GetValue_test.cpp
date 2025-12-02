@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the GetValue.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/12
+ * @author jason.chen@rossvideo.com
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 

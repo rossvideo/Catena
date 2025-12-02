@@ -86,7 +86,7 @@ void ExecuteCommand::proceed(bool ok) {
                 IDevice* dm = nullptr;
                 // Validate slot range
                 if (req_.slot() > 65535 || req_.slot() < 0) {
-                    rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
                 }
 
                 // Only proceed to check device existence if slot is valid

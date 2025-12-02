@@ -24,71 +24,66 @@ void LanguagePack::proceed() {
         // Remove leading "/"
         std::string languageId = context_.fqoid().substr(1);
         IDevice* dm = nullptr;
-        // Validate the slot range.
+        // Validating slot number.
         if (context_.slot() < 0 || context_.slot() > 65535) {
-            rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+            throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
         }
 
-        if (rc.status == catena::StatusCode::OK) {
-            // Getting device at specified slot.
-            if (dms_.contains(context_.slot())) {
-                dm = dms_.at(context_.slot());
-            }
-
-            // Authz required for all methods except GET.
-            if (context_.method() != Method_GET && context_.authorizationEnabled()) {
-                // Authorizer throws an error if invalid jws token so no need to handle rc.
-                sharedAuthz = std::make_shared<catena::common::Authorizer>(context_.jwsToken());
-                authz = sharedAuthz.get();
-            } else {
-                authz = &catena::common::Authorizer::kAuthzDisabled;
-            }
-
-            // Making sure the device exists.
-            if (!dm) {
-                rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
-            }
+        // Getting device at specified slot.
+        if (dms_.contains(context_.slot())) {
+            dm = dms_.at(context_.slot());
         }
-        if (dm && rc.status == catena::StatusCode::OK) {
-            // GET/language-pack
-            if (context_.method() == Method_GET) {
+
+        // Authz required for all methods except GET.
+        if (context_.method() != Method_GET && context_.authorizationEnabled()) {
+            // Authorizer throws an error if invalid jws token so no need to handle rc.
+            sharedAuthz = std::make_shared<catena::common::Authorizer>(context_.jwsToken());
+            authz = sharedAuthz.get();
+        } else {
+            authz = &catena::common::Authorizer::kAuthzDisabled;
+        }
+
+        // Making sure the device exists.
+        if (!dm) {
+            rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+
+        // GET/language-pack
+        } else if (context_.method() == Method_GET) {
+            std::lock_guard lg(dm->mutex());
+            rc = dm->getLanguagePack(languageId, ans);
+
+        // POST/language-pack and PUT/language-pack
+        } else if (context_.method() == Method_POST || context_.method() == Method_PUT) {
+            // Constructing the AddLanguagePayload
+            st2138::AddLanguagePayload payload;
+            payload.set_slot(context_.slot());
+            payload.set_language(languageId);
+            absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), payload.mutable_language_pack());
+
+            if (status.ok()) {
                 std::lock_guard lg(dm->mutex());
-                rc = dm->getLanguagePack(languageId, ans);
-
-            // POST/language-pack and PUT/language-pack
-            } else if (context_.method() == Method_POST || context_.method() == Method_PUT) {
-                // Constructing the AddLanguagePayload
-                st2138::AddLanguagePayload payload;
-                payload.set_slot(context_.slot());
-                payload.set_language(languageId);
-                absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), payload.mutable_language_pack());
-
-                if (status.ok()) {
-                    std::lock_guard lg(dm->mutex());
-                    // Making sure we are only adding with POST and updating with PUT.
-                    if (context_.method() == Method_POST  && dm->hasLanguage(languageId)
-                        || context_.method() == Method_PUT && !dm->hasLanguage(languageId)) {
-                        rc = catena::exception_with_status("", catena::StatusCode::PERMISSION_DENIED);
-                    } else {
-                        // addLanguage ensures shipped languages are not changed.
-                        rc = dm->addLanguage(payload, *authz);
-                    }
+                // Making sure we are only adding with POST and updating with PUT.
+                if (context_.method() == Method_POST  && dm->hasLanguage(languageId)
+                    || context_.method() == Method_PUT && !dm->hasLanguage(languageId)) {
+                    rc = catena::exception_with_status("", catena::StatusCode::PERMISSION_DENIED);
                 } else {
-                    // Failed to parse JSON.
-                    rc = catena::exception_with_status("", catena::StatusCode::INVALID_ARGUMENT);
+                    // addLanguage ensures shipped languages are not changed.
+                    rc = dm->addLanguage(payload, *authz);
                 }
-
-            // DELETE/language-pack
-            } else if (context_.method() == Method_DELETE) {
-                std::lock_guard lg(dm->mutex());
-                rc = dm->removeLanguage(languageId, *authz);
-
-            // Invalid method.
             } else {
-                rc = catena::exception_with_status("", catena::StatusCode::UNIMPLEMENTED);
+                // Failed to parse JSON.
+                rc = catena::exception_with_status("", catena::StatusCode::INVALID_ARGUMENT);
             }
+
+        // DELETE/language-pack
+        } else if (context_.method() == Method_DELETE) {
+            std::lock_guard lg(dm->mutex());
+            rc = dm->removeLanguage(languageId, *authz);
+
+        // Invalid method.
+        } else {
+            rc = catena::exception_with_status("", catena::StatusCode::UNIMPLEMENTED);
         }
-        
     // ERROR
     } catch (catena::exception_with_status& err) {
         rc = catena::exception_with_status(err.what(), err.status);

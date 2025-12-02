@@ -33,7 +33,7 @@
  * @brief This file is for testing the gRPC UpdateSubscriptions.cpp file.
  * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
  * @author Jason Chen (jason.chen@rossvideo.com)
- * @date 2025-11-11
+ * @date 2025-12-01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -212,7 +212,7 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_NotSupported) {
 // 0.2: Error Case - UpdateSubscriptions with an invalid slot
 TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_InvalidSlot) {
     initPayload(dms_.size(), {"param1"}, {"param2"});
-    expRc_ = catena::exception_with_status("Device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     
     // Setting expectations - no subscription operations should happen for invalid slot
     EXPECT_CALL(subManager_, addSubscription(testing::_, testing::_, testing::_, testing::_)).Times(0);

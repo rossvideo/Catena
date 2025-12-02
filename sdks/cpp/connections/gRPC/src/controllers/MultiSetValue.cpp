@@ -91,22 +91,17 @@ void MultiSetValue::proceed(bool ok) {
                 toMulti_();
                 // Validate the slot range
                 if (reqs_.slot() < 0 || reqs_.slot() > 65535) {
-                    rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
                 }
                 
-                // Only proceed to check device existence if slot is valid
-                if (rc.status == catena::StatusCode::OK) {
-                    // Getting device at specified slot.
-                    if (dms_.contains(reqs_.slot())) {
-                        dm = dms_.at(reqs_.slot());
-                    }
-                    // Making sure the device exists.
-                    if (!dm) {
-                        rc = catena::exception_with_status("Device not found in slot " + std::to_string(reqs_.slot()), catena::StatusCode::NOT_FOUND);
-                    }
+                // Getting device at specified slot.
+                if (dms_.contains(reqs_.slot())) {
+                    dm = dms_.at(reqs_.slot());
                 }
-
-                if (dm && rc.status == catena::StatusCode::OK) {
+                // Making sure the device exists.
+                if (!dm) {
+                    rc = catena::exception_with_status("device not found in slot " + std::to_string(reqs_.slot()), catena::StatusCode::NOT_FOUND);
+                } else {
                     /**
                      * Creating authorization object depending on client scopes.
                      * Shared ptr to maintain lifetime of object. Raw ptr ensures

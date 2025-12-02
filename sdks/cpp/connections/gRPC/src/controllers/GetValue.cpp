@@ -88,22 +88,19 @@ void GetValue::proceed( bool ok) {
             try {
                 // Validate the slot range
                 if (req_.slot() < 0 || req_.slot() > 65535) {
-                    rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
                 }
                 
-                // Only proceed to check device existence if slot is valid
-                if (rc.status == catena::StatusCode::OK) {
-                    // Getting device at specified slot.
-                    if (dms_.contains(req_.slot())) {
-                        dm = dms_.at(req_.slot());
-                    }
-                    // Making sure the device exists.
-                    if (!dm) {
-                        rc = catena::exception_with_status("Device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
-                    }
+                // Getting device at specified slot.
+                if (dms_.contains(req_.slot())) {
+                    dm = dms_.at(req_.slot());
                 }
 
-                if (dm && rc.status == catena::StatusCode::OK) {
+                // Making sure the device exists.
+                if (!dm) {
+                    rc = catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
+
+                } else {
                     /*
                     * Creating authorizer object. Shared ptr maintains ownership
                     * while raw ptr ensures we don't delete kAuthzDisabled.

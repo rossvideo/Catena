@@ -106,6 +106,9 @@ void ExternalObjectRequest::proceed(bool ok) {
             try {
                 // Check for valid slot
                 IDevice* dm = nullptr;
+                if (req_.slot() < 0 || req_.slot() > 65535) {
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                }
                 if (dms_.contains(req_.slot())) {
                     dm = dms_.at(req_.slot());
                 }

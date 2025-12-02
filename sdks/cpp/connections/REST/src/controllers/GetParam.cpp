@@ -20,24 +20,21 @@ void GetParam::proceed() {
 
     try {
         IDevice* dm = nullptr;
-        // Validate the slot.
+        // Validating slot number.
         if (context_.slot() < 0 || context_.slot() > 65535) {
-            rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+            throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
         }
 
-        if (rc.status == catena::StatusCode::OK) {
-            // Getting device at specified slot.
-            if (dms_.contains(context_.slot())) {
-                dm = dms_.at(context_.slot());
-            }
-
-            // Making sure the device exists.
-            if (!dm) {
-                rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
-            }
+        // Getting device at specified slot.
+        if (dms_.contains(context_.slot())) {
+            dm = dms_.at(context_.slot());
         }
 
-        if(dm && rc.status == catena::StatusCode::OK) {
+        // Making sure the device exists.
+        if (!dm) {
+            rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+
+        } else {
             // Creating authorizer.
             std::shared_ptr<catena::common::Authorizer> sharedAuthz;
             catena::common::Authorizer* authz;
@@ -55,7 +52,6 @@ void GetParam::proceed() {
                 rc = param->toProto(*ans.mutable_param(), *authz);
             }
         }
-        
     // ERROR
     } catch (const catena::exception_with_status& err) {
         rc = catena::exception_with_status(err.what(), err.status);

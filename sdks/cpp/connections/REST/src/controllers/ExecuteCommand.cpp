@@ -27,26 +27,23 @@ void ExecuteCommand::proceed() {
     try {
         st2138::Value val;
         IDevice* dm = nullptr;
-        // Validate the slot
+        // Validating slot number.
         if (context_.slot() < 0 || context_.slot() > 65535) {
-            rc = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+            throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
         }
+        // Getting device at specified slot.
+        if (dms_.contains(context_.slot())) {
+            dm = dms_.at(context_.slot());
+        }
+        // Making sure the device exists.
+        if (!dm) {
+            rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
 
-        if (rc.status == catena::StatusCode::OK) {
-            // Getting device at specified slot.
-            if (dms_.contains(context_.slot())) {
-                dm = dms_.at(context_.slot());
-            }
-            // Making sure the device exists.
-            if (!dm) {
-                rc = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
-
-            // Parse JSON body if not empty.
-            } else if (!context_.jsonBody().empty()) {
-                auto status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &val);
-                if (!status.ok()) {
-                    rc = catena::exception_with_status("Failed to parse JSON body", catena::StatusCode::INVALID_ARGUMENT);
-                }
+        // Parse JSON body if not empty.
+        } else if (!context_.jsonBody().empty()) {
+            auto status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &val);
+            if (!status.ok()) {
+                rc = catena::exception_with_status("Failed to parse JSON body", catena::StatusCode::INVALID_ARGUMENT);
             }
         }
         

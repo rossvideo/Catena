@@ -32,7 +32,7 @@
  * @brief This file is for testing the AddLanguage.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
- * @date 25/11/11
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -227,7 +227,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrReturnCatena) {
  */
 TEST_F(gRPCAddLanguageTests, AddLanguage_ErrInvalidSlot) {
     initPayload(dms_.size(), "", "", {});
-    expRc_ = catena::exception_with_status("Device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     // Setting expectations
     EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm1_, addLanguage(::testing::_, ::testing::_)).Times(0);
@@ -264,14 +264,14 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowUnknown) {
     testRPC();
 }
 
-/* 
- * TEST 11 - AddLanguage with slot number out of valid range.
+/*
+ * TEST 11 - dm.addLanguage() with slot number out of valid range.
  */
-TEST_F(gRPCAddLanguageTests, AddLanguage_InvalidSlotOutOfRange) {
+TEST_F(gRPCAddLanguageTests, AddLanguage_SlotOutOfRange) {
     dms_[65536] = &dm0_;
-    initPayload(65536, "en", "English", {{"greeting", "Hello"}});
-    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
-    // Setting expectations - no device methods should be called
+    initPayload(dms_.size(), "", "", {});
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
     EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm1_, addLanguage(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC

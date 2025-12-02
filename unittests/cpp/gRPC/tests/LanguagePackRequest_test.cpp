@@ -32,7 +32,7 @@
  * @brief This file is for testing the LanguagePackRequest.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
- * @date 25/11/11
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -154,7 +154,7 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_NullSlotCase) {
  */
 TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrInvalidSlot) {
     initPayload(dms_.size(), "en");
-    expRc_ = catena::exception_with_status("Device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     // Setting expectations
     EXPECT_CALL(dm0_, getLanguagePack(::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm1_, getLanguagePack(::testing::_, ::testing::_)).Times(0);

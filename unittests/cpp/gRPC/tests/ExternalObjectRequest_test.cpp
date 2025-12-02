@@ -32,7 +32,7 @@
  * @brief This file is for testing the ExternalObjectRequest.cpp file.
  * @author nelson.daniels@rossvideo.com
  * @author jason.chen@rossvideo.com
- * @date 25/11/11
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -318,6 +318,27 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_InvalidSlot) {
 
     // Expect NOT_FOUND error
     expRc_ = catena::exception_with_status("Device not found in slot 9999", catena::StatusCode::NOT_FOUND);
+
+    // Send the RPC
+    testRPC();
+}
+
+/*
+ * TEST 2.7 - ExternalObjectRequest with slot of of range - should return INVALID_ARGUMENT.
+ */
+TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+
+    // Create test file with content
+    std::string testContent = "This is test file content for external object.";
+    createTestFile("/test_file.txt", testContent);
+
+    // Initialize request payload
+    initPayload("/test_file.txt");
+    inVal_.set_slot(65536); 
+
+    // Expect NOT_FOUND error
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
 
     // Send the RPC
     testRPC();
