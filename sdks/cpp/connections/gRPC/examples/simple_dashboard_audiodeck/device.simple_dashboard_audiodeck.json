@@ -35,7 +35,7 @@
         "ripple": { "type": "FLOAT32", "precision": 1, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -30.0, "max_value": 30.0, "display_min": -30.0, "display_max": 30.0, "step": 1.0 } } },
         "resp": { "type": "STRING", "constraint": { "type": "STRING_CHOICE", "string_choice": { "choices": ["Cheb I","Cheb II","Cheb III","Cheb IV","Cheb V","Cheb VI","Cheb VII","Cheb VIII","Cheb IX","Cheb X"] } } },
         "volume": { "type": "FLOAT32", "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": 0.0, "max_value": 100.0, "display_min": 0.0, "display_max": 100.0, "step": 1.0 } } },
-        "fader": { "type": "FLOAT32", "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": 0.0, "max_value": 10.0, "display_min": 0.0, "display_max": 10.0, "step": 0.1 } } }
+        "fader": { "type": "FLOAT32", "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": 0.0, "max_value": 10.0, "display_min": 0.0, "display_max": 10.0, "step": 0.5 } } }
       }
     },
     "audio_deck": {
