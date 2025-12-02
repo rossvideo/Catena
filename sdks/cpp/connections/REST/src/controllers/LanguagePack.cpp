@@ -93,6 +93,7 @@ void LanguagePack::proceed() {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
 
+
     // Finishing by writing answer to client.
     if (context_.method() == Method_GET) {
         writer_.sendResponse(rc, ans);
