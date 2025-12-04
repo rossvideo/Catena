@@ -345,7 +345,7 @@ TEST_F(ParamWithValueTest, TwoLevelPathAccess) {
     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
 }
 /*
- * TEST 17 - Testing getParam with numeric index on struct parameter.
+ * TEST 17 - Testing getParam with numeric index instead.
  */
 TEST_F(ParamWithValueTest, NumericIndexOnStructParameterFails) {
     // Create a parent parameter with a child parameter
@@ -388,69 +388,3 @@ TEST_F(ParamWithValueTest, UnauthorizedParameterAccessDenied) {
     EXPECT_FALSE(parentParam.getParam(path, authz_, rc_));
     EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED);
 }
-
-// /*
-//  * TEST 19 - Testing nested parameter access with numeric index (converted to string).
-//  * Since EmptyValue allows both strings and indices, test index path that gets converted to string lookup.
-//  */
-// TEST_F(ParamWithValueTest, NestedParameterAccessWithIndex) {
-//     Device dm;
-//     catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
-//     catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
-
-//     // Create child with OID "0" to test index-to-string conversion
-//     catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "Index 0"}}, "", "", false, "0", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
-//     catena::common::ParamWithValue<catena::common::EmptyValue> childParam(catena::common::emptyValue, childParamDescriptor, dm, false);
-    
-//     EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(2).WillRepeatedly(testing::Return(true));
-    
-//     // Test: Access using index /0 which gets converted to string "0"
-//     Path path = Path("/0");
-//     EXPECT_TRUE(parentParam.getParam(path, authz_, rc_));
-//     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
-// }
-
-
-// /*
-//  * TEST 21 - Testing multi-level path with mixed string and index segments.
-//  */
-// TEST_F(ParamWithValueTest, TwoLevelPathAccessWithIndex) {
-//     Device dm;
-    
-//     catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
-//     catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
-
-//     catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, "0", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
-//     catena::common::ParamWithValue<catena::common::EmptyValue> childParam(catena::common::emptyValue, childParamDescriptor, dm, false);
-    
-//     catena::common::ParamDescriptor child2ParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List2"}}, "", "", false, "1", "", nullptr, false, false, dm, 0, 0, 2, false, &childParamDescriptor);
-//     catena::common::ParamWithValue<catena::common::EmptyValue> child2Param(catena::common::emptyValue, child2ParamDescriptor, dm, false);
-    
-//     EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(3).WillRepeatedly(testing::Return(true));
-    
-//     // Test: Navigate through multi-level path using indices (converted to strings "0" and "1")
-//     Path path = Path("/0/1");
-//     EXPECT_TRUE(parentParam.getParam(path, authz_, rc_));
-//     EXPECT_EQ(rc_.status, catena::StatusCode::OK);
-// }
-
-// /*
-//  * TEST 22 - Testing authorization failure with index-based access.
-//  */
-// TEST_F(ParamWithValueTest, UnauthorizedParameterAccessDeniedWithIndex) {
-//     Device dm;
-    
-//     catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
-//     catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
-
-//     catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, "0", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
-//     catena::common::ParamWithValue<catena::common::EmptyValue> childParam(catena::common::emptyValue, childParamDescriptor, dm, false);
-    
-//     // Passes Authz once then fails the rest
-//     EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(2).WillOnce(testing::Return(true)).WillRepeatedly(testing::Return(false));
-    
-//     // Test: Try to access child parameter by index without proper authorization
-//     Path path = Path("/0");
-//     EXPECT_FALSE(parentParam.getParam(path, authz_, rc_));
-//     EXPECT_EQ(rc_.status, catena::StatusCode::PERMISSION_DENIED);
-// } 
