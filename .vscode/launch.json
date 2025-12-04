@@ -2,6 +2,16 @@
     "version": "0.2.0",
     "configurations": [   
       {
+        "type": "go",
+        "name": "Debug Go example",
+        "request": "launch",
+        "mode": "debug",
+        "program": "${workspaceFolder}/${input:pickGoProgram}",
+        "cwd": "${workspaceFolder}",
+        "args": [],
+        "env": {}
+      },
+      {
         "type": "cppdbg",
         "name": "Debug api_only with lldb",
         "request": "launch",
@@ -178,6 +188,15 @@
     }
   ],
   "inputs": [
+    {
+      "id": "pickGoProgram",
+      "description": "Select Go program to debug",
+      "type": "pickString",
+      "options": [
+        "sdks/go/connections/rest/examples/basic_device/basic_device.go"
+      ],
+      "default": "sdks/go/connections/rest/examples/basic_device/basic_device.go"
+    },
     {
       "id": "pickDeviceModel",
       "description": "Select device model to generate code for",

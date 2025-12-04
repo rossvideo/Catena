@@ -13,10 +13,10 @@ env:
 
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
 jobs:
-  build-and-push-toolchain-cpp:
+  build-and-push-toolchain:
     runs-on: ubuntu-latest
     env:
-      IMAGE_NAME: catena-toolchain-cpp
+      IMAGE_NAME: catena-toolchain
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
       contents: read
@@ -56,24 +56,24 @@ jobs:
         uses: dorny/paths-filter@v3.0.2
         with:
           filters: |
-            toolchain-cpp:
-              - '.devcontainer/toolchain-cpp.dockerfile'
-              - '.devcontainer/toolchain-cpp.env'
+            toolchain:
+              - '.devcontainer/toolchain.dockerfile'
+              - '.devcontainer/toolchain.env'
 
       - name: Build and push Docker image
         id: push
-        if: steps.changes.outputs.toolchain-cpp == 'true'
+        if: steps.changes.outputs.toolchain == 'true'
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         with:
           context: .
-          file: .devcontainer/toolchain-cpp.dockerfile
+          file: .devcontainer/toolchain.dockerfile
           push: true
           tags: "${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}:latest"
           labels: ${{ steps.meta.outputs.labels }}
       
       # This step generates an artifact attestation for the image, which is an unforgeable statement about where and how it was built. It increases supply chain security for people who consume the image. For more information, see [Using artifact attestations to establish provenance for builds](/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds).
       - name: Generate artifact attestation
-        if: steps.changes.outputs.toolchain-cpp == 'true'
+        if: steps.changes.outputs.toolchain == 'true'
         uses: actions/attest-build-provenance@v2
         with:
           subject-name: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME}}
@@ -82,7 +82,7 @@ jobs:
 
   trigger-build-examples:
     runs-on: ubuntu-latest
-    needs: build-and-push-toolchain-cpp
+    needs: build-and-push-toolchain
     steps:
       - name: Create JWT
         uses: actions/create-github-app-token@v2

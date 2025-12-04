@@ -8,7 +8,7 @@ LABEL org.opencontainers.image.vendor=$IMAGE_VENDOR
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Copy the toolchain.env file
-COPY .devcontainer/toolchain-cpp.env /root/toolchain.env
+COPY .devcontainer/cpp/toolchain.env /root/toolchain.env
 
 # Source the toolchain.env file
 RUN . /root/toolchain.env \
@@ -96,7 +96,7 @@ RUN . /root/toolchain.env \
     && apt-get update \
     && apt-get install -y docker-ce-cli docker-buildx-plugin docker-compose-plugin
 
-COPY .devcontainer/toolchain-cpp.requirements.txt /root/requirements.txt
+COPY .devcontainer/cpp/toolchain.requirements.txt /root/requirements.txt
 
 # Install Python and gcovr for coverage reports
 RUN apt-get update && apt-get install --no-install-recommends -y python3-pip \
