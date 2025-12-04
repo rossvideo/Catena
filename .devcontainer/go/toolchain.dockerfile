@@ -14,6 +14,7 @@ COPY .devcontainer/go/toolchain.env /root/toolchain.env
 RUN . /root/toolchain.env \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
+    build-essential \
     sudo \
     git \
     doxygen=$DOXYGEN_VERSION \
@@ -36,10 +37,6 @@ RUN . /root/toolchain.env \
     && rm ${GO_VERSION}.tar.gz
 
 ENV PATH="/usr/local/go/bin:${PATH}"
-
-RUN . /root/toolchain.env \
-    && go install golang.org/x/tools/gopls@latest \
-    && go install github.com/go-delve/delve/cmd/dlv@latest
 
 # Install Docker & Docker Compose
 RUN . /root/toolchain.env \

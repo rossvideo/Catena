@@ -5,7 +5,7 @@ name: Create and publish a Docker images
 on:
   push:
     # branches: ['develop', 'main'] don't build on main for now
-    branches: ['develop']
+    branches: ['develop', 'go_sdk']
 
 # Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
 env:
@@ -15,8 +15,11 @@ env:
 jobs:
   build-and-push-toolchain:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        toolchain: [cpp, go]
     env:
-      IMAGE_NAME: catena-toolchain
+      IMAGE_NAME: catena-${{ matrix.toolchain }}-toolchain
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
       contents: read
@@ -57,8 +60,8 @@ jobs:
         with:
           filters: |
             toolchain:
-              - '.devcontainer/toolchain.dockerfile'
-              - '.devcontainer/toolchain.env'
+              - '.devcontainer/${{ matrix.toolchain }}/toolchain.dockerfile'
+              - '.devcontainer/${{ matrix.toolchain }}/toolchain.env'
 
       - name: Build and push Docker image
         id: push
@@ -66,7 +69,7 @@ jobs:
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         with:
           context: .
-          file: .devcontainer/toolchain.dockerfile
+          file: .devcontainer/${{ matrix.toolchain }}/toolchain.dockerfile
           push: true
           tags: "${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}:latest"
           labels: ${{ steps.meta.outputs.labels }}

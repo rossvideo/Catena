@@ -1,5 +1,4 @@
-#FROM ghcr.io/rossvideo/catena-toolchain:latest
-FROM go-local:latest
+FROM ghcr.io/rossvideo/catena-go-toolchain:latest
 
 # Declare build arguments
 ARG USER_UID=1000
@@ -43,4 +42,8 @@ RUN echo "${USER_NAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 WORKDIR /home/${USER_NAME}/Catena
 
 USER ${USER_NAME}
+
+RUN go install golang.org/x/tools/gopls@latest \
+    && go install github.com/go-delve/delve/cmd/dlv@latest
+
 ENTRYPOINT ["/bin/sh", "-c", "/bin/bash"]

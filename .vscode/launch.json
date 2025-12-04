@@ -6,7 +6,7 @@
         "name": "Debug Go example",
         "request": "launch",
         "mode": "debug",
-        "program": "${workspaceFolder}/${input:pickGoProgram}",
+        "program": "${workspaceFolder}/sdks/go/examples/${input:pickGoService}",
         "cwd": "${workspaceFolder}",
         "args": [],
         "env": {}
@@ -189,13 +189,13 @@
   ],
   "inputs": [
     {
-      "id": "pickGoProgram",
+      "id": "pickGoService",
       "description": "Select Go program to debug",
       "type": "pickString",
       "options": [
-        "sdks/go/connections/rest/examples/basic_device/basic_device.go"
+        "basic_device"
       ],
-      "default": "sdks/go/connections/rest/examples/basic_device/basic_device.go"
+      "default": "basic_device"
     },
     {
       "id": "pickDeviceModel",

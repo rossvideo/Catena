@@ -1,10 +1,11 @@
 CMDS := basic_device
+BIN_DIR := $(HOME)/Catena/$(BUILD_TARGET)
 
 all: $(CMDS)
 
 $(CMDS):
-	mkdir -p $(BUILD_TARGET)
-	go build -o $(BUILD_TARGET)/$@ ./examples/$@
+	mkdir -p $(BIN_DIR)/$@
+	go build -o $(BIN_DIR)/$@/$@ ./examples/$@
 
 clean:
 	rm -rf $(BIN_DIR)
