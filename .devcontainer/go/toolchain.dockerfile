@@ -28,7 +28,7 @@ RUN . /root/toolchain.env \
     && apt-get install -y nodejs \
     && rm -f /tmp/nodesource_setup.sh \
     && npm install -g n \
-    && apt-get clean \
+    && apt-get clean
 
 # install Go
 RUN . /root/toolchain.env \
