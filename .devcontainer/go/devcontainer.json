@@ -1,5 +1,5 @@
 {
-  "name": "Catena Development Container",
+  "name": "Go Catena Development Container",
   "build": {
     "dockerfile": "devcontainer.dockerfile",
     "context": ".",
@@ -7,23 +7,23 @@
       "USER_UID": "1000", //export UID=$(id -u)
       "USER_GID": "1000", //export GID=$(id -g)
       "USER_NAME": "${localEnv:USER}",
-      "IMAGE_TITLE": "Catena Development Container",
-      "IMAGE_DESCRIPTION": "Development container for Catena",
-      "IMAGE_VERSION": "1.0.0",
+      "IMAGE_TITLE": "Catena Development Go Container",
+      "IMAGE_DESCRIPTION": "Go development container for Catena",
+      "IMAGE_VERSION": "1.0.1",
       "IMAGE_VENDOR": "Ross Video",
-      "CMAKE_BUILD_TYPE": "Debug",
-      "CONNECTIONS": "gRPC;REST",
-      "BUILD_TARGET": "build/cpp"
+      "BUILD_TYPE": "Debug",
+      "CONNECTIONS": "REST",
+      "BUILD_TARGET": "build/go"
     }
   },
   "postCreateCommand": {
     "dockerInit": "sudo groupdel docker || true && DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) && sudo groupadd -forg $DOCKER_GID docker && sudo usermod -aG docker ${USER_NAME}",
     "initSubmodules": "git submodule update --init --recursive",
-    "cmake": "chown ${USER_NAME}:${USER_NAME} ~/Catena/${BUILD_TARGET} && ${CMAKE_COMMAND} && echo 'Docker setup complete, please restart the dev container!'"
+    "buildDir": "sudo chown ${USER_NAME}:${USER_NAME} ~/Catena/${BUILD_TARGET} && cd ~/Catena/sdks/go && make && echo 'Docker setup complete, please restart the dev container!'",
   },
   "runArgs": [
     "--env-file",
-    "./.devcontainer/devcontainer.env"
+    "./.devcontainer/go/devcontainer.env"
   ],
   "forwardPorts": [
     6254,
@@ -46,21 +46,24 @@
           "bash": {
             "path": "/bin/bash"
           }
-        }
+        },
+        "[go]": {
+          "editor.formatOnSave": false
+        },
+        "go.formatTool": "gofmt"
       },
       "extensions": [
         "redhat.vscode-yaml",
-        "ms-vscode.cpptools",
         "mhutchie.git-graph",
         "github.vscode-pull-request-github",
-        "ms-vscode.cmake-tools",
+        "golang.go",
         "ryanluker.vscode-coverage-gutters"
       ]
     }
   },
   "mounts": [
     // Mount the build directory as a volume first so that it doesn't sync back to the host
-    "source=catena-build,target=/home/${localEnv:USER}/Catena/build/cpp,type=volume",
+    "source=catena-build-go,target=/home/${localEnv:USER}/Catena/build/go,type=volume",
     // Then, mount the Catena directory so that we can sync other changes back to the host
     "source=/home/${localEnv:USER}/Catena,target=/home/${localEnv:USER}/Catena,type=bind",
     // the docker daemon

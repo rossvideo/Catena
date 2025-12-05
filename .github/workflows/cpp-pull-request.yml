@@ -49,7 +49,7 @@ jobs:
     timeout-minutes: 20
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
+      image: ghcr.io/rossvideo/catena-cpp-toolchain:latest
       options: --user root:root
     env:
       CMAKE_BUILD_TYPE: Debug
@@ -184,7 +184,7 @@ jobs:
     timeout-minutes: 35
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
+      image: ghcr.io/rossvideo/catena-cpp-toolchain:latest
       options: --user root:root
     permissions:
       security-events: write
