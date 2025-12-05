@@ -1,24 +1,27 @@
 # Dev Containers
 
-## file break down
 
-### docker containers
+## Docker Containers
 
-- a base toolchain
-- - this has all the tools needed to build Catena
-- a dev container
-- - this has Catena and has been built once
-- - this is setup for uses as a dev container
-- a service container
-- - this container is a minifide compiled version of Cantena
+| Container Type        | Description                                                                     |
+| --------------------- | ------------------------------------------------------------------------------- |
+| **Base Toolchain**    | Has all tools needed to build Catena                                            |
+| **Dev Container**     | Has Catena checked out and built once; used for day-to-day development.         |
+| **Service Container** | Compiled Catena runtime image used as a service container.                      |
 
-### toolchain
+### File Overview
 
-the toolchain is generated from a docker file installing tools defined in [toolchain.dockerfile](https://github.com/rossvideo/Catena/blob/develop/.devcontainer/toolchain.dockerfile)  
-The version of each tool is defined in [toolchain.env](https://github.com/rossvideo/Catena/blob/develop/.devcontainer/toolchain.env)
+| File                     | Role / Purpose                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------ |
+| `compose.yml`            | Defines the multi-container dev environment (base/toolchain, dev, services).  |
+| `devcontainer.dockerfile` | Dockerfile for the main dev container                                        |
+| `devcontainer.env`       | Environment variables used when building/running the dev container.           |
+| `devcontainer.json`      | VS Code / Cursor dev-container configuration (features, settings, mounts).    |
+| `toolchain.dockerfile`   | Dockerfile for the base toolchain image (installs build tools only).          |
+| `toolchain.env`          | Versions and configuration for the toolchain tools used in `toolchain.dockerfile`. |
 
-### devcontainer.json
-- this is the settings for vscode / curser to use when creating the dev container
+# --- TODO ---
+
 
 ## Setup
 1. Install wsl
