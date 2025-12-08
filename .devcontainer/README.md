@@ -55,7 +55,7 @@ CTRL + SHIFT + P -> Dev Containers: Rebuild without cache and Reopen in Containe
 
 7. Select GO or C++ Dev Container
 
-![Container Options](~/Catena/docs/images/Container_Options.png)
+![Container Options](/docs/images/Container_Options.png)
 
 8. Build
 
