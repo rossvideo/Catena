@@ -20,49 +20,49 @@
 | `toolchain.dockerfile`   | Dockerfile for the base toolchain image (installs build tools only).          |
 | `toolchain.env`          | Versions and configuration for the toolchain tools used in `toolchain.dockerfile`. |
 
-# --- TODO ---
+# Setup
+1. Open PowerShell in Administrator mode and install [WSL](https://learn.microsoft.com/en-us/windows/wsl/install)
+```sh
+wsl --install
+```
 
-
-## Setup
-1. Install wsl
-
-2. Install the Dev container extension on your host systems vscode / curser
+2. Install the Dev Container extension on your host systems IDE (VScode / Cursor)
 ```sh
 code --install-extension ms-vscode-remote.remote-containers
 ```
 
-3. Run Powershell script to generate WSL ubuntu instance and setup docker
+3. In the Catena codebase Navigate to the `.devcontainer` directory
+```sh
+cd ~/Catena/.devcontainer
+```
+
+4. Run the PowerShell script to generate a WSL Ubuntu instance and setup Docker
 ```sh
 .\wsl.ps1 $USERNAME $GITHUB_SIGNING_NAME $ROSS_EMAIL
 ```
 
-4. Setup docker inside WSL
-
-From inside Cursor,
-```sh
-CTRL + SHIFT + P -> Dev Containers: Rebuild without cache and Reopen in Container
-```
-Once that finishes, as instructed by the terminal, close cursor  
-Run command from Powershell
-```sh
-wsl -d CatenaUbuntu
-```
-from inside the WSL shell
-```sh
-cd ~/Catena
-code .
-```
-From inside Cursor,
-```sh
-CTRL + SHIFT + P -> Dev Containers: Rebuild without cache and Reopen in Container
-```
-5. Setup ninja builds
-
-From inside the WSL shell in Cursor
+5. Setup SMPTE
 ```sh
 cd ~/Catena/smpte
 ./build-openapi.sh
-cd  ~/Catena/build/cpp
-ninja
 ```
-6. your good to dev now :D
+
+
+6. Build Container
+```sh
+CTRL + SHIFT + P -> Dev Containers: Rebuild without cache and Reopen in Container
+```
+
+7. Select GO or C++ Dev Container
+
+![Container Options](~/Catena/docs/images/Container_Options.png)
+
+8. Build
+
+| Language              | Build Command                        |
+| --------------------- | -------------------------------------|
+| **C++**               | ```cd ~/Catena/build/cpp && ninja``` |
+| **GO**                | ```cd ~/Catena/sdks/go && make```    |
+
+
+9. your good to dev now :D
