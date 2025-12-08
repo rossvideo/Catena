@@ -262,7 +262,7 @@ TEST_F(RESTLanguagePackTests, LanguagePack_GETInvalidSlot) {
  * TEST 1.7 - GET LanguagePack slot is not in valid range.
  */
 TEST_F(RESTLanguagePackTests, LanguagePack_GETSlotOutOfRange) {
-    expRc_ = catena::exception_with_status("file: " + fqoid_ + " not found", catena::StatusCode::INVALID_ARGUMENT);
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     initPayload(65536, "tl");
     method_ = Method_GET;
     // Calling proceed and testing the output

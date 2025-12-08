@@ -373,7 +373,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzExpired) {
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
     initPayload(dms_.size(), "test_command", "test_value", true);
-    expRc_ = catena::exception_with_status("Device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     // Setting expectations
     EXPECT_CALL(dm0_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);

@@ -140,7 +140,7 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_NullSlotCase) {
  */
 TEST_F(gRPCListLanguagesTests, ListLanguages_ErrInvalidSlot) {
     inVal_.set_slot(dms_.size());
-    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(inVal_.slot()), catena::StatusCode::NOT_FOUND);
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     // Setting expectations
     EXPECT_CALL(dm0_, toProto(::testing::An<st2138::LanguageList&>())).Times(0);
     EXPECT_CALL(dm1_, toProto(::testing::An<st2138::LanguageList&>())).Times(0);
