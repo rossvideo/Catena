@@ -1,0 +1,35 @@
+type: STRUCT
+params:
+  id:
+    type: STRING
+  version:
+    type: STRING
+    read_only: true
+  label:
+    type: STRING
+  description:
+    type: STRING
+  tags:
+    type: STRING_ARRAY
+  source_id:
+    type: STRING
+  device_id:
+    type: STRING
+  parents:
+    type: STRING_ARRAY
+  format:
+    type: STRING
+  frame_width:
+    type: INT32
+  frame_height:
+    type: INT32
+  colorspace:
+    type: STRING
+    constraint:
+      type: STRING_CHOICE
+      string_choice:
+        choices:
+          - BT601
+          - BT709
+          - BT2020
+          - BT2100

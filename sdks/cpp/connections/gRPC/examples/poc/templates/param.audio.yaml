@@ -1,0 +1,23 @@
+type: STRUCT
+params:
+  id:
+    type: STRING
+  version:
+    type: STRING
+    read_only: true
+  label:
+    type: STRING
+  description:
+    type: STRING
+  tags:
+    type: STRING_ARRAY
+  source_id:
+    type: STRING
+  device_id:
+    type: STRING
+  parents:
+    type: STRING_ARRAY
+  format:
+    type: STRING
+  sample_rate:
+    type: FLOAT32

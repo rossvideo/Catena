@@ -37,14 +37,14 @@
         "--compile-commands-dir=${workspaceFolder}/${env:BUILD_TARGET}"
     ],
     "yaml.schemas": {
-        "./schema/catena.device_schema.json" : [
+        "./smpte/interface/schemata/device.json" : [
             "/example_device_models/device.*.yaml",
             "/nab_2024/device.*.yaml",
             "/sdks/cpp/lite/examples/*/device.*.yaml",
             "/sdks/cpp/connections/gRPC/examples/**/device.*.yaml",
             "/sdks/cpp/connections/REST/examples/**/device.*.yaml"
         ],
-        "./schema/catena.param_schema.json" : [
+        "https://smpte.github.io/st2138-a/interface/schemata/param.json" : [
             "/example_device_models/*/param.*.yaml",
             "/sdks/cpp/lite/examples/*/param.*.yaml",
             "/sdks/cpp/connections/gRPC/examples/**/param.*.yaml",
@@ -151,7 +151,8 @@
         "format": "cpp",
         "shared_mutex": "cpp",
         "span": "cpp",
-        "typeindex": "cpp"
+        "typeindex": "cpp",
+        "*.inc": "cpp"
     },
     "java.compile.nullAnalysis.mode": "disabled"
 }

@@ -1,0 +1,148 @@
+type: STRUCT
+stateless: true
+params:
+  id:
+    name:
+      display_strings:
+        en: "ID"
+    type: STRING
+  description:
+    name:
+      display_strings:
+        en: "Description"
+    type: STRING
+  tags:
+    name:
+      display_strings:
+        en: "Tags"
+    type: STRUCT_ARRAY
+    params:
+      name:
+        name:
+          display_strings:
+            en: "Tag Name"
+        type: STRING
+      values:
+        name:
+          display_strings:
+            en: "Tag Values"
+        type: STRING_ARRAY
+  format:
+    name:
+      display_strings:
+        en: "Format"
+    type: STRING
+  label:
+    name:
+      display_strings:
+        en: "Label"
+    type: STRING
+  parents:
+    name:
+      display_strings:
+        en: "Parents"
+    type: STRING_ARRAY
+  media_type:
+    name:
+      display_strings:
+        en: "Media Type"
+    type: STRING
+  grain_rate:
+    type: STRUCT
+    name:
+      display_strings:
+        en: "Grain Rate"
+    params:
+      numerator:
+        name:
+          display_strings:
+            en: "Numerator"
+        type: INT32
+      denominator:
+        name:
+          display_strings:
+            en: "Denominator"
+        type: INT32
+  frame_width:
+    name:
+      display_strings:
+        en: "Frame Width"
+    type: INT32
+  frame_height:
+    name:
+      display_strings:
+        en: "Frame Height"
+    type: INT32
+  interlace_mode:
+    name:
+      display_strings:
+        en: "Interlace Mode"
+    type: STRING
+  colorspace:
+    name:
+      display_strings:
+        en: "Colorspace"
+    type: STRING
+  components:
+    name:
+      display_strings:
+        en: "Components"
+    type: STRUCT_ARRAY
+    params:
+      name:
+        name:
+          display_strings:
+            en: "Component Name"
+        type: STRING
+      width:
+        name:
+          display_strings:
+            en: "Width"
+        type: INT32
+      height:
+        name:
+          display_strings:
+            en: "Height"
+        type: INT32
+      bit_depth:
+        name:
+          display_strings:
+            en: "Bit Depth"
+        type: INT32
+value:
+  struct_value:
+    fields:
+      id:
+        string_value: ""
+      description:
+        string_value: ""
+      tags:
+        struct_array_values:
+          struct_values: []
+      format:
+        string_value: ""
+      label:
+        string_value: ""
+      parents:
+        string_array_values:
+          strings: []
+      media_type:
+        string_value: ""
+      grain_rate:
+        struct_value:
+          fields:
+            numerator:
+              int32_value: 0
+            denominator:
+              int32_value: 0
+      frame_width:
+        int32_value: 0
+      frame_height:
+        int32_value: 0
+      interlace_mode:
+        string_value: ""
+      colorspace:
+        string_value: ""
+      components:
+        struct_array_values:
+          struct_values: []

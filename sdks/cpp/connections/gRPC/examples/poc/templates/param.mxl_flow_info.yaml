@@ -1,0 +1,40 @@
+type: STRUCT
+params:
+  # mxlFlowConfigInfo
+
+  # mxlCommonFlowConfigInfo
+  id:
+    type: STRING # uuid
+  format:
+    type: STRING
+    constraint:
+      type: STRING_CHOICE
+      string_choice:
+        choices:
+          - UNSPECIFIED
+          - VIDEO
+          - AUDIO
+          - DATA
+          - MUX
+
+  grain_rate:
+    type: STRUCT # maybe just a FLOAT32?
+    params:
+      
+      numerator:
+        type: INT32
+      denominator:
+        type: INT32
+
+  
+
+  # mxlFlowRuntimeInfo
+  head_index:
+    type: STRING
+    stateless: true
+  last_write_time:
+    type: STRING
+    stateless: true
+  last_read_time:
+    type: STRING
+    stateless: true

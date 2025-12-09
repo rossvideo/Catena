@@ -108,6 +108,31 @@
                 "ignoreFailures": true
             }
         ]
+    }, {
+        "name": "Debug mxl_info with gdb",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/${env:BUILD_TARGET}/connections/gRPC/examples/poc/mxl_info/mxl_info", // Path to the full_service executable
+        "args": [//"--static_root", "${workspaceFolder}/sdks/cpp/connections/gRPC/examples/poc/mxl_info/static", 
+                //  "--secure_comms", "tls",
+                // "--authz",
+                "--log_dir", "${workspaceFolder}/logs"
+        ], // Any command-line arguments go here
+        "stopAtEntry": false,
+        "cwd": "${workspaceFolder}/${env:BUILD_TARGET}",
+        "environment": [{
+          "name": "LD_LIBRARY_PATH",
+          "value": "${workspaceFolder}/mxl/app"
+        }],
+        "externalConsole": false,
+        "MIMode": "gdb",
+        "setupCommands": [
+            {
+                "description": "Enable pretty-printing for gdb",
+                "text": "-enable-pretty-printing",
+                "ignoreFailures": true
+            }
+        ]
     },
     {
       "type": "node",
