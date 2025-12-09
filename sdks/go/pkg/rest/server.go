@@ -1,10 +1,10 @@
 package rest
 
 import (
-    "net/http"
-    "strconv"
-    "strings"
-    "sync"
+	"net/http"
+	"strconv"
+	"strings"
+	"sync"
 )
 
 // Entity is an opaque type the BaseServer routes to per slot.
