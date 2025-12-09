@@ -5,6 +5,7 @@
 #include <ServiceCredentials.h>
 
 #include <absl/flags/parse.h>
+#include <absl/flags/flag.h>
 #include <absl/flags/usage.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/escaping.h>
@@ -21,6 +22,9 @@
 
 #include <Processing.NDI.Advanced.h>
 
+#include <cstdint>
+#include <cstring>
+
 // std
 #include <atomic>
 #include <thread>
@@ -30,6 +34,81 @@ using catena::gRPC::ServiceImpl;
 using grpc::Server;
 
 using namespace catena::common;
+
+
+
+// Map 10-bit (0..1023) to 8-bit (0..255)
+inline std::uint8_t ten_to_eight(std::uint16_t v10)
+{
+    // Fast: drop 2 LSBs
+    return static_cast<std::uint8_t>(v10 >> 2);
+}
+
+// Convert one line of MXL 10-bit 4:2:2 into UYVY 8-bit.
+//
+// Assumes MXL samples for 2 pixels are in the order: Y0, Cb0, Y1, Cr0
+// and each sample is stored in a 16-bit word with only the lower 10 bits used.
+void v210_to_uyvy_line(
+    const std::uint8_t* src_v210,
+    std::uint8_t*       dst_uyvy,
+    int                 width_pixels   // e.g. 1920
+)
+{
+    const std::uint32_t* s =
+        reinterpret_cast<const std::uint32_t*>(src_v210);
+    std::uint8_t* d = dst_uyvy;
+
+    auto put_pair = [&](std::uint16_t U10,
+                        std::uint16_t Y0_10,
+                        std::uint16_t V10,
+                        std::uint16_t Y1_10)
+    {
+        const std::uint8_t U8  = ten_to_eight(U10);
+        const std::uint8_t V8  = ten_to_eight(V10);
+        const std::uint8_t Y0  = ten_to_eight(Y0_10);
+        const std::uint8_t Y1  = ten_to_eight(Y1_10);
+
+        *d++ = U8;
+        *d++ = Y0;
+        *d++ = V8;
+        *d++ = Y1;
+    };
+
+    int x = 0;
+    while (x < width_pixels)
+    {
+        std::uint32_t w0 = *s++;
+        std::uint32_t w1 = *s++;
+        std::uint32_t w2 = *s++;
+        std::uint32_t w3 = *s++;
+
+        std::uint16_t Cb0 =  (w0      ) & 0x3FF;
+        std::uint16_t Y0  = (w0 >> 10) & 0x3FF;
+        std::uint16_t Cr0 = (w0 >> 20) & 0x3FF;
+
+        std::uint16_t Y1  =  (w1      ) & 0x3FF;
+        std::uint16_t Cb2 = (w1 >> 10) & 0x3FF;
+        std::uint16_t Y2  = (w1 >> 20) & 0x3FF;
+
+        std::uint16_t Cr2 =  (w2      ) & 0x3FF;
+        std::uint16_t Y3  = (w2 >> 10) & 0x3FF;
+        std::uint16_t Cb4 = (w2 >> 20) & 0x3FF;
+
+        std::uint16_t Y4  =  (w3      ) & 0x3FF;
+        std::uint16_t Cr4 = (w3 >> 10) & 0x3FF;
+        std::uint16_t Y5  = (w3 >> 20) & 0x3FF;
+
+        // Pixels 0–1
+        put_pair(Cb0, Y0, Cr0, Y1);
+        // Pixels 2–3
+        put_pair(Cb2, Y2, Cr2, Y3);
+        // Pixels 4–5
+        put_pair(Cb4, Y4, Cr4, Y5);
+
+        x += 6;
+    }
+}
+
 
 Server* globalServer = nullptr;
 std::atomic<bool> isRunning = false;
@@ -219,24 +298,29 @@ void RunVideoFlow() {
     NDIlib_video_frame_v2_t NDI_video_frame;
     NDI_video_frame.xres = 1920;
     NDI_video_frame.yres = 1080;
-    // NDI_video_frame.FourCC = (NDIlib_FourCC_video_type_e)NDIlib_FourCC_type_SHQ2_highest_bandwidth;
-    NDI_video_frame.FourCC = NDIlib_FourCC_video_type_UYVY;
-    NDI_video_frame.frame_rate_N = 30000;
-    NDI_video_frame.frame_rate_D = 1001;
-    NDI_video_frame.picture_aspect_ratio = 16.0f / 9.0f;
-    NDI_video_frame.frame_format_type = NDIlib_frame_format_type_progressive;
-    // NDI_video_frame.line_stride_in_bytes = 5120;// * (1001 / 1492);
-    // NDI_video_frame.line_stride_in_bytes = NDI_video_frame.xres * 28 / 8; // 10-bit 4:2:2 packed
-    NDI_video_frame.line_stride_in_bytes = 5529600 / 1080;
-    NDI_video_frame.p_data = new uint8_t[5529600];
 
-    mxlInstance instance = mxlCreateInstance("/dev/shm/mxl", "");
+    NDI_video_frame.FourCC              = NDIlib_FourCC_video_type_UYVY; // 8-bit 4:2:2
+    NDI_video_frame.frame_rate_N        = 30000;
+    NDI_video_frame.frame_rate_D        = 1001;
+    NDI_video_frame.picture_aspect_ratio = 16.0f / 9.0f;
+    NDI_video_frame.frame_format_type   = NDIlib_frame_format_type_progressive;
+
+    // UYVY: 2 bytes per pixel (U Y0 V Y1 for each 2 pixels)
+    NDI_video_frame.line_stride_in_bytes = NDI_video_frame.xres * 2;
+
+    const size_t ndi_buffer_bytes =
+        static_cast<size_t>(NDI_video_frame.yres) *
+        static_cast<size_t>(NDI_video_frame.line_stride_in_bytes);
+
+    NDI_video_frame.p_data = new std::uint8_t[ndi_buffer_bytes];
+
+    mxlInstance instance = mxlCreateInstance("/dev/shm/mxl/primary", "");
     if (instance == nullptr) {
         LOG(ERROR) << "Failed to create MXL instance";
         return;
     }
     mxlFlowReader flowReader;
-    mxlStatus status = mxlCreateFlowReader(instance, "5fbec3b1-1b0f-417d-9059-8b94a47197ed", "", &flowReader);
+    mxlStatus status = mxlCreateFlowReader(instance, "e299f46b-91ef-4664-8d71-2f5873028d88", "", &flowReader);
     if (status != MXL_STATUS_OK) {
         LOG(ERROR) << "Failed to create MXL flow reader: " << status;
         mxlDestroyInstance(instance);
@@ -295,16 +379,27 @@ void RunVideoFlow() {
             // valid grain, process payload here
             // copy payload to NDI frame
             LOG(INFO) << grainInfo.grainSize << " bytes read for grain index " << grainInfo.index;
-            // Protect against buffer overruns if grain size exceeds allocated NDI buffer
-            // const size_t ndi_buffer_bytes = static_cast<size_t>(NDI_video_frame.yres) *
-            //                                 static_cast<size_t>(NDI_video_frame.line_stride_in_bytes);
-            // const size_t copy_bytes = std::min(ndi_buffer_bytes, static_cast<size_t>(grainInfo.grainSize));
-            // if (grainInfo.grainSize > ndi_buffer_bytes) {
-            //     LOG(WARNING) << "Grain size (" << grainInfo.grainSize
-            //                  << ") exceeds NDI buffer (" << ndi_buffer_bytes
-            //                  << ") — truncating copy to prevent overflow.";
-            // }
-            std::memcpy(NDI_video_frame.p_data, payload, grainInfo.grainSize);
+
+
+            // v210 is packed 10-bit 4:2:2
+            const int width  = NDI_video_frame.xres;   // 1920
+            const int height = NDI_video_frame.yres;   // 1080
+
+            // Stride of the v210 data in bytes (already includes padding)
+            const size_t v210_stride_bytes = grainInfo.grainSize / height;
+
+            const std::uint8_t* src = payload;
+
+            for (int y = 0; y < height; ++y)
+            {
+                const std::uint8_t* src_line = src + y * v210_stride_bytes;
+                std::uint8_t* dst_line =
+                    NDI_video_frame.p_data + y * NDI_video_frame.line_stride_in_bytes;
+
+                v210_to_uyvy_line(src_line, dst_line, width);
+            }
+
+
             // send NDI frame
             NDIlib_send_send_video_v2(pNDI_send, &NDI_video_frame);
 
@@ -380,6 +475,8 @@ void RunRPCServer(std::string addr) {
 int main(int argc, char* argv[]) {
     std::string addr;
     absl::SetProgramUsageMessage("Runs the Catena Service");
+    constexpr uint16_t kLocalNdiPort = 6543;  // Bind gRPC server to localhost:6543 for NDI sink usage
+    absl::SetFlag(&FLAGS_port, kLocalNdiPort);
     absl::ParseCommandLine(argc, argv);
     Logger::init("one_of_everything");
 

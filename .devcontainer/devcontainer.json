@@ -64,6 +64,8 @@
     // Then, mount the Catena directory so that we can sync other changes back to the host
     "source=/home/${localEnv:USER}/Catena,target=/home/${localEnv:USER}/Catena,type=bind",
     // the docker daemon
-    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+    // expose shared memory directory used by MXL tooling
+    "source=/dev/shm,target=/dev/shm,type=bind"
   ]
 }
