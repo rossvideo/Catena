@@ -65,4 +65,4 @@ CTRL + SHIFT + P -> Dev Containers: Rebuild without cache and Reopen in Containe
 | **GO**                | ```cd ~/Catena/sdks/go && make```    |
 
 
-9. your good to dev now :D
+9. You're good to dev now :D
