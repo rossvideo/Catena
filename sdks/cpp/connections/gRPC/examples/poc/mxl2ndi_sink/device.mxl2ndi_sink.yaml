@@ -53,6 +53,45 @@ params:
     import:
       file: ../templates/param.flow_def.yaml
 
+  inputs:
+    type: STRUCT
+    params:
+      domains:
+        name:
+          display_strings:
+            en: "Domains"
+        type: STRING_ARRAY
+      current_domain:
+        name:
+          display_strings:
+            en: "Current Domain"
+        type: STRING
+      current_flow_id:
+        name:
+          display_strings:
+            en: "Current Flow ID"
+        type: STRING
+
+commands:
+  list_flows:
+    type: EMPTY
+    name:
+      display_strings:
+        en: "List Flows"
+    response: false
+  start:
+    type: EMPTY
+    name:
+      display_strings:
+        en: "Start"
+    response: false
+  stop:
+    type: EMPTY
+    name:
+      display_strings:
+        en: "Stop"
+    response: false
+
 menu_groups:
   status:
     name:
@@ -78,3 +117,21 @@ menu_groups:
           - /flow_def/interlace_mode
           - /flow_def/colorspace
           - /flow_def/components
+  config:
+    name:
+      display_strings:
+        en: "Configuration"
+    order: 1
+    menus:
+      inputs:
+        name:
+          display_strings:
+            en: "Inputs"
+        param_oids:
+          - /inputs/domains
+          - /inputs/current_domain
+          - /inputs/current_flow_id
+        command_oids:
+          - /list_flows
+          - /start
+          - /stop

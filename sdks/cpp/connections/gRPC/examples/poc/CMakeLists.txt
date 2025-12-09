@@ -25,4 +25,4 @@ add_dependencies(${target} build_openapi)
 
 add_subdirectory("video_src")
 add_subdirectory("mxl_info")
-add_subdirectory("mxl_sink")
+add_subdirectory("mxl2ndi_sink")

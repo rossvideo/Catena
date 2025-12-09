@@ -1,4 +1,4 @@
-#include "device.mxl_sink.yaml.h"
+#include "device.mxl2ndi_sink.yaml.h"
 
 #include <ParamWithValue.h>
 #include <ServiceImpl.h>
@@ -314,13 +314,13 @@ void RunVideoFlow() {
 
     NDI_video_frame.p_data = new std::uint8_t[ndi_buffer_bytes];
 
-    mxlInstance instance = mxlCreateInstance("/dev/shm/mxl/primary", "");
+    mxlInstance instance = mxlCreateInstance("/dev/shm/mxl", "");
     if (instance == nullptr) {
         LOG(ERROR) << "Failed to create MXL instance";
         return;
     }
     mxlFlowReader flowReader;
-    mxlStatus status = mxlCreateFlowReader(instance, "e299f46b-91ef-4664-8d71-2f5873028d88", "", &flowReader);
+    mxlStatus status = mxlCreateFlowReader(instance, "5fbec3b1-1b0f-417d-9059-8b94a47197ed", "", &flowReader);
     if (status != MXL_STATUS_OK) {
         LOG(ERROR) << "Failed to create MXL flow reader: " << status;
         mxlDestroyInstance(instance);
@@ -412,6 +412,7 @@ void RunVideoFlow() {
     mxlReleaseFlowReader(instance, flowReader);
     mxlDestroyInstance(instance);
 
+    free (NDI_video_frame.p_data);
     NDIlib_send_destroy(pNDI_send);
     NDIlib_destroy();
 }
@@ -475,8 +476,6 @@ void RunRPCServer(std::string addr) {
 int main(int argc, char* argv[]) {
     std::string addr;
     absl::SetProgramUsageMessage("Runs the Catena Service");
-    constexpr uint16_t kLocalNdiPort = 6543;  // Bind gRPC server to localhost:6543 for NDI sink usage
-    absl::SetFlag(&FLAGS_port, kLocalNdiPort);
     absl::ParseCommandLine(argc, argv);
     Logger::init("one_of_everything");
 
