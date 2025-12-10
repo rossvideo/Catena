@@ -66,7 +66,7 @@ func initBusinessLogicV2(srv *rest.Server, mgr *catena.DeviceManager) {
             return
         }
         defer rc.Close()
-        w.Header().Set("Content-Type", "application/octet-stream")1
+        w.Header().Set("Content-Type", "application/octet-stream")
         if _, err := io.Copy(w, rc); err != nil {
             log.Printf("error streaming asset %s: %v", id, err)
         }

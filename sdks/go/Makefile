@@ -1,4 +1,4 @@
-CMDS := basic_device
+CMDS := basic_device_bl
 BIN_DIR := $(HOME)/Catena/$(BUILD_TARGET)
 
 all: $(CMDS)
