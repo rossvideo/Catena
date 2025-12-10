@@ -1,5 +1,6 @@
 #include "device.mxl2ndi_sink.yaml.h"
 
+#include <ParamDescriptor.h>
 #include <ParamWithValue.h>
 #include <ServiceImpl.h>
 #include <ServiceCredentials.h>
@@ -27,6 +28,7 @@
 
 // std
 #include <atomic>
+#include <filesystem>
 #include <thread>
 
 using catena::gRPC::ServiceConfig;
@@ -36,10 +38,8 @@ using grpc::Server;
 using namespace catena::common;
 
 
-
 // Map 10-bit (0..1023) to 8-bit (0..255)
-inline std::uint8_t ten_to_eight(std::uint16_t v10)
-{
+inline std::uint8_t ten_to_eight(std::uint16_t v10) {
     // Fast: drop 2 LSBs
     return static_cast<std::uint8_t>(v10 >> 2);
 }
@@ -48,25 +48,17 @@ inline std::uint8_t ten_to_eight(std::uint16_t v10)
 //
 // Assumes MXL samples for 2 pixels are in the order: Y0, Cb0, Y1, Cr0
 // and each sample is stored in a 16-bit word with only the lower 10 bits used.
-void v210_to_uyvy_line(
-    const std::uint8_t* src_v210,
-    std::uint8_t*       dst_uyvy,
-    int                 width_pixels   // e.g. 1920
-)
-{
-    const std::uint32_t* s =
-        reinterpret_cast<const std::uint32_t*>(src_v210);
+void v210_to_uyvy_line(const std::uint8_t* src_v210, std::uint8_t* dst_uyvy,
+                       int width_pixels  // e.g. 1920
+) {
+    const std::uint32_t* s = reinterpret_cast<const std::uint32_t*>(src_v210);
     std::uint8_t* d = dst_uyvy;
 
-    auto put_pair = [&](std::uint16_t U10,
-                        std::uint16_t Y0_10,
-                        std::uint16_t V10,
-                        std::uint16_t Y1_10)
-    {
-        const std::uint8_t U8  = ten_to_eight(U10);
-        const std::uint8_t V8  = ten_to_eight(V10);
-        const std::uint8_t Y0  = ten_to_eight(Y0_10);
-        const std::uint8_t Y1  = ten_to_eight(Y1_10);
+    auto put_pair = [&](std::uint16_t U10, std::uint16_t Y0_10, std::uint16_t V10, std::uint16_t Y1_10) {
+        const std::uint8_t U8 = ten_to_eight(U10);
+        const std::uint8_t V8 = ten_to_eight(V10);
+        const std::uint8_t Y0 = ten_to_eight(Y0_10);
+        const std::uint8_t Y1 = ten_to_eight(Y1_10);
 
         *d++ = U8;
         *d++ = Y0;
@@ -75,28 +67,27 @@ void v210_to_uyvy_line(
     };
 
     int x = 0;
-    while (x < width_pixels)
-    {
+    while (x < width_pixels) {
         std::uint32_t w0 = *s++;
         std::uint32_t w1 = *s++;
         std::uint32_t w2 = *s++;
         std::uint32_t w3 = *s++;
 
-        std::uint16_t Cb0 =  (w0      ) & 0x3FF;
-        std::uint16_t Y0  = (w0 >> 10) & 0x3FF;
+        std::uint16_t Cb0 = (w0) & 0x3FF;
+        std::uint16_t Y0 = (w0 >> 10) & 0x3FF;
         std::uint16_t Cr0 = (w0 >> 20) & 0x3FF;
 
-        std::uint16_t Y1  =  (w1      ) & 0x3FF;
+        std::uint16_t Y1 = (w1) & 0x3FF;
         std::uint16_t Cb2 = (w1 >> 10) & 0x3FF;
-        std::uint16_t Y2  = (w1 >> 20) & 0x3FF;
+        std::uint16_t Y2 = (w1 >> 20) & 0x3FF;
 
-        std::uint16_t Cr2 =  (w2      ) & 0x3FF;
-        std::uint16_t Y3  = (w2 >> 10) & 0x3FF;
+        std::uint16_t Cr2 = (w2) & 0x3FF;
+        std::uint16_t Y3 = (w2 >> 10) & 0x3FF;
         std::uint16_t Cb4 = (w2 >> 20) & 0x3FF;
 
-        std::uint16_t Y4  =  (w3      ) & 0x3FF;
+        std::uint16_t Y4 = (w3) & 0x3FF;
         std::uint16_t Cr4 = (w3 >> 10) & 0x3FF;
-        std::uint16_t Y5  = (w3 >> 20) & 0x3FF;
+        std::uint16_t Y5 = (w3 >> 20) & 0x3FF;
 
         // Pixels 0–1
         put_pair(Cb0, Y0, Cr0, Y1);
@@ -110,8 +101,9 @@ void v210_to_uyvy_line(
 }
 
 
-Server* globalServer = nullptr;
+std::unique_ptr<Server> globalServer = nullptr;
 std::atomic<bool> isRunning = false;
+std::unique_ptr<std::thread> flowThread = nullptr;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
@@ -125,32 +117,29 @@ void handle_signal(int sig) {
     t.join();
 }
 
-void run() {
-    isRunning = true;
+std::string getDomain(catena::exception_with_status& status) {
+    st2138::Value domainValue;
+    status = dm.getValue("/inputs/current_domain", domainValue);
+    if (status.status != catena::StatusCode::OK) {
+        return std::string{};
+    }
+    return domainValue.string_value();
+}
+
+std::string getFlowId(catena::exception_with_status& status) {
+    st2138::Value flowIdValue;
+    status = dm.getValue("/inputs/current_flow_id", flowIdValue);
+    if (status.status != catena::StatusCode::OK) {
+        return std::string{};
+    }
+    return flowIdValue.string_value();
+}
+
+void setFlowDef(mxlInstance& instance, std::string& flowId) {
     st2138::Value value;
-    mxlFlowInfo flowInfo;
-    const std::string headIndex = "/flow_info/head_index";
-    const std::string lastWrite = "/flow_info/last_write_time";
-    const std::string lastRead = "/flow_info/last_read_time";
-
-    mxlInstance instance = mxlCreateInstance("/dev/shm/mxl", "");
-    if (instance == nullptr) {
-        LOG(ERROR) << "Failed to create MXL instance";
-        return;
-    }
-
-    mxlFlowReader flowReader;
-    mxlStatus status = mxlCreateFlowReader(instance, "5fbec3b1-1b0f-417d-9059-8b94a47197ed", "", &flowReader);
-    if (status != MXL_STATUS_OK) {
-        LOG(ERROR) << "Failed to create MXL flow reader: " << status;
-        mxlDestroyInstance(instance);
-        return;
-    }
-
     char buffer[1024];
     size_t bufferSize = sizeof(buffer);
-
-    status = mxlGetFlowDef(instance, "5fbec3b1-1b0f-417d-9059-8b94a47197ed", buffer, &bufferSize);
+    mxlStatus status = mxlGetFlowDef(instance, flowId.c_str(), buffer, &bufferSize);
     if (status != MXL_STATUS_OK) {
         LOG(ERROR) << "Failed to get MXL flow definition: " << status;
     } else {
@@ -248,6 +237,29 @@ void run() {
             }
         }
     }
+}
+
+void run() {
+    isRunning = true;
+    st2138::Value value;
+    mxlFlowInfo flowInfo;
+    const std::string headIndex = "/flow_info/head_index";
+    const std::string lastWrite = "/flow_info/last_write_time";
+    const std::string lastRead = "/flow_info/last_read_time";
+
+    mxlInstance instance = mxlCreateInstance("/dev/shm/mxl", "");
+    if (instance == nullptr) {
+        LOG(ERROR) << "Failed to create MXL instance";
+        return;
+    }
+
+    mxlFlowReader flowReader;
+    mxlStatus status = mxlCreateFlowReader(instance, "5fbec3b1-1b0f-417d-9059-8b94a47197ed", "", &flowReader);
+    if (status != MXL_STATUS_OK) {
+        LOG(ERROR) << "Failed to create MXL flow reader: " << status;
+        mxlDestroyInstance(instance);
+        return;
+    }
 
     while (isRunning) {
         // update the ticker once per second, and emit the event
@@ -291,7 +303,7 @@ void RunVideoFlow() {
     NDI_send_create_desc.p_ndi_name = "Catena MXL Sink";
     NDIlib_send_instance_t pNDI_send = NDIlib_send_create(&NDI_send_create_desc);
     if (pNDI_send == nullptr) {
-        LOG(ERROR) << "Failed to create NDI sender";;
+        LOG(ERROR) << "Failed to create NDI sender";
         return;
     }
 
@@ -299,28 +311,38 @@ void RunVideoFlow() {
     NDI_video_frame.xres = 1920;
     NDI_video_frame.yres = 1080;
 
-    NDI_video_frame.FourCC              = NDIlib_FourCC_video_type_UYVY; // 8-bit 4:2:2
-    NDI_video_frame.frame_rate_N        = 30000;
-    NDI_video_frame.frame_rate_D        = 1001;
+    NDI_video_frame.FourCC = NDIlib_FourCC_video_type_UYVY;  // 8-bit 4:2:2
+    NDI_video_frame.frame_rate_N = 30000;
+    NDI_video_frame.frame_rate_D = 1001;
     NDI_video_frame.picture_aspect_ratio = 16.0f / 9.0f;
-    NDI_video_frame.frame_format_type   = NDIlib_frame_format_type_progressive;
+    NDI_video_frame.frame_format_type = NDIlib_frame_format_type_progressive;
 
     // UYVY: 2 bytes per pixel (U Y0 V Y1 for each 2 pixels)
     NDI_video_frame.line_stride_in_bytes = NDI_video_frame.xres * 2;
 
     const size_t ndi_buffer_bytes =
-        static_cast<size_t>(NDI_video_frame.yres) *
-        static_cast<size_t>(NDI_video_frame.line_stride_in_bytes);
+      static_cast<size_t>(NDI_video_frame.yres) * static_cast<size_t>(NDI_video_frame.line_stride_in_bytes);
 
     NDI_video_frame.p_data = new std::uint8_t[ndi_buffer_bytes];
 
-    mxlInstance instance = mxlCreateInstance("/dev/shm/mxl", "");
+    catena::exception_with_status statusErr{"", catena::StatusCode::OK};
+    std::string domain = getDomain(statusErr);
+    if (statusErr.status != catena::StatusCode::OK) {
+        LOG(ERROR) << "Failed to get current domain: " << statusErr.what();
+        return;
+    }
+    std::string flowId = getFlowId(statusErr);
+    
+    mxlInstance instance = mxlCreateInstance(domain.c_str(), "");
     if (instance == nullptr) {
         LOG(ERROR) << "Failed to create MXL instance";
         return;
     }
+
+    setFlowDef(instance, flowId);
+
     mxlFlowReader flowReader;
-    mxlStatus status = mxlCreateFlowReader(instance, "5fbec3b1-1b0f-417d-9059-8b94a47197ed", "", &flowReader);
+    mxlStatus status = mxlCreateFlowReader(instance, flowId.c_str(), "", &flowReader);
     if (status != MXL_STATUS_OK) {
         LOG(ERROR) << "Failed to create MXL flow reader: " << status;
         mxlDestroyInstance(instance);
@@ -336,6 +358,10 @@ void RunVideoFlow() {
     }
     mxlRational rate = flowInfo.config.common.grainRate;
     uint32_t maxSyncBatchSizeHint = flowInfo.config.common.maxSyncBatchSizeHint;
+
+    st2138::Value value;
+    value.set_string_value("Running");
+    dm.setValue("/status", value);
 
     uint64_t timeoutNs =
       static_cast<std::uint64_t>(1.0 * rate.denominator * (1'000'000'000.0 / rate.numerator) + 1'000'000ULL);
@@ -382,19 +408,17 @@ void RunVideoFlow() {
 
 
             // v210 is packed 10-bit 4:2:2
-            const int width  = NDI_video_frame.xres;   // 1920
-            const int height = NDI_video_frame.yres;   // 1080
+            const int width = NDI_video_frame.xres;   // 1920
+            const int height = NDI_video_frame.yres;  // 1080
 
             // Stride of the v210 data in bytes (already includes padding)
             const size_t v210_stride_bytes = grainInfo.grainSize / height;
 
             const std::uint8_t* src = payload;
 
-            for (int y = 0; y < height; ++y)
-            {
+            for (int y = 0; y < height; ++y) {
                 const std::uint8_t* src_line = src + y * v210_stride_bytes;
-                std::uint8_t* dst_line =
-                    NDI_video_frame.p_data + y * NDI_video_frame.line_stride_in_bytes;
+                std::uint8_t* dst_line = NDI_video_frame.p_data + y * NDI_video_frame.line_stride_in_bytes;
 
                 v210_to_uyvy_line(src_line, dst_line, width);
             }
@@ -402,19 +426,114 @@ void RunVideoFlow() {
 
             // send NDI frame
             NDIlib_send_send_video_v2(pNDI_send, &NDI_video_frame);
-
         }
 
         index++;
         mxlSleepForNs(mxlGetNsUntilIndex(index, &rate));
     }
+
+    value.set_string_value("Stopped");
+    dm.setValue("/status", value);
+
     // clean up
     mxlReleaseFlowReader(instance, flowReader);
     mxlDestroyInstance(instance);
 
-    free (NDI_video_frame.p_data);
+    free(NDI_video_frame.p_data);
     NDIlib_send_destroy(pNDI_send);
     NDIlib_destroy();
+}
+
+void defineCommands() {
+    catena::exception_with_status err{"", catena::StatusCode::OK};
+    std::unique_ptr<IParam> listFlowsCommand = dm.getCommand("/list_flows", err);
+    listFlowsCommand->defineCommand(
+      [](const st2138::Value& value,
+         const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> {
+          return std::make_unique<ParamDescriptor::CommandResponder>(
+            [](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+                st2138::Value domainsValue;
+                st2138::CommandResponse response;
+                catena::exception_with_status err = dm.getValue("/inputs/domains", domainsValue);
+                // If the state parameter does not exist, return an exception
+                if (err.status != catena::StatusCode::OK) {
+                    response.mutable_exception()->set_type("Invalid Command");
+                    response.mutable_exception()->set_details(err.what());
+                    co_return response;
+                }
+                std::string domain;
+                std::istringstream domainStream(domainsValue.string_value());
+                std::ostringstream flowIdsStream;
+                while (std::getline(domainStream, domain, ';')) {
+                    std::filesystem::path path{domain};
+                    if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path)) {
+                        LOG(WARNING) << "Domain path does not exist or is not a directory: " << domain;
+                        continue;
+                    }
+                    for (const auto& entry : std::filesystem::directory_iterator(path)) {
+                        if (!entry.is_directory())
+                            continue;
+                        if (entry.path().extension() != ".mxl-flow")
+                            continue;
+                        std::string flowId = entry.path().stem().string();
+                        if (flowIdsStream.tellp() != std::ostringstream::pos_type(0)) {
+                            flowIdsStream << ";";
+                        }
+                        flowIdsStream << flowId;
+                        LOG(INFO) << "Found flow ID: " << flowId << " in domain: " << domain;
+                    }
+                }
+                st2138::Value flowIdsValue;
+                flowIdsValue.set_string_value(flowIdsStream.str());
+                dm.setValue("/flow_ids", flowIdsValue);
+                response.mutable_no_response();
+                co_return response;
+            }(value, respond));
+      });
+
+    std::unique_ptr<IParam> startCommand = dm.getCommand("/start", err);
+    startCommand->defineCommand(
+      [](const st2138::Value& value,
+         const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> {
+          return std::make_unique<ParamDescriptor::CommandResponder>(
+            [](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+                st2138::CommandResponse response;
+                if (isRunning) {
+                    response.mutable_exception()->set_type("Invalid Command");
+                    response.mutable_exception()->set_details("Flow is already running");
+                    co_return response;
+                }
+
+                isRunning = true;
+                flowThread = std::make_unique<std::thread>(RunVideoFlow);
+
+                response.mutable_no_response();
+                co_return response;
+            }(value, respond));
+      });
+
+    std::unique_ptr<IParam> stopCommand = dm.getCommand("/stop", err);
+    stopCommand->defineCommand(
+      [](const st2138::Value& value,
+         const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> {
+          return std::make_unique<ParamDescriptor::CommandResponder>(
+            [](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+                st2138::CommandResponse response;
+                if (!isRunning) {
+                    response.mutable_exception()->set_type("Invalid Command");
+                    response.mutable_exception()->set_details("Flow is not running");
+                    co_return response;
+                }
+
+                isRunning = false;
+                if (flowThread && flowThread->joinable()) {
+                    flowThread->join();
+                }
+
+                response.mutable_no_response();
+                co_return response;
+            }(value, respond));
+      });
 }
 
 void RunRPCServer(std::string addr) {
@@ -443,27 +562,23 @@ void RunRPCServer(std::string addr) {
         builder.RegisterService(&service);
 
 
-        std::unique_ptr<Server> server(builder.BuildAndStart());
+        globalServer = builder.BuildAndStart();
         LOG(INFO) << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
-
-        globalServer = server.get();
 
         service.init();
         std::thread cq_thread([&]() { service.processEvents(); });
-
-        std::thread playThread(run);
-        std::thread videoThread(RunVideoFlow);
 
         // start the heartbeat on the device
         dm.setHeartbeatParam("/product/version");
         dm.startHeartbeat();
 
         // wait for the server to shutdown and tidy up
-        server->Wait();
+        globalServer->Wait();
         dm.stopHeartbeat();
 
-        playThread.join();
-        videoThread.join();
+        if (flowThread && flowThread->joinable()) {
+            flowThread->join();
+        }
 
         cq->Shutdown();
         cq_thread.join();
@@ -480,6 +595,8 @@ int main(int argc, char* argv[]) {
     Logger::init("one_of_everything");
 
     addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
+
+    defineCommands();
 
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();

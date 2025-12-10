@@ -53,6 +53,34 @@ params:
     import:
       file: ../templates/param.flow_def.yaml
 
+  flow_ids:
+    type: STRING
+    name:
+      display_strings:
+        en: "Flow IDs from List Flows"
+    value:
+      string_value: ""
+
+  status:
+    type: STRING
+    name:
+      display_strings:
+        en: "Status"
+    constraint:
+      type: STRING_STRING_CHOICE
+      string_string_choice:
+        choices:
+          - name:
+              display_strings:
+                en: "Running"
+            value: "Running"
+          - name:
+              display_strings:
+                en: "Stopped"
+            value: "Stopped"
+    value:
+      string_value: "Stopped"
+
   inputs:
     type: STRUCT
     params:
@@ -60,7 +88,7 @@ params:
         name:
           display_strings:
             en: "Domains"
-        type: STRING_ARRAY
+        type: STRING
       current_domain:
         name:
           display_strings:
@@ -71,6 +99,15 @@ params:
           display_strings:
             en: "Current Flow ID"
         type: STRING
+    value:
+      struct_value:
+        fields:
+          domains:
+            string_value: ""
+          current_domain:
+            string_value: ""
+          current_flow_id:
+            string_value: ""
 
 commands:
   list_flows:
@@ -104,6 +141,7 @@ menu_groups:
           display_strings:
             en: "Flow Definition"
         param_oids:
+          - /status
           - /flow_def/id
           - /flow_def/description
           - /flow_def/tags
@@ -117,6 +155,12 @@ menu_groups:
           - /flow_def/interlace_mode
           - /flow_def/colorspace
           - /flow_def/components
+      flows:
+        name:
+          display_strings:
+            en: "Flows"
+        param_oids:
+          - /flow_ids
   config:
     name:
       display_strings:
@@ -135,3 +179,13 @@ menu_groups:
           - /list_flows
           - /start
           - /stop
+      commands:
+        name:
+          display_strings:
+            en: "Commands"
+        command_oids:
+          - /list_flows
+          - /start
+          - /stop
+        client_hints:
+          oglml: "eo://commands.grid"
