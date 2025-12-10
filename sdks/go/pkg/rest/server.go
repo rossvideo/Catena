@@ -1,106 +1,199 @@
 package rest
 
 import (
-	"encoding/json"
-	"io"
-	"log"
-	"net/http"
-	"strings"
-	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+    "net/http"
+    "strconv"
+    "strings"
+    "sync"
 )
 
+// Entity is an opaque type the BaseServer routes to per slot.
+type Device any
+
+// Base handlers are entity-agnostic.
+type DeviceHandler func(w http.ResponseWriter, r *http.Request)
+type ParamValueHandler func(w http.ResponseWriter, r *http.Request, slot int, fqoid string)
+type AssetHandler func(w http.ResponseWriter, r *http.Request, slot int, fqoid string)
+
+// Server is decoupled from catena.Device and just wires HTTP routes.
 type Server struct {
-	dev catena.Device
+    getDevice  		DeviceHandler
+    getParamValue   map[int]ParamValueHandler
+    setParamValue   map[int]ParamValueHandler
+    getAsset   		map[int]AssetHandler
+
+	slotList		[]int
+	mux 			http.ServeMux
+    mu             	sync.RWMutex
 }
 
-func NewServer(dev catena.Device) *Server {
-	return &Server{dev: dev}
+func NewServer(slotList []int) *Server {
+
+    server := Server{
+        getDevice: 		DeviceHandler(nil),
+        getParamValue:  make(map[int]ParamValueHandler),
+        setParamValue:  make(map[int]ParamValueHandler),
+        getAsset:  		make(map[int]AssetHandler),
+		slotList:    	slotList,
+		mux: 			*http.NewServeMux(),
+    }
+
+	// Start HTTP server.
+    server.RegisterRoutes()
+
+	return &server
 }
 
-func (s *Server) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/st2138-api/v1/0/device", s.handleDevice) // /st2138-api/v1/device
-	mux.HandleFunc("/st2138-api/v1/0/param/", s.handleParam)  // /st2138-api/v1/param/{path}
-	mux.HandleFunc("/st2138-api/v1/0/asset/", s.handleAsset)  // /st2138-api/v1/asset/{id}
+func (s *Server) StartHTTPServer(port int) {
+    addr := ":" + strconv.Itoa(port)
+    go func() {
+        if err := http.ListenAndServe(addr, &s.mux); err != nil {
+            panic("HTTP server failed: " + err.Error())
+        }
+    }()
 }
 
-func (s *Server) handleDevice(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	desc, err := s.dev.Describe(r.Context())
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	writeJSON(w, desc)
+func (s *Server) DefaultDeviceHandler(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "no device handler registered", http.StatusNotImplemented)
 }
 
-func (s *Server) handleParam(w http.ResponseWriter, r *http.Request) {
-	// URL: /st2138-api/v1/0/param/{path}
-	path := strings.TrimPrefix(r.URL.Path, "/st2138-api/v1/0/param/")
-	if path == "" {
-		http.Error(w, "missing param path", http.StatusBadRequest)
-		return
-	}
-
-	switch r.Method {
-	case http.MethodGet:
-		val, err := s.dev.GetParam(r.Context(), path)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
-		}
-		writeJSON(w, val)
-
-	case http.MethodPut:
-		var val catena.Value
-		if err := json.NewDecoder(r.Body).Decode(&val); err != nil {
-			http.Error(w, "invalid JSON", http.StatusBadRequest)
-			return
-		}
-		if err := s.dev.SetParam(r.Context(), path, val); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		w.WriteHeader(http.StatusNoContent)
-
-	default:
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-	}
+func (s *Server) DefaultGetParamValueHandler(w http.ResponseWriter, r *http.Request, slot int, fqoid string) {
+	http.Error(w, "no getParamValue handler registered for slot "+strconv.Itoa(slot)+": fqoid /"+fqoid, http.StatusNotImplemented)
 }
 
-func (s *Server) handleAsset(w http.ResponseWriter, r *http.Request) {
-	// URL: /st2138-api/v1/0/asset/{id}
-
-	id := strings.TrimPrefix(r.URL.Path, "/st2138-api/v1/0/asset/")
-	if id == "" {
-		http.Error(w, "missing asset id", http.StatusBadRequest)
-		return
-	}
-
-	if r.Method != http.MethodGet {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	rc, err := s.dev.GetAsset(r.Context(), id)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
-	defer rc.Close()
-
-	// For demo: assume generic binary; in real Catena you'd set correct type
-	w.Header().Set("Content-Type", "application/octet-stream")
-	if _, err := io.Copy(w, rc); err != nil {
-		log.Printf("error streaming asset %s: %v", id, err)
-	}
+func (s *Server) DefaultSetParamValueHandler(w http.ResponseWriter, r *http.Request, slot int, fqoid string) {
+	http.Error(w, "no setParamValue handler registered for slot "+strconv.Itoa(slot)+": fqoid /"+fqoid, http.StatusNotImplemented)
 }
 
-func writeJSON(w http.ResponseWriter, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(v); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+func (s *Server) DefaultGetAssetHandler(w http.ResponseWriter, r *http.Request, slot int, path string) {
+	http.Error(w, "no getAsset handler registered", http.StatusNotImplemented)
+}
+
+// Registration APIs: populate per-slot maps keyed by fqoid.
+func (s *Server) RegisterGetDeviceHandler(slot int, handler DeviceHandler) {
+    s.mu.Lock()
+    defer s.mu.Unlock()
+    if s.getDevice == nil {
+        s.getDevice = handler
+    }
+}
+
+func (s *Server) RegisterGetParamHandler(slot int, handler ParamValueHandler) {
+    s.mu.Lock()
+    defer s.mu.Unlock()
+    if _, ok := s.getParamValue[slot]; !ok {
+        s.getParamValue[slot] = handler
+    }
+}
+
+func (s *Server) RegisterSetParamHandler(slot int, handler ParamValueHandler) {
+    s.mu.Lock()
+    defer s.mu.Unlock()
+    if _, ok := s.setParamValue[slot]; !ok {
+        s.setParamValue[slot] = handler
+    }
+}
+
+func (s *Server) RegisterGetAssetHandler(slot int, handler AssetHandler) {
+    s.mu.Lock()
+    defer s.mu.Unlock()
+    if _, ok := s.getAsset[slot]; !ok {
+        s.getAsset[slot] = handler
+    }
+}
+
+// Internal lookups (read-locked).
+func (s *Server) lookupGetParamValue(slot int) (ParamValueHandler, bool) {
+    s.mu.RLock()
+    defer s.mu.RUnlock()
+    if m, ok := s.getParamValue[slot]; ok {
+        return m, ok
+    }
+    return nil, false
+}
+
+func (s *Server) lookupSetParamValue(slot int) (ParamValueHandler, bool) {
+    s.mu.RLock()
+    defer s.mu.RUnlock()
+    if m, ok := s.setParamValue[slot]; ok {
+        return m, ok
+    }
+    return nil, false
+}
+
+func (s *Server) lookupGetAsset(slot int) (AssetHandler, bool) {
+    s.mu.RLock()
+    defer s.mu.RUnlock()
+    if m, ok := s.getAsset[slot]; ok {
+        return m, ok
+    }
+    return nil, false
+}
+
+func (s *Server) RegisterRoutes() {
+    for _, slot := range s.slotList {
+        // capture loop variable
+        slot := slot
+
+        prefix := "/st2138-api/v1/" + strconv.Itoa(slot)
+
+        // Entity/device-like endpoint: GET
+        // fqoid can be provided via query "?id=..." or empty "" for default.
+        s.mux.HandleFunc(prefix+"/device", func(w http.ResponseWriter, r *http.Request) {
+            if r.Method != http.MethodGet {
+                http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+                return
+            }
+            if s.getDevice != nil {
+                s.getDevice(w, r)
+            } else {
+				s.DefaultDeviceHandler(w, r)
+			}
+        })
+
+        // Param endpoint: fqoid is the path after /value/
+        s.mux.HandleFunc(prefix+"/value/", func(w http.ResponseWriter, r *http.Request) {
+            fqoid := strings.TrimPrefix(r.URL.Path, prefix+"/value/")
+            if fqoid == "" {
+                http.Error(w, "missing param fqoid", http.StatusBadRequest)
+                return
+            }
+            switch r.Method {
+            case http.MethodGet:
+                if handler, ok := s.lookupGetParamValue(slot); ok {
+                    handler(w, r, slot, fqoid)
+               	} else {
+				s.DefaultGetParamValueHandler(w, r, slot, fqoid)
+				return
+			}
+            case http.MethodPut, http.MethodPatch:
+                if handler, ok := s.lookupSetParamValue(slot); ok {
+                    handler(w, r, slot, fqoid)
+                } else {
+				s.DefaultSetParamValueHandler(w, r, slot, fqoid)
+				return
+			}
+            default:
+                http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+            }
+        })
+
+        // Asset endpoint: fqoid is the path after /asset/
+        s.mux.HandleFunc(prefix+"/asset/", func(w http.ResponseWriter, r *http.Request) {
+            fqoid := strings.TrimPrefix(r.URL.Path, prefix+"/asset/")
+            if fqoid == "" {
+                http.Error(w, "missing asset fqoid", http.StatusBadRequest)
+                return
+            }
+            if r.Method != http.MethodGet {
+                http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+                return
+            }
+            if handler, ok := s.lookupGetAsset(slot); ok {
+                handler(w, r, slot, fqoid)
+            } else {
+				s.DefaultGetAssetHandler(w, r, slot, fqoid)
+			}
+        })
+    }
 }
