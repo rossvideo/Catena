@@ -114,11 +114,12 @@ void run() {
     }
     mxlFlowConfigInfo configInfo;
     std::string flowDef;
+    mxlRational rate{30000, 1001};
     createVideoFlowJson(
         "mxl://5fbec3b1-1b0f-417d-9059-8b94a47197ed",
         1920,
         1080,
-        mxlRational{30000, 1001},
+        rate,
         true,
         "BT.709",
         flowDef);
@@ -138,7 +139,7 @@ void run() {
 
     // Read MPEG-TS and write to MXL ring buffer as fixed-size grains.
     // Align read size to the flow writer's grain size for clean commits.
-    uint64_t grain_index = 0;
+    uint64_t grain_index = mxlGetCurrentIndex(&rate);
     std::ifstream ts_file("/dev/shm/loop/writer.ts", std::ios::in | std::ios::binary);
     if (!ts_file.is_open()) {
         LOG(ERROR) << "Failed to open TS file: /dev/shm/loop/writer.ts";
@@ -195,7 +196,6 @@ void run() {
             isRunning = false;
             return;
         }
-        grain_index++;
     }
 
     // Throttle loop logging to avoid excessive output
@@ -204,6 +204,7 @@ void run() {
 
     while (isRunning)
     {
+        grain_index = mxlGetCurrentIndex(&rate);
         // Ensure we fill exactly one grain worth of data; loop the file if needed.
         size_t totalRead = 0;
         while (totalRead < grain_size && isRunning) {
@@ -243,7 +244,7 @@ void run() {
             LOG(ERROR) << "Failed to commit grain: " << status;
             break;
         }
-        grain_index++;
+        mxlSleepForNs(mxlGetNsUntilIndex(grain_index, &rate));
     }
     ts_file.close();
     mxlReleaseFlowWriter(instance, flowWriter);
