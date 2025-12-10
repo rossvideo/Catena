@@ -20,7 +20,7 @@ func ReadValueFromRequest(r *http.Request) (any, error) {
 			if f, ok := int32Val.(float64); ok {
 				return int(f), nil
 			}
-		} else if floatVal, ok := val["float_value"]; ok {
+		} else if floatVal, ok := val["float32_value"]; ok {
 			if f, ok := floatVal.(float64); ok {
 				return float32(f), nil
 			}
@@ -42,7 +42,7 @@ func WriteResponseJSON(w http.ResponseWriter, v any) {
     case int:
         v = map[string]int32{"int32_value": int32(val)}
     case float32:
-        v = map[string]float32{"float_value": val}
+        v = map[string]float32{"float32_value": val}
     case string:
         v = map[string]string{"string_value": val}
     default:

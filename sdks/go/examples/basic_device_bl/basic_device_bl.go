@@ -6,6 +6,7 @@ import (
     "net/http"
     "os"
     "strconv"
+    "sync"
 
     "github.com/rossvideo/catena/sdks/go/internal"
     "github.com/rossvideo/catena/sdks/go/pkg/rest"
@@ -14,7 +15,7 @@ import (
 //callback for connect endpoint that returns go channel to connection manager
 
 //Implementation for registering parameter handlers for every fqoid on a given slot
-func registerBasicParamHandlers(srv *rest.Server, params map[string]any, slot int) {
+func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
     srv.RegisterSetParamHandler(slot, func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) {
         log.Printf("Slot %d: SetParam %s", slot, fqoid)
         v, err := internal.ReadValueFromRequest(r)
@@ -22,7 +23,7 @@ func registerBasicParamHandlers(srv *rest.Server, params map[string]any, slot in
             http.Error(w, "invalid JSON", http.StatusBadRequest)
             return
         }
-        val, ok := params[fqoid]
+        val, ok := params.Load(fqoid)
         if !ok {
             http.Error(w, "param not found", http.StatusNotFound)
             return
@@ -31,13 +32,13 @@ func registerBasicParamHandlers(srv *rest.Server, params map[string]any, slot in
             http.Error(w, "type mismatch", http.StatusBadRequest)
             return
         }
-        params[fqoid] = v
+        params.Store(fqoid, v)
         w.WriteHeader(http.StatusNoContent)
     })
 
     srv.RegisterGetParamHandler(slot, func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) {
         log.Printf("Slot %d: GetParam %s", slot, fqoid)
-        v, ok := params[fqoid]
+        v, ok := params.Load(fqoid)
         if !ok {
             http.Error(w, "param not found", http.StatusNotFound)
             return
@@ -47,7 +48,7 @@ func registerBasicParamHandlers(srv *rest.Server, params map[string]any, slot in
 }
 
 //For a given slot implement param handlers for a specific param oid only
-func registerSpecificParamHandlers(srv *rest.Server, params map[string]any, fqoid string, slot int) {
+func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid string, slot int) {
     //Implementation for registering parameter handlers
     srv.RegisterSetParamHandler(slot, func(w http.ResponseWriter, r *http.Request, slot int, fqoid_ string) {
         if fqoid_ != fqoid {
@@ -60,7 +61,7 @@ func registerSpecificParamHandlers(srv *rest.Server, params map[string]any, fqoi
             http.Error(w, "invalid JSON", http.StatusBadRequest)
             return
         }
-        val, ok := params[fqoid_]
+        val, ok := params.Load(fqoid_)
         if !ok {
             http.Error(w, "param not found", http.StatusNotFound)
             return
@@ -69,7 +70,7 @@ func registerSpecificParamHandlers(srv *rest.Server, params map[string]any, fqoi
             http.Error(w, "type mismatch", http.StatusBadRequest)
             return
         }
-        params[fqoid_] = v
+        params.Store(fqoid_, v)
         w.WriteHeader(http.StatusNoContent)
     })
 
@@ -79,7 +80,7 @@ func registerSpecificParamHandlers(srv *rest.Server, params map[string]any, fqoi
             return
         }
         log.Printf("Slot %d: GetSpecificParam %s", slot, fqoid_)
-        v, ok := params[fqoid_]
+        v, ok := params.Load(fqoid_)
         if !ok {
             http.Error(w, "param not found", http.StatusNotFound)
             return
@@ -96,8 +97,14 @@ func main() {
     }
     log.Printf("Starting Dummy BaseServer on port %d", port)
 
-    var params0 = map[string]any{"alpha": "alpha", "beta": 42, "counter": 0}
-    var params1 = map[string]any{"alpha": "default", "beta": 3.14, "status": "idle"}
+    var params0 = &sync.Map{}
+    params0.Store("alpha", "alpha")
+    params0.Store("beta", 42)
+    params0.Store("counter", 0)
+    var params1 = &sync.Map{}
+    params1.Store("alpha", "default")
+    params1.Store("beta", float32(3.14))
+    params1.Store("status", "idle")
 
     slotList := []int{0, 1}
 
