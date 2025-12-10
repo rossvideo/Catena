@@ -103,11 +103,11 @@ params:
       struct_value:
         fields:
           domains:
-            string_value: ""
+            string_value: /dev/shm/mxl
           current_domain:
-            string_value: ""
+            string_value: /dev/shm/mxl
           current_flow_id:
-            string_value: ""
+            string_value: 5fbec3b1-1b0f-417d-9059-8b94a47197ed
 
 commands:
   list_flows:
