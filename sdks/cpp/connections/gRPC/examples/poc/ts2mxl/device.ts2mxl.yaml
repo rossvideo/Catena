@@ -1,0 +1,86 @@
+slot: 0
+access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
+default_scope: st2138:mon
+params:
+  product:
+    type: STRUCT
+    read_only: true
+    params:
+      name:
+        type: STRING
+      vendor:
+        type: STRING
+      version:
+        type: STRING
+      catena_sdk:
+        type: STRING
+      catena_sdk_version:
+        type: STRING
+      serial_number:
+        type: STRING
+    value:
+      struct_value:
+        fields:
+          name:
+            string_value: gRPC MXL Reader
+          vendor:
+            string_value: Ross Video
+          version:
+            string_value: "1.0.0"
+          catena_sdk:
+            string_value: Catena C++ SDK
+          serial_number:
+            string_value: SN0987654321
+
+  inputs:
+    type: STRUCT
+    params:
+      target_domain:
+        name:
+          display_strings:
+            en: "Target Domain"
+        type: STRING
+      ts_file_path:
+        name:
+          display_strings:
+            en: "TS File Path"
+        type: STRING
+    value:
+      struct_value:
+        fields:
+          target_domain:
+            string_value: "/dev/shm/mxl"
+          ts_file_path:
+            string_value: "/dev/shm/loop/write.ts"
+
+commands:
+  start:
+    type: EMPTY
+    name:
+      display_strings:
+        en: "Start"
+    response: false
+  stop:
+    type: EMPTY
+    name:
+      display_strings:
+        en: "Stop"
+    response: false
+
+menu_groups:
+  config:
+    name:
+      display_strings:
+        en: "Configuration"
+    order: 1
+    menus:
+      inputs:
+        name:
+          display_strings:
+            en: "Inputs"
+        param_oids:
+          - /inputs/target_domain
+          - /inputs/ts_file_path
+        command_oids:
+          - /start
+          - /stop
