@@ -15,7 +15,7 @@ func ReadValueFromRequest(r *http.Request) (any, error) {
 	}
 	//Convert catena value type to go native type
 	switch val := v.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		if int32Val, ok := val["int32_value"]; ok {
 			if f, ok := int32Val.(float64); ok {
 				return int(f), nil
