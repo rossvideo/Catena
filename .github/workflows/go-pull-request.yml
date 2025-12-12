@@ -35,7 +35,7 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'HIGH,CRITICAL'
-          skip-dirs: '.git,build,coverage,docs,sdks/java,sdks/cpp/unittests'
+          skip-dirs: '.git,build,coverage,docs,sdks/java,sdks/cpp/'
           skip-files: 'pom.xml'
 
       - name: Upload SARIF results
@@ -239,4 +239,3 @@ jobs:
             logs/*fatal*.log
           if-no-files-found: ignore
           retention-days: 1
-          
