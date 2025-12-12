@@ -18,4 +18,3 @@ run-basic-device: basic_device_bl
 	CATENA_LOG_DIR=$(LOG_DIR) $(BIN_DIR)/basic_device_bl/basic_device_bl
 
 .PHONY: all clean $(CMDS) run-basic-device
-	
