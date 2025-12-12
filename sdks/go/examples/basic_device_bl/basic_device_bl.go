@@ -1,15 +1,16 @@
 package main
 
 import (
-    "reflect"
-    "log"
-    "net/http"
-    "os"
-    "strconv"
-    "sync"
+	"fmt"
+	"net/http"
+	"os"
+	"reflect"
+	"strconv"
+	"sync"
 
-    "github.com/rossvideo/catena/sdks/go/internal"
-    "github.com/rossvideo/catena/sdks/go/pkg/rest"
+	"github.com/rossvideo/catena/sdks/go/internal"
+	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	"github.com/rossvideo/catena/sdks/go/pkg/rest"
 )
 
 //callback for connect endpoint that returns go channel to connection manager
@@ -17,18 +18,21 @@ import (
 //Implementation for registering parameter handlers for every fqoid on a given slot
 func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
     srv.RegisterSetParamHandler(slot, func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) {
-        log.Printf("Slot %d: SetParam %s", slot, fqoid)
+        logger.Info("Slot %d: SetParam %s", slot, fqoid)
         v, err := internal.ReadValueFromRequest(r)
         if err != nil {
+            logger.Error("Slot %d: SetParam %s - invalid JSON: %v", slot, fqoid, err)
             http.Error(w, "invalid JSON", http.StatusBadRequest)
             return
         }
         val, ok := params.Load(fqoid)
         if !ok {
+            logger.Warning("Slot %d: SetParam %s - param not found", slot, fqoid)
             http.Error(w, "param not found", http.StatusNotFound)
             return
         }
         if reflect.TypeOf(val) != reflect.TypeOf(v) {
+            logger.Error("Slot %d: SetParam %s - type mismatch", slot, fqoid)
             http.Error(w, "type mismatch", http.StatusBadRequest)
             return
         }
@@ -37,9 +41,10 @@ func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
     })
 
     srv.RegisterGetParamHandler(slot, func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) {
-        log.Printf("Slot %d: GetParam %s", slot, fqoid)
+        logger.Info("Slot %d: GetParam %s", slot, fqoid)
         v, ok := params.Load(fqoid)
         if !ok {
+            logger.Warning("Slot %d: GetParam %s - param not found", slot, fqoid)
             http.Error(w, "param not found", http.StatusNotFound)
             return
         }
@@ -55,18 +60,21 @@ func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid str
             srv.DefaultSetParamValueHandler(w, r, slot, fqoid_)
             return
         }
-        log.Printf("Slot %d: SetSpecificParam %s", slot, fqoid_)
+        logger.Info("Slot %d: SetSpecificParam %s", slot, fqoid_)
         v, err := internal.ReadValueFromRequest(r)
         if err != nil {
+            logger.Error("Slot %d: SetSpecificParam %s - invalid JSON: %v", slot, fqoid_, err)
             http.Error(w, "invalid JSON", http.StatusBadRequest)
             return
         }
         val, ok := params.Load(fqoid_)
         if !ok {
+            logger.Warning("Slot %d: SetSpecificParam %s - param not found", slot, fqoid_)
             http.Error(w, "param not found", http.StatusNotFound)
             return
         }
         if reflect.TypeOf(val) != reflect.TypeOf(v) {
+            logger.Error("Slot %d: SetSpecificParam %s - type mismatch", slot, fqoid_)
             http.Error(w, "type mismatch", http.StatusBadRequest)
             return
         }
@@ -79,9 +87,10 @@ func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid str
             srv.DefaultGetParamValueHandler(w, r, slot, fqoid_)
             return
         }
-        log.Printf("Slot %d: GetSpecificParam %s", slot, fqoid_)
+        logger.Info("Slot %d: GetSpecificParam %s", slot, fqoid_)
         v, ok := params.Load(fqoid_)
         if !ok {
+            logger.Warning("Slot %d: GetSpecificParam %s - param not found", slot, fqoid_)
             http.Error(w, "param not found", http.StatusNotFound)
             return
         }
@@ -90,12 +99,31 @@ func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid str
 }
 
 func main() {
+    // Initialize the logger
+    logDir := envOr("CATENA_LOG_DIR", "./logs")
+    silent := os.Getenv("CATENA_SILENT") == "true"
+
+    err := logger.Init(logger.Config{
+        AppName:        "basic_device_bl",
+        LogDir:         logDir,
+        Silent:         silent,
+        MinLevel:       logger.LevelInfo,
+        WriteToFile:    true,
+        WriteToConsole: true,
+    })
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "failed to initialize logger: %v\n", err)
+        os.Exit(1)
+    }
+    defer logger.Close()
+
     portStr := envOr("CATENA_PORT", "6254")
     port, err := strconv.Atoi(portStr)
     if err != nil {
-        log.Fatalf("invalid CATENA_PORT: %v", err)
+        logger.Error("invalid CATENA_PORT: %v", err)
+        os.Exit(1)
     }
-    log.Printf("Starting Dummy BaseServer on port %d", port)
+    logger.Info("Starting Dummy BaseServer on port %d", port)
 
     var params0 = &sync.Map{}
     params0.Store("alpha", "alpha")
@@ -118,7 +146,7 @@ func main() {
     registerSpecificParamHandlers(srv, params1, "alpha", 1)
 
     addr := ":" + strconv.Itoa(port)
-    log.Printf("Dummy BaseServer listening on %s", addr)
+    logger.Info("Dummy BaseServer listening on %s", addr)
     srv.StartHTTPServer(port)
 
     // Block forever.
