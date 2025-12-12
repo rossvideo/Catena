@@ -1,15 +1,15 @@
 package main
 
 import (
-    "encoding/json"
-    "io"
-    "log"
-    "net/http"
-    "os"
-    "strconv"
+	"encoding/json"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"strconv"
 
-    "github.com/rossvideo/catena/sdks/go/pkg/catena"
-    "github.com/rossvideo/catena/sdks/go/pkg/rest"
+	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/rest"
 )
 
 //different handlers for each method vs switch case in one handler
