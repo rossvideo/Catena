@@ -1,4 +1,4 @@
-name: C++ Code Analysis
+name: Go Code Analysis
 # this runs the workflow on PR and make sure that the code is tested and analyzed
 
 on:
@@ -35,7 +35,7 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'HIGH,CRITICAL'
-          skip-dirs: '.git,build,coverage,docs,sdks/java,sdks/cpp/'
+          skip-dirs: '.git,build,coverage,docs,sdks/java,sdks/cpp/,unittests/'
           skip-files: 'pom.xml'
 
       - name: Upload SARIF results
