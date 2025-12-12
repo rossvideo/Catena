@@ -154,9 +154,9 @@ func (s *Server) RegisterRoutes() {
         // Entity/device-like endpoint: GET
         // fqoid can be provided via query "?id=..." or empty "" for default.
         s.mux.HandleFunc(prefix+"/device", func(w http.ResponseWriter, r *http.Request) {
-			logger.Info("GET /device started")
+			logger.Info("%s /device started", r.Method)
             if r.Method != http.MethodGet {
-				logger.Warning("GET /device: method not allowed: %s", r.Method)
+				logger.Warning("/device: method %s not allowed, expected GET", r.Method)
                 http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
                 return
             }

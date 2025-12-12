@@ -104,7 +104,9 @@ func (l *Logger) setup() error {
 // Close cleans up resources (matches C++ Logger destructor)
 func Close() {
     if globalLogger != nil && globalLogger.file != nil {
-        globalLogger.file.Close()
+        if err := globalLogger.file.Close(); err != nil {
+            fmt.Fprintf(os.Stderr, "logger: failed to close log file: %v\n", err)
+        }
     }
 }
 
