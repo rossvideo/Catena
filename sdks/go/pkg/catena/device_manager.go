@@ -1,9 +1,9 @@
 package catena
 
 import (
-    "errors"
-    "sync"
+	"errors"
 	"strconv"
+	"sync"
 )
 
 // DeviceManager manages multiple devices keyed by slot.

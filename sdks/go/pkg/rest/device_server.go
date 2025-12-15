@@ -1,10 +1,10 @@
 package rest
 
 import (
-    //"io"
-    //"log"
+	//"io"
+	//"log"
 
-    "github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 )
 
 // DeviceServer adapts BaseServer to catena.Device semantics.

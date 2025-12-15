@@ -1,10 +1,12 @@
 package rest
 
 import (
-    "net/http"
-    "strconv"
-    "strings"
-    "sync"
+	"net/http"
+	"strconv"
+	"strings"
+	"sync"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
 // Entity is an opaque type the BaseServer routes to per slot.
@@ -28,6 +30,7 @@ type Server struct {
 }
 
 func NewServer(slotList []int) *Server {
+	logger.Info("Creating new REST server with slots: %v", slotList)
 
     server := Server{
         getDevice: 		DeviceHandler(nil),
@@ -38,7 +41,7 @@ func NewServer(slotList []int) *Server {
 		mux: 			*http.NewServeMux(),
     }
 
-	// Start HTTP server.
+	// Register HTTP routes.
     server.RegisterRoutes()
 
 	return &server
@@ -46,26 +49,32 @@ func NewServer(slotList []int) *Server {
 
 func (s *Server) StartHTTPServer(port int) {
     addr := ":" + strconv.Itoa(port)
+	logger.Info("Starting HTTP server on %s", addr)
     go func() {
         if err := http.ListenAndServe(addr, &s.mux); err != nil {
+			logger.Error("HTTP server failed: %v", err)
             panic("HTTP server failed: " + err.Error())
         }
     }()
 }
 
 func (s *Server) DefaultDeviceHandler(w http.ResponseWriter, r *http.Request) {
+	logger.Warning("GET /device: no handler registered")
 	http.Error(w, "no device handler registered", http.StatusNotImplemented)
 }
 
 func (s *Server) DefaultGetParamValueHandler(w http.ResponseWriter, r *http.Request, slot int, fqoid string) {
+	logger.Warning("GET /value/%s: no handler registered for slot %d", fqoid, slot)
 	http.Error(w, "no getParamValue handler registered for slot "+strconv.Itoa(slot)+": fqoid /"+fqoid, http.StatusNotImplemented)
 }
 
 func (s *Server) DefaultSetParamValueHandler(w http.ResponseWriter, r *http.Request, slot int, fqoid string) {
+	logger.Warning("PUT /value/%s: no handler registered for slot %d", fqoid, slot)
 	http.Error(w, "no setParamValue handler registered for slot "+strconv.Itoa(slot)+": fqoid /"+fqoid, http.StatusNotImplemented)
 }
 
 func (s *Server) DefaultGetAssetHandler(w http.ResponseWriter, r *http.Request, slot int, path string) {
+	logger.Warning("GET /asset/%s: no handler registered for slot %d", path, slot)
 	http.Error(w, "no getAsset handler registered", http.StatusNotImplemented)
 }
 
@@ -75,6 +84,7 @@ func (s *Server) RegisterGetDeviceHandler(slot int, handler DeviceHandler) {
     defer s.mu.Unlock()
     if s.getDevice == nil {
         s.getDevice = handler
+		logger.Debug("Registered device handler for slot %d", slot)
     }
 }
 
@@ -83,6 +93,7 @@ func (s *Server) RegisterGetParamHandler(slot int, handler ParamValueHandler) {
     defer s.mu.Unlock()
     if _, ok := s.getParamValue[slot]; !ok {
         s.getParamValue[slot] = handler
+		logger.Debug("Registered GET param handler for slot %d", slot)
     }
 }
 
@@ -91,6 +102,7 @@ func (s *Server) RegisterSetParamHandler(slot int, handler ParamValueHandler) {
     defer s.mu.Unlock()
     if _, ok := s.setParamValue[slot]; !ok {
         s.setParamValue[slot] = handler
+		logger.Debug("Registered SET param handler for slot %d", slot)
     }
 }
 
@@ -99,6 +111,7 @@ func (s *Server) RegisterGetAssetHandler(slot int, handler AssetHandler) {
     defer s.mu.Unlock()
     if _, ok := s.getAsset[slot]; !ok {
         s.getAsset[slot] = handler
+		logger.Debug("Registered asset handler for slot %d", slot)
     }
 }
 
@@ -131,6 +144,7 @@ func (s *Server) lookupGetAsset(slot int) (AssetHandler, bool) {
 }
 
 func (s *Server) RegisterRoutes() {
+	logger.Debug("Registering routes for %d slots", len(s.slotList))
     for _, slot := range s.slotList {
         // capture loop variable
         slot := slot
@@ -140,12 +154,15 @@ func (s *Server) RegisterRoutes() {
         // Entity/device-like endpoint: GET
         // fqoid can be provided via query "?id=..." or empty "" for default.
         s.mux.HandleFunc(prefix+"/device", func(w http.ResponseWriter, r *http.Request) {
+			logger.Info("%s /device started", r.Method)
             if r.Method != http.MethodGet {
+				logger.Warning("/device: method %s not allowed, expected GET", r.Method)
                 http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
                 return
             }
             if s.getDevice != nil {
                 s.getDevice(w, r)
+				logger.Info("GET /device finished")
             } else {
 				s.DefaultDeviceHandler(w, r)
 			}
@@ -155,25 +172,31 @@ func (s *Server) RegisterRoutes() {
         s.mux.HandleFunc(prefix+"/value/", func(w http.ResponseWriter, r *http.Request) {
             fqoid := strings.TrimPrefix(r.URL.Path, prefix+"/value/")
             if fqoid == "" {
+				logger.Warning("%s /value: missing param fqoid", r.Method)
                 http.Error(w, "missing param fqoid", http.StatusBadRequest)
                 return
             }
             switch r.Method {
             case http.MethodGet:
+				logger.Info("GET /value/%s started", fqoid)
                 if handler, ok := s.lookupGetParamValue(slot); ok {
                     handler(w, r, slot, fqoid)
+					logger.Info("GET /value/%s finished", fqoid)
                	} else {
 				s.DefaultGetParamValueHandler(w, r, slot, fqoid)
 				return
 			}
             case http.MethodPut, http.MethodPatch:
+				logger.Info("%s /value/%s started", r.Method, fqoid)
                 if handler, ok := s.lookupSetParamValue(slot); ok {
                     handler(w, r, slot, fqoid)
+					logger.Info("%s /value/%s finished", r.Method, fqoid)
                 } else {
 				s.DefaultSetParamValueHandler(w, r, slot, fqoid)
 				return
 			}
             default:
+				logger.Warning("%s /value/%s: method not allowed", r.Method, fqoid)
                 http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
             }
         })
@@ -182,15 +205,19 @@ func (s *Server) RegisterRoutes() {
         s.mux.HandleFunc(prefix+"/asset/", func(w http.ResponseWriter, r *http.Request) {
             fqoid := strings.TrimPrefix(r.URL.Path, prefix+"/asset/")
             if fqoid == "" {
+				logger.Warning("GET /asset: missing asset fqoid")
                 http.Error(w, "missing asset fqoid", http.StatusBadRequest)
                 return
             }
             if r.Method != http.MethodGet {
+				logger.Warning("%s /asset/%s: method not allowed", r.Method, fqoid)
                 http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
                 return
             }
+			logger.Info("GET /asset/%s started", fqoid)
             if handler, ok := s.lookupGetAsset(slot); ok {
                 handler(w, r, slot, fqoid)
+				logger.Info("GET /asset/%s finished", fqoid)
             } else {
 				s.DefaultGetAssetHandler(w, r, slot, fqoid)
 			}
