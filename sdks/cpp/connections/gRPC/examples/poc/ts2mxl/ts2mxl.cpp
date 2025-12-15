@@ -191,7 +191,6 @@ std::string createV210FlowJson(picojson::value const& info, std::string flow_id,
 // CREATE DIRECTORY
 // ------------------------------------------------------------
 void makedir() {
-    system("rm -rf /dev/shm/mxl");
     system("mkdir -p /dev/shm/mxl");
 }
 
@@ -320,6 +319,7 @@ void run() {
     avformat_close_input(&fmt);
 
     mxlReleaseFlowWriter(instance, writer);
+    mxlDestroyFlow(instance, flowId.c_str());
     mxlDestroyInstance(instance);
 }
 
