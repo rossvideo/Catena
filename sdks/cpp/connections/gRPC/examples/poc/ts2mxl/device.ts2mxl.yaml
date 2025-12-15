@@ -35,30 +35,37 @@ params:
   inputs:
     type: STRUCT
     params:
-      target_domain:
-        name:
-          display_strings:
-            en: "Target Domain"
-        type: STRING
       ts_file_path:
         name:
           display_strings:
             en: "TS File Path"
         type: STRING
+      target_domain:
+        name:
+          display_strings:
+            en: "Target Domain"
+        type: STRING
+      target_flow:
+        name:
+          display_strings:
+            en: "Target Flow"
+        type: STRING
     value:
       struct_value:
         fields:
+          ts_file_path:
+            string_value: "/dev/shm/main.ts"
           target_domain:
             string_value: "/dev/shm/mxl"
-          ts_file_path:
-            string_value: "/dev/shm/loop/write.ts"
+          target_flow: 
+            string_value: "5fbec3b1-1b0f-417d-9059-8b94a47197ed"
 
 commands:
-  start:
+  go_live:
     type: EMPTY
     name:
       display_strings:
-        en: "Start"
+        en: "Go Live"
     response: false
   stop:
     type: EMPTY
@@ -77,10 +84,8 @@ menu_groups:
       inputs:
         name:
           display_strings:
-            en: "Inputs"
+            en: "Configuration"
         param_oids:
-          - /inputs/target_domain
           - /inputs/ts_file_path
-        command_oids:
-          - /start
-          - /stop
+          - /inputs/target_domain
+          - /inputs/target_flow
