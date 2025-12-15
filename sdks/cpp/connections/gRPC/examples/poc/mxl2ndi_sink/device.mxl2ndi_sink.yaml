@@ -81,33 +81,81 @@ params:
     value:
       string_value: "Stopped"
 
-  inputs:
-    type: STRUCT
-    params:
-      domains:
-        name:
-          display_strings:
-            en: "Domains"
-        type: STRING
-      current_domain:
-        name:
-          display_strings:
-            en: "Current Domain"
-        type: STRING
-      current_flow_id:
-        name:
-          display_strings:
-            en: "Current Flow ID"
-        type: STRING
+  selected_index:
+    type: INT32
+    name:
+      display_strings:
+        en: "Selected Input"
+    constraint:
+      type: INT_RANGE
+      int32_range:
+        min_value: 0
+        max_value: 3
     value:
-      struct_value:
-        fields:
-          domains:
-            string_value: /dev/shm/mxl
-          current_domain:
-            string_value: /dev/shm/mxl
-          current_flow_id:
-            string_value: 5fbec3b1-1b0f-417d-9059-8b94a47197ed
+      int32_value: 0
+
+  selected_name:
+    type: STRING
+    name:
+      display_strings:
+        en: "Selected Input Name"
+    value:
+      string_value: ""
+
+  inputs:
+    type: STRUCT_ARRAY
+    params:
+      name:
+        type: STRING
+        name:
+          display_strings:
+            en: "Name"
+      domain:
+        type: STRING
+        name:
+          display_strings:
+            en: "Domain"
+      flow_id:
+        type: STRING
+        name:
+          display_strings:
+            en: "Flow ID"
+
+    value:
+      struct_array_values:
+        struct_values:
+          - struct_value:
+              fields:
+                name:
+                  string_value: SMPTE Bars
+                domain:
+                  string_value: /dev/shm/mxl
+                flow_id:
+                  string_value: 5fbec3b1-1b0f-417d-9059-8b94a47197ed
+          - struct_value:
+              fields:
+                name:
+                  string_value: Ball
+                domain:
+                  string_value: /dev/shm/mxl
+                flow_id:
+                  string_value: e1c42092-22fc-43fb-ae41-3b351664b6e5
+          # - struct_value:
+          #     fields:
+          #       name:
+          #         string_value: ""
+          #       domain:
+          #         string_value: /dev/shm/mxl
+          #       flow_id:
+          #         string_value: ""
+          # - struct_value:
+          #     fields:
+          #       name:
+          #         string_value: ""
+          #       domain:
+          #         string_value: /dev/shm/mxl
+          #       flow_id:
+          #         string_value: ""
 
 commands:
   list_flows:
@@ -172,20 +220,4 @@ menu_groups:
           display_strings:
             en: "Inputs"
         param_oids:
-          - /inputs/domains
-          - /inputs/current_domain
-          - /inputs/current_flow_id
-        command_oids:
-          - /list_flows
-          - /start
-          - /stop
-      commands:
-        name:
-          display_strings:
-            en: "Commands"
-        command_oids:
-          - /list_flows
-          - /start
-          - /stop
-        client_hints:
-          oglml: "eo://commands.grid"
+          - /inputs
