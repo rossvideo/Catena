@@ -25,6 +25,40 @@ project(${TARGET} C CXX)
 
 add_executable(${TARGET})
 
+# ---- FFmpeg detection (pkg-config preferred, fallback to manual libs) ----
+find_package(PkgConfig)
+set(FFMPEG_FOUND FALSE)
+if(PkgConfig_FOUND)
+    pkg_check_modules(FFMPEG IMPORTED_TARGET
+        libavformat
+        libavcodec
+        libavutil
+        libswscale
+    )
+    if(FFMPEG_FOUND)
+        message(STATUS "FFmpeg found via pkg-config")
+    endif()
+endif()
+
+if(NOT FFMPEG_FOUND)
+    message(WARNING "FFmpeg pkg-config packages not found. Falling back to manual library linking.\n"
+                    "Install dev packages for best results: libavformat-dev libavcodec-dev libavutil-dev")
+    # Try to locate libraries manually; rely on linker search path.
+    # Users may need to install: libavformat-dev libavcodec-dev libavutil-dev
+    find_library(AVFORMAT_LIB avformat)
+    find_library(AVCODEC_LIB  avcodec)
+    find_library(AVUTIL_LIB   avutil)
+    find_library(SWSCALE_LIB  swscale)
+    if(AVFORMAT_LIB AND AVCODEC_LIB AND AVUTIL_LIB AND SWSCALE_LIB)
+        set(FFMPEG_LIBS ${AVFORMAT_LIB} ${AVCODEC_LIB} ${AVUTIL_LIB} ${SWSCALE_LIB})
+        message(STATUS "FFmpeg libs found: ${FFMPEG_LIBS}")
+        set(FFMPEG_INCLUDE_DIRS "")
+        set(FFMPEG_FOUND TRUE)
+    else()
+        message(FATAL_ERROR "FFmpeg libraries not found. Please install libavformat-dev libavcodec-dev libavutil-dev libswscale-dev or provide pkg-config files.")
+    endif()
+endif()
+
 include (${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
 
 generate_catena_device(
@@ -38,6 +72,8 @@ target_include_directories(${TARGET}
         ${CATENA_CPP_ROOT_DIR}/common/include
         ${CATENA_CPP_ROOT_DIR}/../../mxl/include
         ${CATENA_CPP_ROOT_DIR}/../../mxl/ndi/include
+        # FFmpeg headers (set by pkg-config when available)
+        ${FFMPEG_INCLUDE_DIRS}
 )
 
 target_sources(${TARGET}
@@ -48,6 +84,17 @@ target_sources(${TARGET}
 target_link_libraries(${TARGET}
     catena_connections_grpc
     absl::flags_parse
+
+    # FFmpeg libs (pkg-config targets if present, else manual)
+    $<$<BOOL:$<TARGET_EXISTS:PkgConfig::libavformat>>:PkgConfig::libavformat>
+    $<$<BOOL:$<TARGET_EXISTS:PkgConfig::libavcodec>>:PkgConfig::libavcodec>
+    $<$<BOOL:$<TARGET_EXISTS:PkgConfig::libavutil>>:PkgConfig::libavutil>
+    $<$<BOOL:$<TARGET_EXISTS:PkgConfig::libswscale>>:PkgConfig::libswscale>
+    ${FFMPEG_LIBS}
+    avformat
+    avcodec
+    avutil
+    swscale
 )
 
 # Link all MXL shared libraries from the mxl/app folder

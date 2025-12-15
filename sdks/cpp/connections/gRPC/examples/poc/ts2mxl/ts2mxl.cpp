@@ -28,6 +28,19 @@
 // std
 #include <atomic>
 #include <thread>
+#include <fstream>
+
+// FFmpeg
+extern "C" {
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libavutil/avutil.h>
+#include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
+}
+
+// Some FFmpeg builds may not define AV_PIX_FMT_V210; fallback for compilation.
+// Use a widely available 10-bit 4:2:2 pixel format for conversion
 
 using catena::gRPC::ServiceConfig;
 using catena::gRPC::ServiceImpl;
@@ -35,10 +48,10 @@ using grpc::Server;
 
 using namespace catena::common;
 
-
 Server* globalServer = nullptr;
 std::atomic<bool> isRunning = false;
-// handle SIGINT
+
+// handle SIGINT / SIGTERM
 void handle_signal(int sig) {
     std::thread t([sig]() {
         LOG(INFO) << "Caught signal " << sig << ", shutting down";
@@ -50,204 +63,263 @@ void handle_signal(int sig) {
     });
     t.join();
 }
-std::string createVideoFlowJson(std::string const& in_uri, int in_width, int in_height, mxlRational in_rate, bool in_progressive,
-    std::string const& in_colorspace, std::string& out_flowDef)
-    {
-        auto root = picojson::object{};
-        auto label = std::string{"Binary TS flow for "} + in_uri;
-        root["description"] = picojson::value(label);
+// ------------------------------------------------------------
+// MANUAL SMPTE v210 PACKER
+// ------------------------------------------------------------
+size_t pack_v210(const AVFrame* f, uint8_t* dst, size_t maxSize) {
+    const int W = f->width;
+    const int H = f->height;
 
-        root["id"] = picojson::value("5fbec3b1-1b0f-417d-9059-8b94a47197ed");
-        root["tags"] = picojson::value(picojson::object());
-        // Use video format to satisfy current MXL constraints.
-        root["format"] = picojson::value("urn:x-nmos:format:video");
-        root["label"] = picojson::value(label);
-        root["parents"] = picojson::value(picojson::array());
-        root["media_type"] = picojson::value("video/v210");
+    const uint8_t* Y  = f->data[0];
+    const uint8_t* Cb = f->data[1];
+    const uint8_t* Cr = f->data[2];
 
-        auto tags = picojson::object{};
-        auto groupHint = picojson::array{};
-        groupHint.emplace_back(picojson::value{"Looping Source:Video"});
-        tags["urn:x-nmos:tag:grouphint/v1.0"] = picojson::value(groupHint);
-        root["tags"] = picojson::value(tags);
+    const int Ys = f->linesize[0];
+    const int Cs = f->linesize[1];
 
-        auto grain_rate = picojson::object{};
-        grain_rate["numerator"] = picojson::value(static_cast<double>(in_rate.numerator));
-        grain_rate["denominator"] = picojson::value(static_cast<double>(in_rate.denominator));
-        root["grain_rate"] = picojson::value(grain_rate);
-        root["frame_width"] = picojson::value(static_cast<double>(in_width));
-        root["frame_height"] = picojson::value(static_cast<double>(in_height));
-        root["interlace_mode"] = picojson::value(in_progressive ? "progressive" : "interlaced_tff");
-        root["colorspace"] = picojson::value(in_colorspace);
+    // v210 layout
+    const int groups_per_row = (W + 5) / 6;
+    const int rowBytes = ((groups_per_row * 16 + 127) / 128) * 128;
+    const size_t needed = size_t(rowBytes) * H;
 
-        auto components = picojson::array{};
-        auto add_component = [&](std::string const& name, int w, int h)
-        {
-            auto comp = picojson::object{};
-            comp["name"] = picojson::value(name);
-            comp["width"] = picojson::value(static_cast<double>(w));
-            comp["height"] = picojson::value(static_cast<double>(h));
-            comp["bit_depth"] = picojson::value(10.0);
-            components.emplace_back(comp);
-        };
+    if (maxSize < needed)
+        return 0;
 
-        add_component("Y", in_width, in_height);
-        add_component("Cb", in_width / 2, in_height);
-        add_component("Cr", in_width / 2, in_height);
+    uint8_t* row_start = dst;
 
-        root["components"] = picojson::value(components);
+    for (int y = 0; y < H; ++y) {
+        const uint8_t* Yrow  = Y  + y * Ys;
+        const uint8_t* Cbrow = Cb + (y / 2) * Cs;
+        const uint8_t* Crrow = Cr + (y / 2) * Cs;
 
-        out_flowDef = picojson::value(root).serialize(true);
-        return "5fbec3b1-1b0f-417d-9059-8b94a47197ed";
+        uint32_t* out = reinterpret_cast<uint32_t*>(row_start);
+
+        for (int g = 0; g < groups_per_row; ++g) {
+            int x = g * 6;
+
+            int x0 = (x + 0 < W) ? x + 0 : W - 1;
+            int x1 = (x + 1 < W) ? x + 1 : W - 1;
+            int x2 = (x + 2 < W) ? x + 2 : W - 1;
+            int x3 = (x + 3 < W) ? x + 3 : W - 1;
+            int x4 = (x + 4 < W) ? x + 4 : W - 1;
+            int x5 = (x + 5 < W) ? x + 5 : W - 1;
+
+            int cw = (W + 1) / 2;
+            int c0 = (x / 2 + 0 < cw) ? x / 2 + 0 : cw - 1;
+            int c1 = (x / 2 + 1 < cw) ? x / 2 + 1 : cw - 1;
+            int c2 = (x / 2 + 2 < cw) ? x / 2 + 2 : cw - 1;
+
+            // 8-bit → 10-bit
+            uint16_t Cb0 = (uint16_t(Cbrow[c0]) << 2) & 0x3FF;
+            uint16_t Y0  = (uint16_t(Yrow[x0])  << 2) & 0x3FF;
+            uint16_t Cr0 = (uint16_t(Crrow[c0]) << 2) & 0x3FF;
+            uint16_t Y1  = (uint16_t(Yrow[x1])  << 2) & 0x3FF;
+
+            uint16_t Cb2 = (uint16_t(Cbrow[c1]) << 2) & 0x3FF;
+            uint16_t Y2  = (uint16_t(Yrow[x2])  << 2) & 0x3FF;
+            uint16_t Cr2 = (uint16_t(Crrow[c1]) << 2) & 0x3FF;
+            uint16_t Y3  = (uint16_t(Yrow[x3])  << 2) & 0x3FF;
+
+            uint16_t Cb4 = (uint16_t(Cbrow[c2]) << 2) & 0x3FF;
+            uint16_t Y4  = (uint16_t(Yrow[x4])  << 2) & 0x3FF;
+            uint16_t Cr4 = (uint16_t(Crrow[c2]) << 2) & 0x3FF;
+            uint16_t Y5  = (uint16_t(Yrow[x5])  << 2) & 0x3FF;
+
+            // v210 packing (little-endian)
+            out[0] =  Cb0 | (Y0 << 10) | (Cr0 << 20);
+            out[1] =  Y1  | (Cb2 << 10) | (Y2 << 20);
+            out[2] =  Cr2 | (Y3 << 10) | (Cb4 << 20);
+            out[3] =  Y4  | (Cr4 << 10) | (Y5 << 20);
+
+            out += 4;
+        }
+
+        row_start += rowBytes;
     }
-void makedir(){
+
+    return needed;
+}
+// ------------------------------------------------------------
+// CREATE v210 FLOW JSON
+// ------------------------------------------------------------
+std::string createV210FlowJson(picojson::value const& info, std::string flow_id, std::string& out) {
+    const auto& s = info.get("streams").get(0);
+
+    int width = (int)s.get("width").get<double>();
+    int height = (int)s.get("height").get<double>();
+
+    std::string rate = s.get("r_frame_rate").get<std::string>();
+    int fps_n = std::stoi(rate.substr(0, rate.find('/')));
+    int fps_d = std::stoi(rate.substr(rate.find('/') + 1));
+
+    picojson::object root;
+
+    root["description"] = picojson::value("SMPTE v210 Source");
+    root["id"] = picojson::value(flow_id);
+    root["format"] = picojson::value("urn:x-nmos:format:video");
+    root["label"] = picojson::value("v210 10-bit 4:2:2");
+    root["media_type"] = picojson::value("video/v210");
+    root["parents"] = picojson::value(picojson::array());
+
+    // REQUIRED GROUP HINT TAG
+    {
+        picojson::object tags;
+        picojson::array grp;
+        grp.emplace_back(picojson::value("v210 Source:Video"));
+        tags["urn:x-nmos:tag:grouphint/v1.0"] = picojson::value(grp);
+        root["tags"] = picojson::value(tags);
+    }
+
+    picojson::object rateObj;
+    rateObj["numerator"] = picojson::value((double)fps_n);
+    rateObj["denominator"] = picojson::value((double)fps_d);
+    root["grain_rate"] = picojson::value(rateObj);
+
+    root["frame_width"] = picojson::value((double)width);
+    root["frame_height"] = picojson::value((double)height);
+    root["interlace_mode"] = picojson::value("progressive");
+    root["colorspace"] = picojson::value("BT709");
+
+    // Packed video → no components
+    root["components"] = picojson::value(picojson::array());
+
+    out = picojson::value(root).serialize(true);
+    return flow_id;
+}
+
+// ------------------------------------------------------------
+// CREATE DIRECTORY
+// ------------------------------------------------------------
+void makedir() {
     system("rm -rf /dev/shm/mxl");
     system("mkdir -p /dev/shm/mxl");
 }
+
+// ------------------------------------------------------------
+// MAIN VIDEO THREAD
+// ------------------------------------------------------------
 void run() {
     isRunning = true;
-    // grab the ts from /dev/shm/loop/writer.ts
+
+    // Load info.json
+    std::ifstream f("/dev/shm/info.json");
+    if (!f.is_open()) {
+        LOG(ERROR) << "Cannot open info.json";
+        return;
+    }
+
+    std::string text, line;
+    while (std::getline(f, line))
+        text += line;
+
+    picojson::value info;
+    std::string err = picojson::parse(info, text);
+    if (!err.empty()) {
+        LOG(ERROR) << "Failed to parse info.json";
+        return;
+    }
+
+    // MXL instance
     mxlInstance instance = mxlCreateInstance("/dev/shm/mxl", "");
-    if (instance == nullptr) {
-        LOG(ERROR) << "Failed to create MXL instance";
-        return;
-    }
-    mxlFlowConfigInfo configInfo;
-    std::string flowDef;
-    mxlRational rate{30000, 1001};
-    createVideoFlowJson(
-        "mxl://5fbec3b1-1b0f-417d-9059-8b94a47197ed",
-        1920,
-        1080,
-        rate,
-        true,
-        "BT.709",
-        flowDef);
-    auto res = mxlCreateFlow(instance, flowDef.c_str(), nullptr, &configInfo);
-    if (res != MXL_STATUS_OK)
-    {
-        LOG(ERROR) << "Failed to create MXL flow : " << res;
-        return;
-    }
-    mxlFlowWriter flowWriter;
-    res = mxlCreateFlowWriter(instance, "5fbec3b1-1b0f-417d-9059-8b94a47197ed", nullptr, &flowWriter);
-    if (res != MXL_STATUS_OK)
-    {
-        LOG(ERROR) << "Failed to create MXL flow writer: " << res;
+    if (!instance) {
+        LOG(ERROR) << "Cannot create MXL instance";
         return;
     }
 
-    // Read MPEG-TS and write to MXL ring buffer as fixed-size grains.
-    // Align read size to the flow writer's grain size for clean commits.
-    uint64_t grain_index = mxlGetCurrentIndex(&rate);
-    std::ifstream ts_file("/dev/shm/loop/writer.ts", std::ios::in | std::ios::binary);
-    if (!ts_file.is_open()) {
-        LOG(ERROR) << "Failed to open TS file: /dev/shm/loop/writer.ts";
-        mxlReleaseFlowWriter(instance, flowWriter);
-        mxlDestroyInstance(instance);
-        isRunning = false;
-        return;
-    }else{
-        LOG(INFO) << "Opened TS file: /dev/shm/loop/writer.ts";
-    }
+    // Flow JSON
+    mxlFlowConfigInfo cfg{};
+    std::string flowJson;
+    std::string flowId = "5fbec3b1-1b0f-417d-9059-8b94a47197ed";
 
-    // Open first grain to determine grain size; allocate buffer accordingly.
-    mxlGrainInfo grainInfo;
-    uint8_t* payload = nullptr;
-    auto status = mxlFlowWriterOpenGrain(flowWriter, grain_index, &grainInfo, &payload);
-    if (status != MXL_STATUS_OK) {
-        LOG(ERROR) << "Failed to open initial grain for sizing: " << status;
-        mxlReleaseFlowWriter(instance, flowWriter);
-        mxlDestroyInstance(instance);
-        isRunning = false;
+    createV210FlowJson(info, flowId, flowJson);
+
+    if (mxlCreateFlow(instance, flowJson.c_str(), nullptr, &cfg) != MXL_STATUS_OK) {
+        LOG(ERROR) << "Flow creation failed";
         return;
     }
-    const size_t grain_size = static_cast<size_t>(grainInfo.grainSize);
-    std::unique_ptr<uint8_t[]> ts_buffer(new uint8_t[grain_size]);
 
-    // Fill and commit the first grain using the sizing info
-    {
-        size_t totalRead = 0;
-        while (totalRead < grain_size && isRunning) {
-            ts_file.read(reinterpret_cast<char*>(ts_buffer.get() + totalRead), grain_size - totalRead);
-            std::streamsize bytesRead = ts_file.gcount();
-            if (bytesRead <= 0) {
-                ts_file.clear();
-                ts_file.seekg(0, std::ios::beg);
-                continue;
-            }
-            totalRead += static_cast<size_t>(bytesRead);
+    mxlFlowWriter writer;
+    if (mxlCreateFlowWriter(instance, flowId.c_str(), nullptr, &writer) != MXL_STATUS_OK) {
+        LOG(ERROR) << "Writer creation failed";
+        return;
+    }
+
+    // FFmpeg
+    AVFormatContext* fmt = nullptr;
+    avformat_open_input(&fmt, "/dev/shm/main.ts", nullptr, nullptr);
+    avformat_find_stream_info(fmt, nullptr);
+
+    int vid = av_find_best_stream(fmt, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
+    AVStream* vst = fmt->streams[vid];
+
+    const AVCodec* dec = avcodec_find_decoder(vst->codecpar->codec_id);
+    AVCodecContext* decCtx = avcodec_alloc_context3(dec);
+    avcodec_parameters_to_context(decCtx, vst->codecpar);
+    avcodec_open2(decCtx, dec, nullptr);
+
+    AVFrame* frame = av_frame_alloc();
+    AVPacket pkt;
+    av_init_packet(&pkt);
+
+    // Frame rate
+    std::string rf = info.get("streams").get(0).get("r_frame_rate").get<std::string>();
+    int fps_n = std::stoi(rf.substr(0, rf.find('/')));
+    int fps_d = std::stoi(rf.substr(rf.find('/') + 1));
+    mxlRational rate{fps_n, fps_d};
+
+    // Expected v210 size
+    int rowBytes = ((decCtx->width + 5) / 6) * 16;
+    int expectedSize = rowBytes * decCtx->height;
+
+    LOG(INFO) << "Expected v210 size = " << expectedSize;
+
+    // Main loop
+    while (isRunning) {
+        if (av_read_frame(fmt, &pkt) < 0) {
+            av_seek_frame(fmt, vid, 0, AVSEEK_FLAG_BACKWARD);
+            avcodec_flush_buffers(decCtx);
+            continue;
         }
-        if (!isRunning) {
-            ts_file.close();
-            mxlReleaseFlowWriter(instance, flowWriter);
-            mxlDestroyInstance(instance);
-            return;
-        }
-        memcpy(payload, ts_buffer.get(), grain_size);
-        grainInfo.validSlices = grainInfo.totalSlices;
-        grainInfo.flags = 0;
-        status = mxlFlowWriterCommitGrain(flowWriter, &grainInfo);
-        if (status != MXL_STATUS_OK) {
-            LOG(ERROR) << "Failed to commit initial grain: " << status;
-            ts_file.close();
-            mxlReleaseFlowWriter(instance, flowWriter);
-            mxlDestroyInstance(instance);
-            isRunning = false;
-            return;
-        }
-    }
 
-    // Throttle loop logging to avoid excessive output
-    std::uint64_t lastLoopLogNs = 0;
-    const std::uint64_t loopLogIntervalNs = 5'000'000'000ULL; // 5 seconds
+        if (pkt.stream_index != vid) {
+            av_packet_unref(&pkt);
+            continue;
+        }
 
-    while (isRunning)
-    {
-        grain_index = mxlGetCurrentIndex(&rate);
-        // Ensure we fill exactly one grain worth of data; loop the file if needed.
-        size_t totalRead = 0;
-        while (totalRead < grain_size && isRunning) {
-            ts_file.read(reinterpret_cast<char*>(ts_buffer.get() + totalRead), grain_size - totalRead);
-            std::streamsize bytesRead = ts_file.gcount();
-            if (bytesRead <= 0) {
-                // Loop the file from the beginning and log the event (rate-limited).
-                auto const nowNs = ::mxlGetTime();
-                if (nowNs - lastLoopLogNs >= loopLogIntervalNs) {
-                    LOG(INFO) << "Looping TS file: rewinding to start.";
-                    lastLoopLogNs = nowNs;
+        if (avcodec_send_packet(decCtx, &pkt) == 0) {
+
+            while (avcodec_receive_frame(decCtx, frame) == 0) {
+
+                uint64_t idx = mxlGetCurrentIndex(&rate);
+
+                mxlGrainInfo ginfo;
+                uint8_t* payload = nullptr;
+
+                mxlFlowWriterOpenGrain(writer, idx, &ginfo, &payload);
+
+                size_t written = pack_v210(frame, payload, ginfo.grainSize);
+
+                if (written != (size_t)expectedSize) {
+                    LOG(ERROR) << "v210 size mismatch: wrote " << written;
                 }
-                ts_file.clear();
-                ts_file.seekg(0, std::ios::beg);
-                continue;
+
+                ginfo.validSlices = ginfo.totalSlices;
+                ginfo.flags = 0;
+
+                mxlFlowWriterCommitGrain(writer, &ginfo);
+
+                mxlSleepForNs(mxlGetNsUntilIndex(idx, &rate));
             }
-            totalRead += static_cast<size_t>(bytesRead);
         }
 
-        if (!isRunning) break;
-
-        mxlGrainInfo grainInfoIter;
-        uint8_t* payloadIter = nullptr;
-        status = mxlFlowWriterOpenGrain(flowWriter, grain_index, &grainInfoIter, &payloadIter);
-        if (status != MXL_STATUS_OK) {
-            LOG(ERROR) << "Failed to open grain for writing: " << status;
-            break;
-        }
-
-        // Copy exactly one grain worth of MPEG-TS data
-        memcpy(payloadIter, ts_buffer.get(), grain_size);
-        grainInfoIter.validSlices = grainInfoIter.totalSlices;
-        grainInfoIter.flags = 0;
-
-        status = mxlFlowWriterCommitGrain(flowWriter, &grainInfoIter);
-        if (status != MXL_STATUS_OK) {
-            LOG(ERROR) << "Failed to commit grain: " << status;
-            break;
-        }
-        mxlSleepForNs(mxlGetNsUntilIndex(grain_index, &rate));
+        av_packet_unref(&pkt);
     }
-    ts_file.close();
-    mxlReleaseFlowWriter(instance, flowWriter);
+
+    av_frame_free(&frame);
+    avcodec_free_context(&decCtx);
+    avformat_close_input(&fmt);
+
+    mxlReleaseFlowWriter(instance, writer);
     mxlDestroyInstance(instance);
 }
 
@@ -276,7 +348,6 @@ void RunRPCServer(std::string addr) {
         dm.set_default_max_length(absl::GetFlag(FLAGS_default_max_array_size));
 
         builder.RegisterService(&service);
-
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
         LOG(INFO) << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
