@@ -127,7 +127,7 @@ params:
           - struct_value:
               fields:
                 name:
-                  string_value: SMPTE Bars
+                  string_value: Video
                 domain:
                   string_value: /dev/shm/mxl
                 flow_id:
@@ -135,7 +135,7 @@ params:
           - struct_value:
               fields:
                 name:
-                  string_value: Ball
+                  string_value: SMPTE Bars
                 domain:
                   string_value: /dev/shm/mxl
                 flow_id:
@@ -190,6 +190,8 @@ menu_groups:
             en: "Flow Definition"
         param_oids:
           - /status
+          - /selected_index
+          - /selected_name
           - /flow_def/id
           - /flow_def/description
           - /flow_def/tags
@@ -218,6 +220,13 @@ menu_groups:
       inputs:
         name:
           display_strings:
-            en: "Inputs"
+            en: Inputs
         param_oids:
           - /inputs
+          - /selected_index
+      demo:
+        name:
+          display_strings:
+            en: "Demo Controls"
+        client_hints:
+          oglml: eo://demo.grid

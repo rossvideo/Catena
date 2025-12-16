@@ -142,14 +142,18 @@ class MxlReader {
         // grain rate
         if (obj.contains("grain_rate")) {
             picojson::object& grainRate = obj["grain_rate"].get<picojson::object>();
+            st2138::Value grainRateValue;
+            google::protobuf::Map<std::string, st2138::Value>* grainRateFields =
+              grainRateValue.mutable_struct_value()->mutable_fields();
             if (grainRate.contains("numerator") && grainRate.contains("denominator")) {
                 int32_t numerator = static_cast<int32_t>(grainRate["numerator"].get<double>());
                 value.set_int32_value(numerator);
-                rootFields->insert({"grain_rate/numerator", value});
+                grainRateFields->insert({"numerator", value});
                 int32_t denominator = static_cast<int32_t>(grainRate["denominator"].get<double>());
                 value.set_int32_value(denominator);
-                rootFields->insert({"grain_rate/denominator", value});
+                grainRateFields->insert({"denominator", value});
             }
+            rootFields->insert({"grain_rate", grainRateValue});
         }
         // components
         if (obj.contains("components")) {
@@ -175,6 +179,9 @@ class MxlReader {
             }
             rootFields->insert({"components", value});
         }
+        st2138::Value parents;
+        parents.mutable_string_array_values();
+        rootFields->insert({"parents", parents});  // empty for now
         return retValue;
     }
 
@@ -217,7 +224,7 @@ class MxlReader {
         if (!(grainInfo.flags & MXL_GRAIN_FLAG_INVALID)) {
             // valid grain, process payload here
             // copy payload to NDI frame
-            LOG(INFO) << grainInfo.grainSize << " bytes read for grain index " << grainInfo.index;
+            // LOG(INFO) << grainInfo.grainSize << " bytes read for grain index " << grainInfo.index;
 
 
             // v210 is packed 10-bit 4:2:2

@@ -98,18 +98,31 @@ void RunVideoFlow() {
     value.set_string_value("Running");
     dm.setValue("/status", value);
 
+    int readerIndex = -1;
     isRunning = true;
     while (isRunning) {
-        int32_t index = inputIndex.load();
-        if (index < 0 || index >= static_cast<int32_t>(readers.size())) {
-            LOG(WARNING) << "Invalid input index: " << index;
-            mxlSleepForNs(100'000'000);  // 100ms
-            continue;
+        int loadIndex = inputIndex.load();
+        if (readerIndex != loadIndex) {
+
+            if (loadIndex < 0 || loadIndex >= static_cast<int32_t>(readers.size())) {
+                LOG(WARNING) << "Invalid input index: " << loadIndex;
+                mxlSleepForNs(100'000'000);  // 100ms
+                continue;
+            }
+
+            readerIndex = loadIndex;
+            std::unique_ptr<st2138::Value> flowDefValue = readers[readerIndex]->getFlowDef();
+            statusErr = dm.setValue("/flow_def", *flowDefValue);
+            if (statusErr.status != catena::StatusCode::OK) {
+                LOG(ERROR) << "Failed to set flow definition: " << statusErr.what();
+                isRunning = false;
+                break;
+            }
         }
 
         // do the frame
         uint64_t rateNs = 0;
-        const NDIlib_video_frame_v2_t* ndiFrame = readers[index]->dumpNdiFrame(rateNs);
+        const NDIlib_video_frame_v2_t* ndiFrame = readers[readerIndex]->dumpNdiFrame(rateNs);
         if (ndiFrame == nullptr) {
             // No frame available, sleep a bit
             mxlSleepForNs(10'000'000);  // 10ms

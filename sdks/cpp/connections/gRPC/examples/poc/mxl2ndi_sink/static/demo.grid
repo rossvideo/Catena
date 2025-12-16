@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simplegrid cols="1" rows="3">
+    <simplegrid cols="2" rows="2" >
+        <button buttontype="push" name="Start">
+            <task tasktype="ogscript">
+                <!-- params.executeCommand("start", null, null); -->
+            </task>
+        </button>
+        <button buttontype="push" name="Stop">
+            <task tasktype="ogscript">
+                <!-- params.executeCommand("stop", null, null); -->
+            </task>
+        </button>
+    </simplegrid>
+    <simplegrid cols="2" rows="3">
+        <param oid="inputs/0/name" widget="label" style="txt-align: center" />
+        <button buttontype="push" name="Select Source">
+            <task tasktype="ogscript">
+                params.setValue("selected_index", 0, 0);
+            </task>
+        </button>
+        <param oid="inputs/1/name" widget="label" style="txt-align: center" />
+        <button buttontype="push" name="Select Source">
+            <task tasktype="ogscript">
+                params.setValue("selected_index", 0, 1);
+            </task>
+        </button>
+       
+    </simplegrid>
+    <ndi src="localhost:5961" srcname="Catena MXL Sink"  window=""/>
+</simplegrid>
