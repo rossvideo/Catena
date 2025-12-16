@@ -18,6 +18,7 @@ RUN . /root/toolchain.env \
     sudo \
     cmake=$CMAKE_VERSION \
     git \
+    openssh-client \
     libssl-dev=$OPENSSL_VERSION \
     doxygen=$DOXYGEN_VERSION \
     graphviz=$GRAPHVIZ_VERSION \
