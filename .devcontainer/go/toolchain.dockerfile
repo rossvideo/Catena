@@ -17,6 +17,7 @@ RUN . /root/toolchain.env \
     build-essential \
     sudo \
     git \
+    openssh-client \
     libssl-dev=$OPENSSL_VERSION \
     doxygen=$DOXYGEN_VERSION \
     valgrind=$VALGRIND_VERSION \
