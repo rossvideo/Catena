@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief Logger struct for logging to console and file.
+ * @brief Logger using log/slog with configurable levels.
  * @file logger.go
  * @copyright Copyright © 2025 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
@@ -38,8 +38,11 @@
 package logger
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sync"
@@ -47,39 +50,56 @@ import (
 )
 
 var (
-	globalLogger *Logger
-	once         sync.Once
+	ErrAlreadyInitialized = errors.New("logger already initialized")
+
+	globalLogger *logger
+	initialized  bool
+	initMu       sync.Mutex
 )
 
-// Logger handles logging to console and file
-type Logger struct {
-	mu      sync.Mutex
-	config  Config
-	file    *os.File
-	writers []io.Writer
+// logger handles structured logging using slog
+type logger struct {
+	config Config
+	file   *os.File
 }
 
-// Init initializes the global logger (matches C++ Logger::init)
+// Init initializes the global logger.
+// Returns ErrAlreadyInitialized if called more than once.
 func Init(cfg Config) error {
-	var initErr error
-	once.Do(func() {
-		globalLogger = &Logger{config: cfg}
-		initErr = globalLogger.setup()
-	})
-	return initErr
+	initMu.Lock()
+	defer initMu.Unlock()
+
+	if initialized {
+		return ErrAlreadyInitialized
+	}
+
+	globalLogger = &logger{config: cfg}
+	initErr := globalLogger.setup()
+	if initErr != nil {
+		// Nil out globalLogger on setup failure to avoid partially initialized state
+		globalLogger = nil
+		return initErr
+	}
+	initialized = true
+	return nil
 }
 
-func (l *Logger) setup() error {
+// setup configures the slog handlers based on config and sets slog.SetDefault
+func (l *logger) setup() error {
 	if l.config.Silent {
-		l.config.MinLevel = LevelError
+		// Silent mode: discard all logs
+		slog.SetDefault(slog.New(slog.NewTextHandler(io.Discard, nil)))
+		return nil
 	}
+
+	var writers []io.Writer
 
 	// Setup console output
 	if l.config.WriteToConsole {
-		l.writers = append(l.writers, os.Stderr)
+		writers = append(writers, os.Stderr)
 	}
 
-	// Setup file output (matches C++ FileLogSink)
+	// Setup file output
 	if l.config.WriteToFile {
 		if err := os.MkdirAll(l.config.LogDir, 0755); err != nil {
 			return fmt.Errorf("failed to create log directory: %w", err)
@@ -95,13 +115,39 @@ func (l *Logger) setup() error {
 			return fmt.Errorf("failed to open log file: %w", err)
 		}
 		l.file = f
-		l.writers = append(l.writers, f)
+		writers = append(writers, f)
 	}
+
+	// Combine writers
+	var output io.Writer
+	if len(writers) == 0 {
+		output = io.Discard
+	} else if len(writers) == 1 {
+		output = writers[0]
+	} else {
+		output = io.MultiWriter(writers...)
+	}
+
+	// Create handler options with configured level
+	opts := &slog.HandlerOptions{
+		Level: l.config.Level,
+	}
+
+	// Create handler based on format preference
+	var handler slog.Handler
+	if l.config.UseJSON {
+		handler = slog.NewJSONHandler(output, opts)
+	} else {
+		handler = slog.NewTextHandler(output, opts)
+	}
+
+	// Set as default logger for the slog package
+	slog.SetDefault(slog.New(handler))
 
 	return nil
 }
 
-// Close cleans up resources (matches C++ Logger destructor)
+// Close cleans up resources
 func Close() {
 	if globalLogger != nil && globalLogger.file != nil {
 		if err := globalLogger.file.Close(); err != nil {
@@ -110,46 +156,65 @@ func Close() {
 	}
 }
 
-// log writes a message at the given level
-func (l *Logger) log(level Level, format string, args ...any) {
-	if level < l.config.MinLevel {
-		return
-	}
-
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
-	// Format: timestamp [LEVEL] message
-	timestamp := time.Now().Format("2006-01-02 15:04:05.000")
-	msg := fmt.Sprintf(format, args...)
-	entry := fmt.Sprintf("%s [%s] %s\n", timestamp, level, msg)
-
-	for _, w := range l.writers {
-		w.Write([]byte(entry))
-	}
+// GetLogger returns the underlying slog.Logger for advanced usage.
+// Always returns a valid logger (falls back to slog.Default()).
+func GetLogger() *slog.Logger {
+	return slog.Default()
 }
 
-// Package-level convenience functions (similar to LOG(INFO), LOG(ERROR), etc.)
-func Debug(format string, args ...any) {
-	if globalLogger != nil {
-		globalLogger.log(LevelDebug, format, args...)
-	}
+// GetNamed returns a logger with a component/name attribute.
+// This is useful for identifying which component generated a log message.
+// Example: logger.GetNamed("server") returns a logger that adds "logger"="server" to all messages.
+func GetNamed(name string) *slog.Logger {
+	return slog.Default().With("logger", name)
 }
 
-func Info(format string, args ...any) {
-	if globalLogger != nil {
-		globalLogger.log(LevelInfo, format, args...)
-	}
+// Debug logs a debug message (only visible when Level is LevelDebug)
+func Debug(msg string, args ...any) {
+	slog.Debug(msg, args...)
 }
 
-func Warning(format string, args ...any) {
-	if globalLogger != nil {
-		globalLogger.log(LevelWarning, format, args...)
-	}
+// Info logs an info message
+func Info(msg string, args ...any) {
+	slog.Info(msg, args...)
 }
 
-func Error(format string, args ...any) {
-	if globalLogger != nil {
-		globalLogger.log(LevelError, format, args...)
-	}
+// Warning logs a warning message
+func Warning(msg string, args ...any) {
+	slog.Warn(msg, args...)
+}
+
+// Error logs an error message
+func Error(msg string, args ...any) {
+	slog.Error(msg, args...)
+}
+
+// With returns a logger with additional attributes
+func With(args ...any) *slog.Logger {
+	return slog.Default().With(args...)
+}
+
+// WithGroup returns a logger with a group prefix
+func WithGroup(name string) *slog.Logger {
+	return slog.Default().WithGroup(name)
+}
+
+// DebugContext logs a debug message with context
+func DebugContext(ctx context.Context, msg string, args ...any) {
+	slog.DebugContext(ctx, msg, args...)
+}
+
+// InfoContext logs an info message with context
+func InfoContext(ctx context.Context, msg string, args ...any) {
+	slog.InfoContext(ctx, msg, args...)
+}
+
+// WarningContext logs a warning message with context
+func WarningContext(ctx context.Context, msg string, args ...any) {
+	slog.WarnContext(ctx, msg, args...)
+}
+
+// ErrorContext logs an error message with context
+func ErrorContext(ctx context.Context, msg string, args ...any) {
+	slog.ErrorContext(ctx, msg, args...)
 }

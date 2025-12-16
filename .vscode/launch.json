@@ -9,7 +9,9 @@
         "program": "${workspaceFolder}/sdks/go/examples/${input:pickGoService}",
         "cwd": "${workspaceFolder}",
         "args": [],
-        "env": {}
+        "env": {
+          "CATENA_DEBUG": "true" // Enable Debug Mode
+        }
       },
       {
         "type": "cppdbg",
