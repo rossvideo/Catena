@@ -76,6 +76,11 @@ void ListLanguages::proceed(bool ok) {
             st2138::LanguageList ans;
             try {
                 IDevice* dm = nullptr;
+                // Validate the slot range
+                if (req_.slot() < 0 || req_.slot() > 65535) {
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                }
+                
                 // Getting device at specified slot.
                 if (dms_.contains(req_.slot())) {
                     dm = dms_.at(req_.slot());
@@ -88,8 +93,11 @@ void ListLanguages::proceed(bool ok) {
                     std::lock_guard lg(dm->mutex());
                     dm->toProto(ans);
                 }
-            } catch (...) { // Error, end process.
-                rc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
+            // ERROR.
+            } catch (catena::exception_with_status& err) {
+                rc = catena::exception_with_status(err.what(), err.status);
+            } catch (...) {
+                rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
             }
             status_ = CallStatus::kFinish;
             if (rc.status == catena::StatusCode::OK) {

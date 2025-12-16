@@ -138,6 +138,11 @@ void AssetRequest::proceed() {
 
     try {
         IDevice* dm = nullptr;
+        // Validating slot number.
+        if (context_.slot() < 0 || context_.slot() > 65535) {
+            throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+        }
+
         // Getting device at specified slot.
         if (dms_.contains(context_.slot())) {
             dm = dms_.at(context_.slot());

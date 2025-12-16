@@ -90,6 +90,11 @@ void GetParam::proceed( bool ok) {
             catena::common::Authorizer* authz;
             IDevice* dm = nullptr;
             try {
+                // Validate if slot range is correct.
+                if (req_.slot() > 65535 || req_.slot() < 0) {
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                }
+
                 // Getting device at specified slot.
                 if (dms_.contains(req_.slot())) {
                     dm = dms_.at(req_.slot());

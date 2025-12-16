@@ -89,6 +89,11 @@ void MultiSetValue::proceed(bool ok) {
                 IDevice* dm = nullptr;
                 // Convert to MultiSetValuePayload if not already.
                 toMulti_();
+                // Validate the slot range
+                if (reqs_.slot() < 0 || reqs_.slot() > 65535) {
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                }
+                
                 // Getting device at specified slot.
                 if (dms_.contains(reqs_.slot())) {
                     dm = dms_.at(reqs_.slot());

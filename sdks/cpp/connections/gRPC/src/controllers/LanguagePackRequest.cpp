@@ -76,6 +76,11 @@ void LanguagePackRequest::proceed(bool ok) {
             st2138::DeviceComponent_ComponentLanguagePack ans;
             IDevice* dm = nullptr;
             try {
+                // Validate the slot range.
+                if (req_.slot() < 0 || req_.slot() > 65535) {
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                }
+                
                 // Getting device at specified slot.
                 if (dms_.contains(req_.slot())) {
                     dm = dms_.at(req_.slot());
@@ -91,8 +96,11 @@ void LanguagePackRequest::proceed(bool ok) {
                     rc = dm->getLanguagePack(req_.language(), ans);
                     status_ = CallStatus::kFinish;
                 }
-            } catch (...) { // Error, end process.
-                rc = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
+            // ERROR.
+            } catch (catena::exception_with_status& err) {
+                rc = catena::exception_with_status(err.what(), err.status);
+            } catch (...) {
+                rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
             }
             // Writing response to the client.
             status_ = CallStatus::kFinish;

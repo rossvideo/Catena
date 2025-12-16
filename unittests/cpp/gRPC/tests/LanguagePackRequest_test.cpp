@@ -32,7 +32,7 @@
  * @brief This file is for testing the LanguagePackRequest.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
- * @date 25/11/11
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -188,6 +188,21 @@ TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_ErrThrow) {
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
+    EXPECT_CALL(dm1_, getLanguagePack(::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC.
+    testRPC();
+}
+
+/*
+ * TEST 7 - LanguagePackRequest with slot number out of valid range.
+ */
+TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
+    initPayload(65536, "en");
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getLanguagePack(::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm1_, getLanguagePack(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();

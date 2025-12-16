@@ -33,7 +33,7 @@
  * @brief This file is for testing the gRPC ParamInfoRequest.cpp file.
  * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
  * @author Jason Chen (jason.chen@rossvideo.com)
- * @date 2025-11-11
+ * @date 2025-12-01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -784,5 +784,15 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_catchUnknownException) {
             throw 42; // Throw an int
         }));
 
+    testRPC();
+}
+
+// 4.4: Error Case - ParamInfoRequest with slot number out of valid range.
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
+    initPayload(65536); 
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Sending the RPC.
     testRPC();
 }
