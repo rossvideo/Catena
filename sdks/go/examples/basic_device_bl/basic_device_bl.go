@@ -118,20 +118,20 @@ func main() {
 		{"item": "two", "field": 2},
 		{"item": "three", "field": 3},
 	})
-    params2.Store("struct_variant", catena.StructVariantValue{
-        StructVariantType: "typeA",
-        Value:             "some value",
-    })
-    params2.Store("struct_variant_array", []catena.StructVariantValue{
-        {
-            StructVariantType: "typeA",
-            Value:             "value A1",
-        },
-        {
-            StructVariantType: "typeB",
-            Value:             123,
-        },
-    })
+	params2.Store("struct_variant", catena.StructVariantValue{
+		StructVariantType: "typeA",
+		Value:             "some value",
+	})
+	params2.Store("struct_variant_array", []catena.StructVariantValue{
+		{
+			StructVariantType: "typeA",
+			Value:             "value A1",
+		},
+		{
+			StructVariantType: "typeB",
+			Value:             123,
+		},
+	})
 	params2.Store("int_list", []int{1, 2, 3, 4, 5})
 	params2.Store("float_list", []float32{1.1, 2.2, 3.3})
 

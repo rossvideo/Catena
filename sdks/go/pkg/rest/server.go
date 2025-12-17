@@ -90,12 +90,12 @@ func (s *Server) DefaultDeviceHandler(w http.ResponseWriter, r *http.Request) ca
 	return catena.NotImplemented("no device handler registered")
 }
 
-func (s *Server) DefaultGetParamValueHandler(w http.ResponseWriter, r *http.Request, slot int, fqoid string) catena.StatusResult {
+func (s *Server) DefaultGetValueHandler(w http.ResponseWriter, r *http.Request, slot int, fqoid string) catena.StatusResult {
 	logger.Warning("GET /value/%s: no handler registered for slot %d", fqoid, slot)
 	return catena.NotImplemented("no getParamValue handler registered for slot " + strconv.Itoa(slot))
 }
 
-func (s *Server) DefaultSetParamValueHandler(value any, slot int, fqoid string) catena.StatusResult {
+func (s *Server) DefaultSetValueHandler(value any, slot int, fqoid string) catena.StatusResult {
 	logger.Warning("PUT /value/%s: no handler registered for slot %d", fqoid, slot)
 	return catena.NotImplemented("no setParamValue handler registered for slot " + strconv.Itoa(slot))
 }
@@ -136,14 +136,14 @@ func (s *Server) RegisterGetAssetHandler(slot int, handler AssetHandler) {
 }
 
 // Internal lookups (read-locked).
-func (s *Server) lookupGetParamValue(slot int) (GetValueHandler, bool) {
+func (s *Server) lookupGetValue(slot int) (GetValueHandler, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	h, ok := s.getValue[slot]
 	return h, ok
 }
 
-func (s *Server) lookupSetParamValue(slot int) (SetValueHandler, bool) {
+func (s *Server) lookupSetValue(slot int) (SetValueHandler, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	h, ok := s.setValue[slot]
@@ -190,13 +190,13 @@ func (s *Server) RegisterRoutes() {
 			switch r.Method {
 			case http.MethodGet:
 				logger.Info("GET /value/%s started", fqoid)
-				if handler, ok := s.lookupGetParamValue(slot); ok {
+				if handler, ok := s.lookupGetValue(slot); ok {
 					res := handler(slot, fqoid)
 					writeHTTPResult(w, res)
 					logger.Info("GET /value/%s finished", fqoid)
 					return
 				}
-				writeHTTPResult(w, s.DefaultGetParamValueHandler(w, r, slot, fqoid))
+				writeHTTPResult(w, s.DefaultGetValueHandler(w, r, slot, fqoid))
 			case http.MethodPut:
 				value, err := internal.ReadValueFromRequest(r)
 				if err != nil {
@@ -205,13 +205,13 @@ func (s *Server) RegisterRoutes() {
 					return
 				}
 				logger.Info("%s /value/%s started", r.Method, fqoid)
-				if handler, ok := s.lookupSetParamValue(slot); ok {
+				if handler, ok := s.lookupSetValue(slot); ok {
 					res := handler(value, slot, fqoid)
 					writeHTTPResult(w, res)
 					logger.Info("%s /value/%s finished", r.Method, fqoid)
 					return
 				}
-				writeHTTPResult(w, s.DefaultSetParamValueHandler(value, slot, fqoid))
+				writeHTTPResult(w, s.DefaultSetValueHandler(value, slot, fqoid))
 			default:
 				logger.Warning("%s /value/%s: method not allowed", r.Method, fqoid)
 				writeHTTPResult(w, catena.MethodNotAllowed("method not allowed"))
