@@ -18,7 +18,6 @@ for arg in "$@"; do
     html_report=true
     break
   fi
-done
 
 # Check for -V argument
 verbose=false
