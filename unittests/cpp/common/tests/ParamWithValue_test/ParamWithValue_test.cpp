@@ -346,7 +346,7 @@ TEST_F(ParamWithValueTest, TwoLevelPathAccess) {
 /*
  * TEST 17 - Testing getParam with numeric index instead.
  */
-TEST_F(ParamWithValueTest, NumericIndexOnStructParameterFails) {
+TEST_F(ParamWithValueTest, NumericIndexOnStructParameterFail) {
     // Create a parent parameter with a child parameter
     Device dm;
     
@@ -354,7 +354,7 @@ TEST_F(ParamWithValueTest, NumericIndexOnStructParameterFails) {
     catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
 
     // Create child with OID "0" so numeric index can find it
-    catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "Index 0"}}, "", "", false, "0", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
+    catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "Index 0"}}, "", "", false, false, "0", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
     catena::common::ParamWithValue<catena::common::EmptyValue> childParam(catena::common::emptyValue, childParamDescriptor, dm, false);
 
     // Authorization should be checked for both parent and child
