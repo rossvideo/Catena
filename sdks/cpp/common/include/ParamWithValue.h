@@ -243,8 +243,9 @@ class ParamWithValue : public catena::common::IParam {
     const T& get() const { return value_.get(); }
 
     /**
-     * @brief Gets a child parameter by name.
-     * @param oid The oid of the child parameter to get.
+     * @brief Gets a child parameter by following a path.
+     * @param oid The path to the child parameter. The path may contain field names (for structs),
+     * indices (for arrays), or a combination of both for nested structures.
      * @param authz The IAuthorizer to test read permissions with.
      * @param status The status of the operation. OK if successful, otherwise
      * an error.
