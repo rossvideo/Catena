@@ -346,7 +346,7 @@ TEST_F(ParamWithValueTest, TwoLevelPathAccess) {
 /*
  * TEST 17 - Testing getParam with numeric index instead.
  */
-TEST_F(ParamWithValueTest, NumericIndexOnStructParameterFail) {
+TEST_F(ParamWithValueTest, NumericIndexOnStructParameterCase) {
     // Create a parent parameter with a child parameter
     Device dm;
     
