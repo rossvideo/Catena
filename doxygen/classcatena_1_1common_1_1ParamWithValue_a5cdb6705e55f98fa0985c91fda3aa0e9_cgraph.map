@@ -1,17 +1,21 @@
 <map id="catena::common::ParamWithValue::getParam_" name="catena::common::ParamWithValue::getParam_">
-<area shape="rect" id="Node000001" title="Specialized getParam_ for EmptyValue &#45; handles template parameters with descriptor structure." alt="" coords="5,197,216,237"/>
+<area shape="rect" id="Node000001" title="Specialized getParam_ for EmptyValue &#45; handles template parameters with descriptor structure." alt="" coords="5,261,216,301"/>
 <area shape="rect" id="Node000002" href="$classcatena_1_1common_1_1Path.html#a6a63446ed43392f91ddf06d98eecb53a" title="return true if the Path is empty" alt="" coords="306,5,473,45"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="123,196,178,126,218,88,263,55,292,42,294,46,265,60,221,92,182,130,127,199"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="117,260,137,217,168,162,210,104,235,78,263,55,292,40,294,44,265,60,238,82,214,107,172,164,142,220,122,262"/>
 <area shape="rect" id="Node000003" href="$classcatena_1_1common_1_1Path.html#ac6322b03a662c484c09e83df0664ad48" title="return a fully qualified oid" alt="" coords="306,69,473,109"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="137,195,193,157,263,119,291,108,293,113,265,124,196,161,140,200"/>
-<area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1Path.html#a1690b3ea621c581607cf394fbe5f0f7e" title=" " alt="" coords="306,133,473,173"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="198,195,292,173,293,178,199,200"/>
-<area shape="rect" id="Node000005" href="$classcatena_1_1common_1_1Path.html#a154c0ab9589fbf11d872053e869a62ca" title=" " alt="" coords="306,197,473,237"/>
-<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="216,215,292,215,292,220,216,220"/>
-<area shape="rect" id="Node000006" href="$classcatena_1_1common_1_1IParamDescriptor.html#a14a921fffd4c9d68847f37046168bcab" title="return all sub parameters" alt="" coords="264,261,515,301"/>
-<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="199,235,289,256,288,261,198,240"/>
-<area shape="rect" id="Node000007" href="$classcatena_1_1common_1_1Path.html#a8d8e5e7559aca13d6b49a1561c668c43" title="pop the front of the path. Decreases the length of the path by 1 unless the path is already empty in ..." alt="" coords="290,326,489,351"/>
-<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="139,235,195,274,265,311,293,320,291,325,263,316,192,279,136,240"/>
-<area shape="rect" id="Node000008" href="$classcatena_1_1common_1_1IAuthorizer.html#acedeea5eadbebac67cb4e727c5dd762c" title="Check if the client has read authorization for a param." alt="" coords="284,376,495,416"/>
-<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="129,236,185,298,223,332,265,360,282,368,279,373,263,365,220,336,181,301,125,239"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="123,260,178,190,218,152,263,119,292,106,294,110,265,124,221,156,182,194,127,263"/>
+<area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1Path.html#ab7a79c31d5dab66dc08ba641960037aa" title=" " alt="" coords="306,133,473,173"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="137,259,193,221,263,183,291,172,293,177,265,188,196,225,140,264"/>
+<area shape="rect" id="Node000005" href="$classcatena_1_1common_1_1Path.html#a1690b3ea621c581607cf394fbe5f0f7e" title=" " alt="" coords="306,197,473,237"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="198,259,292,237,293,242,199,264"/>
+<area shape="rect" id="Node000006" href="$classcatena_1_1common_1_1Path.html#a51e9261c2c4b79fafc6cae0c105b7e4c" title=" " alt="" coords="306,261,473,301"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="216,279,292,279,292,284,216,284"/>
+<area shape="rect" id="Node000007" href="$classcatena_1_1common_1_1Path.html#a154c0ab9589fbf11d872053e869a62ca" title=" " alt="" coords="306,325,473,365"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="199,299,293,321,292,326,198,304"/>
+<area shape="rect" id="Node000008" href="$classcatena_1_1common_1_1IParamDescriptor.html#a14a921fffd4c9d68847f37046168bcab" title="return all sub parameters" alt="" coords="264,389,515,429"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="140,299,196,337,265,375,285,382,283,387,263,380,193,342,137,304"/>
+<area shape="rect" id="Node000009" href="$classcatena_1_1common_1_1Path.html#a8d8e5e7559aca13d6b49a1561c668c43" title="pop the front of the path. Decreases the length of the path by 1 unless the path is already empty in ..." alt="" coords="290,454,489,479"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="127,300,150,332,182,370,221,408,265,439,282,447,280,452,263,444,217,412,178,373,146,335,123,303"/>
+<area shape="rect" id="Node000010" href="$classcatena_1_1common_1_1IAuthorizer.html#acedeea5eadbebac67cb4e727c5dd762c" title="Check if the client has read authorization for a param." alt="" coords="284,504,495,544"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="123,300,144,340,175,392,216,444,239,468,266,488,278,496,275,500,262,493,236,472,212,448,170,395,139,343,119,303"/>
 </map>
