@@ -28,6 +28,10 @@ void DeviceRequest::proceed() {
         std::shared_ptr<catena::common::Authorizer> sharedAuthz;
         catena::common::Authorizer* authz;
         IDevice* dm = nullptr;
+        // Validating slot number.
+        if (context_.slot() < 0 || context_.slot() > 65535) {
+            throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+        }
         // Getting device at specified slot.
         if (dms_.contains(context_.slot())) {
             dm = dms_.at(context_.slot());
@@ -87,5 +91,6 @@ void DeviceRequest::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    LOG(INFO) << "DeviceRequest[" << objectId_ << "] finished\n";
+    VLOG(1) << RESTMethodMap().getForwardMap().at(context_.method())
+            << "DeviceRequest[" << objectId_ << "] finished\n";
 }

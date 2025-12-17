@@ -32,7 +32,7 @@
  * @brief This file is for testing the ExecuteCommand.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
- * @date 25/11/11
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -587,6 +587,20 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
         }));
     EXPECT_CALL(*mockResponder_, getNext()).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
+    // Sending the RPC
+    testRPC();
+}
+
+/* 
+ * TEST 20 - ExecuteCommand with slot number out of valid range.
+ */
+TEST_F(gRPCExecuteCommandTests, ExecuteCommand_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    initPayload(65536, "test_command", "test_value", false);
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations - no device methods should be called
+    EXPECT_CALL(dm0_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }

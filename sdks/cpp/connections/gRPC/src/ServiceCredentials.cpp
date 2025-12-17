@@ -49,7 +49,7 @@ grpc::Status catena::gRPC::JWTAuthMetadataProcessor::Process(const InputMetadata
 
     // remove the 'Bearer ' text from the beginning
     try {
-        LOG(INFO)<<"Removed bearer text";
+        VLOG(1) << "Removed bearer text";
         constexpr size_t kPrefixLength {std::string("Bearer ").length()};
         grpc::string_ref t = authz->second.substr(kPrefixLength);
         std::string token(t.begin(), t.end());

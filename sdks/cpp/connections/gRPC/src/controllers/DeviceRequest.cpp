@@ -53,7 +53,7 @@ DeviceRequest::DeviceRequest(IServiceImpl *service, SlotMap& dms, bool ok)
  * handling errors and responses accordingly 
  */
 void DeviceRequest::proceed(bool ok) {
-    LOG(INFO) << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
+    VLOG(1) << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok;
     
@@ -82,7 +82,10 @@ void DeviceRequest::proceed(bool ok) {
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             try {
                 bool shallowCopy = true; // controls whether shallow copy or deep copy is used
-
+                // Validate if slot range is correct.
+                if (req_.slot() > 65535 || req_.slot() < 0) {
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                }
                 // Getting device at specified slot.
                 if (dms_.contains(req_.slot())) {
                     dm_ = dms_.at(req_.slot());

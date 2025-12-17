@@ -56,7 +56,7 @@ void MultiSetValue::create_(bool ok) {
 }
 
 void MultiSetValue::proceed(bool ok) { 
-    LOG(INFO) << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
+    VLOG(1) << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: "
                 << std::boolalpha << ok;
 
@@ -89,6 +89,11 @@ void MultiSetValue::proceed(bool ok) {
                 IDevice* dm = nullptr;
                 // Convert to MultiSetValuePayload if not already.
                 toMulti_();
+                // Validate the slot range
+                if (reqs_.slot() < 0 || reqs_.slot() > 65535) {
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                }
+                
                 // Getting device at specified slot.
                 if (dms_.contains(reqs_.slot())) {
                     dm = dms_.at(reqs_.slot());
@@ -116,7 +121,7 @@ void MultiSetValue::proceed(bool ok) {
                     if (dm->tryMultiSetValue(reqs_, rc, *authz)) {
                         rc = dm->commitMultiSetValue(reqs_, *authz);
                     } else { // debug log new
-                        LOG(INFO) << "MultiSetValue: tryMultiSetValue failed for slot " << reqs_.slot()
+                        LOG(ERROR) << "MultiSetValue: tryMultiSetValue failed for slot " << reqs_.slot()
                                   << " status=" << static_cast<int>(rc.status)
                                   << " msg=\"" << rc.what() << "\"";
                     }

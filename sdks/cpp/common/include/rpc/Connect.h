@@ -48,6 +48,7 @@
 #include <ISubscriptionManager.h>
 #include "IConnect.h"
 #include <Logger.h>
+#include <utils.h>
 
 // protobuf interface
 #include <interface/device.pb.h>
@@ -175,14 +176,17 @@ class Connect : public IConnect {
                     rc = p->toProto(*value, *authz_);
                     //If the param conversion was successful, send the update
                     if (rc.status == catena::StatusCode::OK) {
+                        VLOG(1) << "Connect::updateResponse_: Param \"" << oid << "\" set to new value: " << catena::param_value_string(*value);
                         hasUpdate_ = true;
                         cv_.notify_one();
                     }
                 }
+                //lock behind stateless
+                //log new value
             }
         } catch(catena::exception_with_status& why) {
             // if an error is thrown, no update is pushed to the client
-            LOG(INFO) << "Failed to send SetValue update: " << why.what();
+            LOG(ERROR) << "Failed to send SetValue update: " << why.what();
         }
     }
 
@@ -213,7 +217,7 @@ class Connect : public IConnect {
             }
         } catch(catena::exception_with_status& why){
             // if an error is thrown, no update is pushed to the client
-            LOG(INFO) << "Failed to send language pack update: " << why.what();
+            LOG(ERROR) << "Failed to send language pack update: " << why.what();
         }
     }
 

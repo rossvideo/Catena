@@ -67,7 +67,7 @@ ExternalObjectRequest::ExternalObjectRequest(IServiceImpl *service, SlotMap& dms
  * handling errors and responses accordingly 
  */
 void ExternalObjectRequest::proceed(bool ok) {
-    LOG(INFO) << "ExternalObjectRequest proceed[" << objectId_ << "]: " << timeNow()
+    VLOG(1) << "ExternalObjectRequest proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok;
     
     // If the process is cancelled, finish the process
@@ -106,6 +106,9 @@ void ExternalObjectRequest::proceed(bool ok) {
             try {
                 // Check for valid slot
                 IDevice* dm = nullptr;
+                if (req_.slot() < 0 || req_.slot() > 65535) {
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                }
                 if (dms_.contains(req_.slot())) {
                     dm = dms_.at(req_.slot());
                 }
@@ -114,14 +117,14 @@ void ExternalObjectRequest::proceed(bool ok) {
                     why << "Device not found in slot " << req_.slot();
                     throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
                 }
-
-                LOG(INFO) << "sending external object " << req_.oid() <<"\n";
+                
+                VLOG(1) << "sending external object " << req_.oid() <<"\n";
                 std::string path = service_->EOPath();
                 path.append(req_.oid());
 
                 // Check if the file exists
                 if (!std::filesystem::exists(path)) {
-                    LOG(INFO) << "ExternalObjectRequest[" << objectId_ << "] file not found";
+                    LOG(ERROR) << "ExternalObjectRequest[" << objectId_ << "] file not found";
                     if(req_.oid()[0] != '/'){
                         std::stringstream why;
                         why << __PRETTY_FUNCTION__ << "\nfile '" << req_.oid() << "' not found. HINT: Make sure oid starts with '/' prefix.";
@@ -141,7 +144,7 @@ void ExternalObjectRequest::proceed(bool ok) {
                 //obj.mutable_payload()->set_meta(file.);
 
                 //For now we are sending the whole file in one go
-                LOG(INFO) << "ExternalObjectRequest[" << objectId_ << "] sent";
+                VLOG(1) << "ExternalObjectRequest[" << objectId_ << "] sent";
                 status_ = CallStatus::kPostWrite; 
                 writer_.Write(obj, this);
             // Exception occured, finish the process

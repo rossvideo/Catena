@@ -32,7 +32,7 @@
  * @brief This file is for testing the ExecuteCommand.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
- * @date 25/11/11
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -682,6 +682,20 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
     EXPECT_CALL(*mockResponder_, getNext()).Times(1)
         .WillOnce(testing::Throw(std::runtime_error(expRc_.what())));
     EXPECT_CALL(*mockResponder_, hasMore()).Times(1).WillOnce(testing::Return(true));
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 24 - Check for a slot out of range. .
+ */
+TEST_F(RESTExecuteCommandTests, ExecuteCommand_SlotOutOfBounds) {
+    dms_[65536] = &dm0_;
+    initPayload(65536, "test_command", "test_value", true);
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Calling proceed and testing the output
     testCall();
 }

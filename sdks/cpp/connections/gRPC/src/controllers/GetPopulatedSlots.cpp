@@ -49,7 +49,7 @@ GetPopulatedSlots::GetPopulatedSlots(IServiceImpl *service, SlotMap& dms, bool o
 
 // Manages gRPC command execution process using the state variable status.
 void GetPopulatedSlots::proceed( bool ok) {
-    LOG(INFO) << "GetPopulatedSlots::proceed[" << objectId_ << "]: "
+    VLOG(1) << "GetPopulatedSlots::proceed[" << objectId_ << "]: "
               << timeNow() << " status: " << static_cast<int>(status_)
               << ", ok: " << std::boolalpha << ok;
 

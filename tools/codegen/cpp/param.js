@@ -127,6 +127,9 @@ class Descriptor {
       read_only: () => {
         return !!desc.read_only;
       },
+      stateless: () => {
+        return !!desc.stateless;
+      },
       oid: () => {
         return `"${oid}"`;
       },

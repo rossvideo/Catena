@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the Languages.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/13
+ * @author jason.chen@rossvideo.com
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -109,6 +110,21 @@ TEST_F(RESTLanguagesTests, Languages_BadMethod) {
 TEST_F(RESTLanguagesTests, Languages_InvalidSlot) {
     slot_ = dms_.size();
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(dm0_, toProto(testing::An<st2138::LanguageList&>())).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/* 
+ * TEST 0.4 - Languages proceed() with an out of range slot.
+ */
+TEST_F(RESTLanguagesTests, Languages_SlotOutOfRange) {
+    // Add device at the out-of-range slot to ensure slot validation is tested
+    dms_[65536] = &dm0_;
+    
+    slot_ = 65536;
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations
     EXPECT_CALL(dm0_, toProto(testing::An<st2138::LanguageList&>())).Times(0);
     // Calling proceed and testing the output

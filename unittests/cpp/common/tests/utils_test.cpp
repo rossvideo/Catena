@@ -135,3 +135,98 @@ TEST(UtilsTest, Fmt_NoArgs) {
     std::string result = catena::fmt("Hello, World!");
     EXPECT_EQ(result, "Hello, World!");
 }
+
+TEST(UtilsTest, Value_Param_Empty) {
+    st2138::Value value;
+    st2138::Empty* emptyValue = new st2138::Empty();
+    value.set_allocated_empty_value(emptyValue);
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "");
+}
+
+TEST(UtilsTest, Value_Param_Int32) {
+    st2138::Value value;
+    value.set_int32_value(42);
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "42");
+}
+
+TEST(UtilsTest, Value_Param_Float32) {
+    st2138::Value value;
+    value.set_float32_value(3.14f);
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "3.140000");
+}
+
+TEST(UtilsTest, Value_Param_String) {
+    st2138::Value value;
+    value.set_string_value("test string");
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "test string");
+}
+
+TEST(UtilsTest, Value_Param_Struct) {
+    st2138::Value value;
+    value.set_allocated_struct_value(new st2138::StructValue());
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "[struct value]");
+}
+
+TEST(UtilsTest, Value_Param_Int32Array) {
+    st2138::Value value;
+    auto int_array = value.mutable_int32_array_values();
+    int_array->add_ints(1);
+    int_array->add_ints(2);
+    int_array->add_ints(3);
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "[1, 2, 3]");
+}
+
+TEST(UtilsTest, Value_Param_Float32Array) {
+    st2138::Value value;
+    auto float_array = value.mutable_float32_array_values();
+    float_array->add_floats(1.1f);
+    float_array->add_floats(2.2f);
+    float_array->add_floats(3.3f);
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "[1.1, 2.2, 3.3]");
+}
+
+TEST(UtilsTest, Value_Param_StringArray) {
+    st2138::Value value;
+    auto string_array = value.mutable_string_array_values();
+    string_array->add_strings("one");
+    string_array->add_strings("two");
+    string_array->add_strings("three");
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "[\"one\", \"two\", \"three\"]");
+}
+
+TEST(UtilsTest, Value_Param_DataPayload) {
+    st2138::Value value;
+    st2138::DataPayload* dataPayload = new st2138::DataPayload();
+    dataPayload->set_payload("binarydata");
+    value.set_allocated_data_payload(dataPayload);
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "binarydata");
+}
+
+TEST(UtilsTest, Value_Param_StructVariantValue) {
+    st2138::Value value;
+    value.set_allocated_struct_variant_value(new st2138::StructVariantValue());
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "[struct variant value]");
+}
+
+TEST(UtilsTest, Value_Param_StructVariantArrayValues) {
+    st2138::Value value;
+    value.set_allocated_struct_variant_array_values(new st2138::StructVariantList());
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "[struct variant array values]");
+}
+
+TEST(UtilsTest, Value_Param_DefaultCase) {
+    st2138::Value value; // No kind set
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "[no value]");
+}

@@ -286,11 +286,10 @@ TEST_F(ParamWithValueTest, ParamInfoToProto_Error) {
 TEST_F(ParamWithValueTest, NestedParameterAccess) {
     // Create a parent parameter with a child parameter
     Device dm;
-    catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
+    catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
     catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
 
-    catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, "f2", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
-    catena::common::ParamWithValue<catena::common::EmptyValue> childParam(catena::common::emptyValue, childParamDescriptor, dm, false);
+    catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, false, "f2", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
     
     // Expect two authorization checks (one for parent, one for child) - both should pass
     EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(2).WillRepeatedly(testing::Return(true));
@@ -306,7 +305,7 @@ TEST_F(ParamWithValueTest, NestedParameterAccess) {
 TEST_F(ParamWithValueTest, EmptyPathValidation) {
     // Create a parent parameter with a child parameter
     Device dm;
-    catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
+    catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
     catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
 
     // Expect one authorization check for the empty path scenario
@@ -327,13 +326,13 @@ TEST_F(ParamWithValueTest, TwoLevelPathAccess) {
     // Create a parent parameter with a child parameter
     Device dm;
     
-    catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
+    catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
     catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
 
-    catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, "f2", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
+    catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, false, "f2", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
     catena::common::ParamWithValue<catena::common::EmptyValue> childParam(catena::common::emptyValue, childParamDescriptor, dm, false);
     
-    catena::common::ParamDescriptor child2ParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List2"}}, "", "", false, "f3", "", nullptr, false, false, dm, 0, 0, 2, false, &childParamDescriptor);
+    catena::common::ParamDescriptor child2ParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List2"}}, "", "", false, false, "f3", "", nullptr, false, false, dm, 0, 0, 2, false, &childParamDescriptor);
     catena::common::ParamWithValue<catena::common::EmptyValue> child2Param(catena::common::emptyValue, child2ParamDescriptor, dm, false);
     
     // Expect authorization checks for each level
@@ -351,7 +350,7 @@ TEST_F(ParamWithValueTest, NumericIndexOnStructParameterFails) {
     // Create a parent parameter with a child parameter
     Device dm;
     
-    catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
+    catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
     catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
 
     // Create child with OID "0" so numeric index can find it
@@ -375,10 +374,10 @@ TEST_F(ParamWithValueTest, UnauthorizedParameterAccessDenied) {
     // Create a parent parameter with a child parameter
     Device dm;
     
-    catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
+    catena::common::ParamDescriptor parentDescriptor(st2138::ParamType::STRUCT, {}, {{"en", "Audio Channel"}}, "", "", false, false, "f1", "", nullptr, false, false, dm, 0, 0, 2, false, nullptr);
     catena::common::ParamWithValue<catena::common::EmptyValue> parentParam(catena::common::emptyValue, parentDescriptor, dm, false);
 
-    catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, "f2", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
+    catena::common::ParamDescriptor childParamDescriptor(st2138::ParamType::EMPTY, {}, {{"en", "EQ List"}}, "", "", false, false, "f2", "", nullptr, false, false, dm, 0, 0, 2, false, &parentDescriptor);
     
     // Passes Authz once then fails the rest
     EXPECT_CALL(authz_, readAuthz(testing::A<const IParamDescriptor&>())).Times(2).WillOnce(testing::Return(true)).WillRepeatedly(testing::Return(false));

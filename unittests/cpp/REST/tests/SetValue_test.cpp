@@ -32,7 +32,7 @@
  * @brief This file is for testing the SetValue.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
- * @date 25/11/11
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -142,6 +142,18 @@ TEST_F(RESTSetValueTests, SetValue_InvalidSlot) {
     initPayload(22, "/test_oid", "test_value");
     // Setting the expected response
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 5 - SetValue has a slot out of valid range.
+ */
+TEST_F(RESTSetValueTests, SetValue_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    initPayload(65536, "/test_oid", "test_value");
+    // Setting the expected response
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Calling proceed and testing the output
     testCall();
 }

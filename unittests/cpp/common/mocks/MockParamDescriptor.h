@@ -54,6 +54,7 @@ class MockParamDescriptor : public IParamDescriptor {
     MOCK_METHOD((const std::string&), templateOid, (), (const, override));
     MOCK_METHOD(bool, readOnly, (), (const, override));
     MOCK_METHOD(void, readOnly, (bool flag), (override));
+    MOCK_METHOD(bool, stateless, (), (const, override));
     MOCK_METHOD((const std::string&), getScope, (), (const, override));
     MOCK_METHOD(bool, minimalSet, (), (const, override));
     MOCK_METHOD(void, setMinimalSet, (bool flag), (override));

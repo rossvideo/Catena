@@ -33,7 +33,7 @@
  * @brief This file is for testing the gRPC UpdateSubscriptions.cpp file.
  * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
  * @author Jason Chen (jason.chen@rossvideo.com)
- * @date 2025-11-11
+ * @date 2025-12-01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -473,4 +473,23 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_AuthzInvalid) {
     
     // Calling proceed and testing the output
     testRPC();
+}
+
+// 3.3: Error Case - UpdateSubscriptions with slot number out of valid range.
+TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_SlotOutOfRange) {
+    // Add device at the out-of-range slot to ensure slot validation is tested
+    dms_[65536] = &dm0_;
+    
+    initPayload(65536, {"param1", "param2"}, {});
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations - no subscription operations should happen for invalid slot
+    EXPECT_CALL(subManager_, addSubscription(testing::_, testing::_, testing::_, testing::_)).Times(0);
+    EXPECT_CALL(subManager_, removeSubscription(testing::_, testing::_, testing::_)).Times(0);
+    
+    // Calling proceed and testing the output
+    testRPC();
+
+    // Verify no subscription operations were performed
+    EXPECT_EQ(addedOids_, 0);
+    EXPECT_EQ(removedOids_, 0);
 }
