@@ -94,6 +94,14 @@ params:
     value:
       int32_value: 0
 
+  selected_flow_id:
+    type: STRING
+    name:
+      display_strings:
+        en: "Selected Input Flow ID"
+    value:
+      string_value: ""
+
   selected_name:
     type: STRING
     name:

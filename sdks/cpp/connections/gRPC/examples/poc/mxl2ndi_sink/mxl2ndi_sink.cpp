@@ -41,7 +41,8 @@ using namespace catena::common;
 
 std::unique_ptr<Server> globalServer = nullptr;
 std::atomic<bool> isRunning = false;
-std::atomic<int32_t> inputIndex = 0;
+std::atomic<bool> indexChanged = false;
+std::atomic<bool> flowIdChanged = false;
 std::unique_ptr<std::thread> flowThread = nullptr;
 // handle SIGINT
 void handle_signal(int sig) {
@@ -78,9 +79,10 @@ void RunVideoFlow() {
         return;
     }
     for (const auto& input : value.struct_array_values().struct_values()) {
+        std::string name = input.fields().at("name").string_value();
         std::string domain = input.fields().at("domain").string_value();
         std::string flowId = input.fields().at("flow_id").string_value();
-        readers.emplace_back(std::make_unique<mxlcpp::MxlReader>(domain, flowId));
+        readers.emplace_back(std::make_unique<mxlcpp::MxlReader>(name, domain, flowId));
     }
 
     if (readers.empty()) {
@@ -93,24 +95,80 @@ void RunVideoFlow() {
         LOG(ERROR) << "Failed to get selected index: " << statusErr.what();
         return;
     }
-    inputIndex = value.int32_value();
 
     value.set_string_value("Running");
     dm.setValue("/status", value);
 
+    std::unique_ptr<catena::common::IParam> selectedIndexParam = dm.getParam("/selected_index", statusErr);
+    if (statusErr.status != catena::StatusCode::OK) {
+        LOG(ERROR) << "Failed to get selected index param: " << statusErr.what();
+        return;
+    }
+    catena::common::ParamWithValue<int32_t>* selectedIndex =
+      dynamic_cast<catena::common::ParamWithValue<int32_t>*>(selectedIndexParam.get());
+    std::unique_ptr<catena::common::IParam> selectedFlowIdParam = dm.getParam("/selected_flow_id", statusErr);
+    if (statusErr.status != catena::StatusCode::OK) {
+        LOG(ERROR) << "Failed to get selected flow ID param: " << statusErr.what();
+        return;
+    }
+    catena::common::ParamWithValue<std::string>* selectedFlowId =
+      dynamic_cast<catena::common::ParamWithValue<std::string>*>(selectedFlowIdParam.get());
+    std::unique_ptr<catena::common::IParam> selectedNameParam = dm.getParam("/selected_name", statusErr);
+    if (statusErr.status != catena::StatusCode::OK) {
+        LOG(ERROR) << "Failed to get selected name param: " << statusErr.what();
+        return;
+    }
+    catena::common::ParamWithValue<std::string>* selectedName =
+      dynamic_cast<catena::common::ParamWithValue<std::string>*>(selectedNameParam.get());
+
     int readerIndex = -1;
+    indexChanged = true;
     isRunning = true;
+    bool updateParams = false;
     while (isRunning) {
-        int loadIndex = inputIndex.load();
-        if (readerIndex != loadIndex) {
-
-            if (loadIndex < 0 || loadIndex >= static_cast<int32_t>(readers.size())) {
-                LOG(WARNING) << "Invalid input index: " << loadIndex;
-                mxlSleepForNs(100'000'000);  // 100ms
-                continue;
+        {
+            std::lock_guard<std::mutex> lock(dm.mutex());
+            if (indexChanged.exchange(false)) {
+                flowIdChanged = false;
+                updateParams = true;
+                int32_t loadIndex = selectedIndex->get();
+                if (loadIndex < 0 || loadIndex >= readers.size()) {
+                    LOG(WARNING) << "Invalid input index: " << loadIndex;
+                    mxlSleepForNs(100'000'000);  // 100ms
+                    continue;
+                }
+                readerIndex = loadIndex;
             }
+            if (flowIdChanged.exchange(false)) {
+                indexChanged = false;
+                std::string loadFlowId = selectedFlowId->get();
+                bool found = false;
+                for (size_t i = 0; i < readers.size(); ++i) {
+                    if (readers[i]->getFlowId() == loadFlowId) {
+                        readerIndex = static_cast<int>(i);
+                        found = true;
+                        updateParams = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    LOG(WARNING) << "Selected flow ID not found: " << selectedFlowId;
+                    mxlSleepForNs(100'000'000);  // 100ms
+                    continue;
+                }
+            }
+        }
 
-            readerIndex = loadIndex;
+        mxlcpp::MxlReader& currentReader = *readers[readerIndex];
+
+        if (updateParams) {
+            updateParams = false;
+            selectedIndex->get() = readerIndex;
+            selectedFlowId->get() = currentReader.getFlowId();
+            selectedName->get() = currentReader.getName();
+            dm.getValueSetByServer().emit("/selected_index", selectedIndexParam.get());
+            dm.getValueSetByServer().emit("/selected_flow_id", selectedFlowIdParam.get());
+            dm.getValueSetByServer().emit("/selected_name", selectedNameParam.get());
             std::unique_ptr<st2138::Value> flowDefValue = readers[readerIndex]->getFlowDef();
             statusErr = dm.setValue("/flow_def", *flowDefValue);
             if (statusErr.status != catena::StatusCode::OK) {
@@ -122,7 +180,7 @@ void RunVideoFlow() {
 
         // do the frame
         uint64_t rateNs = 0;
-        const NDIlib_video_frame_v2_t* ndiFrame = readers[readerIndex]->dumpNdiFrame(rateNs);
+        const NDIlib_video_frame_v2_t* ndiFrame = currentReader.dumpNdiFrame(rateNs);
         if (ndiFrame == nullptr) {
             // No frame available, sleep a bit
             mxlSleepForNs(10'000'000);  // 10ms
@@ -233,13 +291,12 @@ void defineCommands() {
 }
 
 void valueChangedCallback(const std::string& fqoid, const catena::common::IParam* param) {
-    st2138::Value value;
-    catena::exception_with_status status = dm.getValue("/selected_index", value);
-    if (status.status != catena::StatusCode::OK) {
-        LOG(ERROR) << "Failed to get selected index: " << status.what();
-        return;
+    LOG(INFO) << "Value changed callback for OID: " << fqoid;
+    if (fqoid == "/selected_index") {
+        indexChanged = true;
+    } else if (fqoid == "/selected_flow_id") {
+        flowIdChanged = true;
     }
-    inputIndex = value.int32_value();
 }
 
 void RunRPCServer(std::string addr) {
@@ -279,8 +336,6 @@ void RunRPCServer(std::string addr) {
         dm.startHeartbeat();
 
         dm.getValueSetByClient().connect(valueChangedCallback);
-
-        flowThread = std::make_unique<std::thread>(RunVideoFlow);
 
         // wait for the server to shutdown and tidy up
         globalServer->Wait();

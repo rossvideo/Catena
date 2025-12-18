@@ -11,7 +11,8 @@
 namespace mxlcpp {
 class MxlReader {
   public:
-    MxlReader(std::string const& domain, std::string flowId) : _domain(domain), _flowId(flowId) {
+    MxlReader(std::string const& name, std::string const& domain, std::string flowId)
+        : _name(name), _domain(domain), _flowId(flowId) {
         _instance = mxlCreateInstance(_domain.c_str(), "");
         if (_instance == nullptr) {
             throw std::runtime_error("Failed to create MXL instance");
@@ -65,6 +66,12 @@ class MxlReader {
             mxlDestroyInstance(_instance);
         }
     }
+
+    const std::string& getName() const { return _name; }
+
+    const std::string& getDomain() const { return _domain; }
+
+    const std::string& getFlowId() const { return _flowId; }
 
     const mxlFlowReader& get() const { return _reader; }
 
@@ -249,6 +256,7 @@ class MxlReader {
     }
 
   private:
+    std::string _name;
     std::string _domain;
     std::string _flowId;
     mxlInstance _instance;
