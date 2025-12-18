@@ -194,11 +194,11 @@ void catena::gRPC::Connect::proceed(bool ok) {
          * default: Error, end process.
          * This should be impossible to reach.
          */
-        default: // LCOV_EXCL_START
+        default: // GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             writer_.Finish(errorStatus, this);
-            // LCOV_EXCL_STOP
+            // GCOVR_EXCL_STOP
     }
 }
 

@@ -90,14 +90,14 @@ Path::Path(const std::string &jptr) : segments_{} {
             Segment seg;
             seg.emplace<Index>(kEnd);
             segments_.push_back(seg);
-        // LCOV_EXCL_START
+        // GCOVR_EXCL_START
         } else {
             // this should never happen
             std::stringstream why;
             why << __PRETTY_FUNCTION__ << "\n'" << jptr << " is invalid json pointer";
             throw catena::exception_with_status(why.str(), catena::StatusCode::INVALID_ARGUMENT);
         }
-        // LCOV_EXCL_STOP
+        // GCOVR_EXCL_STOP
     }
     frontIdx_ = 0;
 }

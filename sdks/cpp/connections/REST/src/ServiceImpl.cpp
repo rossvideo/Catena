@@ -23,7 +23,7 @@ using catena::REST::Connect;
 ABSL_FLAG(uint16_t, port, 443, "Catena REST service port");
 
 // (UNUSED) expand env variables
-// LCOV_EXCL_START
+// GCOVR_EXCL_START
 void expandEnvVariables(std::string &str) {
     static std::regex env{"\\$\\{([^}]+)\\}"};
     std::smatch match;
@@ -33,7 +33,7 @@ void expandEnvVariables(std::string &str) {
         str.replace(match[0].first, match[0].second, var);
     }
 }
-// LCOV_EXCL_STOP
+// GCOVR_EXCL_STOP
 
 ServiceImpl::ServiceImpl(const ServiceConfig& config)
     : version_{"v1"},
@@ -119,7 +119,7 @@ void ServiceImpl::run() {
                         rc = catena::exception_with_status("Request " + requestKey + " does not exist", catena::StatusCode::UNIMPLEMENTED);
                     }
                 // ERROR
-                // LCOV_EXCL_START
+                // GCOVR_EXCL_START
                 } catch (const catena::exception_with_status& e) {
                     rc = catena::exception_with_status(e.what(), e.status); 
                 } catch (const std::invalid_argument& e) {
@@ -131,7 +131,7 @@ void ServiceImpl::run() {
                 } catch (...) {
                     rc = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
                 }
-                // LCOV_EXCL_STOP
+                // GCOVR_EXCL_STOP
             } else {
                 rc = catena::exception_with_status{"Service unavailable", catena::StatusCode::UNAVAILABLE};
             }
@@ -171,7 +171,7 @@ void ServiceImpl::Shutdown() {
 };
 
 // (UNUSED)
-// LCOV_EXCL_START
+// GCOVR_EXCL_START
 bool ServiceImpl::is_port_in_use_() const {
     try {
         boost::asio::io_context io_context;
@@ -181,4 +181,4 @@ bool ServiceImpl::is_port_in_use_() const {
         return true;  // Port is in use
     }
 }
-// LCOV_EXCL_STOP
+// GCOVR_EXCL_STOP
