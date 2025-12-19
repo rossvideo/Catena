@@ -83,7 +83,7 @@ The validation logic is integrated into the code generation pipeline in [index.j
 
 ## Required Parts for a Valid Device Model
 
-According to the ST2138-a specification and enforced by the [validation logic](../tools/codegen/index.js#L80-L167), a valid device model must include:
+According to the ST2138-a specification and enforced by the [validation logic](../tools/codegen/index.js#L80-L167), a valid device model could include:
 
 ### 1. **Device Metadata**
 
@@ -93,19 +93,24 @@ According to the ST2138-a specification and enforced by the [validation logic](.
 - **`access_scopes`**: Array of supported access scopes
 - **`multi_set_enabled`**: Boolean indicating multi-set support
 - **`subscriptions`**: Boolean indicating subscription support
+- **`params`**: Container for a device parameters
+- **`commands`**: Container for device commands
+- **`languages`**: Array of supported language codes
 
 ### 2. **Mandatory Product Parameters**
 
-The `product` parameter must be a read-only STRUCT containing:
+The `product` parameter must be a read-only STRUCT containing all six required parameter definitions. The table below shows which parameters must have values:
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `name` | STRING | Yes | Product name |
-| `vendor` | STRING | Yes | Manufacturer name |
-| `version` | STRING | Yes | Firmware/software version |
-| `serial_number` | STRING | Yes | Unique device serial number |
+| Parameter | Type | Value Required | Description |
+|-----------|------|----------------|-------------|
+| `name` | STRING | **Yes** | Product name |
+| `vendor` | STRING | **Yes** | Manufacturer name |
+| `version` | STRING | **Yes** | Firmware/software version |
+| `serial_number` | STRING | **Yes** | Unique device serial number |
 | `catena_sdk` | STRING | No | SDK implementation name |
 | `catena_sdk_version` | STRING | No | SDK version |
+
+**Important:** All six parameters must be **defined** in the `params` structure. However, only the four marked as "Value Required" need actual values provided. The optional parameters (`catena_sdk` and `catena_sdk_version`) can be defined without initial values—these values can be generated automatically at runtime by the SDK if not provided.
 
 All product parameters must have an access scope of `"st2138:mon"` (monitor) or inherit it from parent scopes.
 
@@ -124,7 +129,9 @@ Example from [use_constraints](../sdks/cpp/common/examples/use_constraints/devic
         "name": { "type": "STRING" },
         "vendor": { "type": "STRING" },
         "version": { "type": "STRING" },
-        "serial_number": { "type": "STRING" }
+        "serial_number": { "type": "STRING" },
+        "catena_sdk": { "type": "STRING" },
+        "catena_sdk_version": { "type": "STRING" }
       },
       "value": {
         "struct_value": {
@@ -133,6 +140,7 @@ Example from [use_constraints](../sdks/cpp/common/examples/use_constraints/devic
             "vendor": { "string_value": "Ross Video" },
             "version": { "string_value": "1.0.0" },
             "serial_number": { "string_value": "12345" }
+            // catena_sdk and catena_sdk_version values can be auto-generated
           }
         }
       }
@@ -145,8 +153,8 @@ Example from [use_constraints](../sdks/cpp/common/examples/use_constraints/devic
 
 All parameters must use one of the supported types defined in the protobuf specification:
 
-- Scalar: `INT32`, `INT64`, `FLOAT32`, `FLOAT64`, `STRING`, `BOOLEAN`
-- Complex: `STRUCT`, `VARIANT`, `ARRAY`
+- Scalar: `INT32`, `FLOAT32`, `STRING`
+- Complex: `STRUCT`, `VARIANT`, `INT32_ARRAY`, `FLOAT32_ARRAY`, `STRING_ARRAY`, `STRUCT_ARRAY`, `STRUCT_VARIANT_ARRAY`
 - Special: Commands and external objects
 
 See [param.proto](../smpte/interface/proto/param.proto) for complete type definitions.
@@ -183,7 +191,7 @@ The standalone validator is located in [smpte/tools/validate.js](../smpte/tools/
 **Usage:**
 
 ```bash
-cd /home/jasonchen/Catena
+cd ~/Catena
 node smpte/tools/validate.js <path-to-your-file>
 ```
 
@@ -220,34 +228,32 @@ The validator (implemented in [validator.js](../smpte/tools/validator.js)):
 4. Uses [AJV (Another JSON Validator)](https://ajv.js.org/) to validate against the schema
 5. Reports errors with line numbers using source maps
 
-### Method 2: NPM Package (Published Validator)
+### Method 2: Using NPX with Local Validator
 
-Install the official ST2138-a validator globally:
+The ST2138-a validator is not yet published as a standalone NPM package. However, you can use it via npx by referencing the local path in your `package.json`:
 
-```bash
-npm install -g smpte-st2138-a-validator
+```json
+{
+  "dependencies": {
+    "smpte-validator": "file:./smpte/tools"
+  }
+}
 ```
 
-Then run:
+Then run with npx:
 
 ```bash
-st2138-a-validate ./path/to/device.good.yaml
+npx smpte-validator ./path/to/device.good.yaml
 ```
 
-Or use npx without installation:
-
-```bash
-npx smpte-st2138-a-validator ./path/to/device.good.yaml
-```
-
-This uses the published schema from the SMPTE GitHub repository.
+This method is useful when integrating validation into npm scripts or CI/CD pipelines.
 
 ### Method 3: Integrated Code Generation
 
 When generating code, validation happens automatically. The [codegen tool](../tools/codegen/index.js) validates before generating:
 
 ```bash
-cd /home/jasonchen/Catena/tools/codegen
+cd ~/Catena/tools/codegen
 node index.js --device-model ../../sdks/cpp/common/examples/hello_world/device.hello_world.json --output ./output
 ```
 
