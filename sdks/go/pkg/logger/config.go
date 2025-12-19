@@ -40,33 +40,33 @@ package logger
 
 // Config holds logger configuration options
 type Config struct {
-    // AppName is used in log file naming (like C++ Logger::init(appName))
-    AppName string
-    
-    // LogDir is the directory for log files (matches FLAGS_log_dir)
-    LogDir string
-    
-    // Silent suppresses all log output (matches FLAGS_silent)
-    Silent bool
-    
-    // MinLevel sets minimum log level (INFO for release, DEBUG for debug)
-    MinLevel Level
-    
-    // WriteToFile enables file logging
-    WriteToFile bool
-    
-    // WriteToConsole enables console (stderr) logging
-    WriteToConsole bool
+	// AppName is used in log file naming (like C++ Logger::init(appName))
+	AppName string
+
+	// LogDir is the directory for log files (matches FLAGS_log_dir)
+	LogDir string
+
+	// Silent suppresses all log output (matches FLAGS_silent)
+	Silent bool
+
+	// MinLevel sets minimum log level (INFO for release, DEBUG for debug)
+	MinLevel Level
+
+	// WriteToFile enables file logging
+	WriteToFile bool
+
+	// WriteToConsole enables console (stderr) logging
+	WriteToConsole bool
 }
 
 // DefaultConfig returns sensible defaults matching C++ behavior
 func DefaultConfig() Config {
-    return Config{
-        AppName:        "catena",
-        LogDir:         "./logs",
-        Silent:         false,
-        MinLevel:       LevelInfo,
-        WriteToFile:    true,
-        WriteToConsole: true,
-    }
+	return Config{
+		AppName:        "catena",
+		LogDir:         "./logs",
+		Silent:         false,
+		MinLevel:       LevelInfo,
+		WriteToFile:    true,
+		WriteToConsole: true,
+	}
 }
