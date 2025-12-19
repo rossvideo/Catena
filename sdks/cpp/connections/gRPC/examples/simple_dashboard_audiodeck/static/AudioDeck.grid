@@ -120,16 +120,16 @@
          <!-- Fader Knob -->
          <widgetdescriptor id="fader_knob">
             <oglml>
-               <abs height="160" width="160">
-                  <simplegrid cols="1" left="10" height="30" hspace="10" rows="1" top="10" width="140">
-                     <label name="Pan" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" left="70" />
+               <abs height="80" width="160">
+                  <simplegrid cols="2" rows="1" top="20">
+                     <simplegrid cols="1" height="80" rows="2" width="80">
+                        <label name="Pan" style="txt-align:left;font:bold;"/>
+                        <param oid=".fader" relative="true" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" value="12.2" widget="spinner"/>
+                     </simplegrid>
+                     <param height="80" oid=".fader" relative="true" widget="wheel" width="80">
+                        <config key="w.zero">90</config>
+                     </param>
                   </simplegrid>
-                  <simplegrid cols="3" height="30" top="40" rows="1" vspace="20" width="160">
-                     <label name="L" style="txt-align:center;font:bold;"/>
-                     <label name="0" style="txt-align:center;font:bold;"/>
-                     <label name="R" style="txt-align:center;font:bold;"/>
-                  </simplegrid>
-                  <param height="30" top="70" oid=".fader" left="10" relative="true" widget="scroll-horizontal" width="140"/>
                </abs>
             </oglml>
          </widgetdescriptor>
