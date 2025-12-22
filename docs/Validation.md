@@ -41,18 +41,38 @@ Catena supports the import directive to break large device models into manageabl
 - The root device model file
 - All imported parameter files
 
-The following device model shows two imported parameters: `variant_example` and `variantlist_example`:
+The following device model shows two imported parameters. Full example can be found in [device.import_params.json](../sdks/cpp/common/examples/import_params/device.import_params.json):
 
-![Multi-part Device Model](images/device_tree.png)
+```json
+{
+  "params": {
+    "city": {
+      "import": {"file": "params/param.city.json"}
+    },
+    "plane_ticket": {
+      "type": "STRUCT",
+      "params": {
+        "departure": {
+          "import": {"file": "params/param.ottawa.json"}
+        },
+        "destination": {
+          "type": "STRUCT",
+          "template_oid": "/city"
+        }
+      },
+    }
+  }
+}
+```
 
 The import structure follows these rules (implemented in [DeviceModel.js](../tools/codegen/DeviceModel.js#L55-L90)):
 
 - Root device model: Look in the `params` sub-folder for files named `param.<name>.json` or `param.<name>.yaml`
 - Nested imports: Look in sub-folders matching the parent param name
 
-File system for `device_tree.json` example:
+File system for `device.import_params.json` example:
 
-![Device Tree Folder Structure](images/device_tree_folder.png)
+![Device Tree Folder Structure](images/import_params_tree.png)
 
 ### 3. **IDE Integration**
 
@@ -93,9 +113,11 @@ According to the ST2138-a specification and enforced by the [validation logic](.
 - **`access_scopes`**: Array of supported access scopes
 - **`multi_set_enabled`**: Boolean indicating multi-set support
 - **`subscriptions`**: Boolean indicating subscription support
+- **`constraints`**: Container for shared device constraints
 - **`params`**: Container for a device parameters
 - **`commands`**: Container for device commands
-- **`languages`**: Array of supported language codes
+- **`menu_groups`**: Container for editor UI definitions
+- **`languages_packs`**: Container for device language packs
 
 ### 2. **Mandatory Product Parameters**
 
@@ -140,7 +162,6 @@ Example from [use_constraints](../sdks/cpp/common/examples/use_constraints/devic
             "vendor": { "string_value": "Ross Video" },
             "version": { "string_value": "1.0.0" },
             "serial_number": { "string_value": "12345" }
-            // catena_sdk and catena_sdk_version values can be auto-generated
           }
         }
       }
@@ -153,9 +174,8 @@ Example from [use_constraints](../sdks/cpp/common/examples/use_constraints/devic
 
 All parameters must use one of the supported types defined in the protobuf specification:
 
-- Scalar: `INT32`, `FLOAT32`, `STRING`
-- Complex: `STRUCT`, `VARIANT`, `INT32_ARRAY`, `FLOAT32_ARRAY`, `STRING_ARRAY`, `STRUCT_ARRAY`, `STRUCT_VARIANT_ARRAY`
-- Special: Commands and external objects
+- Scalar: `INT32`, `FLOAT32`, `STRING`, `EMPTY`
+- Complex: `STRUCT`, `STRUCT_VARIANT`, `INT32_ARRAY`, `FLOAT32_ARRAY`, `STRING_ARRAY`, `STRUCT_ARRAY`, `STRUCT_VARIANT_ARRAY`, `BINARY`, `DATA`
 
 See [param.proto](../smpte/interface/proto/param.proto) for complete type definitions.
 
