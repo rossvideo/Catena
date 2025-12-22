@@ -53,7 +53,7 @@ ExecuteCommand::ExecuteCommand(IServiceImpl *service, SlotMap& dms, bool ok)
  * handling errors and responses accordingly 
  */
 void ExecuteCommand::proceed(bool ok) {
-    LOG(INFO) << "ExecuteCommand proceed[" << objectId_ << "]: " << timeNow()
+    VLOG(1) << "ExecuteCommand proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok;
 
@@ -84,6 +84,10 @@ void ExecuteCommand::proceed(bool ok) {
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             try {
                 IDevice* dm = nullptr;
+                // Validate if slot range is correct.
+                if (req_.slot() > 65535 || req_.slot() < 0) {
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                }
                 // Getting device at specified slot.
                 if (dms_.contains(req_.slot())) {
                     dm = dms_.at(req_.slot());

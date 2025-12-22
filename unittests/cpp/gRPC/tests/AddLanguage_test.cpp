@@ -32,7 +32,7 @@
  * @brief This file is for testing the AddLanguage.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
- * @date 25/11/11
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -259,6 +259,20 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowUnknown) {
     // Setting expectations
     EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
+    EXPECT_CALL(dm1_, addLanguage(::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC
+    testRPC();
+}
+
+/*
+ * TEST 11 - dm.addLanguage() with slot number out of valid range.
+ */
+TEST_F(gRPCAddLanguageTests, AddLanguage_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    initPayload(65536, "", "", {});
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm1_, addLanguage(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();

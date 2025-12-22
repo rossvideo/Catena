@@ -45,6 +45,7 @@ void ParamDescriptor::toProto(st2138::Param &param, const IAuthorizer& authz) co
     
     param.set_type(type_);
     param.set_read_only(read_only_);
+    param.set_stateless(stateless_);
     param.set_widget(widget_);
     param.set_minimal_set(minimal_set_);
     param.set_precision(precision_);

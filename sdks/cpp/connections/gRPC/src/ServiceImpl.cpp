@@ -82,7 +82,7 @@ vdk::signal<void()> catena::gRPC::Connect::shutdownSignal_;
 void ServiceImpl::processEvents() {
     void *tag;
     bool ok;
-    LOG(INFO) << "Start processing events\n";
+    VLOG(1) << "Start processing events\n";
     while (true) {
         gpr_timespec deadline =
             gpr_time_add(gpr_now(GPR_CLOCK_REALTIME), gpr_time_from_seconds(1, GPR_TIMESPAN));
@@ -116,5 +116,5 @@ void ServiceImpl::deregisterItem(ICallData *cd) {
     if (it != registry_.end()) {
         registry_.erase(it);
     }
-    LOG(INFO) << "Active RPCs remaining: " << registry_.size() << '\n';
+    VLOG(1) << "Active RPCs remaining: " << registry_.size() << '\n';
 }

@@ -32,7 +32,7 @@
  * @brief This file is for testing the MultiSetValue.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
- * @date 25/11/11
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -278,6 +278,26 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_ExistsDeflate) {
 }
 
 /*
+ * TEST 1.8 - GET asset request for a slot out of range. 
+ */
+TEST_F(RESTAssetRequestTests, GETAssetRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
+    //establish expectations
+    method_ = Method_GET;
+    fqoid_ = "/test_asset.jpg";
+    slot_ = 65536;
+    authzEnabled_ = true;
+    jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
+
+    // Setting the expected response
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
  * ============================================================================
  *                               POST AssetRequest tests
  * ============================================================================
@@ -360,6 +380,26 @@ TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNE_Deflate) {
     postAssetRequestTest(st2138::DataPayload::DEFLATE, "/catena_logo_up.png", payloadDeflate_,
                 Scopes().getForwardMap().at(Scopes_e::kOperate) + ":w");
     ASSERT_TRUE(std::filesystem::remove(downloadFolder_ + fqoid_));
+}
+
+/*
+ * TEST 2.7 - POST asset request for a slot out of range. 
+ */
+TEST_F(RESTAssetRequestTests, POSTAssetRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+
+    //establish expectations
+    method_ = Method_POST;
+    fqoid_ = "/test_asset.jpg";
+    slot_ = 65536;
+    authzEnabled_ = true;
+    jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
+
+    // Setting the expected response
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /*
@@ -446,6 +486,26 @@ TEST_F(RESTAssetRequestTests, PUTAssetRequest_ExistsAuthz) {
 }
 
 /*
+ * TEST 3.4 - PUT asset request for a slot out of range. 
+ */
+TEST_F(RESTAssetRequestTests, PUTAssetRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+
+    //establish expectations
+    method_ = Method_PUT;
+    fqoid_ = "/test_asset.jpg";
+    slot_ = 65536;
+    authzEnabled_ = true;
+    jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
+
+    // Setting the expected response
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
  * ============================================================================
  *                               DELETE AssetRequest tests
  * ============================================================================
@@ -519,6 +579,26 @@ TEST_F(RESTAssetRequestTests, DELETEAssetRequest_Exists) {
     // Calling proceed and testing the output
     testCall();
     ASSERT_TRUE(!std::filesystem::exists(downloadFolder_ + fqoid_)) << "File was not deleted: " << downloadFolder_ + fqoid_;
+}
+
+/*
+ * TEST 4.4 - DELETE asset request for a slot out of range. 
+ */
+TEST_F(RESTAssetRequestTests, DELETEAssetRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+
+    //establish expectations
+    method_ = Method_DELETE;
+    fqoid_ = "/test_asset.jpg";
+    slot_ = 65536;
+    authzEnabled_ = true;
+    jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
+
+    // Setting the expected response
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /*

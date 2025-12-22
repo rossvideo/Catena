@@ -102,7 +102,7 @@ inline std::array<const char*, 2> alternativeNames<TestVariantStruct>{"TestStruc
  * @param size The array size if it's an array type (defaults to 0)
  * @param scope The scope to return (defaults to monitor)
  */
-inline void setupMockParam(MockParam& param, const std::string& oid, MockParamDescriptor& descriptor, bool isArray = false, uint32_t size = 0, const std::string& scope = Scopes().getForwardMap().at(Scopes_e::kMonitor)) {
+inline void setupMockParam(MockParam& param, const std::string& oid, MockParamDescriptor& descriptor, bool isArray = false, uint32_t size = 0, const std::string& scope = Scopes().getForwardMap().at(Scopes_e::kMonitor), bool stateless = false) {
     EXPECT_CALL(param, getOid())
         .WillRepeatedly(::testing::ReturnRef(oid));
     EXPECT_CALL(param, getDescriptor())
@@ -118,7 +118,8 @@ inline void setupMockParam(MockParam& param, const std::string& oid, MockParamDe
     // Set default isCommand for params to be false
     EXPECT_CALL(descriptor, isCommand())
         .WillRepeatedly(::testing::Return(false));
-
+    EXPECT_CALL(descriptor, stateless())
+        .WillRepeatedly(testing::Return(stateless));
 }
 
 /**

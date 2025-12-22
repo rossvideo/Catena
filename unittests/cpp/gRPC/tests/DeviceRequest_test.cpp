@@ -32,7 +32,7 @@
  * @brief This file is for testing the DeviceRequest.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
- * @date 25/11/11
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -399,6 +399,21 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_ErrGetNextThrowUnknown) {
         .WillOnce(::testing::Return(expVals_[1]))
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
     EXPECT_CALL(*mockSerializer_, hasMore()).Times(2).WillRepeatedly(::testing::Return(true));
+    // Sending the RPC
+    testRPC();
+}
+
+/* 
+ * TEST 14 - DeviceRequest with slot number out of valid range.
+ */
+TEST_F(gRPCDeviceRequestTests, DeviceRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
+    initPayload(65536, st2138::Device_DetailLevel::Device_DetailLevel_FULL, {});
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations - no device methods should be called
+    EXPECT_CALL(dm0_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }

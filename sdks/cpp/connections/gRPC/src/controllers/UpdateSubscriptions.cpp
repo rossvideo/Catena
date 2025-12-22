@@ -44,7 +44,7 @@ UpdateSubscriptions::UpdateSubscriptions(IServiceImpl *service, SlotMap& dms, bo
 }
 
 void UpdateSubscriptions::proceed(bool ok) {
-    LOG(INFO) << "UpdateSubscriptions proceed[" << objectId_ << "]: "
+    VLOG(1) << "UpdateSubscriptions proceed[" << objectId_ << "]: "
               << timeNow() << " status: " << static_cast<int>(status_)
               << ", ok: " << std::boolalpha << ok;
 
@@ -67,7 +67,12 @@ void UpdateSubscriptions::proceed(bool ok) {
             { // rc scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             try {
-                // Getting device at specified slot.
+                // Validate the slot range
+                if (req_.slot() < 0 || req_.slot() > 65535) {
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                }
+                
+                 // Getting device at specified slot.
                 if (dms_.contains(req_.slot())) {
                     dm_ = dms_.at(req_.slot());
                 }

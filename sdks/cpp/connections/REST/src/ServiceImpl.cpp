@@ -147,7 +147,7 @@ void ServiceImpl::run() {
             {
                 std::lock_guard<std::mutex> lock(activeRequestMutex_);
                 activeRequests_ -= 1;
-                LOG(INFO)<<"Active requests remaining: "<<activeRequests_;
+                VLOG(1) << "Active requests remaining: " << activeRequests_;
             }
         }).detach();
     }

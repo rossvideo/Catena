@@ -106,7 +106,8 @@ void catena::REST::Connect::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    LOG(INFO) << "Connect[" << objectId_ << "] finished";
+    LOG(INFO) << RESTMethodMap().getForwardMap().at(context_.method())
+            << "Connect[" << objectId_ << "] finished";
 }
 
 // Returns true if the connection has been cancelled.

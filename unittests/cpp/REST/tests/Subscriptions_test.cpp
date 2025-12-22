@@ -32,7 +32,7 @@
  * @brief This file is for testing the Subscriptions.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
- * @date 25/11/11
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -252,7 +252,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_InvalidSlot) {
 }
 
 /* 
- * TEST 0.5 - Subscriptions with an invalid slot and stream enabled.
+ * TEST 0.6 - Subscriptions with an invalid slot and stream enabled.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_InvalidSlotStream) {
     // Remaking with stream enabled.
@@ -260,6 +260,20 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_InvalidSlotStream) {
     endpoint_.reset(makeOne());
     initPayload(dms_.size());
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations.
+    EXPECT_CALL(context_, subscriptionManager()).Times(0); // Should not call.
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/* 
+ * TEST 0.7 - Subscriptions with slot out of valid range.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
+    initPayload(65536);
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Setting expectations.
     EXPECT_CALL(context_, subscriptionManager()).Times(0); // Should not call.
     // Calling proceed and testing the output

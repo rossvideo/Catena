@@ -129,6 +129,10 @@ class IParamDescriptor {
     virtual inline void readOnly(bool flag) = 0;
 
     /**
+     * @brief return the stateless status of the parameter
+     */
+    virtual inline bool stateless() const = 0;
+    /**
      * @brief get the access scope of the parameter
      */
     virtual const std::string& getScope() const = 0;

@@ -24,7 +24,7 @@
       "name": { "display_strings": { "en": "Audio Channel" } },
       "params": {
         "gain": { "type": "FLOAT32", "precision": 1, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -10.0, "max_value": 10.0, "display_min": -10.0, "display_max": 10.0, "step": 0.1 } } },
-        "input": { "type": "FLOAT32", "precision": 2, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -10.0, "max_value": 10.0, "display_min": -10.0, "display_max": 10.0, "step": 0.01 } } },
+        "input": { "type": "FLOAT32", "precision": 2, "stateless": true, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -10.0, "max_value": 10.0, "display_min": -10.0, "display_max": 10.0, "step": 0.01 } } },
         "gain_type": { "type": "STRING", "read_only": true, "constraint": { "type": "STRING_CHOICE", "string_choice": { "choices": ["Gain", "Stereo"] } } },
         "inputLabel": { "type": "STRING" },
         "channelLabel": { "type": "STRING" },

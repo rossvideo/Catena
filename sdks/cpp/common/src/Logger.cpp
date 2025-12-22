@@ -49,15 +49,17 @@ void Logger::init(const std::string& appName) {
         }
 
 #ifdef NDEBUG
-        // Release mode: only log to file (suppress stderr/stdout)
-        absl::SetStderrThreshold(absl::LogSeverity::kFatal);
+        // Release mode: only show LOG
+        absl::SetGlobalVLogLevel(0);
 #else
-        // Debug mode: log to stdout + file
-        absl::SetStderrThreshold(absl::LogSeverity::kInfo);
+        // Debug mode: show both LOG and VLOG
+        absl::SetGlobalVLogLevel(2);
 #endif
         if (absl::GetFlag(FLAGS_silent)) {
             absl::SetMinLogLevel(absl::LogSeverityAtLeast::kError);
         }
+        
+        absl::SetStderrThreshold(absl::LogSeverity::kInfo);
 
         //append date and time to the front of file name in YYYYMMDD_HHMMSS format
         auto now = std::chrono::system_clock::now();

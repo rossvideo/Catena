@@ -27,6 +27,11 @@ void MultiSetValue::proceed() {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     try {
         IDevice* dm = nullptr;
+        // Validating slot number.
+        if (context_.slot() < 0 || context_.slot() > 65535) {
+            throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+        }
+
         // Getting device at specified slot.
         if (dms_.contains(context_.slot())) {
             dm = dms_.at(context_.slot());
@@ -53,7 +58,7 @@ void MultiSetValue::proceed() {
             if (dm->tryMultiSetValue(reqs_, rc, *authz)) {
                 rc = dm->commitMultiSetValue(reqs_, *authz);
             } else { // debug log (new)
-                LOG(INFO) << "MultiSetValue: tryMultiSetValue failed for slot " << reqs_.slot()
+                LOG(ERROR) << "MultiSetValue: tryMultiSetValue failed for slot " << reqs_.slot()
                         << " status=" << static_cast<int>(rc.status)
                         << " msg=\"" << rc.what() << "\"";
             }
@@ -72,5 +77,6 @@ void MultiSetValue::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    LOG(INFO) << typeName_ << "SetValue[" << objectId_ << "] finished\n";
+    LOG(INFO) << RESTMethodMap().getForwardMap().at(context_.method())
+            << typeName_ << "SetValue[" << objectId_ << "] finished\n";
 }

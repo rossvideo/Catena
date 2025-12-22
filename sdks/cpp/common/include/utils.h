@@ -41,6 +41,7 @@
 #include <string>
 #include <vector>
 #include <cstdarg>
+#include <interface/param.pb.h>
 
 namespace catena {
 
@@ -99,5 +100,13 @@ std::string from_base64(const std::string& encoded);
  *  @brief A printf style formatting function that returns a std::string.
  */
 std::string fmt(const char* f, ...);
+
+/**
+ * @brief Converts a st2138::Value to a human readable string.
+ * 
+ * @param value The st2138::Value to convert.
+ * @return The human readable string.
+ */
+std::string param_value_string(const st2138::Value& value);
 
 }  // namespace catena

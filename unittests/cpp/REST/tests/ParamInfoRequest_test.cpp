@@ -33,7 +33,7 @@
  * @brief This file is for testing the ParamInfoRequest.cpp file.
  * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
  * @author Jason Chen (jason.chen@rossvideo.com)
- * @date 2025-11-11
+ * @date 2025-12-01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -222,6 +222,21 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_AuthzValid) {
     std::string jsonBody = catena::REST::test::createParamInfoJson(param_info);
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, {jsonBody}));
 }
+
+// Test 0.8: Device with a slot out of valid range.
+TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_SlotOutOfRange) {
+    // Add device at the out-of-range slot to ensure slot validation is tested
+    dms_[65536] = &dm0_;
+    
+    slot_ = 65536;
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+
+    endpoint_->proceed();
+
+    // Match expected and actual responses
+    EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_));
+}
+
 
 // == MODE 1 TESTS: Get all top-level parameters without recursion ==
 

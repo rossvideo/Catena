@@ -31,7 +31,8 @@
 /**
  * @brief A parent class for REST test fixtures.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/12
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @date 2025-11-27
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -56,6 +57,7 @@ using boost::asio::ip::tcp;
 
 // std
 #include <string>
+#include <map>
 
 // common
 #include <Status.h>
@@ -103,8 +105,84 @@ class RESTTest {
                       st2138::Device_DetailLevel detailLevel,
                       const std::string& language,
                       const std::string& jsonBody) {
-        // Compiling path:
+        // Delegate to header-name aware variant to avoid duplication.
+        writeRequestWithHeaderNames(method,
+                                    slot,
+                                    endpoint,
+                                    fqoid,
+                                    stream,
+                                    fields,
+                                    jwsToken,
+                                    origin,
+                                    detailLevel,
+                                    language,
+                                    jsonBody,
+                                    "Origin",
+                                    "Authorization",
+                                    "Detail-Level",
+                                    "Language",
+                                    "Content-Length");
+    }
+
+    /*
+     * Writes a request allowing custom header names (to test case-insensitivity).
+     */
+    void writeRequestWithHeaderNames(RESTMethod method,
+                      uint32_t slot,
+                      const std::string& endpoint,
+                      const std::string& fqoid,
+                      bool stream,
+                      const std::unordered_map<std::string, std::string>& fields,
+                      const std::string& jwsToken,
+                      const std::string& origin,
+                      st2138::Device_DetailLevel detailLevel,
+                      const std::string& language,
+                      const std::string& jsonBody,
+                      const std::string& originHeaderName,
+                      const std::string& authorizationHeaderName,
+                      const std::string& detailLevelHeaderName,
+                      const std::string& languageHeaderName,
+                      const std::string& contentLengthHeaderName,
+                      const std::vector<std::string>& extraHeaderLines = {}) {
+        // Build headers map allowing injection of custom or extra headers
+        std::map<std::string, std::string> headers;
+        headers[originHeaderName] = origin;
+        headers["User-Agent"] = "test_agent";
+        headers[authorizationHeaderName] = "Bearer " + jwsToken;
+        if (detailLevel != st2138::Device_DetailLevel_UNSET) {
+            headers[detailLevelHeaderName] =
+                catena::patterns::EnumDecorator<st2138::Device_DetailLevel>().getForwardMap().at(detailLevel);
+        }
+        if (!language.empty()) {
+            headers[languageHeaderName] = language;
+        }
+        headers[contentLengthHeaderName] = std::to_string(jsonBody.length());
+        // Add one decoy header with the same length as a real, recognized one
+        // to hit the iequals_header_name() false path (length equal, value differs).
+        // Use the Origin header so the parser will compare it.
+        if (!originHeaderName.empty()) {
+            std::string decoyHeaderName = originHeaderName;
+            decoyHeaderName.back() = (decoyHeaderName.back() == 'X') ? 'Y' : 'X';
+            headers[decoyHeaderName] = "dummy";
+        }
+    
+        writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, extraHeaderLines);
+    }
+
+    /*
+     * Writes a request with an explicit set of headers.
+     */
+    void writeRequestWithHeaders(RESTMethod method,
+                      uint32_t slot,
+                      const std::string& endpoint,
+                      const std::string& fqoid,
+                      bool stream,
+                      const std::unordered_map<std::string, std::string>& fields,
+                      const std::string& jsonBody,
+                      const std::map<std::string, std::string>& headers,
+                      const std::vector<std::string>& extraHeaderLines = {}) {
         std::string request = "";
+        // Path
         request += RESTMethodMap().getForwardMap().at(method)
                 + " /st2138-api/v1";
         if (slot != 0) {
@@ -117,7 +195,7 @@ class RESTTest {
         if (stream) {
             request += "/stream";
         }
-        // compiling fields:
+        // Query parameters
         std::string fieldsStr = "";
         for (auto [fName, fValue] : fields) {
             if (fieldsStr.empty()) {
@@ -127,23 +205,18 @@ class RESTTest {
             }
         }
         request += fieldsStr;
-        // Compiling headers:
-        request += " HTTP/1.1\n"
-                   "Origin: " + origin + "\n"
-                   "User-Agent: test_agent\n"
-                   "Authorization: Bearer " + jwsToken + " \n";
-        if (detailLevel != st2138::Device_DetailLevel_UNSET) {
-            request += "Detail-Level: "
-                    + catena::patterns::EnumDecorator<st2138::Device_DetailLevel>().getForwardMap().at(detailLevel)
-                    + " \n";
+        // Headers (use provided headers map, CRLF per HTTP spec)
+        request += " HTTP/1.1\r\n";
+        for (const auto& kv : headers) {
+            request += kv.first + ": " + kv.second + "\r\n";
         }
-        if (!language.empty()) {
-            request += "Language: " + language + " \n";
+        // Append any raw header lines as-is (to inject malformed headers, etc.)
+        for (const auto& rawLine : extraHeaderLines) {
+            request += rawLine + "\r\n";
         }
-        // Adding jsonBody.
-        request += "Content-Length: " + std::to_string(jsonBody.length()) + "\r\n\r\n"
-                   + jsonBody + "\n"
-                   "\r\n\r\n";
+        // Body
+        request += "\r\n";
+        request += jsonBody;
         boost::asio::write(*writeSocket_, boost::asio::buffer(request));
     }
 

@@ -52,7 +52,7 @@ GetParam::GetParam(IServiceImpl *service, SlotMap& dms, bool ok)
  * Manages the steps of the GetParam gRPC command through the state variable status.
  */
 void GetParam::proceed( bool ok) {
-    LOG(INFO) << "GetParam::proceed[" << objectId_ << "]: " << timeNow()
+    VLOG(1) << "GetParam::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok;
 
@@ -90,6 +90,11 @@ void GetParam::proceed( bool ok) {
             catena::common::Authorizer* authz;
             IDevice* dm = nullptr;
             try {
+                // Validate if slot range is correct.
+                if (req_.slot() > 65535 || req_.slot() < 0) {
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                }
+
                 // Getting device at specified slot.
                 if (dms_.contains(req_.slot())) {
                     dm = dms_.at(req_.slot());
