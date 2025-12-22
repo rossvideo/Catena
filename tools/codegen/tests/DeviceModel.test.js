@@ -235,4 +235,38 @@ describe("DeviceModel", () => {
             expect(call[0]).toBe("param");
         }
     });
+
+    // test for excessive import depth, with an import loop
+    test("load import loop", async () => {
+        validateFnMock.mockImplementation((_, url) => {
+            const path = url.pathname;
+            let nextIndex = 0;
+            if (path.endsWith("device.TestDevice.json")) {
+                nextIndex = 0;
+            } else if (path.endsWith("param.Param0.json")) {
+                nextIndex = 1;
+            } else if (path.endsWith("param.Param1.json")) {
+                nextIndex = 2;
+            } else if (path.endsWith("param.Param2.json")) {
+                nextIndex = 0;
+            } else {
+                throw new Error(`Unexpected path ${path}`);
+            }
+            return new Promise((resolve) => {
+                resolve({
+                    valid: true, data: {
+                        params: {
+                            [`Param${nextIndex}`]: {
+                                import: { url: `param.Param${nextIndex}.json` }
+                            }
+                        }
+                    }
+                });
+            });
+        });
+
+        const dm = new DeviceModel("/path/to/device.TestDevice.json", validatorMock);
+        await expect(dm.load(true)).rejects.toThrow("Maximum import depth exceeded");
+        expect(validateFnMock).toHaveBeenCalledTimes(101);
+    });
 });
