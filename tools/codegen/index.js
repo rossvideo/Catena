@@ -17,7 +17,7 @@
 import fs from 'fs/promises';
 import { program } from 'commander';
 import path from 'path';
-import yaml from "yaml";
+import yaml from 'yaml';
 
 import packageJson from './package.json' with { type: "json" };;
 import { DeviceModel } from './DeviceModel.js';

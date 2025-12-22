@@ -1,7 +1,7 @@
-import { fileURLToPath } from "url";
-import fs from "fs/promises";
-import path from "path";
-import { deserialize, getDevice, serialize } from "../serdes/serdes.js";
+import { fileURLToPath } from 'url';
+import fs from 'fs/promises';
+import path from 'path';
+import { deserialize, getDevice, serialize } from '../serdes/serdes.js';
 
 describe("serdes", () => {
 
