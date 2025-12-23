@@ -117,17 +117,18 @@
             </oglml>
          </widgetdescriptor>
 
-         <!-- Fader Knob -->
-         <widgetdescriptor id="fader_knob">
+         <!-- Pan Knob -->
+         <widgetdescriptor id="pan_knob">
             <oglml>
                <abs height="80" width="160">
-                  <simplegrid cols="2" rows="1" top="20">
-                     <simplegrid cols="1" height="80" rows="2" width="80">
+                  <simplegrid cols="2" rows="1" hspace="20" top="20">
+                     <simplegrid cols="1" height="70" rows="2" width="70">
                         <label name="Pan" style="txt-align:left;font:bold;"/>
-                        <param oid=".fader" relative="true" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" value="12.2" widget="spinner"/>
+                        <param oid=".pan" relative="true" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" value="12.2" widget="label"/>
                      </simplegrid>
-                     <param height="80" oid=".fader" relative="true" widget="wheel" width="80">
+                     <param height="70" oid=".pan" relative="true" widget="wheel" width="70">
                         <config key="w.zero">90</config>
+                        <config key="w.loop">false</config>
                      </param>
                   </simplegrid>
                </abs>
@@ -213,7 +214,7 @@
                      <button buttontype="toggle" name="Solo" style="bdr#darkdivider;bdr:round;t:bg#green;f:bg#red;font:bold;"/>
                      <button buttontype="toggle" name="PFM" style="bg#FFFFFF;bdr#darkdivider;bdr:round;o#darkdivider;fg#modaloverlay;font:bold;"/>
                   </simplegrid>
-                  <widget baseoid="%baseoid%" height="160" left="10" top="80" widgetid="fader_knob" width="160"/>
+                  <widget baseoid="%baseoid%" height="160" left="10" top="80" widgetid="pan_knob" width="160"/>
                   <button buttontype="toggle" height="60" left="60" name="Cut" style="bdr#darkdivider;bdr:round;t:bg#yellow;f:bg#red;font:bold;" top="200" width="60"/>
                   <widget baseoid="%baseoid%" height="400" left="20" top="260" widgetid="volume_slider" width="140"/>
                </abs>
