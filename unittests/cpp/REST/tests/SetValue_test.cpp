@@ -31,9 +31,12 @@
 /**
  * @brief This file is for testing the SetValue.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/14
+ * @author jason.chen@rossvideo.com
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
+
+#include <SharedFlags.h>
 
 // Test helpers
 #include "RESTTest.h"
@@ -49,11 +52,11 @@ class RESTSetValueTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTSetValueTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("RESTSetValueTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     RESTSetValueTests() : RESTEndpointTest() {
@@ -128,6 +131,29 @@ TEST_F(RESTSetValueTests, SetValue_FailParse) {
     // Setting expectations
     EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(0);
     EXPECT_CALL(dm0_, commitMultiSetValue(testing::_, testing::_)).Times(0);
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 4 - SetValue has not device in the specified slot.
+ */
+TEST_F(RESTSetValueTests, SetValue_InvalidSlot) {
+    initPayload(22, "/test_oid", "test_value");
+    // Setting the expected response
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(context_.slot()), catena::StatusCode::NOT_FOUND);
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 5 - SetValue has a slot out of valid range.
+ */
+TEST_F(RESTSetValueTests, SetValue_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    initPayload(65536, "/test_oid", "test_value");
+    // Setting the expected response
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Calling proceed and testing the output
     testCall();
 }

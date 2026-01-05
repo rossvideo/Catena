@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the AddLanguage.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/18
+ * @author jason.chen@rossvideo.com
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -50,11 +51,11 @@ class gRPCAddLanguageTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("gRPCAddLanguageTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("gRPCAddLanguageTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     /*
@@ -133,7 +134,28 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_Normal) {
 }
 
 /*
- * TEST 3 - AddLanguage with authz on and valid token.
+ * TEST 3 - AddLanguage with null slot, should handle as a normal case.
+ */
+TEST_F(gRPCAddLanguageTests, AddLanguage_NullSlotCase) {
+    initPayload(69, "en", "English", {{"greeting", "Hello"}});
+    inVal_.clear_slot();
+    // Mocking kProcess and kFinish functions
+    EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](st2138::AddLanguagePayload &language, const IAuthorizer& authz) {
+            // Checking that function gets correct inputs.
+            EXPECT_EQ(language.SerializeAsString(), inVal_.SerializeAsString());
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            // Setting the output status and returning true.
+            return catena::exception_with_status(expRc_.what(), expRc_.status);
+        }));
+    EXPECT_CALL(dm1_, addLanguage(::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC
+    testRPC();
+}
+
+
+/*
+ * TEST 4 - AddLanguage with authz on and valid token.
  */
 TEST_F(gRPCAddLanguageTests, AddLanguage_AuthzValid) {
     initPayload(0, "en", "English", {{"greeting", "Hello"}});
@@ -156,7 +178,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_AuthzValid) {
 }
 
 /*
- * TEST 4 - AddLanguage with authz on and invalid token.
+ * TEST 5 - AddLanguage with authz on and invalid token.
  */
 TEST_F(gRPCAddLanguageTests, AddLanguage_AuthzInvalid) {
     expRc_ = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
@@ -171,7 +193,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_AuthzInvalid) {
 }
 
 /*
- * TEST 5 - AddLanguage with authz on and invalid token.
+ * TEST 6 - AddLanguage with authz on and invalid token.
  */
 TEST_F(gRPCAddLanguageTests, AddLanguage_AuthzJWSNotFound) {
     expRc_ = catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
@@ -186,7 +208,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_AuthzJWSNotFound) {
 }
 
 /*
- * TEST 6 - dm.addLanguage() returns a catena::exception_with_status.
+ * TEST 7 - dm.addLanguage() returns a catena::exception_with_status.
  */
 TEST_F(gRPCAddLanguageTests, AddLanguage_ErrReturnCatena) {
     expRc_ = catena::exception_with_status("Language already exists", catena::StatusCode::INVALID_ARGUMENT);
@@ -201,7 +223,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrReturnCatena) {
 }
 
 /*
- * TEST 7 - No device in the specified slot.
+ * TEST 8 - No device in the specified slot.
  */
 TEST_F(gRPCAddLanguageTests, AddLanguage_ErrInvalidSlot) {
     initPayload(dms_.size(), "", "", {});
@@ -214,7 +236,7 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrInvalidSlot) {
 }
 
 /*
- * TEST 8 - dm.addLanguage() throws a catena::exception_with_status.
+ * TEST 9 - dm.addLanguage() throws a catena::exception_with_status.
  */
 TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowCatena) {
     expRc_ = catena::exception_with_status("Language already exists", catena::StatusCode::INVALID_ARGUMENT);
@@ -230,13 +252,27 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowCatena) {
 }
 
 /*
- * TEST 9 - dm.addLanguage() throws a std::runtime_exception.
+ * TEST 10 - dm.addLanguage() throws a std::runtime_exception.
  */
 TEST_F(gRPCAddLanguageTests, AddLanguage_ErrThrowUnknown) {
     expRc_ = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
     // Setting expectations
     EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
+    EXPECT_CALL(dm1_, addLanguage(::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC
+    testRPC();
+}
+
+/*
+ * TEST 11 - dm.addLanguage() with slot number out of valid range.
+ */
+TEST_F(gRPCAddLanguageTests, AddLanguage_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    initPayload(65536, "", "", {});
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, addLanguage(::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(dm1_, addLanguage(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();

@@ -31,9 +31,12 @@
 /**
  * @brief This file is for testing the MultiSetValue.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/14
+ * @author jason.chen@rossvideo.com
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
+
+#include <SharedFlags.h>
 
 // Test helpers
 #include "RESTTest.h"
@@ -50,11 +53,11 @@ class RESTMultiSetValueTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTMultiSetValueTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("RESTMultiSetValueTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     RESTMultiSetValueTests() : RESTEndpointTest() {
@@ -300,6 +303,23 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
     EXPECT_CALL(dm0_, tryMultiSetValue(testing::_, testing::_, testing::_)).Times(1).WillOnce(testing::Return(true));
     EXPECT_CALL(dm0_, commitMultiSetValue(testing::_, testing::_)).Times(1)
         .WillOnce(testing::Throw(std::runtime_error(expRc_.what())));
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 5 - No device in the specified slot.
+ */
+TEST_F(RESTMultiSetValueTests, MultiSetValue_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
+    initPayload(65536, {});
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     // Calling proceed and testing the output
     testCall();
 }

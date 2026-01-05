@@ -1,0 +1,241 @@
+name: Go Code Analysis
+# this runs the workflow on PR and make sure that the code is tested and analyzed
+
+on:
+  push:
+    branches: ["develop"]
+    paths:
+      - 'sdks/go/**'
+      #- 'unittests/go/**'
+      #- 'tools/codegen/**'
+  pull_request:
+    paths:
+      - 'sdks/go/**'
+      #- 'unittests/go/**'
+      #- 'tools/codegen/**'
+      - '.github/workflows/go-pull-request.yml'
+  workflow_dispatch:
+
+jobs:
+  Trivy:
+    name: Trivy vulnerability scanner (25 seconds)
+    timeout-minutes: 2
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Run Trivy vulnerability scanner in repo mode
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          skip-dirs: '.git,build,coverage,docs,sdks/java,sdks/cpp,unittests'
+          skip-files: 'pom.xml'
+
+      - name: Upload SARIF results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+          category: 'Trivy Scan Results'
+
+  # Unit-Tests:
+  #   name: Run Unit Tests and coverage (11 minutes)
+  #   timeout-minutes: 20
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: ghcr.io/rossvideo/catena-cpp-toolchain:latest
+  #     options: --user root:root
+  #   env:
+  #     CMAKE_BUILD_TYPE: Debug
+  #     CONNECTIONS: gRPC;REST
+  #     BUILD_TARGET: ${{ github.workspace }}/build/cpp
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #       with:
+  #         submodules: 'recursive'
+
+  #     - name: Build (incremental, clean only if needed)
+  #       run: |
+  #         if [ ! -d ${BUILD_TARGET} ]; then
+  #           echo "Building OpenAPI"
+  #           cd ${GITHUB_WORKSPACE}/smpte
+  #           ./build-openapi.sh
+  #           echo "Done building OpenAPI"
+
+  #           mkdir -p ${BUILD_TARGET}
+  #           cmake -G Ninja \
+  #             -DBUILD_DOC=OFF \
+  #             -DBARE_EXAMPLES=ON \
+  #             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+  #             -DCONNECTIONS=${CONNECTIONS} \
+  #             -DCOVERAGE=ON \
+  #             -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
+  #             -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+  #             -DLOG_DIR=${HOME}/Catena/logs \
+  #             -B ${BUILD_TARGET} \
+  #             -S ${GITHUB_WORKSPACE}/sdks/cpp
+  #         fi
+  #         cd ${BUILD_TARGET}
+  #         ninja
+
+  #     - name: Run Tests
+  #       run: |
+  #         ctest --test-dir ${BUILD_TARGET} -R '^common\.' --output-junit /common_test_results.xml
+  #         ctest --test-dir ${BUILD_TARGET} -R '^gRPC\.' --output-junit /grpc_test_results.xml
+  #         ctest --test-dir ${BUILD_TARGET} -R '^REST\.' --output-junit /rest_test_results.xml
+
+  #     - name: Copy files
+  #       if: always()
+  #       run: |
+  #         if [ -f /common_test_results.xml ]; then
+  #           cp /common_test_results.xml common_test_results.xml
+  #           echo "------------COMMON"
+  #           cat common_test_results.xml
+  #         fi
+  #         if [ -f /grpc_test_results.xml ]; then
+  #           cp /grpc_test_results.xml grpc_test_results.xml
+  #           echo "------------gRPC"
+  #           cat grpc_test_results.xml
+  #         fi
+  #         if [ -f /rest_test_results.xml ]; then
+  #           cp /rest_test_results.xml rest_test_results.xml
+  #           echo "------------REST"
+  #           cat rest_test_results.xml
+  #         fi
+
+
+  #     - name: Publish Unit Test Results
+  #       uses: EnricoMi/publish-unit-test-result-action@v2
+  #       if: always()
+  #       with:
+  #         report_individual_runs: "true"
+  #         files: |
+  #           common_test_results.xml
+  #           grpc_test_results.xml
+  #           rest_test_results.xml
+  #         github_token: ${{ secrets.GITHUB_TOKEN }}
+
+
+  #     - name: Generate Coverage Report
+  #       run: |
+  #         gcovr \
+  #         --lcov=coverage.info \
+  #         --cobertura=coverage.xml \
+  #         --html=index.html \
+  #         --html-details
+
+  #     - name: Code Coverage Summary Report
+  #       id: coverage
+  #       uses: irongut/CodeCoverageSummary@v1.3.0
+  #       with:
+  #         filename: coverage.xml
+  #         badge: true
+  #         format: markdown
+  #         hide_complexity: true
+  #         output: both
+
+  #     - name: Upload coverage artifacts
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: coverage-report
+  #         path: |
+  #           index.html
+  #           index.css
+  #           coverage.xml
+  #           coverage.info
+  #         retention-days: 60
+
+  #     # Build PR comment body for coverage
+  #     - name: Build PR comment body (Coverage)
+  #       if: github.event_name == 'pull_request'
+  #       id: coverage_comment
+  #       run: |
+  #         echo '### 📈 Code Coverage Summary' > coverage-comment-body.md
+  #         cat code-coverage-results.md >> coverage-comment-body.md
+
+  #     - name: Find Unit Test Comment
+  #       if: github.event_name == 'pull_request'
+  #       uses: peter-evans/find-comment@v3
+  #       id: fc_unit
+  #       with:
+  #         issue-number: ${{ github.event.pull_request.number }}
+  #         comment-author: 'github-actions[bot]'
+
+  #     - name: Update PR comment with coverage results
+  #       if: steps.fc_unit.outputs.comment-id != '' && github.event_name == 'pull_request'
+  #       uses: peter-evans/create-or-update-comment@v4
+  #       with:
+  #         token: ${{ secrets.GITHUB_TOKEN }}
+  #         issue-number: ${{ github.event.pull_request.number }}
+  #         body-path: coverage-comment-body.md
+  #         comment-id: ${{ steps.fc_unit.outputs.comment-id }}
+  #         edit-mode: append
+
+  CodeQL:
+    name: CodeQL Analysis (15-30 minutes)
+    timeout-minutes: 35
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rossvideo/catena-go-toolchain:latest
+      options: --user root:root
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['go']
+
+    env:
+      CMAKE_BUILD_TYPE: ''
+      CONNECTIONS: REST
+      BUILD_TARGET: ${{ github.workspace }}/build/go
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          debug: true
+
+      - name: build
+        run: |
+          echo "Building OpenAPI"
+          cd ${GITHUB_WORKSPACE}/smpte
+          ./build-openapi.sh
+          echo "Done building OpenAPI"
+          mkdir -p ${BUILD_TARGET}
+          cd ${GITHUB_WORKSPACE}/sdks/go
+          git config --global --add safe.directory /__w/Catena/Catena
+          go install golang.org/x/tools/gopls@latest
+          go install github.com/go-delve/delve/cmd/dlv@latest
+          make
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+      - name: Upload error and fatal logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: error-logs
+          path: |
+            logs/*error*.log
+            logs/*fatal*.log
+          if-no-files-found: ignore
+          retention-days: 1

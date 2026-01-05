@@ -106,7 +106,7 @@ class GetParam : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      DEBUG_LOG << "GetParam::proceed[" << objectId_ << "]: "
+      VLOG(1) << "GetParam::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok;
     }

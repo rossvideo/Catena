@@ -44,7 +44,7 @@ ServiceImpl::ServiceImpl(const ServiceConfig& config)
       router_{Router::getInstance()},
       connectionQueue_{config.maxConnections} {
 
-    if (authorizationEnabled_) { DEBUG_LOG <<"Authorization enabled."; }
+    if (authorizationEnabled_) { LOG(INFO) <<"Authorization enabled."; }
     // Adding dms to slotMap.
     for (auto dm : config.dms) {
         if (dms_.contains(dm->slot())) {
@@ -147,7 +147,7 @@ void ServiceImpl::run() {
             {
                 std::lock_guard<std::mutex> lock(activeRequestMutex_);
                 activeRequests_ -= 1;
-                DEBUG_LOG<<"Active requests remaining: "<<activeRequests_;
+                VLOG(1) << "Active requests remaining: " << activeRequests_;
             }
         }).detach();
     }

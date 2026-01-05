@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the MultiSetValue.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/18
+ * @author jason.chen@rossvideo.com
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -50,11 +51,11 @@ class gRPCMultiSetValueTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("gRPCMultiSetValueTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("gRPCMultiSetValueTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     /*
@@ -143,7 +144,38 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_Normal) {
 }
 
 /*
- * TEST 3 - MultiSetValue with authz on and valid token.
+ * TEST 3 - MultiSetValue with null slot, should handle as a normal case.
+ */
+TEST_F(gRPCMultiSetValueTests, MultiSetValue_NullSlotCase) {
+    initPayload(41, {{"/test_oid_1", "test_value_1"},{"/test_oid_2", "test_value_2"}});
+    inVal_.clear_slot();
+    expRc_ = catena::exception_with_status("", catena::StatusCode::OK);
+    // Setting expectations
+    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](st2138::MultiSetValuePayload src, catena::exception_with_status &ans, const IAuthorizer &authz) {
+            // Checking that function gets correct inputs.
+            EXPECT_EQ(src.SerializeAsString(), inVal_.SerializeAsString());
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            // Setting the output status and returning true.
+            ans = catena::exception_with_status(expRc_.what(), expRc_.status);
+            return true;
+        }));
+    EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm0_, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](st2138::MultiSetValuePayload src, const IAuthorizer &authz) {
+            // Checking that function gets correct inputs.
+            EXPECT_EQ(src.SerializeAsString(), inVal_.SerializeAsString());
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            // Setting the output status and returning true.
+            return catena::exception_with_status(expRc_.what(), expRc_.status);
+        }));
+    EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC
+    testRPC();
+}
+
+/*
+ * TEST 4 - MultiSetValue with authz on and valid token.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_AuthzValid) {
     initPayload(0, {{"/test_oid_1", "test_value_1"},{"/test_oid_2", "test_value_2"}});
@@ -177,7 +209,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_AuthzValid) {
 }
 
 /*
- * TEST 4 - MultiSetValue with authz on and invalid token.
+ * TEST 5 - MultiSetValue with authz on and invalid token.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_AuthzInvalid) {
     expRc_ = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
@@ -194,7 +226,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_AuthzInvalid) {
 }
 
 /*
- * TEST 5 - MultiSetValue with authz on and invalid token.
+ * TEST 6 - MultiSetValue with authz on and invalid token.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_AuthzJWSNotFound) {
     expRc_ = catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
@@ -211,7 +243,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_AuthzJWSNotFound) {
 }
 
 /*
- * TEST 6 - No device in the specified slot.
+ * TEST 7 - No device in the specified slot.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrInvalidSlot) {
     initPayload(dms_.size(), {});
@@ -226,7 +258,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrInvalidSlot) {
 }
 
 /*
- * TEST 7 - dm.trySetValue returns a catena::Exception_With_Status.
+ * TEST 8 - dm.trySetValue returns a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryReturnCatena) {
     expRc_ = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
@@ -245,7 +277,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryReturnCatena) {
 }
 
 /*
- * TEST 8 - dm.trySetValue throws a catena::Exception_With_Status.
+ * TEST 9 - dm.trySetValue throws a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowCatena) {
     expRc_ = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
@@ -264,7 +296,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowCatena) {
 }
 
 /*
- * TEST 9 - dm.trySetValue throws a std::runtime_error.
+ * TEST 10 - dm.trySetValue throws a std::runtime_error.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowUnknown) {
     expRc_ = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
@@ -279,7 +311,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrTryThrowUnknown) {
 }
 
 /*
- * TEST 10 - dm.commitSetValue returns a catena::Exception_With_Status.
+ * TEST 11 - dm.commitSetValue returns a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitReturnCatena) {
     expRc_ = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
@@ -297,7 +329,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitReturnCatena) {
 }
 
 /*
- * TEST 11 - dm.commitSetValue throws a catena::Exception_With_Status.
+ * TEST 12 - dm.commitSetValue throws a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowCatena) {
     expRc_ = catena::exception_with_status("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
@@ -316,7 +348,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowCatena) {
 }
 
 /*
- * TEST 12 - dm.commitSetValue throws a std::runtime_error.
+ * TEST 13 - dm.commitSetValue throws a std::runtime_error.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
     expRc_ = catena::exception_with_status("unknown error", catena::StatusCode::UNKNOWN);
@@ -327,5 +359,20 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
     EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
+    testRPC();
+}
+
+/*
+ * TEST 14 - MulitSetValue with slot number out of valid range.
+ */
+TEST_F(gRPCMultiSetValueTests, MultiSetValue_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
+    initPayload(65536, {});
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC.
     testRPC();
 }

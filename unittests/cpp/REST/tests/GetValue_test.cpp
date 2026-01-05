@@ -31,9 +31,12 @@
 /**
  * @brief This file is for testing the GetValue.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/12
+ * @author jason.chen@rossvideo.com
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
+
+#include <SharedFlags.h>
 
 // Test helpers
 #include "RESTTest.h"
@@ -50,11 +53,11 @@ class RESTGetValueTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTGetValueTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("RESTGetValueTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
     
     RESTGetValueTests() : RESTEndpointTest() {
@@ -224,6 +227,21 @@ TEST_F(RESTGetValueTests, GetValue_ErrThrowUnknown) {
     // Setting expectations
     EXPECT_CALL(dm0_, getValue(fqoid_, testing::_, testing::_)).Times(1)
         .WillOnce(testing::Throw(0));
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 5 - Device slot is not in range.
+ */
+TEST_F(RESTGetValueTests, GetValue_SlotOutOfBounds) {
+    dms_[65536] = &dm0_;
+    
+    initPayload(65536, "/test_oid");
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Calling proceed and testing the output
     testCall();
 }

@@ -49,13 +49,13 @@ GetValue::GetValue(IServiceImpl *service, SlotMap& dms, bool ok) : CallData(serv
 
 // Manages gRPC command execution process using the state variable status.
 void GetValue::proceed( bool ok) {
-    DEBUG_LOG << "GetValue::proceed[" << objectId_ << "]: " << timeNow()
+    VLOG(1) << "GetValue::proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: "
                 << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        DEBUG_LOG << "GetValue[" << objectId_ << "] cancelled";
+        LOG(INFO) << "GetValue[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -86,6 +86,11 @@ void GetValue::proceed( bool ok) {
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             IDevice* dm = nullptr;
             try {
+                // Validate the slot range
+                if (req_.slot() < 0 || req_.slot() > 65535) {
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                }
+                
                 // Getting device at specified slot.
                 if (dms_.contains(req_.slot())) {
                     dm = dms_.at(req_.slot());
@@ -131,7 +136,7 @@ void GetValue::proceed( bool ok) {
          * ServiceImpl.
          */
         case CallStatus::kFinish:
-            DEBUG_LOG << "GetValue[" << objectId_ << "] finished";
+            LOG(INFO) << "GetValue[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

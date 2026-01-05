@@ -31,12 +31,14 @@
 /**
  * @brief This file is for testing the SocketWriter.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/12
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @date 25/11/03
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 // common
 #include <Logger.h>
+#include <SharedFlags.h>
 
 // Test helpers
 #include "RESTTest.h"
@@ -51,11 +53,11 @@ class RESTSocketWriterTests : public testing::Test, public RESTTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTSocketWriterTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("RESTSocketWriterTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
     
     RESTSocketWriterTests() : RESTTest(&serverSocket_, &clientSocket_) {
@@ -196,7 +198,6 @@ TEST_F(RESTSocketWriterTests, SocketWriter_BufferErrEnd) {
     EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
-
 /*
  * ============================================================================
  *                               SSEWriter tests
@@ -308,4 +309,47 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteErrEnd) {
 
     // Reading from clientSocket_ and checking the response.
     EXPECT_EQ(readResponse(), expectedSSEResponse(rc, msgs));
+}
+
+/* 
+ * TEST 6 - SocketWriter handles graceful shutdown when client disconnects.
+ * This test verifies that the bug fix properly handles socket write errors
+ * when the client disconnects unexpectedly. Tests that write errors don't
+ * cause crashes and are handled gracefully without throwing exceptions.
+ */
+TEST_F(RESTSocketWriterTests, GracefulShutdownOnClientDisconnect) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    st2138::Value msg1;
+    msg1.set_string_value("Test string 1");
+
+    // Initializing SocketWriter with serverSocket_ and writing first message.
+    SocketWriter writer(serverSocket_, origin_);
+    writer.sendResponse(rc, msg1);
+
+    // Reading first response to verify successful write.
+    std::string jsonBody1;
+    google::protobuf::util::JsonPrintOptions options;
+    auto status = google::protobuf::util::MessageToJsonString(msg1, &jsonBody1, options);
+    EXPECT_EQ(readResponse(), expectedResponse(rc, jsonBody1));
+
+    // Shutdown and close client socket to simulate unexpected client disconnect.
+    boost::system::error_code ec;
+    clientSocket_.shutdown(tcp::socket::shutdown_both, ec);
+    clientSocket_.close();
+
+    // Write to server socket after peer closure. Due to TCP buffering, the first write
+    // may succeed (data accepted into OS send buffer) before the peer closure is detected.
+    // Subsequent writes will eventually trigger the error when the OS attempts to flush
+    // the buffer. The error handling in sendResponse() will then close the server socket.
+    bool socketClosed = false;
+    for (int i = 0; i < 10; i++) {
+        st2138::Value msg;
+        msg.set_string_value("Test string " + std::to_string(i));
+        EXPECT_NO_THROW(writer.sendResponse(rc, msg));
+        if (!serverSocket_.is_open()) {
+            socketClosed = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(socketClosed) << "Socket should have been closed after detecting write error";
 }

@@ -105,7 +105,7 @@ class GetPopulatedSlots : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      DEBUG_LOG << "GetPopulatedSlots::proceed[" << objectId_ << "]: "
+      VLOG(1) << "GetPopulatedSlots::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok;
     }
@@ -118,6 +118,10 @@ class GetPopulatedSlots : public ICallData {
      * @brief The SocketWriter object for writing to socket_.
      */
     SocketWriter writer_;
+    /**
+     * @brief The ISocketReader object used to read the client's request.
+     */
+    ISocketReader& context_;
     /**
      * @brief A map of slots to ptrs to their corresponding device.
      */

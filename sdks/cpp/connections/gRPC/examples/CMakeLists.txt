@@ -34,5 +34,6 @@ else()
     add_subdirectory("audiodeck_yaml")
     add_subdirectory("use_commands")
     add_subdirectory("use_menus")
+    add_subdirectory("simple_dashboard_audiodeck")
     # ...add other examples as needed
 endif()

@@ -56,13 +56,13 @@ void MultiSetValue::create_(bool ok) {
 }
 
 void MultiSetValue::proceed(bool ok) { 
-    DEBUG_LOG << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
+    VLOG(1) << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: "
                 << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        DEBUG_LOG << typeName << "[" << objectId_ << "] cancelled";
+        LOG(INFO) << typeName << "[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
     
@@ -89,6 +89,11 @@ void MultiSetValue::proceed(bool ok) {
                 IDevice* dm = nullptr;
                 // Convert to MultiSetValuePayload if not already.
                 toMulti_();
+                // Validate the slot range
+                if (reqs_.slot() < 0 || reqs_.slot() > 65535) {
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                }
+                
                 // Getting device at specified slot.
                 if (dms_.contains(reqs_.slot())) {
                     dm = dms_.at(reqs_.slot());
@@ -116,7 +121,7 @@ void MultiSetValue::proceed(bool ok) {
                     if (dm->tryMultiSetValue(reqs_, rc, *authz)) {
                         rc = dm->commitMultiSetValue(reqs_, *authz);
                     } else { // debug log new
-                        DEBUG_LOG << "MultiSetValue: tryMultiSetValue failed for slot " << reqs_.slot()
+                        LOG(ERROR) << "MultiSetValue: tryMultiSetValue failed for slot " << reqs_.slot()
                                   << " status=" << static_cast<int>(rc.status)
                                   << " msg=\"" << rc.what() << "\"";
                     }
@@ -141,7 +146,7 @@ void MultiSetValue::proceed(bool ok) {
          * ServiceImpl.
          */
         case CallStatus::kFinish:
-            DEBUG_LOG << typeName << "[" << objectId_ << "] finished";
+            LOG(INFO) << typeName << "[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

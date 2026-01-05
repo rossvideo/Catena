@@ -111,10 +111,10 @@ void AssetRequest::extractPayload(const std::string& filePath) {
 
     // Decompress if needed
     if (context_.fields("compression") == "GZIP") {
-        DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] decompressing GZIP";
+        VLOG(1) << "AssetRequest[" + std::to_string(objectId_) + "] decompressing GZIP";
         gzip_decompress(file_data);
     } else if (context_.fields("compression") == "DEFLATE") {
-        DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] decompressing DEFLATE";
+        VLOG(1) << "AssetRequest[" + std::to_string(objectId_) + "] decompressing DEFLATE";
         deflate_decompress(file_data);
     }
 
@@ -138,6 +138,11 @@ void AssetRequest::proceed() {
 
     try {
         IDevice* dm = nullptr;
+        // Validating slot number.
+        if (context_.slot() < 0 || context_.slot() > 65535) {
+            throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+        }
+
         // Getting device at specified slot.
         if (dms_.contains(context_.slot())) {
             dm = dms_.at(context_.slot());
@@ -159,7 +164,7 @@ void AssetRequest::proceed() {
         // GET/asset
         else if (context_.method() == Method_GET) {
             // Locking device and parsing object data.
-            DEBUG_LOG << "sending asset: " << context_.fqoid();
+            VLOG(1) << "sending asset: " << context_.fqoid();
             std::string path = context_.EOPath();
             path.append(context_.fqoid());
 
@@ -176,7 +181,7 @@ void AssetRequest::proceed() {
             // Check if the file exists
             if (!std::filesystem::exists(path)) {
                 std::string notFound = "AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fqoid() + " not found";
-                DEBUG_LOG << notFound;
+                LOG(ERROR) << notFound;
                 throw catena::exception_with_status(notFound, catena::StatusCode::NOT_FOUND);
             }
 
@@ -190,17 +195,17 @@ void AssetRequest::proceed() {
 
             // Set the payload encoding and compress the data accordingly
             if (context_.fields("compression") == "GZIP") {
-                DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] using GZIP compression";
+                VLOG(1) << "AssetRequest[" + std::to_string(objectId_) + "] using GZIP compression";
                 obj.mutable_payload()->set_payload_encoding(st2138::DataPayload::GZIP);
                 gzip_compress(file_data);
 
             } else if (context_.fields("compression") == "DEFLATE") {
-                DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] using DEFLATE compression";
+                VLOG(1) << "AssetRequest[" + std::to_string(objectId_) + "] using DEFLATE compression";
                 obj.mutable_payload()->set_payload_encoding(st2138::DataPayload::DEFLATE);
                 deflate_compress(file_data);
 
             } else {
-                DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] using UNCOMPRESSED compression";
+                VLOG(1) << "AssetRequest[" + std::to_string(objectId_) + "] using UNCOMPRESSED compression";
                 obj.mutable_payload()->set_payload_encoding(st2138::DataPayload::UNCOMPRESSED);
             }
 
@@ -236,12 +241,13 @@ void AssetRequest::proceed() {
             obj.mutable_payload()->set_digest(digest, digest_len);
 
             dm->getDownloadAssetRequest().emit(context_.fqoid(), authz);
-        
+            
+            VLOG(1) << "AssetRequest[" + std::to_string(objectId_) + "] get file: " + context_.fqoid();
         }
 
         // POST/asset
         else if (context_.method() == Method_POST) {
-            DEBUG_LOG << "receiving asset: " << context_.fqoid();
+            VLOG(1) << "receiving asset: " << context_.fqoid();
 
             //Check if the user has write authorization in any scope other than monitoring
             //either authz have to be disabled or have write access to any scope other than monitor
@@ -264,13 +270,13 @@ void AssetRequest::proceed() {
             // Placeholder till BL hook is implemented
             if (std::filesystem::exists(filePath)) {
                 std::string found = "file: " + filePath + " already exists";
-                DEBUG_LOG << found;
+                VLOG(1) << found;
                 throw catena::exception_with_status(found, catena::StatusCode::ALREADY_EXISTS);
             }
         
             extractPayload(filePath);
         
-            DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] wrote file: " + filePath;
+            VLOG(1) << "AssetRequest[" + std::to_string(objectId_) + "] wrote file: " + filePath;
         
             // Set result status to OK
             rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
@@ -278,7 +284,7 @@ void AssetRequest::proceed() {
         
         // PUT/asset
         else if (context_.method() == Method_PUT) {
-            DEBUG_LOG << "receiving asset: " << context_.fqoid();
+            VLOG(1) << "receiving asset: " << context_.fqoid();
 
             //Check if the user has write authorization in any scope other than monitoring
             //either authz have to be disabled or have write access to any scope other than monitor
@@ -301,13 +307,13 @@ void AssetRequest::proceed() {
             // Placeholder till BL hook is implemented
             if (!std::filesystem::exists(filePath)) {
                 std::string notFound = "file: " + filePath + " not found";
-                DEBUG_LOG << notFound;
+                LOG(ERROR) << notFound;
                 throw catena::exception_with_status(notFound, catena::StatusCode::NOT_FOUND);
             }
         
             extractPayload(filePath);
         
-            DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] wrote file: " + filePath;
+            VLOG(1) << "AssetRequest[" + std::to_string(objectId_) + "] wrote file: " + filePath;
         
             // Set result status to OK
             rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
@@ -315,7 +321,7 @@ void AssetRequest::proceed() {
         
         // DELETE/asset
         else if (context_.method() == Method_DELETE) {
-            DEBUG_LOG << "deleting asset: " << context_.fqoid();
+            VLOG(1) << "deleting asset: " << context_.fqoid();
 
             //Check if the user has write authorization in any scope other than monitoring
             //either authz have to be disabled or have write access to any scope other than monitor
@@ -337,17 +343,17 @@ void AssetRequest::proceed() {
             // Check if the file exists
             if (!std::filesystem::exists(filePath)) {
                 std::string notFound = "file: " + filePath + " not found";
-                DEBUG_LOG << notFound;
+                LOG(ERROR) << notFound;
                 throw catena::exception_with_status(notFound, catena::StatusCode::NOT_FOUND);
             }
 
             // Delete the file
             if (std::filesystem::remove(filePath)) {
-                DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] deleted file: " + filePath;
+                VLOG(1) << "AssetRequest[" + std::to_string(objectId_) + "] deleted file: " + filePath;
                 rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
             } else {
                 std::string error = "AssetRequest[" + std::to_string(objectId_) + "] failed to delete file: " + filePath;
-                DEBUG_LOG << error;
+                LOG(ERROR) << error;
                 throw catena::exception_with_status(error, catena::StatusCode::INTERNAL);
             }
         }
@@ -376,5 +382,6 @@ void AssetRequest::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    DEBUG_LOG << "AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fqoid() +" finished";
+    LOG(INFO) << RESTMethodMap().getForwardMap().at(context_.method())
+            << " AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fqoid() +" finished";
 }

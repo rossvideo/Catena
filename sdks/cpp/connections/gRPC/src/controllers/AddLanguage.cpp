@@ -44,13 +44,13 @@ AddLanguage::AddLanguage(IServiceImpl *service, SlotMap& dms, bool ok)
 }
 
 void AddLanguage::proceed(bool ok) { 
-    DEBUG_LOG << "AddLanguage::proceed[" << objectId_ << "]: " << timeNow()
+    VLOG(1) << "AddLanguage::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        DEBUG_LOG << "AddLanguage[" << objectId_ << "] cancelled";
+        LOG(INFO) << "AddLanguage[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
     
@@ -75,6 +75,10 @@ void AddLanguage::proceed(bool ok) {
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             IDevice* dm = nullptr;
             try {
+                // Check if slot is in valid range.
+                if (req_.slot() > 65535 || req_.slot() < 0) {
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                }
                 // Getting device at specified slot.
                 if (dms_.contains(req_.slot())) {
                     dm = dms_.at(req_.slot());
@@ -119,7 +123,7 @@ void AddLanguage::proceed(bool ok) {
          * ServiceImpl.
          */
         case CallStatus::kFinish:
-            DEBUG_LOG << "AddLanguage[" << objectId_ << "] finished";
+            LOG(INFO) << "AddLanguage[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

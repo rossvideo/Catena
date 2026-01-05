@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the ExecuteCommand.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/18
+ * @author jason.chen@rossvideo.com
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -53,11 +54,11 @@ class gRPCExecuteCommandTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("gRPCExecuteCommandTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("gRPCExecuteCommandTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     /*
@@ -381,6 +382,42 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ErrInvalidSlot) {
 }
 
 /*
+ * TEST 10.5 - ExecuteCommand with null slot, should handle as a normal case.
+ */
+TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NullSlotCase) {
+    initPayload(21, "test_command", "test_value", true);
+    expResponse("test_response_1");
+    expResponse("test_response_2");
+    expResponse("test_response_3");
+    inVal_.clear_slot();
+    // Setting expectations
+    EXPECT_CALL(dm0_, getCommand(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const std::string& oid, catena::exception_with_status& status, const IAuthorizer& authz) {
+            // Making sure the correct values were passed in.
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            status = catena::exception_with_status(expRc_.what(), expRc_.status);
+            return std::move(mockCommand_);
+        }));
+    EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(*mockCommand_, executeCommand(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const st2138::Value& value, const bool respond, catena::exception_with_status& status, const IAuthorizer& authz) {
+            // Making sure the correct values were passed in.
+            EXPECT_EQ(value.SerializeAsString(), inVal_.value().SerializeAsString());
+            return std::move(mockResponder_);
+        }));
+    EXPECT_CALL(*mockResponder_, getNext()).Times(3)
+        .WillOnce(::testing::Return(expVals_[0]))
+        .WillOnce(::testing::Return(expVals_[1]))
+        .WillOnce(::testing::Return(expVals_[2]));
+    EXPECT_CALL(*mockResponder_, hasMore()).Times(3)
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(false));
+    // Sending the RPC
+    testRPC();
+}
+
+/*
  * TEST 11 - getCommand does not find a command.
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
@@ -550,6 +587,20 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
         }));
     EXPECT_CALL(*mockResponder_, getNext()).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
+    // Sending the RPC
+    testRPC();
+}
+
+/* 
+ * TEST 20 - ExecuteCommand with slot number out of valid range.
+ */
+TEST_F(gRPCExecuteCommandTests, ExecuteCommand_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    initPayload(65536, "test_command", "test_value", false);
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations - no device methods should be called
+    EXPECT_CALL(dm0_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getCommand(::testing::_, ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
 }

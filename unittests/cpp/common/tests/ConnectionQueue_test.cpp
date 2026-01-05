@@ -43,6 +43,7 @@
 
 // common
 #include <Logger.h>
+#include "SharedFlags.h"
 
 using namespace catena::common;
 
@@ -51,11 +52,11 @@ class ConnectionQueueTest : public testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("ConnectionQueueTest");
+      absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+      Logger::init("ConnectionQueueTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     // Helper class that provides access to connectionQueue_ vector

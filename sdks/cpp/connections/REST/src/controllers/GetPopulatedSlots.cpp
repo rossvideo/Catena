@@ -7,7 +7,7 @@ using catena::REST::GetPopulatedSlots;
 int GetPopulatedSlots::objectCounter_ = 0;
 
 GetPopulatedSlots::GetPopulatedSlots(tcp::socket& socket, ISocketReader& context, SlotMap& dms) :
-    socket_{socket}, writer_{socket, context.origin()}, dms_{dms} {
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dms_{dms} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
@@ -27,5 +27,6 @@ void GetPopulatedSlots::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    DEBUG_LOG << "GetPopulatedSlots[" << objectId_ << "] finished\n";
+    LOG(INFO) << RESTMethodMap().getForwardMap().at(context_.method())
+            << "GetPopulatedSlots[" << objectId_ << "] finished\n";
 }

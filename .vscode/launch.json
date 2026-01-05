@@ -2,6 +2,16 @@
     "version": "0.2.0",
     "configurations": [   
       {
+        "type": "go",
+        "name": "Debug Go example",
+        "request": "launch",
+        "mode": "debug",
+        "program": "${workspaceFolder}/sdks/go/examples/${input:pickGoService}",
+        "cwd": "${workspaceFolder}",
+        "args": [],
+        "env": {}
+      },
+      {
         "type": "cppdbg",
         "name": "Debug api_only with lldb",
         "request": "launch",
@@ -72,7 +82,7 @@
         "type": "cppdbg",
         "request": "launch",
         "program": "${workspaceFolder}/${env:BUILD_TARGET}/${input:pickExample}", // Path to the full_service executable
-        "args": [], // Any command-line arguments go here
+        "args": ["--log_dir", "${workspaceFolder}/logs"], // Any command-line arguments go here
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
         "environment": [],
@@ -93,7 +103,8 @@
         "program": "${workspaceFolder}/${env:BUILD_TARGET}/connections/gRPC/examples/${input:pickService}/${input:pickService}", // Path to the full_service executable
         "args": ["--static_root", "${workspaceFolder}/sdks/cpp/connections/gRPC/examples/${input:pickService}/static", 
                 //  "--secure_comms", "tls",
-                "--authz"
+                "--authz",
+                "--log_dir", "${workspaceFolder}/logs"
         ], // Any command-line arguments go here
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}/${env:BUILD_TARGET}",
@@ -157,6 +168,7 @@
         "--static_root", "${workspaceFolder}/sdks/cpp/connections/REST/examples/${input:pickRestService}/static",
         //  "--secure_comms", "tls", // Unsure if this is functional
         "--authz",
+        "--log_dir", "${workspaceFolder}/logs",
         "--port=6254"
       ],
       "stopAtEntry": false,
@@ -177,23 +189,43 @@
   ],
   "inputs": [
     {
+      "id": "pickGoService",
+      "description": "Select Go program to debug",
+      "type": "pickString",
+      "options": [
+        "basic_device_bl",
+        "basic_device_v2"
+      ],
+      "default": "basic_device_bl"
+    },
+    {
       "id": "pickDeviceModel",
       "description": "Select device model to generate code for",
       "type": "pickString",
-      "options": ["common/examples/start_here/device.start_here.json", 
-                  "common/examples/use_structs/device.use_structs.json",
-                  "common/examples/use_templates/device.use_templates.json",
+      "options": ["common/examples/hello_world/device.hello_world.json",
+                  "common/examples/import_params/device.import_params.json",
                   "common/examples/use_constraints/device.use_constraints.json",
                   "common/examples/use_struct_arrays/device.AudioDeck.json",
-                  "common/examples/import_params/device.import_params.json",
+                  "common/examples/use_structs/device.use_structs.json",
+                  "common/examples/use_templates/device.use_templates.json",
                   "common/examples/use_variants/device.use_variants.json",
                   "connections/gRPC/examples/external_object_request/device.external_object_request.json",
                   "connections/gRPC/examples/one_of_everything/device.one_of_everything.yaml",
                   "connections/gRPC/examples/status_update/device.status_update.json",
-                  "connections/gRPC/examples/structs_with_authz/device.AudioDeck.json",
-                  "connections/gRPC/examples/structs_with_authz_yaml/device.AudioDeck.yaml",
                   "connections/gRPC/examples/use_commands/device.video_player.json",
-                  "connections/gRPC/examples/use_menus/device.use_menus.json"
+                  "connections/gRPC/examples/use_menus/device.use_menus.json",
+                  "connections/gRPC/examples/audiodeck/device.AudioDeck.json",
+                  "connections/gRPC/examples/audiodeck_yaml/device.AudioDeck.yaml",
+                  "connections/gRPC/examples/simple_dashboard_audiodeck/device.simple_dashboard_audiodeck.json",
+                  "connections/REST/examples/asset_request_REST/device.asset_request_REST.json",
+                  "connections/REST/examples/audiodeck_JSON_REST/device.audiodeck.json",
+                  "connections/REST/examples/audiodeck_REST/device.audiodeck.yaml",
+                  "connections/REST/examples/discovery_REST/device.structs_with_authz.json",
+                  "connections/REST/examples/one_of_everything_REST/device.one_of_everything.yaml",
+                  "connections/REST/examples/status_update_JSON_REST/device.status_update.json",
+                  "connections/REST/examples/status_update_REST/device.status_update.yaml",
+                  "connections/REST/examples/use_commands_REST/device.video_player.yaml",
+                  "connections/REST/examples/use_menus_REST/device.use_menus.yaml"
                 ],
       "default": "common/examples/start_here/device.start_here.json"
     },
@@ -206,7 +238,8 @@
                   "structs_with_authz",
                   "structs_with_authz_yaml",
                   "use_commands",
-                  "one_of_everything"
+                  "one_of_everything",
+                  "simple_dashboard_audiodeck"
                 ],
       "default": "status_update"
     },
@@ -251,11 +284,15 @@
         "unittests/common/common_ParamVisitor_test",
         "unittests/common/common_Heartbeat_test",
         "unittests/common/common_NmosNode_test",
+        "unittests/common/common_Logger_test",
+        "unittests/common/common_GenericFactory_test",
+        "unittests/common/common_EnumDecorator_test",
         "unittests/gRPC/gRPC_ParamInfoRequest_test",
         "unittests/gRPC/gRPC_UpdateSubscriptions_test",
         "unittests/gRPC/gRPC_DeviceRequest_test",
         "unittests/gRPC/gRPC_GetPopulatedSlots_test",
         "unittests/gRPC/gRPC_GetParam_test",
+        "unittests/gRPC/gRPC_ServiceCredentials_test",
         "unittests/gRPC/gRPC_LanguagePackRequest_test",
         "unittests/gRPC/gRPC_AddLanguage_test",
         "unittests/gRPC/gRPC_ServiceImpl_test",

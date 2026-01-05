@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the GetValue.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/18
+ * @author jason.chen@rossvideo.com
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -50,11 +51,11 @@ class gRPCGetValueTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("gRPCGetValueTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("gRPCGetValueTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     /*
@@ -128,7 +129,27 @@ TEST_F(gRPCGetValueTests, GetValue_Normal) {
 }
 
 /*
- * TEST 3 - GetValue with authz on and valid token.
+ * TEST 3 - GetValue with null slot, should handle as a normal case.
+ */
+TEST_F(gRPCGetValueTests, GetValue_NullSlotCase) {
+    initPayload(420, "/test_oid");
+    inVal_.clear_slot();
+    expVal_.set_string_value("test_value");
+    // Setting expectations
+    EXPECT_CALL(dm0_, getValue(inVal_.oid(), ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this](const std::string& jptr, st2138::Value& value, const IAuthorizer& authz) {
+            // Checking that function gets correct inputs.
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            value.CopyFrom(expVal_);
+            return catena::exception_with_status(expRc_.what(), expRc_.status);
+        }));
+    EXPECT_CALL(dm1_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC.
+    testRPC();
+}
+
+/*
+ * TEST 4 - GetValue with authz on and valid token.
  */
 TEST_F(gRPCGetValueTests, GetValue_AuthzValid) {
     initPayload(0, "/test_oid");
@@ -151,7 +172,7 @@ TEST_F(gRPCGetValueTests, GetValue_AuthzValid) {
 }
 
 /*
- * TEST 4 - GetValue with authz on and invalid token.
+ * TEST 5 - GetValue with authz on and invalid token.
  */
 TEST_F(gRPCGetValueTests, GetValue_AuthzInvalid) {
     expRc_ = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
@@ -166,7 +187,7 @@ TEST_F(gRPCGetValueTests, GetValue_AuthzInvalid) {
 }
 
 /*
- * TEST 5 - GetValue with authz on and invalid token.
+ * TEST 6 - GetValue with authz on and invalid token.
  */
 TEST_F(gRPCGetValueTests, GetValue_AuthzJWSNotFound) {
     expRc_ = catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
@@ -182,7 +203,7 @@ TEST_F(gRPCGetValueTests, GetValue_AuthzJWSNotFound) {
 }
 
 /*
- * TEST 6 - No device in the specified slot.
+ * TEST 7 - No device in the specified slot.
  */
 TEST_F(gRPCGetValueTests, GetValue_ErrInvalidSlot) {
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
@@ -194,9 +215,8 @@ TEST_F(gRPCGetValueTests, GetValue_ErrInvalidSlot) {
     testRPC();
 }
 
-
 /*
- * TEST 7 - dm.getValue() returns a catena::exception_with_status.
+ * TEST 8 - dm.getValue() returns a catena::exception_with_status.
  */
 TEST_F(gRPCGetValueTests, GetValue_ErrReturnCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -212,7 +232,7 @@ TEST_F(gRPCGetValueTests, GetValue_ErrReturnCatena) {
 }
 
 /*
- * TEST 8 - dm.getValue() throws a catena::exception_with_status.
+ * TEST 9 - dm.getValue() throws a catena::exception_with_status.
  */
 TEST_F(gRPCGetValueTests, GetValue_ErrThrowCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -229,7 +249,7 @@ TEST_F(gRPCGetValueTests, GetValue_ErrThrowCatena) {
 }
 
 /*
- * TEST 9 - dm.getValue() throws a std::runtime_exception.
+ * TEST 10 - dm.getValue() throws a std::runtime_exception.
  */
 TEST_F(gRPCGetValueTests, GetValue_ErrThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -238,6 +258,21 @@ TEST_F(gRPCGetValueTests, GetValue_ErrThrowUnknown) {
     EXPECT_CALL(dm0_, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
     EXPECT_CALL(dm1_, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC.
+    testRPC();
+}
+
+/*
+ * TEST 11 - GetValue with slot number out of valid range.
+ */
+TEST_F(gRPCGetValueTests, GetValue_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
+    initPayload(65536, "/test_oid");
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getValue(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getValue(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }

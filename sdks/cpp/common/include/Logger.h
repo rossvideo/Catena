@@ -38,71 +38,69 @@
  * @author Christian Twarog (christian.twarog@rossvideo.com)
  */
 
-#include <glog/logging.h>
-
+#include "absl/log/log.h"
+#include "absl/log/log_sink.h"
+#include "absl/log/log_sink_registry.h"
+#include "absl/log/log_entry.h"
+#include "absl/log/check.h"
+#include "absl/log/initialize.h"
+#include "absl/log/globals.h"
+#include "absl/flags/usage.h"
+#include <mutex>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <filesystem>
 
-#ifdef NDEBUG
-  // Release build: only log to file
-  #define DEBUG_LOG LOG(INFO)
-#else
-  #define DEBUG_LOG Logger()
-#endif
+/**
+ * @brief A log sink that writes log messages to a specified file.
+ */
+class FileLogSink : public absl::LogSink {
+public:
+  explicit FileLogSink(const std::string& filename) : log_file_(filename, std::ios_base::app) {
+    if (!log_file_.is_open()) {
+      std::cerr << "Error opening log file: " << filename << std::endl;
+    }
+  }
+
+  void Send(const absl::LogEntry& entry) override {
+    if (log_file_.is_open()) {
+      log_file_ << entry.text_message_with_prefix_and_newline();
+      log_file_.flush(); // Ensure immediate write to file
+    }
+  }
+
+private:
+  std::ofstream log_file_;
+};
 
 /**
  * @brief Logger class for logging messages to both console and file.
  */
 class Logger {
 public:
-  Logger() = default;
-
-  template <typename T>
-  Logger& operator<<(const T& value) {
-    stream_ << value;
-    return *this;
-  }
-
-  static void StartLogging(const std::string& name) {
-    FLAGS_logtostderr = false;          // Keep logging to files
-    FLAGS_log_dir = GLOG_LOGGING_DIR;
-    
-    // Store the name in a static variable to ensure it stays alive
-    // for the lifetime of the program, since glog stores the pointer
-    static std::string program_name;
-    program_name = name;
-    google::InitGoogleLogging(program_name.c_str());
-    std::cout << "[       ] Program output gets sent to " << GLOG_LOGGING_DIR << std::endl;
-  }
-
-  static void StartLogging(int argc, char** argv) {
-    std::string name = "no_name";
-    for (int i = 1; i < argc; ++i) {
-      if (std::string(argv[i]) == "--silent") {
-        FLAGS_minloglevel = 2;
-      }
-    }
-
-    if (argc >= 1) {
-      // Extract just the basename from argv[0] to avoid path separators in log filename
-      std::filesystem::path execPath(argv[0]);
-      name = execPath.filename().string();
-    }
-
-    StartLogging(name);
-  }
+  /**
+  * @brief Initialize the logger.
+  * @param appName The name of the application.
+  */
+  static void init(const std::string& appName);
 
   ~Logger() {
-    std::string output = stream_.str();
-
-    // Output to stdout
-    std::cout << output << std::endl;
-
-    // Output to glog file
-    LOG(INFO) << output;
+    if (fileLogSink_) {
+      absl::RemoveLogSink(fileLogSink_.get());
+    }
   }
 
 private:
+  static Logger& instance() {
+    static Logger logger;
+    return logger;
+  }
+
+  Logger() = default;
+  Logger(const Logger&) = delete;
+  Logger& operator=(const Logger&) = delete;
+
   std::ostringstream stream_;
+  std::unique_ptr<FileLogSink> fileLogSink_ = nullptr;
 };

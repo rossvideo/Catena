@@ -49,13 +49,13 @@ GetPopulatedSlots::GetPopulatedSlots(IServiceImpl *service, SlotMap& dms, bool o
 
 // Manages gRPC command execution process using the state variable status.
 void GetPopulatedSlots::proceed( bool ok) {
-    DEBUG_LOG << "GetPopulatedSlots::proceed[" << objectId_ << "]: "
+    VLOG(1) << "GetPopulatedSlots::proceed[" << objectId_ << "]: "
               << timeNow() << " status: " << static_cast<int>(status_)
               << ", ok: " << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        DEBUG_LOG << "GetPopulatedSlots[" << objectId_ << "] cancelled";
+        LOG(INFO) << "GetPopulatedSlots[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -93,7 +93,7 @@ void GetPopulatedSlots::proceed( bool ok) {
          * ServiceImpl.
          */
         case CallStatus::kFinish:
-            DEBUG_LOG << "GetPopulatedSlots[" << objectId_ << "] finished";
+            LOG(INFO) << "GetPopulatedSlots[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
         /*

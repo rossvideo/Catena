@@ -36,6 +36,7 @@
 
 #include <rpc/Heartbeat.h>
 #include <Logger.h>
+#include "SharedFlags.h"
 
 #include <gtest/gtest.h>
 #include <atomic>
@@ -51,11 +52,11 @@ class HeartbeatTest : public ::testing::Test {
     
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("HeartbeatTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("HeartbeatTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     void SetUp() override {

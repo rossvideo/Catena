@@ -61,6 +61,10 @@ void ParamInfoRequest::proceed() {
         IDevice* dm = nullptr;
         // Get recursive from query parameters - presence alone means true
         recursive_ = context_.hasField("recursive");
+        // Validating slot number.
+        if (context_.slot() < 0 || context_.slot() > 65535) {
+            throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+        }
         // Getting device at specified slot.
         if (dms_.contains(context_.slot())) {
             dm = dms_.at(context_.slot());
@@ -190,7 +194,8 @@ void ParamInfoRequest::proceed() {
     
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    DEBUG_LOG << "ParamInfoRequest[" << objectId_ << "] finished\n";
+    LOG(INFO) << RESTMethodMap().getForwardMap().at(context_.method())
+            << "ParamInfoRequest[" << objectId_ << "] finished\n";
 }
 
 // Helper method to add a parameter to the responses

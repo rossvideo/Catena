@@ -21,6 +21,7 @@ set(GRPC_TEST_FILES
     ListLanguages_test.cpp
     MultiSetValue_test.cpp
     ParamInfoRequest_test.cpp
+    ServiceCredentials_test.cpp
     ServiceImpl_test.cpp
     SetValue_test.cpp
     UpdateSubscriptions_test.cpp
@@ -35,7 +36,10 @@ foreach(test_file ${GRPC_TEST_FILES})
         catena_connections_grpc
         pthread
         ${GTEST_BOTH_LIBRARIES}
-        glog::glog
+        absl::log
+        absl::log_globals
+        absl::log_initialize
+        absl::log_severity
         GTest::GTest
         GTest::Main
         GTest::gmock

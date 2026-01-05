@@ -31,9 +31,12 @@
 /**
  * @brief This file is for testing the LanguagePack.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/12
+ * @author jason.chen@rossvideo.com
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
+
+#include <SharedFlags.h>
 
 // Test helpers
 #include "RESTTest.h"
@@ -52,11 +55,11 @@ class RESTLanguagePackTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTLanguagePackTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("RESTLanguagePackTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
     
     RESTLanguagePackTests() : RESTEndpointTest() {
@@ -245,6 +248,28 @@ TEST_F(RESTLanguagePackTests, LanguagePack_GETErrThrowUnknown) {
 }
 
 /*
+ * TEST 1.6 - GET LanguagePack no device specified in slot.
+ */
+TEST_F(RESTLanguagePackTests, LanguagePack_GETInvalidSlot) {
+    expRc_ = catena::exception_with_status("No device specified in slot", catena::StatusCode::NOT_FOUND);
+    initPayload(2, "tl");
+    method_ = Method_GET;
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 1.7 - GET LanguagePack slot is not in valid range.
+ */
+TEST_F(RESTLanguagePackTests, LanguagePack_GETSlotOutOfRange) {
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    initPayload(65536, "tl");
+    method_ = Method_GET;
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
  * ============================================================================
  *                              POST LanguagePack tests
  * ============================================================================
@@ -396,6 +421,28 @@ TEST_F(RESTLanguagePackTests, LanguagePack_POSTErrThrowUnknown) {
     EXPECT_CALL(dm0_, hasLanguage(language_)).Times(1).WillOnce(testing::Return(method_ == Method_PUT));
     EXPECT_CALL(dm0_, addLanguage(testing::_, testing::_)).Times(1)
         .WillOnce(testing::Throw(0));
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 2.10 - POST LanguagePack no device specified in slot.
+ */
+TEST_F(RESTLanguagePackTests, LanguagePack_POSTInvalidSlot) {
+    expRc_ = catena::exception_with_status("No device specified in slot", catena::StatusCode::NOT_FOUND);
+    initPayload(2, "tl");
+    method_ = Method_POST;
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 2.11 - POST LanguagePack slot is not in valid range.
+ */
+TEST_F(RESTLanguagePackTests, LanguagePack_POSTSlotOutOfRange) {
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    initPayload(65536, "tl");
+    method_ = Method_POST;
     // Calling proceed and testing the output
     testCall();
 }
@@ -557,6 +604,28 @@ TEST_F(RESTLanguagePackTests, LanguagePack_PUTErrThrowUnknown) {
 }
 
 /*
+ * TEST 3.10 - PUT LanguagePack no device specified in slot.
+ */
+TEST_F(RESTLanguagePackTests, LanguagePack_PUTInvalidSlot) {
+    expRc_ = catena::exception_with_status("No device specified in slot", catena::StatusCode::NOT_FOUND);
+    initPayload(2, "tl");
+    method_ = Method_PUT;
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 3.11 - PUT LanguagePack slot is not in valid range.
+ */
+TEST_F(RESTLanguagePackTests, LanguagePack_PUTSlotOutOfRange) {
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    initPayload(65536, "tl");
+    method_ = Method_PUT;
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
  * ============================================================================
  *                              DELETE LanguagePack tests
  * ============================================================================
@@ -666,6 +735,29 @@ TEST_F(RESTLanguagePackTests, LanguagePack_DELETEErrThrowUnknown) {
     // Setting expectations
     EXPECT_CALL(dm0_, removeLanguage(language_, testing::_)).Times(1)
         .WillOnce(testing::Throw(0));
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 4.7 - DELETE LanguagePack no device specified in slot.
+ */
+TEST_F(RESTLanguagePackTests, LanguagePack_DELETEInvalidSlot) {
+    expRc_ = catena::exception_with_status("No device specified in slot", catena::StatusCode::NOT_FOUND);
+    initPayload(2, "tl");
+    method_ = Method_DELETE;
+    // Calling proceed and testing the output
+    testCall();
+}
+
+
+/*
+ * TEST 4.8 - DELETE LanguagePack slot is not in valid range.
+ */
+TEST_F(RESTLanguagePackTests, LanguagePack_DELETESlotOutOfRange) {
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    initPayload(65536, "tl");
+    method_ = Method_DELETE;
     // Calling proceed and testing the output
     testCall();
 }

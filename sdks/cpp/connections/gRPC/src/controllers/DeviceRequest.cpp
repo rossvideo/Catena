@@ -53,13 +53,13 @@ DeviceRequest::DeviceRequest(IServiceImpl *service, SlotMap& dms, bool ok)
  * handling errors and responses accordingly 
  */
 void DeviceRequest::proceed(bool ok) {
-    DEBUG_LOG << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
+    VLOG(1) << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok;
     
     // If the process is cancelled, finish the process
     if (!ok) {
-        DEBUG_LOG << "DeviceRequest[" << objectId_ << "] cancelled";
+        LOG(INFO) << "DeviceRequest[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
     
@@ -82,7 +82,10 @@ void DeviceRequest::proceed(bool ok) {
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             try {
                 bool shallowCopy = true; // controls whether shallow copy or deep copy is used
-
+                // Validate if slot range is correct.
+                if (req_.slot() > 65535 || req_.slot() < 0) {
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                }
                 // Getting device at specified slot.
                 if (dms_.contains(req_.slot())) {
                     dm_ = dms_.at(req_.slot());
@@ -184,7 +187,7 @@ void DeviceRequest::proceed(bool ok) {
          * the process
          */
         case CallStatus::kFinish:
-            DEBUG_LOG << "DeviceRequest[" << objectId_ << "] finished";
+            LOG(INFO) << "DeviceRequest[" << objectId_ << "] finished";
             service_->deregisterItem(this);
             break;
 

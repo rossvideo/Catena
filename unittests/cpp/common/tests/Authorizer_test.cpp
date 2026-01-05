@@ -41,6 +41,7 @@
 #include "Enums.h"
 #include "CommonTestHelpers.h"
 #include <Logger.h>
+#include "SharedFlags.h"
 
 // gtest
 #include <gtest/gtest.h>
@@ -71,11 +72,11 @@ class AuthorizationTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("AuthorizationTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("AuthorizationTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 };
 

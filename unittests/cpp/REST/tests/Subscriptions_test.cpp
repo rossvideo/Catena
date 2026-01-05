@@ -31,9 +31,13 @@
 /**
  * @brief This file is for testing the Subscriptions.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/16
+ * @author jason.chen@rossvideo.com
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
+
+
+#include <SharedFlags.h>
 
 // Test helpers
 #include "RESTTest.h"
@@ -52,11 +56,11 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTSubscriptionsTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("RESTSubscriptionsTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     /*
@@ -247,6 +251,35 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_InvalidSlot) {
     testCall();
 }
 
+/* 
+ * TEST 0.6 - Subscriptions with an invalid slot and stream enabled.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_InvalidSlotStream) {
+    // Remaking with stream enabled.
+    stream_ = true;
+    endpoint_.reset(makeOne());
+    initPayload(dms_.size());
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations.
+    EXPECT_CALL(context_, subscriptionManager()).Times(0); // Should not call.
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/* 
+ * TEST 0.7 - Subscriptions with slot out of valid range.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
+    initPayload(65536);
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations.
+    EXPECT_CALL(context_, subscriptionManager()).Times(0); // Should not call.
+    // Calling proceed and testing the output
+    testCall();
+}
+
 /*
  * ============================================================================
  *                              GET Subscriptions tests
@@ -278,6 +311,20 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GETStream) {
 TEST_F(RESTSubscriptionsTests, Subscriptions_GETAuthzValid) {
     initPayload(0);
     authzEnabled_ = true;
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/* 
+ * TEST 1.31 - GET Subscriptions with an invalid slot.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_GetInvalidSlot) {
+    initPayload(dms_.size());
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
+    // Setting expectations
+    EXPECT_CALL(context_, subscriptionManager()).Times(0);
+    EXPECT_CALL(dm0_, subscriptions()).Times(0);
+    EXPECT_CALL(dm0_, getParam(testing::Matcher<const std::string&>(testing::_),testing::_, testing::_)).Times(0);
     // Calling proceed and testing the output
     testCall();
 }
@@ -451,11 +498,25 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTFailParse) {
     // Setting expectations.
     EXPECT_CALL(context_, jwsToken()).Times(0); // Authz false
     // Calling proceed and testing the output
+    
     testCall();
 }
 
 /* 
- * TEST 2.6 - PUT Subscriptions add and remove return an error.
+ * TEST 2.6 - PUT Subscriptions with an invalid slot.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_PUTInvalidSlot) {
+    method_ = Method_PUT;
+    initPayload(dms_.size());
+    expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(slot_), catena::StatusCode::NOT_FOUND);
+    // Setting expectations.
+    EXPECT_CALL(context_, subscriptionManager()).Times(0); // Should not call.
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/* 
+ * TEST 2.7 - PUT Subscriptions add and remove return an error.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTReturnErr) {
     method_ = Method_PUT;
@@ -482,7 +543,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTReturnErr) {
 }
 
 /* 
- * TEST 2.7 - PUT Subscriptions remove throws a catena::exception_with_status.
+ * TEST 2.8 - PUT Subscriptions remove throws a catena::exception_with_status.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowCatena) {
     method_ = Method_PUT;
@@ -500,7 +561,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowCatena) {
 }
 
 /* 
- * TEST 2.8 - PUT Subscriptions remove throws a std::runtime_error.
+ * TEST 2.9 - PUT Subscriptions remove throws a std::runtime_error.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowUnknown) {
     method_ = Method_PUT;
@@ -514,7 +575,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowUnknown) {
 }
 
 /* 
- * TEST 2.9 - PUT Subscriptions add throws a catena::exception_with_status.
+ * TEST 2.10 - PUT Subscriptions add throws a catena::exception_with_status.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowCatena) {
     method_ = Method_PUT;
@@ -532,7 +593,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowCatena) {
 }
 
 /* 
- * TEST 2.10 - PUT Subscriptions add throws a std::runtime_error.
+ * TEST 2.11 - PUT Subscriptions add throws a std::runtime_error.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowUnknown) {
     method_ = Method_PUT;

@@ -44,13 +44,13 @@ ParamInfoRequest::ParamInfoRequest(IServiceImpl *service, SlotMap& dms, bool ok)
 }
 
 void ParamInfoRequest::proceed(bool ok) {
-    DEBUG_LOG << "ParamInfoRequest::proceed[" << objectId_ << "]: "
+    VLOG(1) << "ParamInfoRequest::proceed[" << objectId_ << "]: "
               << timeNow() << " status: " << static_cast<int>(status_)
               << ", ok: " << std::boolalpha << ok;
 
     // If the process is cancelled, finish the process
     if (!ok) {
-        DEBUG_LOG << "ParamInfoRequest[" << objectId_ << "] cancelled";
+        LOG(INFO) << "ParamInfoRequest[" << objectId_ << "] cancelled";
         status_ = CallStatus::kFinish;
     }
 
@@ -72,6 +72,11 @@ void ParamInfoRequest::proceed(bool ok) {
             Authorizer* authz;
             
             try {
+                // Validate the slot range
+                if (req_.slot() < 0 || req_.slot() > 65535) {
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                }
+                
                 // Getting device at specified slot.
                 if (dms_.contains(req_.slot())) {
                     dm_ = dms_.at(req_.slot());
@@ -208,7 +213,7 @@ void ParamInfoRequest::proceed(bool ok) {
             break;
 
         case CallStatus::kFinish:
-            DEBUG_LOG << "[" << objectId_ << "] finished with status: " 
+            LOG(INFO) << "[" << objectId_ << "] finished with status: " 
                       << (context_.IsCancelled() ? "CANCELLED" : "OK");
             service_->deregisterItem(this);
             break;

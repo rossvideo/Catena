@@ -18,8 +18,8 @@
 
 ### toolchain
 
-the toolchain is generated from a docker file installing tools defined in [toolchain-cpp.dockerfile](https://github.com/rossvideo/Catena/blob/develop/.devcontainer/toolchain-cpp.dockerfile)  
-The version of each tool is defined in [toolchain-cpp.env](https://github.com/rossvideo/Catena/blob/develop/.devcontainer/toolchain-cpp.env)
+the toolchain is generated from a docker file installing tools defined in [toolchain.dockerfile](https://github.com/rossvideo/Catena/blob/develop/.devcontainer/toolchain.dockerfile)  
+The version of each tool is defined in [toolchain.env](https://github.com/rossvideo/Catena/blob/develop/.devcontainer/toolchain.env)
 
 ### devcontainer.json
 - this is the settings for vscode / curser to use when creating the dev container
@@ -62,7 +62,7 @@ CTRL + SHIFT + P -> Dev Containers: Rebuild without cache and Reopen in Containe
 From inside the WSL shell in Cursor
 ```sh
 cd  ~/Catena/build/cpp
-cmake -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DCONNECTIONS=$CONNECTIONS -DCOVERAGE=ON -DCMAKE_INSTALL_PREFIX=/usr/local/.local -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE -DGLOG_LOGGING_DIR=${HOME}/Catena/logs -B ~/Catena/${BUILD_TARGET} ~/Catena/sdks/cpp
+cmake -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DCONNECTIONS=$CONNECTIONS -DCOVERAGE=ON -DCMAKE_INSTALL_PREFIX=/usr/local/.local -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE -DLOG_DIR=${HOME}/Catena/logs -B ~/Catena/${BUILD_TARGET} ~/Catena/sdks/cpp
 ninja clean
 ninja
 ```

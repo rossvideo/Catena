@@ -62,10 +62,13 @@
 
 #include <Logger.h>
 #include <iostream>
+#include <absl/flags/parse.h>
 
 using namespace catena::common;
 int main (int argc, char** argv) {
-    Logger::StartLogging(argc, argv);
+    absl::SetProgramUsageMessage("Runs the Catena Service");
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("hello_world");
 
     // The client code, below, directly accesses parts of the device model
     // so we assert a lock on the device model's mutex to ensure threadsafe 
@@ -98,11 +101,11 @@ int main (int argc, char** argv) {
     // The assertion of the lock, above is essential to thread safety because
     // asynchronous access by connected client will also change the Device Model's 
     // state.
-    DEBUG_LOG << helloValue;
+    LOG(INFO) << helloValue;
 
     // and we can change the value
     helloValue = "Goodbye, Cruel World!";
-    DEBUG_LOG << helloValue;
+    LOG(INFO) << helloValue;
 
     // Example with a parameter of type int
     ip = dm.getParam("/count", err);
@@ -112,9 +115,9 @@ int main (int argc, char** argv) {
     }
     auto& countParam = *dynamic_cast<ParamWithValue<int>*>(ip.get());
     int32_t& countValue = countParam.get();
-    DEBUG_LOG << "counter initial value: " << countValue;
+    LOG(INFO) << "counter initial value: " << countValue;
     countValue++;
-    DEBUG_LOG << "counter incremented value: " << countValue;
+    LOG(INFO) << "counter incremented value: " << countValue;
 
     // Example with a parameter of type float
     ip = dm.getParam("/gain", err);
@@ -124,9 +127,9 @@ int main (int argc, char** argv) {
     }
     auto& gainParam = *dynamic_cast<ParamWithValue<float>*>(ip.get());
     float& gainValue = gainParam.get();
-    DEBUG_LOG << "gain initial value: " << gainValue;
+    LOG(INFO) << "gain initial value: " << gainValue;
     gainValue *= gainValue;
-    DEBUG_LOG << "gain squared value: " << gainValue;
+    LOG(INFO) << "gain squared value: " << gainValue;
 
     // Example with array of strings
     ip = dm.getParam("/phonetic_alphabet", err);
@@ -141,7 +144,7 @@ int main (int argc, char** argv) {
     for (const auto& s : phonetic_alphabetValue) {
         outStream << s << " ";
     }
-    DEBUG_LOG << outStream.str();
+    LOG(INFO) << outStream.str();
 
     // note we change the length of the vector - decrease by one
     phonetic_alphabetValue = {"Whiskey", "Yankee", "Zulu"};
@@ -150,7 +153,7 @@ int main (int argc, char** argv) {
     for (const auto& s : phonetic_alphabetValue) {
         outStream << s << " ";
     }
-    DEBUG_LOG << outStream.str();
+    LOG(INFO) << outStream.str();
 
     // Example with array of integers
     ip = dm.getParam("/primes", err);
@@ -165,7 +168,7 @@ int main (int argc, char** argv) {
     for (const auto& i : primesValue) {
         outStream << i << " ";
     }
-    DEBUG_LOG << outStream.str();
+    LOG(INFO) << outStream.str();
 
     // note we change the length of the vector - increase by one
     primesValue = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31};
@@ -174,7 +177,7 @@ int main (int argc, char** argv) {
     for (const auto& i : primesValue) {
         outStream << i << " ";
     }
-    DEBUG_LOG << outStream.str();
+    LOG(INFO) << outStream.str();
 
     // example with array of floats that's initially empty
     ip = dm.getParam("/physical_constants", err);
@@ -184,7 +187,7 @@ int main (int argc, char** argv) {
     }
     auto& physical_constantsParam = *dynamic_cast<ParamWithValue<std::vector<float>>*>(ip.get());
     std::vector<float>& physical_constantsValue = physical_constantsParam.get();
-    DEBUG_LOG << "physical constants " << (physical_constantsValue.size() == 0 ? "is empty" : "is not empty");
+    LOG(INFO) << "physical constants " << (physical_constantsValue.size() == 0 ? "is empty" : "is not empty");
     physical_constantsValue.push_back(3.14159);
     physical_constantsValue.push_back(2.71828);
     physical_constantsValue.push_back(1.61803);
@@ -193,10 +196,8 @@ int main (int argc, char** argv) {
     for (const auto& f : physical_constantsValue) {
         outStream << f << " ";
     }
-    DEBUG_LOG << outStream.str();
+    LOG(INFO) << outStream.str();
 
-    // Shutdown Google Logging
-    google::ShutdownGoogleLogging();
     return EXIT_SUCCESS;
 
     // The Device::LockGuard object will automatically release the lock

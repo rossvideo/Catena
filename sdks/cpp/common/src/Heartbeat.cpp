@@ -62,10 +62,10 @@ void Heartbeat::start(int32_t milliseconds) {
                     signal_.emit();
                 } catch (const std::exception& e) {
                     // log exceptions
-                    DEBUG_LOG << "Exception in heartbeat slot: " << e.what();
+                    LOG(ERROR) << "Exception in heartbeat slot: " << e.what();
                 } catch (...) {
                     // log non-std exceptions
-                    DEBUG_LOG << "Unknown exception in heartbeat slot";
+                    LOG(ERROR) << "Unknown exception in heartbeat slot";
                 }
                 // re-lock before the next iteration
                 lock.lock();

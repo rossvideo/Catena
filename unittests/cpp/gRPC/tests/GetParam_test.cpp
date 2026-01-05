@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the GetParam.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/18
+ * @author jason.chen@rossvideo.com
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -54,11 +55,11 @@ class gRPCGetParamTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("gRPCGetParamTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("gRPCGetParamTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     /*
@@ -149,7 +150,35 @@ TEST_F(gRPCGetParamTests, GetParam_Normal) {
 }
 
 /*
- * TEST 3 - GetParam with authz on and valid token.
+ * TEST 3 - GetParam with null slot, should handle as a normal case.
+ */
+TEST_F(gRPCGetParamTests, GetParam_NullSlotCase) {
+    initPayload(123, "/test_oid");
+    initexpVal_("/test_oid", "test_value", "test_alias", "Test Param");
+    inVal_.clear_slot();
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(inVal_.oid(), ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+        [this](const std::string &fqoid, catena::exception_with_status &status, const IAuthorizer &authz) {
+            // Checking that function gets correct inputs.
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            status = catena::exception_with_status(expRc_.what(), expRc_.status);
+            return std::move(mockParam);
+        }));
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(*mockParam, getOid()).Times(1).WillOnce(::testing::ReturnRef(expVal_.oid()));
+    EXPECT_CALL(*mockParam, toProto(::testing::An<st2138::Param&>(), ::testing::_)).Times(1).WillOnce(::testing::Invoke(
+        [this](st2138::Param &param, const IAuthorizer &authz) {
+            // Checking that function gets correct inputs.
+            EXPECT_EQ(!authzEnabled_, &authz == &Authorizer::kAuthzDisabled);
+            param.CopyFrom(expVal_.param());
+            return catena::exception_with_status(expRc_.what(), expRc_.status);
+        }));
+    // Sending the RPC.
+    testRPC();
+}
+
+/*
+ * TEST 4 - GetParam with authz on and valid token.
  */
 TEST_F(gRPCGetParamTests, GetParam_AuthzValid) {
     initPayload(0, "/test_oid");
@@ -180,7 +209,7 @@ TEST_F(gRPCGetParamTests, GetParam_AuthzValid) {
 }
 
 /*
- * TEST 4 - GetParam with authz on and invalid token.
+ * TEST 5 - GetParam with authz on and invalid token.
  */
 TEST_F(gRPCGetParamTests, GetParam_AuthzInvalid) {
     expRc_ = catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
@@ -194,8 +223,9 @@ TEST_F(gRPCGetParamTests, GetParam_AuthzInvalid) {
     testRPC();
 }
 
+
 /*
- * TEST 5 - GetParam with authz on and invalid token.
+ * TEST 6 - GetParam with authz on and invalid token.
  */
 TEST_F(gRPCGetParamTests, GetParam_AuthzJWSNotFound) {
     expRc_ = catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
@@ -210,7 +240,7 @@ TEST_F(gRPCGetParamTests, GetParam_AuthzJWSNotFound) {
 }
 
 /*
- * TEST 6 - No device in the specified slot.
+ * TEST 7 - No device in the specified slot.
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrInvalidSlot) {
     initPayload(dms_.size(), "/test_oid");
@@ -223,7 +253,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrInvalidSlot) {
 }
 
 /*
- * TEST 7 - dm.getParam() returns a catena::exception_with_status.
+ * TEST 8 - dm.getParam() returns a catena::exception_with_status.
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrGetParamReturnCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -240,7 +270,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrGetParamReturnCatena) {
 }
 
 /*
- * TEST 8 - dm.getParam() throws a catena::exception_with_status.
+ * TEST 9 - dm.getParam() throws a catena::exception_with_status.
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrGetParamThrowCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -257,7 +287,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrGetParamThrowCatena) {
 }
 
 /*
- * TEST 9 - dm.getParam() throws a std::runtime_exception.
+ * TEST 10 - dm.getParam() throws a std::runtime_exception.
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrGetParamThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -271,7 +301,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrGetParamThrowUnknown) {
 }
 
 /*
- * TEST 10 - param->toProto() returns a catena::exception_with_status.
+ * TEST 11 - param->toProto() returns a catena::exception_with_status.
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrToProtoReturnCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -288,7 +318,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoReturnCatena) {
 }
 
 /*
- * TEST 11 - param->toProto() throws a catena::exception_with_status.
+ * TEST 12 - param->toProto() throws a catena::exception_with_status.
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowCatena) {
     expRc_ = catena::exception_with_status("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -308,7 +338,7 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowCatena) {
 }
 
 /*
- * TEST 12 - param->toProto() throws a std::runtime_exception.
+ * TEST 13 - param->toProto() throws a std::runtime_exception.
  */
 TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowUnknown) {
     expRc_ = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -320,6 +350,21 @@ TEST_F(gRPCGetParamTests, GetParam_ErrToProtoThrowUnknown) {
     EXPECT_CALL(*mockParam, getOid()).WillRepeatedly(::testing::ReturnRef(expVal_.oid()));
     EXPECT_CALL(*mockParam, toProto(::testing::An<st2138::Param&>(), ::testing::_)).Times(1)
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
+    // Sending the RPC.
+    testRPC();
+}
+
+/*
+ * TEST 14 - GetParam with slot number out of valid range.
+ */
+TEST_F(gRPCGetParamTests, GetParam_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
+    initPayload(65536, "/test_oid");
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     // Sending the RPC.
     testRPC();
 }

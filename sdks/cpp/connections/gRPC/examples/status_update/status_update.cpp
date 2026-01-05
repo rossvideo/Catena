@@ -83,7 +83,7 @@ std::atomic<bool> globalLoop = true;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        DEBUG_LOG << "Caught signal " << sig << ", shutting down";
+        LOG(INFO) << "Caught signal " << sig << ", shutting down";
         globalLoop = false;
         if (globalServer != nullptr) {
             globalServer->Shutdown();
@@ -97,35 +97,35 @@ void counterUpdateHandler(const std::string& oid, const IParam* p) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
     const int32_t& counter = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    DEBUG_LOG << "*** client set counter to " << counter;
+    LOG(INFO) << "*** client set counter to " << counter;
 }
 
 void text_boxUpdateHandler(const std::string& oid, const IParam* p) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
     const std::string& text_box = dynamic_cast<const ParamWithValue<std::string>*>(p)->get();
-    DEBUG_LOG << "*** client set text_box to " << text_box;
+    LOG(INFO) << "*** client set text_box to " << text_box;
 }
 
 void buttonUpdateHandler(const std::string& oid, const IParam* p) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
     const int32_t& button = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    DEBUG_LOG << "*** client set button to " << button;
+    LOG(INFO) << "*** client set button to " << button;
 }
 
 void sliderUpdateHandler(const std::string& oid, const IParam* p) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
     const int32_t& slider = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    DEBUG_LOG << "*** client set slider to " << slider;
+    LOG(INFO) << "*** client set slider to " << slider;
 }
 
 void combo_boxUpdateHandler(const std::string& oid, const IParam* p) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
     const int32_t& combo_box = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    DEBUG_LOG << "*** client set combo_box to " << combo_box;
+    LOG(INFO) << "*** client set combo_box to " << combo_box;
 }
 
 void statusUpdateExample(){   
@@ -160,7 +160,7 @@ void statusUpdateExample(){
         {
             std::lock_guard lg(dm.mutex());
             counter.get()++;
-            DEBUG_LOG << counter.getOid() << " set to " << counter.get();
+            LOG(INFO) << counter.getOid() << " set to " << counter.get();
             dm.getValueSetByServer().emit("/counter", &counter);
         }
     }
@@ -201,7 +201,7 @@ void RunRPCServer(std::string addr)
 
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
-        DEBUG_LOG << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
+        LOG(INFO) << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
 
         globalServer = server.get();
 
@@ -230,18 +230,15 @@ void RunRPCServer(std::string addr)
 
 int main(int argc, char* argv[])
 {
-    Logger::StartLogging(argc, argv);
-
     std::string addr;
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
+    Logger::init("status_update");
   
     addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
   
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
     
-    // Shutdown Google Logging
-    google::ShutdownGoogleLogging();
     return 0;
 }

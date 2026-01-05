@@ -57,7 +57,7 @@
 
 #include <iostream>
 #include <Logger.h>
-#include <glog/logging.h>
+#include <absl/flags/parse.h>
 
 using namespace catena::common;
 using namespace use_constraints;
@@ -65,7 +65,9 @@ using catena::common::ParamTag;
 using catena::common::getParamValue;
 
 int main (int argc, char** argv) {
-    Logger::StartLogging(argc, argv);
+    absl::SetProgramUsageMessage("Runs the Catena Service");
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("use_constraints");
 
     // lock the model
     std::lock_guard lg(dm.mutex());
@@ -88,20 +90,20 @@ int main (int argc, char** argv) {
         return EXIT_FAILURE;
     }
     int32_t& button = getParamValue<int32_t>(ip.get());
-    DEBUG_LOG << "button initial value: " << button; // button initial value: 0
+    LOG(INFO) << "button initial value: " << button; // button initial value: 0
 
     // This is to mimic a setValue call coming from a client
     value.set_int32_value(1); // "On"
     dm.setValue("/button", value);
     // setting button to one of the valid choices will work as usual
-    DEBUG_LOG << "button set to 1";
-    DEBUG_LOG << "button value: " << button; // button value: 1
+    LOG(INFO) << "button set to 1";
+    LOG(INFO) << "button value: " << button; // button value: 1
 
     // setting button to an invalid choice will do nothing
     value.set_int32_value(3); // "Invalid choice"
     dm.setValue("/button", value);
-    DEBUG_LOG << "button set to 3";
-    DEBUG_LOG << "button value: " << button; // button value: 1
+    LOG(INFO) << "button set to 3";
+    LOG(INFO) << "button value: " << button; // button value: 1
 
 
     /**
@@ -112,7 +114,7 @@ int main (int argc, char** argv) {
      * 
      * @todo enforce the step size
      */
-    DEBUG_LOG;
+    LOG(INFO);
     ip = dm.getParam("/odd_numbers", err);
     if (ip == nullptr){
         LOG(ERROR) << "Error: " << err.what();
@@ -123,7 +125,7 @@ int main (int argc, char** argv) {
     for (auto& num : odd_numbers) {
         debugString += std::to_string(num) + " ";
     }
-    DEBUG_LOG << debugString; // odd_numbers initial value: 0  2 4 6 8
+    LOG(INFO) << debugString; // odd_numbers initial value: 0  2 4 6 8
 
     // Setting an element to a value outside the range will cause it to be constrained to the max/min values
     value.set_int32_value(-2); // below min
@@ -133,19 +135,19 @@ int main (int argc, char** argv) {
         return EXIT_FAILURE;
     }
     // setting odd_numbers[2] to a value below the min will cause it to be set to the min value
-    DEBUG_LOG << "odd_numbers[2] set to -2";
-    DEBUG_LOG << "odd_numbers[2] value: " << odd_numbers[2]; // odd_numbers[2] value: 0
+    LOG(INFO) << "odd_numbers[2] set to -2";
+    LOG(INFO) << "odd_numbers[2] value: " << odd_numbers[2]; // odd_numbers[2] value: 0
 
     // Constraints also apply when setting the value of the whole array
     std::vector<int32_t> newValue = {8, 12, -6, 3};
     value.mutable_int32_array_values()->mutable_ints()->Assign(newValue.begin(), newValue.end());
     dm.setValue("/odd_numbers", value);
-    DEBUG_LOG << "odd_numbers set to 8 12 -6 3";
+    LOG(INFO) << "odd_numbers set to 8 12 -6 3";
     debugString = "odd_numbers value: ";
     for (auto& num : odd_numbers) {
         debugString += std::to_string(num) + " ";
     }
-    DEBUG_LOG << debugString; // odd_numbers value: 7 9 1 3 9
+    LOG(INFO) << debugString; // odd_numbers value: 7 9 1 3 9
 
 
     /**
@@ -154,23 +156,23 @@ int main (int argc, char** argv) {
      * The basic_slider constraint is a FLOAT_RANGE constraint with a range of [0, 10]. This constraint
      * has a step size of 0.25, so the values will be constrained to multiples of 0.25.
      */
-    DEBUG_LOG;
+    LOG(INFO);
     ip = dm.getParam("/gain", err);
     if (ip == nullptr){
         LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     float& gain = getParamValue<float>(ip.get());
-    DEBUG_LOG << "gain initial value: " << gain; // gain initial value: 0.5
+    LOG(INFO) << "gain initial value: " << gain; // gain initial value: 0.5
     value.set_float32_value(1.5); // within range
     dm.setValue("/gain", value);
-    DEBUG_LOG << "gain set to 1.5";
-    DEBUG_LOG << "gain value: " << gain; // gain value: 1.5
+    LOG(INFO) << "gain set to 1.5";
+    LOG(INFO) << "gain value: " << gain; // gain value: 1.5
 
     value.set_float32_value(10.5); // above max
     dm.setValue("/gain", value);
-    DEBUG_LOG << "gain set to 10.5";
-    DEBUG_LOG << "gain value: " << gain; // gain value: 10
+    LOG(INFO) << "gain set to 10.5";
+    LOG(INFO) << "gain value: " << gain; // gain value: 10
 
     ip = dm.getParam("/volume_array", err);
     if (ip == nullptr){
@@ -182,16 +184,16 @@ int main (int argc, char** argv) {
     for (auto& vol : volume) {
         debugString += std::to_string(vol) + " ";
     }
-    DEBUG_LOG << debugString; // volume initial value: 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+    LOG(INFO) << debugString; // volume initial value: 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
     std::vector<float> newVolume = {0.5, 12, -4, 1, 2.1, 3.3, 4.51, 5.751};
     value.mutable_float32_array_values()->mutable_floats()->Assign(newVolume.begin(), newVolume.end());
     dm.setValue("/volume_array", value);
-    DEBUG_LOG << "volume set to 0.5 12 -4 1 2.1 3.3 4.51 5.751";
+    LOG(INFO) << "volume set to 0.5 12 -4 1 2.1 3.3 4.51 5.751";
     debugString = "volume value: ";
     for (auto& vol : volume) {
         debugString += std::to_string(vol) + " ";
     }
-    DEBUG_LOG << debugString; // volume value: 0.5 10.0 0.0 1.0 2.0 3.25 4.5 5.75
+    LOG(INFO) << debugString; // volume value: 0.5 10.0 0.0 1.0 2.0 3.25 4.5 5.75
 
 
     /**
@@ -200,23 +202,23 @@ int main (int argc, char** argv) {
      * This constraint has the strict flag set to true, which means that the value must be one of the choices or else the 
      * setValue request will be ignored.
      */
-    DEBUG_LOG;
+    LOG(INFO);
     ip = dm.getParam("/display_size", err);
     if (ip == nullptr){
         LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     std::string& display_size = getParamValue<std::string>(ip.get());
-    DEBUG_LOG << "display_size initial value: " << display_size;
+    LOG(INFO) << "display_size initial value: " << display_size;
     value.set_string_value("small"); // valid choice
     dm.setValue("/display_size", value);
-    DEBUG_LOG << "display_size set to small";
-    DEBUG_LOG << "display_size value: " << display_size; // display_size value: small
+    LOG(INFO) << "display_size set to small";
+    LOG(INFO) << "display_size value: " << display_size; // display_size value: small
 
     value.set_string_value("tiny"); // invalid choice
     dm.setValue("/display_size", value);
-    DEBUG_LOG << "display_size set to tiny";
-    DEBUG_LOG << "display_size value: " << display_size;
+    LOG(INFO) << "display_size set to tiny";
+    LOG(INFO) << "display_size value: " << display_size;
 
 
     /**
@@ -227,23 +229,23 @@ int main (int argc, char** argv) {
      * The strict flag is set to false, which means that the client can set the value to any string, even 
      * if it is not in the list of choices.
      */
-    DEBUG_LOG;
+    LOG(INFO);
     ip = dm.getParam("/image", err);
     if (ip == nullptr){
         LOG(ERROR) << "Error: " << err.what();
         return EXIT_FAILURE;
     }
     std::string& image = getParamValue<std::string>(ip.get());
-    DEBUG_LOG << "image initial value: " << image;
+    LOG(INFO) << "image initial value: " << image;
     value.set_string_value("eo://dog.png"); // valid choice
     dm.setValue("/image", value);
-    DEBUG_LOG << "image set to dog";
-    DEBUG_LOG << "image value: " << image; // image value: eo://dog.png
+    LOG(INFO) << "image set to dog";
+    LOG(INFO) << "image value: " << image; // image value: eo://dog.png
 
     value.set_string_value("eo://bird.png"); // invalid choice
     dm.setValue("/image", value);
-    DEBUG_LOG << "image set to bird";
-    DEBUG_LOG << "image value: " << image; // image value: eo://bird.png
+    LOG(INFO) << "image set to bird";
+    LOG(INFO) << "image value: " << image; // image value: eo://bird.png
 
 
     /**
@@ -254,7 +256,7 @@ int main (int argc, char** argv) {
      * setting any element in the button_array to a value other than 0 or 1 will cause the entire
      * value to remain the same.
      */
-    DEBUG_LOG;
+    LOG(INFO);
     ip = dm.getParam("/button_array", err);
     if (ip == nullptr){
         LOG(ERROR) << "Error: " << err.what();
@@ -265,7 +267,7 @@ int main (int argc, char** argv) {
     for (auto& num : button_array) {
         debugString += std::to_string(num) + " ";
     }
-    DEBUG_LOG << debugString; // button_array initial value: 0 0 0 0
+    LOG(INFO) << debugString; // button_array initial value: 0 0 0 0
 
     /**
      * If the incomming value has more elemnts than the button_array, the extra elements will be appended
@@ -274,12 +276,12 @@ int main (int argc, char** argv) {
     std::vector<int32_t> arrayVal = {0, 1, 0, 0, 0, 1};
     value.mutable_int32_array_values()->mutable_ints()->Assign(arrayVal.begin(), arrayVal.end());
     dm.setValue("/button_array", value);
-    DEBUG_LOG << "button_array set to 0 1 0 0 0 1";
+    LOG(INFO) << "button_array set to 0 1 0 0 0 1";
     debugString = "button_array value: ";
     for (auto& num : button_array) {
         debugString += std::to_string(num) + " ";
     }
-    DEBUG_LOG << debugString; // button_array value: 0 1 0 0 0 1
+    LOG(INFO) << debugString; // button_array value: 0 1 0 0 0 1
 
     return EXIT_SUCCESS;
 }

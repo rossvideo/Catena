@@ -68,7 +68,12 @@ function(set_up_proto_targets)
     )
 
     # Provide link libraries
-    target_link_libraries(${PROTO_TARGET} PUBLIC glog::glog protobuf::libprotobuf)
+    target_link_libraries(${PROTO_TARGET} PUBLIC
+        protobuf::libprotobuf
+        absl::log
+        absl::log_globals
+        absl::log_initialize
+        absl::log_severity)
 
     # use the protobuf generate function provided by the protobuf package to make the c++ source files
     protobuf_generate(

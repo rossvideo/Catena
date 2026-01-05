@@ -31,9 +31,12 @@
 /**
  * @brief This file is for testing the GetParam.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/21
+ * @author jason.chen@rossvideo.com
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
+
+#include <SharedFlags.h>
 
 // Test helpers
 #include "RESTTest.h"
@@ -52,11 +55,11 @@ class RESTGetParamTests : public RESTEndpointTest {
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTGetParamTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("RESTGetParamTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
     
     RESTGetParamTests() : RESTEndpointTest() {
@@ -328,6 +331,21 @@ TEST_F(RESTGetParamTests, GetParam_ErrToProtoThrowUnknown) {
     EXPECT_CALL(*mockParam_, getOid()).WillRepeatedly(testing::ReturnRef(fqoid_));
     EXPECT_CALL(*mockParam_, toProto(testing::An<st2138::Param&>(), testing::_)).Times(1)
         .WillOnce(testing::Throw(0));
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * TEST 5 - Device slot is out of range.
+ */
+TEST_F(RESTGetParamTests, GetParam_SlotOutOfBounds) {
+    dms_[65536] = &dm0_;
+    
+    initPayload(65536, "/test_oid");
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, getParam(::testing::An<const std::string&>(), ::testing::_, ::testing::_)).Times(0);
     // Calling proceed and testing the output
     testCall();
 }

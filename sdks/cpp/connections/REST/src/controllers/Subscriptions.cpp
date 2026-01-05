@@ -57,6 +57,11 @@ void Subscriptions::proceed() {
 
     try {
         IDevice* dm = nullptr;
+        // Validating slot number.
+        if (context_.slot() < 0 || context_.slot() > 65535) {
+            throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+        }
+
         // Getting device at specified slot.
         if (dms_.contains(context_.slot())) {
             dm = dms_.at(context_.slot());
@@ -135,5 +140,5 @@ void Subscriptions::proceed() {
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    DEBUG_LOG << context_.method() << " Subscriptions[" << objectId_ << "] finished\n";
+    VLOG(1) << context_.method() << " Subscriptions[" << objectId_ << "] finished\n";
 }

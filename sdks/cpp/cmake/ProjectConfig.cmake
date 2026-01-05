@@ -21,24 +21,21 @@ function(setup_project_directories)
 endfunction()
 
 # Setup logging configuration  
-function(setup_logging_config CATENA_ROOT_DIR)
+function(setup_logging_config)
     # Set default log directory - respect command line override
-    if(NOT DEFINED GLOG_LOGGING_DIR)
-        set(GLOG_LOGGING_DIR "${CATENA_ROOT_DIR}/logs")
-        message(STATUS "Using default glog logging directory: ${GLOG_LOGGING_DIR}")
-    else()
+    if(DEFINED LOG_DIR)
         # Expand tilde if present
-        string(REGEX REPLACE "^~" "$ENV{HOME}" GLOG_LOGGING_DIR "${GLOG_LOGGING_DIR}")
-        message(STATUS "Using specified glog logging directory: ${GLOG_LOGGING_DIR}")
+        string(REGEX REPLACE "^~" "$ENV{HOME}" LOG_DIR "${LOG_DIR}")
+        message(STATUS "Using specified logging directory: ${LOG_DIR}")
     endif()
-    
-    # Create logs directory if it doesn't exist
-    if(NOT EXISTS "${GLOG_LOGGING_DIR}")
-        file(MAKE_DIRECTORY "${GLOG_LOGGING_DIR}")
-        message(STATUS "Created logging directory: ${GLOG_LOGGING_DIR}")
+
+    #if default log directory not set, use a standard location
+    if(NOT DEFINED LOG_DIR)
+        set(LOG_DIR "${CATENA_ROOT_DIR}/logs")
+        message(STATUS "Using default logging directory: ${LOG_DIR}")
     endif()
-    
-    add_compile_definitions(GLOG_LOGGING_DIR="${GLOG_LOGGING_DIR}")
+
+    add_compile_definitions(LOG_DIR="${LOG_DIR}")
 endfunction()
 
 # Parse version information from VERSION.txt

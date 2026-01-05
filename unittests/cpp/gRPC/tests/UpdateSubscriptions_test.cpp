@@ -32,7 +32,8 @@
  * @file UpdateSubscriptions_test.cpp
  * @brief This file is for testing the gRPC UpdateSubscriptions.cpp file.
  * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
- * @date 2025-08-07
+ * @author Jason Chen (jason.chen@rossvideo.com)
+ * @date 2025-12-01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -64,11 +65,11 @@ class gRPCUpdateSubscriptionsTests : public GRPCTest {
 
         // Set up and tear down Google Logging
         static void SetUpTestSuite() {
-            Logger::StartLogging("gRPCUpdateSubscriptionsTest");
+            absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+            Logger::init("gRPCUpdateSubscriptionsTest");
         }
 
         static void TearDownTestSuite() {
-            google::ShutdownGoogleLogging();
         }
 
         /*
@@ -213,11 +214,16 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_InvalidSlot) {
     initPayload(dms_.size(), {"param1"}, {"param2"});
     expRc_ = catena::exception_with_status("device not found in slot " + std::to_string(dms_.size()), catena::StatusCode::NOT_FOUND);
     
-    // Setting expectations.
-    EXPECT_CALL(service_, getSubscriptionManager()).Times(0); // Should not call.
+    // Setting expectations - no subscription operations should happen for invalid slot
+    EXPECT_CALL(subManager_, addSubscription(testing::_, testing::_, testing::_, testing::_)).Times(0);
+    EXPECT_CALL(subManager_, removeSubscription(testing::_, testing::_, testing::_)).Times(0);
     
     // Calling proceed and testing the output
     testRPC();
+
+    // Verify no subscription operations were performed
+    EXPECT_EQ(addedOids_, 0);
+    EXPECT_EQ(removedOids_, 0);
 }
 
 /*
@@ -302,6 +308,33 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_AuthzValid) {
     
     // Calling proceed and testing the output
     testRPC();
+}
+
+// 1.5: Success Case - UpdateSubscriptions null slot case.
+TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_NullSlotCase) {
+    initPayload(1111, {"param1", "param2"}, {});
+    inVal_.clear_slot();
+    
+    // Setting expectations for add subscription operations
+    EXPECT_CALL(subManager_, addSubscription("param1", testing::Ref(dm0_), testing::_, testing::_)).WillOnce(testing::Invoke(
+        [this](const std::string& oid, catena::common::IDevice& dm, catena::exception_with_status& rc, const IAuthorizer& authz) -> bool {
+            addedOids_++;
+            rc = catena::exception_with_status("", catena::StatusCode::OK);
+            return true;
+        }));
+    EXPECT_CALL(subManager_, addSubscription("param2", testing::Ref(dm0_), testing::_, testing::_)).WillOnce(testing::Invoke(
+        [this](const std::string& oid, catena::common::IDevice& dm, catena::exception_with_status& rc, const IAuthorizer& authz) -> bool {
+            addedOids_++;
+            rc = catena::exception_with_status("", catena::StatusCode::OK);
+            return true;
+        }));
+
+    // Calling proceed and testing the output
+    testRPC();
+
+    // Verify subscription operations were called
+    EXPECT_EQ(addedOids_, 2);
+    EXPECT_EQ(removedOids_, 0);
 }
 
 /*
@@ -440,4 +473,23 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_AuthzInvalid) {
     
     // Calling proceed and testing the output
     testRPC();
+}
+
+// 3.3: Error Case - UpdateSubscriptions with slot number out of valid range.
+TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_SlotOutOfRange) {
+    // Add device at the out-of-range slot to ensure slot validation is tested
+    dms_[65536] = &dm0_;
+    
+    initPayload(65536, {"param1", "param2"}, {});
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations - no subscription operations should happen for invalid slot
+    EXPECT_CALL(subManager_, addSubscription(testing::_, testing::_, testing::_, testing::_)).Times(0);
+    EXPECT_CALL(subManager_, removeSubscription(testing::_, testing::_, testing::_)).Times(0);
+    
+    // Calling proceed and testing the output
+    testRPC();
+
+    // Verify no subscription operations were performed
+    EXPECT_EQ(addedOids_, 0);
+    EXPECT_EQ(removedOids_, 0);
 }

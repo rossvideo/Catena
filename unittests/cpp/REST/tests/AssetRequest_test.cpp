@@ -31,13 +31,15 @@
 /**
  * @brief This file is for testing the MultiSetValue.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/14
+ * @author jason.chen@rossvideo.com
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #include "interface/param.pb.h"
 #include <fstream>
 #include <sys/stat.h>
+#include <SharedFlags.h>
 
 // Test helpers
 #include "RESTTest.h"
@@ -71,11 +73,11 @@ class RESTAssetRequestTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("RESTAssetRequestTests");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("RESTAssetRequestTests");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
   
     RESTAssetRequestTests() : RESTEndpointTest() {
@@ -189,7 +191,7 @@ class RESTAssetRequestTests : public RESTEndpointTest {
 
 /*
  * ============================================================================
- *                               AssetRequest tests
+ *                               GET AssetRequest tests
  * ============================================================================
  * 
  * TEST 1.1 - GET asset request for a file that does not exist.
@@ -208,8 +210,23 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_DNE) {
     testCall();
 }
 
+/*
+ * TEST 1.2 - GET asset request for a file that does not exist and stream enabled.
+ */
+TEST_F(RESTAssetRequestTests, GETAssetRequest_DNE_StreamEnabled) {
+    // establish expectations
+    stream_ = true;
+    endpoint_.reset(makeOne());
+    method_ = Method_GET;
+    fqoid_ = "/test_asset";
+    slot_ = 99;
+    authzEnabled_ = false;
+    expRc_ = catena::exception_with_status("AssetRequest[0] for file: /test_asset not found", catena::StatusCode::NOT_FOUND);
+    testCall();
+}
+
 /* 
- * TEST 1.2 - GET asset request for a file that exists without authorization.
+ * TEST 1.3 - GET asset request for a file that exists without authorization.
  */
 TEST_F(RESTAssetRequestTests, GETAssetRequest_NoAuthz) {
     //establish expectations
@@ -227,7 +244,7 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_NoAuthz) {
 }
 
 /*
- * TEST 1.3 - GET asset request for a file that exists with authorization.
+ * TEST 1.4 - GET asset request for a file that exists with authorization.
  */
 TEST_F(RESTAssetRequestTests, GETAssetRequest_Exists) {
     getAssetRequestTest(st2138::DataPayload::UNCOMPRESSED, "/" + fileName_, payloadUncompressed_,
@@ -235,7 +252,17 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_Exists) {
 }
 
 /*
- * TEST 1.4 - GET asset request for a Gzip encoded file that exists with authorization.
+ * TEST 1.5 - GET asset request for a file that exists with authorization with stream.
+ */
+TEST_F(RESTAssetRequestTests, GETAssetRequest_Exists_StreamEnabled) {
+    stream_ = true;
+    endpoint_.reset(makeOne());
+    getAssetRequestTest(st2138::DataPayload::UNCOMPRESSED, "/" + fileName_, payloadUncompressed_,
+            digestUncompressed_, 1088, Scopes().getForwardMap().at(Scopes_e::kMonitor));
+}
+
+/*
+ * TEST 1.6 - GET asset request for a Gzip encoded file that exists with authorization.
  */
 TEST_F(RESTAssetRequestTests, GETAssetRequest_ExistsGzip) {
     getAssetRequestTest(st2138::DataPayload::GZIP, "/" + fileName_, payloadGzip_,
@@ -243,15 +270,57 @@ TEST_F(RESTAssetRequestTests, GETAssetRequest_ExistsGzip) {
 }
 
 /*
- * TEST 1.5 - GET asset request for a Deflate encoded file that exists with authorization.
+ * TEST 1.7 - GET asset request for a Deflate encoded file that exists with authorization.
  */
 TEST_F(RESTAssetRequestTests, GETAssetRequest_ExistsDeflate) {
     getAssetRequestTest(st2138::DataPayload::DEFLATE, "/" + fileName_, payloadDeflate_,
             digestDeflate_, 1014, Scopes().getForwardMap().at(Scopes_e::kMonitor));
 }
 
+/*
+ * TEST 1.8 - GET asset request for a slot out of range. 
+ */
+TEST_F(RESTAssetRequestTests, GETAssetRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
+    //establish expectations
+    method_ = Method_GET;
+    fqoid_ = "/test_asset.jpg";
+    slot_ = 65536;
+    authzEnabled_ = true;
+    jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
+
+    // Setting the expected response
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * ============================================================================
+ *                               POST AssetRequest tests
+ * ============================================================================
+ * 
+ * TEST 2.1 - POST asset request for a file that does not exist.
+ */
+TEST_F(RESTAssetRequestTests, POSTAssetRequest__DNE) {
+    //establish expectations
+    method_ = Method_POST;
+    fqoid_ = "/test_asset.jpg";
+    slot_ = 9999;
+    authzEnabled_ = true;
+    jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kOperate) + ":w");
+
+    // Setting the expected response
+    expRc_ = catena::exception_with_status("device not found in slot 9999", catena::StatusCode::NOT_FOUND);
+
+    // Calling proceed and testing the output
+    testCall();
+}
+
 /* 
- * TEST 2.1 - POST asset request for a file without authorization.
+ * TEST 2.2 - POST asset request for a file without authorization.
  */
 TEST_F(RESTAssetRequestTests, POSTAssetRequest_NoAuthz) {
     //establish expectations
@@ -269,9 +338,9 @@ TEST_F(RESTAssetRequestTests, POSTAssetRequest_NoAuthz) {
 }
 
 /*
- * TEST 2.2 - POST asset request for a file that exists with authorization.
+ * TEST 2.3 - POST asset request for a file that exists with authorization.
  */
-TEST_F(RESTAssetRequestTests, POSTAssetRequest_Exists) {
+TEST_F(RESTAssetRequestTests, POSTAssetRequest_ExistsAuthz) {
     //establish expectations
     method_ = Method_POST;
     fqoid_ = "/" + fileName_;
@@ -287,16 +356,16 @@ TEST_F(RESTAssetRequestTests, POSTAssetRequest_Exists) {
 }
 
 /*
- * TEST 2.3 - POST asset request for a file that does not exist with authorization.
+ * TEST 2.4 - POST asset request for a file that does not exist with authorization.
  */
-TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNE) {
+TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNEAuthz) {
     postAssetRequestTest(st2138::DataPayload::UNCOMPRESSED, "/catena_logo_up.png", payloadUncompressed_,
                 Scopes().getForwardMap().at(Scopes_e::kOperate) + ":w");
     ASSERT_TRUE(std::filesystem::remove(downloadFolder_ + fqoid_));
 }
 
 /*
- * TEST 2.4 - POST asset request for a Gzip encoded file that does not exist with authorization.
+ * TEST 2.5 - POST asset request for a Gzip encoded file that does not exist with authorization.
  */
 TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNE_Gzip) {
     postAssetRequestTest(st2138::DataPayload::GZIP, "/catena_logo_up.png", payloadGzip_,
@@ -305,7 +374,7 @@ TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNE_Gzip) {
 }
 
 /*
- * TEST 2.5 - POST asset request for a Deflate encoded file that does not exist with authorization.
+ * TEST 2.6 - POST asset request for a Deflate encoded file that does not exist with authorization.
  */
 TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNE_Deflate) {
     postAssetRequestTest(st2138::DataPayload::DEFLATE, "/catena_logo_up.png", payloadDeflate_,
@@ -314,6 +383,30 @@ TEST_F(RESTAssetRequestTests, POSTAssetRequest_DNE_Deflate) {
 }
 
 /*
+ * TEST 2.7 - POST asset request for a slot out of range. 
+ */
+TEST_F(RESTAssetRequestTests, POSTAssetRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+
+    //establish expectations
+    method_ = Method_POST;
+    fqoid_ = "/test_asset.jpg";
+    slot_ = 65536;
+    authzEnabled_ = true;
+    jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
+
+    // Setting the expected response
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * ============================================================================
+ *                               PUT AssetRequest tests
+ * ============================================================================
+ * 
  * TEST 3.1 - PUT asset request for a file that does not exist.
  */
 TEST_F(RESTAssetRequestTests, PUTAssetRequest_DNE) {
@@ -352,7 +445,7 @@ TEST_F(RESTAssetRequestTests, PUTAssetRequest_NoAuthz) {
 /*
  * TEST 3.3 - PUT asset request for a file that exists with authorization.
  */
-TEST_F(RESTAssetRequestTests, PUTAssetRequest_Exists) {
+TEST_F(RESTAssetRequestTests, PUTAssetRequest_ExistsAuthz) {
     //establish expectations
     method_ = Method_PUT;
     fqoid_ = "/catena_logo_up.png";
@@ -393,6 +486,30 @@ TEST_F(RESTAssetRequestTests, PUTAssetRequest_Exists) {
 }
 
 /*
+ * TEST 3.4 - PUT asset request for a slot out of range. 
+ */
+TEST_F(RESTAssetRequestTests, PUTAssetRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+
+    //establish expectations
+    method_ = Method_PUT;
+    fqoid_ = "/test_asset.jpg";
+    slot_ = 65536;
+    authzEnabled_ = true;
+    jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
+
+    // Setting the expected response
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+
+    // Calling proceed and testing the output
+    testCall();
+}
+
+/*
+ * ============================================================================
+ *                               DELETE AssetRequest tests
+ * ============================================================================
+ * 
  * TEST 4.1 - DELETE asset request for a file that does not exist.
  */
 TEST_F(RESTAssetRequestTests, DELETEAssetRequest_DNE) {
@@ -462,6 +579,26 @@ TEST_F(RESTAssetRequestTests, DELETEAssetRequest_Exists) {
     // Calling proceed and testing the output
     testCall();
     ASSERT_TRUE(!std::filesystem::exists(downloadFolder_ + fqoid_)) << "File was not deleted: " << downloadFolder_ + fqoid_;
+}
+
+/*
+ * TEST 4.4 - DELETE asset request for a slot out of range. 
+ */
+TEST_F(RESTAssetRequestTests, DELETEAssetRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+
+    //establish expectations
+    method_ = Method_DELETE;
+    fqoid_ = "/test_asset.jpg";
+    slot_ = 65536;
+    authzEnabled_ = true;
+    jwsToken_ = getJwsToken(Scopes().getForwardMap().at(Scopes_e::kMonitor));
+
+    // Setting the expected response
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+
+    // Calling proceed and testing the output
+    testCall();
 }
 
 /*

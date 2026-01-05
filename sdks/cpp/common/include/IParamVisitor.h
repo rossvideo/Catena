@@ -34,7 +34,8 @@
  * @file IParamVisitor.h
  * @brief Implements Catena IParamVisitor
  * @author zuhayr.sarker@rossvideo.com
- * @date 2025-04-02
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @date 2025-11-06
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -67,10 +68,8 @@ class IParamVisitor {
          * @param param The array to visit
          * @param path The path of the array
          * @param length The length of the array
-         * @note Default implementation does nothing, but can be overridden 
-         * by subclasses for special array handling.
          */
-        virtual void visitArray(IParam* param, const std::string& path, uint32_t length) {}
+        virtual void visitArray(IParam* param, const std::string& path, uint32_t length) = 0;
 };
 
 } // namespace common

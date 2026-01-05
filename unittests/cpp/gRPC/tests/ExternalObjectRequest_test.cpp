@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the ExternalObjectRequest.cpp file.
  * @author nelson.daniels@rossvideo.com
- * @date 25/09/19
+ * @author jason.chen@rossvideo.com
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -55,11 +56,11 @@ class gRPCExternalObjectRequestTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("gRPCExternalObjectRequestTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("gRPCExternalObjectRequestTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     // Called after each individual test
@@ -282,6 +283,63 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_FileIOException) {
     // Set expected error - generic exception should result in CANCELLED status
     expRc_ = catena::exception_with_status("", catena::StatusCode::CANCELLED);
     
+    // Send the RPC
+    testRPC();
+}
+
+/*
+ * TEST 2.5 - ExternalObjectRequest with null slot, should handle as a normal case.
+ */
+TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_NullSlotCase) {
+    // Create test file with content
+    std::string testContent = "This is test file content for external object.";
+    createTestFile("/test_file.txt", testContent);
+    
+    // Initialize request payload
+    initPayload("/test_file.txt");
+    inVal_.clear_slot();
+    expPayload(testContent);
+    
+    // Send the RPC
+    testRPC();
+}
+
+/*
+ * TEST 2.6 - ExternalObjectRequest with invalid slot, should return NOT_FOUND.
+ */
+TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_InvalidSlot) {
+    // Create test file with content
+    std::string testContent = "This is test file content for external object.";
+    createTestFile("/test_file.txt", testContent);
+
+    // Initialize request payload
+    initPayload("/test_file.txt");
+    inVal_.set_slot(9999); 
+
+    // Expect NOT_FOUND error
+    expRc_ = catena::exception_with_status("Device not found in slot 9999", catena::StatusCode::NOT_FOUND);
+
+    // Send the RPC
+    testRPC();
+}
+
+/*
+ * TEST 2.7 - ExternalObjectRequest with slot of of range - should return INVALID_ARGUMENT.
+ */
+TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+
+    // Create test file with content
+    std::string testContent = "This is test file content for external object.";
+    createTestFile("/test_file.txt", testContent);
+
+    // Initialize request payload
+    initPayload("/test_file.txt");
+    inVal_.set_slot(65536); 
+
+    // Expect NOT_FOUND error
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+
     // Send the RPC
     testRPC();
 }

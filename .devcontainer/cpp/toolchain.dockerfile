@@ -8,7 +8,7 @@ LABEL org.opencontainers.image.vendor=$IMAGE_VENDOR
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Copy the toolchain.env file
-COPY .devcontainer/toolchain-cpp.env /root/toolchain.env
+COPY .devcontainer/cpp/toolchain.env /root/toolchain.env
 
 # Source the toolchain.env file
 RUN . /root/toolchain.env \
@@ -40,9 +40,19 @@ RUN . /root/toolchain.env \
     && apt-get install -y nodejs \
     && rm -f /tmp/nodesource_setup.sh \
     && npm install -g n \
-    && apt-get install -y libgoogle-glog-dev \
     && apt-get clean \
     && rm -rf /var/cache/apt/archives/ /var/lib/apt/lists/*
+
+# install lcov without relying on apt since the version in the ubuntu repos is outdated
+RUN . /root/toolchain.env \
+    && curl -L --output /tmp/lcov-$LCOV_VERSION.tar.gz https://github.com/linux-test-project/lcov/releases/download/v$LCOV_VERSION/lcov-$LCOV_VERSION.tar.gz \
+    && tar -xzf /tmp/lcov-$LCOV_VERSION.tar.gz -C /tmp/ \
+    && make -C /tmp/lcov-$LCOV_VERSION install \
+    && rm -rf /tmp/lcov-$LCOV_VERSION /tmp/lcov-$LCOV_VERSION.tar.gz \
+    && PERL_MM_USE_DEFAULT=1 cpan install App::cpanminus \
+    && cpanm Capture::Tiny DateTime Date::Parse \
+    && rm -rf /root/.cpanm /root/.cpan \
+    && lcov --version
 
 FROM base AS builder
 
@@ -50,6 +60,7 @@ FROM base AS builder
 RUN . /root/toolchain.env \
     && git clone -b $GRPC_VERSION https://github.com/grpc/grpc /usr/local/grpc \
     && git -C /usr/local/grpc submodule update --recursive --init \
+    && git -C /usr/local/grpc/third_party/abseil-cpp checkout $ABSEIL_VERSION \
     && mkdir -p /usr/local/grpc/cmake/build
 
 WORKDIR /usr/local/grpc/cmake/build
@@ -85,7 +96,7 @@ RUN . /root/toolchain.env \
     && apt-get update \
     && apt-get install -y docker-ce-cli docker-buildx-plugin docker-compose-plugin
 
-COPY .devcontainer/toolchain-cpp.requirements.txt /root/requirements.txt
+COPY .devcontainer/cpp/toolchain.requirements.txt /root/requirements.txt
 
 # Install Python and gcovr for coverage reports
 RUN apt-get update && apt-get install --no-install-recommends -y python3-pip \

@@ -46,6 +46,7 @@
 #include <Authorizer.h>
 #include <SubscriptionManager.h>
 #include <Logger.h>
+#include "SharedFlags.h"
 
 using namespace catena::common;
 
@@ -53,11 +54,11 @@ class SubscriptionManagerTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        Logger::StartLogging("SubscriptionManagerTest");
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        Logger::init("SubscriptionManagerTest");
     }
 
     static void TearDownTestSuite() {
-        google::ShutdownGoogleLogging();
     }
 
     SubscriptionManagerTest() : authz_(jwsToken_) {}
