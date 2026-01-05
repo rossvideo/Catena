@@ -103,7 +103,7 @@ The validation logic is integrated into the code generation pipeline in [index.j
 
 ## Required Parts for a Valid Device Model
 
-According to the ST2138-a specification and enforced by the [validation logic](../tools/codegen/index.js#L80-L167), a valid device model could include:
+According to the ST2138-a specification and enforced by the [validation logic](../tools/codegen/index.js#L80-L167), a valid device model can only include:
 
 ### 1. **Device Metadata**
 
