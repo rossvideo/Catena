@@ -6,52 +6,378 @@ style="width: 100%;" alt="Catena Logo" />
 <figcaption aria-hidden="true">Catena Logo</figcaption>
 </figure>
 </div>
-<h1 id="multi-part-device-models-and-the-validator">Multi-part Device
-Models and the Validator</h1>
-<p>Device models can quickly become too large to manage.</p>
-<p>For this reason, Catena supports the import directive. At time of
-writing, only <code>Param</code> objects can be imported.</p>
-<p>The following device model shows two imported parameters:
-<code>variant_example</code> and <code>variantlist_example</code>.</p>
-<figure>
-<img src="images/device_tree.png" alt="alt" />
-<figcaption aria-hidden="true">alt</figcaption>
-</figure>
-<p>The C++ SDK recognizes the (badly formatted, for a url) import value
-<code>include</code> to import the component of the device model
-locally. The rules being:</p>
+<h1 id="validating-device-models">Validating Device Models</h1>
+<h2 id="about-st2138-a">About ST2138-a</h2>
+<p>SMPTE ST 2138 (also known as the <strong>Catena standard</strong>) is
+an emerging standard by the Society of Motion Picture and Television
+Engineers that defines a standardized control plane for media devices
+and services. The ST2138-a specification provides schema definitions for
+plug-and-play communication and control of media services and devices
+across cloud, on-premises, and hybrid platforms.</p>
+<p>The Catena specification is currently in discussion with OSA with the
+goal of SMPTE standardization. You can learn more about ST2138-a at:</p>
 <ul>
-<li>If this is the root device model, look in the <code>params</code>
-sub-folder for a file with the same name as the imported param with a
-<code>param.</code> prefix and <code>.json</code> extension.</li>
-<li>If I’m lower than the root because a param is importing another
-param, look in the sub-folder with the same name as the importing param
-and for files named for the imported child param again with the
-<code>param.</code> prefix and <code>.json</code> extension.</li>
+<li><a href="https://github.com/SMPTE/st2138-a">SMPTE ST 2138-a GitHub
+Repository</a></li>
 </ul>
-<p>This shows the file system for the <code>device_tree.json</code>
-example:</p>
+<p>The standard defines a comprehensive device model structure using
+protocol buffers and JSON schemas. Device models must conform to these
+schemas to ensure interoperability between different implementations and
+manufacturers.</p>
+<hr />
+<h2 id="why-a-validator">Why a Validator</h2>
+<p>Device models can quickly become complex, spanning multiple files
+with hundreds of parameters, constraints, commands, and menu structures.
+Manual verification of these models is error-prone and time-consuming. A
+validator is essential for several reasons:</p>
+<h3 id="catch-errors-early">1. <strong>Catch Errors Early</strong></h3>
+<p>The validator ensures your device model conforms to the ST2138-a
+schema before attempting to generate code or deploy the model. This
+catches:</p>
+<ul>
+<li>Type mismatches (e.g., using a string where an integer is
+required)</li>
+<li>Missing required fields (e.g., mandatory product information)</li>
+<li>Invalid enum values</li>
+<li>Incorrect nested structures</li>
+<li>Schema constraint violations</li>
+</ul>
 <figure>
-<img src="images/device_tree_folder.png" alt="alt" />
-<figcaption aria-hidden="true">alt</figcaption>
+<img src="images/device.minimal.error.png"
+alt="Device Model Error Highlighting" />
+<figcaption aria-hidden="true">Device Model Error
+Highlighting</figcaption>
 </figure>
-<p>I wish the file <code>device.tree.json</code> started this screengrab
-to show that it’s in the local root folder that contains the
-<code>params</code> folder. But we can’t have everything.</p>
-<p>It used to be possible to have <code>vscode</code> apply sub-schemas
-from a schema file. That functionality disappeared sometime around 2022
-so to validate JSON files that do not contain device models we can use
-the valiation tool that is included in this repo.</p>
-<p><code>validate.js</code> uses the first part of its target’s filename
-to select the schema (or sub-schema) it will apply. So, to check whether
-the <code>param.AudioSlot.json</code> is valid here we can run it like
-this:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Catena</span> % node validate.js ./example_device_models/device_tree/par</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ams/variantlist_example/param.AudioSlot.json</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">applying:</span> param schema to input file ./example_device_models/device_tree/params/variantlist_example/param.AudioSlot.json</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">data</span> was valid.</span></code></pre></div>
-<p><code>validate.js</code> uses the <code>ajv</code> module to perform
-the validation.</p>
+<p><em>Example: VSCode highlighting a validation error in a device
+model</em></p>
+<h3 id="multi-part-device-model-support">2. <strong>Multi-part Device
+Model Support</strong></h3>
+<p>Catena supports the import directive to break large device models
+into manageable parts. Currently, <code>Param</code> objects can be
+imported. The validator checks both:</p>
+<ul>
+<li>The root device model file</li>
+<li>All imported parameter files</li>
+</ul>
+<p>The following device model shows two imported parameters. Full
+example can be found in <a
+href="../sdks/cpp/common/examples/import_params/device.import_params.json">device.import_params.json</a>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;params&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;city&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;import&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;file&quot;</span><span class="fu">:</span> <span class="st">&quot;params/param.city.json&quot;</span><span class="fu">}</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;plane_ticket&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;STRUCT&quot;</span><span class="fu">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;params&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;departure&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;import&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;file&quot;</span><span class="fu">:</span> <span class="st">&quot;params/param.ottawa.json&quot;</span><span class="fu">}</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        <span class="fu">},</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;destination&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;STRUCT&quot;</span><span class="fu">,</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;template_oid&quot;</span><span class="fu">:</span> <span class="st">&quot;/city&quot;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>      <span class="fu">},</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>The import structure follows these rules (implemented in <a
+href="../tools/codegen/DeviceModel.js#L55-L90">DeviceModel.js</a>):</p>
+<ul>
+<li>Root device model: Look in the <code>params</code> sub-folder for
+files named <code>param.&lt;name&gt;.json</code> or
+<code>param.&lt;name&gt;.yaml</code></li>
+<li>Nested imports: Look in sub-folders matching the parent param
+name</li>
+</ul>
+<p>File system for <code>device.import_params.json</code> example:</p>
+<figure>
+<img src="images/import_params_tree.png"
+alt="Device Tree Folder Structure" />
+<figcaption aria-hidden="true">Device Tree Folder Structure</figcaption>
+</figure>
+<h3 id="ide-integration">3. <strong>IDE Integration</strong></h3>
+<p>Schema validation for VSCode for JSON and YAML is already set up in
+<code>.vscode/settings.json</code>. For YAML files, ensure you have the
+<a
+href="https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml">YAML
+extension</a> installed. If you wish to set up schema validation
+manually for another project, refer to the <code>settings.json</code>
+file for example configuration. Configuration can be found under the
+<code>json.schemas</code> and <code>yaml.schemas</code> sections.</p>
+<p>With proper configuration, validators provide real-time feedback in
+your IDE:</p>
+<ul>
+<li><strong>Auto-completion</strong>: Suggests valid properties and
+values</li>
+</ul>
+<figure>
+<img src="images/autocomplete.png" alt="Auto-completion in VSCode" />
+<figcaption aria-hidden="true">Auto-completion in VSCode</figcaption>
+</figure>
+<ul>
+<li><strong>Tooltips</strong>: Shows documentation for each field</li>
+</ul>
+<figure>
+<img src="images/tooltip.png" alt="Tooltip Documentation" />
+<figcaption aria-hidden="true">Tooltip Documentation</figcaption>
+</figure>
+<ul>
+<li><strong>Inline error highlighting</strong>: Marks invalid syntax
+immediately</li>
+</ul>
+<h3 id="prevent-runtime-errors">4. <strong>Prevent Runtime
+Errors</strong></h3>
+<p>Many issues that would cause runtime failures are caught at
+validation time:</p>
+<ul>
+<li>Invalid JSON pointer references</li>
+<li>Circular dependencies in imports</li>
+<li>Authorization scope misconfigurations</li>
+<li>Constraint reference errors</li>
+</ul>
+<p>The validation logic is integrated into the code generation pipeline
+in <a href="../tools/codegen/index.js#L173-L187">index.js</a>, ensuring
+no invalid models make it to production.</p>
+<hr />
+<h2 id="required-parts-for-a-valid-device-model">Required Parts for a
+Valid Device Model</h2>
+<p>According to the ST2138-a specification and enforced by the <a
+href="../tools/codegen/index.js#L80-L167">validation logic</a>, a valid
+device model can only include:</p>
+<h3 id="device-metadata">1. <strong>Device Metadata</strong></h3>
+<ul>
+<li><strong><code>slot</code></strong>: Device slot number</li>
+<li><strong><code>default_scope</code></strong>: Default access scope
+(e.g., <code>"st2138:mon"</code>)</li>
+<li><strong><code>detail_level</code></strong>: Default detail level for
+responses</li>
+<li><strong><code>access_scopes</code></strong>: Array of supported
+access scopes</li>
+<li><strong><code>multi_set_enabled</code></strong>: Boolean indicating
+multi-set support</li>
+<li><strong><code>subscriptions</code></strong>: Boolean indicating
+subscription support</li>
+<li><strong><code>constraints</code></strong>: Container for shared
+device constraints</li>
+<li><strong><code>params</code></strong>: Container for a device
+parameters</li>
+<li><strong><code>commands</code></strong>: Container for device
+commands</li>
+<li><strong><code>menu_groups</code></strong>: Container for editor UI
+definitions</li>
+<li><strong><code>languages_packs</code></strong>: Container for device
+language packs</li>
+</ul>
+<h3 id="mandatory-product-parameters">2. <strong>Mandatory Product
+Parameters</strong></h3>
+<p>The <code>product</code> parameter must be a read-only STRUCT
+containing all six required parameter definitions. The table below shows
+which parameters must have values:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Value Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>name</code></td>
+<td>STRING</td>
+<td><strong>Yes</strong></td>
+<td>Product name</td>
+</tr>
+<tr class="even">
+<td><code>vendor</code></td>
+<td>STRING</td>
+<td><strong>Yes</strong></td>
+<td>Manufacturer name</td>
+</tr>
+<tr class="odd">
+<td><code>version</code></td>
+<td>STRING</td>
+<td><strong>Yes</strong></td>
+<td>Firmware/software version</td>
+</tr>
+<tr class="even">
+<td><code>serial_number</code></td>
+<td>STRING</td>
+<td><strong>Yes</strong></td>
+<td>Unique device serial number</td>
+</tr>
+<tr class="odd">
+<td><code>catena_sdk</code></td>
+<td>STRING</td>
+<td>No</td>
+<td>SDK implementation name</td>
+</tr>
+<tr class="even">
+<td><code>catena_sdk_version</code></td>
+<td>STRING</td>
+<td>No</td>
+<td>SDK version</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Important:</strong> All six parameters must be
+<strong>defined</strong> in the <code>params</code> structure. However,
+only the four marked as “Value Required” need actual values provided.
+The optional parameters (<code>catena_sdk</code> and
+<code>catena_sdk_version</code>) can be defined without initial
+values—these values can be generated automatically at runtime by the SDK
+if not provided.</p>
+<p>All product parameters must have an access scope of
+<code>"st2138:mon"</code> (monitor) or inherit it from parent
+scopes.</p>
+<p>Example from <a
+href="../sdks/cpp/common/examples/use_constraints/device.use_constraints.json">use_constraints</a>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;slot&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;default_scope&quot;</span><span class="fu">:</span> <span class="st">&quot;st2138:mon&quot;</span><span class="fu">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;params&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;product&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;STRUCT&quot;</span><span class="fu">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;read_only&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;access_scope&quot;</span><span class="fu">:</span> <span class="st">&quot;st2138:mon&quot;</span><span class="fu">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;params&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;STRING&quot;</span> <span class="fu">},</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;vendor&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;STRING&quot;</span> <span class="fu">},</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;STRING&quot;</span> <span class="fu">},</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;serial_number&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;STRING&quot;</span> <span class="fu">},</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;catena_sdk&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;STRING&quot;</span> <span class="fu">},</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;catena_sdk_version&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;STRING&quot;</span> <span class="fu">}</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>      <span class="fu">},</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;struct_value&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;fields&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;string_value&quot;</span><span class="fu">:</span> <span class="st">&quot;My Device&quot;</span> <span class="fu">},</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;vendor&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;string_value&quot;</span><span class="fu">:</span> <span class="st">&quot;Ross Video&quot;</span> <span class="fu">},</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;string_value&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0.0&quot;</span> <span class="fu">},</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;serial_number&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;string_value&quot;</span><span class="fu">:</span> <span class="st">&quot;12345&quot;</span> <span class="fu">}</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>          <span class="fu">}</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="valid-parameter-types">3. <strong>Valid Parameter
+Types</strong></h3>
+<p>All parameters must use one of the supported types defined in the
+protobuf specification:</p>
+<ul>
+<li>Scalar: <code>INT32</code>, <code>FLOAT32</code>,
+<code>STRING</code>, <code>EMPTY</code></li>
+<li>Complex: <code>STRUCT</code>, <code>STRUCT_VARIANT</code>,
+<code>INT32_ARRAY</code>, <code>FLOAT32_ARRAY</code>,
+<code>STRING_ARRAY</code>, <code>STRUCT_ARRAY</code>,
+<code>STRUCT_VARIANT_ARRAY</code>, <code>BINARY</code>,
+<code>DATA</code></li>
+</ul>
+<p>See <a href="../smpte/interface/proto/param.proto">param.proto</a>
+for complete type definitions.</p>
+<h3 id="proper-file-naming-convention">4. <strong>Proper File Naming
+Convention</strong></h3>
+<p>Files must follow the naming pattern for schema detection:</p>
+<ul>
+<li>Device models: <code>device.&lt;name&gt;.json</code> or
+<code>device.&lt;name&gt;.yaml</code></li>
+<li>Parameter imports: <code>param.&lt;name&gt;.json</code> or
+<code>param.&lt;name&gt;.yaml</code></li>
+<li>Constraint definitions: Follow schema requirements</li>
+</ul>
+<p>The <a href="../smpte/tools/validator.js#L56-L84">validator</a>
+extracts the schema name from the first part of the filename.</p>
+<h3 id="valid-references">5. <strong>Valid References</strong></h3>
+<p>All references must resolve correctly:</p>
+<ul>
+<li>Constraint references (<code>constraint_ref</code>)</li>
+<li>Template references</li>
+<li>Import paths</li>
+<li>JSON pointers in commands</li>
+</ul>
+<hr />
+<h2 id="how-to-run-the-validator">How to Run the Validator</h2>
+<p>There are multiple ways to validate your device models:</p>
+<h3 id="method-1-command-line-validation-standalone">Method 1:
+Command-Line Validation (Standalone)</h3>
+<p>The standalone validator is located in <a
+href="../smpte/tools/validate.js">smpte/tools/validate.js</a>.</p>
+<p><strong>Usage:</strong></p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/Catena</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">node</span> smpte/tools/validate.js <span class="op">&lt;</span>path-to-your-file<span class="op">&gt;</span></span></code></pre></div>
+<p><strong>Examples:</strong></p>
+<p>Validate a device model:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">node</span> smpte/tools/validate.js ./sdks/cpp/common/examples/hello_world/device.hello_world.json</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Output:</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Applying schema &#39;device&#39; to file &#39;./sdks/cpp/common/examples/hello_world/device.hello_world.json&#39;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ✅ Validation succeeded.</span></span></code></pre></div>
+<p>Validate a parameter file:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">node</span> smpte/tools/validate.js ./example_device_models/device_tree/params/variantlist_example/param.AudioSlot.json</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Output:</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Applying schema &#39;param&#39; to file &#39;./example_device_models/device_tree/params/variantlist_example/param.AudioSlot.json&#39;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ✅ Validation succeeded.</span></span></code></pre></div>
+<p>Validate a YAML file:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">node</span> smpte/tools/validate.js ./sdks/cpp/connections/gRPC/examples/one_of_everything/device.one_of_everything.yaml</span></code></pre></div>
+<p><strong>How it works:</strong></p>
+<p>The validator (implemented in <a
+href="../smpte/tools/validator.js">validator.js</a>):</p>
+<ol type="1">
+<li>Extracts the schema name from the filename prefix (e.g.,
+<code>device</code>, <code>param</code>)</li>
+<li>Loads the appropriate schema from <a
+href="../smpte/interface/schemata/device.json">device.json</a></li>
+<li>Parses the input file (supports both JSON and YAML)</li>
+<li>Uses <a href="https://ajv.js.org/">AJV (Another JSON Validator)</a>
+to validate against the schema</li>
+<li>Reports errors with line numbers using source maps</li>
+</ol>
+<h3 id="method-2-using-npx-with-local-validator">Method 2: Using NPX
+with Local Validator</h3>
+<p>The ST2138-a validator is not yet published as a standalone NPM
+package. However, you can use it via npx by referencing the local path
+in your <code>package.json</code>:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;dependencies&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;smpte-validator&quot;</span><span class="fu">:</span> <span class="st">&quot;file:./smpte/tools&quot;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Then run with npx:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npx</span> smpte-validator ./path/to/device.good.yaml</span></code></pre></div>
+<p>This method is useful when integrating validation into npm scripts or
+CI/CD pipelines.</p>
+<h3 id="method-3-integrated-code-generation">Method 3: Integrated Code
+Generation</h3>
+<p>When generating code, validation happens automatically. The <a
+href="../tools/codegen/index.js">codegen tool</a> validates before
+generating:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/Catena/tools/codegen</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">node</span> index.js <span class="at">--device-model</span> ../../sdks/cpp/common/examples/hello_world/device.hello_world.json <span class="at">--output</span> ./output</span></code></pre></div>
+<p><strong>Output:</strong></p>
+<pre><code>Validating device model &#39;device&#39; from file &#39;../../sdks/cpp/common/examples/hello_world/device.hello_world.json&#39;...
+Applying schema &#39;device&#39; to file &#39;../../sdks/cpp/common/examples/hello_world/device.hello_world.json&#39;
+✅ Validation succeeded.
+Generating code...
+✅ Code generation completed.</code></pre>
+<p>The validation includes: - Schema conformance check - Mandatory
+parameter enforcement (see <a
+href="../tools/codegen/index.js#L80-L167">validateRequiredParamsAndScopes</a>)
+- Import resolution for multi-part models</p>
+<p>To disable mandatory parameter enforcement during development:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">node</span> index.js <span class="at">--device-model</span> ./device.test.json <span class="at">--disable-mandatory-enforcement</span> <span class="at">--output</span> ./output</span></code></pre></div>
+<hr />
 <div style="text-align: center">
 <p><a href="Template.html">Next Page: Template Parameters</a></p>
 </div>
