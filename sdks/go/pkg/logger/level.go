@@ -43,23 +43,23 @@ package logger
 type Level int
 
 const (
-    LevelDebug Level = iota  // Verbose logging (similar to VLOG)
-    LevelInfo                // Standard info (LOG(INFO))
-    LevelWarning             // Warnings (LOG(WARNING))
-    LevelError               // Errors (LOG(ERROR))
+	LevelDebug   Level = iota // Verbose logging (similar to VLOG)
+	LevelInfo                 // Standard info (LOG(INFO))
+	LevelWarning              // Warnings (LOG(WARNING))
+	LevelError                // Errors (LOG(ERROR))
 )
 
 func (l Level) String() string {
-    switch l {
-    case LevelDebug:
-        return "DEBUG"
-    case LevelInfo:
-        return "INFO"
-    case LevelWarning:
-        return "WARNING"
-    case LevelError:
-        return "ERROR"
-    default:
-        return "UNKNOWN"
-    }
+	switch l {
+	case LevelDebug:
+		return "DEBUG"
+	case LevelInfo:
+		return "INFO"
+	case LevelWarning:
+		return "WARNING"
+	case LevelError:
+		return "ERROR"
+	default:
+		return "UNKNOWN"
+	}
 }

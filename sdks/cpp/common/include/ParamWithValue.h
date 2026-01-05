@@ -243,8 +243,9 @@ class ParamWithValue : public catena::common::IParam {
     const T& get() const { return value_.get(); }
 
     /**
-     * @brief Gets a child parameter by name.
-     * @param oid The oid of the child parameter to get.
+     * @brief Gets a child parameter by following a path.
+     * @param oid The path to the child parameter. The path may contain field names (for structs),
+     * indices (for arrays), or a combination of both for nested structures.
      * @param authz The IAuthorizer to test read permissions with.
      * @param status The status of the operation. OK if successful, otherwise
      * an error.
@@ -521,10 +522,16 @@ class ParamWithValue : public catena::common::IParam {
     std::unique_ptr<IParam> getParam_(Path& oid, EmptyValue& value, const IAuthorizer& authz, catena::exception_with_status& status) {
         std::unique_ptr<IParam> returnParam = nullptr;
         // Make sure the front is a field name.
-        if (!oid.front_is_string()) {
-            status = catena::exception_with_status("Expected string in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
+        if (!oid.front_is_string() && !oid.front_is_index()) {
+            status = catena::exception_with_status("Expected string or index in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
         } else {
-            std::string oidStr = oid.front_as_string();
+            std::string oidStr;
+            if (oid.front_is_index()) {
+                oidStr = std::to_string(oid.front_as_index());
+            }
+            else {
+                oidStr = oid.front_as_string();
+            }          
             oid.pop();
             
             // Check if this parameter has sub-parameters defined in its descriptor
