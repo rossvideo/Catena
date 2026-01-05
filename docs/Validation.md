@@ -75,6 +75,7 @@ File system for `device.import_params.json` example:
 ![Device Tree Folder Structure](images/import_params_tree.png)
 
 ### 3. **IDE Integration**
+Schema validation for VSCode for JSON and YAML is already set up in `.vscode/settings.json`. For YAML files, ensure you have the [YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) installed. If you wish to set up schema validation manually for another project, refer to the `settings.json` file for example configuration. Configuration can be found under the `json.schemas` and `yaml.schemas` sections.
 
 With proper configuration, validators provide real-time feedback in your IDE:
 
