@@ -44,16 +44,20 @@ type SetValueHandler func(value any, slot int, fqoid string) catena.StatusResult
 // AssetHandler keeps w/r so implementations can stream content directly; they still return an HTTPResult for status.
 type AssetHandler func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) catena.StatusResult
 
-// NotFoundHandler is called when an endpoint is requested that does not exist.
-type NotFoundHandler func(w http.ResponseWriter, r *http.Request) catena.StatusResult
+// ConnectHandler handles connection requests (e.g., websocket upgrade or session init).
+type ConnectHandler func(w http.ResponseWriter, r *http.Request, slot int) catena.StatusResult
+
+// ExecuteCommandHandler handles command execution requests.
+type ExecuteCommandHandler func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) catena.StatusResult
 
 // Server is decoupled from catena.Device and just wires HTTP routes.
 type Server struct {
-	getDevice DeviceHandler
-	getValue  map[int]GetValueHandler
-	setValue  map[int]SetValueHandler
-	getAsset  map[int]AssetHandler
-	notFound  NotFoundHandler
+	getDevice      DeviceHandler
+	getValue       map[int]GetValueHandler
+	setValue       map[int]SetValueHandler
+	getAsset       map[int]AssetHandler
+	connect        map[int]ConnectHandler
+	executeCommand map[int]ExecuteCommandHandler
 
 	slotList []int
 	mux      http.ServeMux
@@ -66,13 +70,14 @@ func NewServer(slotList []int) *Server {
 	log.Info("Creating new REST server", "slots", slotList)
 
 	server := Server{
-		getDevice: DeviceHandler(nil),
-		getValue:  make(map[int]GetValueHandler),
-		setValue:  make(map[int]SetValueHandler),
-		getAsset:  make(map[int]AssetHandler),
-		slotList:  slotList,
-		mux:       *http.NewServeMux(),
-		log:       log,
+		getDevice:      DeviceHandler(nil),
+		getValue:       make(map[int]GetValueHandler),
+		setValue:       make(map[int]SetValueHandler),
+		getAsset:       make(map[int]AssetHandler),
+		connect:        make(map[int]ConnectHandler),
+		executeCommand: make(map[int]ExecuteCommandHandler),
+		slotList:       slotList,
+		mux:            *http.NewServeMux(),
 	}
 
 	// Register HTTP routes.
@@ -111,6 +116,16 @@ func (s *Server) DefaultSetValueHandler(value any, slot int, fqoid string) caten
 func (s *Server) DefaultGetAssetHandler(w http.ResponseWriter, r *http.Request, slot int, fqoid string) catena.StatusResult {
 	s.log.Warn("No handler registered", "method", "GET", "endpoint", "/asset", "fqoid", fqoid, "slot", slot)
 	return catena.NotImplemented("no getAsset handler registered for slot " + strconv.Itoa(slot))
+}
+
+func (s *Server) DefaultConnectHandler(w http.ResponseWriter, r *http.Request, slot int) catena.StatusResult {
+	logger.Warning("POST /connect: no handler registered for slot %d", slot)
+	return catena.NotImplemented("no connect handler registered for slot " + strconv.Itoa(slot))
+}
+
+func (s *Server) DefaultExecuteCommandHandler(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) catena.StatusResult {
+	logger.Warning("POST /commands/%s: no handler registered for slot %d", commandFqoid, slot)
+	return catena.NotImplemented("no executeCommand handler registered for slot " + strconv.Itoa(slot))
 }
 
 // Registration APIs: set one generic handler per slot.
@@ -156,6 +171,20 @@ func (s *Server) RegisterNotFoundHandler(handler NotFoundHandler) {
 	s.log.Debug("Registered not-found handler")
 }
 
+func (s *Server) RegisterConnectHandler(slot int, handler ConnectHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.connect[slot] = handler
+	logger.Debug("Registered connect handler for slot %d", slot)
+}
+
+func (s *Server) RegisterExecuteCommandHandler(slot int, handler ExecuteCommandHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.executeCommand[slot] = handler
+	logger.Debug("Registered executeCommand handler for slot %d", slot)
+}
+
 // Internal lookups (read-locked).
 func (s *Server) lookupGetValue(slot int) (GetValueHandler, bool) {
 	s.mu.RLock()
@@ -175,6 +204,20 @@ func (s *Server) lookupGetAsset(slot int) (AssetHandler, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	h, ok := s.getAsset[slot]
+	return h, ok
+}
+
+func (s *Server) lookupConnect(slot int) (ConnectHandler, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	h, ok := s.connect[slot]
+	return h, ok
+}
+
+func (s *Server) lookupExecuteCommand(slot int) (ExecuteCommandHandler, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	h, ok := s.executeCommand[slot]
 	return h, ok
 }
 
@@ -263,6 +306,52 @@ func (s *Server) RegisterRoutes() {
 				return
 			}
 			writeHTTPResult(w, s.DefaultGetAssetHandler(w, r, slot, fqoid))
+		})
+
+		// Connect endpoint: POST /connect
+		s.mux.HandleFunc(prefix+"/connect", func(w http.ResponseWriter, r *http.Request) {
+			logger.Info("%s /connect started", r.Method)
+			if r.Method != http.MethodPost {
+				logger.Warning("/connect: method %s not allowed, expected POST", r.Method)
+				writeHTTPResult(w, catena.MethodNotAllowed("method not allowed"))
+				return
+			}
+			if handler, ok := s.lookupConnect(slot); ok {
+				res := handler(w, r, slot)
+				writeHTTPResult(w, res)
+				logger.Info("POST /connect finished")
+				return
+			}
+			writeHTTPResult(w, s.DefaultConnectHandler(w, r, slot))
+		})
+
+		// Commands endpoint: POST /commands/{commandFqoid}
+		s.mux.HandleFunc(prefix+"/commands/", func(w http.ResponseWriter, r *http.Request) {
+			commandFqoid := strings.TrimPrefix(r.URL.Path, prefix+"/commands/")
+			if commandFqoid == "" {
+				logger.Warning("POST /commands: missing command fqoid")
+				writeHTTPResult(w, catena.BadRequest("missing command fqoid"))
+				return
+			}
+			if r.Method != http.MethodPost {
+				logger.Warning("%s /commands/%s: method not allowed", r.Method, commandFqoid)
+				writeHTTPResult(w, catena.MethodNotAllowed("method not allowed"))
+				return
+			}
+			payload, err := internal.ReadValueFromRequest(r)
+			if err != nil {
+				logger.Error("Slot %d: ExecuteCommand %s - invalid JSON: %v", slot, commandFqoid, err)
+				writeHTTPResult(w, catena.BadRequest("invalid JSON"))
+				return
+			}
+			logger.Info("POST /commands/%s started", commandFqoid)
+			if handler, ok := s.lookupExecuteCommand(slot); ok {
+				res := handler(w, r, slot, commandFqoid, payload)
+				writeHTTPResult(w, res)
+				logger.Info("POST /commands/%s finished", commandFqoid)
+				return
+			}
+			writeHTTPResult(w, s.DefaultExecuteCommandHandler(w, r, slot, commandFqoid, payload))
 		})
 	}
 }
