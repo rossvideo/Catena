@@ -33,7 +33,7 @@
  * @author zuhayr.sarker@rossvideo.com
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
- * @date 2025-11-11
+ * @date 2025-12-01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -293,6 +293,19 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_GetSerializerThrowUnknown) {
     // Setting expectations
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_))
         .Times(1).WillOnce(testing::Throw(42));
+    // Calling proceed and testing the output
+    testCall();
+}
+
+// Test 3.7: Test proceed with an out of range slot.
+TEST_F(RESTDeviceRequestTests, DeviceRequest_SlotOutOfBounds) {
+    // Add device at out of range slot
+    dms_[65536] = &dm0_;
+    
+    slot_ = 65536;
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations.
+    EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(0);
     // Calling proceed and testing the output
     testCall();
 }

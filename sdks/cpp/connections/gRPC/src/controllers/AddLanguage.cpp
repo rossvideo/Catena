@@ -75,6 +75,10 @@ void AddLanguage::proceed(bool ok) {
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             IDevice* dm = nullptr;
             try {
+                // Check if slot is in valid range.
+                if (req_.slot() > 65535 || req_.slot() < 0) {
+                    throw catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+                }
                 // Getting device at specified slot.
                 if (dms_.contains(req_.slot())) {
                     dm = dms_.at(req_.slot());

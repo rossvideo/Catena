@@ -32,7 +32,7 @@
  * @brief This file is for testing the MultiSetValue.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
- * @date 25/11/11
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -359,5 +359,20 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_ErrCommitThrowUnknown) {
         .WillOnce(::testing::Throw(std::runtime_error(expRc_.what())));
     EXPECT_CALL(dm1_, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
+    testRPC();
+}
+
+/*
+ * TEST 14 - MulitSetValue with slot number out of valid range.
+ */
+TEST_F(gRPCMultiSetValueTests, MultiSetValue_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
+    initPayload(65536, {});
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm1_, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    // Sending the RPC.
     testRPC();
 }

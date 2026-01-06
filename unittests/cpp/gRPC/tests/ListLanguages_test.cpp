@@ -32,7 +32,7 @@
  * @brief This file is for testing the ListLanguages.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
- * @date 25/11/11
+ * @date 25/12/01
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -158,6 +158,21 @@ TEST_F(gRPCListLanguagesTests, ListLanguages_Err) {
         .WillOnce(::testing::Invoke([this](st2138::LanguageList &list){
             throw catena::exception_with_status(expRc_.what(), expRc_.status);
         }));
+    EXPECT_CALL(dm1_, toProto(::testing::An<st2138::LanguageList&>())).Times(0);
+    // Sending the RPC.
+    testRPC();
+}
+
+/*
+ * TEST 6 - ListLanguages with slot number out of valid range.
+ */
+TEST_F(gRPCListLanguagesTests, ListLanguages_SlotOutOfRange) {
+    dms_[65536] = &dm0_;
+    
+    inVal_.set_slot(65536);
+    expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
+    // Setting expectations
+    EXPECT_CALL(dm0_, toProto(::testing::An<st2138::LanguageList&>())).Times(0);
     EXPECT_CALL(dm1_, toProto(::testing::An<st2138::LanguageList&>())).Times(0);
     // Sending the RPC.
     testRPC();
