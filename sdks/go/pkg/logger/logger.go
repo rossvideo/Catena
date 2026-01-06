@@ -147,13 +147,19 @@ func (l *logger) setup() error {
 	return nil
 }
 
-// Close cleans up resources
+// Close cleans up resources and allows re-initialization.
 func Close() {
+	initMu.Lock()
+	defer initMu.Unlock()
+
 	if globalLogger != nil && globalLogger.file != nil {
 		if err := globalLogger.file.Close(); err != nil {
 			fmt.Fprintf(os.Stderr, "logger: failed to close log file: %v\n", err)
 		}
+		globalLogger.file = nil
 	}
+	globalLogger = nil
+	initialized = false
 }
 
 // GetLogger returns the underlying slog.Logger for advanced usage.
