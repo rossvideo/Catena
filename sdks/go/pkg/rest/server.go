@@ -44,12 +44,16 @@ type SetValueHandler func(value any, slot int, fqoid string) catena.StatusResult
 // AssetHandler keeps w/r so implementations can stream content directly; they still return an HTTPResult for status.
 type AssetHandler func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) catena.StatusResult
 
+// NotFoundHandler is called when an endpoint is requested that does not exist.
+type NotFoundHandler func(w http.ResponseWriter, r *http.Request) catena.StatusResult
+
 // Server is decoupled from catena.Device and just wires HTTP routes.
 type Server struct {
 	getDevice DeviceHandler
 	getValue  map[int]GetValueHandler
 	setValue  map[int]SetValueHandler
 	getAsset  map[int]AssetHandler
+	notFound  NotFoundHandler
 
 	slotList []int
 	mux      http.ServeMux
@@ -137,6 +141,19 @@ func (s *Server) RegisterGetAssetHandler(slot int, handler AssetHandler) {
 	defer s.mu.Unlock()
 	s.getAsset[slot] = handler
 	s.log.Debug("Registered asset handler", "slot", slot)
+}
+
+// RegisterNotFoundHandler registers a handler for requests to non-existent endpoints.
+// This registers a catch-all route at "/" that matches any unhandled paths.
+func (s *Server) RegisterNotFoundHandler(handler NotFoundHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.notFound = handler
+	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		res := handler(w, r)
+		writeHTTPResult(w, res)
+	})
+	s.log.Debug("Registered not-found handler")
 }
 
 // Internal lookups (read-locked).

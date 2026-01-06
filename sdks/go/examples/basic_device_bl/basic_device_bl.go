@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"reflect"
 	"strconv"
@@ -18,7 +19,7 @@ func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
 		logger.Info("SetParam", "slot", slot, "fqoid", fqoid)
 		val, ok := params.Load(fqoid)
 		if !ok {
-			logger.Warning("SetParam param not found", "slot", slot, "fqoid", fqoid)
+			logger.Error("SetParam param not found", "slot", slot, "fqoid", fqoid)
 			return catena.NotFound("param not found")
 		}
 		if reflect.TypeOf(val) != reflect.TypeOf(value) {
@@ -33,7 +34,7 @@ func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
 		logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
 		v, ok := params.Load(fqoid)
 		if !ok {
-			logger.Warning("GetParam param not found", "slot", slot, "fqoid", fqoid)
+			logger.Error("GetParam param not found", "slot", slot, "fqoid", fqoid)
 			return catena.NotFound("param not found")
 		}
 		return catena.OK(v)
@@ -49,7 +50,7 @@ func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid str
 		logger.Info("SetSpecificParam", "slot", slot, "fqoid", fqoid_)
 		val, ok := params.Load(fqoid_)
 		if !ok {
-			logger.Warning("SetSpecificParam param not found", "slot", slot, "fqoid", fqoid_)
+			logger.Error("SetSpecificParam param not found", "slot", slot, "fqoid", fqoid_)
 			return catena.NotFound("param not found")
 		}
 		if reflect.TypeOf(val) != reflect.TypeOf(value) {
@@ -67,7 +68,7 @@ func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid str
 		logger.Info("GetSpecificParam", "slot", slot, "fqoid", fqoid_)
 		v, ok := params.Load(fqoid_)
 		if !ok {
-			logger.Warning("GetSpecificParam param not found", "slot", slot, "fqoid", fqoid_)
+			logger.Error("GetSpecificParam param not found", "slot", slot, "fqoid", fqoid_)
 			return catena.NotFound("param not found")
 		}
 		return catena.OK(v)
@@ -141,6 +142,12 @@ func main() {
 	registerSpecificParamHandlers(srv, params1, "alpha", 1)
 	// Device 2: basic param handlers for all params.
 	registerBasicParamHandlers(srv, params2, 2)
+
+	// Register handler for non-existent endpoints
+	srv.RegisterNotFoundHandler(func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
+		logger.Error("Endpoint not found", "method", r.Method, "path", r.URL.Path)
+		return catena.NotFound("endpoint not found: " + r.URL.Path)
+	})
 
 	addr := ":" + strconv.Itoa(port)
 	logger.Info("Dummy BaseServer listening", "address", addr)
