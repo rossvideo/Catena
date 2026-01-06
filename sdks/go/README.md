@@ -100,4 +100,17 @@ func (v Variant) Print() {
         fmt.Println("string:", v.StrVal)
     }
 }
+
+## Logging Config
+
+Config can be changed with env variables:
+
+| Variable | Description | Allowed values | Default |
+|---|---|---|---|
+| `CATENA_LOG_DIR` | Directory for log files | Path | `./logs` |
+| `CATENA_SILENT` | Suppress all output | `true` | — |
+| `CATENA_LOG_LEVEL` | Logging verbosity | `debug`, `info`, `warn`, `error` | `error` |
+| `CATENA_LOG_FILE` | Enable file logging | `true`, `false` | `true` |
+| `CATENA_LOG_CONSOLE` | Enable console logging | `true`, `false` | `true` |
+| `CATENA_LOG_JSON` | Output logs as JSON | `true` | — |
 ```
