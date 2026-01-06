@@ -108,7 +108,7 @@ func ParseFromEnv(prefix string) Config {
 		cfg.LogDir = v
 	}
 
-	if os.Getenv(prefix+"_SILENT") == "true" {
+	if parseBool(os.Getenv(prefix + "_SILENT")) {
 		cfg.Silent = true
 	}
 
@@ -117,18 +117,30 @@ func ParseFromEnv(prefix string) Config {
 	}
 
 	if v := os.Getenv(prefix + "_LOG_FILE"); v != "" {
-		cfg.WriteToFile = v == "true"
+		cfg.WriteToFile = parseBool(v)
 	}
 
 	if v := os.Getenv(prefix + "_LOG_CONSOLE"); v != "" {
-		cfg.WriteToConsole = v == "true"
+		cfg.WriteToConsole = parseBool(v)
 	}
 
-	if os.Getenv(prefix+"_LOG_JSON") == "true" {
+	if parseBool(os.Getenv(prefix + "_LOG_JSON")) {
 		cfg.UseJSON = true
 	}
 
 	return cfg
+}
+
+// parseBool parses a string to a boolean value (case-insensitive)
+// Returns true for: "true", "1", "yes", "on"
+// Returns false for all other values
+func parseBool(s string) bool {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "true", "1", "yes", "on":
+		return true
+	default:
+		return false
+	}
 }
 
 // ParseLevel parses a string level name to slog.Level
@@ -149,27 +161,19 @@ func ParseLevel(s string) slog.Level {
 	}
 }
 
-// ParseVerbosity parses command-line arguments for -v and -vv flags
+// ParseVerbosity parses command-line arguments for verbosity flags
 // Returns the corresponding slog.Level:
 //   - 0 (no -v): ERROR only
 //   - 1 (-v): WARNING and ERROR
-//   - 2+ (-vv): INFO, WARNING, and ERROR
+//   - 2 (-vv): INFO, WARNING, and ERROR
+//   - 3+ (-vvv): DEBUG, INFO, WARNING, and ERROR
 func ParseVerbosity(args []string) slog.Level {
 	verbosity := 0
 	for _, arg := range args {
-		switch arg {
-		case "-vv":
-			return slog.LevelInfo // -vv is max verbosity for release
-		case "-v":
-			verbosity++
-		default:
-			// Check for combined flags like -vvv (only consecutive v's)
-			if strings.HasPrefix(arg, "-") && !strings.HasPrefix(arg, "--") {
-				flagContent := arg[1:]
-				// Only count if the flag consists entirely of 'v' characters
-				if len(flagContent) > 0 && strings.Trim(flagContent, "v") == "" {
-					verbosity += len(flagContent)
-				}
+		if strings.HasPrefix(arg, "-") && !strings.HasPrefix(arg, "--") {
+			content := arg[1:]
+			if len(content) > 0 && strings.Trim(content, "v") == "" {
+				verbosity += len(content)
 			}
 		}
 	}
@@ -179,8 +183,10 @@ func ParseVerbosity(args []string) slog.Level {
 		return slog.LevelError
 	case 1:
 		return slog.LevelWarn
-	default:
+	case 2:
 		return slog.LevelInfo
+	default:
+		return slog.LevelDebug
 	}
 }
 
@@ -190,7 +196,7 @@ func ParseVerbosityFromOS() slog.Level {
 }
 
 // ParseConfigWithVerbosity parses config from environment variables and applies
-// CLI verbosity flags (-v, -vv). CLI flags override env level if more verbose.
+// CLI verbosity flags (-v, -vv, -vvv). CLI flags override env level if more verbose.
 func ParseConfigWithVerbosity(prefix string) Config {
 	cfg := ParseFromEnv(prefix)
 	cliLevel := ParseVerbosityFromOS()

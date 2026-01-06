@@ -10,7 +10,7 @@
         "cwd": "${workspaceFolder}",
         "args": [],
         "env": {
-          "CATENA_DEBUG": "true" // Enable Debug Mode
+          "CATENA_LOG_LEVEL": "DEBUG", // Set log level to DEBUG
         }
       },
       {
