@@ -1,6 +1,7 @@
 #include "device.ts2mxl.yaml.h"
 
 #include <ParamWithValue.h>
+#include <ParamDescriptor.h>
 #include <ServiceImpl.h>
 #include <ServiceCredentials.h>
 
@@ -50,6 +51,7 @@ using namespace catena::common;
 
 Server* globalServer = nullptr;
 std::atomic<bool> isRunning = false;
+std::unique_ptr<std::thread> playThread = nullptr;
 
 // handle SIGINT / SIGTERM
 void handle_signal(int sig) {
@@ -70,7 +72,7 @@ size_t pack_v210(const AVFrame* f, uint8_t* dst, size_t maxSize) {
     const int W = f->width;
     const int H = f->height;
 
-    const uint8_t* Y  = f->data[0];
+    const uint8_t* Y = f->data[0];
     const uint8_t* Cb = f->data[1];
     const uint8_t* Cr = f->data[2];
 
@@ -88,7 +90,7 @@ size_t pack_v210(const AVFrame* f, uint8_t* dst, size_t maxSize) {
     uint8_t* row_start = dst;
 
     for (int y = 0; y < H; ++y) {
-        const uint8_t* Yrow  = Y  + y * Ys;
+        const uint8_t* Yrow = Y + y * Ys;
         const uint8_t* Cbrow = Cb + (y / 2) * Cs;
         const uint8_t* Crrow = Cr + (y / 2) * Cs;
 
@@ -111,25 +113,25 @@ size_t pack_v210(const AVFrame* f, uint8_t* dst, size_t maxSize) {
 
             // 8-bit → 10-bit
             uint16_t Cb0 = (uint16_t(Cbrow[c0]) << 2) & 0x3FF;
-            uint16_t Y0  = (uint16_t(Yrow[x0])  << 2) & 0x3FF;
+            uint16_t Y0 = (uint16_t(Yrow[x0]) << 2) & 0x3FF;
             uint16_t Cr0 = (uint16_t(Crrow[c0]) << 2) & 0x3FF;
-            uint16_t Y1  = (uint16_t(Yrow[x1])  << 2) & 0x3FF;
+            uint16_t Y1 = (uint16_t(Yrow[x1]) << 2) & 0x3FF;
 
             uint16_t Cb2 = (uint16_t(Cbrow[c1]) << 2) & 0x3FF;
-            uint16_t Y2  = (uint16_t(Yrow[x2])  << 2) & 0x3FF;
+            uint16_t Y2 = (uint16_t(Yrow[x2]) << 2) & 0x3FF;
             uint16_t Cr2 = (uint16_t(Crrow[c1]) << 2) & 0x3FF;
-            uint16_t Y3  = (uint16_t(Yrow[x3])  << 2) & 0x3FF;
+            uint16_t Y3 = (uint16_t(Yrow[x3]) << 2) & 0x3FF;
 
             uint16_t Cb4 = (uint16_t(Cbrow[c2]) << 2) & 0x3FF;
-            uint16_t Y4  = (uint16_t(Yrow[x4])  << 2) & 0x3FF;
+            uint16_t Y4 = (uint16_t(Yrow[x4]) << 2) & 0x3FF;
             uint16_t Cr4 = (uint16_t(Crrow[c2]) << 2) & 0x3FF;
-            uint16_t Y5  = (uint16_t(Yrow[x5])  << 2) & 0x3FF;
+            uint16_t Y5 = (uint16_t(Yrow[x5]) << 2) & 0x3FF;
 
             // v210 packing (little-endian)
-            out[0] =  Cb0 | (Y0 << 10) | (Cr0 << 20);
-            out[1] =  Y1  | (Cb2 << 10) | (Y2 << 20);
-            out[2] =  Cr2 | (Y3 << 10) | (Cb4 << 20);
-            out[3] =  Y4  | (Cr4 << 10) | (Y5 << 20);
+            out[0] = Cb0 | (Y0 << 10) | (Cr0 << 20);
+            out[1] = Y1 | (Cb2 << 10) | (Y2 << 20);
+            out[2] = Cr2 | (Y3 << 10) | (Cb4 << 20);
+            out[3] = Y4 | (Cr4 << 10) | (Y5 << 20);
 
             out += 4;
         }
@@ -188,13 +190,6 @@ std::string createV210FlowJson(picojson::value const& info, std::string flow_id,
 }
 
 // ------------------------------------------------------------
-// CREATE DIRECTORY
-// ------------------------------------------------------------
-void makedir() {
-    system("mkdir -p /dev/shm/mxl");
-}
-
-// ------------------------------------------------------------
 // MAIN VIDEO THREAD
 // ------------------------------------------------------------
 void run() {
@@ -218,8 +213,17 @@ void run() {
         return;
     }
 
+    st2138::Value value;
+    catena::exception_with_status statusErr = dm.getValue("/inputs/target_domain", value);
+    if (statusErr.status != catena::StatusCode::OK) {
+        LOG(ERROR) << "Cannot get target_domain param value: " << statusErr.what();
+        return;
+    }
+    std::string target_domain = value.string_value();
+    std::filesystem::create_directories(target_domain);
+
     // MXL instance
-    mxlInstance instance = mxlCreateInstance("/dev/shm/mxl", "");
+    mxlInstance instance = mxlCreateInstance(target_domain.c_str(), "");
     if (!instance) {
         LOG(ERROR) << "Cannot create MXL instance";
         return;
@@ -272,6 +276,12 @@ void run() {
 
     LOG(INFO) << "Expected v210 size = " << expectedSize;
 
+    std::unique_ptr<IParam> statusParam = dm.getParam("/status", statusErr);
+    catena::common::ParamWithValue<std::string>* statusValue = 
+    dynamic_cast<catena::common::ParamWithValue<std::string>*>(statusParam.get());
+    statusValue->get() = "Running";
+    dm.getValueSetByServer().emit("/status", statusParam.get());
+
     // Main loop
     while (isRunning) {
         if (av_read_frame(fmt, &pkt) < 0) {
@@ -314,6 +324,9 @@ void run() {
         av_packet_unref(&pkt);
     }
 
+    statusValue->get() = "Stopped";
+    dm.getValueSetByServer().emit("/status", statusParam.get());
+
     av_frame_free(&frame);
     avcodec_free_context(&decCtx);
     avformat_close_input(&fmt);
@@ -323,6 +336,55 @@ void run() {
     mxlDestroyInstance(instance);
 }
 
+void defineCommands() {
+    catena::exception_with_status err{"", catena::StatusCode::OK};
+    std::unique_ptr<IParam> startCommand = dm.getCommand("/start", err);
+    startCommand->defineCommand(
+      [](const st2138::Value& value,
+         const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> {
+          return std::make_unique<ParamDescriptor::CommandResponder>(
+            [](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+                LOG(INFO) << "Start command received";
+                st2138::CommandResponse response;
+                if (isRunning) {
+                    LOG(WARNING) << "Flow is already running";
+                    response.mutable_exception()->set_type("Invalid Command");
+                    response.mutable_exception()->set_details("Flow is already running");
+                    co_return response;
+                }
+
+                LOG(INFO) << "Starting flow playback thread";
+                isRunning = true;
+                playThread = std::make_unique<std::thread>(run);
+
+                response.mutable_no_response();
+                co_return response;
+            }(value, respond));
+      });
+
+    std::unique_ptr<IParam> stopCommand = dm.getCommand("/stop", err);
+    stopCommand->defineCommand(
+      [](const st2138::Value& value,
+         const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> {
+          return std::make_unique<ParamDescriptor::CommandResponder>(
+            [](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+                st2138::CommandResponse response;
+                if (!isRunning) {
+                    response.mutable_exception()->set_type("Invalid Command");
+                    response.mutable_exception()->set_details("Flow is not running");
+                    co_return response;
+                }
+
+                isRunning = false;
+                if (playThread && playThread->joinable()) {
+                    playThread->join();
+                }
+
+                response.mutable_no_response();
+                co_return response;
+            }(value, respond));
+      });
+}
 
 void RunRPCServer(std::string addr) {
     // install signal handlers
@@ -357,8 +419,6 @@ void RunRPCServer(std::string addr) {
         service.init();
         std::thread cq_thread([&]() { service.processEvents(); });
 
-        std::thread playThread(run);
-
         // start the heartbeat on the device
         dm.setHeartbeatParam("/product/version");
         dm.startHeartbeat();
@@ -367,7 +427,9 @@ void RunRPCServer(std::string addr) {
         server->Wait();
         dm.stopHeartbeat();
 
-        playThread.join();
+        if (playThread && playThread->joinable()) {
+            playThread->join();
+        }
 
         cq->Shutdown();
         cq_thread.join();
@@ -383,8 +445,9 @@ int main(int argc, char* argv[]) {
     absl::ParseCommandLine(argc, argv);
     Logger::init("ts2mxl");
 
+    defineCommands();
+
     addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
-    makedir();
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
 

@@ -32,6 +32,15 @@ params:
           serial_number:
             string_value: SN0987654321
 
+  status:
+    type: STRING
+    read_only: true
+    name:
+      display_strings:
+        en: "Status"
+    value:
+      string_value: "Stopped"
+
   inputs:
     type: STRUCT
     params:
@@ -57,15 +66,13 @@ params:
             string_value: "/dev/shm/main.ts"
           target_domain:
             string_value: "/dev/shm/mxl"
-          target_flow: 
-            string_value: "5fbec3b1-1b0f-417d-9059-8b94a47197ed"
 
 commands:
-  go_live:
+  start:
     type: EMPTY
     name:
       display_strings:
-        en: "Go Live"
+        en: "Start"
     response: false
   stop:
     type: EMPTY
@@ -75,6 +82,18 @@ commands:
     response: false
 
 menu_groups:
+  status:
+    name:
+      display_strings:
+        en: "Status"
+    order: 0
+    menus:
+      status:
+        name:
+          display_strings:
+            en: "Status"
+        param_oids:
+          - /status
   config:
     name:
       display_strings:
@@ -89,3 +108,9 @@ menu_groups:
           - /inputs/ts_file_path
           - /inputs/target_domain
           - /inputs/target_flow
+      control:
+        name:
+          display_strings:
+            en: Control
+        client_hints:
+          oglml: eo://demo.grid
