@@ -50,6 +50,9 @@ type ConnectHandler func(w http.ResponseWriter, r *http.Request, slot int) caten
 // ExecuteCommandHandler handles command execution requests.
 type ExecuteCommandHandler func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) catena.StatusResult
 
+// NotFoundHandler handles requests to non-existent endpoints.
+type NotFoundHandler func(w http.ResponseWriter, r *http.Request) catena.StatusResult
+
 // Server is decoupled from catena.Device and just wires HTTP routes.
 type Server struct {
 	getDevice      DeviceHandler
@@ -58,6 +61,7 @@ type Server struct {
 	getAsset       map[int]AssetHandler
 	connect        map[int]ConnectHandler
 	executeCommand map[int]ExecuteCommandHandler
+	notFound       NotFoundHandler
 
 	slotList []int
 	mux      http.ServeMux
