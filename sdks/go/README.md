@@ -100,6 +100,7 @@ func (v Variant) Print() {
         fmt.Println("string:", v.StrVal)
     }
 }
+```
 
 ## Logging Config
 
@@ -113,4 +114,15 @@ Config can be changed with env variables:
 | `CATENA_LOG_FILE` | Enable file logging | `true`, `false` | `true` |
 | `CATENA_LOG_CONSOLE` | Enable console logging | `true`, `false` | `true` |
 | `CATENA_LOG_JSON` | Output logs as JSON | `true` | — |
+
+### Custom Prefix
+
+By default, the logger uses `CATENA` as the environment variable prefix. If you want to use your own prefix, pass a custom prefix to `ParseFromEnv`:
+
+```go
+// Use the default CATENA prefix
+cfg := logger.ParseFromEnv("")  // reads CATENA_LOG_LEVEL, CATENA_SILENT, etc.
+
+// Use a custom prefix for your application
+cfg := logger.ParseFromEnv("MYAPP")  // reads MYAPP_LOG_LEVEL, MYAPP_SILENT, etc.
 ```
