@@ -82,6 +82,7 @@ func NewServer(slotList []int) *Server {
 		executeCommand: make(map[int]ExecuteCommandHandler),
 		slotList:       slotList,
 		mux:            *http.NewServeMux(),
+		log:            log,
 	}
 
 	// Register HTTP routes.
