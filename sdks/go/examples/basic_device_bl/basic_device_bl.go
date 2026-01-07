@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"reflect"
 	"strconv"
@@ -15,14 +16,14 @@ import (
 // Implementation for registering parameter handlers for every fqoid on a given slot
 func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
 	srv.RegisterSetValueHandler(slot, func(value any, slot int, fqoid string) catena.StatusResult {
-		logger.Info("Slot %d: SetParam %s", slot, fqoid)
+		logger.Info("SetParam", "slot", slot, "fqoid", fqoid)
 		val, ok := params.Load(fqoid)
 		if !ok {
-			logger.Warning("Slot %d: SetParam %s - param not found", slot, fqoid)
+			logger.Error("SetParam param not found", "slot", slot, "fqoid", fqoid)
 			return catena.NotFound("param not found")
 		}
 		if reflect.TypeOf(val) != reflect.TypeOf(value) {
-			logger.Error("Slot %d: SetParam %s - type mismatch", slot, fqoid)
+			logger.Error("SetParam type mismatch", "slot", slot, "fqoid", fqoid)
 			return catena.BadRequest("type mismatch")
 		}
 		params.Store(fqoid, value)
@@ -30,10 +31,10 @@ func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
 	})
 
 	srv.RegisterGetValueHandler(slot, func(slot int, fqoid string) catena.StatusResult {
-		logger.Info("Slot %d: GetParam %s", slot, fqoid)
+		logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
 		v, ok := params.Load(fqoid)
 		if !ok {
-			logger.Warning("Slot %d: GetParam %s - param not found", slot, fqoid)
+			logger.Error("GetParam param not found", "slot", slot, "fqoid", fqoid)
 			return catena.NotFound("param not found")
 		}
 		return catena.OK(v)
@@ -46,14 +47,14 @@ func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid str
 		if fqoid_ != fqoid {
 			return catena.NotImplemented("no handler for fqoid " + fqoid_)
 		}
-		logger.Info("Slot %d: SetSpecificParam %s", slot, fqoid_)
+		logger.Info("SetSpecificParam", "slot", slot, "fqoid", fqoid_)
 		val, ok := params.Load(fqoid_)
 		if !ok {
-			logger.Warning("Slot %d: SetSpecificParam %s - param not found", slot, fqoid_)
+			logger.Error("SetSpecificParam param not found", "slot", slot, "fqoid", fqoid_)
 			return catena.NotFound("param not found")
 		}
 		if reflect.TypeOf(val) != reflect.TypeOf(value) {
-			logger.Error("Slot %d: SetSpecificParam %s - type mismatch", slot, fqoid_)
+			logger.Error("SetSpecificParam type mismatch", "slot", slot, "fqoid", fqoid_)
 			return catena.BadRequest("type mismatch")
 		}
 		params.Store(fqoid_, value)
@@ -64,10 +65,10 @@ func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid str
 		if fqoid_ != fqoid {
 			return catena.NotImplemented("no handler for fqoid " + fqoid_)
 		}
-		logger.Info("Slot %d: GetSpecificParam %s", slot, fqoid_)
+		logger.Info("GetSpecificParam", "slot", slot, "fqoid", fqoid_)
 		v, ok := params.Load(fqoid_)
 		if !ok {
-			logger.Warning("Slot %d: GetSpecificParam %s - param not found", slot, fqoid_)
+			logger.Error("GetSpecificParam param not found", "slot", slot, "fqoid", fqoid_)
 			return catena.NotFound("param not found")
 		}
 		return catena.OK(v)
@@ -75,18 +76,12 @@ func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid str
 }
 
 func main() {
-	// Initialize the logger
-	logDir := envOr("CATENA_LOG_DIR", "./logs")
-	silent := os.Getenv("CATENA_SILENT") == "true"
+	// Parse config from environment variables with CATENA prefix
+	// and apply CLI verbosity flags (-v, -vv) if specified
+	cfg := logger.ParseConfigWithVerbosity("CATENA")
+	cfg.AppName = "basic_device_bl"
 
-	err := logger.Init(logger.Config{
-		AppName:        "basic_device_bl",
-		LogDir:         logDir,
-		Silent:         silent,
-		MinLevel:       logger.LevelInfo,
-		WriteToFile:    true,
-		WriteToConsole: true,
-	})
+	err := logger.Init(cfg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to initialize logger: %v\n", err)
 		os.Exit(1)
@@ -96,10 +91,10 @@ func main() {
 	portStr := envOr("CATENA_PORT", "6254")
 	port, err := strconv.Atoi(portStr)
 	if err != nil {
-		logger.Error("invalid CATENA_PORT: %v", err)
+		logger.Error("invalid CATENA_PORT", "error", err)
 		os.Exit(1)
 	}
-	logger.Info("Starting Dummy BaseServer on port %d", port)
+	logger.Info("Starting Dummy BaseServer", "port", port)
 
 	var params0 = &sync.Map{}
 	params0.Store("alpha", "alpha")
@@ -148,8 +143,14 @@ func main() {
 	// Device 2: basic param handlers for all params.
 	registerBasicParamHandlers(srv, params2, 2)
 
+	// Register handler for non-existent endpoints
+	srv.RegisterNotFoundHandler(func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
+		logger.Error("Endpoint not found", "method", r.Method, "path", r.URL.Path)
+		return catena.NotFound("endpoint not found: " + r.URL.Path)
+	})
+
 	addr := ":" + strconv.Itoa(port)
-	logger.Info("Dummy BaseServer listening on %s", addr)
+	logger.Info("Dummy BaseServer listening", "address", addr)
 	srv.StartHTTPServer(port)
 
 	// Block forever.

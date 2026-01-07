@@ -29,37 +29,25 @@
  */
 
 /**
- * @brief Level enum for log levels.
+ * @brief Level mapping to slog levels.
  * @file level.go
  * @copyright Copyright © 2025 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @date 2025-12-09
  */
 
-// Package logger provides a logger with different log levels.
+// Package logger provides a structured logger using log/slog with debug/release modes.
 package logger
 
-// Level represents the severity of a log message
-type Level int
+import "log/slog"
 
+// Level represents the severity of a log message, mapping to slog.Level
+type Level = slog.Level
+
+// Log level constants matching slog's built-in levels
 const (
-	LevelDebug   Level = iota // Verbose logging (similar to VLOG)
-	LevelInfo                 // Standard info (LOG(INFO))
-	LevelWarning              // Warnings (LOG(WARNING))
-	LevelError                // Errors (LOG(ERROR))
+	LevelDebug   Level = slog.LevelDebug // Verbose logging (DEBUG mode only)
+	LevelInfo    Level = slog.LevelInfo  // Standard info
+	LevelWarning Level = slog.LevelWarn  // Warnings
+	LevelError   Level = slog.LevelError // Errors
 )
-
-func (l Level) String() string {
-	switch l {
-	case LevelDebug:
-		return "DEBUG"
-	case LevelInfo:
-		return "INFO"
-	case LevelWarning:
-		return "WARNING"
-	case LevelError:
-		return "ERROR"
-	default:
-		return "UNKNOWN"
-	}
-}
