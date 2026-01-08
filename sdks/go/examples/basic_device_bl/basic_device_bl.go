@@ -171,7 +171,7 @@ func main() {
 		})
 	}
 
-	// Define device models for each slot (schema-compliant)
+	// Define device models for each slot
 	devices := map[int]map[string]any{
 		0: {
 			"slot":             0,
