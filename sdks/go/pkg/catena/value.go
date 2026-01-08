@@ -89,28 +89,28 @@ func FromProto(pv *protos.Value) any {
 	if pv == nil {
 		return nil
 	}
-	switch kind := pv.GetKind().(type) {
+	switch pv.GetKind().(type) {
 	case *protos.Value_Int32Value:
-		return kind.Int32Value
+		return pv.GetInt32Value()
 	case *protos.Value_Float32Value:
-		return kind.Float32Value
+		return pv.GetFloat32Value()
 	case *protos.Value_StringValue:
-		return kind.StringValue
+		return pv.GetStringValue()
 	case *protos.Value_Int32ArrayValues:
-		return kind.GetInt32ArrayValues().GetInts()
+		return pv.GetInt32ArrayValues().GetInts()
 	case *protos.Value_Float32ArrayValues:
-		return kind.GetFloat32ArrayValues().GetFloats()
+		return pv.GetFloat32ArrayValues().GetFloats()
 	case *protos.Value_StringArrayValues:
-		return kind.GetStringArrayValues().GetStrings()
+		return pv.GetStringArrayValues().GetStrings()
 	case *protos.Value_StructValue:
-		fields := kind.GetStructValue().GetFields()
+		fields := pv.GetStructValue().GetFields()
 		m := make(map[string]any, len(fields))
 		for k, v := range fields {
 			m[k] = FromProto(v)
 		}
 		return m
 	case *protos.Value_StructArrayValues:
-		list := kind.GetStructArrayValues().GetStructValues()
+		list := pv.GetStructArrayValues().GetStructValues()
 		arr := make([]map[string]any, len(list))
 		for i, sv := range list {
 			fields := sv.GetFields()
@@ -122,13 +122,13 @@ func FromProto(pv *protos.Value) any {
 		}
 		return arr
 	case *protos.Value_StructVariantValue:
-		sv := kind.GetStructVariantValue()
+		sv := pv.GetStructVariantValue()
 		return StructVariantValue{
 			StructVariantType: sv.GetStructVariantType(),
 			Value:             FromProto(sv.GetValue()),
 		}
 	case *protos.Value_StructVariantArrayValues:
-		list := kind.GetStructVariantArrayValues().GetStructVariants()
+		list := pv.GetStructVariantArrayValues().GetStructVariants()
 		var arr []StructVariantValue
 		for _, sv := range list {
 			arr = append(arr, StructVariantValue{
