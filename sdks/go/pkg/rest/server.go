@@ -44,8 +44,9 @@ type SetValueHandler func(value any, slot int, fqoid string) catena.StatusResult
 // AssetHandler keeps w/r so implementations can stream content directly; they still return an HTTPResult for status.
 type AssetHandler func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) catena.StatusResult
 
-// ConnectHandler handles connection requests (e.g., websocket upgrade or session init).
-type ConnectHandler func(w http.ResponseWriter, r *http.Request, slot int) catena.StatusResult
+// ConnectHandler handles connection requests (e.g., SSE stream for push updates).
+// This is a global endpoint that handles all slots.
+type ConnectHandler func(w http.ResponseWriter, r *http.Request) catena.StatusResult
 
 // ExecuteCommandHandler handles command execution requests.
 type ExecuteCommandHandler func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) catena.StatusResult
@@ -59,7 +60,7 @@ type Server struct {
 	getValue       map[int]GetValueHandler
 	setValue       map[int]SetValueHandler
 	getAsset       map[int]AssetHandler
-	connect        map[int]ConnectHandler
+	connect        ConnectHandler
 	executeCommand map[int]ExecuteCommandHandler
 	notFound       NotFoundHandler
 
@@ -78,7 +79,7 @@ func NewServer(slotList []int) *Server {
 		getValue:       make(map[int]GetValueHandler),
 		setValue:       make(map[int]SetValueHandler),
 		getAsset:       make(map[int]AssetHandler),
-		connect:        make(map[int]ConnectHandler),
+		connect:        ConnectHandler(nil),
 		executeCommand: make(map[int]ExecuteCommandHandler),
 		slotList:       slotList,
 		mux:            *http.NewServeMux(),
@@ -104,7 +105,7 @@ func (s *Server) StartHTTPServer(port int) {
 
 // Default handlers return HTTPResult for uniform handling.
 func (s *Server) DefaultDeviceHandler(w http.ResponseWriter, r *http.Request) catena.StatusResult {
-	s.log.Warn("No handler registered", "method", "GET", "endpoint", "/device")
+	s.log.Warn("No handler registered", "method", "GET", "endpoint", "/{slot}")
 	return catena.NotImplemented("no device handler registered")
 }
 
@@ -123,13 +124,13 @@ func (s *Server) DefaultGetAssetHandler(w http.ResponseWriter, r *http.Request, 
 	return catena.NotImplemented("no getAsset handler registered for slot " + strconv.Itoa(slot))
 }
 
-func (s *Server) DefaultConnectHandler(w http.ResponseWriter, r *http.Request, slot int) catena.StatusResult {
-	s.log.Warn("No handler registered", "method", "GET", "endpoint", "/connect", "slot", slot)
-	return catena.NotImplemented("no connect handler registered for slot " + strconv.Itoa(slot))
+func (s *Server) DefaultConnectHandler(w http.ResponseWriter, r *http.Request) catena.StatusResult {
+	s.log.Warn("No handler registered", "method", "GET", "endpoint", "/connect")
+	return catena.NotImplemented("no connect handler registered")
 }
 
 func (s *Server) DefaultExecuteCommandHandler(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) catena.StatusResult {
-	s.log.Warn("No handler registered", "method", "POST", "endpoint", "/commands", "command", commandFqoid, "slot", slot)
+	s.log.Warn("No handler registered", "method", "POST", "endpoint", "/command", "command", commandFqoid, "slot", slot)
 	return catena.NotImplemented("no executeCommand handler registered for slot " + strconv.Itoa(slot))
 }
 
@@ -176,11 +177,11 @@ func (s *Server) RegisterNotFoundHandler(handler NotFoundHandler) {
 	s.log.Debug("Registered not-found handler")
 }
 
-func (s *Server) RegisterConnectHandler(slot int, handler ConnectHandler) {
+func (s *Server) RegisterConnectHandler(handler ConnectHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.connect[slot] = handler
-	s.log.Debug("Registered connect handler", "slot", slot)
+	s.connect = handler
+	s.log.Debug("Registered connect handler")
 }
 
 func (s *Server) RegisterExecuteCommandHandler(slot int, handler ExecuteCommandHandler) {
@@ -212,11 +213,10 @@ func (s *Server) lookupGetAsset(slot int) (AssetHandler, bool) {
 	return h, ok
 }
 
-func (s *Server) lookupConnect(slot int) (ConnectHandler, bool) {
+func (s *Server) lookupConnect() (ConnectHandler, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	h, ok := s.connect[slot]
-	return h, ok
+	return s.connect, s.connect != nil
 }
 
 func (s *Server) lookupExecuteCommand(slot int) (ExecuteCommandHandler, bool) {
@@ -234,18 +234,18 @@ func (s *Server) RegisterRoutes() {
 
 		prefix := "/st2138-api/v1/" + strconv.Itoa(slot)
 
-		// Entity/device-like endpoint: GET
-		s.mux.HandleFunc(prefix+"/device", func(w http.ResponseWriter, r *http.Request) {
-			s.log.Info("Request started", "method", r.Method, "endpoint", "/device")
+		// Entity/device-like endpoint: GET /st2138-api/v1/{slot}
+		s.mux.HandleFunc(prefix, func(w http.ResponseWriter, r *http.Request) {
+			s.log.Info("Request started", "method", r.Method, "endpoint", prefix)
 			if r.Method != http.MethodGet {
-				s.log.Warn("Method not allowed", "method", r.Method, "endpoint", "/device", "expected", "GET")
+				s.log.Warn("Method not allowed", "method", r.Method, "endpoint", prefix, "expected", "GET")
 				writeHTTPResult(w, catena.MethodNotAllowed("method not allowed"))
 				return
 			}
 			if s.getDevice != nil {
 				res := s.getDevice(w, r)
 				writeHTTPResult(w, res)
-				s.log.Info("Request finished", "method", "GET", "endpoint", "/device")
+				s.log.Info("Request finished", "method", "GET", "endpoint", prefix)
 				return
 			}
 			writeHTTPResult(w, s.DefaultDeviceHandler(w, r))
@@ -313,33 +313,16 @@ func (s *Server) RegisterRoutes() {
 			writeHTTPResult(w, s.DefaultGetAssetHandler(w, r, slot, fqoid))
 		})
 
-		// Connect endpoint: GET /connect
-		s.mux.HandleFunc(prefix+"/connect", func(w http.ResponseWriter, r *http.Request) {
-			s.log.Info("Request started", "method", r.Method, "endpoint", "/connect")
-			if r.Method != http.MethodGet {
-				s.log.Warn("Method not allowed", "method", r.Method, "endpoint", "/connect", "expected", "GET")
-				writeHTTPResult(w, catena.MethodNotAllowed("method not allowed"))
-				return
-			}
-			if handler, ok := s.lookupConnect(slot); ok {
-				res := handler(w, r, slot)
-				writeHTTPResult(w, res)
-				s.log.Info("Request finished", "method", "GET", "endpoint", "/connect")
-				return
-			}
-			writeHTTPResult(w, s.DefaultConnectHandler(w, r, slot))
-		})
-
-		// Commands endpoint: POST /commands/{commandFqoid}
-		s.mux.HandleFunc(prefix+"/commands/", func(w http.ResponseWriter, r *http.Request) {
-			commandFqoid := strings.TrimPrefix(r.URL.Path, prefix+"/commands/")
+		// Command endpoint: POST /command/{commandFqoid}
+		s.mux.HandleFunc(prefix+"/command/", func(w http.ResponseWriter, r *http.Request) {
+			commandFqoid := strings.TrimPrefix(r.URL.Path, prefix+"/command/")
 			if commandFqoid == "" {
-				s.log.Warn("Missing command fqoid", "method", "POST", "endpoint", "/commands")
+				s.log.Warn("Missing command fqoid", "method", "POST", "endpoint", "/command")
 				writeHTTPResult(w, catena.BadRequest("missing command fqoid"))
 				return
 			}
 			if r.Method != http.MethodPost {
-				s.log.Warn("Method not allowed", "method", r.Method, "endpoint", "/commands", "command", commandFqoid)
+				s.log.Warn("Method not allowed", "method", r.Method, "endpoint", "/command", "command", commandFqoid)
 				writeHTTPResult(w, catena.MethodNotAllowed("method not allowed"))
 				return
 			}
@@ -349,14 +332,31 @@ func (s *Server) RegisterRoutes() {
 				writeHTTPResult(w, catena.BadRequest("invalid JSON"))
 				return
 			}
-			s.log.Info("Request started", "method", "POST", "endpoint", "/commands", "command", commandFqoid)
+			s.log.Info("Request started", "method", "POST", "endpoint", "/command", "command", commandFqoid)
 			if handler, ok := s.lookupExecuteCommand(slot); ok {
 				res := handler(w, r, slot, commandFqoid, payload)
 				writeHTTPResult(w, res)
-				s.log.Info("Request finished", "method", "POST", "endpoint", "/commands", "command", commandFqoid)
+				s.log.Info("Request finished", "method", "POST", "endpoint", "/command", "command", commandFqoid)
 				return
 			}
 			writeHTTPResult(w, s.DefaultExecuteCommandHandler(w, r, slot, commandFqoid, payload))
 		})
 	}
+
+	// Global Connect endpoint: GET /connect (outside slot loop)
+	s.mux.HandleFunc("/st2138-api/v1/connect", func(w http.ResponseWriter, r *http.Request) {
+		s.log.Info("Request started", "method", r.Method, "endpoint", "/connect")
+		if r.Method != http.MethodGet {
+			s.log.Warn("Method not allowed", "method", r.Method, "endpoint", "/connect", "expected", "GET")
+			writeHTTPResult(w, catena.MethodNotAllowed("method not allowed"))
+			return
+		}
+		if handler, ok := s.lookupConnect(); ok {
+			res := handler(w, r)
+			writeHTTPResult(w, res)
+			s.log.Info("Request finished", "method", "GET", "endpoint", "/connect")
+			return
+		}
+		writeHTTPResult(w, s.DefaultConnectHandler(w, r))
+	})
 }
