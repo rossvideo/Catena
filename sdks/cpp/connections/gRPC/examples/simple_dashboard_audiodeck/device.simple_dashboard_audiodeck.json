@@ -35,7 +35,7 @@
         "ripple": { "type": "FLOAT32", "precision": 1, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -30.0, "max_value": 30.0, "display_min": -30.0, "display_max": 30.0, "step": 1.0 } } },
         "resp": { "type": "STRING", "constraint": { "type": "STRING_CHOICE", "string_choice": { "choices": ["Cheb I","Cheb II","Cheb III","Cheb IV","Cheb V","Cheb VI","Cheb VII","Cheb VIII","Cheb IX","Cheb X"] } } },
         "volume": { "type": "FLOAT32", "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": 0.0, "max_value": 100.0, "display_min": 0.0, "display_max": 100.0, "step": 1.0 } } },
-        "fader": { "type": "STRING", "constraint": { "type": "STRING_CHOICE", "string_choice": { "choices": ["Top","Right","Bottom","Left","Center"] } } }
+        "pan": { "type": "INT32", "constraint": { "type": "INT_RANGE", "int32_range": { "min_value": -100, "max_value": 100, "display_min": -100, "display_max": 100, "step": 1 } } }
       }
     },
     "audio_deck": {
@@ -59,7 +59,7 @@
                 "ripple": { "float32_value": 3.0 },
                 "resp": { "string_value": "Cheb II" },
                 "volume": { "float32_value": 50.0 },
-                "fader": { "string_value": "Center" }
+                "pan": { "int32_value": 0 }
               }
             },
             {
@@ -76,7 +76,7 @@
                 "ripple": { "float32_value": 3.0 },
                 "resp": { "string_value": "Cheb II" },
                 "volume": { "float32_value": 50.0 },
-                "fader": { "string_value": "Center" }
+                "pan": { "int32_value": 0 }
               }
             },
             {
@@ -93,7 +93,7 @@
                 "ripple": { "float32_value": 3.0 },
                 "resp": { "string_value": "Cheb II" },
                 "volume": { "float32_value": 50.0 },
-                "fader": { "string_value": "Center" }
+                "pan": { "int32_value": 0 }
               }
             },
             {
@@ -110,7 +110,7 @@
                 "ripple": { "float32_value": 3.0 },
                 "resp": { "string_value": "Cheb II" },
                 "volume": { "float32_value": 50.0 },
-                "fader": { "string_value": "Center" }
+                "pan": { "int32_value": 0 }
               }
             },
             {
@@ -127,7 +127,7 @@
                 "ripple": { "float32_value": 3.0 },
                 "resp": { "string_value": "Cheb II" },
                 "volume": { "float32_value": 50.0 },
-                "fader": { "string_value": "Center" }
+                "pan": { "int32_value": 0 }
               }
             },
             {
@@ -144,7 +144,7 @@
                 "ripple": { "float32_value": 3.0 },
                 "resp": { "string_value": "Cheb II" },
                 "volume": { "float32_value": 50.0 },
-                "fader": { "string_value": "Center" }
+                "pan": { "int32_value": 0 }
               }
             },
             {
@@ -161,7 +161,7 @@
                 "ripple": { "float32_value": 3.0 },
                 "resp": { "string_value": "Cheb II" },
                 "volume": { "float32_value": 50.0 },
-                "fader": { "string_value": "Center" }
+                  "pan": { "int32_value": 0 }
               }
             },
             {
@@ -178,7 +178,7 @@
                 "ripple": { "float32_value": 3.0 },
                 "resp": { "string_value": "Cheb II" },
                 "volume": { "float32_value": 50.0 },
-                "fader": { "string_value": "Center" }
+                "pan": { "int32_value": 0 }
               }
             }
           ]
