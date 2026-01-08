@@ -124,7 +124,7 @@ func (s *Server) DefaultGetAssetHandler(w http.ResponseWriter, r *http.Request, 
 }
 
 func (s *Server) DefaultConnectHandler(w http.ResponseWriter, r *http.Request, slot int) catena.StatusResult {
-	logger.Warning("POST /connect: no handler registered for slot %d", slot)
+	logger.Warning("GET /connect: no handler registered for slot %d", slot)
 	return catena.NotImplemented("no connect handler registered for slot " + strconv.Itoa(slot))
 }
 
@@ -313,18 +313,18 @@ func (s *Server) RegisterRoutes() {
 			writeHTTPResult(w, s.DefaultGetAssetHandler(w, r, slot, fqoid))
 		})
 
-		// Connect endpoint: POST /connect
+		// Connect endpoint: GET /connect
 		s.mux.HandleFunc(prefix+"/connect", func(w http.ResponseWriter, r *http.Request) {
 			logger.Info("%s /connect started", r.Method)
-			if r.Method != http.MethodPost {
-				logger.Warning("/connect: method %s not allowed, expected POST", r.Method)
+			if r.Method != http.MethodGet {
+				logger.Warning("/connect: method %s not allowed, expected GET", r.Method)
 				writeHTTPResult(w, catena.MethodNotAllowed("method not allowed"))
 				return
 			}
 			if handler, ok := s.lookupConnect(slot); ok {
 				res := handler(w, r, slot)
 				writeHTTPResult(w, res)
-				logger.Info("POST /connect finished")
+				logger.Info("GET /connect finished")
 				return
 			}
 			writeHTTPResult(w, s.DefaultConnectHandler(w, r, slot))

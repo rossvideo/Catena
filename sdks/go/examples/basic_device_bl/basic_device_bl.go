@@ -143,6 +143,32 @@ func main() {
 	// Device 2: basic param handlers for all params.
 	registerBasicParamHandlers(srv, params2, 2)
 
+	// Register connect handlers for each slot
+	for _, slot := range slotList {
+		slot := slot // capture loop variable
+		srv.RegisterConnectHandler(slot, func(w http.ResponseWriter, r *http.Request, slot int) catena.StatusResult {
+			logger.Info("Connect", "slot", slot)
+			return catena.OK(map[string]any{
+				"status": "connected",
+				"slot":   slot,
+			})
+		})
+	}
+
+	// Register command handlers for each slot
+	for _, slot := range slotList {
+		slot := slot // capture loop variable
+		srv.RegisterExecuteCommandHandler(slot, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) catena.StatusResult {
+			logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid, "payload", payload)
+			return catena.OK(map[string]any{
+				"command": commandFqoid,
+				"slot":    slot,
+				"result":  "executed",
+				"payload": payload,
+			})
+		})
+	}
+
 	// Register handler for non-existent endpoints
 	srv.RegisterNotFoundHandler(func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
 		logger.Error("Endpoint not found", "method", r.Method, "path", r.URL.Path)
