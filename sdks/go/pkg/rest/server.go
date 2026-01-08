@@ -124,12 +124,12 @@ func (s *Server) DefaultGetAssetHandler(w http.ResponseWriter, r *http.Request, 
 }
 
 func (s *Server) DefaultConnectHandler(w http.ResponseWriter, r *http.Request, slot int) catena.StatusResult {
-	logger.Warning("GET /connect: no handler registered for slot %d", slot)
+	s.log.Warn("No handler registered", "method", "GET", "endpoint", "/connect", "slot", slot)
 	return catena.NotImplemented("no connect handler registered for slot " + strconv.Itoa(slot))
 }
 
 func (s *Server) DefaultExecuteCommandHandler(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) catena.StatusResult {
-	logger.Warning("POST /commands/%s: no handler registered for slot %d", commandFqoid, slot)
+	s.log.Warn("No handler registered", "method", "POST", "endpoint", "/commands", "command", commandFqoid, "slot", slot)
 	return catena.NotImplemented("no executeCommand handler registered for slot " + strconv.Itoa(slot))
 }
 
@@ -180,14 +180,14 @@ func (s *Server) RegisterConnectHandler(slot int, handler ConnectHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.connect[slot] = handler
-	logger.Debug("Registered connect handler for slot %d", slot)
+	s.log.Debug("Registered connect handler", "slot", slot)
 }
 
 func (s *Server) RegisterExecuteCommandHandler(slot int, handler ExecuteCommandHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.executeCommand[slot] = handler
-	logger.Debug("Registered executeCommand handler for slot %d", slot)
+	s.log.Debug("Registered executeCommand handler", "slot", slot)
 }
 
 // Internal lookups (read-locked).
@@ -315,16 +315,16 @@ func (s *Server) RegisterRoutes() {
 
 		// Connect endpoint: GET /connect
 		s.mux.HandleFunc(prefix+"/connect", func(w http.ResponseWriter, r *http.Request) {
-			logger.Info("%s /connect started", r.Method)
+			s.log.Info("Request started", "method", r.Method, "endpoint", "/connect")
 			if r.Method != http.MethodGet {
-				logger.Warning("/connect: method %s not allowed, expected GET", r.Method)
+				s.log.Warn("Method not allowed", "method", r.Method, "endpoint", "/connect", "expected", "GET")
 				writeHTTPResult(w, catena.MethodNotAllowed("method not allowed"))
 				return
 			}
 			if handler, ok := s.lookupConnect(slot); ok {
 				res := handler(w, r, slot)
 				writeHTTPResult(w, res)
-				logger.Info("GET /connect finished")
+				s.log.Info("Request finished", "method", "GET", "endpoint", "/connect")
 				return
 			}
 			writeHTTPResult(w, s.DefaultConnectHandler(w, r, slot))
@@ -334,26 +334,26 @@ func (s *Server) RegisterRoutes() {
 		s.mux.HandleFunc(prefix+"/commands/", func(w http.ResponseWriter, r *http.Request) {
 			commandFqoid := strings.TrimPrefix(r.URL.Path, prefix+"/commands/")
 			if commandFqoid == "" {
-				logger.Warning("POST /commands: missing command fqoid")
+				s.log.Warn("Missing command fqoid", "method", "POST", "endpoint", "/commands")
 				writeHTTPResult(w, catena.BadRequest("missing command fqoid"))
 				return
 			}
 			if r.Method != http.MethodPost {
-				logger.Warning("%s /commands/%s: method not allowed", r.Method, commandFqoid)
+				s.log.Warn("Method not allowed", "method", r.Method, "endpoint", "/commands", "command", commandFqoid)
 				writeHTTPResult(w, catena.MethodNotAllowed("method not allowed"))
 				return
 			}
 			payload, err := internal.ReadValueFromRequest(r)
 			if err != nil {
-				logger.Error("Slot %d: ExecuteCommand %s - invalid JSON: %v", slot, commandFqoid, err)
+				s.log.Error("Invalid JSON in request", "slot", slot, "command", commandFqoid, "error", err)
 				writeHTTPResult(w, catena.BadRequest("invalid JSON"))
 				return
 			}
-			logger.Info("POST /commands/%s started", commandFqoid)
+			s.log.Info("Request started", "method", "POST", "endpoint", "/commands", "command", commandFqoid)
 			if handler, ok := s.lookupExecuteCommand(slot); ok {
 				res := handler(w, r, slot, commandFqoid, payload)
 				writeHTTPResult(w, res)
-				logger.Info("POST /commands/%s finished", commandFqoid)
+				s.log.Info("Request finished", "method", "POST", "endpoint", "/commands", "command", commandFqoid)
 				return
 			}
 			writeHTTPResult(w, s.DefaultExecuteCommandHandler(w, r, slot, commandFqoid, payload))
