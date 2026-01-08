@@ -270,7 +270,7 @@ func (s *Server) RegisterRoutes() {
 				}
 				writeHTTPResult(w, s.DefaultGetValueHandler(w, r, slot, fqoid))
 			case http.MethodPut:
-				value, err := internal.ReadValueFromRequest(r)
+				value, err := internal.ReadRequestJSON(r)
 				if err != nil {
 					s.log.Error("Invalid JSON in request", "slot", slot, "fqoid", fqoid, "error", err)
 					writeHTTPResult(w, catena.BadRequest("invalid JSON"))
@@ -278,7 +278,7 @@ func (s *Server) RegisterRoutes() {
 				}
 				s.log.Info("Request started", "method", r.Method, "endpoint", "/value", "fqoid", fqoid)
 				if handler, ok := s.lookupSetValue(slot); ok {
-					res := handler(value, slot, fqoid)
+					res := handler(catena.FromProto(value), slot, fqoid)
 					writeHTTPResult(w, res)
 					s.log.Info("Request finished", "method", r.Method, "endpoint", "/value", "fqoid", fqoid)
 					return

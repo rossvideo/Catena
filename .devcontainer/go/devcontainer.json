@@ -19,8 +19,8 @@
   "postCreateCommand": {
     "dockerInit": "sudo groupdel docker || true && DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) && sudo groupadd -forg $DOCKER_GID docker && sudo usermod -aG docker ${USER_NAME}",
     "initSubmodules": "git submodule update --init --recursive",
-    "goMods": "cd ~/Catena && (go work init ./sdks/go ./build/go || true) && (cd ~/Catena/build/go && go work edit -go=1.23 && go mod download) && (cd ~/Catena/sdks/go && go work edit -go=1.23 && go mod download || true) && go work sync",
-    "buildDir": "sudo chown ${USER_NAME}:${USER_NAME} ~/Catena/${BUILD_TARGET} && cd ~/Catena/sdks/go && make protos && (cd ~/Catena/build/go && go mod tidy || true) && make && echo 'Docker setup complete, please restart the dev container!'"
+    "goWorkspace": "cd ~/Catena && rm -f go.work go.work.sum && go work init ./sdks/go ./build/go && go work edit -go=1.24 && go work edit -toolchain=go1.24.11 && go work sync",
+    "buildGo": "sudo chown -R ${USER_NAME}:${USER_NAME} ~/Catena/${BUILD_TARGET} && cd ~/Catena/sdks/go && make protos && go mod tidy && go mod download && make && echo 'Docker setup complete, please restart the dev container!'"
   },
   "runArgs": [
     "--env-file",

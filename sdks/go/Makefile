@@ -29,7 +29,7 @@ proto-module:
 	{ \
 		echo "module github.com/rossvideo/catena/build/go"; \
 		echo ""; \
-		echo "go 1.22.5"; \
+		echo "go 1.24"; \
 	} > "$(MOD_DIR)/go.mod"
 
 proto-tools:

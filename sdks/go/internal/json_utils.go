@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 )
 
-func ReadValueFromRequest(r *http.Request) (*protos.Value, error) {
+func ReadRequestJSON(r *http.Request) (*protos.Value, error) {
 	defer r.Body.Close()
 
 	data, err := io.ReadAll(r.Body)
@@ -28,10 +29,9 @@ func ReadValueFromRequest(r *http.Request) (*protos.Value, error) {
 }
 
 func WriteResponseJSON(w http.ResponseWriter, res catena.StatusResult) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(res.Status)
-
 	if res.Payload == nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(res.Status)
 		return
 	}
 
@@ -40,7 +40,17 @@ func WriteResponseJSON(w http.ResponseWriter, res catena.StatusResult) {
 		EmitUnpopulated: false,
 	}).Marshal(res.Payload)
 	if err != nil {
+		// Marshaling failed (e.g., invalid UTF-8). Don't return a 2xx with an empty body.
+		// Prefer a JSON error body so clients that always parse JSON don't explode.
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"error": "failed to marshal response payload",
+		})
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(res.Status)
 	_, _ = w.Write(b)
 }
