@@ -86,7 +86,10 @@ func ToProto(v any) *protos.Value {
 
 // FromProto converts protos.Value to native Go types
 func FromProto(pv *protos.Value) any {
-	switch kind := pv.Kind.(type) {
+	if pv == nil {
+		return nil
+	}
+	switch kind := pv.GetKind().(type) {
 	case *protos.Value_Int32Value:
 		return kind.Int32Value
 	case *protos.Value_Float32Value:
@@ -94,38 +97,43 @@ func FromProto(pv *protos.Value) any {
 	case *protos.Value_StringValue:
 		return kind.StringValue
 	case *protos.Value_Int32ArrayValues:
-		return kind.Int32ArrayValues.Ints
+		return kind.GetInt32ArrayValues().GetInts()
 	case *protos.Value_Float32ArrayValues:
-		return kind.Float32ArrayValues.Floats
+		return kind.GetFloat32ArrayValues().GetFloats()
 	case *protos.Value_StringArrayValues:
-		return kind.StringArrayValues.Strings
+		return kind.GetStringArrayValues().GetStrings()
 	case *protos.Value_StructValue:
-		m := make(map[string]any)
-		for k, v := range kind.StructValue.Fields {
+		fields := kind.GetStructValue().GetFields()
+		m := make(map[string]any, len(fields))
+		for k, v := range fields {
 			m[k] = FromProto(v)
 		}
 		return m
 	case *protos.Value_StructArrayValues:
-		arr := make([]map[string]any, len(kind.StructArrayValues.StructValues))
-		for i, sv := range kind.StructArrayValues.StructValues {
-			m := make(map[string]any)
-			for k, v := range sv.Fields {
+		list := kind.GetStructArrayValues().GetStructValues()
+		arr := make([]map[string]any, len(list))
+		for i, sv := range list {
+			fields := sv.GetFields()
+			m := make(map[string]any, len(fields))
+			for k, v := range fields {
 				m[k] = FromProto(v)
 			}
 			arr[i] = m
 		}
 		return arr
 	case *protos.Value_StructVariantValue:
+		sv := kind.GetStructVariantValue()
 		return StructVariantValue{
-			StructVariantType: kind.StructVariantValue.StructVariantType,
-			Value:             FromProto(kind.StructVariantValue.Value),
+			StructVariantType: sv.GetStructVariantType(),
+			Value:             FromProto(sv.GetValue()),
 		}
 	case *protos.Value_StructVariantArrayValues:
+		list := kind.GetStructVariantArrayValues().GetStructVariants()
 		var arr []StructVariantValue
-		for _, sv := range kind.StructVariantArrayValues.StructVariants {
+		for _, sv := range list {
 			arr = append(arr, StructVariantValue{
-				StructVariantType: sv.StructVariantType,
-				Value:             FromProto(sv.Value),
+				StructVariantType: sv.GetStructVariantType(),
+				Value:             FromProto(sv.GetValue()),
 			})
 		}
 		return arr
