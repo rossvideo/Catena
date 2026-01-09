@@ -221,9 +221,12 @@ jobs:
           mkdir -p ${BUILD_TARGET}
           # Generate go.work dynamically targeting Go 1.24
           cd ${GITHUB_WORKSPACE}
+          echo "work init"
           go work init ./sdks/go ./build/go
+          echo "work edit"
           go work edit -go=1.24
           go work edit -toolchain=go1.24.11
+          echo "work sync"
           go work sync
           # Install dev tools
           cd ${GITHUB_WORKSPACE}/sdks/go
