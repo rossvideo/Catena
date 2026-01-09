@@ -4,6 +4,9 @@ USER_NAME=$1
 BUILD_TARGET=$2
 ROOT_DIR=$3
 
+echo ${USER_NAME}
+echo ${BUILD_TARGET}
+echo ${ROOT_DIR}
 git submodule update --init --recursive
 cd ${ROOT_DIR}/sdks/go
 make protos
