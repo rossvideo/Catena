@@ -624,4 +624,5 @@ int main(int argc, char* argv[]) {
     catenaRpcThread.join();
 
     return 0;
+    //TODO: clean up mxl instance and flow if running on ctl+c
 }
