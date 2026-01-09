@@ -232,7 +232,7 @@ jobs:
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
           
           # Setup Go environment
-          ${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh ${UID} ${BUILD_TARGET} ${GITHUB_WORKSPACE}
+          ${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh root ${BUILD_TARGET} ${GITHUB_WORKSPACE}
           cd ${GITHUB_WORKSPACE}/sdks/go
           make
       - name: Perform CodeQL Analysis
