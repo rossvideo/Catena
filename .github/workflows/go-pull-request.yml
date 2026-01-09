@@ -221,7 +221,6 @@ jobs:
           mkdir -p ${BUILD_TARGET}
           # Generate go.work dynamically targeting Go 1.24
           cd ${GITHUB_WORKSPACE}
-          rm -f go.work go.work.sum
           go work init ./sdks/go ./build/go
           go work edit -go=1.24
           go work edit -toolchain=go1.24.11
@@ -233,6 +232,8 @@ jobs:
           go install github.com/go-delve/delve/cmd/dlv@latest
           # Generate Go protos and prepare modules
           make protos
+          ls ${GITHUB_WORKSPACE}/build/go -la 
+          cat ${GITHUB_WORKSPACE}/build/go/go.work
           # Ensure module graph is tidy and deps are downloaded
           go mod tidy
           go mod download
