@@ -9,7 +9,7 @@ cd ${ROOT_DIR}/sdks/go
 make protos
 
 cd ${ROOT_DIR}
-rm -rf ${ROOT_DIR}/go.work ${ROOT_DIR}/go.sum
+rm -rf ${ROOT_DIR}/go.work ${ROOT_DIR}/go.work.sum
 go work init ./sdks/go ./build/go
 go work edit -go=1.24
 go work edit -toolchain=go1.24.11
