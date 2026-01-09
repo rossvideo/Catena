@@ -180,6 +180,12 @@ std::string catena::param_value_string(const st2138::Value& value) {
             return "[struct variant value]";
         case st2138::Value::kStructVariantArrayValues:
             return "[struct variant array values]";
+        case st2138::Value::kStructArrayValues:
+            return "[struct array values]";
+        case st2138::Value::kUndefinedValue:
+            return "[undefined value]";
+        case st2138::Value::KIND_NOT_SET:
+            return "[kind not set]";
         default:
             return "[no value]";
     }

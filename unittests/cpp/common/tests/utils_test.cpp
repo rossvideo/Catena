@@ -225,8 +225,22 @@ TEST(UtilsTest, Value_Param_StructVariantArrayValues) {
     EXPECT_EQ(result, "[struct variant array values]");
 }
 
-TEST(UtilsTest, Value_Param_DefaultCase) {
+TEST(UtilsTest, Value_Param_StructArrayValues) {
+    st2138::Value value;
+    value.set_allocated_struct_array_values(new st2138::StructList());
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "[struct array values]");
+}
+
+TEST(UtilsTest, Value_Param_UndefinedValue) {
+    st2138::Value value;
+    value.set_undefined_value(st2138::UNDEFINED_VALUE);
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "[undefined value]");
+}
+
+TEST(UtilsTest, Value_Param_KIND_NOT_SET) {
     st2138::Value value; // No kind set
     std::string result = catena::param_value_string(value);
-    EXPECT_EQ(result, "[no value]");
+    EXPECT_EQ(result, "[kind not set]");
 }
