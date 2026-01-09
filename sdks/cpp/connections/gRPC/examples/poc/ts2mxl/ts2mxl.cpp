@@ -298,6 +298,7 @@ void run() {
         if (avcodec_send_packet(decCtx, &pkt) == 0) {
 
             while (avcodec_receive_frame(decCtx, frame) == 0) {
+                
 
                 uint64_t idx = mxlGetCurrentIndex(&rate);
 
@@ -316,8 +317,10 @@ void run() {
                 ginfo.flags = 0;
 
                 mxlFlowWriterCommitGrain(writer, &ginfo);
-
-                mxlSleepForNs(mxlGetNsUntilIndex(idx, &rate));
+                int wait = mxlGetNsUntilIndex(idx, &rate);
+                LOG(INFO) << "Wrote grain index " << idx << ", waiting " << wait << " ns";
+                mxlSleepForNs(wait);
+                
             }
         }
 

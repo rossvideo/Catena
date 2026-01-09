@@ -1,0 +1,122 @@
+slot: 0
+access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
+default_scope: st2138:mon
+params:
+  product:
+    type: STRUCT
+    read_only: true
+    params:
+      name:
+        type: STRING
+      vendor:
+        type: STRING
+      version:
+        type: STRING
+      catena_sdk:
+        type: STRING
+      catena_sdk_version:
+        type: STRING
+      serial_number:
+        type: STRING
+    value:
+      struct_value:
+        fields:
+          name:
+            string_value: gRPC MXL Reader
+          vendor:
+            string_value: Ross Video
+          version:
+            string_value: "1.0.0"
+          catena_sdk:
+            string_value: Catena C++ SDK
+          serial_number:
+            string_value: SN0987654321
+
+  status:
+    type: STRING
+    read_only: true
+    name:
+      display_strings:
+        en: "Status"
+    value:
+      string_value: "Stopped"
+
+  inputs:
+    type: STRUCT
+    params:
+      video_file_path:
+        name:
+          display_strings:
+            en: "Video File Path"
+        type: STRING
+      domain:
+        name:
+          display_strings:
+            en: "Target Domain"
+        type: STRING
+      flow:
+        import:
+          file: ../templates/param.flow_def.yaml
+      auto_configure:
+        type: STRING
+        name:
+          display_strings:
+            en: "Auto Configure"
+    value:
+      struct_value:
+        fields:
+          video_file_path:
+            string_value: "/videos/sample.mp4"
+          domain:
+            string_value: "/dev/shm/mxl"
+          auto_configure:
+            string_value: "1"
+
+commands:
+  start:
+    type: EMPTY
+    name:
+      display_strings:
+        en: "Start"
+    response: false
+  stop:
+    type: EMPTY
+    name:
+      display_strings:
+        en: "Stop"
+    response: false
+
+menu_groups:
+  status:
+    name:
+      display_strings:
+        en: "Status"
+    order: 0
+    menus:
+      status:
+        name:
+          display_strings:
+            en: "Status"
+        param_oids:
+          - /status
+  config:
+    name:
+      display_strings:
+        en: "Configuration"
+    order: 1
+    menus:
+      inputs:
+        name:
+          display_strings:
+            en: "Configuration"
+        param_oids:
+          - /inputs/auto_configure
+          - /inputs/video_file_path
+          - /inputs/domain
+          - /inputs/flow/id
+      control:
+        name:
+          display_strings:
+            en: Control
+        client_hints:
+          oglml: eo://demo.grid
