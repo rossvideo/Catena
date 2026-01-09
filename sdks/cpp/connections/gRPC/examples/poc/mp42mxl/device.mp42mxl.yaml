@@ -40,7 +40,9 @@ params:
         en: "Status"
     value:
       string_value: "Stopped"
-
+  flow:
+    import:
+      file: ../templates/param.flow_def.yaml
   inputs:
     type: STRUCT
     params:
@@ -54,9 +56,6 @@ params:
           display_strings:
             en: "Target Domain"
         type: STRING
-      flow:
-        import:
-          file: ../templates/param.flow_def.yaml
       auto_configure:
         type: STRING
         name:
@@ -113,7 +112,19 @@ menu_groups:
           - /inputs/auto_configure
           - /inputs/video_file_path
           - /inputs/domain
-          - /inputs/flow/id
+          - /flow/id
+          - /flow/description
+          - /flow/tags
+          - /flow/format
+          - /flow/label
+          - /flow/parents
+          - /flow/media_type
+          - /flow/grain_rate
+          - /flow/frame_width
+          - /flow/frame_height
+          - /flow/interlace_mode
+          - /flow/colorspace
+          - /flow/components
       control:
         name:
           display_strings:
