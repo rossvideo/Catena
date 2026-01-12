@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
@@ -142,6 +143,69 @@ func main() {
 	registerSpecificParamHandlers(srv, params1, "alpha", 1)
 	// Device 2: basic param handlers for all params.
 	registerBasicParamHandlers(srv, params2, 2)
+
+	// Register global connect handler (SSE streaming endpoint)
+	srv.RegisterConnectHandler(func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
+		logger.Info("Connect - SSE stream requested")
+		// Set SSE headers for streaming
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
+		// For this example, just acknowledge the connection
+		// A real implementation would keep the connection open and push updates
+		return catena.OK(nil)
+	})
+
+	// Register command handlers for each slot
+	for _, slot := range slotList {
+		slot := slot // capture loop variable
+		srv.RegisterExecuteCommandHandler(slot, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) catena.StatusResult {
+			logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid, "payload", payload)
+			// Return schema-compliant command_response format
+			// Options: {response: value}, {no_response: {}}, or {exception: {...}}
+			return catena.OK(map[string]any{
+				"response": map[string]any{
+					"string_value": "Command " + commandFqoid + " executed successfully",
+				},
+			})
+		})
+	}
+
+	// Define device models for each slot
+	devices := map[int]map[string]any{
+		0: {
+			"slot":             0,
+			"multi_set_enabled": true,
+			"subscriptions":    true,
+			"access_scopes":    []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
+			"default_scope":    "st2138:op",
+		},
+	}
+
+	// Register device handler (parses slot from URL path)
+	for _, slot := range slotList {
+		srv.RegisterGetDeviceHandler(slot, func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
+			// Parse slot from URL path: /st2138-api/v1/{slot}
+			parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+			if len(parts) < 3 {
+				logger.Error("GetDevice invalid path", "path", r.URL.Path)
+				return catena.BadRequest("invalid path")
+			}
+			slotStr := parts[2]
+			slot, err := strconv.Atoi(slotStr)
+			if err != nil {
+				logger.Error("GetDevice invalid slot", "slot", slotStr, "error", err)
+				return catena.BadRequest("invalid slot")
+			}
+			logger.Info("GetDevice", "slot", slot)
+			device, ok := devices[slot]
+			if !ok {
+				logger.Error("GetDevice device not found", "slot", slot)
+				return catena.NotFound("device not found")
+			}
+			return catena.OK(device)
+		})
+	}
 
 	// Register handler for non-existent endpoints
 	srv.RegisterNotFoundHandler(func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
