@@ -136,10 +136,11 @@ TEST(UtilsTest, Fmt_NoArgs) {
     EXPECT_EQ(result, "Hello, World!");
 }
 
+// PARAM_VALUE_STRING TESTS
+
 TEST(UtilsTest, Value_Param_Empty) {
     st2138::Value value;
-    st2138::Empty* emptyValue = new st2138::Empty();
-    value.set_allocated_empty_value(emptyValue);
+    value.mutable_empty_value();
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "");
 }
@@ -160,14 +161,15 @@ TEST(UtilsTest, Value_Param_Float32) {
 
 TEST(UtilsTest, Value_Param_String) {
     st2138::Value value;
-    value.set_string_value("test string");
+    auto str = value.mutable_string_value();
+    str->assign("test string");
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "test string");
 }
 
 TEST(UtilsTest, Value_Param_Struct) {
     st2138::Value value;
-    value.set_allocated_struct_value(new st2138::StructValue());
+    value.mutable_struct_value();
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "[struct value]");
 }
@@ -204,30 +206,29 @@ TEST(UtilsTest, Value_Param_StringArray) {
 
 TEST(UtilsTest, Value_Param_DataPayload) {
     st2138::Value value;
-    st2138::DataPayload* dataPayload = new st2138::DataPayload();
-    dataPayload->set_payload("binarydata");
-    value.set_allocated_data_payload(dataPayload);
+    auto datapayload = value.mutable_data_payload();
+    datapayload->set_payload("binarydata");
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "binarydata");
 }
 
 TEST(UtilsTest, Value_Param_StructVariantValue) {
     st2138::Value value;
-    value.set_allocated_struct_variant_value(new st2138::StructVariantValue());
+    value.mutable_struct_variant_value();
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "[struct variant value]");
 }
 
 TEST(UtilsTest, Value_Param_StructVariantArrayValues) {
     st2138::Value value;
-    value.set_allocated_struct_variant_array_values(new st2138::StructVariantList());
+    value.mutable_struct_variant_array_values();
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "[struct variant array values]");
 }
 
 TEST(UtilsTest, Value_Param_StructArrayValues) {
     st2138::Value value;
-    value.set_allocated_struct_array_values(new st2138::StructList());
+    value.mutable_struct_array_values();
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "[struct array values]");
 }
