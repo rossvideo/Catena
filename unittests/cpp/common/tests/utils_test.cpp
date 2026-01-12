@@ -161,8 +161,7 @@ TEST(UtilsTest, Value_Param_Float32) {
 
 TEST(UtilsTest, Value_Param_String) {
     st2138::Value value;
-    auto str = value.mutable_string_value();
-    str->assign("test string");
+    value.set_string_value("test string");
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "test string");
 }
