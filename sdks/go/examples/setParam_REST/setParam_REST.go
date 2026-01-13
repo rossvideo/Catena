@@ -76,29 +76,14 @@ func main() {
 			"string_value": "1920x1080",
 		},
 	})
-	videoParams.Store("framerate", map[string]any{
-		"value": map[string]any{
-			"float32_value": 59.94,
-		},
-	})
 	videoParams.Store("brightness", map[string]any{
 		"value": map[string]any{
 			"int32_value": 50,
 		},
 	})
-	videoParams.Store("contrast", map[string]any{
+	videoParams.Store("counter", map[string]any{
 		"value": map[string]any{
-			"float32_value": 1.0,
-		},
-	})
-	videoParams.Store("saturation", map[string]any{
-		"value": map[string]any{
-			"float32_value": 1.0,
-		},
-	})
-	videoParams.Store("output_enabled", map[string]any{
-		"value": map[string]any{
-			"int32_value": 1,
+			"int32_value": 0,
 		},
 	})
 
@@ -112,26 +97,6 @@ func main() {
 		},
 	})
 	audioParams.Store("muted", map[string]any{
-		"value": map[string]any{
-			"int32_value": 0,
-		},
-	})
-	audioParams.Store("balance", map[string]any{
-		"value": map[string]any{
-			"float32_value": 0.0,
-		},
-	})
-	audioParams.Store("bass", map[string]any{
-		"value": map[string]any{
-			"int32_value": 0,
-		},
-	})
-	audioParams.Store("treble", map[string]any{
-		"value": map[string]any{
-			"int32_value": 0,
-		},
-	})
-	audioParams.Store("audio_delay_ms", map[string]any{
 		"value": map[string]any{
 			"int32_value": 0,
 		},
@@ -151,26 +116,6 @@ func main() {
 			"int32_value": 0,
 		},
 	})
-	systemParams.Store("led_brightness", map[string]any{
-		"value": map[string]any{
-			"int32_value": 100,
-		},
-	})
-	systemParams.Store("auto_power_off_minutes", map[string]any{
-		"value": map[string]any{
-			"int32_value": 0,
-		},
-	})
-	systemParams.Store("timezone_offset", map[string]any{
-		"value": map[string]any{
-			"int32_value": 0,
-		},
-	})
-	systemParams.Store("language", map[string]any{
-		"value": map[string]any{
-			"string_value": "en-US",
-		},
-	})
 
 	slotList := []int{0, 1, 2}
 	srv := rest.NewServer(slotList)
@@ -182,9 +127,9 @@ func main() {
 	}
 
 	slotDescriptions := map[int]string{
-		0: "Video Parameters (resolution, brightness, contrast, etc.)",
-		1: "Audio Parameters (volume, muted, balance, etc.)",
-		2: "System Parameters (device_name, standby_mode, language, etc.)",
+		0: "Video Parameters (resolution, brightness, counter)",
+		1: "Audio Parameters (volume, muted)",
+		2: "System Parameters (device_name, standby_mode)",
 	}
 
 	for slot := range paramStores {
@@ -246,16 +191,17 @@ func main() {
 		return catena.NotFound("endpoint not found: " + r.URL.Path)
 	})
 
-	logger.Info("SetParam Example listening", "port", port)
-	logger.Info("Available slots and parameters:")
-	for slot, desc := range slotDescriptions {
-		logger.Info("  ", "slot", slot, "description", desc)
-	}
-	logger.Info("Example requests:")
-	logger.Info("  PUT /st2138-api/v1/0/value/brightness with body: {\"value\":{\"int32_value\":75}}")
-	logger.Info("  PUT /st2138-api/v1/1/value/volume with body: {\"value\":{\"float32_value\":0.5}}")
-	logger.Info("  PUT /st2138-api/v1/2/value/device_name with body: {\"value\":{\"string_value\":\"My Device\"}}")
-	logger.Info("  GET /st2138-api/v1/0/value/brightness (to read back)")
+	// Logger info about the example
+	logger.Info("=======================================================")
+	logger.Info("SetParam Example")
+	logger.Info("=======================================================")
+	logger.Info("Listening", "port", port)
+	logger.Info("")
+	logger.Info("Available parameters:")
+	logger.Info("  Slot 0: resolution, brightness, counter")
+	logger.Info("  Slot 1: volume, muted")
+	logger.Info("  Slot 2: device_name, standby_mode")
+	logger.Info("=======================================================")
 
 	srv.StartHTTPServer(port)
 	select {}

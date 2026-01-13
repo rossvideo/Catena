@@ -81,24 +81,9 @@ func main() {
 			"float32_value": 59.94,
 		},
 	})
-	videoParams.Store("colorspace", map[string]any{
+	videoParams.Store("counter", map[string]any{
 		"value": map[string]any{
-			"string_value": "BT.709",
-		},
-	})
-	videoParams.Store("hdr_enabled", map[string]any{
-		"value": map[string]any{
-			"int32_value": 1,
-		},
-	})
-	videoParams.Store("brightness", map[string]any{
-		"value": map[string]any{
-			"int32_value": 50,
-		},
-	})
-	videoParams.Store("contrast", map[string]any{
-		"value": map[string]any{
-			"float32_value": 1.0,
+			"int32_value": 0,
 		},
 	})
 
@@ -111,29 +96,9 @@ func main() {
 			"int32_value": 48000,
 		},
 	})
-	audioParams.Store("bit_depth", map[string]any{
-		"value": map[string]any{
-			"int32_value": 24,
-		},
-	})
-	audioParams.Store("channels", map[string]any{
-		"value": map[string]any{
-			"int32_value": 8,
-		},
-	})
 	audioParams.Store("volume", map[string]any{
 		"value": map[string]any{
 			"float32_value": 0.75,
-		},
-	})
-	audioParams.Store("muted", map[string]any{
-		"value": map[string]any{
-			"int32_value": 0,
-		},
-	})
-	audioParams.Store("audio_format", map[string]any{
-		"value": map[string]any{
-			"string_value": "PCM",
 		},
 	})
 
@@ -146,29 +111,9 @@ func main() {
 			"string_value": "192.168.1.100",
 		},
 	})
-	networkParams.Store("subnet_mask", map[string]any{
-		"value": map[string]any{
-			"string_value": "255.255.255.0",
-		},
-	})
-	networkParams.Store("gateway", map[string]any{
-		"value": map[string]any{
-			"string_value": "192.168.1.1",
-		},
-	})
-	networkParams.Store("dhcp_enabled", map[string]any{
-		"value": map[string]any{
-			"int32_value": 0,
-		},
-	})
 	networkParams.Store("port", map[string]any{
 		"value": map[string]any{
 			"int32_value": 5000,
-		},
-	})
-	networkParams.Store("connection_status", map[string]any{
-		"value": map[string]any{
-			"string_value": "connected",
 		},
 	})
 
@@ -182,9 +127,9 @@ func main() {
 	}
 
 	slotDescriptions := map[int]string{
-		0: "Video Parameters (resolution, framerate, colorspace, etc.)",
-		1: "Audio Parameters (sample_rate, bit_depth, volume, etc.)",
-		2: "Network Parameters (ip_address, subnet_mask, port, etc.)",
+		0: "Video Parameters (resolution, framerate, counter)",
+		1: "Audio Parameters (sample_rate, volume)",
+		2: "Network Parameters (ip_address, port)",
 	}
 
 	for slot := range paramStores {
@@ -212,18 +157,17 @@ func main() {
 		return catena.NotFound("endpoint not found: " + r.URL.Path)
 	})
 
-	logger.Info("GetParam Example listening", "port", port)
-	logger.Info("Available slots and parameters:")
-	for slot, desc := range slotDescriptions {
-		logger.Info("  ", "slot", slot, "description", desc)
-	}
-	logger.Info("Example requests:")
-	logger.Info("  GET /st2138-api/v1/0/value/resolution")
-	logger.Info("  GET /st2138-api/v1/0/value/framerate")
-	logger.Info("  GET /st2138-api/v1/1/value/sample_rate")
-	logger.Info("  GET /st2138-api/v1/1/value/volume")
-	logger.Info("  GET /st2138-api/v1/2/value/ip_address")
-	logger.Info("  GET /st2138-api/v1/2/value/port")
+	// Logger info about the example
+	logger.Info("=======================================================")
+	logger.Info("GetParam Example")
+	logger.Info("=======================================================")
+	logger.Info("Listening", "port", port)
+	logger.Info("")
+	logger.Info("Available parameters:")
+	logger.Info("  Slot 0: resolution, framerate, counter")
+	logger.Info("  Slot 1: sample_rate, volume")
+	logger.Info("  Slot 2: ip_address, port")
+	logger.Info("=======================================================")
 
 	srv.StartHTTPServer(port)
 	select {}

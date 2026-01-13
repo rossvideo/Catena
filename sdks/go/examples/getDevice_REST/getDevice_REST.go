@@ -155,7 +155,18 @@ func main() {
 		return catena.NotFound("endpoint not found: " + r.URL.Path)
 	})
 
-	logger.Info("GetDevice Example listening", "port", port)
+	// Logger info about the example
+	logger.Info("=======================================================")
+	logger.Info("GetDevice Example")
+	logger.Info("=======================================================")
+	logger.Info("Listening", "port", port)
+	logger.Info("")
+	logger.Info("Available devices:")
+	logger.Info("  Primary Video Processor (slot 0)")
+	logger.Info("  Audio Mixer (slot 1)")
+	logger.Info("  Router Controller (slot 2)")
+	logger.Info("=======================================================")
+
 	srv.StartHTTPServer(port)
 
 	select {} // Block forever
