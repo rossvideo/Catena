@@ -1,0 +1,269 @@
+/*
+ * Copyright 2026 Ross Video Ltd
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @brief SetParam REST example.
+ * @file setParam_REST.go
+ * @copyright Copyright © 2026 Ross Video Ltd
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @date 2026-01-13
+ */
+
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"os"
+	"strconv"
+	"sync"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	"github.com/rossvideo/catena/sdks/go/pkg/rest"
+)
+
+func main() {
+	cfg := logger.ParseConfigWithVerbosity("CATENA")
+	cfg.AppName = "set_param_example"
+
+	if err := logger.Init(cfg); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize logger: %v\n", err)
+		os.Exit(1)
+	}
+	defer logger.Close()
+
+	portStr := envOr("CATENA_PORT", "6254")
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		logger.Error("invalid CATENA_PORT", "error", err)
+		os.Exit(1)
+	}
+
+	// ==========================================================================
+	// Slot 0: Video Parameters (read/write)
+	// ==========================================================================
+	videoParams := &sync.Map{}
+	videoParams.Store("resolution", map[string]any{
+		"value": map[string]any{
+			"string_value": "1920x1080",
+		},
+	})
+	videoParams.Store("framerate", map[string]any{
+		"value": map[string]any{
+			"float32_value": 59.94,
+		},
+	})
+	videoParams.Store("brightness", map[string]any{
+		"value": map[string]any{
+			"int32_value": 50,
+		},
+	})
+	videoParams.Store("contrast", map[string]any{
+		"value": map[string]any{
+			"float32_value": 1.0,
+		},
+	})
+	videoParams.Store("saturation", map[string]any{
+		"value": map[string]any{
+			"float32_value": 1.0,
+		},
+	})
+	videoParams.Store("output_enabled", map[string]any{
+		"value": map[string]any{
+			"int32_value": 1,
+		},
+	})
+
+	// ==========================================================================
+	// Slot 1: Audio Parameters (read/write)
+	// ==========================================================================
+	audioParams := &sync.Map{}
+	audioParams.Store("volume", map[string]any{
+		"value": map[string]any{
+			"float32_value": 0.75,
+		},
+	})
+	audioParams.Store("muted", map[string]any{
+		"value": map[string]any{
+			"int32_value": 0,
+		},
+	})
+	audioParams.Store("balance", map[string]any{
+		"value": map[string]any{
+			"float32_value": 0.0,
+		},
+	})
+	audioParams.Store("bass", map[string]any{
+		"value": map[string]any{
+			"int32_value": 0,
+		},
+	})
+	audioParams.Store("treble", map[string]any{
+		"value": map[string]any{
+			"int32_value": 0,
+		},
+	})
+	audioParams.Store("audio_delay_ms", map[string]any{
+		"value": map[string]any{
+			"int32_value": 0,
+		},
+	})
+
+	// ==========================================================================
+	// Slot 2: System Parameters (read/write)
+	// ==========================================================================
+	systemParams := &sync.Map{}
+	systemParams.Store("device_name", map[string]any{
+		"value": map[string]any{
+			"string_value": "Catena Device",
+		},
+	})
+	systemParams.Store("standby_mode", map[string]any{
+		"value": map[string]any{
+			"int32_value": 0,
+		},
+	})
+	systemParams.Store("led_brightness", map[string]any{
+		"value": map[string]any{
+			"int32_value": 100,
+		},
+	})
+	systemParams.Store("auto_power_off_minutes", map[string]any{
+		"value": map[string]any{
+			"int32_value": 0,
+		},
+	})
+	systemParams.Store("timezone_offset", map[string]any{
+		"value": map[string]any{
+			"int32_value": 0,
+		},
+	})
+	systemParams.Store("language", map[string]any{
+		"value": map[string]any{
+			"string_value": "en-US",
+		},
+	})
+
+	slotList := []int{0, 1, 2}
+	srv := rest.NewServer(slotList)
+
+	paramStores := map[int]*sync.Map{
+		0: videoParams,
+		1: audioParams,
+		2: systemParams,
+	}
+
+	slotDescriptions := map[int]string{
+		0: "Video Parameters (resolution, brightness, contrast, etc.)",
+		1: "Audio Parameters (volume, muted, balance, etc.)",
+		2: "System Parameters (device_name, standby_mode, language, etc.)",
+	}
+
+	for slot := range paramStores {
+		slot := slot
+		store := paramStores[slot]
+		desc := slotDescriptions[slot]
+
+		// Register SetValue handler (PUT /value/{fqoid})
+		srv.RegisterSetValueHandler(slot, func(value any, slotNum int, fqoid string) catena.StatusResult {
+			logger.Info("SetParam", "slot", slotNum, "fqoid", fqoid, "value", value, "type", desc)
+
+			// Check if parameter exists (only allow setting existing parameters)
+			_, exists := store.Load(fqoid)
+			if !exists {
+				logger.Warning("SetParam parameter not found", "slot", slotNum, "fqoid", fqoid)
+				return catena.NotFound("parameter not found: " + fqoid)
+			}
+
+			// Store the new value - wrap it in the expected format if needed
+			var wrappedValue map[string]any
+			if valueMap, ok := value.(map[string]any); ok {
+				// Check if value is already wrapped
+				if _, hasValue := valueMap["value"]; hasValue {
+					wrappedValue = valueMap
+				} else {
+					// Wrap the value
+					wrappedValue = map[string]any{"value": valueMap}
+				}
+			} else {
+				// Wrap non-map values
+				wrappedValue = map[string]any{"value": value}
+			}
+
+			store.Store(fqoid, wrappedValue)
+			logger.Info("SetParam stored", "slot", slotNum, "fqoid", fqoid, "stored_value", wrappedValue)
+
+			// Return the updated value
+			return catena.OK(wrappedValue)
+		})
+
+		// Also register GetValue handler so we can read back values
+		srv.RegisterGetValueHandler(slot, func(slotNum int, fqoid string) catena.StatusResult {
+			logger.Info("GetParam", "slot", slotNum, "fqoid", fqoid, "type", desc)
+
+			val, ok := store.Load(fqoid)
+			if !ok {
+				logger.Warning("GetParam not found", "slot", slotNum, "fqoid", fqoid)
+				return catena.NotFound("parameter not found: " + fqoid)
+			}
+
+			param := val.(map[string]any)
+			logger.Info("GetParam returning", "slot", slotNum, "fqoid", fqoid, "value", param)
+			return catena.OK(param)
+		})
+	}
+
+	// Not found handler
+	srv.RegisterNotFoundHandler(func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
+		return catena.NotFound("endpoint not found: " + r.URL.Path)
+	})
+
+	logger.Info("SetParam Example listening", "port", port)
+	logger.Info("Available slots and parameters:")
+	for slot, desc := range slotDescriptions {
+		logger.Info("  ", "slot", slot, "description", desc)
+	}
+	logger.Info("Example requests:")
+	logger.Info("  PUT /st2138-api/v1/0/value/brightness with body: {\"value\":{\"int32_value\":75}}")
+	logger.Info("  PUT /st2138-api/v1/1/value/volume with body: {\"value\":{\"float32_value\":0.5}}")
+	logger.Info("  PUT /st2138-api/v1/2/value/device_name with body: {\"value\":{\"string_value\":\"My Device\"}}")
+	logger.Info("  GET /st2138-api/v1/0/value/brightness (to read back)")
+
+	srv.StartHTTPServer(port)
+	select {}
+}
+
+func envOr(key, def string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return def
+}
