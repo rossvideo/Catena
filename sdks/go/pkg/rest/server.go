@@ -283,7 +283,7 @@ func (s *Server) RegisterRoutes() {
 					s.log.Info("Request finished", "method", r.Method, "endpoint", "/value", "fqoid", fqoid)
 					return
 				}
-				writeHTTPResult(w, s.DefaultSetValueHandler(value, slot, fqoid))
+				writeHTTPResult(w, s.DefaultSetValueHandler(catena.FromProto(value), slot, fqoid))
 			default:
 				s.log.Warn("Method not allowed", "method", r.Method, "endpoint", "/value", "fqoid", fqoid)
 				writeHTTPResult(w, catena.MethodNotAllowed("method not allowed"))
@@ -334,12 +334,12 @@ func (s *Server) RegisterRoutes() {
 			}
 			s.log.Info("Request started", "method", "POST", "endpoint", "/command", "command", commandFqoid)
 			if handler, ok := s.lookupExecuteCommand(slot); ok {
-				res := handler(w, r, slot, commandFqoid, payload)
+				res := handler(w, r, slot, commandFqoid, catena.FromProto(payload))
 				writeHTTPResult(w, res)
 				s.log.Info("Request finished", "method", "POST", "endpoint", "/command", "command", commandFqoid)
 				return
 			}
-			writeHTTPResult(w, s.DefaultExecuteCommandHandler(w, r, slot, commandFqoid, payload))
+			writeHTTPResult(w, s.DefaultExecuteCommandHandler(w, r, slot, commandFqoid, catena.FromProto(payload)))
 		})
 	}
 
