@@ -68,7 +68,6 @@ func main() {
 	}
 
 	// Define device metadata for multiple slots
-	// Each device has different capabilities and configurations
 	devices := map[int]map[string]any{
 		0: {
 			"slot":              0,
