@@ -40,6 +40,13 @@ void SocketReader::read(tcp::socket& socket) {
     detailLevel_ = st2138::Device_DetailLevel_UNSET;
     jwsToken_ = "";
     jsonBody_ = "";
+    requestStart_ = 0.0;
+    requestReceived_ = 0.0;
+
+    // Getting request receival time formatted as,
+    // <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+    const auto epoch_time = std::chrono::system_clock::now().time_since_epoch();
+    requestReceived_ = std::chrono::duration_cast<std::chrono::milliseconds>(epoch_time).count() / 1000.0;
 
     // Reading from the socket.
     boost::asio::streambuf buffer;
@@ -139,6 +146,10 @@ void SocketReader::read(tcp::socket& socket) {
             if (dlMap.contains(dl)) {
                 detailLevel_ = dlMap.at(dl);
             }
+        }
+        // Getting time request was sent
+        else if (requestStart_ == 0.0 && iequals_header_name(name, "request-start") && value != ""){
+            requestStart_ = stod(value);
         }
         // Getting body content-Length
         else if (contentLength == 0 && iequals_header_name(name, "content-length")) {

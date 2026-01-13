@@ -151,6 +151,16 @@ class ISocketReader {
      * @brief Returns a reference to the subscription manager
      */
     virtual catena::common::ISubscriptionManager& subscriptionManager() = 0;
+    /**
+     * @brief Returns the time the client started the request formatted as,
+     * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+     */
+    virtual const double requestStart() const = 0;
+        /**
+     * @brief Returns the time the client's request was received formatted as,
+     * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+     */
+    virtual const double requestReceived() const = 0;
 };
  
 }; // Namespace REST

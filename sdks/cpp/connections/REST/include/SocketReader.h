@@ -193,6 +193,16 @@ class SocketReader : public ISocketReader {
      * @brief Returns a reference to the subscription manager
      */
     catena::common::ISubscriptionManager& subscriptionManager() override { return service_->subscriptionManager(); }
+    /**
+     * @brief Returns the time the client started the request formatted as,
+     * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+     */
+    const double requestStart() const override{ return requestStart_; }
+        /**
+     * @brief Returns the time the client's request was received formatted as,
+     * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+     */
+    const double requestReceived() const override{ return requestReceived_; }
 
 
   private:
@@ -245,6 +255,16 @@ class SocketReader : public ISocketReader {
      * @brief Pointer to the ServiceImpl
      */
     IServiceImpl* service_ = nullptr;
+    /**
+     * @brief The time at which the request was sent formatted as,
+     * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+     */
+    double requestStart_ = 0.0;
+    /**
+     * @brief The time at which the request was sent formatted as,
+     * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+     */
+    double requestReceived_ = 0.0;
 };
 
 }; // Namespace REST

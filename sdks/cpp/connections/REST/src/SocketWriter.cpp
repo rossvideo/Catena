@@ -38,11 +38,6 @@ void SocketWriter::sendResponse(const catena::exception_with_status& err, const 
         if (buffer_ && !jsonBody_.empty()) {
             jsonBody_ = "{\"data\":[" + jsonBody_ + "]}";
         }
-        // Getting request start time formatted as,
-        // <number of seconds since start of epoch>.<number of milliseconds since start of current second>
-        const auto epoch_time = std::chrono::system_clock::now().time_since_epoch();
-        double seconds_since_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(epoch_time).count() / 1000;
-
         // Adding headers and writing to client.
         std::stringstream response;
         response << "HTTP/1.1 " << httpStatus.first << " " << httpStatus.second << "\r\n"
@@ -52,8 +47,7 @@ void SocketWriter::sendResponse(const catena::exception_with_status& err, const 
                  << "Access-Control-Allow-Origin: " << origin_ << "\r\n"
                  << "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
                  << "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
-                 << "Access-Control-Allow-Credentials: true\r\n"
-                 << "Request-Start: " << seconds_since_epoch << "\r\n\r\n"
+                 << "Access-Control-Allow-Credentials: true\r\n\r\n"
                  << jsonBody_;
         // Use non-throwing write; on error, close socket to signal disconnect
         boost::system::error_code ec;
@@ -87,11 +81,6 @@ void SSEWriter::sendResponse(const catena::exception_with_status& err, const goo
 
     // Send headers only once
     if (!headers_sent_) {
-        // Getting request start time formatted as,
-        // <number of seconds since start of epoch>.<number of milliseconds since start of current second>
-        const auto epoch_time = std::chrono::system_clock::now().time_since_epoch();
-        double seconds_since_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(epoch_time).count() / 1000;
-
         response << "HTTP/1.1 " << httpStatus.first << " " << httpStatus.second << "\r\n"
                  << "Content-Type: text/event-stream\r\n"
                  << "Cache-Control: no-cache\r\n"
@@ -99,8 +88,7 @@ void SSEWriter::sendResponse(const catena::exception_with_status& err, const goo
                  << "Access-Control-Allow-Origin: " << origin_ << "\r\n"
                  << "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
                  << "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
-                 << "Access-Control-Allow-Credentials: true\r\n"
-                 << "Request-Start: " << seconds_since_epoch << "\r\n\r\n";
+                 << "Access-Control-Allow-Credentials: true\r\n\r\n";
         headers_sent_ = true;
     }
 
