@@ -4,7 +4,6 @@ USER_NAME=$1
 BUILD_TARGET=$2
 ROOT_DIR=$3
 
-git submodule update --init --recursive
 cd ${ROOT_DIR}/sdks/go
 make protos
 
@@ -21,4 +20,3 @@ go mod tidy
 go mod download
 make
 echo 'Docker setup complete, please restart the dev container!'
-  

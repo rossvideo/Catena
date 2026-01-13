@@ -326,7 +326,7 @@ func (s *Server) RegisterRoutes() {
 				writeHTTPResult(w, catena.MethodNotAllowed("method not allowed"))
 				return
 			}
-			payload, err := internal.ReadValueFromRequest(r)
+			payload, err := internal.ReadRequestJSON(r)
 			if err != nil {
 				s.log.Error("Invalid JSON in request", "slot", slot, "command", commandFqoid, "error", err)
 				writeHTTPResult(w, catena.BadRequest("invalid JSON"))

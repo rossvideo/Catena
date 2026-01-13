@@ -18,7 +18,7 @@
   },
   "postCreateCommand": {
     "dockerInit": "sudo groupdel docker || true && DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) && sudo groupadd -forg $DOCKER_GID docker && sudo usermod -aG docker ${USER_NAME}",
-    "goEnvScript": "~/Catena/.devcontainer/go/postCreateCommand.sh ${USER_NAME} ${BUILD_TARGET} ~/Catena"
+    "goEnvScript": "git submodule update --init --recursive && ~/Catena/.devcontainer/go/postCreateCommand.sh ${USER_NAME} ${BUILD_TARGET} ~/Catena"
   },
   "runArgs": [
     "--env-file",

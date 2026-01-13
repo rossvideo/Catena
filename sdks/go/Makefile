@@ -60,3 +60,4 @@ update-imports:
 
 clean-protos:
 	rm -rf "$(OUT_DIR)"
+	
