@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief ExecuteCommand REST example.
+ * @brief ExecuteCommand REST example - Counter Demo.
  * @file executeCommand_REST.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
@@ -39,11 +39,14 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
@@ -51,18 +54,87 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/rest"
 )
 
+//go:embed static/*
+var staticFS embed.FS
+
 // CommandHandler processes a command and returns a response
 type CommandHandler func(payload any) catena.StatusResult
 
+// Global state for graceful shutdown
+var (
+	shutdownChan = make(chan struct{})
+	srv          *rest.Server
+)
+
+// Counter state
+type CounterState struct {
+	mu      sync.RWMutex
+	value   int64
+	running bool
+}
+
+func (c *CounterState) GetValue() int64 {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.value
+}
+
+func (c *CounterState) IsRunning() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.running
+}
+
+func (c *CounterState) Start() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.running = true
+}
+
+func (c *CounterState) Stop() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.running = false
+}
+
+func (c *CounterState) Add(n int64) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.value += n
+}
+
+func (c *CounterState) Reset() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.value = 0
+}
+
+func (c *CounterState) Increment() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.running {
+		c.value++
+	}
+}
+
 func main() {
 	cfg := logger.ParseConfigWithVerbosity("CATENA")
-	cfg.AppName = "command_example"
+	cfg.AppName = "counter_commands_REST"
 
 	if err := logger.Init(cfg); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to initialize logger: %v\n", err)
 		os.Exit(1)
 	}
 	defer logger.Close()
+
+	// Handle signals for graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigChan
+		logger.Info("Caught signal, shutting down", "signal", sig)
+		close(shutdownChan)
+	}()
 
 	portStr := envOr("CATENA_PORT", "6254")
 	port, err := strconv.Atoi(portStr)
@@ -71,259 +143,149 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Device state (shared across commands)
-	deviceState := &sync.Map{}
-	deviceState.Store("running", false)
-	deviceState.Store("counter", 0)
+	// Initialize counter
+	counter := &CounterState{}
 
-	// ==========================================================================
-	// Slot 0: Basic Commands (simple request/response)
-	// ==========================================================================
-	basicCommands := map[string]CommandHandler{
-		// Simple echo command - returns the input
-		"echo": func(payload any) catena.StatusResult {
-			logger.Info("Executing echo command", "payload", payload)
-			return catena.OK(map[string]any{
-				"response": map[string]any{
-					"echo": payload,
-				},
-			})
-		},
+	// Start counter goroutine - increments every second when running
+	go func() {
+		ticker := time.NewTicker(1 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				if counter.IsRunning() {
+					counter.Increment()
+					logger.Info("Counter tick", "value", counter.GetValue())
+				}
+			case <-shutdownChan:
+				return
+			}
+		}
+	}()
 
-		// Ping command - no input, simple response
-		"ping": func(payload any) catena.StatusResult {
-			logger.Info("Executing ping command")
-			return catena.OK(map[string]any{
-				"response": map[string]any{
-					"string_value": "pong",
-					"timestamp":    time.Now().Unix(),
-				},
-			})
-		},
-
-		// Get status command - returns device state
-		"get_status": func(payload any) catena.StatusResult {
-			running, _ := deviceState.Load("running")
-			counter, _ := deviceState.Load("counter")
-			return catena.OK(map[string]any{
-				"response": map[string]any{
-					"running": running,
-					"counter": counter,
-					"uptime":  time.Now().Unix(),
-				},
-			})
-		},
+	// Helper to build response with current state
+	buildResponse := func() map[string]any {
+		return map[string]any{
+			"counter": counter.GetValue(),
+			"running": counter.IsRunning(),
+		}
 	}
 
 	// ==========================================================================
-	// Slot 1: Action Commands (commands with side effects)
+	// Commands
 	// ==========================================================================
-	actionCommands := map[string]CommandHandler{
-		// Start command - starts a process
+	commands := map[string]CommandHandler{
+		// Start command
 		"start": func(payload any) catena.StatusResult {
-			running, _ := deviceState.Load("running")
-			if running.(bool) {
-				return catena.OK(map[string]any{
-					"exception": map[string]any{
-						"error_code":    1001,
-						"error_message": "Already running",
-					},
-				})
+			if counter.IsRunning() {
+				logger.Info("Start command - already running")
+				return catena.OK(buildResponse())
 			}
-			deviceState.Store("running", true)
-			logger.Info("Device started")
-			return catena.OK(map[string]any{
-				"response": map[string]any{
-					"string_value": "started",
-				},
-			})
+			counter.Start()
+			logger.Info("Counter started", "value", counter.GetValue())
+			return catena.OK(buildResponse())
 		},
 
-		// Stop command - stops a process
+		// Stop command
 		"stop": func(payload any) catena.StatusResult {
-			running, _ := deviceState.Load("running")
-			if !running.(bool) {
-				return catena.OK(map[string]any{
-					"exception": map[string]any{
-						"error_code":    1002,
-						"error_message": "Not running",
-					},
-				})
+			if !counter.IsRunning() {
+				logger.Info("Stop command - already stopped")
+				return catena.OK(buildResponse())
 			}
-			deviceState.Store("running", false)
-			logger.Info("Device stopped")
-			return catena.OK(map[string]any{
-				"response": map[string]any{
-					"string_value": "stopped",
-				},
-			})
+			counter.Stop()
+			logger.Info("Counter stopped", "value", counter.GetValue())
+			return catena.OK(buildResponse())
 		},
 
-		// Increment counter command
-		"increment": func(payload any) catena.StatusResult {
-			counter, _ := deviceState.Load("counter")
-			newCounter := counter.(int) + 1
-			deviceState.Store("counter", newCounter)
-			return catena.OK(map[string]any{
-				"response": map[string]any{
-					"int32_value": newCounter,
-				},
-			})
+		// Add10 command
+		"add10": func(payload any) catena.StatusResult {
+			counter.Add(10)
+			logger.Info("Added 10 to counter", "value", counter.GetValue())
+			return catena.OK(buildResponse())
 		},
 
-		// Reset command - resets device state
+		// Reset command
 		"reset": func(payload any) catena.StatusResult {
-			deviceState.Store("running", false)
-			deviceState.Store("counter", 0)
-			logger.Info("Device reset")
-			return catena.OK(map[string]any{
-				"no_response": map[string]any{},
-			})
+			counter.Reset()
+			logger.Info("Counter reset", "value", counter.GetValue())
+			return catena.OK(buildResponse())
 		},
 	}
 
 	// ==========================================================================
-	// Slot 2: Complex Commands (structured inputs/outputs)
+	// Server Setup
 	// ==========================================================================
-	complexCommands := map[string]CommandHandler{
-		// Route command - takes structured input
-		"route": func(payload any) catena.StatusResult {
-			logger.Info("Executing route command", "payload", payload)
-			// Expect payload like: {"source": 1, "destination": 2}
-			if payloadMap, ok := payload.(map[string]any); ok {
-				source := payloadMap["source"]
-				dest := payloadMap["destination"]
-				return catena.OK(map[string]any{
-					"response": map[string]any{
-						"routed":      true,
-						"source":      source,
-						"destination": dest,
-					},
-				})
-			}
+	slotList := []int{0}
+	srv = rest.NewServer(slotList)
+
+	// Register GetValue handler to retrieve counter state
+	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) catena.StatusResult {
+		if fqoid == "counter" {
+			return catena.OK(buildResponse())
+		}
+		return catena.NotFound("parameter not found: " + fqoid)
+	})
+
+	// Register ExecuteCommand handler
+	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) catena.StatusResult {
+		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
+
+		handler, ok := commands[commandFqoid]
+		if !ok {
+			logger.Warning("Command not found", "slot", slot, "command", commandFqoid)
 			return catena.OK(map[string]any{
 				"exception": map[string]any{
-					"error_code":    2001,
-					"error_message": "Invalid payload format",
+					"type":    "Invalid Command",
+					"details": "Command not found: " + commandFqoid,
 				},
 			})
-		},
+		}
 
-		// Batch route command - takes array of routes
-		"batch_route": func(payload any) catena.StatusResult {
-			logger.Info("Executing batch_route command", "payload", payload)
-			if routes, ok := payload.([]any); ok {
-				results := make([]map[string]any, 0, len(routes))
-				for i, route := range routes {
-					if routeMap, ok := route.(map[string]any); ok {
-						results = append(results, map[string]any{
-							"index":  i,
-							"source": routeMap["source"],
-							"dest":   routeMap["destination"],
-							"status": "routed",
-						})
-					}
-				}
-				return catena.OK(map[string]any{
-					"response": map[string]any{
-						"routes_processed": len(results),
-						"results":          results,
-					},
-				})
-			}
-			return catena.OK(map[string]any{
-				"exception": map[string]any{
-					"error_code":    2002,
-					"error_message": "Expected array of routes",
-				},
-			})
-		},
+		return handler(payload)
+	})
 
-		// Configure command - applies a complex configuration
-		"configure": func(payload any) catena.StatusResult {
-			logger.Info("Executing configure command", "payload", payload)
-			// Simulate configuration validation and application
-			if config, ok := payload.(map[string]any); ok {
-				// Validate required fields
-				if _, hasVideo := config["video"]; !hasVideo {
-					return catena.OK(map[string]any{
-						"exception": map[string]any{
-							"error_code":    2003,
-							"error_message": "Missing 'video' configuration",
-						},
-					})
-				}
-				return catena.OK(map[string]any{
-					"response": map[string]any{
-						"configured": true,
-						"applied":    config,
-					},
-				})
-			}
-			return catena.OK(map[string]any{
-				"exception": map[string]any{
-					"error_code":    2004,
-					"error_message": "Invalid configuration format",
-				},
-			})
-		},
-	}
-
-	slotList := []int{0, 1, 2}
-	srv := rest.NewServer(slotList)
-
-	commandMaps := map[int]map[string]CommandHandler{
-		0: basicCommands,
-		1: actionCommands,
-		2: complexCommands,
-	}
-
-	slotDescriptions := map[int]string{
-		0: "Basic Commands (echo, ping, get_status)",
-		1: "Action Commands (start, stop, increment, reset)",
-		2: "Complex Commands (route, batch_route, configure)",
-	}
-
-	for slot, commands := range commandMaps {
-		slot := slot
-		commands := commands
-		desc := slotDescriptions[slot]
-
-		srv.RegisterExecuteCommandHandler(slot, func(w http.ResponseWriter, r *http.Request, slotNum int, commandFqoid string, payload any) catena.StatusResult {
-			logger.Info("ExecuteCommand", "slot", slotNum, "command", commandFqoid, "type", desc)
-
-			handler, ok := commands[commandFqoid]
-			if !ok {
-				logger.Warning("Command not found", "slot", slotNum, "command", commandFqoid)
-				return catena.OK(map[string]any{
-					"exception": map[string]any{
-						"error_code":    404,
-						"error_message": "Command not found: " + commandFqoid,
-					},
-				})
-			}
-
-			return handler(payload)
-		})
-	}
-
-	// Not found handler
+	// Serve static files at root (including index.html)
 	srv.RegisterNotFoundHandler(func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
+		// Serve index.html for root path
+		if r.URL.Path == "/" {
+			data, err := staticFS.ReadFile("static/index.htm")
+			if err != nil {
+				return catena.NotFound("index.html not found")
+			}
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write(data)
+			return catena.StatusResult{Status: http.StatusOK}
+		}
 		return catena.NotFound("endpoint not found: " + r.URL.Path)
 	})
 
-	logger.Info("Command Example listening", "port", port)
-	logger.Info("Available slots and commands:")
-	for slot, desc := range slotDescriptions {
-		logger.Info("  ", "slot", slot, "description", desc)
-	}
-	logger.Info("Example requests:")
-	logger.Info("  POST /st2138-api/v1/0/command/ping")
-	logger.Info("  POST /st2138-api/v1/1/command/start")
-	logger.Info("  POST /st2138-api/v1/2/command/route {\"source\":1,\"destination\":2}")
+	// ==========================================================================
+	// Start Server
+	// ==========================================================================
+	logger.Info("=======================================================")
+	logger.Info("Counter Commands REST Example")
+	logger.Info("=======================================================")
+	logger.Info("REST server starting", "port", port)
+	logger.Info("")
+	logger.Info("Web UI available at:")
+	logger.Info(fmt.Sprintf("  http://localhost:%d/", port))
+	logger.Info("")
+	logger.Info("API endpoints:")
+	logger.Info("  GET  /st2138-api/v1/0/value/counter    - Get counter state")
+	logger.Info("  POST /st2138-api/v1/0/command/{cmd}    - Execute command")
+	logger.Info("")
+	logger.Info("Available commands:")
+	logger.Info("  start  - Start auto-incrementing (1/sec)")
+	logger.Info("  stop   - Stop auto-incrementing")
+	logger.Info("  add10  - Add 10 to counter")
+	logger.Info("  reset  - Reset counter to 0")
+	logger.Info("=======================================================")
 
 	srv.StartHTTPServer(port)
-	select {}
+
+	// Wait for shutdown signal
+	<-shutdownChan
+	logger.Info("Server shutdown complete")
 }
 
 func envOr(key, def string) string {
@@ -332,4 +294,3 @@ func envOr(key, def string) string {
 	}
 	return def
 }
-

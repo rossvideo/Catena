@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catena Counter Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0a0a0a;
+            --bg-card: #141414;
+            --bg-elevated: #1f1f1f;
+            --accent: #10b981;
+            --accent-glow: rgba(16, 185, 129, 0.3);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.3);
+            --warning: #f59e0b;
+            --text-primary: #fafafa;
+            --text-secondary: #a3a3a3;
+            --text-muted: #525252;
+            --border: #262626;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background-image: 
+                radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 60%);
+        }
+
+        .container {
+            max-width: 480px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes countUp {
+            0% { transform: translateY(20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Counter Display */
+        .counter-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            animation: fadeIn 0.5s ease-out 0.1s both;
+        }
+
+        .counter-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+            margin-bottom: 1rem;
+            transition: color 0.3s ease;
+        }
+
+        .counter-value.running {
+            color: var(--accent);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .status-badge.running {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent);
+        }
+
+        .status-badge.stopped {
+            background: var(--bg-elevated);
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .status-badge.running .status-dot {
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        /* Controls */
+        .controls-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            animation: fadeIn 0.5s ease-out 0.2s both;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .control-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-btn {
+            flex: 1;
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .control-btn.start {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-deep);
+        }
+
+        .control-btn.start:hover {
+            box-shadow: 0 8px 30px var(--accent-glow);
+        }
+
+        .control-btn.stop {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+
+        .control-btn.stop:hover {
+            box-shadow: 0 8px 30px var(--danger-glow);
+        }
+
+        .control-btn.add {
+            background: linear-gradient(135deg, var(--warning), #d97706);
+            border-color: var(--warning);
+            color: var(--bg-deep);
+        }
+
+        .control-btn.reset {
+            background: var(--bg-elevated);
+            border-color: var(--border);
+            color: var(--text-secondary);
+        }
+
+        .control-btn.reset:hover {
+            border-color: var(--text-muted);
+            color: var(--text-primary);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Log */
+        .log-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            animation: fadeIn 0.5s ease-out 0.3s both;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .log-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .log-container {
+            background: var(--bg-deep);
+            border-radius: 8px;
+            padding: 0.75rem;
+            max-height: 120px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+        }
+
+        .log-entry {
+            padding: 0.25rem 0;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .log-time {
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .log-cmd {
+            color: var(--accent);
+            min-width: 50px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            animation: fadeIn 0.5s ease-out 0.4s both;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Counter Demo</h1>
+            <p class="subtitle">ST-2138 ExecuteCommand Example</p>
+        </header>
+
+        <div class="counter-card">
+            <div class="counter-value" id="counterValue">0</div>
+            <div class="status-badge stopped" id="statusBadge">
+                <span class="status-dot"></span>
+                <span id="statusText">Stopped</span>
+            </div>
+        </div>
+
+        <div class="controls-card">
+            <div class="control-row">
+                <button class="control-btn start" id="startBtn" onclick="executeCommand('start')">
+                    ▶ Start
+                </button>
+                <button class="control-btn stop" id="stopBtn" onclick="executeCommand('stop')">
+                    ⏹ Stop
+                </button>
+            </div>
+            <div class="control-row">
+                <button class="control-btn add" onclick="executeCommand('add10')">
+                    +10
+                </button>
+                <button class="control-btn reset" onclick="executeCommand('reset')">
+                    ↺ Reset
+                </button>
+            </div>
+        </div>
+
+        <div class="log-card">
+            <div class="log-header">
+                <span class="log-title">Activity</span>
+            </div>
+            <div class="log-container" id="logContainer">
+                <div class="log-entry">
+                    <span class="log-time">--:--:--</span>
+                    <span class="log-cmd">READY</span>
+                    <span>Waiting...</span>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>POST /st2138-api/v1/0/command/{cmd} • <a href="https://github.com/rossvideo/catena">Catena</a></p>
+        </footer>
+    </div>
+
+    <script>
+        let isRunning = false;
+        let pollInterval = null;
+
+        function updateUI(counter, running) {
+            const counterEl = document.getElementById('counterValue');
+            const statusBadge = document.getElementById('statusBadge');
+            const statusText = document.getElementById('statusText');
+
+            counterEl.textContent = counter;
+            
+            if (running) {
+                counterEl.classList.add('running');
+                statusBadge.classList.remove('stopped');
+                statusBadge.classList.add('running');
+                statusText.textContent = 'Running';
+            } else {
+                counterEl.classList.remove('running');
+                statusBadge.classList.remove('running');
+                statusBadge.classList.add('stopped');
+                statusText.textContent = 'Stopped';
+            }
+
+            isRunning = running;
+        }
+
+        function addLog(cmd, value) {
+            const log = document.getElementById('logContainer');
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+            
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `
+                <span class="log-time">${time}</span>
+                <span class="log-cmd">${cmd.toUpperCase()}</span>
+                <span>→ ${value}</span>
+            `;
+            
+            log.insertBefore(entry, log.firstChild);
+            
+            // Keep only last 10 entries
+            while (log.children.length > 10) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        async function executeCommand(cmd) {
+            try {
+                const response = await fetch(`/st2138-api/v1/0/command/${cmd}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                
+                if (data.exception) {
+                    addLog(cmd, 'Error: ' + data.exception.details);
+                    return;
+                }
+
+                // Response is wrapped in struct_value by the REST server
+                const sv = data.struct_value;
+                if (sv) {
+                    updateUI(sv.counter ?? 0, sv.running ?? false);
+                    addLog(cmd, sv.counter ?? 0);
+                }
+            } catch (error) {
+                addLog(cmd, 'Error: ' + error.message);
+            }
+        }
+
+        async function pollState() {
+            try {
+                const response = await fetch('/st2138-api/v1/0/value/counter');
+                const data = await response.json();
+                
+                // Response is wrapped in struct_value by the REST server
+                const sv = data.struct_value;
+                if (sv) {
+                    updateUI(sv.counter ?? 0, sv.running ?? false);
+                }
+            } catch (error) {
+                // Silently ignore polling errors
+            }
+        }
+
+        // Poll every 500ms to keep UI in sync
+        pollInterval = setInterval(pollState, 500);
+        
+        // Initial poll
+        pollState();
+    </script>
+</body>
+</html>
