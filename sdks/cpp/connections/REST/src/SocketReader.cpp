@@ -148,7 +148,7 @@ void SocketReader::read(tcp::socket& socket) {
             }
         }
         // Getting time request was sent
-        else if (requestStart_ == 0.0 && iequals_header_name(name, "request-start") && value != ""){
+        else if (requestStart_ == static_cast<double>(0.0) && iequals_header_name(name, "request-start") && value != ""){
             requestStart_ = stod(value);
         }
         // Getting body content-Length
