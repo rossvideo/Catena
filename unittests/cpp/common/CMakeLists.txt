@@ -2,6 +2,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 find_package(GTest REQUIRED)
+include(GoogleTest)
 include_directories(${GTEST_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CATENA_UNITTESTS_DIR}/cpp/REST/mocks)
@@ -59,7 +60,7 @@ foreach(test_file ${TEST_FILES})
         GTest::gmock_main
         ${common_lib}
     )
-    add_test(NAME common.${test_name} COMMAND common_${test_name})
+    gtest_discover_tests(common_${test_name} TEST_PREFIX "common." DISCOVERY_MODE PRE_TEST)
 endforeach()
 
 #special avahi linking for NmosNode_test
@@ -99,4 +100,4 @@ target_link_libraries(common_ParamWithValue PRIVATE
     ${common_lib}
 )
 
-add_test(NAME common.ParamWithValue COMMAND common_ParamWithValue)
+gtest_discover_tests(common_ParamWithValue TEST_PREFIX "common.ParamWithValue." DISCOVERY_MODE PRE_TEST)
