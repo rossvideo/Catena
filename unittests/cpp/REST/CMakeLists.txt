@@ -2,6 +2,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 find_package(GTest REQUIRED)
+include(GoogleTest)
 include_directories(${GTEST_INCLUDE_DIRS})
 include_directories(${CATENA_CPP_ROOT_DIR}/common/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -45,5 +46,5 @@ foreach(test_file ${REST_TEST_FILES})
         GTest::gmock
         GTest::gmock_main
     )
-    add_test(NAME REST.${test_name} COMMAND REST_${test_name})
+    gtest_discover_tests(REST_${test_name} TEST_PREFIX "REST." DISCOVERY_MODE PRE_TEST)
 endforeach()
