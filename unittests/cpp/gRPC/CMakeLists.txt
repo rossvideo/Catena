@@ -2,6 +2,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 find_package(GTest REQUIRED)
+include(GoogleTest)
 include_directories(${GTEST_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(mocks)
@@ -45,5 +46,5 @@ foreach(test_file ${GRPC_TEST_FILES})
         GTest::gmock
         GTest::gmock_main
     )
-    add_test(NAME gRPC.${test_name} COMMAND gRPC_${test_name})
+    gtest_discover_tests(gRPC_${test_name} TEST_PREFIX "gRPC." DISCOVERY_MODE PRE_TEST)
 endforeach()
