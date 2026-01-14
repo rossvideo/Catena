@@ -67,7 +67,7 @@ params:
         type: STRING
       serial_number:
         type: STRING
-    import: {file: params/param.product.json}
+    import: {url: params/param.product.json}
   counter:
     type: INT32
     name: {display_strings: {en: Counter, es: Contador, fr: Compteur}}

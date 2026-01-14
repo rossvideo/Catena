@@ -14,63 +14,103 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { existsSync, readFileSync } from 'fs';
-import { basename, dirname, extname } from "path";
-import { parse } from 'yaml';
-
+import { basename, resolve } from 'path';
 import Validator from 'smpte-validator';
 
-/**
- * @class DeviceModel
- * @brief Holds the information parsed from a json device model file
- */
+// TODO get the max depth from the smpte spec
+const MAX_RESOLVE_DEPTH = 100;
+
 export class DeviceModel {
     /**
-     * @brief Construct a new DeviceModel object
-     * @param {string} filePath the path to the device model file
-     * @param {Validator} validator the json validator object
-     * @param {object} desc the parsed json object
+     * Create a new DeviceModel instance. To load the model from file, call load().
+     * @param {string} url the path to the device model file
+     * @param {Validator} validator the validator to use
      */
-    constructor(filePath, validator, desc) {
-        this.filePath = filePath;
+    constructor(url, validator) {
+        this.url = url;
+        this.baseFilename = null;
+        this.deviceName = null;
         this.validator = validator;
-        this.desc = desc;
-        this.baseFilename = basename(filePath);
+        this.desc = null;
+    }
+
+    /**
+     * @brief Load the device model from file
+     * @param {bool} resolveImports if true, resolve any imports in the model
+     * @throws {Error} if the file is not a device model
+     * @todo this will change when smpte updates with a different param definition.
+     * The top level params and commands objects will still exist, but sub-params
+     * and sub-commands will be combined into a single 'typedef' object.
+     */
+    async load(resolveImports) {
+        this.baseFilename = basename(this.url);
         const info = this.baseFilename.split(".");
         const schemaName = info[0];
         if (schemaName !== "device") {
             throw new Error(`File must be a device model, not ${schemaName}`);
         }
         this.deviceName = info[1];
+        if (this.url.indexOf("://") === -1) {
+            this.url = new URL(resolve(this.url), "file://");
+        } else {
+            this.url = new URL(this.url);
+        }
+        this.desc = await this._load(schemaName, this.url, resolveImports, 0);
     }
 
     /**
-     * @brief open a param.*.json file and return the parsed json object
-     * @param {string} importArg the path to the param.*.json file relative to the directory containing the device model file
-     * @returns the parsed json object
-     * @throws {Error} if the file cannot be opened or the data is invalid against the schema
-     * @todo add support for other import types 
+     * Load a resource from a uri, validate it and return the parsed object.
+     * @param {string} schemaName the schema name to validate against
+     * @param {URL} url the uri to load
+     * @param {bool} resolveImports if true, resolve any imports in the object
+     * @param {number} depth the current recursion depth
+     * @returns {Promise<object>} the parsed object
+     * @throws {Error} if the resource cannot be loaded or is invalid
      */
-    importParam(importArg) {
-        if ("file" in importArg) {
-            const importDir = dirname(this.filePath);
-            const importPath = `${importDir}/${importArg.file}`;
-            if (!existsSync(importPath)) {
-                throw new Error(`Cannot open file at ${importArg.file}`);
+    async _load(schemaName, url, resolveImports, depth) {
+        const { valid, data } = await this.validator.validate(schemaName, url);
+        if (!valid) {
+            throw new Error(`Resource ${url} is invalid`);
+        }
+        if (resolveImports) {
+            if (data.params) {
+                await this._walk(data.params, depth + 1, url);
             }
-            // Determining if the file is yaml or json and parsing accordingly.
-            const importData = (() => {
-                const extension = extname(importPath);
-                if (extension === ".yaml" || extension === ".yml") {
-                    return parse(readFileSync(importPath, 'utf8'));
-                } else { // Default
-                    return JSON.parse(readFileSync(importPath));
-                }
-            })();
-            return importData;
+            // istanbul ignore next, going away
+            if (data.commands) {
+                await this._walk(data.commands, depth + 1, url);
+            }
+        }
+        return data;
+    }
 
-        } else {
-            throw new Error(`Unsupported import type: ${importArg}`);
+    /**
+     * Walk the parameters and resolve any imports.
+     * @param {object} params params to walk
+     * @param {number} depth current recursion depth
+     * @param {URL} currentUrl URL to put paths against
+     */
+    async _walk(params, depth, currentUrl) {
+        if (depth > MAX_RESOLVE_DEPTH) {
+            throw new Error("Maximum import depth exceeded");
+        }
+        for (let [name, param] of Object.entries(params)) {
+            if (param.import) {
+                const importUrl = new URL(param.import.url, currentUrl);
+                if (!basename(importUrl.pathname).startsWith("param.")) {
+                    throw new Error(`Imported file ${param.import.url} is not a param file`);
+                }
+                params[name] = param = await this._load("param", importUrl, true, depth);
+            }
+            // recurse into sub-params and sub-commands
+            // this is the part will change to typedefs when smpte updates
+            if (param.params) {
+                await this._walk(param.params, depth + 1, currentUrl);
+            }
+            // istanbul ignore next, going away
+            if (param.commands) {
+                await this._walk(param.commands, depth + 1, currentUrl);
+            }
         }
     }
 }
