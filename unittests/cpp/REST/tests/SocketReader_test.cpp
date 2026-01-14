@@ -122,6 +122,7 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
         EXPECT_EQ(socketReader.authorizationEnabled(), authz);
         EXPECT_EQ(socketReader.stream(), stream);
         EXPECT_EQ(socketReader.requestStart(), requestStart != "" ? stod(requestStart) : 0.0);
+        EXPECT_EQ(socketReader.requestReceived() > (requestStart != "" ? stod(requestStart) : 0.0), true);
     }
 
     // Variables to test on creation.
@@ -328,6 +329,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderCaseInsensitive) {
     EXPECT_EQ(socketReader.authorizationEnabled(), true);
     EXPECT_EQ(socketReader.stream(), stream);
     EXPECT_EQ(socketReader.requestStart(), std::stod(requestStart));
+    EXPECT_EQ(socketReader.requestReceived() > std::stod(requestStart), true);
 }
 
 /*
@@ -376,4 +378,5 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderWithoutColonIgnored) {
     EXPECT_EQ(socketReader.authorizationEnabled(), true);
     EXPECT_EQ(socketReader.stream(), stream);
     EXPECT_EQ(socketReader.requestStart(), std::stod(requestStart));
+    EXPECT_EQ(socketReader.requestReceived() > std::stod(requestStart), true);
 }
