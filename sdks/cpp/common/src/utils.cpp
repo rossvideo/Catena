@@ -186,7 +186,8 @@ std::string catena::param_value_string(const st2138::Value& value) {
             return "[undefined value]";
         case st2138::Value::KIND_NOT_SET:
             return "[kind not set]";
-        default:
+        default: //GCOVR_EXCL_START
             return "[no value]";
+            //GCOVR_EXCL_END
     }
 }
