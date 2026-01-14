@@ -40,20 +40,28 @@ package main
 
 import (
 	"bytes"
-	"encoding/base64"
+	"embed"
 	"fmt"
 	"io"
+	"io/fs"
+	"mime"
 	"net/http"
 	"os"
+	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/rest"
 )
+
+//go:embed static/*
+var staticFS embed.FS
 
 // Asset represents a binary asset with metadata
 type Asset struct {
@@ -65,15 +73,81 @@ type Asset struct {
 // CommandHandler processes a command and returns a response
 type CommandHandler func(payload any) catena.StatusResult
 
+// Counter state with thread-safe operations
+type CounterState struct {
+	mu      sync.RWMutex
+	value   int64
+	running bool
+}
+
+func (c *CounterState) GetValue() int64 {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.value
+}
+
+func (c *CounterState) IsRunning() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.running
+}
+
+func (c *CounterState) Start() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.running = true
+}
+
+func (c *CounterState) Stop() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.running = false
+}
+
+func (c *CounterState) Add(n int64) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.value += n
+}
+
+func (c *CounterState) Reset() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.value = 0
+}
+
+func (c *CounterState) Increment() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.running {
+		c.value++
+	}
+}
+
+// Global state for graceful shutdown
+var (
+	shutdownChan = make(chan struct{})
+	srv          *rest.Server
+)
+
 func main() {
 	cfg := logger.ParseConfigWithVerbosity("CATENA")
-	cfg.AppName = "all_endpoints_example"
+	cfg.AppName = "one_of_everything_REST"
 
 	if err := logger.Init(cfg); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to initialize logger: %v\n", err)
 		os.Exit(1)
 	}
 	defer logger.Close()
+
+	// Handle signals for graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigChan
+		logger.Info("Caught signal, shutting down", "signal", sig)
+		close(shutdownChan)
+	}()
 
 	portStr := envOr("CATENA_PORT", "6254")
 	port, err := strconv.Atoi(portStr)
@@ -83,26 +157,37 @@ func main() {
 	}
 
 	// ==========================================================================
+	// Counter State
+	// ==========================================================================
+	counter := &CounterState{}
+
+	// Start counter goroutine - increments every second when running
+	go func() {
+		ticker := time.NewTicker(1 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				if counter.IsRunning() {
+					counter.Increment()
+					logger.Info("Counter tick", "value", counter.GetValue())
+				}
+			case <-shutdownChan:
+				return
+			}
+		}
+	}()
+
+	// ==========================================================================
 	// Device Metadata (for GetDevice endpoint)
 	// ==========================================================================
 	devices := map[int]map[string]any{
 		0: {
 			"slot":              0,
-			"name":              "Video Processor",
-			"product":           "VP-3000",
-			"version":           "2.1.0",
 			"multi_set_enabled": true,
-			"subscriptions":     true,
-			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
-			"default_scope":     "st2138:op",
-			"capabilities": map[string]any{
-				"max_channels":   16,
-				"supports_4k":    true,
-				"supports_8k":    true,
-				"supports_hdr":   true,
-				"input_formats":  []string{"SDI", "HDMI", "IP", "NDI"},
-				"output_formats": []string{"SDI", "HDMI", "IP"},
-			},
+			"detail_level":      "FULL",
+			"access_scopes":     []string{"monitor", "operate", "configure", "administer"},
+			"default_scope":     "operate",
 		},
 	}
 
@@ -112,169 +197,62 @@ func main() {
 	params := &sync.Map{}
 
 	// Video parameters
-	params.Store("video/resolution", map[string]any{
-		"value": map[string]any{"string_value": "3840x2160"},
-	})
-	params.Store("video/brightness", map[string]any{
-		"value": map[string]any{"int32_value": 50},
-	})
-	params.Store("video/counter", map[string]any{
-		"value": map[string]any{"int32_value": 0},
-	})
+	params.Store("video/resolution", "1920x1080")
+	params.Store("video/brightness", 50)
+	params.Store("video/contrast", 50)
+	params.Store("video/saturation", 50)
 
 	// Audio parameters
-	params.Store("audio/volume", map[string]any{
-		"value": map[string]any{"float32_value": 0.8},
-	})
-	params.Store("audio/muted", map[string]any{
-		"value": map[string]any{"int32_value": 0},
-	})
+	params.Store("audio/volume", 75)
+	params.Store("audio/muted", false)
 
 	// System parameters
-	params.Store("system/device_name", map[string]any{
-		"value": map[string]any{"string_value": "Production Studio A"},
-	})
-
-	// Network parameters
-	params.Store("network/ip_address", map[string]any{
-		"value": map[string]any{"string_value": "192.168.1.100"},
-	})
+	params.Store("system/device_name", "Demo Device")
 
 	// ==========================================================================
 	// Commands (for ExecuteCommand endpoint)
 	// ==========================================================================
-	deviceState := &sync.Map{}
-	deviceState.Store("running", false)
-	deviceState.Store("counter", 0)
-	deviceState.Store("preset_index", 0)
+
+	// Helper to build counter response
+	buildCounterResponse := func() map[string]any {
+		return map[string]any{
+			"counter": counter.GetValue(),
+			"running": counter.IsRunning(),
+		}
+	}
 
 	commands := map[string]CommandHandler{
-		// Simple commands
-		"ping": func(payload any) catena.StatusResult {
-			logger.Info("Executing ping command")
-			return catena.OK(map[string]any{
-				"response": map[string]any{
-					"string_value": "pong",
-					"timestamp":    time.Now().Unix(),
-				},
-			})
-		},
-
-		"echo": func(payload any) catena.StatusResult {
-			logger.Info("Executing echo command", "payload", payload)
-			return catena.OK(map[string]any{
-				"response": map[string]any{
-					"echo": payload,
-				},
-			})
-		},
-
-		"get_status": func(payload any) catena.StatusResult {
-			running, _ := deviceState.Load("running")
-			counter, _ := deviceState.Load("counter")
-			preset, _ := deviceState.Load("preset_index")
-			return catena.OK(map[string]any{
-				"response": map[string]any{
-					"running":      running,
-					"counter":      counter,
-					"preset_index": preset,
-					"uptime":       time.Now().Unix(),
-				},
-			})
-		},
-
-		// State control commands
+		// Counter commands
 		"start": func(payload any) catena.StatusResult {
-			running, _ := deviceState.Load("running")
-			if running.(bool) {
-				return catena.OK(map[string]any{
-					"exception": map[string]any{
-						"error_code":    1001,
-						"error_message": "Device already running",
-					},
-				})
+			if counter.IsRunning() {
+				logger.Info("Start command - already running")
+				return catena.OK(buildCounterResponse())
 			}
-			deviceState.Store("running", true)
-			logger.Info("Device started")
-			return catena.OK(map[string]any{
-				"response": map[string]any{
-					"string_value": "started",
-				},
-			})
+			counter.Start()
+			logger.Info("Counter started", "value", counter.GetValue())
+			return catena.OK(buildCounterResponse())
 		},
 
 		"stop": func(payload any) catena.StatusResult {
-			running, _ := deviceState.Load("running")
-			if !running.(bool) {
-				return catena.OK(map[string]any{
-					"exception": map[string]any{
-						"error_code":    1002,
-						"error_message": "Device not running",
-					},
-				})
+			if !counter.IsRunning() {
+				logger.Info("Stop command - already stopped")
+				return catena.OK(buildCounterResponse())
 			}
-			deviceState.Store("running", false)
-			logger.Info("Device stopped")
-			return catena.OK(map[string]any{
-				"response": map[string]any{
-					"string_value": "stopped",
-				},
-			})
+			counter.Stop()
+			logger.Info("Counter stopped", "value", counter.GetValue())
+			return catena.OK(buildCounterResponse())
+		},
+
+		"add10": func(payload any) catena.StatusResult {
+			counter.Add(10)
+			logger.Info("Added 10 to counter", "value", counter.GetValue())
+			return catena.OK(buildCounterResponse())
 		},
 
 		"reset": func(payload any) catena.StatusResult {
-			deviceState.Store("running", false)
-			deviceState.Store("counter", 0)
-			deviceState.Store("preset_index", 0)
-			logger.Info("Device reset")
-			return catena.OK(map[string]any{
-				"no_response": map[string]any{},
-			})
-		},
-
-		// Preset commands
-		"load_preset": func(payload any) catena.StatusResult {
-			if payloadMap, ok := payload.(map[string]any); ok {
-				if index, ok := payloadMap["index"]; ok {
-					deviceState.Store("preset_index", index)
-					logger.Info("Preset loaded", "index", index)
-					return catena.OK(map[string]any{
-						"response": map[string]any{
-							"preset_loaded": index,
-						},
-					})
-				}
-			}
-			return catena.OK(map[string]any{
-				"exception": map[string]any{
-					"error_code":    2001,
-					"error_message": "Missing preset index",
-				},
-			})
-		},
-
-		// Complex routing command
-		"route": func(payload any) catena.StatusResult {
-			if payloadMap, ok := payload.(map[string]any); ok {
-				source := payloadMap["source"]
-				dest := payloadMap["destination"]
-				if source != nil && dest != nil {
-					logger.Info("Routing", "source", source, "destination", dest)
-					return catena.OK(map[string]any{
-						"response": map[string]any{
-							"routed":      true,
-							"source":      source,
-							"destination": dest,
-						},
-					})
-				}
-			}
-			return catena.OK(map[string]any{
-				"exception": map[string]any{
-					"error_code":    2002,
-					"error_message": "Invalid route parameters",
-				},
-			})
+			counter.Reset()
+			logger.Info("Counter reset", "value", counter.GetValue())
+			return catena.OK(buildCounterResponse())
 		},
 	}
 
@@ -282,40 +260,23 @@ func main() {
 	// Assets (for GetAsset endpoint)
 	// ==========================================================================
 	assets := &sync.Map{}
+	assetsList := &sync.Map{}
 
-	// Image assets (1x1 PNG pixels)
-	redPixelPNG, _ := base64.StdEncoding.DecodeString(
-		"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==")
-	bluePixelPNG, _ := base64.StdEncoding.DecodeString(
-		"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPj/HwADBwIAMCbHYQAAAABJRU5ErkJggg==")
+	// Load assets from embedded static directory
+	loadAssetsFromEmbedded(staticFS, "static", assets, assetsList)
 
-	assets.Store("thumbnail", Asset{ContentType: "image/png", Data: redPixelPNG, Filename: "thumbnail.png"})
-	assets.Store("icon", Asset{ContentType: "image/png", Data: bluePixelPNG, Filename: "icon.png"})
-
-	// Configuration assets
-	assets.Store("device_config", Asset{
-		ContentType: "application/json",
-		Data:        []byte(`{"device":"VP-3000","version":"2.1.0","serial":"SN-2026-001234"}`),
-		Filename:    "device_config.json",
-	})
-	assets.Store("preset_default", Asset{
-		ContentType: "application/json",
-		Data:        []byte(`{"name":"Default","video":{"resolution":"3840x2160","colorspace":"BT.2020"}}`),
-		Filename:    "preset_default.json",
-	})
-
-	// Documentation
-	assets.Store("readme", Asset{
-		ContentType: "text/plain",
-		Data:        []byte("VP-3000 Video Processor\n=======================\nFirmware: 2.1.0\n\nThis device supports 4K/8K video processing with HDR."),
-		Filename:    "README.txt",
+	// Build assets list for logging
+	var assetNames []string
+	assetsList.Range(func(key, value any) bool {
+		assetNames = append(assetNames, key.(string))
+		return true
 	})
 
 	// ==========================================================================
 	// Server Setup
 	// ==========================================================================
 	slotList := []int{0}
-	srv := rest.NewServer(slotList)
+	srv = rest.NewServer(slotList)
 
 	// --------------------------------------------------------------------------
 	// Register GetDevice handler
@@ -323,20 +284,17 @@ func main() {
 	srv.RegisterGetDeviceHandler(0, func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
 		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 		if len(parts) < 3 {
-			logger.Error("GetDevice invalid path", "path", r.URL.Path)
 			return catena.BadRequest("invalid path")
 		}
 		slotStr := parts[2]
 		slot, err := strconv.Atoi(slotStr)
 		if err != nil {
-			logger.Error("GetDevice invalid slot", "slot", slotStr, "error", err)
 			return catena.BadRequest("invalid slot")
 		}
 
 		logger.Info("GetDevice", "slot", slot)
 		device, ok := devices[slot]
 		if !ok {
-			logger.Error("GetDevice device not found", "slot", slot)
 			return catena.NotFound("device not found")
 		}
 		return catena.OK(device)
@@ -348,15 +306,29 @@ func main() {
 	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) catena.StatusResult {
 		logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
 
+		// Special case: return counter state
+		if fqoid == "counter" {
+			return catena.OK(buildCounterResponse())
+		}
+
+		// Special case: return all params as a struct
+		if fqoid == "all" {
+			allParams := make(map[string]any)
+			params.Range(func(key, value any) bool {
+				allParams[key.(string)] = value
+				return true
+			})
+			allParams["counter"] = counter.GetValue()
+			allParams["counter_running"] = counter.IsRunning()
+			return catena.OK(allParams)
+		}
+
 		val, ok := params.Load(fqoid)
 		if !ok {
-			logger.Warning("GetParam not found", "slot", slot, "fqoid", fqoid)
 			return catena.NotFound("parameter not found: " + fqoid)
 		}
 
-		param := val.(map[string]any)
-		logger.Info("GetParam returning", "slot", slot, "fqoid", fqoid, "value", param)
-		return catena.OK(param)
+		return catena.OK(val)
 	})
 
 	// --------------------------------------------------------------------------
@@ -368,40 +340,27 @@ func main() {
 		// Check if parameter exists
 		_, exists := params.Load(fqoid)
 		if !exists {
-			logger.Warning("SetParam parameter not found", "slot", slot, "fqoid", fqoid)
 			return catena.NotFound("parameter not found: " + fqoid)
 		}
 
-		// Wrap value in expected format
-		var wrappedValue map[string]any
-		if valueMap, ok := value.(map[string]any); ok {
-			if _, hasValue := valueMap["value"]; hasValue {
-				wrappedValue = valueMap
-			} else {
-				wrappedValue = map[string]any{"value": valueMap}
-			}
-		} else {
-			wrappedValue = map[string]any{"value": value}
-		}
-
-		params.Store(fqoid, wrappedValue)
-		logger.Info("SetParam stored", "slot", slot, "fqoid", fqoid, "stored_value", wrappedValue)
-		return catena.OK(wrappedValue)
+		params.Store(fqoid, value)
+		logger.Info("Parameter updated", "fqoid", fqoid, "value", value)
+		return catena.OK(value)
 	})
 
 	// --------------------------------------------------------------------------
 	// Register ExecuteCommand handler
 	// --------------------------------------------------------------------------
 	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) catena.StatusResult {
-		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid, "payload", payload)
+		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 
 		handler, ok := commands[commandFqoid]
 		if !ok {
 			logger.Warning("Command not found", "slot", slot, "command", commandFqoid)
 			return catena.OK(map[string]any{
 				"exception": map[string]any{
-					"error_code":    404,
-					"error_message": "Command not found: " + commandFqoid,
+					"type":    "Invalid Command",
+					"details": "Command not found: " + commandFqoid,
 				},
 			})
 		}
@@ -417,23 +376,15 @@ func main() {
 
 		val, ok := assets.Load(fqoid)
 		if !ok {
-			logger.Warning("GetAsset not found", "slot", slot, "fqoid", fqoid)
 			return catena.NotFound("asset not found: " + fqoid)
 		}
 
 		asset := val.(Asset)
-
-		// Set appropriate headers
 		w.Header().Set("Content-Type", asset.ContentType)
 		w.Header().Set("Content-Length", strconv.Itoa(len(asset.Data)))
-		if asset.Filename != "" {
-			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", asset.Filename))
-		}
 
-		// Stream the content
 		reader := bytes.NewReader(asset.Data)
 		if _, err := io.Copy(w, reader); err != nil {
-			logger.Error("GetAsset streaming error", "slot", slot, "fqoid", fqoid, "error", err)
 			return catena.InternalServerError("failed to stream asset")
 		}
 
@@ -441,29 +392,18 @@ func main() {
 	})
 
 	// --------------------------------------------------------------------------
-	// Register Connect handler (PLACEHOLDER - not fully implemented)
-	// --------------------------------------------------------------------------
-	srv.RegisterConnectHandler(func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
-		logger.Info("Connect endpoint called")
-
-		// TODO: 
-
-		return catena.OK(map[string]any{
-			"status":  "placeholder",
-			"message": "Connect endpoint not fully implemented",
-			"info": map[string]any{
-				"supported_protocols": []string{"websocket", "sse"},
-				"subscriptions":       true,
-				"available_slots":     slotList,
-			},
-		})
-	})
-
-	// --------------------------------------------------------------------------
-	// Register NotFound handler
+	// Register NotFound handler - serves index.html at root
 	// --------------------------------------------------------------------------
 	srv.RegisterNotFoundHandler(func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
-		logger.Warning("Endpoint not found", "method", r.Method, "path", r.URL.Path)
+		if r.URL.Path == "/" {
+			data, err := staticFS.ReadFile("static/index.htm")
+			if err != nil {
+				return catena.NotFound("index.html not found")
+			}
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write(data)
+			return catena.StatusResult{Status: http.StatusOK}
+		}
 		return catena.NotFound("endpoint not found: " + r.URL.Path)
 	})
 
@@ -471,42 +411,75 @@ func main() {
 	// Start Server
 	// ==========================================================================
 	logger.Info("=======================================================")
-	logger.Info("All Endpoints REST Example")
+	logger.Info("One of Everything REST Example")
 	logger.Info("=======================================================")
-	logger.Info("Listening", "port", port)
+	logger.Info("REST server starting", "port", port)
 	logger.Info("")
-	logger.Info("Available endpoints:")
-	logger.Info("  GET  /st2138-api/v1/0              - GetDevice")	
+	logger.Info("Web UI available at:")
+	logger.Info(fmt.Sprintf("  http://localhost:%d/", port))
+	logger.Info("")
+	logger.Info("API endpoints:")
+	logger.Info("  GET  /st2138-api/v1/0              - GetDevice")
 	logger.Info("  GET  /st2138-api/v1/0/value/{oid}  - GetParam")
 	logger.Info("  PUT  /st2138-api/v1/0/value/{oid}  - SetParam")
 	logger.Info("  POST /st2138-api/v1/0/command/{cmd}- ExecuteCommand")
 	logger.Info("  GET  /st2138-api/v1/0/asset/{oid}  - GetAsset")
-	logger.Info("  GET  /st2138-api/v1/connect        - Connect (NOT IMPLEMENTED)")
 	logger.Info("")
-	logger.Info("Example requests:")
-	logger.Info("  curl http://localhost:6254/st2138-api/v1/0")
-	logger.Info("  curl http://localhost:6254/st2138-api/v1/0/value/video/resolution")
-	logger.Info("  curl -X PUT -d '{\"value\":{\"int32_value\":75}}' http://localhost:6254/st2138-api/v1/0/value/video/brightness")
-	logger.Info("  curl -X POST http://localhost:6254/st2138-api/v1/0/command/ping")
-	logger.Info("  curl -X POST -d '{\"source\":1,\"destination\":2}' http://localhost:6254/st2138-api/v1/0/command/route")
-	logger.Info("  curl http://localhost:6254/st2138-api/v1/0/asset/device_config")
-	logger.Info("  curl http://localhost:6254/st2138-api/v1/connect")
-	logger.Info("")
-	logger.Info("Available parameters:")
-	logger.Info("  video/resolution, video/brightness, video/counter")
-	logger.Info("  audio/volume, audio/muted")
-	logger.Info("  system/device_name")
-	logger.Info("  network/ip_address")
-	logger.Info("")
-	logger.Info("Available commands:")
-	logger.Info("  ping, echo, get_status, start, stop, reset, load_preset, route")
-	logger.Info("")
-	logger.Info("Available assets:")
-	logger.Info("  thumbnail, icon, device_config, preset_default, readme")
+	logger.Info("Parameters: video/brightness, video/contrast, video/saturation,")
+	logger.Info("            video/resolution, audio/volume, audio/muted, system/device_name")
+	logger.Info("Commands:   start, stop, add10, reset")
+	logger.Info("Assets:", "count", len(assetNames))
 	logger.Info("=======================================================")
 
 	srv.StartHTTPServer(port)
-	select {} // Block forever
+
+	// Wait for shutdown signal
+	<-shutdownChan
+	logger.Info("Server shutdown complete")
+}
+
+// loadAssetsFromEmbedded loads files from embedded FS into the asset store
+func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map, assetsList *sync.Map) {
+	err := fs.WalkDir(embedFS, root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		if d.IsDir() {
+			return nil
+		}
+		// Skip index.html
+		if filepath.Base(path) == "index.htm" {
+			return nil
+		}
+
+		data, err := embedFS.ReadFile(path)
+		if err != nil {
+			return nil
+		}
+
+		ext := filepath.Ext(path)
+		contentType := mime.TypeByExtension(ext)
+		if contentType == "" {
+			contentType = "application/octet-stream"
+		}
+
+		relPath, _ := filepath.Rel(root, path)
+		assetID := strings.ReplaceAll(relPath, string(filepath.Separator), "/")
+
+		assets.Store(assetID, Asset{
+			ContentType: contentType,
+			Data:        data,
+			Filename:    filepath.Base(path),
+		})
+		assetsList.Store(assetID, true)
+		logger.Info("Loaded asset", "id", assetID, "size", len(data))
+
+		return nil
+	})
+
+	if err != nil {
+		logger.Error("Error loading assets", "error", err)
+	}
 }
 
 func envOr(key, def string) string {
