@@ -2,27 +2,51 @@ slot: 0
 access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
 default_scope: st2138:mon
 params:
+  dashboard_icon:
+    type: STRING
+    oid_aliases: ["0xFF0C"]
+    read_only: true
+    value: { string_value: "eo://mxl_egress_network.png" }
+
   product:
     type: STRUCT
     read_only: true
     params:
       name:
         type: STRING
+        name:
+          display_strings:
+            en: Product Name
       vendor:
         type: STRING
+        name:
+          display_strings:
+            en: Vendor
       version:
         type: STRING
+        name:
+          display_strings:
+            en: Version
       catena_sdk:
         type: STRING
+        name:
+          display_strings:
+            en: Catena SDK
       catena_sdk_version:
         type: STRING
+        name:
+          display_strings:
+            en: Catena SDK Version
       serial_number:
         type: STRING
+        name:
+          display_strings:
+            en: Serial Number
     value:
       struct_value:
         fields:
           name:
-            string_value: gRPC MXL Reader
+            string_value: MXL to NDI Sink
           vendor:
             string_value: Ross Video
           version:
@@ -192,6 +216,18 @@ menu_groups:
         en: "Status"
     order: 0
     menus:
+      status:
+        name:
+          display_strings:
+            en: "Status"
+        param_oids:
+          - /status
+          - /product/name
+          - /product/vendor
+          - /product/version
+          - /product/catena_sdk
+          - /product/catena_sdk_version
+          - /product/serial_number
       flow_def:
         name:
           display_strings:
