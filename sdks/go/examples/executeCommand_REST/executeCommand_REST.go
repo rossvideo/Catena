@@ -40,6 +40,7 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -65,6 +66,58 @@ var (
 	shutdownChan = make(chan struct{})
 	srv          *rest.Server
 )
+
+// ==========================================================================
+// SSE Hub for broadcasting command events to connected clients
+// ==========================================================================
+
+// CommandEvent represents a command execution event sent via SSE
+type CommandEvent struct {
+	Command string `json:"command"`
+	Counter int64  `json:"counter"`
+	Running bool   `json:"running"`
+}
+
+// SSEHub manages SSE client connections
+type SSEHub struct {
+	mu      sync.RWMutex
+	clients map[chan CommandEvent]struct{}
+}
+
+func NewSSEHub() *SSEHub {
+	return &SSEHub{
+		clients: make(map[chan CommandEvent]struct{}),
+	}
+}
+
+func (h *SSEHub) Subscribe() chan CommandEvent {
+	ch := make(chan CommandEvent, 10)
+	h.mu.Lock()
+	h.clients[ch] = struct{}{}
+	h.mu.Unlock()
+	logger.Info("SSE client connected", "total_clients", len(h.clients))
+	return ch
+}
+
+func (h *SSEHub) Unsubscribe(ch chan CommandEvent) {
+	h.mu.Lock()
+	delete(h.clients, ch)
+	close(ch)
+	h.mu.Unlock()
+	logger.Info("SSE client disconnected", "total_clients", len(h.clients))
+}
+
+func (h *SSEHub) Broadcast(event CommandEvent) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	for ch := range h.clients {
+		select {
+		case ch <- event:
+		default:
+			// Client too slow, skip this event
+		}
+	}
+}
 
 // Counter state
 type CounterState struct {
@@ -145,6 +198,9 @@ func main() {
 
 	// Initialize counter
 	counter := &CounterState{}
+
+	// Initialize SSE hub for broadcasting command events
+	sseHub := NewSSEHub()
 
 	// Start counter goroutine - increments every second when running
 	go func() {
@@ -241,7 +297,55 @@ func main() {
 			})
 		}
 
-		return handler(payload)
+		result := handler(payload)
+
+		// Broadcast command event to all connected SSE clients
+		sseHub.Broadcast(CommandEvent{
+			Command: commandFqoid,
+			Counter: counter.GetValue(),
+			Running: counter.IsRunning(),
+		})
+
+		return result
+	})
+
+	// Register SSE Connect handler for real-time command notifications
+	srv.RegisterConnectHandler(func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
+		// Set SSE headers
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		// Subscribe to command events
+		eventChan := sseHub.Subscribe()
+		defer sseHub.Unsubscribe(eventChan)
+
+		// Get flusher for streaming
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			logger.Error("SSE: ResponseWriter does not support flushing")
+			return catena.InternalServerError("streaming not supported")
+		}
+
+		// Send initial connection event
+		fmt.Fprintf(w, "event: connected\ndata: {\"status\":\"connected\"}\n\n")
+		flusher.Flush()
+
+		// Stream events until client disconnects
+		for {
+			select {
+			case event := <-eventChan:
+				data, _ := json.Marshal(event)
+				fmt.Fprintf(w, "event: command\ndata: %s\n\n", data)
+				flusher.Flush()
+			case <-r.Context().Done():
+				logger.Info("SSE client disconnected (context done)")
+				return catena.StatusResult{Status: http.StatusOK}
+			case <-shutdownChan:
+				return catena.StatusResult{Status: http.StatusOK}
+			}
+		}
 	})
 
 	// Serve static files at root (including index.html)
@@ -273,6 +377,7 @@ func main() {
 	logger.Info("API endpoints:")
 	logger.Info("  GET  /st2138-api/v1/0/value/counter    - Get counter state")
 	logger.Info("  POST /st2138-api/v1/0/command/{cmd}    - Execute command")
+	logger.Info("  GET  /st2138-api/v1/connect            - SSE stream for events")
 	logger.Info("")
 	logger.Info("Available commands:")
 	logger.Info("  start  - Start auto-incrementing (1/sec)")

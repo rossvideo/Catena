@@ -348,6 +348,7 @@
     <script>
         let isRunning = false;
         let pollInterval = null;
+        let eventSource = null;
 
         function updateUI(counter, running) {
             const counterEl = document.getElementById('counterValue');
@@ -405,12 +406,8 @@
                     return;
                 }
 
-                // Response is wrapped in struct_value by the REST server
-                const sv = data.struct_value;
-                if (sv) {
-                    updateUI(sv.counter ?? 0, sv.running ?? false);
-                    addLog(cmd, sv.counter ?? 0);
-                }
+                // UI update and log will be handled by SSE event
+                // No need to call addLog here - it will come through SSE
             } catch (error) {
                 addLog(cmd, 'Error: ' + error.message);
             }
@@ -431,11 +428,38 @@
             }
         }
 
-        // Poll every 500ms to keep UI in sync
+        // Connect to SSE for real-time command notifications
+        function connectSSE() {
+            eventSource = new EventSource('/st2138-api/v1/connect');
+            
+            eventSource.addEventListener('connected', (e) => {
+                console.log('SSE connected:', e.data);
+            });
+            
+            eventSource.addEventListener('command', (e) => {
+                const data = JSON.parse(e.data);
+                // Update UI with new state
+                updateUI(data.counter, data.running);
+                // Add to activity log
+                addLog(data.command, data.counter);
+            });
+            
+            eventSource.onerror = (e) => {
+                console.log('SSE error, will reconnect...');
+                eventSource.close();
+                // Reconnect after 2 seconds
+                setTimeout(connectSSE, 2000);
+            };
+        }
+
+        // Poll every 500ms to keep UI in sync (for counter auto-increment)
         pollInterval = setInterval(pollState, 500);
         
         // Initial poll
         pollState();
+        
+        // Connect to SSE for command notifications
+        connectSSE();
     </script>
 </body>
 </html>
