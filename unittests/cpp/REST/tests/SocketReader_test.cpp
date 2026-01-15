@@ -380,3 +380,59 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderWithoutColonIgnored) {
     EXPECT_EQ(socketReader.requestStart(), std::stod(requestStart));
     EXPECT_EQ(socketReader.requestReceived() > std::stod(requestStart), true);
 }
+
+/**
+ * TEST 17 - Invalid Request-Start value is set to default(0.0)
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_InvalidRequestStart) {
+    // Enable authz so Authorization header is parsed.
+    EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
+    // Build and send request with an extra malformed header line (no ':')
+    const RESTMethod method = catena::REST::Method_GET;
+    const uint32_t slot = 1;
+    const std::string endpoint = "/test-call";
+    const std::string fqoid = "/test/oid";
+    const bool stream = false;
+    const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
+    const std::string jwsToken = "test-jws-token";
+    const std::string origin = "*";
+    const auto detailLevel = st2138::Device_DetailLevel_NONE;
+    const std::string language = "en";
+    const std::string jsonBody = "{test_json_body}";
+    // Test with non-number/period in value
+        writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
+                                jwsToken, origin, detailLevel, language, "123@.123", jsonBody,
+                                "Origin",
+                                "Authorization",
+                                "Detail-Level",
+                                "Language",
+                                "Content-Length",
+                                "Request-Start");
+
+    socketReader.read(serverSocket_);
+    EXPECT_EQ(socketReader.requestStart(), 0.0);
+    // Test with multiple periods
+        writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
+                                jwsToken, origin, detailLevel, language, "123.123.", jsonBody,
+                                "Origin",
+                                "Authorization",
+                                "Detail-Level",
+                                "Language",
+                                "Content-Length",
+                                "Request-Start");
+
+    socketReader.read(serverSocket_);
+    EXPECT_EQ(socketReader.requestStart(), 0.0);
+    // Test with negative value
+        writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
+                                jwsToken, origin, detailLevel, language, "-123.123", jsonBody,
+                                "Origin",
+                                "Authorization",
+                                "Detail-Level",
+                                "Language",
+                                "Content-Length",
+                                "Request-Start");
+
+    socketReader.read(serverSocket_);
+    EXPECT_EQ(socketReader.requestStart(), 0.0);
+}

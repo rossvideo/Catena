@@ -27,6 +27,27 @@ static inline bool iequals_header_name(std::string_view a, std::string_view b) {
     }
     return true;
 }
+
+static inline bool valid_start_time(std::string_view s) {
+    if (s.compare("") == true) return false;
+    const unsigned char* ps = reinterpret_cast<const unsigned char*>(s.data());
+    const std::size_t n = s.size();
+    bool hasPeriod = false;
+
+    for(std::size_t i = 0; i < n; ++i) {
+        unsigned char cs = ps[i];
+
+        // Checks if the char is not a number or the first period(decimal point), invalid if so
+        if ((cs != '.' || hasPeriod) && ('0' > cs || cs > '9')) {
+            return false;
+        }
+        if (cs == 0x2E) {
+            hasPeriod = true; // Decimal point found
+        }
+    }
+    // No invalid characters found, value is valid
+    return true;
+}
 }
 
 void SocketReader::read(tcp::socket& socket) {
@@ -149,7 +170,9 @@ void SocketReader::read(tcp::socket& socket) {
         }
         // Getting time request was sent
         else if (requestStart_ == static_cast<double>(0.0) && iequals_header_name(name, "request-start") && value != ""){
-            requestStart_ = stod(value);
+            if (valid_start_time(value)){
+                requestStart_ = stod(value);
+            }
         }
         // Getting body content-Length
         else if (contentLength == 0 && iequals_header_name(name, "content-length")) {
