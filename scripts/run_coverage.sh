@@ -65,6 +65,32 @@ fi
 
 cd ~/Catena/
 
+#check if coverage directory exists
+if [ ! -d "coverage" ]; then
+  mkdir -p coverage
+fi
+
+# clean the coverage directory before generating new reports
+rm -rf coverage/*
+gcovr --lcov=coverage/gcovr.info
+
+CODEGEN_DIR="$(realpath ~/Catena/tools/codegen)"
+cd $CODEGEN_DIR
+npm install
+JEST_ARGS=""
+# Check for -V argument for verbose test output
+if [ "$verbose" = true ]; then
+  JEST_ARGS="$JEST_ARGS --verbose"
+fi
+npm test -- $JEST_ARGS
+
+cd ~/Catena/
+
+lcov --config-file lcov.config \
+     --add-tracefile coverage/gcovr.info \
+     --add-tracefile $CODEGEN_DIR/coverage/lcov.info \
+     --output-file coverage/coverage.info
+
 # Check for --html argument
 html_report=false
 for arg in "$@"; do
@@ -74,17 +100,11 @@ for arg in "$@"; do
   fi
 done
 
-#check if coverage directory exists
-if [ ! -d "coverage" ]; then
-  mkdir -p coverage
-fi
-
-# clean the coverage directory before generating new reports
-rm -rf coverage/*
-COVERAGE_FILES="--lcov=coverage/coverage.info --xml=coverage/coverage.xml"
-# Conditionally generate HTML report
 if [ "$html_report" = true ]; then
-  gcovr $COVERAGE_FILES --html=coverage/index.html --html-details
-else
-  gcovr $COVERAGE_FILES
+  echo "Generating HTML coverage report..."
+  genhtml --config-file lcov.config \
+          --output-directory coverage \
+          --title "All Tests" \
+          --prefix ~/Catena/ \
+          coverage/coverage.info
 fi
