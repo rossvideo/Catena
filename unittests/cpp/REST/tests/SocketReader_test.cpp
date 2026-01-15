@@ -369,3 +369,68 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderWithoutColonIgnored) {
     EXPECT_EQ(socketReader.authorizationEnabled(), true);
     EXPECT_EQ(socketReader.stream(), stream);
 }
+
+/**
+ * TEST 18 - Invalid Content-Type throws exception
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentType) {
+        // Enable authz so Authorization header is parsed.
+    EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
+    // Build and send request with an extra malformed header line (no ':')
+    const RESTMethod method = catena::REST::Method_GET;
+    const uint32_t slot = 1;
+    const std::string endpoint = "/test-call";
+    const std::string fqoid = "/test/oid";
+    const bool stream = false;
+    const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
+    const std::string jwsToken = "test-jws-token";
+    const std::string origin = "*";
+    const auto detailLevel = st2138::Device_DetailLevel_NONE;
+    const std::string language = "en";
+    const std::string jsonBody = "";
+    // Testing with xml
+    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
+                                jwsToken, origin, detailLevel, language, jsonBody,
+                                "Origin",
+                                "Authorization",
+                                "Detail-Level",
+                                "Language",
+                                "Content-Length",
+                                /*extraHeaderLines=*/{"Content-Type: application/xml"});
+    try {
+        socketReader.read(serverSocket_);
+    }
+    catch(const catena::exception_with_status& e) {
+        EXPECT_EQ(catena::StatusCode::INVALID_ARGUMENT, e.status);
+    }
+    // Testing with plain text
+    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
+                                jwsToken, origin, detailLevel, language, jsonBody,
+                                "Origin",
+                                "Authorization",
+                                "Detail-Level",
+                                "Language",
+                                "Content-Length",
+                                /*extraHeaderLines=*/{"Content-Type: text/plain"});
+    try {
+        socketReader.read(serverSocket_);
+    }
+    catch(const catena::exception_with_status& e) {
+        EXPECT_EQ(catena::StatusCode::INVALID_ARGUMENT, e.status);
+    }
+    // Testing with default
+    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
+                                jwsToken, origin, detailLevel, language, jsonBody,
+                                "Origin",
+                                "Authorization",
+                                "Detail-Level",
+                                "Language",
+                                "Content-Length"
+                                /*extraHeaderLines=*/);
+    try {
+        socketReader.read(serverSocket_);
+    }
+    catch(const catena::exception_with_status& e) {
+        EXPECT_EQ(catena::StatusCode::INVALID_ARGUMENT, e.status);
+    }
+}

@@ -144,6 +144,10 @@ void SocketReader::read(tcp::socket& socket) {
         else if (contentLength == 0 && iequals_header_name(name, "content-length")) {
             contentLength = stoi(value);
         }
+        // Checking Content-Type
+        else if (iequals_header_name(name, "content-type") && value != "application/json") {
+            throw catena::exception_with_status("Invalid Content-Type", catena::StatusCode::INVALID_ARGUMENT);
+        }
     }
     // If body exists, we need to handle leftover data and append the rest.
     if (contentLength > 0) {
