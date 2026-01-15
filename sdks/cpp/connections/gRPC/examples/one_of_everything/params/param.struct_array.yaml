@@ -12,17 +12,15 @@ access_scope: st2138:adm
 value:
   struct_array_values:
     struct_values:
-      - struct_value:
-          fields:
-            nested_struct:
-              struct_value:
-                fields:
-                  num_1: {int32_value: 1}
-                  num_2: {int32_value: 2}
-      - struct_value:
-          fields:
-            nested_struct:
-              struct_value:
-                fields:
-                  num_1: {int32_value: 3}
-                  num_2: {int32_value: 4}
+      - fields:
+          nested_struct:
+            struct_value:
+              fields:
+                num_1: {int32_value: 1}
+                num_2: {int32_value: 2}
+      - fields:
+          nested_struct:
+            struct_value:
+              fields:
+                num_1: {int32_value: 3}
+                num_2: {int32_value: 4}
