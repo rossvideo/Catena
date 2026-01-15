@@ -45,7 +45,7 @@ export function validateRequiredParamsAndScopes(deviceDesc, disableMandatoryEnfo
     // Helper function to derive effective scope for a parameter
     function getDerivedScope(param) {
         const dScope = param.access_scope || productScope || defaultScope || REQUIRED_SCOPE;
-        if (dScope == REQUIRED_SCOPE) {
+        if (dScope === REQUIRED_SCOPE) {
             return dScope;
         } else {
             return "INVALID";
@@ -66,7 +66,7 @@ export function validateRequiredParamsAndScopes(deviceDesc, disableMandatoryEnfo
             // Derive the effective scope and check if it's correct
             const derivedScope = getDerivedScope(param);
             
-            if (derivedScope == "INVALID") {
+            if (derivedScope === "INVALID") {
                 invalidScopes.push(`${key} (derived scope is invalid, must be ('${REQUIRED_SCOPE}')`);
             }
 

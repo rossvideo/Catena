@@ -54,13 +54,9 @@ const DEVICE_ARGUMENT = ["<deviceModel>", "Catena device model to process"];
  * log the options being used
  * @param {object} options options from commander
  */
-function logOptions(options) {
-    if (options.deviceModel) {
-        log(`deviceModel: ${options.deviceModel}`);
-    }
-    if (options.language) {
-        log(`language: ${options.language}`);
-    }
+function logOptions(language, deviceModel, options) {
+    log(`deviceModel: ${deviceModel}`);
+    log(`language: ${language}`);
     if (options.output) {
         log(`output: ${options.output}`);
     }
@@ -134,7 +130,7 @@ program
 
 async function generate(language, deviceModelPath, options) {
     // log the options being used
-    logOptions(options);
+    logOptions(language, deviceModelPath, options);
 
     // load and validate the device model
     const validator = new Validator();

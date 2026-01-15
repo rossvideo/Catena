@@ -51,7 +51,8 @@ export class DeviceModel {
         }
         this.deviceName = info[1];
         if (this.url.indexOf("://") === -1) {
-            this.url = new URL(resolve(this.url), "file://");
+            // assume file:// if no scheme
+            this.url = new URL(`file://${resolve(this.url)}`);
         } else {
             this.url = new URL(this.url);
         }

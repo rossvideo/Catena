@@ -136,10 +136,11 @@ TEST(UtilsTest, Fmt_NoArgs) {
     EXPECT_EQ(result, "Hello, World!");
 }
 
+// PARAM_VALUE_STRING TESTS
+
 TEST(UtilsTest, Value_Param_Empty) {
     st2138::Value value;
-    st2138::Empty* emptyValue = new st2138::Empty();
-    value.set_allocated_empty_value(emptyValue);
+    value.mutable_empty_value();
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "");
 }
@@ -167,7 +168,7 @@ TEST(UtilsTest, Value_Param_String) {
 
 TEST(UtilsTest, Value_Param_Struct) {
     st2138::Value value;
-    value.set_allocated_struct_value(new st2138::StructValue());
+    value.mutable_struct_value();
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "[struct value]");
 }
@@ -204,29 +205,42 @@ TEST(UtilsTest, Value_Param_StringArray) {
 
 TEST(UtilsTest, Value_Param_DataPayload) {
     st2138::Value value;
-    st2138::DataPayload* dataPayload = new st2138::DataPayload();
-    dataPayload->set_payload("binarydata");
-    value.set_allocated_data_payload(dataPayload);
+    auto datapayload = value.mutable_data_payload();
+    datapayload->set_payload("binarydata");
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "binarydata");
 }
 
 TEST(UtilsTest, Value_Param_StructVariantValue) {
     st2138::Value value;
-    value.set_allocated_struct_variant_value(new st2138::StructVariantValue());
+    value.mutable_struct_variant_value();
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "[struct variant value]");
 }
 
 TEST(UtilsTest, Value_Param_StructVariantArrayValues) {
     st2138::Value value;
-    value.set_allocated_struct_variant_array_values(new st2138::StructVariantList());
+    value.mutable_struct_variant_array_values();
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "[struct variant array values]");
 }
 
-TEST(UtilsTest, Value_Param_DefaultCase) {
+TEST(UtilsTest, Value_Param_StructArrayValues) {
+    st2138::Value value;
+    value.mutable_struct_array_values();
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "[struct array values]");
+}
+
+TEST(UtilsTest, Value_Param_UndefinedValue) {
+    st2138::Value value;
+    value.set_undefined_value(st2138::UNDEFINED_VALUE);
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "[undefined value]");
+}
+
+TEST(UtilsTest, Value_Param_KIND_NOT_SET) {
     st2138::Value value; // No kind set
     std::string result = catena::param_value_string(value);
-    EXPECT_EQ(result, "[no value]");
+    EXPECT_EQ(result, "[kind not set]");
 }
