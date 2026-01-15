@@ -9,46 +9,46 @@ name: { display_strings: {
 params:
   # INT_RANGE constraint example
   int32_range:
-    import: { file: /constraints/param.int32_range.yaml }
+    import: { url: param.int32_range.yaml }
   # INT_CHOICE constraint example
   int32_choice:
-    import: { file: /constraints/param.int32_choice.yaml }
+    import: { url: param.int32_choice.yaml }
   # INT_ALARM constraint example [NOT YET IMPLEMENTED]
   # int32_alarm:
-  #   import: { file: /constraints/param.int32_alarm.yaml }
+  #   import: { url: param.int32_alarm.yaml }
   # FLOAT_RANGE constraint example
   float32_range:
-    import: { file: /constraints/param.float32_range.yaml }
+    import: { url: param.float32_range.yaml }
   # STRING_CHOICE constraint example
   string_choice:
-    import: { file: /constraints/param.string_choice.yaml }
+    import: { url: param.string_choice.yaml }
   # STRING_STRING_CHOICE constraint example
   string_string_choice:
-    import: { file: /constraints/param.string_string_choice.yaml }
+    import: { url: param.string_string_choice.yaml }
   # max_length example
   string_length:
-    import: { file: /constraints/param.string_length.yaml }
+    import: { url: param.string_length.yaml }
   # INT_RANGE constraint example with an array
   int_array_range:
-    import: { file: /constraints/param.int_array_range.yaml }
+    import: { url: param.int_array_range.yaml }
   # INT_CHOICE constraint example with an array
   int_array_choice:
-    import: { file: /constraints/param.int_array_choice.yaml }
+    import: { url: param.int_array_choice.yaml }
   # INT_ALARM constraint example with an array [NOT YET IMPLEMENTED]
   # int_array_alarm:
-  #   import: { file: /constraints/param.int_array_alarm.yaml }
+  #   import: { url: param.int_array_alarm.yaml }
   # FLOAT_RANGE constraint example with an array
   float_array_range:
-    import: { file: /constraints/param.float_array_range.yaml }
+    import: { url: param.float_array_range.yaml }
   # STRING_CHOICE constraint example with an array
   string_array_choice:
-    import: { file: /constraints/param.string_array_choice.yaml }
+    import: { url: param.string_array_choice.yaml }
   # STRING_ARRAY_CHOICE constraint example with an array
   string_string_array_choice:
-    import: { file: /constraints/param.string_string_array_choice.yaml }
+    import: { url: param.string_string_array_choice.yaml }
   # max_length and total_length example with an array
   string_array_length:
-    import: { file: /constraints/param.string_array_length.yaml }
+    import: { url: param.string_array_length.yaml }
 value: 
   struct_value:
     fields:

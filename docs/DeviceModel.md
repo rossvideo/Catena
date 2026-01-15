@@ -26,20 +26,19 @@ If you're using `vscode` it's possible to have intellisense mark up JSON device 
 "json.schemas": [
   {
     "fileMatch": [
-      "/example_device_models/device.*.json",
-      "/nab_2024/device.*.json",
-      "/sdks/cpp/lite/examples/*/device.*.json",
-      "/sdks/cpp/connections/gRPC/examples/*/device.*.json"
+      "/sdks/cpp/common/examples/**/device.*.json",
+      "/sdks/cpp/connections/gRPC/examples/**/device.*.json",
+      "/sdks/cpp/connections/REST/examples/**/device.*.json"
     ],
-    "url": "./schema/catena.device_schema.json"
+    "url": "./smpte/interface/schemata/device.json"
   },
   {
     "fileMatch": [
-      "/example_device_models/**/param.*.json",
-      "/sdks/cpp/lite/examples/**/param.*.json",
-      "/sdks/cpp/connections/gRPC/examples/**/param.*.json"
+      "/sdks/cpp/common/examples/**/param.*.json",
+      "/sdks/cpp/connections/gRPC/examples/**/param.*.json",
+      "/sdks/cpp/connections/REST/examples/**/param.*.json"
     ],
-    "url": "./schema/catena.param_schema.json"
+    "url": "./smpte/interface/schemata/param.json"
   }
 ],
 ```
@@ -56,16 +55,15 @@ This will cause incorrect code to be highlighted like this typo...
 This is also possible with YAML device models using the modified snippet.
 ```json
 "yaml.schemas": {
-    "./schema/catena.device_schema.json" : [
-        "/example_device_models/device.*.yaml",
-        "/nab_2024/device.*.yaml",
-        "/sdks/cpp/lite/examples/*/device.*.yaml",
-        "/sdks/cpp/connections/gRPC/examples/*/device.*.yaml"
+    "./smpte/interface/schemata/device.yaml" : [
+      "/sdks/cpp/common/examples/**/device.*.yaml",
+      "/sdks/cpp/connections/gRPC/examples/**/device.*.yaml",
+      "/sdks/cpp/connections/REST/examples/**/device.*.yaml"
     ],
-    "./schema/catena.param_schema.json" : [
-        "/example_device_models/**/param.*.yaml",
-        "/sdks/cpp/lite/examples/**/param.*.yaml",
-        "/sdks/cpp/connections/gRPC/examples/**/param.*.yaml"
+    "./smpte/interface/schemata/param.yaml" : [
+      "/sdks/cpp/common/examples/**/param.*.yaml",
+      "/sdks/cpp/connections/gRPC/examples/**/param.*.yaml",
+      "/sdks/cpp/connections/REST/examples/**/param.*.yaml"
     ]
 }
 ```

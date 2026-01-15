@@ -15,179 +15,85 @@
  */
 
 import { program } from 'commander';
-import fs from 'fs';
-import path from "path";
 
 import packageJson from './package.json' with { type: "json" };;
 import { DeviceModel } from './DeviceModel.js';
 import Validator from 'smpte-validator';
+import { validateRequiredParamsAndScopes } from './mandatory.js';
+import CppGen from './cpp/cppgen.js';
 
 //
 // Converts Catena compatible Device Models to computer code in a variety of languages
 //
 
+let log = console.log;
+
 // load the command line parser
 program
     .description(packageJson.description)
     .version(packageJson.version)
-    .option('-s, --schema <string>', 'path to schema definitions', '../../smpte/interface/schemata/device.json')
-    .option('-d, --device-model <string>', 'Catena device model to process', '../../example_device_models/device.minimal.json')
-    .option('-l, --language <string>', 'Language to generate code for', 'cpp')
-    .option('-o, --output <string>', 'Output folder for generated code', '.')
-    .option('--disable-mandatory-enforcement', 'Disable enforcement of mandatory parameters during code generation')
     .option('-q, --quiet', 'Suppress non-error console output', false)
-
-program.parse();
-const options = program.opts();
-// define our logging functions to be used throughout
-// if quiet mode is enabled, log does nothing
-const log = options.quiet ? function() {} : console.log;
-const error = console.error;
-
-if (options.schema) {
-    log(`schema: ${options.schema}`);
-}
-if (options.deviceModel) {
-    log(`deviceModel: ${options.deviceModel}`);
-}
-if (options.language) {
-    log(`language: ${options.language}`);
-}
-if (options.output) {
-    log(`output: ${options.output}`);
-}
-if (options.disableMandatoryEnforcement) {
-    log(`Mandatory parameter enforcement disabled`);
-}
-
-// verify input file exists
-if (!fs.existsSync(options.deviceModel)) {
-    error(`Cannot open file at ${options.deviceModel}`);
-    process.exit(1);
-}
-
-// extract schema name from input filename
-const deviceName = path.parse(options.deviceModel).name.split('.')[0];
-log(`Validating device model '${deviceName}' from file '${options.deviceModel}' against schema file '${options.schema}'...`);
-
-/**
- * @brief Validates that all mandatory product parameters and scopes are present and have valid values
- * @param {object} deviceDesc The complete device model object (includes top-level properties and params)
- * @param {boolean} disableMandatoryEnforcement If true, skip validation and return early
- * @throws {Error} If mandatory parameters are missing or have invalid values (when enforcement enabled)
- */
-function validateRequiredParamsAndScopes(deviceDesc, disableMandatoryEnforcement = false) {
-    if (disableMandatoryEnforcement) {
-        return;
-    }
-    const REQUIRED_PARAMS = {
-        "name": true,
-        "vendor": true,
-        "version": true,
-        "catena_sdk": false,
-        "catena_sdk_version": false,
-        "serial_number": true
-    };
-
-    const REQUIRED_SCOPE = "st2138:mon";
-
-    if (!deviceDesc || !deviceDesc.params || !deviceDesc.params.product) {
-        throw new Error(`Missing mandatory product struct in params`);
-    }
-
-    if (deviceDesc.params.product.type !== 'STRUCT') {
-        throw new Error(`Product parameter must be STRUCT type, not ${deviceDesc.params.product.type}`);
-    }
-
-    if (!deviceDesc.params.product.read_only) {
-        throw new Error(`Product parameter must be read_only`);
-    }
-
-    const productParams = deviceDesc.params.product.params || {};
-    const productValue = deviceDesc.params.product.value;
-    const missing = [];
-    const emptyValues = [];
-    const invalidScopes = [];
-
-    // Get scope sources
-    const productScope = deviceDesc.params.product.access_scope;
-    const defaultScope = deviceDesc.default_scope;
-
-    // Helper function to derive effective scope for a parameter
-    function getDerivedScope(param) {
-        const dScope = param.access_scope || productScope || defaultScope || REQUIRED_SCOPE;
-        if (dScope == REQUIRED_SCOPE) {
-            return dScope;
-        } else {
-            return "INVALID";
-        } 
-    }
-
-    Object.entries(REQUIRED_PARAMS).forEach(([key, checkValue]) => {
-        const param = productParams[key];
-
-        if (!param) {
-            missing.push(key);
-        } else {
-            if (param.type !== 'STRING') {
-                missing.push(`${key} (not STRING type)`);
-                return;
-            }
-
-            // Derive the effective scope and check if it's correct
-            const derivedScope = getDerivedScope(param);
-            
-            if (derivedScope == "INVALID") {
-                invalidScopes.push(`${key} (derived scope is invalid, must be ('${REQUIRED_SCOPE}')`);
-            }
-
-            if (checkValue) {
-                let stringValue;
-
-                if (productValue && productValue.struct_value && productValue.struct_value.fields) {
-                    const field = productValue.struct_value.fields[key];
-                    if (field && field.string_value) {
-                        stringValue = field.string_value;
-                    }
-                }
-
-                if (!stringValue) {
-                    emptyValues.push(`${key} (no value found)`);
-                } else if (stringValue.trim() === '') {
-                    emptyValues.push(`${key} (empty string value)`);
-                }
-            }
+    .hook('preAction', (thisCommand) => {
+        const options = thisCommand.opts();
+        // redefine log function based on quiet option
+        if (options.quiet) {
+            log = function () { };
         }
     });
 
-    const allIssues = [...missing.map(p => `${p} (missing field)`), ...emptyValues, ...invalidScopes];
+const MANDATORY_OPTION = ["--disable-mandatory-enforcement", "Disable enforcement of mandatory parameters during code generation"];
+const OUTPUT_OPTION = ["-o --output <string>", "Output folder for results", "."];
+const DEVICE_ARGUMENT = ["<deviceModel>", "Catena device model to process"];
 
-    if (allIssues.length > 0 && !disableMandatoryEnforcement) {
-        throw new Error(`Invalid mandatory product parameters: ${allIssues.join(', ')}`);
+/**
+ * log the options being used
+ * @param {object} options options from commander
+ */
+function logOptions(language, deviceModel, options) {
+    log(`deviceModel: ${deviceModel}`);
+    log(`language: ${language}`);
+    if (options.output) {
+        log(`output: ${options.output}`);
+    }
+    if (options.disableMandatoryEnforcement) {
+        log(`Mandatory parameter enforcement disabled`);
     }
 }
 
+program
+    .command("cpp")
+    .description("Generate C++ code from device model")
+    .option(...MANDATORY_OPTION)
+    .option(...OUTPUT_OPTION)
+    .argument(...DEVICE_ARGUMENT)
+    .action(async (deviceModel, options) => generate("cpp", deviceModel, options));
+
 (async () => {
-    const validator = new Validator(options.schema);
-    log(`Applying schema '${deviceName}' to file '${options.deviceModel}'`);
-    const isValid = validator.validate(deviceName, options.deviceModel);
-    if (isValid.data) {
-        const dm = new DeviceModel(options.deviceModel, validator, isValid.data);
-
-        validateRequiredParamsAndScopes(dm.desc, options.disableMandatoryEnforcement);
-
-        log('✅ Validation succeeded.');
-        log("Generating code...");
-        const { default: CodeGen } = await import(`../../tools/codegen/${options.language}/${options.language}gen.js`);
-        const codeGen = new CodeGen(dm, options.output);
-
-        codeGen.generate();
-        log('✅ Code generation completed.');
-    } else {
-        error('❌ Schema validation failed.');
-        process.exit(1);
-    }
+    await program.parseAsync();
 })().catch((err) => {
-    error(`Error: ${err.message}`);
+    console.error(`Error: ${err.message}`);
     process.exit(err.error || 1);
 });
+
+async function generate(language, deviceModelPath, options) {
+    // log the options being used
+    logOptions(language, deviceModelPath, options);
+
+    // load and validate the device model
+    const validator = new Validator();
+    const deviceModel = new DeviceModel(deviceModelPath, validator);
+    log(`Validating device model ${deviceModelPath}...`);
+    await deviceModel.load(true);
+    validateRequiredParamsAndScopes(deviceModel.desc, options.disableMandatoryEnforcement);
+
+    switch (language) {
+        case 'cpp':
+            log("Generating C++ code...");
+            const cppGen = new CppGen(deviceModel, options.output);
+            cppGen.generate();
+            break;
+        default:
+            throw new Error(`Unsupported language: ${language}`);
+    }
+    log('✅ Code generation completed.');
+}

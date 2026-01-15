@@ -8,8 +8,8 @@
       "name": { "display_strings": { "en": "City Name" } }
     },
     "location": {
-      "import": { "file": "params/param.location.json" }
+      "import": { "url": "param.location.json" }
     }
   }
 }
-  
+

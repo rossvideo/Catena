@@ -130,14 +130,10 @@
       ],
       "program": "${workspaceFolder}/tools/codegen/index.js",
       "args": [
-          "--schema",
-          "${workspaceFolder}/smpte/interface/schemata/device.json",
-          "--device-model",
-          "${workspaceFolder}/sdks/cpp/${input:pickDeviceModel}",
+          "cpp",
           "--output",
           "${workspaceFolder}/${env:BUILD_TARGET}/${input:pickDeviceModel}/..",
-          "--language",
-          "cpp"
+          "${workspaceFolder}/sdks/cpp/${input:pickDeviceModel}"
       ],
     },
     {
@@ -220,8 +216,8 @@
                   "connections/gRPC/examples/audiodeck_yaml/device.AudioDeck.yaml",
                   "connections/gRPC/examples/simple_dashboard_audiodeck/device.simple_dashboard_audiodeck.json",
                   "connections/REST/examples/asset_request_REST/device.asset_request_REST.json",
-                  "connections/REST/examples/audiodeck_JSON_REST/device.audiodeck.json",
-                  "connections/REST/examples/audiodeck_REST/device.audiodeck.yaml",
+                  "connections/REST/examples/audiodeck_JSON_REST/device.AudioDeck.json",
+                  "connections/REST/examples/audiodeck_REST/device.AudioDeck.yaml",
                   "connections/REST/examples/discovery_REST/device.structs_with_authz.json",
                   "connections/REST/examples/one_of_everything_REST/device.one_of_everything.yaml",
                   "connections/REST/examples/status_update_JSON_REST/device.status_update.json",
