@@ -29,7 +29,8 @@ static inline bool iequals_header_name(std::string_view a, std::string_view b) {
 }
 
 static inline bool valid_start_time(std::string_view s) {
-    if (s.compare("") == true) return false;
+    // Empty or larger than 308 chars cannot be converted to a double
+    if (s.empty() || s.length() > 308) return false;
     const unsigned char* ps = reinterpret_cast<const unsigned char*>(s.data());
     const std::size_t n = s.size();
     bool hasPeriod = false;
@@ -37,11 +38,12 @@ static inline bool valid_start_time(std::string_view s) {
     for(std::size_t i = 0; i < n; ++i) {
         unsigned char cs = ps[i];
 
-        // Checks if the char is not a number or the first period(decimal point), invalid if so
-        if ((cs != '.' || hasPeriod) && ('0' > cs || cs > '9')) {
+        // Checks if the char is not a number or is a second period(decimal point)
+        // and if the first char is a period, invalid if so
+        if ((cs != '.' || hasPeriod) && (!isdigit(cs)) || (cs == '.' && i == 0)) {
             return false;
         }
-        if (cs == 0x2E) {
+        if (cs == '.') {
             hasPeriod = true; // Decimal point found
         }
     }
@@ -169,7 +171,7 @@ void SocketReader::read(tcp::socket& socket) {
             }
         }
         // Getting time request was sent
-        else if (requestStart_ == static_cast<double>(0.0) && iequals_header_name(name, "request-start") && value != ""){
+        else if (requestStart_ == static_cast<double>(0.0) && iequals_header_name(name, "request-start")){
             if (valid_start_time(value)){
                 requestStart_ = stod(value);
             }

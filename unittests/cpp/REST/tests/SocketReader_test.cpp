@@ -397,39 +397,58 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidRequestStart) {
     const std::string language = "en";
     const std::string jsonBody = "{test_json_body}";
     // Test with non-number/period in value
-        writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
-                                jwsToken, origin, detailLevel, language, "123@.123", jsonBody,
-                                "Origin",
-                                "Authorization",
-                                "Detail-Level",
-                                "Language",
-                                "Content-Length",
-                                "Request-Start");
-
+    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
+                            jwsToken, origin, detailLevel, language, "123@.123", jsonBody,
+                            "Origin",
+                            "Authorization",
+                            "Detail-Level",
+                            "Language",
+                            "Content-Length",
+                            "Request-Start");
     socketReader.read(serverSocket_);
     EXPECT_EQ(socketReader.requestStart(), 0.0);
     // Test with multiple periods
-        writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
-                                jwsToken, origin, detailLevel, language, "123.123.", jsonBody,
-                                "Origin",
-                                "Authorization",
-                                "Detail-Level",
-                                "Language",
-                                "Content-Length",
-                                "Request-Start");
-
+    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
+                            jwsToken, origin, detailLevel, language, "123.123.", jsonBody,
+                            "Origin",
+                            "Authorization",
+                            "Detail-Level",
+                            "Language",
+                            "Content-Length",
+                            "Request-Start");
     socketReader.read(serverSocket_);
     EXPECT_EQ(socketReader.requestStart(), 0.0);
     // Test with negative value
-        writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
-                                jwsToken, origin, detailLevel, language, "-123.123", jsonBody,
-                                "Origin",
-                                "Authorization",
-                                "Detail-Level",
-                                "Language",
-                                "Content-Length",
-                                "Request-Start");
-
+    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
+                            jwsToken, origin, detailLevel, language, "-123.123", jsonBody,
+                            "Origin",
+                            "Authorization",
+                            "Detail-Level",
+                            "Language",
+                            "Content-Length",
+                            "Request-Start");
+    socketReader.read(serverSocket_);
+    EXPECT_EQ(socketReader.requestStart(), 0.0);
+    // Test with leading period
+    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
+                            jwsToken, origin, detailLevel, language, ".123123", jsonBody,
+                            "Origin",
+                            "Authorization",
+                            "Detail-Level",
+                            "Language",
+                            "Content-Length",
+                            "Request-Start");
+    socketReader.read(serverSocket_);
+    EXPECT_EQ(socketReader.requestStart(), 0.0);
+    // Test with too large of a value
+    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
+                            jwsToken, origin, detailLevel, language, std::string(309, '1'), jsonBody,
+                            "Origin",
+                            "Authorization",
+                            "Detail-Level",
+                            "Language",
+                            "Content-Length",
+                            "Request-Start");
     socketReader.read(serverSocket_);
     EXPECT_EQ(socketReader.requestStart(), 0.0);
 }

@@ -197,12 +197,12 @@ class SocketReader : public ISocketReader {
      * @brief Returns the time the client started the request formatted as,
      * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
      */
-    const double requestStart() const override{ return requestStart_; }
-        /**
+    const double requestStart() const override { return requestStart_; }
+    /**
      * @brief Returns the time the client's request was received formatted as,
      * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
      */
-    const double requestReceived() const override{ return requestReceived_; }
+    const double requestReceived() const override { return requestReceived_; }
 
 
   private:
@@ -261,7 +261,7 @@ class SocketReader : public ISocketReader {
      */
     double requestStart_ = 0.0;
     /**
-     * @brief The time at which the request was sent formatted as,
+     * @brief The time at which the request was received formatted as,
      * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
      */
     double requestReceived_ = 0.0;
