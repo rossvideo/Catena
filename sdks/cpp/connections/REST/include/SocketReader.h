@@ -259,12 +259,12 @@ class SocketReader : public ISocketReader {
      * @brief The time at which the request was sent formatted as,
      * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
      */
-    double requestStart_ = 0.0;
+    double requestStart_ = DEFAULT_REQUEST_START;
     /**
      * @brief The time at which the request was received formatted as,
      * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
      */
-    double requestReceived_ = 0.0;
+    double requestReceived_ = DEFAULT_REQUEST_RECEIVED;
 };
 
 }; // Namespace REST

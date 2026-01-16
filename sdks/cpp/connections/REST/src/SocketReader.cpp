@@ -63,8 +63,8 @@ void SocketReader::read(tcp::socket& socket) {
     detailLevel_ = st2138::Device_DetailLevel_UNSET;
     jwsToken_ = "";
     jsonBody_ = "";
-    requestStart_ = 0.0;
-    requestReceived_ = 0.0;
+    requestStart_ = DEFAULT_REQUEST_START;
+    requestReceived_ = DEFAULT_REQUEST_START;
 
     // Getting request receival time formatted as,
     // <number of seconds since start of epoch>.<number of milliseconds since start of current second>
@@ -171,7 +171,7 @@ void SocketReader::read(tcp::socket& socket) {
             }
         }
         // Getting time request was sent
-        else if (requestStart_ == static_cast<double>(0.0) && iequals_header_name(name, "request-start")){
+        else if (requestStart_ == DEFAULT_REQUEST_START && iequals_header_name(name, "request-start")){
             if (valid_start_time(value)){
                 requestStart_ = stod(value);
             }

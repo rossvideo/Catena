@@ -121,7 +121,7 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
         EXPECT_EQ(socketReader.jsonBody(), jsonBody);
         EXPECT_EQ(socketReader.authorizationEnabled(), authz);
         EXPECT_EQ(socketReader.stream(), stream);
-        EXPECT_EQ(socketReader.requestStart(), requestStart != "" ? stod(requestStart) : 0.0);
+        EXPECT_EQ(socketReader.requestStart(), requestStart != "" ? stod(requestStart) : DEFAULT_REQUEST_START);
     }
 
     // Variables to test on creation.
@@ -406,7 +406,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidRequestStart) {
                             "Content-Length",
                             "Request-Start");
     socketReader.read(serverSocket_);
-    EXPECT_EQ(socketReader.requestStart(), 0.0);
+    EXPECT_EQ(socketReader.requestStart(), DEFAULT_REQUEST_START);
     // Test with multiple periods
     writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
                             jwsToken, origin, detailLevel, language, "123.123.", jsonBody,
@@ -417,7 +417,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidRequestStart) {
                             "Content-Length",
                             "Request-Start");
     socketReader.read(serverSocket_);
-    EXPECT_EQ(socketReader.requestStart(), 0.0);
+    EXPECT_EQ(socketReader.requestStart(), DEFAULT_REQUEST_START);
     // Test with negative value
     writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
                             jwsToken, origin, detailLevel, language, "-123.123", jsonBody,
@@ -428,7 +428,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidRequestStart) {
                             "Content-Length",
                             "Request-Start");
     socketReader.read(serverSocket_);
-    EXPECT_EQ(socketReader.requestStart(), 0.0);
+    EXPECT_EQ(socketReader.requestStart(), DEFAULT_REQUEST_START);
     // Test with leading period
     writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
                             jwsToken, origin, detailLevel, language, ".123123", jsonBody,
@@ -439,7 +439,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidRequestStart) {
                             "Content-Length",
                             "Request-Start");
     socketReader.read(serverSocket_);
-    EXPECT_EQ(socketReader.requestStart(), 0.0);
+    EXPECT_EQ(socketReader.requestStart(), DEFAULT_REQUEST_START);
     // Test with too large of a value
     writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
                             jwsToken, origin, detailLevel, language, std::string(309, '1'), jsonBody,
@@ -450,5 +450,5 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidRequestStart) {
                             "Content-Length",
                             "Request-Start");
     socketReader.read(serverSocket_);
-    EXPECT_EQ(socketReader.requestStart(), 0.0);
+    EXPECT_EQ(socketReader.requestStart(), DEFAULT_REQUEST_START);
 }

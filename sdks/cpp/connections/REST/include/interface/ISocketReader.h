@@ -60,6 +60,9 @@ namespace REST {
  */
 enum RESTMethod : uint32_t { Method_NONE, Method_GET, Method_POST, Method_PUT, Method_PATCH, Method_DELETE, Method_HEAD, Method_OPTIONS };
 
+const double DEFAULT_REQUEST_START = 0.0;
+const double DEFAULT_REQUEST_RECEIVED = 0.0;
+
 /**
  * @brief Interface for the SocketReader class.
  * 
