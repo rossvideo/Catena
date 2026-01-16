@@ -227,58 +227,6 @@
             transform: none !important;
         }
 
-        /* Log */
-        .log-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 1rem;
-            margin-top: 1.5rem;
-            animation: fadeIn 0.5s ease-out 0.3s both;
-        }
-
-        .log-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.75rem;
-        }
-
-        .log-title {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .log-container {
-            background: var(--bg-deep);
-            border-radius: 8px;
-            padding: 0.75rem;
-            max-height: 120px;
-            overflow-y: auto;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-        }
-
-        .log-entry {
-            padding: 0.25rem 0;
-            color: var(--text-secondary);
-            display: flex;
-            gap: 0.75rem;
-        }
-
-        .log-time {
-            color: var(--text-muted);
-            flex-shrink: 0;
-        }
-
-        .log-cmd {
-            color: var(--accent);
-            min-width: 50px;
-        }
-
         footer {
             text-align: center;
             margin-top: 2rem;
@@ -297,7 +245,6 @@
     <div class="container">
         <header>
             <h1>Counter Demo</h1>
-            <p class="subtitle">ST-2138 ExecuteCommand Example</p>
         </header>
 
         <div class="counter-card">
@@ -327,28 +274,14 @@
             </div>
         </div>
 
-        <div class="log-card">
-            <div class="log-header">
-                <span class="log-title">Activity</span>
-            </div>
-            <div class="log-container" id="logContainer">
-                <div class="log-entry">
-                    <span class="log-time">--:--:--</span>
-                    <span class="log-cmd">READY</span>
-                    <span>Waiting...</span>
-                </div>
-            </div>
-        </div>
-
         <footer>
-            <p>POST /st2138-api/v1/0/command/{cmd} • <a href="https://github.com/rossvideo/catena">Catena</a></p>
+            <p><a href="https://github.com/rossvideo/catena">Catena</a></p>
         </footer>
     </div>
 
     <script>
         let isRunning = false;
         let pollInterval = null;
-        let eventSource = null;
 
         function updateUI(counter, running) {
             const counterEl = document.getElementById('counterValue');
@@ -372,26 +305,6 @@
             isRunning = running;
         }
 
-        function addLog(cmd, value) {
-            const log = document.getElementById('logContainer');
-            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
-            
-            const entry = document.createElement('div');
-            entry.className = 'log-entry';
-            entry.innerHTML = `
-                <span class="log-time">${time}</span>
-                <span class="log-cmd">${cmd.toUpperCase()}</span>
-                <span>→ ${value}</span>
-            `;
-            
-            log.insertBefore(entry, log.firstChild);
-            
-            // Keep only last 10 entries
-            while (log.children.length > 10) {
-                log.removeChild(log.lastChild);
-            }
-        }
-
         async function executeCommand(cmd) {
             try {
                 const response = await fetch(`/st2138-api/v1/0/command/${cmd}`, {
@@ -402,14 +315,14 @@
                 const data = await response.json();
                 
                 if (data.exception) {
-                    addLog(cmd, 'Error: ' + data.exception.details);
+                    console.error('Command error:', data.exception.details);
                     return;
                 }
 
-                // UI update and log will be handled by SSE event
-                // No need to call addLog here - it will come through SSE
+                // Update UI with response
+                updateUI(data.counter ?? 0, data.running ?? false);
             } catch (error) {
-                addLog(cmd, 'Error: ' + error.message);
+                console.error('Command error:', error.message);
             }
         }
 
@@ -428,38 +341,11 @@
             }
         }
 
-        // Connect to SSE for real-time command notifications
-        function connectSSE() {
-            eventSource = new EventSource('/st2138-api/v1/connect');
-            
-            eventSource.addEventListener('connected', (e) => {
-                console.log('SSE connected:', e.data);
-            });
-            
-            eventSource.addEventListener('command', (e) => {
-                const data = JSON.parse(e.data);
-                // Update UI with new state
-                updateUI(data.counter, data.running);
-                // Add to activity log
-                addLog(data.command, data.counter);
-            });
-            
-            eventSource.onerror = (e) => {
-                console.log('SSE error, will reconnect...');
-                eventSource.close();
-                // Reconnect after 2 seconds
-                setTimeout(connectSSE, 2000);
-            };
-        }
-
         // Poll every 500ms to keep UI in sync (for counter auto-increment)
         pollInterval = setInterval(pollState, 500);
         
         // Initial poll
         pollState();
-        
-        // Connect to SSE for command notifications
-        connectSSE();
     </script>
 </body>
 </html>
