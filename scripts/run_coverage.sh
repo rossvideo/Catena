@@ -3,8 +3,6 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
-cd ~/Catena/${BUILD_TARGET}
-echo ~/Catena/${BUILD_TARGET}
 clean=false
 for arg in "$@"; do
   if [[ "$arg" == "-C"  || "$arg" == "--clean"  || "$arg" == "-c" ]]; then
@@ -12,84 +10,6 @@ for arg in "$@"; do
     break
   fi
 done
-
-if [ "$clean" = true ]; then
-  echo "Cleaning build directory..."
-  find ../../ -type f -name '*.gcov' -delete
-  rm -rf *
-  $CMAKE_COMMAND
-  echo "Build directory cleaned."
-fi
-
-# Set number of parallel jobs for ninja based on available memory 
-ninja_jobs=0
-need_j_value=0
-for arg in "$@"; do
-  if [[ $need_j_value -eq 1 ]]; then
-    ninja_jobs="$arg"
-    break
-  fi
-  if [[ "$arg" == "-j" ]]; then
-    need_j_value=1
-  elif [[ "$arg" == -j* ]]; then
-    ninja_jobs="${arg:2}"
-    break
-  fi
-done
-if [ $ninja_jobs -eq 0 ]; then
-  ninja_jobs=$(($(nproc) - 1))
-  if [ $(free -m | awk '/^Mem:/{print $2}') -le 8192 ]; then
-    ninja_jobs=1
-  elif [ $(free -m | awk '/^Mem:/{print $2}') -le 16384 ]; then
-    ninja_jobs=$(($ninja_jobs - ($ninja_jobs / 4)))
-  fi
-fi
-echo "Using $ninja_jobs parallel jobs for ninja build."
-ninja -j $ninja_jobs
-# Check for -V argument
-verbose=false
-for arg in "$@"; do
-  if [[ "$arg" == "-V"  || "$arg" == "--verbose"  || "$arg" == "-v" ]]; then
-    verbose=true
-    break
-  fi
-done
-
-CTEST_FLAGS="--progress --output-on-failure"
-# Run tests with verbose output if -V flag is present
-if [ "$verbose" = true ]; then
-  ctest $CTEST_FLAGS -V || ctest $CTEST_FLAGS --rerun-failed -V
-else
-  ctest $CTEST_FLAGS || ctest $CTEST_FLAGS --rerun-failed
-fi
-
-cd ~/Catena/
-
-#check if coverage directory exists
-if [ ! -d "coverage" ]; then
-  mkdir -p coverage
-fi
-
-# clean the coverage directory before generating new reports
-rm -rf coverage/*
-gcovr --lcov=coverage/gcovr.info
-
-CODEGEN_DIR="$(realpath ~/Catena/tools/codegen)"
-cd $CODEGEN_DIR
-npm install
-JEST_ARGS=""
-# Check for -V argument for verbose test output
-if [ "$verbose" = true ]; then
-  JEST_ARGS="$JEST_ARGS --verbose"
-fi
-npm test -- $JEST_ARGS
-
-cd ~/Catena/
-
-lcov --config-file lcov.config \
-     --add-tracefile coverage/gcovr.info \
-     --add-tracefile $CODEGEN_DIR/coverage/lcov.info \
-     --output-file coverage/coverage.info
 
 # Check for --html argument
 html_report=false
@@ -100,11 +20,98 @@ for arg in "$@"; do
   fi
 done
 
-if [ "$html_report" = true ]; then
-  echo "Generating HTML coverage report..."
-  genhtml --config-file lcov.config \
-          --output-directory coverage \
-          --title "All Tests" \
-          --prefix ~/Catena/ \
-          coverage/coverage.info
+# Check for -V argument
+verbose=false
+for arg in "$@"; do
+  if [[ "$arg" == "-V"  || "$arg" == "--verbose"  || "$arg" == "-v" ]]; then
+    verbose=true
+    break
+  fi
+done
+
+javascript () {
+  cd ~/Catena/tools/codegen
+  if [ "$clean" = true ]; then
+    npm run clean
+  fi
+  npm test
+}
+
+cpp () {
+  if [ "$clean" = true ]; then
+    echo "Cleaning build directory..."
+    find ../../ -type f -name '*.gcov' -delete
+    rm -rf *
+    $CMAKE_COMMAND
+    echo "Build directory cleaned."
+  fi
+
+  # Set number of parallel jobs for ninja based on available memory 
+  ninja_jobs=0
+  need_j_value=0
+  for arg in "$@"; do
+    if [[ $need_j_value -eq 1 ]]; then
+      ninja_jobs="$arg"
+      break
+    fi
+    if [[ "$arg" == "-j" ]]; then
+      need_j_value=1
+    elif [[ "$arg" == -j* ]]; then
+      ninja_jobs="${arg:2}"
+      break
+    fi
+  done
+  if [ $ninja_jobs -eq 0 ]; then
+    ninja_jobs=$(($(nproc) - 1))
+    if [ $(free -m | awk '/^Mem:/{print $2}') -le 8192 ]; then
+      ninja_jobs=1
+    elif [ $(free -m | awk '/^Mem:/{print $2}') -le 16384 ]; then
+      ninja_jobs=$(($ninja_jobs - ($ninja_jobs / 4)))
+    fi
+  fi
+  echo "Using $ninja_jobs parallel jobs for ninja build."
+  ninja -j $ninja_jobs
+
+  CTEST_FLAGS="--progress --output-on-failure"
+  # Run tests with verbose output if -V flag is present
+  if [ "$verbose" = true ]; then
+    ctest $CTEST_FLAGS -V || ctest $CTEST_FLAGS --rerun-failed -V
+  else
+    ctest $CTEST_FLAGS || ctest $CTEST_FLAGS --rerun-failed
+  fi
+
+  cd ~/Catena/
+
+  #check if coverage directory exists
+  if [ ! -d "coverage" ]; then
+    mkdir -p coverage
+  fi
+
+  # clean the coverage directory before generating new reports
+  rm -rf coverage/*
+  COVERAGE_FILES="--lcov=coverage/coverage.info --xml=coverage/coverage.xml"
+  # Conditionally generate HTML report
+  if [ "$html_report" = true ]; then
+    gcovr $COVERAGE_FILES --html=coverage/index.html --html-details
+  else
+    gcovr $COVERAGE_FILES
+  fi
+}
+
+golang () {
+  echo "Not set up yet"
+}
+
+
+# run the javascript tests/coverage
+javascript
+
+# run the main coverage based on build target
+cd ~/Catena/${BUILD_TARGET}
+echo ~/Catena/${BUILD_TARGET}
+
+if [ "$BUILD_TARGET" == "build/cpp" ]; then
+  cpp "$@"
+elif [ "$BUILD_TARGET" == "build/go" ]; then
+  golang
 fi

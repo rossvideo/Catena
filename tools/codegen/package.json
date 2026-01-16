@@ -5,7 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "clean": "rm -rf ./coverage && rm -rf ./junit.xml"
   },
   "repository": {
     "type": "git",
