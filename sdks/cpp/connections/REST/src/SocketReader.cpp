@@ -27,6 +27,31 @@ static inline bool iequals_header_name(std::string_view a, std::string_view b) {
     }
     return true;
 }
+
+static inline bool valid_content_type(std::string_view s, std::string_view contentType) {
+    if (s.size() < contentType.size()) return false;
+    const unsigned char* ps = reinterpret_cast<const unsigned char*>(s.data());
+    const unsigned char* pcontentType = reinterpret_cast<const unsigned char*>(contentType.data());
+    const std::size_t n = contentType.size();
+
+    for (std::size_t i = 0; i < n; ++i) {
+        unsigned char cs = ps[i];
+        unsigned char ccontentType = pcontentType[i]; // already lowercase
+
+        if (cs == ccontentType) continue; // fast path
+
+        // Fold only 'A'..'Z' to 'a'..'z'
+        if (cs >= 'A' && cs <= 'Z') {
+            cs = static_cast<unsigned char>(cs | 0x20); // to lowercase
+            if (cs == ccontentType) continue;
+        }
+
+        // If we get here, they are not equal
+        return false;
+    }
+    return true;
+
+}
 }
 
 void SocketReader::read(tcp::socket& socket) {
@@ -145,7 +170,7 @@ void SocketReader::read(tcp::socket& socket) {
             contentLength = stoi(value);
         }
         // Checking Content-Type
-        else if (iequals_header_name(name, "content-type") && value != "application/json") {
+        else if (iequals_header_name(name, "content-type") && !valid_content_type(value, "application/json")) {
             throw catena::exception_with_status("Invalid Content-Type", catena::StatusCode::INVALID_ARGUMENT);
         }
     }
