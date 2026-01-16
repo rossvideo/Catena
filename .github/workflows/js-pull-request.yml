@@ -5,11 +5,11 @@ on:
   push:
     branches: ["develop"]
     paths:
-      - 'tools/codegen/**'
+      - "tools/codegen/**"
   pull_request:
     paths:
-      - 'tools/codegen/**'
-      - '.github/workflows/js-pull-request.yml'
+      - "tools/codegen/**"
+      - ".github/workflows/js-pull-request.yml"
   workflow_dispatch:
 
 jobs:
@@ -22,7 +22,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
+          submodules: "recursive"
 
       - name: Setup SMPTE
         run: |
@@ -91,14 +91,11 @@ jobs:
       #     body-path: coverage-comment-body.md
       #     comment-id: ${{ steps.fc_unit.outputs.comment-id }}
       #     edit-mode: append
-          
+
   CodeQL:
     name: CodeQL Analysis (15-30 minutes)
     timeout-minutes: 35
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/rossvideo/catena-cpp-toolchain:latest
-      options: --user root:root
     permissions:
       security-events: write
       actions: read
@@ -106,59 +103,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['c-cpp']
-
-    env:
-      CMAKE_BUILD_TYPE: ''
-      CONNECTIONS: gRPC
-      BUILD_TARGET: ${{ github.workspace }}/build/cpp
+        language:
+          - javascript
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
+          submodules: "recursive"
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
           debug: true
-      
-      - name: build
-        run: |
-          echo "Building OpenAPI"
-          cd ${GITHUB_WORKSPACE}/smpte
-          ./build-openapi.sh
-          echo "Done building OpenAPI"
-
-          mkdir -p ${BUILD_TARGET}
-          git config --global --add safe.directory /__w/Catena/Catena
-          cmake -G Ninja \
-            -DUNIT_TESTING=OFF \
-            -DBUILD_DOC=OFF \
-            -DCATENA_MODEL="lite" \
-            -DCONNECTIONS=${CONNECTIONS} \
-            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
-            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
-            -DLOG_DIR=${HOME}/Catena/logs \
-            -B ${BUILD_TARGET} \
-            -S ${GITHUB_WORKSPACE}/sdks/cpp
-          cd ${BUILD_TARGET}
-          ninja -C ${BUILD_TARGET}
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{ matrix.language }}"
-      
-      - name: Upload error and fatal logs on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: error-logs
-          path: |
-            logs/*error*.log
-            logs/*fatal*.log
-          if-no-files-found: ignore
-          retention-days: 1
