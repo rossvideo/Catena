@@ -319,8 +319,9 @@
                     return;
                 }
 
-                // Update UI with response
-                updateUI(data.counter ?? 0, data.running ?? false);
+                // Update UI with response - handle struct_value wrapper
+                const sv = data.struct_value || data;
+                updateUI(sv.counter ?? 0, sv.running ?? false);
             } catch (error) {
                 console.error('Command error:', error.message);
             }
