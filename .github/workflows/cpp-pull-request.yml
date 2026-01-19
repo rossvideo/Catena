@@ -7,12 +7,10 @@ on:
     paths:
       - 'sdks/cpp/**'
       - 'unittests/cpp/**'
-      - 'tools/codegen/**'
   pull_request:
     paths:
       - 'sdks/cpp/**'
       - 'unittests/cpp/**'
-      - 'tools/codegen/**'
       - '.github/workflows/cpp-pull-request.yml'
   workflow_dispatch:
 
@@ -52,6 +50,7 @@ jobs:
       image: ghcr.io/rossvideo/catena-cpp-toolchain:latest
       options: --user root:root
     env:
+      CHECK_NAME: C++ Unit Tests
       CMAKE_BUILD_TYPE: Debug
       CONNECTIONS: gRPC;REST
       BUILD_TARGET: ${{ github.workspace }}/build/cpp
@@ -111,18 +110,17 @@ jobs:
             cat rest_test_results.xml
           fi
 
-
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
+          check_name: "${{ env.CHECK_NAME }}"
           report_individual_runs: "true"
           files: |
             common_test_results.xml
             grpc_test_results.xml
             rest_test_results.xml
           github_token: ${{ secrets.GITHUB_TOKEN }}
-
 
       - name: Generate Coverage Report
         run: |
@@ -168,6 +166,7 @@ jobs:
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
+          body-includes: "## ${{ env.CHECK_NAME }}"
 
       - name: Update PR comment with coverage results
         if: steps.fc_unit.outputs.comment-id != '' && github.event_name == 'pull_request'
