@@ -92,7 +92,7 @@ program
     .option("--json", "Output device model in JSON format", false)
     .argument("<input>", "Input binary file")
     .action(async (input, options) => {
-        logOptions(options);
+        logOptions("des", input, options);
         log(`Deserializing binary file ${input}...`);
         const [metadata, deviceModel] = await deserialize({
             input,
