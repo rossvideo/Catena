@@ -65,6 +65,9 @@ namespace gRPC {
  */
 enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
+const double DEFAULT_REQUEST_START = 0;
+const double DEFAULT_REQUEST_RECEIVED = 0;
+
 /**
  * @brief Abstract base class for inherited by CallData child classes defining
  * the jwsToken_() method.
@@ -107,6 +110,22 @@ class CallData : public ICallData {
         }
         return jwsToken;
     }
+    
+    /**
+     * @brief Reads requestStart from metadata and records current time for requestReceived.
+     */
+    void processTimesatmps_() {
+        auto clientMeta = &context_.client_metadata();
+        // Getting client metadata from context.
+        if (clientMeta != nullptr) {
+            auto startTime = clientMeta->find("request-start");
+            if (startTime != clientMeta->end()) {
+                
+            }
+        } else {
+            throw catena::exception_with_status("Client metadata not found", catena::StatusCode::NOT_FOUND);
+        }
+    }
 
     /**
      * @brief The context of the RPC. This is retrieved once a call to
@@ -117,6 +136,16 @@ class CallData : public ICallData {
      * @brief Pointer to ServiceImpl.
      */
     IServiceImpl* service_;
+    /**
+     * @brief The time at which the request was sent formatted as,
+     * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+     */
+    double requestStart_ = DEFAULT_REQUEST_START;
+    /**
+     * @brief The time at which the request was sent formatted as,
+     * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+     */
+    double requestStart_ = DEFAULT_REQUEST_START;
 };
 
 };
