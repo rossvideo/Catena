@@ -408,6 +408,16 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentType) {
                                 "Content-Length",
                                 /*extraHeaderLines=*/{"Content-Type: text/plain"});
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    // Testing with same prefix but invalid
+    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
+                                jwsToken, origin, detailLevel, language, jsonBody,
+                                "Origin",
+                                "Authorization",
+                                "Detail-Level",
+                                "Language",
+                                "Content-Length",
+                                /*extraHeaderLines=*/{"Content-Type: application/json-patch+json"});
+    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
     // Testing with extra parameter
     writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
                                 jwsToken, origin, detailLevel, language, jsonBody,

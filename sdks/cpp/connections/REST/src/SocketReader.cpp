@@ -49,6 +49,10 @@ static inline bool valid_content_type(std::string_view s, std::string_view conte
         // If we get here, they are not equal
         return false;
     }
+    // Ensure MIME type is exactly contentType
+    if (ps[n] != '\0' && ps[n] != ';') {
+        return false;
+    }
     return true;
 
 }
