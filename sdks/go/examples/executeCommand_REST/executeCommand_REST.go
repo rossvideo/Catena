@@ -118,6 +118,7 @@ func (c *CounterState) Increment() {
 }
 
 func main() {
+	// Parse config from environment variables with CATENA prefix
 	cfg := logger.ParseConfigWithVerbosity("CATENA")
 	cfg.AppName = "executeCommand_REST"
 
@@ -129,18 +130,19 @@ func main() {
 
 	// Handle signals for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM) // sends a signal to the channel when the process is interrupted
 	go func() {
-		sig := <-sigChan
+		sig := <-sigChan // blocks until a signal is received
 		logger.Info("Caught signal, shutting down", "signal", sig)
-		close(shutdownChan)
+		close(shutdownChan) // closes the channel to signal the main goroutine to shut down
 	}()
 
+	// Get port from environment variables or use default 6254
 	portStr := envOr("CATENA_PORT", "6254")
-	port, err := strconv.Atoi(portStr)
+	port, err := strconv.Atoi(portStr) // converts the string to an integer
 	if err != nil {
 		logger.Error("invalid CATENA_PORT", "error", err)
-		os.Exit(1)
+		os.Exit(1) // exits the program with a non-zero status code
 	}
 
 	// Initialize counter
