@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "clean": "rm -rf ./coverage && rm -rf ./junit.xml"
+    "clean": "rm -rf ./coverage && rm -rf ./junit.xml && rm -rf tests/output/*"
   },
   "repository": {
     "type": "git",
