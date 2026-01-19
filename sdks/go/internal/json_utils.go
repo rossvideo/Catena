@@ -3,6 +3,7 @@ package internal
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
@@ -13,6 +14,10 @@ func ReadValueFromRequest(r *http.Request) (any, error) {
 	var v any
 
 	if err := json.NewDecoder(r.Body).Decode(&v); err != nil {
+		// Empty body is valid for commands that don't require a payload
+		if err == io.EOF {
+			return nil, nil
+		}
 		return nil, err
 	}
 
