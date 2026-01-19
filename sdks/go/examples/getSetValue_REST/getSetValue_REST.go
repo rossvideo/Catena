@@ -29,11 +29,11 @@
  */
 
 /**
- * @brief SetParam REST example.
- * @file setParam_REST.go
+ * @brief GetParam and SetParam REST example.
+ * @file param_REST.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2026-01-13
+ * @date 2026-01-19
  */
 
 package main
@@ -52,7 +52,7 @@ import (
 
 func main() {
 	cfg := logger.ParseConfigWithVerbosity("CATENA")
-	cfg.AppName = "set_param_example"
+	cfg.AppName = "param_example"
 
 	if err := logger.Init(cfg); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to initialize logger: %v\n", err)
@@ -68,12 +68,17 @@ func main() {
 	}
 
 	// ==========================================================================
-	// Slot 0: Video Parameters (read/write)
+	// Slot 0: Video Parameters
 	// ==========================================================================
 	videoParams := &sync.Map{}
 	videoParams.Store("resolution", map[string]any{
 		"value": map[string]any{
 			"string_value": "1920x1080",
+		},
+	})
+	videoParams.Store("framerate", map[string]any{
+		"value": map[string]any{
+			"float32_value": 59.94,
 		},
 	})
 	videoParams.Store("brightness", map[string]any{
@@ -88,9 +93,14 @@ func main() {
 	})
 
 	// ==========================================================================
-	// Slot 1: Audio Parameters (read/write)
+	// Slot 1: Audio Parameters
 	// ==========================================================================
 	audioParams := &sync.Map{}
+	audioParams.Store("sample_rate", map[string]any{
+		"value": map[string]any{
+			"int32_value": 48000,
+		},
+	})
 	audioParams.Store("volume", map[string]any{
 		"value": map[string]any{
 			"float32_value": 0.75,
@@ -103,15 +113,25 @@ func main() {
 	})
 
 	// ==========================================================================
-	// Slot 2: System Parameters (read/write)
+	// Slot 2: Network Parameters
 	// ==========================================================================
-	systemParams := &sync.Map{}
-	systemParams.Store("device_name", map[string]any{
+	networkParams := &sync.Map{}
+	networkParams.Store("ip_address", map[string]any{
+		"value": map[string]any{
+			"string_value": "192.168.1.100",
+		},
+	})
+	networkParams.Store("port", map[string]any{
+		"value": map[string]any{
+			"int32_value": 5000,
+		},
+	})
+	networkParams.Store("device_name", map[string]any{
 		"value": map[string]any{
 			"string_value": "Catena Device",
 		},
 	})
-	systemParams.Store("standby_mode", map[string]any{
+	networkParams.Store("standby_mode", map[string]any{
 		"value": map[string]any{
 			"int32_value": 0,
 		},
@@ -123,19 +143,34 @@ func main() {
 	paramStores := map[int]*sync.Map{
 		0: videoParams,
 		1: audioParams,
-		2: systemParams,
+		2: networkParams,
 	}
 
 	slotDescriptions := map[int]string{
-		0: "Video Parameters (resolution, brightness, counter)",
-		1: "Audio Parameters (volume, muted)",
-		2: "System Parameters (device_name, standby_mode)",
+		0: "Video Parameters (resolution, framerate, brightness, counter)",
+		1: "Audio Parameters (sample_rate, volume, muted)",
+		2: "Network Parameters (ip_address, port, device_name, standby_mode)",
 	}
 
 	for slot := range paramStores {
 		slot := slot
 		store := paramStores[slot]
 		desc := slotDescriptions[slot]
+
+		// Register GetValue handler (GET /value/{fqoid})
+		srv.RegisterGetValueHandler(slot, func(slotNum int, fqoid string) catena.StatusResult {
+			logger.Info("GetParam", "slot", slotNum, "fqoid", fqoid, "type", desc)
+
+			val, ok := store.Load(fqoid)
+			if !ok {
+				logger.Warning("GetParam not found", "slot", slotNum, "fqoid", fqoid)
+				return catena.NotFound("parameter not found: " + fqoid)
+			}
+
+			param := val.(map[string]any)
+			logger.Info("GetParam returning", "slot", slotNum, "fqoid", fqoid, "value", param)
+			return catena.OK(param)
+		})
 
 		// Register SetValue handler (PUT /value/{fqoid})
 		srv.RegisterSetValueHandler(slot, func(value any, slotNum int, fqoid string) catena.StatusResult {
@@ -169,21 +204,6 @@ func main() {
 			// Return the updated value
 			return catena.OK(wrappedValue)
 		})
-
-		// Also register GetValue handler so we can read back values
-		srv.RegisterGetValueHandler(slot, func(slotNum int, fqoid string) catena.StatusResult {
-			logger.Info("GetParam", "slot", slotNum, "fqoid", fqoid, "type", desc)
-
-			val, ok := store.Load(fqoid)
-			if !ok {
-				logger.Warning("GetParam not found", "slot", slotNum, "fqoid", fqoid)
-				return catena.NotFound("parameter not found: " + fqoid)
-			}
-
-			param := val.(map[string]any)
-			logger.Info("GetParam returning", "slot", slotNum, "fqoid", fqoid, "value", param)
-			return catena.OK(param)
-		})
 	}
 
 	// Not found handler
@@ -193,14 +213,14 @@ func main() {
 
 	// Logger info about the example
 	logger.Info("=======================================================")
-	logger.Info("SetParam Example")
+	logger.Info("GetParam & SetParam Example")
 	logger.Info("=======================================================")
 	logger.Info("Listening", "port", port)
 	logger.Info("")
 	logger.Info("Available parameters:")
-	logger.Info("  Slot 0: resolution, brightness, counter")
-	logger.Info("  Slot 1: volume, muted")
-	logger.Info("  Slot 2: device_name, standby_mode")
+	logger.Info("  Slot 0: resolution, framerate, brightness, counter")
+	logger.Info("  Slot 1: sample_rate, volume, muted")
+	logger.Info("  Slot 2: ip_address, port, device_name, standby_mode")
 	logger.Info("=======================================================")
 
 	srv.StartHTTPServer(port)
