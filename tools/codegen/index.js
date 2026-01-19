@@ -108,7 +108,7 @@ program
         let output = "";
         let outputPath = options.output;
         const inputFileName = path.basename(input);
-        const inputExt = path.extname(inputFileName);
+        const inputExt = path.extname(inputFileName) || /$/;
         if (options.json && !options.yaml) {
             output = JSON.stringify(deviceModel, null, 4);
             outputPath = path.join(outputPath, inputFileName.replace(inputExt, '.json'));
