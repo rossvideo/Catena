@@ -371,7 +371,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderWithoutColonIgnored) {
 }
 
 /**
- * TEST 18 - Content-Type is validated correctly
+ * TEST 18 - Invalid Content-Type throws exception
  */
 TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentType) {
         // Enable authz so Authorization header is parsed.
@@ -388,7 +388,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentType) {
     const auto detailLevel = st2138::Device_DetailLevel_NONE;
     const std::string language = "en";
     const std::string jsonBody = "";
-    // Testing with xml
+    // Testing with invalid
     writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
                                 jwsToken, origin, detailLevel, language, jsonBody,
                                 "Origin",
@@ -396,17 +396,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentType) {
                                 "Detail-Level",
                                 "Language",
                                 "Content-Length",
-                                /*extraHeaderLines=*/{"Content-Type: application/xml"});
-    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
-    // Testing with plain text
-    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
-                                jwsToken, origin, detailLevel, language, jsonBody,
-                                "Origin",
-                                "Authorization",
-                                "Detail-Level",
-                                "Language",
-                                "Content-Length",
-                                /*extraHeaderLines=*/{"Content-Type: text/plain"});
+                                /*extraHeaderLines=*/{"Content-Type: <test>"});
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
     // Testing with same prefix but invalid
     writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
@@ -418,6 +408,36 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentType) {
                                 "Content-Length",
                                 /*extraHeaderLines=*/{"Content-Type: application/json-patch+json"});
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+}
+
+/**
+ * TEST 19 - Valid Content-Type doesn't throw exception
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_ValidContentType) {
+        // Enable authz so Authorization header is parsed.
+    EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
+    // Build and send request with an extra malformed header line (no ':')
+    const RESTMethod method = catena::REST::Method_GET;
+    const uint32_t slot = 1;
+    const std::string endpoint = "/test-call";
+    const std::string fqoid = "/test/oid";
+    const bool stream = false;
+    const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
+    const std::string jwsToken = "test-jws-token";
+    const std::string origin = "*";
+    const auto detailLevel = st2138::Device_DetailLevel_NONE;
+    const std::string language = "en";
+    const std::string jsonBody = "";
+    // Testing with valid
+    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
+                                jwsToken, origin, detailLevel, language, jsonBody,
+                                "Origin",
+                                "Authorization",
+                                "Detail-Level",
+                                "Language",
+                                "Content-Length",
+                                /*extraHeaderLines=*/{"Content-Type: application/json"});
+    EXPECT_NO_THROW(socketReader.read(serverSocket_));
     // Testing with extra parameter
     writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
                                 jwsToken, origin, detailLevel, language, jsonBody,
