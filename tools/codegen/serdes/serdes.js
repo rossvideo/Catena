@@ -1,4 +1,4 @@
-/*Copyright 2025 Ross Video Ltd
+/*Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  *
@@ -18,8 +18,8 @@
  * @file serdes.js
  * @brief functions to serialize and deserialize Catena device models
  * @author Andrew Brown <andrew.brown@rossvideo.com>
- * @date 2025-12-01
- * @copyright Copyright (c) 2025 Ross Video
+ * @date 2026-01-19
+ * @copyright Copyright (c) 2026 Ross Video
  */
 
 import { createHash } from 'crypto';
