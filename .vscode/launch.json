@@ -192,7 +192,11 @@
       "type": "pickString",
       "options": [
         "basic_device_bl",
-        "basic_device_v2"
+        "basic_device_v2",
+        "getDevice_REST",
+        "executeCommand_REST",
+        "getAsset_REST",
+        "getSetValue_REST"
       ],
       "default": "basic_device_bl"
     },
