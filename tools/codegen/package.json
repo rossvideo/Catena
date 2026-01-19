@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "flatten-junit": "node ./scripts/flatten-junit.js"
+    "clean": "rm -rf ./coverage && rm -rf ./junit.xml"
   },
   "repository": {
     "type": "git",

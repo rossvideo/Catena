@@ -7,12 +7,10 @@ on:
     paths:
       - 'sdks/cpp/**'
       - 'unittests/cpp/**'
-      - 'tools/codegen/**'
   pull_request:
     paths:
       - 'sdks/cpp/**'
       - 'unittests/cpp/**'
-      - 'tools/codegen/**'
       - '.github/workflows/cpp-pull-request.yml'
   workflow_dispatch:
 
@@ -52,6 +50,7 @@ jobs:
       image: ghcr.io/rossvideo/catena-cpp-toolchain:latest
       options: --user root:root
     env:
+      CHECK_NAME: C++ Unit Tests
       CMAKE_BUILD_TYPE: Debug
       CONNECTIONS: gRPC;REST
       BUILD_TARGET: ${{ github.workspace }}/build/cpp
@@ -86,7 +85,7 @@ jobs:
           cd ${BUILD_TARGET}
           ninja
 
-      - name: Run CPP Unit Tests
+      - name: Run Tests
         run: |
           ctest --output-on-failure --test-dir ${BUILD_TARGET} -R '^common\.' --output-junit /common_test_results.xml
           ctest --output-on-failure --test-dir ${BUILD_TARGET} -R '^gRPC\.' --output-junit /grpc_test_results.xml
@@ -111,61 +110,45 @@ jobs:
             cat rest_test_results.xml
           fi
 
-      - name: Run Codegen Unit Tests and Coverage Report
-        run: |
-          cd ${GITHUB_WORKSPACE}/tools/codegen
-          npm test -- --ci
-          npm run flatten-junit
-
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
+          check_name: "${{ env.CHECK_NAME }}"
           report_individual_runs: "true"
           files: |
             common_test_results.xml
             grpc_test_results.xml
             rest_test_results.xml
-            tools/codegen/junit.xml
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate CPP Coverage Report
+      - name: Generate Coverage Report
         run: |
           gcovr \
-          --lcov=gcovr.info \
-          --cobertura=coverage.xml
+          --lcov=coverage.info \
+          --cobertura=coverage.xml \
+          --html=index.html \
+          --html-details
 
       - name: Code Coverage Summary Report
         id: coverage
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:
-          filename: coverage.xml,tools/codegen/coverage/cobertura-coverage.xml
+          filename: coverage.xml
           badge: true
           format: markdown
           hide_complexity: true
           output: both
-
-      - name: Combined Code Coverage Results
-        run: |
-          lcov --config-file lcov.config \
-               --add-tracefile gcovr.info \
-               --add-tracefile tools/codegen/coverage/lcov.info \
-               --output-file coverage.info
-          genhtml --config-file lcov.config \
-                  --prefix ${GITHUB_WORKSPACE} \
-                  --output-directory coverage_report \
-                  --flat \
-                  coverage.info
-
+      
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: |
-            coverage_report/index.html
+            index.html
+            index.css
             coverage.xml
             coverage.info
-            tools/codegen/coverage/cobertura-coverage.xml
           retention-days: 60
 
       # Build PR comment body for coverage
@@ -183,6 +166,7 @@ jobs:
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
+          body-includes: "## ${{ env.CHECK_NAME }}"
 
       - name: Update PR comment with coverage results
         if: steps.fc_unit.outputs.comment-id != '' && github.event_name == 'pull_request'
