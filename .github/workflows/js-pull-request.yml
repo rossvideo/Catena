@@ -96,7 +96,7 @@ jobs:
           edit-mode: append
 
   CodeQL:
-    name: CodeQL Analysis (15-30 minutes)
+    name: CodeQL Analysis (1-5 minutes)
     timeout-minutes: 35
     runs-on: ubuntu-latest
     permissions:

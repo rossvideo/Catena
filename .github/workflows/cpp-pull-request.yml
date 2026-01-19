@@ -7,12 +7,10 @@ on:
     paths:
       - 'sdks/cpp/**'
       - 'unittests/cpp/**'
-      - 'tools/codegen/**'
   pull_request:
     paths:
       - 'sdks/cpp/**'
       - 'unittests/cpp/**'
-      - 'tools/codegen/**'
       - '.github/workflows/cpp-pull-request.yml'
   workflow_dispatch:
 
