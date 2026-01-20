@@ -31,7 +31,8 @@
 /**
  * @brief Mock implementation for the ISocketReader class.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/26
+ * @author keon.foster@rossvideo.com
+ * @date 2026/01/20
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
