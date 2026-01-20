@@ -38,17 +38,19 @@ static inline bool valid_start_time(std::string_view s) {
     for(std::size_t i = 0; i < n; ++i) {
         unsigned char cs = ps[i];
 
-        // Checks if the char is not a number or is a second period(decimal point)
-        // and if the first char is a period, invalid if so
-        if ((cs != '.' || hasPeriod) && (!isdigit(cs)) || (cs == '.' && i == 0)) {
-            return false;
-        }
-        if (cs == '.') {
-            hasPeriod = true; // Decimal point found
+        if (!isdigit(cs)) {
+            if (cs == '.' && i == 0) {
+                return false; // Reject leading period
+            }
+            else if (cs == '.' && !hasPeriod) {
+                hasPeriod = true; // Decimal point found
+            } else {
+                return false; // cs is 2nd period or invalid character
+            }
         }
     }
-    // No invalid characters found, value is valid
-    return true;
+    // No invalid characters found, if hasPeriod then format is valid.
+    return hasPeriod;
 }
 }
 
@@ -171,9 +173,12 @@ void SocketReader::read(tcp::socket& socket) {
             }
         }
         // Getting time request was sent
-        else if (requestStart_ == DEFAULT_REQUEST_START && iequals_header_name(name, "request-start")){
-            if (valid_start_time(value)){
-                requestStart_ = stod(value);
+        else if (requestStart_ == DEFAULT_REQUEST_START && iequals_header_name(name, "request-start") && valid_start_time(value)){
+            try {
+                char* end = NULL;
+                requestStart_ = strtod(value.c_str(), &end);
+            } catch(...) {
+                throw catena::exception_with_status("Invalid Request-Start", catena::StatusCode::INVALID_ARGUMENT);
             }
         }
         // Getting body content-Length
