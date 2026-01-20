@@ -31,49 +31,31 @@
 package catena
 
 import (
-	"errors"
-	"strconv"
-	"sync"
+	"net/http"
 )
 
-// DeviceManager manages multiple devices keyed by slot.
-type DeviceManager struct {
-	mu      sync.RWMutex
-	devices map[int]Device
+// StatusResult represents an HTTP outcome (success or error) that the server can render uniformly.
+type StatusResult struct {
+	Status  int    // e.g., 200, 204, 400, 404, 405, 501, 500
+	Payload any    // optional body to JSON-encode on success (2xx). If nil and Status is 204, no body.
+	Message string // optional error message for non-2xx statuses
 }
 
-func NewDeviceManager() *DeviceManager {
-	return &DeviceManager{
-		devices: make(map[int]Device),
-	}
+// Convenience constructors
+func OK(payload any) StatusResult { return StatusResult{Status: http.StatusOK, Payload: payload} }
+func NoContent() StatusResult     { return StatusResult{Status: http.StatusNoContent} }
+func BadRequest(msg string) StatusResult {
+	return StatusResult{Status: http.StatusBadRequest, Message: msg}
 }
-
-func (m *DeviceManager) Register(slot int, d Device) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.devices[slot] = d
+func NotFound(msg string) StatusResult {
+	return StatusResult{Status: http.StatusNotFound, Message: msg}
 }
-
-func (m *DeviceManager) Get(slot int) (Device, bool) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	d, ok := m.devices[slot]
-	return d, ok
+func MethodNotAllowed(msg string) StatusResult {
+	return StatusResult{Status: http.StatusMethodNotAllowed, Message: msg}
 }
-
-func (m *DeviceManager) MustGet(slot int) (Device, error) {
-	if d, ok := m.Get(slot); ok {
-		return d, nil
-	}
-	return nil, errors.New("device not found for slot: " + strconv.Itoa(slot))
+func NotImplemented(msg string) StatusResult {
+	return StatusResult{Status: http.StatusNotImplemented, Message: msg}
 }
-
-func (m *DeviceManager) ListSlots() []int {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	out := make([]int, 0, len(m.devices))
-	for k := range m.devices {
-		out = append(out, k)
-	}
-	return out
+func InternalServerError(msg string) StatusResult {
+	return StatusResult{Status: http.StatusInternalServerError, Message: msg}
 }
