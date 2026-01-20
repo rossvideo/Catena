@@ -69,11 +69,11 @@ var (
 // Counter state
 type CounterState struct {
 	mu      sync.RWMutex
-	value   int64
+	value   int32
 	running bool
 }
 
-func (c *CounterState) GetValue() int64 {
+func (c *CounterState) GetValue() int32 {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.value
@@ -97,7 +97,7 @@ func (c *CounterState) Stop() {
 	c.running = false
 }
 
-func (c *CounterState) Add(n int64) {
+func (c *CounterState) Add(n int32) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.value += n

@@ -157,12 +157,14 @@ func main() {
 			}
 
 			logger.Info("GetDevice", "slot", slot)
-			device, ok := devices[slot]
+			_, ok := devices[slot]
 			if !ok {
 				logger.Error("GetDevice device not found", "slot", slot)
 				return catena.ReplyNotFound("device not found")
 			}
-			return catena.ReplyOK(catena.NewStructValue(device))
+
+			//will be catenadevice later
+			return catena.ReplyOK(catena.CatenaValue{})
 		})
 	}
 
