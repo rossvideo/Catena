@@ -167,9 +167,13 @@ func main() {
 
 	// Helper to build response with current state
 	buildResponse := func() map[string]any {
+		var runningVal int32 = 0
+		if counter.IsRunning() {
+			runningVal = 1
+		}
 		return map[string]any{
-			"counter": counter.GetValue(),
-			"running": counter.IsRunning(),
+			"counter": int32(counter.GetValue()),
+			"running": runningVal,
 		}
 	}
 
