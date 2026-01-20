@@ -11,16 +11,25 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
+// Handlers now return (CatenaValue, StatusResult) so the server can respond consistently.
+type DeviceHandler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
+type GetValueHandler func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult)
+type SetValueHandler func(value any, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult)
+type GetAssetHandler func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult)
+type ConnectHandler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
+type ExecuteCommandHandler func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult)
+type FallbackHandler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
+
 // Server provides REST API endpoints for Catena devices
 type Server struct {
 	mux                    *http.ServeMux
-	getDeviceHandlers      map[int]func(http.ResponseWriter, *http.Request) (catena.CatenaValue, catena.StatusResult)
-	getValueHandlers       map[int]func(int, string) (catena.CatenaValue, catena.StatusResult)
-	setValueHandlers       map[int]func(any, int, string) (catena.CatenaValue, catena.StatusResult)
-	getAssetHandlers       map[int]func(http.ResponseWriter, *http.Request, int, string) (catena.CatenaValue, catena.StatusResult)
-	connectHandler         func(http.ResponseWriter, *http.Request) (catena.CatenaValue, catena.StatusResult)
-	executeCommandHandlers map[int]func(http.ResponseWriter, *http.Request, int, string, any) (catena.CatenaValue, catena.StatusResult)
-	fallbackHandler        func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
+	getDeviceHandlers      map[int]DeviceHandler
+	getValueHandlers       map[int]GetValueHandler
+	setValueHandlers       map[int]SetValueHandler
+	getAssetHandlers       map[int]GetAssetHandler
+	connectHandler         ConnectHandler
+	executeCommandHandlers map[int]ExecuteCommandHandler
+	fallbackHandler        FallbackHandler
 }
 
 // writeHTTPResult writes a CatenaValue and StatusResult to the HTTP response
@@ -52,11 +61,11 @@ func writeHTTPResult(w http.ResponseWriter, value catena.CatenaValue, result cat
 func NewServer(slots []int) *Server {
 	s := &Server{
 		mux:                    http.NewServeMux(),
-		getDeviceHandlers:      make(map[int]func(http.ResponseWriter, *http.Request) (catena.CatenaValue, catena.StatusResult)),
-		getValueHandlers:       make(map[int]func(int, string) (catena.CatenaValue, catena.StatusResult)),
-		setValueHandlers:       make(map[int]func(any, int, string) (catena.CatenaValue, catena.StatusResult)),
-		getAssetHandlers:       make(map[int]func(http.ResponseWriter, *http.Request, int, string) (catena.CatenaValue, catena.StatusResult)),
-		executeCommandHandlers: make(map[int]func(http.ResponseWriter, *http.Request, int, string, any) (catena.CatenaValue, catena.StatusResult)),
+		getDeviceHandlers:      make(map[int]DeviceHandler),
+		getValueHandlers:       make(map[int]GetValueHandler),
+		setValueHandlers:       make(map[int]SetValueHandler),
+		getAssetHandlers:       make(map[int]GetAssetHandler),
+		executeCommandHandlers: make(map[int]ExecuteCommandHandler),
 	}
 
 	// Register default handlers for each slot
@@ -112,65 +121,65 @@ func DefaultExecuteCommandHandler(w http.ResponseWriter, r *http.Request, slot i
 
 // Handler registration methods
 
-func (s *Server) RegisterGetDeviceHandler(slot int, handler func(http.ResponseWriter, *http.Request) (catena.CatenaValue, catena.StatusResult)) {
+func (s *Server) RegisterGetDeviceHandler(slot int, handler DeviceHandler) {
 	s.getDeviceHandlers[slot] = handler
 }
 
-func (s *Server) RegisterGetValueHandler(slot int, handler func(int, string) (catena.CatenaValue, catena.StatusResult)) {
+func (s *Server) RegisterGetValueHandler(slot int, handler GetValueHandler) {
 	s.getValueHandlers[slot] = handler
 }
 
-func (s *Server) RegisterSetValueHandler(slot int, handler func(any, int, string) (catena.CatenaValue, catena.StatusResult)) {
+func (s *Server) RegisterSetValueHandler(slot int, handler SetValueHandler) {
 	s.setValueHandlers[slot] = handler
 }
 
-func (s *Server) RegisterGetAssetHandler(slot int, handler func(http.ResponseWriter, *http.Request, int, string) (catena.CatenaValue, catena.StatusResult)) {
+func (s *Server) RegisterGetAssetHandler(slot int, handler GetAssetHandler) {
 	s.getAssetHandlers[slot] = handler
 }
 
-func (s *Server) RegisterFallbackHandler(handler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)) {
-	s.fallbackHandler = handler
-}
-
-func (s *Server) RegisterConnectHandler(handler func(http.ResponseWriter, *http.Request) (catena.CatenaValue, catena.StatusResult)) {
+func (s *Server) RegisterConnectHandler(handler ConnectHandler) {
 	s.connectHandler = handler
 }
 
-func (s *Server) RegisterExecuteCommandHandler(slot int, handler func(http.ResponseWriter, *http.Request, int, string, any) (catena.CatenaValue, catena.StatusResult)) {
+func (s *Server) RegisterExecuteCommandHandler(slot int, handler ExecuteCommandHandler) {
 	s.executeCommandHandlers[slot] = handler
+}
+
+func (s *Server) RegisterFallbackHandler(handler FallbackHandler) {
+	s.fallbackHandler = handler
 }
 
 // Lookup helper functions
 
-func (s *Server) lookupGetValue(slot int) func(int, string) (catena.CatenaValue, catena.StatusResult) {
+func (s *Server) lookupGetValue(slot int) GetValueHandler {
 	if handler, ok := s.getValueHandlers[slot]; ok {
 		return handler
 	}
 	return DefaultGetValueHandler
 }
 
-func (s *Server) lookupSetValue(slot int) func(any, int, string) (catena.CatenaValue, catena.StatusResult) {
+func (s *Server) lookupSetValue(slot int) SetValueHandler {
 	if handler, ok := s.setValueHandlers[slot]; ok {
 		return handler
 	}
 	return DefaultSetValueHandler
 }
 
-func (s *Server) lookupGetAsset(slot int) func(http.ResponseWriter, *http.Request, int, string) (catena.CatenaValue, catena.StatusResult) {
+func (s *Server) lookupGetAsset(slot int) GetAssetHandler {
 	if handler, ok := s.getAssetHandlers[slot]; ok {
 		return handler
 	}
 	return DefaultGetAssetHandler
 }
 
-func (s *Server) lookupConnect() func(http.ResponseWriter, *http.Request) (catena.CatenaValue, catena.StatusResult) {
+func (s *Server) lookupConnect() ConnectHandler {
 	if s.connectHandler != nil {
 		return s.connectHandler
 	}
 	return DefaultConnectHandler
 }
 
-func (s *Server) lookupExecuteCommand(slot int) func(http.ResponseWriter, *http.Request, int, string, any) (catena.CatenaValue, catena.StatusResult) {
+func (s *Server) lookupExecuteCommand(slot int) ExecuteCommandHandler {
 	if handler, ok := s.executeCommandHandlers[slot]; ok {
 		return handler
 	}
