@@ -254,10 +254,13 @@ func main() {
 	addr := ":" + strconv.Itoa(port)
 	logger.Info("Dummy BaseServer listening", "address", addr)
 
-	if err := rest.StartHTTPServer(port); err != nil {
-		logger.Error("server failed", "error", err)
-		os.Exit(1)
-	}
+	// Start server in a goroutine so shutdown handling works
+	go func() {
+		if err := srv.Start(port); err != nil {
+			logger.Error("server failed", "error", err)
+			os.Exit(1)
+		}
+	}()
 
 	// Wait for shutdown signal
 	<-shutdownChan

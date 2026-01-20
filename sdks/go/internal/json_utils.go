@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 
 	"google.golang.org/protobuf/encoding/protojson"
@@ -18,8 +19,15 @@ func ReadRequestJSON(r *http.Request) (*protos.Value, error) {
 
 	// Check Content-Type header
 	contentType := r.Header.Get("Content-Type")
-	if contentType != "" && contentType != "application/json" {
-		return nil, fmt.Errorf("unsupported content type: %s, expected application/json", contentType)
+	if contentType != "" {
+		// Parse media type to handle parameters like charset
+		mediaType, _, err := mime.ParseMediaType(contentType)
+		if err != nil {
+			return nil, fmt.Errorf("invalid content type: %s", contentType)
+		}
+		if mediaType != "application/json" {
+			return nil, fmt.Errorf("unsupported content type: %s, expected application/json", mediaType)
+		}
 	}
 
 	data, err := io.ReadAll(r.Body)

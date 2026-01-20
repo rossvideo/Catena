@@ -120,10 +120,12 @@ func ToProto(v any) (*protos.Value, error) {
 		}
 
 		// Set either URL or Payload based on which is provided
-		if val.URL != "" {
+		if val.URL != "" && val.Payload == nil {
 			dp.Kind = &protos.DataPayload_Url{Url: val.URL}
-		} else if val.Payload != nil {
+		} else if val.Payload != nil && val.URL == "" {
 			dp.Kind = &protos.DataPayload_Payload{Payload: val.Payload}
+		} else {
+			return nil, fmt.Errorf("DataPayload must have either URL or Payload set, but not both")
 		}
 
 		return &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: dp}}, nil

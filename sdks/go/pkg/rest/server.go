@@ -1,10 +1,13 @@
 package rest
 
 import (
+	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/rossvideo/catena/sdks/go/internal"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
@@ -22,6 +25,7 @@ type FallbackHandler func(w http.ResponseWriter, r *http.Request) (catena.Catena
 
 // Server provides REST API endpoints for Catena devices
 type Server struct {
+	mu                     sync.Mutex
 	mux                    *http.ServeMux
 	getDeviceHandlers      map[int]DeviceHandler
 	getValueHandlers       map[int]GetValueHandler
@@ -40,7 +44,7 @@ func writeHTTPResult(w http.ResponseWriter, value catena.CatenaValue, result cat
 	if result.Error != "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(httpStatus)
-		fmt.Fprintf(w, `{"error": "%s"}`, result.Error)
+		json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
 		return
 	}
 
@@ -86,11 +90,11 @@ func NewServer(slots []int) *Server {
 	return s
 }
 
-// StartHTTPServer starts the HTTP server on the specified port
-func StartHTTPServer(port int) error {
+// Start starts the HTTP server on the specified port using this server's mux
+func (s *Server) Start(port int) error {
 	addr := fmt.Sprintf(":%d", port)
 	logger.Info("Starting HTTP server", "address", addr)
-	return http.ListenAndServe(addr, nil)
+	return http.ListenAndServe(addr, s.mux)
 }
 
 // Default handlers that return "not implemented"
@@ -122,30 +126,44 @@ func DefaultExecuteCommandHandler(w http.ResponseWriter, r *http.Request, slot i
 // Handler registration methods
 
 func (s *Server) RegisterGetDeviceHandler(slot int, handler DeviceHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.getDeviceHandlers[slot] = handler
 }
 
 func (s *Server) RegisterGetValueHandler(slot int, handler GetValueHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.getValueHandlers[slot] = handler
 }
 
 func (s *Server) RegisterSetValueHandler(slot int, handler SetValueHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.setValueHandlers[slot] = handler
 }
 
 func (s *Server) RegisterGetAssetHandler(slot int, handler GetAssetHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.getAssetHandlers[slot] = handler
 }
 
 func (s *Server) RegisterConnectHandler(handler ConnectHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.connectHandler = handler
 }
 
 func (s *Server) RegisterExecuteCommandHandler(slot int, handler ExecuteCommandHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.executeCommandHandlers[slot] = handler
 }
 
 func (s *Server) RegisterFallbackHandler(handler FallbackHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.fallbackHandler = handler
 }
 
@@ -199,7 +217,7 @@ func (s *Server) RegisterRoutes() {
 
 		slotStr := parts[2]
 		slot, err := strconv.Atoi(slotStr)
-		if err != nil {
+		if err != nil || slot < 0 || slot > math.MaxInt16 {
 			val, res := catena.ReplyBadRequest("invalid slot number")
 			writeHTTPResult(w, val, res)
 			return
@@ -261,8 +279,6 @@ func (s *Server) RegisterRoutes() {
 		val, res := catena.ReplyNotFound("endpoint not found")
 		writeHTTPResult(w, val, res)
 	})
-
-	http.Handle("/", s.mux)
 }
 
 func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slot int, pathParts []string) {
@@ -274,7 +290,7 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 		val, res := handler(slot, fqoid)
 		writeHTTPResult(w, val, res)
 
-	case http.MethodPut, http.MethodPatch:
+	case http.MethodPut:
 		// Read request body
 		reqValue, err := internal.ReadRequestJSON(r)
 		if err != nil {
