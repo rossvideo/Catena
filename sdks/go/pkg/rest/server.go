@@ -17,10 +17,10 @@ type Server struct {
 	getDeviceHandlers      map[int]func(http.ResponseWriter, *http.Request) (catena.CatenaValue, catena.StatusResult)
 	getValueHandlers       map[int]func(int, string) (catena.CatenaValue, catena.StatusResult)
 	setValueHandlers       map[int]func(any, int, string) (catena.CatenaValue, catena.StatusResult)
-	getAssetHandlers       map[int]func(int, string) (catena.CatenaValue, catena.StatusResult)
+	getAssetHandlers       map[int]func(http.ResponseWriter, *http.Request, int, string) (catena.CatenaValue, catena.StatusResult)
 	connectHandler         func(http.ResponseWriter, *http.Request) (catena.CatenaValue, catena.StatusResult)
 	executeCommandHandlers map[int]func(http.ResponseWriter, *http.Request, int, string, any) (catena.CatenaValue, catena.StatusResult)
-	notFoundHandler        func(http.ResponseWriter, *http.Request) (catena.CatenaValue, catena.StatusResult)
+	fallbackHandler        func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
 }
 
 // writeHTTPResult writes a CatenaValue and StatusResult to the HTTP response
@@ -55,7 +55,7 @@ func NewServer(slots []int) *Server {
 		getDeviceHandlers:      make(map[int]func(http.ResponseWriter, *http.Request) (catena.CatenaValue, catena.StatusResult)),
 		getValueHandlers:       make(map[int]func(int, string) (catena.CatenaValue, catena.StatusResult)),
 		setValueHandlers:       make(map[int]func(any, int, string) (catena.CatenaValue, catena.StatusResult)),
-		getAssetHandlers:       make(map[int]func(int, string) (catena.CatenaValue, catena.StatusResult)),
+		getAssetHandlers:       make(map[int]func(http.ResponseWriter, *http.Request, int, string) (catena.CatenaValue, catena.StatusResult)),
 		executeCommandHandlers: make(map[int]func(http.ResponseWriter, *http.Request, int, string, any) (catena.CatenaValue, catena.StatusResult)),
 	}
 
@@ -98,7 +98,7 @@ func DefaultSetValueHandler(value any, slot int, fqoid string) (catena.CatenaVal
 	return catena.ReplyNotImplemented("SetValue not implemented")
 }
 
-func DefaultGetAssetHandler(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+func DefaultGetAssetHandler(w http.ResponseWriter, r *http.Request, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 	return catena.ReplyNotImplemented("GetAsset not implemented")
 }
 
@@ -124,12 +124,12 @@ func (s *Server) RegisterSetValueHandler(slot int, handler func(any, int, string
 	s.setValueHandlers[slot] = handler
 }
 
-func (s *Server) RegisterGetAssetHandler(slot int, handler func(int, string) (catena.CatenaValue, catena.StatusResult)) {
+func (s *Server) RegisterGetAssetHandler(slot int, handler func(http.ResponseWriter, *http.Request, int, string) (catena.CatenaValue, catena.StatusResult)) {
 	s.getAssetHandlers[slot] = handler
 }
 
-func (s *Server) RegisterNotFoundHandler(handler func(http.ResponseWriter, *http.Request) (catena.CatenaValue, catena.StatusResult)) {
-	s.notFoundHandler = handler
+func (s *Server) RegisterFallbackHandler(handler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)) {
+	s.fallbackHandler = handler
 }
 
 func (s *Server) RegisterConnectHandler(handler func(http.ResponseWriter, *http.Request) (catena.CatenaValue, catena.StatusResult)) {
@@ -156,7 +156,7 @@ func (s *Server) lookupSetValue(slot int) func(any, int, string) (catena.CatenaV
 	return DefaultSetValueHandler
 }
 
-func (s *Server) lookupGetAsset(slot int) func(int, string) (catena.CatenaValue, catena.StatusResult) {
+func (s *Server) lookupGetAsset(slot int) func(http.ResponseWriter, *http.Request, int, string) (catena.CatenaValue, catena.StatusResult) {
 	if handler, ok := s.getAssetHandlers[slot]; ok {
 		return handler
 	}
@@ -244,8 +244,8 @@ func (s *Server) RegisterRoutes() {
 
 	// Catch-all for 404 - must be registered last
 	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if s.notFoundHandler != nil {
-			val, res := s.notFoundHandler(w, r)
+		if s.fallbackHandler != nil {
+			val, res := s.fallbackHandler(w, r)
 			writeHTTPResult(w, val, res)
 			return
 		}
@@ -297,7 +297,7 @@ func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slo
 
 	fqoid := strings.Join(pathParts, "/")
 	handler := s.lookupGetAsset(slot)
-	val, res := handler(slot, fqoid)
+	val, res := handler(w, r, slot, fqoid)
 	writeHTTPResult(w, val, res)
 }
 

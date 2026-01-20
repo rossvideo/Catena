@@ -42,12 +42,21 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
+	"reflect"
 	"strconv"
 	"sync"
+	"syscall"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/rest"
+)
+
+// Global state for graceful shutdown
+var (
+	shutdownChan = make(chan struct{})
+	srv          *rest.Server
 )
 
 func main() {
@@ -59,6 +68,15 @@ func main() {
 		os.Exit(1)
 	}
 	defer logger.Close()
+
+	// Handle signals for graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigChan
+		logger.Info("Caught signal, shutting down", "signal", sig)
+		close(shutdownChan)
+	}()
 
 	portStr := envOr("CATENA_PORT", "6254")
 	port, err := strconv.Atoi(portStr)
@@ -158,57 +176,47 @@ func main() {
 		desc := slotDescriptions[slot]
 
 		// Register GetValue handler (GET /value/{fqoid})
-		srv.RegisterGetValueHandler(slot, func(slotNum int, fqoid string) catena.StatusResult {
+		srv.RegisterGetValueHandler(slot, func(slotNum int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 			logger.Info("GetParam", "slot", slotNum, "fqoid", fqoid, "type", desc)
 
 			val, ok := store.Load(fqoid)
 			if !ok {
 				logger.Warning("GetParam not found", "slot", slotNum, "fqoid", fqoid)
-				return catena.NotFound("parameter not found: " + fqoid)
+				return catena.ReplyNotFound("parameter not found: " + fqoid)
 			}
 
-			param := val.(map[string]any)
-			logger.Info("GetParam returning", "slot", slotNum, "fqoid", fqoid, "value", param)
-			return catena.OK(param)
+			catenaVal, err := catena.ToCatenaValue(val)
+			if err != nil {
+				logger.Error("GetParam failed to convert value", "slot", slot, "fqoid", fqoid, "error", err)
+				return catena.ReplyInternalError("failed to convert value")
+			}
+			logger.Info("GetParam returning", "slot", slotNum, "fqoid", fqoid, "value", val)
+			return catena.ReplyOK(catenaVal)
 		})
 
 		// Register SetValue handler (PUT /value/{fqoid})
-		srv.RegisterSetValueHandler(slot, func(value any, slotNum int, fqoid string) catena.StatusResult {
+		srv.RegisterSetValueHandler(slot, func(value any, slotNum int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 			logger.Info("SetParam", "slot", slotNum, "fqoid", fqoid, "value", value, "type", desc)
 
 			// Check if parameter exists (only allow setting existing parameters)
-			_, exists := store.Load(fqoid)
+			val, exists := store.Load(fqoid)
 			if !exists {
 				logger.Warning("SetParam parameter not found", "slot", slotNum, "fqoid", fqoid)
-				return catena.NotFound("parameter not found: " + fqoid)
+				return catena.ReplyNotFound("parameter not found: " + fqoid)
 			}
 
-			// Store the new value - wrap it in the expected format if needed
-			var wrappedValue map[string]any
-			if valueMap, ok := value.(map[string]any); ok {
-				// Check if value is already wrapped
-				if _, hasValue := valueMap["value"]; hasValue {
-					wrappedValue = valueMap
-				} else {
-					// Wrap the value
-					wrappedValue = map[string]any{"value": valueMap}
-				}
-			} else {
-				// Wrap non-map values
-				wrappedValue = map[string]any{"value": value}
+			if reflect.TypeOf(val) != reflect.TypeOf(value) {
+				logger.Error("SetParam type mismatch", "slot", slot, "fqoid", fqoid)
+				return catena.ReplyBadRequest("type mismatch")
 			}
-
-			store.Store(fqoid, wrappedValue)
-			logger.Info("SetParam stored", "slot", slotNum, "fqoid", fqoid, "stored_value", wrappedValue)
-
-			// Return the updated value
-			return catena.OK(wrappedValue)
+			store.Store(fqoid, value)
+			return catena.ReplyNoContent()
 		})
 	}
 
-	// Not found handler
-	srv.RegisterNotFoundHandler(func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
-		return catena.NotFound("endpoint not found: " + r.URL.Path)
+	// Fallback handler
+	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
+		return catena.ReplyNotFound("endpoint not found: " + r.URL.Path)
 	})
 
 	// Logger info about the example
@@ -223,8 +231,14 @@ func main() {
 	logger.Info("  Slot 2: ip_address, port, device_name, standby_mode")
 	logger.Info("=======================================================")
 
-	srv.StartHTTPServer(port)
-	select {}
+	if err := rest.StartHTTPServer(port); err != nil {
+		logger.Error("server failed", "error", err)
+		os.Exit(1)
+	}
+
+	// Wait for shutdown signal
+	<-shutdownChan
+	logger.Info("Server shutdown complete")
 }
 
 func envOr(key, def string) string {

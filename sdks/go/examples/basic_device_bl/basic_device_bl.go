@@ -4,13 +4,21 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"reflect"
 	"strconv"
 	"sync"
+	"syscall"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/rest"
+)
+
+// Global state for graceful shutdown
+var (
+	shutdownChan = make(chan struct{})
+	srv          *rest.Server
 )
 
 // Implementation for registering parameter handlers for every fqoid on a given slot
@@ -97,6 +105,15 @@ func main() {
 		os.Exit(1)
 	}
 	defer logger.Close()
+
+	// Handle signals for graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigChan
+		logger.Info("Caught signal, shutting down", "signal", sig)
+		close(shutdownChan)
+	}()
 
 	portStr := envOr("CATENA_PORT", "6254")
 	port, err := strconv.Atoi(portStr)
@@ -229,9 +246,9 @@ func main() {
 	}
 
 	// Register handler for non-existent endpoints
-	srv.RegisterNotFoundHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		logger.Error("Endpoint not found", "method", r.Method, "path", r.URL.Path)
-		return catena.ReplyNotFound("endpoint not found: " + r.URL.Path)
+	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
+		logger.Error("Endpoint not found")
+		return catena.ReplyNotFound("endpoint not found")
 	})
 
 	addr := ":" + strconv.Itoa(port)
@@ -241,6 +258,10 @@ func main() {
 		logger.Error("server failed", "error", err)
 		os.Exit(1)
 	}
+
+	// Wait for shutdown signal
+	<-shutdownChan
+	logger.Info("Server shutdown complete")
 }
 
 func envOr(key, def string) string {

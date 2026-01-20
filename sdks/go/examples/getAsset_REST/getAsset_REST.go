@@ -124,13 +124,13 @@ func main() {
 	srv = rest.NewServer(slotList)
 
 	// Register GetAsset handler
-	srv.RegisterGetAssetHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) catena.StatusResult {
+	srv.RegisterGetAssetHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
 
 		val, ok := assets.Load(fqoid)
 		if !ok {
 			logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
-			return catena.NotFound("asset not found: " + fqoid)
+			return catena.ReplyNotFound("asset not found: " + fqoid)
 		}
 
 		asset := val.(Asset)
@@ -146,16 +146,16 @@ func main() {
 		reader := bytes.NewReader(asset.Data)
 		if _, err := io.Copy(w, reader); err != nil {
 			logger.Error("Asset streaming error", "slot", slot, "fqoid", fqoid, "error", err)
-			return catena.InternalServerError("failed to stream asset")
+			return catena.ReplyInternalError("failed to stream asset")
 		}
 
 		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid)
-		return catena.StatusResult{Status: http.StatusOK}
+		return catena.ReplyOK(catena.CatenaValue{})
 	})
 
-	// Not found handler
-	srv.RegisterNotFoundHandler(func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
-		return catena.NotFound("endpoint not found: " + r.URL.Path)
+	// Fallback handler
+	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
+		return catena.ReplyNotFound("endpoint not found")
 	})
 
 	// ==========================================================================
@@ -181,7 +181,10 @@ func main() {
 	}
 	logger.Info("=======================================================")
 
-	srv.StartHTTPServer(port)
+	if err := rest.StartHTTPServer(port); err != nil {
+		logger.Error("server failed", "error", err)
+		os.Exit(1)
+	}
 
 	// Wait for shutdown signal
 	<-shutdownChan

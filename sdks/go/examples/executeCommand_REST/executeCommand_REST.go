@@ -58,7 +58,7 @@ import (
 var staticFS embed.FS
 
 // CommandHandler processes a command and returns a response
-type CommandHandler func(payload any) catena.StatusResult
+type CommandHandler func(payload any) (catena.CatenaValue, catena.StatusResult)
 
 // Global state for graceful shutdown
 var (
@@ -178,39 +178,45 @@ func main() {
 	// ==========================================================================
 	commands := map[string]CommandHandler{
 		// Start command
-		"start": func(payload any) catena.StatusResult {
+		"start": func(payload any) (catena.CatenaValue, catena.StatusResult) {
 			if counter.IsRunning() {
 				logger.Info("Start command - already running")
-				return catena.OK(buildResponse())
+				val, _ := catena.ToCatenaValue(buildResponse())
+				return catena.ReplyOK(val)
 			}
 			counter.Start()
 			logger.Info("Counter started", "value", counter.GetValue())
-			return catena.OK(buildResponse())
+			val, _ := catena.ToCatenaValue(buildResponse())
+			return catena.ReplyOK(val)
 		},
 
 		// Stop command
-		"stop": func(payload any) catena.StatusResult {
+		"stop": func(payload any) (catena.CatenaValue, catena.StatusResult) {
 			if !counter.IsRunning() {
 				logger.Info("Stop command - already stopped")
-				return catena.OK(buildResponse())
+				val, _ := catena.ToCatenaValue(buildResponse())
+				return catena.ReplyOK(val)
 			}
 			counter.Stop()
 			logger.Info("Counter stopped", "value", counter.GetValue())
-			return catena.OK(buildResponse())
+			val, _ := catena.ToCatenaValue(buildResponse())
+			return catena.ReplyOK(val)
 		},
 
 		// Add10 command
-		"add10": func(payload any) catena.StatusResult {
+		"add10": func(payload any) (catena.CatenaValue, catena.StatusResult) {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
-			return catena.OK(buildResponse())
+			val, _ := catena.ToCatenaValue(buildResponse())
+			return catena.ReplyOK(val)
 		},
 
 		// Reset command
-		"reset": func(payload any) catena.StatusResult {
+		"reset": func(payload any) (catena.CatenaValue, catena.StatusResult) {
 			counter.Reset()
 			logger.Info("Counter reset", "value", counter.GetValue())
-			return catena.OK(buildResponse())
+			val, _ := catena.ToCatenaValue(buildResponse())
+			return catena.ReplyOK(val)
 		},
 	}
 
@@ -221,44 +227,47 @@ func main() {
 	srv = rest.NewServer(slotList)
 
 	// Register GetValue handler to retrieve counter state
-	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) catena.StatusResult {
+	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		if fqoid == "counter" {
-			return catena.OK(buildResponse())
+			val, _ := catena.ToCatenaValue(buildResponse())
+			return catena.ReplyOK(val)
 		}
-		return catena.NotFound("parameter not found: " + fqoid)
+		return catena.ReplyNotFound("parameter not found: " + fqoid)
 	})
 
 	// Register ExecuteCommand handler
-	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) catena.StatusResult {
+	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 
 		handler, ok := commands[commandFqoid]
 		if !ok {
 			logger.Warning("Command not found", "slot", slot, "command", commandFqoid)
-			return catena.OK(map[string]any{
+			exception := map[string]any{
 				"exception": map[string]any{
 					"type":    "Invalid Command",
 					"details": "Command not found: " + commandFqoid,
 				},
-			})
+			}
+			val, _ := catena.ToCatenaValue(exception)
+			return catena.ReplyOK(val)
 		}
 
 		return handler(payload)
 	})
 
 	// Serve static files at root (including index.html)
-	srv.RegisterNotFoundHandler(func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
+	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
 		// Serve index.html for root path
 		if r.URL.Path == "/" {
 			data, err := staticFS.ReadFile("static/index.htm")
 			if err != nil {
-				return catena.NotFound("index.html not found")
+				return catena.ReplyNotFound("index.html not found")
 			}
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Write(data)
-			return catena.StatusResult{Status: http.StatusOK}
+			return catena.ReplyOK(catena.CatenaValue{})
 		}
-		return catena.NotFound("endpoint not found: " + r.URL.Path)
+		return catena.ReplyNotFound("endpoint not found: " + r.URL.Path)
 	})
 
 	// ==========================================================================
@@ -274,7 +283,10 @@ func main() {
 	logger.Info("")
 	logger.Info("=======================================================")
 
-	srv.StartHTTPServer(port)
+	if err := rest.StartHTTPServer(port); err != nil {
+		logger.Error("server failed", "error", err)
+		os.Exit(1)
+	}
 
 	// Wait for shutdown signal
 	<-shutdownChan

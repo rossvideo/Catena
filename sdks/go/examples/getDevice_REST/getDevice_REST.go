@@ -42,12 +42,20 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/rest"
+)
+
+// Global state for graceful shutdown
+var (
+	shutdownChan = make(chan struct{})
+	srv          *rest.Server
 )
 
 func main() {
@@ -59,6 +67,15 @@ func main() {
 		os.Exit(1)
 	}
 	defer logger.Close()
+
+	// Handle signals for graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigChan
+		logger.Info("Caught signal, shutting down", "signal", sig)
+		close(shutdownChan)
+	}()
 
 	portStr := envOr("CATENA_PORT", "6254")
 	port, err := strconv.Atoi(portStr)
@@ -125,34 +142,34 @@ func main() {
 
 	// Register GetDevice handler for each slot
 	for _, slot := range slotList {
-		srv.RegisterGetDeviceHandler(slot, func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
+		srv.RegisterGetDeviceHandler(slot, func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
 			// Parse slot from URL path: /st2138-api/v1/{slot}
 			parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 			if len(parts) < 3 {
 				logger.Error("GetDevice invalid path", "path", r.URL.Path)
-				return catena.BadRequest("invalid path")
+				return catena.ReplyBadRequest("invalid path")
 			}
 			slotStr := parts[2]
 			slot, err := strconv.Atoi(slotStr)
 			if err != nil {
 				logger.Error("GetDevice invalid slot", "slot", slotStr, "error", err)
-				return catena.BadRequest("invalid slot")
+				return catena.ReplyBadRequest("invalid slot")
 			}
 
 			logger.Info("GetDevice", "slot", slot)
 			device, ok := devices[slot]
 			if !ok {
 				logger.Error("GetDevice device not found", "slot", slot)
-				return catena.NotFound("device not found")
+				return catena.ReplyNotFound("device not found")
 			}
-			return catena.OK(device)
+			return catena.ReplyOK(catena.NewStructValue(device))
 		})
 	}
 
-	// Register not-found handler
-	srv.RegisterNotFoundHandler(func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
+	// Register fallback handler
+	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
 		logger.Warning("Endpoint not found", "method", r.Method, "path", r.URL.Path)
-		return catena.NotFound("endpoint not found: " + r.URL.Path)
+		return catena.ReplyNotFound("endpoint not found: " + r.URL.Path)
 	})
 
 	// Logger info about the example
@@ -167,9 +184,14 @@ func main() {
 	logger.Info("  Router Controller (slot 2)")
 	logger.Info("=======================================================")
 
-	srv.StartHTTPServer(port)
+	if err := rest.StartHTTPServer(port); err != nil {
+		logger.Error("server failed", "error", err)
+		os.Exit(1)
+	}
 
-	select {} // Block forever
+	// Wait for shutdown signal
+	<-shutdownChan
+	logger.Info("Server shutdown complete")
 }
 
 func envOr(key, def string) string {
@@ -178,4 +200,3 @@ func envOr(key, def string) string {
 	}
 	return def
 }
-
