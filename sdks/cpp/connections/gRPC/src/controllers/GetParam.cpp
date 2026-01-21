@@ -79,6 +79,7 @@ void GetParam::proceed( bool ok) {
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
+            processTimesatmps_();
             new GetParam(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
 

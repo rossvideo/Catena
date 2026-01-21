@@ -74,6 +74,7 @@ void GetPopulatedSlots::proceed( bool ok) {
          */
         case CallStatus::kProcess:
             {
+                processTimesatmps_();
                 // Used to serve other clients while processing.
                 new GetPopulatedSlots(service_, dms_, ok);
                 context_.AsyncNotifyWhenDone(this);

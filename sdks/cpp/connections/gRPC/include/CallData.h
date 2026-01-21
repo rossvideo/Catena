@@ -57,6 +57,33 @@ using grpc::ServerCompletionQueue;
 #include <vector>
 #include <mutex>
 
+namespace {
+static inline bool valid_start_time(grpc::string_ref s) {
+    // Empty or larger than 308 chars cannot be converted to a double
+    if (s.empty() || s.length() > 308) return false;
+    const unsigned char* ps = reinterpret_cast<const unsigned char*>(s.data());
+    const std::size_t n = s.size();
+    bool hasPeriod = false;
+
+    for(std::size_t i = 0; i < n; ++i) {
+        unsigned char cs = ps[i];
+
+        if (!isdigit(cs)) {
+            if (cs == '.' && i == 0) {
+                return false; // Reject leading period
+            }
+            else if (cs == '.' && !hasPeriod) {
+                hasPeriod = true; // Decimal point found
+            } else {
+                return false; // cs is 2nd period or invalid character
+            }
+        }
+    }
+    // No invalid characters found, if hasPeriod then format is valid.
+    return hasPeriod;
+}
+}
+
 namespace catena {
 namespace gRPC {
  
@@ -65,14 +92,25 @@ namespace gRPC {
  */
 enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
-const double DEFAULT_REQUEST_START = 0;
-const double DEFAULT_REQUEST_RECEIVED = 0;
+const double DEFAULT_REQUEST_START = 0.0;
+const double DEFAULT_REQUEST_RECEIVED = 0.0;
 
 /**
  * @brief Abstract base class for inherited by CallData child classes defining
  * the jwsToken_() method.
  */
 class CallData : public ICallData {
+  public:
+  
+    /**
+     * @brief Getter for requestStart_ 
+     */
+    double getRequestStart_() { return requestStart_; }
+    /**
+     * @brief Getter for requestReceived_ 
+     */
+    double getRequestReceieved_() { return requestReceived_; }
+
   protected:
     /**
      * @brief CallData constructor which sets service_.
@@ -115,12 +153,23 @@ class CallData : public ICallData {
      * @brief Reads requestStart from metadata and records current time for requestReceived.
      */
     void processTimesatmps_() {
+        // Getting request receival time formatted as,
+        // <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+        const auto epoch_time = std::chrono::system_clock::now().time_since_epoch();
+        double receival_time = std::chrono::duration_cast<std::chrono::milliseconds>(epoch_time).count() / 1000.0;
+        requestReceived_ = receival_time;
+
         auto clientMeta = &context_.client_metadata();
         // Getting client metadata from context.
         if (clientMeta != nullptr) {
-            auto startTime = clientMeta->find("request-start");
-            if (startTime != clientMeta->end()) {
-                
+            auto kv = clientMeta->find("request-start");
+            if (kv != clientMeta->end() && valid_start_time(kv->second)) {
+                try {
+                    char* end = NULL;
+                    requestStart_ = strtod(kv->second.data(), &end);
+                } catch (...) {
+                    throw catena::exception_with_status("Invalid Request Start", catena::StatusCode::INVALID_ARGUMENT);
+                }
             }
         } else {
             throw catena::exception_with_status("Client metadata not found", catena::StatusCode::NOT_FOUND);
@@ -145,7 +194,7 @@ class CallData : public ICallData {
      * @brief The time at which the request was sent formatted as,
      * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
      */
-    double requestStart_ = DEFAULT_REQUEST_START;
+    double requestReceived_ = DEFAULT_REQUEST_RECEIVED;
 };
 
 };
