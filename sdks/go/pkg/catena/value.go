@@ -40,6 +40,14 @@ type CatenaValue struct {
 	Value *protos.Value
 }
 
+// CatenaAsset represents a binary asset with HTTP headers for GetAsset responses
+type CatenaAsset struct {
+	ContentType        string
+	ContentDisposition string
+	Payload            DataPayload       // Use DataPayload instead of raw bytes
+	CustomHeaders      map[string]string // Additional headers if needed
+}
+
 type StructVariantValue struct {
 	StructVariantType string `json:"struct_variant_type"`
 	Value             any    `json:"value"`
@@ -63,6 +71,101 @@ func ToCatenaValue(v any) (CatenaValue, error) {
 		return CatenaValue{}, fmt.Errorf("ToCatenaValue: %w", err)
 	}
 	return CatenaValue{Value: val}, nil
+}
+
+// NewCatenaAsset creates a CatenaAsset from binary data and metadata
+func NewCatenaAsset(data []byte, contentType string) CatenaAsset {
+	return CatenaAsset{
+		ContentType: contentType,
+		Payload: DataPayload{
+			Payload:         data,
+			PayloadEncoding: "uncompressed",
+		},
+	}
+}
+
+// NewCatenaAssetFromURL creates a CatenaAsset that references an external URL
+func NewCatenaAssetFromURL(url string, contentType string) CatenaAsset {
+	return CatenaAsset{
+		ContentType: contentType,
+		Payload: DataPayload{
+			URL:             url,
+			PayloadEncoding: "uncompressed",
+		},
+	}
+}
+
+// NewCatenaAssetFromPayload creates a CatenaAsset from an existing DataPayload
+func NewCatenaAssetFromPayload(payload DataPayload, contentType string) CatenaAsset {
+	return CatenaAsset{
+		ContentType: contentType,
+		Payload:     payload,
+	}
+}
+
+// WithFilename sets the Content-Disposition header for download
+func (ca CatenaAsset) WithFilename(filename string) CatenaAsset {
+	ca.ContentDisposition = fmt.Sprintf("attachment; filename=%q", filename)
+	return ca
+}
+
+// WithInlineFilename sets the Content-Disposition header for inline display
+func (ca CatenaAsset) WithInlineFilename(filename string) CatenaAsset {
+	ca.ContentDisposition = fmt.Sprintf("inline; filename=%q", filename)
+	return ca
+}
+
+// WithCustomHeader adds a custom HTTP header
+func (ca CatenaAsset) WithCustomHeader(key, value string) CatenaAsset {
+	if ca.CustomHeaders == nil {
+		ca.CustomHeaders = make(map[string]string)
+	}
+	ca.CustomHeaders[key] = value
+	return ca
+}
+
+// WithCompression sets the payload encoding (gzip, deflate, or uncompressed)
+func (ca CatenaAsset) WithCompression(encoding string) CatenaAsset {
+	ca.Payload.PayloadEncoding = encoding
+	return ca
+}
+
+// WithDigest sets the digest/checksum for the payload
+func (ca CatenaAsset) WithDigest(digest []byte) CatenaAsset {
+	ca.Payload.Digest = digest
+	return ca
+}
+
+// WithMetadata adds metadata to the payload
+func (ca CatenaAsset) WithMetadata(key, value string) CatenaAsset {
+	if ca.Payload.Metadata == nil {
+		ca.Payload.Metadata = make(map[string]string)
+	}
+	ca.Payload.Metadata[key] = value
+	return ca
+}
+
+// IsURL returns true if this asset is a URL reference
+func (ca CatenaAsset) IsURL() bool {
+	return ca.Payload.URL != ""
+}
+
+// GetData returns the embedded payload data (nil if URL-based)
+func (ca CatenaAsset) GetData() []byte {
+	return ca.Payload.Payload
+}
+
+// GetURL returns the URL (empty string if embedded data)
+func (ca CatenaAsset) GetURL() string {
+	return ca.Payload.URL
+}
+
+// ContentLength returns the size of the payload (0 for URL-based assets)
+func (ca CatenaAsset) ContentLength() int64 {
+	if ca.Payload.Payload != nil {
+		return int64(len(ca.Payload.Payload))
+	}
+	return 0
 }
 
 // ToProto converts native Go types to protos.Value

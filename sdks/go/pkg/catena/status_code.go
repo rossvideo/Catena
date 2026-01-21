@@ -295,3 +295,58 @@ func ReplyWithCode(code StatusCode, msg string) (CatenaValue, StatusResult) {
 	}
 	return CatenaValue{Value: nil}, StatusResult{Code: code, Error: msg}
 }
+
+// Asset reply helper functions that return (CatenaAsset, StatusResult)
+
+// ReplyAsset returns a successful asset response with the given asset data.
+func ReplyAsset(asset CatenaAsset) (CatenaAsset, StatusResult) {
+	return asset, StatusResult{Code: OK}
+}
+
+// ReplyAssetNotFound returns a 404 Not Found error for asset requests.
+func ReplyAssetNotFound(msg string) (CatenaAsset, StatusResult) {
+	if msg == "" {
+		return CatenaAsset{}, StatusResult{Code: NOT_FOUND}
+	}
+	return CatenaAsset{}, StatusResult{Code: NOT_FOUND, Error: msg}
+}
+
+// ReplyAssetBadRequest returns a 400 Bad Request error for asset requests.
+func ReplyAssetBadRequest(msg string) (CatenaAsset, StatusResult) {
+	if msg == "" {
+		return CatenaAsset{}, StatusResult{Code: INVALID_ARGUMENT}
+	}
+	return CatenaAsset{}, StatusResult{Code: INVALID_ARGUMENT, Error: msg}
+}
+
+// ReplyAssetUnauthorized returns a 401 Unauthorized error for asset requests.
+func ReplyAssetUnauthorized(msg string) (CatenaAsset, StatusResult) {
+	if msg == "" {
+		return CatenaAsset{}, StatusResult{Code: UNAUTHENTICATED}
+	}
+	return CatenaAsset{}, StatusResult{Code: UNAUTHENTICATED, Error: msg}
+}
+
+// ReplyAssetForbidden returns a 403 Forbidden error for asset requests.
+func ReplyAssetForbidden(msg string) (CatenaAsset, StatusResult) {
+	if msg == "" {
+		return CatenaAsset{}, StatusResult{Code: PERMISSION_DENIED}
+	}
+	return CatenaAsset{}, StatusResult{Code: PERMISSION_DENIED, Error: msg}
+}
+
+// ReplyAssetInternalError returns a 500 Internal Server Error for asset requests.
+func ReplyAssetInternalError(msg string) (CatenaAsset, StatusResult) {
+	if msg == "" {
+		return CatenaAsset{}, StatusResult{Code: INTERNAL}
+	}
+	return CatenaAsset{}, StatusResult{Code: INTERNAL, Error: msg}
+}
+
+// ReplyAssetUnavailable returns a 503 Service Unavailable error for asset requests.
+func ReplyAssetUnavailable(msg string) (CatenaAsset, StatusResult) {
+	if msg == "" {
+		return CatenaAsset{}, StatusResult{Code: UNAVAILABLE}
+	}
+	return CatenaAsset{}, StatusResult{Code: UNAVAILABLE, Error: msg}
+}

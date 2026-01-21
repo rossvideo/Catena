@@ -31,8 +31,10 @@
 package rest
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math"
 	"net/http"
 	"strconv"
@@ -45,10 +47,10 @@ import (
 )
 
 // Handlers now return (CatenaValue, StatusResult) so the server can respond consistently.
-type DeviceHandler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
+type DeviceHandler func() (catena.CatenaValue, catena.StatusResult)
 type GetValueHandler func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult)
 type SetValueHandler func(value any, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult)
-type GetAssetHandler func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult)
+type GetAssetHandler func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult)
 type ConnectHandler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
 type ExecuteCommandHandler func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult)
 type FallbackHandler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
@@ -95,6 +97,70 @@ func writeHTTPResult(w http.ResponseWriter, value catena.CatenaValue, result cat
 	}
 }
 
+// writeAssetResult writes a CatenaAsset to the HTTP response with appropriate headers
+func writeAssetResult(w http.ResponseWriter, asset catena.CatenaAsset, result catena.StatusResult) {
+	httpStatus := result.Code.ToHTTPStatus()
+
+	// If there's an error, write error response
+	if result.Error != "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(httpStatus)
+		fmt.Fprintf(w, `{"error": "%s"}`, result.Error)
+		return
+	}
+
+	// If URL-based asset, redirect or return URL
+	if asset.IsURL() {
+		// Option 1: Redirect to the URL
+		w.Header().Set("Location", asset.GetURL())
+		w.WriteHeader(http.StatusFound) // 302 redirect
+		return
+
+		// Option 2: Return URL as JSON (uncomment if preferred)
+		// w.Header().Set("Content-Type", "application/json")
+		// w.WriteHeader(httpStatus)
+		// fmt.Fprintf(w, `{"url": "%s"}`, asset.GetURL())
+		// return
+	}
+
+	// Handle embedded data
+	data := asset.GetData()
+	if len(data) == 0 {
+		w.WriteHeader(httpStatus)
+		return
+	}
+
+	// Set asset headers
+	if asset.ContentType != "" {
+		w.Header().Set("Content-Type", asset.ContentType)
+	}
+	if asset.ContentDisposition != "" {
+		w.Header().Set("Content-Disposition", asset.ContentDisposition)
+	}
+
+	contentLength := asset.ContentLength()
+	if contentLength > 0 {
+		w.Header().Set("Content-Length", strconv.FormatInt(contentLength, 10))
+	}
+
+	// Set compression encoding if specified
+	if asset.Payload.PayloadEncoding != "" && asset.Payload.PayloadEncoding != "uncompressed" {
+		w.Header().Set("Content-Encoding", asset.Payload.PayloadEncoding)
+	}
+
+	// Set custom headers
+	for key, value := range asset.CustomHeaders {
+		w.Header().Set(key, value)
+	}
+
+	// Write status and stream data
+	w.WriteHeader(httpStatus)
+	reader := bytes.NewReader(data)
+	if _, err := io.Copy(w, reader); err != nil {
+		logger.Error("failed to stream asset data", "error", err)
+	}
+}
+
 // NewServer creates a new REST server for the given device slots
 func NewServer(slots []int) *Server {
 	s := &Server{
@@ -133,7 +199,7 @@ func (s *Server) Start(port int) error {
 
 // Default handlers that return "not implemented"
 
-func DefaultDeviceHandler(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
+func DefaultDeviceHandler() (catena.CatenaValue, catena.StatusResult) {
 	return catena.ReplyNotImplemented("GetDevice not implemented")
 }
 
@@ -145,8 +211,8 @@ func DefaultSetValueHandler(value any, slot int, fqoid string) (catena.CatenaVal
 	return catena.ReplyNotImplemented("SetValue not implemented")
 }
 
-func DefaultGetAssetHandler(w http.ResponseWriter, r *http.Request, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
-	return catena.ReplyNotImplemented("GetAsset not implemented")
+func DefaultGetAssetHandler(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	return catena.ReplyAssetNotFound("GetAsset not implemented")
 }
 
 func DefaultConnectHandler(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
@@ -266,7 +332,7 @@ func (s *Server) RegisterRoutes() {
 				writeHTTPResult(w, val, res)
 				return
 			}
-			val, res := handler(w, r)
+			val, res := handler()
 			writeHTTPResult(w, val, res)
 			return
 		}
@@ -356,8 +422,8 @@ func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slo
 
 	fqoid := strings.Join(pathParts, "/")
 	handler := s.lookupGetAsset(slot)
-	val, res := handler(w, r, slot, fqoid)
-	writeHTTPResult(w, val, res)
+	val, res := handler(slot, fqoid)
+	writeAssetResult(w, val, res)
 }
 
 func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, slot int, pathParts []string) {

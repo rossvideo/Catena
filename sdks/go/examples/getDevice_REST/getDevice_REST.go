@@ -44,7 +44,6 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"strings"
 	"syscall"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
@@ -137,20 +136,7 @@ func main() {
 
 	// Register GetDevice handler for each slot
 	for _, slot := range slotList {
-		srv.RegisterGetDeviceHandler(slot, func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-			// Parse slot from URL path: /st2138-api/v1/{slot}
-			parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-			if len(parts) < 3 {
-				logger.Error("GetDevice invalid path", "path", r.URL.Path)
-				return catena.ReplyBadRequest("invalid path")
-			}
-			slotStr := parts[2]
-			slot, err := strconv.Atoi(slotStr)
-			if err != nil {
-				logger.Error("GetDevice invalid slot", "slot", slotStr, "error", err)
-				return catena.ReplyBadRequest("invalid slot")
-			}
-
+		srv.RegisterGetDeviceHandler(slot, func() (catena.CatenaValue, catena.StatusResult) {
 			logger.Info("GetDevice", "slot", slot)
 			_, ok := devices[slot]
 			if !ok {
@@ -165,8 +151,8 @@ func main() {
 
 	// Register fallback handler
 	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		logger.Warning("Endpoint not found", "method", r.Method, "path", r.URL.Path)
-		return catena.ReplyNotFound("endpoint not found: " + r.URL.Path)
+		logger.Warning("Endpoint not found")
+		return catena.ReplyNotFound("endpoint not found")
 	})
 
 	// Logger info about the example

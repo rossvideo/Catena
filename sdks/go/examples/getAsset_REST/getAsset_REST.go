@@ -39,10 +39,8 @@
 package main
 
 import (
-	"bytes"
 	"embed"
 	"fmt"
-	"io"
 	"io/fs"
 	"mime"
 	"net/http"
@@ -119,36 +117,30 @@ func main() {
 	srv = rest.NewServer(slotList)
 
 	// Register GetAsset handler
-	srv.RegisterGetAssetHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 		logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
 
 		val, ok := assets.Load(fqoid)
 		if !ok {
 			logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
-			return catena.ReplyNotFound("asset not found: " + fqoid)
+			return catena.ReplyAssetNotFound("asset not found: " + fqoid)
 		}
 
 		asset := val.(Asset)
 
-		// Set appropriate headers for binary content
-		w.Header().Set("Content-Type", asset.ContentType)
-		w.Header().Set("Content-Length", strconv.Itoa(len(asset.Data)))
+		// Create CatenaAsset with the data and content type
+		catenaAsset := catena.NewCatenaAsset(asset.Data, asset.ContentType)
+
+		// Add filename if available
 		if asset.Filename != "" {
-			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", asset.Filename))
+			catenaAsset = catenaAsset.WithFilename(asset.Filename)
 		}
 
-		// Stream the content
-		reader := bytes.NewReader(asset.Data)
-		if _, err := io.Copy(w, reader); err != nil {
-			logger.Error("Asset streaming error", "slot", slot, "fqoid", fqoid, "error", err)
-			return catena.ReplyInternalError("failed to stream asset")
-		}
-
-		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid)
-		return catena.ReplyOK(catena.CatenaValue{})
+		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(asset.Data))
+		return catena.ReplyAsset(catenaAsset)
 	})
 
-	// Fallback handler
+	// Not found handler
 	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
 		return catena.ReplyNotFound("endpoint not found")
 	})
