@@ -5,7 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "clean": "rm -rf ./coverage && rm -rf ./junit.xml"
   },
   "repository": {
     "type": "git",
@@ -31,5 +32,9 @@
     "node": "^20.7.0",
     "smpte-validator": "file:../../smpte/tools",
     "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0",
+    "jest-junit": "^16.0.0"
   }
 }

@@ -46,155 +46,139 @@
         "struct_array_values": {
           "struct_values": [
             {
-              "struct_value": {
-                "fields": {
-                  "gain": { "float32_value": 0.0 },
-                  "input": { "float32_value": 0.0 },
-                  "gain_type": { "string_value": "Gain" },
-                  "inputLabel": { "string_value": "Channel 1" },
-                  "channelLabel": { "string_value": "Channel 1" },
-                  "invert": { "string_value": "Invert" },
-                  "stereo": { "float32_value": 0.0 },
-                  "roll_off": { "float32_value": 24.0 },
-                  "frequency": { "float32_value": 85.0 },
-                  "ripple": { "float32_value": 3.0 },
-                  "resp": { "string_value": "Cheb II" },
-                  "volume": { "float32_value": 50.0 },
-                  "pan": { "int32_value": 0 }
-                }
+              "fields": {
+                "gain": { "float32_value": 0.0 },
+                "input": { "float32_value": 0.0 },
+                "gain_type": { "string_value": "Gain" },
+                "inputLabel": { "string_value": "Channel 1" },
+                "channelLabel": { "string_value": "Channel 1" },
+                "invert": { "string_value": "Invert" },
+                "stereo": { "float32_value": 0.0 },
+                "roll_off": { "float32_value": 24.0 },
+                "frequency": { "float32_value": 85.0 },
+                "ripple": { "float32_value": 3.0 },
+                "resp": { "string_value": "Cheb II" },
+                "volume": { "float32_value": 50.0 },
+                "pan": { "int32_value": 0 }
               }
             },
             {
-              "struct_value": {
-                "fields": {
-                  "gain": { "float32_value": 0.0 },
-                  "input": { "float32_value": 0.0 },
-                  "gain_type": { "string_value": "Gain" },
-                  "inputLabel": { "string_value": "Channel 2" },
-                  "channelLabel": { "string_value": "Channel 2" },
-                  "invert": { "string_value": "Invert" },
-                  "stereo": { "float32_value": 0.0 },
-                  "roll_off": { "float32_value": 24.0 },
-                  "frequency": { "float32_value": 85.0 },
-                  "ripple": { "float32_value": 3.0 },
-                  "resp": { "string_value": "Cheb II" },
-                  "volume": { "float32_value": 50.0 },
-                  "pan": { "int32_value": 0 }
-                }
+              "fields": {
+                "gain": { "float32_value": 0.0 },
+                "input": { "float32_value": 0.0 },
+                "gain_type": { "string_value": "Gain" },
+                "inputLabel": { "string_value": "Channel 2" },
+                "channelLabel": { "string_value": "Channel 2" },
+                "invert": { "string_value": "Invert" },
+                "stereo": { "float32_value": 0.0 },
+                "roll_off": { "float32_value": 24.0 },
+                "frequency": { "float32_value": 85.0 },
+                "ripple": { "float32_value": 3.0 },
+                "resp": { "string_value": "Cheb II" },
+                "volume": { "float32_value": 50.0 },
+                "pan": { "int32_value": 0 }
               }
             },
             {
-              "struct_value": {
-                "fields": {
-                  "gain": { "float32_value": 0.0 },
-                  "input": { "float32_value": 0.0 },
-                  "gain_type": { "string_value": "Gain" },
-                  "inputLabel": { "string_value": "Channel 3" },
-                  "channelLabel": { "string_value": "Channel 3" },
-                  "invert": { "string_value": "Invert" },
-                  "stereo": { "float32_value": 0.0 },
-                  "roll_off": { "float32_value": 24.0 },
-                  "frequency": { "float32_value": 85.0 },
-                  "ripple": { "float32_value": 3.0 },
-                  "resp": { "string_value": "Cheb II" },
-                  "volume": { "float32_value": 50.0 },
-                  "pan": { "int32_value": 0 }
-                }
+              "fields": {
+                "gain": { "float32_value": 0.0 },
+                "input": { "float32_value": 0.0 },
+                "gain_type": { "string_value": "Gain" },
+                "inputLabel": { "string_value": "Channel 3" },
+                "channelLabel": { "string_value": "Channel 3" },
+                "invert": { "string_value": "Invert" },
+                "stereo": { "float32_value": 0.0 },
+                "roll_off": { "float32_value": 24.0 },
+                "frequency": { "float32_value": 85.0 },
+                "ripple": { "float32_value": 3.0 },
+                "resp": { "string_value": "Cheb II" },
+                "volume": { "float32_value": 50.0 },
+                "pan": { "int32_value": 0 }
               }
             },
             {
-              "struct_value": {
-                "fields": {
-                  "gain": { "float32_value": 0.0 },
-                  "input": { "float32_value": 0.0 },
-                  "gain_type": { "string_value": "Gain" },
-                  "inputLabel": { "string_value": "Channel 4" },
-                  "channelLabel": { "string_value": "Channel 4" },
-                  "invert": { "string_value": "Invert" },
-                  "stereo": { "float32_value": 0.0 },
-                  "roll_off": { "float32_value": 24.0 },
-                  "frequency": { "float32_value": 85.0 },
-                  "ripple": { "float32_value": 3.0 },
-                  "resp": { "string_value": "Cheb II" },
-                  "volume": { "float32_value": 50.0 },
-                  "pan": { "int32_value": 0 }
-                }
+              "fields": {
+                "gain": { "float32_value": 0.0 },
+                "input": { "float32_value": 0.0 },
+                "gain_type": { "string_value": "Gain" },
+                "inputLabel": { "string_value": "Channel 4" },
+                "channelLabel": { "string_value": "Channel 4" },
+                "invert": { "string_value": "Invert" },
+                "stereo": { "float32_value": 0.0 },
+                "roll_off": { "float32_value": 24.0 },
+                "frequency": { "float32_value": 85.0 },
+                "ripple": { "float32_value": 3.0 },
+                "resp": { "string_value": "Cheb II" },
+                "volume": { "float32_value": 50.0 },
+                "pan": { "int32_value": 0 }
               }
             },
             {
-              "struct_value": {
-                "fields": {
-                  "gain": { "float32_value": 0.0 },
-                  "input": { "float32_value": 0.0 },
-                  "gain_type": { "string_value": "Gain" },
-                  "inputLabel": { "string_value": "Channel 5" },
-                  "channelLabel": { "string_value": "Channel 5" },
-                  "invert": { "string_value": "Invert" },
-                  "stereo": { "float32_value": 0.0 },
-                  "roll_off": { "float32_value": 24.0 },
-                  "frequency": { "float32_value": 85.0 },
-                  "ripple": { "float32_value": 3.0 },
-                  "resp": { "string_value": "Cheb II" },
-                  "volume": { "float32_value": 50.0 },
-                  "pan": { "int32_value": 0 }
-                }
+              "fields": {
+                "gain": { "float32_value": 0.0 },
+                "input": { "float32_value": 0.0 },
+                "gain_type": { "string_value": "Gain" },
+                "inputLabel": { "string_value": "Channel 5" },
+                "channelLabel": { "string_value": "Channel 5" },
+                "invert": { "string_value": "Invert" },
+                "stereo": { "float32_value": 0.0 },
+                "roll_off": { "float32_value": 24.0 },
+                "frequency": { "float32_value": 85.0 },
+                "ripple": { "float32_value": 3.0 },
+                "resp": { "string_value": "Cheb II" },
+                "volume": { "float32_value": 50.0 },
+                "pan": { "int32_value": 0 }
               }
             },
             {
-              "struct_value": {
-                "fields": {
-                  "gain": { "float32_value": 0.0 },
-                  "input": { "float32_value": 0.0 },
-                  "gain_type": { "string_value": "Gain" },
-                  "inputLabel": { "string_value": "Channel 6" },
-                  "channelLabel": { "string_value": "Channel 6" },
-                  "invert": { "string_value": "Invert" },
-                  "stereo": { "float32_value": 0.0 },
-                  "roll_off": { "float32_value": 24.0 },
-                  "frequency": { "float32_value": 85.0 },
-                  "ripple": { "float32_value": 3.0 },
-                  "resp": { "string_value": "Cheb II" },
-                  "volume": { "float32_value": 50.0 },
-                  "pan": { "int32_value": 0 }
-                }
+              "fields": {
+                "gain": { "float32_value": 0.0 },
+                "input": { "float32_value": 0.0 },
+                "gain_type": { "string_value": "Gain" },
+                "inputLabel": { "string_value": "Channel 6" },
+                "channelLabel": { "string_value": "Channel 6" },
+                "invert": { "string_value": "Invert" },
+                "stereo": { "float32_value": 0.0 },
+                "roll_off": { "float32_value": 24.0 },
+                "frequency": { "float32_value": 85.0 },
+                "ripple": { "float32_value": 3.0 },
+                "resp": { "string_value": "Cheb II" },
+                "volume": { "float32_value": 50.0 },
+                "pan": { "int32_value": 0 }
               }
             },
             {
-              "struct_value": {
-                "fields": {
-                  "gain": { "float32_value": 0.0 },
-                  "input": { "float32_value": 0.0 },
-                  "gain_type": { "string_value": "Gain" },
-                  "inputLabel": { "string_value": "Channel 7" },
-                  "channelLabel": { "string_value": "Channel 7" },
-                  "invert": { "string_value": "Invert" },
-                  "stereo": { "float32_value": 0.0 },
-                  "roll_off": { "float32_value": 24.0 },
-                  "frequency": { "float32_value": 85.0 },
-                  "ripple": { "float32_value": 3.0 },
-                  "resp": { "string_value": "Cheb II" },
-                  "volume": { "float32_value": 50.0 },
-                    "pan": { "int32_value": 0 }
-                }
+              "fields": {
+                "gain": { "float32_value": 0.0 },
+                "input": { "float32_value": 0.0 },
+                "gain_type": { "string_value": "Gain" },
+                "inputLabel": { "string_value": "Channel 7" },
+                "channelLabel": { "string_value": "Channel 7" },
+                "invert": { "string_value": "Invert" },
+                "stereo": { "float32_value": 0.0 },
+                "roll_off": { "float32_value": 24.0 },
+                "frequency": { "float32_value": 85.0 },
+                "ripple": { "float32_value": 3.0 },
+                "resp": { "string_value": "Cheb II" },
+                "volume": { "float32_value": 50.0 },
+                  "pan": { "int32_value": 0 }
               }
             },
             {
-              "struct_value": {
-                "fields": {
-                  "gain": { "float32_value": 0.0 },
-                  "input": { "float32_value": 0.0 },
-                  "gain_type": { "string_value": "Gain" },
-                  "inputLabel": { "string_value": "Channel 8" },
-                  "channelLabel": { "string_value": "Channel 8" },
-                  "invert": { "string_value": "Invert" },
-                  "stereo": { "float32_value": 0.0 },
-                  "roll_off": { "float32_value": 24.0 },
-                  "frequency": { "float32_value": 85.0 },
-                  "ripple": { "float32_value": 3.0 },
-                  "resp": { "string_value": "Cheb II" },
-                  "volume": { "float32_value": 50.0 },
-                  "pan": { "int32_value": 0 }
-                }
+              "fields": {
+                "gain": { "float32_value": 0.0 },
+                "input": { "float32_value": 0.0 },
+                "gain_type": { "string_value": "Gain" },
+                "inputLabel": { "string_value": "Channel 8" },
+                "channelLabel": { "string_value": "Channel 8" },
+                "invert": { "string_value": "Invert" },
+                "stereo": { "float32_value": 0.0 },
+                "roll_off": { "float32_value": 24.0 },
+                "frequency": { "float32_value": 85.0 },
+                "ripple": { "float32_value": 3.0 },
+                "resp": { "string_value": "Cheb II" },
+                "volume": { "float32_value": 50.0 },
+                "pan": { "int32_value": 0 }
               }
             }
           ]
