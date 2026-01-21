@@ -19,29 +19,21 @@
       "read_only": true,
       "value": { "string_value": "eo://catena_logo.png" }
     },
-    "audio_channel": {
-      "type": "STRUCT",
-      "name": { "display_strings": { "en": "Audio Channel" } },
-      "params": {
-        "gain": { "type": "FLOAT32", "precision": 1, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -10.0, "max_value": 10.0, "display_min": -10.0, "display_max": 10.0, "step": 0.1 } } },
-        "input": { "type": "FLOAT32", "precision": 2, "stateless": true, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -10.0, "max_value": 10.0, "display_min": -10.0, "display_max": 10.0, "step": 0.01 } } },
-        "gain_type": { "type": "STRING", "read_only": true, "constraint": { "type": "STRING_CHOICE", "string_choice": { "choices": ["Gain", "Stereo"] } } },
-        "inputLabel": { "type": "STRING" },
-        "channelLabel": { "type": "STRING" },
-        "invert": { "type": "STRING", "widget": "toggle", "constraint": { "type": "STRING_CHOICE", "string_choice": { "choices": ["Inverted","Invert"] } } },
-        "stereo": { "type": "FLOAT32", "precision": 1, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -10.0, "max_value": 10.0, "display_min": -10.0, "display_max": 10.0, "step": 0.1 } } },
-        "roll_off": { "type": "FLOAT32", "precision": 1, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -30.0, "max_value": 30.0, "display_min": -30.0, "display_max": 30.0, "step": 1.0 } } },
-        "frequency": { "type": "FLOAT32", "precision": 0, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": 0.0, "max_value": 500.0, "display_min": 0.0, "display_max": 500.0, "step": 1.0 } } },
-        "ripple": { "type": "FLOAT32", "precision": 1, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -30.0, "max_value": 30.0, "display_min": -30.0, "display_max": 30.0, "step": 1.0 } } },
-        "resp": { "type": "STRING", "constraint": { "type": "STRING_CHOICE", "string_choice": { "choices": ["Cheb I","Cheb II","Cheb III","Cheb IV","Cheb V","Cheb VI","Cheb VII","Cheb VIII","Cheb IX","Cheb X"] } } },
-        "volume": { "type": "FLOAT32", "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": 0.0, "max_value": 100.0, "display_min": 0.0, "display_max": 100.0, "step": 1.0 } } },
-        "pan": { "type": "INT32", "constraint": { "type": "INT_RANGE", "int32_range": { "min_value": -100, "max_value": 100, "display_min": -100, "display_max": 100, "step": 1 } } }
-      }
-    },
     "audio_deck": {
       "type": "STRUCT_ARRAY",
       "name": { "display_strings": { "en": "Audio Deck" } },
-      "template_oid": "/audio_channel",
+      "params": {
+        "gain": { "name": { "display_strings": { "ai": "Preamp gain in dB (-10.0 to 10.0). Adjust to match source level." } }, "type": "FLOAT32", "precision": 1, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -10.0, "max_value": 10.0, "display_min": -10.0, "display_max": 10.0, "step": 0.1 } } },
+        "input": { "name": { "display_strings": { "ai": "Realtime input level meter in dB (stateless). Agents read only." } }, "type": "FLOAT32", "precision": 2, "stateless": true, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -10.0, "max_value": 10.0, "display_min": -10.0, "display_max": 10.0, "step": 0.01 } } },
+        "inputLabel": { "name": { "display_strings": { "ai": "Editable input label shown to operators. Provide a human-friendly source name." } }, "type": "STRING" },
+        "invert": { "name": { "display_strings": { "ai": "Polarity toggle. 'Inverted' = flipped polarity; 'Invert' = normal." } }, "type": "STRING", "widget": "toggle", "constraint": { "type": "STRING_CHOICE", "string_choice": { "choices": ["Inverted","Invert"] } } },
+        "roll_off": { "name": { "display_strings": { "ai": "Filter slope in dB/oct. Typical 6-24; higher = steeper." } }, "type": "FLOAT32", "precision": 1, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -30.0, "max_value": 30.0, "display_min": -30.0, "display_max": 30.0, "step": 1.0 } } },
+        "frequency": { "name": { "display_strings": { "ai": "Filter cutoff/center frequency in Hz (0-500)." } }, "type": "FLOAT32", "precision": 0, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": 0.0, "max_value": 500.0, "display_min": 0.0, "display_max": 500.0, "step": 1.0 } } },
+        "ripple": { "name": { "display_strings": { "ai": "Chebyshev ripple in dB. Small positive values (e.g., 0-3 dB) typical." } }, "type": "FLOAT32", "precision": 1, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -30.0, "max_value": 30.0, "display_min": -30.0, "display_max": 30.0, "step": 1.0 } } },
+        "resp": { "name": { "display_strings": { "ai": "Filter response type. Choose Butterworth, Cheb II, or Legendre." } }, "type": "STRING", "constraint": { "type": "STRING_CHOICE", "string_choice": { "choices": ["Butterworth", "Cheb II", "Legendre"] } } },
+        "volume": { "name": { "display_strings": { "ai": "Output volume level in percent (0-100%)." } }, "type": "FLOAT32", "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": 0.0, "max_value": 100.0, "display_min": 0.0, "display_max": 100.0, "step": 1.0 } } },
+        "pan": { "name": { "display_strings": { "ai": "Stereo pan position (-100 = left, 0 = center, 100 = right)." } }, "type": "INT32", "constraint": { "type": "INT_RANGE", "int32_range": { "min_value": -100, "max_value": 100, "display_min": -100, "display_max": 100, "step": 1 } } }
+      },
       "value": {
         "struct_array_values": {
           "struct_values": [
@@ -49,11 +41,8 @@
               "fields": {
                 "gain": { "float32_value": 0.0 },
                 "input": { "float32_value": 0.0 },
-                "gain_type": { "string_value": "Gain" },
                 "inputLabel": { "string_value": "Channel 1" },
-                "channelLabel": { "string_value": "Channel 1" },
                 "invert": { "string_value": "Invert" },
-                "stereo": { "float32_value": 0.0 },
                 "roll_off": { "float32_value": 24.0 },
                 "frequency": { "float32_value": 85.0 },
                 "ripple": { "float32_value": 3.0 },
@@ -66,11 +55,8 @@
               "fields": {
                 "gain": { "float32_value": 0.0 },
                 "input": { "float32_value": 0.0 },
-                "gain_type": { "string_value": "Gain" },
                 "inputLabel": { "string_value": "Channel 2" },
-                "channelLabel": { "string_value": "Channel 2" },
                 "invert": { "string_value": "Invert" },
-                "stereo": { "float32_value": 0.0 },
                 "roll_off": { "float32_value": 24.0 },
                 "frequency": { "float32_value": 85.0 },
                 "ripple": { "float32_value": 3.0 },
@@ -83,11 +69,8 @@
               "fields": {
                 "gain": { "float32_value": 0.0 },
                 "input": { "float32_value": 0.0 },
-                "gain_type": { "string_value": "Gain" },
                 "inputLabel": { "string_value": "Channel 3" },
-                "channelLabel": { "string_value": "Channel 3" },
                 "invert": { "string_value": "Invert" },
-                "stereo": { "float32_value": 0.0 },
                 "roll_off": { "float32_value": 24.0 },
                 "frequency": { "float32_value": 85.0 },
                 "ripple": { "float32_value": 3.0 },
@@ -100,11 +83,8 @@
               "fields": {
                 "gain": { "float32_value": 0.0 },
                 "input": { "float32_value": 0.0 },
-                "gain_type": { "string_value": "Gain" },
                 "inputLabel": { "string_value": "Channel 4" },
-                "channelLabel": { "string_value": "Channel 4" },
                 "invert": { "string_value": "Invert" },
-                "stereo": { "float32_value": 0.0 },
                 "roll_off": { "float32_value": 24.0 },
                 "frequency": { "float32_value": 85.0 },
                 "ripple": { "float32_value": 3.0 },
@@ -117,11 +97,8 @@
               "fields": {
                 "gain": { "float32_value": 0.0 },
                 "input": { "float32_value": 0.0 },
-                "gain_type": { "string_value": "Gain" },
                 "inputLabel": { "string_value": "Channel 5" },
-                "channelLabel": { "string_value": "Channel 5" },
                 "invert": { "string_value": "Invert" },
-                "stereo": { "float32_value": 0.0 },
                 "roll_off": { "float32_value": 24.0 },
                 "frequency": { "float32_value": 85.0 },
                 "ripple": { "float32_value": 3.0 },
@@ -134,11 +111,8 @@
               "fields": {
                 "gain": { "float32_value": 0.0 },
                 "input": { "float32_value": 0.0 },
-                "gain_type": { "string_value": "Gain" },
                 "inputLabel": { "string_value": "Channel 6" },
-                "channelLabel": { "string_value": "Channel 6" },
                 "invert": { "string_value": "Invert" },
-                "stereo": { "float32_value": 0.0 },
                 "roll_off": { "float32_value": 24.0 },
                 "frequency": { "float32_value": 85.0 },
                 "ripple": { "float32_value": 3.0 },
@@ -151,11 +125,8 @@
               "fields": {
                 "gain": { "float32_value": 0.0 },
                 "input": { "float32_value": 0.0 },
-                "gain_type": { "string_value": "Gain" },
                 "inputLabel": { "string_value": "Channel 7" },
-                "channelLabel": { "string_value": "Channel 7" },
                 "invert": { "string_value": "Invert" },
-                "stereo": { "float32_value": 0.0 },
                 "roll_off": { "float32_value": 24.0 },
                 "frequency": { "float32_value": 85.0 },
                 "ripple": { "float32_value": 3.0 },
@@ -168,11 +139,8 @@
               "fields": {
                 "gain": { "float32_value": 0.0 },
                 "input": { "float32_value": 0.0 },
-                "gain_type": { "string_value": "Gain" },
                 "inputLabel": { "string_value": "Channel 8" },
-                "channelLabel": { "string_value": "Channel 8" },
                 "invert": { "string_value": "Invert" },
-                "stereo": { "float32_value": 0.0 },
                 "roll_off": { "float32_value": 24.0 },
                 "frequency": { "float32_value": 85.0 },
                 "ripple": { "float32_value": 3.0 },
@@ -222,111 +190,6 @@
     }
   },
   "commands": {
-    "play": {
-      "name": {"display_strings": {
-        "en": "Play",
-        "fr": "Lire",
-        "es": "Reproducir",
-        "ja": "再生"
-      }},
-      "type":"EMPTY",
-      "widget": "button",
-      "response": false
-    },
-    "pause": {
-      "name": {"display_strings": {
-        "en": "Pause",
-        "fr": "Pause",
-        "es": "Pausa",
-        "ja": "一時停止"
-      }},
-      "type":"EMPTY",
-      "response": false
-    },
-    "stop": {
-      "name": {"display_strings": {
-        "en": "Stop",
-        "fr": "Arrêter",
-        "es": "Detener",
-        "ja": "停止"
-      }},
-      "type":"EMPTY",
-      "response": false
-    },
-    "rewind": {
-      "name": {"display_strings": {
-        "en": "Rewind",
-        "fr": "Rembobiner",
-        "es": "Rebobinar",
-        "ja": "巻き戻し"
-      }},
-      "type": "EMPTY",
-      "response": false
-    },
-    "fast_forward": {
-      "name": {"display_strings": {
-        "en": "Fast Forward",
-        "fr": "Avance rapide",
-        "es": "Avance rápido",
-        "ja": "早送り"
-      }},
-      "type": "EMPTY",
-      "response": false
-    },
-    "load": {
-      "name": {"display_strings": {
-        "en": "Load Video",
-        "fr": "Charger la vidéo",
-        "es": "Cargar video",
-        "ja": "ビデオを読み込む"
-      }},
-      "widget": "button",
-      "type":"STRING",
-      "response": false
-    },
-    "eject": {
-      "type":"STRING",
-      "name": {"display_strings": {
-        "en": "Eject",
-        "fr": "Éjecter",
-        "es": "Expulsar",
-        "ja": "取り出す"
-      }},
-      "widget": "button",
-      "response": false
-    },
-    "debug_counter": {
-      "name": {"display_strings": {
-        "en": "Debug Counter",
-        "fr": "Compteur de débogage",
-        "es": "Contador de depuración",
-        "ja": "デバッグカウンター"
-      }},
-      "type":"INT32",
-      "widget": "button",
-      "read_only": true, 
-      "response": true
-    },
-    "multi_arg_command": {
-      "name": {"display_strings": {
-        "en": "Multi-Arg Command",
-        "fr": "Commande multi-argument",
-        "es": "Comando multi-argumento",
-        "ja": "マルチ引数コマンド"
-      }},
-      "type":"STRUCT",
-      "widget": "button",
-      "read_only": false,
-      "response": true,
-      "params": {
-        "arg1": {
-          "type": "INT32"
-        },
-        "arg2": {
-          "type": "INT32"
-        }
-      }
-    },
     "add_channel": {
       "name": {"display_strings": {
         "en": "Add Channel",
@@ -337,49 +200,6 @@
       "type": "STRING",
       "widget": "button",
       "response": false
-    }
-  },
-  "menu_groups": {
-    "status": {
-      "name": { "display_strings": {
-        "en": "Status",
-        "fr": "État",
-        "es": "Estado",
-        "ja": "ステータス"
-      }},
-      "menus": {
-        "state": {
-          "name": { "display_strings": {
-            "en": "State",
-            "fr": "État",
-            "es": "Estado",
-            "ja": "状態"
-          }},
-          "param_oids": ["/state"]
-        }
-      },
-      "order": 0
-    },
-    "config": {
-      "name": { "display_strings": {
-        "en": "Configuration",
-        "fr": "Configuration",
-        "es": "Configuración",
-        "ja": "設定"
-      }},
-      "menus": {
-        "commands": {
-          "name": { "display_strings": {
-            "en": "Commands",
-            "fr": "Commandes",
-            "es": "Comandos",
-            "ja": "コマンド"
-          }},
-          "param_oids": [],
-          "command_oids": ["/play", "/pause", "/stop", "/rewind", "/fast_forward", "/load", "/eject"]
-        }
-      },
-      "order": 1
     }
   }
 }
