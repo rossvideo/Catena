@@ -1,4 +1,4 @@
-CMDS := basic_device_bl
+CMDS := executeCommand_REST getAsset_REST getDevice_REST getSetValue_REST
 BIN_DIR := $(HOME)/Catena/$(BUILD_TARGET)
 LOG_DIR := ./logs
 
