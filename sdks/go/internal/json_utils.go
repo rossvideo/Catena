@@ -2,162 +2,75 @@ package internal
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io"
+	"mime"
 	"net/http"
 
-	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"google.golang.org/protobuf/encoding/protojson"
+
+	"github.com/rossvideo/catena/build/go/protos"
 )
 
-func ReadValueFromRequest(r *http.Request) (any, error) {
-	//Decode body into catena value type
-	var v any
+// ReadRequestJSON reads and unmarshals a JSON request body into a protos.Value.
+// It validates the Content-Type header and returns an error if it's not application/json.
+func ReadRequestJSON(r *http.Request) (*protos.Value, error) {
+	defer r.Body.Close()
 
-	if err := json.NewDecoder(r.Body).Decode(&v); err != nil {
-		// Empty body is valid for commands that don't require a payload
-		if err == io.EOF {
-			return nil, nil
+	// Check Content-Type header
+	contentType := r.Header.Get("Content-Type")
+	if contentType == "" {
+		return nil, fmt.Errorf("missing Content-Type header")
+	} else {
+		// Parse media type to handle parameters like charset
+		mediaType, _, err := mime.ParseMediaType(contentType)
+		if err != nil {
+			return nil, fmt.Errorf("invalid content type: %s", contentType)
 		}
+		if mediaType != "application/json" {
+			return nil, fmt.Errorf("unsupported content type: %s, expected application/json", mediaType)
+		}
+	}
+
+	data, err := io.ReadAll(r.Body)
+	if err != nil || err == io.EOF {
 		return nil, err
 	}
 
-	val, ok := v.(map[string]any)
-	if !ok {
-		return nil, errors.New("invalid request body format")
+	v := &protos.Value{}
+	if err := (protojson.UnmarshalOptions{
+		DiscardUnknown: true,
+	}).Unmarshal(data, v); err != nil {
+		return nil, err
 	}
-
-	//Convert catena value type to go native type
-	if int32Val, ok := val["int32_value"]; ok {
-		if f, ok := int32Val.(float64); ok {
-			return int(f), nil
-		}
-	} else if int32ArrVal, ok := val["int32_array_value"]; ok {
-		if arr, ok := int32ArrVal.([]any); ok {
-			intArr := make([]int, len(arr))
-			for i, num := range arr {
-				if f, ok := num.(float64); ok {
-					intArr[i] = int(f)
-				} else {
-					return nil, errors.New("invalid int32 array value in request body")
-				}
-			}
-			return intArr, nil
-		}
-	} else if floatVal, ok := val["float32_value"]; ok {
-		if f, ok := floatVal.(float64); ok {
-			return float32(f), nil
-		}
-	} else if float32ArrVal, ok := val["float32_array_value"]; ok {
-		if arr, ok := float32ArrVal.([]any); ok {
-			floatArr := make([]float32, len(arr))
-			for i, num := range arr {
-				if f, ok := num.(float64); ok {
-					floatArr[i] = float32(f)
-				} else {
-					return nil, errors.New("invalid float32 array value in request body")
-				}
-			}
-			return floatArr, nil
-		}
-	} else if stringVal, ok := val["string_value"]; ok {
-		if s, ok := stringVal.(string); ok {
-			return s, nil
-		}
-	} else if structVal, ok := val["struct_value"]; ok {
-		if m, ok := structVal.(map[string]any); ok {
-			return m, nil
-		}
-	} else if structArrVal, ok := val["struct_array_value"]; ok {
-		if arr, ok := structArrVal.([]any); ok {
-			structArr := make([]map[string]any, len(arr))
-			for i, item := range arr {
-				if m, ok := item.(map[string]any); ok {
-					structArr[i] = m
-				} else {
-					return nil, errors.New("invalid struct array value in request body")
-				}
-			}
-			return structArr, nil
-		}
-	} else if structVariantVal, ok := val["struct_variant_value"]; ok {
-		if m, ok := structVariantVal.(map[string]any); ok {
-			svType, okType := m["struct_variant_type"].(string)
-			svValue, okValue := m["value"]
-			if okType && okValue {
-				return catena.StructVariantValue{
-					StructVariantType: svType,
-					Value:             svValue,
-				}, nil
-			}
-		}
-	} else if structVariantArrVal, ok := val["struct_variant_array_value"]; ok {
-		if arr, ok := structVariantArrVal.([]any); ok {
-			var structVariantArr []catena.StructVariantValue
-			for _, item := range arr {
-				if m, ok := item.(map[string]any); ok {
-					svType, okType := m["struct_variant_type"].(string)
-					svValue, okValue := m["value"]
-					if okType && okValue {
-						structVariantArr = append(structVariantArr, catena.StructVariantValue{
-							StructVariantType: svType,
-							Value:             svValue,
-						})
-					} else {
-						return nil, errors.New("invalid struct variant array value in request body")
-					}
-				} else {
-					return nil, errors.New("invalid struct variant array value in request body")
-				}
-			}
-			return structVariantArr, nil
-		}
-	}
-
-	//type not supported, set error
-	err := errors.New("unsupported type in request body")
-	return nil, err
+	return v, nil
 }
 
-func WriteResponseJSON(w http.ResponseWriter, res catena.StatusResult) {
-	//Check the type of v and convert to catena type
-	switch val := res.Payload.(type) {
-	case int:
-		res.Payload = map[string]int32{"int32_value": int32(val)}
-	case []int:
-		int32Arr := make([]int32, len(val))
-		for i, num := range val {
-			int32Arr[i] = int32(num)
-		}
-		res.Payload = map[string][]int32{"int32_array_value": int32Arr}
-	case float32:
-		res.Payload = map[string]float32{"float32_value": val}
-	case []float32:
-		res.Payload = map[string][]float32{"float32_array_value": val}
-	case string:
-		res.Payload = map[string]string{"string_value": val}
-	case map[string]any:
-		res.Payload = map[string]map[string]any{"struct_value": val}
-	case []map[string]any:
-		res.Payload = map[string][]map[string]any{"struct_array_value": val}
-	case catena.StructVariantValue:
-		res.Payload = map[string]map[string]any{"struct_variant_value": {
-			"struct_variant_type": val.StructVariantType,
-			"value":              val.Value,
-		}}
-	case []catena.StructVariantValue:
-		var structVariantArr []map[string]any
-		for _, item := range val {
-			structVariantArr = append(structVariantArr, map[string]any{
-				"struct_variant_type": item.StructVariantType,
-				"value":              item.Value,
-			})
-		}
-		res.Payload = map[string][]map[string]any{"struct_variant_array_value": structVariantArr}
-	default:
-		http.Error(w, "failed to encode JSON response: ", http.StatusInternalServerError)
-	}
-	//Encode response as JSON
+// WriteResponseJSON marshals a protos.Value to JSON and writes it to the HTTP response
+// with the specified status code. If the value is nil, only the status code is written.
+func WriteResponseJSON(w http.ResponseWriter, value *protos.Value, statusCode int) error {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(res.Status)
-	_ = json.NewEncoder(w).Encode(res.Payload)
+
+	if value == nil {
+		w.WriteHeader(statusCode)
+		return nil
+	}
+
+	b, err := (protojson.MarshalOptions{
+		UseProtoNames:   true,
+		EmitUnpopulated: false,
+	}).Marshal(value)
+	if err != nil {
+		// Marshaling failed (e.g., invalid UTF-8). Don't return a 2xx with an empty body.
+		// Prefer a JSON error body so clients that always parse JSON don't explode.
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"error": "failed to marshal response payload",
+		})
+		return fmt.Errorf("failed to marshal response: %w", err)
+	}
+
+	w.WriteHeader(statusCode)
+	_, writeErr := w.Write(b)
+	return writeErr
 }

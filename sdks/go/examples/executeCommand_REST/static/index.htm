@@ -305,6 +305,15 @@
             isRunning = running;
         }
 
+        // Helper function to extract value from protobuf JSON format
+        function extractValue(protoVal) {
+            if (!protoVal || typeof protoVal !== 'object') return protoVal;
+            if ('int32_value' in protoVal) return protoVal.int32_value;
+            if ('float32_value' in protoVal) return protoVal.float32_value;
+            if ('string_value' in protoVal) return protoVal.string_value;
+            return protoVal;
+        }
+
         async function executeCommand(cmd) {
             try {
                 const response = await fetch(`/st2138-api/v1/0/command/${cmd}`, {
@@ -319,9 +328,12 @@
                     return;
                 }
 
-                // Update UI with response - handle struct_value wrapper
-                const sv = data.struct_value || data;
-                updateUI(sv.counter ?? 0, sv.running ?? false);
+                const fields = data.struct_value?.fields;
+                if (fields) {
+                    const counter = extractValue(fields.counter) ?? 0;
+                    const running = extractValue(fields.running) ?? 0;
+                    updateUI(counter, running === 1);
+                }
             } catch (error) {
                 console.error('Command error:', error.message);
             }
@@ -332,10 +344,11 @@
                 const response = await fetch('/st2138-api/v1/0/value/counter');
                 const data = await response.json();
                 
-                // Response is wrapped in struct_value by the REST server
-                const sv = data.struct_value;
-                if (sv) {
-                    updateUI(sv.counter ?? 0, sv.running ?? false);
+                const fields = data.struct_value?.fields;
+                if (fields) {
+                    const counter = extractValue(fields.counter) ?? 0;
+                    const running = extractValue(fields.running) ?? 0;
+                    updateUI(counter, running === 1);
                 }
             } catch (error) {
                 // Silently ignore polling errors
