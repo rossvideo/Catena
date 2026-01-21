@@ -85,6 +85,9 @@ class gRPCGetPopulatedSlotsTests : public GRPCTest {
         EXPECT_TRUE(asyncCall_) << "Async handler was not created during runtime";
     }
 
+    /**
+     * Makes an async RPC and returns the requestStart value read by the handler.
+     */
     double getRPCRequestStart(std::string expectedRequestStart) {
         done_ = false;
         double requestStart = -1.0;
@@ -167,7 +170,7 @@ TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_RequestStart) {
 }
 
 /*
- * TEST 3 - Test invalid request-start header value get set to default
+ * TEST 4 - Test invalid request-start header value get set to default
  */
 TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_InvalidRequestStart) {
     // Test with non-number/period in value
