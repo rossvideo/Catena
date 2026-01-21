@@ -1,7 +1,9 @@
 package rest
 
 import (
-	"log/slog"
+	"encoding/json"
+	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,351 +14,341 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
-// Device is opaque for this base server.
-type Device any
+// Handlers now return (CatenaValue, StatusResult) so the server can respond consistently.
+type DeviceHandler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
+type GetValueHandler func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult)
+type SetValueHandler func(value any, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult)
+type GetAssetHandler func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult)
+type ConnectHandler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
+type ExecuteCommandHandler func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult)
+type FallbackHandler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
 
-// Renderer
-func writeHTTPResult(w http.ResponseWriter, res catena.StatusResult) {
-	switch {
-	case res.Status >= 200 && res.Status < 300:
-		if res.Status == http.StatusNoContent || res.Payload == nil {
-			w.WriteHeader(res.Status)
-			return
-		}
-		internal.WriteResponseJSON(w, res)
-	default:
-		http.Error(w, nonEmpty(res.Message, http.StatusText(res.Status)), res.Status)
-	}
-}
-
-func nonEmpty(s, fallback string) string {
-	if s != "" {
-		return s
-	}
-	return fallback
-}
-
-// Handlers now return HTTPResult so the server can respond consistently.
-type DeviceHandler func(w http.ResponseWriter, r *http.Request) catena.StatusResult
-type GetValueHandler func(slot int, fqoid string) catena.StatusResult
-type SetValueHandler func(value any, slot int, fqoid string) catena.StatusResult
-
-// AssetHandler keeps w/r so implementations can stream content directly; they still return an HTTPResult for status.
-type AssetHandler func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) catena.StatusResult
-
-// ConnectHandler handles connection requests (e.g., SSE stream for push updates).
-// This is a global endpoint that handles all slots.
-type ConnectHandler func(w http.ResponseWriter, r *http.Request) catena.StatusResult
-
-// ExecuteCommandHandler handles command execution requests.
-type ExecuteCommandHandler func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) catena.StatusResult
-
-// NotFoundHandler handles requests to non-existent endpoints.
-type NotFoundHandler func(w http.ResponseWriter, r *http.Request) catena.StatusResult
-
-// Server is decoupled from catena.Device and just wires HTTP routes.
+// Server provides REST API endpoints for Catena devices
 type Server struct {
-	getDevice      DeviceHandler
-	getValue       map[int]GetValueHandler
-	setValue       map[int]SetValueHandler
-	getAsset       map[int]AssetHandler
-	connect        ConnectHandler
-	executeCommand map[int]ExecuteCommandHandler
-	notFound       NotFoundHandler
-
-	slotList []int
-	mux      http.ServeMux
-	mu       sync.RWMutex
-	log      *slog.Logger
+	mu                     sync.Mutex
+	mux                    *http.ServeMux
+	getDeviceHandlers      map[int]DeviceHandler
+	getValueHandlers       map[int]GetValueHandler
+	setValueHandlers       map[int]SetValueHandler
+	getAssetHandlers       map[int]GetAssetHandler
+	connectHandler         ConnectHandler
+	executeCommandHandlers map[int]ExecuteCommandHandler
+	fallbackHandler        FallbackHandler
 }
 
-func NewServer(slotList []int) *Server {
-	log := logger.GetNamed("rest-server")
-	log.Info("Creating new REST server", "slots", slotList)
+// writeHTTPResult writes a CatenaValue and StatusResult to the HTTP response
+func writeHTTPResult(w http.ResponseWriter, value catena.CatenaValue, result catena.StatusResult) {
+	httpStatus := result.Code.ToHTTPStatus()
 
-	server := Server{
-		getDevice:      DeviceHandler(nil),
-		getValue:       make(map[int]GetValueHandler),
-		setValue:       make(map[int]SetValueHandler),
-		getAsset:       make(map[int]AssetHandler),
-		connect:        ConnectHandler(nil),
-		executeCommand: make(map[int]ExecuteCommandHandler),
-		slotList:       slotList,
-		mux:            *http.NewServeMux(),
-		log:            log,
+	// If there's an error message, write it as JSON
+	if result.Error != "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(httpStatus)
+		json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
+		return
 	}
 
-	// Register HTTP routes.
-	server.RegisterRoutes()
+	// If Value is nil, just write the status code
+	if value.Value == nil {
+		w.WriteHeader(httpStatus)
+		return
+	}
 
-	return &server
+	// Write the protobuf value as JSON
+	if err := internal.WriteResponseJSON(w, value.Value, httpStatus); err != nil {
+		logger.Error("failed to write response", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
-func (s *Server) StartHTTPServer(port int) {
-	addr := ":" + strconv.Itoa(port)
-	s.log.Info("Starting HTTP server", "address", addr)
-	go func() {
-		if err := http.ListenAndServe(addr, &s.mux); err != nil {
-			s.log.Error("HTTP server failed", "error", err)
-			panic("HTTP server failed: " + err.Error())
-		}
-	}()
+// NewServer creates a new REST server for the given device slots
+func NewServer(slots []int) *Server {
+	s := &Server{
+		mux:                    http.NewServeMux(),
+		getDeviceHandlers:      make(map[int]DeviceHandler),
+		getValueHandlers:       make(map[int]GetValueHandler),
+		setValueHandlers:       make(map[int]SetValueHandler),
+		getAssetHandlers:       make(map[int]GetAssetHandler),
+		executeCommandHandlers: make(map[int]ExecuteCommandHandler),
+	}
+
+	// Register default handlers for each slot
+	for _, slot := range slots {
+		s.RegisterGetDeviceHandler(slot, DefaultDeviceHandler)
+		s.RegisterGetValueHandler(slot, DefaultGetValueHandler)
+		s.RegisterSetValueHandler(slot, DefaultSetValueHandler)
+		s.RegisterGetAssetHandler(slot, DefaultGetAssetHandler)
+		s.RegisterExecuteCommandHandler(slot, DefaultExecuteCommandHandler)
+	}
+
+	// Register default connect handler
+	s.RegisterConnectHandler(DefaultConnectHandler)
+
+	// Register routes
+	s.RegisterRoutes()
+
+	return s
 }
 
-// Default handlers return HTTPResult for uniform handling.
-func (s *Server) DefaultDeviceHandler(w http.ResponseWriter, r *http.Request) catena.StatusResult {
-	s.log.Warn("No handler registered", "method", "GET", "endpoint", "/{slot}")
-	return catena.NotImplemented("no device handler registered")
+// Start starts the HTTP server on the specified port using this server's mux
+func (s *Server) Start(port int) error {
+	addr := fmt.Sprintf(":%d", port)
+	logger.Info("Starting HTTP server", "address", addr)
+	return http.ListenAndServe(addr, s.mux)
 }
 
-func (s *Server) DefaultGetValueHandler(w http.ResponseWriter, r *http.Request, slot int, fqoid string) catena.StatusResult {
-	s.log.Warn("No handler registered", "method", "GET", "endpoint", "/value", "fqoid", fqoid, "slot", slot)
-	return catena.NotImplemented("no getParamValue handler registered for slot " + strconv.Itoa(slot))
+// Default handlers that return "not implemented"
+
+func DefaultDeviceHandler(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
+	return catena.ReplyNotImplemented("GetDevice not implemented")
 }
 
-func (s *Server) DefaultSetValueHandler(value any, slot int, fqoid string) catena.StatusResult {
-	s.log.Warn("No handler registered", "method", "PUT", "endpoint", "/value", "fqoid", fqoid, "slot", slot)
-	return catena.NotImplemented("no setParamValue handler registered for slot " + strconv.Itoa(slot))
+func DefaultGetValueHandler(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	return catena.ReplyNotImplemented("GetValue not implemented")
 }
 
-func (s *Server) DefaultGetAssetHandler(w http.ResponseWriter, r *http.Request, slot int, fqoid string) catena.StatusResult {
-	s.log.Warn("No handler registered", "method", "GET", "endpoint", "/asset", "fqoid", fqoid, "slot", slot)
-	return catena.NotImplemented("no getAsset handler registered for slot " + strconv.Itoa(slot))
+func DefaultSetValueHandler(value any, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	return catena.ReplyNotImplemented("SetValue not implemented")
 }
 
-func (s *Server) DefaultConnectHandler(w http.ResponseWriter, r *http.Request) catena.StatusResult {
-	s.log.Warn("No handler registered", "method", "GET", "endpoint", "/connect")
-	return catena.NotImplemented("no connect handler registered")
+func DefaultGetAssetHandler(w http.ResponseWriter, r *http.Request, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	return catena.ReplyNotImplemented("GetAsset not implemented")
 }
 
-func (s *Server) DefaultExecuteCommandHandler(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) catena.StatusResult {
-	s.log.Warn("No handler registered", "method", "POST", "endpoint", "/command", "command", commandFqoid, "slot", slot)
-	return catena.NotImplemented("no executeCommand handler registered for slot " + strconv.Itoa(slot))
+func DefaultConnectHandler(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
+	return catena.ReplyNotImplemented("Connect not implemented")
 }
 
-// Registration APIs: set one generic handler per slot.
+func DefaultExecuteCommandHandler(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	return catena.ReplyNotImplemented("ExecuteCommand not implemented")
+}
+
+// Handler registration methods
+
 func (s *Server) RegisterGetDeviceHandler(slot int, handler DeviceHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	// getDevice is global; last registration wins.
-	s.getDevice = handler
-	s.log.Debug("Registered device handler", "slot", slot)
+	s.getDeviceHandlers[slot] = handler
 }
 
 func (s *Server) RegisterGetValueHandler(slot int, handler GetValueHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.getValue[slot] = handler
-	s.log.Debug("Registered GET value handler", "slot", slot)
+	s.getValueHandlers[slot] = handler
 }
 
 func (s *Server) RegisterSetValueHandler(slot int, handler SetValueHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.setValue[slot] = handler
-	s.log.Debug("Registered SET value handler", "slot", slot)
+	s.setValueHandlers[slot] = handler
 }
 
-func (s *Server) RegisterGetAssetHandler(slot int, handler AssetHandler) {
+func (s *Server) RegisterGetAssetHandler(slot int, handler GetAssetHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.getAsset[slot] = handler
-	s.log.Debug("Registered asset handler", "slot", slot)
-}
-
-// RegisterNotFoundHandler registers a handler for requests to non-existent endpoints.
-// This registers a catch-all route at "/" that matches any unhandled paths.
-func (s *Server) RegisterNotFoundHandler(handler NotFoundHandler) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.notFound = handler
-	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		res := handler(w, r)
-		writeHTTPResult(w, res)
-	})
-	s.log.Debug("Registered not-found handler")
+	s.getAssetHandlers[slot] = handler
 }
 
 func (s *Server) RegisterConnectHandler(handler ConnectHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.connect = handler
-	s.log.Debug("Registered connect handler")
+	s.connectHandler = handler
 }
 
 func (s *Server) RegisterExecuteCommandHandler(slot int, handler ExecuteCommandHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.executeCommand[slot] = handler
-	s.log.Debug("Registered executeCommand handler", "slot", slot)
+	s.executeCommandHandlers[slot] = handler
 }
 
-// Internal lookups (read-locked).
-func (s *Server) lookupGetValue(slot int) (GetValueHandler, bool) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	h, ok := s.getValue[slot]
-	return h, ok
+func (s *Server) RegisterFallbackHandler(handler FallbackHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.fallbackHandler = handler
 }
 
-func (s *Server) lookupSetValue(slot int) (SetValueHandler, bool) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	h, ok := s.setValue[slot]
-	return h, ok
+// Lookup helper functions
+
+func (s *Server) lookupGetValue(slot int) GetValueHandler {
+	if handler, ok := s.getValueHandlers[slot]; ok {
+		return handler
+	}
+	return DefaultGetValueHandler
 }
 
-func (s *Server) lookupGetAsset(slot int) (AssetHandler, bool) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	h, ok := s.getAsset[slot]
-	return h, ok
+func (s *Server) lookupSetValue(slot int) SetValueHandler {
+	if handler, ok := s.setValueHandlers[slot]; ok {
+		return handler
+	}
+	return DefaultSetValueHandler
 }
 
-func (s *Server) lookupConnect() (ConnectHandler, bool) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.connect, s.connect != nil
+func (s *Server) lookupGetAsset(slot int) GetAssetHandler {
+	if handler, ok := s.getAssetHandlers[slot]; ok {
+		return handler
+	}
+	return DefaultGetAssetHandler
 }
 
-func (s *Server) lookupExecuteCommand(slot int) (ExecuteCommandHandler, bool) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	h, ok := s.executeCommand[slot]
-	return h, ok
+func (s *Server) lookupConnect() ConnectHandler {
+	if s.connectHandler != nil {
+		return s.connectHandler
+	}
+	return DefaultConnectHandler
 }
 
+func (s *Server) lookupExecuteCommand(slot int) ExecuteCommandHandler {
+	if handler, ok := s.executeCommandHandlers[slot]; ok {
+		return handler
+	}
+	return DefaultExecuteCommandHandler
+}
+
+// RegisterRoutes sets up all HTTP routes
 func (s *Server) RegisterRoutes() {
-	s.log.Debug("Registering routes", "slot_count", len(s.slotList))
-	for _, slot := range s.slotList {
-		// capture loop variable
-		slot := slot
+	// Device endpoint: GET /st2138-api/v1/{slot}
+	s.mux.HandleFunc("/st2138-api/v1/", func(w http.ResponseWriter, r *http.Request) {
+		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+		if len(parts) < 3 {
+			val, res := catena.ReplyBadRequest("invalid path format")
+			writeHTTPResult(w, val, res)
+			return
+		}
 
-		prefix := "/st2138-api/v1/" + strconv.Itoa(slot)
+		slotStr := parts[2]
+		slot, err := strconv.Atoi(slotStr)
+		if err != nil || slot < 0 || slot > math.MaxInt16 {
+			val, res := catena.ReplyBadRequest("invalid slot number")
+			writeHTTPResult(w, val, res)
+			return
+		}
 
-		// Entity/device-like endpoint: GET /st2138-api/v1/{slot}
-		s.mux.HandleFunc(prefix, func(w http.ResponseWriter, r *http.Request) {
-			s.log.Info("Request started", "method", r.Method, "endpoint", prefix)
-			if r.Method != http.MethodGet {
-				s.log.Warn("Method not allowed", "method", r.Method, "endpoint", prefix, "expected", "GET")
-				writeHTTPResult(w, catena.MethodNotAllowed("method not allowed"))
+		// Route based on path structure
+		if len(parts) == 3 && r.Method == http.MethodGet {
+			// GET /st2138-api/v1/{slot} - Get device info
+			handler, ok := s.getDeviceHandlers[slot]
+			if !ok {
+				val, res := catena.ReplyNotFound("device not found")
+				writeHTTPResult(w, val, res)
 				return
 			}
-			if s.getDevice != nil {
-				res := s.getDevice(w, r)
-				writeHTTPResult(w, res)
-				s.log.Info("Request finished", "method", "GET", "endpoint", prefix)
-				return
-			}
-			writeHTTPResult(w, s.DefaultDeviceHandler(w, r))
-		})
+			val, res := handler(w, r)
+			writeHTTPResult(w, val, res)
+			return
+		}
 
-		// Param endpoint: fqoid is the path after /value/
-		s.mux.HandleFunc(prefix+"/value/", func(w http.ResponseWriter, r *http.Request) {
-			fqoid := strings.TrimPrefix(r.URL.Path, prefix+"/value/")
-			if fqoid == "" {
-				s.log.Warn("Missing param fqoid", "method", r.Method, "endpoint", "/value")
-				writeHTTPResult(w, catena.BadRequest("missing param fqoid"))
-				return
-			}
-			switch r.Method {
-			case http.MethodGet:
-				s.log.Info("Request started", "method", "GET", "endpoint", "/value", "fqoid", fqoid)
-				if handler, ok := s.lookupGetValue(slot); ok {
-					res := handler(slot, fqoid)
-					writeHTTPResult(w, res)
-					s.log.Info("Request finished", "method", "GET", "endpoint", "/value", "fqoid", fqoid)
-					return
-				}
-				writeHTTPResult(w, s.DefaultGetValueHandler(w, r, slot, fqoid))
-			case http.MethodPut:
-				value, err := internal.ReadValueFromRequest(r)
-				if err != nil {
-					s.log.Error("Invalid JSON in request", "slot", slot, "fqoid", fqoid, "error", err)
-					writeHTTPResult(w, catena.BadRequest("invalid JSON"))
-					return
-				}
-				s.log.Info("Request started", "method", r.Method, "endpoint", "/value", "fqoid", fqoid)
-				if handler, ok := s.lookupSetValue(slot); ok {
-					res := handler(value, slot, fqoid)
-					writeHTTPResult(w, res)
-					s.log.Info("Request finished", "method", r.Method, "endpoint", "/value", "fqoid", fqoid)
-					return
-				}
-				writeHTTPResult(w, s.DefaultSetValueHandler(value, slot, fqoid))
+		if len(parts) >= 4 {
+			endpoint := parts[3]
+			switch endpoint {
+			case "value":
+				s.handleValueEndpoint(w, r, slot, parts[4:])
+			case "asset":
+				s.handleAssetEndpoint(w, r, slot, parts[4:])
+			case "command":
+				s.handleCommandEndpoint(w, r, slot, parts[4:])
 			default:
-				s.log.Warn("Method not allowed", "method", r.Method, "endpoint", "/value", "fqoid", fqoid)
-				writeHTTPResult(w, catena.MethodNotAllowed("method not allowed"))
+				val, res := catena.ReplyNotFound("unknown endpoint")
+				writeHTTPResult(w, val, res)
 			}
-		})
+			return
+		}
 
-		// Asset endpoint: fqoid is the path after /asset/
-		s.mux.HandleFunc(prefix+"/asset/", func(w http.ResponseWriter, r *http.Request) {
-			fqoid := strings.TrimPrefix(r.URL.Path, prefix+"/asset/")
-			if fqoid == "" {
-				s.log.Warn("Missing asset fqoid", "method", "GET", "endpoint", "/asset")
-				writeHTTPResult(w, catena.BadRequest("missing asset fqoid"))
-				return
-			}
-			if r.Method != http.MethodGet {
-				s.log.Warn("Method not allowed", "method", r.Method, "endpoint", "/asset", "fqoid", fqoid)
-				writeHTTPResult(w, catena.MethodNotAllowed("method not allowed"))
-				return
-			}
-			s.log.Info("Request started", "method", "GET", "endpoint", "/asset", "fqoid", fqoid)
-			if handler, ok := s.lookupGetAsset(slot); ok {
-				res := handler(w, r, slot, fqoid)
-				writeHTTPResult(w, res)
-				s.log.Info("Request finished", "method", "GET", "endpoint", "/asset", "fqoid", fqoid)
-				return
-			}
-			writeHTTPResult(w, s.DefaultGetAssetHandler(w, r, slot, fqoid))
-		})
+		val, res := catena.ReplyNotFound("endpoint not found")
+		writeHTTPResult(w, val, res)
+	})
 
-		// Command endpoint: POST /command/{commandFqoid}
-		s.mux.HandleFunc(prefix+"/command/", func(w http.ResponseWriter, r *http.Request) {
-			commandFqoid := strings.TrimPrefix(r.URL.Path, prefix+"/command/")
-			if commandFqoid == "" {
-				s.log.Warn("Missing command fqoid", "method", "POST", "endpoint", "/command")
-				writeHTTPResult(w, catena.BadRequest("missing command fqoid"))
-				return
-			}
-			if r.Method != http.MethodPost {
-				s.log.Warn("Method not allowed", "method", r.Method, "endpoint", "/command", "command", commandFqoid)
-				writeHTTPResult(w, catena.MethodNotAllowed("method not allowed"))
-				return
-			}
-			payload, err := internal.ReadValueFromRequest(r)
-			if err != nil {
-				s.log.Error("Invalid JSON in request", "slot", slot, "command", commandFqoid, "error", err)
-				writeHTTPResult(w, catena.BadRequest("invalid JSON"))
-				return
-			}
-			s.log.Info("Request started", "method", "POST", "endpoint", "/command", "command", commandFqoid)
-			if handler, ok := s.lookupExecuteCommand(slot); ok {
-				res := handler(w, r, slot, commandFqoid, payload)
-				writeHTTPResult(w, res)
-				s.log.Info("Request finished", "method", "POST", "endpoint", "/command", "command", commandFqoid)
-				return
-			}
-			writeHTTPResult(w, s.DefaultExecuteCommandHandler(w, r, slot, commandFqoid, payload))
-		})
+	// Connect endpoint: GET /st2138-api/v1/connect
+	s.mux.HandleFunc("/st2138-api/v1/connect", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			val, res := catena.ReplyMethodNotAllowed("only GET allowed")
+			writeHTTPResult(w, val, res)
+			return
+		}
+		handler := s.lookupConnect()
+		val, res := handler(w, r)
+		writeHTTPResult(w, val, res)
+	})
+
+	// Catch-all for 404 - must be registered last
+	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if s.fallbackHandler != nil {
+			val, res := s.fallbackHandler(w, r)
+			writeHTTPResult(w, val, res)
+			return
+		}
+		val, res := catena.ReplyNotFound("endpoint not found")
+		writeHTTPResult(w, val, res)
+	})
+}
+
+func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slot int, pathParts []string) {
+	fqoid := strings.Join(pathParts, "/")
+
+	switch r.Method {
+	case http.MethodGet:
+		handler := s.lookupGetValue(slot)
+		val, res := handler(slot, fqoid)
+		writeHTTPResult(w, val, res)
+
+	case http.MethodPut:
+		// Read request body
+		reqValue, err := internal.ReadRequestJSON(r)
+		if err != nil {
+			logger.Error("failed to read request", "error", err)
+			val, res := catena.ReplyBadRequest("invalid request body")
+			writeHTTPResult(w, val, res)
+			return
+		}
+
+		// Convert proto value to native Go type
+		nativeValue := catena.FromProto(reqValue)
+
+		handler := s.lookupSetValue(slot)
+		val, res := handler(nativeValue, slot, fqoid)
+		writeHTTPResult(w, val, res)
+
+	default:
+		val, res := catena.ReplyMethodNotAllowed("only GET, PUT, PATCH allowed")
+		writeHTTPResult(w, val, res)
+	}
+}
+
+func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slot int, pathParts []string) {
+	if r.Method != http.MethodGet {
+		val, res := catena.ReplyMethodNotAllowed("only GET allowed")
+		writeHTTPResult(w, val, res)
+		return
 	}
 
-	// Global Connect endpoint: GET /connect (outside slot loop)
-	s.mux.HandleFunc("/st2138-api/v1/connect", func(w http.ResponseWriter, r *http.Request) {
-		s.log.Info("Request started", "method", r.Method, "endpoint", "/connect")
-		if r.Method != http.MethodGet {
-			s.log.Warn("Method not allowed", "method", r.Method, "endpoint", "/connect", "expected", "GET")
-			writeHTTPResult(w, catena.MethodNotAllowed("method not allowed"))
+	fqoid := strings.Join(pathParts, "/")
+	handler := s.lookupGetAsset(slot)
+	val, res := handler(w, r, slot, fqoid)
+	writeHTTPResult(w, val, res)
+}
+
+func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, slot int, pathParts []string) {
+	if r.Method != http.MethodPost {
+		val, res := catena.ReplyMethodNotAllowed("only POST allowed")
+		writeHTTPResult(w, val, res)
+		return
+	}
+
+	commandFqoid := strings.Join(pathParts, "/")
+
+	// Read command payload
+	var payload any
+	if r.ContentLength > 0 {
+		reqValue, err := internal.ReadRequestJSON(r)
+		if err != nil {
+			logger.Error("failed to read command payload", "error", err)
+			val, res := catena.ReplyBadRequest("invalid command payload")
+			writeHTTPResult(w, val, res)
 			return
 		}
-		if handler, ok := s.lookupConnect(); ok {
-			res := handler(w, r)
-			writeHTTPResult(w, res)
-			s.log.Info("Request finished", "method", "GET", "endpoint", "/connect")
-			return
-		}
-		writeHTTPResult(w, s.DefaultConnectHandler(w, r))
-	})
+		payload = catena.FromProto(reqValue)
+	}
+
+	handler := s.lookupExecuteCommand(slot)
+	val, res := handler(w, r, slot, commandFqoid, payload)
+	writeHTTPResult(w, val, res)
 }
