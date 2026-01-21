@@ -37,12 +37,12 @@
     ],
     "yaml.schemas": {
         "./smpte/interface/schemata/device.json" : [
-            "/sdks/cpp/lite/examples/**/device.*.yaml",
+            "/sdks/cpp/common/examples/**/device.*.yaml",
             "/sdks/cpp/connections/gRPC/examples/**/device.*.yaml",
             "/sdks/cpp/connections/REST/examples/**/device.*.yaml"
         ],
         "./smpte/interface/schemata/param.json" : [
-            "/sdks/cpp/lite/examples/**/param.*.yaml",
+            "/sdks/cpp/common/examples/**/param.*.yaml",
             "/sdks/cpp/connections/gRPC/examples/**/param.*.yaml",
             "/sdks/cpp/connections/REST/examples/**/param.*.yaml"
         ]
