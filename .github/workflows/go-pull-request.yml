@@ -180,7 +180,7 @@ jobs:
   #         edit-mode: append
 
   CodeQL:
-    name: CodeQL Analysis (15-30 minutes)
+    name: CodeQL Analysis (5-10 minutes)
     timeout-minutes: 35
     runs-on: ubuntu-latest
     container:
