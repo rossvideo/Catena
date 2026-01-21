@@ -19,7 +19,9 @@ func ReadRequestJSON(r *http.Request) (*protos.Value, error) {
 
 	// Check Content-Type header
 	contentType := r.Header.Get("Content-Type")
-	if contentType != "" {
+	if contentType == "" {
+		return nil, fmt.Errorf("missing Content-Type header")
+	} else {
 		// Parse media type to handle parameters like charset
 		mediaType, _, err := mime.ParseMediaType(contentType)
 		if err != nil {
