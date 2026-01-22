@@ -44,7 +44,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -118,15 +117,15 @@ func (c *CounterState) Increment() {
 }
 
 func main() {
-	// Parse config from environment variables with CATENA prefix
-	cfg := logger.ParseConfigWithVerbosity("CATENA")
-	cfg.AppName = "executeCommand_REST"
+	// Single unified config initialization with prefix
+	cfg := catena.ParseConfigWithVerbosity("CATENA")
+	cfg.Logger.AppName = "executeCommand_REST"
 
-	if err := logger.Init(cfg); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to initialize logger: %v\n", err)
+	if err := catena.Init(cfg); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize catena: %v\n", err)
 		os.Exit(1)
 	}
-	defer logger.Close()
+	defer catena.Close()
 
 	// Handle signals for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
@@ -137,13 +136,8 @@ func main() {
 		close(shutdownChan) // closes the channel to signal the main goroutine to shut down
 	}()
 
-	// Get port from environment variables or use default 6254
-	portStr := envOr("CATENA_PORT", "6254")
-	port, err := strconv.Atoi(portStr) // converts the string to an integer
-	if err != nil {
-		logger.Error("invalid CATENA_PORT", "error", err)
-		os.Exit(1) // exits the program with a non-zero status code
-	}
+	// Port comes from the unified config
+	port := cfg.Port
 
 	// Initialize counter
 	counter := &CounterState{}
@@ -298,11 +292,4 @@ func main() {
 	// Wait for shutdown signal
 	<-shutdownChan
 	logger.Info("Server shutdown complete")
-}
-
-func envOr(key, def string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return def
 }

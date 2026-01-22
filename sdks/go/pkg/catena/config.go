@@ -40,7 +40,10 @@ package catena
 
 import (
 	"os"
+	"strconv"
 	"strings"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
 // Environment represents dev or prod mode for the SDK.
@@ -53,14 +56,15 @@ const (
 
 var currentEnv Environment = EnvProd // default to prod
 
-func init() {
-	if v := os.Getenv("CATENA_ENV"); v != "" {
-		switch strings.ToLower(strings.TrimSpace(v)) {
-		case "dev", "development":
-			currentEnv = EnvDev
-		case "prod", "production":
-			currentEnv = EnvProd
-		}
+// parseEnvString parses an environment string to Environment type.
+func parseEnvString(s string) Environment {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "dev", "development":
+		return EnvDev
+	case "prod", "production":
+		return EnvProd
+	default:
+		return EnvProd
 	}
 }
 
@@ -82,4 +86,85 @@ func GetEnv() Environment {
 // SetEnv allows programmatic override of the environment.
 func SetEnv(env Environment) {
 	currentEnv = env
+}
+
+// Config holds all Catena SDK configuration.
+type Config struct {
+	Prefix string        // Environment variable prefix (e.g., "CATENA" or "MYAPP")
+	Env    Environment   // dev or prod (default: prod)
+	Logger logger.Config // Logger configuration
+	Port   int           // HTTP server port (default: 6254)
+}
+
+// DefaultConfig returns sensible defaults with the given prefix.
+func DefaultConfig(prefix string) Config {
+	if prefix == "" {
+		prefix = "CATENA"
+	}
+	return Config{
+		Prefix: prefix,
+		Env:    EnvProd,
+		Logger: logger.DefaultConfig(),
+		Port:   6254,
+	}
+}
+
+// ParseConfig parses all configuration from environment variables using the given prefix.
+func ParseConfig(prefix string) Config {
+	if prefix == "" {
+		prefix = "CATENA"
+	}
+
+	cfg := DefaultConfig(prefix)
+	cfg.Logger = logger.ParseFromEnv(prefix)
+
+	// Parse environment (dev/prod)
+	if v := os.Getenv(prefix + "_ENV"); v != "" {
+		cfg.Env = parseEnvString(v)
+	}
+
+	// Parse port
+	if v := os.Getenv(prefix + "_PORT"); v != "" {
+		if port, err := strconv.Atoi(v); err == nil && port > 0 {
+			cfg.Port = port
+		}
+	}
+
+	return cfg
+}
+
+// ParseConfigWithVerbosity parses config and applies CLI verbosity flags (-v, -vv, -vvv).
+func ParseConfigWithVerbosity(prefix string) Config {
+	if prefix == "" {
+		prefix = "CATENA"
+	}
+
+	cfg := DefaultConfig(prefix)
+	cfg.Logger = logger.ParseConfigWithVerbosity(prefix)
+
+	// Parse environment (dev/prod)
+	if v := os.Getenv(prefix + "_ENV"); v != "" {
+		cfg.Env = parseEnvString(v)
+	}
+
+	// Parse port
+	if v := os.Getenv(prefix + "_PORT"); v != "" {
+		if port, err := strconv.Atoi(v); err == nil && port > 0 {
+			cfg.Port = port
+		}
+	}
+
+	return cfg
+}
+
+// Init initializes all Catena SDK systems with the given configuration.
+// Sets the global environment (accessible via IsDev/IsProd) and initializes the logger.
+func Init(cfg Config) error {
+	currentEnv = cfg.Env
+	return logger.Init(cfg.Logger)
+}
+
+// Close cleans up all Catena SDK resources.
+func Close() {
+	logger.Close()
 }

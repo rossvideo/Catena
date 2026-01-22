@@ -76,14 +76,15 @@ var (
 )
 
 func main() {
-	cfg := logger.ParseConfigWithVerbosity("CATENA")
-	cfg.AppName = "asset_request_REST"
+	// Single unified config initialization with prefix
+	cfg := catena.ParseConfigWithVerbosity("CATENA")
+	cfg.Logger.AppName = "asset_request_REST"
 
-	if err := logger.Init(cfg); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to initialize logger: %v\n", err)
+	if err := catena.Init(cfg); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize catena: %v\n", err)
 		os.Exit(1)
 	}
-	defer logger.Close()
+	defer catena.Close()
 
 	// Handle signals for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
@@ -94,12 +95,8 @@ func main() {
 		close(shutdownChan)
 	}()
 
-	portStr := envOr("CATENA_PORT", "6254")
-	port, err := strconv.Atoi(portStr)
-	if err != nil {
-		logger.Error("invalid CATENA_PORT", "error", err)
-		os.Exit(1)
-	}
+	// Port comes from the unified config (parsed from CATENA_PORT)
+	port := cfg.Port
 
 	// ==========================================================================
 	// Asset Storage
@@ -246,9 +243,3 @@ func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map, ass
 	}
 }
 
-func envOr(key, def string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return def
-}
