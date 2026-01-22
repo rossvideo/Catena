@@ -79,7 +79,7 @@ func writeHTTPResult(w http.ResponseWriter, value catena.CatenaValue, result cat
 		if catena.IsDev() {
 			json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
 		} else {
-			json.NewEncoder(w).Encode(map[string]string{"error": "error"})
+			json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(httpStatus)})
 		}
 		return
 	}
