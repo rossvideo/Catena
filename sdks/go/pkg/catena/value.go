@@ -40,14 +40,6 @@ type CatenaValue struct {
 	Value *protos.Value
 }
 
-// CatenaAsset represents a binary asset with HTTP headers for GetAsset responses
-type CatenaAsset struct {
-	ContentType        string
-	ContentDisposition string
-	Payload            DataPayload       // Use DataPayload instead of raw bytes
-	CustomHeaders      map[string]string // Additional headers if needed
-}
-
 type StructVariantValue struct {
 	StructVariantType string `json:"struct_variant_type"`
 	Value             any    `json:"value"`
@@ -57,14 +49,6 @@ type EmptyValue struct{}
 
 type UndefinedValue int32
 
-type DataPayload struct {
-	Metadata        map[string]string `json:"metadata,omitempty"`
-	Digest          []byte            `json:"digest,omitempty"`
-	PayloadEncoding string            `json:"payload_encoding,omitempty"` // "uncompressed", "gzip", or "deflate"
-	URL             string            `json:"url,omitempty"`
-	Payload         []byte            `json:"payload,omitempty"`
-}
-
 func ToCatenaValue(v any) (CatenaValue, error) {
 	val, err := ToProto(v)
 	if err != nil {
@@ -73,104 +57,12 @@ func ToCatenaValue(v any) (CatenaValue, error) {
 	return CatenaValue{Value: val}, nil
 }
 
-// NewCatenaAsset creates a CatenaAsset from binary data and metadata
-func NewCatenaAsset(data []byte, contentType string) CatenaAsset {
-	return CatenaAsset{
-		ContentType: contentType,
-		Payload: DataPayload{
-			Payload:         data,
-			PayloadEncoding: "uncompressed",
-		},
-	}
-}
-
-// NewCatenaAssetFromURL creates a CatenaAsset that references an external URL
-func NewCatenaAssetFromURL(url string, contentType string) CatenaAsset {
-	return CatenaAsset{
-		ContentType: contentType,
-		Payload: DataPayload{
-			URL:             url,
-			PayloadEncoding: "uncompressed",
-		},
-	}
-}
-
-// NewCatenaAssetFromPayload creates a CatenaAsset from an existing DataPayload
-func NewCatenaAssetFromPayload(payload DataPayload, contentType string) CatenaAsset {
-	return CatenaAsset{
-		ContentType: contentType,
-		Payload:     payload,
-	}
-}
-
-// WithFilename sets the Content-Disposition header for download
-func (ca CatenaAsset) WithFilename(filename string) CatenaAsset {
-	ca.ContentDisposition = fmt.Sprintf("attachment; filename=%q", filename)
-	return ca
-}
-
-// WithInlineFilename sets the Content-Disposition header for inline display
-func (ca CatenaAsset) WithInlineFilename(filename string) CatenaAsset {
-	ca.ContentDisposition = fmt.Sprintf("inline; filename=%q", filename)
-	return ca
-}
-
-// WithCustomHeader adds a custom HTTP header
-func (ca CatenaAsset) WithCustomHeader(key, value string) CatenaAsset {
-	if ca.CustomHeaders == nil {
-		ca.CustomHeaders = make(map[string]string)
-	}
-	ca.CustomHeaders[key] = value
-	return ca
-}
-
-// WithCompression sets the payload encoding (gzip, deflate, or uncompressed)
-func (ca CatenaAsset) WithCompression(encoding string) CatenaAsset {
-	ca.Payload.PayloadEncoding = encoding
-	return ca
-}
-
-// WithDigest sets the digest/checksum for the payload
-func (ca CatenaAsset) WithDigest(digest []byte) CatenaAsset {
-	ca.Payload.Digest = digest
-	return ca
-}
-
-// WithMetadata adds metadata to the payload
-func (ca CatenaAsset) WithMetadata(key, value string) CatenaAsset {
-	if ca.Payload.Metadata == nil {
-		ca.Payload.Metadata = make(map[string]string)
-	}
-	ca.Payload.Metadata[key] = value
-	return ca
-}
-
-// IsURL returns true if this asset is a URL reference
-func (ca CatenaAsset) IsURL() bool {
-	return ca.Payload.URL != ""
-}
-
-// GetData returns the embedded payload data (nil if URL-based)
-func (ca CatenaAsset) GetData() []byte {
-	return ca.Payload.Payload
-}
-
-// GetURL returns the URL (empty string if embedded data)
-func (ca CatenaAsset) GetURL() string {
-	return ca.Payload.URL
-}
-
-// ContentLength returns the size of the payload (0 for URL-based assets)
-func (ca CatenaAsset) ContentLength() int64 {
-	if ca.Payload.Payload != nil {
-		return int64(len(ca.Payload.Payload))
-	}
-	return 0
-}
-
 // ToProto converts native Go types to protos.Value
 func ToProto(v any) (*protos.Value, error) {
 	switch val := v.(type) {
+	case *protos.DataPayload:
+		// Pass through DataPayload directly
+		return &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: val}}, nil
 	case UndefinedValue:
 		return &protos.Value{Kind: &protos.Value_UndefinedValue{UndefinedValue: protos.UndefinedValue(val)}}, nil
 	case EmptyValue:
@@ -235,34 +127,6 @@ func ToProto(v any) (*protos.Value, error) {
 		return &protos.Value{Kind: &protos.Value_StructVariantArrayValues{StructVariantArrayValues: &protos.StructVariantList{
 			StructVariants: structVariants,
 		}}}, nil
-	case DataPayload:
-		// Convert payload encoding string to enum
-		var encoding protos.DataPayload_PayloadEncoding
-		switch val.PayloadEncoding {
-		case "gzip":
-			encoding = protos.DataPayload_GZIP
-		case "deflate":
-			encoding = protos.DataPayload_DEFLATE
-		default:
-			encoding = protos.DataPayload_UNCOMPRESSED
-		}
-
-		dp := &protos.DataPayload{
-			Metadata:        val.Metadata,
-			Digest:          val.Digest,
-			PayloadEncoding: encoding,
-		}
-
-		// Set either URL or Payload based on which is provided
-		if val.URL != "" && val.Payload == nil {
-			dp.Kind = &protos.DataPayload_Url{Url: val.URL}
-		} else if val.Payload != nil && val.URL == "" {
-			dp.Kind = &protos.DataPayload_Payload{Payload: val.Payload}
-		} else {
-			return nil, fmt.Errorf("DataPayload must have either URL or Payload set, but not both")
-		}
-
-		return &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: dp}}, nil
 	default:
 		return nil, fmt.Errorf("unsupported type: %T", v)
 	}
@@ -274,6 +138,9 @@ func FromProto(pv *protos.Value) any {
 		return nil
 	}
 	switch pv.GetKind().(type) {
+	case *protos.Value_DataPayload:
+		// Return the raw DataPayload proto
+		return pv.GetDataPayload()
 	case *protos.Value_UndefinedValue:
 		return UndefinedValue(pv.GetUndefinedValue())
 	case *protos.Value_EmptyValue:
@@ -325,35 +192,6 @@ func FromProto(pv *protos.Value) any {
 			})
 		}
 		return arr
-	case *protos.Value_DataPayload:
-		dp := pv.GetDataPayload()
-
-		// Convert encoding enum to string
-		var encoding string
-		switch dp.GetPayloadEncoding() {
-		case protos.DataPayload_GZIP:
-			encoding = "gzip"
-		case protos.DataPayload_DEFLATE:
-			encoding = "deflate"
-		default:
-			encoding = "uncompressed"
-		}
-
-		result := DataPayload{
-			Metadata:        dp.GetMetadata(),
-			Digest:          dp.GetDigest(),
-			PayloadEncoding: encoding,
-		}
-
-		// Get either URL or Payload based on Kind
-		switch kind := dp.GetKind().(type) {
-		case *protos.DataPayload_Url:
-			result.URL = kind.Url
-		case *protos.DataPayload_Payload:
-			result.Payload = kind.Payload
-		}
-
-		return result
 	default:
 		return nil
 	}

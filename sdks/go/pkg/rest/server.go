@@ -105,22 +105,28 @@ func writeAssetResult(w http.ResponseWriter, asset catena.CatenaAsset, result ca
 	if result.Error != "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(httpStatus)
-		fmt.Fprintf(w, `{"error": "%s"}`, result.Error)
+		json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
 		return
 	}
 
-	// If URL-based asset, redirect or return URL
+	// Validate asset structure
+	if asset.ExternalObject == nil || asset.ExternalObject.Payload == nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid asset structure"})
+		return
+	}
+
+	// Set cachability headers
+	if !asset.IsCachable() {
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
+	}
+
+	// If URL-based asset, redirect to the URL
 	if asset.IsURL() {
-		// Option 1: Redirect to the URL
 		w.Header().Set("Location", asset.GetURL())
 		w.WriteHeader(http.StatusFound) // 302 redirect
 		return
-
-		// Option 2: Return URL as JSON (uncomment if preferred)
-		// w.Header().Set("Content-Type", "application/json")
-		// w.WriteHeader(httpStatus)
-		// fmt.Fprintf(w, `{"url": "%s"}`, asset.GetURL())
-		// return
 	}
 
 	// Handle embedded data
@@ -130,27 +136,38 @@ func writeAssetResult(w http.ResponseWriter, asset catena.CatenaAsset, result ca
 		return
 	}
 
-	// Set asset headers
-	if asset.ContentType != "" {
-		w.Header().Set("Content-Type", asset.ContentType)
-	}
-	if asset.ContentDisposition != "" {
-		w.Header().Set("Content-Disposition", asset.ContentDisposition)
+	// Set content-type from metadata
+	if contentType := asset.GetContentType(); contentType != "" {
+		w.Header().Set("Content-Type", contentType)
 	}
 
+	// Set content-disposition from metadata
+	if contentDisposition := asset.GetContentDisposition(); contentDisposition != "" {
+		w.Header().Set("Content-Disposition", contentDisposition)
+	}
+
+	// Set content-length
 	contentLength := asset.ContentLength()
 	if contentLength > 0 {
 		w.Header().Set("Content-Length", strconv.FormatInt(contentLength, 10))
 	}
 
 	// Set compression encoding if specified
-	if asset.Payload.PayloadEncoding != "" && asset.Payload.PayloadEncoding != "uncompressed" {
-		w.Header().Set("Content-Encoding", asset.Payload.PayloadEncoding)
+	encoding := asset.ExternalObject.Payload.PayloadEncoding
+	if encoding != 0 { // 0 is UNCOMPRESSED
+		switch encoding {
+		case 1: // GZIP
+			w.Header().Set("Content-Encoding", "gzip")
+		case 2: // DEFLATE
+			w.Header().Set("Content-Encoding", "deflate")
+		}
 	}
 
-	// Set custom headers
-	for key, value := range asset.CustomHeaders {
-		w.Header().Set(key, value)
+	// Set all custom headers from metadata (skip standard ones we already handled)
+	for key, value := range asset.GetAllMetadata() {
+		if key != "content-type" && key != "content-disposition" {
+			w.Header().Set(key, value)
+		}
 	}
 
 	// Write status and stream data

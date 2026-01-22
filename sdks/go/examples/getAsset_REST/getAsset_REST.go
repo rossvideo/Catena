@@ -98,16 +98,17 @@ func main() {
 	// Asset Storage
 	// ==========================================================================
 	assets := &sync.Map{}
-	assetsList := &sync.Map{}
 
 	// Load assets from embedded static directory
-	loadAssetsFromEmbedded(staticFS, "static", assets, assetsList)
+	loadAssetsFromEmbedded(staticFS, "static", assets)
 
-	// Build assets list for logging
-	var assetNames []string
-	assetsList.Range(func(key, value any) bool {
-		assetNames = append(assetNames, key.(string))
-		return true
+	// Collect asset names for example curl command
+	var firstAssetName string
+	assets.Range(func(key, _ any) bool {
+		if firstAssetName == "" {
+			firstAssetName = key.(string)
+		}
+		return firstAssetName == "" // Stop after finding first asset
 	})
 
 	// ==========================================================================
@@ -128,13 +129,20 @@ func main() {
 
 		asset := val.(Asset)
 
-		// Create CatenaAsset with the data and content type
-		catenaAsset := catena.NewCatenaAsset(asset.Data, asset.ContentType)
-
-		// Add filename if available
-		if asset.Filename != "" {
-			catenaAsset = catenaAsset.WithFilename(asset.Filename)
+		// Create DataPayload in business logic
+		payload := catena.DataPayload{
+			Data:        asset.Data,
+			ContentType: asset.ContentType,
+			Cachable:    true,
 		}
+
+		// Add filename to content-disposition if available
+		if asset.Filename != "" {
+			payload.ContentDisposition = fmt.Sprintf("attachment; filename=%q", asset.Filename)
+		}
+
+		// Convert DataPayload to CatenaAsset when returning
+		catenaAsset := payload.ToCatenaAsset()
 
 		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(asset.Data))
 		return catena.ReplyAsset(catenaAsset)
@@ -156,15 +164,9 @@ func main() {
 	logger.Info("Available endpoint:")
 	logger.Info("  GET  /st2138-api/v1/0/asset/{oid}  - GetAsset")
 	logger.Info("")
-	logger.Info("Loaded assets:")
-	assetsList.Range(func(key, value any) bool {
-		logger.Info("  ", "asset", key)
-		return true
-	})
-	logger.Info("")
-	logger.Info("Example curl:")
-	if len(assetNames) > 0 {
-		logger.Info(fmt.Sprintf("  curl http://localhost:%d/st2138-api/v1/0/asset/%s", port, assetNames[0]))
+	if firstAssetName != "" {
+		logger.Info("Example curl:")
+		logger.Info(fmt.Sprintf("  curl http://localhost:%d/st2138-api/v1/0/asset/%s", port, firstAssetName))
 	}
 	logger.Info("=======================================================")
 
@@ -182,7 +184,7 @@ func main() {
 }
 
 // loadAssetsFromEmbedded loads all files from the embedded filesystem into the asset store
-func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map, assetsList *sync.Map) {
+func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map) {
 	err := fs.WalkDir(embedFS, root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			logger.Warning("Error accessing path", "path", path, "error", err)
@@ -222,7 +224,6 @@ func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map, ass
 		}
 
 		assets.Store(assetID, asset)
-		assetsList.Store(assetID, true)
 		logger.Info("Loaded asset", "id", assetID, "size", len(data), "type", contentType)
 
 		return nil
