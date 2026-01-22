@@ -97,9 +97,9 @@ target_link_libraries(${TARGET}
     swscale
 )
 
-# Link all MXL shared libraries from the mxl/app folder
+# Link all MXL shared libraries from the mxl/lib folder
 file(GLOB MXL_SO_FILES
-    "${CATENA_CPP_ROOT_DIR}/../../mxl/app/*.so"
+    "${CATENA_CPP_ROOT_DIR}/../../mxl/lib/*.so"
 )
 
 # If any .so files are present, link them directly and ensure the runtime can find them

@@ -200,50 +200,6 @@ void RunVideoFlow() {
 
 void defineCommands() {
     catena::exception_with_status err{"", catena::StatusCode::OK};
-    std::unique_ptr<IParam> listFlowsCommand = dm.getCommand("/list_flows", err);
-    listFlowsCommand->defineCommand(
-      [](const st2138::Value& value,
-         const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> {
-          return std::make_unique<ParamDescriptor::CommandResponder>(
-            [](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
-                st2138::Value domainsValue;
-                st2138::CommandResponse response;
-                catena::exception_with_status err = dm.getValue("/inputs/domains", domainsValue);
-                // If the state parameter does not exist, return an exception
-                if (err.status != catena::StatusCode::OK) {
-                    response.mutable_exception()->set_type("Invalid Command");
-                    response.mutable_exception()->set_details(err.what());
-                    co_return response;
-                }
-                std::string domain;
-                std::istringstream domainStream(domainsValue.string_value());
-                std::ostringstream flowIdsStream;
-                while (std::getline(domainStream, domain, ';')) {
-                    std::filesystem::path path{domain};
-                    if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path)) {
-                        LOG(WARNING) << "Domain path does not exist or is not a directory: " << domain;
-                        continue;
-                    }
-                    for (const auto& entry : std::filesystem::directory_iterator(path)) {
-                        if (!entry.is_directory())
-                            continue;
-                        if (entry.path().extension() != ".mxl-flow")
-                            continue;
-                        std::string flowId = entry.path().stem().string();
-                        if (flowIdsStream.tellp() != std::ostringstream::pos_type(0)) {
-                            flowIdsStream << ";";
-                        }
-                        flowIdsStream << flowId;
-                        LOG(INFO) << "Found flow ID: " << flowId << " in domain: " << domain;
-                    }
-                }
-                st2138::Value flowIdsValue;
-                flowIdsValue.set_string_value(flowIdsStream.str());
-                dm.setValue("/flow_ids", flowIdsValue);
-                response.mutable_no_response();
-                co_return response;
-            }(value, respond));
-      });
 
     std::unique_ptr<IParam> startCommand = dm.getCommand("/start", err);
     startCommand->defineCommand(

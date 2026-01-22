@@ -58,7 +58,7 @@ params:
 
   ref_flow_info:
     import:
-      file: ../templates/param.mxl_flow_info.yaml
+      url: ../templates/param.mxl_flow_info.yaml
 
   flow_info:
     template_oid: /ref_flow_info
@@ -75,15 +75,7 @@ params:
 
   flow_def:
     import:
-      file: ../templates/param.flow_def.yaml
-
-  flow_ids:
-    type: STRING
-    name:
-      display_strings:
-        en: "Flow IDs from List Flows"
-    value:
-      string_value: ""
+      url: ../templates/param.flow_def.yaml
 
   status:
     type: STRING
@@ -156,46 +148,22 @@ params:
     value:
       struct_array_values:
         struct_values:
-          - struct_value:
-              fields:
-                name:
-                  string_value: Video
-                domain:
-                  string_value: /dev/shm/mxl
-                flow_id:
-                  string_value: 5fbec3b1-1b0f-417d-9059-8b94a47197ed
-          - struct_value:
-              fields:
-                name:
-                  string_value: SMPTE Bars
-                domain:
-                  string_value: /dev/shm/mxl
-                flow_id:
-                  string_value: e1c42092-22fc-43fb-ae41-3b351664b6e5
-          # - struct_value:
-          #     fields:
-          #       name:
-          #         string_value: ""
-          #       domain:
-          #         string_value: /dev/shm/mxl
-          #       flow_id:
-          #         string_value: ""
-          # - struct_value:
-          #     fields:
-          #       name:
-          #         string_value: ""
-          #       domain:
-          #         string_value: /dev/shm/mxl
-          #       flow_id:
-          #         string_value: ""
+          - fields:
+              name:
+                string_value: Video
+              domain:
+                string_value: /dev/shm/mxl
+              flow_id:
+                string_value: 5fbec3b1-1b0f-417d-9059-8b94a47197ed
+          - fields:
+              name:
+                string_value: SMPTE Bars
+              domain:
+                string_value: /dev/shm/mxl
+              flow_id:
+                string_value: e1c42092-22fc-43fb-ae41-3b351664b6e5
 
 commands:
-  list_flows:
-    type: EMPTY
-    name:
-      display_strings:
-        en: "List Flows"
-    response: false
   start:
     type: EMPTY
     name:
@@ -249,12 +217,6 @@ menu_groups:
           - /flow_def/interlace_mode
           - /flow_def/colorspace
           - /flow_def/components
-      flows:
-        name:
-          display_strings:
-            en: "Flows"
-        param_oids:
-          - /flow_ids
   config:
     name:
       display_strings:

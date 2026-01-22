@@ -23,8 +23,6 @@ cmake_minimum_required(VERSION 3.20)
 project(CATENA_LITE_EXAMPLES C CXX)
 add_dependencies(${target} build_openapi)
 
-add_subdirectory("video_src")
 add_subdirectory("mxl_info")
 add_subdirectory("mxl2ndi_sink")
 add_subdirectory("ts2mxl")
-add_subdirectory("mp42mxl")

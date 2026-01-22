@@ -34,7 +34,7 @@ params:
 
   ref_flow_info:
     import:
-      file: ../templates/param.mxl_flow_info.yaml
+      url: ../templates/param.mxl_flow_info.yaml
 
   flow_info:
     template_oid: /ref_flow_info
@@ -51,7 +51,7 @@ params:
 
   flow_def:
     import:
-      file: ../templates/param.flow_def.yaml
+      url: ../templates/param.flow_def.yaml
 
 menu_groups:
   status:

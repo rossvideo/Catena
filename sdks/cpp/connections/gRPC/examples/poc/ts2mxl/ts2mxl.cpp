@@ -236,13 +236,10 @@ void run() {
 
     createV210FlowJson(info, flowId, flowJson);
 
-    if (mxlCreateFlow(instance, flowJson.c_str(), nullptr, &cfg) != MXL_STATUS_OK) {
-        LOG(ERROR) << "Flow creation failed";
-        return;
-    }
-
     mxlFlowWriter writer;
-    if (mxlCreateFlowWriter(instance, flowId.c_str(), nullptr, &writer) != MXL_STATUS_OK) {
+    mxlFlowConfigInfo configInfo;
+    bool created = false;
+    if (mxlCreateFlowWriter(instance, flowId.c_str(), nullptr, &writer, &configInfo, &created) != MXL_STATUS_OK) {
         LOG(ERROR) << "Writer creation failed";
         return;
     }
@@ -335,7 +332,6 @@ void run() {
     avformat_close_input(&fmt);
 
     mxlReleaseFlowWriter(instance, writer);
-    mxlDestroyFlow(instance, flowId.c_str());
     mxlDestroyInstance(instance);
 }
 
