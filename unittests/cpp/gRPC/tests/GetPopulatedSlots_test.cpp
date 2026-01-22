@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the GetPopulatedSlots.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/18
+ * @author keon.foster@rossvideo.com
+ * @date 22/01/26
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -183,6 +184,8 @@ TEST_F(gRPCGetPopulatedSlotsTests, GetPopulatedSlots_InvalidRequestStart) {
     EXPECT_DOUBLE_EQ(getRPCRequestStart(".123123"), DEFAULT_REQUEST_START);
     // Test with no period
     EXPECT_DOUBLE_EQ(getRPCRequestStart("123"), DEFAULT_REQUEST_START);
+    // Test with empty value
+    EXPECT_DOUBLE_EQ(getRPCRequestStart(""), DEFAULT_REQUEST_START);
     // Test with too large of a value
     EXPECT_DOUBLE_EQ(getRPCRequestStart(std::string(309, '1')), DEFAULT_REQUEST_START);
 }

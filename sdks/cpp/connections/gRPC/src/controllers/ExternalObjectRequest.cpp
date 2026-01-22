@@ -93,6 +93,7 @@ void ExternalObjectRequest::proceed(bool ok) {
          * and transitioning to kRead
          */
         case CallStatus::kProcess:
+            processTimesatmps_();
             new ExternalObjectRequest(service_, dms_, ok);  // to serve other clients
             context_.AsyncNotifyWhenDone(this);
             status_ = CallStatus::kWrite;

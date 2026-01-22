@@ -32,6 +32,8 @@
  * @file ICallData.h
  * @brief Interface class for gRPC CallData classes.
  * @author benjamin.whitten@rossvideo.com
+ * @author keon.foster@rossvideo.com
+ * @date 22/01/26
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -70,6 +72,10 @@ class ICallData {
      * @throw catena::exception_with_status if the token is not found.
      */
     virtual std::string jwsToken_() const = 0;
+    /**
+     * @brief Reads requestStart from metadata and records current time for requestReceived.
+     */
+    virtual void processTimesatmps_() = 0;
 };
 
 };

@@ -32,6 +32,8 @@
  * @file CallData.h
  * @brief Base class for gRPC CallData classes which defines getJWSToken_().
  * @author benjamin.whitten@rossvideo.com
+ * @author keon.foster@rossvideo.com
+ * @date 22/01/26
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -164,12 +166,9 @@ class CallData : public ICallData {
         if (clientMeta != nullptr) {
             auto kv = clientMeta->find("request-start");
             if (kv != clientMeta->end() && valid_start_time(kv->second)) {
-                try {
-                    char* end = NULL;
-                    requestStart_ = strtod(kv->second.data(), &end);
-                } catch (...) {
-                    throw catena::exception_with_status("Invalid Request Start", catena::StatusCode::INVALID_ARGUMENT);
-                }
+                std::string requestStartStr(kv->second.data(), kv->second.length());
+                char* end = NULL;
+                requestStart_ = strtod(requestStartStr.c_str(), &end);
             }
         } else {
             throw catena::exception_with_status("Client metadata not found", catena::StatusCode::NOT_FOUND);

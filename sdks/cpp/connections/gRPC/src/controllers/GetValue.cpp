@@ -77,6 +77,7 @@ void GetValue::proceed( bool ok) {
          * kFinish and notifying the responder once finished.
          */
         case CallStatus::kProcess:
+            processTimesatmps_();
             // Used to serve other clients while processing.
             new GetValue(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);

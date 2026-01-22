@@ -33,7 +33,8 @@
  * @brief This file is for testing the gRPC ParamInfoRequest.cpp file.
  * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
  * @author Jason Chen (jason.chen@rossvideo.com)
- * @date 2025-12-01
+ * @author keon.foster@rossvideo.com
+ * @date 22/01/26
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -114,6 +115,50 @@ protected:
                     << "Response " << i << " does not match expected";
             }
         }
+    }
+
+    /**
+     * Makes an async RPC and returns the requestStart value read by the handler.
+     */
+    double getRPCRequestStart(std::string expectedRequestStart) {
+        done_ = false;
+        double requestStart = -1.0;
+        const int maxWaitMs = 5000;
+        const auto startTime = std::chrono::steady_clock::now();
+
+        // Create a new client context for this call to avoid metadata from previous calls
+        grpc::ClientContext context;
+        context.AddMetadata("request-start", expectedRequestStart);
+        
+        // Sending async RPC
+        StreamReader streamReader(&outVals_, &outRc_);
+        streamReader.MakeCall(&context, &inVal_, [this](auto ctx, auto payload, auto reactor) {
+            client_->async()->ParamInfoRequest(ctx, payload, reactor);
+        });
+        
+        // Loop for checking handler
+        while (true) {
+            auto elapsed = std::chrono::steady_clock::now() - startTime;
+            if (std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count() > maxWaitMs) {
+                break; // Timeout waiting for RPC
+            }
+
+            auto* handler = dynamic_cast<ParamInfoRequest*>(testCall_.get());
+            if (handler != nullptr) {
+                if (handler->getRequestReceieved_() != DEFAULT_REQUEST_RECEIVED) { // Check if processTimestamps_ has been called
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Give processTimestamps_ time to finish
+                    requestStart = handler->getRequestStart_();
+                    break;
+                }
+            }
+        }
+        streamReader.Await();
+        
+        // Clear the response for the next call
+        outVals_.erase(outVals_.begin(), outVals_.end());
+        
+        // Will return -1.0 if timed-out, 0.0 if invalid header value, or the parsed value
+        return requestStart;
     }
 
     // In/out val
@@ -795,4 +840,33 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_SlotOutOfRange) {
     expRc_ = catena::exception_with_status("slot number out of range", catena::StatusCode::INVALID_ARGUMENT);
     // Sending the RPC.
     testRPC();
+}
+
+/*
+ * TEST 5 - Test request-start header read correctly
+ */
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_RequestStart) {
+    EXPECT_DOUBLE_EQ(getRPCRequestStart("12345.123"), 12345.123);
+    EXPECT_DOUBLE_EQ(getRPCRequestStart("1.0"), 1.0);
+    EXPECT_DOUBLE_EQ(getRPCRequestStart("123456789.12345"), 123456789.12345);
+}
+
+/*
+ * TEST 6 - Test invalid request-start header value get set to default
+ */
+TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_InvalidRequestStart) {
+    // Test with non-number/period in value
+    EXPECT_DOUBLE_EQ(getRPCRequestStart("123@.123"), DEFAULT_REQUEST_START);
+    // Test with multiple periods
+    EXPECT_DOUBLE_EQ(getRPCRequestStart("123.123."), DEFAULT_REQUEST_START);
+    // Test with negative value
+    EXPECT_DOUBLE_EQ(getRPCRequestStart("-123.123"), DEFAULT_REQUEST_START);
+    // Test with leading period
+    EXPECT_DOUBLE_EQ(getRPCRequestStart(".123123"), DEFAULT_REQUEST_START);
+    // Test with no period
+    EXPECT_DOUBLE_EQ(getRPCRequestStart("123"), DEFAULT_REQUEST_START);
+    // Test with empty value
+    EXPECT_DOUBLE_EQ(getRPCRequestStart(""), DEFAULT_REQUEST_START);
+    // Test with too large of a value
+    EXPECT_DOUBLE_EQ(getRPCRequestStart(std::string(309, '1')), DEFAULT_REQUEST_START);
 }

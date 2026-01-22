@@ -61,6 +61,7 @@ void UpdateSubscriptions::proceed(bool ok) {
             break;
 
         case CallStatus::kProcess:
+            processTimesatmps_();
             new UpdateSubscriptions(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
             

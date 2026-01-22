@@ -62,6 +62,7 @@ void ParamInfoRequest::proceed(bool ok) {
             break;  
 
         case CallStatus::kProcess:
+            processTimesatmps_();
             { // rc scope
             new ParamInfoRequest(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
