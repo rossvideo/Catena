@@ -102,27 +102,51 @@ func (v Variant) Print() {
 }
 ```
 
-## Logging Config
+## SDK Configuration
 
-Config can be changed with env variables:
+The SDK uses a unified configuration system. All settings are loaded from environment variables with a configurable prefix.
+
+### Usage
+
+```go
+import "github.com/rossvideo/catena/sdks/go/pkg/catena"
+
+func main() {
+    // Parse config from environment variables (supports -v, -vv, -vvv flags)
+    cfg := catena.ParseConfigWithVerbosity("CATENA")
+    cfg.Logger.AppName = "my_service"
+
+    // Initialize SDK
+    if err := catena.Init(cfg); err != nil {
+        log.Fatal(err)
+    }
+    defer catena.Close()
+
+    // Use cfg.Port for server, catena.IsDev() for environment checks, etc.
+}
+```
+
+### Environment Variables
+
+All variables use the same prefix (default: `CATENA`). Replace `{PREFIX}` with your chosen prefix.
 
 | Variable | Description | Allowed values | Default |
 |---|---|---|---|
-| `CATENA_LOG_DIR` | Directory for log files | Path | `./logs` |
-| `CATENA_SILENT` | Suppress all output | `true` | — |
-| `CATENA_LOG_LEVEL` | Logging verbosity | `debug`, `info`, `warn`, `error` | `error` |
-| `CATENA_LOG_FILE` | Enable file logging | `true`, `false` | `true` |
-| `CATENA_LOG_CONSOLE` | Enable console logging | `true`, `false` | `true` |
-| `CATENA_LOG_JSON` | Output logs as JSON | `true` | — |
+| `{PREFIX}_ENV` | Environment mode | `dev`, `prod` | `prod` |
+| `{PREFIX}_PORT` | HTTP server port | Integer | `6254` |
+| `{PREFIX}_LOG_DIR` | Directory for log files | Path | `./logs` |
+| `{PREFIX}_SILENT` | Suppress all output | `true` | — |
+| `{PREFIX}_LOG_LEVEL` | Logging verbosity | `debug`, `info`, `warn`, `error` | `error` |
+| `{PREFIX}_LOG_FILE` | Enable file logging | `true`, `false` | `true` |
+| `{PREFIX}_LOG_CONSOLE` | Enable console logging | `true`, `false` | `true` |
+| `{PREFIX}_LOG_JSON` | Output logs as JSON | `true` | — |
 
 ### Custom Prefix
 
-By default, the logger uses `CATENA` as the environment variable prefix. If you want to use your own prefix, pass a custom prefix to `ParseFromEnv`:
-
 ```go
 // Use the default CATENA prefix
-cfg := logger.ParseFromEnv("")  // reads CATENA_LOG_LEVEL, CATENA_SILENT, etc.
+cfg := catena.ParseConfigWithVerbosity("")  // reads CATENA_ENV, CATENA_PORT, etc.
 
 // Use a custom prefix for your application
-cfg := logger.ParseFromEnv("MYAPP")  // reads MYAPP_LOG_LEVEL, MYAPP_SILENT, etc.
+cfg := catena.ParseConfigWithVerbosity("MYAPP")  // reads MYAPP_ENV, MYAPP_PORT, etc.
 ```
