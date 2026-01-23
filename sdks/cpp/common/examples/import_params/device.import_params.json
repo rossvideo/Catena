@@ -47,13 +47,13 @@
       }
     },
     "city": {
-      "import": {"file": "params/param.city.json"}
+      "import": {"url": "params/param.city.json"}
     },
     "plane_ticket": {
       "type": "STRUCT",
       "params": {
         "departure": {
-          "import": {"file": "params/param.ottawa.json"}
+          "import": {"url": "params/param.ottawa.json"}
         },
         "destination": {
           "type": "STRUCT",
