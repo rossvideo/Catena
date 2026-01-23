@@ -70,6 +70,8 @@ void SocketReader::read(tcp::socket& socket) {
     jwsToken_ = "";
     jsonBody_ = "";
 
+    bool hasContentType = false; // Used for enforcing Content-Type
+
     // Reading from the socket.
     boost::asio::streambuf buffer;
     boost::asio::read_until(socket, buffer, "\r\n\r\n");
@@ -174,12 +176,18 @@ void SocketReader::read(tcp::socket& socket) {
             contentLength = stoi(value);
         }
         // Checking Content-Type
-        else if (iequals_header_name(name, "content-type") && !valid_content_type(value, "application/json")) {
-            throw catena::exception_with_status("Invalid Content-Type", catena::StatusCode::INVALID_ARGUMENT);
+        else if (iequals_header_name(name, "content-type")) {
+            if (!valid_content_type(value, "application.json")) {
+                throw catena::exception_with_status("Invalid Content-Type", catena::StatusCode::INVALID_ARGUMENT);
+            }
+            hasContentType = true;
         }
     }
     // If body exists, we need to handle leftover data and append the rest.
     if (contentLength > 0) {
+        if (!hasContentType) {
+            throw catena::exception_with_status("Content-Type missing", catena::StatusCode::INVALID_ARGUMENT);
+        }
         jsonBody_ = std::string((std::istreambuf_iterator<char>(header_stream)), std::istreambuf_iterator<char>());
         if (jsonBody_.size() < contentLength) {
             std::size_t remainingLength = contentLength - jsonBody_.size();
