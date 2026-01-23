@@ -248,6 +248,15 @@
     </div>
 
     <script>
+        // Extract value from protobuf JSON format (e.g., {int32_value: 5} -> 5)
+        function extractValue(protoVal) {
+            if (!protoVal) return null;
+            if ('int32_value' in protoVal) return protoVal.int32_value;
+            if ('float32_value' in protoVal) return protoVal.float32_value;
+            if ('string_value' in protoVal) return protoVal.string_value;
+            return null;
+        }
+
         async function cmd(name) {
             try {
                 const res = await fetch(`/st2138-api/v1/0/command/${name}`, {
@@ -255,16 +264,21 @@
                     headers: { 'Content-Type': 'application/json' }
                 });
                 const data = await res.json();
-                const sv = data.struct_value;
-                if (sv) updateCounter(sv.counter, sv.running);
-            } catch (e) {}
+                const fields = data.struct_value?.fields;
+                if (fields) {
+                    const counter = extractValue(fields.counter);
+                    const running = extractValue(fields.running);
+                    updateCounter(counter, running);
+                }
+            } catch (e) { console.error('cmd error:', e); }
         }
 
         function updateCounter(value, running) {
             const el = document.getElementById('counterValue');
             const badge = document.getElementById('statusBadge');
             el.textContent = value ?? 0;
-            if (running) {
+            // running is int32: 0 = false, 1 = true
+            if (running === 1) {
                 el.classList.add('running');
                 badge.className = 'status-badge running';
                 badge.textContent = 'Running';
@@ -279,15 +293,13 @@
             const el = document.getElementById('p-' + id);
             if (!el) return;
             
-            // Handle different value types
             let display = value;
             el.classList.remove('bool-true', 'bool-false');
             
-            if (typeof value === 'boolean') {
-                display = value ? 'true' : 'false';
-                el.classList.add(value ? 'bool-true' : 'bool-false');
-            } else if (typeof value === 'number') {
-                display = value;
+            // Handle muted as int32 boolean (0/1)
+            if (id === 'audio/muted') {
+                display = value === 1 ? 'true' : 'false';
+                el.classList.add(value === 1 ? 'bool-true' : 'bool-false');
             }
             
             el.textContent = display;
@@ -297,19 +309,21 @@
             try {
                 const res = await fetch('/st2138-api/v1/0/value/all');
                 const data = await res.json();
-                const sv = data.struct_value;
-                if (sv) {
+                const fields = data.struct_value?.fields;
+                if (fields) {
                     // Update counter
-                    updateCounter(sv.counter, sv.counter_running);
+                    const counter = extractValue(fields.counter);
+                    const running = extractValue(fields.counter_running);
+                    updateCounter(counter, running);
                     
                     // Update params
-                    for (const [key, val] of Object.entries(sv)) {
+                    for (const [key, protoVal] of Object.entries(fields)) {
                         if (key !== 'counter' && key !== 'counter_running') {
-                            updateParam(key, val);
+                            updateParam(key, extractValue(protoVal));
                         }
                     }
                 }
-            } catch (e) {}
+            } catch (e) { console.error('poll error:', e); }
         }
 
         // Poll every 500ms

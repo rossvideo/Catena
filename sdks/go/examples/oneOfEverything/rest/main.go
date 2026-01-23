@@ -71,7 +71,7 @@ type Asset struct {
 }
 
 // CommandHandler processes a command and returns a response
-type CommandHandler func(payload any) catena.StatusResult
+type CommandHandler func(payload any) (catena.CatenaValue, catena.StatusResult)
 
 // Counter state with thread-safe operations
 type CounterState struct {
@@ -196,15 +196,13 @@ func main() {
 	// ==========================================================================
 	params := &sync.Map{}
 
-	// Video parameters
 	params.Store("video/resolution", "1920x1080")
-	params.Store("video/brightness", 50)
-	params.Store("video/contrast", 50)
-	params.Store("video/saturation", 50)
+	params.Store("video/brightness", int32(50))
+	params.Store("video/contrast", int32(50))
+	params.Store("video/saturation", int32(50))
 
-	// Audio parameters
-	params.Store("audio/volume", 75)
-	params.Store("audio/muted", false)
+	params.Store("audio/volume", int32(75))
+	params.Store("audio/muted", int32(0)) // 0 = false, 1 = true
 
 	// System parameters
 	params.Store("system/device_name", "Demo Device")
@@ -214,45 +212,66 @@ func main() {
 	// ==========================================================================
 
 	// Helper to build counter response
+	// Note: ToProto only supports int32, float32, string - not int64 or bool
 	buildCounterResponse := func() map[string]any {
+		running := int32(0)
+		if counter.IsRunning() {
+			running = 1
+		}
 		return map[string]any{
-			"counter": counter.GetValue(),
-			"running": counter.IsRunning(),
+			"counter": int32(counter.GetValue()),
+			"running": running,
 		}
 	}
 
 	commands := map[string]CommandHandler{
 		// Counter commands
-		"start": func(payload any) catena.StatusResult {
+		"start": func(payload any) (catena.CatenaValue, catena.StatusResult) {
 			if counter.IsRunning() {
 				logger.Info("Start command - already running")
-				return catena.OK(buildCounterResponse())
+			} else {
+				counter.Start()
+				logger.Info("Counter started", "value", counter.GetValue())
 			}
-			counter.Start()
-			logger.Info("Counter started", "value", counter.GetValue())
-			return catena.OK(buildCounterResponse())
+			catenaVal, err := catena.ToCatenaValue(buildCounterResponse())
+			if err != nil {
+				return catena.ReplyInternalError("failed to create response")
+			}
+			return catena.ReplyOK(catenaVal)
 		},
 
-		"stop": func(payload any) catena.StatusResult {
+		"stop": func(payload any) (catena.CatenaValue, catena.StatusResult) {
 			if !counter.IsRunning() {
 				logger.Info("Stop command - already stopped")
-				return catena.OK(buildCounterResponse())
+			} else {
+				counter.Stop()
+				logger.Info("Counter stopped", "value", counter.GetValue())
 			}
-			counter.Stop()
-			logger.Info("Counter stopped", "value", counter.GetValue())
-			return catena.OK(buildCounterResponse())
+			catenaVal, err := catena.ToCatenaValue(buildCounterResponse())
+			if err != nil {
+				return catena.ReplyInternalError("failed to create response")
+			}
+			return catena.ReplyOK(catenaVal)
 		},
 
-		"add10": func(payload any) catena.StatusResult {
+		"add10": func(payload any) (catena.CatenaValue, catena.StatusResult) {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
-			return catena.OK(buildCounterResponse())
+			catenaVal, err := catena.ToCatenaValue(buildCounterResponse())
+			if err != nil {
+				return catena.ReplyInternalError("failed to create response")
+			}
+			return catena.ReplyOK(catenaVal)
 		},
 
-		"reset": func(payload any) catena.StatusResult {
+		"reset": func(payload any) (catena.CatenaValue, catena.StatusResult) {
 			counter.Reset()
 			logger.Info("Counter reset", "value", counter.GetValue())
-			return catena.OK(buildCounterResponse())
+			catenaVal, err := catena.ToCatenaValue(buildCounterResponse())
+			if err != nil {
+				return catena.ReplyInternalError("failed to create response")
+			}
+			return catena.ReplyOK(catenaVal)
 		},
 	}
 
@@ -281,34 +300,42 @@ func main() {
 	// --------------------------------------------------------------------------
 	// Register GetDevice handler
 	// --------------------------------------------------------------------------
-	srv.RegisterGetDeviceHandler(0, func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
+	srv.RegisterGetDeviceHandler(0, func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
 		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 		if len(parts) < 3 {
-			return catena.BadRequest("invalid path")
+			return catena.ReplyBadRequest("invalid path")
 		}
 		slotStr := parts[2]
 		slot, err := strconv.Atoi(slotStr)
 		if err != nil {
-			return catena.BadRequest("invalid slot")
+			return catena.ReplyBadRequest("invalid slot")
 		}
 
 		logger.Info("GetDevice", "slot", slot)
 		device, ok := devices[slot]
 		if !ok {
-			return catena.NotFound("device not found")
+			return catena.ReplyNotFound("device not found")
 		}
-		return catena.OK(device)
+		catenaVal, err := catena.ToCatenaValue(device)
+		if err != nil {
+			return catena.ReplyInternalError("failed to create device info")
+		}
+		return catena.ReplyOK(catenaVal)
 	})
 
 	// --------------------------------------------------------------------------
 	// Register GetValue handler (GetParam)
 	// --------------------------------------------------------------------------
-	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) catena.StatusResult {
+	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
 
 		// Special case: return counter state
 		if fqoid == "counter" {
-			return catena.OK(buildCounterResponse())
+			catenaVal, err := catena.ToCatenaValue(buildCounterResponse())
+			if err != nil {
+				return catena.ReplyInternalError("failed to convert counter response")
+			}
+			return catena.ReplyOK(catenaVal)
 		}
 
 		// Special case: return all params as a struct
@@ -318,51 +345,68 @@ func main() {
 				allParams[key.(string)] = value
 				return true
 			})
-			allParams["counter"] = counter.GetValue()
-			allParams["counter_running"] = counter.IsRunning()
-			return catena.OK(allParams)
+			running := int32(0)
+			if counter.IsRunning() {
+				running = 1
+			}
+			allParams["counter"] = int32(counter.GetValue())
+			allParams["counter_running"] = running
+			catenaVal, err := catena.ToCatenaValue(allParams)
+			if err != nil {
+				return catena.ReplyInternalError("failed to convert params")
+			}
+			return catena.ReplyOK(catenaVal)
 		}
 
 		val, ok := params.Load(fqoid)
 		if !ok {
-			return catena.NotFound("parameter not found: " + fqoid)
+			return catena.ReplyNotFound("parameter not found: " + fqoid)
 		}
 
-		return catena.OK(val)
+		catenaVal, err := catena.ToCatenaValue(val)
+		if err != nil {
+			return catena.ReplyInternalError("failed to convert value")
+		}
+		return catena.ReplyOK(catenaVal)
 	})
 
 	// --------------------------------------------------------------------------
 	// Register SetValue handler (SetParam)
 	// --------------------------------------------------------------------------
-	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
+	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		logger.Info("SetParam", "slot", slot, "fqoid", fqoid, "value", value)
 
 		// Check if parameter exists
 		_, exists := params.Load(fqoid)
 		if !exists {
-			return catena.NotFound("parameter not found: " + fqoid)
+			return catena.ReplyNotFound("parameter not found: " + fqoid)
 		}
 
 		params.Store(fqoid, value)
 		logger.Info("Parameter updated", "fqoid", fqoid, "value", value)
-		return catena.OK(value)
+		return catena.ReplyNoContent()
 	})
 
 	// --------------------------------------------------------------------------
 	// Register ExecuteCommand handler
 	// --------------------------------------------------------------------------
-	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) catena.StatusResult {
+	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 
 		handler, ok := commands[commandFqoid]
 		if !ok {
 			logger.Warning("Command not found", "slot", slot, "command", commandFqoid)
-			return catena.OK(map[string]any{
+			response := map[string]any{
 				"exception": map[string]any{
 					"type":    "Invalid Command",
 					"details": "Command not found: " + commandFqoid,
 				},
-			})
+			}
+			catenaVal, err := catena.ToCatenaValue(response)
+			if err != nil {
+				return catena.ReplyInternalError("failed to create exception response")
+			}
+			return catena.ReplyOK(catenaVal)
 		}
 
 		return handler(payload)
@@ -371,12 +415,12 @@ func main() {
 	// --------------------------------------------------------------------------
 	// Register GetAsset handler
 	// --------------------------------------------------------------------------
-	srv.RegisterGetAssetHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) catena.StatusResult {
+	srv.RegisterGetAssetHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		logger.Info("GetAsset", "slot", slot, "fqoid", fqoid)
 
 		val, ok := assets.Load(fqoid)
 		if !ok {
-			return catena.NotFound("asset not found: " + fqoid)
+			return catena.ReplyNotFound("asset not found: " + fqoid)
 		}
 
 		asset := val.(Asset)
@@ -385,26 +429,28 @@ func main() {
 
 		reader := bytes.NewReader(asset.Data)
 		if _, err := io.Copy(w, reader); err != nil {
-			return catena.InternalServerError("failed to stream asset")
+			return catena.ReplyInternalError("failed to stream asset")
 		}
 
-		return catena.StatusResult{Status: http.StatusOK}
+		// Asset already written to response writer, return empty value with OK status
+		return catena.CatenaValue{}, catena.StatusResult{Code: catena.OK}
 	})
 
 	// --------------------------------------------------------------------------
-	// Register NotFound handler - serves index.html at root
+	// Register Fallback handler - serves index.html at root
 	// --------------------------------------------------------------------------
-	srv.RegisterNotFoundHandler(func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
+	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
 		if r.URL.Path == "/" {
 			data, err := staticFS.ReadFile("static/index.htm")
 			if err != nil {
-				return catena.NotFound("index.html not found")
+				return catena.ReplyNotFound("index.html not found")
 			}
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Write(data)
-			return catena.StatusResult{Status: http.StatusOK}
+			// Content already written to response writer
+			return catena.CatenaValue{}, catena.StatusResult{Code: catena.OK}
 		}
-		return catena.NotFound("endpoint not found: " + r.URL.Path)
+		return catena.ReplyNotFound("endpoint not found: " + r.URL.Path)
 	})
 
 	// ==========================================================================
@@ -431,7 +477,13 @@ func main() {
 	logger.Info("Assets:", "count", len(assetNames))
 	logger.Info("=======================================================")
 
-	srv.StartHTTPServer(port)
+	// Start server in a goroutine so shutdown handling works
+	go func() {
+		if err := srv.Start(port); err != nil {
+			logger.Error("server failed", "error", err)
+			os.Exit(1)
+		}
+	}()
 
 	// Wait for shutdown signal
 	<-shutdownChan
