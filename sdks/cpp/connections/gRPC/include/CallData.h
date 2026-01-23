@@ -161,17 +161,11 @@ class CallData : public ICallData {
         double receival_time = std::chrono::duration_cast<std::chrono::milliseconds>(epoch_time).count() / 1000.0;
         requestReceived_ = receival_time;
 
-        auto clientMeta = &context_.client_metadata();
+        auto clientMeta = context_.client_metadata();
         // Getting client metadata from context.
-        if (clientMeta != nullptr) {
-            auto kv = clientMeta->find("request-start");
-            if (kv != clientMeta->end() && valid_start_time(kv->second)) {
-                std::string requestStartStr(kv->second.data(), kv->second.length());
-                char* end = NULL;
-                requestStart_ = strtod(requestStartStr.c_str(), &end);
-            }
-        } else {
-            throw catena::exception_with_status("Client metadata not found", catena::StatusCode::NOT_FOUND);
+        auto kv = clientMeta.find("request-start");
+        if (kv != clientMeta.end() && valid_start_time(kv->second)) {
+            std::from_chars(kv->second.data(), kv->second.data() + kv->second.length(), requestStart_, std::chars_format::fixed);
         }
     }
 
