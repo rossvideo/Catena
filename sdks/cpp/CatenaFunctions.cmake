@@ -63,8 +63,8 @@ function(install_catena_codegen)
 
     #install the Catena device validation schema file
     install(
-        FILES ${CATENA_ROOT_DIR}/schema/catena.device_schema.json
-            ${CATENA_ROOT_DIR}/schema/catena.param_schema.json
+        FILES ${CATENA_ROOT_DIR}/smpte/interface/schemata/device.json
+            ${CATENA_ROOT_DIR}/smpte/interface/schemata/param.json
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Catena_cpp
     )
     set(CATENA_SCHEMA_JSON ${CMAKE_INSTALL_DATAROOTDIR}/Catena_cpp PARENT_SCOPE)
