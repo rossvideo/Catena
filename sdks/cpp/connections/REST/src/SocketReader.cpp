@@ -174,12 +174,7 @@ void SocketReader::read(tcp::socket& socket) {
         }
         // Getting time request was sent
         else if (requestStart_ == DEFAULT_REQUEST_START && iequals_header_name(name, "request-start") && valid_start_time(value)){
-            try {
-                char* end = NULL;
-                requestStart_ = strtod(value.c_str(), &end);
-            } catch(...) {
-                throw catena::exception_with_status("Invalid Request-Start", catena::StatusCode::INVALID_ARGUMENT);
-            }
+            std::from_chars(value.c_str(), value.c_str() + value.length(), requestStart_, std::chars_format::fixed);
         }
         // Getting body content-Length
         else if (contentLength == 0 && iequals_header_name(name, "content-length")) {
