@@ -177,7 +177,7 @@ void SocketReader::read(tcp::socket& socket) {
         }
         // Checking Content-Type
         else if (iequals_header_name(name, "content-type")) {
-            if (!valid_content_type(value, "application.json")) {
+            if (!valid_content_type(value, "application/json")) {
                 throw catena::exception_with_status("Invalid Content-Type", catena::StatusCode::INVALID_ARGUMENT);
             }
             hasContentType = true;

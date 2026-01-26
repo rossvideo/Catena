@@ -104,6 +104,7 @@ class RESTTest {
                       const std::string& origin,
                       st2138::Device_DetailLevel detailLevel,
                       const std::string& language,
+                      const std::string& contentType,
                       const std::string& jsonBody) {
         // Delegate to header-name aware variant to avoid duplication.
         writeRequestWithHeaderNames(method,
@@ -116,12 +117,14 @@ class RESTTest {
                                     origin,
                                     detailLevel,
                                     language,
+                                    contentType,
                                     jsonBody,
                                     "Origin",
                                     "Authorization",
                                     "Detail-Level",
                                     "Language",
-                                    "Content-Length");
+                                    "Content-Length",
+                                    "Content-Type");
     }
 
     /*
@@ -137,18 +140,21 @@ class RESTTest {
                       const std::string& origin,
                       st2138::Device_DetailLevel detailLevel,
                       const std::string& language,
+                      const std::string& contentType,
                       const std::string& jsonBody,
                       const std::string& originHeaderName,
                       const std::string& authorizationHeaderName,
                       const std::string& detailLevelHeaderName,
                       const std::string& languageHeaderName,
                       const std::string& contentLengthHeaderName,
+                      const std::string& contentTypeHeaderName,
                       const std::vector<std::string>& extraHeaderLines = {}) {
         // Build headers map allowing injection of custom or extra headers
         std::map<std::string, std::string> headers;
         headers[originHeaderName] = origin;
         headers["User-Agent"] = "test_agent";
         headers[authorizationHeaderName] = "Bearer " + jwsToken;
+        headers[contentTypeHeaderName] = contentType;
         if (detailLevel != st2138::Device_DetailLevel_UNSET) {
             headers[detailLevelHeaderName] =
                 catena::patterns::EnumDecorator<st2138::Device_DetailLevel>().getForwardMap().at(detailLevel);
