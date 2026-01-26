@@ -76,12 +76,10 @@ var (
 )
 
 func main() {
-	// Single unified config initialization with prefix
-	cfg := catena.ParseConfigWithVerbosity("CATENA")
-	cfg.Logger.AppName = "asset_request_REST"
-
-	if err := catena.Init(cfg); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to initialize catena: %v\n", err)
+	// Initialize SDK with prefix and app name
+	cfg, err := catena.InitSDK("CATENA", "asset_request_REST")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize SDK: %v\n", err)
 		os.Exit(1)
 	}
 	defer catena.Close()
@@ -242,4 +240,3 @@ func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map, ass
 		logger.Error("Error walking embedded directory", "root", root, "error", err)
 	}
 }
-

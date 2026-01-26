@@ -110,8 +110,8 @@ func DefaultConfig(prefix string) Config {
 	}
 }
 
-// ParseConfig parses all configuration from environment variables using the given prefix.
-func ParseConfig(prefix string) Config {
+// parseConfig parses all configuration from environment variables using the given prefix.
+func parseConfig(prefix string) Config {
 	if prefix == "" {
 		prefix = "CATENA"
 	}
@@ -141,18 +141,24 @@ func ParseConfig(prefix string) Config {
 	return cfg
 }
 
-// ParseConfigWithVerbosity parses config and applies CLI verbosity flags (-v, -vv, -vvv).
-func ParseConfigWithVerbosity(prefix string) Config {
-	cfg := ParseConfig(prefix)
+// parseConfigWithVerbosity parses config and applies CLI verbosity flags (-v, -vv, -vvv).
+func parseConfigWithVerbosity(prefix string) Config {
+	cfg := parseConfig(prefix)
 	cfg.Logger = logger.ParseConfigWithVerbosity(cfg.Prefix)
 	return cfg
 }
 
-// Init initializes all Catena SDK systems with the given configuration.
-// Sets the global environment (accessible via IsDev/IsProd) and initializes the logger.
-func Init(cfg Config) error {
+// InitSDK parses configuration from environment variables and initializes all Catena SDK systems.
+func InitSDK(prefix string, appName ...string) (Config, error) {
+	cfg := parseConfigWithVerbosity(prefix)
+	if len(appName) > 0 && appName[0] != "" {
+		cfg.Logger.AppName = appName[0]
+	}
 	currentEnv = cfg.Env
-	return logger.Init(cfg.Logger)
+	if err := logger.Init(cfg.Logger); err != nil {
+		return Config{}, err
+	}
+	return cfg, nil
 }
 
 // Close cleans up all Catena SDK resources.

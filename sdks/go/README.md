@@ -112,12 +112,9 @@ The SDK uses a unified configuration system. All settings are loaded from enviro
 import "github.com/rossvideo/catena/sdks/go/pkg/catena"
 
 func main() {
-    // Parse config from environment variables (supports -v, -vv, -vvv flags)
-    cfg := catena.ParseConfigWithVerbosity("CATENA")
-    cfg.Logger.AppName = "my_service"
-
-    // Initialize SDK
-    if err := catena.Init(cfg); err != nil {
+    // Initialize SDK with prefix and app name (parses env vars, supports -v flags)
+    cfg, err := catena.InitSDK("CATENA", "my_service")
+    if err != nil {
         log.Fatal(err)
     }
     defer catena.Close()
@@ -145,8 +142,8 @@ All variables use the same prefix (default: `CATENA`). Replace `{PREFIX}` with y
 
 ```go
 // Use the default CATENA prefix
-cfg := catena.ParseConfigWithVerbosity("")  // reads CATENA_ENV, CATENA_PORT, etc.
+cfg, err := catena.InitSDK("")  // reads CATENA_ENV, CATENA_PORT, etc.
 
 // Use a custom prefix for your application
-cfg := catena.ParseConfigWithVerbosity("MYAPP")  // reads MYAPP_ENV, MYAPP_PORT, etc.
+cfg, err := catena.InitSDK("MYAPP", "my_app")  // reads MYAPP_ENV, MYAPP_PORT, etc.
 ```

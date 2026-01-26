@@ -117,12 +117,10 @@ func (c *CounterState) Increment() {
 }
 
 func main() {
-	// Single unified config initialization with prefix
-	cfg := catena.ParseConfigWithVerbosity("CATENA")
-	cfg.Logger.AppName = "executeCommand_REST"
-
-	if err := catena.Init(cfg); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to initialize catena: %v\n", err)
+	// Initialize SDK with prefix and app name
+	cfg, err := catena.InitSDK("CATENA", "executeCommand_REST")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize SDK: %v\n", err)
 		os.Exit(1)
 	}
 	defer catena.Close()
