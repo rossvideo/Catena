@@ -27,31 +27,6 @@ static inline bool iequals_header_name(std::string_view a, std::string_view b) {
     }
     return true;
 }
-
-static inline bool valid_start_time(std::string_view s) {
-    // Empty or larger than 308 chars cannot be converted to a double
-    if (s.empty() || s.length() > 308) return false;
-    const unsigned char* ps = reinterpret_cast<const unsigned char*>(s.data());
-    const std::size_t n = s.size();
-    bool hasPeriod = false;
-
-    for(std::size_t i = 0; i < n; ++i) {
-        unsigned char cs = ps[i];
-
-        if (!isdigit(cs)) {
-            if (cs == '.' && i == 0) {
-                return false; // Reject leading period
-            }
-            else if (cs == '.' && !hasPeriod) {
-                hasPeriod = true; // Decimal point found
-            } else {
-                return false; // cs is 2nd period or invalid character
-            }
-        }
-    }
-    // No invalid characters found, if hasPeriod then format is valid.
-    return hasPeriod;
-}
 }
 
 void SocketReader::read(tcp::socket& socket) {
