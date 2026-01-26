@@ -164,8 +164,15 @@ class CallData : public ICallData {
         auto clientMeta = context_.client_metadata();
         // Getting client metadata from context.
         auto kv = clientMeta.find("request-start");
-        if (kv != clientMeta.end() && valid_start_time(kv->second)) {
-            std::from_chars(kv->second.data(), kv->second.data() + kv->second.length(), requestStart_, std::chars_format::fixed);
+        if (kv != clientMeta.end()) {
+            auto val = kv->second;
+            double temp;
+            if (std::isdigit(val.data()[0])) {
+                auto [ptr, ec] = std::from_chars(val.data(), val.data() + val.length(), temp, std::chars_format::fixed);
+                if (ec == std::errc() && ptr == val.data() + val.length() && temp >= 0) {
+                    requestStart_ = temp;
+                }
+            }
         }
     }
 

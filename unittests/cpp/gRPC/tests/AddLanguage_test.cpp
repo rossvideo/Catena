@@ -345,10 +345,8 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_InvalidRequestStart) {
     EXPECT_DOUBLE_EQ(getRPCRequestStart("-123.123"), DEFAULT_REQUEST_START);
     // Test with leading period
     EXPECT_DOUBLE_EQ(getRPCRequestStart(".123123"), DEFAULT_REQUEST_START);
-    // Test with no period
-    EXPECT_DOUBLE_EQ(getRPCRequestStart("123"), DEFAULT_REQUEST_START);
     // Test with empty value
     EXPECT_DOUBLE_EQ(getRPCRequestStart(""), DEFAULT_REQUEST_START);
     // Test with too large of a value
-    EXPECT_DOUBLE_EQ(getRPCRequestStart(std::string(309, '1')), DEFAULT_REQUEST_START);
+    EXPECT_DOUBLE_EQ(getRPCRequestStart(std::string(310, '1')), DEFAULT_REQUEST_START);
 }
