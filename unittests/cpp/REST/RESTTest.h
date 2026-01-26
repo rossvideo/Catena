@@ -32,8 +32,9 @@
  * @brief A parent class for REST test fixtures.
  * @author benjamin.whitten@rossvideo.com
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2025-11-27
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author keon.foster@rossvideo.com
+ * @date 2026/01/26
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #pragma once
