@@ -393,25 +393,12 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentType) {
     const auto detailLevel = st2138::Device_DetailLevel_NONE;
     const std::string language = "en";
     const std::string jsonBody = "";
+    std::map<std::string, std::string> headers;
     // Testing with invalid
-    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
-                                jwsToken, origin, detailLevel, language, "application/xml", jsonBody,
-                                "Origin",
-                                "Authorization",
-                                "Detail-Level",
-                                "Language",
-                                "Content-Length",
-                                "Content-Type");
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jwsToken, headers, {"Content-Type: application/xml"});
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
     // Testing with same prefix but invalid
-    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
-                                jwsToken, origin, detailLevel, language, "application/json=patch+json", jsonBody,
-                                "Origin",
-                                "Authorization",
-                                "Detail-Level",
-                                "Language",
-                                "Content-Length",
-                                "Content-Type");
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jwsToken, headers, {"Content-Type: application/json=patch+json"});
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
 }
 
@@ -433,34 +420,14 @@ TEST_F(RESTSocketReaderTests, SocketReader_ValidContentType) {
     const auto detailLevel = st2138::Device_DetailLevel_NONE;
     const std::string language = "en";
     const std::string jsonBody = "";
+    std::map<std::string, std::string> headers;
     // Testing with valid
-    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
-                                jwsToken, origin, detailLevel, language, "application/json", jsonBody,
-                                "Origin",
-                                "Authorization",
-                                "Detail-Level",
-                                "Language",
-                                "Content-Length",
-                                "Content-Type");
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jwsToken, headers, {"Content-Type: application/json"});
     EXPECT_NO_THROW(socketReader.read(serverSocket_));
     // Testing with extra parameter
-    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
-                                jwsToken, origin, detailLevel, language, "application/json; charset=utf-8", jsonBody,
-                                "Origin",
-                                "Authorization",
-                                "Detail-Level",
-                                "Language",
-                                "Content-Length",
-                                "Content-Type");
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jwsToken, headers, {"Content-Type: application/json; charset=utf-8"});
     EXPECT_NO_THROW(socketReader.read(serverSocket_));
     // Testing case-insensitive
-    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
-                                jwsToken, origin, detailLevel, language, "aPpliCatIon/jSon", jsonBody,
-                                "Origin",
-                                "Authorization",
-                                "Detail-Level",
-                                "Language",
-                                "Content-Length",
-                                "Content-Type");
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jwsToken, headers, {"Content-Type: aPpliCatIon/jSon"});
     EXPECT_NO_THROW(socketReader.read(serverSocket_));
 }
