@@ -173,8 +173,13 @@ void SocketReader::read(tcp::socket& socket) {
             }
         }
         // Getting time request was sent
-        else if (requestStart_ == DEFAULT_REQUEST_START && iequals_header_name(name, "request-start") && valid_start_time(value)){
-            std::from_chars(value.c_str(), value.c_str() + value.length(), requestStart_, std::chars_format::fixed);
+        else if (requestStart_ == DEFAULT_REQUEST_START && iequals_header_name(name, "request-start") && std::isdigit(value[0])){
+            double temp;
+            const char* val = value.c_str();
+            auto [ptr, ec] = std::from_chars(val, val + value.length(), temp, std::chars_format::fixed);
+            if (ec == std::errc() && ptr == val + value.length()) {
+                requestStart_ = temp;
+            }
         }
         // Getting body content-Length
         else if (contentLength == 0 && iequals_header_name(name, "content-length")) {

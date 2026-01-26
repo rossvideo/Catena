@@ -419,7 +419,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidRequestStart) {
     EXPECT_EQ(socketReader.requestStart(), DEFAULT_REQUEST_START);
     // Test with too large of a value
     writeRequest(method, slot, endpoint, fqoid, stream, fields,
-                            jwsToken, origin, detailLevel, language, std::string(309, '1'), jsonBody);
+                            jwsToken, origin, detailLevel, language, std::string(310, '1'), jsonBody);
     socketReader.read(serverSocket_);
     EXPECT_EQ(socketReader.requestStart(), DEFAULT_REQUEST_START);
     // Test with missing header
