@@ -135,25 +135,8 @@ func ParseConfig(prefix string) Config {
 
 // ParseConfigWithVerbosity parses config and applies CLI verbosity flags (-v, -vv, -vvv).
 func ParseConfigWithVerbosity(prefix string) Config {
-	if prefix == "" {
-		prefix = "CATENA"
-	}
-
-	cfg := DefaultConfig(prefix)
-	cfg.Logger = logger.ParseConfigWithVerbosity(prefix)
-
-	// Parse environment (dev/prod)
-	if v := os.Getenv(prefix + "_ENV"); v != "" {
-		cfg.Env = parseEnvString(v)
-	}
-
-	// Parse port
-	if v := os.Getenv(prefix + "_PORT"); v != "" {
-		if port, err := strconv.Atoi(v); err == nil && port > 0 {
-			cfg.Port = port
-		}
-	}
-
+	cfg := ParseConfig(prefix)
+	cfg.Logger = logger.ParseConfigWithVerbosity(cfg.Prefix)
 	return cfg
 }
 

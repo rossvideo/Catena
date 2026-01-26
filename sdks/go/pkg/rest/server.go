@@ -66,23 +66,28 @@ type Server struct {
 	fallbackHandler        FallbackHandler
 }
 
+func writeHTTPError(w http.ResponseWriter, result catena.StatusResult) {
+	httpStatus := result.Code.ToHTTPStatus()
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(httpStatus)
+
+	// Only return detailed error messages in dev mode
+	if catena.IsDev() {
+		json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
+	} else {
+		json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(httpStatus)})
+	}
+}
+
 // writeHTTPResult writes a CatenaValue and StatusResult to the HTTP response.
 func writeHTTPResult(w http.ResponseWriter, value catena.CatenaValue, result catena.StatusResult) {
-	httpStatus := result.Code.ToHTTPStatus()
-
-	// If there's an error message, write it as JSON
+	// If there's an error message, delegate to writeHTTPError
 	if result.Error != "" {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(httpStatus)
-
-		// Only return detailed error messages in dev mode
-		if catena.IsDev() {
-			json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
-		} else {
-			json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(httpStatus)})
-		}
+		writeHTTPError(w, result)
 		return
 	}
+
+	httpStatus := result.Code.ToHTTPStatus()
 
 	// If Value is nil, just write the status code
 	if value.Value == nil {
