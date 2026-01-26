@@ -39,6 +39,7 @@
 package catena
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -125,9 +126,16 @@ func ParseConfig(prefix string) Config {
 
 	// Parse port
 	if v := os.Getenv(prefix + "_PORT"); v != "" {
-		if port, err := strconv.Atoi(v); err == nil && port > 0 {
-			cfg.Port = port
+		port, err := strconv.Atoi(v)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: invalid %s_PORT value %q: %v\n", prefix, v, err)
+			os.Exit(1)
 		}
+		if port <= 0 || port > 65535 {
+			fmt.Fprintf(os.Stderr, "Error: %s_PORT value %d is out of valid range (1-65535)\n", prefix, port)
+			os.Exit(1)
+		}
+		cfg.Port = port
 	}
 
 	return cfg
