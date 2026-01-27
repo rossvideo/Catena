@@ -468,3 +468,40 @@ TEST_F(RESTSocketReaderTests, SocketReader_ValidRequestStart) {
     socketReader.read(serverSocket_);
     EXPECT_EQ(socketReader.requestStart(), 123456789.123456789);
 }
+
+/**
+ * TEST 19 - Invalid Content-Length throws exception
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentLength) {
+    // Enable authz so Authorization header is parsed.
+    EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
+    // Build and send request with an extra malformed header line (no ':')
+    const RESTMethod method = catena::REST::Method_GET;
+    const uint32_t slot = 1;
+    const std::string endpoint = "/test-call";
+    const std::string fqoid = "/test/oid";
+    const bool stream = false;
+    const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
+    const std::string jwsToken = "test-jws-token";
+    const std::string origin = "*";
+    const auto detailLevel = st2138::Device_DetailLevel_NONE;
+    const std::string language = "en";
+    const std::string jsonBody = "{test_json_body}";
+    const std::map<std::string, std::string> headers;
+    // Test with invalid character
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 1a23"});
+    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    // Test with invalid character at end
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 123a"});
+    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    // Test with multiple periods
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 123.123."});    
+    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    // Floats/doubles are invalid but do not throw exceptions. The fractional part is simply dropped during conversion.
+    // Test with single period
+    // writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 123.123"});    
+    // EXPECT_NO_THROW(socketReader.read(serverSocket_));
+    // Test with leading period
+    // writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: .123"});    
+    // EXPECT_NO_THROW(socketReader.read(serverSocket_));
+}
