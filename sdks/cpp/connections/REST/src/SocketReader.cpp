@@ -158,7 +158,14 @@ void SocketReader::read(tcp::socket& socket) {
         }
         // Getting body content-Length
         else if (contentLength == 0 && iequals_header_name(name, "content-length")) {
-            contentLength = stoi(value);
+            double temp;
+            const char* val = value.c_str();
+            auto [ptr, ec] = std::from_chars(val, val + value.length(), temp, std::chars_format::fixed);
+            if (ec == std::errc() && ptr == val + value.length() && temp >= 0) {
+                contentLength = static_cast<size_t>(temp);
+            } else {
+                throw catena::exception_with_status("Invalid Content-Length", catena::StatusCode::INVALID_ARGUMENT);
+            }
         }
     }
     // If body exists, we need to handle leftover data and append the rest.
