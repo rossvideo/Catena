@@ -60,7 +60,7 @@ var (
 
 func main() {
 	// Initialize SDK with prefix and app name
-	cfg, err := catena.InitSDK("CATENA", "getDevice_REST")
+	cfg, err := catena.InitSDK(catena.InitOptions{AppName: "getDevice_REST"})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to initialize SDK: %v\n", err)
 		os.Exit(1)

@@ -148,11 +148,26 @@ func parseConfigWithVerbosity(prefix string) Config {
 	return cfg
 }
 
+// InitOptions holds optional parameters for InitSDK.
+type InitOptions struct {
+	Prefix  string // Environment variable prefix (default: "CATENA")
+	AppName string // Application name for logging
+}
+
 // InitSDK parses configuration from environment variables and initializes all Catena SDK systems.
-func InitSDK(prefix string, appName ...string) (Config, error) {
-	cfg := parseConfigWithVerbosity(prefix)
-	if len(appName) > 0 && appName[0] != "" {
-		cfg.Logger.AppName = appName[0]
+// Call with no arguments to use defaults, or pass InitOptions to customize.
+func InitSDK(opts ...InitOptions) (Config, error) {
+	var opt InitOptions
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+	if opt.Prefix == "" {
+		opt.Prefix = "CATENA"
+	}
+
+	cfg := parseConfigWithVerbosity(opt.Prefix)
+	if opt.AppName != "" {
+		cfg.Logger.AppName = opt.AppName
 	}
 	currentEnv = cfg.Env
 	if err := logger.Init(cfg.Logger); err != nil {
