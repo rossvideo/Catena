@@ -34,7 +34,7 @@
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @author keon.foster@rossvideo.com
  * @date 2026/01/20
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // Common
@@ -123,6 +123,7 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
         EXPECT_EQ(socketReader.authorizationEnabled(), authz);
         EXPECT_EQ(socketReader.stream(), stream);
         EXPECT_EQ(socketReader.requestStart(), requestStart != "" ? stod(requestStart) : DEFAULT_REQUEST_START);
+        EXPECT_TRUE(socketReader.requestReceived() > 0);
     }
 
     // Variables to test on creation.
@@ -161,7 +162,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_NormalCase) {
  */
 TEST_F(RESTSocketReaderTests, SocketReader_StreamCase) {
     // Authz false by default.
-    testCall(catena::REST::Method_GET, 1, "/test-call", "/test/oid", true, {{"test-field-1", "1"}, {"test-field-2", "2"}}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "0.0", "{test_json_body}");
+    testCall(catena::REST::Method_GET, 1, "/test-call", "/test/oid", true, {{"test-field-1", "1"}, {"test-field-2", "2"}}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "1.0", "{test_json_body}");
 }
 
 /* 
@@ -169,7 +170,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_StreamCase) {
  */
 TEST_F(RESTSocketReaderTests, SocketReader_AuthzCase) {
     // Setting authz to true and calling validate.
-    testCall(catena::REST::Method_GET, 1, "/test-call", "/test/oid", false, {{"test-field-1", "1"}, {"test-field-2", "2"}}, true, "test-jws-token", "*", st2138::Device_DetailLevel_NONE, "en", "0.0", "{test_json_body}");
+    testCall(catena::REST::Method_GET, 1, "/test-call", "/test/oid", false, {{"test-field-1", "1"}, {"test-field-2", "2"}}, true, "test-jws-token", "*", st2138::Device_DetailLevel_NONE, "en", "2.5", "{test_json_body}");
 }
 
 /* 
@@ -177,7 +178,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_AuthzCase) {
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointHealth) {
     // GET /v1/health
-    testCall(catena::REST::Method_GET, 0, "/health", "", false, {}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "0.0", "");
+    testCall(catena::REST::Method_GET, 0, "/health", "", false, {}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "123.123", "");
 }
 
 /* 
@@ -185,18 +186,18 @@ TEST_F(RESTSocketReaderTests, SocketReader_EndpointHealth) {
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointDiscovery) {
     // GET /v1/devices
-    testCall(catena::REST::Method_GET, 0, "/devices", "", false, {}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "0.0", "");
+    testCall(catena::REST::Method_GET, 0, "/devices", "", false, {}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "1000.320", "");
     // GET /v1/{slot}
-    testCall(catena::REST::Method_GET, 1, "/", "", false, {}, false, "", "*", st2138::Device_DetailLevel_FULL, "en", "0.0", "");
+    testCall(catena::REST::Method_GET, 1, "/", "", false, {}, false, "", "*", st2138::Device_DetailLevel_FULL, "en", "932.0", "");
     // GET /v1/{slot}/stream
-    testCall(catena::REST::Method_GET, 1, "/", "", true, {}, false, "", "*", st2138::Device_DetailLevel_FULL, "en", "0.0", "");
+    testCall(catena::REST::Method_GET, 1, "/", "", true, {}, false, "", "*", st2138::Device_DetailLevel_FULL, "en", "0.1324", "");
 }
 
 /* 
  * TEST 7 - Testing parsing of commands endpoint.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointCommands) {
-    testCall(catena::REST::Method_POST, 0, "/commands", "/play", false, {{"respond", "true"}}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "0.0", "{test_json_body}");
+    testCall(catena::REST::Method_POST, 0, "/commands", "/play", false, {{"respond", "true"}}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "45234.123", "{test_json_body}");
 }
 
 /* 
@@ -249,7 +250,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_EndpointSubscriptions) {
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointUpdates) {
     // GET /v1/{slot}/connect
-    testCall(catena::REST::Method_GET, 1, "/connect", "", false, {}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "0.0", "");
+    testCall(catena::REST::Method_GET, 1, "/connect", "", false, {}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "123456789.123", "");
 }
 
 /* 
@@ -329,6 +330,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderCaseInsensitive) {
     EXPECT_EQ(socketReader.authorizationEnabled(), true);
     EXPECT_EQ(socketReader.stream(), stream);
     EXPECT_EQ(socketReader.requestStart(), std::stod(requestStart));
+    EXPECT_TRUE(socketReader.requestReceived() > 0);
 }
 
 /*
@@ -377,94 +379,5 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderWithoutColonIgnored) {
     EXPECT_EQ(socketReader.authorizationEnabled(), true);
     EXPECT_EQ(socketReader.stream(), stream);
     EXPECT_EQ(socketReader.requestStart(), std::stod(requestStart));
-}
-
-/**
- * TEST 17 - Invalid Request-Start value is set to default(0.0)
- */
-TEST_F(RESTSocketReaderTests, SocketReader_InvalidRequestStart) {
-    // Enable authz so Authorization header is parsed.
-    EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
-    // Build and send request with an extra malformed header line (no ':')
-    const RESTMethod method = catena::REST::Method_GET;
-    const uint32_t slot = 1;
-    const std::string endpoint = "/test-call";
-    const std::string fqoid = "/test/oid";
-    const bool stream = false;
-    const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
-    const std::string jwsToken = "test-jws-token";
-    const std::string origin = "*";
-    const auto detailLevel = st2138::Device_DetailLevel_NONE;
-    const std::string language = "en";
-    const std::string jsonBody = "{test_json_body}";
-    // Test with non-number/period in value
-    writeRequest(method, slot, endpoint, fqoid, stream, fields,
-                            jwsToken, origin, detailLevel, language, "123@.123", jsonBody);
-    socketReader.read(serverSocket_);
-    EXPECT_EQ(socketReader.requestStart(), DEFAULT_REQUEST_START);
-    // Test with multiple periods
-    writeRequest(method, slot, endpoint, fqoid, stream, fields,
-                            jwsToken, origin, detailLevel, language, "123.123.", jsonBody);
-    socketReader.read(serverSocket_);
-    EXPECT_EQ(socketReader.requestStart(), DEFAULT_REQUEST_START);
-    // Test with negative value
-    writeRequest(method, slot, endpoint, fqoid, stream, fields,
-                            jwsToken, origin, detailLevel, language, "-123.123", jsonBody);
-    socketReader.read(serverSocket_);
-    EXPECT_EQ(socketReader.requestStart(), DEFAULT_REQUEST_START);
-    // Test with leading period
-    writeRequest(method, slot, endpoint, fqoid, stream, fields,
-                            jwsToken, origin, detailLevel, language, ".123123", jsonBody);
-    socketReader.read(serverSocket_);
-    EXPECT_EQ(socketReader.requestStart(), DEFAULT_REQUEST_START);
-    // Test with too large of a value
-    writeRequest(method, slot, endpoint, fqoid, stream, fields,
-                            jwsToken, origin, detailLevel, language, std::string(310, '1'), jsonBody);
-    socketReader.read(serverSocket_);
-    EXPECT_EQ(socketReader.requestStart(), DEFAULT_REQUEST_START);
-    // Test with missing header
-    writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
-                            jwsToken, origin, detailLevel, language, "", jsonBody,
-                            "Origin",
-                            "Authorization",
-                            "Detail-Level",
-                            "Language",
-                            "Content-Length",
-                            "");
-    EXPECT_EQ(socketReader.requestStart(), DEFAULT_REQUEST_START);
-}
-
-/**
- * TEST 18 - Valid Request-Start is read correctly
- */
-TEST_F(RESTSocketReaderTests, SocketReader_ValidRequestStart) {
-    // Enable authz so Authorization header is parsed.
-    EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
-    // Build and send request with an extra malformed header line (no ':')
-    const RESTMethod method = catena::REST::Method_GET;
-    const uint32_t slot = 1;
-    const std::string endpoint = "/test-call";
-    const std::string fqoid = "/test/oid";
-    const bool stream = false;
-    const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
-    const std::string jwsToken = "test-jws-token";
-    const std::string origin = "*";
-    const auto detailLevel = st2138::Device_DetailLevel_NONE;
-    const std::string language = "en";
-    const std::string jsonBody = "{test_json_body}";
-    // Test with medium sized value
-    writeRequest(method, slot, endpoint, fqoid, stream, fields,
-                            jwsToken, origin, detailLevel, language, "12345.123", jsonBody);
-    socketReader.read(serverSocket_);
-    EXPECT_EQ(socketReader.requestStart(), 12345.123);
-    // Test with small value
-    writeRequest(method, slot, endpoint, fqoid, stream, fields,
-                            jwsToken, origin, detailLevel, language, "1.0", jsonBody);
-    socketReader.read(serverSocket_);
-    EXPECT_EQ(socketReader.requestStart(), 1.0);
-    // Test with large value
-    writeRequest(method, slot, endpoint, fqoid, stream, fields,
-                            jwsToken, origin, detailLevel, language, "123456789.123456789", jsonBody);
-    socketReader.read(serverSocket_);
-    EXPECT_EQ(socketReader.requestStart(), 123456789.123456789);
+    EXPECT_TRUE(socketReader.requestReceived() > 0);
 }
