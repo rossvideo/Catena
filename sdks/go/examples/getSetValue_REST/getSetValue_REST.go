@@ -257,13 +257,13 @@ func main() {
 	for slot, deviceInfo := range devices {
 		slot := slot             // capture loop variable
 		deviceInfo := deviceInfo // capture loop variable
-		srv.RegisterGetDeviceHandler(slot, func() (catena.CatenaValue, catena.StatusResult) {
+		srv.RegisterGetDeviceHandler(slot, func() (catena.CatenaDevice, catena.StatusResult) {
 			logger.Info("GetDevice", "slot", slot)
-			catenaVal, err := catena.ToCatenaValue(deviceInfo)
+			device, err := catena.ToCatenaDevice(deviceInfo)
 			if err != nil {
-				return catena.ReplyInternalError("failed to create device info")
+				return catena.ReplyDeviceInternalError("failed to create device info")
 			}
-			return catena.ReplyOK(catenaVal)
+			return catena.ReplyDevice(device)
 		})
 	}
 

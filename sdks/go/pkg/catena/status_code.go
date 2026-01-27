@@ -306,47 +306,102 @@ func ReplyAsset(asset CatenaAsset) (CatenaAsset, StatusResult) {
 // ReplyAssetNotFound returns a 404 Not Found error for asset requests.
 func ReplyAssetNotFound(msg string) (CatenaAsset, StatusResult) {
 	if msg == "" {
-		return CatenaAsset{}, StatusResult{Code: NOT_FOUND}
+		return CatenaAsset{asset: nil}, StatusResult{Code: NOT_FOUND}
 	}
-	return CatenaAsset{}, StatusResult{Code: NOT_FOUND, Error: msg}
+	return CatenaAsset{asset: nil}, StatusResult{Code: NOT_FOUND, Error: msg}
 }
 
 // ReplyAssetBadRequest returns a 400 Bad Request error for asset requests.
 func ReplyAssetBadRequest(msg string) (CatenaAsset, StatusResult) {
 	if msg == "" {
-		return CatenaAsset{}, StatusResult{Code: INVALID_ARGUMENT}
+		return CatenaAsset{asset: nil}, StatusResult{Code: INVALID_ARGUMENT}
 	}
-	return CatenaAsset{}, StatusResult{Code: INVALID_ARGUMENT, Error: msg}
+	return CatenaAsset{asset: nil}, StatusResult{Code: INVALID_ARGUMENT, Error: msg}
 }
 
 // ReplyAssetUnauthorized returns a 401 Unauthorized error for asset requests.
 func ReplyAssetUnauthorized(msg string) (CatenaAsset, StatusResult) {
 	if msg == "" {
-		return CatenaAsset{}, StatusResult{Code: UNAUTHENTICATED}
+		return CatenaAsset{asset: nil}, StatusResult{Code: UNAUTHENTICATED}
 	}
-	return CatenaAsset{}, StatusResult{Code: UNAUTHENTICATED, Error: msg}
+	return CatenaAsset{asset: nil}, StatusResult{Code: UNAUTHENTICATED, Error: msg}
 }
 
 // ReplyAssetForbidden returns a 403 Forbidden error for asset requests.
 func ReplyAssetForbidden(msg string) (CatenaAsset, StatusResult) {
 	if msg == "" {
-		return CatenaAsset{}, StatusResult{Code: PERMISSION_DENIED}
+		return CatenaAsset{asset: nil}, StatusResult{Code: PERMISSION_DENIED}
 	}
-	return CatenaAsset{}, StatusResult{Code: PERMISSION_DENIED, Error: msg}
+	return CatenaAsset{asset: nil}, StatusResult{Code: PERMISSION_DENIED, Error: msg}
 }
 
 // ReplyAssetInternalError returns a 500 Internal Server Error for asset requests.
 func ReplyAssetInternalError(msg string) (CatenaAsset, StatusResult) {
 	if msg == "" {
-		return CatenaAsset{}, StatusResult{Code: INTERNAL}
+		return CatenaAsset{asset: nil}, StatusResult{Code: INTERNAL}
 	}
-	return CatenaAsset{}, StatusResult{Code: INTERNAL, Error: msg}
+	return CatenaAsset{asset: nil}, StatusResult{Code: INTERNAL, Error: msg}
 }
 
 // ReplyAssetUnavailable returns a 503 Service Unavailable error for asset requests.
 func ReplyAssetUnavailable(msg string) (CatenaAsset, StatusResult) {
 	if msg == "" {
-		return CatenaAsset{}, StatusResult{Code: UNAVAILABLE}
+		return CatenaAsset{asset: nil}, StatusResult{Code: UNAVAILABLE}
 	}
-	return CatenaAsset{}, StatusResult{Code: UNAVAILABLE, Error: msg}
+	return CatenaAsset{asset: nil}, StatusResult{Code: UNAVAILABLE, Error: msg}
+}
+
+// Device reply helper functions that return (CatenaDevice, StatusResult)
+
+// ReplyDevice returns a successful device response with the given device data.
+func ReplyDevice(device CatenaDevice) (CatenaDevice, StatusResult) {
+	return device, StatusResult{Code: OK}
+}
+
+// ReplyDeviceNotFound returns a 404 Not Found error for device requests.
+func ReplyDeviceNotFound(msg string) (CatenaDevice, StatusResult) {
+	if msg == "" {
+		return CatenaDevice{device: nil}, StatusResult{Code: NOT_FOUND}
+	}
+	return CatenaDevice{device: nil}, StatusResult{Code: NOT_FOUND, Error: msg}
+}
+
+// ReplyDeviceBadRequest returns a 400 Bad Request error for device requests.
+func ReplyDeviceBadRequest(msg string) (CatenaDevice, StatusResult) {
+	if msg == "" {
+		return CatenaDevice{device: nil}, StatusResult{Code: INVALID_ARGUMENT}
+	}
+	return CatenaDevice{device: nil}, StatusResult{Code: INVALID_ARGUMENT, Error: msg}
+}
+
+// ReplyDeviceUnauthorized returns a 401 Unauthorized error for device requests.
+func ReplyDeviceUnauthorized(msg string) (CatenaDevice, StatusResult) {
+	if msg == "" {
+		return CatenaDevice{device: nil}, StatusResult{Code: UNAUTHENTICATED}
+	}
+	return CatenaDevice{device: nil}, StatusResult{Code: UNAUTHENTICATED, Error: msg}
+}
+
+// ReplyDeviceForbidden returns a 403 Forbidden error for device requests.
+func ReplyDeviceForbidden(msg string) (CatenaDevice, StatusResult) {
+	if msg == "" {
+		return CatenaDevice{device: nil}, StatusResult{Code: PERMISSION_DENIED}
+	}
+	return CatenaDevice{device: nil}, StatusResult{Code: PERMISSION_DENIED, Error: msg}
+}
+
+// ReplyDeviceInternalError returns a 500 Internal Server Error for device requests.
+func ReplyDeviceInternalError(msg string) (CatenaDevice, StatusResult) {
+	if msg == "" {
+		return CatenaDevice{device: nil}, StatusResult{Code: INTERNAL}
+	}
+	return CatenaDevice{device: nil}, StatusResult{Code: INTERNAL, Error: msg}
+}
+
+// ReplyDeviceUnavailable returns a 503 Service Unavailable error for device requests.
+func ReplyDeviceUnavailable(msg string) (CatenaDevice, StatusResult) {
+	if msg == "" {
+		return CatenaDevice{device: nil}, StatusResult{Code: UNAVAILABLE}
+	}
+	return CatenaDevice{device: nil}, StatusResult{Code: UNAVAILABLE, Error: msg}
 }

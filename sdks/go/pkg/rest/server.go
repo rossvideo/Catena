@@ -41,13 +41,15 @@ import (
 	"strings"
 	"sync"
 
+	"google.golang.org/protobuf/encoding/protojson"
+
 	"github.com/rossvideo/catena/sdks/go/internal"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
 // Handlers now return (CatenaValue, StatusResult) so the server can respond consistently.
-type DeviceHandler func() (catena.CatenaValue, catena.StatusResult)
+type DeviceHandler func() (catena.CatenaDevice, catena.StatusResult)
 type GetValueHandler func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult)
 type SetValueHandler func(value any, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult)
 type GetAssetHandler func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult)
@@ -68,8 +70,8 @@ type Server struct {
 	fallbackHandler        FallbackHandler
 }
 
-// writeHTTPResult writes a CatenaValue and StatusResult to the HTTP response.
-func writeHTTPResult(w http.ResponseWriter, value catena.CatenaValue, result catena.StatusResult) {
+// writeHTTPResult is a unified function that handles writing different response types
+func writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value interface{}) {
 	httpStatus := result.Code.ToHTTPStatus()
 
 	w.Header().Set("Content-Type", "application/json")
@@ -84,33 +86,63 @@ func writeHTTPResult(w http.ResponseWriter, value catena.CatenaValue, result cat
 		}
 	}
 
-	// If Value is nil, just write the status code
-	if value.Value == nil {
+	// Handle different value types
+	switch v := value.(type) {
+	case catena.CatenaValue:
+		writeValueResult(w, v, httpStatus)
+	case catena.CatenaDevice:
+		writeDeviceResult(w, v, httpStatus)
+	case catena.CatenaAsset:
+		writeAssetResult(w, v, httpStatus)
+	default:
+		w.WriteHeader(httpStatus)
+	}
+}
+
+// writeValueResult writes a CatenaValue as JSON
+func writeValueResult(w http.ResponseWriter, value catena.CatenaValue, httpStatus int) {
+	protoValue := value.Value
+	if protoValue == nil {
 		w.WriteHeader(httpStatus)
 		return
 	}
 
-	// Write the protobuf value as JSON
-	if err := internal.WriteResponseJSON(w, value.Value, httpStatus); err != nil {
-		logger.Error("failed to write response", "error", err)
+	if err := internal.WriteResponseJSON(w, protoValue, httpStatus); err != nil {
+		logger.Error("failed to write value response", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
 
-// writeAssetResult writes a CatenaAsset to the HTTP response with appropriate headers
-func writeAssetResult(w http.ResponseWriter, asset catena.CatenaAsset, result catena.StatusResult) {
-	httpStatus := result.Code.ToHTTPStatus()
-
-	// If there's an error, write error response
-	if result.Error != "" {
-		w.Header().Set("Content-Type", "application/json")
+// writeDeviceResult writes a CatenaDevice as JSON
+func writeDeviceResult(w http.ResponseWriter, device catena.CatenaDevice, httpStatus int) {
+	protoDevice := device.GetProtoDevice()
+	if protoDevice == nil {
 		w.WriteHeader(httpStatus)
-		json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
 		return
 	}
 
-	// Validate asset structure
-	if asset.ExternalObject == nil || asset.ExternalObject.Payload == nil {
+	w.Header().Set("Content-Type", "application/json")
+	b, err := (protojson.MarshalOptions{
+		UseProtoNames:   true,
+		EmitUnpopulated: false,
+	}).Marshal(protoDevice)
+	if err != nil {
+		logger.Error("failed to marshal device response", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "failed to marshal device response"})
+		return
+	}
+
+	w.WriteHeader(httpStatus)
+	if _, writeErr := w.Write(b); writeErr != nil {
+		logger.Error("failed to write device response", "error", writeErr)
+	}
+}
+
+// writeAssetResult writes a CatenaAsset with appropriate headers for binary/redirect responses
+func writeAssetResult(w http.ResponseWriter, asset catena.CatenaAsset, httpStatus int) {
+	protoAsset := asset.GetProtoAsset()
+	if protoAsset == nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid asset structure"})
@@ -118,44 +150,56 @@ func writeAssetResult(w http.ResponseWriter, asset catena.CatenaAsset, result ca
 	}
 
 	// Set cachability headers
-	if !asset.IsCachable() {
+	if !protoAsset.Cachable {
 		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
 	}
 
+	payload := protoAsset.Payload
+	if payload == nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Asset payload is missing"})
+		return
+	}
+
 	// If URL-based asset, redirect to the URL
-	if asset.IsURL() {
-		w.Header().Set("Location", asset.GetURL())
+	if payload.GetUrl() != "" {
+		w.Header().Set("Location", payload.GetUrl())
 		w.WriteHeader(http.StatusFound) // 302 redirect
 		return
 	}
 
 	// Handle embedded data
-	data := asset.GetData()
+	data := payload.GetPayload()
 	if len(data) == 0 {
 		w.WriteHeader(httpStatus)
 		return
 	}
 
-	// Set content-type from metadata
-	if contentType := asset.GetContentType(); contentType != "" {
-		w.Header().Set("Content-Type", contentType)
-	}
-
-	// Set content-disposition from metadata
-	if contentDisposition := asset.GetContentDisposition(); contentDisposition != "" {
-		w.Header().Set("Content-Disposition", contentDisposition)
+	// Set metadata headers
+	if payload.Metadata != nil {
+		if contentType, ok := payload.Metadata["content-type"]; ok {
+			w.Header().Set("Content-Type", contentType)
+		}
+		if contentDisposition, ok := payload.Metadata["content-disposition"]; ok {
+			w.Header().Set("Content-Disposition", contentDisposition)
+		}
+		// Set all custom headers from metadata (skip standard ones we already handled)
+		for key, value := range payload.Metadata {
+			if key != "content-type" && key != "content-disposition" {
+				w.Header().Set(key, value)
+			}
+		}
 	}
 
 	// Set content-length
-	contentLength := asset.ContentLength()
-	if contentLength > 0 {
-		w.Header().Set("Content-Length", strconv.FormatInt(contentLength, 10))
+	if len(data) > 0 {
+		w.Header().Set("Content-Length", strconv.Itoa(len(data)))
 	}
 
 	// Set compression encoding if specified
-	encoding := asset.ExternalObject.Payload.PayloadEncoding
-	if encoding != 0 { // 0 is UNCOMPRESSED
-		switch encoding {
+	if payload.PayloadEncoding != 0 { // 0 is UNCOMPRESSED
+		switch payload.PayloadEncoding {
 		case 1: // GZIP
 			w.Header().Set("Content-Encoding", "gzip")
 		case 2: // DEFLATE
@@ -163,17 +207,9 @@ func writeAssetResult(w http.ResponseWriter, asset catena.CatenaAsset, result ca
 		}
 	}
 
-	// Set all custom headers from metadata (skip standard ones we already handled)
-	for key, value := range asset.GetAllMetadata() {
-		if key != "content-type" && key != "content-disposition" {
-			w.Header().Set(key, value)
-		}
-	}
-
 	// Write status and stream data
 	w.WriteHeader(httpStatus)
-	reader := bytes.NewReader(data)
-	if _, err := io.Copy(w, reader); err != nil {
+	if _, err := io.Copy(w, bytes.NewReader(data)); err != nil {
 		logger.Error("failed to stream asset data", "error", err)
 	}
 }
@@ -216,8 +252,8 @@ func (s *Server) Start(port int) error {
 
 // Default handlers that return "not implemented"
 
-func DefaultDeviceHandler() (catena.CatenaValue, catena.StatusResult) {
-	return catena.ReplyNotImplemented("GetDevice not implemented")
+func DefaultDeviceHandler() (catena.CatenaDevice, catena.StatusResult) {
+	return catena.ReplyDeviceNotFound("GetDevice not implemented")
 }
 
 func DefaultGetValueHandler(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
@@ -328,7 +364,7 @@ func (s *Server) RegisterRoutes() {
 		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 		if len(parts) < 3 {
 			val, res := catena.ReplyBadRequest("invalid path format")
-			writeHTTPResult(w, val, res)
+			writeHTTPResult(w, res, val)
 			return
 		}
 
@@ -336,7 +372,7 @@ func (s *Server) RegisterRoutes() {
 		slot, err := strconv.Atoi(slotStr)
 		if err != nil || slot < 0 || slot > math.MaxInt16 {
 			val, res := catena.ReplyBadRequest("invalid slot number")
-			writeHTTPResult(w, val, res)
+			writeHTTPResult(w, res, val)
 			return
 		}
 
@@ -345,12 +381,12 @@ func (s *Server) RegisterRoutes() {
 			// GET /st2138-api/v1/{slot} - Get device info
 			handler, ok := s.getDeviceHandlers[slot]
 			if !ok {
-				val, res := catena.ReplyNotFound("device not found")
-				writeHTTPResult(w, val, res)
+				device, res := catena.ReplyDeviceNotFound("device not found")
+				writeHTTPResult(w, res, device)
 				return
 			}
-			val, res := handler()
-			writeHTTPResult(w, val, res)
+			device, res := handler()
+			writeHTTPResult(w, res, device)
 			return
 		}
 
@@ -365,36 +401,36 @@ func (s *Server) RegisterRoutes() {
 				s.handleCommandEndpoint(w, r, slot, parts[4:])
 			default:
 				val, res := catena.ReplyNotFound("unknown endpoint")
-				writeHTTPResult(w, val, res)
+				writeHTTPResult(w, res, val)
 			}
 			return
 		}
 
 		val, res := catena.ReplyNotFound("endpoint not found")
-		writeHTTPResult(w, val, res)
+		writeHTTPResult(w, res, val)
 	})
 
 	// Connect endpoint: GET /st2138-api/v1/connect
 	s.mux.HandleFunc("/st2138-api/v1/connect", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			val, res := catena.ReplyMethodNotAllowed("only GET allowed")
-			writeHTTPResult(w, val, res)
+			writeHTTPResult(w, res, val)
 			return
 		}
 		handler := s.lookupConnect()
 		val, res := handler(w, r)
-		writeHTTPResult(w, val, res)
+		writeHTTPResult(w, res, val)
 	})
 
 	// Catch-all for 404 - must be registered last
 	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if s.fallbackHandler != nil {
 			val, res := s.fallbackHandler(w, r)
-			writeHTTPResult(w, val, res)
+			writeHTTPResult(w, res, val)
 			return
 		}
 		val, res := catena.ReplyNotFound("endpoint not found")
-		writeHTTPResult(w, val, res)
+		writeHTTPResult(w, res, val)
 	})
 }
 
@@ -405,7 +441,7 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 	case http.MethodGet:
 		handler := s.lookupGetValue(slot)
 		val, res := handler(slot, fqoid)
-		writeHTTPResult(w, val, res)
+		writeHTTPResult(w, res, val)
 
 	case http.MethodPut:
 		// Read request body
@@ -413,7 +449,7 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 		if err != nil {
 			logger.Error("failed to read request", "error", err)
 			val, res := catena.ReplyBadRequest("invalid request body")
-			writeHTTPResult(w, val, res)
+			writeHTTPResult(w, res, val)
 			return
 		}
 
@@ -422,31 +458,31 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 
 		handler := s.lookupSetValue(slot)
 		val, res := handler(nativeValue, slot, fqoid)
-		writeHTTPResult(w, val, res)
+		writeHTTPResult(w, res, val)
 
 	default:
 		val, res := catena.ReplyMethodNotAllowed("only GET, PUT, PATCH allowed")
-		writeHTTPResult(w, val, res)
+		writeHTTPResult(w, res, val)
 	}
 }
 
 func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slot int, pathParts []string) {
 	if r.Method != http.MethodGet {
 		val, res := catena.ReplyMethodNotAllowed("only GET allowed")
-		writeHTTPResult(w, val, res)
+		writeHTTPResult(w, res, val)
 		return
 	}
 
 	fqoid := strings.Join(pathParts, "/")
 	handler := s.lookupGetAsset(slot)
 	val, res := handler(slot, fqoid)
-	writeAssetResult(w, val, res)
+	writeHTTPResult(w, res, val)
 }
 
 func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, slot int, pathParts []string) {
 	if r.Method != http.MethodPost {
 		val, res := catena.ReplyMethodNotAllowed("only POST allowed")
-		writeHTTPResult(w, val, res)
+		writeHTTPResult(w, res, val)
 		return
 	}
 
@@ -459,7 +495,7 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 		if err != nil {
 			logger.Error("failed to read command payload", "error", err)
 			val, res := catena.ReplyBadRequest("invalid command payload")
-			writeHTTPResult(w, val, res)
+			writeHTTPResult(w, res, val)
 			return
 		}
 		payload = catena.FromProto(reqValue)
@@ -467,5 +503,5 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 
 	handler := s.lookupExecuteCommand(slot)
 	val, res := handler(w, r, slot, commandFqoid, payload)
-	writeHTTPResult(w, val, res)
+	writeHTTPResult(w, res, val)
 }
