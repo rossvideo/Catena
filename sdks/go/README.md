@@ -142,8 +142,8 @@ All variables use the same prefix (default: `CATENA`). Replace `{PREFIX}` with y
 
 ```go
 // Use the default CATENA prefix (no arguments needed)
-cfg, err := catena.InitSDK()  // reads CATENA_ENV, CATENA_PORT, etc.
+cfg, err := catena.InitOptions()  // reads CATENA_ENV, CATENA_PORT, etc.
 
 // Use a custom prefix for your application
-cfg, err := catena.InitSDK(catena.InitOptions{Prefix: "MYAPP", AppName: "my_app"})  // reads MYAPP_ENV, MYAPP_PORT, etc.
+cfg, err := catena.InitOptions(catena.Options{Prefix: "MYAPP", AppName: "my_app"})  // reads MYAPP_ENV, MYAPP_PORT, etc.
 ```

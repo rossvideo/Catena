@@ -148,16 +148,16 @@ func parseConfigWithVerbosity(prefix string) Config {
 	return cfg
 }
 
-// InitOptions holds optional parameters for InitSDK.
-type InitOptions struct {
+// Options holds optional parameters for InitOptions.
+type Options struct {
 	Prefix  string // Environment variable prefix (default: "CATENA")
 	AppName string // Application name for logging
 }
 
-// InitSDK parses configuration from environment variables and initializes all Catena SDK systems.
-// Call with no arguments to use defaults, or pass InitOptions to customize.
-func InitSDK(opts ...InitOptions) (Config, error) {
-	var opt InitOptions
+// InitOptions parses configuration from environment variables and initializes all Catena SDK systems.
+// Call with no arguments to use defaults, or pass Options to customize.
+func InitOptions(opts ...Options) (Config, error) {
+	var opt Options
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
