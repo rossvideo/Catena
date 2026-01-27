@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -49,6 +49,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -185,9 +186,10 @@ func main() {
 		0: {
 			"slot":              0,
 			"multi_set_enabled": true,
+			"subscriptions":     true,
 			"detail_level":      "FULL",
-			"access_scopes":     []string{"monitor", "operate", "configure", "administer"},
-			"default_scope":     "operate",
+			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
+			"default_scope":     "st2138:op",
 		},
 	}
 
@@ -212,7 +214,6 @@ func main() {
 	// ==========================================================================
 
 	// Helper to build counter response
-	// Note: ToProto only supports int32, float32, string - not int64 or bool
 	buildCounterResponse := func() map[string]any {
 		running := int32(0)
 		if counter.IsRunning() {
@@ -377,9 +378,17 @@ func main() {
 		logger.Info("SetParam", "slot", slot, "fqoid", fqoid, "value", value)
 
 		// Check if parameter exists
-		_, exists := params.Load(fqoid)
-		if !exists {
-			return catena.ReplyNotFound("parameter not found: " + fqoid)
+		val, ok := params.Load(fqoid)
+		if !ok {
+			logger.Error("SetParam param not found", "slot", slot, "fqoid", fqoid)
+			return catena.ReplyNotFound("param not found: " + fqoid)
+		}
+
+		// Verify type matches
+		if reflect.TypeOf(val) != reflect.TypeOf(value) {
+			logger.Error("SetParam type mismatch", "slot", slot, "fqoid", fqoid,
+				"expected", reflect.TypeOf(val), "got", reflect.TypeOf(value))
+			return catena.ReplyBadRequest("type mismatch")
 		}
 
 		params.Store(fqoid, value)
@@ -416,24 +425,33 @@ func main() {
 	// Register GetAsset handler
 	// --------------------------------------------------------------------------
 	srv.RegisterGetAssetHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
-		logger.Info("GetAsset", "slot", slot, "fqoid", fqoid)
+		logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
 
 		val, ok := assets.Load(fqoid)
 		if !ok {
+			logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
 			return catena.ReplyNotFound("asset not found: " + fqoid)
 		}
 
 		asset := val.(Asset)
+
+		// Set appropriate headers for binary content
 		w.Header().Set("Content-Type", asset.ContentType)
 		w.Header().Set("Content-Length", strconv.Itoa(len(asset.Data)))
+		if asset.Filename != "" {
+			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", asset.Filename))
+		}
 
+		// Stream the content
 		reader := bytes.NewReader(asset.Data)
 		if _, err := io.Copy(w, reader); err != nil {
+			logger.Error("Asset streaming error", "slot", slot, "fqoid", fqoid, "error", err)
 			return catena.ReplyInternalError("failed to stream asset")
 		}
 
+		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid)
 		// Asset already written to response writer, return empty value with OK status
-		return catena.CatenaValue{}, catena.StatusResult{Code: catena.OK}
+		return catena.ReplyOK(catena.CatenaValue{})
 	})
 
 	// --------------------------------------------------------------------------
@@ -464,17 +482,6 @@ func main() {
 	logger.Info("Web UI available at:")
 	logger.Info(fmt.Sprintf("  http://localhost:%d/", port))
 	logger.Info("")
-	logger.Info("API endpoints:")
-	logger.Info("  GET  /st2138-api/v1/0              - GetDevice")
-	logger.Info("  GET  /st2138-api/v1/0/value/{oid}  - GetParam")
-	logger.Info("  PUT  /st2138-api/v1/0/value/{oid}  - SetParam")
-	logger.Info("  POST /st2138-api/v1/0/command/{cmd}- ExecuteCommand")
-	logger.Info("  GET  /st2138-api/v1/0/asset/{oid}  - GetAsset")
-	logger.Info("")
-	logger.Info("Parameters: video/brightness, video/contrast, video/saturation,")
-	logger.Info("            video/resolution, audio/volume, audio/muted, system/device_name")
-	logger.Info("Commands:   start, stop, add10, reset")
-	logger.Info("Assets:", "count", len(assetNames))
 	logger.Info("=======================================================")
 
 	// Start server in a goroutine so shutdown handling works
@@ -490,47 +497,60 @@ func main() {
 	logger.Info("Server shutdown complete")
 }
 
-// loadAssetsFromEmbedded loads files from embedded FS into the asset store
+// loadAssetsFromEmbedded loads all files from the embedded filesystem into the asset store
 func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map, assetsList *sync.Map) {
 	err := fs.WalkDir(embedFS, root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return nil
+			logger.Warning("Error accessing path", "path", path, "error", err)
+			return nil // Continue walking
 		}
+
 		if d.IsDir() {
-			return nil
+			return nil // Skip directories
 		}
-		// Skip index.html
+
+		// Skip index.html (served separately via fallback handler)
 		if filepath.Base(path) == "index.htm" {
 			return nil
 		}
 
+		// Read file contents
 		data, err := embedFS.ReadFile(path)
 		if err != nil {
+			logger.Warning("Failed to read file", "path", path, "error", err)
 			return nil
 		}
 
+		// Determine content type from extension
 		ext := filepath.Ext(path)
 		contentType := mime.TypeByExtension(ext)
 		if contentType == "" {
 			contentType = "application/octet-stream"
 		}
 
-		relPath, _ := filepath.Rel(root, path)
+		// Use relative path from root as the asset ID
+		relPath, err := filepath.Rel(root, path)
+		if err != nil {
+			relPath = filepath.Base(path)
+		}
+		// Normalize path separators for URL use
 		assetID := strings.ReplaceAll(relPath, string(filepath.Separator), "/")
 
-		assets.Store(assetID, Asset{
+		asset := Asset{
 			ContentType: contentType,
 			Data:        data,
 			Filename:    filepath.Base(path),
-		})
+		}
+
+		assets.Store(assetID, asset)
 		assetsList.Store(assetID, true)
-		logger.Info("Loaded asset", "id", assetID, "size", len(data))
+		logger.Info("Loaded asset", "id", assetID, "size", len(data), "type", contentType)
 
 		return nil
 	})
 
 	if err != nil {
-		logger.Error("Error loading assets", "error", err)
+		logger.Error("Error walking embedded directory", "root", root, "error", err)
 	}
 }
 
