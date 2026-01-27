@@ -499,9 +499,9 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentLength) {
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
     // Floats/doubles are invalid but do not throw exceptions. The fractional part is simply dropped during conversion.
     // Test with single period
-    // writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 123.123"});    
-    // EXPECT_NO_THROW(socketReader.read(serverSocket_));
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 14.123"});    
+    EXPECT_NO_THROW(socketReader.read(serverSocket_));
     // Test with leading period
-    // writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: .123"});    
-    // EXPECT_NO_THROW(socketReader.read(serverSocket_));
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: .123"});    
+    EXPECT_NO_THROW(socketReader.read(serverSocket_));
 }
