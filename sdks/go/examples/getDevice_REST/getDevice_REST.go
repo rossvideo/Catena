@@ -460,6 +460,7 @@ func main() {
 
 	// Register GetDevice handler for each slot
 	for _, slot := range slotList {
+		slot := slot
 		srv.RegisterGetDeviceHandler(slot, func() (catena.CatenaDevice, catena.StatusResult) {
 			logger.Info("GetDevice", "slot", slot)
 			_, ok := devices[slot]

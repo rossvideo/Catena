@@ -144,7 +144,7 @@ func writeAssetResult(w http.ResponseWriter, asset catena.CatenaAsset, httpStatu
 	protoAsset := asset.GetProtoAsset()
 	if protoAsset == nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(httpStatus)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid asset structure"})
 		return
 	}
