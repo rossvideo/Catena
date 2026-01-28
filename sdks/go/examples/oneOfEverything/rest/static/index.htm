@@ -19,6 +19,10 @@
             --text: #fafafa;
             --text-dim: #a1a1aa;
             --text-muted: #52525b;
+            --section-device: #8b5cf6;
+            --section-params: #06b6d4;
+            --section-commands: #f59e0b;
+            --section-assets: #ec4899;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -29,38 +33,90 @@
             padding: 1.5rem;
         }
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
         }
         header {
             text-align: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
             padding-bottom: 1rem;
             border-bottom: 1px solid var(--border);
         }
         h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
+            font-size: 1.75rem;
+            font-weight: 700;
             color: var(--text);
+            letter-spacing: -0.025em;
         }
         .subtitle {
             color: var(--text-muted);
             font-size: 0.875rem;
             margin-top: 0.25rem;
         }
-        .grid {
+
+        /* Sections 2x2 grid */
+        .sections-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1rem;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
         }
-        @media (max-width: 640px) {
-            .grid { grid-template-columns: 1fr; }
+        @media (max-width: 800px) {
+            .sections-grid { grid-template-columns: 1fr; }
         }
-        .card {
+
+        /* Section styling */
+        .section {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .section-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        .section-icon.device { background: rgba(139, 92, 246, 0.15); color: var(--section-device); }
+        .section-icon.params { background: rgba(6, 182, 212, 0.15); color: var(--section-params); }
+        .section-icon.commands { background: rgba(245, 158, 11, 0.15); color: var(--section-commands); }
+        .section-icon.assets { background: rgba(236, 72, 153, 0.15); color: var(--section-assets); }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .section-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .section-content {
+            flex: 1;
+        }
+
+        /* Card styling */
+        .card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
         }
         .card-title {
             font-size: 0.7rem;
@@ -70,12 +126,21 @@
             letter-spacing: 0.05em;
             margin-bottom: 1rem;
         }
-        
-        /* Counter Card */
-        .counter-card {
-            grid-column: 1 / -1;
-            margin-bottom: 1rem;
+
+        /* Grid layouts */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
         }
+        .grid-full {
+            grid-column: 1 / -1;
+        }
+        @media (max-width: 640px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        /* Counter Card */
         .counter-display {
             display: flex;
             align-items: center;
@@ -84,7 +149,7 @@
         }
         .counter-value {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 700;
         }
         .counter-value.running { color: var(--success); }
@@ -135,12 +200,18 @@
         }
         .btn.add { background: var(--warning); border-color: var(--warning); color: #000; }
         
-        /* Param rows */
+        /* Param groups and rows */
+        .param-group {
+            margin-bottom: 1rem;
+        }
+        .param-group:last-child {
+            margin-bottom: 0;
+        }
         .param-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.5rem 0;
+            padding: 0.375rem 0;
             border-bottom: 1px solid var(--border);
         }
         .param-row:last-child { border-bottom: none; }
@@ -157,6 +228,26 @@
         }
         .param-value.bool-true { color: var(--success); }
         .param-value.bool-false { color: var(--danger); }
+
+        /* Placeholder content */
+        .placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            text-align: center;
+            flex: 1;
+        }
+        .placeholder-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.4;
+        }
+        .placeholder-text {
+            font-size: 0.8rem;
+        }
         
         /* Footer */
         footer {
@@ -178,72 +269,118 @@
 <body>
     <div class="container">
         <header>
-            <h1>Device Dashboard</h1>
-            <p class="subtitle">One of Everything REST Example</p>
+            <h1>One of Everything</h1>
+            <p class="subtitle">GO SDK REST Example</p>
         </header>
 
-        <!-- Counter -->
-        <div class="card counter-card">
-            <div class="card-title">Counter</div>
-            <div class="counter-display">
-                <div class="counter-value" id="counterValue">0</div>
-                <span class="status-badge stopped" id="statusBadge">Stopped</span>
-            </div>
-            <div class="counter-buttons">
-                <button class="btn start" onclick="cmd('start')">▶ Start</button>
-                <button class="btn stop" onclick="cmd('stop')">⏹ Stop</button>
-                <button class="btn add" onclick="cmd('add10')">+10</button>
-                <button class="btn" onclick="cmd('reset')">Reset</button>
-            </div>
-        </div>
-
-        <div class="grid">
-            <!-- Video Parameters -->
-            <div class="card">
-                <div class="card-title">Video</div>
-                <div class="param-row">
-                    <span class="param-name">resolution</span>
-                    <span class="param-value" id="p-video/resolution">-</span>
+        <div class="sections-grid">
+            <!-- DEVICE SECTION -->
+            <div class="section" id="section-device">
+                <div class="section-header">
+                    <div class="section-icon device">📱</div>
+                    <div>
+                        <div class="section-title">Device</div>
+                    </div>
                 </div>
-                <div class="param-row">
-                    <span class="param-name">brightness</span>
-                    <span class="param-value" id="p-video/brightness">-</span>
-                </div>
-                <div class="param-row">
-                    <span class="param-name">contrast</span>
-                    <span class="param-value" id="p-video/contrast">-</span>
-                </div>
-                <div class="param-row">
-                    <span class="param-name">saturation</span>
-                    <span class="param-value" id="p-video/saturation">-</span>
+                <div class="section-content">
+                    <div class="placeholder">
+                        <div class="placeholder-icon">📱</div>
+                        <div class="placeholder-text">Device information will be displayed here</div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Audio Parameters -->
-            <div class="card">
-                <div class="card-title">Audio</div>
-                <div class="param-row">
-                    <span class="param-name">volume</span>
-                    <span class="param-value" id="p-audio/volume">-</span>
+            <!-- PARAMETERS SECTION -->
+            <div class="section" id="section-parameters">
+                <div class="section-header">
+                    <div class="section-icon params">⚙️</div>
+                    <div>
+                        <div class="section-title">Parameters</div>
+                    </div>
                 </div>
-                <div class="param-row">
-                    <span class="param-name">muted</span>
-                    <span class="param-value" id="p-audio/muted">-</span>
+                <div class="section-content">
+                    <div class="param-group">
+                        <div class="card-title">Video</div>
+                        <div class="param-row">
+                            <span class="param-name">resolution</span>
+                            <span class="param-value" id="p-resolution">-</span>
+                        </div>
+                        <div class="param-row">
+                            <span class="param-name">brightness</span>
+                            <span class="param-value" id="p-brightness">-</span>
+                        </div>
+                        <div class="param-row">
+                            <span class="param-name">contrast</span>
+                            <span class="param-value" id="p-contrast">-</span>
+                        </div>
+                        <div class="param-row">
+                            <span class="param-name">saturation</span>
+                            <span class="param-value" id="p-saturation">-</span>
+                        </div>
+                    </div>
+                    <div class="param-group">
+                        <div class="card-title">Audio</div>
+                        <div class="param-row">
+                            <span class="param-name">volume</span>
+                            <span class="param-value" id="p-volume">-</span>
+                        </div>
+                        <div class="param-row">
+                            <span class="param-name">muted</span>
+                            <span class="param-value" id="p-muted">-</span>
+                        </div>
+                    </div>
+                    <div class="param-group">
+                        <div class="card-title">System</div>
+                        <div class="param-row">
+                            <span class="param-name">device_name</span>
+                            <span class="param-value" id="p-device_name">-</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- System Parameters -->
-            <div class="card" style="grid-column: 1 / -1;">
-                <div class="card-title">System</div>
-                <div class="param-row">
-                    <span class="param-name">device_name</span>
-                    <span class="param-value" id="p-system/device_name">-</span>
+            <!-- COMMANDS SECTION (Counter) -->
+            <div class="section" id="section-commands">
+                <div class="section-header">
+                    <div class="section-icon commands">⚡</div>
+                    <div>
+                        <div class="section-title">Commands</div>
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div class="card-title">Counter Demo</div>
+                    <div class="counter-display">
+                        <div class="counter-value" id="counterValue">0</div>
+                        <span class="status-badge stopped" id="statusBadge">Stopped</span>
+                    </div>
+                    <div class="counter-buttons">
+                        <button class="btn start" onclick="cmd('start')">▶ Start</button>
+                        <button class="btn stop" onclick="cmd('stop')">⏹ Stop</button>
+                        <button class="btn add" onclick="cmd('add10')">+10</button>
+                        <button class="btn" onclick="cmd('reset')">Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ASSETS SECTION -->
+            <div class="section" id="section-assets">
+                <div class="section-header">
+                    <div class="section-icon assets">📦</div>
+                    <div>
+                        <div class="section-title">Assets</div>
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div class="placeholder">
+                        <div class="placeholder-icon">📦</div>
+                        <div class="placeholder-text">Asset browser will be displayed here</div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <footer>
-            Polls <code>GET /value/all</code> every 500ms &bull; Use Postman to change values
+            Polls <code>GET /value/all</code> every 500ms &bull; Catena REST API
         </footer>
     </div>
 
@@ -297,7 +434,7 @@
             el.classList.remove('bool-true', 'bool-false');
             
             // Handle muted as int32 boolean (0/1)
-            if (id === 'audio/muted') {
+            if (id === 'muted') {
                 display = value === 1 ? 'true' : 'false';
                 el.classList.add(value === 1 ? 'bool-true' : 'bool-false');
             }

@@ -193,16 +193,16 @@ func main() {
 	// ==========================================================================
 	params := &sync.Map{}
 
-	params.Store("video/resolution", "1920x1080")
-	params.Store("video/brightness", int32(50))
-	params.Store("video/contrast", int32(50))
-	params.Store("video/saturation", int32(50))
+	params.Store("resolution", "1920x1080")
+	params.Store("brightness", int32(50))
+	params.Store("contrast", int32(50))
+	params.Store("saturation", int32(50))
 
-	params.Store("audio/volume", int32(75))
-	params.Store("audio/muted", int32(0)) // 0 = false, 1 = true
+	params.Store("volume", int32(75))
+	params.Store("muted", int32(0)) // 0 = false, 1 = true
 
 	// System parameters
-	params.Store("system/device_name", "Demo Device")
+	params.Store("device_name", "Demo Device")
 
 	// ==========================================================================
 	// Commands (for ExecuteCommand endpoint)
