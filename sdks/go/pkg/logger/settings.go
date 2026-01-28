@@ -30,7 +30,7 @@
 
 /**
  * @brief Config struct for logger.
- * @file config.go
+ * @file settings.go
  * @copyright Copyright © 2025 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @date 2025-12-09
