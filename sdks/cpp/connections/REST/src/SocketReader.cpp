@@ -50,7 +50,7 @@ static inline bool valid_content_type(std::string_view s, std::string_view conte
         return false;
     }
     // Ensure MIME type is exactly contentType
-    if (ps[n] != '\0' && ps[n] != ';') {
+    if (n != s.size() && ps[n] != ';') {
         return false;
     }
     return true;
@@ -185,6 +185,7 @@ void SocketReader::read(tcp::socket& socket) {
     }
     // If body exists, we need to handle leftover data and append the rest.
     if (contentLength > 0) {
+        // All request bodies must be json according to the spec, so we can just check here
         if (!hasContentType) {
             throw catena::exception_with_status("Content-Type missing", catena::StatusCode::INVALID_ARGUMENT);
         }
