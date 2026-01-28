@@ -59,14 +59,13 @@ var (
 )
 
 func main() {
-	cfg := logger.ParseConfigWithVerbosity("CATENA")
-	cfg.AppName = "get_device_example"
-
-	if err := logger.Init(cfg); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to initialize logger: %v\n", err)
+	// Initialize SDK with prefix and app name
+	cfg, err := catena.InitOptions(catena.Options{AppName: "getDevice_REST"})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize SDK: %v\n", err)
 		os.Exit(1)
 	}
-	defer logger.Close()
+	defer catena.Close()
 
 	// Handle signals for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
@@ -77,12 +76,8 @@ func main() {
 		close(shutdownChan)
 	}()
 
-	portStr := envOr("CATENA_PORT", "6254")
-	port, err := strconv.Atoi(portStr)
-	if err != nil {
-		logger.Error("invalid CATENA_PORT", "error", err)
-		os.Exit(1)
-	}
+	// Port comes from the unified config (parsed from CATENA_PORT)
+	port := cfg.Port
 
 	// Define device metadata for multiple slots
 	devices := map[int]map[string]any{
@@ -197,11 +192,4 @@ func main() {
 	// Wait for shutdown signal
 	<-shutdownChan
 	logger.Info("Server shutdown complete")
-}
-
-func envOr(key, def string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return def
 }
