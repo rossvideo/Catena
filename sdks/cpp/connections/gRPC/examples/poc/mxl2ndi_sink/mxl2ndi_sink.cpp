@@ -82,6 +82,10 @@ void RunVideoFlow() {
         std::string name = input.fields().at("name").string_value();
         std::string domain = input.fields().at("domain").string_value();
         std::string flowId = input.fields().at("flow_id").string_value();
+        if (flowId.empty()) {
+            LOG(WARNING) << "Skipping input with empty flow ID";
+            continue;
+        }
         readers.emplace_back(std::make_unique<mxlcpp::MxlReader>(name, domain, flowId));
     }
 
