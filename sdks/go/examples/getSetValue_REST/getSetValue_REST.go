@@ -196,21 +196,9 @@ func main() {
 	// Device 2: basic param handlers for all params.
 	registerBasicParamHandlers(srv, params2, 2)
 
-	// Register global connect handler (SSE streaming endpoint)
-	srv.RegisterConnectHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		logger.Info("Connect - SSE stream requested")
-		// Set SSE headers for streaming
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("Connection", "keep-alive")
-		// For this example, just acknowledge the connection
-		// A real implementation would keep the connection open and push updates
-		catenaVal, err := catena.ToCatenaValue("connected")
-		if err != nil {
-			return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to create response")
-		}
-		return catena.Reply(catenaVal)
-	})
+	// Connect endpoint is now built-in with full SSE streaming support
+	// Clients connecting to /st2138-api/v1/connect will receive real-time push updates
+	// when values change via SetValue
 
 	// Register command handlers for each slot
 	for _, slot := range slotList {
