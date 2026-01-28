@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
 import path from 'path';
-import { deserialize, getDevice, serialize } from '../serdes/serdes.js';
+import { deserialize, getDeviceDefinition, serialize } from '../serdes/serdes.js';
 
 describe("serdes", () => {
 
@@ -162,13 +162,13 @@ describe("serdes", () => {
     });
 
     test("getDevice throws on missing protos", async () => {
-        await expect(getDevice("/nonexistent/path")).rejects.toThrow("Protos path '/nonexistent/path' does not exist");
+        await expect(getDeviceDefinition("/nonexistent/path")).rejects.toThrow("Protos path '/nonexistent/path' does not exist");
     });
 
     test("getDevice protos missing Device", async () => {
         // create an empty protos directory
         const emptyProtosDir = path.join(OUTPUT_DIR, "empty_protos");
         await fs.mkdir(emptyProtosDir, { recursive: true });
-        await expect(getDevice(emptyProtosDir)).rejects.toThrow("st2138.Device");
+        await expect(getDeviceDefinition(emptyProtosDir)).rejects.toThrow("st2138.Device");
     });
 });
