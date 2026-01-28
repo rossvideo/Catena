@@ -407,20 +407,13 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentLength) {
     // Test with invalid character at end
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 123a"});
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
-    // Test with multiple periods
-    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 123.123."});    
+    // Test with float
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 123.123"});    
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
     // Test with negative value
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: -16"});    
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
-    // Test with too larger Content-Length
+    // Test with incorrect Content-Length
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 1000"});    
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
-    // Floats/doubles are invalid but do not throw exceptions. The fractional part is simply dropped during conversion.
-    // Test with single period
-    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 16.123"});    
-    EXPECT_NO_THROW(socketReader.read(serverSocket_));
-    // Test with leading period
-    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: .123"});    
-    EXPECT_NO_THROW(socketReader.read(serverSocket_));
 }
