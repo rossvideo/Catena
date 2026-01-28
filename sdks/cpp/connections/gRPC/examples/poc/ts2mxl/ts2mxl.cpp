@@ -21,8 +21,6 @@
 #include <mxl/mxl.h>
 #include <mxl/time.h>
 
-#include <Processing.NDI.Advanced.h>
-
 #include <cstdint>
 #include <cstring>
 
@@ -31,27 +29,19 @@
 #include <thread>
 #include <fstream>
 
-// FFmpeg
-extern "C" {
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
-#include <libavutil/avutil.h>
-#include <libavutil/imgutils.h>
-#include <libswscale/swscale.h>
-}
-
-// Some FFmpeg builds may not define AV_PIX_FMT_V210; fallback for compilation.
-// Use a widely available 10-bit 4:2:2 pixel format for conversion
+#include <boost/process.hpp>
 
 using catena::gRPC::ServiceConfig;
 using catena::gRPC::ServiceImpl;
 using grpc::Server;
 
 using namespace catena::common;
+namespace bp = boost::process;
 
+std::string mxlPath;
 Server* globalServer = nullptr;
 std::atomic<bool> isRunning = false;
-std::unique_ptr<std::thread> playThread = nullptr;
+std::unique_ptr<std::thread> monThread = nullptr;
 
 // handle SIGINT / SIGTERM
 void handle_signal(int sig) {
@@ -65,274 +55,46 @@ void handle_signal(int sig) {
     });
     t.join();
 }
-// ------------------------------------------------------------
-// MANUAL SMPTE v210 PACKER
-// ------------------------------------------------------------
-size_t pack_v210(const AVFrame* f, uint8_t* dst, size_t maxSize) {
-    const int W = f->width;
-    const int H = f->height;
 
-    const uint8_t* Y = f->data[0];
-    const uint8_t* Cb = f->data[1];
-    const uint8_t* Cr = f->data[2];
-
-    const int Ys = f->linesize[0];
-    const int Cs = f->linesize[1];
-
-    // v210 layout
-    const int groups_per_row = (W + 5) / 6;
-    const int rowBytes = ((groups_per_row * 16 + 127) / 128) * 128;
-    const size_t needed = size_t(rowBytes) * H;
-
-    if (maxSize < needed)
-        return 0;
-
-    uint8_t* row_start = dst;
-
-    for (int y = 0; y < H; ++y) {
-        const uint8_t* Yrow = Y + y * Ys;
-        const uint8_t* Cbrow = Cb + (y / 2) * Cs;
-        const uint8_t* Crrow = Cr + (y / 2) * Cs;
-
-        uint32_t* out = reinterpret_cast<uint32_t*>(row_start);
-
-        for (int g = 0; g < groups_per_row; ++g) {
-            int x = g * 6;
-
-            int x0 = (x + 0 < W) ? x + 0 : W - 1;
-            int x1 = (x + 1 < W) ? x + 1 : W - 1;
-            int x2 = (x + 2 < W) ? x + 2 : W - 1;
-            int x3 = (x + 3 < W) ? x + 3 : W - 1;
-            int x4 = (x + 4 < W) ? x + 4 : W - 1;
-            int x5 = (x + 5 < W) ? x + 5 : W - 1;
-
-            int cw = (W + 1) / 2;
-            int c0 = (x / 2 + 0 < cw) ? x / 2 + 0 : cw - 1;
-            int c1 = (x / 2 + 1 < cw) ? x / 2 + 1 : cw - 1;
-            int c2 = (x / 2 + 2 < cw) ? x / 2 + 2 : cw - 1;
-
-            // 8-bit → 10-bit
-            uint16_t Cb0 = (uint16_t(Cbrow[c0]) << 2) & 0x3FF;
-            uint16_t Y0 = (uint16_t(Yrow[x0]) << 2) & 0x3FF;
-            uint16_t Cr0 = (uint16_t(Crrow[c0]) << 2) & 0x3FF;
-            uint16_t Y1 = (uint16_t(Yrow[x1]) << 2) & 0x3FF;
-
-            uint16_t Cb2 = (uint16_t(Cbrow[c1]) << 2) & 0x3FF;
-            uint16_t Y2 = (uint16_t(Yrow[x2]) << 2) & 0x3FF;
-            uint16_t Cr2 = (uint16_t(Crrow[c1]) << 2) & 0x3FF;
-            uint16_t Y3 = (uint16_t(Yrow[x3]) << 2) & 0x3FF;
-
-            uint16_t Cb4 = (uint16_t(Cbrow[c2]) << 2) & 0x3FF;
-            uint16_t Y4 = (uint16_t(Yrow[x4]) << 2) & 0x3FF;
-            uint16_t Cr4 = (uint16_t(Crrow[c2]) << 2) & 0x3FF;
-            uint16_t Y5 = (uint16_t(Yrow[x5]) << 2) & 0x3FF;
-
-            // v210 packing (little-endian)
-            out[0] = Cb0 | (Y0 << 10) | (Cr0 << 20);
-            out[1] = Y1 | (Cb2 << 10) | (Y2 << 20);
-            out[2] = Cr2 | (Y3 << 10) | (Cb4 << 20);
-            out[3] = Y4 | (Cr4 << 10) | (Y5 << 20);
-
-            out += 4;
-        }
-
-        row_start += rowBytes;
+template <typename T> T& getParamAs(const std::string& oid) {
+    catena::exception_with_status err{"", catena::StatusCode::OK};
+    std::unique_ptr<IParam> param = dm.getParam(oid, err);
+    if (err.status != catena::StatusCode::OK) {
+        LOG(ERROR) << "Error getting param " << oid << ": " << err.what();
+        throw err;
     }
-
-    return needed;
-}
-// ------------------------------------------------------------
-// CREATE v210 FLOW JSON
-// ------------------------------------------------------------
-std::string createV210FlowJson(picojson::value const& info, std::string flow_id, std::string& out) {
-    const auto& s = info.get("streams").get(0);
-
-    int width = (int)s.get("width").get<double>();
-    int height = (int)s.get("height").get<double>();
-
-    std::string rate = s.get("r_frame_rate").get<std::string>();
-    int fps_n = std::stoi(rate.substr(0, rate.find('/')));
-    int fps_d = std::stoi(rate.substr(rate.find('/') + 1));
-
-    picojson::object root;
-
-    root["description"] = picojson::value("SMPTE v210 Source");
-    root["id"] = picojson::value(flow_id);
-    root["format"] = picojson::value("urn:x-nmos:format:video");
-    root["label"] = picojson::value("v210 10-bit 4:2:2");
-    root["media_type"] = picojson::value("video/v210");
-    root["parents"] = picojson::value(picojson::array());
-
-    // REQUIRED GROUP HINT TAG
-    {
-        picojson::object tags;
-        picojson::array grp;
-        grp.emplace_back(picojson::value("v210 Source:Video"));
-        tags["urn:x-nmos:tag:grouphint/v1.0"] = picojson::value(grp);
-        root["tags"] = picojson::value(tags);
+    ParamWithValue<T>* paramWithValue = dynamic_cast<ParamWithValue<T>*>(param.get());
+    if (!paramWithValue) {
+        LOG(ERROR) << "Error casting param " << oid << " to ParamWithValue<" << typeid(T).name() << ">";
+        throw catena::exception_with_status{"", catena::StatusCode::UNKNOWN};
     }
-
-    picojson::object rateObj;
-    rateObj["numerator"] = picojson::value((double)fps_n);
-    rateObj["denominator"] = picojson::value((double)fps_d);
-    root["grain_rate"] = picojson::value(rateObj);
-
-    root["frame_width"] = picojson::value((double)width);
-    root["frame_height"] = picojson::value((double)height);
-    root["interlace_mode"] = picojson::value("progressive");
-    root["colorspace"] = picojson::value("BT709");
-
-    // Packed video → no components
-    root["components"] = picojson::value(picojson::array());
-
-    out = picojson::value(root).serialize(true);
-    return flow_id;
+    return paramWithValue->get();
 }
 
-// ------------------------------------------------------------
-// MAIN VIDEO THREAD
-// ------------------------------------------------------------
 void run() {
+    catena::exception_with_status err{"", catena::StatusCode::OK};
+    std::string tsFile = getParamAs<std::string>("/inputs/ts_file_path");
+    std::string domain = getParamAs<std::string>("/inputs/target_domain");
+    std::string flowId = getParamAs<std::string>("/inputs/target_flow");
+    std::unique_ptr<IParam> statusParam = dm.getParam("/status", err);
+    ParamWithValue<std::string>* statusValue = dynamic_cast<ParamWithValue<std::string>*>(statusParam.get());
+    
+    std::string command =
+      std::format("{} --input {} --domain {} --video-id {}", mxlPath, tsFile, domain, flowId);
+    LOG(INFO) << "Starting MXL process: " << command;
+    bp::child mxlProcess(command, bp::std_out > stdout, bp::std_err > stderr);
     isRunning = true;
-
-    // Load info.json
-    std::ifstream f("/dev/shm/info.json");
-    if (!f.is_open()) {
-        LOG(ERROR) << "Cannot open info.json";
-        return;
-    }
-
-    std::string text, line;
-    while (std::getline(f, line))
-        text += line;
-
-    picojson::value info;
-    std::string err = picojson::parse(info, text);
-    if (!err.empty()) {
-        LOG(ERROR) << "Failed to parse info.json";
-        return;
-    }
-
-    st2138::Value value;
-    catena::exception_with_status statusErr = dm.getValue("/inputs/target_domain", value);
-    if (statusErr.status != catena::StatusCode::OK) {
-        LOG(ERROR) << "Cannot get target_domain param value: " << statusErr.what();
-        return;
-    }
-    std::string target_domain = value.string_value();
-    std::filesystem::create_directories(target_domain);
-
-    // MXL instance
-    mxlInstance instance = mxlCreateInstance(target_domain.c_str(), "");
-    if (!instance) {
-        LOG(ERROR) << "Cannot create MXL instance";
-        return;
-    }
-
-    // Flow JSON
-    mxlFlowConfigInfo cfg{};
-    std::string flowJson;
-    std::string flowId = "5fbec3b1-1b0f-417d-9059-8b94a47197ed";
-
-    createV210FlowJson(info, flowId, flowJson);
-
-    mxlFlowWriter writer;
-    mxlFlowConfigInfo configInfo;
-    bool created = false;
-    if (mxlCreateFlowWriter(instance, flowId.c_str(), nullptr, &writer, &configInfo, &created) != MXL_STATUS_OK) {
-        LOG(ERROR) << "Writer creation failed";
-        return;
-    }
-
-    // FFmpeg
-    AVFormatContext* fmt = nullptr;
-    avformat_open_input(&fmt, "/dev/shm/main.ts", nullptr, nullptr);
-    avformat_find_stream_info(fmt, nullptr);
-
-    int vid = av_find_best_stream(fmt, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
-    AVStream* vst = fmt->streams[vid];
-
-    const AVCodec* dec = avcodec_find_decoder(vst->codecpar->codec_id);
-    AVCodecContext* decCtx = avcodec_alloc_context3(dec);
-    avcodec_parameters_to_context(decCtx, vst->codecpar);
-    avcodec_open2(decCtx, dec, nullptr);
-
-    AVFrame* frame = av_frame_alloc();
-    AVPacket pkt;
-    av_init_packet(&pkt);
-
-    // Frame rate
-    std::string rf = info.get("streams").get(0).get("r_frame_rate").get<std::string>();
-    int fps_n = std::stoi(rf.substr(0, rf.find('/')));
-    int fps_d = std::stoi(rf.substr(rf.find('/') + 1));
-    mxlRational rate{fps_n, fps_d};
-
-    // Expected v210 size
-    int rowBytes = ((decCtx->width + 5) / 6) * 16;
-    int expectedSize = rowBytes * decCtx->height;
-
-    LOG(INFO) << "Expected v210 size = " << expectedSize;
-
-    std::unique_ptr<IParam> statusParam = dm.getParam("/status", statusErr);
-    catena::common::ParamWithValue<std::string>* statusValue = 
-    dynamic_cast<catena::common::ParamWithValue<std::string>*>(statusParam.get());
     statusValue->get() = "Running";
     dm.getValueSetByServer().emit("/status", statusParam.get());
-
-    // Main loop
-    while (isRunning) {
-        if (av_read_frame(fmt, &pkt) < 0) {
-            av_seek_frame(fmt, vid, 0, AVSEEK_FLAG_BACKWARD);
-            avcodec_flush_buffers(decCtx);
-            continue;
-        }
-
-        if (pkt.stream_index != vid) {
-            av_packet_unref(&pkt);
-            continue;
-        }
-
-        if (avcodec_send_packet(decCtx, &pkt) == 0) {
-
-            while (avcodec_receive_frame(decCtx, frame) == 0) {
-                
-
-                uint64_t idx = mxlGetCurrentIndex(&rate);
-
-                mxlGrainInfo ginfo;
-                uint8_t* payload = nullptr;
-
-                mxlFlowWriterOpenGrain(writer, idx, &ginfo, &payload);
-
-                size_t written = pack_v210(frame, payload, ginfo.grainSize);
-
-                if (written != (size_t)expectedSize) {
-                    LOG(ERROR) << "v210 size mismatch: wrote " << written;
-                }
-
-                ginfo.validSlices = ginfo.totalSlices;
-                ginfo.flags = 0;
-
-                mxlFlowWriterCommitGrain(writer, &ginfo);
-                int wait = mxlGetNsUntilIndex(idx, &rate);
-                LOG(INFO) << "Wrote grain index " << idx << ", waiting " << wait << " ns";
-                mxlSleepForNs(wait);
-                
-            }
-        }
-
-        av_packet_unref(&pkt);
+    while (isRunning && mxlProcess.running()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-
+    mxlProcess.terminate();
+    mxlProcess.wait();
+    isRunning = false;
     statusValue->get() = "Stopped";
     dm.getValueSetByServer().emit("/status", statusParam.get());
-
-    av_frame_free(&frame);
-    avcodec_free_context(&decCtx);
-    avformat_close_input(&fmt);
-
-    mxlReleaseFlowWriter(instance, writer);
-    mxlDestroyInstance(instance);
+    LOG(INFO) << "MXL process exited";
 }
 
 void defineCommands() {
@@ -353,9 +115,7 @@ void defineCommands() {
                 }
 
                 LOG(INFO) << "Starting flow playback thread";
-                isRunning = true;
-                playThread = std::make_unique<std::thread>(run);
-
+                monThread = std::make_unique<std::thread>(run);
                 response.mutable_no_response();
                 co_return response;
             }(value, respond));
@@ -375,9 +135,10 @@ void defineCommands() {
                 }
 
                 isRunning = false;
-                if (playThread && playThread->joinable()) {
-                    playThread->join();
+                if (monThread && monThread->joinable()) {
+                    monThread->join();
                 }
+                monThread = nullptr;
 
                 response.mutable_no_response();
                 co_return response;
@@ -426,8 +187,8 @@ void RunRPCServer(std::string addr) {
         server->Wait();
         dm.stopHeartbeat();
 
-        if (playThread && playThread->joinable()) {
-            playThread->join();
+        if (monThread && monThread->joinable()) {
+            monThread->join();
         }
 
         cq->Shutdown();
@@ -438,6 +199,30 @@ void RunRPCServer(std::string addr) {
     }
 }
 
+bool checkMxlPath() {
+    char* mxlEnv = std::getenv("MXL_PATH");
+    if (mxlEnv == nullptr) {
+        LOG(ERROR) << "MXL_PATH environment variable not set, exiting";
+        return true;
+    }
+    mxlPath = std::string(mxlEnv);
+    std::filesystem::path mxlPathFs{mxlPath};
+    if (!std::filesystem::exists(mxlPathFs)) {
+        LOG(ERROR) << "MXL_PATH " << mxlPath << " does not exist, exiting";
+        return true;
+    }
+    mxlPath = std::filesystem::absolute(mxlPathFs).string();
+    std::string cmd = mxlPath + " --help";
+    int result = bp::system(cmd, bp::std_out > bp::null, bp::std_err > stderr);
+    if (result != 0) {
+        LOG(ERROR) << "MXL_PATH " << mxlPath << " is not executable, exiting";
+        return true;
+    }
+
+    LOG(INFO) << "Using MXL_PATH: " << mxlPath;
+    return false;
+}
+
 int main(int argc, char* argv[]) {
     std::string addr;
     absl::SetProgramUsageMessage("Runs the Catena Service");
@@ -445,6 +230,9 @@ int main(int argc, char* argv[]) {
     Logger::init("ts2mxl");
 
     defineCommands();
+    if (checkMxlPath()) {
+        return 1;
+    }
 
     addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
     std::thread catenaRpcThread(RunRPCServer, addr);

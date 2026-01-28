@@ -90,6 +90,8 @@ params:
             string_value: "/dev/shm/main.ts"
           target_domain:
             string_value: "/dev/shm/mxl"
+          target_flow:
+            string_value: ""
 
 commands:
   start:
