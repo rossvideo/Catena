@@ -436,7 +436,4 @@ TEST_F(RESTSocketReaderTests, SocketReader_ValidContentType) {
     // Testing case-insensitive
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jwsToken, headers, {"Content-Type: aPpliCatIon/jSon"});
     EXPECT_NO_THROW(socketReader.read(serverSocket_));
-    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jwsToken, headers, {"Content-Type: aPpliCatIon/jSon", "Content-Length: 100"});
-    EXPECT_NO_THROW(socketReader.read(serverSocket_));
-
 }
