@@ -1,5 +1,5 @@
 CMDS_PAIRED := getDevice getSetValue
-CMDS_REST_ONLY := executeCommand getAsset
+CMDS_REST_ONLY := executeCommand getAsset oneOfEverything
 BIN_DIR := $(HOME)/Catena/$(BUILD_TARGET)
 LOG_DIR := ./logs
 
