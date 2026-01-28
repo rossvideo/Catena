@@ -93,7 +93,7 @@ func SetEnv(env Environment) {
 type Config struct {
 	Prefix string        // Environment variable prefix (e.g., "CATENA" or "MYAPP")
 	Env    Environment   // dev or prod (default: prod)
-	Logger logger.Config // Logger configuration
+	Logger logger.Settings // Logger configuration
 	Port   int           // HTTP server port (default: 6254)
 }
 
@@ -105,7 +105,7 @@ func DefaultConfig(prefix string) Config {
 	return Config{
 		Prefix: prefix,
 		Env:    EnvProd,
-		Logger: logger.DefaultConfig(),
+		Logger: logger.DefaultSettings(),
 		Port:   6254,
 	}
 }
@@ -144,7 +144,7 @@ func parseConfig(prefix string) Config {
 // parseConfigWithVerbosity parses config and applies CLI verbosity flags (-v, -vv, -vvv).
 func parseConfigWithVerbosity(prefix string) Config {
 	cfg := parseConfig(prefix)
-	cfg.Logger = logger.ParseConfigWithVerbosity(cfg.Prefix)
+	cfg.Logger = logger.ParseSettingsWithVerbosity(cfg.Prefix)
 	return cfg
 }
 

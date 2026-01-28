@@ -44,8 +44,8 @@ import (
 	"strings"
 )
 
-// Config holds logger configuration options
-type Config struct {
+// Settings holds logger configuration options
+type Settings struct {
 	// AppName is used in log file naming
 	AppName string
 
@@ -68,9 +68,9 @@ type Config struct {
 	UseJSON bool
 }
 
-// DefaultConfig returns sensible defaults for release mode
-func DefaultConfig() Config {
-	return Config{
+// DefaultSettings returns sensible defaults for release mode
+func DefaultSettings() Settings {
+	return Settings{
 		AppName:        "catena",
 		LogDir:         "./logs",
 		Silent:         false,
@@ -81,11 +81,11 @@ func DefaultConfig() Config {
 	}
 }
 
-// DebugConfig returns configuration for debug/development mode
-func DebugConfig() Config {
-	cfg := DefaultConfig()
-	cfg.Level = slog.LevelDebug
-	return cfg
+// DebugSettings returns configuration for debug/development mode
+func DebugSettings() Settings {
+	stg := DefaultSettings()
+	stg.Level = slog.LevelDebug
+	return stg
 }
 
 // ParseFromEnv creates a Config from environment variables.
@@ -97,38 +97,38 @@ func DebugConfig() Config {
 //   - {PREFIX}_LOG_FILE: "true"/"false" to enable file logging (default: "true")
 //   - {PREFIX}_LOG_CONSOLE: "true"/"false" to enable console logging (default: "true")
 //   - {PREFIX}_LOG_JSON: "true" to output JSON format
-func ParseFromEnv(prefix string) Config {
+func ParseFromEnv(prefix string) Settings {
 	if prefix == "" {
 		prefix = "CATENA"
 	}
 
-	cfg := DefaultConfig()
+	stg := DefaultSettings()
 
 	if v := os.Getenv(prefix + "_LOG_DIR"); v != "" {
-		cfg.LogDir = v
+		stg.LogDir = v
 	}
 
 	if parseBool(os.Getenv(prefix + "_SILENT")) {
-		cfg.Silent = true
+		stg.Silent = true
 	}
 
 	if v := os.Getenv(prefix + "_LOG_LEVEL"); v != "" {
-		cfg.Level = ParseLevel(v)
+		stg.Level = ParseLevel(v)
 	}
 
 	if v := os.Getenv(prefix + "_LOG_FILE"); v != "" {
-		cfg.WriteToFile = parseBool(v)
+		stg.WriteToFile = parseBool(v)
 	}
 
 	if v := os.Getenv(prefix + "_LOG_CONSOLE"); v != "" {
-		cfg.WriteToConsole = parseBool(v)
+		stg.WriteToConsole = parseBool(v)
 	}
 
 	if parseBool(os.Getenv(prefix + "_LOG_JSON")) {
-		cfg.UseJSON = true
+		stg.UseJSON = true
 	}
 
-	return cfg
+	return stg
 }
 
 // parseBool parses a string to a boolean value (case-insensitive)
@@ -195,13 +195,13 @@ func ParseVerbosityFromOS() slog.Level {
 	return ParseVerbosity(os.Args[1:])
 }
 
-// ParseConfigWithVerbosity parses config from environment variables and applies
+// ParseSettingsWithVerbosity parses settings from environment variables and applies
 // CLI verbosity flags (-v, -vv, -vvv). CLI flags override env level if more verbose.
-func ParseConfigWithVerbosity(prefix string) Config {
-	cfg := ParseFromEnv(prefix)
+func ParseSettingsWithVerbosity(prefix string) Settings {
+	stg := ParseFromEnv(prefix)
 	cliLevel := ParseVerbosityFromOS()
-	if cliLevel < cfg.Level {
-		cfg.Level = cliLevel
+	if cliLevel < stg.Level {
+		stg.Level = cliLevel
 	}
-	return cfg
+	return stg
 }
