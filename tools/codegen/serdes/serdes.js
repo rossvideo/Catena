@@ -41,14 +41,15 @@ const MAGIC_STRING = "CTNA";
  */
 export async function serialize(deviceModel, options, metadata) {
     const deviceDesc = deviceModel.desc;
-    const device = await getDevice(options.protos);
-    const protoObj = device.fromObject(deviceDesc);
-    const errMsg = device.verify(protoObj);
+    // this is a protobuf.Type, it represents the device protobuf
+    const deviceDefinition = await getDeviceDefinition(options.protos);
+    const protoObj = deviceDefinition.fromObject(deviceDesc);
+    const errMsg = deviceDefinition.verify(protoObj);
     /* istanbul ignore next don't know how to trigger this, but keeping for completeness */
     if (errMsg) {
         throw new Error(`Invalid device model: ${errMsg}`);
     }
-    const deviceBin = device.encode(protoObj).finish();
+    const deviceBin = deviceDefinition.encode(protoObj).finish();
     const metadataStr = JSON.stringify({
         ...metadata,
         payload: {
@@ -95,9 +96,9 @@ export async function deserialize(options) {
     if (createHash('sha256').update(deviceBin).digest('hex') !== metadata.payload.sha256) {
         throw new Error(`Protobuf SHA256 mismatch`);
     }
-    const device = await getDevice(options.protos);
-    const protoObj = device.decode(new Uint8Array(deviceBin));
-    const deviceDesc = device.toObject(protoObj, {
+    const deviceDefinition = await getDeviceDefinition(options.protos);
+    const protoObj = deviceDefinition.decode(new Uint8Array(deviceBin));
+    const deviceDesc = deviceDefinition.toObject(protoObj, {
         enums: String,
     });
     return [metadata, deviceDesc];
@@ -106,21 +107,22 @@ export async function deserialize(options) {
 /**
  * Load and return the protobuf root object
  * @param {string} protoPath path to the protos directory
- * @returns {Promise<protobuf.Message>} the protobuf root object
+ * @returns {Promise<protobuf.Type>} the protobuf definition for st2138.Device
  * @throws {Error} if the protos path is invalid or loading fails
  */
-export async function getDevice(protoPath) {
+export async function getDeviceDefinition(protoPath) {
     if (await fs.stat(protoPath).catch(() => null) === null) {
         throw new Error(`Protos path '${protoPath}' does not exist`);
     }
     // load all the proto files in the protos directory
     const files = await fs.readdir(protoPath);
     const protoFiles = files.filter(f => f.endsWith('.proto'));
+    // make a root object to load
     const root = new protobuf.Root();
+    // parse all the proto files
     await root.load(protoFiles.map(f => path.join(protoPath, f)), {
         keepCase: true, // so that protobufjs doesn't convert field names to camelCase
     });
     // throws if not found
-    const device = root.lookupType("st2138.Device");
-    return device;
+    return root.lookupType("st2138.Device");
 }
