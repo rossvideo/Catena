@@ -33,8 +33,10 @@
 /**
  * @brief Utility functions.
  * @file utils.h
- * @copyright Copyright © 2024 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
+ * @author keon.foster@rossvideo.com
+ * @date 2026/01/20
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #include <filesystem>
@@ -108,5 +110,15 @@ std::string fmt(const char* f, ...);
  * @return The human readable string.
  */
 std::string param_value_string(const st2138::Value& value);
+
+/**
+ * @brief Converts a string to a double and stores in dest
+ * 
+ * String formatted as <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+ * 
+ * @param value The string to convert. Entire string must be a valid positive double.
+ * @param dest The destination to store the converted value. Unchanged if value is invalid.
+ */
+void readTimestamp(std::string& value, double& dest);
 
 }  // namespace catena

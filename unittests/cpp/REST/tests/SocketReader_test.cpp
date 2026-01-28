@@ -34,7 +34,7 @@
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @author keon.foster@rossvideo.com
  * @date 2026/01/20
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // Common
@@ -123,6 +123,7 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
         EXPECT_EQ(socketReader.authorizationEnabled(), authz);
         EXPECT_EQ(socketReader.stream(), stream);
         EXPECT_EQ(socketReader.requestStart(), requestStart != "" ? stod(requestStart) : DEFAULT_REQUEST_START);
+        EXPECT_TRUE(socketReader.requestReceived() > 0);
     }
 
     // Variables to test on creation.
@@ -161,7 +162,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_NormalCase) {
  */
 TEST_F(RESTSocketReaderTests, SocketReader_StreamCase) {
     // Authz false by default.
-    testCall(catena::REST::Method_GET, 1, "/test-call", "/test/oid", true, {{"test-field-1", "1"}, {"test-field-2", "2"}}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "0.0", "{test_json_body}");
+    testCall(catena::REST::Method_GET, 1, "/test-call", "/test/oid", true, {{"test-field-1", "1"}, {"test-field-2", "2"}}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "1.0", "{test_json_body}");
 }
 
 /* 
@@ -169,7 +170,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_StreamCase) {
  */
 TEST_F(RESTSocketReaderTests, SocketReader_AuthzCase) {
     // Setting authz to true and calling validate.
-    testCall(catena::REST::Method_GET, 1, "/test-call", "/test/oid", false, {{"test-field-1", "1"}, {"test-field-2", "2"}}, true, "test-jws-token", "*", st2138::Device_DetailLevel_NONE, "en", "0.0", "{test_json_body}");
+    testCall(catena::REST::Method_GET, 1, "/test-call", "/test/oid", false, {{"test-field-1", "1"}, {"test-field-2", "2"}}, true, "test-jws-token", "*", st2138::Device_DetailLevel_NONE, "en", "2.5", "{test_json_body}");
 }
 
 /* 
@@ -177,7 +178,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_AuthzCase) {
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointHealth) {
     // GET /v1/health
-    testCall(catena::REST::Method_GET, 0, "/health", "", false, {}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "0.0", "");
+    testCall(catena::REST::Method_GET, 0, "/health", "", false, {}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "123.123", "");
 }
 
 /* 
@@ -185,18 +186,18 @@ TEST_F(RESTSocketReaderTests, SocketReader_EndpointHealth) {
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointDiscovery) {
     // GET /v1/devices
-    testCall(catena::REST::Method_GET, 0, "/devices", "", false, {}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "0.0", "");
+    testCall(catena::REST::Method_GET, 0, "/devices", "", false, {}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "1000.320", "");
     // GET /v1/{slot}
-    testCall(catena::REST::Method_GET, 1, "/", "", false, {}, false, "", "*", st2138::Device_DetailLevel_FULL, "en", "0.0", "");
+    testCall(catena::REST::Method_GET, 1, "/", "", false, {}, false, "", "*", st2138::Device_DetailLevel_FULL, "en", "932.0", "");
     // GET /v1/{slot}/stream
-    testCall(catena::REST::Method_GET, 1, "/", "", true, {}, false, "", "*", st2138::Device_DetailLevel_FULL, "en", "0.0", "");
+    testCall(catena::REST::Method_GET, 1, "/", "", true, {}, false, "", "*", st2138::Device_DetailLevel_FULL, "en", "0.1324", "");
 }
 
 /* 
  * TEST 7 - Testing parsing of commands endpoint.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointCommands) {
-    testCall(catena::REST::Method_POST, 0, "/commands", "/play", false, {{"respond", "true"}}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "0.0", "{test_json_body}");
+    testCall(catena::REST::Method_POST, 0, "/commands", "/play", false, {{"respond", "true"}}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "45234.123", "{test_json_body}");
 }
 
 /* 
@@ -249,7 +250,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_EndpointSubscriptions) {
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointUpdates) {
     // GET /v1/{slot}/connect
-    testCall(catena::REST::Method_GET, 1, "/connect", "", false, {}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "0.0", "");
+    testCall(catena::REST::Method_GET, 1, "/connect", "", false, {}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "123456789.123", "");
 }
 
 /* 
@@ -329,6 +330,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderCaseInsensitive) {
     EXPECT_EQ(socketReader.authorizationEnabled(), true);
     EXPECT_EQ(socketReader.stream(), stream);
     EXPECT_EQ(socketReader.requestStart(), std::stod(requestStart));
+    EXPECT_TRUE(socketReader.requestReceived() > 0);
 }
 
 /*
@@ -377,6 +379,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderWithoutColonIgnored) {
     EXPECT_EQ(socketReader.authorizationEnabled(), true);
     EXPECT_EQ(socketReader.stream(), stream);
     EXPECT_EQ(socketReader.requestStart(), std::stod(requestStart));
+    EXPECT_TRUE(socketReader.requestReceived() > 0);
 }
 
 /**
