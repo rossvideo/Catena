@@ -80,7 +80,7 @@ void MultiSetValue::proceed(bool ok) {
          * kFinish and notifying the responder once finished.
          */
         case CallStatus::kProcess:
-            processTimesatmps_();
+            processTimestamps_();
             // Used to serve other clients while processing.
             create_(ok);
             context_.AsyncNotifyWhenDone(this);

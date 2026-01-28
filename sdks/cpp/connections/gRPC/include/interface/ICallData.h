@@ -34,7 +34,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author keon.foster@rossvideo.com
  * @date 22/01/26
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #pragma once
@@ -75,7 +75,7 @@ class ICallData {
     /**
      * @brief Reads requestStart from metadata and records current time for requestReceived.
      */
-    virtual void processTimesatmps_() = 0;
+    virtual void processTimestamps_() = 0;
 };
 
 };

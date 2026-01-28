@@ -34,7 +34,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author keon.foster@rossvideo.com
  * @date 22/01/26
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #pragma once
@@ -154,7 +154,7 @@ class CallData : public ICallData {
     /**
      * @brief Reads requestStart from metadata and records current time for requestReceived.
      */
-    void processTimesatmps_() {
+    void processTimestamps_() {
         // Getting request receival time formatted as,
         // <number of seconds since start of epoch>.<number of milliseconds since start of current second>
         const auto epoch_time = std::chrono::system_clock::now().time_since_epoch();

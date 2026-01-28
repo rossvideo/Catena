@@ -78,7 +78,7 @@ void ExecuteCommand::proceed(bool ok) {
          * and transitioning to kRead
          */
         case CallStatus::kProcess:
-            processTimesatmps_();
+            processTimestamps_();
             new ExecuteCommand(service_, dms_, ok); // to serve other clients
             context_.AsyncNotifyWhenDone(this);
             { // rc scope
