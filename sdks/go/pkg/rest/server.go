@@ -74,9 +74,6 @@ type Server struct {
 func writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value interface{}) {
 	httpStatus := result.Code.ToHTTPStatus()
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(httpStatus)
-
 	if result.Error != "" {
 		// Only return detailed error messages in dev mode
 		if catena.IsDev() {
@@ -144,7 +141,7 @@ func writeAssetResult(w http.ResponseWriter, asset catena.CatenaAsset, httpStatu
 	protoAsset := asset.GetProtoAsset()
 	if protoAsset == nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(httpStatus)
+		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid asset structure"})
 		return
 	}
