@@ -170,7 +170,6 @@ void SocketReader::read(tcp::socket& socket) {
             std::size_t leftover = contentLength - jsonBody_.size();
             jsonBody_.resize(contentLength);
             char* buf = &jsonBody_[contentLength - leftover];
-            bool doneRead = false;
             std::size_t lengthRead = 0;
             boost::system::error_code err;
 
@@ -186,6 +185,7 @@ void SocketReader::read(tcp::socket& socket) {
                 std::size_t remaining = leftover - lengthRead;
                 lengthRead += socket.read_some(boost::asio::buffer(buf + lengthRead, remaining), err);
             }
+            socket.non_blocking(false);
             
         } else if (jsonBody_.size() > contentLength) {
             jsonBody_.resize(contentLength);
