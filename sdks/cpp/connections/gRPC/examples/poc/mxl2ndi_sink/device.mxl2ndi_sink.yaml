@@ -56,23 +56,6 @@ params:
           serial_number:
             string_value: SN0987654321
 
-  ref_flow_info:
-    import:
-      url: ../templates/param.mxl_flow_info.yaml
-
-  flow_info:
-    template_oid: /ref_flow_info
-    type: STRUCT
-    value:
-      struct_value:
-        fields:
-          head_index:
-            string_value: ""
-          last_write_time:
-            string_value: ""
-          last_read_time:
-            string_value: ""
-
   flow_def:
     import:
       url: ../templates/param.flow_def.yaml
@@ -102,11 +85,6 @@ params:
     name:
       display_strings:
         en: "Selected Input"
-    constraint:
-      type: INT_RANGE
-      int32_range:
-        min_value: 0
-        max_value: 3
     value:
       int32_value: 0
 
