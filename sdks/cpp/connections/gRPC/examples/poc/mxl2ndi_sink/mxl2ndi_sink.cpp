@@ -43,6 +43,8 @@ std::unique_ptr<Server> globalServer = nullptr;
 std::atomic<bool> isRunning = false;
 std::atomic<bool> indexChanged = false;
 std::atomic<bool> flowIdChanged = false;
+std::atomic<int> liveIndexChanged = -1;
+std::atomic<int> displayIndexChanged = -1;
 std::unique_ptr<std::thread> flowThread = nullptr;
 // handle SIGINT
 void handle_signal(int sig) {
@@ -103,6 +105,10 @@ void RunVideoFlow() {
     value.set_string_value("Running");
     dm.setValue("/status", value);
 
+    std::unique_ptr<catena::common::IParam> inputsParam = dm.getParam("/inputs", statusErr);
+    catena::common::ParamWithValue<mxl2ndi_sink::Inputs>* inputs =
+      dynamic_cast<catena::common::ParamWithValue<mxl2ndi_sink::Inputs>*>(inputsParam.get());
+
     std::unique_ptr<catena::common::IParam> selectedIndexParam = dm.getParam("/selected_index", statusErr);
     if (statusErr.status != catena::StatusCode::OK) {
         LOG(ERROR) << "Failed to get selected index param: " << statusErr.what();
@@ -126,12 +132,32 @@ void RunVideoFlow() {
       dynamic_cast<catena::common::ParamWithValue<std::string>*>(selectedNameParam.get());
 
     int readerIndex = -1;
+    int updateDisplayIndex = -1;
     indexChanged = true;
     isRunning = true;
     bool updateParams = false;
     while (isRunning) {
         {
             std::lock_guard<std::mutex> lock(dm.mutex());
+            int liveIndex = liveIndexChanged.exchange(-1);
+            if (liveIndex >= 0) {
+                if (liveIndex < 0 || liveIndex >= readers.size()) {
+                    LOG(WARNING) << "Invalid live index: " << liveIndex;
+                } else {
+                    readerIndex = liveIndex;
+                    updateDisplayIndex = liveIndex;
+                    updateParams = true;
+                }
+            }
+            int displayIndex = displayIndexChanged.exchange(-1);
+            if (displayIndex >= 0) {
+                if (displayIndex < 0 || displayIndex >= readers.size()) {
+                    LOG(WARNING) << "Invalid display index: " << displayIndex;
+                } else {
+                    updateDisplayIndex = displayIndex;
+                    updateParams = true;
+                }
+            }
             if (indexChanged.exchange(false)) {
                 flowIdChanged = false;
                 updateParams = true;
@@ -142,6 +168,7 @@ void RunVideoFlow() {
                     continue;
                 }
                 readerIndex = loadIndex;
+                updateDisplayIndex = loadIndex;
             }
             if (flowIdChanged.exchange(false)) {
                 indexChanged = false;
@@ -150,6 +177,7 @@ void RunVideoFlow() {
                 for (size_t i = 0; i < readers.size(); ++i) {
                     if (readers[i]->getFlowId() == loadFlowId) {
                         readerIndex = static_cast<int>(i);
+                        updateDisplayIndex = readerIndex;
                         found = true;
                         updateParams = true;
                         break;
@@ -167,13 +195,21 @@ void RunVideoFlow() {
 
         if (updateParams) {
             updateParams = false;
-            selectedIndex->get() = readerIndex;
-            selectedFlowId->get() = currentReader.getFlowId();
-            selectedName->get() = currentReader.getName();
-            dm.getValueSetByServer().emit("/selected_index", selectedIndexParam.get());
-            dm.getValueSetByServer().emit("/selected_flow_id", selectedFlowIdParam.get());
-            dm.getValueSetByServer().emit("/selected_name", selectedNameParam.get());
-            std::unique_ptr<st2138::Value> flowDefValue = readers[readerIndex]->getFlowDef();
+            {
+                std::lock_guard<std::mutex> lock(dm.mutex());
+                selectedIndex->get() = readerIndex;
+                selectedFlowId->get() = currentReader.getFlowId();
+                selectedName->get() = currentReader.getName();
+                dm.getValueSetByServer().emit("/selected_index", selectedIndexParam.get());
+                dm.getValueSetByServer().emit("/selected_flow_id", selectedFlowIdParam.get());
+                dm.getValueSetByServer().emit("/selected_name", selectedNameParam.get());
+                for (size_t i = 0; i < inputs->get().size(); ++i) {
+                    inputs->get()[i].display = (i == static_cast<size_t>(updateDisplayIndex)) ? 0 : 1;
+                    inputs->get()[i].live = (i == static_cast<size_t>(readerIndex)) ? 0 : 1;
+                }
+                dm.getValueSetByServer().emit("/inputs", inputsParam.get());
+            }
+            std::unique_ptr<st2138::Value> flowDefValue = readers[updateDisplayIndex]->getFlowDef();
             statusErr = dm.setValue("/flow_def", *flowDefValue);
             if (statusErr.status != catena::StatusCode::OK) {
                 LOG(ERROR) << "Failed to set flow definition: " << statusErr.what();
@@ -256,6 +292,23 @@ void valueChangedCallback(const std::string& fqoid, const catena::common::IParam
         indexChanged = true;
     } else if (fqoid == "/selected_flow_id") {
         flowIdChanged = true;
+    } else if (fqoid.starts_with("/inputs/")) {
+        // get the index from the OID
+        size_t nextSlash = fqoid.find('/', 8); // length of "/inputs/" is 8
+        if (nextSlash != std::string::npos) {
+            std::string indexStr = fqoid.substr(8, nextSlash - 8);
+            try {
+                int index = std::stoi(indexStr);
+                // live or display depends on endswith
+                if (fqoid.ends_with("/live")) {
+                    liveIndexChanged = index;
+                } else if (fqoid.ends_with("/display")) {
+                    displayIndexChanged = index;
+                }
+            } catch (const std::exception& e) {
+                LOG(ERROR) << "Failed to parse index from OID: " << fqoid << " Error: " << e.what();
+            }
+        }
     }
 }
 

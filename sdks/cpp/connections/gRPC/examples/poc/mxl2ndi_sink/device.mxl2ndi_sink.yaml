@@ -144,6 +144,42 @@ params:
         name:
           display_strings:
             en: "Flow ID"
+      live:
+        type: INT32
+        widget: checkbox
+        name:
+          display_strings:
+            en: Live
+        constraint:
+          type: INT_CHOICE
+          int32_choice:
+            choices:
+              - value: 0
+                name:
+                  display_strings:
+                    en: "Off"
+              - value: 1
+                name:
+                  display_strings:
+                    en: "On"
+      display:
+        type: INT32
+        widget: checkbox
+        name:
+          display_strings:
+            en: Display
+        constraint:
+          type: INT_CHOICE
+          int32_choice:
+            choices:
+              - value: 0
+                name:
+                  display_strings:
+                    en: "Off"
+              - value: 1
+                name:
+                  display_strings:
+                    en: "On"
 
     value:
       struct_array_values:
@@ -155,6 +191,10 @@ params:
                 string_value: ""
               flow_id:
                 string_value: ""
+              live:
+                int32_value: 1
+              display:
+                int32_value: 1
           - fields:
               name:
                 string_value: ""
@@ -162,6 +202,10 @@ params:
                 string_value: ""
               flow_id:
                 string_value: ""
+              live:
+                int32_value: 1
+              display:
+                int32_value: 1
           - fields:
               name:
                 string_value: ""
@@ -169,6 +213,10 @@ params:
                 string_value: ""
               flow_id:
                 string_value: ""
+              live:
+                int32_value: 1
+              display:
+                int32_value: 1
           - fields:
               name:
                 string_value: ""
@@ -176,6 +224,10 @@ params:
                 string_value: ""
               flow_id:
                 string_value: ""
+              live:
+                int32_value: 1
+              display:
+                int32_value: 1
           - fields:
               name:
                 string_value: ""
@@ -183,6 +235,10 @@ params:
                 string_value: ""
               flow_id:
                 string_value: ""
+              live:
+                int32_value: 1
+              display:
+                int32_value: 1
           - fields:
               name:
                 string_value: ""
@@ -190,6 +246,10 @@ params:
                 string_value: ""
               flow_id:
                 string_value: ""
+              live:
+                int32_value: 1
+              display:
+                int32_value: 1
           - fields:
               name:
                 string_value: ""
@@ -197,6 +257,10 @@ params:
                 string_value: ""
               flow_id:
                 string_value: ""
+              live:
+                int32_value: 1
+              display:
+                int32_value: 1
           - fields:
               name:
                 string_value: ""
@@ -204,6 +268,10 @@ params:
                 string_value: ""
               flow_id:
                 string_value: ""
+              live:
+                int32_value: 1
+              display:
+                int32_value: 1
           - fields:
               name:
                 string_value: ""
@@ -211,6 +279,10 @@ params:
                 string_value: ""
               flow_id:
                 string_value: ""
+              live:
+                int32_value: 1
+              display:
+                int32_value: 1
           - fields:
               name:
                 string_value: ""
@@ -218,6 +290,10 @@ params:
                 string_value: ""
               flow_id:
                 string_value: ""
+              live:
+                int32_value: 1
+              display:
+                int32_value: 1
 
 commands:
   start:
@@ -279,16 +355,15 @@ menu_groups:
         en: "Configuration"
     order: 1
     menus:
-      inputs:
-        name:
-          display_strings:
-            en: Inputs
-        param_oids:
-          - /inputs
-          - /selected_index
       demo:
         name:
           display_strings:
-            en: "Demo Controls"
+            en: Demo
         client_hints:
           oglml: eo://demo.grid
+      control:
+        name:
+          display_strings:
+            en: Control
+        client_hints:
+          oglml: eo://control.grid
