@@ -44,9 +44,9 @@ void SocketReader::read(tcp::socket& socket) {
     requestReceived_ = DEFAULT_REQUEST_START;
 
     // Getting request receival time formatted as,
-    // <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+    // <number of milliseconds since start of epoch>
     const auto epoch_time = std::chrono::system_clock::now().time_since_epoch();
-    requestReceived_ = std::chrono::duration_cast<std::chrono::milliseconds>(epoch_time).count() / 1000.0;
+    requestReceived_ = std::chrono::duration_cast<std::chrono::milliseconds>(epoch_time).count();
 
     // Reading from the socket.
     boost::asio::streambuf buffer;
@@ -148,7 +148,7 @@ void SocketReader::read(tcp::socket& socket) {
             }
         }
         // Getting time request was sent
-        else if (requestStart_ == DEFAULT_REQUEST_START && iequals_header_name(name, "request-start") && std::isdigit(value[0])){
+        else if (requestStart_ == DEFAULT_REQUEST_START && iequals_header_name(name, "request-start")){
             catena::readTimestamp(value, requestStart_);
         }
         // Getting body content-Length

@@ -197,14 +197,14 @@ class SocketReader : public ISocketReader {
     catena::common::ISubscriptionManager& subscriptionManager() override { return service_->subscriptionManager(); }
     /**
      * @brief Returns the time the client started the request formatted as,
-     * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+     * <number of milliseconds since start of epoch>
      */
-    const double requestStart() const override { return requestStart_; }
+    const long requestStart() const override { return requestStart_; }
     /**
      * @brief Returns the time the client's request was received formatted as,
-     * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+     * <number of milliseconds since start of epoch>
      */
-    const double requestReceived() const override { return requestReceived_; }
+    const long requestReceived() const override { return requestReceived_; }
 
 
   private:
@@ -259,14 +259,14 @@ class SocketReader : public ISocketReader {
     IServiceImpl* service_ = nullptr;
     /**
      * @brief The time at which the request was sent formatted as,
-     * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+     * <number of milliseconds since start of epoch>
      */
-    double requestStart_ = DEFAULT_REQUEST_START;
+    long requestStart_ = DEFAULT_REQUEST_START;
     /**
      * @brief The time at which the request was received formatted as,
-     * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+     * <number of milliseconds since start of epoch>
      */
-    double requestReceived_ = DEFAULT_REQUEST_RECEIVED;
+    long requestReceived_ = DEFAULT_REQUEST_RECEIVED;
 };
 
 }; // Namespace REST

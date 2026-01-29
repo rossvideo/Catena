@@ -62,8 +62,8 @@ namespace REST {
  */
 enum RESTMethod : uint32_t { Method_NONE, Method_GET, Method_POST, Method_PUT, Method_PATCH, Method_DELETE, Method_HEAD, Method_OPTIONS };
 
-const double DEFAULT_REQUEST_START = 0.0;
-const double DEFAULT_REQUEST_RECEIVED = 0.0;
+const long DEFAULT_REQUEST_START = 0;
+const long DEFAULT_REQUEST_RECEIVED = 0;
 
 /**
  * @brief Interface for the SocketReader class.
@@ -158,14 +158,14 @@ class ISocketReader {
     virtual catena::common::ISubscriptionManager& subscriptionManager() = 0;
     /**
      * @brief Returns the time the client started the request formatted as,
-     * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+     * <number of milliseconds since start of epoch>
      */
-    virtual const double requestStart() const = 0;
+    virtual const long requestStart() const = 0;
     /**
      * @brief Returns the time the client's request was received formatted as,
-     * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+     * <number of milliseconds since start of epoch>
      */
-    virtual const double requestReceived() const = 0;
+    virtual const long requestReceived() const = 0;
 };
  
 }; // Namespace REST
