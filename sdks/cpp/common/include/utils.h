@@ -109,4 +109,14 @@ std::string fmt(const char* f, ...);
  */
 std::string param_value_string(const st2138::Value& value);
 
+/**
+ * @brief Converts a string to a long and stores in dest
+ * 
+ * <number of milliseconds since start of epoch>
+ * 
+ * @param value The string to convert. Entire string must be a valid positive long.
+ * @param dest The destination to store the converted value. Unchanged if value is invalid.
+ */
+bool readTimestamp(std::string& value, long& dest);
+
 }  // namespace catena

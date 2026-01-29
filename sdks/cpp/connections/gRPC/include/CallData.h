@@ -46,6 +46,7 @@
 // common
 #include <rpc/TimeNow.h>
 #include <Authorizer.h>
+#include <utils.h>
 
 // gRPC
 #include <grpcpp/grpcpp.h>
@@ -94,8 +95,8 @@ namespace gRPC {
  */
 enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
-const double DEFAULT_REQUEST_START = 0.0;
-const double DEFAULT_REQUEST_RECEIVED = 0.0;
+const long DEFAULT_REQUEST_START = 0;
+const long DEFAULT_REQUEST_RECEIVED = 0;
 
 /**
  * @brief Abstract base class for inherited by CallData child classes defining
@@ -164,14 +165,8 @@ class CallData : public ICallData {
         // Getting client metadata from context.
         auto kv = clientMeta.find("request-start");
         if (kv != clientMeta.end()) {
-            auto val = kv->second;
-            long temp;
-            if (std::isdigit(val.data()[0])) {
-                auto [ptr, ec] = std::from_chars(val.data(), val.data() + val.length(), temp);
-                if (ec == std::errc() && ptr == val.data() + val.length() && temp >= 0) {
-                    requestStart_ = temp;
-                }
-            }
+            std::string value(kv->second.data(), kv->second.size());
+            catena::readTimestamp(value, requestStart_);
         }
     }
 

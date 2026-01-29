@@ -244,3 +244,61 @@ TEST(UtilsTest, Value_Param_KIND_NOT_SET) {
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "[kind not set]");
 }
+
+// READTIMESTAMP TESTS
+
+TEST(UtilsTest, Read_Timestamp_Valid_Normal) {
+    long result = 0;
+    bool valid;
+    std::string value = "123123";
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 123123);
+}
+
+TEST(UtilsTest, Read_Timestamp_Valid_Leading_Zero) {
+    long result = 0;
+    bool valid;
+    std::string value = "0123123";
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 123123);
+}
+
+TEST(UtilsTest, Read_Timestamp_Invalid_Char) {
+    long result = 0;
+    bool valid;
+    std::string value = "123@123";
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 0);
+}
+
+TEST(UtilsTest, Read_Timestamp_Invalid_Period) {
+    long result = 0;
+    bool valid;
+    std::string value = "123.123";
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 0);
+}
+
+TEST(UtilsTest, Read_Timestamp_Invalid_Negative) {
+    long result = 0;
+    bool valid;
+    std::string value = "-123123";
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 0);
+}
+
+TEST(UtilsTest, Read_Timestamp_Invalid_Large_Value) {
+    long result = 0;
+    bool valid;
+    std::string value(20, '1');
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 0);
+}
+
+TEST(UtilsTest, Read_Timestamp_Invalid_Empty) {
+    long result = 0;
+    bool valid;
+    std::string value = "";
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 0);
+}

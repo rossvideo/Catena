@@ -252,25 +252,26 @@ TEST_F(gRPCSetValueTests, SetValue_SlotOutOfRange) {
  * TEST 6 - Test request-start header read correctly
  */
 TEST_F(gRPCSetValueTests, SetValue_RequestStart) {
-    EXPECT_DOUBLE_EQ(getRPCRequestStart("12345.123"), 12345.123);
-    EXPECT_DOUBLE_EQ(getRPCRequestStart("1.0"), 1.0);
-    EXPECT_DOUBLE_EQ(getRPCRequestStart("123456789.12345"), 123456789.12345);
+    EXPECT_EQ(getRPCRequestStart("12345123"), 12345123);
+    EXPECT_EQ(getRPCRequestStart("10"), 10);
+    EXPECT_EQ(getRPCRequestStart("12345678912345"), 12345678912345);
+    EXPECT_EQ(getRPCRequestStart("00012345678912345"), 12345678912345);
 }
 
 /*
  * TEST 7 - Test invalid request-start header value get set to default
  */
 TEST_F(gRPCSetValueTests, SetValue_InvalidRequestStart) {
-    // Test with non-number/period in value
-    EXPECT_DOUBLE_EQ(getRPCRequestStart("123@.123"), DEFAULT_REQUEST_START);
-    // Test with multiple periods
-    EXPECT_DOUBLE_EQ(getRPCRequestStart("123.123."), DEFAULT_REQUEST_START);
+    // Test with non-number in value
+    EXPECT_EQ(getRPCRequestStart("123@123"), DEFAULT_REQUEST_START);
+    // Test with period
+    EXPECT_EQ(getRPCRequestStart("123.123"), DEFAULT_REQUEST_START);
     // Test with negative value
-    EXPECT_DOUBLE_EQ(getRPCRequestStart("-123.123"), DEFAULT_REQUEST_START);
+    EXPECT_EQ(getRPCRequestStart("-123123"), DEFAULT_REQUEST_START);
     // Test with leading period
-    EXPECT_DOUBLE_EQ(getRPCRequestStart(".123123"), DEFAULT_REQUEST_START);
+    EXPECT_EQ(getRPCRequestStart(".123123"), DEFAULT_REQUEST_START);
     // Test with empty value
-    EXPECT_DOUBLE_EQ(getRPCRequestStart(""), DEFAULT_REQUEST_START);
+    EXPECT_EQ(getRPCRequestStart(""), DEFAULT_REQUEST_START);
     // Test with too large of a value
-    EXPECT_DOUBLE_EQ(getRPCRequestStart(std::string(310, '1')), DEFAULT_REQUEST_START);
+    EXPECT_EQ(getRPCRequestStart(std::string(20, '1')), DEFAULT_REQUEST_START);
 }
