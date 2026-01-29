@@ -156,19 +156,18 @@ class CallData : public ICallData {
      */
     void processTimestamps_() {
         // Getting request receival time formatted as,
-        // <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+        // <number of milliseconds since start of epoch>
         const auto epoch_time = std::chrono::system_clock::now().time_since_epoch();
-        double receival_time = std::chrono::duration_cast<std::chrono::milliseconds>(epoch_time).count() / 1000.0;
-        requestReceived_ = receival_time;
+        requestReceived_ = std::chrono::duration_cast<std::chrono::milliseconds>(epoch_time).count();
 
         auto clientMeta = context_.client_metadata();
         // Getting client metadata from context.
         auto kv = clientMeta.find("request-start");
         if (kv != clientMeta.end()) {
             auto val = kv->second;
-            double temp;
+            long temp;
             if (std::isdigit(val.data()[0])) {
-                auto [ptr, ec] = std::from_chars(val.data(), val.data() + val.length(), temp, std::chars_format::fixed);
+                auto [ptr, ec] = std::from_chars(val.data(), val.data() + val.length(), temp);
                 if (ec == std::errc() && ptr == val.data() + val.length() && temp >= 0) {
                     requestStart_ = temp;
                 }
@@ -187,14 +186,14 @@ class CallData : public ICallData {
     IServiceImpl* service_;
     /**
      * @brief The time at which the request was sent formatted as,
-     * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+     * <number of milliseconds since start of epoch>
      */
-    double requestStart_ = DEFAULT_REQUEST_START;
+    long requestStart_ = DEFAULT_REQUEST_START;
     /**
      * @brief The time at which the request was sent formatted as,
-     * <number of seconds since start of epoch>.<number of milliseconds since start of current second>
+     * <number of milliseconds since start of epoch>
      */
-    double requestReceived_ = DEFAULT_REQUEST_RECEIVED;
+    long requestReceived_ = DEFAULT_REQUEST_RECEIVED;
 };
 
 };
