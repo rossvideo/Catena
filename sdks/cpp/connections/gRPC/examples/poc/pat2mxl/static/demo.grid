@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simplegrid cols="1" rows="3">
+    <label name="MXL Pattern Catena Demo" style="txt-align:center;size:biggest;bg-u:eo://mxl_ingest_stream.png;bg-align:west;bg-fill:vertical;o#000000" />
+    <simplegrid cols="2" rows="2" >
+        <button buttontype="push" name="Start">
+            <task tasktype="ogscript">
+                params.executeCommand("start", null, null);
+            </task>
+        </button>
+        <button buttontype="push" name="Stop">
+            <task tasktype="ogscript">
+                params.executeCommand("stop", null, null);
+            </task>
+        </button>
+    </simplegrid>
+</simplegrid>
