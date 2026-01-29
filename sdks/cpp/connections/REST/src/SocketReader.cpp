@@ -50,7 +50,11 @@ void SocketReader::read(tcp::socket& socket) {
 
     // Reading from the socket.
     boost::asio::streambuf buffer;
-    buffer.prepare(socket.available());
+    size_t dataSize = socket.available();
+    if (dataSize == 0) {
+        throw catena::exception_with_status("Message not found", catena::StatusCode::INVALID_ARGUMENT);
+    }
+    buffer.prepare(dataSize);
     boost::asio::read(socket, buffer, boost::asio::transfer_at_least(1));
     std::istream header_stream(&buffer);
 
@@ -155,7 +159,7 @@ void SocketReader::read(tcp::socket& socket) {
         // Getting body content-Length
         else if (contentLength == 0 && iequals_header_name(name, "content-length")) {
             try {
-                if (value[0] == '-') {
+                if (value.empty() || value[0] == '-') {
                     throw catena::exception_with_status("Invalid Content-Length", catena::StatusCode::INVALID_ARGUMENT);
                 }
                 contentLength = stoi(value);

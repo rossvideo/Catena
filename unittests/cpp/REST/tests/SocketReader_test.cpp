@@ -388,17 +388,12 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderWithoutColonIgnored) {
 TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentLength) {
     // Enable authz so Authorization header is parsed.
     EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
-    // Build and send request with an extra malformed header line (no ':')
     const RESTMethod method = catena::REST::Method_GET;
     const uint32_t slot = 1;
     const std::string endpoint = "/test-call";
     const std::string fqoid = "/test/oid";
     const bool stream = false;
     const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
-    const std::string jwsToken = "test-jws-token";
-    const std::string origin = "*";
-    const auto detailLevel = st2138::Device_DetailLevel_NONE;
-    const std::string language = "en";
     const std::string jsonBody = "{test_json_body}";
     const std::map<std::string, std::string> headers;
     // Test with invalid character
@@ -415,5 +410,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentLength) {
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
     // Test with incorrect Content-Length
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 1000"});    
+    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    // Test with missing message
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
 }
