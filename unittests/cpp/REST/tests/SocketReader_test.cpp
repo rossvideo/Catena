@@ -404,9 +404,31 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentType) {
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jwsToken, headers, {"Content-Type: application/json=patch+json"});
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
     // Testing with missing header
-    // writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jwsToken, headers, {"Content-Type:"});
-    // EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    headers["Content-Length"] = std::to_string(10);
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jwsToken, headers);
+    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
 }
+
+/**
+ * TEST 18b - Body present but no Content-Type header throws exception
+ */
+// TEST_F(RESTSocketReaderTests, SocketReader_JsonBodyNoContentType) {
+//     EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(false));
+//     const RESTMethod method = catena::REST::Method_POST;
+//     const uint32_t slot = 1;
+//     const std::string endpoint = "/commands";
+//     const std::string fqoid = "/play";
+//     const bool stream = false;
+//     const std::unordered_map<std::string, std::string> fields = {};
+//     const std::string jwsToken = "";
+//     const std::string jsonBody = "{\"key\":\"value\"}";
+//     // Headers with Content-Length so there is a body, but no Content-Type
+//     std::map<std::string, std::string> headers;
+//     headers["Content-Length"] = std::to_string(jsonBody.size());
+//     headers["Origin"] = "*";
+//     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {});
+//     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+// }
 
 /**
  * TEST 19 - Valid Content-Type doesn't throw exception
