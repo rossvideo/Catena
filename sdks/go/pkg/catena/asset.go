@@ -16,42 +16,43 @@ type CatenaAsset struct {
 }
 
 // DataPayload is a helper type for business logic to create assets
-// It provides a convenient way to construct ExternalObjectPayload
+// It mirrors protos.DataPayload structure for convenient construction
 type DataPayload struct {
-	Data               []byte
-	ContentType        string
-	ContentDisposition string
-	Cachable           bool
-	CustomHeaders      map[string]string
-	PayloadEncoding    int32 // 0=UNCOMPRESSED, 1=GZIP, 2=DEFLATE
+	Metadata        map[string]string // Information about the payload (e.g. content-type, filename)
+	Digest          []byte            // SHA-256 digest of the payload
+	PayloadEncoding int32             // 0=UNCOMPRESSED, 1=GZIP, 2=DEFLATE
+	Payload         []byte            // Embedded binary data (use this OR Url, not both)
+	Url             string            // URL to external resource (use this OR Payload, not both)
 }
 
 // ToCatenaAsset converts DataPayload to CatenaAsset
-func (dp DataPayload) ToCatenaAsset() CatenaAsset {
-	// Build metadata map
-	metadata := make(map[string]string)
-
-	// Add standard headers
-	if dp.ContentType != "" {
-		metadata["content-type"] = dp.ContentType
-	}
-	if dp.ContentDisposition != "" {
-		metadata["content-disposition"] = dp.ContentDisposition
+func (dp DataPayload) ToCatenaAsset(cachable bool) CatenaAsset {
+	// Build the payload map for DataPayload
+	payloadMap := map[string]any{
+		"payload_encoding": dp.PayloadEncoding,
 	}
 
-	// Add custom headers
-	for key, value := range dp.CustomHeaders {
-		metadata[key] = value
+	// Add metadata if present
+	if len(dp.Metadata) > 0 {
+		payloadMap["metadata"] = dp.Metadata
+	}
+
+	// Add digest if present
+	if len(dp.Digest) > 0 {
+		payloadMap["digest"] = dp.Digest
+	}
+
+	// Add either payload or url (oneof in proto)
+	if dp.Url != "" {
+		payloadMap["url"] = dp.Url
+	} else if len(dp.Payload) > 0 {
+		payloadMap["payload"] = dp.Payload
 	}
 
 	// Create the map structure for ExternalObjectPayload
 	assetMap := map[string]any{
-		"cachable": dp.Cachable,
-		"payload": map[string]any{
-			"payload":          dp.Data,
-			"metadata":         metadata,
-			"payload_encoding": dp.PayloadEncoding,
-		},
+		"cachable": cachable,
+		"payload":  payloadMap,
 	}
 
 	// Convert to CatenaAsset
@@ -63,11 +64,6 @@ func (dp DataPayload) ToCatenaAsset() CatenaAsset {
 	}
 
 	return catenaAsset
-}
-
-// NewCatenaAsset creates a CatenaAsset from a protos.ExternalObjectPayload
-func NewCatenaAsset(asset *protos.ExternalObjectPayload) CatenaAsset {
-	return CatenaAsset{asset: asset}
 }
 
 // ToCatenaAsset converts a Go map/struct to CatenaAsset
@@ -97,22 +93,6 @@ func toProtoAsset(m map[string]any) (*protos.ExternalObjectPayload, []byte, erro
 	}
 
 	return asset, jsonData, nil
-}
-
-// IsCachable returns whether the asset is cachable
-func (ca CatenaAsset) IsCachable() bool {
-	if ca.asset == nil {
-		return false
-	}
-	return ca.asset.Cachable
-}
-
-// GetPayload returns the asset's data payload
-func (ca CatenaAsset) GetPayload() *protos.DataPayload {
-	if ca.asset == nil {
-		return nil
-	}
-	return ca.asset.Payload
 }
 
 // GetProtoAsset returns the underlying protos.ExternalObjectPayload

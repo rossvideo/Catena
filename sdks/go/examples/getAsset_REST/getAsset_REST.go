@@ -39,6 +39,7 @@
 package main
 
 import (
+	"crypto/sha256"
 	"embed"
 	"fmt"
 	"io/fs"
@@ -47,7 +48,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -59,13 +59,6 @@ import (
 
 //go:embed static/*
 var staticFS embed.FS
-
-// Asset represents a binary asset with metadata
-type Asset struct {
-	ContentType string
-	Data        []byte
-	Filename    string
-}
 
 // Global state for graceful shutdown
 var (
@@ -124,33 +117,21 @@ func main() {
 		val, ok := assets.Load(fqoid)
 		if !ok {
 			logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
-			return catena.ReplyAssetNotFound("asset not found: " + fqoid)
+			return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND,"asset not found: " + fqoid)
 		}
 
-		asset := val.(Asset)
-
-		// Create DataPayload in business logic
-		payload := catena.DataPayload{
-			Data:        asset.Data,
-			ContentType: asset.ContentType,
-			Cachable:    true,
-		}
-
-		// Add filename to content-disposition if available
-		if asset.Filename != "" {
-			payload.ContentDisposition = fmt.Sprintf("attachment; filename=%q", asset.Filename)
-		}
+		payload := val.(catena.DataPayload)
 
 		// Convert DataPayload to CatenaAsset when returning
-		catenaAsset := payload.ToCatenaAsset()
+		catenaAsset := payload.ToCatenaAsset(true)
 
-		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(asset.Data))
-		return catena.ReplyAsset(catenaAsset)
+		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(payload.Payload))
+		return catena.Reply(catenaAsset)
 	})
 
 	// Not found handler
 	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		return catena.ReplyNotFound("endpoint not found")
+		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"endpoint not found")
 	})
 
 	// ==========================================================================
@@ -217,13 +198,23 @@ func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map) {
 		// Normalize path separators for URL use
 		assetID := strings.ReplaceAll(relPath, string(filepath.Separator), "/")
 
-		asset := Asset{
-			ContentType: contentType,
-			Data:        data,
-			Filename:    filepath.Base(path),
+		// Build metadata
+		metadata := map[string]string{
+			"content-type":        contentType,
+			"content-disposition": fmt.Sprintf("attachment; filename=%q", filepath.Base(path)),
 		}
 
-		assets.Store(assetID, asset)
+		// Calculate SHA-256 digest
+		hash := sha256.Sum256(data)
+
+		// Store as DataPayload directly
+		payload := catena.DataPayload{
+			Payload:  data,
+			Metadata: metadata,
+			Digest:   hash[:],
+		}
+
+		assets.Store(assetID, payload)
 		logger.Info("Loaded asset", "id", assetID, "size", len(data), "type", contentType)
 
 		return nil

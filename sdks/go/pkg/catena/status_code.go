@@ -184,224 +184,27 @@ func (s StatusCode) ToHTTPStatus() int {
 	}
 }
 
-// Reply helper functions that return (CatenaValue, StatusResult)
-// CatenaValue is returned by value (never nil), but its internal *protos.Value can be nil.
+// ResponseType is a constraint for types that can be returned from handlers
+type ResponseType interface {
+	CatenaValue | CatenaAsset | CatenaDevice
+}
 
-// ReplyOK returns a successful response with the given value.
-func ReplyOK(value CatenaValue) (CatenaValue, StatusResult) {
+// Reply returns a successful response (OK) with the given value.
+// Usage: catena.Reply(value), catena.Reply(asset), catena.Reply(device)
+func Reply[T ResponseType](value T) (T, StatusResult) {
 	return value, StatusResult{Code: OK}
 }
 
-// ReplyCreated returns a 201 Created response with the given value.
-func ReplyCreated(value CatenaValue) (CatenaValue, StatusResult) {
-	return value, StatusResult{Code: CREATED}
+// ReplyWithCode returns a response with the given value and status code.
+// Usage: catena.ReplyWithCode(value, catena.CREATED)
+func ReplyWithCode[T ResponseType](value T, code StatusCode) (T, StatusResult) {
+	return value, StatusResult{Code: code}
 }
 
-// ReplyAccepted returns a 202 Accepted response with the given value.
-func ReplyAccepted(value CatenaValue) (CatenaValue, StatusResult) {
-	return value, StatusResult{Code: ACCEPTED}
-}
-
-// ReplyNoContent returns a 204 No Content response with no payload.
-func ReplyNoContent() (CatenaValue, StatusResult) {
-	return CatenaValue{Value: nil}, StatusResult{Code: NO_CONTENT}
-}
-
-// ReplyBadRequest returns a 400 Bad Request error with an optional message.
-func ReplyBadRequest(msg string) (CatenaValue, StatusResult) {
-	if msg == "" {
-		return CatenaValue{Value: nil}, StatusResult{Code: INVALID_ARGUMENT}
-	}
-	return CatenaValue{Value: nil}, StatusResult{Code: INVALID_ARGUMENT, Error: msg}
-}
-
-// ReplyNotFound returns a 404 Not Found error with an optional message.
-func ReplyNotFound(msg string) (CatenaValue, StatusResult) {
-	if msg == "" {
-		return CatenaValue{Value: nil}, StatusResult{Code: NOT_FOUND}
-	}
-	return CatenaValue{Value: nil}, StatusResult{Code: NOT_FOUND, Error: msg}
-}
-
-// ReplyMethodNotAllowed returns a 405 Method Not Allowed error with an optional message.
-func ReplyMethodNotAllowed(msg string) (CatenaValue, StatusResult) {
-	if msg == "" {
-		return CatenaValue{Value: nil}, StatusResult{Code: METHOD_NOT_ALLOWED}
-	}
-	return CatenaValue{Value: nil}, StatusResult{Code: METHOD_NOT_ALLOWED, Error: msg}
-}
-
-// ReplyConflict returns a 409 Conflict error with an optional message.
-func ReplyConflict(msg string) (CatenaValue, StatusResult) {
-	if msg == "" {
-		return CatenaValue{Value: nil}, StatusResult{Code: CONFLICT}
-	}
-	return CatenaValue{Value: nil}, StatusResult{Code: CONFLICT, Error: msg}
-}
-
-// ReplyUnprocessableEntity returns a 422 Unprocessable Entity error with an optional message.
-func ReplyUnprocessableEntity(msg string) (CatenaValue, StatusResult) {
-	if msg == "" {
-		return CatenaValue{Value: nil}, StatusResult{Code: UNPROCESSABLE_ENTITY}
-	}
-	return CatenaValue{Value: nil}, StatusResult{Code: UNPROCESSABLE_ENTITY, Error: msg}
-}
-
-// ReplyNotImplemented returns a 501 Not Implemented error with an optional message.
-func ReplyNotImplemented(msg string) (CatenaValue, StatusResult) {
-	if msg == "" {
-		return CatenaValue{Value: nil}, StatusResult{Code: UNIMPLEMENTED}
-	}
-	return CatenaValue{Value: nil}, StatusResult{Code: UNIMPLEMENTED, Error: msg}
-}
-
-// ReplyInternalError returns a 500 Internal Server Error with an optional message.
-func ReplyInternalError(msg string) (CatenaValue, StatusResult) {
-	if msg == "" {
-		return CatenaValue{Value: nil}, StatusResult{Code: INTERNAL}
-	}
-	return CatenaValue{Value: nil}, StatusResult{Code: INTERNAL, Error: msg}
-}
-
-// ReplyUnavailable returns a 503 Service Unavailable error with an optional message.
-func ReplyUnavailable(msg string) (CatenaValue, StatusResult) {
-	if msg == "" {
-		return CatenaValue{Value: nil}, StatusResult{Code: UNAVAILABLE}
-	}
-	return CatenaValue{Value: nil}, StatusResult{Code: UNAVAILABLE, Error: msg}
-}
-
-// ReplyUnauthenticated returns a 401 Unauthorized error with an optional message.
-func ReplyUnauthenticated(msg string) (CatenaValue, StatusResult) {
-	if msg == "" {
-		return CatenaValue{Value: nil}, StatusResult{Code: UNAUTHENTICATED}
-	}
-	return CatenaValue{Value: nil}, StatusResult{Code: UNAUTHENTICATED, Error: msg}
-}
-
-// ReplyPermissionDenied returns a 403 Forbidden error with an optional message.
-func ReplyPermissionDenied(msg string) (CatenaValue, StatusResult) {
-	if msg == "" {
-		return CatenaValue{Value: nil}, StatusResult{Code: PERMISSION_DENIED}
-	}
-	return CatenaValue{Value: nil}, StatusResult{Code: PERMISSION_DENIED, Error: msg}
-}
-
-// ReplyWithCode returns a response with the given StatusCode and optional message.
-// This is a generic helper for cases not covered by specific Reply* functions.
-func ReplyWithCode(code StatusCode, msg string) (CatenaValue, StatusResult) {
-	if msg == "" {
-		return CatenaValue{Value: nil}, StatusResult{Code: code}
-	}
-	return CatenaValue{Value: nil}, StatusResult{Code: code, Error: msg}
-}
-
-// Asset reply helper functions that return (CatenaAsset, StatusResult)
-
-// ReplyAsset returns a successful asset response with the given asset data.
-func ReplyAsset(asset CatenaAsset) (CatenaAsset, StatusResult) {
-	return asset, StatusResult{Code: OK}
-}
-
-// ReplyAssetNotFound returns a 404 Not Found error for asset requests.
-func ReplyAssetNotFound(msg string) (CatenaAsset, StatusResult) {
-	if msg == "" {
-		return CatenaAsset{asset: nil}, StatusResult{Code: NOT_FOUND}
-	}
-	return CatenaAsset{asset: nil}, StatusResult{Code: NOT_FOUND, Error: msg}
-}
-
-// ReplyAssetBadRequest returns a 400 Bad Request error for asset requests.
-func ReplyAssetBadRequest(msg string) (CatenaAsset, StatusResult) {
-	if msg == "" {
-		return CatenaAsset{asset: nil}, StatusResult{Code: INVALID_ARGUMENT}
-	}
-	return CatenaAsset{asset: nil}, StatusResult{Code: INVALID_ARGUMENT, Error: msg}
-}
-
-// ReplyAssetUnauthorized returns a 401 Unauthorized error for asset requests.
-func ReplyAssetUnauthorized(msg string) (CatenaAsset, StatusResult) {
-	if msg == "" {
-		return CatenaAsset{asset: nil}, StatusResult{Code: UNAUTHENTICATED}
-	}
-	return CatenaAsset{asset: nil}, StatusResult{Code: UNAUTHENTICATED, Error: msg}
-}
-
-// ReplyAssetForbidden returns a 403 Forbidden error for asset requests.
-func ReplyAssetForbidden(msg string) (CatenaAsset, StatusResult) {
-	if msg == "" {
-		return CatenaAsset{asset: nil}, StatusResult{Code: PERMISSION_DENIED}
-	}
-	return CatenaAsset{asset: nil}, StatusResult{Code: PERMISSION_DENIED, Error: msg}
-}
-
-// ReplyAssetInternalError returns a 500 Internal Server Error for asset requests.
-func ReplyAssetInternalError(msg string) (CatenaAsset, StatusResult) {
-	if msg == "" {
-		return CatenaAsset{asset: nil}, StatusResult{Code: INTERNAL}
-	}
-	return CatenaAsset{asset: nil}, StatusResult{Code: INTERNAL, Error: msg}
-}
-
-// ReplyAssetUnavailable returns a 503 Service Unavailable error for asset requests.
-func ReplyAssetUnavailable(msg string) (CatenaAsset, StatusResult) {
-	if msg == "" {
-		return CatenaAsset{asset: nil}, StatusResult{Code: UNAVAILABLE}
-	}
-	return CatenaAsset{asset: nil}, StatusResult{Code: UNAVAILABLE, Error: msg}
-}
-
-// Device reply helper functions that return (CatenaDevice, StatusResult)
-
-// ReplyDevice returns a successful device response with the given device data.
-func ReplyDevice(device CatenaDevice) (CatenaDevice, StatusResult) {
-	return device, StatusResult{Code: OK}
-}
-
-// ReplyDeviceNotFound returns a 404 Not Found error for device requests.
-func ReplyDeviceNotFound(msg string) (CatenaDevice, StatusResult) {
-	if msg == "" {
-		return CatenaDevice{device: nil}, StatusResult{Code: NOT_FOUND}
-	}
-	return CatenaDevice{device: nil}, StatusResult{Code: NOT_FOUND, Error: msg}
-}
-
-// ReplyDeviceBadRequest returns a 400 Bad Request error for device requests.
-func ReplyDeviceBadRequest(msg string) (CatenaDevice, StatusResult) {
-	if msg == "" {
-		return CatenaDevice{device: nil}, StatusResult{Code: INVALID_ARGUMENT}
-	}
-	return CatenaDevice{device: nil}, StatusResult{Code: INVALID_ARGUMENT, Error: msg}
-}
-
-// ReplyDeviceUnauthorized returns a 401 Unauthorized error for device requests.
-func ReplyDeviceUnauthorized(msg string) (CatenaDevice, StatusResult) {
-	if msg == "" {
-		return CatenaDevice{device: nil}, StatusResult{Code: UNAUTHENTICATED}
-	}
-	return CatenaDevice{device: nil}, StatusResult{Code: UNAUTHENTICATED, Error: msg}
-}
-
-// ReplyDeviceForbidden returns a 403 Forbidden error for device requests.
-func ReplyDeviceForbidden(msg string) (CatenaDevice, StatusResult) {
-	if msg == "" {
-		return CatenaDevice{device: nil}, StatusResult{Code: PERMISSION_DENIED}
-	}
-	return CatenaDevice{device: nil}, StatusResult{Code: PERMISSION_DENIED, Error: msg}
-}
-
-// ReplyDeviceInternalError returns a 500 Internal Server Error for device requests.
-func ReplyDeviceInternalError(msg string) (CatenaDevice, StatusResult) {
-	if msg == "" {
-		return CatenaDevice{device: nil}, StatusResult{Code: INTERNAL}
-	}
-	return CatenaDevice{device: nil}, StatusResult{Code: INTERNAL, Error: msg}
-}
-
-// ReplyDeviceUnavailable returns a 503 Service Unavailable error for device requests.
-func ReplyDeviceUnavailable(msg string) (CatenaDevice, StatusResult) {
-	if msg == "" {
-		return CatenaDevice{device: nil}, StatusResult{Code: UNAVAILABLE}
-	}
-	return CatenaDevice{device: nil}, StatusResult{Code: UNAVAILABLE, Error: msg}
+// ReplyError returns an error response with the given status code and message.
+// The value returned is the zero value of T.
+// Usage: catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "not found")
+func ReplyError[T ResponseType](code StatusCode, msg string) (T, StatusResult) {
+	var zero T
+	return zero, StatusResult{Code: code, Error: msg}
 }

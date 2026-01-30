@@ -43,7 +43,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
@@ -82,6 +81,7 @@ func main() {
 	devices := map[int]map[string]any{
 		0: {
 			"slot":              uint32(0),
+			"detail_level":      int32(0), // FULL
 			"multi_set_enabled": true,
 			"subscriptions":     true,
 			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
@@ -237,6 +237,7 @@ func main() {
 		},
 		1: {
 			"slot":              uint32(1),
+			"detail_level":      int32(0), // FULL
 			"multi_set_enabled": false,
 			"subscriptions":     true,
 			"access_scopes":     []string{"st2138:mon", "st2138:op"},
@@ -344,6 +345,7 @@ func main() {
 		},
 		2: {
 			"slot":              uint32(2),
+			"detail_level":      int32(0), // FULL
 			"multi_set_enabled": true,
 			"subscriptions":     false,
 			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg"},
@@ -466,23 +468,23 @@ func main() {
 			_, ok := devices[slot]
 			if !ok {
 				logger.Error("GetDevice device not found", "slot", slot)
-				return catena.ReplyDeviceNotFound("device not found")
+				return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
 			}
 
 			device, err := catena.ToCatenaDevice(devices[slot])
 			if err != nil {
 				logger.Error("failed to convert device", "slot", slot, "error", err)
-				return catena.ReplyDeviceInternalError("failed to convert device")
+				return catena.ReplyError[catena.CatenaDevice](catena.INTERNAL, "failed to convert device")
 			}
 
-			return catena.ReplyDevice(device)
+			return catena.Reply(device)
 		})
 	}
 
 	// Register fallback handler
 	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
 		logger.Warning("Endpoint not found")
-		return catena.ReplyNotFound("endpoint not found")
+		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found")
 	})
 
 	// Logger info about the example

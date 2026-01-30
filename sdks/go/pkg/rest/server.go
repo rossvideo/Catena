@@ -31,10 +31,8 @@
 package rest
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"math"
 	"net/http"
 	"strconv"
@@ -136,78 +134,27 @@ func writeDeviceResult(w http.ResponseWriter, device catena.CatenaDevice, httpSt
 	}
 }
 
-// writeAssetResult writes a CatenaAsset with appropriate headers for binary/redirect responses
+// writeAssetResult writes a CatenaAsset as JSON-encoded ExternalObjectPayload
 func writeAssetResult(w http.ResponseWriter, asset catena.CatenaAsset, httpStatus int) {
 	protoAsset := asset.GetProtoAsset()
 	if protoAsset == nil {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid asset structure"})
 		return
 	}
 
-	// Set cachability headers
-	if !protoAsset.Cachable {
-		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
-	}
-
-	payload := protoAsset.Payload
-	if payload == nil {
+	// Convert asset to JSON
+	jsonData, err := asset.ToJSON()
+	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Asset payload is missing"})
 		return
 	}
 
-	// If URL-based asset, redirect to the URL
-	if payload.GetUrl() != "" {
-		w.Header().Set("Location", payload.GetUrl())
-		w.WriteHeader(http.StatusFound) // 302 redirect
-		return
-	}
-
-	// Handle embedded data
-	data := payload.GetPayload()
-	if len(data) == 0 {
-		w.WriteHeader(httpStatus)
-		return
-	}
-
-	// Set metadata headers
-	if payload.Metadata != nil {
-		if contentType, ok := payload.Metadata["content-type"]; ok {
-			w.Header().Set("Content-Type", contentType)
-		}
-		if contentDisposition, ok := payload.Metadata["content-disposition"]; ok {
-			w.Header().Set("Content-Disposition", contentDisposition)
-		}
-		// Set all custom headers from metadata (skip standard ones we already handled)
-		for key, value := range payload.Metadata {
-			if key != "content-type" && key != "content-disposition" {
-				w.Header().Set(key, value)
-			}
-		}
-	}
-
-	// Set content-length
-	if len(data) > 0 {
-		w.Header().Set("Content-Length", strconv.Itoa(len(data)))
-	}
-
-	// Set compression encoding if specified
-	if payload.PayloadEncoding != 0 { // 0 is UNCOMPRESSED
-		switch payload.PayloadEncoding {
-		case 1: // GZIP
-			w.Header().Set("Content-Encoding", "gzip")
-		case 2: // DEFLATE
-			w.Header().Set("Content-Encoding", "deflate")
-		}
-	}
-
-	// Write status and stream data
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(httpStatus)
-	if _, err := io.Copy(w, bytes.NewReader(data)); err != nil {
-		logger.Error("failed to stream asset data", "error", err)
+	if _, writeErr := w.Write(jsonData); writeErr != nil {
+		logger.Error("failed to write asset response", "error", writeErr)
 	}
 }
 
@@ -250,27 +197,27 @@ func (s *Server) Start(port int) error {
 // Default handlers that return "not implemented"
 
 func DefaultDeviceHandler() (catena.CatenaDevice, catena.StatusResult) {
-	return catena.ReplyDeviceNotFound("GetDevice not implemented")
+	return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "GetDevice not implemented")
 }
 
 func DefaultGetValueHandler(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
-	return catena.ReplyNotImplemented("GetValue not implemented")
+	return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "GetValue not implemented")
 }
 
 func DefaultSetValueHandler(value any, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
-	return catena.ReplyNotImplemented("SetValue not implemented")
+	return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "SetValue not implemented")
 }
 
 func DefaultGetAssetHandler(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
-	return catena.ReplyAssetNotFound("GetAsset not implemented")
+	return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "GetAsset not implemented")
 }
 
 func DefaultConnectHandler(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-	return catena.ReplyNotImplemented("Connect not implemented")
+	return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "Connect not implemented")
 }
 
 func DefaultExecuteCommandHandler(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
-	return catena.ReplyNotImplemented("ExecuteCommand not implemented")
+	return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "ExecuteCommand not implemented")
 }
 
 // Handler registration methods
@@ -360,7 +307,7 @@ func (s *Server) RegisterRoutes() {
 	s.mux.HandleFunc("/st2138-api/v1/", func(w http.ResponseWriter, r *http.Request) {
 		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 		if len(parts) < 3 {
-			val, res := catena.ReplyBadRequest("invalid path format")
+			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid path format")
 			writeHTTPResult(w, res, val)
 			return
 		}
@@ -368,7 +315,7 @@ func (s *Server) RegisterRoutes() {
 		slotStr := parts[2]
 		slot, err := strconv.Atoi(slotStr)
 		if err != nil || slot < 0 || slot > math.MaxInt16 {
-			val, res := catena.ReplyBadRequest("invalid slot number")
+			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid slot number")
 			writeHTTPResult(w, res, val)
 			return
 		}
@@ -378,7 +325,7 @@ func (s *Server) RegisterRoutes() {
 			// GET /st2138-api/v1/{slot} - Get device info
 			handler, ok := s.getDeviceHandlers[slot]
 			if !ok {
-				device, res := catena.ReplyDeviceNotFound("device not found")
+				device, res := catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
 				writeHTTPResult(w, res, device)
 				return
 			}
@@ -397,20 +344,20 @@ func (s *Server) RegisterRoutes() {
 			case "command":
 				s.handleCommandEndpoint(w, r, slot, parts[4:])
 			default:
-				val, res := catena.ReplyNotFound("unknown endpoint")
+				val, res := catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "unknown endpoint")
 				writeHTTPResult(w, res, val)
 			}
 			return
 		}
 
-		val, res := catena.ReplyNotFound("endpoint not found")
+		val, res := catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found")
 		writeHTTPResult(w, res, val)
 	})
 
 	// Connect endpoint: GET /st2138-api/v1/connect
 	s.mux.HandleFunc("/st2138-api/v1/connect", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
-			val, res := catena.ReplyMethodNotAllowed("only GET allowed")
+			val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
 			writeHTTPResult(w, res, val)
 			return
 		}
@@ -426,7 +373,7 @@ func (s *Server) RegisterRoutes() {
 			writeHTTPResult(w, res, val)
 			return
 		}
-		val, res := catena.ReplyNotFound("endpoint not found")
+		val, res := catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found")
 		writeHTTPResult(w, res, val)
 	})
 }
@@ -445,7 +392,7 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 		reqValue, err := internal.ReadRequestJSON(r)
 		if err != nil {
 			logger.Error("failed to read request", "error", err)
-			val, res := catena.ReplyBadRequest("invalid request body")
+			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid request body")
 			writeHTTPResult(w, res, val)
 			return
 		}
@@ -458,14 +405,14 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 		writeHTTPResult(w, res, val)
 
 	default:
-		val, res := catena.ReplyMethodNotAllowed("only GET, PUT, PATCH allowed")
+		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET, PUT, PATCH allowed")
 		writeHTTPResult(w, res, val)
 	}
 }
 
 func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slot int, pathParts []string) {
 	if r.Method != http.MethodGet {
-		val, res := catena.ReplyMethodNotAllowed("only GET allowed")
+		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
 		writeHTTPResult(w, res, val)
 		return
 	}
@@ -478,7 +425,7 @@ func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slo
 
 func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, slot int, pathParts []string) {
 	if r.Method != http.MethodPost {
-		val, res := catena.ReplyMethodNotAllowed("only POST allowed")
+		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only POST allowed")
 		writeHTTPResult(w, res, val)
 		return
 	}
@@ -491,7 +438,7 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 		reqValue, err := internal.ReadRequestJSON(r)
 		if err != nil {
 			logger.Error("failed to read command payload", "error", err)
-			val, res := catena.ReplyBadRequest("invalid command payload")
+			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid command payload")
 			writeHTTPResult(w, res, val)
 			return
 		}
