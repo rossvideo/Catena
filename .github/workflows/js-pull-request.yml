@@ -17,6 +17,8 @@ jobs:
     name: Run Unit Tests and coverage
     timeout-minutes: 20
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
     env:
       CHECK_NAME: Codegen Unit Tests
 
