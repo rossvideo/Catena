@@ -60,6 +60,9 @@ func ToCatenaValue(v any) (CatenaValue, error) {
 // ToProto converts native Go types to protos.Value
 func ToProto(v any) (*protos.Value, error) {
 	switch val := v.(type) {
+	case *protos.DataPayload:
+		// Pass through DataPayload directly
+		return &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: val}}, nil
 	case UndefinedValue:
 		return &protos.Value{Kind: &protos.Value_UndefinedValue{UndefinedValue: protos.UndefinedValue(val)}}, nil
 	case EmptyValue:
@@ -135,6 +138,9 @@ func FromProto(pv *protos.Value) any {
 		return nil
 	}
 	switch pv.GetKind().(type) {
+	case *protos.Value_DataPayload:
+		// Return the raw DataPayload proto
+		return pv.GetDataPayload()
 	case *protos.Value_UndefinedValue:
 		return UndefinedValue(pv.GetUndefinedValue())
 	case *protos.Value_EmptyValue:

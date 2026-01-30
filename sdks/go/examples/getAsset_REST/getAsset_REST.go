@@ -117,13 +117,17 @@ func main() {
 		val, ok := assets.Load(fqoid)
 		if !ok {
 			logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
-			return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND,"asset not found: " + fqoid)
+			return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found: "+fqoid)
 		}
 
 		payload := val.(catena.DataPayload)
 
 		// Convert DataPayload to CatenaAsset when returning
-		catenaAsset := payload.ToCatenaAsset(true)
+		catenaAsset, err := catena.ToCatenaAsset(payload, true)
+		if err != nil {
+			logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", err)
+			return catena.ReplyError[catena.CatenaAsset](catena.INTERNAL, "failed to convert asset: "+err.Error())
+		}
 
 		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(payload.Payload))
 		return catena.Reply(catenaAsset)
@@ -131,7 +135,7 @@ func main() {
 
 	// Not found handler
 	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"endpoint not found")
+		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found")
 	})
 
 	// ==========================================================================
@@ -200,8 +204,8 @@ func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map) {
 
 		// Build metadata
 		metadata := map[string]string{
-			"content-type":        contentType,
-			"content-disposition": fmt.Sprintf("attachment; filename=%q", filepath.Base(path)),
+			"content-type": contentType,
+			"file-name":    filepath.Base(path),
 		}
 
 		// Calculate SHA-256 digest

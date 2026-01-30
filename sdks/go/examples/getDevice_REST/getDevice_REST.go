@@ -80,8 +80,8 @@ func main() {
 	// Define device metadata for multiple slots
 	devices := map[int]map[string]any{
 		0: {
-			"slot":              uint32(0),
-			"detail_level":      int32(0), // FULL
+			"slot":         uint32(0),
+			"detail_level": catena.DetailLevelFull,
 			"multi_set_enabled": true,
 			"subscriptions":     true,
 			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
@@ -236,8 +236,8 @@ func main() {
 			},
 		},
 		1: {
-			"slot":              uint32(1),
-			"detail_level":      int32(0), // FULL
+			"slot":         uint32(1),
+			"detail_level": catena.DetailLevelFull,
 			"multi_set_enabled": false,
 			"subscriptions":     true,
 			"access_scopes":     []string{"st2138:mon", "st2138:op"},
@@ -344,8 +344,8 @@ func main() {
 			},
 		},
 		2: {
-			"slot":              uint32(2),
-			"detail_level":      int32(0), // FULL
+			"slot":         uint32(2),
+			"detail_level": catena.DetailLevelFull,
 			"multi_set_enabled": true,
 			"subscriptions":     false,
 			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg"},

@@ -39,15 +39,24 @@ import (
 	"github.com/rossvideo/catena/build/go/protos"
 )
 
+// DetailLevel represents how much of the device model to deliver
+// Mirrors protos.Device_DetailLevel for convenience
+type DetailLevel = protos.Device_DetailLevel
+
+// DetailLevel constants matching the proto enum
+const (
+	DetailLevelFull          DetailLevel = protos.Device_FULL
+	DetailLevelSubscriptions DetailLevel = protos.Device_SUBSCRIPTIONS
+	DetailLevelMinimal       DetailLevel = protos.Device_MINIMAL
+	DetailLevelCommands      DetailLevel = protos.Device_COMMANDS
+	DetailLevelNone          DetailLevel = protos.Device_NONE
+	DetailLevelUnset         DetailLevel = protos.Device_UNSET
+)
+
 // CatenaDevice wraps protos.Device for device model handling
 type CatenaDevice struct {
 	device   *protos.Device
 	jsonData []byte // Cached JSON representation
-}
-
-// NewCatenaDevice creates a CatenaDevice from a protos.Device
-func NewCatenaDevice(newDevice *protos.Device) CatenaDevice {
-	return CatenaDevice{device: newDevice}
 }
 
 // ToCatenaDevice converts a Go map/struct to CatenaDevice
@@ -82,54 +91,6 @@ func toProtoDevice(m map[string]any) (*protos.Device, []byte, error) {
 // GetProtoDevice returns the underlying protos.Device
 func (cd CatenaDevice) GetProtoDevice() *protos.Device {
 	return cd.device
-}
-
-// GetSlot returns the device slot
-func (cd CatenaDevice) GetSlot() uint32 {
-	if cd.device == nil {
-		return 0
-	}
-	return cd.device.Slot
-}
-
-// GetDetailLevel returns the detail level
-func (cd CatenaDevice) GetDetailLevel() protos.Device_DetailLevel {
-	if cd.device == nil {
-		return protos.Device_UNSET
-	}
-	return cd.device.DetailLevel
-}
-
-// IsMultiSetEnabled returns whether multi-set is enabled
-func (cd CatenaDevice) IsMultiSetEnabled() bool {
-	if cd.device == nil {
-		return false
-	}
-	return cd.device.MultiSetEnabled
-}
-
-// SupportsSubscriptions returns whether subscriptions are supported
-func (cd CatenaDevice) SupportsSubscriptions() bool {
-	if cd.device == nil {
-		return false
-	}
-	return cd.device.Subscriptions
-}
-
-// GetAccessScopes returns the device access scopes
-func (cd CatenaDevice) GetAccessScopes() []string {
-	if cd.device == nil {
-		return nil
-	}
-	return cd.device.AccessScopes
-}
-
-// GetDefaultScope returns the default access scope
-func (cd CatenaDevice) GetDefaultScope() string {
-	if cd.device == nil {
-		return ""
-	}
-	return cd.device.DefaultScope
 }
 
 // ToJSON converts CatenaDevice to JSON bytes using protojson
