@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       checks: write
+      pull-requests: write
     env:
       CHECK_NAME: Codegen Unit Tests
 
