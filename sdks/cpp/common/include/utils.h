@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,8 +33,9 @@
 /**
  * @brief Utility functions.
  * @file utils.h
- * @copyright Copyright © 2024 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
+ * @author keon.foster@rossvideo.com
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #include <filesystem>

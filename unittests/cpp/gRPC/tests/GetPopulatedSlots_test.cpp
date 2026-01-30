@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,7 +33,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author keon.foster@rossvideo.com
  * @date 22/01/26
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // Test helpers
