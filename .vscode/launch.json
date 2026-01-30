@@ -11,6 +11,7 @@
         "args": [],
         "env": {
           "CATENA_LOG_LEVEL": "DEBUG", // Set log level to DEBUG
+          "CATENA_ENV": "dev",
         }
       },
       {
