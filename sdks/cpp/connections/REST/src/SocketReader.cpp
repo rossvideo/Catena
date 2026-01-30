@@ -50,12 +50,7 @@ void SocketReader::read(tcp::socket& socket) {
 
     // Reading from the socket.
     boost::asio::streambuf buffer;
-    size_t dataSize = socket.available();
-    if (dataSize == 0) {
-        throw catena::exception_with_status("Message not found", catena::StatusCode::INVALID_ARGUMENT);
-    }
-    buffer.prepare(dataSize);
-    boost::asio::read(socket, buffer, boost::asio::transfer_at_least(1));
+    boost::asio::read_until(socket, buffer, "\r\n\r\n");
     std::istream header_stream(&buffer);
 
     // Getting the first line from the stream (URL), splitting, and parsing.
@@ -162,7 +157,11 @@ void SocketReader::read(tcp::socket& socket) {
                 if (value.empty() || value[0] == '-') {
                     throw catena::exception_with_status("Invalid Content-Length", catena::StatusCode::INVALID_ARGUMENT);
                 }
-                contentLength = stoi(value);
+                size_t processed = 0;
+                contentLength = stoi(value, &processed);
+                if (processed < value.length()) {
+                    throw catena::exception_with_status("Invalid Content-Length", catena::StatusCode::INVALID_ARGUMENT);
+                }
             } catch(...) {
                 throw catena::exception_with_status("Invalid Content-Length", catena::StatusCode::INVALID_ARGUMENT);
             }
@@ -171,8 +170,28 @@ void SocketReader::read(tcp::socket& socket) {
     // If body exists, we need to handle leftover data and append the rest.
     if (contentLength > 0) {
         jsonBody_ = std::string((std::istreambuf_iterator<char>(header_stream)), std::istreambuf_iterator<char>());
-        if (jsonBody_.size() != contentLength) {
-            throw catena::exception_with_status("Content-Length does not match body size", catena::StatusCode::INVALID_ARGUMENT);
+        if (jsonBody_.size() < contentLength) {
+            std::size_t leftover = contentLength - jsonBody_.size();
+            jsonBody_.resize(contentLength);
+            char* buf = &jsonBody_[contentLength - leftover];
+            std::size_t lengthRead = 0;
+            boost::system::error_code err;
+
+            socket.non_blocking(true);
+            auto startTime = std::chrono::steady_clock::now();
+            while (lengthRead < leftover) {
+                auto elapsedNS = std::chrono::steady_clock::now() - startTime;
+                auto elapsedS = std::chrono::duration_cast<std::chrono::seconds>(elapsedNS);
+                if (elapsedS >= std::chrono::seconds(5)) {
+                    socket.non_blocking(false);
+                    throw catena::exception_with_status("Timed out", catena::StatusCode::INVALID_ARGUMENT);
+                }
+                std::size_t remaining = leftover - lengthRead;
+                lengthRead += socket.read_some(boost::asio::buffer(buf + lengthRead, remaining), err);
+            }
+            socket.non_blocking(false);
+        } else if (jsonBody_.size() > contentLength) {
+            jsonBody_.resize(contentLength);
         }
     }
     // Setting detail level to NONE if not set.

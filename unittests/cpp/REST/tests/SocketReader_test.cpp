@@ -411,6 +411,4 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentLength) {
     // Test with incorrect Content-Length
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 1000"});    
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
-    // Test with missing message
-    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
 }
