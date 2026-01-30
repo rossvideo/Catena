@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -388,47 +388,22 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentType) {
     const std::string fqoid = "/test/oid";
     const bool stream = false;
     const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
-    const std::string jwsToken = "test-jws-token";
-    const std::string origin = "*";
-    const auto detailLevel = st2138::Device_DetailLevel_NONE;
-    const std::string language = "en";
-    const std::string jsonBody = "";
+    const std::string jsonBody = "{test_json_body}";
     std::map<std::string, std::string> headers;
     // Testing with invalid
-    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jwsToken, headers, {"Content-Type: application/xml"});
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: application/xml"});
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
     // Testing with typo
-    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jwsToken, headers, {"Content-Type: application/josn"});
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: application/josn"});
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
     // Testing with same prefix but invalid
-    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jwsToken, headers, {"Content-Type: application/json=patch+json"});
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: application/json=patch+json"});
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
     // Testing with missing header
     headers["Content-Length"] = std::to_string(10);
-    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jwsToken, headers);
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, "", headers);
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
 }
-
-/**
- * TEST 18b - Body present but no Content-Type header throws exception
- */
-// TEST_F(RESTSocketReaderTests, SocketReader_JsonBodyNoContentType) {
-//     EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(false));
-//     const RESTMethod method = catena::REST::Method_POST;
-//     const uint32_t slot = 1;
-//     const std::string endpoint = "/commands";
-//     const std::string fqoid = "/play";
-//     const bool stream = false;
-//     const std::unordered_map<std::string, std::string> fields = {};
-//     const std::string jwsToken = "";
-//     const std::string jsonBody = "{\"key\":\"value\"}";
-//     // Headers with Content-Length so there is a body, but no Content-Type
-//     std::map<std::string, std::string> headers;
-//     headers["Content-Length"] = std::to_string(jsonBody.size());
-//     headers["Origin"] = "*";
-//     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {});
-//     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
-// }
 
 /**
  * TEST 19 - Valid Content-Type doesn't throw exception
@@ -443,19 +418,18 @@ TEST_F(RESTSocketReaderTests, SocketReader_ValidContentType) {
     const std::string fqoid = "/test/oid";
     const bool stream = false;
     const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
-    const std::string jwsToken = "test-jws-token";
-    const std::string origin = "*";
-    const auto detailLevel = st2138::Device_DetailLevel_NONE;
-    const std::string language = "en";
     const std::string jsonBody = "";
     std::map<std::string, std::string> headers;
     // Testing with valid
-    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jwsToken, headers, {"Content-Type: application/json"});
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: application/json"});
     EXPECT_NO_THROW(socketReader.read(serverSocket_));
     // Testing with extra parameter
-    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jwsToken, headers, {"Content-Type: application/json; charset=utf-8"});
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: application/json; charset=utf-8"});
     EXPECT_NO_THROW(socketReader.read(serverSocket_));
     // Testing case-insensitive
-    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jwsToken, headers, {"Content-Type: aPpliCatIon/jSon"});
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: aPpliCatIon/jSon"});
+    EXPECT_NO_THROW(socketReader.read(serverSocket_));
+    // Testing no body or header
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, "", headers);
     EXPECT_NO_THROW(socketReader.read(serverSocket_));
 }
