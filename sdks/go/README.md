@@ -113,7 +113,7 @@ import "github.com/rossvideo/catena/sdks/go/pkg/catena"
 
 func main() {
     // Initialize SDK (parses env vars, supports -v flags)
-    cfg, err := catena.InitSDK(catena.InitOptions{AppName: "my_service"})
+    cfg, err := catena.InitOptions(catena.Options{AppName: "my_service"})
     if err != nil {
         log.Fatal(err)
     }
