@@ -105,7 +105,9 @@ RUN apt-get update && apt-get install --no-install-recommends -y python3-pip \
     && rm -rf /var/cache/apt/archives/ /var/lib/apt/lists/*
 
 # Build OpenAPI
-COPY smpte/install-tooling.sh /root/smpte/install-tooling.sh
+ARG IN_CONTAINER_BUILD=1
+RUN mkdir -p /root/smpte
+COPY smpte/*.sh /root/smpte/
 WORKDIR /root/smpte
 RUN ./install-tooling.sh
 

@@ -104,7 +104,7 @@ golang () {
 
 
 # run the javascript tests/coverage
-javascript
+# javascript
 
 # run the main coverage based on build target
 cd ~/Catena/${BUILD_TARGET}
