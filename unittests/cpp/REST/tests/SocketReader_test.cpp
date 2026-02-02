@@ -390,9 +390,8 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderWithoutColonIgnored) {
  * TEST 18 - Invalid Content-Type throws exception
  */
 TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentType) {
-        // Enable authz so Authorization header is parsed.
+    // Enable authz so Authorization header is parsed.
     EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
-    // Build and send request with an extra malformed header line (no ':')
     const RESTMethod method = catena::REST::Method_GET;
     const uint32_t slot = 1;
     const std::string endpoint = "/test-call";
@@ -422,7 +421,6 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentType) {
 TEST_F(RESTSocketReaderTests, SocketReader_ValidContentType) {
         // Enable authz so Authorization header is parsed.
     EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
-    // Build and send request with an extra malformed header line (no ':')
     const RESTMethod method = catena::REST::Method_GET;
     const uint32_t slot = 1;
     const std::string endpoint = "/test-call";
@@ -443,4 +441,23 @@ TEST_F(RESTSocketReaderTests, SocketReader_ValidContentType) {
     // Testing no body or header
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, "", headers);
     EXPECT_NO_THROW(socketReader.read(serverSocket_));
+}
+
+/**
+ * TEST 20 - Missing Request-Start sets to default
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_MissingRequestStart) {
+        // Enable authz so Authorization header is parsed.
+    EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
+    const RESTMethod method = catena::REST::Method_GET;
+    const uint32_t slot = 1;
+    const std::string endpoint = "/test-call";
+    const std::string fqoid = "/test/oid";
+    const bool stream = false;
+    const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
+    const std::string jsonBody = "";
+    std::map<std::string, std::string> headers;
+    // Testing with valid
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers);
+    EXPECT_EQ(socketReader.requestStart(), DEFAULT_REQUEST_START);
 }
