@@ -178,12 +178,12 @@ func main() {
 			if counter.IsRunning() {
 				logger.Info("Start command - already running")
 				val, _ := catena.ToCatenaValue(buildResponse())
-				return catena.ReplyOK(val)
+				return catena.Reply(val)
 			}
 			counter.Start()
 			logger.Info("Counter started", "value", counter.GetValue())
 			val, _ := catena.ToCatenaValue(buildResponse())
-			return catena.ReplyOK(val)
+			return catena.Reply(val)
 		},
 
 		// Stop command
@@ -191,12 +191,12 @@ func main() {
 			if !counter.IsRunning() {
 				logger.Info("Stop command - already stopped")
 				val, _ := catena.ToCatenaValue(buildResponse())
-				return catena.ReplyOK(val)
+				return catena.Reply(val)
 			}
 			counter.Stop()
 			logger.Info("Counter stopped", "value", counter.GetValue())
 			val, _ := catena.ToCatenaValue(buildResponse())
-			return catena.ReplyOK(val)
+			return catena.Reply(val)
 		},
 
 		// Add10 command
@@ -204,7 +204,7 @@ func main() {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
 			val, _ := catena.ToCatenaValue(buildResponse())
-			return catena.ReplyOK(val)
+			return catena.Reply(val)
 		},
 
 		// Reset command
@@ -212,7 +212,7 @@ func main() {
 			counter.Reset()
 			logger.Info("Counter reset", "value", counter.GetValue())
 			val, _ := catena.ToCatenaValue(buildResponse())
-			return catena.ReplyOK(val)
+			return catena.Reply(val)
 		},
 	}
 
@@ -226,9 +226,9 @@ func main() {
 	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		if fqoid == "counter" {
 			val, _ := catena.ToCatenaValue(buildResponse())
-			return catena.ReplyOK(val)
+			return catena.Reply(val)
 		}
-		return catena.ReplyNotFound("parameter not found: " + fqoid)
+		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"parameter not found: " + fqoid)
 	})
 
 	// Register ExecuteCommand handler
@@ -245,7 +245,7 @@ func main() {
 				},
 			}
 			val, _ := catena.ToCatenaValue(exception)
-			return catena.ReplyOK(val)
+			return catena.Reply(val)
 		}
 
 		return handler(payload)
@@ -257,13 +257,13 @@ func main() {
 		if r.URL.Path == "/" {
 			data, err := staticFS.ReadFile("static/index.htm")
 			if err != nil {
-				return catena.ReplyNotFound("index.html not found")
+				return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"index.html not found")
 			}
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Write(data)
-			return catena.ReplyOK(catena.CatenaValue{})
+			return catena.Reply(catena.CatenaValue{})
 		}
-		return catena.ReplyNotFound("endpoint not found: " + r.URL.Path)
+		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"endpoint not found: " + r.URL.Path)
 	})
 
 	// ==========================================================================
