@@ -80,8 +80,8 @@ func main() {
 	// Define device metadata for multiple slots
 	devices := map[int]map[string]any{
 		0: {
-			"slot":         uint32(0),
-			"detail_level": catena.DetailLevelFull,
+			"slot":              uint32(0),
+			"detail_level":      catena.DetailLevelFull,
 			"multi_set_enabled": true,
 			"subscriptions":     true,
 			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
@@ -93,7 +93,7 @@ func main() {
 							"en": "Brightness",
 						},
 					},
-					"type": int32(4), // INT32
+					"type": catena.ParamTypeInt32,
 					"constraint": map[string]any{
 						"ref_oid": "brightness_range",
 					},
@@ -106,7 +106,7 @@ func main() {
 							"en": "Contrast",
 						},
 					},
-					"type": int32(4), // INT32
+					"type": catena.ParamTypeInt32,
 					"constraint": map[string]any{
 						"ref_oid": "brightness_range",
 					},
@@ -120,7 +120,7 @@ func main() {
 							"fr": "Source d'entrée",
 						},
 					},
-					"type": int32(7), // STRING
+					"type": catena.ParamTypeString,
 					"constraint": map[string]any{
 						"ref_oid": "input_source_choice",
 					},
@@ -193,7 +193,7 @@ func main() {
 							"fr": "Redémarrer l'appareil",
 						},
 					},
-					"type": int32(1), // EMPTY (command with no args)
+					"type": catena.ParamTypeEmpty, // command with no args
 				},
 				"reset": map[string]any{
 					"name": map[string]any{
@@ -202,7 +202,7 @@ func main() {
 							"fr": "Réinitialiser aux valeurs par défaut",
 						},
 					},
-					"type": int32(1), // EMPTY
+					"type": catena.ParamTypeEmpty,
 				},
 			},
 			"language_packs": map[string]any{
@@ -236,8 +236,8 @@ func main() {
 			},
 		},
 		1: {
-			"slot":         uint32(1),
-			"detail_level": catena.DetailLevelFull,
+			"slot":              uint32(1),
+			"detail_level":      catena.DetailLevelFull,
 			"multi_set_enabled": false,
 			"subscriptions":     true,
 			"access_scopes":     []string{"st2138:mon", "st2138:op"},
@@ -263,7 +263,7 @@ func main() {
 							"en": "Master Gain",
 						},
 					},
-					"type": int32(6), // FLOAT32
+					"type": catena.ParamTypeFloat32,
 					"constraint": map[string]any{
 						"ref_oid": "gain_range",
 					},
@@ -276,7 +276,7 @@ func main() {
 							"en": "Input 1 Gain",
 						},
 					},
-					"type": int32(6), // FLOAT32
+					"type": catena.ParamTypeFloat32,
 					"constraint": map[string]any{
 						"ref_oid": "gain_range",
 					},
@@ -289,7 +289,7 @@ func main() {
 							"en": "Mute",
 						},
 					},
-					"type":      int32(4), // INT32 (treating boolean as int32)
+					"type":      catena.ParamTypeInt32, // treating boolean as int32
 					"widget":    "CHECKBOX",
 					"read_only": false,
 				},
@@ -324,7 +324,7 @@ func main() {
 							"en": "Reset Peak Meters",
 						},
 					},
-					"type": int32(1), // EMPTY
+					"type": catena.ParamTypeEmpty,
 				},
 			},
 			"language_packs": map[string]any{
@@ -344,8 +344,8 @@ func main() {
 			},
 		},
 		2: {
-			"slot":         uint32(2),
-			"detail_level": catena.DetailLevelFull,
+			"slot":              uint32(2),
+			"detail_level":      catena.DetailLevelFull,
 			"multi_set_enabled": true,
 			"subscriptions":     false,
 			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg"},
@@ -371,7 +371,7 @@ func main() {
 							"en": "Output 1 Source",
 						},
 					},
-					"type": int32(4), // INT32
+					"type": catena.ParamTypeInt32,
 					"constraint": map[string]any{
 						"ref_oid": "input_choice",
 					},
@@ -384,7 +384,7 @@ func main() {
 							"en": "Lock Enabled",
 						},
 					},
-					"type":      int32(4), // INT32 (treating boolean as int32)
+					"type":      catena.ParamTypeInt32, // treating boolean as int32
 					"widget":    "CHECKBOX",
 					"read_only": false,
 				},
@@ -427,7 +427,7 @@ func main() {
 							"en": "Take (Execute Salvo)",
 						},
 					},
-					"type": int32(1), // EMPTY
+					"type": catena.ParamTypeEmpty,
 				},
 				"clear_locks": map[string]any{
 					"name": map[string]any{
@@ -435,7 +435,7 @@ func main() {
 							"en": "Clear All Locks",
 						},
 					},
-					"type": int32(1), // EMPTY
+					"type": catena.ParamTypeEmpty,
 				},
 			},
 			"language_packs": map[string]any{

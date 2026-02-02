@@ -1,6 +1,8 @@
 package catena
 
 import (
+	"fmt"
+
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/rossvideo/catena/build/go/protos"
@@ -31,10 +33,12 @@ func ToCatenaAsset(dp DataPayload, cachable bool) (CatenaAsset, error) {
 	}
 
 	// Handle oneof: either url or payload (not both)
-	if dp.Url != "" {
+	if dp.Url != "" && len(dp.Payload) == 0 {
 		protoPayload.Kind = &protos.DataPayload_Url{Url: dp.Url}
-	} else if len(dp.Payload) > 0 {
+	} else if len(dp.Payload) > 0 && dp.Url == "" {
 		protoPayload.Kind = &protos.DataPayload_Payload{Payload: dp.Payload}
+	} else {
+		return CatenaAsset{asset: nil}, fmt.Errorf("either payload or url must be provided in DataPayload, but not both")
 	}
 
 	// Build the ExternalObjectPayload

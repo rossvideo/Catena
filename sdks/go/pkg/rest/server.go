@@ -398,7 +398,13 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 		}
 
 		// Convert proto value to native Go type
-		nativeValue := catena.FromProto(reqValue)
+		nativeValue, err := catena.FromProto(reqValue)
+		if err != nil {
+			logger.Error("failed to convert proto value to native Go type", "error", err)
+			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid request body")
+			writeHTTPResult(w, res, val)
+			return
+		}
 
 		handler := s.lookupSetValue(slot)
 		val, res := handler(nativeValue, slot, fqoid)
@@ -442,7 +448,13 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 			writeHTTPResult(w, res, val)
 			return
 		}
-		payload = catena.FromProto(reqValue)
+		payload, err = catena.FromProto(reqValue)
+		if err != nil {
+			logger.Error("failed to convert proto value to native Go type", "error", err)
+			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid command payload")
+			writeHTTPResult(w, res, val)
+			return
+		}
 	}
 
 	handler := s.lookupExecuteCommand(slot)
