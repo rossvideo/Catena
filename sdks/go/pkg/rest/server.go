@@ -66,16 +66,20 @@ type Server struct {
 	fallbackHandler        FallbackHandler
 }
 
-// writeHTTPResult writes a CatenaValue and StatusResult to the HTTP response
+// writeHTTPResult writes a CatenaValue and StatusResult to the HTTP response.
 func writeHTTPResult(w http.ResponseWriter, value catena.CatenaValue, result catena.StatusResult) {
 	httpStatus := result.Code.ToHTTPStatus()
 
-	// If there's an error message, write it as JSON
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(httpStatus)
+
 	if result.Error != "" {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(httpStatus)
-		json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
-		return
+		// Only return detailed error messages in dev mode
+		if catena.IsDev() {
+			json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
+		} else {
+			json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(httpStatus)})
+		}
 	}
 
 	// If Value is nil, just write the status code
