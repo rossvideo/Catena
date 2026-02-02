@@ -66,7 +66,7 @@ RUN . /root/toolchain.env \
 WORKDIR /usr/local/grpc/cmake/build
 RUN . /root/toolchain.env \
     && cmake /usr/local/grpc -DCMAKE_BUILD_TYPE=Release -DgRPC_INSTALL=ON -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
-    && make -j4 install
+    && make -j1 install
 
 # Install jwt-cpp
 RUN . /root/toolchain.env \
