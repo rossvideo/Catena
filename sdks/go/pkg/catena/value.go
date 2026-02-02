@@ -49,13 +49,27 @@ type EmptyValue struct{}
 
 type UndefinedValue int32
 
-type DataPayload struct {
-	Metadata        map[string]string `json:"metadata,omitempty"`
-	Digest          []byte            `json:"digest,omitempty"`
-	PayloadEncoding string            `json:"payload_encoding,omitempty"` // "uncompressed", "gzip", or "deflate"
-	URL             string            `json:"url,omitempty"`
-	Payload         []byte            `json:"payload,omitempty"`
-}
+// ParamType represents the type of a parameter value
+// Mirrors protos.ParamType for convenience
+type ParamType = protos.ParamType
+
+// ParamType constants matching the proto enum
+const (
+	ParamTypeUndefined          ParamType = protos.ParamType_UNDEFINED
+	ParamTypeEmpty              ParamType = protos.ParamType_EMPTY
+	ParamTypeInt32              ParamType = protos.ParamType_INT32
+	ParamTypeFloat32            ParamType = protos.ParamType_FLOAT32
+	ParamTypeString             ParamType = protos.ParamType_STRING
+	ParamTypeStruct             ParamType = protos.ParamType_STRUCT
+	ParamTypeStructVariant      ParamType = protos.ParamType_STRUCT_VARIANT
+	ParamTypeInt32Array         ParamType = protos.ParamType_INT32_ARRAY
+	ParamTypeFloat32Array       ParamType = protos.ParamType_FLOAT32_ARRAY
+	ParamTypeStringArray        ParamType = protos.ParamType_STRING_ARRAY
+	ParamTypeBinary             ParamType = protos.ParamType_BINARY
+	ParamTypeStructArray        ParamType = protos.ParamType_STRUCT_ARRAY
+	ParamTypeStructVariantArray ParamType = protos.ParamType_STRUCT_VARIANT_ARRAY
+	ParamTypeData               ParamType = protos.ParamType_DATA
+)
 
 func ToCatenaValue(v any) (CatenaValue, error) {
 	val, err := ToProto(v)
@@ -68,6 +82,9 @@ func ToCatenaValue(v any) (CatenaValue, error) {
 // ToProto converts native Go types to protos.Value
 func ToProto(v any) (*protos.Value, error) {
 	switch val := v.(type) {
+	case *protos.DataPayload:
+		// Pass through DataPayload directly
+		return nil, fmt.Errorf("DataPayload is not supported in ToProto")
 	case UndefinedValue:
 		return &protos.Value{Kind: &protos.Value_UndefinedValue{UndefinedValue: protos.UndefinedValue(val)}}, nil
 	case EmptyValue:
@@ -132,68 +149,47 @@ func ToProto(v any) (*protos.Value, error) {
 		return &protos.Value{Kind: &protos.Value_StructVariantArrayValues{StructVariantArrayValues: &protos.StructVariantList{
 			StructVariants: structVariants,
 		}}}, nil
-	case DataPayload:
-		// Convert payload encoding string to enum
-		var encoding protos.DataPayload_PayloadEncoding
-		switch val.PayloadEncoding {
-		case "gzip":
-			encoding = protos.DataPayload_GZIP
-		case "deflate":
-			encoding = protos.DataPayload_DEFLATE
-		default:
-			encoding = protos.DataPayload_UNCOMPRESSED
-		}
-
-		dp := &protos.DataPayload{
-			Metadata:        val.Metadata,
-			Digest:          val.Digest,
-			PayloadEncoding: encoding,
-		}
-
-		// Set either URL or Payload based on which is provided
-		if val.URL != "" && val.Payload == nil {
-			dp.Kind = &protos.DataPayload_Url{Url: val.URL}
-		} else if val.Payload != nil && val.URL == "" {
-			dp.Kind = &protos.DataPayload_Payload{Payload: val.Payload}
-		} else {
-			return nil, fmt.Errorf("DataPayload must have either URL or Payload set, but not both")
-		}
-
-		return &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: dp}}, nil
 	default:
 		return nil, fmt.Errorf("unsupported type: %T", v)
 	}
 }
 
 // FromProto converts protos.Value to native Go types
-func FromProto(pv *protos.Value) any {
+func FromProto(pv *protos.Value) (any, error) {
 	if pv == nil {
-		return nil
+		return nil, fmt.Errorf("nil Value")
 	}
 	switch pv.GetKind().(type) {
+	case *protos.Value_DataPayload:
+		// Return the raw DataPayload proto
+		return nil, fmt.Errorf("DataPayload is not supported in FromProto")
 	case *protos.Value_UndefinedValue:
-		return UndefinedValue(pv.GetUndefinedValue())
+		return UndefinedValue(pv.GetUndefinedValue()), nil
 	case *protos.Value_EmptyValue:
-		return EmptyValue{}
+		return EmptyValue{}, nil
 	case *protos.Value_Int32Value:
-		return pv.GetInt32Value()
+		return pv.GetInt32Value(), nil
 	case *protos.Value_Float32Value:
-		return pv.GetFloat32Value()
+		return pv.GetFloat32Value(), nil
 	case *protos.Value_StringValue:
-		return pv.GetStringValue()
+		return pv.GetStringValue(), nil
 	case *protos.Value_Int32ArrayValues:
-		return pv.GetInt32ArrayValues().GetInts()
+		return pv.GetInt32ArrayValues().GetInts(), nil
 	case *protos.Value_Float32ArrayValues:
-		return pv.GetFloat32ArrayValues().GetFloats()
+		return pv.GetFloat32ArrayValues().GetFloats(), nil
 	case *protos.Value_StringArrayValues:
-		return pv.GetStringArrayValues().GetStrings()
+		return pv.GetStringArrayValues().GetStrings(), nil
 	case *protos.Value_StructValue:
 		fields := pv.GetStructValue().GetFields()
 		m := make(map[string]any, len(fields))
 		for k, v := range fields {
-			m[k] = FromProto(v)
+			val, err := FromProto(v)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert struct field %s: %w", k, err)
+			}
+			m[k] = val
 		}
-		return m
+		return m, nil
 	case *protos.Value_StructArrayValues:
 		list := pv.GetStructArrayValues().GetStructValues()
 		arr := make([]map[string]any, len(list))
@@ -201,57 +197,40 @@ func FromProto(pv *protos.Value) any {
 			fields := sv.GetFields()
 			m := make(map[string]any, len(fields))
 			for k, v := range fields {
-				m[k] = FromProto(v)
+				val, err := FromProto(v)
+				if err != nil {
+					return nil, fmt.Errorf("failed to convert struct field %s: %w", k, err)
+				}
+				m[k] = val
 			}
 			arr[i] = m
 		}
-		return arr
+		return arr, nil
 	case *protos.Value_StructVariantValue:
 		sv := pv.GetStructVariantValue()
+		val, err := FromProto(sv.GetValue())
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert struct variant value: %w", err)
+		}
 		return StructVariantValue{
 			StructVariantType: sv.GetStructVariantType(),
-			Value:             FromProto(sv.GetValue()),
-		}
+			Value:             val,
+		}, nil
 	case *protos.Value_StructVariantArrayValues:
 		list := pv.GetStructVariantArrayValues().GetStructVariants()
 		arr := make([]StructVariantValue, 0, len(list))
 		for _, sv := range list {
+			val, err := FromProto(sv.GetValue())
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert struct variant value: %w", err)
+			}
 			arr = append(arr, StructVariantValue{
 				StructVariantType: sv.GetStructVariantType(),
-				Value:             FromProto(sv.GetValue()),
+				Value:             val,
 			})
 		}
-		return arr
-	case *protos.Value_DataPayload:
-		dp := pv.GetDataPayload()
-
-		// Convert encoding enum to string
-		var encoding string
-		switch dp.GetPayloadEncoding() {
-		case protos.DataPayload_GZIP:
-			encoding = "gzip"
-		case protos.DataPayload_DEFLATE:
-			encoding = "deflate"
-		default:
-			encoding = "uncompressed"
-		}
-
-		result := DataPayload{
-			Metadata:        dp.GetMetadata(),
-			Digest:          dp.GetDigest(),
-			PayloadEncoding: encoding,
-		}
-
-		// Get either URL or Payload based on Kind
-		switch kind := dp.GetKind().(type) {
-		case *protos.DataPayload_Url:
-			result.URL = kind.Url
-		case *protos.DataPayload_Payload:
-			result.Payload = kind.Payload
-		}
-
-		return result
+		return arr, nil
 	default:
-		return nil
+		return nil, fmt.Errorf("unsupported Value type: %T", pv.GetKind())
 	}
 }
