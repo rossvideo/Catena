@@ -49,7 +49,7 @@ import (
 // Handlers now return (CatenaValue, StatusResult) so the server can respond consistently.
 type DeviceHandler func() (catena.CatenaDevice, catena.StatusResult)
 type GetValueHandler func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult)
-type SetValueHandler func(value any, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult)
+type SetValueHandler func(value any, slot int, fqoid string) catena.StatusResult
 type GetAssetHandler func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult)
 type ConnectHandler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
 type ExecuteCommandHandler func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult)
@@ -92,6 +92,21 @@ func writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value in
 	default:
 		w.WriteHeader(httpStatus)
 	}
+}
+
+// writeHTTPStatusResult writes a StatusResult to the HTTP response (no value).
+func writeHTTPStatusResult(w http.ResponseWriter, result catena.StatusResult) {
+	httpStatus := result.Code.ToHTTPStatus()
+
+	if result.Error != "" {
+		if catena.IsDev() {
+			json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
+		} else {
+			json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(httpStatus)})
+		}
+	}
+
+	w.WriteHeader(httpStatus)
 }
 
 // writeValueResult writes a CatenaValue as JSON
@@ -204,8 +219,8 @@ func DefaultGetValueHandler(slot int, fqoid string) (catena.CatenaValue, catena.
 	return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "GetValue not implemented")
 }
 
-func DefaultSetValueHandler(value any, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
-	return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "SetValue not implemented")
+func DefaultSetValueHandler(value any, slot int, fqoid string) catena.StatusResult {
+	return catena.StatusNotImplemented("SetValue not implemented")
 }
 
 func DefaultGetAssetHandler(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
@@ -392,8 +407,7 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 		reqValue, err := internal.ReadRequestJSON(r)
 		if err != nil {
 			logger.Error("failed to read request", "error", err)
-			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid request body")
-			writeHTTPResult(w, res, val)
+			writeHTTPStatusResult(w, catena.StatusBadRequest("invalid request body"))
 			return
 		}
 
@@ -407,8 +421,8 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 		}
 
 		handler := s.lookupSetValue(slot)
-		val, res := handler(nativeValue, slot, fqoid)
-		writeHTTPResult(w, res, val)
+		res := handler(nativeValue, slot, fqoid)
+		writeHTTPStatusResult(w, res)
 
 	default:
 		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET, PUT, PATCH allowed")

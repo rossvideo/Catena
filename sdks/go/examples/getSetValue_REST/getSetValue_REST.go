@@ -53,19 +53,19 @@ var (
 
 // Implementation for registering parameter handlers for every fqoid on a given slot
 func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
-	srv.RegisterSetValueHandler(slot, func(value any, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterSetValueHandler(slot, func(value any, slot int, fqoid string) catena.StatusResult {
 		logger.Info("SetParam", "slot", slot, "fqoid", fqoid)
 		val, ok := params.Load(fqoid)
 		if !ok {
 			logger.Error("SetParam param not found", "slot", slot, "fqoid", fqoid)
-			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"param not found")
+			return catena.StatusNotFound("param not found")
 		}
 		if reflect.TypeOf(val) != reflect.TypeOf(value) {
 			logger.Error("SetParam type mismatch", "slot", slot, "fqoid", fqoid)
-			return catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT,"type mismatch")
+			return catena.StatusBadRequest("type mismatch")
 		}
 		params.Store(fqoid, value)
-		return catena.ReplyError[catena.CatenaValue](catena.NO_CONTENT, "")
+		return catena.StatusNoContent()
 	})
 
 	srv.RegisterGetValueHandler(slot, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
@@ -86,22 +86,22 @@ func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
 
 // For a given slot implement param handlers for a specific param oid only
 func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid string, slot int) {
-	srv.RegisterSetValueHandler(slot, func(value any, slot int, fqoid_ string) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterSetValueHandler(slot, func(value any, slot int, fqoid_ string) catena.StatusResult {
 		if fqoid_ != fqoid {
-			return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED,"no handler for fqoid " + fqoid_)
+			return catena.StatusNotImplemented("no handler for fqoid " + fqoid_)
 		}
 		logger.Info("SetSpecificParam", "slot", slot, "fqoid", fqoid_)
 		val, ok := params.Load(fqoid_)
 		if !ok {
 			logger.Error("SetSpecificParam param not found", "slot", slot, "fqoid", fqoid_)
-			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"param not found")
+			return catena.StatusNotFound("param not found")
 		}
 		if reflect.TypeOf(val) != reflect.TypeOf(value) {
 			logger.Error("SetSpecificParam type mismatch", "slot", slot, "fqoid", fqoid_)
-			return catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT,"type mismatch")
+			return catena.StatusBadRequest("type mismatch")
 		}
 		params.Store(fqoid_, value)
-		return catena.ReplyError[catena.CatenaValue](catena.NO_CONTENT, "")
+		return catena.StatusNoContent()
 	})
 
 	srv.RegisterGetValueHandler(slot, func(slot int, fqoid_ string) (catena.CatenaValue, catena.StatusResult) {
