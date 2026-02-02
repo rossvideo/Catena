@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,9 @@
  * @file ISocketReader.h
  * @brief Interface for the SocketReader class.
  * @author benjamin.whitten@rossvideo.com
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author keon.foster@rossvideo.com
+ * @date 2026/01/20
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #pragma once
@@ -59,6 +61,9 @@ namespace REST {
  * @brief Enum for REST methods.
  */
 enum RESTMethod : uint32_t { Method_NONE, Method_GET, Method_POST, Method_PUT, Method_PATCH, Method_DELETE, Method_HEAD, Method_OPTIONS };
+
+const long DEFAULT_REQUEST_START = 0;
+const long DEFAULT_REQUEST_RECEIVED = 0;
 
 /**
  * @brief Interface for the SocketReader class.
@@ -151,6 +156,16 @@ class ISocketReader {
      * @brief Returns a reference to the subscription manager
      */
     virtual catena::common::ISubscriptionManager& subscriptionManager() = 0;
+    /**
+     * @brief Returns the time the client started the request formatted as,
+     * <number of milliseconds since start of epoch>
+     */
+    virtual const long requestStart() const = 0;
+    /**
+     * @brief Returns the time the client's request was received formatted as,
+     * <number of milliseconds since start of epoch>
+     */
+    virtual const long requestReceived() const = 0;
 };
  
 }; // Namespace REST

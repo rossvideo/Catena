@@ -105,6 +105,7 @@ class RESTTest {
                       const std::string& origin,
                       st2138::Device_DetailLevel detailLevel,
                       const std::string& language,
+                      const std::string& requestStart,
                       const std::string& contentType,
                       const std::string& jsonBody) {
         // Delegate to header-name aware variant to avoid duplication.
@@ -118,6 +119,7 @@ class RESTTest {
                                     origin,
                                     detailLevel,
                                     language,
+                                    requestStart,
                                     contentType,
                                     jsonBody,
                                     "Origin",
@@ -125,6 +127,7 @@ class RESTTest {
                                     "Detail-Level",
                                     "Language",
                                     "Content-Length",
+                                    "Request-Start",
                                     "Content-Type");
     }
 
@@ -141,6 +144,7 @@ class RESTTest {
                       const std::string& origin,
                       st2138::Device_DetailLevel detailLevel,
                       const std::string& language,
+                      const std::string& requestStart,
                       const std::string& contentType,
                       const std::string& jsonBody,
                       const std::string& originHeaderName,
@@ -148,6 +152,7 @@ class RESTTest {
                       const std::string& detailLevelHeaderName,
                       const std::string& languageHeaderName,
                       const std::string& contentLengthHeaderName,
+                      const std::string& requestStartHeaderName,
                       const std::string& contentTypeHeaderName,
                       const std::vector<std::string>& extraHeaderLines = {}) {
         // Build headers map allowing injection of custom or extra headers
@@ -155,6 +160,7 @@ class RESTTest {
         headers[originHeaderName] = origin;
         headers["User-Agent"] = "test_agent";
         headers[authorizationHeaderName] = "Bearer " + jwsToken;
+        headers[requestStartHeaderName] = requestStart;
         headers[contentTypeHeaderName] = contentType;
         if (detailLevel != st2138::Device_DetailLevel_UNSET) {
             headers[detailLevelHeaderName] =
