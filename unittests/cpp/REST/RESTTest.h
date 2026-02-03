@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,8 +32,9 @@
  * @brief A parent class for REST test fixtures.
  * @author benjamin.whitten@rossvideo.com
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2025-11-27
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author keon.foster@rossvideo.com
+ * @date 2026/01/26
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #pragma once
@@ -104,6 +105,8 @@ class RESTTest {
                       const std::string& origin,
                       st2138::Device_DetailLevel detailLevel,
                       const std::string& language,
+                      const std::string& requestStart,
+                      const std::string& contentType,
                       const std::string& jsonBody) {
         // Delegate to header-name aware variant to avoid duplication.
         writeRequestWithHeaderNames(method,
@@ -116,12 +119,16 @@ class RESTTest {
                                     origin,
                                     detailLevel,
                                     language,
+                                    requestStart,
+                                    contentType,
                                     jsonBody,
                                     "Origin",
                                     "Authorization",
                                     "Detail-Level",
                                     "Language",
-                                    "Content-Length");
+                                    "Content-Length",
+                                    "Request-Start",
+                                    "Content-Type");
     }
 
     /*
@@ -137,18 +144,24 @@ class RESTTest {
                       const std::string& origin,
                       st2138::Device_DetailLevel detailLevel,
                       const std::string& language,
+                      const std::string& requestStart,
+                      const std::string& contentType,
                       const std::string& jsonBody,
                       const std::string& originHeaderName,
                       const std::string& authorizationHeaderName,
                       const std::string& detailLevelHeaderName,
                       const std::string& languageHeaderName,
                       const std::string& contentLengthHeaderName,
+                      const std::string& requestStartHeaderName,
+                      const std::string& contentTypeHeaderName,
                       const std::vector<std::string>& extraHeaderLines = {}) {
         // Build headers map allowing injection of custom or extra headers
         std::map<std::string, std::string> headers;
         headers[originHeaderName] = origin;
         headers["User-Agent"] = "test_agent";
         headers[authorizationHeaderName] = "Bearer " + jwsToken;
+        headers[requestStartHeaderName] = requestStart;
+        headers[contentTypeHeaderName] = contentType;
         if (detailLevel != st2138::Device_DetailLevel_UNSET) {
             headers[detailLevelHeaderName] =
                 catena::patterns::EnumDecorator<st2138::Device_DetailLevel>().getForwardMap().at(detailLevel);

@@ -39,17 +39,15 @@
 package main
 
 import (
-	"bytes"
+	"crypto/sha256"
 	"embed"
 	"fmt"
-	"io"
 	"io/fs"
 	"mime"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -62,13 +60,6 @@ import (
 //go:embed static/*
 var staticFS embed.FS
 
-// Asset represents a binary asset with metadata
-type Asset struct {
-	ContentType string
-	Data        []byte
-	Filename    string
-}
-
 // Global state for graceful shutdown
 var (
 	shutdownChan = make(chan struct{})
@@ -76,14 +67,13 @@ var (
 )
 
 func main() {
-	cfg := logger.ParseConfigWithVerbosity("CATENA")
-	cfg.AppName = "asset_request_REST"
-
-	if err := logger.Init(cfg); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to initialize logger: %v\n", err)
+	// Initialize SDK with prefix and app name
+	cfg, err := catena.InitOptions(catena.Options{AppName: "asset_request_REST"})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize SDK: %v\n", err)
 		os.Exit(1)
 	}
-	defer logger.Close()
+	defer catena.Close()
 
 	// Handle signals for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
@@ -94,27 +84,24 @@ func main() {
 		close(shutdownChan)
 	}()
 
-	portStr := envOr("CATENA_PORT", "6254")
-	port, err := strconv.Atoi(portStr)
-	if err != nil {
-		logger.Error("invalid CATENA_PORT", "error", err)
-		os.Exit(1)
-	}
+	// Port comes from the unified config (parsed from CATENA_PORT)
+	port := cfg.Port
 
 	// ==========================================================================
 	// Asset Storage
 	// ==========================================================================
 	assets := &sync.Map{}
-	assetsList := &sync.Map{}
 
 	// Load assets from embedded static directory
-	loadAssetsFromEmbedded(staticFS, "static", assets, assetsList)
+	loadAssetsFromEmbedded(staticFS, "static", assets)
 
-	// Build assets list for logging
-	var assetNames []string
-	assetsList.Range(func(key, value any) bool {
-		assetNames = append(assetNames, key.(string))
-		return true
+	// Collect asset names for example curl command
+	var firstAssetName string
+	assets.Range(func(key, _ any) bool {
+		if firstAssetName == "" {
+			firstAssetName = key.(string)
+		}
+		return firstAssetName == "" // Stop after finding first asset
 	})
 
 	// ==========================================================================
@@ -124,38 +111,31 @@ func main() {
 	srv = rest.NewServer(slotList)
 
 	// Register GetAsset handler
-	srv.RegisterGetAssetHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 		logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
 
 		val, ok := assets.Load(fqoid)
 		if !ok {
 			logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
-			return catena.ReplyNotFound("asset not found: " + fqoid)
+			return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found: "+fqoid)
 		}
 
-		asset := val.(Asset)
+		payload := val.(catena.DataPayload)
 
-		// Set appropriate headers for binary content
-		w.Header().Set("Content-Type", asset.ContentType)
-		w.Header().Set("Content-Length", strconv.Itoa(len(asset.Data)))
-		if asset.Filename != "" {
-			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", asset.Filename))
+		// Convert DataPayload to CatenaAsset when returning
+		catenaAsset, err := catena.ToCatenaAsset(payload, true)
+		if err != nil {
+			logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", err)
+			return catena.ReplyError[catena.CatenaAsset](catena.INTERNAL, "failed to convert asset: "+err.Error())
 		}
 
-		// Stream the content
-		reader := bytes.NewReader(asset.Data)
-		if _, err := io.Copy(w, reader); err != nil {
-			logger.Error("Asset streaming error", "slot", slot, "fqoid", fqoid, "error", err)
-			return catena.ReplyInternalError("failed to stream asset")
-		}
-
-		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid)
-		return catena.ReplyOK(catena.CatenaValue{})
+		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(payload.Payload))
+		return catena.Reply(catenaAsset)
 	})
 
-	// Fallback handler
+	// Not found handler
 	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		return catena.ReplyNotFound("endpoint not found")
+		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found")
 	})
 
 	// ==========================================================================
@@ -169,15 +149,9 @@ func main() {
 	logger.Info("Available endpoint:")
 	logger.Info("  GET  /st2138-api/v1/0/asset/{oid}  - GetAsset")
 	logger.Info("")
-	logger.Info("Loaded assets:")
-	assetsList.Range(func(key, value any) bool {
-		logger.Info("  ", "asset", key)
-		return true
-	})
-	logger.Info("")
-	logger.Info("Example curl:")
-	if len(assetNames) > 0 {
-		logger.Info(fmt.Sprintf("  curl http://localhost:%d/st2138-api/v1/0/asset/%s", port, assetNames[0]))
+	if firstAssetName != "" {
+		logger.Info("Example curl:")
+		logger.Info(fmt.Sprintf("  curl http://localhost:%d/st2138-api/v1/0/asset/%s", port, firstAssetName))
 	}
 	logger.Info("=======================================================")
 
@@ -195,7 +169,7 @@ func main() {
 }
 
 // loadAssetsFromEmbedded loads all files from the embedded filesystem into the asset store
-func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map, assetsList *sync.Map) {
+func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map) {
 	err := fs.WalkDir(embedFS, root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			logger.Warning("Error accessing path", "path", path, "error", err)
@@ -228,14 +202,23 @@ func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map, ass
 		// Normalize path separators for URL use
 		assetID := strings.ReplaceAll(relPath, string(filepath.Separator), "/")
 
-		asset := Asset{
-			ContentType: contentType,
-			Data:        data,
-			Filename:    filepath.Base(path),
+		// Build metadata
+		metadata := map[string]string{
+			"content-type": contentType,
+			"file-name":    filepath.Base(path),
 		}
 
-		assets.Store(assetID, asset)
-		assetsList.Store(assetID, true)
+		// Calculate SHA-256 digest
+		hash := sha256.Sum256(data)
+
+		// Store as DataPayload directly
+		payload := catena.DataPayload{
+			Payload:  data,
+			Metadata: metadata,
+			Digest:   hash[:],
+		}
+
+		assets.Store(assetID, payload)
 		logger.Info("Loaded asset", "id", assetID, "size", len(data), "type", contentType)
 
 		return nil
@@ -244,11 +227,4 @@ func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map, ass
 	if err != nil {
 		logger.Error("Error walking embedded directory", "root", root, "error", err)
 	}
-}
-
-func envOr(key, def string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return def
 }

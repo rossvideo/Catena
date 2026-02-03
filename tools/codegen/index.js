@@ -14,47 +14,37 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import fs from 'fs/promises';
 import { program } from 'commander';
-import path from 'path';
-import yaml from 'yaml';
 
 import packageJson from './package.json' with { type: "json" };;
 import { DeviceModel } from './DeviceModel.js';
 import Validator from 'smpte-validator';
 import { validateRequiredParamsAndScopes } from './mandatory.js';
 import CppGen from './cpp/cppgen.js';
-import { deserialize, serialize } from './serdes/serdes.js';
 
 //
 // Converts Catena compatible Device Models to computer code in a variety of languages
 //
-
-let log = console.log;
 
 // load the command line parser
 program
     .description(packageJson.description)
     .version(packageJson.version)
     .option('-q, --quiet', 'Suppress non-error console output', false)
-    .hook('preAction', (thisCommand) => {
-        const options = thisCommand.opts();
-        // redefine log function based on quiet option
-        if (options.quiet) {
-            log = function () { };
-        }
-    });
-
-const MANDATORY_OPTION = ["--disable-mandatory-enforcement", "Disable enforcement of mandatory parameters during code generation"];
-const OUTPUT_OPTION = ["-o --output <string>", "Output folder for results", "."];
-const PROTOS_OPTION = ["-p --protos <string>", "path to protobuf definitions", '../../smpte/interface/proto'];
-const DEVICE_ARGUMENT = ["<deviceModel>", "Catena device model to process"];
+    .option("--disable-mandatory-enforcement", "Disable enforcement of mandatory parameters during code generation")
+    .option("-o --output <string>", "Output folder for results", ".")
+    .argument("<language>", "Target programming language (cpp)")
+    .argument("<deviceModel>", "Catena device model to process")
+    .action(generate);
 
 /**
  * log the options being used
+ * @param {function} log logging function
+ * @param {string} language target language
+ * @param {string} deviceModel path to device model
  * @param {object} options options from commander
  */
-function logOptions(language, deviceModel, options) {
+function logOptions(log, language, deviceModel, options) {
     log(`deviceModel: ${deviceModel}`);
     log(`language: ${language}`);
     if (options.output) {
@@ -65,62 +55,7 @@ function logOptions(language, deviceModel, options) {
     }
 }
 
-program
-    .command("cpp")
-    .description("Generate C++ code from device model")
-    .option(...MANDATORY_OPTION)
-    .option(...OUTPUT_OPTION)
-    .argument(...DEVICE_ARGUMENT)
-    .action(async (deviceModel, options) => generate("cpp", deviceModel, options));
-
-program
-    .command("ser")
-    .description("Serialize device model to a binary format")
-    .option(...MANDATORY_OPTION)
-    .option(...OUTPUT_OPTION)
-    .option(...PROTOS_OPTION)
-    .argument(...DEVICE_ARGUMENT)
-    .action(async (deviceModel, options) => generate("ser", deviceModel, options));
-
-program
-    .command("des")
-    .description("Deserialize binary to device model")
-    .option(...OUTPUT_OPTION)
-    .option(...PROTOS_OPTION)
-    .option("--metadata", "Just output metadata", false)
-    .option("--yaml", "Output device model in YAML format (default)", false)
-    .option("--json", "Output device model in JSON format", false)
-    .argument("<input>", "Input binary file")
-    .action(async (input, options) => {
-        logOptions("des", input, options);
-        log(`Deserializing binary file ${input}...`);
-        const [metadata, deviceModel] = await deserialize({
-            input,
-            ...options
-        });
-        if (options.metadata) {
-            // don't use log, always output metadata, if requested
-            console.log("Metadata:");
-            console.log(JSON.stringify(metadata, null, 2));
-            return;
-        }
-        log("Writing deserialized device model to output...");
-        let output = "";
-        let outputPath = options.output;
-        const inputFileName = path.basename(input);
-        const inputExt = path.extname(inputFileName) || /$/;
-        if (options.json && !options.yaml) {
-            output = JSON.stringify(deviceModel, null, 4);
-            outputPath = path.join(outputPath, inputFileName.replace(inputExt, '.json'));
-        } else {
-            output = yaml.stringify(deviceModel);
-            outputPath = path.join(outputPath, inputFileName.replace(inputExt, '.yaml'));
-        }
-        await fs.mkdir(path.dirname(outputPath), { recursive: true });
-        await fs.writeFile(outputPath, output, "utf-8");
-        log(`Wrote deserialized device model to ${outputPath}`);
-    });
-
+// run the command line parser
 (async () => {
     await program.parseAsync();
 })().catch((err) => {
@@ -129,8 +64,11 @@ program
 });
 
 async function generate(language, deviceModelPath, options) {
+    // define logging function based on quiet option
+    const log = options.quiet ? () => { } : console.log;
+
     // log the options being used
-    logOptions(language, deviceModelPath, options);
+    logOptions(log, language, deviceModelPath, options);
 
     // load and validate the device model
     const validator = new Validator();
@@ -139,13 +77,7 @@ async function generate(language, deviceModelPath, options) {
     await deviceModel.load(true);
     validateRequiredParamsAndScopes(deviceModel.desc, options.disableMandatoryEnforcement);
 
-    // prepare standard metadata for generated files
-    const metadata = {
-        tool: "codegen",
-        version: packageJson.version,
-        timestamp: new Date().toISOString(),
-    };
-
+    // generate code in the requested language
     switch (language) {
         case 'cpp':
             log("Generating C++ code...");
