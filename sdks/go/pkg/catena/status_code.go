@@ -209,39 +209,8 @@ func ReplyError[T ResponseType](code StatusCode, msg string) (T, StatusResult) {
 	return zero, StatusResult{Code: code, Error: msg}
 }
 
-// StatusResult-only reply helpers for handlers that don't return values (e.g., SetValue).
-
-// StatusOK returns a successful StatusResult (200 OK).
-func StatusOK() StatusResult {
-	return StatusResult{Code: OK}
-}
-
-// StatusNoContent returns a 204 No Content StatusResult.
-func StatusNoContent() StatusResult {
-	return StatusResult{Code: NO_CONTENT}
-}
-
-// StatusBadRequest returns a 400 Bad Request StatusResult with an optional message.
-func StatusBadRequest(msg string) StatusResult {
-	return StatusResult{Code: INVALID_ARGUMENT, Error: msg}
-}
-
-// StatusNotFound returns a 404 Not Found StatusResult with an optional message.
-func StatusNotFound(msg string) StatusResult {
-	return StatusResult{Code: NOT_FOUND, Error: msg}
-}
-
-// StatusNotImplemented returns a 501 Not Implemented StatusResult with an optional message.
-func StatusNotImplemented(msg string) StatusResult {
-	return StatusResult{Code: UNIMPLEMENTED, Error: msg}
-}
-
-// StatusInternalError returns a 500 Internal Server Error StatusResult with an optional message.
-func StatusInternalError(msg string) StatusResult {
-	return StatusResult{Code: INTERNAL, Error: msg}
-}
-
 // StatusWithCode returns a StatusResult with the given StatusCode and optional message.
+
 func StatusWithCode(code StatusCode, msg string) StatusResult {
 	return StatusResult{Code: code, Error: msg}
 }

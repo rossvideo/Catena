@@ -68,28 +68,9 @@ type Server struct {
 	fallbackHandler        FallbackHandler
 }
 
-// writeErrorResponse writes an error JSON response if errorMsg is non-empty.
-func writeErrorResponse(w http.ResponseWriter, errorMsg string, httpStatus int) bool {
-	if errorMsg == "" {
-		return false
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(httpStatus)
-	if catena.IsDev() { // Only return detailed error messages in dev mode
-		json.NewEncoder(w).Encode(map[string]string{"error": errorMsg})
-	} else {
-		json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(httpStatus)})
-	}
-	return true
-}
-
 // writeHTTPResult is a unified function that handles writing different response types
 func writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value interface{}) {
 	httpStatus := result.Code.ToHTTPStatus()
-
-	if writeErrorResponse(w, result.Error, httpStatus) {
-		return
-	}
 
 	// Handle different value types
 	switch v := value.(type) {
@@ -107,11 +88,6 @@ func writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value in
 // writeHTTPStatusResult writes a StatusResult to the HTTP response (no value).
 func writeHTTPStatusResult(w http.ResponseWriter, result catena.StatusResult) {
 	httpStatus := result.Code.ToHTTPStatus()
-
-	if writeErrorResponse(w, result.Error, httpStatus) {
-		return
-	}
-
 	w.WriteHeader(httpStatus)
 }
 
@@ -226,7 +202,7 @@ func DefaultGetValueHandler(slot int, fqoid string) (catena.CatenaValue, catena.
 }
 
 func DefaultSetValueHandler(value any, slot int, fqoid string) catena.StatusResult {
-	return catena.StatusNotImplemented("SetValue not implemented")
+	return catena.StatusWithCode(catena.UNIMPLEMENTED, "SetValue not implemented")
 }
 
 func DefaultGetAssetHandler(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
@@ -413,7 +389,7 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 		reqValue, err := internal.ReadRequestJSON(r)
 		if err != nil {
 			logger.Error("failed to read request", "error", err)
-			writeHTTPStatusResult(w, catena.StatusBadRequest("invalid request body"))
+			writeHTTPStatusResult(w, catena.StatusWithCode(catena.INVALID_ARGUMENT, "invalid request body"))
 			return
 		}
 

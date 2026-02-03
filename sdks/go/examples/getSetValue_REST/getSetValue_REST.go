@@ -57,19 +57,19 @@ func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
 		logger.Info("SetParam", "slot", slot, "fqoid", fqoid)
 		if value == nil {
 			logger.Error("SetParam nil value received", "slot", slot, "fqoid", fqoid)
-			return catena.StatusInternalError("nil value received")
+			return catena.StatusWithCode(catena.INTERNAL, "nil value received")
 		}
 		val, ok := params.Load(fqoid)
 		if !ok {
 			logger.Error("SetParam param not found", "slot", slot, "fqoid", fqoid)
-			return catena.StatusNotFound("param not found")
+			return catena.StatusWithCode(catena.NOT_FOUND, "param not found")
 		}
 		if reflect.TypeOf(val) != reflect.TypeOf(value) {
 			logger.Error("SetParam type mismatch", "slot", slot, "fqoid", fqoid)
-			return catena.StatusBadRequest("type mismatch")
+			return catena.StatusWithCode(catena.INVALID_ARGUMENT, "type mismatch")
 		}
 		params.Store(fqoid, value)
-		return catena.StatusNoContent()
+		return catena.StatusWithCode(catena.NO_CONTENT, "")
 	})
 
 	srv.RegisterGetValueHandler(slot, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
@@ -98,14 +98,14 @@ func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid str
 		val, ok := params.Load(fqoid_)
 		if !ok {
 			logger.Error("SetSpecificParam param not found", "slot", slot, "fqoid", fqoid_)
-			return catena.StatusNotFound("param not found")
+			return catena.StatusWithCode(catena.NOT_FOUND, "param not found")
 		}
 		if reflect.TypeOf(val) != reflect.TypeOf(value) {
 			logger.Error("SetSpecificParam type mismatch", "slot", slot, "fqoid", fqoid_)
-			return catena.StatusBadRequest("type mismatch")
+			return catena.StatusWithCode(catena.INVALID_ARGUMENT, "type mismatch")
 		}
 		params.Store(fqoid_, value)
-		return catena.StatusOK()
+		return catena.StatusWithCode(catena.OK, "")
 	})
 
 	srv.RegisterGetValueHandler(slot, func(slot int, fqoid_ string) (catena.CatenaValue, catena.StatusResult) {
