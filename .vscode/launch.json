@@ -131,9 +131,9 @@
       ],
       "program": "${workspaceFolder}/tools/codegen/index.js",
       "args": [
-          "cpp",
           "--output",
           "${workspaceFolder}/${env:BUILD_TARGET}/${input:pickDeviceModel}/..",
+          "cpp",
           "${workspaceFolder}/sdks/cpp/${input:pickDeviceModel}"
       ],
     },
