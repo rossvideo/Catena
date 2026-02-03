@@ -72,6 +72,15 @@ type Server struct {
 func writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value interface{}) {
 	httpStatus := result.Code.ToHTTPStatus()
 
+	if result.Error != "" {
+		// Only return detailed error messages in dev mode
+		if catena.IsDev() {
+			json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
+		} else {
+			json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(httpStatus)})
+		}
+	}
+
 	// Handle different value types
 	switch v := value.(type) {
 	case catena.CatenaValue:
@@ -88,6 +97,16 @@ func writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value in
 // writeHTTPStatusResult writes a StatusResult to the HTTP response (no value).
 func writeHTTPStatusResult(w http.ResponseWriter, result catena.StatusResult) {
 	httpStatus := result.Code.ToHTTPStatus()
+
+	if result.Error != "" {
+		// Only return detailed error messages in dev mode
+		if catena.IsDev() {
+			json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
+		} else {
+			json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(httpStatus)})
+		}
+	}
+
 	w.WriteHeader(httpStatus)
 }
 
