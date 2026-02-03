@@ -37,6 +37,24 @@ program
     .argument("<deviceModel>", "Catena device model to process")
     .action(generate);
 
+/**
+ * log the options being used
+ * @param {function} log logging function
+ * @param {string} language target language
+ * @param {string} deviceModel path to device model
+ * @param {object} options options from commander
+ */
+function logOptions(log, language, deviceModel, options) {
+    log(`deviceModel: ${deviceModel}`);
+    log(`language: ${language}`);
+    if (options.output) {
+        log(`output: ${options.output}`);
+    }
+    if (options.disableMandatoryEnforcement) {
+        log(`Mandatory parameter enforcement disabled`);
+    }
+}
+
 // run the command line parser
 (async () => {
     await program.parseAsync();
@@ -47,14 +65,7 @@ program
 
 async function generate(language, deviceModelPath, options) {
     const log = options.quiet ? () => { } : console.log;
-    log(`deviceModel: ${deviceModelPath}`);
-    log(`language: ${language}`);
-    if (options.output) {
-        log(`output: ${options.output}`);
-    }
-    if (options.disableMandatoryEnforcement) {
-        log(`Mandatory parameter enforcement disabled`);
-    }
+    logOptions(log, language, deviceModelPath, options);
 
     // load and validate the device model
     const validator = new Validator();
