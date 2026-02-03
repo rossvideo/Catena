@@ -64,7 +64,9 @@ function logOptions(log, language, deviceModel, options) {
 });
 
 async function generate(language, deviceModelPath, options) {
+    // define logging function based on quiet option
     const log = options.quiet ? () => { } : console.log;
+
     // log the options being used
     logOptions(log, language, deviceModelPath, options);
 
@@ -75,6 +77,7 @@ async function generate(language, deviceModelPath, options) {
     await deviceModel.load(true);
     validateRequiredParamsAndScopes(deviceModel.desc, options.disableMandatoryEnforcement);
 
+    // generate code in the requested language
     switch (language) {
         case 'cpp':
             log("Generating C++ code...");
