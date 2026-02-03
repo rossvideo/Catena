@@ -68,20 +68,26 @@ type Server struct {
 	fallbackHandler        FallbackHandler
 }
 
+// writeErrorResponse writes an error JSON response if errorMsg is non-empty.
+func writeErrorResponse(w http.ResponseWriter, errorMsg string, httpStatus int) bool {
+	if errorMsg == "" {
+		return false
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(httpStatus)
+	if catena.IsDev() { // Only return detailed error messages in dev mode
+		json.NewEncoder(w).Encode(map[string]string{"error": errorMsg})
+	} else {
+		json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(httpStatus)})
+	}
+	return true
+}
+
 // writeHTTPResult is a unified function that handles writing different response types
 func writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value interface{}) {
 	httpStatus := result.Code.ToHTTPStatus()
 
-	if result.Error != "" {
-		// Only return detailed error messages in dev mode
-		// Must set header and status before writing body to avoid implicit 200 OK
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(httpStatus)
-		if catena.IsDev() {
-			json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
-		} else {
-			json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(httpStatus)})
-		}
+	if writeErrorResponse(w, result.Error, httpStatus) {
 		return
 	}
 
@@ -102,15 +108,7 @@ func writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value in
 func writeHTTPStatusResult(w http.ResponseWriter, result catena.StatusResult) {
 	httpStatus := result.Code.ToHTTPStatus()
 
-	if result.Error != "" {
-		// Must set header and status before writing body to avoid implicit 200 OK
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(httpStatus)
-		if catena.IsDev() {
-			json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
-		} else {
-			json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(httpStatus)})
-		}
+	if writeErrorResponse(w, result.Error, httpStatus) {
 		return
 	}
 
