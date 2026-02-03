@@ -53,19 +53,23 @@ var (
 
 // Implementation for registering parameter handlers for every fqoid on a given slot
 func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
-	srv.RegisterSetValueHandler(slot, func(value any, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterSetValueHandler(slot, func(value any, slot int, fqoid string) catena.StatusResult {
 		logger.Info("SetParam", "slot", slot, "fqoid", fqoid)
+		if value == nil {
+			logger.Error("SetParam nil value received", "slot", slot, "fqoid", fqoid)
+			return catena.StatusWithCode(catena.INTERNAL, "nil value received")
+		}
 		val, ok := params.Load(fqoid)
 		if !ok {
 			logger.Error("SetParam param not found", "slot", slot, "fqoid", fqoid)
-			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"param not found")
+			return catena.StatusWithCode(catena.NOT_FOUND, "param not found")
 		}
 		if reflect.TypeOf(val) != reflect.TypeOf(value) {
 			logger.Error("SetParam type mismatch", "slot", slot, "fqoid", fqoid)
-			return catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT,"type mismatch")
+			return catena.StatusWithCode(catena.INVALID_ARGUMENT, "type mismatch")
 		}
 		params.Store(fqoid, value)
-		return catena.ReplyError[catena.CatenaValue](catena.NO_CONTENT, "")
+		return catena.StatusWithCode(catena.NO_CONTENT, "")
 	})
 
 	srv.RegisterGetValueHandler(slot, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
@@ -73,12 +77,12 @@ func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
 		v, ok := params.Load(fqoid)
 		if !ok {
 			logger.Error("GetParam param not found", "slot", slot, "fqoid", fqoid)
-			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"param not found")
+			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "param not found")
 		}
 		catenaVal, err := catena.ToCatenaValue(v)
 		if err != nil {
 			logger.Error("GetParam failed to convert value", "slot", slot, "fqoid", fqoid, "error", err)
-			return catena.ReplyError[catena.CatenaValue](catena.INTERNAL,"failed to convert value")
+			return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
 		}
 		return catena.Reply(catenaVal)
 	})
@@ -86,38 +90,38 @@ func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
 
 // For a given slot implement param handlers for a specific param oid only
 func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid string, slot int) {
-	srv.RegisterSetValueHandler(slot, func(value any, slot int, fqoid_ string) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterSetValueHandler(slot, func(value any, slot int, fqoid_ string) catena.StatusResult {
 		if fqoid_ != fqoid {
-			return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED,"no handler for fqoid " + fqoid_)
+			return catena.StatusWithCode(catena.UNIMPLEMENTED, "no handler for fqoid "+fqoid_)
 		}
 		logger.Info("SetSpecificParam", "slot", slot, "fqoid", fqoid_)
 		val, ok := params.Load(fqoid_)
 		if !ok {
 			logger.Error("SetSpecificParam param not found", "slot", slot, "fqoid", fqoid_)
-			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"param not found")
+			return catena.StatusWithCode(catena.NOT_FOUND, "param not found")
 		}
 		if reflect.TypeOf(val) != reflect.TypeOf(value) {
 			logger.Error("SetSpecificParam type mismatch", "slot", slot, "fqoid", fqoid_)
-			return catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT,"type mismatch")
+			return catena.StatusWithCode(catena.INVALID_ARGUMENT, "type mismatch")
 		}
 		params.Store(fqoid_, value)
-		return catena.ReplyError[catena.CatenaValue](catena.NO_CONTENT, "")
+		return catena.StatusWithCode(catena.OK, "")
 	})
 
 	srv.RegisterGetValueHandler(slot, func(slot int, fqoid_ string) (catena.CatenaValue, catena.StatusResult) {
 		if fqoid_ != fqoid {
-			return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED,"no handler for fqoid " + fqoid_)
+			return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "no handler for fqoid "+fqoid_)
 		}
 		logger.Info("GetSpecificParam", "slot", slot, "fqoid", fqoid_)
 		v, ok := params.Load(fqoid_)
 		if !ok {
 			logger.Error("GetSpecificParam param not found", "slot", slot, "fqoid", fqoid_)
-			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"param not found")
+			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "param not found")
 		}
 		catenaVal, err := catena.ToCatenaValue(v)
 		if err != nil {
 			logger.Error("GetSpecificParam failed to convert value", "slot", slot, "fqoid", fqoid_, "error", err)
-			return catena.ReplyError[catena.CatenaValue](catena.INTERNAL,"failed to convert value")
+			return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
 		}
 		return catena.Reply(catenaVal)
 	})
@@ -203,7 +207,7 @@ func main() {
 		// A real implementation would keep the connection open and push updates
 		catenaVal, err := catena.ToCatenaValue("connected")
 		if err != nil {
-			return catena.ReplyError[catena.CatenaValue](catena.INTERNAL,"failed to create response")
+			return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to create response")
 		}
 		return catena.Reply(catenaVal)
 	})
@@ -222,7 +226,7 @@ func main() {
 			}
 			catenaVal, err := catena.ToCatenaValue(response)
 			if err != nil {
-				return catena.ReplyError[catena.CatenaValue](catena.INTERNAL,"failed to create command response")
+				return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to create command response")
 			}
 			return catena.Reply(catenaVal)
 		})
@@ -261,7 +265,7 @@ func main() {
 			logger.Info("GetDevice", "slot", slot)
 			device, err := catena.ToCatenaDevice(deviceInfo)
 			if err != nil {
-				return catena.ReplyError[catena.CatenaDevice](catena.INTERNAL,"failed to create device info")
+				return catena.ReplyError[catena.CatenaDevice](catena.INTERNAL, "failed to create device info")
 			}
 			return catena.Reply(device)
 		})
@@ -270,7 +274,7 @@ func main() {
 	// Register handler for non-existent endpoints
 	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
 		logger.Error("Endpoint not found")
-		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"endpoint not found")
+		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found")
 	})
 
 	addr := ":" + strconv.Itoa(port)
