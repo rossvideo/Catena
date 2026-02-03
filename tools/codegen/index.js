@@ -65,6 +65,7 @@ function logOptions(log, language, deviceModel, options) {
 
 async function generate(language, deviceModelPath, options) {
     const log = options.quiet ? () => { } : console.log;
+    // log the options being used
     logOptions(log, language, deviceModelPath, options);
 
     // load and validate the device model
