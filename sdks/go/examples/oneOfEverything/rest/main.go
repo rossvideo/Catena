@@ -39,10 +39,9 @@
 package main
 
 import (
-	"bytes"
+	"crypto/sha256"
 	"embed"
 	"fmt"
-	"io"
 	"io/fs"
 	"mime"
 	"net/http"
@@ -50,7 +49,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"reflect"
-	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -64,24 +62,17 @@ import (
 //go:embed static/*
 var staticFS embed.FS
 
-// Asset represents a binary asset with metadata
-type Asset struct {
-	ContentType string
-	Data        []byte
-	Filename    string
-}
-
 // CommandHandler processes a command and returns a response
 type CommandHandler func(payload any) (catena.CatenaValue, catena.StatusResult)
 
 // Counter state with thread-safe operations
 type CounterState struct {
 	mu      sync.RWMutex
-	value   int64
+	value   int32
 	running bool
 }
 
-func (c *CounterState) GetValue() int64 {
+func (c *CounterState) GetValue() int32 {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.value
@@ -105,7 +96,7 @@ func (c *CounterState) Stop() {
 	c.running = false
 }
 
-func (c *CounterState) Add(n int64) {
+func (c *CounterState) Add(n int32) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.value += n
@@ -210,13 +201,13 @@ func main() {
 
 	// Helper to build counter response
 	buildCounterResponse := func() map[string]any {
-		running := int32(0)
+		var runningVal int32 = 0
 		if counter.IsRunning() {
-			running = 1
+			runningVal = 1
 		}
 		return map[string]any{
 			"counter": int32(counter.GetValue()),
-			"running": running,
+			"running": runningVal,
 		}
 	}
 
@@ -229,11 +220,8 @@ func main() {
 				counter.Start()
 				logger.Info("Counter started", "value", counter.GetValue())
 			}
-			catenaVal, err := catena.ToCatenaValue(buildCounterResponse())
-			if err != nil {
-				return catena.ReplyInternalError("failed to create response")
-			}
-			return catena.ReplyOK(catenaVal)
+			val, _ := catena.ToCatenaValue(buildCounterResponse())
+			return catena.Reply(val)
 		},
 
 		"stop": func(payload any) (catena.CatenaValue, catena.StatusResult) {
@@ -243,31 +231,22 @@ func main() {
 				counter.Stop()
 				logger.Info("Counter stopped", "value", counter.GetValue())
 			}
-			catenaVal, err := catena.ToCatenaValue(buildCounterResponse())
-			if err != nil {
-				return catena.ReplyInternalError("failed to create response")
-			}
-			return catena.ReplyOK(catenaVal)
+			val, _ := catena.ToCatenaValue(buildCounterResponse())
+			return catena.Reply(val)
 		},
 
 		"add10": func(payload any) (catena.CatenaValue, catena.StatusResult) {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
-			catenaVal, err := catena.ToCatenaValue(buildCounterResponse())
-			if err != nil {
-				return catena.ReplyInternalError("failed to create response")
-			}
-			return catena.ReplyOK(catenaVal)
+			val, _ := catena.ToCatenaValue(buildCounterResponse())
+			return catena.Reply(val)
 		},
 
 		"reset": func(payload any) (catena.CatenaValue, catena.StatusResult) {
 			counter.Reset()
 			logger.Info("Counter reset", "value", counter.GetValue())
-			catenaVal, err := catena.ToCatenaValue(buildCounterResponse())
-			if err != nil {
-				return catena.ReplyInternalError("failed to create response")
-			}
-			return catena.ReplyOK(catenaVal)
+			val, _ := catena.ToCatenaValue(buildCounterResponse())
+			return catena.Reply(val)
 		},
 	}
 
@@ -275,17 +254,9 @@ func main() {
 	// Assets (for GetAsset endpoint)
 	// ==========================================================================
 	assets := &sync.Map{}
-	assetsList := &sync.Map{}
 
 	// Load assets from embedded static directory
-	loadAssetsFromEmbedded(staticFS, "static", assets, assetsList)
-
-	// Build assets list for logging
-	var assetNames []string
-	assetsList.Range(func(key, value any) bool {
-		assetNames = append(assetNames, key.(string))
-		return true
-	})
+	loadAssetsFromEmbedded(staticFS, "static", assets)
 
 	// ==========================================================================
 	// Server Setup
@@ -296,27 +267,17 @@ func main() {
 	// --------------------------------------------------------------------------
 	// Register GetDevice handler
 	// --------------------------------------------------------------------------
-	srv.RegisterGetDeviceHandler(0, func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-		if len(parts) < 3 {
-			return catena.ReplyBadRequest("invalid path")
-		}
-		slotStr := parts[2]
-		slot, err := strconv.Atoi(slotStr)
-		if err != nil {
-			return catena.ReplyBadRequest("invalid slot")
-		}
-
-		logger.Info("GetDevice", "slot", slot)
-		device, ok := devices[slot]
+	srv.RegisterGetDeviceHandler(0, func() (catena.CatenaDevice, catena.StatusResult) {
+		logger.Info("GetDevice", "slot", 0)
+		deviceInfo, ok := devices[0]
 		if !ok {
-			return catena.ReplyNotFound("device not found")
+			return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
 		}
-		catenaVal, err := catena.ToCatenaValue(device)
+		device, err := catena.ToCatenaDevice(deviceInfo)
 		if err != nil {
-			return catena.ReplyInternalError("failed to create device info")
+			return catena.ReplyError[catena.CatenaDevice](catena.INTERNAL, "failed to create device info")
 		}
-		return catena.ReplyOK(catenaVal)
+		return catena.Reply(device)
 	})
 
 	// --------------------------------------------------------------------------
@@ -327,11 +288,8 @@ func main() {
 
 		// Special case: return counter state
 		if fqoid == "counter" {
-			catenaVal, err := catena.ToCatenaValue(buildCounterResponse())
-			if err != nil {
-				return catena.ReplyInternalError("failed to convert counter response")
-			}
-			return catena.ReplyOK(catenaVal)
+			val, _ := catena.ToCatenaValue(buildCounterResponse())
+			return catena.Reply(val)
 		}
 
 		// Special case: return all params as a struct
@@ -341,29 +299,29 @@ func main() {
 				allParams[key.(string)] = value
 				return true
 			})
-			running := int32(0)
+			var runningVal int32 = 0
 			if counter.IsRunning() {
-				running = 1
+				runningVal = 1
 			}
 			allParams["counter"] = int32(counter.GetValue())
-			allParams["counter_running"] = running
+			allParams["counter_running"] = runningVal
 			catenaVal, err := catena.ToCatenaValue(allParams)
 			if err != nil {
-				return catena.ReplyInternalError("failed to convert params")
+				return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert params")
 			}
-			return catena.ReplyOK(catenaVal)
+			return catena.Reply(catenaVal)
 		}
 
-		val, ok := params.Load(fqoid)
+		v, ok := params.Load(fqoid)
 		if !ok {
-			return catena.ReplyNotFound("parameter not found: " + fqoid)
+			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found: "+fqoid)
 		}
 
-		catenaVal, err := catena.ToCatenaValue(val)
+		catenaVal, err := catena.ToCatenaValue(v)
 		if err != nil {
-			return catena.ReplyInternalError("failed to convert value")
+			return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
 		}
-		return catena.ReplyOK(catenaVal)
+		return catena.Reply(catenaVal)
 	})
 
 	// --------------------------------------------------------------------------
@@ -376,19 +334,19 @@ func main() {
 		val, ok := params.Load(fqoid)
 		if !ok {
 			logger.Error("SetParam param not found", "slot", slot, "fqoid", fqoid)
-			return catena.ReplyNotFound("param not found: " + fqoid)
+			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "param not found: "+fqoid)
 		}
 
 		// Verify type matches
 		if reflect.TypeOf(val) != reflect.TypeOf(value) {
 			logger.Error("SetParam type mismatch", "slot", slot, "fqoid", fqoid,
 				"expected", reflect.TypeOf(val), "got", reflect.TypeOf(value))
-			return catena.ReplyBadRequest("type mismatch")
+			return catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "type mismatch")
 		}
 
 		params.Store(fqoid, value)
 		logger.Info("Parameter updated", "fqoid", fqoid, "value", value)
-		return catena.ReplyNoContent()
+		return catena.ReplyError[catena.CatenaValue](catena.NO_CONTENT, "")
 	})
 
 	// --------------------------------------------------------------------------
@@ -400,17 +358,14 @@ func main() {
 		handler, ok := commands[commandFqoid]
 		if !ok {
 			logger.Warning("Command not found", "slot", slot, "command", commandFqoid)
-			response := map[string]any{
+			exception := map[string]any{
 				"exception": map[string]any{
 					"type":    "Invalid Command",
 					"details": "Command not found: " + commandFqoid,
 				},
 			}
-			catenaVal, err := catena.ToCatenaValue(response)
-			if err != nil {
-				return catena.ReplyInternalError("failed to create exception response")
-			}
-			return catena.ReplyOK(catenaVal)
+			val, _ := catena.ToCatenaValue(exception)
+			return catena.Reply(val)
 		}
 
 		return handler(payload)
@@ -419,34 +374,26 @@ func main() {
 	// --------------------------------------------------------------------------
 	// Register GetAsset handler
 	// --------------------------------------------------------------------------
-	srv.RegisterGetAssetHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 		logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
 
 		val, ok := assets.Load(fqoid)
 		if !ok {
 			logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
-			return catena.ReplyNotFound("asset not found: " + fqoid)
+			return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found: "+fqoid)
 		}
 
-		asset := val.(Asset)
+		payload := val.(catena.DataPayload)
 
-		// Set appropriate headers for binary content
-		w.Header().Set("Content-Type", asset.ContentType)
-		w.Header().Set("Content-Length", strconv.Itoa(len(asset.Data)))
-		if asset.Filename != "" {
-			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", asset.Filename))
+		// Convert DataPayload to CatenaAsset when returning
+		catenaAsset, err := catena.ToCatenaAsset(payload, true)
+		if err != nil {
+			logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", err)
+			return catena.ReplyError[catena.CatenaAsset](catena.INTERNAL, "failed to convert asset: "+err.Error())
 		}
 
-		// Stream the content
-		reader := bytes.NewReader(asset.Data)
-		if _, err := io.Copy(w, reader); err != nil {
-			logger.Error("Asset streaming error", "slot", slot, "fqoid", fqoid, "error", err)
-			return catena.ReplyInternalError("failed to stream asset")
-		}
-
-		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid)
-		// Asset already written to response writer, return empty value with OK status
-		return catena.ReplyOK(catena.CatenaValue{})
+		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(payload.Payload))
+		return catena.Reply(catenaAsset)
 	})
 
 	// --------------------------------------------------------------------------
@@ -456,14 +403,14 @@ func main() {
 		if r.URL.Path == "/" {
 			data, err := staticFS.ReadFile("static/index.htm")
 			if err != nil {
-				return catena.ReplyNotFound("index.html not found")
+				return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "index.html not found")
 			}
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Write(data)
 			// Content already written to response writer
-			return catena.CatenaValue{}, catena.StatusResult{Code: catena.OK}
+			return catena.Reply(catena.CatenaValue{})
 		}
-		return catena.ReplyNotFound("endpoint not found: " + r.URL.Path)
+		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found: "+r.URL.Path)
 	})
 
 	// ==========================================================================
@@ -493,7 +440,7 @@ func main() {
 }
 
 // loadAssetsFromEmbedded loads all files from the embedded filesystem into the asset store
-func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map, assetsList *sync.Map) {
+func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map) {
 	err := fs.WalkDir(embedFS, root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			logger.Warning("Error accessing path", "path", path, "error", err)
@@ -531,14 +478,23 @@ func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map, ass
 		// Normalize path separators for URL use
 		assetID := strings.ReplaceAll(relPath, string(filepath.Separator), "/")
 
-		asset := Asset{
-			ContentType: contentType,
-			Data:        data,
-			Filename:    filepath.Base(path),
+		// Build metadata
+		metadata := map[string]string{
+			"content-type": contentType,
+			"file-name":    filepath.Base(path),
 		}
 
-		assets.Store(assetID, asset)
-		assetsList.Store(assetID, true)
+		// Calculate SHA-256 digest
+		hash := sha256.Sum256(data)
+
+		// Store as DataPayload directly
+		payload := catena.DataPayload{
+			Payload:  data,
+			Metadata: metadata,
+			Digest:   hash[:],
+		}
+
+		assets.Store(assetID, payload)
 		logger.Info("Loaded asset", "id", assetID, "size", len(data), "type", contentType)
 
 		return nil
