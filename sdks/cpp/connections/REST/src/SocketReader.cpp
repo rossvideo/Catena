@@ -31,14 +31,13 @@ static inline bool iequals_header_name(std::string_view a, std::string_view b) {
 boost::asio::awaitable<void> read_with_timeout(tcp::socket& socket, std::string& buf, std::size_t start, std::size_t bytes) {
     using namespace boost::asio::experimental::awaitable_operators;
     boost::asio::steady_timer timer(socket.get_executor());
-    timer.expires_after(std::chrono::seconds(5));
+    timer.expires_after(std::chrono::milliseconds(600));
 
     auto result = co_await (boost::asio::async_read(socket, boost::asio::buffer(&buf[start], bytes), boost::asio::use_awaitable) ||
         timer.async_wait(boost::asio::use_awaitable)
     );
 
     if (result.index() != 0) {
-        socket.close();
         throw catena::exception_with_status("Timed out", catena::StatusCode::INVALID_ARGUMENT);
     }
 }
@@ -190,39 +189,16 @@ void SocketReader::read(tcp::socket& socket) {
             std::size_t start = jsonBody_.size();
             jsonBody_.resize(contentLength);
 
-            boost::asio::io_context& ioc = static_cast<boost::asio::io_context&>(socket.get_executor().context());
-
             auto reader = read_with_timeout(socket, jsonBody_, start, leftover);
             auto result = boost::asio::co_spawn(socket.get_executor(), std::move(reader), boost::asio::use_future);
-            while (result.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready) {
-                ioc.run_one();
-            }
+
             try {
                 result.get();
             } catch(...) {
                 throw catena::exception_with_status("Timed out", catena::StatusCode::INVALID_ARGUMENT);
             }
-
-            // char* buf = &jsonBody_[contentLength - leftover];
-            // std::size_t lengthRead = 0;
-            // boost::system::error_code err;
-
-
-            // socket.non_blocking(true);
-            // auto startTime = std::chrono::steady_clock::now();
-            // while (lengthRead < leftover) {
-            //     auto elapsedNS = std::chrono::steady_clock::now() - startTime;
-            //     auto elapsedS = std::chrono::duration_cast<std::chrono::seconds>(elapsedNS);
-            //     if (elapsedS >= std::chrono::seconds(5)) {
-            //         socket.non_blocking(false);
-            //         throw catena::exception_with_status("Timed out", catena::StatusCode::INVALID_ARGUMENT);
-            //     }
-            //     std::size_t remaining = leftover - lengthRead;
-            //     lengthRead += socket.read_some(boost::asio::buffer(buf + lengthRead, remaining), err);
-            // }
-            // socket.non_blocking(false);
         } else if (jsonBody_.size() > contentLength) {
-            jsonBody_.resize(contentLength);
+            throw catena::exception_with_status("Incorrect Content-Length: data lost", catena::StatusCode::INVALID_ARGUMENT);
         }
     }
     // Setting detail level to NONE if not set.

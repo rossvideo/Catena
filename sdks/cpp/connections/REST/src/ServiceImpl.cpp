@@ -85,6 +85,8 @@ vdk::signal<void()> catena::REST::Connect::shutdownSignal_;
 void ServiceImpl::run() {
     // TLS handled by Envoyproxy
     shutdown_ = false;
+    auto guard = boost::asio::make_work_guard(io_context_.get_executor());
+    std::thread runner([this](){ io_context_.run(); });
 
     while (!shutdown_) {
         // Waiting for a connection.
@@ -157,8 +159,10 @@ void ServiceImpl::run() {
     while(activeRequests_ > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-
+    
     // Once active requests are done, close the acceptor and io_context.
+    guard.reset();
+    runner.join();
     io_context_.stop();
     acceptor_.close();
 }
