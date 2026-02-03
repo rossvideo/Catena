@@ -81,7 +81,12 @@ RUN . /root/toolchain.env \
 # Install Google Test
 WORKDIR /usr/src/gtest
 RUN cmake -DCMAKE_INSTALL_PREFIX=/usr/local/.local CMakeLists.txt \
-    && make
+    && make \
+    && pwd \
+    && ls -la lib \
+    && echo "----------------------" \
+    && ls -la /usr/src/gtest/lib/*.a \
+    && echo "----------------------"
 
 FROM base AS final
 
@@ -114,7 +119,8 @@ RUN ./install-tooling.sh
 # this is the dir our builder stage CMAKE_INSTALL_PREFIX is set to
 COPY --from=builder /usr/local/.local /usr/local/.local
 # gtest doesn't have a make install target, so we have to copy the files manually
-COPY --from=builder /usr/src/gtest/lib/*.a /usr/lib/
+COPY --from=builder /usr/src/gtest/lib/libgtest.a /usr/lib/
+COPY --from=builder /usr/src/gtest/lib/libgtest_main.a /usr/lib/
 
 USER ubuntu
 WORKDIR /home/ubuntu
