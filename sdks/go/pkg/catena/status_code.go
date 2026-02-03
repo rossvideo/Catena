@@ -208,3 +208,9 @@ func ReplyError[T ResponseType](code StatusCode, msg string) (T, StatusResult) {
 	var zero T
 	return zero, StatusResult{Code: code, Error: msg}
 }
+
+// StatusWithCode returns a StatusResult with the given StatusCode and optional message.
+
+func StatusWithCode(code StatusCode, msg string) StatusResult {
+	return StatusResult{Code: code, Error: msg}
+}
