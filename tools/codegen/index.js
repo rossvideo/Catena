@@ -1,4 +1,4 @@
-/*Copyright 2025 Ross Video Ltd
+/*Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  *
@@ -26,30 +26,25 @@ import CppGen from './cpp/cppgen.js';
 // Converts Catena compatible Device Models to computer code in a variety of languages
 //
 
-let log = console.log;
-
 // load the command line parser
 program
     .description(packageJson.description)
     .version(packageJson.version)
     .option('-q, --quiet', 'Suppress non-error console output', false)
-    .hook('preAction', (thisCommand) => {
-        const options = thisCommand.opts();
-        // redefine log function based on quiet option
-        if (options.quiet) {
-            log = function () { };
-        }
-    });
-
-const MANDATORY_OPTION = ["--disable-mandatory-enforcement", "Disable enforcement of mandatory parameters during code generation"];
-const OUTPUT_OPTION = ["-o --output <string>", "Output folder for results", "."];
-const DEVICE_ARGUMENT = ["<deviceModel>", "Catena device model to process"];
+    .option("--disable-mandatory-enforcement", "Disable enforcement of mandatory parameters during code generation")
+    .option("-o --output <string>", "Output folder for results", ".")
+    .argument("<language>", "Target programming language (cpp)")
+    .argument("<deviceModel>", "Catena device model to process")
+    .action(generate);
 
 /**
  * log the options being used
+ * @param {function} log logging function
+ * @param {string} language target language
+ * @param {string} deviceModel path to device model
  * @param {object} options options from commander
  */
-function logOptions(language, deviceModel, options) {
+function logOptions(log, language, deviceModel, options) {
     log(`deviceModel: ${deviceModel}`);
     log(`language: ${language}`);
     if (options.output) {
@@ -60,14 +55,7 @@ function logOptions(language, deviceModel, options) {
     }
 }
 
-program
-    .command("cpp")
-    .description("Generate C++ code from device model")
-    .option(...MANDATORY_OPTION)
-    .option(...OUTPUT_OPTION)
-    .argument(...DEVICE_ARGUMENT)
-    .action(async (deviceModel, options) => generate("cpp", deviceModel, options));
-
+// run the command line parser
 (async () => {
     await program.parseAsync();
 })().catch((err) => {
@@ -76,8 +64,11 @@ program
 });
 
 async function generate(language, deviceModelPath, options) {
+    // define logging function based on quiet option
+    const log = options.quiet ? () => { } : console.log;
+
     // log the options being used
-    logOptions(language, deviceModelPath, options);
+    logOptions(log, language, deviceModelPath, options);
 
     // load and validate the device model
     const validator = new Validator();
@@ -86,6 +77,7 @@ async function generate(language, deviceModelPath, options) {
     await deviceModel.load(true);
     validateRequiredParamsAndScopes(deviceModel.desc, options.disableMandatoryEnforcement);
 
+    // generate code in the requested language
     switch (language) {
         case 'cpp':
             log("Generating C++ code...");
