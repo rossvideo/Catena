@@ -74,11 +74,15 @@ func writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value in
 
 	if result.Error != "" {
 		// Only return detailed error messages in dev mode
+		// Must set header and status before writing body to avoid implicit 200 OK
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(httpStatus)
 		if catena.IsDev() {
 			json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
 		} else {
 			json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(httpStatus)})
 		}
+		return
 	}
 
 	// Handle different value types
@@ -99,11 +103,15 @@ func writeHTTPStatusResult(w http.ResponseWriter, result catena.StatusResult) {
 	httpStatus := result.Code.ToHTTPStatus()
 
 	if result.Error != "" {
+		// Must set header and status before writing body to avoid implicit 200 OK
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(httpStatus)
 		if catena.IsDev() {
 			json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
 		} else {
 			json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(httpStatus)})
 		}
+		return
 	}
 
 	w.WriteHeader(httpStatus)
