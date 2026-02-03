@@ -559,6 +559,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_MultipleActiveRequests) {
                     "Request-Start: 0\r\n"
                     "Detail-Level: NONE\r\n"
                     "Language: en\r\n"
+                    "Content-Type: application/json\r\n"
                     "Content-Length: " + std::to_string(body_size) + "\r\n"
                     "\r\n" + body;
                 boost::asio::write(clients[i], boost::asio::buffer(request));
@@ -646,6 +647,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_MultipleIncorrectActiveRequests) {
                     "Request-Start: 0\r\n"
                     "Detail-Level: NONE\r\n"
                     "Language: en\r\n"
+                    "Content-Type: application/json\r\n"
                     "Content-Length: 100\r\n" // Incorrect value to cause hang
                     "\r\n" + body;
                 boost::asio::write(clients[i], boost::asio::buffer(request));
