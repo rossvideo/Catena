@@ -222,6 +222,49 @@ async function poll() {
 }
 
 // =====================================================================
+// Assets Section
+// =====================================================================
+async function fetchAssets() {
+    const container = document.getElementById('assetsContainer');
+    try {
+        const res = await fetch('/assets-list');
+        if (!res.ok) {
+            container.innerHTML = '<div class="asset-error">Failed to load assets</div>';
+            return;
+        }
+        const assets = await res.json();
+        renderAssets(assets);
+    } catch (e) {
+        console.error('fetchAssets error:', e);
+        container.innerHTML = '<div class="asset-error">Error loading assets</div>';
+    }
+}
+
+function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function renderAssets(assets) {
+    const container = document.getElementById('assetsContainer');
+    if (!assets || assets.length === 0) {
+        container.innerHTML = '<div class="asset-empty">No assets found</div>';
+        return;
+    }
+    
+    container.innerHTML = assets.map(asset => `
+        <div class="asset-item">
+            <div class="asset-info">
+                <span class="asset-name">${asset.file_name}</span>
+                <span class="asset-meta">${asset.content_type} · ${formatSize(asset.size)}</span>
+            </div>
+            <a href="/st2138-api/v1/0/asset/${asset.id}" class="asset-download" target="_blank" title="Download">⬇</a>
+        </div>
+    `).join('');
+}
+
+// =====================================================================
 // Initialization
 // =====================================================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -229,4 +272,5 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(poll, 500);
     poll();
     fetchDevice(0);
+    fetchAssets();
 });

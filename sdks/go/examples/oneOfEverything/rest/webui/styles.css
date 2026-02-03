@@ -26,7 +26,7 @@ body {
 }
 
 .container {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
 }
 
@@ -50,16 +50,29 @@ h1 {
     margin-top: 0.25rem;
 }
 
-/* Sections 2x2 grid */
+/* Sections 1x3 grid */
 .sections-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 1.5rem;
     margin-bottom: 1.5rem;
 }
 
-@media (max-width: 800px) {
+.middle-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+@media (max-width: 1000px) {
+    .sections-grid { grid-template-columns: 1fr 1fr; }
+    .middle-column { grid-column: 1 / -1; flex-direction: row; }
+    .middle-column .section { flex: 1; }
+}
+
+@media (max-width: 700px) {
     .sections-grid { grid-template-columns: 1fr; }
+    .middle-column { flex-direction: column; }
 }
 
 /* Section styling */
@@ -464,6 +477,74 @@ h1 {
     padding: 1rem;
     color: var(--text-muted);
     font-size: 0.875rem;
+}
+
+/* Assets list */
+.asset-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.asset-item:last-child {
+    border-bottom: none;
+}
+
+.asset-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    overflow: hidden;
+}
+
+.asset-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.asset-meta {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.asset-download {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--section-assets);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: all 0.15s;
+}
+
+.asset-download:hover {
+    background: rgba(236, 72, 153, 0.15);
+    border-color: var(--section-assets);
+}
+
+.asset-loading,
+.asset-error,
+.asset-empty {
+    text-align: center;
+    padding: 1rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.asset-error {
+    color: var(--danger);
 }
 
 /* Footer */

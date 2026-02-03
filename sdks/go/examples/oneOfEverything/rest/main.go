@@ -41,6 +41,7 @@ package main
 import (
 	"crypto/sha256"
 	"embed"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"mime"
@@ -416,9 +417,27 @@ func main() {
 	})
 
 	// --------------------------------------------------------------------------
-	// Register Fallback handler - serves web UI files
+	// Register Fallback handler - serves web UI files and assets list
 	// --------------------------------------------------------------------------
 	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
+		// Serve assets list as JSON
+		if r.URL.Path == "/assets-list" {
+			var assetList []map[string]any
+			assets.Range(func(key, value any) bool {
+				payload := value.(catena.DataPayload)
+				assetList = append(assetList, map[string]any{
+					"id":           key.(string),
+					"content_type": payload.Metadata["content-type"],
+					"file_name":    payload.Metadata["file-name"],
+					"size":         len(payload.Payload),
+				})
+				return true
+			})
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(assetList)
+			return catena.Reply(catena.CatenaValue{})
+		}
+
 		// Map paths to files
 		fileMap := map[string]struct {
 			path        string
