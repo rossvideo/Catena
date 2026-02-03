@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,7 +33,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @author keon.foster@rossvideo.com
- * @date 2026/01/20
+ * @date 2026/02/03
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -103,7 +103,7 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
         EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(authz));
         // Writing the request to the socket and reading.
         writeRequest(method, slot, endpoint, fqoid, stream, fields,
-                     jwsToken, origin, detailLevel, language, requestStart, jsonBody);
+                     jwsToken, origin, detailLevel, language, requestStart, "application/json", jsonBody);
         socketReader.read(serverSocket_);
         // Validating the results.
         if (!authz) { jwsToken = ""; }
@@ -275,9 +275,6 @@ TEST_F(RESTSocketReaderTests, SocketReader_EndpointLanguages) {
 
 /*
  * TEST 13 - Testing with a long json body.
- * Runs the fixture's io_context in a dedicated thread so the async body-read
- * coroutine can complete (caller must run the context; SocketReader does not).
- * Work guard keeps run() from returning before we post the coroutine in read().
  */
 TEST_F(RESTSocketReaderTests, SocketReader_LongJsonBody) {
     auto work = boost::asio::make_work_guard(io_context_.get_executor());
@@ -311,16 +308,18 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderCaseInsensitive) {
     const std::string origin = "*";
     const auto detailLevel = st2138::Device_DetailLevel_NONE;
     const std::string language = "en";
+    const std::string contentType = "application/json";
     const std::string jsonBody = "{test_json_body}";
     const std::string requestStart = "1768323281123";
     writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
-                                jwsToken, origin, detailLevel, language, requestStart, jsonBody,
+                                jwsToken, origin, detailLevel, language, requestStart, contentType, jsonBody,
                                 "origin",            // lower-case
                                 "AUTHORIZATION",     // upper-case
                                 "dEtAiL-LeVeL",      // mixed-case
                                 "LANGUAGE",          // upper-case
                                 "content-length",    // lower-case
-                                "ReQuEsT-sTaRt");    // mixed-case
+                                "ReQuEsT-sTaRt",    // mixed-case
+                                "ConTenT-tYpE");    // mixed-case
 
     socketReader.read(serverSocket_);
     // Validate results identical to normal case
@@ -360,16 +359,18 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderWithoutColonIgnored) {
     const std::string origin = "*";
     const auto detailLevel = st2138::Device_DetailLevel_NONE;
     const std::string language = "en";
+    const std::string contentType = "application/json";
     const std::string jsonBody = "{test_json_body}";
     const std::string requestStart = "1768323281123";
     writeRequestWithHeaderNames(method, slot, endpoint, fqoid, stream, fields,
-                                jwsToken, origin, detailLevel, language, requestStart, jsonBody,
+                                jwsToken, origin, detailLevel, language, requestStart, contentType, jsonBody,
                                 "Origin",
                                 "Authorization",
                                 "Detail-Level",
                                 "Language",
                                 "Content-Length",
                                 "Request-Start",
+                                "Content-Type",
                                 /*extraHeaderLines=*/{"This-Is-A-Bad-Header-Without-Colon"});
 
     socketReader.read(serverSocket_);
@@ -392,8 +393,84 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderWithoutColonIgnored) {
     EXPECT_TRUE(socketReader.requestReceived() > 0);
 }
 
+/**
+ * TEST 18 - Invalid Content-Type throws exception
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentType) {
+    // Enable authz so Authorization header is parsed.
+    EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
+    const RESTMethod method = catena::REST::Method_GET;
+    const uint32_t slot = 1;
+    const std::string endpoint = "/test-call";
+    const std::string fqoid = "/test/oid";
+    const bool stream = false;
+    const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
+    const std::string jsonBody = "{test_json_body}";
+    std::map<std::string, std::string> headers;
+    // Testing with invalid
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: application/xml"});
+    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    // Testing with typo
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: application/josn"});
+    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    // Testing with same prefix but invalid
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: application/json=patch+json"});
+    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    // Testing with missing header
+    headers["Content-Length"] = std::to_string(10);
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, "", headers);
+    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+}
+
+/**
+ * TEST 19 - Valid Content-Type doesn't throw exception
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_ValidContentType) {
+        // Enable authz so Authorization header is parsed.
+    EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
+    const RESTMethod method = catena::REST::Method_GET;
+    const uint32_t slot = 1;
+    const std::string endpoint = "/test-call";
+    const std::string fqoid = "/test/oid";
+    const bool stream = false;
+    const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
+    const std::string jsonBody = "";
+    std::map<std::string, std::string> headers;
+    // Testing with valid
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: application/json"});
+    EXPECT_NO_THROW(socketReader.read(serverSocket_));
+    // Testing with extra parameter
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: application/json; charset=utf-8"});
+    EXPECT_NO_THROW(socketReader.read(serverSocket_));
+    // Testing case-insensitive
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: aPpliCatIon/jSon"});
+    EXPECT_NO_THROW(socketReader.read(serverSocket_));
+    // Testing no body or header
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, "", headers);
+    EXPECT_NO_THROW(socketReader.read(serverSocket_));
+}
+
+/**
+ * TEST 20 - Missing Request-Start sets to default
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_MissingRequestStart) {
+        // Enable authz so Authorization header is parsed.
+    EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
+    const RESTMethod method = catena::REST::Method_GET;
+    const uint32_t slot = 1;
+    const std::string endpoint = "/test-call";
+    const std::string fqoid = "/test/oid";
+    const bool stream = false;
+    const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
+    const std::string jsonBody = "";
+    std::map<std::string, std::string> headers;
+    // Testing with valid
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers);
+    EXPECT_EQ(socketReader.requestStart(), DEFAULT_REQUEST_START);
+}
+
 /*
- * TEST 17 - Invalid Content-Length throws exception
+ * TEST 21 - Invalid Content-Length throws exception
  */
 TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentLength) {
     // Enable authz so Authorization header is parsed.
@@ -430,7 +507,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentLength) {
 }
 
 /*
- * Test 18 - Concurrent requests processed correctly
+ * Test 22 - Concurrent requests processed correctly
  */
 TEST_F(RESTSocketReaderTests, SocketReader_MultipleActiveRequests) {
     constexpr std::size_t N = 5;
@@ -517,7 +594,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_MultipleActiveRequests) {
 }
 
 /*
- * Test 19 - Multiple Incorrect requests timeout
+ * Test 23 - Multiple Incorrect requests timeout
  */
 TEST_F(RESTSocketReaderTests, SocketReader_MultipleIncorrectActiveRequests) {
     constexpr std::size_t N = 5;

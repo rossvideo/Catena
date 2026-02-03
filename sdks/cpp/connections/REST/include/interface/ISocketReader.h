@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,8 +33,8 @@
  * @brief Interface for the SocketReader class.
  * @author benjamin.whitten@rossvideo.com
  * @author keon.foster@rossvideo.com
- * @date 2026/01/20
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @date 2026/02/03
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #pragma once

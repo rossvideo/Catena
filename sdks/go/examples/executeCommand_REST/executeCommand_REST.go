@@ -44,7 +44,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -118,15 +117,13 @@ func (c *CounterState) Increment() {
 }
 
 func main() {
-	// Parse config from environment variables with CATENA prefix
-	cfg := logger.ParseConfigWithVerbosity("CATENA")
-	cfg.AppName = "executeCommand_REST"
-
-	if err := logger.Init(cfg); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to initialize logger: %v\n", err)
+	// Initialize SDK with prefix and app name
+	cfg, err := catena.InitOptions(catena.Options{AppName: "executeCommand_REST"})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize SDK: %v\n", err)
 		os.Exit(1)
 	}
-	defer logger.Close()
+	defer catena.Close()
 
 	// Handle signals for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
@@ -137,13 +134,8 @@ func main() {
 		close(shutdownChan) // closes the channel to signal the main goroutine to shut down
 	}()
 
-	// Get port from environment variables or use default 6254
-	portStr := envOr("CATENA_PORT", "6254")
-	port, err := strconv.Atoi(portStr) // converts the string to an integer
-	if err != nil {
-		logger.Error("invalid CATENA_PORT", "error", err)
-		os.Exit(1) // exits the program with a non-zero status code
-	}
+	// Port comes from the unified config
+	port := cfg.Port
 
 	// Initialize counter
 	counter := &CounterState{}
@@ -186,12 +178,12 @@ func main() {
 			if counter.IsRunning() {
 				logger.Info("Start command - already running")
 				val, _ := catena.ToCatenaValue(buildResponse())
-				return catena.ReplyOK(val)
+				return catena.Reply(val)
 			}
 			counter.Start()
 			logger.Info("Counter started", "value", counter.GetValue())
 			val, _ := catena.ToCatenaValue(buildResponse())
-			return catena.ReplyOK(val)
+			return catena.Reply(val)
 		},
 
 		// Stop command
@@ -199,12 +191,12 @@ func main() {
 			if !counter.IsRunning() {
 				logger.Info("Stop command - already stopped")
 				val, _ := catena.ToCatenaValue(buildResponse())
-				return catena.ReplyOK(val)
+				return catena.Reply(val)
 			}
 			counter.Stop()
 			logger.Info("Counter stopped", "value", counter.GetValue())
 			val, _ := catena.ToCatenaValue(buildResponse())
-			return catena.ReplyOK(val)
+			return catena.Reply(val)
 		},
 
 		// Add10 command
@@ -212,7 +204,7 @@ func main() {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
 			val, _ := catena.ToCatenaValue(buildResponse())
-			return catena.ReplyOK(val)
+			return catena.Reply(val)
 		},
 
 		// Reset command
@@ -220,7 +212,7 @@ func main() {
 			counter.Reset()
 			logger.Info("Counter reset", "value", counter.GetValue())
 			val, _ := catena.ToCatenaValue(buildResponse())
-			return catena.ReplyOK(val)
+			return catena.Reply(val)
 		},
 	}
 
@@ -234,9 +226,9 @@ func main() {
 	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		if fqoid == "counter" {
 			val, _ := catena.ToCatenaValue(buildResponse())
-			return catena.ReplyOK(val)
+			return catena.Reply(val)
 		}
-		return catena.ReplyNotFound("parameter not found: " + fqoid)
+		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"parameter not found: " + fqoid)
 	})
 
 	// Register ExecuteCommand handler
@@ -253,7 +245,7 @@ func main() {
 				},
 			}
 			val, _ := catena.ToCatenaValue(exception)
-			return catena.ReplyOK(val)
+			return catena.Reply(val)
 		}
 
 		return handler(payload)
@@ -265,13 +257,13 @@ func main() {
 		if r.URL.Path == "/" {
 			data, err := staticFS.ReadFile("static/index.htm")
 			if err != nil {
-				return catena.ReplyNotFound("index.html not found")
+				return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"index.html not found")
 			}
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Write(data)
-			return catena.ReplyOK(catena.CatenaValue{})
+			return catena.Reply(catena.CatenaValue{})
 		}
-		return catena.ReplyNotFound("endpoint not found: " + r.URL.Path)
+		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"endpoint not found: " + r.URL.Path)
 	})
 
 	// ==========================================================================
@@ -298,11 +290,4 @@ func main() {
 	// Wait for shutdown signal
 	<-shutdownChan
 	logger.Info("Server shutdown complete")
-}
-
-func envOr(key, def string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return def
 }
