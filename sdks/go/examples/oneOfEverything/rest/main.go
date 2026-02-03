@@ -59,6 +59,9 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/rest"
 )
 
+//go:embed webui/*
+var webFS embed.FS
+
 //go:embed static/*
 var staticFS embed.FS
 
@@ -204,11 +207,8 @@ func main() {
 	params.Store("brightness", int32(50))
 	params.Store("contrast", int32(50))
 	params.Store("saturation", int32(50))
-
 	params.Store("volume", int32(75))
 	params.Store("muted", int32(0)) // 0 = false, 1 = true
-
-	// System parameters
 	params.Store("device_name", "Demo Device")
 
 	// ==========================================================================
@@ -416,17 +416,26 @@ func main() {
 	})
 
 	// --------------------------------------------------------------------------
-	// Register Fallback handler - serves index.html at root
+	// Register Fallback handler - serves web UI files
 	// --------------------------------------------------------------------------
 	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		if r.URL.Path == "/" {
-			data, err := staticFS.ReadFile("static/index.htm")
+		// Map paths to files
+		fileMap := map[string]struct {
+			path        string
+			contentType string
+		}{
+			"/":           {"webui/index.htm", "text/html; charset=utf-8"},
+			"/styles.css": {"webui/styles.css", "text/css; charset=utf-8"},
+			"/script.js":  {"webui/script.js", "application/javascript; charset=utf-8"},
+		}
+
+		if file, ok := fileMap[r.URL.Path]; ok {
+			data, err := webFS.ReadFile(file.path)
 			if err != nil {
-				return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "index.html not found")
+				return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "file not found: "+r.URL.Path)
 			}
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Header().Set("Content-Type", file.contentType)
 			w.Write(data)
-			// Content already written to response writer
 			return catena.Reply(catena.CatenaValue{})
 		}
 		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found: "+r.URL.Path)
@@ -468,11 +477,6 @@ func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map) {
 
 		if d.IsDir() {
 			return nil // Skip directories
-		}
-
-		// Skip index.html (served separately via fallback handler)
-		if filepath.Base(path) == "index.htm" {
-			return nil
 		}
 
 		// Read file contents
