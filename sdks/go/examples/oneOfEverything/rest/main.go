@@ -170,12 +170,28 @@ func main() {
 	// ==========================================================================
 	devices := map[int]map[string]any{
 		0: {
-			"slot":              0,
+			"slot":              uint32(0),
+			"detail_level":      catena.DetailLevelFull,
 			"multi_set_enabled": true,
 			"subscriptions":     true,
-			"detail_level":      "FULL",
 			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
 			"default_scope":     "st2138:op",
+		},
+		1: {
+			"slot":              uint32(1),
+			"detail_level":      catena.DetailLevelFull,
+			"multi_set_enabled": false,
+			"subscriptions":     true,
+			"access_scopes":     []string{"st2138:mon", "st2138:op"},
+			"default_scope":     "st2138:mon",
+		},
+		2: {
+			"slot":              uint32(2),
+			"detail_level":      catena.DetailLevelFull,
+			"multi_set_enabled": true,
+			"subscriptions":     false,
+			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg"},
+			"default_scope":     "st2138:cfg",
 		},
 	}
 
@@ -261,24 +277,27 @@ func main() {
 	// ==========================================================================
 	// Server Setup
 	// ==========================================================================
-	slotList := []int{0}
+	slotList := []int{0, 1, 2}
 	srv = rest.NewServer(slotList)
 
 	// --------------------------------------------------------------------------
-	// Register GetDevice handler
+	// Register GetDevice handler for each slot
 	// --------------------------------------------------------------------------
-	srv.RegisterGetDeviceHandler(0, func() (catena.CatenaDevice, catena.StatusResult) {
-		logger.Info("GetDevice", "slot", 0)
-		deviceInfo, ok := devices[0]
-		if !ok {
-			return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
-		}
-		device, err := catena.ToCatenaDevice(deviceInfo)
-		if err != nil {
-			return catena.ReplyError[catena.CatenaDevice](catena.INTERNAL, "failed to create device info")
-		}
-		return catena.Reply(device)
-	})
+	for _, slot := range slotList {
+		slot := slot // capture loop variable
+		srv.RegisterGetDeviceHandler(slot, func() (catena.CatenaDevice, catena.StatusResult) {
+			logger.Info("GetDevice", "slot", slot)
+			deviceInfo, ok := devices[slot]
+			if !ok {
+				return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
+			}
+			device, err := catena.ToCatenaDevice(deviceInfo)
+			if err != nil {
+				return catena.ReplyError[catena.CatenaDevice](catena.INTERNAL, "failed to create device info")
+			}
+			return catena.Reply(device)
+		})
+	}
 
 	// --------------------------------------------------------------------------
 	// Register GetValue handler (GetParam)

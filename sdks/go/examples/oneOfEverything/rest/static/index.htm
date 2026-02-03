@@ -248,6 +248,61 @@
         .placeholder-text {
             font-size: 0.8rem;
         }
+
+        /* Slot list styling */
+        .slot-list {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .slot-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text-dim);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .slot-btn:hover {
+            border-color: var(--section-device);
+            color: var(--text);
+        }
+        .slot-btn.active {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: var(--section-device);
+            color: var(--section-device);
+        }
+        .device-details {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            max-height: 280px;
+            overflow-y: auto;
+        }
+        .json-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin: 0;
+        }
+        .json-key { color: var(--section-device); }
+        .json-string { color: var(--success); }
+        .json-number { color: var(--warning); }
+        .json-bool { color: var(--section-params); }
+        .json-null { color: var(--text-muted); }
+        .json-bracket { color: var(--text-dim); }
+        .device-loading {
+            text-align: center;
+            padding: 1rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
         
         /* Footer */
         footer {
@@ -283,9 +338,14 @@
                     </div>
                 </div>
                 <div class="section-content">
-                    <div class="placeholder">
-                        <div class="placeholder-icon">📱</div>
-                        <div class="placeholder-text">Device information will be displayed here</div>
+                    <div class="card-title">Select Slot</div>
+                    <div class="slot-list" id="slotList">
+                        <button class="slot-btn active" data-slot="0" onclick="selectSlot(0)">Slot 0</button>
+                        <button class="slot-btn" data-slot="1" onclick="selectSlot(1)">Slot 1</button>
+                        <button class="slot-btn" data-slot="2" onclick="selectSlot(2)">Slot 2</button>
+                    </div>
+                    <div class="device-details" id="deviceDetails">
+                        <div class="device-loading">Loading...</div>
                     </div>
                 </div>
             </div>
@@ -380,20 +440,91 @@
         </div>
 
         <footer>
-            Polls <code>GET /value/all</code> every 500ms &bull; Catena REST API
+           Catena REST API
         </footer>
     </div>
 
     <script>
+        let currentSlot = 0;
+
         // Extract value from protobuf JSON format (e.g., {int32_value: 5} -> 5)
         function extractValue(protoVal) {
             if (!protoVal) return null;
             if ('int32_value' in protoVal) return protoVal.int32_value;
+            if ('uint32_value' in protoVal) return protoVal.uint32_value;
             if ('float32_value' in protoVal) return protoVal.float32_value;
             if ('string_value' in protoVal) return protoVal.string_value;
             return null;
         }
 
+        // =====================================================================
+        // Device Section
+        // =====================================================================
+        async function selectSlot(slot) {
+            currentSlot = slot;
+            
+            // Update active button
+            document.querySelectorAll('.slot-btn').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.dataset.slot) === slot);
+            });
+            
+            // Show loading state
+            const details = document.getElementById('deviceDetails');
+            details.innerHTML = '<div class="device-loading">Loading...</div>';
+            
+            // Fetch device info
+            await fetchDevice(slot);
+        }
+
+        async function fetchDevice(slot) {
+            const details = document.getElementById('deviceDetails');
+            try {
+                const res = await fetch(`/st2138-api/v1/${slot}`);
+                if (!res.ok) {
+                    details.innerHTML = `<div class="device-loading">Error: ${res.status}</div>`;
+                    return;
+                }
+                const data = await res.json();
+                renderDevice(data);
+            } catch (e) {
+                console.error('fetchDevice error:', e);
+                details.innerHTML = `<div class="device-loading">Error loading device</div>`;
+            }
+        }
+
+        function syntaxHighlight(json) {
+            if (typeof json !== 'string') {
+                json = JSON.stringify(json, null, 4);
+            }
+            // Escape HTML
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            // Apply syntax highlighting
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-bool';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        function renderDevice(device) {
+            const details = document.getElementById('deviceDetails');
+            const highlighted = syntaxHighlight(device);
+            details.innerHTML = `<pre class="json-display">${highlighted}</pre>`;
+        }
+
+        // =====================================================================
+        // Commands Section
+        // =====================================================================
         async function cmd(name) {
             try {
                 const res = await fetch(`/st2138-api/v1/0/command/${name}`, {
@@ -426,6 +557,9 @@
             }
         }
 
+        // =====================================================================
+        // Parameters Section
+        // =====================================================================
         function updateParam(id, value) {
             const el = document.getElementById('p-' + id);
             if (!el) return;
@@ -463,9 +597,15 @@
             } catch (e) { console.error('poll error:', e); }
         }
 
+        // =====================================================================
+        // Initialization
+        // =====================================================================
         // Poll every 500ms
         setInterval(poll, 500);
         poll();
+        
+        // Load initial device info
+        fetchDevice(0);
     </script>
 </body>
 </html>
