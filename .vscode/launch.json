@@ -138,6 +138,38 @@
       ],
     },
     {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Serialize",
+      "skipFiles": [
+          "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/tools/codegen/ser.js",
+      "args": [
+          "--output",
+          "${workspaceFolder}/${env:BUILD_TARGET}/${input:pickDeviceModel}/..",
+          "--protos",
+          "${workspaceFolder}/smpte/interface/proto",
+          "${workspaceFolder}/sdks/cpp/${input:pickDeviceModel}"
+      ],
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Deserialize",
+      "skipFiles": [
+          "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/tools/codegen/des.js",
+      "args": [
+          "--output",
+          "${workspaceFolder}/${env:BUILD_TARGET}/${input:pickDeviceModel}/..",
+          "--protos",
+          "${workspaceFolder}/smpte/interface/proto",
+          "${workspaceFolder}/${env:BUILD_TARGET}/${input:pickDeviceModel}/../device.${input:getDeviceModel}.bin",
+      ],
+    },
+    {
       "name": "Debug Unit Tests with GDB",
       "type": "cppdbg",
       "request": "launch",
@@ -229,6 +261,11 @@
                   "connections/REST/examples/use_menus_REST/device.use_menus.yaml"
                 ],
       "default": "common/examples/start_here/device.start_here.json"
+    },
+    {
+      "id": "getDeviceModel",
+      "type": "promptString",
+      "description": "Put in the device name, e.g. hello_world, use_structs, one_of_everything, sorry, best we can do with vscode...",
     },
     {
       "id": "pickService",

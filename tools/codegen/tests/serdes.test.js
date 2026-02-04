@@ -65,6 +65,7 @@ describe("serdes", () => {
             params: {
                 param_with_Caps: {
                     type: "INT32",
+                    oid_aliases: [],
                     value: {
                         int32_value: 42,
                     },
