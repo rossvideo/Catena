@@ -35,6 +35,7 @@
  * @file utils.h
  * @author John R. Naylor (john.naylor@rossvideo.com)
  * @author keon.foster@rossvideo.com
+ * @date 2026/01/20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -117,6 +118,7 @@ std::string param_value_string(const st2138::Value& value);
  * 
  * @param value The string to convert. Entire string must be a valid positive long.
  * @param dest The destination to store the converted value. Unchanged if value is invalid.
+ * @return true if input string is valid.
  */
 bool readTimestamp(std::string& value, long& dest);
 

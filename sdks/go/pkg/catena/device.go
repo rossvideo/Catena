@@ -31,85 +31,83 @@
 package catena
 
 import (
-	"context"
-	"errors"
-	"io"
-	"os"
-	"sync"
+	"encoding/json"
+	"fmt"
+
+	"google.golang.org/protobuf/encoding/protojson"
+
+	"github.com/rossvideo/catena/build/go/protos"
 )
 
-type Value struct {
-	String string `json:"string,omitempty"`
-	// Extend with numeric, boolean, etc.
+// DetailLevel represents how much of the device model to deliver
+// Mirrors protos.Device_DetailLevel for convenience
+type DetailLevel = protos.Device_DetailLevel
+
+// DetailLevel constants matching the proto enum
+const (
+	DetailLevelFull          DetailLevel = protos.Device_FULL
+	DetailLevelSubscriptions DetailLevel = protos.Device_SUBSCRIPTIONS
+	DetailLevelMinimal       DetailLevel = protos.Device_MINIMAL
+	DetailLevelCommands      DetailLevel = protos.Device_COMMANDS
+	DetailLevelNone          DetailLevel = protos.Device_NONE
+	DetailLevelUnset         DetailLevel = protos.Device_UNSET
+)
+
+// CatenaDevice wraps protos.Device for device model handling
+type CatenaDevice struct {
+	device   *protos.Device
+	jsonData []byte // Cached JSON representation
 }
 
-type DeviceDescriptor struct {
-	Id      string `json:"id"`
-	Vendor  string `json:"vendor"`
-	Product string `json:"product"`
-	// plus menus, commands, params, etc.
-}
-
-// Device is what your business-logic implements.
-// This is the "lite" device model from Catena’s perspective.
-type Device interface {
-	Describe(ctx context.Context) (*DeviceDescriptor, error)
-	GetParam(ctx context.Context, path string) (Value, error)
-	SetParam(ctx context.Context, path string, v Value) error
-	GetAsset(ctx context.Context, id string) (io.ReadCloser, error)
-}
-
-// Simple in-memory implementation for an example device.
-type simpleDevice struct {
-	mu     sync.RWMutex
-	status string
-	// imagine a map of assetID -> path
-	assetRoot string
-}
-
-func NewSimpleDevice(assetRoot string) Device {
-	return &simpleDevice{
-		status:    "OK",
-		assetRoot: assetRoot,
-	}
-}
-
-func (d *simpleDevice) Describe(ctx context.Context) (*DeviceDescriptor, error) {
-	return &DeviceDescriptor{
-		Id:      "catena-go-example",
-		Vendor:  "Ross Video",
-		Product: "Catena Go REST Example",
-	}, nil
-}
-
-func (d *simpleDevice) GetParam(ctx context.Context, path string) (Value, error) {
-	d.mu.RLock()
-	defer d.mu.RUnlock()
-	switch path {
-	case "status":
-		return Value{String: d.status}, nil
-	default:
-		return Value{}, errors.New("param not found")
-	}
-}
-
-func (d *simpleDevice) SetParam(ctx context.Context, path string, v Value) error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	switch path {
-	case "status":
-		d.status = v.String
-		return nil
-	default:
-		return errors.New("param not found")
-	}
-}
-
-func (d *simpleDevice) GetAsset(ctx context.Context, id string) (io.ReadCloser, error) {
-	// In real Catena, you'd respect the asset model; here we just map id -> file
-	f, err := os.Open(d.assetRoot + "/" + id)
+// ToCatenaDevice converts a Go map/struct to CatenaDevice
+// This allows developers to work with native Go types and convert to the protobuf format
+func ToCatenaDevice(m map[string]any) (CatenaDevice, error) {
+	device, jsonData, err := toProtoDevice(m)
 	if err != nil {
-		return nil, err
+		return CatenaDevice{jsonData: nil}, fmt.Errorf("ToCatenaDevice: %w", err)
 	}
-	return f, nil
+	return CatenaDevice{device: device, jsonData: jsonData}, nil
+}
+
+// toProtoDevice converts native Go types to protos.Device
+// For complex nested types (params, constraints, etc.), uses JSON marshaling
+// to leverage protojson's automatic conversion and validation
+// Returns the device, cached JSON data, and any error
+func toProtoDevice(m map[string]any) (*protos.Device, []byte, error) {
+	// For complex types, use JSON marshaling to handle nested structures
+	jsonData, err := json.Marshal(m)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal map to JSON: %w", err)
+	}
+
+	device := &protos.Device{}
+	if err := protojson.Unmarshal(jsonData, device); err != nil {
+		return nil, nil, fmt.Errorf("failed to unmarshal JSON to Device proto: %w", err)
+	}
+
+	return device, jsonData, nil
+}
+
+// GetProtoDevice returns the underlying protos.Device
+func (cd CatenaDevice) GetProtoDevice() *protos.Device {
+	return cd.device
+}
+
+// ToJSON converts CatenaDevice to JSON bytes using protojson
+// Uses cached JSON if available, otherwise generates new JSON
+func (cd CatenaDevice) ToJSON() ([]byte, error) {
+	if cd.device == nil {
+		return nil, nil
+	}
+
+	// Return cached JSON if available
+	if cd.jsonData != nil {
+		return cd.jsonData, nil
+	}
+
+	// Generate JSON from protobuf if not cached
+	return (protojson.MarshalOptions{
+		UseProtoNames:   true,
+		EmitUnpopulated: false,
+	}).Marshal(cd.device)
 }
