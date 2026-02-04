@@ -237,7 +237,7 @@ void SocketReader::read(tcp::socket& socket) {
             try {
                 result.get();
             } catch(const catena::exception_with_status& e) {
-                throw catena::exception_with_status(e.what(), e.status);
+                throw catena::exception_with_status("Timed out", catena::StatusCode::DEADLINE_EXCEEDED);
             } catch(...) {
                 throw catena::exception_with_status("Read error", catena::StatusCode::UNKNOWN);
             }
