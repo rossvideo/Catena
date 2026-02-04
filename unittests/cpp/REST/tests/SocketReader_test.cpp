@@ -482,7 +482,8 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentLength) {
     const bool stream = false;
     const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
     const std::string jsonBody = "{test_json_body}";
-    const std::map<std::string, std::string> headers;
+    std::map<std::string, std::string> headers;
+    headers["Content-Type"] = "application/json";
     // Test with invalid character
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 1a23"});
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
@@ -496,7 +497,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentLength) {
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: -16"});    
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
     // Test with incorrect Content-Length
-    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 10"});    
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 1"});    
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
     auto work = boost::asio::make_work_guard(io_context_.get_executor());
     std::thread runner([this]() { io_context_.run(); });
