@@ -116,22 +116,8 @@ h1 {
     color: var(--text);
 }
 
-.section-subtitle {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    font-family: 'JetBrains Mono', monospace;
-}
-
 .section-content {
     flex: 1;
-}
-
-/* Card styling */
-.card {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1rem;
 }
 
 .card-title {
@@ -141,21 +127,6 @@ h1 {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 1rem;
-}
-
-/* Grid layouts */
-.grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-.grid-full {
-    grid-column: 1 / -1;
-}
-
-@media (max-width: 640px) {
-    .grid { grid-template-columns: 1fr; }
 }
 
 /* Counter Card */
@@ -229,15 +200,6 @@ h1 {
 
 .btn.add { background: var(--warning); border-color: var(--warning); color: #000; }
 
-/* Param groups and rows */
-.param-group {
-    margin-bottom: 1rem;
-}
-
-.param-group:last-child {
-    margin-bottom: 0;
-}
-
 .param-row {
     display: flex;
     justify-content: space-between;
@@ -263,18 +225,6 @@ h1 {
     flex: 1;
     justify-content: flex-end;
 }
-
-.param-value {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85rem;
-    color: var(--accent);
-    font-weight: 600;
-    min-width: 2.5rem;
-    text-align: right;
-}
-
-.param-value.bool-true { color: var(--success); }
-.param-value.bool-false { color: var(--danger); }
 
 /* Param inputs */
 .param-input {
@@ -383,41 +333,6 @@ h1 {
     background: var(--text);
 }
 
-/* Save feedback */
-.param-row.saving .param-value {
-    color: var(--warning);
-}
-
-.param-row.saved .param-value {
-    color: var(--success);
-}
-
-.param-row.error .param-value {
-    color: var(--danger);
-}
-
-/* Placeholder content */
-.placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 1.5rem;
-    color: var(--text-muted);
-    text-align: center;
-    flex: 1;
-}
-
-.placeholder-icon {
-    font-size: 2.5rem;
-    margin-bottom: 0.75rem;
-    opacity: 0.4;
-}
-
-.placeholder-text {
-    font-size: 0.8rem;
-}
-
 /* Slot list styling */
 .slot-list {
     display: flex;
@@ -471,7 +386,6 @@ h1 {
 .json-number { color: var(--warning); }
 .json-bool { color: var(--section-params); }
 .json-null { color: var(--text-muted); }
-.json-bracket { color: var(--text-dim); }
 
 .device-loading {
     text-align: center;
@@ -634,11 +548,4 @@ footer {
     border-top: 1px solid var(--border);
     color: var(--text-muted);
     font-size: 0.75rem;
-}
-
-footer code {
-    color: var(--text-dim);
-    background: var(--card);
-    padding: 0.125rem 0.375rem;
-    border-radius: 4px;
 }
