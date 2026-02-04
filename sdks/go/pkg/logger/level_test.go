@@ -28,17 +28,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @brief Test utilities for the Catena Go SDK.
- * @file logger.go
- * @copyright Copyright © 2025 Ross Video Ltd
- * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2025-12-09
- */
-
 package logger
 
-import "testing"
+import (
+	"log/slog"
+	"testing"
+)
 
 func TestLevelString(t *testing.T) {
 	tests := []struct {
@@ -47,10 +42,8 @@ func TestLevelString(t *testing.T) {
 	}{
 		{LevelDebug, "DEBUG"},
 		{LevelInfo, "INFO"},
-		{LevelWarning, "WARNING"},
+		{LevelWarning, "WARN"},
 		{LevelError, "ERROR"},
-		{Level(99), "UNKNOWN"},
-		{Level(-1), "UNKNOWN"},
 	}
 
 	for _, tt := range tests {
@@ -64,7 +57,6 @@ func TestLevelString(t *testing.T) {
 }
 
 func TestLevelOrder(t *testing.T) {
-	// Verify levels are ordered correctly (lower value = more verbose)
 	if LevelDebug >= LevelInfo {
 		t.Error("LevelDebug should be less than LevelInfo")
 	}
@@ -78,26 +70,23 @@ func TestLevelOrder(t *testing.T) {
 
 func TestLevelComparison(t *testing.T) {
 	tests := []struct {
-		name        string
-		logLevel    Level
-		minLevel    Level
-		shouldLog   bool
+		name      string
+		logLevel  Level
+		minLevel  Level
+		shouldLog bool
 	}{
 		{"debug at debug", LevelDebug, LevelDebug, true},
 		{"info at debug", LevelInfo, LevelDebug, true},
 		{"warning at debug", LevelWarning, LevelDebug, true},
 		{"error at debug", LevelError, LevelDebug, true},
-
 		{"debug at info", LevelDebug, LevelInfo, false},
 		{"info at info", LevelInfo, LevelInfo, true},
 		{"warning at info", LevelWarning, LevelInfo, true},
 		{"error at info", LevelError, LevelInfo, true},
-
 		{"debug at warning", LevelDebug, LevelWarning, false},
 		{"info at warning", LevelInfo, LevelWarning, false},
 		{"warning at warning", LevelWarning, LevelWarning, true},
 		{"error at warning", LevelError, LevelWarning, true},
-
 		{"debug at error", LevelDebug, LevelError, false},
 		{"info at error", LevelInfo, LevelError, false},
 		{"warning at error", LevelWarning, LevelError, false},
@@ -106,7 +95,6 @@ func TestLevelComparison(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// The logger logs if logLevel >= minLevel
 			shouldLog := tt.logLevel >= tt.minLevel
 			if shouldLog != tt.shouldLog {
 				t.Errorf("logLevel(%v) >= minLevel(%v) = %v, want %v",
@@ -117,18 +105,23 @@ func TestLevelComparison(t *testing.T) {
 }
 
 func TestLevelConstants(t *testing.T) {
-	// Verify level constants have expected values
-	if LevelDebug != 0 {
-		t.Errorf("LevelDebug = %d, want 0", LevelDebug)
+	if LevelDebug != slog.LevelDebug {
+		t.Errorf("LevelDebug = %d, want %d", LevelDebug, slog.LevelDebug)
 	}
-	if LevelInfo != 1 {
-		t.Errorf("LevelInfo = %d, want 1", LevelInfo)
+	if LevelInfo != slog.LevelInfo {
+		t.Errorf("LevelInfo = %d, want %d", LevelInfo, slog.LevelInfo)
 	}
-	if LevelWarning != 2 {
-		t.Errorf("LevelWarning = %d, want 2", LevelWarning)
+	if LevelWarning != slog.LevelWarn {
+		t.Errorf("LevelWarning = %d, want %d", LevelWarning, slog.LevelWarn)
 	}
-	if LevelError != 3 {
-		t.Errorf("LevelError = %d, want 3", LevelError)
+	if LevelError != slog.LevelError {
+		t.Errorf("LevelError = %d, want %d", LevelError, slog.LevelError)
 	}
 }
 
+func TestLevelAlias(t *testing.T) {
+	var l Level = slog.LevelInfo
+	if l != LevelInfo {
+		t.Errorf("Level should be aliased to slog.Level")
+	}
+}

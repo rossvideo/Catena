@@ -18,6 +18,7 @@ for arg in "$@"; do
     html_report=true
     break
   fi
+done
 
 # Check for -V argument
 verbose=false
@@ -99,18 +100,50 @@ cpp () {
 }
 
 golang () {
-  echo "Not set up yet"
+  cd ~/Catena/sdks/go
+
+  if [ "$clean" = true ]; then
+    echo "Cleaning Go build cache..."
+    go clean -testcache
+  fi
+
+  # Download dependencies
+  go mod download
+
+  # Run tests with coverage (use count mode for hit counts)
+  COVERAGE_FILE="$HOME/Catena/coverage/go_coverage.out"
+  mkdir -p ~/Catena/coverage
+
+  if [ "$verbose" = true ]; then
+    go test ./pkg/... ./internal/... -v -coverprofile="$COVERAGE_FILE" -covermode=count
+  else
+    go test ./pkg/... ./internal/... -coverprofile="$COVERAGE_FILE" -covermode=count
+  fi
+
+  # Show coverage summary
+  echo ""
+  echo "Go Coverage Summary:"
+  go tool cover -func="$COVERAGE_FILE" | tail -1
+
+  # Generate HTML report if requested
+  if [ "$html_report" = true ]; then
+    echo "Generating HTML report with hit counts..."
+    gocov convert "$COVERAGE_FILE" | gocov-html > ~/Catena/coverage/go_coverage.html
+    echo "Go HTML coverage report (with hit counts): ~/Catena/coverage/go_coverage.html"
+  fi
 }
 
 
-# run the javascript tests/coverage
-javascript
+
 
 # run the main coverage based on build target
 cd ~/Catena/${BUILD_TARGET}
 echo ~/Catena/${BUILD_TARGET}
 
 if [ "$BUILD_TARGET" == "build/cpp" ]; then
+  # run the javascript tests/coverage
+  #TODO: fix how this is ran
+  javascript
   cpp "$@"
 elif [ "$BUILD_TARGET" == "build/go" ]; then
   golang
