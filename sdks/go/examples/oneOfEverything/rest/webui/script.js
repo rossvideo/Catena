@@ -259,9 +259,109 @@ function renderAssets(assets) {
                 <span class="asset-name">${asset.file_name}</span>
                 <span class="asset-meta">${asset.content_type} · ${formatSize(asset.size)}</span>
             </div>
-            <a href="/st2138-api/v1/0/asset/${asset.id}" class="asset-download" target="_blank" title="Download">⬇</a>
+            <button class="asset-btn" onclick="viewAsset('${asset.id}', '${asset.content_type}', '${asset.file_name}')" title="View">👁</button>
         </div>
     `).join('');
+}
+
+// Decode base64 payload from asset response
+function decodeAssetPayload(base64) {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+}
+
+// Fetch and decode asset from API
+async function fetchAssetData(assetId) {
+    const res = await fetch(`/st2138-api/v1/0/asset/${assetId}`);
+    if (!res.ok) throw new Error(`Failed to fetch asset: ${res.status}`);
+    const data = await res.json();
+    
+    const base64 = data.payload?.payload;
+    if (!base64) throw new Error('No payload in asset response');
+    
+    return decodeAssetPayload(base64);
+}
+
+// View asset in modal or new tab
+async function viewAsset(assetId, contentType, fileName) {
+    try {
+        const bytes = await fetchAssetData(assetId);
+        const blob = new Blob([bytes], { type: contentType });
+        
+        if (contentType.startsWith('image/')) {
+            // Show image in modal
+            showAssetModal(URL.createObjectURL(blob), 'image', fileName);
+        } else if (contentType.startsWith('text/')) {
+            // Show text content in modal
+            const text = new TextDecoder().decode(bytes);
+            showAssetModal(text, 'text', fileName);
+        } else {
+            // For other types, open in new tab or download
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+        }
+    } catch (e) {
+        console.error('viewAsset error:', e);
+        alert('Failed to view asset: ' + e.message);
+    }
+}
+
+// Show asset content in a modal
+function showAssetModal(content, type, fileName) {
+    // Remove existing modal if any
+    const existing = document.getElementById('assetModal');
+    if (existing) existing.remove();
+    
+    const modal = document.createElement('div');
+    modal.id = 'assetModal';
+    modal.className = 'asset-modal';
+    
+    let contentHtml;
+    if (type === 'image') {
+        contentHtml = `<img src="${content}" alt="${fileName}" style="max-width: 100%; max-height: 70vh;">`;
+    } else {
+        contentHtml = `<pre style="text-align: left; white-space: pre-wrap; word-wrap: break-word; max-height: 70vh; overflow: auto;">${escapeHtml(content)}</pre>`;
+    }
+    
+    modal.innerHTML = `
+        <div class="asset-modal-content">
+            <div class="asset-modal-header">
+                <span class="asset-modal-title">${escapeHtml(fileName)}</span>
+                <button class="asset-modal-close" onclick="closeAssetModal()">✕</button>
+            </div>
+            <div class="asset-modal-body">
+                ${contentHtml}
+            </div>
+        </div>
+    `;
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeAssetModal();
+    });
+    
+    document.body.appendChild(modal);
+}
+
+function closeAssetModal() {
+    const modal = document.getElementById('assetModal');
+    if (modal) {
+        // Revoke any blob URLs for images
+        const img = modal.querySelector('img');
+        if (img && img.src.startsWith('blob:')) {
+            URL.revokeObjectURL(img.src);
+        }
+        modal.remove();
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // =====================================================================
