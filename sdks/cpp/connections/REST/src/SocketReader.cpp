@@ -38,7 +38,7 @@ boost::asio::awaitable<void> read_with_timeout(tcp::socket& socket, std::string&
     );
 
     if (result.index() != 0) {
-        throw catena::exception_with_status("Timed out", catena::StatusCode::INVALID_ARGUMENT);
+        throw catena::exception_with_status("Timed out", catena::StatusCode::DEADLINE_EXCEEDED);
     }
 }
 
@@ -236,11 +236,13 @@ void SocketReader::read(tcp::socket& socket) {
 
             try {
                 result.get();
+            } catch(const catena::exception_with_status& e) {
+                throw catena::exception_with_status(e.what(), e.status);
             } catch(...) {
-                throw catena::exception_with_status("Timed out", catena::StatusCode::INVALID_ARGUMENT);
+                throw catena::exception_with_status("Read error", catena::StatusCode::UNKNOWN);
             }
         } else if (jsonBody_.size() > contentLength) {
-            throw catena::exception_with_status("Incorrect Content-Length: data lost", catena::StatusCode::INVALID_ARGUMENT);
+            throw catena::exception_with_status("Incorrect Content-Length: data lost", catena::StatusCode::DATA_LOSS);
         }
     }
     // Setting detail level to NONE if not set.
