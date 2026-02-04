@@ -127,6 +127,11 @@ jobs:
     container:
       image: ghcr.io/rossvideo/catena-go-toolchain:latest
       options: --user root:root
+    
+    env:
+      CMAKE_BUILD_TYPE: ''
+      CONNECTIONS: REST
+      BUILD_TARGET: ${{ github.workspace }}/build/go
 
     steps:
       - name: Checkout code
