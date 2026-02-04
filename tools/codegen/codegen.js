@@ -16,7 +16,8 @@
 
 import { program } from 'commander';
 
-import packageJson from './package.json' with { type: "json" };;
+import packageJson from './package.json' with { type: "json" };
+import { QUIET_OPTION, MANDATORY_OPTION, OUTPUT_OPTION, VERSION, createLogger, sync } from './common.js';
 import { DeviceModel } from './DeviceModel.js';
 import Validator from 'smpte-validator';
 import { validateRequiredParamsAndScopes } from './mandatory.js';
@@ -29,10 +30,10 @@ import CppGen from './cpp/cppgen.js';
 // load the command line parser
 program
     .description(packageJson.description)
-    .version(packageJson.version)
-    .option('-q, --quiet', 'Suppress non-error console output', false)
-    .option("--disable-mandatory-enforcement", "Disable enforcement of mandatory parameters during code generation")
-    .option("-o --output <string>", "Output folder for results", ".")
+    .version(VERSION)
+    .option(...QUIET_OPTION)
+    .option(...MANDATORY_OPTION)
+    .option(...OUTPUT_OPTION)
     .argument("<language>", "Target programming language (cpp)")
     .argument("<deviceModel>", "Catena device model to process")
     .action(generate);
@@ -56,16 +57,11 @@ function logOptions(log, language, deviceModel, options) {
 }
 
 // run the command line parser
-(async () => {
-    await program.parseAsync();
-})().catch((err) => {
-    console.error(`Error: ${err.message}`);
-    process.exit(err.error || 1);
-});
+sync(program);
 
 async function generate(language, deviceModelPath, options) {
     // define logging function based on quiet option
-    const log = options.quiet ? () => { } : console.log;
+    const log = createLogger(options);
 
     // log the options being used
     logOptions(log, language, deviceModelPath, options);
@@ -83,10 +79,6 @@ async function generate(language, deviceModelPath, options) {
             log("Generating C++ code...");
             const cppGen = new CppGen(deviceModel, options.output);
             cppGen.generate();
-            break;
-        case 'ser':
-            log("Generating serialized output...");
-            await serialize(deviceModel, options, metadata);
             break;
         default:
             throw new Error(`Unsupported language: ${language}`);

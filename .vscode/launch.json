@@ -129,7 +129,7 @@
       "skipFiles": [
           "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/tools/codegen/index.js",
+      "program": "${workspaceFolder}/tools/codegen/codegen.js",
       "args": [
           "--output",
           "${workspaceFolder}/${env:BUILD_TARGET}/${input:pickDeviceModel}/..",
