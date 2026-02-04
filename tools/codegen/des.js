@@ -18,7 +18,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import yaml from 'yaml';
 import { program } from 'commander';
-import { createLogger, OUTPUT_OPTION, PROTOS_OPTION, sync, VERSION } from './common.js';
+import { createLogger, OUTPUT_OPTION, PROTOS_OPTION, QUIET_OPTION, sync, VERSION } from './common.js';
 import { deserialize } from './serdes/serdes.js';
 
 //
@@ -29,6 +29,7 @@ import { deserialize } from './serdes/serdes.js';
 program
     .description("Deserialize binary to device model")
     .version(VERSION)
+    .option(...QUIET_OPTION)
     .option(...OUTPUT_OPTION)
     .option(...PROTOS_OPTION)
     .option("--metadata", "Just output metadata", false)
