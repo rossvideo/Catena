@@ -99,6 +99,7 @@ export async function deserialize(options) {
     const deviceDefinition = await getDeviceDefinition(options.protos);
     const protoObj = deviceDefinition.decode(new Uint8Array(deviceBin));
     const deviceDesc = deviceDefinition.toObject(protoObj, {
+        arrays: true,
         enums: String,
     });
     return [metadata, deviceDesc];
