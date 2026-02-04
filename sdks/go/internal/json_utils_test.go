@@ -28,6 +28,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @brief JSON utilities for the Catena SDK.
+ * @file json_utils.go
+ * @copyright Copyright © 2026 Ross Video Ltd
+ * @author Christian Twarog (christian.twarog@rossvideo.com)
+ * @date 2026-02-04
+ */
+
 package internal
 
 import (

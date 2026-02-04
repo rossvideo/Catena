@@ -32,7 +32,7 @@
  * @brief Test for Settings and configuration parsing.
  * @file config_test.go
  * @copyright Copyright © 2025 Ross Video Ltd
- * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @author Christian Twarog (christian.twarog@rossvideo.com)
  * @date 2025-12-09
  */
 
@@ -215,39 +215,39 @@ func TestParseBoolValues(t *testing.T) {
 
 func TestParseSettingsWithVerbosity(t *testing.T) {
 	tests := []struct {
-		name         string
-		envLevel     string
-		osArgs       []string
+		name          string
+		envLevel      string
+		osArgs        []string
 		expectedLevel slog.Level
 	}{
 		{
-			name:         "no CLI flags, use env level",
-			envLevel:     "info",
-			osArgs:       []string{"program"},
+			name:          "no CLI flags, use env level",
+			envLevel:      "info",
+			osArgs:        []string{"program"},
 			expectedLevel: slog.LevelInfo,
 		},
 		{
-			name:         "CLI more verbose than env",
-			envLevel:     "error",
-			osArgs:       []string{"program", "-vv"},
+			name:          "CLI more verbose than env",
+			envLevel:      "error",
+			osArgs:        []string{"program", "-vv"},
 			expectedLevel: slog.LevelInfo,
 		},
 		{
-			name:         "env more verbose than CLI",
-			envLevel:     "debug",
-			osArgs:       []string{"program", "-v"},
+			name:          "env more verbose than CLI",
+			envLevel:      "debug",
+			osArgs:        []string{"program", "-v"},
 			expectedLevel: slog.LevelDebug,
 		},
 		{
-			name:         "CLI overrides with -vvv",
-			envLevel:     "warn",
-			osArgs:       []string{"program", "-vvvv"},
+			name:          "CLI overrides with -vvv",
+			envLevel:      "warn",
+			osArgs:        []string{"program", "-vvvv"},
 			expectedLevel: slog.LevelDebug,
 		},
 		{
-			name:         "no env level set, CLI provides",
-			envLevel:     "",
-			osArgs:       []string{"program", "-v"},
+			name:          "no env level set, CLI provides",
+			envLevel:      "",
+			osArgs:        []string{"program", "-v"},
 			expectedLevel: slog.LevelWarn,
 		},
 	}

@@ -28,6 +28,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @brief Device handling for the Catena SDK.
+ * @file device_test.go
+ * @copyright Copyright © 2026 Ross Video Ltd
+ * @author Christian Twarog (christian.twarog@rossvideo.com)
+ * @date 2026-02-04
+ */
+
 package catena
 
 import (

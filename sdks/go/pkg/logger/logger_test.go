@@ -32,7 +32,7 @@
  * @brief Test utilities for the Catena Go SDK.
  * @file logger_test.go
  * @copyright Copyright © 2026 Ross Video Ltd
- * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @author Christian Twarog (christian.twarog@rossvideo.com)
  * @date 2025-12-09
  */
 

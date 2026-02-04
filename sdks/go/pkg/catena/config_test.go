@@ -28,6 +28,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @brief Configuration for the Catena SDK.
+ * @file config_test.go
+ * @copyright Copyright © 2026 Ross Video Ltd
+ * @author Christian Twarog (christian.twarog@rossvideo.com)
+ * @date 2026-02-04
+ */
+
 package catena
 
 import (
@@ -63,9 +71,9 @@ func TestParseEnvString(t *testing.T) {
 		{"production", EnvProd},
 		{"PRODUCTION", EnvProd},
 		{"  prod  ", EnvProd},
-		{"", EnvProd},           // empty defaults to prod
-		{"unknown", EnvProd},   // unknown defaults to prod
-		{"staging", EnvProd},   // unknown defaults to prod
+		{"", EnvProd},        // empty defaults to prod
+		{"unknown", EnvProd}, // unknown defaults to prod
+		{"staging", EnvProd}, // unknown defaults to prod
 	}
 
 	for _, tt := range tests {

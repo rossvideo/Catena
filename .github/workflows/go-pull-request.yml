@@ -44,61 +44,6 @@ jobs:
           sarif_file: trivy-results.sarif
           category: 'Trivy Scan Results'
 
-  Go-Unit-Tests:
-    name: Run Go Unit Tests and Coverage
-    timeout-minutes: 10
-    runs-on: ubuntu-24.04
-    container:
-      image: ghcr.io/rossvideo/catena-go-toolchain:latest
-      options: --user root:root
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
-
-      - name: Build OpenAPI
-        run: |
-          cd ${GITHUB_WORKSPACE}/smpte
-          ./build-openapi.sh
-
-      - name: Install Go dependencies
-        run: |
-          cd ${GITHUB_WORKSPACE}/sdks/go
-          go mod download
-          go install github.com/axw/gocov/gocov@latest
-          go install github.com/matm/gocov-html/cmd/gocov-html@latest
-
-      - name: Run unit tests with coverage
-        run: |
-          cd ${GITHUB_WORKSPACE}/sdks/go
-          go test ./pkg/... ./internal/... -v -coverprofile=coverage.out -covermode=count
-
-      - name: Generate coverage report
-        run: |
-          cd ${GITHUB_WORKSPACE}/sdks/go
-          go tool cover -func=coverage.out > coverage.txt
-          go tool cover -html=coverage.out -o coverage.html
-          gocov convert coverage.out | gocov-html > coverage-detailed.html
-
-      - name: Display coverage summary
-        run: |
-          cd ${GITHUB_WORKSPACE}/sdks/go
-          echo "### Go Test Coverage Summary"
-          go tool cover -func=coverage.out | tail -1
-
-      - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: go-coverage-report
-          path: |
-            sdks/go/coverage.out
-            sdks/go/coverage.txt
-            sdks/go/coverage.html
-            sdks/go/coverage-detailed.html
-          retention-days: 30
-
   CodeQL:
     name: CodeQL Analysis (5-10 minutes)
     timeout-minutes: 35
@@ -135,7 +80,7 @@ jobs:
           languages: ${{ matrix.language }}
           debug: true
 
-      - name: build
+      - name: Build OpenAPI and Go Dependencies
         run: |
           echo "Building OpenAPI"
           cd ${GITHUB_WORKSPACE}/smpte
@@ -153,13 +98,12 @@ jobs:
           sudo apt-get update && sudo apt-get install -y protobuf-compiler || true
           go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-          go install github.com/axw/gocov/gocov@latest
-          go install github.com/matm/gocov-html/cmd/gocov-html@latest
           
           # Setup Go environment
           ${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh root ${BUILD_TARGET} ${GITHUB_WORKSPACE}
           cd ${GITHUB_WORKSPACE}/sdks/go
           make
+
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
         with:
@@ -175,3 +119,70 @@ jobs:
             logs/*fatal*.log
           if-no-files-found: ignore
           retention-days: 1
+
+  Go-Unit-Tests:
+    name: Run Go Unit Tests and Coverage
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    container:
+      image: ghcr.io/rossvideo/catena-go-toolchain:latest
+      options: --user root:root
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Build OpenAPI and Go Dependencies
+        run: |
+          echo "Building OpenAPI"
+          cd ${GITHUB_WORKSPACE}/smpte
+          ./build-openapi.sh
+          echo "Done building OpenAPI"
+          mkdir -p ${BUILD_TARGET} 
+
+          # Install Go Dependencies
+          cd ${GITHUB_WORKSPACE}/sdks/go
+          git config --global --add safe.directory /__w/Catena/Catena
+          go install golang.org/x/tools/gopls@latest
+          go install github.com/go-delve/delve/cmd/dlv@latest
+          
+          # Ensure protoc and plugins are available
+          sudo apt-get update && sudo apt-get install -y protobuf-compiler || true
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+          
+          # Setup Go environment
+          ${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh root ${BUILD_TARGET} ${GITHUB_WORKSPACE}
+          cd ${GITHUB_WORKSPACE}/sdks/go
+          make
+
+      - name: Run unit tests with coverage
+        run: |
+          cd ${GITHUB_WORKSPACE}/sdks/go
+          go test ./pkg/... ./internal/... -v -coverprofile=coverage.out -covermode=count
+
+      - name: Generate coverage report
+        run: |
+          cd ${GITHUB_WORKSPACE}/sdks/go
+          go tool cover -func=coverage.out > coverage.txt
+          go tool cover -html=coverage.out -o coverage.html
+          gocov convert coverage.out | gocov-html > coverage-detailed.html
+
+      - name: Display coverage summary
+        run: |
+          cd ${GITHUB_WORKSPACE}/sdks/go
+          echo "### Go Test Coverage Summary"
+          go tool cover -func=coverage.out | tail -1
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-coverage-report
+          path: |
+            sdks/go/coverage.out
+            sdks/go/coverage.txt
+            sdks/go/coverage.html
+            sdks/go/coverage-detailed.html
+          retention-days: 30
