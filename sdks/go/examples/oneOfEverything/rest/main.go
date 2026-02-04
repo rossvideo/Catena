@@ -347,26 +347,32 @@ func main() {
 	// --------------------------------------------------------------------------
 	// Register SetValue handler (SetParam)
 	// --------------------------------------------------------------------------
-	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
 		logger.Info("SetParam", "slot", slot, "fqoid", fqoid, "value", value)
+
+		// Check for nil value
+		if value == nil {
+			logger.Error("SetParam nil value received", "slot", slot, "fqoid", fqoid)
+			return catena.StatusWithCode(catena.INTERNAL, "nil value received")
+		}
 
 		// Check if parameter exists
 		val, ok := params.Load(fqoid)
 		if !ok {
 			logger.Error("SetParam param not found", "slot", slot, "fqoid", fqoid)
-			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "param not found: "+fqoid)
+			return catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
 		}
 
 		// Verify type matches
 		if reflect.TypeOf(val) != reflect.TypeOf(value) {
 			logger.Error("SetParam type mismatch", "slot", slot, "fqoid", fqoid,
 				"expected", reflect.TypeOf(val), "got", reflect.TypeOf(value))
-			return catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "type mismatch")
+			return catena.StatusWithCode(catena.INVALID_ARGUMENT, "type mismatch")
 		}
 
 		params.Store(fqoid, value)
 		logger.Info("Parameter updated", "fqoid", fqoid, "value", value)
-		return catena.ReplyError[catena.CatenaValue](catena.NO_CONTENT, "")
+		return catena.StatusWithCode(catena.NO_CONTENT, "")
 	})
 
 	// --------------------------------------------------------------------------
