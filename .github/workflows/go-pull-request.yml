@@ -121,7 +121,7 @@ jobs:
           retention-days: 1
 
   Go-Unit-Tests:
-    name: Run Go Unit Tests and Coverage
+    name: Run Go Unit Tests and Coverage (5-10 minutes)
     timeout-minutes: 10
     runs-on: ubuntu-24.04
     container:
@@ -182,6 +182,9 @@ jobs:
           cd ${GITHUB_WORKSPACE}/sdks/go
           go tool cover -func=coverage.out > coverage.txt
           go tool cover -html=coverage.out -o coverage.html
+          
+          # Use full path to gocov tools (installed to $GOPATH/bin)
+          export PATH=$PATH:$(go env GOPATH)/bin
           gocov convert coverage.out | gocov-html > coverage-detailed.html
 
       - name: Display coverage summary
