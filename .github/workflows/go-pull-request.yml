@@ -171,11 +171,8 @@ jobs:
           # Ensure workspace is owned by testuser
           chown -R testuser:testuser ${GITHUB_WORKSPACE}
           
-          # Verify user creation
-          id testuser
-          
           # Run tests as non-root to properly test permission errors
-          su - testuser -c "cd ${GITHUB_WORKSPACE}/sdks/go && go test ./pkg/... ./internal/... -v -coverpkg=./pkg/...,./internal -coverprofile=coverage.out -covermode=count"
+          su testuser -c "cd ${GITHUB_WORKSPACE}/sdks/go && go test ./pkg/... ./internal/... -v -coverpkg=./pkg/...,./internal -coverprofile=coverage.out -covermode=count"
 
       - name: Generate coverage report
         run: |
