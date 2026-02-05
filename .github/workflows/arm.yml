@@ -5,7 +5,7 @@ on:
       - arm-build
 env:
   REGISTRY: ghcr.io 
-  
+
 jobs:
   build-and-push-toolchain-arm:
     runs-on: ubuntu-latest
@@ -68,7 +68,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           context: .
           file: .devcontainer/${{ matrix.toolchain }}/toolchain.dockerfile
-          push: false
+          push: true
           tags: "${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}:latest"
           labels: ${{ steps.meta.outputs.labels }}
       
