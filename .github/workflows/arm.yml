@@ -11,12 +11,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        toolchain: [cpp]
         include:
-        - platform: linux/amd64
-          runner: ubuntu-latest
+        # - platform: linux/amd64
+        #   runner: ubuntu-latest
+        #   toolchain: cpp
         - platform: linux/arm64
           runner: ubuntu-24.04-arm
+          toolchain: cpp
     runs-on: ${{ matrix.runner }}
     env:
       IMAGE_NAME: catena-${{ matrix.toolchain }}-toolchain
@@ -76,20 +77,21 @@ jobs:
         
       - name: Build and push Docker image
         id: push
+        # if: steps.changes.outputs.toolchain == 'true'
         uses: docker/build-push-action@v6
         with:
           platforms: ${{ matrix.platform }}
           context: .
           file: .devcontainer/${{ matrix.toolchain }}/toolchain.dockerfile
-          push: false
+          push: true
           tags: "${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}:latest"
           labels: ${{ steps.meta.outputs.labels }}
       
       # This step generates an artifact attestation for the image, which is an unforgeable statement about where and how it was built. It increases supply chain security for people who consume the image. For more information, see [Using artifact attestations to establish provenance for builds](/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds).
-      # - name: Generate artifact attestation
-      #   if: steps.changes.outputs.toolchain == 'true'
-      #   uses: actions/attest-build-provenance@v2
-      #   with:
-      #     subject-name: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME}}
-      #     subject-digest: ${{ steps.push.outputs.digest }}
-      #     push-to-registry: false
+      - name: Generate artifact attestation
+        # if: steps.changes.outputs.toolchain == 'true'
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME}}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
