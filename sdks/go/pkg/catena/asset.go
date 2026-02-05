@@ -39,7 +39,12 @@
 package catena
 
 import (
+	"crypto/sha256"
 	"fmt"
+	"mime"
+	"os"
+	"path/filepath"
+	"strconv"
 
 	"google.golang.org/protobuf/encoding/protojson"
 
@@ -59,6 +64,48 @@ type DataPayload struct {
 	PayloadEncoding int32             // 0=UNCOMPRESSED, 1=GZIP, 2=DEFLATE
 	Payload         []byte            // Embedded binary data (use this OR Url, not both)
 	Url             string            // URL to external resource (use this OR Payload, not both)
+}
+
+// ToPayload creates a DataPayload from raw bytes with metadata and auto-computed SHA-256 digest.
+// This is the primary helper for creating asset payloads from in-memory data.
+func ToPayload(data []byte, contentType string, filename string) DataPayload {
+	hash := sha256.Sum256(data)
+	return DataPayload{
+		Payload:         data,
+		PayloadEncoding: 0, // UNCOMPRESSED
+		Metadata: map[string]string{
+			"content-type": contentType,
+			"file-name":    filename,
+			"size":         strconv.Itoa(len(data)),
+		},
+		Digest: hash[:],
+	}
+}
+
+// ToPayloadFromPath creates a DataPayload by reading a file from disk.
+// Auto-detects content type from file extension and computes SHA-256 digest.
+func ToPayloadFromPath(path string) (DataPayload, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return DataPayload{}, fmt.Errorf("failed to read file: %w", err)
+	}
+
+	// Auto-detect content type from extension
+	contentType := mime.TypeByExtension(filepath.Ext(path))
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	filename := filepath.Base(path)
+	return ToPayload(data, contentType, filename), nil
+}
+
+// ToPayloadFromURL creates a DataPayload with a URL reference (no embedded data).
+// Use this when the asset is hosted externally and shouldn't be embedded.
+func ToPayloadFromURL(url string) DataPayload {
+	return DataPayload{
+		Url: url,
+	}
 }
 
 // ToCatenaAsset converts DataPayload to CatenaAsset by building the proto directly

@@ -39,7 +39,6 @@
 package main
 
 import (
-	"crypto/sha256"
 	"embed"
 	"fmt"
 	"io/fs"
@@ -202,19 +201,8 @@ func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map) {
 		// Normalize path separators for URL use
 		assetID := strings.ReplaceAll(relPath, string(filepath.Separator), "/")
 
-		// Build metadata
-		metadata := map[string]string{
-			"content-type": contentType,
-			"file-name":    filepath.Base(path),
-		}
-
-		// Calculate SHA-256 digest
-		hash := sha256.Sum256(data)
-
-		// Store as DataPayload directly
-		payload := catena.FromBytes(data)
-		payload.Metadata = metadata
-		payload.Digest = hash[:]
+		// Create payload with metadata and digest
+		payload := catena.ToPayload(data, contentType, filepath.Base(path))
 
 		assets.Store(assetID, payload)
 		logger.Info("Loaded asset", "id", assetID, "size", len(data), "type", contentType)
