@@ -172,7 +172,8 @@ jobs:
           chown -R testuser:testuser ${GITHUB_WORKSPACE}
           
           # Run tests as non-root to properly test permission errors
-          su testuser -c "cd ${GITHUB_WORKSPACE}/sdks/go && go test ./pkg/... ./internal/... -v -coverpkg=./pkg/...,./internal -coverprofile=coverage.out -covermode=count"
+          # Using runuser to preserve environment including PATH
+          runuser -u testuser -- bash -c "cd ${GITHUB_WORKSPACE}/sdks/go && go test ./pkg/... ./internal/... -v -coverpkg=./pkg/...,./internal -coverprofile=coverage.out -covermode=count"
 
       - name: Generate coverage report
         run: |
