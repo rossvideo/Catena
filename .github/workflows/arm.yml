@@ -4,51 +4,76 @@ on:
     branches:
       - arm-build
 jobs:
-  build:
-    name: Build on ARM64
-    runs-on: ubuntu-24.04-arm
+  build-and-push-toolchain-arm:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        toolchain: [cpp, go]
     env:
-      CMAKE_BUILD_TYPE: Release
-      CONNECTIONS: gRPC;REST
-      BUILD_TARGET: ${{ github.workspace }}/build/cpp
-
+      IMAGE_NAME: catena-${{ matrix.toolchain }}-toolchain
+    # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+      #
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
+      # Uses the `docker/login-action` action to log in to the Container registry registry using the account and password that will publish the packages. Once published, the packages are scoped to the account defined here.
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: setup cpp toolchain
-        # using .devcontainer/cpp/toolchain.Dockerfile as reference
+      # This step uses [docker/metadata-action](https://github.com/docker/metadata-action#about) to extract tags and labels that will be applied to the specified image. The `id` "meta" allows the output of this step to be referenced in a subsequent step. The `images` value provides the base name for the tags and labels.
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}
+
+      - name: Print stuff
         run: |
-          .devcontainer/cpp/toolchain.env
-          apt-get update
-          apt-get install --no-install-recommends -y \
-          build-essential \
-          sudo \
-          cmake=$CMAKE_VERSION \
-          git \
-          libssl-dev=$OPENSSL_VERSION \
-          doxygen=$DOXYGEN_VERSION \
-          graphviz=$GRAPHVIZ_VERSION \
-          libgtest-dev=$GTEST_VERSION \
-          libboost-all-dev=$BOOST_VERSION \
-          libasio-dev=$ASIO_VERSION \
-          libgmock-dev=$GMOCK_VERSION \
-          ninja-build=$NINJA_VERSION \
-          gdb=$GNU_DEBUGGER_VERSION \
-          valgrind=$VALGRIND_VERSION \
-          curl=$CURL_VERSION \
-          libcurl4-openssl-dev=$LIBCURL_VERSION \
-          libavahi-client-dev=$AVAHI_CLIENT_VERSION \
-          libavahi-common-dev=$AVAHI_COMMON_VERSION \
-          pkg-config=$PKG_CONFIG_VERSION \
-          ca-certificates
-          curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x -o /tmp/nodesource_setup.sh \
-          cat /tmp/nodesource_setup.sh \
-          bash /tmp/nodesource_setup.sh \
-          apt-get install -y nodejs \
-          rm -f /tmp/nodesource_setup.sh \
-          npm install -g n \
-          apt-get clean \
-          rm -rf /var/cache/apt/archives/ /var/lib/apt/lists/*
+          echo "IMAGE_NAME: ${{ env.IMAGE_NAME }}"
+          echo "REGISTRY: ${{ env.REGISTRY }}"
+          echo "tags: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}:latest"
+          echo "labels: ${{ steps.meta.outputs.labels }}"
+
+      - name: Paths Changes Filter
+        id: changes
+        uses: dorny/paths-filter@v3.0.2
+        with:
+          filters: |
+            toolchain:
+              - '.devcontainer/${{ matrix.toolchain }}/toolchain.dockerfile'
+              - '.devcontainer/${{ matrix.toolchain }}/toolchain.env'
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Build and push Docker image
+        id: push
+        if: steps.changes.outputs.toolchain == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/amd64,linux/arm64
+          context: .
+          file: .devcontainer/${{ matrix.toolchain }}/toolchain.dockerfile
+          push: false
+          tags: "${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}:latest"
+          labels: ${{ steps.meta.outputs.labels }}
+      
+      # This step generates an artifact attestation for the image, which is an unforgeable statement about where and how it was built. It increases supply chain security for people who consume the image. For more information, see [Using artifact attestations to establish provenance for builds](/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds).
+      # - name: Generate artifact attestation
+      #   if: steps.changes.outputs.toolchain == 'true'
+      #   uses: actions/attest-build-provenance@v2
+      #   with:
+      #     subject-name: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME}}
+      #     subject-digest: ${{ steps.push.outputs.digest }}
+      #     push-to-registry: false
