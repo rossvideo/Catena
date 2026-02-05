@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - arm-build
+env:
+  REGISTRY: ghcr.io 
+  
 jobs:
   build-and-push-toolchain-arm:
     runs-on: ubuntu-latest
