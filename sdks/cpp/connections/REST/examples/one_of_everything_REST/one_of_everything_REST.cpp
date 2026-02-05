@@ -49,17 +49,19 @@
 
 // REST
 #include <ServiceImpl.h>
+#include <ConnectionProps.h>
 
 #include <iomanip>
 #include <iostream>
 #include <memory>
-#include <regex>
 #include <stdexcept>
 #include <string>
 #include <thread>
 #include <chrono>
 #include <signal.h>
 #include <functional>
+#include <fstream>
+#include <sstream>
 #include <Logger.h>
 
 
@@ -280,6 +282,25 @@ void startCounter() {
     }
 }
 
+/**
+ * @brief Load connection properties XML from file and substitute dynamic values
+ * @param filepath Path to the XML file
+ * @return XML content as string
+ */
+std::string loadConnectionPropsXml(const std::string& filepath) {
+    std::ifstream file(filepath);
+    if (!file.is_open()) {
+        LOG(ERROR) << "Failed to open connection properties file: " << filepath;
+        return "";
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string xml = buffer.str();
+
+    return xml;
+}
+
 void RunRESTServer() {
     // install signal handlers
     signal(SIGINT, handle_signal);
@@ -321,8 +342,31 @@ int main(int argc, char* argv[])
     // commands should be defined before starting the RPC server
     defineCommands();
 
+    // Load connection properties XML from static file
+    std::string static_root = absl::GetFlag(FLAGS_static_root);
+    std::string xml_path = static_root + "/connection-props.xml";
+    
+    std::string xml = loadConnectionPropsXml(xml_path);
+    
+    if (xml.empty()) {
+        LOG(ERROR) << "Failed to load connection properties from: " << xml_path;
+        LOG(ERROR) << "Make sure the static directory is set correctly with --static_root";
+    }
+
+    catena::common::ConnectionProps connectionProps(
+        "/connect/connection-props.xml",  // Endpoint
+        xml,                              // Content
+        DEFAULT_CONNECTION_PROPS_PORT     // Port
+    );
+
+    if (!connectionProps.start()) {
+        LOG(WARNING) << "Failed to start connection props server on port " << DEFAULT_CONNECTION_PROPS_PORT;
+    }
+
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
+
+    connectionProps.stop();
     
     return 0;
 }

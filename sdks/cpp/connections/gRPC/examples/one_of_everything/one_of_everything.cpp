@@ -50,7 +50,7 @@
 // connections/gRPC
 #include <ServiceImpl.h>
 #include <ServiceCredentials.h>
-
+#include <ConnectionProps.h>
 
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
@@ -69,6 +69,8 @@
 #include <chrono>
 #include <signal.h>
 #include <functional>
+#include <fstream>
+#include <sstream>
 #include <Logger.h>
 
 using grpc::Server;
@@ -342,6 +344,25 @@ void RunRPCServer(std::string addr)
     }
 }
 
+/**
+ * @brief Load connection properties XML from file and substitute dynamic values
+ * @param filepath Path to the XML file
+ * @return XML content as string
+ */
+std::string loadConnectionPropsXml(const std::string& filepath) {
+    std::ifstream file(filepath);
+    if (!file.is_open()) {
+        LOG(ERROR) << "Failed to open connection properties file: " << filepath;
+        return "";
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string xml = buffer.str();
+
+    return xml;
+}
+
 int main(int argc, char* argv[])
 {
     std::string addr;
@@ -356,8 +377,31 @@ int main(int argc, char* argv[])
     // commands should be defined before starting the RPC server 
     defineCommands();
 
+    // Load connection properties XML from static file
+    std::string static_root = absl::GetFlag(FLAGS_static_root);
+    std::string xml_path = static_root + "/connection-props.xml";
+    std::string xml = loadConnectionPropsXml(xml_path);
+    
+    if (xml.empty()) {
+        LOG(ERROR) << "Failed to load connection properties from: " << xml_path;
+        LOG(ERROR) << "Make sure the static directory is set correctly with --static_root";
+    }
+
+    catena::common::ConnectionProps connectionProps(
+        "/connect/connection-props.xml",  // Endpoint
+        xml,                              // Content
+        DEFAULT_CONNECTION_PROPS_PORT     // Port
+    );
+
+    if (!connectionProps.start()) {
+        LOG(WARNING) << "Failed to start connection props server on port " << DEFAULT_CONNECTION_PROPS_PORT;
+    }
+    
+
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
+
+    connectionProps.stop();
     
     return 0;
 }
