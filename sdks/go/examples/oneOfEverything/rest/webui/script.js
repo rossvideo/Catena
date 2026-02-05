@@ -1,5 +1,3 @@
-let currentSlot = 0;
-
 // Extract value from protobuf JSON format (e.g., {int32_value: 5} -> 5)
 function extractValue(protoVal) {
     if (!protoVal) return null;
@@ -14,8 +12,6 @@ function extractValue(protoVal) {
 // Device Section
 // =====================================================================
 async function selectSlot(slot) {
-    currentSlot = slot;
-    
     // Update active button
     document.querySelectorAll('.slot-btn').forEach(btn => {
         btn.classList.toggle('active', parseInt(btn.dataset.slot) === slot);
