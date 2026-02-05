@@ -60,33 +60,6 @@ using grpc::ServerCompletionQueue;
 #include <vector>
 #include <mutex>
 
-namespace {
-static inline bool valid_start_time(grpc::string_ref s) {
-    // Empty or larger than 308 chars cannot be converted to a double
-    if (s.empty() || s.length() > 308) return false;
-    const unsigned char* ps = reinterpret_cast<const unsigned char*>(s.data());
-    const std::size_t n = s.size();
-    bool hasPeriod = false;
-
-    for(std::size_t i = 0; i < n; ++i) {
-        unsigned char cs = ps[i];
-
-        if (!isdigit(cs)) {
-            if (cs == '.' && i == 0) {
-                return false; // Reject leading period
-            }
-            else if (cs == '.' && !hasPeriod) {
-                hasPeriod = true; // Decimal point found
-            } else {
-                return false; // cs is 2nd period or invalid character
-            }
-        }
-    }
-    // No invalid characters found, if hasPeriod then format is valid.
-    return hasPeriod;
-}
-}
-
 namespace catena {
 namespace gRPC {
  
@@ -108,11 +81,11 @@ class CallData : public ICallData {
     /**
      * @brief Getter for requestStart_ 
      */
-    double getRequestStart_() { return requestStart_; }
+    long getRequestStart() { return requestStart_; }
     /**
      * @brief Getter for requestReceived_ 
      */
-    double getRequestReceieved_() { return requestReceived_; }
+    long getRequestReceived() { return requestReceived_; }
 
   protected:
     /**

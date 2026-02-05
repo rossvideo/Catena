@@ -94,9 +94,9 @@ class gRPCLanguagePackRequestTests : public GRPCTest {
     /**
      * Makes an async RPC and returns the requestStart value read by the handler.
      */
-    double getRPCRequestStart(std::string expectedRequestStart) {
+    long getRPCRequestStart(std::string expectedRequestStart) {
         done_ = false;
-        double requestStart = -1.0;
+        long requestStart = -1;
         const int maxWaitMs = 5000;
         const auto startTime = std::chrono::steady_clock::now();
 
@@ -120,9 +120,9 @@ class gRPCLanguagePackRequestTests : public GRPCTest {
 
             auto* handler = dynamic_cast<LanguagePackRequest*>(testCall_.get());
             if (handler != nullptr) {
-                if (handler->getRequestReceieved_() != DEFAULT_REQUEST_RECEIVED) { // Check if processTimestamps_ has been called
+                if (handler->getRequestReceived() != DEFAULT_REQUEST_RECEIVED) { // Check if processTimestamps_ has been called
                     std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Give processTimestamps_ time to finish
-                    requestStart = handler->getRequestStart_();
+                    requestStart = handler->getRequestStart();
                     break;
                 }
             }
@@ -132,7 +132,7 @@ class gRPCLanguagePackRequestTests : public GRPCTest {
         // Clear the response for the next call
         outVal_.Clear();
         
-        // Will return -1.0 if timed-out, 0.0 if invalid header value, or the parsed value
+        // Will return -1 if timed-out, 0 if invalid header value, or the parsed value
         return requestStart;
     }
 
