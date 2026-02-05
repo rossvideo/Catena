@@ -212,11 +212,9 @@ func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map) {
 		hash := sha256.Sum256(data)
 
 		// Store as DataPayload directly
-		payload := catena.DataPayload{
-			Payload:  data,
-			Metadata: metadata,
-			Digest:   hash[:],
-		}
+		payload := catena.FromBytes(data)
+		payload.Metadata = metadata
+		payload.Digest = hash[:]
 
 		assets.Store(assetID, payload)
 		logger.Info("Loaded asset", "id", assetID, "size", len(data), "type", contentType)
