@@ -33,10 +33,28 @@ boost::asio::awaitable<void> read_with_timeout(tcp::socket& socket, std::string&
     boost::asio::steady_timer timer(socket.get_executor());
     timer.expires_after(std::chrono::milliseconds(600));
 
+    // Async_read and timer run simultaneously, the other cancels when one finishes
     auto result = co_await (boost::asio::async_read(socket, boost::asio::buffer(&buf[start], bytes), boost::asio::use_awaitable) ||
         timer.async_wait(boost::asio::use_awaitable)
     );
 
+    // index of 0 = read finished first
+    if (result.index() != 0) {
+        throw catena::exception_with_status("Timed out", catena::StatusCode::DEADLINE_EXCEEDED);
+    }
+}
+
+boost::asio::awaitable<void> read_until_with_timeout(tcp::socket& socket, boost::asio::streambuf& buf, std::string_view delim) {
+    using namespace boost::asio::experimental::awaitable_operators;
+    boost::asio::steady_timer timer(socket.get_executor());
+    timer.expires_after(std::chrono::milliseconds(600));
+
+    // Async_read and timer run simultaneously, the other cancels when one finishes
+    auto result = co_await (boost::asio::async_read_until(socket, buf, delim, boost::asio::use_awaitable) ||
+        timer.async_wait(boost::asio::use_awaitable)
+    );
+
+    // index of 0 = read finished first
     if (result.index() != 0) {
         throw catena::exception_with_status("Timed out", catena::StatusCode::DEADLINE_EXCEEDED);
     }
@@ -95,7 +113,16 @@ void SocketReader::read(tcp::socket& socket) {
 
     // Reading from the socket.
     boost::asio::streambuf buffer;
-    boost::asio::read_until(socket, buffer, "\r\n\r\n");
+    auto reader = read_until_with_timeout(socket, buffer, "\r\n\r\n");
+    auto result = boost::asio::co_spawn(socket.get_executor(), std::move(reader), boost::asio::use_future);
+
+    try {
+        result.get();
+    } catch(const catena::exception_with_status& e) {
+        throw catena::exception_with_status("Timed out", catena::StatusCode::DEADLINE_EXCEEDED);
+    } catch(...) {
+        throw catena::exception_with_status("Read error", catena::StatusCode::UNKNOWN);
+    }
     std::istream header_stream(&buffer);
 
     // Getting the first line from the stream (URL), splitting, and parsing.
