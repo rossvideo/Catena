@@ -29,7 +29,7 @@ import protobuf from 'protobufjs';
 
 /** @typedef {import('../DeviceModel.js').DeviceModel} DeviceModel */
 
-const MAGIC_STRING = "CTNA";
+const FILE_SIGNATURE = "CTNA";
 
 /**
  * Serialize the device model to a binary format
@@ -59,7 +59,7 @@ export async function serialize(deviceModel, options, metadata) {
     });
     const metadataLen = Buffer.byteLength(metadataStr, "utf-8");
     const header = Buffer.alloc(8);
-    header.write(MAGIC_STRING, 0, 4, "utf-8"); // magic
+    header.write(FILE_SIGNATURE, 0, 4, "utf-8"); // magic
     header.writeUInt32LE(metadataLen, 4); // metadata length
     const outputBuffer = Buffer.concat([header, Buffer.from(metadataStr, "utf-8"), Buffer.from(deviceBin)]);
     await fs.mkdir(options.output, { recursive: true });
@@ -82,9 +82,9 @@ export async function deserialize(options) {
     // returns a Buffer
     const fileBuffer = await fs.readFile(options.input);
     // verify magic number
-    const magic = fileBuffer.subarray(0, 4).toString("utf-8");
-    if (magic !== MAGIC_STRING) {
-        throw new Error(`Not a serialized Catena device, got '${magic}'`);
+    const signature = fileBuffer.subarray(0, 4).toString("utf-8");
+    if (signature !== FILE_SIGNATURE) {
+        throw new Error(`Not a serialized Catena device, got '${signature}'`);
     }
     const metadataLen = fileBuffer.readUInt32LE(4);
     const metadataStr = fileBuffer.subarray(8, 8 + metadataLen).toString("utf-8");
