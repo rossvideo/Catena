@@ -165,8 +165,13 @@ jobs:
 
       - name: Run unit tests with coverage
         run: |
+          # Create a non-root user for testing
+          useradd -m -s /bin/bash testuser || true
+          chown -R testuser:testuser ${GITHUB_WORKSPACE}
+          
+          # Run tests as non-root user
           cd ${GITHUB_WORKSPACE}/sdks/go
-          go test ./pkg/... ./internal/... -v -coverprofile=coverage.out -covermode=count
+          su testuser -c "go test ./pkg/... ./internal/... -v -coverpkg=./pkg/...,./internal -coverprofile=coverage.out -covermode=count"
 
       - name: Generate coverage report
         run: |
