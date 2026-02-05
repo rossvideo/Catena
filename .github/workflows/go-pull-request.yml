@@ -121,7 +121,7 @@ jobs:
           retention-days: 1
 
   Go-Unit-Tests:
-    name: Run Go Unit Tests and Coverage (5-10 minutes)
+    name: Run Go Unit Tests and Coverage (2-5 minutes)
     timeout-minutes: 10
     runs-on: ubuntu-24.04
     container:
