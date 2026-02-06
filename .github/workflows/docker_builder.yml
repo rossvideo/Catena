@@ -48,8 +48,10 @@ jobs:
 
           if [[ "$ON_MAIN" == "true" ]]; then
             CPP_CHANGED=true
-            GO_CHANGED=true
+            
           fi
+          # For now, we want to build the Go toolchain on every push cuz the matrix cant be empty.
+          GO_CHANGED=true
 
           output='['
           if [[ "$CPP_CHANGED" == "true" ]]; then
