@@ -9,7 +9,8 @@ jobs:
   check-if-toolchain-changed:
     runs-on: ubuntu-latest
     outputs:
-      matrix_to_build: ${{ steps.matrix.outputs.matrix }}
+      matrix_to_build: ${{ steps.matrix.outputs.build }}
+      matrix_to_merge: ${{ steps.matrix.outputs.merge }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -47,7 +48,19 @@ jobs:
             output+='{"toolchain": "go", "platform": "linux/amd64", "runner": "ubuntu-latest"}'
           fi
           output+=']'
-          echo "matrix=$output" >> $GITHUB_OUTPUT
+          echo "build=$output" >> $GITHUB_OUTPUT
+          output='['
+          if [[ "${{ steps.cpp.outputs.toolchain }}" == "true" ]]; then
+            output+='{"toolchain": "cpp"},'
+            if [[ "${{ steps.go.outputs.toolchain }}" == "true" ]]; then
+              output+=','
+            fi
+          fi
+          if [[ "${{ steps.go.outputs.toolchain }}" == "true" ]]; then
+            output+='{"toolchain": "go"}'
+          fi
+          output+=']'
+          echo "merge=$output" >> $GITHUB_OUTPUT
   
   build-and-push-toolchain:
     needs:
