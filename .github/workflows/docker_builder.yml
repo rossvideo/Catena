@@ -153,7 +153,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJson(needs.check-if-toolchain-changed.outputs.matrix_to_build) }}
+        include: ${{ fromJson(needs.check-if-toolchain-changed.outputs.matrix_to_merge) }}
     env:
       IMAGE_NAME: catena-${{ matrix.toolchain }}-toolchain
     permissions:
