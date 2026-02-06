@@ -68,10 +68,6 @@ jobs:
       id-token: write
       #
     steps:
-      - name: Skip if disabled
-        if: matrix.enabled != 'true'
-        run: exit 0
-
       - name: Prepare
         run: |
           platform=${{ matrix.platform }}
@@ -158,10 +154,6 @@ jobs:
       id-token: write
       #
     steps:
-      - name: Skip if disabled
-        if: matrix.enabled != 'true'
-        run: exit 0
-
       - name: Prepare
         run: |
           echo "REGISTRY_IMAGE=${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
