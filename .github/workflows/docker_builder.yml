@@ -36,31 +36,47 @@ jobs:
       - name: create matrix
         id: matrix
         run: |
+          set -e
+
+          ON_MAIN=false
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            ON_MAIN=true
+          fi
+
+          CPP_CHANGED="${{ steps.cpp.outputs.toolchain }}"
+          GO_CHANGED="${{ steps.go.outputs.toolchain }}"
+
+          if [[ "$ON_MAIN" == "true" ]]; then
+            CPP_CHANGED=true
+            GO_CHANGED=true
+          fi
+
           output='['
-          if [[ "${{ steps.cpp.outputs.toolchain }}" == "true" ]]; then
-            output+='{"toolchain": "cpp", "platform": "linux/amd64", "runner": "ubuntu-latest"},'
-            output+='{"toolchain": "cpp", "platform": "linux/arm64", "runner": "ubuntu-24.04-arm"}'
-            if [[ "${{ steps.go.outputs.toolchain }}" == "true" ]]; then
+          if [[ "$CPP_CHANGED" == "true" ]]; then
+            output+='{"toolchain":"cpp","platform":"linux/amd64","runner":"ubuntu-latest"},'
+            output+='{"toolchain":"cpp","platform":"linux/arm64","runner":"ubuntu-24.04-arm"}'
+            if [[ "$GO_CHANGED" == "true" ]]; then
               output+=','
             fi
           fi
-          if [[ "${{ steps.go.outputs.toolchain }}" == "true" ]]; then
-            output+='{"toolchain": "go", "platform": "linux/amd64", "runner": "ubuntu-latest"}'
+          if [[ "$GO_CHANGED" == "true" ]]; then
+            output+='{"toolchain":"go","platform":"linux/amd64","runner":"ubuntu-latest"}'
           fi
           output+=']'
-          echo "build=$output" >> $GITHUB_OUTPUT
+          echo "build=$output" >> "$GITHUB_OUTPUT"
+
           output='['
-          if [[ "${{ steps.cpp.outputs.toolchain }}" == "true" ]]; then
-            output+='{"toolchain": "cpp"}'
-            if [[ "${{ steps.go.outputs.toolchain }}" == "true" ]]; then
+          if [[ "$CPP_CHANGED" == "true" ]]; then
+            output+='{"toolchain":"cpp"}'
+            if [[ "$GO_CHANGED" == "true" ]]; then
               output+=','
             fi
           fi
-          if [[ "${{ steps.go.outputs.toolchain }}" == "true" ]]; then
-            output+='{"toolchain": "go"}'
+          if [[ "$GO_CHANGED" == "true" ]]; then
+            output+='{"toolchain":"go"}'
           fi
           output+=']'
-          echo "merge=$output" >> $GITHUB_OUTPUT
+          echo "merge=$output" >> "$GITHUB_OUTPUT"
   
   build-and-push-toolchain:
     needs:
