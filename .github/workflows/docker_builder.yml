@@ -140,11 +140,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-        - toolchain: go
-          enabled: ${{ needs.check-if-toolchain-changed.outputs.go_changed }}
-        - toolchain: cpp
-          enabled: ${{ needs.check-if-toolchain-changed.outputs.cpp_changed }}
+        include: ${{ fromJson(needs.check-if-toolchain-changed.outputs.matrix_to_build) }}
     env:
       IMAGE_NAME: catena-${{ matrix.toolchain }}-toolchain
     permissions:
