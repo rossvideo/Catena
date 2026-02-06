@@ -59,9 +59,7 @@ jobs:
               output+=','
             fi
           fi
-          if [[ "$GO_CHANGED" == "true" ]]; then
-            output+='{"toolchain":"go","platform":"linux/amd64","runner":"ubuntu-latest"}'
-          fi
+          output+='{"toolchain":"go","platform":"linux/amd64","runner":"ubuntu-latest"}'
           output+=']'
           echo "build=$output" >> "$GITHUB_OUTPUT"
 
