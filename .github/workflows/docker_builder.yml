@@ -51,7 +51,7 @@ jobs:
           echo "build=$output" >> $GITHUB_OUTPUT
           output='['
           if [[ "${{ steps.cpp.outputs.toolchain }}" == "true" ]]; then
-            output+='{"toolchain": "cpp"},'
+            output+='{"toolchain": "cpp"}'
             if [[ "${{ steps.go.outputs.toolchain }}" == "true" ]]; then
               output+=','
             fi
