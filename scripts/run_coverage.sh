@@ -34,6 +34,7 @@ javascript () {
   if [ "$clean" = true ]; then
     npm run clean
   fi
+  npm install
   npm test
 }
 
