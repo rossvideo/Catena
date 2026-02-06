@@ -9,8 +9,7 @@ jobs:
   check-if-toolchain-changed:
     runs-on: ubuntu-latest
     outputs:
-      cpp_changed: ${{ steps.cpp.outputs.toolchain }}
-      go_changed:  ${{ steps.go.outputs.toolchain }}
+      matrix_to_build: ${{ steps.matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,6 +32,22 @@ jobs:
             toolchain:
               - '.devcontainer/go/toolchain.dockerfile'
               - '.devcontainer/go/toolchain.env'
+      - name: create matrix
+        id: matrix
+        run: |
+          output='['
+          if [[ "${{ steps.cpp.outputs.toolchain }}" == "true" ]]; then
+            output+='{"toolchain": "cpp", "platform": "linux/amd64", "runner": "ubuntu-latest"},'
+            output+='{"toolchain": "cpp", "platform": "linux/arm64", "runner": "ubuntu-24.04-arm"}'
+            if [[ "${{ steps.go.outputs.toolchain }}" == "true" ]]; then
+              output+=','
+            fi
+          fi
+          if [[ "${{ steps.go.outputs.toolchain }}" == "true" ]]; then
+            output+='{"toolchain": "go", "platform": "linux/amd64", "runner": "ubuntu-latest"}'
+          fi
+          output+=']'
+          echo "matrix=$output" >> $GITHUB_OUTPUT
   
   build-and-push-toolchain:
     needs:
@@ -40,21 +55,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-        - platform: linux/amd64
-          runner: ubuntu-latest
-          toolchain: cpp
-          enabled: ${{ needs.check-if-toolchain-changed.outputs.cpp_changed }}
-
-        - platform: linux/amd64
-          runner: ubuntu-latest
-          toolchain: go
-          enabled: ${{ needs.check-if-toolchain-changed.outputs.go_changed }}
-
-        - platform: linux/arm64
-          runner: ubuntu-24.04-arm
-          toolchain: cpp
-          enabled: ${{ needs.check-if-toolchain-changed.outputs.cpp_changed }}
+        include: ${{ fromJson(needs.check-if-toolchain-changed.outputs.matrix_to_build) }}
 
     runs-on: ${{ matrix.runner }}
     env:
@@ -150,6 +151,12 @@ jobs:
           enabled: ${{ needs.check-if-toolchain-changed.outputs.cpp_changed }}
     env:
       IMAGE_NAME: catena-${{ matrix.toolchain }}-toolchain
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+      #
     steps:
       - name: Skip if disabled
         if: matrix.enabled != 'true'
@@ -213,10 +220,6 @@ jobs:
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
-
-      - name: Inspect image
-        run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
           
   trigger-build-examples:
     runs-on: ubuntu-latest
