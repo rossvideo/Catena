@@ -202,7 +202,7 @@ jobs:
       - name: Resolve image version
         id: version
         run: |
-          if [[ "${GITHUB_REF_NAME}" == "develop" ]]; then
+          if [[ "${{ github.ref_name }}" == "develop" ]]; then
             VERSION="latest"
           else
             VERSION_FILE="sdks/${{ matrix.toolchain }}/VERSION.txt"
