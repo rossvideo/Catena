@@ -36,6 +36,7 @@ jobs:
         run: |
           platform=${{ matrix.platform }}
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+          echo "REGISTRY_IMAGE=${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -52,15 +53,15 @@ jobs:
       # This step uses [docker/metadata-action](https://github.com/docker/metadata-action#about) to extract tags and labels that will be applied to the specified image. The `id` "meta" allows the output of this step to be referenced in a subsequent step. The `images` value provides the base name for the tags and labels.
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY_IMAGE }}
 
       - name: Print stuff
         run: |
           echo "IMAGE_NAME: ${{ env.IMAGE_NAME }}"
           echo "REGISTRY: ${{ env.REGISTRY }}"
-          echo "tags: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}:latest"
+          echo "tags: ${{ env.REGISTRY_IMAGE }}:latest"
           echo "labels: ${{ steps.meta.outputs.labels }}"
 
       - name: Paths Changes Filter
@@ -86,7 +87,7 @@ jobs:
           platforms: ${{ matrix.platform }}
           context: .
           file: .devcontainer/${{ matrix.toolchain }}/toolchain.dockerfile
-          tags: "${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}:latest"
+          tags: "${{ env.REGISTRY_IMAGE }}"
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
       
@@ -116,6 +117,9 @@ jobs:
     env:
       IMAGE_NAME: catena-${{ matrix.toolchain }}-toolchain
     steps:
+      - name: Prepare
+        run: |
+          echo "REGISTRY_IMAGE=${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
       - name: Download digests
         uses: actions/download-artifact@v4
         with:
@@ -137,7 +141,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY_IMAGE }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -148,8 +152,8 @@ jobs:
         working-directory: ${{ runner.temp }}/digests
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.IMAGE_NAME }}@sha256:%s ' *)
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
 
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
