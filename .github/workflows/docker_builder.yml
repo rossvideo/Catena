@@ -48,8 +48,10 @@ jobs:
 
           if [[ "$ON_MAIN" == "true" ]]; then
             CPP_CHANGED=true
-            GO_CHANGED=true
+            
           fi
+          # For now, we want to build the Go toolchain on every push cuz the matrix cant be empty.
+          GO_CHANGED=true
 
           output='['
           if [[ "$CPP_CHANGED" == "true" ]]; then
@@ -59,7 +61,9 @@ jobs:
               output+=','
             fi
           fi
-          output+='{"toolchain":"go","platform":"linux/amd64","runner":"ubuntu-latest"}'
+          if [[ "$GO_CHANGED" == "true" ]]; then
+            output+='{"toolchain":"go","platform":"linux/amd64","runner":"ubuntu-latest"}'
+          fi
           output+=']'
           echo "build=$output" >> "$GITHUB_OUTPUT"
 
@@ -70,7 +74,9 @@ jobs:
               output+=','
             fi
           fi
-          output+='{"toolchain":"go"}'
+          if [[ "$GO_CHANGED" == "true" ]]; then
+            output+='{"toolchain":"go"}'
+          fi
           output+=']'
           echo "merge=$output" >> "$GITHUB_OUTPUT"
   
