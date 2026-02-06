@@ -97,48 +97,27 @@ class gRPCSetValueTests : public GRPCTest {
     }
 
     /**
-     * Makes an async RPC and returns the requestStart value read by the handler.
+     * Makes an async RPC and checks the requestStart/requestReceived values read by the handler.
      */
-    long getRPCRequestStart(std::string expectedRequestStart) {
-        done_ = false;
-        long requestStart = -1;
-        const int maxWaitMs = 5000;
-        const auto startTime = std::chrono::steady_clock::now();
-
+    void testRPCTimestamps(std::string input, long expected) {
         // Create a new client context for this call to avoid metadata from previous calls
         grpc::ClientContext context;
-        context.AddMetadata("request-start", expectedRequestStart);
-        
+        context.AddMetadata("request-start", input);
+
         // Sending async RPC
         client_->async()->SetValue(&context, &inVal_, &outVal_, [this](grpc::Status status){
             outRc_ = status;
             done_ = true;
             cv_.notify_one();
         });
-        
-        // Loop for checking handler
-        while (true) {
-            auto elapsed = std::chrono::steady_clock::now() - startTime;
-            if (std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count() > maxWaitMs) {
-                break; // Timeout waiting for RPC
-            }
-
-            auto* handler = dynamic_cast<SetValue*>(testCall_.get());
-            if (handler != nullptr) {
-                if (handler->getRequestReceived() != DEFAULT_REQUEST_RECEIVED) { // Check if processTimestamps_ has been called
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Give processTimestamps_ time to finish
-                    requestStart = handler->getRequestStart();
-                    break;
-                }
-            }
-        }
         cv_.wait(lock_, [this] { return done_; });
-        
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
         // Clear the response for the next call
         outVal_.Clear();
-        
-        // Will return -1 if timed-out, 0 if invalid header value, or the parsed value
-        return requestStart;
+
+        EXPECT_EQ(requestStart_, expected);
+        EXPECT_TRUE(requestReceived_ > DEFAULT_REQUEST_RECEIVED);
     }
 
     // in/out val
@@ -252,10 +231,10 @@ TEST_F(gRPCSetValueTests, SetValue_SlotOutOfRange) {
  * TEST 6 - Test request-start header read correctly
  */
 TEST_F(gRPCSetValueTests, SetValue_RequestStart) {
-    EXPECT_EQ(getRPCRequestStart("12345123"), 12345123);
-    EXPECT_EQ(getRPCRequestStart("10"), 10);
-    EXPECT_EQ(getRPCRequestStart("12345678912345"), 12345678912345);
-    EXPECT_EQ(getRPCRequestStart("00012345678912345"), 12345678912345);
+    testRPCTimestamps("12345123", 12345123);
+    testRPCTimestamps("10", 10);
+    testRPCTimestamps("12345678912345", 12345678912345);
+    testRPCTimestamps("00012345678912345", 12345678912345);
 }
 
 /*
@@ -263,15 +242,15 @@ TEST_F(gRPCSetValueTests, SetValue_RequestStart) {
  */
 TEST_F(gRPCSetValueTests, SetValue_InvalidRequestStart) {
     // Test with non-number in value
-    EXPECT_EQ(getRPCRequestStart("123@123"), DEFAULT_REQUEST_START);
+    testRPCTimestamps("123@123", DEFAULT_REQUEST_START);
     // Test with period
-    EXPECT_EQ(getRPCRequestStart("123.123"), DEFAULT_REQUEST_START);
+    testRPCTimestamps("123.123", DEFAULT_REQUEST_START);
     // Test with negative value
-    EXPECT_EQ(getRPCRequestStart("-123123"), DEFAULT_REQUEST_START);
+    testRPCTimestamps("-123123", DEFAULT_REQUEST_START);
     // Test with leading period
-    EXPECT_EQ(getRPCRequestStart(".123123"), DEFAULT_REQUEST_START);
+    testRPCTimestamps(".123123", DEFAULT_REQUEST_START);
     // Test with empty value
-    EXPECT_EQ(getRPCRequestStart(""), DEFAULT_REQUEST_START);
+    testRPCTimestamps("", DEFAULT_REQUEST_START);
     // Test with too large of a value
-    EXPECT_EQ(getRPCRequestStart(std::string(20, '1')), DEFAULT_REQUEST_START);
+    testRPCTimestamps(std::string(20, '1'), DEFAULT_REQUEST_START);
 }

@@ -168,49 +168,28 @@ class gRPCUpdateSubscriptionsTests : public GRPCTest {
             EXPECT_TRUE(asyncCall_) << "Async handler was not created during runtime";
         }
 
-    /**
-     * Makes an async RPC and returns the requestStart value read by the handler.
-     */
-    long getRPCRequestStart(std::string expectedRequestStart) {
-        done_ = false;
-        long requestStart = -1;
-        const int maxWaitMs = 5000;
-        const auto startTime = std::chrono::steady_clock::now();
+        /**
+         * Makes an async RPC and checks the requestStart/requestReceived values read by the handler.
+         */
+        void testRPCTimestamps(std::string input, long expected) {
+            // Create a new client context for this call to avoid metadata from previous calls
+            grpc::ClientContext context;
+            context.AddMetadata("request-start", input);
 
-        // Create a new client context for this call to avoid metadata from previous calls
-        grpc::ClientContext context;
-        context.AddMetadata("request-start", expectedRequestStart);
-        
-        // Sending async RPC
-        StreamReader streamReader(&outVals_, &outRc_);
-        streamReader.MakeCall(&context, &inVal_, [this](auto ctx, auto payload, auto reactor) {
-            client_->async()->UpdateSubscriptions(ctx, payload, reactor);
-        });
-        
-        // Loop for checking handler
-        while (true) {
-            auto elapsed = std::chrono::steady_clock::now() - startTime;
-            if (std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count() > maxWaitMs) {
-                break; // Timeout waiting for RPC
-            }
+            // Sending async RPC
+            StreamReader streamReader(&outVals_, &outRc_);
+            streamReader.MakeCall(&context, &inVal_, [this](auto ctx, auto payload, auto reactor) {
+                client_->async()->UpdateSubscriptions(ctx, payload, reactor);
+            });
+            streamReader.Await();
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-            auto* handler = dynamic_cast<UpdateSubscriptions*>(testCall_.get());
-            if (handler != nullptr) {
-                if (handler->getRequestReceived() != DEFAULT_REQUEST_RECEIVED) { // Check if processTimestamps_ has been called
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Give processTimestamps_ time to finish
-                    requestStart = handler->getRequestStart();
-                    break;
-                }
-            }
+            // Clear the response for the next call
+            outVals_.erase(outVals_.begin(), outVals_.end());
+
+            EXPECT_EQ(requestStart_, expected);
+            EXPECT_TRUE(requestReceived_ > DEFAULT_REQUEST_RECEIVED);
         }
-        streamReader.Await();
-        
-        // Clear the response for the next call
-        outVals_.erase(outVals_.begin(), outVals_.end());
-        
-        // Will return -1 if timed-out, 0 if invalid header value, or the parsed value
-        return requestStart;
-    }
 
         // Input/Output values
         st2138::UpdateSubscriptionsPayload inVal_;
@@ -543,10 +522,10 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_SlotOutOfRange) {
  * TEST 4 - Test request-start header read correctly
  */
 TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_RequestStart) {
-    EXPECT_EQ(getRPCRequestStart("12345123"), 12345123);
-    EXPECT_EQ(getRPCRequestStart("10"), 10);
-    EXPECT_EQ(getRPCRequestStart("12345678912345"), 12345678912345);
-    EXPECT_EQ(getRPCRequestStart("00012345678912345"), 12345678912345);
+    testRPCTimestamps("12345123", 12345123);
+    testRPCTimestamps("10", 10);
+    testRPCTimestamps("12345678912345", 12345678912345);
+    testRPCTimestamps("00012345678912345", 12345678912345);
 }
 
 /*
@@ -554,15 +533,15 @@ TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_RequestStart) {
  */
 TEST_F(gRPCUpdateSubscriptionsTests, UpdateSubscriptions_InvalidRequestStart) {
     // Test with non-number in value
-    EXPECT_EQ(getRPCRequestStart("123@123"), DEFAULT_REQUEST_START);
+    testRPCTimestamps("123@123", DEFAULT_REQUEST_START);
     // Test with period
-    EXPECT_EQ(getRPCRequestStart("123.123"), DEFAULT_REQUEST_START);
+    testRPCTimestamps("123.123", DEFAULT_REQUEST_START);
     // Test with negative value
-    EXPECT_EQ(getRPCRequestStart("-123123"), DEFAULT_REQUEST_START);
+    testRPCTimestamps("-123123", DEFAULT_REQUEST_START);
     // Test with leading period
-    EXPECT_EQ(getRPCRequestStart(".123123"), DEFAULT_REQUEST_START);
+    testRPCTimestamps(".123123", DEFAULT_REQUEST_START);
     // Test with empty value
-    EXPECT_EQ(getRPCRequestStart(""), DEFAULT_REQUEST_START);
+    testRPCTimestamps("", DEFAULT_REQUEST_START);
     // Test with too large of a value
-    EXPECT_EQ(getRPCRequestStart(std::string(20, '1')), DEFAULT_REQUEST_START);
+    testRPCTimestamps(std::string(20, '1'), DEFAULT_REQUEST_START);
 }
