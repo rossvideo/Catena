@@ -1,23 +1,62 @@
-#
 name: Create and publish a Docker images
-
-# Configures this workflow to run every time a change is pushed to the branch called `release`.
 on:
   push:
-    # branches: ['develop', 'main'] don't build on main for now
-    branches: ['develop']
-
-# Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
+    branches: ['develop', 'main']
 env:
-  REGISTRY: ghcr.io  
+  REGISTRY: ghcr.io 
 
-# There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
-jobs:
-  build-and-push-toolchain:
+jobs: 
+  check-if-toolchain-changed:
     runs-on: ubuntu-latest
+    outputs:
+      cpp_changed: ${{ steps.cpp.outputs.toolchain }}
+      go_changed:  ${{ steps.go.outputs.toolchain }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Check cpp toolchain
+        id: cpp
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            toolchain:
+              - '.devcontainer/cpp/toolchain.dockerfile'
+              - '.devcontainer/cpp/toolchain.env'
+
+      - name: Check go toolchain
+        id: go
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            toolchain:
+              - '.devcontainer/go/toolchain.dockerfile'
+              - '.devcontainer/go/toolchain.env'
+  
+  build-and-push-toolchain:
+    needs:
+      - check-if-toolchain-changed
     strategy:
+      fail-fast: false
       matrix:
-        toolchain: [cpp, go]
+        include:
+        - platform: linux/amd64
+          runner: ubuntu-latest
+          toolchain: cpp
+          enabled: ${{ needs.check-if-toolchain-changed.outputs.cpp_changed }}
+
+        - platform: linux/amd64
+          runner: ubuntu-latest
+          toolchain: go
+          enabled: ${{ needs.check-if-toolchain-changed.outputs.go_changed }}
+
+        - platform: linux/arm64
+          runner: ubuntu-24.04-arm
+          toolchain: cpp
+          enabled: ${{ needs.check-if-toolchain-changed.outputs.cpp_changed }}
+
+    runs-on: ${{ matrix.runner }}
     env:
       IMAGE_NAME: catena-${{ matrix.toolchain }}-toolchain
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
@@ -28,13 +67,23 @@ jobs:
       id-token: write
       #
     steps:
+      - name: Skip if disabled
+        if: matrix.enabled != 'true'
+        run: exit 0
+
+      - name: Prepare
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+          echo "REGISTRY_IMAGE=${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
       # Uses the `docker/login-action` action to log in to the Container registry registry using the account and password that will publish the packages. Once published, the packages are scoped to the account defined here.
       - name: Log in to the Container registry
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -43,46 +92,132 @@ jobs:
       # This step uses [docker/metadata-action](https://github.com/docker/metadata-action#about) to extract tags and labels that will be applied to the specified image. The `id` "meta" allows the output of this step to be referenced in a subsequent step. The `images` value provides the base name for the tags and labels.
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY_IMAGE }}
+          labels: |
+            org.opencontainers.image.version=latest
 
       - name: Print stuff
         run: |
           echo "IMAGE_NAME: ${{ env.IMAGE_NAME }}"
           echo "REGISTRY: ${{ env.REGISTRY }}"
-          echo "tags: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}:latest"
+          echo "tags: ${{ env.REGISTRY_IMAGE }}:latest"
           echo "labels: ${{ steps.meta.outputs.labels }}"
 
-      - name: Paths Changes Filter
-        id: changes
-        uses: dorny/paths-filter@v3.0.2
-        with:
-          filters: |
-            toolchain:
-              - '.devcontainer/${{ matrix.toolchain }}/toolchain.dockerfile'
-              - '.devcontainer/${{ matrix.toolchain }}/toolchain.env'
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
       - name: Build and push Docker image
         id: push
-        if: steps.changes.outputs.toolchain == 'true'
-        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+        uses: docker/build-push-action@v6
         with:
+          platforms: ${{ matrix.platform }}
           context: .
           file: .devcontainer/${{ matrix.toolchain }}/toolchain.dockerfile
-          push: true
-          tags: "${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}:latest"
+          tags: "${{ env.REGISTRY_IMAGE }}"
           labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
       
-      # This step generates an artifact attestation for the image, which is an unforgeable statement about where and how it was built. It increases supply chain security for people who consume the image. For more information, see [Using artifact attestations to establish provenance for builds](/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds).
-      - name: Generate artifact attestation
-        if: steps.changes.outputs.toolchain == 'true'
-        uses: actions/attest-build-provenance@v2
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.push.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+      - name: Upload digest as artifact
+        uses: actions/upload-artifact@v4
         with:
-          subject-name: ${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME}}
-          subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
+          name: digests-${{ matrix.toolchain }}-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
 
+  merge-digests:
+    runs-on: ubuntu-latest
+    needs:
+      - build-and-push-toolchain
+      - check-if-toolchain-changed
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - toolchain: go
+          enabled: ${{ needs.check-if-toolchain-changed.outputs.go_changed }}
+        - toolchain: cpp
+          enabled: ${{ needs.check-if-toolchain-changed.outputs.cpp_changed }}
+    env:
+      IMAGE_NAME: catena-${{ matrix.toolchain }}-toolchain
+    steps:
+      - name: Skip if disabled
+        if: matrix.enabled != 'true'
+        run: exit 0
+
+      - name: Prepare
+        run: |
+          echo "REGISTRY_IMAGE=${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-${{ matrix.toolchain }}-*
+          merge-multiple: true
+      
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Resolve image version
+        id: version
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == "develop" ]]; then
+            VERSION="latest"
+          else
+            VERSION_FILE="sdks/${{ matrix.toolchain }}/VERSION.txt"
+            if [[ -f "$VERSION_FILE" ]]; then
+              RAW="$(cat "$VERSION_FILE" | tr -d ' \n')"
+              VERSION="$(sed -n 's/.*\(v[0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p' <<< "$RAW")"
+
+              if [[ -z "$VERSION" ]]; then
+                echo "Version pattern not found, falling back"
+                VERSION="unversioned"
+              fi
+            else
+              VERSION="unversioned"
+            fi
+          fi
+
+          echo "Resolved version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.version }}
+          labels: |
+            org.opencontainers.image.version=${{ steps.version.outputs.version }} 
+
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
+
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
+          
   trigger-build-examples:
     runs-on: ubuntu-latest
     needs: build-and-push-toolchain
