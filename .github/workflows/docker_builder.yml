@@ -70,9 +70,7 @@ jobs:
               output+=','
             fi
           fi
-          if [[ "$GO_CHANGED" == "true" ]]; then
-            output+='{"toolchain":"go"}'
-          fi
+          output+='{"toolchain":"go"}'
           output+=']'
           echo "merge=$output" >> "$GITHUB_OUTPUT"
   
