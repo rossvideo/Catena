@@ -33,7 +33,6 @@
 /**
  * @brief Utility functions.
  * @file utils.h
- * @copyright Copyright © 2024 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
  * @author keon.foster@rossvideo.com
  * @date 2026/02/03
