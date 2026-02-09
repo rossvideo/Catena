@@ -529,9 +529,9 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentLength) {
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
     // Test with incorrect Content-Length
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 1"});    
-    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    EXPECT_THROW(socketReader.read(serverSocket_, 50), catena::exception_with_status);
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 1000"});    
-    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    EXPECT_THROW(socketReader.read(serverSocket_, 50), catena::exception_with_status);
     work.reset();
     runner.join();
 }
@@ -683,7 +683,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_MultipleIncorrectActiveRequests) {
                 boost::asio::write(clients[i], boost::asio::buffer(request));
 
                 SocketReader reader(&thread_service);
-                EXPECT_THROW(reader.read(servers[i]), catena::exception_with_status);
+                EXPECT_THROW(reader.read(servers[i], 50), catena::exception_with_status);
             } catch (...) {
                 exceptions[i] = std::current_exception();
             }
@@ -719,7 +719,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_MissingEndHeaders){
     io_context_.restart();
     auto work = boost::asio::make_work_guard(io_context_);
     std::thread runner([this](){ io_context_.run(); });
-    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    EXPECT_THROW(socketReader.read(serverSocket_, 50), catena::exception_with_status);
     work.reset();
     runner.join();
 }

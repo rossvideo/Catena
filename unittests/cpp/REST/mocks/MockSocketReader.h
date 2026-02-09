@@ -47,7 +47,7 @@ namespace REST {
 // Mock implementation for the ISocketReader class.
 class MockSocketReader : public ISocketReader {
   public:
-    MOCK_METHOD(void, read, (tcp::socket& socket), (override));
+    MOCK_METHOD(void, read, (tcp::socket& socket, int timeout), (override));
     MOCK_METHOD(RESTMethod, method, (), (const, override));
     MOCK_METHOD(const std::string&, endpoint, (), (const, override));
     MOCK_METHOD(uint32_t, slot, (), (const, override));

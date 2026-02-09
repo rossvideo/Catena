@@ -28,11 +28,11 @@ static inline bool iequals_header_name(std::string_view a, std::string_view b) {
     return true;
 }
 
-boost::asio::awaitable<void> read_with_timeout(tcp::socket& socket, std::string& buf, std::size_t start, std::size_t bytes) {
+boost::asio::awaitable<void> read_with_timeout(tcp::socket& socket, std::string& buf, std::size_t start, std::size_t bytes, int timeout) {
     using namespace boost::asio::experimental::awaitable_operators;
     boost::asio::steady_timer timer(socket.get_executor());
-    timer.expires_after(std::chrono::milliseconds(600));
-
+    timer.expires_after(std::chrono::milliseconds(timeout));
+    
     // Async_read and timer run simultaneously, the other cancels when one finishes
     auto result = co_await (boost::asio::async_read(socket, boost::asio::buffer(&buf[start], bytes), boost::asio::use_awaitable) ||
         timer.async_wait(boost::asio::use_awaitable)
@@ -44,10 +44,10 @@ boost::asio::awaitable<void> read_with_timeout(tcp::socket& socket, std::string&
     }
 }
 
-boost::asio::awaitable<void> read_until_with_timeout(tcp::socket& socket, boost::asio::streambuf& buf, std::string_view delim) {
+boost::asio::awaitable<void> read_until_with_timeout(tcp::socket& socket, boost::asio::streambuf& buf, std::string_view delim, int timeout) {
     using namespace boost::asio::experimental::awaitable_operators;
     boost::asio::steady_timer timer(socket.get_executor());
-    timer.expires_after(std::chrono::milliseconds(600));
+    timer.expires_after(std::chrono::milliseconds(timeout));
 
     // Async_read and timer run simultaneously, the other cancels when one finishes
     auto result = co_await (boost::asio::async_read_until(socket, buf, delim, boost::asio::use_awaitable) ||
@@ -90,7 +90,7 @@ static inline bool valid_content_type(std::string_view s, std::string_view conte
 }
 }
 
-void SocketReader::read(tcp::socket& socket) {
+void SocketReader::read(tcp::socket& socket, int timeout) {
     // Resetting variables.
     method_ = catena::REST::Method_NONE;
     slot_ = 0;
@@ -113,7 +113,7 @@ void SocketReader::read(tcp::socket& socket) {
 
     // Reading from the socket.
     boost::asio::streambuf buffer;
-    auto reader = read_until_with_timeout(socket, buffer, "\r\n\r\n");
+    auto reader = read_until_with_timeout(socket, buffer, "\r\n\r\n", timeout);
     auto result = boost::asio::co_spawn(socket.get_executor(), std::move(reader), boost::asio::use_future);
 
     try {
@@ -258,7 +258,7 @@ void SocketReader::read(tcp::socket& socket) {
             std::size_t start = jsonBody_.size();
             jsonBody_.resize(contentLength);
 
-            auto reader = read_with_timeout(socket, jsonBody_, start, leftover);
+            auto reader = read_with_timeout(socket, jsonBody_, start, leftover, timeout);
             auto result = boost::asio::co_spawn(socket.get_executor(), std::move(reader), boost::asio::use_future);
 
             try {
