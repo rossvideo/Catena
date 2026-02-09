@@ -60,8 +60,6 @@
 #include <chrono>
 #include <signal.h>
 #include <functional>
-#include <fstream>
-#include <sstream>
 #include <Logger.h>
 
 
@@ -283,22 +281,22 @@ void startCounter() {
 }
 
 /**
- * @brief Load connection properties XML from file and substitute dynamic values
- * @param filepath Path to the XML file
- * @return XML content as string
+ * @brief Generate connection properties configuration for REST
+ * @param address Address (e.g., "0.0.0.0")
+ * @param port Port number
+ * @param useTls Whether to use HTTPS
+ * @return ConnectionPropsConfig structure
  */
-std::string loadConnectionPropsXml(const std::string& filepath) {
-    std::ifstream file(filepath);
-    if (!file.is_open()) {
-        LOG(ERROR) << "Failed to open connection properties file: " << filepath;
-        return "";
-    }
-
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    std::string xml = buffer.str();
-
-    return xml;
+catena::common::ConnectionPropsConfig generateConnectionPropsConfig(const std::string& address, uint16_t port, bool useTls) {
+    catena::common::ConnectionPropsConfig config;
+    config.protocol = "rest";
+    config.address = address;
+    config.service_port = port;
+    config.node_id = "one_of_everything-a4:bb:6d:6a:6f:a3";
+    config.node_name = "one_of_everything";
+    config.refresh_interval = 30000;
+    config.use_tls = useTls;
+    return config;
 }
 
 void RunRESTServer() {
@@ -342,20 +340,14 @@ int main(int argc, char* argv[])
     // commands should be defined before starting the RPC server
     defineCommands();
 
-    // Load connection properties XML from static file
-    std::string static_root = absl::GetFlag(FLAGS_static_root);
-    std::string xml_path = static_root + "/connection-props.xml";
+    // Generate connection properties configuration
+    // Determine if TLS is being used (typically yes for port 443)
+    bool useTls = (absl::GetFlag(FLAGS_port) == 443);
+    catena::common::ConnectionPropsConfig config = generateConnectionPropsConfig("0.0.0.0", absl::GetFlag(FLAGS_port), useTls);
     
-    std::string xml = loadConnectionPropsXml(xml_path);
-    
-    if (xml.empty()) {
-        LOG(ERROR) << "Failed to load connection properties from: " << xml_path;
-        LOG(ERROR) << "Make sure the static directory is set correctly with --static_root";
-    }
-
     catena::common::ConnectionProps connectionProps(
+        config,                           // Configuration
         "/connect/connection-props.xml",  // Endpoint
-        xml,                              // Content
         DEFAULT_CONNECTION_PROPS_PORT     // Port
     );
 

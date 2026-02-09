@@ -43,15 +43,16 @@
 using namespace catena::common;
 
 ConnectionProps::ConnectionProps(
+    const ConnectionPropsConfig& config,
     const std::string& endpoint,
-    const std::string& response_content,
     uint16_t port)
     : endpoint_(endpoint),
-      response_content_(response_content),
       port_(port),
+      config_(config),
       running_(false) {
+    response_content_ = generateXml(config);
     LOG(INFO) << "Connection props server constructed with endpoint: " << endpoint
-              << ", port: " << port;
+              << ", port: " << port << ", protocol: " << config.protocol;
 }
 
 ConnectionProps::~ConnectionProps() {
@@ -95,10 +96,23 @@ void ConnectionProps::stop() {
     LOG(INFO) << "Stopping connection props server on port " << port_;
     running_ = false;
 
-    // Stop the io_context
-    if (io_context_) {
-        io_context_->stop();
+    // Send a dummy connection to wake up the accept() call
+    // This ensures the server thread can exit from the blocking accept()
+    try {
+        boost::asio::io_context dummy_io;
+        tcp::socket dummy_socket(dummy_io);
+        boost::system::error_code ec;
+        dummy_socket.connect(tcp::endpoint(tcp::v4(), port_), ec);
+        // We don't care if this fails - it's just to wake up accept()
+        if (!ec) {
+            dummy_socket.close(ec);
+        }
+    } catch (...) {
+        // Ignore errors - acceptor might already be closed
     }
+
+    // Give the thread a moment to wake up and see running_ == false
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     // Close the acceptor
     if (acceptor_ && acceptor_->is_open()) {
@@ -107,6 +121,11 @@ void ConnectionProps::stop() {
         if (ec) {
             LOG(WARNING) << "Error closing acceptor: " << ec.message();
         }
+    }
+
+    // Stop the io_context
+    if (io_context_) {
+        io_context_->stop();
     }
 
     // Wait for the server thread to finish
@@ -120,7 +139,54 @@ void ConnectionProps::stop() {
 void ConnectionProps::updateContent(const std::string& content) {
     std::lock_guard<std::mutex> lock(content_mutex_);
     response_content_ = content;
-    VLOG(1) << "Connection props server content updated";
+    VLOG(1) << "Connection props server content updated (legacy)";
+}
+
+void ConnectionProps::updateConfig(const ConnectionPropsConfig& config) {
+    std::lock_guard<std::mutex> lock(content_mutex_);
+    config_ = config;
+    response_content_ = generateXml(config);
+    VLOG(1) << "Connection props server config updated, protocol: " << config.protocol;
+}
+
+std::string ConnectionProps::generateXml(const ConnectionPropsConfig& config) {
+    std::stringstream xml;
+    
+    xml << "<properties version=\"1.0\">\n"
+        << "    <comment>DashBoard Device Connection Settings</comment>\n";
+    
+    // Base URL and service URL
+    if (config.protocol == "rest") {
+        std::string scheme = config.use_tls ? "https" : "http";
+        xml << "    <entry key=\"base-url\">" << scheme << "://" << config.address << "/</entry>\n";
+    } else {
+        xml << "    <entry key=\"base-url\">http://" << config.address << "/</entry>\n";
+    }
+    
+    xml << "    <entry key=\"serviceUrl\">service:catena-device</entry>\n";
+    
+    // Equipment type
+    xml << "    <entry key=\"equipmentType\">" << config.protocol << "</entry>\n";
+    
+    // Address and port
+    xml << "    <entry key=\"address\">" << config.address << "</entry>\n"
+        << "    <entry key=\"port\">" << config.service_port << "</entry>\n";
+    
+    // Node ID and name (if provided)
+    if (!config.node_id.empty()) {
+        xml << "    <entry key=\"node-id\">" << config.node_id << "</entry>\n";
+    }
+    if (!config.node_name.empty()) {
+        xml << "    <entry key=\"node-name\">" << config.node_name << "</entry>\n";
+    }
+    
+    // Index URL and refresh interval
+    xml << "    <entry key=\"index-url\">connect/connection-props.xml</entry>\n"
+        << "    <entry key=\"refresh-interval\">" << config.refresh_interval << "</entry>\n";
+    
+    xml << "</properties>";
+    
+    return xml.str();
 }
 
 void ConnectionProps::run() {
