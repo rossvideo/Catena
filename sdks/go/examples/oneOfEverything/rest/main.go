@@ -180,37 +180,120 @@ func main() {
 			"subscriptions":     true,
 			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
 			"default_scope":     "st2138:op",
+			"params": map[string]any{
+				"counter": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Counter",
+						},
+					},
+					"type": catena.ParamTypeInt32,
+					"value": map[string]any{
+						"int32_value": 0,
+					},
+				},
+			},
 		},
 		1: {
 			"slot":              uint32(1),
 			"detail_level":      catena.DetailLevelFull,
 			"multi_set_enabled": false,
 			"subscriptions":     true,
-			"access_scopes":     []string{"st2138:mon", "st2138:op"},
-			"default_scope":     "st2138:mon",
+			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
+			"default_scope":     "st2138:op",
+			"params": map[string]any{
+				"resolution": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Resolution",
+						},
+					},
+					"type": catena.ParamTypeString,
+					"value": map[string]any{
+						"string_value": "1920x1080",
+					},
+				},
+				"brightness": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Brightness",
+						},
+					},
+					"type": catena.ParamTypeInt32,
+					"value": map[string]any{
+						"int32_value": 50,
+					},
+				},
+				"contrast": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Contrast",
+						},
+					},
+					"type": catena.ParamTypeInt32,
+					"value": map[string]any{
+						"int32_value": 50,
+					},
+				},
+				"saturation": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Saturation",
+						},
+					},
+					"type": catena.ParamTypeInt32,
+					"value": map[string]any{
+						"int32_value": 50,
+					},
+				},
+			},
 		},
 		2: {
 			"slot":              uint32(2),
 			"detail_level":      catena.DetailLevelFull,
 			"multi_set_enabled": true,
 			"subscriptions":     false,
-			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg"},
-			"default_scope":     "st2138:cfg",
+			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
+			"default_scope":     "st2138:op",
+			"params": map[string]any{
+				"volume": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Volume",
+						},
+					},
+					"type": catena.ParamTypeInt32,
+					"value": map[string]any{
+						"int32_value": 75,
+					},
+				},
+				"muted": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Muted",
+						},
+					},
+					"type": catena.ParamTypeInt32,
+					"value": map[string]any{
+						"int32_value": 0,
+					},
+				},
+				"device_name": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Device Name",
+						},
+					},
+					"type": catena.ParamTypeString,
+					"value": map[string]any{
+						"string_value": "Demo Device",
+					},
+				},
+			},
 		},
 	}
 
-	// ==========================================================================
-	// Parameters (for GetParam/SetParam endpoints)
-	// ==========================================================================
 	params := &sync.Map{}
-
-	params.Store("resolution", "1920x1080")
-	params.Store("brightness", int32(50))
-	params.Store("contrast", int32(50))
-	params.Store("saturation", int32(50))
-	params.Store("volume", int32(75))
-	params.Store("muted", int32(0)) // 0 = false, 1 = true
-	params.Store("device_name", "Demo Device")
 
 	// ==========================================================================
 	// Commands (for ExecuteCommand endpoint)
