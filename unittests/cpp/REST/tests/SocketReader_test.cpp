@@ -502,7 +502,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_MissingRequestStart) {
  */
 TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentLength) {
     // Enable authz so Authorization header is parsed.
-    EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(service_, authorizationEnabled()).Times(0);
     const RESTMethod method = catena::REST::Method_GET;
     const uint32_t slot = 1;
     const std::string endpoint = "/test-call";
@@ -516,22 +516,40 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentLength) {
     auto work = boost::asio::make_work_guard(io_context_.get_executor());
     std::thread runner([this]() { io_context_.run(); });
     // Test with invalid character
-    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 1a23"});
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 1a23", "Authorization: test"});
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    EXPECT_TRUE(socketReader.jsonBody().empty());
+    EXPECT_TRUE(socketReader.jwsToken().empty());
     // Test with invalid character at end
-    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 123a"});
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 123a", "Authorization: test"});
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    EXPECT_TRUE(socketReader.jsonBody().empty());
+    EXPECT_TRUE(socketReader.jwsToken().empty());
     // Test with float
-    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 123.123"});    
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 123.123", "Authorization: test"});    
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    EXPECT_TRUE(socketReader.jsonBody().empty());
+    EXPECT_TRUE(socketReader.jwsToken().empty());
     // Test with negative value
-    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: -16"});    
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: -16", "Authorization: test"});    
     EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    EXPECT_TRUE(socketReader.jsonBody().empty());
+    EXPECT_TRUE(socketReader.jwsToken().empty());
+    // Test with too large
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 2147483648", "Authorization: test"});
+    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    EXPECT_TRUE(socketReader.jsonBody().empty());
+    EXPECT_TRUE(socketReader.jwsToken().empty());
     // Test with incorrect Content-Length
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 0"});    
+    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    EXPECT_EQ(socketReader.detailLevel(), st2138::Device_DetailLevel_UNSET);
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 1"});    
     EXPECT_THROW(socketReader.read(serverSocket_, 50), catena::exception_with_status);
+    EXPECT_EQ(socketReader.detailLevel(), st2138::Device_DetailLevel_UNSET);
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 1000"});    
     EXPECT_THROW(socketReader.read(serverSocket_, 50), catena::exception_with_status);
+    EXPECT_EQ(socketReader.detailLevel(), st2138::Device_DetailLevel_UNSET);
     work.reset();
     runner.join();
 }
