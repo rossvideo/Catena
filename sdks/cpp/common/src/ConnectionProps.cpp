@@ -38,7 +38,6 @@
 #include <ConnectionProps.h>
 #include <Logger.h>
 #include <sstream>
-#include <regex>
 
 using namespace catena::common;
 
