@@ -41,10 +41,12 @@ package catena
 import (
 	"crypto/sha256"
 	"fmt"
+	"io/fs"
 	"mime"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"google.golang.org/protobuf/encoding/protojson"
 
@@ -98,6 +100,54 @@ func ToPayloadFromPath(path string) (DataPayload, error) {
 
 	filename := filepath.Base(path)
 	return ToPayload(data, contentType, filename), nil
+}
+
+// ToPayloadFromFS creates a DataPayload by reading a file from an fs.FS (e.g. embed.FS).
+func ToPayloadFromFS(fsys fs.FS, path string) (DataPayload, error) {
+	data, err := fs.ReadFile(fsys, path)
+	if err != nil {
+		return DataPayload{}, fmt.Errorf("failed to read file from FS: %w", err)
+	}
+
+	// Use forward slashes for base name in case path is from embed (always /)
+	name := path
+	if i := strings.LastIndex(name, "/"); i >= 0 {
+		name = name[i+1:]
+	}
+	contentType := mime.TypeByExtension(filepath.Ext(name))
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	return ToPayload(data, contentType, name), nil
+}
+
+// LoadPayloadsFromEmbed walks an embedded filesystem from root and returns a map of
+func LoadPayloadsFromEmbed(embedFS fs.FS, root string) (map[string]DataPayload, error) {
+	out := make(map[string]DataPayload)
+	err := fs.WalkDir(embedFS, root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		payload, err := ToPayloadFromFS(embedFS, path)
+		if err != nil {
+			return fmt.Errorf("%s: %w", path, err)
+		}
+		relPath, err := filepath.Rel(root, path)
+		if err != nil {
+			relPath = filepath.Base(path)
+		}
+		assetID := strings.ReplaceAll(relPath, string(filepath.Separator), "/")
+		out[assetID] = payload
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 // ToPayloadFromURL creates a DataPayload with a URL reference (no embedded data).
