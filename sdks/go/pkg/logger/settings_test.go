@@ -30,7 +30,7 @@
 
 /**
  * @brief Test for Settings and configuration parsing.
- * @file config_test.go
+ * @file settings_test.go
  * @copyright Copyright © 2025 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
  * @date 2025-12-09
