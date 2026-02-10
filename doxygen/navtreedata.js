@@ -135,8 +135,8 @@ var NAVTREEINDEX =
 "classcatena_1_1common_1_1IMenuGroup.html#ab5ab36b7072f70b19193e675d9dde352",
 "classcatena_1_1common_1_1NmosNode.html#a9ac224a448cb22885aee8a6afe7e6446",
 "classcatena_1_1common_1_1Path.html#aff66461b7b6ecc1b22bd81ff54090b35",
-"classcatena_1_1gRPC_1_1UpdateSubscriptions.html",
-"md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md27"
+"classcatena_1_1gRPC_1_1ServiceImpl.html#a9477cb0631c39828bdfa030d60b98b20",
+"md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md15"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

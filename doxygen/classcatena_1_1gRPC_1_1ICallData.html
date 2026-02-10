@@ -123,6 +123,9 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:a8bad679b189ee76c89e80336a08706ad" id="r_a8bad679b189ee76c89e80336a08706ad"><td class="memItemLeft" align="right" valign="top">virtual std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1gRPC_1_1ICallData.html#a8bad679b189ee76c89e80336a08706ad">jwsToken_</a> () const =0</td></tr>
 <tr class="memdesc:a8bad679b189ee76c89e80336a08706ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extracts the JWS Bearer token from the client's metadata.  <br /></td></tr>
 <tr class="separator:a8bad679b189ee76c89e80336a08706ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77980db6cddf2d70af02e44ec3ecd637" id="r_a77980db6cddf2d70af02e44ec3ecd637"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1gRPC_1_1ICallData.html#a77980db6cddf2d70af02e44ec3ecd637">processTimestamps_</a> ()=0</td></tr>
+<tr class="memdesc:a77980db6cddf2d70af02e44ec3ecd637"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads requestStart from metadata and records current time for requestReceived.  <br /></td></tr>
+<tr class="separator:a77980db6cddf2d70af02e44ec3ecd637"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface class for <a class="el" href="namespacecatena_1_1gRPC.html" title="Namespace containing classes relating to the gRPC API.">gRPC</a> <a class="el" href="classcatena_1_1gRPC_1_1CallData.html" title="Abstract base class for inherited by CallData child classes defining the jwsToken_() method.">CallData</a> classes. </p>
@@ -197,6 +200,35 @@ Protected Member Functions</h2></td></tr>
 </dl>
 
 <p>Implemented in <a class="el" href="classcatena_1_1gRPC_1_1AddLanguage.html#a69d4c47066d33bd5d18aea939fccb151">catena::gRPC::AddLanguage</a>, <a class="el" href="classcatena_1_1gRPC_1_1Connect.html#a424ff10a7606f927cc617ff4616eb8c3">catena::gRPC::Connect</a>, <a class="el" href="classcatena_1_1gRPC_1_1DeviceRequest.html#ae551adf8b29584ab6d41b22ce166ffd1">catena::gRPC::DeviceRequest</a>, <a class="el" href="classcatena_1_1gRPC_1_1ExecuteCommand.html#a20404dadcba84fd96277052f061cdb1a">catena::gRPC::ExecuteCommand</a>, <a class="el" href="classcatena_1_1gRPC_1_1ExternalObjectRequest.html#a33142ffa2f411e24732863f849760a01">catena::gRPC::ExternalObjectRequest</a>, <a class="el" href="classcatena_1_1gRPC_1_1GetParam.html#a2f4fddc5cff5453a07eb45e1736fd238">catena::gRPC::GetParam</a>, <a class="el" href="classcatena_1_1gRPC_1_1GetPopulatedSlots.html#a79a5e674e005763321e99b00cd5d4f27">catena::gRPC::GetPopulatedSlots</a>, <a class="el" href="classcatena_1_1gRPC_1_1GetValue.html#ad377b42ef9b07055e479ba01b10a49f2">catena::gRPC::GetValue</a>, <a class="el" href="classcatena_1_1gRPC_1_1LanguagePackRequest.html#ad9853cc210f0e1e26d7ebb7d7792fa7c">catena::gRPC::LanguagePackRequest</a>, <a class="el" href="classcatena_1_1gRPC_1_1ListLanguages.html#afb057985a5ad5a9b5b669ce8dcc603a8">catena::gRPC::ListLanguages</a>, <a class="el" href="classcatena_1_1gRPC_1_1MultiSetValue.html#a6b9fa23b75af036824354f5f2ea29d1f">catena::gRPC::MultiSetValue</a>, <a class="el" href="classcatena_1_1gRPC_1_1ParamInfoRequest.html#a88317ab753a1c9ad05a4350af4299256">catena::gRPC::ParamInfoRequest</a>, and <a class="el" href="classcatena_1_1gRPC_1_1UpdateSubscriptions.html#ab5fda07507dba9a19dccde4389ff872d">catena::gRPC::UpdateSubscriptions</a>.</p>
+
+</div>
+</div>
+<a id="a77980db6cddf2d70af02e44ec3ecd637" name="a77980db6cddf2d70af02e44ec3ecd637"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a77980db6cddf2d70af02e44ec3ecd637">&#9670;&#160;</a></span>processTimestamps_()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void catena::gRPC::ICallData::processTimestamps_ </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Reads requestStart from metadata and records current time for requestReceived. </p>
+
+<p>Implemented in <a class="el" href="classcatena_1_1gRPC_1_1CallData.html#acf427c501f8239b0e9a764b2ed8660c9">catena::gRPC::CallData</a>.</p>
 
 </div>
 </div>
