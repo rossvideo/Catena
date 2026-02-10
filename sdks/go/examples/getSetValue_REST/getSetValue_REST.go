@@ -196,6 +196,10 @@ func main() {
 	// Device 2: basic param handlers for all params.
 	registerBasicParamHandlers(srv, params2, 2)
 
+	// Connect endpoint is now built-in with full SSE streaming support
+	// Clients connecting to /st2138-api/v1/connect will receive real-time push updates
+	// when values change via SetValue
+
 	// Register command handlers for each slot
 	for _, slot := range slotList {
 		slot := slot // capture loop variable
