@@ -98,13 +98,13 @@ Many issues that would cause runtime failures are caught at validation time:
 - Authorization scope misconfigurations
 - Constraint reference errors
 
-The validation logic is integrated into the code generation pipeline in [index.js](../tools/codegen/index.js#L173-L187), ensuring no invalid models make it to production.
+The validation logic is integrated into the code generation pipeline in [codegen.js](../tools/codegen/codegen.js#L173-L187), ensuring no invalid models make it to production.
 
 ---
 
 ## Required Parts for a Valid Device Model
 
-According to the ST2138-a specification and enforced by the [validation logic](../tools/codegen/index.js#L80-L167), a valid device model can only include:
+According to the ST2138-a specification and enforced by the [validation logic](../tools/codegen/codegen.js#L80-L167), a valid device model can only include:
 
 ### 1. **Device Metadata**
 
@@ -271,11 +271,11 @@ This method is useful when integrating validation into npm scripts or CI/CD pipe
 
 ### Method 3: Integrated Code Generation
 
-When generating code, validation happens automatically. The [codegen tool](../tools/codegen/index.js) validates before generating:
+When generating code, validation happens automatically. The [codegen tool](../tools/codegen/codegen.js) validates before generating:
 
 ```bash
 cd ~/Catena/tools/codegen
-node index.js --device-model ../../sdks/cpp/common/examples/hello_world/device.hello_world.json --output ./output
+node codegen.js --device-model ../../sdks/cpp/common/examples/hello_world/device.hello_world.json --output ./output
 ```
 
 **Output:**
@@ -289,13 +289,13 @@ Generating code...
 
 The validation includes:
 - Schema conformance check
-- Mandatory parameter enforcement (see [validateRequiredParamsAndScopes](../tools/codegen/index.js#L80-L167))
+- Mandatory parameter enforcement (see [validateRequiredParamsAndScopes](../tools/codegen/codegen.js#L80-L167))
 - Import resolution for multi-part models
 
 To disable mandatory parameter enforcement during development:
 
 ```bash
-node index.js --device-model ./device.test.json --disable-mandatory-enforcement --output ./output
+node codegen.js --device-model ./device.test.json --disable-mandatory-enforcement --output ./output
 ```
 ---
 
