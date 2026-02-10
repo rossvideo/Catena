@@ -85,21 +85,11 @@ func ToPayload(data []byte, contentType string, filename string) DataPayload {
 }
 
 // ToPayloadFromPath creates a DataPayload by reading a file from disk.
-// Auto-detects content type from file extension and computes SHA-256 digest.
+// Implemented by treating the file's directory as an fs.FS and delegating to ToPayloadFromFS.
 func ToPayloadFromPath(path string) (DataPayload, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return DataPayload{}, fmt.Errorf("failed to read file: %w", err)
-	}
-
-	// Auto-detect content type from extension
-	contentType := mime.TypeByExtension(filepath.Ext(path))
-	if contentType == "" {
-		contentType = "application/octet-stream"
-	}
-
-	filename := filepath.Base(path)
-	return ToPayload(data, contentType, filename), nil
+	dir := filepath.Dir(path)
+	name := filepath.Base(path)
+	return ToPayloadFromFS(os.DirFS(dir), name)
 }
 
 // ToPayloadFromFS creates a DataPayload by reading a file from an fs.FS (e.g. embed.FS).
