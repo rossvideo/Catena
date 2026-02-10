@@ -119,7 +119,7 @@ void SocketReader::read(tcp::socket& socket, int timeout) {
     try {
         result.get();
     } catch(const catena::exception_with_status& e) {
-        throw catena::exception_with_status("Timed out", catena::StatusCode::DEADLINE_EXCEEDED);
+        throw;
     } catch(...) {
         throw catena::exception_with_status("Read error", catena::StatusCode::UNKNOWN);
     }
@@ -200,7 +200,7 @@ void SocketReader::read(tcp::socket& socket, int timeout) {
         }
 
         // Getting jwsToken.
-        if (iequals_header_name(name, "authorization") && service_->authorizationEnabled() && jwsToken_.empty()) {
+        if (service_->authorizationEnabled() && jwsToken_.empty() && iequals_header_name(name, "authorization")) {
             // Expect "Bearer <token>" (keep scheme check case-sensitive as before)
             static const std::string kBearerPrefix = "Bearer ";
             if (value.find(kBearerPrefix) == 0) {
@@ -267,7 +267,7 @@ void SocketReader::read(tcp::socket& socket, int timeout) {
             try {
                 result.get();
             } catch(const catena::exception_with_status& e) {
-                throw catena::exception_with_status("Timed out", catena::StatusCode::DEADLINE_EXCEEDED);
+                throw;
             } catch(...) {
                 throw catena::exception_with_status("Read error", catena::StatusCode::UNKNOWN);
             }
