@@ -16,59 +16,51 @@
 
 import { program } from 'commander';
 
-import packageJson from './package.json' with { type: "json" };;
+import { createLogger, MANDATORY_OPTION, OUTPUT_OPTION, PROTOS_OPTION, QUIET_OPTION, sync, VERSION } from './common.js';
 import { DeviceModel } from './DeviceModel.js';
 import Validator from 'smpte-validator';
 import { validateRequiredParamsAndScopes } from './mandatory.js';
-import CppGen from './cpp/cppgen.js';
-
-//
-// Converts Catena compatible Device Models to computer code in a variety of languages
-//
+import { serialize } from './serdes/serdes.js';
 
 // load the command line parser
 program
-    .description(packageJson.description)
-    .version(packageJson.version)
-    .option('-q, --quiet', 'Suppress non-error console output', false)
-    .option("--disable-mandatory-enforcement", "Disable enforcement of mandatory parameters during code generation")
-    .option("-o --output <string>", "Output folder for results", ".")
-    .argument("<language>", "Target programming language (cpp)")
+    .description("Serialize Catena device models to a binary format")
+    .version(VERSION)
+    .option(...OUTPUT_OPTION)
+    .option(...QUIET_OPTION)
+    .option(...MANDATORY_OPTION)
+    .option(...PROTOS_OPTION)
     .argument("<deviceModel>", "Catena device model to process")
-    .action(generate);
+    .action(run);
 
 /**
  * log the options being used
  * @param {function} log logging function
- * @param {string} language target language
  * @param {string} deviceModel path to device model
  * @param {object} options options from commander
  */
-function logOptions(log, language, deviceModel, options) {
+function logOptions(log, deviceModel, options) {
     log(`deviceModel: ${deviceModel}`);
-    log(`language: ${language}`);
     if (options.output) {
         log(`output: ${options.output}`);
     }
     if (options.disableMandatoryEnforcement) {
         log(`Mandatory parameter enforcement disabled`);
     }
+    if (options.protos) {
+        log(`protos: ${options.protos}`);
+    }
 }
 
 // run the command line parser
-(async () => {
-    await program.parseAsync();
-})().catch((err) => {
-    console.error(`Error: ${err.message}`);
-    process.exit(err.error || 1);
-});
+sync(program);
 
-async function generate(language, deviceModelPath, options) {
+async function run(deviceModelPath, options) {
     // define logging function based on quiet option
-    const log = options.quiet ? () => { } : console.log;
+    const log = createLogger(options);
 
     // log the options being used
-    logOptions(log, language, deviceModelPath, options);
+    logOptions(log, deviceModelPath, options);
 
     // load and validate the device model
     const validator = new Validator();
@@ -77,15 +69,14 @@ async function generate(language, deviceModelPath, options) {
     await deviceModel.load(true);
     validateRequiredParamsAndScopes(deviceModel.desc, options.disableMandatoryEnforcement);
 
-    // generate code in the requested language
-    switch (language) {
-        case 'cpp':
-            log("Generating C++ code...");
-            const cppGen = new CppGen(deviceModel, options.output);
-            cppGen.generate();
-            break;
-        default:
-            throw new Error(`Unsupported language: ${language}`);
-    }
-    log('✅ Code generation completed.');
+    // prepare metadata
+    const metadata = {
+        tool: "ser",
+        version: VERSION,
+        timestamp: new Date().toISOString(),
+    };
+
+    log("Generating serialized output...");
+    await serialize(deviceModel, options, metadata);
+    log('✅ Completed.');
 }
