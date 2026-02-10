@@ -138,14 +138,14 @@ validation time:</p>
 <li>Constraint reference errors</li>
 </ul>
 <p>The validation logic is integrated into the code generation pipeline
-in <a href="../tools/codegen/index.js#L173-L187">index.js</a>, ensuring
-no invalid models make it to production.</p>
+in <a href="../tools/codegen/codegen.js#L173-L187">codegen.js</a>,
+ensuring no invalid models make it to production.</p>
 <hr />
 <h2 id="required-parts-for-a-valid-device-model">Required Parts for a
 Valid Device Model</h2>
 <p>According to the ST2138-a specification and enforced by the <a
-href="../tools/codegen/index.js#L80-L167">validation logic</a>, a valid
-device model can only include:</p>
+href="../tools/codegen/codegen.js#L80-L167">validation logic</a>, a
+valid device model can only include:</p>
 <h3 id="device-metadata">1. <strong>Device Metadata</strong></h3>
 <ul>
 <li><strong><code>slot</code></strong>: Device slot number</li>
@@ -359,11 +359,11 @@ CI/CD pipelines.</p>
 <h3 id="method-3-integrated-code-generation">Method 3: Integrated Code
 Generation</h3>
 <p>When generating code, validation happens automatically. The <a
-href="../tools/codegen/index.js">codegen tool</a> validates before
+href="../tools/codegen/codegen.js">codegen tool</a> validates before
 generating:</p>
 <div class="sourceCode" id="cb9"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/Catena/tools/codegen</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">node</span> index.js <span class="at">--device-model</span> ../../sdks/cpp/common/examples/hello_world/device.hello_world.json <span class="at">--output</span> ./output</span></code></pre></div>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">node</span> codegen.js <span class="at">--device-model</span> ../../sdks/cpp/common/examples/hello_world/device.hello_world.json <span class="at">--output</span> ./output</span></code></pre></div>
 <p><strong>Output:</strong></p>
 <pre><code>Validating device model &#39;device&#39; from file &#39;../../sdks/cpp/common/examples/hello_world/device.hello_world.json&#39;...
 Applying schema &#39;device&#39; to file &#39;../../sdks/cpp/common/examples/hello_world/device.hello_world.json&#39;
@@ -372,11 +372,11 @@ Generating code...
 ✅ Code generation completed.</code></pre>
 <p>The validation includes: - Schema conformance check - Mandatory
 parameter enforcement (see <a
-href="../tools/codegen/index.js#L80-L167">validateRequiredParamsAndScopes</a>)
+href="../tools/codegen/codegen.js#L80-L167">validateRequiredParamsAndScopes</a>)
 - Import resolution for multi-part models</p>
 <p>To disable mandatory parameter enforcement during development:</p>
 <div class="sourceCode" id="cb11"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">node</span> index.js <span class="at">--device-model</span> ./device.test.json <span class="at">--disable-mandatory-enforcement</span> <span class="at">--output</span> ./output</span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">node</span> codegen.js <span class="at">--device-model</span> ./device.test.json <span class="at">--disable-mandatory-enforcement</span> <span class="at">--output</span> ./output</span></code></pre></div>
 <hr />
 <div style="text-align: center">
 <p><a href="Template.html">Next Page: Template Parameters</a></p>
