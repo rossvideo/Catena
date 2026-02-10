@@ -355,4 +355,3 @@ TEST(UtilsTest, Read_Timestamp_Invalid_Empty) {
     EXPECT_EQ(result, 0);
     EXPECT_FALSE(valid);
 }
-
