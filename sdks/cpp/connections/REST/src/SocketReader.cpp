@@ -70,7 +70,7 @@ void SocketReader::read(tcp::socket& socket) {
     jwsToken_ = "";
     jsonBody_ = "";
     requestStart_ = DEFAULT_REQUEST_START;
-    requestReceived_ = DEFAULT_REQUEST_START;
+    requestReceived_ = DEFAULT_REQUEST_RECEIVED;
 
     // Getting request receival time formatted as,
     // <number of milliseconds since start of epoch>

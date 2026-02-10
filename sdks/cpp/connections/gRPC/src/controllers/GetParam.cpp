@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -79,6 +79,7 @@ void GetParam::proceed( bool ok) {
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
+            processTimestamps_();
             new GetParam(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
 

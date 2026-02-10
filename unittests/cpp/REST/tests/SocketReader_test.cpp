@@ -122,7 +122,7 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
         EXPECT_EQ(socketReader.jsonBody(), jsonBody);
         EXPECT_EQ(socketReader.authorizationEnabled(), authz);
         EXPECT_EQ(socketReader.stream(), stream);
-        EXPECT_EQ(socketReader.requestStart(), requestStart != "" ? stod(requestStart) : DEFAULT_REQUEST_START);
+        EXPECT_EQ(socketReader.requestStart(), requestStart != "" ? std::stol(requestStart) : DEFAULT_REQUEST_START);
         EXPECT_TRUE(socketReader.requestReceived() > 0);
     }
 
