@@ -30,6 +30,10 @@ set(REST_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Default socket read timeout in milliseconds (can be overridden: -DREST_SOCKET_READER_TIMEOUT_MS=1000)
 set(REST_READ_TIMEOUT_MS 600 CACHE STRING "Default socket read timeout in milliseconds")
+if(REST_READ_TIMEOUT_MS LESS_EQUAL 0)
+    message(WARNING "REST_READ_TIMEOUT_MS must be greater than 0, using default of 600 instead")
+    set(REST_READ_TIMEOUT_MS 600 CACHE STRING "Default socket read timeout in milliseconds" FORCE)
+endif()
 
 find_package(Boost 1.81 REQUIRED COMPONENTS system date_time url)
 find_package(ZLIB REQUIRED)
