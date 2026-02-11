@@ -206,6 +206,9 @@ jobs:
         with:
           submodules: 'recursive'
 
+      - name: Install file utility # go needs this for CodeQL
+        run: sudo apt-get update && sudo apt-get install -y file
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
