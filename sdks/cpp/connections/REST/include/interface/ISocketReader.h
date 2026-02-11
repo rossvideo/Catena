@@ -87,7 +87,7 @@ class ISocketReader {
      * @param socket The socket to read from.
      * @param timeout How long to read for in ms before cancelling. Socket can be read from twice and timeout is applied in full both times.
      */
-    virtual void read(tcp::socket& socket, int timeout = DEFAULT_TIMEOUT) = 0;
+    virtual void read(tcp::socket& socket, uint32_t timeout = DEFAULT_TIMEOUT) = 0;
     /**
      * @brief Returns the HTTP method of the request.
      */

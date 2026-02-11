@@ -118,7 +118,7 @@ class SocketReader : public ISocketReader {
      * @param socket The socket to read from.
      * @param timeout How long to read before in ms cancelling. Socket can be read from twice and timeout is applied in full both times.
      */
-    void read(tcp::socket& socket, int timeout = DEFAULT_TIMEOUT) override;
+    void read(tcp::socket& socket, uint32_t timeout = DEFAULT_TIMEOUT) override;
     /**
      * @brief Returns the HTTP method of the request.
      */

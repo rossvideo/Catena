@@ -90,7 +90,7 @@ static inline bool valid_content_type(std::string_view s, std::string_view conte
 }
 }
 
-void SocketReader::read(tcp::socket& socket, int timeout) {
+void SocketReader::read(tcp::socket& socket, uint32_t timeout) {
     // Resetting variables.
     method_ = catena::REST::Method_NONE;
     slot_ = 0;
