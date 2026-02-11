@@ -64,7 +64,7 @@ enum RESTMethod : uint32_t { Method_NONE, Method_GET, Method_POST, Method_PUT, M
 
 const long DEFAULT_REQUEST_START = 0;
 const long DEFAULT_REQUEST_RECEIVED = 0;
-const int DEFAULT_TIMEOUT = 600; // value is in milliseconds
+const uint32_t DEFAULT_TIMEOUT = SOCKET_READER_DEFAULT_TIMEOUT_MS; // value is in milliseconds
 
 /**
  * @brief Interface for the SocketReader class.
