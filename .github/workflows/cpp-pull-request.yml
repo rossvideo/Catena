@@ -37,7 +37,7 @@ jobs:
           skip-files: 'pom.xml'
 
       - name: Upload SARIF results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-results.sarif
           category: 'Trivy Scan Results'
@@ -206,7 +206,7 @@ jobs:
           submodules: 'recursive'
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
           debug: true
@@ -234,7 +234,7 @@ jobs:
           ninja -C ${BUILD_TARGET}
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{ matrix.language }}"
       
