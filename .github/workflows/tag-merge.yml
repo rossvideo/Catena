@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'sdks/cpp/VERSION.txt'
+      - 'sdks/go/VERSION.txt'
 
 jobs:
   update_version_file:
@@ -16,23 +17,24 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Put the version tag on main
+      - name: Put the version tags on main
         run: |
-
+          # Derive version from C++ VERSION.txt (both SDKs share the same version numbers)
           TEXT_FILE="$(cat sdks/cpp/VERSION.txt)"
           VERSION=${TEXT_FILE#cpp-}
           if [ "$(echo "$VERSION" | cut -d'-' -f1)" = "" ]; then
-            echo "❌ Bad Version FIle"
+            echo "❌ Bad version file: sdks/cpp/VERSION.txt"
             exit 1
           fi
 
           VERSION_PART="$(echo "$VERSION" | cut -d'-' -f1)-$(echo "$VERSION" | cut -d'-' -f2)"
-          VERSION="cpp-$VERSION_PART"
-          echo "tagging with $VERSION"
-
-          echo "VERSION=${NEW_VERSION}" >> $GITHUB_ENV
+          CPP_TAG="cpp-$VERSION_PART"
+          GO_TAG="go-$VERSION_PART"
+          echo "Tagging with $CPP_TAG and $GO_TAG"
 
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          git tag -a $VERSION -m "Version $VERSION"
-          git push origin $VERSION
+
+          git tag -a "$CPP_TAG" -m "Version $CPP_TAG"
+          git tag -a "$GO_TAG" -m "Version $GO_TAG"
+          git push origin "$CPP_TAG" "$GO_TAG"
