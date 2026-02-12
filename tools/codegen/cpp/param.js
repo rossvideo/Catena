@@ -580,7 +580,7 @@ class Param {
   getFieldInfoInit() {
     let subParamArr = Object.values(this.subParams);
     let mappedArr = subParamArr.map((subParam) => {
-      return `{"${subParam.cppIdentifier}", &${this.objectType()}::${subParam.cppIdentifier}}`;
+      return `{"${subParam.oid}", &${this.objectType()}::${subParam.cppIdentifier}}`;
     });
     return mappedArr.join(", ");
   }
