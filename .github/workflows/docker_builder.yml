@@ -181,6 +181,9 @@ jobs:
       id-token: write
       #
     steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
       - name: Prepare
         run: |
           echo "REGISTRY_IMAGE=${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
