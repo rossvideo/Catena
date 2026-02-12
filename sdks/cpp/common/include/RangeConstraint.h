@@ -68,10 +68,16 @@ class RangeConstraint : public catena::common::IConstraint {
      * @param shared is the constraint shared
      */
     RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid, bool shared)
-        : min_(min), max_(max), step_{step}, display_min_{display_min},
+        : min_(min), max_(max), display_min_{display_min},
           display_max_{display_max}, oid_{oid}, shared_{shared} {
         if constexpr(!std::is_same<T, int32_t>::value && !std::is_same<T, float>::value) {
             throw std::runtime_error("Cannot create RangeConstraint with type other than int32_t or float");
+        }
+        // want step to always be positive
+        if constexpr (std::is_same<T, int32_t>::value) {
+            step_ = std::abs(step);
+        } else if constexpr (std::is_same<T, float>::value) {
+            step_ = std::fabs(step);
         }
     }
 
@@ -134,9 +140,16 @@ class RangeConstraint : public catena::common::IConstraint {
                   && (!step_ || (src.int32_value() - min_) % step_ == 0);
         }
         else if constexpr(std::is_same<T, float>::value) {
-            ans = src.float32_value() >= min_ 
-                  && src.float32_value() <= max_
-                  && (!step_ || std::fmod(src.float32_value() - min_, step_) == 0);
+            const float val = src.float32_value();
+            if (val >= min_ && val <= max_) {
+                if (!step_) {
+                    ans = true;
+                } else {
+                    const st2138::Value constrainedVal = apply(src);
+                    // close enough if within 1/10000th of the step size
+                    ans = std::fabs(constrainedVal.float32_value() - val) < (step_ * 0.00001f);
+                }
+            }
         }
         return ans;
     }
@@ -171,16 +184,18 @@ class RangeConstraint : public catena::common::IConstraint {
         else if constexpr(std::is_same<T, float>::value) {
             // return empty value if src is not valid
             if (src.has_float32_value()) {
-                float s = src.float32_value();
+                float val = src.float32_value();
                 // constrain if not within allowed range
-                if (s < min_) {
+                if (val < min_) {
                     constrainedVal.set_float32_value(min_);
-                } else if (s > max_) {
+                } else if (val > max_) {
                     constrainedVal.set_float32_value(max_);
-                } else if (step_ && std::fmod(s - min_, step_) != 0) {
-                    constrainedVal.set_float32_value(s - std::fmod(s - min_, step_));
+                } else if (step_) {
+                    // round to the nearest step, if step is not 0
+                    constrainedVal.set_float32_value(
+                      static_cast<float>((std::round((val - min_) / step_) * step_) + min_));
                 } else {
-                    constrainedVal.set_float32_value(s);
+                    constrainedVal.set_float32_value(val);
                 }
             }
         }
