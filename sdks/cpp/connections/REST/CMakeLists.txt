@@ -59,7 +59,7 @@ set(sources
 
 add_library(${target} STATIC ${sources})
 
-target_compile_definitions(${target} PUBLIC SOCKET_READER_DEFAULT_TIMEOUT_MS=${REST_READ_TIMEOUT_MS})
+target_compile_definitions(${target} PUBLIC REST_READ_TIMEOUT_MS=${REST_READ_TIMEOUT_MS})
 
 find_package(jwt-cpp CONFIG REQUIRED)
 
