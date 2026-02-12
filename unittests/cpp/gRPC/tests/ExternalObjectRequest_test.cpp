@@ -33,7 +33,7 @@
  * @author nelson.daniels@rossvideo.com
  * @author jason.chen@rossvideo.com
  * @author keon.foster@rossvideo.com
- * @date 22/01/26
+ * @date 2026/02/11
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -97,9 +97,13 @@ class gRPCExternalObjectRequestTests : public GRPCTest {
     }
 
     // Adds an expected external object payload to the expected values.
-    void expPayload(const std::string& content) {
+    // digest is the SHA-256 digest of content, base64-encoded.
+    void expPayload(const std::string& content, const std::string& digest) {
         expVals_.push_back(st2138::ExternalObjectPayload());
-        expVals_.back().mutable_payload()->set_payload(content.data(), content.size());
+        auto* objPayload = expVals_.back().mutable_payload();
+        objPayload->set_payload(content.data(), content.size());
+        std::string digestBytes = catena::from_base64(digest);
+        objPayload->set_digest(digestBytes.data(), digestBytes.size());
     }
 
     // Makes an async RPC to the MockServer and waits for responses before comparing output.
@@ -148,6 +152,12 @@ class gRPCExternalObjectRequestTests : public GRPCTest {
 
     // Test file path for external objects
     std::string testEOPath_ = "/tmp/catena_test_eo/";
+
+    // Precomputed SHA-256 digests (base64) for test payloads.
+    std::string digestNormal_ = "IA6PlY/NIwnLzNC76J+Bz2z+AdeqCq8AF+xPZYkmy08=";
+    std::string digestSpecialChars_ = "cqGM/92veCrMRfOrvfp6NlpRdGJzHVO4PSL78rE2vTA=";
+    std::string digestEmpty_ = "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=";
+    std::string digestBinary256_ = "QK/y6dLYki5Hr9RkjmlnSXFYeF+9Hahw5xECZr+USIA=";
     
     // Input/output values
     st2138::ExternalObjectRequestPayload inVal_;
@@ -187,7 +197,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_Normal) {
     
     // Initialize request payload
     initPayload("/test_file.txt");
-    expPayload(testContent);
+    expPayload(testContent, digestNormal_);
     
     // Send the RPC
     testRPC();
@@ -204,7 +214,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_SpecialCharacters) 
     
     // Initialize request payload
     initPayload(specialPath);
-    expPayload(testContent);
+    expPayload(testContent, digestSpecialChars_);
     
     // Send the RPC
     testRPC();
@@ -219,7 +229,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_EmptyFile) {
     
     // Initialize request payload
     initPayload("/empty_file.txt");
-    expPayload("");
+    expPayload("", digestEmpty_);
     
     // Send the RPC
     testRPC();
@@ -238,7 +248,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_BinaryFile) {
     
     // Initialize request payload
     initPayload("/binary_file.bin");
-    expPayload(binaryContent);
+    expPayload(binaryContent, digestBinary256_);
     
     // Send the RPC
     testRPC();
@@ -322,7 +332,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_NullSlotCase) {
     // Initialize request payload
     initPayload("/test_file.txt");
     inVal_.clear_slot();
-    expPayload(testContent);
+    expPayload(testContent, digestNormal_);
     
     // Send the RPC
     testRPC();

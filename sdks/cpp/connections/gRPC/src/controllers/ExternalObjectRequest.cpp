@@ -144,6 +144,18 @@ void ExternalObjectRequest::proceed(bool ok) {
                 obj.mutable_payload()->set_payload(file_data.data(), file_data.size()); 
                 //obj.mutable_payload()->set_meta(file.);
 
+                //Calculate SHA-256 digest
+                unsigned char digest[EVP_MAX_MD_SIZE];
+                unsigned int digest_len;
+                EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
+                EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL);
+                EVP_DigestUpdate(mdctx, file_data.data(), file_data.size());
+                EVP_DigestFinal_ex(mdctx, digest, &digest_len);
+                EVP_MD_CTX_free(mdctx);
+
+                // Set the digest using the digest array
+                obj.mutable_payload()->set_digest(digest, digest_len);
+
                 //For now we are sending the whole file in one go
                 VLOG(1) << "ExternalObjectRequest[" << objectId_ << "] sent";
                 status_ = CallStatus::kPostWrite; 
