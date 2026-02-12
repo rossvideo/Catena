@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,8 +32,9 @@
  * @brief This file is for testing the AddLanguage.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
- * @date 25/12/01
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author keon.foster@rossvideo.com
+ * @date 22/01/26
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // Test helpers
@@ -94,6 +95,30 @@ class gRPCAddLanguageTests : public GRPCTest {
         EXPECT_EQ(outRc_.error_message(), expRc_.what());
         // Make sure another AddLanguage handler was created.
         EXPECT_TRUE(asyncCall_) << "Async handler was not created during runtime";
+    }
+
+    /**
+     * Makes an async RPC and checks the requestStart/requestReceived value read by the handler.
+     */
+    void testRPCTimestamps(std::string input, long expected) {
+        // Create a new client context for this call to avoid metadata from previous calls
+        grpc::ClientContext context;
+        context.AddMetadata("request-start", input);
+        
+        // Sending async RPC
+        client_->async()->AddLanguage(&context, &inVal_, &outVal_, [this](grpc::Status status){
+            outRc_ = status;
+            done_ = true;
+            cv_.notify_one();
+        });
+        cv_.wait(lock_, [this] { return done_; });
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+        // Clear the response for the next call
+        outVal_.Clear();
+
+       EXPECT_EQ(requestStart_, expected);
+       EXPECT_TRUE(requestReceived_ > DEFAULT_REQUEST_RECEIVED);
     }
 
     // in/out val
@@ -276,4 +301,32 @@ TEST_F(gRPCAddLanguageTests, AddLanguage_SlotOutOfRange) {
     EXPECT_CALL(dm1_, addLanguage(::testing::_, ::testing::_)).Times(0);
     // Sending the RPC
     testRPC();
+}
+
+/*
+ * TEST 12 - Test request-start header read correctly
+ */
+TEST_F(gRPCAddLanguageTests, AddLanguage_RequestStart) {
+    testRPCTimestamps("12345123", 12345123);
+    testRPCTimestamps("10", 10);
+    testRPCTimestamps("12345678912345", 12345678912345);
+    testRPCTimestamps("00012345678912345", 12345678912345);
+}
+
+/*
+ * TEST 13 - Test invalid request-start header value get set to default
+ */
+TEST_F(gRPCAddLanguageTests, AddLanguage_InvalidRequestStart) {
+    // Test with non-number in value
+    testRPCTimestamps("123@123", DEFAULT_REQUEST_START);
+    // Test with period
+    testRPCTimestamps("123.123", DEFAULT_REQUEST_START);
+    // Test with negative value
+    testRPCTimestamps("-123123", DEFAULT_REQUEST_START);
+    // Test with leading period
+    testRPCTimestamps(".123123", DEFAULT_REQUEST_START);
+    // Test with empty value
+    testRPCTimestamps("", DEFAULT_REQUEST_START);
+    // Test with too large of a value
+    testRPCTimestamps(std::string(20, '1'), DEFAULT_REQUEST_START);
 }

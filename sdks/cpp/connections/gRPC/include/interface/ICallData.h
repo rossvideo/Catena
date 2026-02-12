@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,9 @@
  * @file ICallData.h
  * @brief Interface class for gRPC CallData classes.
  * @author benjamin.whitten@rossvideo.com
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author keon.foster@rossvideo.com
+ * @date 22/01/26
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #pragma once
@@ -70,6 +72,10 @@ class ICallData {
      * @throw catena::exception_with_status if the token is not found.
      */
     virtual std::string jwsToken_() const = 0;
+    /**
+     * @brief Reads requestStart from metadata and records current time for requestReceived.
+     */
+    virtual void processTimestamps_() = 0;
 };
 
 };

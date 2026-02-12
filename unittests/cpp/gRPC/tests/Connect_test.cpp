@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,8 +31,9 @@
 /**
  * @brief This file is for testing the Connect.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/07/22
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author keon.foster@rossvideo.com
+ * @date 22/01/26
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // Test helpers
@@ -174,6 +175,33 @@ class gRPCConnectTests : public GRPCTest {
         }
         // Make sure another Command handler was created.
         EXPECT_TRUE(asyncCall_) << "Async handler was not created during runtime";
+    }
+
+    /**
+     * Makes an async RPC and checks the requestStart/requestReceived values read by the handler.
+     */
+    void testRPCTimestamps(std::string input, long expected) {
+        // Create a new client context for this call to avoid metadata from previous calls
+        grpc::ClientContext context;
+        context.AddMetadata("request-start", input);
+
+        // Setting expectations, test doesn't work otherwise
+        expRc_ = catena::exception_with_status("Too many connections to service", catena::StatusCode::RESOURCE_EXHAUSTED);
+        EXPECT_CALL(connectionQueue_, registerConnection(testing::_)).WillOnce(testing::Return(false));
+
+        // Sending async RPC
+        StreamReader streamReader(&outVals_, &outRc_);
+        streamReader.MakeCall(&context, &inVal_, [this](auto ctx, auto payload, auto reactor) {
+            client_->async()->Connect(ctx, payload, reactor);
+        });
+        streamReader.Await();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+        // Clear the response for the next call
+        outVals_.erase(outVals_.begin(), outVals_.end());
+
+        EXPECT_EQ(requestStart_, expected);
+        EXPECT_TRUE(requestReceived_ > DEFAULT_REQUEST_RECEIVED);
     }
 
     ~gRPCConnectTests() override {
@@ -450,4 +478,32 @@ TEST_F(gRPCConnectTests, Connect_RegisterConnectionFailure) {
     });
     streamReader_->Await();
     streamReader_.reset(nullptr);
+}
+
+/*
+ * TEST 9 - Test request-start header read correctly
+ */
+TEST_F(gRPCConnectTests, Connect_RequestStart) {
+    testRPCTimestamps("12345123", 12345123);
+    testRPCTimestamps("10", 10);
+    testRPCTimestamps("12345678912345", 12345678912345);
+    testRPCTimestamps("00012345678912345", 12345678912345);
+}
+
+/*
+ * TEST 10 - Test invalid request-start header value get set to default
+ */
+TEST_F(gRPCConnectTests, Connect_InvalidRequestStart) {
+    // Test with non-number in value
+    testRPCTimestamps("123@123", DEFAULT_REQUEST_START);
+    // Test with period
+    testRPCTimestamps("123.123", DEFAULT_REQUEST_START);
+    // Test with negative value
+    testRPCTimestamps("-123123", DEFAULT_REQUEST_START);
+    // Test with leading period
+    testRPCTimestamps(".123123", DEFAULT_REQUEST_START);
+    // Test with empty value
+    testRPCTimestamps("", DEFAULT_REQUEST_START);
+    // Test with too large of a value
+    testRPCTimestamps(std::string(20, '1'), DEFAULT_REQUEST_START);
 }
