@@ -39,8 +39,12 @@
 package catena
 
 import (
+	"crypto/sha256"
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"testing"
+	"testing/fstest"
 )
 
 func TestToCatenaAsset_WithPayload(t *testing.T) {
@@ -299,5 +303,152 @@ func TestDataPayload_Fields(t *testing.T) {
 	}
 	if string(dp.Payload) != "test" {
 		t.Errorf("expected Payload 'test', got %s", dp.Payload)
+	}
+}
+
+func TestToPayload(t *testing.T) {
+	data := []byte("hello world")
+	contentType := "text/plain"
+	filename := "hello.txt"
+
+	dp := ToPayload(data, contentType, filename)
+
+	if dp.PayloadEncoding != 0 {
+		t.Errorf("expected PayloadEncoding 0 (UNCOMPRESSED), got %d", dp.PayloadEncoding)
+	}
+	if string(dp.Payload) != string(data) {
+		t.Errorf("expected Payload %q, got %q", data, dp.Payload)
+	}
+	if dp.Metadata["content-type"] != contentType {
+		t.Errorf("expected content-type %q, got %q", contentType, dp.Metadata["content-type"])
+	}
+	if dp.Metadata["file-name"] != filename {
+		t.Errorf("expected file-name %q, got %q", filename, dp.Metadata["file-name"])
+	}
+	if dp.Metadata["size"] != "11" {
+		t.Errorf("expected size \"11\", got %q", dp.Metadata["size"])
+	}
+	expectedHash := sha256.Sum256(data)
+	if len(dp.Digest) != len(expectedHash) {
+		t.Fatalf("expected digest length %d, got %d", len(expectedHash), len(dp.Digest))
+	}
+	for i := range expectedHash {
+		if dp.Digest[i] != expectedHash[i] {
+			t.Errorf("digest byte %d: expected %x, got %x", i, expectedHash[i], dp.Digest[i])
+		}
+	}
+}
+
+func TestToPayloadFromPath(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "asset.bin")
+	data := []byte("file contents")
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	dp, err := ToPayloadFromPath(path)
+	if err != nil {
+		t.Fatalf("ToPayloadFromPath: %v", err)
+	}
+	if string(dp.Payload) != string(data) {
+		t.Errorf("expected Payload %q, got %q", data, dp.Payload)
+	}
+	if dp.Metadata["file-name"] != "asset.bin" {
+		t.Errorf("expected file-name asset.bin, got %q", dp.Metadata["file-name"])
+	}
+}
+
+func TestToPayloadFromPath_NotFound(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "nonexistent.txt")
+
+	_, err := ToPayloadFromPath(path)
+	if err == nil {
+		t.Error("expected error for missing file")
+	}
+}
+
+func TestToPayloadFromFS_Success(t *testing.T) {
+	fsys := fstest.MapFS{
+		"dir/file.txt": {Data: []byte("hello")},
+	}
+	dp, err := ToPayloadFromFS(fsys, "dir/file.txt")
+	if err != nil {
+		t.Fatalf("ToPayloadFromFS: %v", err)
+	}
+	if string(dp.Payload) != "hello" {
+		t.Errorf("expected Payload \"hello\", got %q", dp.Payload)
+	}
+	if dp.Metadata["content-type"] != "text/plain; charset=utf-8" {
+		t.Errorf("expected content-type for .txt, got %q", dp.Metadata["content-type"])
+	}
+	if dp.Metadata["file-name"] != "file.txt" {
+		t.Errorf("expected file-name file.txt, got %q", dp.Metadata["file-name"])
+	}
+}
+
+func TestToPayloadFromFS_UnknownExtension(t *testing.T) {
+	fsys := fstest.MapFS{
+		"data.unknown": {Data: []byte("x")},
+	}
+	dp, err := ToPayloadFromFS(fsys, "data.unknown")
+	if err != nil {
+		t.Fatalf("ToPayloadFromFS: %v", err)
+	}
+	if dp.Metadata["content-type"] != "application/octet-stream" {
+		t.Errorf("expected application/octet-stream for unknown ext, got %q", dp.Metadata["content-type"])
+	}
+}
+
+func TestToPayloadFromFS_ReadError(t *testing.T) {
+	fsys := fstest.MapFS{}
+	_, err := ToPayloadFromFS(fsys, "missing.txt")
+	if err == nil {
+		t.Error("expected error when file does not exist")
+	}
+}
+
+func TestLoadPayloadsFromEmbed(t *testing.T) {
+	fsys := fstest.MapFS{
+		"root/a.txt":   {Data: []byte("a")},
+		"root/b/c.txt": {Data: []byte("c")},
+	}
+	out, err := LoadPayloadsFromEmbed(fsys, "root")
+	if err != nil {
+		t.Fatalf("LoadPayloadsFromEmbed: %v", err)
+	}
+	if len(out) != 2 {
+		t.Fatalf("expected 2 entries, got %d", len(out))
+	}
+	if p, ok := out["a.txt"]; !ok || string(p.Payload) != "a" {
+		t.Errorf("expected out[\"a.txt\"] with payload \"a\", got ok=%v payload=%q", ok, out["a.txt"].Payload)
+	}
+	if p, ok := out["b/c.txt"]; !ok || string(p.Payload) != "c" {
+		t.Errorf("expected out[\"b/c.txt\"] with payload \"c\", got ok=%v payload=%q", ok, out["b/c.txt"].Payload)
+	}
+}
+
+func TestLoadPayloadsFromEmbed_EmptyRoot(t *testing.T) {
+	fsys := fstest.MapFS{
+		"f1.txt": {Data: []byte("1")},
+	}
+	out, err := LoadPayloadsFromEmbed(fsys, ".")
+	if err != nil {
+		t.Fatalf("LoadPayloadsFromEmbed: %v", err)
+	}
+	if len(out) != 1 {
+		t.Fatalf("expected 1 entry, got %d", len(out))
+	}
+}
+
+func TestToPayloadFromURL(t *testing.T) {
+	url := "https://example.com/asset.json"
+	dp := ToPayloadFromURL(url)
+	if dp.Url != url {
+		t.Errorf("expected Url %q, got %q", url, dp.Url)
+	}
+	if len(dp.Payload) != 0 {
+		t.Errorf("expected empty Payload, got %d bytes", len(dp.Payload))
 	}
 }
