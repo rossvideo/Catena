@@ -1,4 +1,4 @@
-/** Copyright 2024 Ross Video Ltd
+/** Copyright 2026 Ross Video Ltd
 
  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
@@ -180,7 +180,28 @@ std::string catena::param_value_string(const st2138::Value& value) {
             return "[struct variant value]";
         case st2138::Value::kStructVariantArrayValues:
             return "[struct variant array values]";
-        default:
+        case st2138::Value::kStructArrayValues:
+            return "[struct array values]";
+        case st2138::Value::kUndefinedValue:
+            return "[undefined value]";
+        case st2138::Value::KIND_NOT_SET:
+            return "[kind not set]";
+        default: // GCOVR_EXCL_START
             return "[no value]";
+            // GCOVR_EXCL_STOP
     }
+}
+
+bool catena::readTimestamp(std::string& value, long& dest) {
+    if (value.length() == 0 || !std::isdigit(value[0])) {
+        return false;
+    }
+    long temp;
+    const char* val = value.c_str();
+    auto [ptr, ec] = std::from_chars(val, val + value.length(), temp);
+    if (ec == std::errc() && ptr == (val + value.length())) {
+        dest = temp;
+        return true;
+    }
+    return false;
 }

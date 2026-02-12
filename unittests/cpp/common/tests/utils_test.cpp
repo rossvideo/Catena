@@ -2,8 +2,9 @@
 * @file utils_tests.cpp
 * @brief Testing for utils.cpp
 * @author nathan.rochon@rossvideo.com
-* @date 2025-03-26
-* @copyright Copyright © 2025 Ross Video Ltd
+* @author keon.foster@rossvideo.com
+* @date 2026/01/30
+* @copyright Copyright © 2026 Ross Video Ltd
 */
 
 #include <gtest/gtest.h>
@@ -136,10 +137,11 @@ TEST(UtilsTest, Fmt_NoArgs) {
     EXPECT_EQ(result, "Hello, World!");
 }
 
+// PARAM_VALUE_STRING TESTS
+
 TEST(UtilsTest, Value_Param_Empty) {
     st2138::Value value;
-    st2138::Empty* emptyValue = new st2138::Empty();
-    value.set_allocated_empty_value(emptyValue);
+    value.mutable_empty_value();
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "");
 }
@@ -167,7 +169,7 @@ TEST(UtilsTest, Value_Param_String) {
 
 TEST(UtilsTest, Value_Param_Struct) {
     st2138::Value value;
-    value.set_allocated_struct_value(new st2138::StructValue());
+    value.mutable_struct_value();
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "[struct value]");
 }
@@ -204,29 +206,152 @@ TEST(UtilsTest, Value_Param_StringArray) {
 
 TEST(UtilsTest, Value_Param_DataPayload) {
     st2138::Value value;
-    st2138::DataPayload* dataPayload = new st2138::DataPayload();
-    dataPayload->set_payload("binarydata");
-    value.set_allocated_data_payload(dataPayload);
+    auto datapayload = value.mutable_data_payload();
+    datapayload->set_payload("binarydata");
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "binarydata");
 }
 
 TEST(UtilsTest, Value_Param_StructVariantValue) {
     st2138::Value value;
-    value.set_allocated_struct_variant_value(new st2138::StructVariantValue());
+    value.mutable_struct_variant_value();
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "[struct variant value]");
 }
 
 TEST(UtilsTest, Value_Param_StructVariantArrayValues) {
     st2138::Value value;
-    value.set_allocated_struct_variant_array_values(new st2138::StructVariantList());
+    value.mutable_struct_variant_array_values();
     std::string result = catena::param_value_string(value);
     EXPECT_EQ(result, "[struct variant array values]");
 }
 
-TEST(UtilsTest, Value_Param_DefaultCase) {
+TEST(UtilsTest, Value_Param_StructArrayValues) {
+    st2138::Value value;
+    value.mutable_struct_array_values();
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "[struct array values]");
+}
+
+TEST(UtilsTest, Value_Param_UndefinedValue) {
+    st2138::Value value;
+    value.set_undefined_value(st2138::UNDEFINED_VALUE);
+    std::string result = catena::param_value_string(value);
+    EXPECT_EQ(result, "[undefined value]");
+}
+
+TEST(UtilsTest, Value_Param_KIND_NOT_SET) {
     st2138::Value value; // No kind set
     std::string result = catena::param_value_string(value);
-    EXPECT_EQ(result, "[no value]");
+    EXPECT_EQ(result, "[kind not set]");
+}
+
+// READTIMESTAMP TESTS
+
+TEST(UtilsTest, Read_Timestamp_Valid_Normal) {
+    long result = 0;
+    bool valid;
+    std::string value = "123123123";
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 123123123);
+    EXPECT_TRUE(valid);
+}
+
+TEST(UtilsTest, Read_Timestamp_Valid_Large) {
+    long result = 0;
+    bool valid;
+    std::string value(19, '1');
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 1111111111111111111);
+    EXPECT_TRUE(valid);
+}
+
+TEST(UtilsTest, Read_Timestamp_Valid_Small) {
+    long result = 0;
+    bool valid;
+    std::string value = "1";
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 1);
+    EXPECT_TRUE(valid);
+}
+
+TEST(UtilsTest, Read_Timestamp_Valid_Leading_Zero) {
+    long result = 0;
+    bool valid;
+    std::string value = "0123123";
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 123123);
+    EXPECT_TRUE(valid);
+}
+
+TEST(UtilsTest, Read_Timestamp_Invalid_Char) {
+    long result = 0;
+    bool valid;
+    std::string value = "123@123";
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 0);
+    EXPECT_FALSE(valid);
+}
+
+TEST(UtilsTest, Read_Timestamp_Invalid_Period) {
+    long result = 0;
+    bool valid;
+    std::string value = "123.123";
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 0);
+    EXPECT_FALSE(valid);
+}
+
+TEST(UtilsTest, Read_Timestamp_Invalid_Negative) {
+    long result = 0;
+    bool valid;
+    std::string value = "-123123";
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 0);
+    EXPECT_FALSE(valid);
+}
+
+TEST(UtilsTest, Read_Timestamp_Invalid_Prefix) {
+    long result = 0;
+    bool valid;
+    std::string value = "abc123123";
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 0);
+    EXPECT_FALSE(valid);
+}
+
+TEST(UtilsTest, Read_Timestamp_Invalid_Suffix) {
+    long result = 0;
+    bool valid;
+    std::string value = "123123abc";
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 0);
+    EXPECT_FALSE(valid);
+}
+
+TEST(UtilsTest, Read_Timestamp_Invalid_All_Chars) {
+    long result = 0;
+    bool valid;
+    std::string value = "abcdefg";
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 0);
+    EXPECT_FALSE(valid);
+}
+
+TEST(UtilsTest, Read_Timestamp_Invalid_Large_Value) {
+    long result = 0;
+    bool valid;
+    std::string value(20, '1');
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 0);
+    EXPECT_FALSE(valid);
+}
+
+TEST(UtilsTest, Read_Timestamp_Invalid_Empty) {
+    long result = 0;
+    bool valid;
+    std::string value = "";
+    valid = catena::readTimestamp(value, result);
+    EXPECT_EQ(result, 0);
+    EXPECT_FALSE(valid);
 }

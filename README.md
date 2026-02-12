@@ -41,8 +41,8 @@ Learn more about Ross Video [here](https://www.rossvideo.com/company/about-ross/
 * `/docs/`: Documentation and images
 * `/example_device_models/`: Example json device models 
   * `/import1/`: Device model with external param imports
-* `/interface/`: Contains the Catena protobuf source
-* `./schema/catena.device_schema.json`: JSON schema for Catena device models
+* `smpte/interface/proto/`: Contains the Catena protobuf source
+* `smpte/interface/schemata/device.json`: JSON schema for Catena device models
 * `/scripts/`: Collection of useful scripts
   * `./validate.js`: Tool to validate device models using schema
 * `/sdks/`: SDK source

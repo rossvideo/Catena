@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -93,6 +93,7 @@ void ExternalObjectRequest::proceed(bool ok) {
          * and transitioning to kRead
          */
         case CallStatus::kProcess:
+            processTimestamps_();
             new ExternalObjectRequest(service_, dms_, ok);  // to serve other clients
             context_.AsyncNotifyWhenDone(this);
             status_ = CallStatus::kWrite;

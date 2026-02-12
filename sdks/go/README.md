@@ -101,3 +101,49 @@ func (v Variant) Print() {
     }
 }
 ```
+
+## SDK Configuration
+
+The SDK uses a unified configuration system. All settings are loaded from environment variables with a configurable prefix.
+
+### Usage
+
+```go
+import "github.com/rossvideo/catena/sdks/go/pkg/catena"
+
+func main() {
+    // Initialize SDK (parses env vars, supports -v flags)
+    cfg, err := catena.InitOptions(catena.Options{AppName: "my_service"})
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer catena.Close()
+
+    // Use cfg.Port for server, catena.IsDev() for environment checks, etc.
+}
+```
+
+### Environment Variables
+
+All variables use the same prefix (default: `CATENA`). Replace `{PREFIX}` with your chosen prefix.
+
+| Variable | Description | Allowed values | Default |
+|---|---|---|---|
+| `{PREFIX}_ENV` | Environment mode | `dev`, `prod` | `prod` |
+| `{PREFIX}_PORT` | HTTP server port | Integer | `6254` |
+| `{PREFIX}_LOG_DIR` | Directory for log files | Path | `./logs` |
+| `{PREFIX}_SILENT` | Suppress all output | `true` | — |
+| `{PREFIX}_LOG_LEVEL` | Logging verbosity | `debug`, `info`, `warn`, `error` | `error` |
+| `{PREFIX}_LOG_FILE` | Enable file logging | `true`, `false` | `true` |
+| `{PREFIX}_LOG_CONSOLE` | Enable console logging | `true`, `false` | `true` |
+| `{PREFIX}_LOG_JSON` | Output logs as JSON | `true` | — |
+
+### Custom Prefix
+
+```go
+// Use the default CATENA prefix (no arguments needed)
+cfg, err := catena.InitOptions()  // reads CATENA_ENV, CATENA_PORT, etc.
+
+// Use a custom prefix for your application
+cfg, err := catena.InitOptions(catena.Options{Prefix: "MYAPP", AppName: "my_app"})  // reads MYAPP_ENV, MYAPP_PORT, etc.
+```
