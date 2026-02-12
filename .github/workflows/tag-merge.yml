@@ -11,6 +11,9 @@ on:
 jobs:
   update_version_file:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        sdk: [ 'cpp', 'go' ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -18,29 +21,26 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
-      - name: Put the version tags on main
+      - name: Put the version tags on main (${{ matrix.sdk }})
         run: |
-          # Derive version from C++ VERSION.txt (both SDKs share the same version numbers)
-          TEXT_FILE="$(cat sdks/cpp/VERSION.txt)"
-          VERSION=${TEXT_FILE#cpp-}
+          # Derive version from VERSION.txt
+          TEXT_FILE="$(cat sdks/${{ matrix.sdk }}/VERSION.txt)"
+          VERSION=${TEXT_FILE#${{ matrix.sdk }}-}
+
           if [ "$(echo "$VERSION" | cut -d'-' -f1)" = "" ]; then
-            echo "❌ Bad version file: sdks/cpp/VERSION.txt"
+            echo "❌ Bad version file: sdks/${{ matrix.sdk }}/VERSION.txt"
             exit 1
           fi
 
           VERSION_PART="$(echo "$VERSION" | cut -d'-' -f1)-$(echo "$VERSION" | cut -d'-' -f2)"
-          CPP_TAG="cpp-$VERSION_PART"
-          GO_TAG="go-$VERSION_PART"
-          echo "Tagging with $CPP_TAG and $GO_TAG"
+          TAG="${{ matrix.sdk }}-$VERSION_PART"
+          echo "Tagging with $TAG"
 
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
 
           # Create only tags that don't exist (workflow can run when only one SDK's VERSION.txt changed)
-          if ! git rev-parse --verify "$CPP_TAG" >/dev/null 2>&1; then
-            git tag -a "$CPP_TAG" -m "Version $CPP_TAG"
+          if ! git rev-parse --verify "$TAG" >/dev/null 2>&1; then
+            git tag -a "$TAG" -m "Version $TAG"
           fi
-          if ! git rev-parse --verify "$GO_TAG" >/dev/null 2>&1; then
-            git tag -a "$GO_TAG" -m "Version $GO_TAG"
-          fi
-          git push origin "$CPP_TAG" "$GO_TAG"
+          git push origin "$TAG"
