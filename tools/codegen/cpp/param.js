@@ -84,6 +84,28 @@ function removeArraySuffix(type) {
 }
 
 /**
+ * @param {string} oid the object id of the Param
+ * @returns a c++ safe identifier
+ */
+function getCppIdentifier(oid) {
+  const keywords = new Set([
+    "auto",
+    "class",
+    "private",
+    "public",
+    "protected",
+    "switch",
+    "if"
+  ]);
+
+  if (keywords.has(oid)) {
+    return `${oid}_`;
+  } else {
+    return oid;
+  }
+}
+
+/**
  * @class Descriptor
  * @brief extracts the paramDescriptor arguments from the param description
  * @param {object} desc the param description
@@ -194,6 +216,7 @@ class Descriptor {
 class Param {
   constructor(oid, desc, namespace, device, parent = undefined, isCommand = false) {
     this.oid = oid;
+    this.cppIdentifier = getCppIdentifier(oid);
     this.namespace = namespace;
     this.subParams = {};
     this.type = desc.type;
@@ -239,7 +262,7 @@ class Param {
         throw new Error(`${this.type} type can not have subparams`);
       }
       for (let oid in desc.params) {
-        let subParamNamespace = this.isVariantType() ? `${this.namespace}::_${this.oid}` : `${this.namespace}::${initialCap(this.oid)}`;
+        let subParamNamespace = this.isVariantType() ? `${this.namespace}::_${this.cppIdentifier}` : `${this.namespace}::${initialCap(this.cppIdentifier)}`;
         this.subParams[oid] = new Param(oid, desc.params[oid], `${subParamNamespace}`, device, this);
       }
     }
@@ -321,10 +344,10 @@ class Param {
     }
     // Not templated returns param
     if (!this.isTemplated()) {
-      return `${initialCap(this.oid)}`;
+      return `${initialCap(this.cppIdentifier)}`;
     // Non-array template also returns param
     } else if (this.isArrayType() && !this.template_param.isArrayType()) {
-      return `${initialCap(this.oid)}`;
+      return `${initialCap(this.cppIdentifier)}`;
     // Array template returns template_param
     } else {
       return this.template_param.objectType();
@@ -341,10 +364,10 @@ class Param {
     }
     // Not templated returns namespace::param
     if (!this.isTemplated()) {
-      return `${this.namespace}::${initialCap(this.oid)}`;
+      return `${this.namespace}::${initialCap(this.cppIdentifier)}`;
     // Non-array template also returns namespace::param
     } else if (this.isArrayType() && !this.template_param.isArrayType()) {
-      return `${this.namespace}::${initialCap(this.oid)}`;
+      return `${this.namespace}::${initialCap(this.cppIdentifier)}`;
     // Array template returns namespace::template_param
     } else {
       return this.template_param.objectNamespaceType();
@@ -400,10 +423,10 @@ class Param {
    */
   initializeValue() {
     if (!this.hasValue()) {
-      return `${this.objectType()} ${this.oid};`;
+      return `${this.objectType()} ${this.cppIdentifier};`;
     }
     let param = this.template_param || this;
-    return `${this.objectType()} ${this.oid}${this.valueInitializer(this.value, this.type, param)};`;
+    return `${this.objectType()} ${this.cppIdentifier}${this.valueInitializer(this.value, this.type, param)};`;
   }
 
   /**
@@ -454,7 +477,7 @@ class Param {
               throw new Error(`Subparam ${field} not found`);
             }
             let paramDef = subParam.template_param || subParam;
-            mappedFields.push(`.${field}${this.valueInitializer(typeValue.fields[field], subParam.type, paramDef)}`);
+            mappedFields.push(`.${subParam.cppIdentifier}${this.valueInitializer(typeValue.fields[field], subParam.type, paramDef)}`);
           }
         }
         return `${mappedFields.join(",")}`;
@@ -515,10 +538,10 @@ class Param {
   initializeParamWithValue() {
     if (!this.isCommand && this.hasValue())  {
       return `catena::common::ParamWithValue<${this.objectNamespaceType()}> ` +
-           `_${this.oid}Param(${this.oid}, _${this.oid}Descriptor, dm, ${this.isCommand});`;
+           `_${this.cppIdentifier}Param(${this.cppIdentifier}, _${this.cppIdentifier}Descriptor, dm, ${this.isCommand});`;
     } else {
       return `catena::common::ParamWithValue<catena::common::EmptyValue> ` +
-           `_${this.oid}Param(catena::common::emptyValue, _${this.oid}Descriptor, dm, ${this.isCommand});`;
+           `_${this.cppIdentifier}Param(catena::common::emptyValue, _${this.cppIdentifier}Descriptor, dm, ${this.isCommand});`;
     }
   }
 
@@ -557,7 +580,7 @@ class Param {
   getFieldInfoInit() {
     let subParamArr = Object.values(this.subParams);
     let mappedArr = subParamArr.map((subParam) => {
-      return `{"${subParam.oid}", &${this.objectType()}::${subParam.oid}}`;
+      return `{"${subParam.cppIdentifier}", &${this.objectType()}::${subParam.cppIdentifier}}`;
     });
     return mappedArr.join(", ");
   }
@@ -607,4 +630,5 @@ class Param {
   }
 }
 
+export { getCppIdentifier };
 export default Param;
