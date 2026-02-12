@@ -82,15 +82,19 @@ func writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value in
 	httpStatus := result.Code.ToHTTPStatus()
 
 	if result.Error != "" {
+		// Set status code BEFORE writing error body
+		w.WriteHeader(httpStatus)
+
 		// Only return detailed error messages in dev mode
 		if catena.IsDev() {
 			json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
 		} else {
 			json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(httpStatus)})
 		}
+		return
 	}
 
-	// Handle different value types
+	// Handle different value types (no error case)
 	switch v := value.(type) {
 	case catena.CatenaValue:
 		writeValueResult(w, v, httpStatus)
@@ -106,6 +110,10 @@ func writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value in
 // writeHTTPStatusResult writes a StatusResult to the HTTP response (no value).
 func writeHTTPStatusResult(w http.ResponseWriter, result catena.StatusResult) {
 	httpStatus := result.Code.ToHTTPStatus()
+	logger.Info("writeHTTPStatusResult", "httpStatus", httpStatus, "error", result.Error, "code", result.Code.ToHTTPStatus())
+
+	// Set status code BEFORE writing body
+	w.WriteHeader(httpStatus)
 
 	if result.Error != "" {
 		// Only return detailed error messages in dev mode
@@ -115,8 +123,6 @@ func writeHTTPStatusResult(w http.ResponseWriter, result catena.StatusResult) {
 			json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(httpStatus)})
 		}
 	}
-
-	w.WriteHeader(httpStatus)
 }
 
 // writeValueResult writes a CatenaValue as JSON
@@ -330,6 +336,7 @@ func (s *Server) lookupExecuteCommand(slot int) ExecuteCommandHandler {
 func (s *Server) RegisterRoutes() {
 	// Device endpoint: GET /st2138-api/v1/{slot}
 	s.mux.HandleFunc("/st2138-api/v1/", func(w http.ResponseWriter, r *http.Request) {
+		logger.Info("Device endpoint", "path", r.URL.Path, "method", r.Method)
 		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 		if len(parts) < 3 {
 			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid path format")
@@ -393,6 +400,7 @@ func (s *Server) RegisterRoutes() {
 
 	// Catch-all for 404 - must be registered last
 	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		logger.Info("Fallback handler", "path", r.URL.Path, "method", r.Method)
 		if s.fallbackHandler != nil {
 			val, res := s.fallbackHandler(w, r)
 			writeHTTPResult(w, res, val)
@@ -400,6 +408,10 @@ func (s *Server) RegisterRoutes() {
 		}
 		val, res := catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found")
 		writeHTTPResult(w, res, val)
+	})
+
+	s.mux.HandleFunc("/st2138-api/v1", func(w http.ResponseWriter, r *http.Request) {
+		writeHTTPStatusResult(w, catena.StatusWithCode(catena.NOT_FOUND, "endpoint not found"))
 	})
 }
 
