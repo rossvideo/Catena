@@ -31,9 +31,9 @@
 /**
  * @brief Test for Settings and configuration parsing.
  * @file settings_test.go
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
- * @date 2025-12-09
+ * @date 2026-02-12
  */
 
 package logger
