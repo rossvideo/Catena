@@ -13,9 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        include:
-          - sdk: cpp
-          - sdk: go
+        sdk: [ 'cpp', 'go' ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
