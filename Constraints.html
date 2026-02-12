@@ -1,0 +1,59 @@
+<div class="image-wrapper"
+style="background-color: black; padding: 5px;">
+<figure>
+<img src="images/Catena%20Logo_PMS2191%20&amp;%20White.png"
+style="width: 100%;" alt="Catena Logo" />
+<figcaption aria-hidden="true">Catena Logo</figcaption>
+</figure>
+</div>
+<h1 id="constraints">Constraints</h1>
+<blockquote>
+<p>Defined in <code>smpte/interface/proto/constraint.proto</code></p>
+</blockquote>
+<p>Constraints are applied to parameters to restrict the valid values
+that a parameter can take. They are optional and a parameter may only
+have at most one constraint. The supported constraints are:</p>
+<ul>
+<li><code>ALARM_TABLE</code> - <em>not implemented yet</em></li>
+<li><code>INT_RANGE</code> - restricts a parameter to a range of integer
+values with an optional step size.</li>
+<li><code>FLOAT_RANGE</code> - restricts a parameter to a range of float
+values with an optional step size.</li>
+<li><code>INT_CHOICE</code> - restricts a parameter to a list of
+discrete integer values.</li>
+<li><code>STRING_CHOICE</code> - restricts a parameter to a list of
+discrete string values.</li>
+<li><code>STRING_STRING_CHOICE</code> - restricts a parameter to a list
+of discrete string values with associated display strings. This is
+useful when the valid values are not human readable.</li>
+</ul>
+<h2 id="range-constraints">Range Constraints</h2>
+<p>Range constraints are applied to <code>INT32</code> and
+<code>FLOAT</code> parameter types. They specify a minimum and maximum
+value for the parameter, and an optional step size. If a step size is
+specified, the parameter’s value must be a multiple of the step size
+away from the minimum value. For example, if the minimum value is -10,
+the maximum value is 10 and the step size is 4, valid values would be
+-10, -6, -2, 2, 6 and 10.</p>
+<h3 id="step-size-rounding">Step Size Rounding</h3>
+<p>If a value is set that violates the step size constraint, it will be
+coerced to a valid value. For the case of <code>INT_RANGE</code>, the
+value will be rounded down to the nearest valid value. For the case of
+<code>FLOAT_RANGE</code>, the value will be rounded to the nearest valid
+value. If the number is exactly in between two valid values, it is
+undefined whether it will be rounded up or down. This is due to floating
+point precision issues that make it practically impossible to guarantee
+consistent rounding in this case, so the implementation is free to round
+either way. A value will be accepted as valid if it is with 1/10000th of
+a step size away from a valid value to account for floating point
+precision issues.</p>
+<h2 id="choice-constraints">Choice Constraints</h2>
+<p>Choice constraints are applied to <code>INT32</code>,
+<code>STRING</code> and <code>STRING_STRING</code> parameter types. They
+specify a list of valid values for the parameter. For
+<code>INT_CHOICE</code> and <code>STRING_CHOICE</code>, the parameter’s
+value must be one of the valid values specified in the constraint. For
+<code>STRING_STRING_CHOICE</code>, the parameter’s value must be one of
+the valid values specified in the constraint, but each valid value also
+has an associated display string that can be used for GUI representation
+using a <code>PolyglotText</code> object.</p>
