@@ -304,16 +304,14 @@ TEST_F(RangeConstraintTest, RangeConstraint_FloatApply) {
     EXPECT_EQ(res.float32_value(), 3.5) << "Constraint should set invalid value 3.25 to 3.5";
     }
     // some more testing for floating point precision issues
-    min = -10;
-    max = 10;
-    step = 0.1;
+    min = -10; max = 10; step = 0.1;
     constraint = RangeConstraint<float>(min, max, step, "test_oid", false);
-    for (float val = min; val <= max; val += 0.1f) {
-        src.set_float32_value(val);
+    for (int expected = -1000; expected <= 1000; expected += 10) {
+        const float testVal = expected / 100.0f;
+        src.set_float32_value(testVal);
         st2138::Value res = constraint.apply(src);
-        const float resVal = res.float32_value();
         // just care about the value being close enough to the expected value due to floating point precision issues
-        EXPECT_NEAR(res.float32_value(), val, 0.0001f) << "Constraint should not change valid value " << val;
+        EXPECT_NEAR(res.float32_value(), testVal, 0.0001f) << "Constraint should not change valid value " << testVal;
     }
     // testing in between values
     // -9.99 -> -10.0, -9.98 -> -10.0, -9.94 -> -9.9, -9.91 -> -9.9 ...,  9.96 -> 10.0
@@ -334,6 +332,17 @@ TEST_F(RangeConstraintTest, RangeConstraint_FloatApply) {
         const float resVal = res.float32_value();
         EXPECT_TRUE(std::abs(resVal - (expected / 100.0f)) < 0.0001f || std::abs(resVal - ((expected + 10) / 100.0f)) < 0.0001f) << "Constraint should set invalid value " << testVal << " to either " << expected / 100.0f << " or " << (expected + 10) / 100.0f;
     }
+    min = -10; max = 10; step = 7;
+    constraint = RangeConstraint<float>(min, max, step, "test_oid", false);
+    // make sure apply doesn't go under the min when rounding to the nearest step
+    src.set_float32_value(-9);
+    st2138::Value res = constraint.apply(src);
+    EXPECT_EQ(res.float32_value(), -10) << "Constraint should set invalid value -9 to -10";
+    // make sure apply doesn't go over the max when rounding to the nearest step
+    // naive rounding would round 9 to 11 which is over the max
+    src.set_float32_value(9);
+    res = constraint.apply(src);
+    EXPECT_EQ(res.float32_value(), 10) << "Constraint should set invalid value 9 to 10";
 }
 /* 
  * TEST 2.4 - Testing Float RangeConstraint toProto

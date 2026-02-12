@@ -19,7 +19,7 @@ Constraints are applied to parameters to restrict the valid values that a parame
 Range constraints are applied to `INT32` and `FLOAT` parameter types. They specify a minimum and maximum value for the parameter, and an optional step size. If a step size is specified, the parameter's value must be a multiple of the step size away from the minimum value. For example, if the minimum value is -10, the maximum value is 10 and the step size is 4, valid values would be -10, -6, -2, 2, 6 and 10.
 
 ### Step Size Rounding
-If a value is set that violates the step size constraint, it will be coerced to a valid value. For the case of `INT_RANGE`, the value will be rounded down to the nearest valid value. For the case of `FLOAT_RANGE`, the value will be rounded to the nearest valid value. If the number is exactly in between two valid values, it is undefined whether it will be rounded up or down.
+If a value is set that violates the step size constraint, it will be coerced to a valid value. For the case of `INT_RANGE`, the value will be rounded down to the nearest valid value. For the case of `FLOAT_RANGE`, the value will be rounded to the nearest valid value. If the number is exactly in between two valid values, it is undefined whether it will be rounded up or down. This is due to floating point precision issues that make it practically impossible to guarantee consistent rounding in this case, so the implementation is free to round either way. A value will be accepted as valid if it is with 1/10000th of a step size away from a valid value to account for floating point precision issues.
 
 ## Choice Constraints
 

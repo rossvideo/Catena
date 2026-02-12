@@ -135,19 +135,22 @@ class RangeConstraint : public catena::common::IConstraint {
     bool satisfied(const st2138::Value& src) const override {
         bool ans = false;
         if constexpr(std::is_same<T, int32_t>::value) {
-            ans = src.int32_value() >= min_ 
+            ans = src.has_int32_value() && src.int32_value() >= min_ 
                   && src.int32_value() <= max_
                   && (!step_ || (src.int32_value() - min_) % step_ == 0);
         }
         else if constexpr(std::is_same<T, float>::value) {
-            const float val = src.float32_value();
-            if (val >= min_ && val <= max_) {
-                if (!step_) {
-                    ans = true;
-                } else {
-                    const st2138::Value constrainedVal = apply(src);
-                    // close enough if within 1/10000th of the step size
-                    ans = std::fabs(constrainedVal.float32_value() - val) < (step_ * 0.00001f);
+            if (src.has_float32_value()) {
+                const float val = src.float32_value();
+                if (val >= min_ && val <= max_) {
+                    if (!step_) {
+                        ans = true;
+                    } else {
+                        constexpr float kStepTolerance = 0.0001f;
+                        const st2138::Value constrainedVal = apply(src);
+                        // close enough if within 1/10000th of the step size
+                        ans = std::fabs(constrainedVal.float32_value() - val) < (step_ * kStepTolerance);
+                    }
                 }
             }
         }
@@ -192,8 +195,16 @@ class RangeConstraint : public catena::common::IConstraint {
                     constrainedVal.set_float32_value(max_);
                 } else if (step_) {
                     // round to the nearest step, if step is not 0
-                    constrainedVal.set_float32_value(
-                      static_cast<float>((std::round((val - min_) / step_) * step_) + min_));
+                    const float steps = std::round((val - min_) / step_);
+                    const float newVal = (steps * step_) + min_;
+                    // make sure we don't go under the min or over the max when rounding
+                    if (newVal < min_) {
+                        constrainedVal.set_float32_value(min_);
+                    } else if (newVal > max_) {
+                        constrainedVal.set_float32_value(max_);
+                    } else {
+                        constrainedVal.set_float32_value(newVal);
+                    }
                 } else {
                     constrainedVal.set_float32_value(val);
                 }
