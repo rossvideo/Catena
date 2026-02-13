@@ -32,7 +32,7 @@
  * @brief Mock implementation for the ISocketReader class.
  * @author benjamin.whitten@rossvideo.com
  * @author keon.foster@rossvideo.com
- * @date 2026/01/20
+ * @date 2026/02/11
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -47,7 +47,7 @@ namespace REST {
 // Mock implementation for the ISocketReader class.
 class MockSocketReader : public ISocketReader {
   public:
-    MOCK_METHOD(void, read, (tcp::socket& socket), (override));
+    MOCK_METHOD(void, read, (tcp::socket& socket, uint32_t timeout), (override));
     MOCK_METHOD(RESTMethod, method, (), (const, override));
     MOCK_METHOD(const std::string&, endpoint, (), (const, override));
     MOCK_METHOD(uint32_t, slot, (), (const, override));

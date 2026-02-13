@@ -1,4 +1,4 @@
-# Copyright 2024 Ross Video Ltd
+# Copyright 2026 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 #
@@ -28,6 +28,13 @@ endif(APPLE)
 set(target catena_connections_REST)
 set(REST_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
+# Default socket read timeout in milliseconds (can be overridden: -DREST_SOCKET_READER_TIMEOUT_MS=1000)
+set(REST_READ_TIMEOUT_MS 600 CACHE STRING "Default socket read timeout in milliseconds")
+if(REST_READ_TIMEOUT_MS LESS_EQUAL 0)
+    message(WARNING "REST_READ_TIMEOUT_MS must be greater than 0, using default of 600 instead")
+    set(REST_READ_TIMEOUT_MS 600 CACHE STRING "Default socket read timeout in milliseconds" FORCE)
+endif()
+
 find_package(Boost 1.81 REQUIRED COMPONENTS system date_time url)
 find_package(ZLIB REQUIRED)
 
@@ -51,6 +58,8 @@ set(sources
 )
 
 add_library(${target} STATIC ${sources})
+
+target_compile_definitions(${target} PUBLIC REST_READ_TIMEOUT_MS=${REST_READ_TIMEOUT_MS})
 
 find_package(jwt-cpp CONFIG REQUIRED)
 

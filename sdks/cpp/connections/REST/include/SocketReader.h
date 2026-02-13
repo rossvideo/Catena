@@ -34,7 +34,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
  * @author keon.foster@rossvideo.com
- * @date 2026/01/20
+ * @date 2026/02/11
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -53,6 +53,7 @@
 // boost
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
+#include <boost/asio/experimental/awaitable_operators.hpp>
 #include <boost/url.hpp>
 using boost::asio::ip::tcp;
 using namespace boost::urls;
@@ -115,8 +116,9 @@ class SocketReader : public ISocketReader {
      * @brief Reads information from the inputted socket and extracts relevant
      * information pertaining to the REST request.
      * @param socket The socket to read from.
+     * @param timeout How long to read before in ms cancelling. Socket can be read from twice and timeout is applied in full both times.
      */
-    void read(tcp::socket& socket) override;
+    void read(tcp::socket& socket, uint32_t timeout = DEFAULT_TIMEOUT) override;
     /**
      * @brief Returns the HTTP method of the request.
      */
