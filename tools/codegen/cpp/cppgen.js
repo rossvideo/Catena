@@ -250,7 +250,7 @@ class CppGen {
    * generate the code to instantiate the params
    */
   params() {
-    if (!"params" in this.device.desc) {
+    if (!("params" in this.device.desc)) {
       return;
     }
     for (let oid in this.device.desc.params) {
@@ -364,7 +364,7 @@ class CppGen {
    * generate the code to instantiate the commands
    */
   commands() {
-    if (!"commands" in this.device.desc) {
+    if (!("commands" in this.device.desc)) {
       return;
     }
     for (let oid in this.device.desc.commands) {

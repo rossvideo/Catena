@@ -118,7 +118,7 @@ class Device extends CppCtor {
         path.shift(); // remove leading empty string
         let front = path.shift();
 
-        if (!front in this.params) {
+        if (!(front in this.params)) {
             throw new Error(`Invalid template parameter ${fqoid}`);
         }
 

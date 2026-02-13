@@ -48,6 +48,7 @@
 #include "MockDevice.h"
 #include "MockServiceImpl.h"
 #include "interface/ICallData.h"
+#include "CallData.h"
 
 // protobuf
 #include <interface/device.pb.h>
@@ -115,6 +116,9 @@ class GRPCTest : public ::testing::Test {
         }));
         EXPECT_CALL(service_, cq()).WillRepeatedly(::testing::Return(cq_.get()));
         EXPECT_CALL(service_, deregisterItem(::testing::_)).WillRepeatedly(::testing::Invoke([this](ICallData* cd) {
+            auto* temp = static_cast<CallData*>(testCall_.get());
+            requestStart_ = temp->getRequestStart();
+            requestReceived_ = temp->getRequestReceived();
             testCall_.reset(nullptr);
         }));
         EXPECT_CALL(dm0_, mutex()).WillRepeatedly(::testing::ReturnRef(mtx0_));
@@ -181,6 +185,8 @@ class GRPCTest : public ::testing::Test {
     // gRPC test variables.
     std::unique_ptr<ICallData> testCall_ = nullptr;
     std::unique_ptr<ICallData> asyncCall_ = nullptr;
+    long requestStart_ = -1;
+    long requestReceived_ = -1;
 };
 
 } // namespace gRPC

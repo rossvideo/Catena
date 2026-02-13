@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -82,6 +82,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
          * kFinish and notifying the responder once finished.
          */
         case CallStatus::kProcess:
+            processTimestamps_();
             // Cancels all open connections if shutdown signal is sent.
             shutdownSignalId_ = shutdownSignal_.connect([this](){ shutdown(); });
             // Used to serve other clients while processing.

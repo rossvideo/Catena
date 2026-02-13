@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,9 @@
  * @file CallData.h
  * @brief Base class for gRPC CallData classes which defines getJWSToken_().
  * @author benjamin.whitten@rossvideo.com
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author keon.foster@rossvideo.com
+ * @date 22/01/26
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #pragma once
@@ -44,6 +46,7 @@
 // common
 #include <rpc/TimeNow.h>
 #include <Authorizer.h>
+#include <utils.h>
 
 // gRPC
 #include <grpcpp/grpcpp.h>
@@ -65,11 +68,25 @@ namespace gRPC {
  */
 enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
+const long DEFAULT_REQUEST_START = 0;
+const long DEFAULT_REQUEST_RECEIVED = 0;
+
 /**
  * @brief Abstract base class for inherited by CallData child classes defining
  * the jwsToken_() method.
  */
 class CallData : public ICallData {
+  public:
+  
+    /**
+     * @brief Getter for requestStart_ 
+     */
+    long getRequestStart() { return requestStart_; }
+    /**
+     * @brief Getter for requestReceived_ 
+     */
+    long getRequestReceived() { return requestReceived_; }
+
   protected:
     /**
      * @brief CallData constructor which sets service_.
@@ -107,6 +124,24 @@ class CallData : public ICallData {
         }
         return jwsToken;
     }
+    
+    /**
+     * @brief Reads requestStart from metadata and records current time for requestReceived.
+     */
+    void processTimestamps_() {
+        // Getting request receival time formatted as,
+        // <number of milliseconds since start of epoch>
+        const auto epoch_time = std::chrono::system_clock::now().time_since_epoch();
+        requestReceived_ = std::chrono::duration_cast<std::chrono::milliseconds>(epoch_time).count();
+
+        auto clientMeta = context_.client_metadata();
+        // Getting client metadata from context.
+        auto kv = clientMeta.find("request-start");
+        if (kv != clientMeta.end()) {
+            std::string value(kv->second.data(), kv->second.size());
+            catena::readTimestamp(value, requestStart_);
+        }
+    }
 
     /**
      * @brief The context of the RPC. This is retrieved once a call to
@@ -117,6 +152,16 @@ class CallData : public ICallData {
      * @brief Pointer to ServiceImpl.
      */
     IServiceImpl* service_;
+    /**
+     * @brief The time at which the request was sent formatted as,
+     * <number of milliseconds since start of epoch>
+     */
+    long requestStart_ = DEFAULT_REQUEST_START;
+    /**
+     * @brief The time at which the request was sent formatted as,
+     * <number of milliseconds since start of epoch>
+     */
+    long requestReceived_ = DEFAULT_REQUEST_RECEIVED;
 };
 
 };
