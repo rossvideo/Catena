@@ -117,9 +117,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a7e7de6cd90e39a3eff518b4c98c0b0d8" id="r_a7e7de6cd90e39a3eff518b4c98c0b0d8"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a7e7de6cd90e39a3eff518b4c98c0b0d8">SocketReader</a> (<a class="el" href="classcatena_1_1REST_1_1IServiceImpl.html">IServiceImpl</a> *<a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a77e6454d07e1db7095ed8191496740b1">service</a>)</td></tr>
 <tr class="memdesc:a7e7de6cd90e39a3eff518b4c98c0b0d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1REST_1_1SocketReader.html" title="A helper class which reads from the client socket using boost and extracts relevant information perta...">SocketReader</a> class.  <br /></td></tr>
 <tr class="separator:a7e7de6cd90e39a3eff518b4c98c0b0d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6a3de487f64c2717545da55ec979cba3" id="r_a6a3de487f64c2717545da55ec979cba3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a6a3de487f64c2717545da55ec979cba3">read</a> (tcp::socket &amp;socket) override</td></tr>
-<tr class="memdesc:a6a3de487f64c2717545da55ec979cba3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads information from the inputted socket and extracts relevant information pertaining to the <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> request.  <br /></td></tr>
-<tr class="separator:a6a3de487f64c2717545da55ec979cba3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31a87a254c0b5fdf897c0f3f6099e26f" id="r_a31a87a254c0b5fdf897c0f3f6099e26f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a31a87a254c0b5fdf897c0f3f6099e26f">read</a> (tcp::socket &amp;socket, uint32_t timeout=DEFAULT_TIMEOUT) override</td></tr>
+<tr class="memdesc:a31a87a254c0b5fdf897c0f3f6099e26f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads information from the inputted socket and extracts relevant information pertaining to the <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> request.  <br /></td></tr>
+<tr class="separator:a31a87a254c0b5fdf897c0f3f6099e26f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a240084c7a4f8fd879ffdc850efca6e70" id="r_a240084c7a4f8fd879ffdc850efca6e70"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacecatena_1_1REST.html#a41324383cc28492c334974a51fe45b54">RESTMethod</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a240084c7a4f8fd879ffdc850efca6e70">method</a> () const override</td></tr>
 <tr class="memdesc:a240084c7a4f8fd879ffdc850efca6e70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the HTTP method of the request.  <br /></td></tr>
 <tr class="separator:a240084c7a4f8fd879ffdc850efca6e70"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -623,8 +623,8 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
-<a id="a6a3de487f64c2717545da55ec979cba3" name="a6a3de487f64c2717545da55ec979cba3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6a3de487f64c2717545da55ec979cba3">&#9670;&#160;</a></span>read()</h2>
+<a id="a31a87a254c0b5fdf897c0f3f6099e26f" name="a31a87a254c0b5fdf897c0f3f6099e26f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a31a87a254c0b5fdf897c0f3f6099e26f">&#9670;&#160;</a></span>read()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -636,8 +636,18 @@ Here is the call graph for this function:</div>
           <td class="memname">void catena::REST::SocketReader::read </td>
           <td>(</td>
           <td class="paramtype">tcp::socket &amp;&#160;</td>
-          <td class="paramname"><em>socket</em></td><td>)</td>
+          <td class="paramname"><em>socket</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>timeout</em> = <code>DEFAULT_TIMEOUT</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -651,11 +661,12 @@ Here is the call graph for this function:</div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">socket</td><td>The socket to read from. </td></tr>
+    <tr><td class="paramname">timeout</td><td>How long to read before in ms cancelling. Socket can be read from twice and timeout is applied in full both times. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a4f7f98c4a24dc291fc762f3e5d82e6a0">catena::REST::ISocketReader</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a42a291bd006c0156e071d07da0ec75fa">catena::REST::ISocketReader</a>.</p>
 
 </div>
 </div>
