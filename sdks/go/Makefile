@@ -75,7 +75,6 @@ coverage-html: coverage
 	@echo "Coverage report generated: coverage.html"
 
 coverage-lcov: coverage
-	@command -v gcov2lcov >/dev/null 2>&1 || { echo "Installing gcov2lcov..."; go install github.com/jandelgado/gcov2lcov@latest; }
 	gcov2lcov -infile=coverage.out -outfile=coverage.lcov
 	@echo "LCOV coverage report generated: coverage.lcov"
 	@echo "You can now enable Coverage Gutters in VS Code to see coverage highlights"
