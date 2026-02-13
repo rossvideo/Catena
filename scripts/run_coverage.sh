@@ -125,6 +125,16 @@ golang () {
   echo "Go Coverage Summary:"
   go tool cover -func="$COVERAGE_FILE" | tail -1
 
+  # Generate LCOV file for Coverage Gutters (VS Code extension)
+  echo "Generating LCOV coverage file for VS Code Coverage Gutters..."
+  LCOV_FILE="$HOME/Catena/sdks/go/coverage.lcov"
+  if ! command -v gcov2lcov &> /dev/null; then
+    echo "Installing gcov2lcov..."
+    go install github.com/jandelgado/gcov2lcov@latest
+  fi
+  gcov2lcov -infile="$COVERAGE_FILE" -outfile="$LCOV_FILE"
+  echo "LCOV coverage file generated: $LCOV_FILE"
+
   # Generate HTML report if requested
   if [ "$html_report" = true ]; then
     echo "Generating HTML report with hit counts..."

@@ -60,3 +60,22 @@ update-imports:
 
 clean-protos:
 	rm -rf "$(OUT_DIR)"
+
+# Test coverage targets
+.PHONY: test coverage coverage-html coverage-lcov
+
+test:
+	go test -v ./...
+
+coverage:
+	go test -v -coverprofile=coverage.out -covermode=atomic -coverpkg=./... ./...
+
+coverage-html: coverage
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
+
+coverage-lcov: coverage
+	@command -v gcov2lcov >/dev/null 2>&1 || { echo "Installing gcov2lcov..."; go install github.com/jandelgado/gcov2lcov@latest; }
+	gcov2lcov -infile=coverage.out -outfile=coverage.lcov
+	@echo "LCOV coverage report generated: coverage.lcov"
+	@echo "You can now enable Coverage Gutters in VS Code to see coverage highlights"

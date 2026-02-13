@@ -149,5 +149,13 @@
         "span": "cpp",
         "typeindex": "cpp"
     },
-    "java.compile.nullAnalysis.mode": "disabled"
+    "java.compile.nullAnalysis.mode": "disabled",
+    "coverage-gutters.coverageFileNames": [
+        "sdks/go/coverage.lcov",
+        "coverage.lcov",
+        "lcov.info"
+    ],
+    "coverage-gutters.coverageBaseDir": "**",
+    "coverage-gutters.showLineCoverage": true,
+    "coverage-gutters.showRulerCoverage": true
 }
