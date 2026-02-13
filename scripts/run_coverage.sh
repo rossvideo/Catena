@@ -142,8 +142,7 @@ echo ~/Catena/${BUILD_TARGET}
 
 if [ "$BUILD_TARGET" == "build/cpp" ]; then
   # run the javascript tests/coverage
-  #TODO: fix how this is ran
-  javascript
+  (javascript)
   cpp "$@"
 elif [ "$BUILD_TARGET" == "build/go" ]; then
   golang
