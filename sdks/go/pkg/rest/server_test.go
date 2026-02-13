@@ -40,12 +40,15 @@ package rest
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 )
@@ -161,23 +164,6 @@ func TestServer_RegisterGetAssetHandler(t *testing.T) {
 
 	handler := srv.lookupGetAsset(0)
 	_, _ = handler(0, "test/asset")
-
-	if !handlerCalled {
-		t.Error("registered handler was not called")
-	}
-}
-
-func TestServer_RegisterConnectHandler(t *testing.T) {
-	srv := NewServer([]int{0})
-
-	handlerCalled := false
-	srv.RegisterConnectHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		handlerCalled = true
-		return catena.CatenaValue{}, catena.StatusResult{Code: catena.OK}
-	})
-
-	handler := srv.lookupConnect()
-	_, _ = handler(nil, nil)
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
@@ -509,40 +495,56 @@ func TestServer_ExecuteCommand_MethodNotAllowed(t *testing.T) {
 	}
 }
 
-// TODO once connect is implemented, add tests for it
 func TestServer_Connect_Route(t *testing.T) {
-	/*srv := NewServer([]int{0})
+	srv := NewServer([]int{0, 1})
 
-	handlerCalled := false
-	srv.RegisterConnectHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		handlerCalled = true
-		return catena.Reply(catena.CatenaValue{})
-	})
-
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
+	ctx, cancel := context.WithCancel(context.Background())
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
 	rec := httptest.NewRecorder()
 
-	srv.mux.ServeHTTP(rec, req)
+	go srv.mux.ServeHTTP(rec, req)
+	// Allow handler to write headers and initial SSE event
+	time.Sleep(100 * time.Millisecond)
+	cancel()
+	// Allow handler to exit and defer to run
+	time.Sleep(50 * time.Millisecond)
 
 	if rec.Code != http.StatusOK {
 		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
 	}
-	if handlerCalled {
-		t.Error("registered handler should not have been called")
-	}*/
+	if rec.Header().Get("Content-Type") != "text/event-stream" {
+		t.Errorf("expected Content-Type text/event-stream, got %s", rec.Header().Get("Content-Type"))
+	}
+	if rec.Header().Get("Cache-Control") != "no-cache" {
+		t.Errorf("expected Cache-Control no-cache, got %s", rec.Header().Get("Cache-Control"))
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, "data:") {
+		t.Error("expected SSE data in response body")
+	}
+	if !strings.Contains(body, "slots_added") {
+		t.Error("expected initial SlotsAdded event in response body")
+	}
 }
 
 func TestServer_Connect_MethodNotAllowed(t *testing.T) {
-	/*srv := NewServer([]int{0})
+	srv := NewServer([]int{0})
 
 	req := httptest.NewRequest(http.MethodPost, "/st2138-api/v1/connect", nil)
 	rec := httptest.NewRecorder()
 
 	srv.mux.ServeHTTP(rec, req)
 
-	// POST to connect endpoint should not be allowed (GET required)
-	// Test passes if no panic occurs
-	*/
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Errorf("expected status %d, got %d", http.StatusMethodNotAllowed, rec.Code)
+	}
+	body, _ := io.ReadAll(rec.Body)
+	var response map[string]string
+	if err := json.Unmarshal(body, &response); err == nil {
+		if !strings.Contains(response["error"], "GET") {
+			t.Errorf("expected error to mention GET, got %s", response["error"])
+		}
+	}
 }
 
 func TestServer_Fallback_Route(t *testing.T) {
@@ -601,12 +603,6 @@ func TestServer_DefaultHandlers(t *testing.T) {
 	}
 	if asset.GetProtoAsset() != nil {
 		t.Error("default get asset handler should return nil asset")
-	}
-
-	// Test default connect handler
-	value, status = srv.lookupConnect()(nil, nil)
-	if status.Code != catena.UNIMPLEMENTED {
-		t.Errorf("default connect handler should return UNIMPLEMENTED, got %v", status.Code)
 	}
 
 	// Test default execute command handler
@@ -971,20 +967,33 @@ func TestDeviceEndpoint_NotRegistered(t *testing.T) {
 	}
 }
 
-func TestConnectHandler_Lookup(t *testing.T) {
-	srv := NewServer([]int{})
-	called := false
-	srv.RegisterConnectHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		called = true
-		return catena.Reply(catena.CatenaValue{})
-	})
+func TestServer_Connect_TooManyConnections(t *testing.T) {
+	srv := NewServer([]int{0})
+	srv.SetMaxConnections(1)
 
-	handler := srv.lookupConnect()
-	handler(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/", nil))
+	ctx1, cancel1 := context.WithCancel(context.Background())
+	req1 := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx1)
+	rec1 := httptest.NewRecorder()
+	go srv.mux.ServeHTTP(rec1, req1)
+	time.Sleep(50 * time.Millisecond)
 
-	if !called {
-		t.Error("custom connect handler not called")
+	req2 := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
+	rec2 := httptest.NewRecorder()
+	srv.mux.ServeHTTP(rec2, req2)
+
+	if rec2.Code != http.StatusTooManyRequests {
+		t.Errorf("expected status %d when at max connections, got %d", http.StatusTooManyRequests, rec2.Code)
 	}
+	body, _ := io.ReadAll(rec2.Body)
+	var response map[string]string
+	if err := json.Unmarshal(body, &response); err == nil {
+		if _, ok := response["error"]; !ok {
+			t.Error("expected error in response when at max connections")
+		}
+	}
+
+	cancel1()
+	time.Sleep(50 * time.Millisecond)
 }
 
 func TestWriteResults_ValidData(t *testing.T) {
