@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { expect, test, describe, beforeAll } from '@jest/globals';
 import { getCppIdentifier } from '../cpp/param.js';
+import { CPP_KEYWORDS } from '../cpp/cpp-keywords.js';
 import CppGen from '../cpp/cppgen.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -70,38 +71,6 @@ const MINIMAL_DESCRIPTOR_WITH_KEYWORDS = {
 };
 
 describe('getCppIdentifier', () => {
-  test('returns safe identifier for C++ keyword "auto"', () => {
-    expect(getCppIdentifier('auto')).toBe('auto_');
-  });
-
-  test('returns safe identifier for C++ keyword "class"', () => {
-    expect(getCppIdentifier('class')).toBe('class_');
-  });
-
-  test('returns safe identifier for C++ keyword "private"', () => {
-    expect(getCppIdentifier('private')).toBe('private_');
-  });
-
-  test('returns safe identifier for C++ keyword "public"', () => {
-    expect(getCppIdentifier('public')).toBe('public_');
-  });
-
-  test('returns safe identifier for C++ keyword "protected"', () => {
-    expect(getCppIdentifier('protected')).toBe('protected_');
-  });
-
-  test('returns safe identifier for C++ keyword "switch"', () => {
-    expect(getCppIdentifier('switch')).toBe('switch_');
-  });
-
-  test('returns safe identifier for C++ keyword "if"', () => {
-    expect(getCppIdentifier('if')).toBe('if_');
-  });
-
-  test('returns oid unchanged for non-keyword "video_file_path"', () => {
-    expect(getCppIdentifier('video_file_path')).toBe('video_file_path');
-  });
-
   test('returns oid unchanged for non-keyword "inputs"', () => {
     expect(getCppIdentifier('inputs')).toBe('inputs');
   });
@@ -116,6 +85,12 @@ describe('getCppIdentifier', () => {
 
   test('returns oid unchanged for non-keyword "flow"', () => {
     expect(getCppIdentifier('flow')).toBe('flow');
+  });
+
+  test('every CPP_KEYWORDS entry returns safe identifier (keyword + underscore)', () => {
+    for (const keyword of CPP_KEYWORDS) {
+      expect(getCppIdentifier(keyword)).toBe(`${keyword}_`);
+    }
   });
 });
 

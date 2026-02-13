@@ -14,6 +14,7 @@
 * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 import Constraint from "./constraint.js";
+import { CPP_KEYWORDS } from "./cpp-keywords.js";
 
 /**
  *
@@ -88,21 +89,10 @@ function removeArraySuffix(type) {
  * @returns a c++ safe identifier
  */
 function getCppIdentifier(oid) {
-  const keywords = new Set([
-    "auto",
-    "class",
-    "private",
-    "public",
-    "protected",
-    "switch",
-    "if"
-  ]);
-
-  if (keywords.has(oid)) {
+  if (CPP_KEYWORDS.has(oid)) {
     return `${oid}_`;
-  } else {
-    return oid;
   }
+  return oid;
 }
 
 /**
