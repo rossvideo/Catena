@@ -2,9 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { expect, test, describe, beforeAll } from '@jest/globals';
-import { getCppIdentifier } from '../cpp/param.js';
-import { CPP_KEYWORDS } from '../cpp/cpp-keywords.js';
-import CppGen from '../cpp/cppgen.js';
+import { getCppIdentifier } from '../param.js';
+import { CPP_KEYWORDS } from '../cpp-keywords.js';
+import CppGen from '../cppgen.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = path.join(__dirname, 'output', 'cpp-keywords-integration');
