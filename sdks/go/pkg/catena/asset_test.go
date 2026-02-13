@@ -41,8 +41,11 @@ package catena
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"testing/fstest"
 )
@@ -439,6 +442,46 @@ func TestLoadPayloadsFromEmbed_EmptyRoot(t *testing.T) {
 	}
 	if len(out) != 1 {
 		t.Fatalf("expected 1 entry, got %d", len(out))
+	}
+}
+
+// openFailFS wraps an fs.FS and returns an error from Open for a specific path.
+type openFailFS struct {
+	fs.FS
+	failPath string
+}
+
+func (f openFailFS) Open(name string) (fs.File, error) {
+	if name == f.failPath {
+		return nil, errors.New("read forbidden")
+	}
+	return f.FS.Open(name)
+}
+
+func TestLoadPayloadsFromEmbed_WalkDirError(t *testing.T) {
+	// Non-existent root: WalkDir calls the callback with err != nil (covers lines 120 and 138).
+	fsys := fstest.MapFS{"root/a.txt": {Data: []byte("a")}}
+	_, err := LoadPayloadsFromEmbed(fsys, "nonexistent")
+	if err == nil {
+		t.Fatal("expected error when root does not exist")
+	}
+}
+
+func TestLoadPayloadsFromEmbed_ToPayloadFromFSError(t *testing.T) {
+	// FS that lists a file but Open fails for it, so ToPayloadFromFS fails (covers line 127).
+	fsys := openFailFS{
+		FS: fstest.MapFS{
+			"root/ok.txt":  {Data: []byte("ok")},
+			"root/bad.txt": {Data: []byte("bad")},
+		},
+		failPath: "root/bad.txt",
+	}
+	_, err := LoadPayloadsFromEmbed(fsys, "root")
+	if err == nil {
+		t.Fatal("expected error when ToPayloadFromFS fails for a file")
+	}
+	if err.Error() == "" || !strings.Contains(err.Error(), "root/bad.txt") {
+		t.Errorf("expected error to mention path root/bad.txt: %v", err)
 	}
 }
 
