@@ -7,7 +7,7 @@ import { CPP_KEYWORDS } from '../cpp-keywords.js';
 import CppGen from '../cppgen.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const OUTPUT_DIR = path.join(__dirname, 'output', 'cpp-keywords-integration');
+const OUTPUT_DIR = path.join(__dirname, 'output', 'cpp-test-output');
 
 /**
  * Minimal valid device descriptor with C++ keywords as param oids:
