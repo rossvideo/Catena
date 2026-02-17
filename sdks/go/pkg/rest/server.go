@@ -608,15 +608,6 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 		res := handler(nativeValue, slot, fqoid)
 		writeHTTPStatusResult(w, res)
 
-		// Broadcast value change to all SSE connections if successful
-		if res.Code == catena.OK || res.Code == catena.NO_CONTENT {
-			s.BroadcastUpdate(PushUpdate{
-				Slot:  slot,
-				OID:   fqoid,
-				Value: nativeValue,
-			})
-		}
-
 	default:
 		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET, PUT, PATCH allowed")
 		writeHTTPResult(w, res, val)
