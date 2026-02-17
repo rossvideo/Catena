@@ -38,6 +38,7 @@
  #pragma once
 
  #include <boost/asio.hpp>
+ #include <HTTPServer.h>
  #include <string>
  #include <thread>
  #include <atomic>
@@ -172,9 +173,9 @@ private:
      /**
       * @brief Generate HTTP response
       * @param path The requested path
-      * @return HTTP response string
+      * @return HTTP response object
       */
-     std::string generateResponse(const std::string& path);
+     HTTPResponse generateResponse(const std::string& path);
 
      /**
       * @brief Generate XML content from configuration

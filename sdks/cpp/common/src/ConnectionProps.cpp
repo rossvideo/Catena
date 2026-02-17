@@ -36,6 +36,7 @@
   */
 
 #include <ConnectionProps.h>
+#include <HTTPServer.h>
 #include <Logger.h>
 #include <sstream>
 
@@ -224,28 +225,22 @@ void ConnectionProps::run() {
 
 void ConnectionProps::handleRequest(tcp::socket socket) {
     try {
-        // Read the HTTP request
-        boost::asio::streambuf request_buf;
+        // Read the HTTP request using HTTPServer utilities
+        HTTPRequest request;
         boost::system::error_code ec;
         
-        // Read until we get the double CRLF (end of headers)
-        boost::asio::read_until(socket, request_buf, "\r\n\r\n", ec);
-        
-        if (ec && ec != boost::asio::error::eof) {
-            LOG(WARNING) << "Error reading request: " << ec.message();
+        if (!HTTPServer::readRequest(socket, request, ec)) {
+            if (ec && ec != boost::asio::error::eof) {
+                LOG(WARNING) << "Error reading request: " << ec.message();
+            }
             return;
         }
 
-        // Parse the request line
-        std::istream request_stream(&request_buf);
-        std::string method, path, version;
-        request_stream >> method >> path >> version;
-
-        VLOG(2) << "Connection props request: " << method << " " << path;
+        VLOG(2) << "Connection props request: " << request.method << " " << request.path;
 
         // Generate and send response
-        std::string response = generateResponse(path);
-        boost::asio::write(socket, boost::asio::buffer(response), ec);
+        HTTPResponse response = generateResponse(request.path);
+        HTTPServer::writeResponse(socket, response, ec);
 
         if (ec) {
             LOG(WARNING) << "Error writing response: " << ec.message();
@@ -259,42 +254,37 @@ void ConnectionProps::handleRequest(tcp::socket socket) {
     }
 }
 
-std::string ConnectionProps::generateResponse(const std::string& path) {
-    std::stringstream response;
+HTTPResponse ConnectionProps::generateResponse(const std::string& path) {
+    HTTPResponse response;
 
     // Check if the path matches our endpoint
     if (path == endpoint_) {
         // Serve the discovery content
         std::lock_guard<std::mutex> lock(content_mutex_);
         
-        response << "HTTP/1.1 200 OK\r\n"
-                 << "Content-Type: application/xml\r\n"
-                 << "Content-Length: " << response_content_.length() << "\r\n"
-                 << "Connection: close\r\n"
-                 << "Access-Control-Allow-Origin: *\r\n"
-                 << "Access-Control-Allow-Methods: GET, OPTIONS\r\n"
-                 << "Access-Control-Allow-Headers: Content-Type\r\n"
-                 << "\r\n"
-                 << response_content_;
+        response.status_code = 200;
+        response.status_message = "OK";
+        response.headers["Content-Type"] = "application/xml";
+        response.headers["Connection"] = "close";
+        response.headers["Access-Control-Allow-Origin"] = "*";
+        response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS";
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type";
+        response.body = response_content_;
     } else if (path == "/health") {
         // Simple health check endpoint
-        std::string health = "OK";
-        response << "HTTP/1.1 200 OK\r\n"
-                 << "Content-Type: text/plain\r\n"
-                 << "Content-Length: " << health.length() << "\r\n"
-                 << "Connection: close\r\n"
-                 << "\r\n"
-                 << health;
+        response.status_code = 200;
+        response.status_message = "OK";
+        response.headers["Content-Type"] = "text/plain";
+        response.headers["Connection"] = "close";
+        response.body = "OK";
     } else {
         // 404 Not Found for all other paths
-        std::string not_found = "Not Found - Only " + endpoint_ + " is available";
-        response << "HTTP/1.1 404 Not Found\r\n"
-                 << "Content-Type: text/plain\r\n"
-                 << "Content-Length: " << not_found.length() << "\r\n"
-                 << "Connection: close\r\n"
-                 << "\r\n"
-                 << not_found;
+        response.status_code = 404;
+        response.status_message = "Not Found";
+        response.headers["Content-Type"] = "text/plain";
+        response.headers["Connection"] = "close";
+        response.body = "Not Found - Only " + endpoint_ + " is available";
     }
 
-    return response.str();
+    return response;
 }
