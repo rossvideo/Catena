@@ -522,8 +522,33 @@ func TestServer_Connect_Route(t *testing.T) {
 	if !strings.Contains(body, "data:") {
 		t.Error("expected SSE data in response body")
 	}
+	// Initial event must be PushUpdates format: {"slots_added":{"slots":[...]}} (matches C++/proto)
 	if !strings.Contains(body, "slots_added") {
-		t.Error("expected initial SlotsAdded event in response body")
+		t.Error("expected initial slots_added in response body")
+	}
+	if !strings.Contains(body, "\"slots\"") {
+		t.Error("expected initial event in proto format with nested \"slots\" (SlotList)")
+	}
+	// Parse first SSE data line and verify structure
+	lines := strings.Split(body, "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "data: ") {
+			var payload map[string]any
+			if err := json.Unmarshal([]byte(strings.TrimPrefix(line, "data: ")), &payload); err != nil {
+				t.Errorf("initial SSE data must be valid JSON: %v", err)
+				break
+			}
+			slotsAdded, ok := payload["slots_added"].(map[string]any)
+			if !ok {
+				t.Error("expected slots_added object (SlotList) in initial event")
+				break
+			}
+			slots, ok := slotsAdded["slots"].([]any)
+			if !ok || len(slots) != 2 {
+				t.Errorf("expected slots_added.slots to be array of 2 slots, got %T %v", slotsAdded["slots"], slotsAdded["slots"])
+			}
+			break
+		}
 	}
 }
 
@@ -989,6 +1014,11 @@ func TestServer_Connect_TooManyConnections(t *testing.T) {
 	if err := json.Unmarshal(body, &response); err == nil {
 		if _, ok := response["error"]; !ok {
 			t.Error("expected error in response when at max connections")
+		}
+		// In dev mode server returns C++-matching message; in prod returns http.StatusText
+		msg := response["error"]
+		if msg != "Too many connections to service" && msg != "Too Many Requests" {
+			t.Errorf("expected error \"Too many connections to service\" (dev) or \"Too Many Requests\" (prod), got %q", msg)
 		}
 	}
 

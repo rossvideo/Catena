@@ -447,16 +447,21 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Register this connection
+	_ = r.Header.Get("Detail-Level")
+	_ = r.Header.Get("User-Agent")
+	_ = r.Header.Get("Authorization")
+
+	// Register this connection (same as C++ connectionQueue().registerConnection(this)).
 	connID, updates := s.registerConnection()
 	if connID < 0 {
-		val, res := catena.ReplyError[catena.CatenaValue](catena.RESOURCE_EXHAUSTED, "too many connections")
+		// Same message and status as C++: "Too many connections to service", RESOURCE_EXHAUSTED
+		val, res := catena.ReplyError[catena.CatenaValue](catena.RESOURCE_EXHAUSTED, "Too many connections to service")
 		writeHTTPResult(w, res, val)
 		return
 	}
 	defer s.unregisterConnection(connID)
 
-	// Set SSE headers
+	// Set SSE headers (same as C++ SSEWriter: text/event-stream, Cache-Control, Connection, CORS).
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
@@ -470,14 +475,20 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	flusher.Flush()
 
-	// Send initial message with populated slots
-	initialUpdate := PushUpdate{
-		SlotsAdded: s.getPopulatedSlots(),
+	// Send initial empty update with populated slots (same as C++: sendResponse(OK, populatedSlots)).
+	// Proto PushUpdates uses slots_added as SlotList { repeated uint32 slots }; send that shape.
+	populatedSlots := s.getPopulatedSlots()
+	initialPayload := map[string]any{"slots_added": map[string]any{"slots": populatedSlots}}
+	initialJSON, err := json.Marshal(initialPayload)
+	if err != nil {
+		logger.Error("failed to marshal initial connect payload", "error", err)
+		return
 	}
-	if err := s.sendSSEEvent(w, flusher, initialUpdate); err != nil {
+	if _, err := fmt.Fprintf(w, "data: %s\n\n", initialJSON); err != nil {
 		logger.Error("failed to send initial SSE event", "error", err)
 		return
 	}
+	flusher.Flush()
 
 	logger.Info("SSE Connect started", "connID", connID)
 
