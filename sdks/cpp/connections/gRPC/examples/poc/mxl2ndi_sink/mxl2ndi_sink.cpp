@@ -131,6 +131,15 @@ void RunVideoFlow() {
     catena::common::ParamWithValue<std::string>* selectedName =
       dynamic_cast<catena::common::ParamWithValue<std::string>*>(selectedNameParam.get());
 
+    st2138::StructList* flowDefs = value.mutable_struct_array_values();
+    flowDefs->clear_struct_values();
+    for (const std::unique_ptr<mxlcpp::MxlReader>& reader : readers) {
+        std::unique_ptr<st2138::Value> flowDefValue = reader->getFlowDef();
+        st2138::StructValue flowDefStruct = flowDefValue->struct_value();
+        flowDefs->mutable_struct_values()->Add(std::move(flowDefStruct));
+    }
+    dm.setValue("/flow_defs", value);
+
     int readerIndex = -1;
     int updateDisplayIndex = -1;
     indexChanged = true;

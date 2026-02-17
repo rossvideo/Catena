@@ -5,16 +5,19 @@ params:
     name:
       display_strings:
         en: "ID"
+        ai: GUID for this flow definition.
     type: STRING
   description:
     name:
       display_strings:
         en: "Description"
+        ai: "Description of the flow"
     type: STRING
   tags:
     name:
       display_strings:
         en: "Tags"
+        ai: "Tags associated with the flow"
     type: STRUCT_ARRAY
     params:
       name:
@@ -31,11 +34,13 @@ params:
     name:
       display_strings:
         en: "Format"
+        ai: "The format of the flow, e.g. urn:x-nmos:format:audio, urn:x-nmos:format:video, etc."
     type: STRING
   label:
     name:
       display_strings:
         en: "Label"
+        ai: "Human-readable label/name for the flow"
     type: STRING
   parents:
     name:
@@ -46,47 +51,56 @@ params:
     name:
       display_strings:
         en: "Media Type"
+        ai: "The media type of the flow, follows a MIME type structure eg video/v210, audio/float32"
     type: STRING
   grain_rate:
     type: STRUCT
     name:
       display_strings:
         en: "Grain Rate"
+        ai: "Grain rate or frame rate of the flow, expessed as a rational number"
     params:
       numerator:
         name:
           display_strings:
             en: "Numerator"
+            ai: "The numerator of the grain rate rational number. Grain rate or frame rate is expressed as a rational number."
         type: INT32
       denominator:
         name:
           display_strings:
             en: "Denominator"
+            ai: "The denominator of the grain rate rational number. Grain rate or frame rate is expressed as a rational number."
         type: INT32
   frame_width:
     name:
       display_strings:
         en: "Frame Width"
+        ai: "The width of the video frame in pixels. Only applicable for video flows."
     type: INT32
   frame_height:
     name:
       display_strings:
         en: "Frame Height"
+        ai: "The height of the video frame in pixels. Only applicable for video flows."
     type: INT32
   interlace_mode:
     name:
       display_strings:
         en: "Interlace Mode"
+        ai: "The interlace mode of the video flow. Only applicable for video flows."
     type: STRING
   colorspace:
     name:
       display_strings:
         en: "Colorspace"
+        ai: "The colorspace of the video flow."
     type: STRING
   components:
     name:
       display_strings:
         en: "Components"
+        ai: "The components of the flow, only applicable for video flows."
     type: STRUCT_ARRAY
     params:
       name:

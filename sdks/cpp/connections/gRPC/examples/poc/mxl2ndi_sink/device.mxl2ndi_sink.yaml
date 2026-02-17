@@ -85,6 +85,7 @@ params:
     name:
       display_strings:
         en: "Selected Input"
+        ai: "The index of the currently selected input flow. This is used to control which input flow is live. Changing this will change which flow is live."
     value:
       int32_value: 0
 
@@ -112,22 +113,26 @@ params:
         name:
           display_strings:
             en: "Name"
+            ai: The name of the input flow
       domain:
         type: STRING
         name:
           display_strings:
             en: "Domain"
+            ai: The MXL domain used for this flow
       flow_id:
         type: STRING
         name:
           display_strings:
             en: "Flow ID"
+            ai: The MXL flow ID for this input flow. It is a GUID.
       live:
         type: INT32
         widget: checkbox
         name:
           display_strings:
             en: Live
+            ai: Control the selected input flow. Only 1 flow will be selected as live at a time. 0 for not live, 1 for live.
         constraint:
           type: INT_CHOICE
           int32_choice:
@@ -146,6 +151,7 @@ params:
         name:
           display_strings:
             en: Display
+            ai: Independant from live, control which flow's metadata is displayed on the dashboard. 0 for not displayed, 1 for displayed. Changing live will change display, changing display will not change live. 0 for not displayed, 1 for displayed.
         constraint:
           type: INT_CHOICE
           int32_choice:
@@ -272,6 +278,21 @@ params:
                 int32_value: 1
               display:
                 int32_value: 1
+
+  flow_def_template:
+    import:
+      url: ../templates/param.flow_def.yaml
+
+  flow_defs:
+    type: STRUCT_ARRAY
+    name:
+      display_strings:
+        en: Flow Definitions
+        ai: "All available flow definitions set up on the device."
+    template_oid: /flow_def_template
+    value:
+      struct_array_values:
+        struct_values: []
 
 commands:
   start:
