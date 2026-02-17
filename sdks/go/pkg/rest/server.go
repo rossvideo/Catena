@@ -447,6 +447,7 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Read request headers (not used yet)
 	_ = r.Header.Get("Detail-Level")
 	_ = r.Header.Get("User-Agent")
 	_ = r.Header.Get("Authorization")
