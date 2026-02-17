@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,9 @@
  * @file ISocketReader.h
  * @brief Interface for the SocketReader class.
  * @author benjamin.whitten@rossvideo.com
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author keon.foster@rossvideo.com
+ * @date 2026/02/11
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #pragma once
@@ -60,6 +62,10 @@ namespace REST {
  */
 enum RESTMethod : uint32_t { Method_NONE, Method_GET, Method_POST, Method_PUT, Method_PATCH, Method_DELETE, Method_HEAD, Method_OPTIONS };
 
+const long DEFAULT_REQUEST_START = 0;
+const long DEFAULT_REQUEST_RECEIVED = 0;
+const uint32_t DEFAULT_TIMEOUT = REST_READ_TIMEOUT_MS; // value is in milliseconds
+
 /**
  * @brief Interface for the SocketReader class.
  * 
@@ -79,8 +85,9 @@ class ISocketReader {
      * @brief Populates variables using information read from the inputted
      * socket.
      * @param socket The socket to read from.
+     * @param timeout How long to read for in ms before cancelling. Socket can be read from twice and timeout is applied in full both times.
      */
-    virtual void read(tcp::socket& socket) = 0;
+    virtual void read(tcp::socket& socket, uint32_t timeout = DEFAULT_TIMEOUT) = 0;
     /**
      * @brief Returns the HTTP method of the request.
      */
@@ -151,6 +158,16 @@ class ISocketReader {
      * @brief Returns a reference to the subscription manager
      */
     virtual catena::common::ISubscriptionManager& subscriptionManager() = 0;
+    /**
+     * @brief Returns the time the client started the request formatted as,
+     * <number of milliseconds since start of epoch>
+     */
+    virtual const long requestStart() const = 0;
+    /**
+     * @brief Returns the time the client's request was received formatted as,
+     * <number of milliseconds since start of epoch>
+     */
+    virtual const long requestReceived() const = 0;
 };
  
 }; // Namespace REST

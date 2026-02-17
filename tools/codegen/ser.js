@@ -1,4 +1,4 @@
-/*Copyright 2025 Ross Video Ltd
+/*Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  *
@@ -16,68 +16,51 @@
 
 import { program } from 'commander';
 
-import packageJson from './package.json' with { type: "json" };;
+import { createLogger, MANDATORY_OPTION, OUTPUT_OPTION, PROTOS_OPTION, QUIET_OPTION, sync, VERSION } from './common.js';
 import { DeviceModel } from './DeviceModel.js';
 import Validator from 'smpte-validator';
 import { validateRequiredParamsAndScopes } from './mandatory.js';
-import CppGen from './cpp/cppgen.js';
-
-//
-// Converts Catena compatible Device Models to computer code in a variety of languages
-//
-
-let log = console.log;
+import { serialize } from './serdes/serdes.js';
 
 // load the command line parser
 program
-    .description(packageJson.description)
-    .version(packageJson.version)
-    .option('-q, --quiet', 'Suppress non-error console output', false)
-    .hook('preAction', (thisCommand) => {
-        const options = thisCommand.opts();
-        // redefine log function based on quiet option
-        if (options.quiet) {
-            log = function () { };
-        }
-    });
-
-const MANDATORY_OPTION = ["--disable-mandatory-enforcement", "Disable enforcement of mandatory parameters during code generation"];
-const OUTPUT_OPTION = ["-o --output <string>", "Output folder for results", "."];
-const DEVICE_ARGUMENT = ["<deviceModel>", "Catena device model to process"];
+    .description("Serialize Catena device models to a binary format")
+    .version(VERSION)
+    .option(...OUTPUT_OPTION)
+    .option(...QUIET_OPTION)
+    .option(...MANDATORY_OPTION)
+    .option(...PROTOS_OPTION)
+    .argument("<deviceModel>", "Catena device model to process")
+    .action(run);
 
 /**
  * log the options being used
+ * @param {function} log logging function
+ * @param {string} deviceModel path to device model
  * @param {object} options options from commander
  */
-function logOptions(language, deviceModel, options) {
+function logOptions(log, deviceModel, options) {
     log(`deviceModel: ${deviceModel}`);
-    log(`language: ${language}`);
     if (options.output) {
         log(`output: ${options.output}`);
     }
     if (options.disableMandatoryEnforcement) {
         log(`Mandatory parameter enforcement disabled`);
     }
+    if (options.protos) {
+        log(`protos: ${options.protos}`);
+    }
 }
 
-program
-    .command("cpp")
-    .description("Generate C++ code from device model")
-    .option(...MANDATORY_OPTION)
-    .option(...OUTPUT_OPTION)
-    .argument(...DEVICE_ARGUMENT)
-    .action(async (deviceModel, options) => generate("cpp", deviceModel, options));
+// run the command line parser
+sync(program);
 
-(async () => {
-    await program.parseAsync();
-})().catch((err) => {
-    console.error(`Error: ${err.message}`);
-    process.exit(err.error || 1);
-});
+async function run(deviceModelPath, options) {
+    // define logging function based on quiet option
+    const log = createLogger(options);
 
-async function generate(language, deviceModelPath, options) {
     // log the options being used
-    logOptions(language, deviceModelPath, options);
+    logOptions(log, deviceModelPath, options);
 
     // load and validate the device model
     const validator = new Validator();
@@ -86,14 +69,14 @@ async function generate(language, deviceModelPath, options) {
     await deviceModel.load(true);
     validateRequiredParamsAndScopes(deviceModel.desc, options.disableMandatoryEnforcement);
 
-    switch (language) {
-        case 'cpp':
-            log("Generating C++ code...");
-            const cppGen = new CppGen(deviceModel, options.output);
-            cppGen.generate();
-            break;
-        default:
-            throw new Error(`Unsupported language: ${language}`);
-    }
-    log('✅ Code generation completed.');
+    // prepare metadata
+    const metadata = {
+        tool: "ser",
+        version: VERSION,
+        timestamp: new Date().toISOString(),
+    };
+
+    log("Generating serialized output...");
+    await serialize(deviceModel, options, metadata);
+    log('✅ Completed.');
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,8 +31,9 @@
 /**
  * @brief Mock implementation for the ISocketReader class.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/26
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author keon.foster@rossvideo.com
+ * @date 2026/02/11
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #pragma once
@@ -46,7 +47,7 @@ namespace REST {
 // Mock implementation for the ISocketReader class.
 class MockSocketReader : public ISocketReader {
   public:
-    MOCK_METHOD(void, read, (tcp::socket& socket), (override));
+    MOCK_METHOD(void, read, (tcp::socket& socket, uint32_t timeout), (override));
     MOCK_METHOD(RESTMethod, method, (), (const, override));
     MOCK_METHOD(const std::string&, endpoint, (), (const, override));
     MOCK_METHOD(uint32_t, slot, (), (const, override));
@@ -63,7 +64,8 @@ class MockSocketReader : public ISocketReader {
     MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
     MOCK_METHOD(const std::string&, EOPath, (), (const, override));
     MOCK_METHOD(catena::common::ISubscriptionManager&, subscriptionManager, (), (override));
-
+    MOCK_METHOD(const long, requestStart, (), (const, override));
+    MOCK_METHOD(const long, requestReceived, (), (const, override));
 };
 
 } // namespace REST

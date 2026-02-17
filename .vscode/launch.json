@@ -11,6 +11,7 @@
         "args": [],
         "env": {
           "CATENA_LOG_LEVEL": "DEBUG", // Set log level to DEBUG
+          "CATENA_ENV": "dev",
         }
       },
       {
@@ -176,12 +177,44 @@
       "skipFiles": [
           "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/tools/codegen/index.js",
+      "program": "${workspaceFolder}/tools/codegen/codegen.js",
       "args": [
-          "cpp",
           "--output",
           "${workspaceFolder}/${env:BUILD_TARGET}/${input:pickDeviceModel}/..",
+          "cpp",
           "${workspaceFolder}/sdks/cpp/${input:pickDeviceModel}"
+      ],
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Serialize",
+      "skipFiles": [
+          "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/tools/codegen/ser.js",
+      "args": [
+          "--output",
+          "${workspaceFolder}/${env:BUILD_TARGET}/${input:pickDeviceModel}/..",
+          "--protos",
+          "${workspaceFolder}/smpte/interface/proto",
+          "${workspaceFolder}/sdks/cpp/${input:pickDeviceModel}"
+      ],
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Deserialize",
+      "skipFiles": [
+          "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/tools/codegen/des.js",
+      "args": [
+          "--output",
+          "${workspaceFolder}/${env:BUILD_TARGET}/${input:pickDeviceModel}/..",
+          "--protos",
+          "${workspaceFolder}/smpte/interface/proto",
+          "${workspaceFolder}/${env:BUILD_TARGET}/${input:pickDeviceModel}/../device.${input:getDeviceModel}.bin",
       ],
     },
     {
@@ -239,14 +272,12 @@
       "description": "Select Go program to debug",
       "type": "pickString",
       "options": [
-        "basic_device_bl",
-        "basic_device_v2",
         "getDevice_REST",
         "executeCommand_REST",
         "getAsset_REST",
         "getSetValue_REST"
       ],
-      "default": "basic_device_bl"
+      "default": "getSetValue_REST"
     },
     {
       "id": "pickDeviceModel",
@@ -278,6 +309,11 @@
                   "connections/REST/examples/use_menus_REST/device.use_menus.yaml"
                 ],
       "default": "common/examples/start_here/device.start_here.json"
+    },
+    {
+      "id": "getDeviceModel",
+      "type": "promptString",
+      "description": "Put in the device name, e.g. hello_world, use_structs, one_of_everything, sorry, best we can do with vscode...",
     },
     {
       "id": "pickService",

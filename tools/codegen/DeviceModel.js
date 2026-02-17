@@ -15,7 +15,7 @@
  */
 
 import { basename, resolve } from 'path';
-import Validator from 'smpte-validator';
+/** @typedef {import('smpte-validator')} Validator */
 
 // TODO get the max depth from the smpte spec
 const MAX_RESOLVE_DEPTH = 100;

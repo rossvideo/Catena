@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -59,13 +59,13 @@ var (
 
 // logger handles structured logging using slog
 type logger struct {
-	config Config
-	file   *os.File
+	settings Settings
+	file     *os.File
 }
 
 // Init initializes the global logger.
 // Returns ErrAlreadyInitialized if called more than once.
-func Init(cfg Config) error {
+func Init(stg Settings) error {
 	initMu.Lock()
 	defer initMu.Unlock()
 
@@ -73,7 +73,7 @@ func Init(cfg Config) error {
 		return ErrAlreadyInitialized
 	}
 
-	globalLogger = &logger{config: cfg}
+	globalLogger = &logger{settings: stg}
 	initErr := globalLogger.setup()
 	if initErr != nil {
 		// Nil out globalLogger on setup failure to avoid partially initialized state
@@ -86,7 +86,7 @@ func Init(cfg Config) error {
 
 // setup configures the slog handlers based on config and sets slog.SetDefault
 func (l *logger) setup() error {
-	if l.config.Silent {
+	if l.settings.Silent {
 		// Silent mode: discard all logs
 		slog.SetDefault(slog.New(slog.NewTextHandler(io.Discard, nil)))
 		return nil
@@ -95,20 +95,20 @@ func (l *logger) setup() error {
 	var writers []io.Writer
 
 	// Setup console output
-	if l.config.WriteToConsole {
+	if l.settings.WriteToConsole {
 		writers = append(writers, os.Stderr)
 	}
 
 	// Setup file output
-	if l.config.WriteToFile {
-		if err := os.MkdirAll(l.config.LogDir, 0755); err != nil {
+	if l.settings.WriteToFile {
+		if err := os.MkdirAll(l.settings.LogDir, 0755); err != nil {
 			return fmt.Errorf("failed to create log directory: %w", err)
 		}
 
 		// Timestamped filename: YYYYMMDD_HHMMSS_appName.log
 		timestamp := time.Now().Format("20060102_150405")
-		filename := fmt.Sprintf("%s_%s.log", timestamp, l.config.AppName)
-		logPath := filepath.Join(l.config.LogDir, filename)
+		filename := fmt.Sprintf("%s_%s.log", timestamp, l.settings.AppName)
+		logPath := filepath.Join(l.settings.LogDir, filename)
 
 		f, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
@@ -130,12 +130,12 @@ func (l *logger) setup() error {
 
 	// Create handler options with configured level
 	opts := &slog.HandlerOptions{
-		Level: l.config.Level,
+		Level: l.settings.Level,
 	}
 
 	// Create handler based on format preference
 	var handler slog.Handler
-	if l.config.UseJSON {
+	if l.settings.UseJSON {
 		handler = slog.NewJSONHandler(output, opts)
 	} else {
 		handler = slog.NewTextHandler(output, opts)

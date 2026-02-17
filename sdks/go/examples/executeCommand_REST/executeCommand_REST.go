@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -44,7 +44,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -58,7 +57,7 @@ import (
 var staticFS embed.FS
 
 // CommandHandler processes a command and returns a response
-type CommandHandler func(payload any) catena.StatusResult
+type CommandHandler func(payload any) (catena.CatenaValue, catena.StatusResult)
 
 // Global state for graceful shutdown
 var (
@@ -69,11 +68,11 @@ var (
 // Counter state
 type CounterState struct {
 	mu      sync.RWMutex
-	value   int64
+	value   int32
 	running bool
 }
 
-func (c *CounterState) GetValue() int64 {
+func (c *CounterState) GetValue() int32 {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.value
@@ -97,7 +96,7 @@ func (c *CounterState) Stop() {
 	c.running = false
 }
 
-func (c *CounterState) Add(n int64) {
+func (c *CounterState) Add(n int32) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.value += n
@@ -118,15 +117,13 @@ func (c *CounterState) Increment() {
 }
 
 func main() {
-	// Parse config from environment variables with CATENA prefix
-	cfg := logger.ParseConfigWithVerbosity("CATENA")
-	cfg.AppName = "executeCommand_REST"
-
-	if err := logger.Init(cfg); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to initialize logger: %v\n", err)
+	// Initialize SDK with prefix and app name
+	cfg, err := catena.InitOptions(catena.Options{AppName: "executeCommand_REST"})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize SDK: %v\n", err)
 		os.Exit(1)
 	}
-	defer logger.Close()
+	defer catena.Close()
 
 	// Handle signals for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
@@ -137,13 +134,8 @@ func main() {
 		close(shutdownChan) // closes the channel to signal the main goroutine to shut down
 	}()
 
-	// Get port from environment variables or use default 6254
-	portStr := envOr("CATENA_PORT", "6254")
-	port, err := strconv.Atoi(portStr) // converts the string to an integer
-	if err != nil {
-		logger.Error("invalid CATENA_PORT", "error", err)
-		os.Exit(1) // exits the program with a non-zero status code
-	}
+	// Port comes from the unified config
+	port := cfg.Port
 
 	// Initialize counter
 	counter := &CounterState{}
@@ -167,9 +159,13 @@ func main() {
 
 	// Helper to build response with current state
 	buildResponse := func() map[string]any {
+		var runningVal int32 = 0
+		if counter.IsRunning() {
+			runningVal = 1
+		}
 		return map[string]any{
-			"counter": counter.GetValue(),
-			"running": counter.IsRunning(),
+			"counter": int32(counter.GetValue()),
+			"running": runningVal,
 		}
 	}
 
@@ -178,39 +174,45 @@ func main() {
 	// ==========================================================================
 	commands := map[string]CommandHandler{
 		// Start command
-		"start": func(payload any) catena.StatusResult {
+		"start": func(payload any) (catena.CatenaValue, catena.StatusResult) {
 			if counter.IsRunning() {
 				logger.Info("Start command - already running")
-				return catena.OK(buildResponse())
+				val, _ := catena.ToCatenaValue(buildResponse())
+				return catena.Reply(val)
 			}
 			counter.Start()
 			logger.Info("Counter started", "value", counter.GetValue())
-			return catena.OK(buildResponse())
+			val, _ := catena.ToCatenaValue(buildResponse())
+			return catena.Reply(val)
 		},
 
 		// Stop command
-		"stop": func(payload any) catena.StatusResult {
+		"stop": func(payload any) (catena.CatenaValue, catena.StatusResult) {
 			if !counter.IsRunning() {
 				logger.Info("Stop command - already stopped")
-				return catena.OK(buildResponse())
+				val, _ := catena.ToCatenaValue(buildResponse())
+				return catena.Reply(val)
 			}
 			counter.Stop()
 			logger.Info("Counter stopped", "value", counter.GetValue())
-			return catena.OK(buildResponse())
+			val, _ := catena.ToCatenaValue(buildResponse())
+			return catena.Reply(val)
 		},
 
 		// Add10 command
-		"add10": func(payload any) catena.StatusResult {
+		"add10": func(payload any) (catena.CatenaValue, catena.StatusResult) {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
-			return catena.OK(buildResponse())
+			val, _ := catena.ToCatenaValue(buildResponse())
+			return catena.Reply(val)
 		},
 
 		// Reset command
-		"reset": func(payload any) catena.StatusResult {
+		"reset": func(payload any) (catena.CatenaValue, catena.StatusResult) {
 			counter.Reset()
 			logger.Info("Counter reset", "value", counter.GetValue())
-			return catena.OK(buildResponse())
+			val, _ := catena.ToCatenaValue(buildResponse())
+			return catena.Reply(val)
 		},
 	}
 
@@ -221,44 +223,47 @@ func main() {
 	srv = rest.NewServer(slotList)
 
 	// Register GetValue handler to retrieve counter state
-	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) catena.StatusResult {
+	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		if fqoid == "counter" {
-			return catena.OK(buildResponse())
+			val, _ := catena.ToCatenaValue(buildResponse())
+			return catena.Reply(val)
 		}
-		return catena.NotFound("parameter not found: " + fqoid)
+		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"parameter not found: " + fqoid)
 	})
 
 	// Register ExecuteCommand handler
-	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) catena.StatusResult {
+	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 
 		handler, ok := commands[commandFqoid]
 		if !ok {
 			logger.Warning("Command not found", "slot", slot, "command", commandFqoid)
-			return catena.OK(map[string]any{
+			exception := map[string]any{
 				"exception": map[string]any{
 					"type":    "Invalid Command",
 					"details": "Command not found: " + commandFqoid,
 				},
-			})
+			}
+			val, _ := catena.ToCatenaValue(exception)
+			return catena.Reply(val)
 		}
 
 		return handler(payload)
 	})
 
 	// Serve static files at root (including index.html)
-	srv.RegisterNotFoundHandler(func(w http.ResponseWriter, r *http.Request) catena.StatusResult {
+	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
 		// Serve index.html for root path
 		if r.URL.Path == "/" {
 			data, err := staticFS.ReadFile("static/index.htm")
 			if err != nil {
-				return catena.NotFound("index.html not found")
+				return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"index.html not found")
 			}
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Write(data)
-			return catena.StatusResult{Status: http.StatusOK}
+			return catena.Reply(catena.CatenaValue{})
 		}
-		return catena.NotFound("endpoint not found: " + r.URL.Path)
+		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"endpoint not found: " + r.URL.Path)
 	})
 
 	// ==========================================================================
@@ -274,16 +279,15 @@ func main() {
 	logger.Info("")
 	logger.Info("=======================================================")
 
-	srv.StartHTTPServer(port)
+	// Start server in a goroutine so shutdown handling works
+	go func() {
+		if err := srv.Start(port); err != nil {
+			logger.Error("server failed", "error", err)
+			os.Exit(1)
+		}
+	}()
 
 	// Wait for shutdown signal
 	<-shutdownChan
 	logger.Info("Server shutdown complete")
-}
-
-func envOr(key, def string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return def
 }

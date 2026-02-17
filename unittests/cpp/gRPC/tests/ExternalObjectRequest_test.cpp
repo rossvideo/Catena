@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,8 +32,9 @@
  * @brief This file is for testing the ExternalObjectRequest.cpp file.
  * @author nelson.daniels@rossvideo.com
  * @author jason.chen@rossvideo.com
- * @date 25/12/01
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author keon.foster@rossvideo.com
+ * @date 2026/02/11
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // Test helpers
@@ -96,9 +97,13 @@ class gRPCExternalObjectRequestTests : public GRPCTest {
     }
 
     // Adds an expected external object payload to the expected values.
-    void expPayload(const std::string& content) {
+    // digest is the SHA-256 digest of content, base64-encoded.
+    void expPayload(const std::string& content, const std::string& digest) {
         expVals_.push_back(st2138::ExternalObjectPayload());
-        expVals_.back().mutable_payload()->set_payload(content.data(), content.size());
+        auto* objPayload = expVals_.back().mutable_payload();
+        objPayload->set_payload(content.data(), content.size());
+        std::string digestBytes = catena::from_base64(digest);
+        objPayload->set_digest(digestBytes.data(), digestBytes.size());
     }
 
     // Makes an async RPC to the MockServer and waits for responses before comparing output.
@@ -122,8 +127,37 @@ class gRPCExternalObjectRequestTests : public GRPCTest {
         EXPECT_TRUE(asyncCall_) << "Async handler was not created during runtime";
     }
 
+    /**
+     * Makes an async RPC and checks the requestStart/requestReceived values read by the handler.
+     */
+    void testRPCTimestamps(std::string input, long expected) {
+        // Create a new client context for this call to avoid metadata from previous calls
+        grpc::ClientContext context;
+        context.AddMetadata("request-start", input);
+
+        // Sending async RPC
+        StreamReader streamReader(&outVals_, &outRc_);
+        streamReader.MakeCall(&context, &inVal_, [this](auto ctx, auto payload, auto reactor) {
+            client_->async()->ExternalObjectRequest(ctx, payload, reactor);
+        });
+        streamReader.Await();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+        // Clear the response for the next call
+        outVals_.erase(outVals_.begin(), outVals_.end());
+
+        EXPECT_EQ(requestStart_, expected);
+        EXPECT_TRUE(requestReceived_ > DEFAULT_REQUEST_RECEIVED);
+    }
+
     // Test file path for external objects
     std::string testEOPath_ = "/tmp/catena_test_eo/";
+
+    // Precomputed SHA-256 digests (base64) for test payloads.
+    std::string digestNormal_ = "IA6PlY/NIwnLzNC76J+Bz2z+AdeqCq8AF+xPZYkmy08=";
+    std::string digestSpecialChars_ = "cqGM/92veCrMRfOrvfp6NlpRdGJzHVO4PSL78rE2vTA=";
+    std::string digestEmpty_ = "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=";
+    std::string digestBinary256_ = "QK/y6dLYki5Hr9RkjmlnSXFYeF+9Hahw5xECZr+USIA=";
     
     // Input/output values
     st2138::ExternalObjectRequestPayload inVal_;
@@ -163,7 +197,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_Normal) {
     
     // Initialize request payload
     initPayload("/test_file.txt");
-    expPayload(testContent);
+    expPayload(testContent, digestNormal_);
     
     // Send the RPC
     testRPC();
@@ -180,7 +214,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_SpecialCharacters) 
     
     // Initialize request payload
     initPayload(specialPath);
-    expPayload(testContent);
+    expPayload(testContent, digestSpecialChars_);
     
     // Send the RPC
     testRPC();
@@ -195,7 +229,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_EmptyFile) {
     
     // Initialize request payload
     initPayload("/empty_file.txt");
-    expPayload("");
+    expPayload("", digestEmpty_);
     
     // Send the RPC
     testRPC();
@@ -214,7 +248,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_BinaryFile) {
     
     // Initialize request payload
     initPayload("/binary_file.bin");
-    expPayload(binaryContent);
+    expPayload(binaryContent, digestBinary256_);
     
     // Send the RPC
     testRPC();
@@ -298,7 +332,7 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_NullSlotCase) {
     // Initialize request payload
     initPayload("/test_file.txt");
     inVal_.clear_slot();
-    expPayload(testContent);
+    expPayload(testContent, digestNormal_);
     
     // Send the RPC
     testRPC();
@@ -342,4 +376,32 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_SlotOutOfRange) {
 
     // Send the RPC
     testRPC();
+}
+
+/*
+ * TEST 3 - Test request-start header read correctly
+ */
+TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_RequestStart) {
+    testRPCTimestamps("12345123", 12345123);
+    testRPCTimestamps("10", 10);
+    testRPCTimestamps("12345678912345", 12345678912345);
+    testRPCTimestamps("00012345678912345", 12345678912345);
+}
+
+/*
+ * TEST 4 - Test invalid request-start header value get set to default
+ */
+TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_InvalidRequestStart) {
+    // Test with non-number in value
+    testRPCTimestamps("123@123", DEFAULT_REQUEST_START);
+    // Test with period
+    testRPCTimestamps("123.123", DEFAULT_REQUEST_START);
+    // Test with negative value
+    testRPCTimestamps("-123123", DEFAULT_REQUEST_START);
+    // Test with leading period
+    testRPCTimestamps(".123123", DEFAULT_REQUEST_START);
+    // Test with empty value
+    testRPCTimestamps("", DEFAULT_REQUEST_START);
+    // Test with too large of a value
+    testRPCTimestamps(std::string(20, '1'), DEFAULT_REQUEST_START);
 }

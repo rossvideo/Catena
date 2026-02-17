@@ -13,13 +13,12 @@
       "IMAGE_VENDOR": "Ross Video",
       "BUILD_TYPE": "Debug",
       "CONNECTIONS": "REST",
-      "BUILD_TARGET": "build/go"
+      "BUILD_TARGET": "~/Catena/build/go"
     }
   },
   "postCreateCommand": {
     "dockerInit": "sudo groupdel docker || true && DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) && sudo groupadd -forg $DOCKER_GID docker && sudo usermod -aG docker ${USER_NAME}",
-    "initSubmodules": "git submodule update --init --recursive",
-    "buildDir": "sudo chown ${USER_NAME}:${USER_NAME} ~/Catena/${BUILD_TARGET} && cd ~/Catena/sdks/go && make && echo 'Docker setup complete, please restart the dev container!'",
+    "goEnvScript": "git submodule update --init --recursive && ~/Catena/.devcontainer/go/postCreateCommand.sh ${USER_NAME} ${BUILD_TARGET} ~/Catena"
   },
   "runArgs": [
     "--env-file",

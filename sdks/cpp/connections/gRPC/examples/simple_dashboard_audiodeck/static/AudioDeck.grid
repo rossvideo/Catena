@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?><abs height="1590" id="_top" keepalive="true" scroll="vertical" style="bg#tablezebra;" virtualheight="2000" width="1440">
    <meta>
-      <!-- Meter Tick Timer-->
-      <api id="meter-api" immediate="true" src="input.grid.js"/>
-
-      <timer autostart="true" delay="0" id="meterTick" rate="100"/>
-      <!-- END Meter Tick Timer-->
-
       <widgets>
          <!-- Audio Meter -->
          <widgetdescriptor id="audio_meter">
@@ -16,12 +10,9 @@
             </config>
             <oglml>
                <abs height="100" width="160">
-                  <param expand="true" width="160" oid=".input" relative="true" showlabel="false" widget="level-meter"/>
+                  <param expand="true" height="100" width="160" oid=".input" relative="true" showlabel="false" widget="level-meter"/>
                </abs>
 
-               <timertask tasktype="ogscript" timerid="meterTick">
-                  updateMeter('%baseoid%');
-               </timertask>
             </oglml>
          </widgetdescriptor>
 
@@ -96,7 +87,7 @@
                   <simplegrid cols="2" rows="1">
                      <simplegrid cols="1" height="80" rows="2" width="80">
                         <label name="Resp" style="txt-align:left;font:bold;"/>
-                        <param oid=".resp" relative="true" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" widget="spinner"/>
+                        <param oid=".resp" relative="true" style="txt-align:center;bg#tablezebra;look:label;bdr#darkdivider;bdr:round;" widget="combo"/>
                      </simplegrid>
                      <param height="80" oid=".resp" relative="true" widget="wheel" width="80">
                         <task tasktype="onchange">ctrl.event('wheel', this);</task>
