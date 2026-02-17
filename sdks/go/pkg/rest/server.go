@@ -44,6 +44,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -78,7 +79,6 @@ type Server struct {
 	connections    map[int]*sseConnection
 	nextConnID     int
 	maxConnections int
-	slots          []int // registered device slots
 }
 
 // PushUpdate represents a streaming update sent to connected clients via SSE
@@ -94,7 +94,6 @@ type PushUpdate struct {
 // sseConnection represents an active SSE connection
 type sseConnection struct {
 	updates chan PushUpdate
-	slots   []int // slots this connection is subscribed to
 }
 
 // writeHTTPResult is a unified function that handles writing different response types
@@ -221,7 +220,6 @@ func NewServer(slots []int) *Server {
 		// SSE connection management
 		connections:    make(map[int]*sseConnection),
 		maxConnections: 100, // default limit, can be changed via SetMaxConnections
-		slots:          slots,
 	}
 
 	// Register default handlers for each slot
@@ -346,7 +344,7 @@ func (s *Server) SetMaxConnections(max int) {
 }
 
 // registerConnection registers a new SSE connection and returns its ID
-func (s *Server) registerConnection(slots []int) (int, chan PushUpdate) {
+func (s *Server) registerConnection() (int, chan PushUpdate) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -359,7 +357,6 @@ func (s *Server) registerConnection(slots []int) (int, chan PushUpdate) {
 	updates := make(chan PushUpdate, 100)
 	s.connections[s.nextConnID] = &sseConnection{
 		updates: updates,
-		slots:   slots,
 	}
 	logger.Info("SSE connection registered", "connID", s.nextConnID, "total", len(s.connections))
 	return s.nextConnID, updates
@@ -383,15 +380,12 @@ func (s *Server) BroadcastUpdate(update PushUpdate) {
 	defer s.mu.Unlock()
 
 	for connID, conn := range s.connections {
-		// Only send to connections subscribed to this slot (or all if slot is 0)
-		if update.Slot == 0 || len(conn.slots) == 0 || containsSlot(conn.slots, update.Slot) {
-			select {
-			case conn.updates <- update:
-				// Successfully sent
-			default:
-				// Channel full, log warning but don't block
-				logger.Warning("SSE channel full, dropping update", "connID", connID, "oid", update.OID)
-			}
+		select {
+		case conn.updates <- update:
+			// Successfully sent
+		default:
+			// Channel full, log warning but don't block
+			logger.Warning("SSE channel full, dropping update", "connID", connID, "oid", update.OID)
 		}
 	}
 }
@@ -410,21 +404,32 @@ func (s *Server) sendSSEEvent(w http.ResponseWriter, flusher http.Flusher, updat
 	return nil
 }
 
-// getPopulatedSlots returns the list of registered device slots
+// getPopulatedSlots returns the list of slots that have at least one handler registered (inferred from handler maps).
 func (s *Server) getPopulatedSlots() []int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.slots
-}
-
-// containsSlot checks if a slot is in the list
-func containsSlot(slots []int, slot int) bool {
-	for _, s := range slots {
-		if s == slot {
-			return true
-		}
+	slotSet := make(map[int]struct{})
+	for slot := range s.getDeviceHandlers {
+		slotSet[slot] = struct{}{}
 	}
-	return false
+	for slot := range s.getValueHandlers {
+		slotSet[slot] = struct{}{}
+	}
+	for slot := range s.setValueHandlers {
+		slotSet[slot] = struct{}{}
+	}
+	for slot := range s.getAssetHandlers {
+		slotSet[slot] = struct{}{}
+	}
+	for slot := range s.executeCommandHandlers {
+		slotSet[slot] = struct{}{}
+	}
+	slots := make([]int, 0, len(slotSet))
+	for slot := range slotSet {
+		slots = append(slots, slot)
+	}
+	sort.Ints(slots)
+	return slots
 }
 
 // handleConnect handles GET /st2138-api/v1/connect (SSE streaming)
@@ -443,7 +448,7 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Register this connection
-	connID, updates := s.registerConnection(s.getPopulatedSlots())
+	connID, updates := s.registerConnection()
 	if connID < 0 {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.RESOURCE_EXHAUSTED, "too many connections")
 		writeHTTPResult(w, res, val)
