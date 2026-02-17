@@ -451,17 +451,16 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 	_ = r.Header.Get("User-Agent")
 	_ = r.Header.Get("Authorization")
 
-	// Register this connection (same as C++ connectionQueue().registerConnection(this)).
+	// Register this connection
 	connID, updates := s.registerConnection()
 	if connID < 0 {
-		// Same message and status as C++: "Too many connections to service", RESOURCE_EXHAUSTED
 		val, res := catena.ReplyError[catena.CatenaValue](catena.RESOURCE_EXHAUSTED, "Too many connections to service")
 		writeHTTPResult(w, res, val)
 		return
 	}
 	defer s.unregisterConnection(connID)
 
-	// Set SSE headers (same as C++ SSEWriter: text/event-stream, Cache-Control, Connection, CORS).
+	// Set SSE headers
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
@@ -475,7 +474,7 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	flusher.Flush()
 
-	// Send initial empty update with populated slots (same as C++: sendResponse(OK, populatedSlots)).
+	// Send initial empty update with populated slots
 	// Proto PushUpdates uses slots_added as SlotList { repeated uint32 slots }; send that shape.
 	populatedSlots := s.getPopulatedSlots()
 	initialPayload := map[string]any{"slots_added": map[string]any{"slots": populatedSlots}}
