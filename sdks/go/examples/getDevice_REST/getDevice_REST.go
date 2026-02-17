@@ -77,6 +77,21 @@ func main() {
 	// Port comes from the unified config (parsed from CATENA_PORT)
 	port := cfg.Port
 
+	device0 := catena.CatenaDevice{
+		Name:           	"Video Processor",
+		Vendor: 			"Ross Video",
+		Version: 			"1.0.0",
+		CatenaSDK: 			"https://github.com/rossvideo/Catena.git",
+		SerialNumber: 		"SN-7K9M-2024-XR485-BLU",
+	}
+	
+	device1 := catena.CatenaDevice{
+		Name: "Audio Mixer",
+		Vendor: "Ross Video",
+		Version: "1.0.0",
+		CatenaSDK: "https://github.com/rossvideo/Catena.git",
+		CatenaSDKVersion: "1.0.0",
+		SerialNumber: "SN-7K9M-2024-XR485-BLU",
 	// Define device metadata for multiple slots
 	devices := map[int]map[string]any{
 		0: {

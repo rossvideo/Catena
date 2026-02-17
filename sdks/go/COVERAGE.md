@@ -48,7 +48,7 @@ bash scripts/run_coverage.sh [OPTIONS]
 
 **What it generates:**
 - `~/Catena/coverage/go_coverage.out` - Go coverage data
-- `~/Catena/sdks/go/coverage.lcov` - LCOV format for Coverage Gutters
+- `~/Catena/coverage/go_coverage.lcov` - LCOV format for Coverage Gutters
 - `~/Catena/coverage/go_coverage.html` - HTML report (with `--html` flag)
 
 ### Using Make Targets
@@ -64,7 +64,7 @@ Alternatively, you can use Make directly from the `sdks/go` directory:
 
 ### When using `scripts/run_coverage.sh`:
 - `~/Catena/coverage/go_coverage.out` - Go's native coverage format
-- `~/Catena/sdks/go/coverage.lcov` - LCOV format for Coverage Gutters (always generated)
+- `~/Catena/coverage/go_coverage.lcov` - LCOV format for Coverage Gutters (always generated)
 - `~/Catena/coverage/go_coverage.html` - HTML report (with `--html` flag)
 
 ### When using Make targets:

@@ -127,7 +127,7 @@ golang () {
 
   # Generate LCOV file for Coverage Gutters (VS Code extension)
   echo "Generating LCOV coverage file for VS Code Coverage Gutters..."
-  LCOV_FILE="$HOME/Catena/sdks/go/coverage.lcov"
+  LCOV_FILE="$HOME/Catena/coverage/go_coverage.lcov"
   gcov2lcov -infile="$COVERAGE_FILE" -outfile="$LCOV_FILE"
   echo "LCOV coverage file generated: $LCOV_FILE"
 
