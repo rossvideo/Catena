@@ -45,8 +45,10 @@ function(cmake_catena_proto_common)
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
     )
 
+    find_package(Boost 1.81 REQUIRED COMPONENTS program_options)
+
     # link against the protobuf interface
-    target_link_libraries(${target} PUBLIC ${PROTO_TARGET})
+    target_link_libraries(${target} PUBLIC ${PROTO_TARGET} Boost::program_options)
     target_compile_features(${target} PUBLIC cxx_std_20)
 
     # add dependencies

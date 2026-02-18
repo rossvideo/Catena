@@ -44,6 +44,7 @@ set(sources
     "src/Heartbeat.cpp"
     "src/NmosNode.cpp"
     "src/Logger.cpp"
+    "src/Config.cpp"
 )
 
 # conditionally make for gRPC
