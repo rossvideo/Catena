@@ -42,7 +42,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -1094,5 +1097,235 @@ func TestWriteHTTPStatusResult_WithError(t *testing.T) {
 	body, _ := io.ReadAll(rec.Body)
 	if !bytes.Contains(body, []byte("error")) {
 		t.Error("expected error in response")
+	}
+}
+
+// failWriter is an http.ResponseWriter that fails on Write (used to cover error paths).
+type failWriter struct {
+	http.ResponseWriter
+	failOnWrite bool
+}
+
+func (f *failWriter) Write(p []byte) (n int, err error) {
+	if f.failOnWrite {
+		return 0, errors.New("write failed")
+	}
+	return f.ResponseWriter.Write(p)
+}
+
+// noFlusher wraps ResponseWriter and does not implement http.Flusher (for "streaming not supported" test).
+type noFlusher struct {
+	http.ResponseWriter
+}
+
+func TestServer_sendSSEEvent(t *testing.T) {
+	srv := NewServer([]int{0})
+	rec := httptest.NewRecorder()
+	var w http.ResponseWriter = rec
+	flusher := w.(http.Flusher)
+	update := PushUpdate{Slot: 1, OID: "test/param", Value: 42}
+
+	err := srv.sendSSEEvent(rec, flusher, update)
+	if err != nil {
+		t.Fatalf("sendSSEEvent: %v", err)
+	}
+	body := rec.Body.String()
+	if !strings.HasPrefix(body, "data: ") {
+		t.Errorf("expected body to start with 'data: ', got %q", body)
+	}
+	var decoded PushUpdate
+	if err := json.Unmarshal([]byte(strings.TrimPrefix(strings.Split(body, "\n")[0], "data: ")), &decoded); err != nil {
+		t.Fatalf("SSE data not valid JSON: %v", err)
+	}
+	if decoded.Slot != 1 || decoded.OID != "test/param" {
+		t.Errorf("expected Slot=1 OID=test/param, got Slot=%d OID=%s", decoded.Slot, decoded.OID)
+	}
+}
+
+func TestServer_BroadcastUpdate(t *testing.T) {
+	srv := NewServer([]int{0})
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	go srv.mux.ServeHTTP(rec, req)
+	time.Sleep(150 * time.Millisecond)
+
+	// Broadcast an update and give handler time to send it
+	srv.BroadcastUpdate(PushUpdate{Slot: 0, OID: "broadcast/oid", Value: "hello"})
+	time.Sleep(100 * time.Millisecond)
+	cancel()
+	time.Sleep(50 * time.Millisecond)
+
+	body := rec.Body.String()
+	if !strings.Contains(body, "broadcast/oid") {
+		t.Errorf("expected SSE body to contain broadcast/oid, got %s", body)
+	}
+}
+
+func TestServer_BroadcastUpdate_ChannelFull(t *testing.T) {
+	srv := NewServer([]int{0})
+	srv.SetMaxConnections(10)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	go srv.mux.ServeHTTP(rec, req)
+	time.Sleep(100 * time.Millisecond)
+
+	// Fill the channel (buffer 100) by sending many updates without client reading fast enough
+	for i := 0; i < 150; i++ {
+		srv.BroadcastUpdate(PushUpdate{OID: "fill"})
+	}
+	cancel()
+	time.Sleep(50 * time.Millisecond)
+	// No assertion other than no panic; we're covering the "channel full" default branch
+}
+
+func TestServer_Start(t *testing.T) {
+	srv := NewServer([]int{0})
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		t.Fatalf("net.Listen: %v", err)
+	}
+	port := listener.Addr().(*net.TCPAddr).Port
+	listener.Close()
+
+	go func() { _ = srv.Start(port) }()
+	time.Sleep(200 * time.Millisecond)
+
+	url := fmt.Sprintf("http://127.0.0.1:%d/st2138-api/v1", port)
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("GET: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusNotFound {
+		t.Errorf("expected status %d, got %d", http.StatusNotFound, resp.StatusCode)
+	}
+}
+
+func TestWriteHTTPResult_DefaultType(t *testing.T) {
+	rec := httptest.NewRecorder()
+	result := catena.StatusResult{Code: catena.OK}
+	// Pass nil so switch hits default (no CatenaValue/Device/Asset)
+	writeHTTPResult(rec, result, nil)
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
+	}
+}
+
+func TestServer_Connect_StreamingNotSupported(t *testing.T) {
+	original := catena.GetEnv()
+	defer catena.SetEnv(original)
+	catena.SetEnv(catena.EnvDev)
+
+	srv := NewServer([]int{0})
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
+	rec := httptest.NewRecorder()
+	w := &noFlusher{ResponseWriter: rec}
+
+	srv.handleConnect(w, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Errorf("expected status %d when Flusher not supported, got %d", http.StatusInternalServerError, rec.Code)
+	}
+	body, _ := io.ReadAll(rec.Body)
+	var response map[string]string
+	if err := json.Unmarshal(body, &response); err == nil {
+		if !strings.Contains(response["error"], "streaming") && !strings.Contains(response["error"], "Internal") {
+			t.Errorf("expected error to mention streaming or Internal, got %s", response["error"])
+		}
+	}
+}
+
+func TestWriteHTTPStatusResult_ProdMode(t *testing.T) {
+	original := catena.GetEnv()
+	defer catena.SetEnv(original)
+	catena.SetEnv(catena.EnvProd)
+
+	rec := httptest.NewRecorder()
+	result := catena.StatusResult{Code: catena.NOT_FOUND, Error: "detailed internal error"}
+	writeHTTPStatusResult(rec, result)
+
+	body, _ := io.ReadAll(rec.Body)
+	if !bytes.Contains(body, []byte("Not Found")) {
+		t.Errorf("prod mode should hide details, expected 'Not Found' in body, got %q", string(body))
+	}
+	if bytes.Contains(body, []byte("detailed internal error")) {
+		t.Error("prod mode should not expose detailed error message")
+	}
+}
+
+func TestServer_Connect_WithOrigin(t *testing.T) {
+	srv := NewServer([]int{0})
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
+	req.Header.Set("Origin", "https://example.com")
+	rec := httptest.NewRecorder()
+
+	go srv.mux.ServeHTTP(rec, req)
+	time.Sleep(100 * time.Millisecond)
+	cancel()
+	time.Sleep(50 * time.Millisecond)
+
+	if rec.Header().Get("Access-Control-Allow-Origin") != "https://example.com" {
+		t.Errorf("expected CORS Origin header, got %s", rec.Header().Get("Access-Control-Allow-Origin"))
+	}
+}
+
+func TestWriteValueResult_WriteError(t *testing.T) {
+	value, _ := catena.ToCatenaValue(int32(1))
+	rec := httptest.NewRecorder()
+	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
+
+	writeValueResult(w, value, http.StatusOK)
+
+	// internal.WriteResponseJSON writes status then body; when Write fails, status may already be 200
+	if rec.Code != http.StatusInternalServerError && rec.Code != http.StatusOK {
+		t.Errorf("expected status 500 or 200 (if header already sent), got %d", rec.Code)
+	}
+}
+
+func TestWriteDeviceResult_WriteError(t *testing.T) {
+	device, _ := catena.ToCatenaDevice(map[string]any{"slot": int32(0)})
+	rec := httptest.NewRecorder()
+	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
+
+	writeDeviceResult(w, device, http.StatusOK)
+
+	// writeDeviceResult only logs on write error and does not change status after WriteHeader(200)
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected status %d (header already written), got %d", http.StatusOK, rec.Code)
+	}
+}
+
+func TestWriteAssetResult_WriteError(t *testing.T) {
+	asset, _ := catena.ToCatenaAsset(catena.DataPayload{Payload: []byte("x")}, false)
+	rec := httptest.NewRecorder()
+	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
+
+	writeAssetResult(w, asset, http.StatusOK)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected status %d (header already written before Write), got %d", http.StatusOK, rec.Code)
+	}
+}
+
+func TestWriteHTTPResult_WithError_NonDev(t *testing.T) {
+	original := catena.GetEnv()
+	defer catena.SetEnv(original)
+	catena.SetEnv(catena.EnvProd)
+
+	rec := httptest.NewRecorder()
+	result := catena.StatusResult{Code: catena.NOT_FOUND, Error: "internal detail"}
+	writeHTTPResult(rec, result, catena.CatenaValue{})
+
+	body, _ := io.ReadAll(rec.Body)
+	if bytes.Contains(body, []byte("internal detail")) {
+		t.Error("prod mode should not expose detailed error in writeHTTPResult")
 	}
 }
