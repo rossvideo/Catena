@@ -434,11 +434,13 @@ func (s *Server) getPopulatedSlots() []int {
 
 // handleConnect handles GET /st2138-api/v1/connect (SSE streaming)
 func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
+	// Check if the request method is GET
 	if r.Method != http.MethodGet {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
 		writeHTTPResult(w, res, val)
 		return
 	}
+
 	// Check if SSE streaming is supported
 	flusher, ok := w.(http.Flusher)
 	if !ok {
@@ -476,7 +478,6 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 	flusher.Flush()
 
 	// Send initial empty update with populated slots
-	// Proto PushUpdates uses slots_added as SlotList { repeated uint32 slots }; send that shape.
 	populatedSlots := s.getPopulatedSlots()
 	initialPayload := map[string]any{"slots_added": map[string]any{"slots": populatedSlots}}
 	initialJSON, err := json.Marshal(initialPayload)
