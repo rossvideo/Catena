@@ -26,7 +26,7 @@ void config::initConfigVariables(int argc, char* argv[], std::string prefix) {
         ("silent", po::bool_switch(), "use this to suppress all log output.")
     ;
 
-    //Read values from command line and configironment variables
+    //Read values from command line and environment variables
     po::variables_map vars;
     po::store(po::parse_command_line(argc, argv, configArgs), vars);
     po::notify(vars);

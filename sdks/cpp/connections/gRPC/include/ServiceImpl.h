@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,8 +34,9 @@
  * @author john.naylor@rossvideo.com
  * @author john.danen@rossvideo.com
  * @author isaac.robert@rossvideo.com
- * @date 2024-06-08
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @author keon.foster@rossvideo.com
+ * @date 2026-02-19
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #pragma once
