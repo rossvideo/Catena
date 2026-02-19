@@ -47,7 +47,6 @@
 #include <unistd.h>
 #include "WrapAvahiClient.h"
 #include "Config.h"
-#include "SharedFlags.h"
 
 inline AvahiTestControl g_avahi_test_control;
 

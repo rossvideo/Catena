@@ -33,9 +33,6 @@
 #include <Logger.h>
 using catena::gRPC::ServiceImpl;
 
-// Defining the port flag from SharedFlags.h
-ABSL_FLAG(uint16_t, port, 6254, "Catena gRPC service port");
-
 ServiceImpl::ServiceImpl(const ServiceConfig& config)
     : cq_{config.cq},
       EOPath_{config.EOPath}, 

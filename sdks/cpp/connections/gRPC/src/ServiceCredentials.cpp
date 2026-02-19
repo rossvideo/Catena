@@ -28,7 +28,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <SharedFlags.h>
 #include <ServiceCredentials.h>
 #include <Logger.h>
 #include <Config.h>
@@ -91,7 +90,7 @@ std::shared_ptr<grpc::ServerCredentials> catena::gRPC::getServerCredentials() {
         expandEnvVariables(path_to_certs);
 
         // read the CA cert if we are using a private CA, use to set ssl options
-        if (absl::GetFlag(FLAGS_private_ca)) {
+        if (config::private_ca) {
             std::string ca_cert_fn(path_to_certs + "/" + config::ca_file);
             std::string ca_cert = catena::readFile(ca_cert_fn);
             ssl_opts.pem_root_certs = ca_cert;

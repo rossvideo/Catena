@@ -40,7 +40,6 @@
 #include "interface/param.pb.h"
 #include <fstream>
 #include <sys/stat.h>
-#include <SharedFlags.h>
 
 // Test helpers
 #include "RESTTest.h"

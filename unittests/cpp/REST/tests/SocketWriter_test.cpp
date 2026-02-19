@@ -39,7 +39,6 @@
 
 // common
 #include <Logger.h>
-#include <SharedFlags.h>
 
 // Test helpers
 #include "RESTTest.h"

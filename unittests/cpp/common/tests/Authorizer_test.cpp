@@ -43,7 +43,6 @@
 #include "CommonTestHelpers.h"
 #include <Logger.h>
 #include "Config.h"
-#include "SharedFlags.h"
 
 // gtest
 #include <gtest/gtest.h>

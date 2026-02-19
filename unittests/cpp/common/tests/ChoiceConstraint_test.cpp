@@ -44,7 +44,6 @@
 #include "MockDevice.h"
 #include "Logger.h"
 #include "Config.h"
-#include "SharedFlags.h"
 
 #include "ChoiceConstraint.h"
 

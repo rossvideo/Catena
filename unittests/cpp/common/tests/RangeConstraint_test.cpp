@@ -44,7 +44,6 @@
 #include "MockDevice.h"
 #include "Config.h"
 #include "Logger.h"
-#include "SharedFlags.h"
 
 #include "RangeConstraint.h"
 

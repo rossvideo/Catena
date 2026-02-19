@@ -37,7 +37,6 @@
 
 // common
 #include <Logger.h>
-#include <SharedFlags.h>
 #include <Config.h>
 
 void Logger::init(const std::string& appName) {

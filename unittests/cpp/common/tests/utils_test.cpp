@@ -15,7 +15,6 @@
 #include <Logger.h>
 #include "../src/utils.cpp" // Include the file to test
 #include "Config.h"
-#include "SharedFlags.h"
 
 namespace fs = std::filesystem;
 

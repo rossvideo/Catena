@@ -39,7 +39,6 @@
 #include <rpc/Heartbeat.h>
 #include <Logger.h>
 #include "Config.h"
-#include "SharedFlags.h"
 
 #include <gtest/gtest.h>
 #include <atomic>

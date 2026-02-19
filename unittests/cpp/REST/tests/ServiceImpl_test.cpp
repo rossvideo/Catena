@@ -40,7 +40,6 @@
 // common
 #include <Config.h>
 #include <Logger.h>
-#include <SharedFlags.h>
 
 // gtest
 #include <gtest/gtest.h>

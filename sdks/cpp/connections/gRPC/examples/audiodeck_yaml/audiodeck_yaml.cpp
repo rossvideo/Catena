@@ -102,9 +102,9 @@ void RunRPCServer(std::string addr)
 
     try {
         // // check that static_root is a valid file path
-        // if (!std::filesystem::exists(absl::GetFlag(FLAGS_static_root))) {
+        // if (!std::filesystem::exists(config::static_root)) {
         //     std::stringstream why;
-        //     why << std::quoted(absl::GetFlag(FLAGS_static_root)) << " is not a valid file path";
+        //     why << std::quoted(config::static_root) << " is not a valid file path";
         //     throw std::invalid_argument(why.str());
         // }
 

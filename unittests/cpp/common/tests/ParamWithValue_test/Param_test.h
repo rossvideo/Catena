@@ -43,7 +43,6 @@
 #include "StructInfo.h"
 #include "Logger.h"
 #include "Config.h"
-#include "SharedFlags.h"
 
 // mocks
 #include "MockParamDescriptor.h"

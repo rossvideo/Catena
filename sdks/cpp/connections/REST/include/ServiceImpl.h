@@ -48,7 +48,6 @@
 #include <Authorizer.h>
 #include <Enums.h>
 #include <SubscriptionManager.h>
-#include <SharedFlags.h>
 #include <Config.h>
 #include <rpc/ConnectionQueue.h>
 

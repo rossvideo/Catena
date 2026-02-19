@@ -42,7 +42,6 @@
 #include "Enums.h"
 #include "Logger.h"
 #include "Config.h"
-#include "SharedFlags.h"
 
 #include "MockConstraint.h"
 #include "MockDevice.h"

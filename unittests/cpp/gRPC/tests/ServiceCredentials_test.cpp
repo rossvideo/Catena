@@ -198,7 +198,7 @@ TEST(gRPCExpandEnvVariablesTest, NoEnvVarInString) {
 }
 
 /*
- * TEST 7 - Test with FLAGS_secure_comms set to off
+ * TEST 7 - Test with config::secure_comms set to off
  */
 TEST_F(gRPCServiceCredentialsTests, FlagsSecureCommsOff) {
     config::secure_comms = "off";
@@ -210,9 +210,9 @@ TEST_F(gRPCServiceCredentialsTests, FlagsSecureCommsOff) {
 }
 
 /*
- * TEST 8 - Test with FLAGS_secure_comms set to tls and mutual_authc set to false.
+ * TEST 8 - Test with config::secure_comms set to tls and config::mutual_authc set to false.
  */
-TEST_F(gRPCServiceCredentialsTests, FLAGS_mutual_authcFalse) {
+TEST_F(gRPCServiceCredentialsTests, MutualAuthcFalse) {
     config::secure_comms = "tls";
     config::mutual_authc = false;
 
@@ -224,9 +224,9 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_mutual_authcFalse) {
 }
 
 /*
- * TEST 9 - Test with FLAGS_secure_comms set to tls and mutual_authc set to true.
+ * TEST 9 - Test with config::secure_comms set to tls and config::mutual_authc set to true.
  */
-TEST_F(gRPCServiceCredentialsTests, FLAGS_mutual_authcTrue) {
+TEST_F(gRPCServiceCredentialsTests, MutualAuthcTrue) {
     config::secure_comms = "tls";
     config::mutual_authc = true;
 
@@ -238,9 +238,9 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_mutual_authcTrue) {
 }
 
 /*
- * TEST 10 - Test with FLAGS_secure_comms set to tls and private_ca set to false.
+ * TEST 10 - Test with config::secure_comms set to tls and config::private_ca set to false.
  */
-TEST_F(gRPCServiceCredentialsTests, FLAGS_private_caFalse) {
+TEST_F(gRPCServiceCredentialsTests, PrivateCaFalse) {
     config::secure_comms = "tls";
     config::private_ca = false;
     config::certs = "/tmp/testcerts";
@@ -256,9 +256,9 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_private_caFalse) {
 }
 
 /*
- * TEST 11 - Test with FLAGS_secure_comms set to tls and private_ca set to true.
+ * TEST 11 - Test with config::secure_comms set to tls and config::private_ca set to true.
  */
-TEST_F(gRPCServiceCredentialsTests, FLAGS_private_caTrue) {
+TEST_F(gRPCServiceCredentialsTests, PrivateCaTrue) {
     config::secure_comms = "tls";
     config::private_ca = true;
     config::certs = "/tmp/testcerts";
@@ -274,9 +274,9 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_private_caTrue) {
 }
 
 /*
- * TEST 12 - Test with FLAGS_secure_comms set to tls and FLAGS_authz set to false.
+ * TEST 12 - Test with config::secure_comms set to tls and config::authz set to false.
  */
-TEST_F(gRPCServiceCredentialsTests, FLAGS_authzFalse) {
+TEST_F(gRPCServiceCredentialsTests, AuthzFalse) {
     config::secure_comms = "tls";
     config::authz = false;
     config::certs = "/tmp/testcerts";
@@ -291,9 +291,9 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_authzFalse) {
 }
 
 /*
- * TEST 13 - Test with FLAGS_secure_comms set to tls and FLAGS_authz set to true.
+ * TEST 13 - Test with config::secure_comms set to tls and config::authz set to true.
  */
-TEST_F(gRPCServiceCredentialsTests, FLAGS_authzTrue) {
+TEST_F(gRPCServiceCredentialsTests, AuthzTrue) {
     config::secure_comms = "tls";
     config::private_ca = true;
     config::certs = "/tmp/testcerts";
@@ -309,9 +309,9 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_authzTrue) {
 }
 
 /*
- * TEST 14 - Test with FLAGS_secure_comms set to an invalid value.
+ * TEST 14 - Test with config::secure_comms set to an invalid value.
  */
-TEST_F(gRPCServiceCredentialsTests, FLAGS_secure_commsInvalidValue) {
+TEST_F(gRPCServiceCredentialsTests, SecureCommsInvalidValue) {
     config::secure_comms = "invalid_value";
 
     // Setting expectations

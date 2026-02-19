@@ -45,7 +45,6 @@
 #include "LanguagePack.h"
 #include <Logger.h>
 #include "Config.h"
-#include "SharedFlags.h"
 
 using namespace catena::common;
 

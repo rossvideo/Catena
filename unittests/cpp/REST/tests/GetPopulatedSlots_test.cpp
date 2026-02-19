@@ -36,7 +36,6 @@
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
-#include <SharedFlags.h>
 
 // Test helpers
 #include "RESTTest.h"

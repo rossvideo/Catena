@@ -66,7 +66,6 @@
 #include <IParam.h>
 #include <IDevice.h>
 #include <Authorizer.h>
-#include <SharedFlags.h>
 #include <SubscriptionManager.h>
 #include <Config.h>
 #include <rpc/ConnectionQueue.h>

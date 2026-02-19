@@ -42,7 +42,6 @@
 #include "Enums.h"
 #include "CommonTestHelpers.h"
 #include <Logger.h>
-#include <SharedFlags.h>
 #include <Config.h>
 #include <regex>
 

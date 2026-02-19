@@ -38,7 +38,6 @@
  */
 
 
-#include <SharedFlags.h>
 
 // Test helpers
 #include "RESTTest.h"
