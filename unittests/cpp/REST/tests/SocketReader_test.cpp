@@ -33,7 +33,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @author keon.foster@rossvideo.com
- * @date 2026/02/09
+ * @date 2026-02-19
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -61,7 +61,7 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        config::log_dir = UNITTEST_LOG_DIR;
         Logger::init("RESTSocketReaderTest");
     }
 

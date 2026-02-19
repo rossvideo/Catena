@@ -3,7 +3,7 @@
 * @brief Testing for utils.cpp
 * @author nathan.rochon@rossvideo.com
 * @author keon.foster@rossvideo.com
-* @date 2026/01/30
+* @date 2026-02-19
 * @copyright Copyright © 2026 Ross Video Ltd
 */
 
@@ -14,6 +14,7 @@
 #include <tuple>
 #include <Logger.h>
 #include "../src/utils.cpp" // Include the file to test
+#include "Config.h"
 #include "SharedFlags.h"
 
 namespace fs = std::filesystem;
@@ -22,7 +23,7 @@ class UtilsTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        catena::common::config::log_dir = UNITTEST_LOG_DIR;
         Logger::init("UtilsTest");
     }
 

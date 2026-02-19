@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,13 +31,15 @@
 /**
  * @brief This file is for testing the EnumDecorator.h file.
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2025-11-06
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-02-19
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // common
 #include <patterns/EnumDecorator.h>
 #include <Logger.h>
+#include <Config.h>
 #include <SharedFlags.h>
 
 // gtest
@@ -79,7 +81,7 @@ class EnumDecoratorTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        catena::common::config::log_dir = UNITTEST_LOG_DIR;
         Logger::init("EnumDecoratorTest");
     }
 

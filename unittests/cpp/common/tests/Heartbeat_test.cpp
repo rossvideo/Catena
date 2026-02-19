@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,11 +31,14 @@
 /**
  * @brief This file is for testing the Heartbeat.cpp file.
  * @author andrew.brown@rossvideo.com
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-02-19
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #include <rpc/Heartbeat.h>
 #include <Logger.h>
+#include "Config.h"
 #include "SharedFlags.h"
 
 #include <gtest/gtest.h>
@@ -52,7 +55,7 @@ class HeartbeatTest : public ::testing::Test {
     
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        config::log_dir = UNITTEST_LOG_DIR;
         Logger::init("HeartbeatTest");
     }
 
