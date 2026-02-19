@@ -1329,3 +1329,147 @@ func TestWriteHTTPResult_WithError_NonDev(t *testing.T) {
 		t.Error("prod mode should not expose detailed error in writeHTTPResult")
 	}
 }
+
+func TestServer_Shutdown(t *testing.T) {
+	srv := NewServer([]int{0})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	go srv.mux.ServeHTTP(rec, req)
+	time.Sleep(100 * time.Millisecond)
+
+	if srv.connectionQueue.ConnectionCount() != 1 {
+		t.Errorf("expected 1 connection before shutdown, got %d", srv.connectionQueue.ConnectionCount())
+	}
+
+	done := make(chan struct{})
+	go func() {
+		srv.Shutdown()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		// Shutdown completed
+	case <-time.After(2 * time.Second):
+		t.Fatal("Shutdown timed out")
+	}
+
+	if srv.connectionQueue.ConnectionCount() != 0 {
+		t.Errorf("expected 0 connections after shutdown, got %d", srv.connectionQueue.ConnectionCount())
+	}
+}
+
+func TestServer_Shutdown_MultipleConnections(t *testing.T) {
+	srv := NewServer([]int{0})
+	srv.SetMaxConnections(10)
+
+	ctxs := make([]context.CancelFunc, 3)
+	for i := 0; i < 3; i++ {
+		ctx, cancel := context.WithCancel(context.Background())
+		ctxs[i] = cancel
+		req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
+		rec := httptest.NewRecorder()
+		go srv.mux.ServeHTTP(rec, req)
+	}
+	defer func() {
+		for _, cancel := range ctxs {
+			cancel()
+		}
+	}()
+
+	time.Sleep(150 * time.Millisecond)
+
+	if srv.connectionQueue.ConnectionCount() != 3 {
+		t.Errorf("expected 3 connections, got %d", srv.connectionQueue.ConnectionCount())
+	}
+
+	done := make(chan struct{})
+	go func() {
+		srv.Shutdown()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("Shutdown timed out")
+	}
+
+	if srv.connectionQueue.ConnectionCount() != 0 {
+		t.Errorf("expected 0 connections after shutdown, got %d", srv.connectionQueue.ConnectionCount())
+	}
+}
+
+func TestServer_SetValue_NotifiesConnections(t *testing.T) {
+	srv := NewServer([]int{0})
+
+	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
+		return catena.StatusResult{Code: catena.OK}
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	go srv.mux.ServeHTTP(rec, req)
+	time.Sleep(150 * time.Millisecond)
+
+	// Set a value via HTTP - should auto-notify connected clients
+	body := []byte(`{"int32_value": 42}`)
+	setReq := httptest.NewRequest(http.MethodPut, "/st2138-api/v1/0/value/brightness", bytes.NewReader(body))
+	setReq.Header.Set("Content-Type", "application/json")
+	setRec := httptest.NewRecorder()
+	srv.mux.ServeHTTP(setRec, setReq)
+
+	if setRec.Code != http.StatusOK {
+		t.Errorf("expected SetValue status %d, got %d", http.StatusOK, setRec.Code)
+	}
+
+	time.Sleep(100 * time.Millisecond)
+	cancel()
+	time.Sleep(50 * time.Millisecond)
+
+	sseBody := rec.Body.String()
+	if !strings.Contains(sseBody, "brightness") {
+		t.Errorf("expected SSE body to contain 'brightness' from SetValue notification, got %s", sseBody)
+	}
+}
+
+func TestServer_SetValue_FailureDoesNotNotify(t *testing.T) {
+	srv := NewServer([]int{0})
+
+	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
+		return catena.StatusWithCode(catena.INVALID_ARGUMENT, "bad value")
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	go srv.mux.ServeHTTP(rec, req)
+	time.Sleep(150 * time.Millisecond)
+
+	body := []byte(`{"int32_value": -1}`)
+	setReq := httptest.NewRequest(http.MethodPut, "/st2138-api/v1/0/value/brightness", bytes.NewReader(body))
+	setReq.Header.Set("Content-Type", "application/json")
+	setRec := httptest.NewRecorder()
+	srv.mux.ServeHTTP(setRec, setReq)
+
+	time.Sleep(100 * time.Millisecond)
+	cancel()
+	time.Sleep(50 * time.Millisecond)
+
+	sseBody := rec.Body.String()
+	lines := strings.Split(sseBody, "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "data: ") && strings.Contains(line, "brightness") {
+			t.Error("failed SetValue should not send SSE notification")
+		}
+	}
+}

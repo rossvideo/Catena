@@ -74,26 +74,7 @@ type Server struct {
 	getAssetHandlers       map[int]GetAssetHandler
 	executeCommandHandlers map[int]ExecuteCommandHandler
 	fallbackHandler        FallbackHandler
-
-	// SSE connection management
-	connections    map[int]*sseConnection
-	nextConnID     int
-	maxConnections int
-}
-
-// PushUpdate represents a streaming update sent to connected clients via SSE
-type PushUpdate struct {
-	Slot            int    `json:"slot,omitempty"`
-	OID             string `json:"oid,omitempty"`
-	Value           any    `json:"value,omitempty"`
-	SlotsAdded      []int  `json:"slots_added,omitempty"`
-	SlotsRemoved    []int  `json:"slots_removed,omitempty"`
-	DeviceComponent any    `json:"device_component,omitempty"`
-}
-
-// sseConnection represents an active SSE connection
-type sseConnection struct {
-	updates chan PushUpdate
+	connectionQueue        *ConnectionQueue
 }
 
 // writeHTTPResult is a unified function that handles writing different response types
@@ -217,9 +198,7 @@ func NewServer(slots []int) *Server {
 		setValueHandlers:       make(map[int]SetValueHandler),
 		getAssetHandlers:       make(map[int]GetAssetHandler),
 		executeCommandHandlers: make(map[int]ExecuteCommandHandler),
-		// SSE connection management
-		connections:    make(map[int]*sseConnection),
-		maxConnections: 100, // default limit, can be changed via SetMaxConnections
+		connectionQueue:        NewConnectionQueue(100),
 	}
 
 	// Register default handlers for each slot
@@ -334,60 +313,20 @@ func (s *Server) lookupExecuteCommand(slot int) ExecuteCommandHandler {
 	return DefaultExecuteCommandHandler
 }
 
-// Connection management
-
 // SetMaxConnections sets the maximum number of SSE connections allowed (0 = unlimited)
 func (s *Server) SetMaxConnections(max int) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.maxConnections = max
-}
-
-// registerConnection registers a new SSE connection and returns its ID
-func (s *Server) registerConnection() (int, chan PushUpdate) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	// Check connection limit
-	if s.maxConnections > 0 && len(s.connections) >= s.maxConnections {
-		return -1, nil
-	}
-
-	s.nextConnID++
-	updates := make(chan PushUpdate, 100)
-	s.connections[s.nextConnID] = &sseConnection{
-		updates: updates,
-	}
-	logger.Info("SSE connection registered", "connID", s.nextConnID, "total", len(s.connections))
-	return s.nextConnID, updates
-}
-
-// unregisterConnection removes an SSE connection
-func (s *Server) unregisterConnection(connID int) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if conn, ok := s.connections[connID]; ok {
-		close(conn.updates)
-		delete(s.connections, connID)
-		logger.Info("SSE connection unregistered", "connID", connID, "remaining", len(s.connections))
-	}
+	s.connectionQueue.SetMaxConnections(max)
 }
 
 // BroadcastUpdate sends an update to all connected SSE clients
 func (s *Server) BroadcastUpdate(update PushUpdate) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.connectionQueue.NotifySetValue(update)
+}
 
-	for connID, conn := range s.connections {
-		select {
-		case conn.updates <- update:
-			// Successfully sent
-		default:
-			// Channel full, log warning but don't block
-			logger.Warning("SSE channel full, dropping update", "connID", connID, "oid", update.OID)
-		}
-	}
+// Shutdown gracefully shuts down the server by closing all SSE connections
+// and waiting for their goroutines to finish.
+func (s *Server) Shutdown() {
+	s.connectionQueue.Shutdown()
 }
 
 // sendSSEEvent writes a single SSE event to the response writer
@@ -454,14 +393,14 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 	_ = r.Header.Get("User-Agent")
 	_ = r.Header.Get("Authorization")
 
-	// Register this connection
-	connID, updates := s.registerConnection()
+	// Register this connection in the ConnectionQueue
+	connID, conn := s.connectionQueue.RegisterConnection()
 	if connID < 0 {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.RESOURCE_EXHAUSTED, "Too many connections to service")
 		writeHTTPResult(w, res, val)
 		return
 	}
-	defer s.unregisterConnection(connID)
+	defer s.connectionQueue.DeregisterConnection(connID)
 
 	// Set SSE headers
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -493,20 +432,19 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info("SSE Connect started", "connID", connID)
 
-	// Stream updates until client disconnects
+	// Each connection's goroutine listens for setValue updates and
+	// server shutdown signals, matching the C++ pattern where each
+	// connection waits on a condition variable for updates.
 	ctx := r.Context()
 	for {
 		select {
 		case <-ctx.Done():
-			// Client disconnected
 			logger.Info("SSE client disconnected", "connID", connID)
 			return
-		case update, ok := <-updates:
-			if !ok {
-				// Channel closed (server shutdown or forced disconnect)
-				logger.Info("SSE channel closed", "connID", connID)
-				return
-			}
+		case <-conn.done:
+			logger.Info("SSE connection shut down by server", "connID", connID)
+			return
+		case update := <-conn.updates:
 			if err := s.sendSSEEvent(w, flusher, update); err != nil {
 				logger.Error("failed to send SSE event", "connID", connID, "error", err)
 				return
@@ -618,6 +556,13 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 
 		handler := s.lookupSetValue(slot)
 		res := handler(nativeValue, slot, fqoid)
+		if res.Error == "" {
+			s.connectionQueue.NotifySetValue(PushUpdate{
+				Slot:  slot,
+				OID:   fqoid,
+				Value: nativeValue,
+			})
+		}
 		writeHTTPStatusResult(w, res)
 
 	default:
