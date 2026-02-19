@@ -51,6 +51,7 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 
+	"github.com/rossvideo/catena/build/go/protos"
 	"github.com/rossvideo/catena/sdks/go/internal"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
@@ -318,8 +319,24 @@ func (s *Server) SetMaxConnections(max int) {
 	s.connectionQueue.SetMaxConnections(max)
 }
 
-// BroadcastUpdate sends an update to all connected SSE clients
-func (s *Server) BroadcastUpdate(update PushUpdate) {
+// BroadcastUpdate converts a native Go value into a proto PushUpdates message
+// and sends it to all connected SSE clients. Business logic calls this with
+// plain Go types; the proto serialization is handled internally.
+func (s *Server) BroadcastUpdate(slot int, oid string, value any) {
+	protoValue, err := catena.ToProto(value)
+	if err != nil {
+		logger.Error("BroadcastUpdate: failed to convert value to proto", "error", err)
+		return
+	}
+	update := &protos.PushUpdates{
+		Slot: uint32(slot),
+		Kind: &protos.PushUpdates_Value{
+			Value: &protos.PushUpdates_PushValue{
+				Oid:   oid,
+				Value: protoValue,
+			},
+		},
+	}
 	s.connectionQueue.NotifySetValue(update)
 }
 
@@ -329,9 +346,15 @@ func (s *Server) Shutdown() {
 	s.connectionQueue.Shutdown()
 }
 
-// sendSSEEvent writes a single SSE event to the response writer
-func (s *Server) sendSSEEvent(w http.ResponseWriter, flusher http.Flusher, update PushUpdate) error {
-	data, err := json.Marshal(update)
+// sseMarshaler is the protojson marshaler used for SSE events.
+var sseMarshaler = protojson.MarshalOptions{
+	EmitUnpopulated: false,
+}
+
+// sendSSEEvent writes a single SSE event to the response writer,
+// serializing the proto PushUpdates message with protojson.
+func (s *Server) sendSSEEvent(w http.ResponseWriter, flusher http.Flusher, update *protos.PushUpdates) error {
+	data, err := sseMarshaler.Marshal(update)
 	if err != nil {
 		return err
 	}
@@ -416,25 +439,27 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	flusher.Flush()
 
-	// Send initial empty update with populated slots
+	// Send initial update with populated slots using proto PushUpdates format
 	populatedSlots := s.getPopulatedSlots()
-	initialPayload := map[string]any{"slots_added": map[string]any{"slots": populatedSlots}}
-	initialJSON, err := json.Marshal(initialPayload)
-	if err != nil {
-		logger.Error("failed to marshal initial connect payload", "error", err)
-		return
+	slotUint32s := make([]uint32, len(populatedSlots))
+	for i, sl := range populatedSlots {
+		slotUint32s[i] = uint32(sl)
 	}
-	if _, err := fmt.Fprintf(w, "data: %s\n\n", initialJSON); err != nil {
+	initialEvent := &protos.PushUpdates{
+		Kind: &protos.PushUpdates_SlotsAdded{
+			SlotsAdded: &protos.SlotList{
+				Slots: slotUint32s,
+			},
+		},
+	}
+	if err := s.sendSSEEvent(w, flusher, initialEvent); err != nil {
 		logger.Error("failed to send initial SSE event", "error", err)
 		return
 	}
-	flusher.Flush()
 
 	logger.Info("SSE Connect started", "connID", connID)
 
-	// Each connection's goroutine listens for setValue updates and
-	// server shutdown signals, matching the C++ pattern where each
-	// connection waits on a condition variable for updates.
+	// Each connection's goroutine listens for setValue updates and server shutdown signals
 	ctx := r.Context()
 	for {
 		select {
@@ -556,13 +581,6 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 
 		handler := s.lookupSetValue(slot)
 		res := handler(nativeValue, slot, fqoid)
-		if res.Error == "" {
-			s.connectionQueue.NotifySetValue(PushUpdate{
-				Slot:  slot,
-				OID:   fqoid,
-				Value: nativeValue,
-			})
-		}
 		writeHTTPStatusResult(w, res)
 
 	default:

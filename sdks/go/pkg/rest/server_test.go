@@ -53,6 +53,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rossvideo/catena/build/go/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 )
 
@@ -525,14 +526,13 @@ func TestServer_Connect_Route(t *testing.T) {
 	if !strings.Contains(body, "data:") {
 		t.Error("expected SSE data in response body")
 	}
-	// Initial event must be PushUpdates format: {"slots_added":{"slots":[...]}} (matches C++/proto)
-	if !strings.Contains(body, "slots_added") {
-		t.Error("expected initial slots_added in response body")
+	// Initial event must be protojson PushUpdates format: {"slotsAdded":{"slots":[...]}}
+	if !strings.Contains(body, "slotsAdded") {
+		t.Error("expected initial slotsAdded in response body")
 	}
 	if !strings.Contains(body, "\"slots\"") {
 		t.Error("expected initial event in proto format with nested \"slots\" (SlotList)")
 	}
-	// Parse first SSE data line and verify structure
 	lines := strings.Split(body, "\n")
 	for _, line := range lines {
 		if strings.HasPrefix(line, "data: ") {
@@ -541,14 +541,14 @@ func TestServer_Connect_Route(t *testing.T) {
 				t.Errorf("initial SSE data must be valid JSON: %v", err)
 				break
 			}
-			slotsAdded, ok := payload["slots_added"].(map[string]any)
+			slotsAdded, ok := payload["slotsAdded"].(map[string]any)
 			if !ok {
-				t.Error("expected slots_added object (SlotList) in initial event")
+				t.Error("expected slotsAdded object (SlotList) in initial event")
 				break
 			}
 			slots, ok := slotsAdded["slots"].([]any)
 			if !ok || len(slots) != 2 {
-				t.Errorf("expected slots_added.slots to be array of 2 slots, got %T %v", slotsAdded["slots"], slotsAdded["slots"])
+				t.Errorf("expected slotsAdded.slots to be array of 2 slots, got %T %v", slotsAdded["slots"], slotsAdded["slots"])
 			}
 			break
 		}
@@ -1123,7 +1123,15 @@ func TestServer_sendSSEEvent(t *testing.T) {
 	rec := httptest.NewRecorder()
 	var w http.ResponseWriter = rec
 	flusher := w.(http.Flusher)
-	update := PushUpdate{Slot: 1, OID: "test/param", Value: 42}
+	update := &protos.PushUpdates{
+		Slot: 1,
+		Kind: &protos.PushUpdates_Value{
+			Value: &protos.PushUpdates_PushValue{
+				Oid:   "test/param",
+				Value: &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: 42}},
+			},
+		},
+	}
 
 	err := srv.sendSSEEvent(rec, flusher, update)
 	if err != nil {
@@ -1133,12 +1141,19 @@ func TestServer_sendSSEEvent(t *testing.T) {
 	if !strings.HasPrefix(body, "data: ") {
 		t.Errorf("expected body to start with 'data: ', got %q", body)
 	}
-	var decoded PushUpdate
+	var decoded map[string]any
 	if err := json.Unmarshal([]byte(strings.TrimPrefix(strings.Split(body, "\n")[0], "data: ")), &decoded); err != nil {
 		t.Fatalf("SSE data not valid JSON: %v", err)
 	}
-	if decoded.Slot != 1 || decoded.OID != "test/param" {
-		t.Errorf("expected Slot=1 OID=test/param, got Slot=%d OID=%s", decoded.Slot, decoded.OID)
+	if decoded["slot"] != float64(1) {
+		t.Errorf("expected slot=1, got %v", decoded["slot"])
+	}
+	valueObj, ok := decoded["value"].(map[string]any)
+	if !ok {
+		t.Fatal("expected nested 'value' object in SSE payload")
+	}
+	if valueObj["oid"] != "test/param" {
+		t.Errorf("expected oid=test/param, got %v", valueObj["oid"])
 	}
 }
 
@@ -1152,8 +1167,7 @@ func TestServer_BroadcastUpdate(t *testing.T) {
 	go srv.mux.ServeHTTP(rec, req)
 	time.Sleep(150 * time.Millisecond)
 
-	// Broadcast an update and give handler time to send it
-	srv.BroadcastUpdate(PushUpdate{Slot: 0, OID: "broadcast/oid", Value: "hello"})
+	srv.BroadcastUpdate(0, "broadcast/oid", "hello")
 	time.Sleep(100 * time.Millisecond)
 	cancel()
 	time.Sleep(50 * time.Millisecond)
@@ -1175,9 +1189,8 @@ func TestServer_BroadcastUpdate_ChannelFull(t *testing.T) {
 	go srv.mux.ServeHTTP(rec, req)
 	time.Sleep(100 * time.Millisecond)
 
-	// Fill the channel (buffer 100) by sending many updates without client reading fast enough
 	for i := 0; i < 150; i++ {
-		srv.BroadcastUpdate(PushUpdate{OID: "fill"})
+		srv.BroadcastUpdate(0, "fill", int32(i))
 	}
 	cancel()
 	time.Sleep(50 * time.Millisecond)
@@ -1408,6 +1421,7 @@ func TestServer_SetValue_NotifiesConnections(t *testing.T) {
 	srv := NewServer([]int{0})
 
 	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
+		srv.BroadcastUpdate(slot, fqoid, value)
 		return catena.StatusResult{Code: catena.OK}
 	})
 
@@ -1419,7 +1433,6 @@ func TestServer_SetValue_NotifiesConnections(t *testing.T) {
 	go srv.mux.ServeHTTP(rec, req)
 	time.Sleep(150 * time.Millisecond)
 
-	// Set a value via HTTP - should auto-notify connected clients
 	body := []byte(`{"int32_value": 42}`)
 	setReq := httptest.NewRequest(http.MethodPut, "/st2138-api/v1/0/value/brightness", bytes.NewReader(body))
 	setReq.Header.Set("Content-Type", "application/json")
@@ -1443,6 +1456,7 @@ func TestServer_SetValue_NotifiesConnections(t *testing.T) {
 func TestServer_SetValue_FailureDoesNotNotify(t *testing.T) {
 	srv := NewServer([]int{0})
 
+	// Handler only broadcasts on success -- never reached here
 	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
 		return catena.StatusWithCode(catena.INVALID_ARGUMENT, "bad value")
 	})

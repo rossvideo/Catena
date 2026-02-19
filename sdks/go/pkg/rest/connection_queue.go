@@ -41,33 +41,21 @@ package rest
 import (
 	"sync"
 
+	"github.com/rossvideo/catena/build/go/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
-// PushUpdate represents a streaming update sent to connected clients via SSE
-type PushUpdate struct {
-	Slot            int    `json:"slot,omitempty"`
-	OID             string `json:"oid,omitempty"`
-	Value           any    `json:"value,omitempty"`
-	SlotsAdded      []int  `json:"slots_added,omitempty"`
-	SlotsRemoved    []int  `json:"slots_removed,omitempty"`
-	DeviceComponent any    `json:"device_component,omitempty"`
-}
-
 // Connection represents an active SSE connection.
 // Each connection runs in its own goroutine and receives updates via the
-// updates channel. The done channel is closed by the ConnectionQueue to
-// signal server-initiated shutdown.
+// updates channel as proto PushUpdates messages. The done channel is closed
+// by the ConnectionQueue to signal server-initiated shutdown.
 type Connection struct {
 	id      int
-	updates chan PushUpdate
+	updates chan *protos.PushUpdates
 	done    chan struct{}
 }
 
 // ConnectionQueue manages SSE connections to the service.
-// Modeled after the C++ ConnectionQueue, it owns all active connections
-// and handles registration, deregistration, update notification, and
-// graceful shutdown.
 type ConnectionQueue struct {
 	mu             sync.Mutex
 	connections    map[int]*Connection
@@ -94,7 +82,6 @@ func (cq *ConnectionQueue) SetMaxConnections(max int) {
 }
 
 // RegisterConnection creates a new connection and returns its ID and Connection.
-// Returns (-1, nil) if the connection limit has been reached or the queue is shutting down.
 func (cq *ConnectionQueue) RegisterConnection() (int, *Connection) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
@@ -110,7 +97,7 @@ func (cq *ConnectionQueue) RegisterConnection() (int, *Connection) {
 	cq.nextConnID++
 	conn := &Connection{
 		id:      cq.nextConnID,
-		updates: make(chan PushUpdate, 100),
+		updates: make(chan *protos.PushUpdates, 100),
 		done:    make(chan struct{}),
 	}
 	cq.connections[cq.nextConnID] = conn
@@ -132,11 +119,10 @@ func (cq *ConnectionQueue) DeregisterConnection(connID int) {
 	}
 }
 
-// NotifySetValue sends a setValue update to all connected clients.
+// NotifySetValue sends a PushUpdates message to all connected clients.
 // Called when a value changes (by client or server) to propagate
-// the update to all SSE subscribers, matching the C++ pattern where
-// valueSetByClient/valueSetByServer signals notify all connections.
-func (cq *ConnectionQueue) NotifySetValue(update PushUpdate) {
+// the update to all SSE subscribers.
+func (cq *ConnectionQueue) NotifySetValue(update *protos.PushUpdates) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
@@ -144,7 +130,7 @@ func (cq *ConnectionQueue) NotifySetValue(update PushUpdate) {
 		select {
 		case conn.updates <- update:
 		default:
-			logger.Warning("SSE channel full, dropping update", "connID", connID, "oid", update.OID)
+			logger.Warning("SSE channel full, dropping update", "connID", connID)
 		}
 	}
 }

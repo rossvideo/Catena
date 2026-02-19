@@ -42,6 +42,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/rossvideo/catena/build/go/protos"
 )
 
 func TestNewConnectionQueue(t *testing.T) {
@@ -171,26 +173,30 @@ func TestConnectionQueue_NotifySetValue(t *testing.T) {
 	_, conn1 := cq.RegisterConnection()
 	_, conn2 := cq.RegisterConnection()
 
-	update := PushUpdate{Slot: 0, OID: "test/param", Value: int32(42)}
+	update := &protos.PushUpdates{
+		Slot: 0,
+		Kind: &protos.PushUpdates_Value{
+			Value: &protos.PushUpdates_PushValue{
+				Oid:   "test/param",
+				Value: &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: 42}},
+			},
+		},
+	}
 	cq.NotifySetValue(update)
 
-	select {
-	case received := <-conn1.updates:
-		if received.OID != "test/param" {
-			t.Errorf("conn1: expected OID 'test/param', got %s", received.OID)
+	checkUpdate := func(name string, conn *Connection) {
+		select {
+		case received := <-conn.updates:
+			pv, ok := received.Kind.(*protos.PushUpdates_Value)
+			if !ok || pv.Value.GetOid() != "test/param" {
+				t.Errorf("%s: expected OID 'test/param'", name)
+			}
+		case <-time.After(time.Second):
+			t.Errorf("%s: timed out waiting for update", name)
 		}
-	case <-time.After(time.Second):
-		t.Error("conn1: timed out waiting for update")
 	}
-
-	select {
-	case received := <-conn2.updates:
-		if received.OID != "test/param" {
-			t.Errorf("conn2: expected OID 'test/param', got %s", received.OID)
-		}
-	case <-time.After(time.Second):
-		t.Error("conn2: timed out waiting for update")
-	}
+	checkUpdate("conn1", conn1)
+	checkUpdate("conn2", conn2)
 }
 
 func TestConnectionQueue_NotifySetValue_ChannelFull(t *testing.T) {
@@ -198,19 +204,24 @@ func TestConnectionQueue_NotifySetValue_ChannelFull(t *testing.T) {
 
 	_, conn := cq.RegisterConnection()
 
-	// Fill the channel buffer (100)
+	fillUpdate := &protos.PushUpdates{Kind: &protos.PushUpdates_Value{
+		Value: &protos.PushUpdates_PushValue{Oid: "fill"},
+	}}
+	overflowUpdate := &protos.PushUpdates{Kind: &protos.PushUpdates_Value{
+		Value: &protos.PushUpdates_PushValue{Oid: "overflow"},
+	}}
+
 	for i := 0; i < 100; i++ {
-		cq.NotifySetValue(PushUpdate{OID: "fill"})
+		cq.NotifySetValue(fillUpdate)
 	}
 
 	// This should not block (drops the update)
-	cq.NotifySetValue(PushUpdate{OID: "overflow"})
+	cq.NotifySetValue(overflowUpdate)
 
-	// Drain and verify no "overflow" OID made it through
 	count := 0
 	for len(conn.updates) > 0 {
 		u := <-conn.updates
-		if u.OID == "overflow" {
+		if pv, ok := u.Kind.(*protos.PushUpdates_Value); ok && pv.Value.GetOid() == "overflow" {
 			t.Error("overflow update should have been dropped")
 		}
 		count++
@@ -222,8 +233,7 @@ func TestConnectionQueue_NotifySetValue_ChannelFull(t *testing.T) {
 
 func TestConnectionQueue_NotifySetValue_NoConnections(t *testing.T) {
 	cq := NewConnectionQueue(0)
-	// Should not panic with no connections
-	cq.NotifySetValue(PushUpdate{OID: "test"})
+	cq.NotifySetValue(&protos.PushUpdates{})
 }
 
 func TestConnectionQueue_Shutdown(t *testing.T) {

@@ -69,6 +69,9 @@ func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
 			return catena.StatusWithCode(catena.INVALID_ARGUMENT, "type mismatch")
 		}
 		params.Store(fqoid, value)
+
+		// Broadcast the update to all connected clients
+		srv.BroadcastUpdate(slot, fqoid, value)
 		return catena.StatusWithCode(catena.NO_CONTENT, "")
 	})
 
@@ -105,6 +108,9 @@ func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid str
 			return catena.StatusWithCode(catena.INVALID_ARGUMENT, "type mismatch")
 		}
 		params.Store(fqoid_, value)
+
+		// Broadcast the update to all connected clients
+		srv.BroadcastUpdate(slot, fqoid_, value)
 		return catena.StatusWithCode(catena.OK, "")
 	})
 
