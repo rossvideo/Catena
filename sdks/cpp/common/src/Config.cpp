@@ -20,10 +20,10 @@ void config::initConfigVariables(int argc, char* argv[], std::string prefix) {
         ("default_total_array_size", po::value<uint32_t>()->default_value(kDefaultMaxArrayLength), "use this to define the default total length for string array params.")
         ("max_connections", po::value<uint32_t>()->default_value(DEFAULT_MAX_CONNECTIONS), "use this to define the total number of concurrent connections that can be made to a service.")
         ("port", po::value<uint16_t>()->default_value(6254), "Catena service port")
-        ("private_ca", po::bool_switch(), "Specify if using a private CA")
-        ("mutual_authc", po::bool_switch(), "use this to require client to authenticate")
-        ("authz", po::bool_switch(), "use OAuth token authorization")
-        ("silent", po::bool_switch(), "use this to suppress all log output.")
+        ("private_ca", po::value<bool>()->default_value(false)->implicit_value(true), "Specify if using a private CA")
+        ("mutual_authc", po::value<bool>()->default_value(false)->implicit_value(true), "use this to require client to authenticate")
+        ("authz", po::value<bool>()->default_value(false)->implicit_value(true), "use OAuth token authorization")
+        ("silent", po::value<bool>()->default_value(false)->implicit_value(true), "use this to suppress all log output.")
     ;
 
     //Read values from command line and environment variables

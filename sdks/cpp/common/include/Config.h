@@ -85,4 +85,3 @@ inline bool silent = false;
 } // namespace config     
 } // namespace common
 } // namespace catena
-
