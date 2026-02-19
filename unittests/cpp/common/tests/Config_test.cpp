@@ -156,7 +156,7 @@ TEST_F(ConfigTest, defaultValues) {
     EXPECT_EQ(config::default_max_array_size, kDefaultMaxArrayLength);
     EXPECT_EQ(config::default_total_array_size, kDefaultMaxArrayLength);
     EXPECT_EQ(config::max_connections, DEFAULT_MAX_CONNECTIONS);
-    EXPECT_EQ(config::port, 6254);
+    EXPECT_EQ(config::port, NULL);
     EXPECT_EQ(config::authz, false);
     EXPECT_EQ(config::mutual_authc, false);
     EXPECT_EQ(config::private_ca, false);
@@ -305,7 +305,7 @@ TEST_F(ConfigTest, CmdAndEnv) {
     EXPECT_EQ(config::secure_comms, "off");
     EXPECT_EQ(config::static_root, getenv("HOME"));
     EXPECT_EQ(config::max_connections, DEFAULT_MAX_CONNECTIONS);
-    EXPECT_EQ(config::port, 6254);
+    EXPECT_EQ(config::port, NULL);
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
 
