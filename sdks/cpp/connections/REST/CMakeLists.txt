@@ -57,7 +57,12 @@ set(sources
     "src/controllers/Subscriptions.cpp"
 )
 
-add_library(${target} STATIC ${sources})
+add_library(${target} ${sources})
+
+# DLL export macro for shared builds
+if(BUILD_SHARED_LIBS)
+    target_compile_definitions(${target} PRIVATE CATENA_EXPORTS)
+endif()
 
 target_compile_definitions(${target} PUBLIC REST_READ_TIMEOUT_MS=${REST_READ_TIMEOUT_MS})
 
@@ -75,8 +80,12 @@ target_include_directories(
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
-        ${AVAHI_CLIENT_INCLUDE_DIRS}
 )
+
+# Avahi include dirs (Linux only)
+if(NOT WIN32)
+    target_include_directories(${target} PUBLIC ${AVAHI_CLIENT_INCLUDE_DIRS})
+endif()
 
 # Link Boost.System to your target
 target_link_libraries(${target}
@@ -88,8 +97,12 @@ target_link_libraries(${target}
         catena_proto_common
         absl::flags_parse
         ZLIB::ZLIB
-        ${AVAHI_CLIENT_LIBRARIES}
 )
+
+# Avahi link libs (Linux only)
+if(NOT WIN32)
+    target_link_libraries(${target} PUBLIC ${AVAHI_CLIENT_LIBRARIES})
+endif()
 
 target_compile_features(${target} PUBLIC cxx_std_20)
 

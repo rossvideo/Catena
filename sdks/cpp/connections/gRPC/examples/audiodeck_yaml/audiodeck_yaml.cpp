@@ -97,7 +97,9 @@ void RunRPCServer(std::string addr)
     // install signal handlers
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
+#ifndef _WIN32
     signal(SIGKILL, handle_signal);
+#endif
 
     try {
         // // check that static_root is a valid file path

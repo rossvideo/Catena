@@ -39,11 +39,15 @@ set(TEST_FILES
     Device_test.cpp
     ConnectionQueue_test.cpp
     Heartbeat_test.cpp
-    NmosNode_test.cpp
     Logger_test.cpp
     GenericFactory_test.cpp
     EnumDecorator_test.cpp
 )
+
+# NmosNode_test requires Avahi (Linux only)
+if(NOT WIN32)
+    list(APPEND TEST_FILES NmosNode_test.cpp)
+endif()
 
 foreach(test_file ${TEST_FILES})
     get_filename_component(test_name ${test_file} NAME_WE)
@@ -63,26 +67,28 @@ foreach(test_file ${TEST_FILES})
     gtest_discover_tests(common_${test_name} TEST_PREFIX "common." DISCOVERY_MODE PRE_TEST)
 endforeach()
 
-#special avahi linking for NmosNode_test
-target_link_options(common_NmosNode_test PRIVATE
-    -Wl,--wrap=avahi_client_errno
-    -Wl,--wrap=avahi_simple_poll_new
-    -Wl,--wrap=avahi_simple_poll_free
-    -Wl,--wrap=avahi_simple_poll_loop
-    -Wl,--wrap=avahi_simple_poll_quit
-    -Wl,--wrap=avahi_client_new
-    -Wl,--wrap=avahi_client_free
-    -Wl,--wrap=avahi_service_resolver_new
-    -Wl,--wrap=avahi_service_resolver_free
-    -Wl,--wrap=avahi_service_browser_new
-    -Wl,--wrap=avahi_service_browser_free
-)
-target_include_directories(common_NmosNode_test PUBLIC
-    ${AVAHI_CLIENT_INCLUDE_DIRS}
-)
-target_link_libraries(common_NmosNode_test PRIVATE
-    ${AVAHI_CLIENT_LIBRARIES}
-)
+# Special avahi linking for NmosNode_test (Linux only)
+if(NOT WIN32)
+    target_link_options(common_NmosNode_test PRIVATE
+        -Wl,--wrap=avahi_client_errno
+        -Wl,--wrap=avahi_simple_poll_new
+        -Wl,--wrap=avahi_simple_poll_free
+        -Wl,--wrap=avahi_simple_poll_loop
+        -Wl,--wrap=avahi_simple_poll_quit
+        -Wl,--wrap=avahi_client_new
+        -Wl,--wrap=avahi_client_free
+        -Wl,--wrap=avahi_service_resolver_new
+        -Wl,--wrap=avahi_service_resolver_free
+        -Wl,--wrap=avahi_service_browser_new
+        -Wl,--wrap=avahi_service_browser_free
+    )
+    target_include_directories(common_NmosNode_test PUBLIC
+        ${AVAHI_CLIENT_INCLUDE_DIRS}
+    )
+    target_link_libraries(common_NmosNode_test PRIVATE
+        ${AVAHI_CLIENT_LIBRARIES}
+    )
+endif()
 
 # ParamWithValue_test subdir: one executable for all files
 file(GLOB PARAMWITHVALUE_TESTS "tests/ParamWithValue_test/*.cpp")

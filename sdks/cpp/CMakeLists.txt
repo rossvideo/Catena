@@ -33,6 +33,19 @@ cmake_minimum_required(VERSION 3.20)
 # Project declaration
 project(Catena_cpp VERSION 0.0.1 LANGUAGES C CXX)
 
+if(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    include_directories(BEFORE "${CMAKE_CURRENT_SOURCE_DIR}/overrides")
+endif()
+
+# Shared/static library option (use -DBUILD_SHARED_LIBS=ON for .dll/.so)
+option(BUILD_SHARED_LIBS "Build shared libraries (.dll/.so) instead of static (.lib/.a)" OFF)
+if(BUILD_SHARED_LIBS)
+    message(STATUS "Building SHARED libraries")
+    add_compile_definitions(CATENA_SHARED)
+else()
+    message(STATUS "Building STATIC libraries")
+endif()
+
 # Add cmake modules to path
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 

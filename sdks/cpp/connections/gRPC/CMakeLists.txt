@@ -46,7 +46,12 @@ set(sources
     "src/controllers/UpdateSubscriptions.cpp"
 )
 
-add_library(${target} STATIC ${sources})
+add_library(${target} ${sources})
+
+# DLL export macro for shared builds
+if(BUILD_SHARED_LIBS)
+    target_compile_definitions(${target} PRIVATE CATENA_EXPORTS)
+endif()
 
 find_package(jwt-cpp CONFIG REQUIRED)
 

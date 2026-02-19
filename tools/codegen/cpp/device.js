@@ -29,7 +29,11 @@ function slotArg(desc) {
  * @returns value of the detail_level member as a DetailLevel object
  */
 function detailLevelArg(desc) {
-    return `DetailLevel("${desc.detail_level}")()`;
+    const raw = typeof desc.detail_level === 'string' ? desc.detail_level : 'UNSET';
+    const normalized = raw.toUpperCase();
+    const valid = new Set(['FULL', 'SUBSCRIPTIONS', 'MINIMAL', 'COMMANDS', 'NONE', 'UNSET']);
+    const level = valid.has(normalized) ? normalized : 'UNSET';
+    return `st2138::Device_DetailLevel_${level}`;
 }
 
 /**

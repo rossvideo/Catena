@@ -296,10 +296,11 @@ void RunRPCServer(std::string addr)
     signal(SIGTERM, handle_signal);
     signal(SIGKILL, handle_signal);
 
+
     try {
         grpc::ServerBuilder builder;
         // set some grpc options
-        grpc::EnableDefaultHealthCheckService(true);
+        grpc::EnableDefaultHealthCheckService(false);
 
         builder.AddListeningPort(addr, catena::gRPC::getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
@@ -325,18 +326,25 @@ void RunRPCServer(std::string addr)
         service.init();
         std::thread cq_thread([&]() { service.processEvents(); });
 
-        std::thread loop(startCounter);
+        std::unique_ptr<std::thread> loop;
+    
+        loop = std::make_unique<std::thread>(startCounter);
 
         // start the heartbeat on the device
         dm.setHeartbeatParam("/product/version");
         dm.startHeartbeat();
 
+
         // wait for the server to shutdown and tidy up
         server->Wait();
+ 
         dm.stopHeartbeat();
 
+
         if (fibThread) { fibThread->join(); }
-        loop.join();
+        if (loop && loop->joinable()) {
+            loop->join();
+        }
 
         cq->Shutdown();
         cq_thread.join();

@@ -42,9 +42,13 @@ set(sources
     "src/ConnectionQueue.cpp"
     "src/ChoiceConstraint.cpp"
     "src/Heartbeat.cpp"
-    "src/NmosNode.cpp"
     "src/Logger.cpp"
 )
+
+# NmosNode uses Avahi (Linux-only mDNS). Exclude on Windows.
+if(NOT WIN32)
+    list(APPEND sources "src/NmosNode.cpp")
+endif()
 
 # conditionally make for gRPC
 if (gRPC_enabled)

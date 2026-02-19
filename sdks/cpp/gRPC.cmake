@@ -104,7 +104,7 @@ function(set_up_gRPC_targets)
 
     # Provide link libraries
     target_link_libraries(${GRPC_TARGET} PUBLIC
-        protobuf::libprotobuf-lite
+        protobuf::libprotobuf
         gRPC::grpc++
         absl::log
         absl::log_globals

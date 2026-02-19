@@ -65,7 +65,11 @@ void Logger::init(const std::string& appName) {
         auto now = std::chrono::system_clock::now();
         std::time_t now_time = std::chrono::system_clock::to_time_t(now);
         std::tm tm_buf;
+        #ifdef _WIN32
+        localtime_s(&tm_buf, &now_time);
+        #else
         localtime_r(&now_time, &tm_buf);
+        #endif
         char datetime[32];
         std::strftime(datetime, sizeof(datetime), "%Y%m%d_%H%M%S", &tm_buf);
 

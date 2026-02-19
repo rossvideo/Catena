@@ -41,6 +41,7 @@
 #include <gmock/gmock.h>
 
 // std
+#include <cstdlib>
 #include <string>
 
 #include "MockDevice.h"
@@ -70,6 +71,24 @@
 using namespace catena::common;
 using namespace catena::gRPC;
 
+namespace {
+int set_test_env(const char* name, const char* value) {
+#ifdef _WIN32
+    return _putenv_s(name, value);
+#else
+    return setenv(name, value, 1);
+#endif
+}
+
+int unset_test_env(const char* name) {
+#ifdef _WIN32
+    return _putenv_s(name, "");
+#else
+    return unsetenv(name);
+#endif
+}
+}
+
 // Fixture
 class gRPCServiceCredentialsTests : public testing::Test {
   protected:
@@ -84,7 +103,7 @@ class gRPCServiceCredentialsTests : public testing::Test {
 
     void SetUp() override {
         // Set environment variable for expansion
-        setenv("TEST_CERT_PATH", "/tmp/testcerts", 1);
+        set_test_env("TEST_CERT_PATH", "/tmp/testcerts");
 
         // Set flags for credential logic
         absl::SetFlag(&FLAGS_secure_comms, "tls");
@@ -98,7 +117,7 @@ class gRPCServiceCredentialsTests : public testing::Test {
 
     void TearDown() override {
         // Unset environment variables
-        unsetenv("TEST_CERT_PATH");
+        unset_test_env("TEST_CERT_PATH");
         // Reset flags
         absl::SetFlag(&FLAGS_secure_comms, "off");
         absl::SetFlag(&FLAGS_certs, "");
@@ -163,20 +182,20 @@ TEST_F(gRPCServiceCredentialsTests, InvalidTokenInAuthzMetadata) {
  * TEST 4 - Test with a string containing environment variables (e.g. ${HOME}) and verify replacement.
  */
 TEST(gRPCExpandEnvVariablesTest, ReplaceExistingEnvVar) {
-    setenv("HOME", "/tmp/home", 1);
+    set_test_env("HOME", "/tmp/home");
     std::string input = "Path: ${HOME}/data";
     catena::gRPC::expandEnvVariables(input);
     
     // Setting expectations
     EXPECT_EQ(input, "Path: /tmp/home/data");
-    unsetenv("HOME");
+    unset_test_env("HOME");
 }
 
 /*
  * TEST 5 - Test with a string containing an env variable that doesn't exist.
  */
 TEST(gRPCExpandEnvVariablesTest, ReplaceNonExistingEnvVar) {
-    unsetenv("DOES_NOT_EXIST");
+    unset_test_env("DOES_NOT_EXIST");
     std::string input = "Path: ${DOES_NOT_EXIST}/data";
     catena::gRPC::expandEnvVariables(input);
     

@@ -24,6 +24,30 @@ function(setup_platform_config)
         # Disable braced scalar initialization warnings
         add_compile_options(-Wno-braced-scalar-init)
         
+    elseif(WIN32)
+        # Windows platform
+        add_compile_definitions(NOMINMAX)
+
+        # Use clang as C preprocessor (ships with LLVM toolchain)
+        # Prefer deriving from configured C compiler path so PATH is not required.
+        unset(CPP)
+        if(DEFINED CMAKE_C_COMPILER AND EXISTS "${CMAKE_C_COMPILER}")
+            get_filename_component(_compiler_dir "${CMAKE_C_COMPILER}" DIRECTORY)
+            if(EXISTS "${_compiler_dir}/clang.exe")
+                set(CPP "${_compiler_dir}/clang.exe")
+            endif()
+        endif()
+
+        if(NOT CPP)
+            find_program(CPP NAMES clang clang-cl)
+        endif()
+
+        if(NOT CPP)
+            message(FATAL_ERROR "C preprocessor not found. Install LLVM/Clang, add it to PATH, or set CMAKE_C_COMPILER to a full LLVM path.")
+        endif()
+        set(CPP ${CPP} PARENT_SCOPE)
+        set(cpp_opts -E -P -x c PARENT_SCOPE)
+
     else()
         # Linux/other platforms
         find_program(CPP cpp)
@@ -34,8 +58,14 @@ function(setup_platform_config)
         set(cpp_opts -P -C PARENT_SCOPE)
     endif()
     
-    # Common include directory (moved from APPLE-specific section)
-    include_directories("$ENV{HOME}/.local/include")
+    # Common include directory
+    if(WIN32)
+        if(DEFINED ENV{USERPROFILE})
+            include_directories("$ENV{USERPROFILE}/.local/include")
+        endif()
+    else()
+        include_directories("$ENV{HOME}/.local/include")
+    endif()
     
     message(STATUS "Using C preprocessor: ${CPP}")
 endfunction()
@@ -49,6 +79,10 @@ function(setup_compiler_config)
     
     # Coverage flags - only add if COVERAGE is enabled
     option(COVERAGE "Enable code coverage flags" OFF)
+    if(COVERAGE AND WIN32)
+        message(WARNING "COVERAGE is not supported on Windows; disabling coverage flags for this configure.")
+        set(COVERAGE OFF)
+    endif()
     set(COVERAGE ${COVERAGE} PARENT_SCOPE)
     if(COVERAGE)
         add_compile_options(--coverage)
@@ -60,4 +94,10 @@ function(setup_compiler_config)
         set(DEFAULT_MAX_CONNECTIONS 16 CACHE STRING "Default max connections")
     endif()
     add_compile_definitions(DEFAULT_MAX_CONNECTIONS=${DEFAULT_MAX_CONNECTIONS})
+
+    # Ensure C++ exceptions are enabled for clang-cl/MSVC style builds on Windows.
+    # This project uses try/catch and throw in core runtime code.
+    if(WIN32)
+        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/EHsc>)
+    endif()
 endfunction()

@@ -64,8 +64,13 @@ namespace catena {
 namespace REST {
 
 using RESTMethodMap = catena::patterns::EnumDecorator<RESTMethod>;
+
+} // namespace REST
+
+namespace patterns {
+
 template <>
-inline const RESTMethodMap::FwdMap RESTMethodMap::fwdMap_ = {
+inline const EnumDecorator<catena::REST::RESTMethod>::FwdMap EnumDecorator<catena::REST::RESTMethod>::fwdMap_ = {
   {catena::REST::Method_NONE,    "NONE"},
   {catena::REST::Method_GET,     "GET"},
   {catena::REST::Method_POST,    "POST"},
@@ -75,6 +80,10 @@ inline const RESTMethodMap::FwdMap RESTMethodMap::fwdMap_ = {
   {catena::REST::Method_HEAD,    "HEAD"},
   {catena::REST::Method_OPTIONS, "OPTIONS"}
 };
+
+} // namespace patterns
+
+namespace REST {
 
 /**
  * @brief A helper class which reads from the client socket using boost and

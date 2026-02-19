@@ -33,7 +33,12 @@
 function(cmake_catena_proto_common)
     # set up our target with its sources
     set(target catena_proto_common)
-    add_library(${target} STATIC ${sources})
+    add_library(${target} ${sources})
+
+    # DLL export macro for shared builds
+    if(BUILD_SHARED_LIBS)
+        target_compile_definitions(${target} PRIVATE CATENA_EXPORTS)
+    endif()
 
     # set up include directories
     target_include_directories(
@@ -46,7 +51,7 @@ function(cmake_catena_proto_common)
     )
 
     # link against the protobuf interface
-    target_link_libraries(${target} PUBLIC ${PROTO_TARGET})
+    target_link_libraries(${target} PUBLIC ${PROTO_TARGET} jwt-cpp::jwt-cpp)
     target_compile_features(${target} PUBLIC cxx_std_20)
 
     # add dependencies

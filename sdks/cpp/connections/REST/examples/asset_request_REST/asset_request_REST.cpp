@@ -139,7 +139,9 @@ void RunRESTServer() {
     // install signal handlers
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
+#ifndef _WIN32
     signal(SIGKILL, handle_signal);
+#endif
 
     // this is the "receiving end" of the asset request example
     dm.getDownloadAssetRequest().connect([](const std::string& fqoid, const IAuthorizer* authz) {

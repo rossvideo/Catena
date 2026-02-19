@@ -33,9 +33,10 @@ set(REST_TEST_FILES
 foreach(test_file ${REST_TEST_FILES})
     get_filename_component(test_name ${test_file} NAME_WE)
     add_executable(REST_${test_name} tests/${test_file})
+    find_package(Threads REQUIRED)
     target_link_libraries(REST_${test_name} PRIVATE
         catena_connections_REST
-        pthread
+        Threads::Threads
         ${GTEST_BOTH_LIBRARIES}
         absl::log
         absl::log_globals

@@ -32,10 +32,11 @@ set(GRPC_TEST_FILES
 foreach(test_file ${GRPC_TEST_FILES})
     get_filename_component(test_name ${test_file} NAME_WE)
     add_executable(gRPC_${test_name} tests/${test_file})
+    find_package(Threads REQUIRED)
     target_link_libraries(gRPC_${test_name} PRIVATE
         catena_grpc_common
         catena_connections_grpc
-        pthread
+        Threads::Threads
         ${GTEST_BOTH_LIBRARIES}
         absl::log
         absl::log_globals
