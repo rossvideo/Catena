@@ -43,6 +43,7 @@ set(TEST_FILES
     Logger_test.cpp
     GenericFactory_test.cpp
     EnumDecorator_test.cpp
+    Config_test.cpp
 )
 
 foreach(test_file ${TEST_FILES})
