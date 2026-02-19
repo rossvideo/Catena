@@ -52,35 +52,35 @@ namespace config{
  */
 void initConfigVariables(int argc, char* argv[], std::string prefix = "CATENA_");
 
-inline std::string certs;
+inline std::string certs = "";
 
-inline std::string secure_comms;
+inline std::string secure_comms = "";
 
-inline std::string cert_file;
+inline std::string cert_file = "";
 
-inline std::string key_file;
+inline std::string key_file = "";
 
-inline std::string ca_file;
+inline std::string ca_file = "";
 
-inline std::string static_root;
+inline std::string static_root = "";
 
-inline std::string log_dir;
+inline std::string log_dir = "";
 
-inline uint32_t default_max_array_size;
+inline uint32_t default_max_array_size = 0;
 
-inline uint32_t default_total_array_size;
+inline uint32_t default_total_array_size = 0;
 
-inline uint32_t max_connections;
+inline uint32_t max_connections = 0;
 
-inline uint16_t port;
+inline uint16_t port = 0;
 
-inline bool private_ca;
+inline bool private_ca = false;
 
-inline bool authz;
+inline bool authz = false;
 
-inline bool mutual_authc;
+inline bool mutual_authc = false;
 
-inline bool silent;
+inline bool silent = false;
 
 } // namespace config     
 } // namespace common

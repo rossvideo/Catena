@@ -67,6 +67,7 @@
 #include <Authorizer.h>
 #include <SharedFlags.h>
 #include <SubscriptionManager.h>
+#include <Config.h>
 #include <rpc/ConnectionQueue.h>
 
 // std
@@ -102,6 +103,14 @@ namespace gRPC {
  */
 class ServiceConfig {
   public:
+    /**
+     * @brief Constructor for GRPC Service Config. Device pointers and completion queue must be added manually.
+     */
+    ServiceConfig() {
+      this->EOPath = config::static_root;
+      this->maxConnections = config::max_connections;
+      this->authz = config::authz;
+    }
     /**
      * @brief Sets the completion queue.
      * @param cq A pointer to the completion queue

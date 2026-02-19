@@ -47,6 +47,7 @@
 #include <Enums.h>
 #include <SubscriptionManager.h>
 #include <SharedFlags.h>
+#include <Config.h>
 #include <rpc/ConnectionQueue.h>
 
 // REST
@@ -82,6 +83,16 @@ namespace REST {
  */
 class ServiceConfig {
   public:
+
+    /**
+     * @brief Constructor for REST Service Config. Device pointers must be added manually.
+     */
+    ServiceConfig() {
+      this->port = config::port;
+      this->EOPath = config::static_root;
+      this->maxConnections = config::max_connections;
+      this->authz = config::authz;
+    }
     /**
      * @brief Sets the vector of Device pointers.
      * @param dms A vector of Device pointers.
