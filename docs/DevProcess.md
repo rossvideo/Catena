@@ -73,11 +73,12 @@ void RunRPCServer(std::string addr) {
     // Adding a listening port and completion queue.
     builder.AddListeningPort(addr, catena::gRPC::getServerCredentials());
     std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
-    // Getting command line flags
+    // Setup ServiceConfig
+    // Config vars must be initialized beforehand (e.g. config::initConfigVariables(argc, argv, "CATENA_"))
     ServiceConfig config = ServiceConfig()
-        .set_EOPath(absl::GetFlag(FLAGS_static_root))
-        .set_authz(absl::GetFlag(FLAGS_authz))
-        .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
+        .set_EOPath(config::static_root)
+        .set_authz(config::authz)
+        .set_maxConnections(config::max_connections)
         .set_cq(cq.get())
         // Adding devices
         .add_dm(&dm);
@@ -114,7 +115,7 @@ void handle_signal(int sig) {
 Alternatively, you can make it a REST service by following the process below.
 1. Include the `catena_connections_REST` library in your `CMakeList.txt` file using `target_link_libraries()`.
 2. Initialize a `catena::REST::CatenaServiceImpl` object with your generated device.
-3. Run you service with CatenaServiceImpl::Run()
+3. Run your service with CatenaServiceImpl::Run()
 5. You should now be able to make various REST API calls to the server using Postman or openAPI.
 6. Coming soon ... use DashBoard beta to even get a GUI!
 
@@ -126,12 +127,13 @@ catena::REST::CatenaServiceImpl *globalApi = nullptr;
 
 // This initializes a REST Catena service with your device.
 void RunRESTServer () {
-    // Getting command line flags
+    // Setup ServiceConfig
+    // Config vars must be initialized beforehand (e.g. config::initConfigVariables(argc, argv, "CATENA_"))
     ServiceConfig config = ServiceConfig()
-        .set_EOPath(absl::GetFlag(FLAGS_static_root))
-        .set_authz(absl::GetFlag(FLAGS_authz))
-        .set_port(absl::GetFlag(FLAGS_port))
-        .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
+        .set_EOPath(config::static_root)
+        .set_authz(config::authz)
+        .set_port(config::port)
+        .set_maxConnections(config::max_connections)
         // Adding devices
         .add_dm(&dm);
     // Creating and running the REST service.
