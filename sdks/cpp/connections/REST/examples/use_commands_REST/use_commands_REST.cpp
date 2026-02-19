@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,9 +31,11 @@
 /**
  * @brief Example program to demonstrate using commands with the REST API.
  * @file use_commands_REST.cpp
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @copyright Copyright © 2026 Ross Video Ltd
  * @author John Danen (john.danen@rossvideo.com)
  * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-02-19
  */
 
 // device model
@@ -44,13 +46,10 @@
 #include <Device.h>
 #include <ParamWithValue.h>
 #include <ParamDescriptor.h>
+#include <Config.h>
 
 // REST
 #include <ServiceImpl.h>
-
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
-#include "absl/strings/str_format.h"
 
 #include <iomanip>
 #include <iostream>
@@ -93,12 +92,7 @@ void RunRESTServer() {
 
     try {
        // Setting config.
-        ServiceConfig config = ServiceConfig()
-            .set_EOPath(absl::GetFlag(FLAGS_static_root))
-            .set_authz(absl::GetFlag(FLAGS_authz))
-            .set_port(absl::GetFlag(FLAGS_port))
-            .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
-            .add_dm(&dm);
+        ServiceConfig config = ServiceConfig().add_dm(&dm);
         
         // Creating and running the REST service.
         ServiceImpl api(config);
@@ -184,8 +178,7 @@ void defineCommands() {
 }
 
 int main(int argc, char* argv[]) {
-    absl::SetProgramUsageMessage("Runs the Catena Service");
-    absl::ParseCommandLine(argc, argv);
+    config::initConfigVariables(argc, argv, "TEST_");
     Logger::init("use_commands_REST");
 
     // commands should be defined before starting the REST server

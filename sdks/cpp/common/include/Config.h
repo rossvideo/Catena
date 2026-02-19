@@ -31,10 +31,10 @@
  */
 
 /**
- * @file Environment.h
+ * @file Config.h
  * @brief Runtime configuration variables
  * @author keon.foster@rossvideo.com
- * @date 2026-02-17
+ * @date 2026-02-19
  * @copyright Copyright (c) 2026 Ross Video
  */
 
