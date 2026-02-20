@@ -93,6 +93,11 @@
             config::mutual_authc = false;
             config::private_ca = false;
             config::silent = false;
+
+            // Reset "HOME" in case missing "HOME" test case couldn't
+            if (home != nullptr) {
+                setenv("HOME", home, 0);
+            }
         }
 
         // Build fake argv from given strings.
@@ -130,6 +135,8 @@
                 unsetenv(name.c_str());
             }
         }
+
+        char* home = nullptr;
     };
     
 /**
@@ -382,4 +389,25 @@ TEST_F(ConfigTest, CmdOverwritesEnv) {
 
     // Delete environment variables
     unsetEnvVars(envArgs);
+}
+
+/**
+ * TEST 5 - Missing "HOME" environment variable throws exception
+ */
+TEST_F(ConfigTest, MissingHome) {
+
+    // Set required command line arg
+    char arg0[] = {"./test"};
+    char* argv[] = {arg0, nullptr};
+    int argc = 1;
+
+    // Save "HOME" value and delete environment variable
+    home = getenv("HOME");
+    unsetenv("HOME");
+
+    // Do call resulting in throw
+    EXPECT_THROW(config::initConfigVariables(argc, argv, "GRPC", "CONFIGTEST_"), std::exception);
+
+    // Reset "HOME"
+    setenv("HOME", home, 0);
 }

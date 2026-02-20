@@ -139,10 +139,15 @@ void RunRESTServer() {
 }
 
 int main(int argc, char* argv[]) {
-    auto help = config::initConfigVariables(argc, argv, "REST");
-    if (help.second) {
-        help.first.print(std::cout);
-        return 0;
+    try {
+        auto help = config::initConfigVariables(argc, argv, "REST");
+        if (help.second) {
+            help.first.print(std::cout);
+            return 0;
+        }
+    } catch (const std::exception &e) {
+        std::cerr << e.what() << std::endl;
+        return 1;
     }
     Logger::init("audiodeck_JSON_REST");
 

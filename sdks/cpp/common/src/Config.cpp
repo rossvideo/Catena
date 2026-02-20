@@ -10,12 +10,10 @@ std::pair<boost::program_options::options_description, bool> config::initConfigV
     po::options_description configArgs("Allowed options");
     configArgs.add_options()
         ("help,h", "Get help message")
-        ("certs", po::value<std::string>()->default_value("${HOME}/test_certs"), "path/to/certs/files")
         ("secure_comms", po::value<std::string>()->default_value("off"), "Specify type of secure comms, options are: \"off\", \"tls\"")
         ("cert_file", po::value<std::string>()->default_value("server.crt"), "Specify the certificate file")
         ("key_file", po::value<std::string>()->default_value("server.key"), "Specify the key file")
         ("ca_file", po::value<std::string>()->default_value("ca.crt"), "Specify the CA file if using a private CA")
-        ("static_root", po::value<std::string>()->default_value(getenv("HOME")), "Specify the directory to search for external objects")
         ("log_dir", po::value<std::string>()->default_value(LOG_DIR), "Specify the directory for log files.")
         ("default_max_array_size", po::value<uint32_t>()->default_value(kDefaultMaxArrayLength), "Use this to define the default max length for array and string params.")
         ("default_total_array_size", po::value<uint32_t>()->default_value(kDefaultMaxArrayLength), "Use this to define the default total length for string array params.")
@@ -25,6 +23,13 @@ std::pair<boost::program_options::options_description, bool> config::initConfigV
         ("authz", po::value<bool>()->default_value(false)->implicit_value(true), "Use OAuth token authorization")
         ("silent", po::value<bool>()->default_value(false)->implicit_value(true), "Use this to suppress all log output.")
         ;
+    char* home = getenv("HOME");
+    if (home != nullptr) {
+        configArgs.add_options()("certs", po::value<std::string>()->default_value("${HOME}/test_certs"), "path/to/certs/files");
+        configArgs.add_options()("static_root", po::value<std::string>()->default_value(home), "Specify the directory to search for external objects");
+    } else {
+        throw std::runtime_error("\"HOME\" environment variable not found. Required to initialize static_root and certs default values.");
+    }
     if (serviceType == "REST") {
         configArgs.add_options()("port", po::value<uint16_t>()->default_value(443), "Catena REST service port");
     } else if (serviceType == "GRPC") {

@@ -345,10 +345,15 @@ void RunRPCServer(std::string addr)
 int main(int argc, char* argv[])
 {
     std::string addr;
-    auto help = config::initConfigVariables(argc, argv, "GRPC");
-    if (help.second) {
-        help.first.print(std::cout);
-        return 0;
+    try {
+        auto help = config::initConfigVariables(argc, argv, "GRPC");
+        if (help.second) {
+            help.first.print(std::cout);
+            return 0;
+        }
+    } catch (const std::exception &e) {
+        std::cerr << e.what() << std::endl;
+        return 1;
     }
     Logger::init("one_of_everything");
   

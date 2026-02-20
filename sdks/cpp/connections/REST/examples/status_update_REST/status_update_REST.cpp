@@ -186,9 +186,14 @@ void RunRESTServer() {
 }
 
 int main(int argc, char* argv[]) {
-    auto help = config::initConfigVariables(argc, argv, "REST");
-    if (help.second) {
-        help.first.print(std::cout);
+    try {
+        auto help = config::initConfigVariables(argc, argv, "REST");
+        if (help.second) {
+            help.first.print(std::cout);
+            return 1;
+        }
+    } catch (const std::exception &e) {
+        std::cerr << e.what() << std::endl;
         return 0;
     }
     Logger::init("status_update_REST");
