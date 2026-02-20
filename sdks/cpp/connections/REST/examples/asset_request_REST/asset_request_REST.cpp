@@ -184,7 +184,11 @@ void RunRESTServer() {
 }
 
 int main(int argc, char* argv[]) {
-    config::initConfigVariables(argc, argv, "REST");
+    auto help = config::initConfigVariables(argc, argv, "REST");
+    if (help.second) {
+        help.first.print(std::cout);
+        return 0;
+    }
     Logger::init("asset_request_REST");
     
     std::thread catenaRestThread(RunRESTServer);

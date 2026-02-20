@@ -178,7 +178,11 @@ void defineCommands() {
 }
 
 int main(int argc, char* argv[]) {
-    config::initConfigVariables(argc, argv, "REST");
+    auto help = config::initConfigVariables(argc, argv, "REST");
+    if (help.second) {
+        help.first.print(std::cout);
+        return 0;
+    }
     Logger::init("use_commands_REST");
 
     // commands should be defined before starting the REST server

@@ -147,7 +147,7 @@ TEST_F(ConfigTest, defaultValues) {
 
     // Check values
     EXPECT_EQ(config::ca_file, "ca.crt");
-    EXPECT_EQ(config::cert_file, "server.vrt");
+    EXPECT_EQ(config::cert_file, "server.crt");
     EXPECT_EQ(config::certs, "${HOME}/test_certs");
     EXPECT_EQ(config::key_file, "server.key");
     EXPECT_EQ(config::log_dir, LOG_DIR);

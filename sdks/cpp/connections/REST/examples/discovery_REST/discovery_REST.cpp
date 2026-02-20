@@ -106,7 +106,11 @@ void RunRESTServer() {
 }
 
 int main(int argc, char* argv[]) {
-    config::initConfigVariables(argc, argv, "REST");
+    auto help = config::initConfigVariables(argc, argv, "REST");
+    if (help.second) {
+        help.first.print(std::cout);
+        return 0;
+    }
     Logger::init("discovery_REST");
 
     NmosNode node("Catena Device", "Catena Node", "A Catena example Node", "discovery_REST");

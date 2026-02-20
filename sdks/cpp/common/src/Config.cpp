@@ -5,14 +5,14 @@
 namespace po = boost::program_options;
 using namespace catena::common;
 
-void config::initConfigVariables(int argc, char* argv[], std::string serviceType, std::string prefix) {
+std::pair<boost::program_options::options_description, bool> config::initConfigVariables(int argc, char* argv[], std::string serviceType, std::string prefix) {
     //Declare options
     po::options_description configArgs("Allowed options");
     configArgs.add_options()
         ("help,h", "Get help message")
         ("certs", po::value<std::string>()->default_value("${HOME}/test_certs"), "path/to/certs/files")
         ("secure_comms", po::value<std::string>()->default_value("off"), "Specify type of secure comms, options are: \"off\", \"tls\"")
-        ("cert_file", po::value<std::string>()->default_value("server.vrt"), "Specify the certificate file")
+        ("cert_file", po::value<std::string>()->default_value("server.crt"), "Specify the certificate file")
         ("key_file", po::value<std::string>()->default_value("server.key"), "Specify the key file")
         ("ca_file", po::value<std::string>()->default_value("ca.crt"), "Specify the CA file if using a private CA")
         ("static_root", po::value<std::string>()->default_value(getenv("HOME")), "Specify the directory to search for external objects")
@@ -39,9 +39,10 @@ void config::initConfigVariables(int argc, char* argv[], std::string serviceType
     po::notify(vars);
 
     // help message
-    // if (vars.count("help")) {
-    //     std::cout << configArgs << std::endl;
-    // }
+    bool help = false;
+    if (vars.count("help")) {
+        help = true;
+    }
 
     //Store values in config variables
     if (vars.count("certs")) config::certs = vars["certs"].as<std::string>();
@@ -59,4 +60,6 @@ void config::initConfigVariables(int argc, char* argv[], std::string serviceType
     if (vars.count("mutual_authc")) config::mutual_authc = vars["mutual_authc"].as<bool>();
     if (vars.count("authz")) config::authz = vars["authz"].as<bool>();
     if (vars.count("silent")) config::silent = vars["silent"].as<bool>();
+
+    return std::pair<boost::program_options::options_description, bool>(configArgs, help);
 }

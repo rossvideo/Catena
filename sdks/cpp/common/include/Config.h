@@ -40,6 +40,7 @@
 
  #include <string>
  #include <cstdint>
+ #include <boost/program_options.hpp>
 namespace catena{
 namespace common{
 namespace config{
@@ -50,8 +51,9 @@ namespace config{
  * @param argv Command-line arguments
  * @param serviceType The type of service being ran, can be "REST" or "GRPC".
  * @param prefix Prefix used for relevant environment variables, include trailing underscore. Defaults to "CATENA_".
+ * @return Pair of option description and boolean. Boolean states if --help was selected and description can be used to print the options.
  */
-void initConfigVariables(int argc, char* argv[], std::string serviceType, std::string prefix = "CATENA_");
+ std::pair<boost::program_options::options_description, bool> initConfigVariables(int argc, char* argv[], std::string serviceType, std::string prefix = "CATENA_");
 
 inline std::string certs = "";
 
