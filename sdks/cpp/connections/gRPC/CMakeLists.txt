@@ -46,7 +46,7 @@ set(sources
     "src/controllers/UpdateSubscriptions.cpp"
 )
 
-add_library(${target} STATIC ${sources})
+add_library(${target} ${CATENA_LIBRARY_TYPE} ${sources})
 
 find_package(jwt-cpp CONFIG REQUIRED)
 

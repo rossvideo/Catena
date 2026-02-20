@@ -33,6 +33,11 @@ cmake_minimum_required(VERSION 3.20)
 # Project declaration
 project(Catena_cpp VERSION 0.0.1 LANGUAGES C CXX)
 
+# Build shared libraries by default so Linux builds emit .so artifacts.
+# Can be overridden with -DCATENA_LIBRARY_TYPE=STATIC.
+set(CATENA_LIBRARY_TYPE "SHARED" CACHE STRING "Library type for Catena C++ SDK targets (SHARED or STATIC)")
+set_property(CACHE CATENA_LIBRARY_TYPE PROPERTY STRINGS SHARED STATIC)
+
 # Add cmake modules to path
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -139,6 +144,7 @@ endif()
 message(STATUS "========================================")
 message(STATUS "Catena C++ SDK Build Configuration:")
 message(STATUS "  Version: ${CATENA_CPP_VERSION}")
+message(STATUS "  Library Type: ${CATENA_LIBRARY_TYPE}")
 message(STATUS "  Connections: ${CONNECTIONS}")
 message(STATUS "  Unit Testing: ${UNIT_TESTING}")
 message(STATUS "  Coverage: ${COVERAGE}")

@@ -57,7 +57,7 @@ set(sources
     "src/controllers/Subscriptions.cpp"
 )
 
-add_library(${target} STATIC ${sources})
+add_library(${target} ${CATENA_LIBRARY_TYPE} ${sources})
 
 target_compile_definitions(${target} PUBLIC REST_READ_TIMEOUT_MS=${REST_READ_TIMEOUT_MS})
 

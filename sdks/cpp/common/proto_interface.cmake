@@ -33,7 +33,7 @@
 function(cmake_catena_proto_common)
     # set up our target with its sources
     set(target catena_proto_common)
-    add_library(${target} STATIC ${sources})
+    add_library(${target} ${CATENA_LIBRARY_TYPE} ${sources})
 
     # set up include directories
     target_include_directories(
@@ -45,8 +45,8 @@ function(cmake_catena_proto_common)
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
     )
 
-    # link against the protobuf interface
-    target_link_libraries(${target} PUBLIC ${PROTO_TARGET})
+    # link against the protobuf interface and required runtime deps
+    target_link_libraries(${target} PUBLIC ${PROTO_TARGET} CURL::libcurl)
     target_compile_features(${target} PUBLIC cxx_std_20)
 
     # add dependencies

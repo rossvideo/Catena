@@ -33,7 +33,7 @@
 function(cmake_catena_grpc_common)
     # set up our target with its sources
     set(target catena_grpc_common)
-    add_library(${target} STATIC ${sources})
+    add_library(${target} ${CATENA_LIBRARY_TYPE} ${sources})
 
     # set up include directories
     target_include_directories(

@@ -57,7 +57,7 @@ function(set_up_proto_targets)
     # declare our target
     # NB the sources are set in the call to preprocess_protobuf_files
     # Make the library depend on the preprocessor target to ensure sources are generated
-    add_library(${PROTO_TARGET} STATIC)
+    add_library(${PROTO_TARGET} ${CATENA_LIBRARY_TYPE})
     add_dependencies(${PROTO_TARGET} proto_preprocessor_target)
     target_compile_features(${PROTO_TARGET} PUBLIC cxx_std_20)
 

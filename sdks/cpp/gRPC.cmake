@@ -91,7 +91,7 @@ function(set_up_gRPC_targets)
     # NB the sources are set in the call to preprocess_protobuf_files
     # apart from the extra files
     # Make the library depend on the preprocessor target to ensure sources are generated
-    add_library(${GRPC_TARGET} STATIC)
+    add_library(${GRPC_TARGET} ${CATENA_LIBRARY_TYPE})
     target_sources(${GRPC_TARGET} PRIVATE ${extra_files})
     add_dependencies(${GRPC_TARGET} grpc_preprocessor_target)
     target_compile_features(${GRPC_TARGET} PUBLIC cxx_std_20)
