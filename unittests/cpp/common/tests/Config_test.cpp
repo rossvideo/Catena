@@ -392,7 +392,7 @@ TEST_F(ConfigTest, CmdOverwritesEnv) {
 }
 
 /**
- * TEST 5 - Missing "HOME" environment variable throws exception
+ * TEST 6 - Missing "HOME" environment variable throws exception
  */
 TEST_F(ConfigTest, MissingHome) {
 
