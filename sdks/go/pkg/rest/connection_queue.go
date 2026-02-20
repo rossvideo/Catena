@@ -45,44 +45,44 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
-// Connection represents an active SSE connection.
+// connection represents an active SSE connection.
 // Each connection runs in its own goroutine and receives updates via the
 // updates channel as proto PushUpdates messages. The done channel is closed
-// by the ConnectionQueue to signal server-initiated shutdown.
-type Connection struct {
+// by the connectionQueue to signal server-initiated shutdown.
+type connection struct {
 	id      int
 	updates chan *protos.PushUpdates
 	done    chan struct{}
 }
 
-// ConnectionQueue manages SSE connections to the service.
-type ConnectionQueue struct {
+// connectionQueue manages SSE connections to the service.
+type connectionQueue struct {
 	mu             sync.Mutex
-	connections    map[int]*Connection
+	connections    map[int]*connection
 	nextConnID     int
 	maxConnections int
 	wg             sync.WaitGroup
 	shuttingDown   bool
 }
 
-// NewConnectionQueue creates a new ConnectionQueue.
+// newConnectionQueue creates a new connectionQueue.
 // maxConnections sets the limit on simultaneous connections (0 = unlimited).
-func NewConnectionQueue(maxConnections int) *ConnectionQueue {
-	return &ConnectionQueue{
-		connections:    make(map[int]*Connection),
+func newConnectionQueue(maxConnections int) *connectionQueue {
+	return &connectionQueue{
+		connections:    make(map[int]*connection),
 		maxConnections: maxConnections,
 	}
 }
 
-// SetMaxConnections updates the maximum number of connections allowed (0 = unlimited).
-func (cq *ConnectionQueue) SetMaxConnections(max int) {
+// setMaxConnections updates the maximum number of connections allowed (0 = unlimited).
+func (cq *connectionQueue) setMaxConnections(max int) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 	cq.maxConnections = max
 }
 
-// RegisterConnection creates a new connection and returns its ID and Connection.
-func (cq *ConnectionQueue) RegisterConnection() (int, *Connection) {
+// registerConnection creates a new connection and returns its ID and connection.
+func (cq *connectionQueue) registerConnection() (int, *connection) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
@@ -95,7 +95,7 @@ func (cq *ConnectionQueue) RegisterConnection() (int, *Connection) {
 	}
 
 	cq.nextConnID++
-	conn := &Connection{
+	conn := &connection{
 		id:      cq.nextConnID,
 		updates: make(chan *protos.PushUpdates, 100),
 		done:    make(chan struct{}),
@@ -106,9 +106,9 @@ func (cq *ConnectionQueue) RegisterConnection() (int, *Connection) {
 	return cq.nextConnID, conn
 }
 
-// DeregisterConnection removes a connection from the queue.
+// deregisterConnection removes a connection from the queue.
 // Safe to call multiple times for the same connID.
-func (cq *ConnectionQueue) DeregisterConnection(connID int) {
+func (cq *connectionQueue) deregisterConnection(connID int) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
@@ -119,10 +119,10 @@ func (cq *ConnectionQueue) DeregisterConnection(connID int) {
 	}
 }
 
-// NotifySetValue sends a PushUpdates message to all connected clients.
+// notifyUpdate sends a PushUpdates message to all connected clients.
 // Called when a value changes (by client or server) to propagate
 // the update to all SSE subscribers.
-func (cq *ConnectionQueue) NotifySetValue(update *protos.PushUpdates) {
+func (cq *connectionQueue) notifyUpdate(update *protos.PushUpdates) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
@@ -135,10 +135,10 @@ func (cq *ConnectionQueue) NotifySetValue(update *protos.PushUpdates) {
 	}
 }
 
-// Shutdown signals all connections to stop and waits for them to deregister.
+// shutdown signals all connections to stop and waits for them to deregister.
 // Each connection's goroutine will receive the signal via the done channel,
 // exit its event loop, and deregister itself.
-func (cq *ConnectionQueue) Shutdown() {
+func (cq *connectionQueue) shutdown() {
 	cq.mu.Lock()
 	cq.shuttingDown = true
 	for _, conn := range cq.connections {
@@ -154,8 +154,8 @@ func (cq *ConnectionQueue) Shutdown() {
 	logger.Info("All SSE connections shut down")
 }
 
-// ConnectionCount returns the number of active connections.
-func (cq *ConnectionQueue) ConnectionCount() int {
+// connectionCount returns the number of active connections.
+func (cq *connectionQueue) connectionCount() int {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 	return len(cq.connections)

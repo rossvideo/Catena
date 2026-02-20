@@ -1354,8 +1354,8 @@ func TestServer_Shutdown(t *testing.T) {
 	go srv.mux.ServeHTTP(rec, req)
 	time.Sleep(100 * time.Millisecond)
 
-	if srv.connectionQueue.ConnectionCount() != 1 {
-		t.Errorf("expected 1 connection before shutdown, got %d", srv.connectionQueue.ConnectionCount())
+	if srv.connectionQueue.connectionCount() != 1 {
+		t.Errorf("expected 1 connection before shutdown, got %d", srv.connectionQueue.connectionCount())
 	}
 
 	done := make(chan struct{})
@@ -1371,8 +1371,8 @@ func TestServer_Shutdown(t *testing.T) {
 		t.Fatal("Shutdown timed out")
 	}
 
-	if srv.connectionQueue.ConnectionCount() != 0 {
-		t.Errorf("expected 0 connections after shutdown, got %d", srv.connectionQueue.ConnectionCount())
+	if srv.connectionQueue.connectionCount() != 0 {
+		t.Errorf("expected 0 connections after shutdown, got %d", srv.connectionQueue.connectionCount())
 	}
 }
 
@@ -1396,8 +1396,8 @@ func TestServer_Shutdown_MultipleConnections(t *testing.T) {
 
 	time.Sleep(150 * time.Millisecond)
 
-	if srv.connectionQueue.ConnectionCount() != 3 {
-		t.Errorf("expected 3 connections, got %d", srv.connectionQueue.ConnectionCount())
+	if srv.connectionQueue.connectionCount() != 3 {
+		t.Errorf("expected 3 connections, got %d", srv.connectionQueue.connectionCount())
 	}
 
 	done := make(chan struct{})
@@ -1412,8 +1412,8 @@ func TestServer_Shutdown_MultipleConnections(t *testing.T) {
 		t.Fatal("Shutdown timed out")
 	}
 
-	if srv.connectionQueue.ConnectionCount() != 0 {
-		t.Errorf("expected 0 connections after shutdown, got %d", srv.connectionQueue.ConnectionCount())
+	if srv.connectionQueue.connectionCount() != 0 {
+		t.Errorf("expected 0 connections after shutdown, got %d", srv.connectionQueue.connectionCount())
 	}
 }
 

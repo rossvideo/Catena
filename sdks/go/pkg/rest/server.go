@@ -75,7 +75,7 @@ type Server struct {
 	getAssetHandlers       map[int]GetAssetHandler
 	executeCommandHandlers map[int]ExecuteCommandHandler
 	fallbackHandler        FallbackHandler
-	connectionQueue        *ConnectionQueue
+	connectionQueue        *connectionQueue
 }
 
 // writeHTTPResult is a unified function that handles writing different response types
@@ -199,7 +199,7 @@ func NewServer(slots []int) *Server {
 		setValueHandlers:       make(map[int]SetValueHandler),
 		getAssetHandlers:       make(map[int]GetAssetHandler),
 		executeCommandHandlers: make(map[int]ExecuteCommandHandler),
-		connectionQueue:        NewConnectionQueue(100),
+		connectionQueue:        newConnectionQueue(100),
 	}
 
 	// Register default handlers for each slot
@@ -316,7 +316,7 @@ func (s *Server) lookupExecuteCommand(slot int) ExecuteCommandHandler {
 
 // SetMaxConnections sets the maximum number of SSE connections allowed (0 = unlimited)
 func (s *Server) SetMaxConnections(max int) {
-	s.connectionQueue.SetMaxConnections(max)
+	s.connectionQueue.setMaxConnections(max)
 }
 
 // BroadcastUpdate converts a native Go value into a proto PushUpdates message
@@ -337,13 +337,13 @@ func (s *Server) BroadcastUpdate(slot int, oid string, value any) {
 			},
 		},
 	}
-	s.connectionQueue.NotifySetValue(update)
+	s.connectionQueue.notifyUpdate(update)
 }
 
 // Shutdown gracefully shuts down the server by closing all SSE connections
 // and waiting for their goroutines to finish.
 func (s *Server) Shutdown() {
-	s.connectionQueue.Shutdown()
+	s.connectionQueue.shutdown()
 }
 
 // sseMarshaler is the protojson marshaler used for SSE events.
@@ -416,14 +416,14 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 	_ = r.Header.Get("User-Agent")
 	_ = r.Header.Get("Authorization")
 
-	// Register this connection in the ConnectionQueue
-	connID, conn := s.connectionQueue.RegisterConnection()
+	// Register this connection in the connectionQueue
+	connID, conn := s.connectionQueue.registerConnection()
 	if connID < 0 {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.RESOURCE_EXHAUSTED, "Too many connections to service")
 		writeHTTPResult(w, res, val)
 		return
 	}
-	defer s.connectionQueue.DeregisterConnection(connID)
+	defer s.connectionQueue.deregisterConnection(connID)
 
 	// Set SSE headers
 	w.Header().Set("Content-Type", "text/event-stream")

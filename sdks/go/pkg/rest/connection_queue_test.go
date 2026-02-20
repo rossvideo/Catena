@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief Tests for the ConnectionQueue.
+ * @brief Tests for the connectionQueue.
  * @file connection_queue_test.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
@@ -47,9 +47,9 @@ import (
 )
 
 func TestNewConnectionQueue(t *testing.T) {
-	cq := NewConnectionQueue(10)
+	cq := newConnectionQueue(10)
 	if cq == nil {
-		t.Fatal("NewConnectionQueue returned nil")
+		t.Fatal("newConnectionQueue returned nil")
 	}
 	if cq.maxConnections != 10 {
 		t.Errorf("expected maxConnections 10, got %d", cq.maxConnections)
@@ -57,15 +57,15 @@ func TestNewConnectionQueue(t *testing.T) {
 	if cq.connections == nil {
 		t.Error("connections map should be initialized")
 	}
-	if cq.ConnectionCount() != 0 {
-		t.Errorf("expected 0 connections, got %d", cq.ConnectionCount())
+	if cq.connectionCount() != 0 {
+		t.Errorf("expected 0 connections, got %d", cq.connectionCount())
 	}
 }
 
 func TestConnectionQueue_RegisterDeregister(t *testing.T) {
-	cq := NewConnectionQueue(0)
+	cq := newConnectionQueue(0)
 
-	connID, conn := cq.RegisterConnection()
+	connID, conn := cq.registerConnection()
 	if connID < 0 {
 		t.Fatal("RegisterConnection returned negative ID")
 	}
@@ -78,100 +78,100 @@ func TestConnectionQueue_RegisterDeregister(t *testing.T) {
 	if conn.done == nil {
 		t.Error("connection done channel should be initialized")
 	}
-	if cq.ConnectionCount() != 1 {
-		t.Errorf("expected 1 connection, got %d", cq.ConnectionCount())
+	if cq.connectionCount() != 1 {
+		t.Errorf("expected 1 connection, got %d", cq.connectionCount())
 	}
 
-	cq.DeregisterConnection(connID)
-	if cq.ConnectionCount() != 0 {
-		t.Errorf("expected 0 connections after deregister, got %d", cq.ConnectionCount())
+	cq.deregisterConnection(connID)
+	if cq.connectionCount() != 0 {
+		t.Errorf("expected 0 connections after deregister, got %d", cq.connectionCount())
 	}
 }
 
 func TestConnectionQueue_DeregisterIdempotent(t *testing.T) {
-	cq := NewConnectionQueue(0)
+	cq := newConnectionQueue(0)
 
-	connID, _ := cq.RegisterConnection()
-	cq.DeregisterConnection(connID)
-	cq.DeregisterConnection(connID) // should not panic or decrement below 0
-	if cq.ConnectionCount() != 0 {
-		t.Errorf("expected 0 connections, got %d", cq.ConnectionCount())
+	connID, _ := cq.registerConnection()
+	cq.deregisterConnection(connID)
+	cq.deregisterConnection(connID) // should not panic or decrement below 0
+	if cq.connectionCount() != 0 {
+		t.Errorf("expected 0 connections, got %d", cq.connectionCount())
 	}
 }
 
 func TestConnectionQueue_MaxConnections(t *testing.T) {
-	cq := NewConnectionQueue(2)
+	cq := newConnectionQueue(2)
 
-	id1, conn1 := cq.RegisterConnection()
+	id1, conn1 := cq.registerConnection()
 	if id1 < 0 || conn1 == nil {
 		t.Fatal("first registration should succeed")
 	}
 
-	id2, conn2 := cq.RegisterConnection()
+	id2, conn2 := cq.registerConnection()
 	if id2 < 0 || conn2 == nil {
 		t.Fatal("second registration should succeed")
 	}
 
-	id3, conn3 := cq.RegisterConnection()
+	id3, conn3 := cq.registerConnection()
 	if id3 != -1 || conn3 != nil {
 		t.Error("third registration should be rejected when max is 2")
 	}
-	if cq.ConnectionCount() != 2 {
-		t.Errorf("expected 2 connections, got %d", cq.ConnectionCount())
+	if cq.connectionCount() != 2 {
+		t.Errorf("expected 2 connections, got %d", cq.connectionCount())
 	}
 
 	// After deregistering one, should be able to register again
-	cq.DeregisterConnection(id1)
-	id4, conn4 := cq.RegisterConnection()
+	cq.deregisterConnection(id1)
+	id4, conn4 := cq.registerConnection()
 	if id4 < 0 || conn4 == nil {
 		t.Error("registration should succeed after deregistering one")
 	}
 }
 
 func TestConnectionQueue_UnlimitedConnections(t *testing.T) {
-	cq := NewConnectionQueue(0)
+	cq := newConnectionQueue(0)
 
 	ids := make([]int, 100)
 	for i := 0; i < 100; i++ {
-		id, conn := cq.RegisterConnection()
+		id, conn := cq.registerConnection()
 		if id < 0 || conn == nil {
 			t.Fatalf("registration %d should succeed with unlimited connections", i)
 		}
 		ids[i] = id
 	}
-	if cq.ConnectionCount() != 100 {
-		t.Errorf("expected 100 connections, got %d", cq.ConnectionCount())
+	if cq.connectionCount() != 100 {
+		t.Errorf("expected 100 connections, got %d", cq.connectionCount())
 	}
 
 	for _, id := range ids {
-		cq.DeregisterConnection(id)
+		cq.deregisterConnection(id)
 	}
-	if cq.ConnectionCount() != 0 {
-		t.Errorf("expected 0 connections after deregistering all, got %d", cq.ConnectionCount())
+	if cq.connectionCount() != 0 {
+		t.Errorf("expected 0 connections after deregistering all, got %d", cq.connectionCount())
 	}
 }
 
 func TestConnectionQueue_SetMaxConnections(t *testing.T) {
-	cq := NewConnectionQueue(1)
+	cq := newConnectionQueue(1)
 
-	cq.RegisterConnection()
-	id2, _ := cq.RegisterConnection()
+	cq.registerConnection()
+	id2, _ := cq.registerConnection()
 	if id2 != -1 {
 		t.Error("should reject when at max")
 	}
 
-	cq.SetMaxConnections(2)
-	id3, conn3 := cq.RegisterConnection()
+	cq.setMaxConnections(2)
+	id3, conn3 := cq.registerConnection()
 	if id3 < 0 || conn3 == nil {
 		t.Error("should succeed after increasing max")
 	}
 }
 
 func TestConnectionQueue_NotifySetValue(t *testing.T) {
-	cq := NewConnectionQueue(0)
+	cq := newConnectionQueue(0)
 
-	_, conn1 := cq.RegisterConnection()
-	_, conn2 := cq.RegisterConnection()
+	_, conn1 := cq.registerConnection()
+	_, conn2 := cq.registerConnection()
 
 	update := &protos.PushUpdates{
 		Slot: 0,
@@ -182,9 +182,9 @@ func TestConnectionQueue_NotifySetValue(t *testing.T) {
 			},
 		},
 	}
-	cq.NotifySetValue(update)
+	cq.notifyUpdate(update)
 
-	checkUpdate := func(name string, conn *Connection) {
+	checkUpdate := func(name string, conn *connection) {
 		select {
 		case received := <-conn.updates:
 			pv, ok := received.Kind.(*protos.PushUpdates_Value)
@@ -200,9 +200,9 @@ func TestConnectionQueue_NotifySetValue(t *testing.T) {
 }
 
 func TestConnectionQueue_NotifySetValue_ChannelFull(t *testing.T) {
-	cq := NewConnectionQueue(0)
+	cq := newConnectionQueue(0)
 
-	_, conn := cq.RegisterConnection()
+	_, conn := cq.registerConnection()
 
 	fillUpdate := &protos.PushUpdates{Kind: &protos.PushUpdates_Value{
 		Value: &protos.PushUpdates_PushValue{Oid: "fill"},
@@ -212,11 +212,11 @@ func TestConnectionQueue_NotifySetValue_ChannelFull(t *testing.T) {
 	}}
 
 	for i := 0; i < 100; i++ {
-		cq.NotifySetValue(fillUpdate)
+		cq.notifyUpdate(fillUpdate)
 	}
 
 	// This should not block (drops the update)
-	cq.NotifySetValue(overflowUpdate)
+	cq.notifyUpdate(overflowUpdate)
 
 	count := 0
 	for len(conn.updates) > 0 {
@@ -232,15 +232,15 @@ func TestConnectionQueue_NotifySetValue_ChannelFull(t *testing.T) {
 }
 
 func TestConnectionQueue_NotifySetValue_NoConnections(t *testing.T) {
-	cq := NewConnectionQueue(0)
-	cq.NotifySetValue(&protos.PushUpdates{})
+	cq := newConnectionQueue(0)
+	cq.notifyUpdate(&protos.PushUpdates{})
 }
 
 func TestConnectionQueue_Shutdown(t *testing.T) {
-	cq := NewConnectionQueue(0)
+	cq := newConnectionQueue(0)
 
-	_, conn1 := cq.RegisterConnection()
-	id2, conn2 := cq.RegisterConnection()
+	_, conn1 := cq.registerConnection()
+	id2, conn2 := cq.registerConnection()
 	_ = id2
 
 	// Simulate goroutines that would deregister on done signal
@@ -250,18 +250,18 @@ func TestConnectionQueue_Shutdown(t *testing.T) {
 	go func() {
 		defer wg.Done()
 		<-conn1.done
-		cq.DeregisterConnection(conn1.id)
+		cq.deregisterConnection(conn1.id)
 	}()
 
 	go func() {
 		defer wg.Done()
 		<-conn2.done
-		cq.DeregisterConnection(conn2.id)
+		cq.deregisterConnection(conn2.id)
 	}()
 
 	done := make(chan struct{})
 	go func() {
-		cq.Shutdown()
+		cq.shutdown()
 		close(done)
 	}()
 
@@ -274,36 +274,36 @@ func TestConnectionQueue_Shutdown(t *testing.T) {
 
 	wg.Wait()
 
-	if cq.ConnectionCount() != 0 {
-		t.Errorf("expected 0 connections after shutdown, got %d", cq.ConnectionCount())
+	if cq.connectionCount() != 0 {
+		t.Errorf("expected 0 connections after shutdown, got %d", cq.connectionCount())
 	}
 }
 
 func TestConnectionQueue_Shutdown_RejectsNewConnections(t *testing.T) {
-	cq := NewConnectionQueue(0)
+	cq := newConnectionQueue(0)
 
-	_, conn := cq.RegisterConnection()
+	_, conn := cq.registerConnection()
 
 	// Simulate a goroutine that deregisters on done
 	go func() {
 		<-conn.done
-		cq.DeregisterConnection(conn.id)
+		cq.deregisterConnection(conn.id)
 	}()
 
-	cq.Shutdown()
+	cq.shutdown()
 
-	id, c := cq.RegisterConnection()
+	id, c := cq.registerConnection()
 	if id != -1 || c != nil {
 		t.Error("should reject new connections after shutdown")
 	}
 }
 
 func TestConnectionQueue_Shutdown_Empty(t *testing.T) {
-	cq := NewConnectionQueue(0)
+	cq := newConnectionQueue(0)
 
 	done := make(chan struct{})
 	go func() {
-		cq.Shutdown()
+		cq.shutdown()
 		close(done)
 	}()
 
@@ -316,52 +316,52 @@ func TestConnectionQueue_Shutdown_Empty(t *testing.T) {
 }
 
 func TestConnectionQueue_ConcurrentRegisterDeregister(t *testing.T) {
-	cq := NewConnectionQueue(0)
+	cq := newConnectionQueue(0)
 	var wg sync.WaitGroup
 
 	for i := 0; i < 50; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			id, conn := cq.RegisterConnection()
+			id, conn := cq.registerConnection()
 			if id < 0 || conn == nil {
 				return
 			}
 			time.Sleep(10 * time.Millisecond)
-			cq.DeregisterConnection(id)
+			cq.deregisterConnection(id)
 		}()
 	}
 
 	wg.Wait()
-	if cq.ConnectionCount() != 0 {
-		t.Errorf("expected 0 connections after concurrent test, got %d", cq.ConnectionCount())
+	if cq.connectionCount() != 0 {
+		t.Errorf("expected 0 connections after concurrent test, got %d", cq.connectionCount())
 	}
 }
 
 func TestConnectionQueue_ConnectionCount(t *testing.T) {
-	cq := NewConnectionQueue(0)
+	cq := newConnectionQueue(0)
 
-	if cq.ConnectionCount() != 0 {
-		t.Errorf("expected 0, got %d", cq.ConnectionCount())
+	if cq.connectionCount() != 0 {
+		t.Errorf("expected 0, got %d", cq.connectionCount())
 	}
 
-	id1, _ := cq.RegisterConnection()
-	if cq.ConnectionCount() != 1 {
-		t.Errorf("expected 1, got %d", cq.ConnectionCount())
+	id1, _ := cq.registerConnection()
+	if cq.connectionCount() != 1 {
+		t.Errorf("expected 1, got %d", cq.connectionCount())
 	}
 
-	id2, _ := cq.RegisterConnection()
-	if cq.ConnectionCount() != 2 {
-		t.Errorf("expected 2, got %d", cq.ConnectionCount())
+	id2, _ := cq.registerConnection()
+	if cq.connectionCount() != 2 {
+		t.Errorf("expected 2, got %d", cq.connectionCount())
 	}
 
-	cq.DeregisterConnection(id1)
-	if cq.ConnectionCount() != 1 {
-		t.Errorf("expected 1, got %d", cq.ConnectionCount())
+	cq.deregisterConnection(id1)
+	if cq.connectionCount() != 1 {
+		t.Errorf("expected 1, got %d", cq.connectionCount())
 	}
 
-	cq.DeregisterConnection(id2)
-	if cq.ConnectionCount() != 0 {
-		t.Errorf("expected 0, got %d", cq.ConnectionCount())
+	cq.deregisterConnection(id2)
+	if cq.connectionCount() != 0 {
+		t.Errorf("expected 0, got %d", cq.connectionCount())
 	}
 }
