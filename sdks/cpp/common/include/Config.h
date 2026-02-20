@@ -48,9 +48,10 @@ namespace config{
  * @brief Parses environment variables and command line to initialize variables used for runtime configuration
  * @param argc Command-line argument count
  * @param argv Command-line arguments
+ * @param serviceType The type of service being ran, can be "REST" or "GRPC".
  * @param prefix Prefix used for relevant environment variables, include trailing underscore. Defaults to "CATENA_".
  */
-void initConfigVariables(int argc, char* argv[], std::string prefix = "CATENA_");
+void initConfigVariables(int argc, char* argv[], std::string serviceType, std::string prefix = "CATENA_");
 
 inline std::string certs = "";
 

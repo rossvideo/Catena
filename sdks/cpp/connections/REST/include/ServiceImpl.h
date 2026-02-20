@@ -89,11 +89,7 @@ class ServiceConfig {
      * @brief Constructor for REST Service Config. Device pointers must be added manually.
      */
     ServiceConfig() {
-      if (!config::port) {
-        config::port = 443; // Default Catena REST port
-      } else {
-        this->port = config::port;
-      }
+      this->port = config::port;
       this->EOPath = config::static_root;
       this->maxConnections = config::max_connections;
       this->authz = config::authz;

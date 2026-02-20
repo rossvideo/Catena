@@ -74,7 +74,7 @@ void RunRPCServer(std::string addr) {
     builder.AddListeningPort(addr, catena::gRPC::getServerCredentials());
     std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
     // Setup ServiceConfig
-    // Config vars must be initialized beforehand (e.g. config::initConfigVariables(argc, argv, "CATENA_"))
+    // Config vars must be initialized beforehand (e.g. config::initConfigVariables(argc, argv, "GRPC"))
     ServiceConfig config = ServiceConfig()
         .set_EOPath(config::static_root)
         .set_authz(config::authz)
@@ -128,7 +128,7 @@ catena::REST::CatenaServiceImpl *globalApi = nullptr;
 // This initializes a REST Catena service with your device.
 void RunRESTServer () {
     // Setup ServiceConfig
-    // Config vars must be initialized beforehand (e.g. config::initConfigVariables(argc, argv, "CATENA_"))
+    // Config vars must be initialized beforehand (e.g. config::initConfigVariables(argc, argv, "REST"))
     ServiceConfig config = ServiceConfig()
         .set_EOPath(config::static_root)
         .set_authz(config::authz)

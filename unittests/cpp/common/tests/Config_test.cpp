@@ -143,7 +143,7 @@ TEST_F(ConfigTest, defaultValues) {
     buildArgv(args, argc, argv);
 
     // Set config variables
-    config::initConfigVariables(argc, argv.data(), "NONE_");
+    config::initConfigVariables(argc, argv.data(), "REST", "NONE_");
 
     // Check values
     EXPECT_EQ(config::ca_file, "ca.crt");
@@ -156,7 +156,7 @@ TEST_F(ConfigTest, defaultValues) {
     EXPECT_EQ(config::default_max_array_size, kDefaultMaxArrayLength);
     EXPECT_EQ(config::default_total_array_size, kDefaultMaxArrayLength);
     EXPECT_EQ(config::max_connections, DEFAULT_MAX_CONNECTIONS);
-    EXPECT_EQ(config::port, NULL);
+    EXPECT_EQ(config::port, 443);
     EXPECT_EQ(config::authz, false);
     EXPECT_EQ(config::mutual_authc, false);
     EXPECT_EQ(config::private_ca, false);
@@ -191,7 +191,7 @@ TEST_F(ConfigTest, CommandLine) {
     buildArgv(args, argc, argv);
 
     // Set config variables
-    config::initConfigVariables(argc, argv.data(), "NONE_");
+    config::initConfigVariables(argc, argv.data(), "REST", "NONE_");
 
     // Check values
     EXPECT_EQ(config::ca_file, "a");
@@ -241,7 +241,7 @@ TEST_F(ConfigTest, EnvironmentVariables) {
     int argc = 1;
 
     // Set config variables
-    config::initConfigVariables(argc, argv, "CONFIGTEST_");
+    config::initConfigVariables(argc, argv, "REST", "CONFIGTEST_");
 
     // Check values
     EXPECT_EQ(config::ca_file, "a");
@@ -288,7 +288,7 @@ TEST_F(ConfigTest, CmdAndEnv) {
     buildArgv(args, argc, argv);
 
     // Set config variables
-    config::initConfigVariables(argc, argv.data(), "CONFIGTEST_");
+    config::initConfigVariables(argc, argv.data(), "GRPC", "CONFIGTEST_");
 
     // Check values set by environment variables
     EXPECT_EQ(config::ca_file, "a");
@@ -305,7 +305,7 @@ TEST_F(ConfigTest, CmdAndEnv) {
     EXPECT_EQ(config::secure_comms, "off");
     EXPECT_EQ(config::static_root, getenv("HOME"));
     EXPECT_EQ(config::max_connections, DEFAULT_MAX_CONNECTIONS);
-    EXPECT_EQ(config::port, NULL);
+    EXPECT_EQ(config::port, 6254);
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
 
@@ -361,7 +361,7 @@ TEST_F(ConfigTest, CmdOverwritesEnv) {
     buildArgv(cmdArgs, argc, argv);
 
     // Set config variables
-    config::initConfigVariables(argc, argv.data(), "CONFIGTEST_");
+    config::initConfigVariables(argc, argv.data(), "GRPC", "CONFIGTEST_");
 
     // Check values match command line args
     EXPECT_EQ(config::ca_file, "b");

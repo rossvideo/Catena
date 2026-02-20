@@ -5,10 +5,11 @@
 namespace po = boost::program_options;
 using namespace catena::common;
 
-void config::initConfigVariables(int argc, char* argv[], std::string prefix) {
+void config::initConfigVariables(int argc, char* argv[], std::string serviceType, std::string prefix) {
     //Declare options
     po::options_description configArgs("Allowed options");
     configArgs.add_options()
+        ("help,h", "Get help message")
         ("certs", po::value<std::string>()->default_value("${HOME}/test_certs"), "path/to/certs/files")
         ("secure_comms", po::value<std::string>()->default_value("off"), "Specify type of secure comms, options are: \"off\", \"tls\"")
         ("cert_file", po::value<std::string>()->default_value("server.vrt"), "Specify the certificate file")
@@ -16,15 +17,19 @@ void config::initConfigVariables(int argc, char* argv[], std::string prefix) {
         ("ca_file", po::value<std::string>()->default_value("ca.crt"), "Specify the CA file if using a private CA")
         ("static_root", po::value<std::string>()->default_value(getenv("HOME")), "Specify the directory to search for external objects")
         ("log_dir", po::value<std::string>()->default_value(LOG_DIR), "Specify the directory for log files.")
-        ("default_max_array_size", po::value<uint32_t>()->default_value(kDefaultMaxArrayLength), "use this to define the default max length for array and string params.")
-        ("default_total_array_size", po::value<uint32_t>()->default_value(kDefaultMaxArrayLength), "use this to define the default total length for string array params.")
-        ("max_connections", po::value<uint32_t>()->default_value(DEFAULT_MAX_CONNECTIONS), "use this to define the total number of concurrent connections that can be made to a service.")
-        ("port", po::value<uint16_t>()->default_value(NULL), "Catena service port") // REST and GRPC have unique defaults, handled by their respective ServiceConfigs on creation
+        ("default_max_array_size", po::value<uint32_t>()->default_value(kDefaultMaxArrayLength), "Use this to define the default max length for array and string params.")
+        ("default_total_array_size", po::value<uint32_t>()->default_value(kDefaultMaxArrayLength), "Use this to define the default total length for string array params.")
+        ("max_connections", po::value<uint32_t>()->default_value(DEFAULT_MAX_CONNECTIONS), "Use this to define the total number of concurrent connections that can be made to a service.")
         ("private_ca", po::value<bool>()->default_value(false)->implicit_value(true), "Specify if using a private CA")
-        ("mutual_authc", po::value<bool>()->default_value(false)->implicit_value(true), "use this to require client to authenticate")
-        ("authz", po::value<bool>()->default_value(false)->implicit_value(true), "use OAuth token authorization")
-        ("silent", po::value<bool>()->default_value(false)->implicit_value(true), "use this to suppress all log output.")
-    ;
+        ("mutual_authc", po::value<bool>()->default_value(false)->implicit_value(true), "Use this to require client to authenticate")
+        ("authz", po::value<bool>()->default_value(false)->implicit_value(true), "Use OAuth token authorization")
+        ("silent", po::value<bool>()->default_value(false)->implicit_value(true), "Use this to suppress all log output.")
+        ;
+    if (serviceType == "REST") {
+        configArgs.add_options()("port", po::value<uint16_t>()->default_value(443), "Catena REST service port");
+    } else if (serviceType == "GRPC") {
+        configArgs.add_options()("port", po::value<uint16_t>()->default_value(6254), "Catena gRPC service port");
+    }
 
     //Read values from command line and environment variables
     po::variables_map vars;
@@ -32,6 +37,11 @@ void config::initConfigVariables(int argc, char* argv[], std::string prefix) {
     po::notify(vars);
     po::store(po::parse_environment(configArgs, prefix), vars);
     po::notify(vars);
+
+    // help message
+    // if (vars.count("help")) {
+    //     std::cout << configArgs << std::endl;
+    // }
 
     //Store values in config variables
     if (vars.count("certs")) config::certs = vars["certs"].as<std::string>();

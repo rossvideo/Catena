@@ -107,9 +107,6 @@ class ServiceConfig {
      * @brief Constructor for GRPC Service Config. Device pointers and completion queue must be added manually.
      */
     ServiceConfig() {
-      if (!config::port) {
-        config::port = 6254; // Default Catena gRPC port
-      }
       this->EOPath = config::static_root;
       this->maxConnections = config::max_connections;
       this->authz = config::authz;

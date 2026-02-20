@@ -312,7 +312,7 @@ void RunRESTServer() {
 
 int main(int argc, char* argv[])
 {
-    config::initConfigVariables(argc, argv, "TEST_");
+    config::initConfigVariables(argc, argv, "REST");
     Logger::init("one_of_everything_REST");
 
     // commands should be defined before starting the RPC server

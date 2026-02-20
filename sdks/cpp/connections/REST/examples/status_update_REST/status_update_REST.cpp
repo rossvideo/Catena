@@ -186,7 +186,7 @@ void RunRESTServer() {
 }
 
 int main(int argc, char* argv[]) {
-    config::initConfigVariables(argc, argv, "TEST_");
+    config::initConfigVariables(argc, argv, "REST");
     Logger::init("status_update_REST");
 
     std::thread catenaRestThread(RunRESTServer);

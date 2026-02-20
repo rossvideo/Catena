@@ -165,7 +165,7 @@ void RunRPCServer(std::string addr)
 int main(int argc, char* argv[])
 {
     std::string addr;
-    config::initConfigVariables(argc, argv, "TEST_");
+    config::initConfigVariables(argc, argv, "GRPC");
     Logger::init("audiodeck");
   
     addr = absl::StrFormat("0.0.0.0:%d", config::port);
