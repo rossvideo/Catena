@@ -39,8 +39,12 @@
 package catena
 
 import (
+	"bytes"
+	"compress/gzip"
+	"compress/zlib"
 	"crypto/sha256"
 	"fmt"
+	"io"
 	"io/fs"
 	"mime"
 	"os"
@@ -51,6 +55,12 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/rossvideo/catena/build/go/protos"
+)
+
+const (
+	EncodingUncompressed int32 = 0
+	EncodingGzip         int32 = 1
+	EncodingDeflate      int32 = 2
 )
 
 // CatenaAsset wraps protos.ExternalObjectPayload for asset handling
@@ -93,6 +103,7 @@ func ToPayloadFromPath(path string) (DataPayload, error) {
 }
 
 // ToPayloadFromFS creates a DataPayload by reading a file from an fs.FS (e.g. embed.FS).
+// Encoding is auto-detected from the file extension: .gz → GZIP, .zz → DEFLATE.
 func ToPayloadFromFS(fsys fs.FS, path string) (DataPayload, error) {
 	data, err := fs.ReadFile(fsys, path)
 	if err != nil {
@@ -109,7 +120,9 @@ func ToPayloadFromFS(fsys fs.FS, path string) (DataPayload, error) {
 		contentType = "application/octet-stream"
 	}
 
-	return ToPayload(data, contentType, name), nil
+	dp := ToPayload(data, contentType, name)
+	dp.PayloadEncoding = PayloadEncodingFromExt(name)
+	return dp, nil
 }
 
 // LoadPayloadsFromEmbed walks an embedded filesystem from root and returns a map of
@@ -190,4 +203,138 @@ func (ca CatenaAsset) ToJSON() ([]byte, error) {
 		UseProtoNames:   true,
 		EmitUnpopulated: false,
 	}).Marshal(ca.asset)
+}
+
+// CompressGzip compresses data using gzip format.
+func CompressGzip(data []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	w := gzip.NewWriter(&buf)
+	if _, err := w.Write(data); err != nil {
+		return nil, fmt.Errorf("gzip write: %w", err)
+	}
+	if err := w.Close(); err != nil {
+		return nil, fmt.Errorf("gzip close: %w", err)
+	}
+	return buf.Bytes(), nil
+}
+
+// CompressDeflate compresses data using zlib (deflate) format.
+func CompressDeflate(data []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	w := zlib.NewWriter(&buf)
+	if _, err := w.Write(data); err != nil {
+		return nil, fmt.Errorf("zlib write: %w", err)
+	}
+	if err := w.Close(); err != nil {
+		return nil, fmt.Errorf("zlib close: %w", err)
+	}
+	return buf.Bytes(), nil
+}
+
+// DecompressGzip decompresses gzip-encoded data.
+func DecompressGzip(data []byte) ([]byte, error) {
+	r, err := gzip.NewReader(bytes.NewReader(data))
+	if err != nil {
+		return nil, fmt.Errorf("gzip reader: %w", err)
+	}
+	defer r.Close()
+	return io.ReadAll(r)
+}
+
+// DecompressDeflate decompresses zlib (deflate)-encoded data.
+func DecompressDeflate(data []byte) ([]byte, error) {
+	r, err := zlib.NewReader(bytes.NewReader(data))
+	if err != nil {
+		return nil, fmt.Errorf("zlib reader: %w", err)
+	}
+	defer r.Close()
+	return io.ReadAll(r)
+}
+
+// DecodePayload decompresses payload bytes according to the given encoding.
+func DecodePayload(data []byte, encoding int32) ([]byte, error) {
+	switch encoding {
+	case EncodingGzip:
+		return DecompressGzip(data)
+	case EncodingDeflate:
+		return DecompressDeflate(data)
+	case EncodingUncompressed:
+		return data, nil
+	default:
+		return nil, fmt.Errorf("unsupported encoding: %d", encoding)
+	}
+}
+
+// EncodePayload compresses raw data according to the given encoding.
+func EncodePayload(data []byte, encoding int32) ([]byte, error) {
+	switch encoding {
+	case EncodingGzip:
+		return CompressGzip(data)
+	case EncodingDeflate:
+		return CompressDeflate(data)
+	case EncodingUncompressed:
+		return data, nil
+	default:
+		return nil, fmt.Errorf("unsupported encoding: %d", encoding)
+	}
+}
+
+// ParsePayloadEncoding converts a string (e.g. "GZIP", "DEFLATE", "UNCOMPRESSED")
+// or numeric string ("0", "1", "2") to the corresponding encoding constant.
+func ParsePayloadEncoding(s string) (int32, error) {
+	switch strings.ToUpper(strings.TrimSpace(s)) {
+	case "UNCOMPRESSED", "0", "":
+		return EncodingUncompressed, nil
+	case "GZIP", "1":
+		return EncodingGzip, nil
+	case "DEFLATE", "2":
+		return EncodingDeflate, nil
+	default:
+		return 0, fmt.Errorf("invalid payload encoding: %s", s)
+	}
+}
+
+// PayloadEncodingFromExt returns the payload encoding implied by a file extension.
+// ".gz" → GZIP, ".zz" → DEFLATE, anything else → UNCOMPRESSED.
+func PayloadEncodingFromExt(filename string) int32 {
+	switch filepath.Ext(filename) {
+	case ".gz":
+		return EncodingGzip
+	case ".zz":
+		return EncodingDeflate
+	default:
+		return EncodingUncompressed
+	}
+}
+
+// TranscodeAssetPayload decodes the asset's current payload encoding and
+// re-encodes it to targetEncoding, modifying the asset in place.
+// If the asset is already in the target encoding, this is a no-op.
+func TranscodeAssetPayload(asset *CatenaAsset, targetEncoding int32) error {
+	proto := asset.GetProtoAsset()
+	if proto == nil || proto.GetPayload() == nil {
+		return fmt.Errorf("asset has no payload")
+	}
+
+	dp := proto.GetPayload()
+	currentEncoding := int32(dp.GetPayloadEncoding())
+
+	if currentEncoding == targetEncoding {
+		return nil
+	}
+
+	rawData, err := DecodePayload(dp.GetPayload(), currentEncoding)
+	if err != nil {
+		return fmt.Errorf("decode: %w", err)
+	}
+
+	encodedData, err := EncodePayload(rawData, targetEncoding)
+	if err != nil {
+		return fmt.Errorf("encode: %w", err)
+	}
+
+	dp.Kind = &protos.DataPayload_Payload{Payload: encodedData}
+	dp.PayloadEncoding = protos.DataPayload_PayloadEncoding(targetEncoding)
+
+	return nil
 }

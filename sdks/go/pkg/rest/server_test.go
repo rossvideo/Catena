@@ -903,6 +903,90 @@ func TestWriteHTTPResult_DefaultType(t *testing.T) {
 	assertStatus(t, rec, http.StatusOK)
 }
 
+func TestServer_GetAsset_CompressionQueryParam_Gzip(t *testing.T) {
+	srv := NewServer([]int{0})
+
+	dp := catena.DataPayload{
+		Metadata: map[string]string{"content-type": "text/plain"},
+		Payload:  []byte("test asset data for compression"),
+	}
+	asset, _ := catena.ToCatenaAsset(dp, true)
+
+	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+		return catena.Reply(asset)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/asset/test.txt?compression=GZIP", nil)
+	rec := httptest.NewRecorder()
+	srv.mux.ServeHTTP(rec, req)
+	assertStatus(t, rec, http.StatusOK)
+
+	var result map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &result); err != nil {
+		t.Fatalf("invalid JSON response: %v", err)
+	}
+	payload, ok := result["payload"].(map[string]any)
+	if !ok {
+		t.Fatal("expected payload field in response")
+	}
+	if payload["payload_encoding"] != "GZIP" {
+		t.Errorf("expected payload_encoding GZIP, got %v", payload["payload_encoding"])
+	}
+}
+
+func TestServer_GetAsset_CompressionQueryParam_Deflate(t *testing.T) {
+	srv := NewServer([]int{0})
+
+	dp := catena.DataPayload{
+		Metadata: map[string]string{"content-type": "text/plain"},
+		Payload:  []byte("test asset data for compression"),
+	}
+	asset, _ := catena.ToCatenaAsset(dp, true)
+
+	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+		return catena.Reply(asset)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/asset/test.txt?compression=DEFLATE", nil)
+	rec := httptest.NewRecorder()
+	srv.mux.ServeHTTP(rec, req)
+	assertStatus(t, rec, http.StatusOK)
+
+	var result map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &result); err != nil {
+		t.Fatalf("invalid JSON response: %v", err)
+	}
+	payload, ok := result["payload"].(map[string]any)
+	if !ok {
+		t.Fatal("expected payload field in response")
+	}
+	if payload["payload_encoding"] != "DEFLATE" {
+		t.Errorf("expected payload_encoding DEFLATE, got %v", payload["payload_encoding"])
+	}
+}
+
+func TestServer_GetAsset_CompressionQueryParam_Uncompressed(t *testing.T) {
+	srv := NewServer([]int{0})
+
+	original := []byte("test asset data")
+	gzData, _ := catena.CompressGzip(original)
+	dp := catena.DataPayload{
+		Metadata:        map[string]string{"content-type": "text/plain"},
+		Payload:         gzData,
+		PayloadEncoding: catena.EncodingGzip,
+	}
+	asset, _ := catena.ToCatenaAsset(dp, true)
+
+	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+		return catena.Reply(asset)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/asset/test.txt?compression=UNCOMPRESSED", nil)
+	rec := httptest.NewRecorder()
+	srv.mux.ServeHTTP(rec, req)
+	assertStatus(t, rec, http.StatusOK)
+}
+
 func TestServer_Connect_StreamingNotSupported(t *testing.T) {
 	original := catena.GetEnv()
 	defer catena.SetEnv(original)
@@ -1172,4 +1256,64 @@ func TestRouting_BasePathOnly(t *testing.T) {
 	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/", "")
 	assertStatus(t, rec, http.StatusBadRequest)
 	assertHasError(t, rec)
+}
+
+func TestServer_GetAsset_CompressionQueryParam_Invalid(t *testing.T) {
+	srv := NewServer([]int{0})
+
+	dp := catena.DataPayload{
+		Metadata: map[string]string{"content-type": "text/plain"},
+		Payload:  []byte("test data"),
+	}
+	asset, _ := catena.ToCatenaAsset(dp, true)
+
+	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+		return catena.Reply(asset)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/asset/test.txt?compression=INVALID", nil)
+	rec := httptest.NewRecorder()
+	srv.mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("expected status %d, got %d", http.StatusBadRequest, rec.Code)
+	}
+}
+
+func TestServer_GetAsset_NoCompressionParam(t *testing.T) {
+	srv := NewServer([]int{0})
+
+	dp := catena.DataPayload{
+		Metadata: map[string]string{"content-type": "text/plain"},
+		Payload:  []byte("uncompressed data"),
+	}
+	asset, _ := catena.ToCatenaAsset(dp, true)
+
+	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+		return catena.Reply(asset)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/asset/test.txt", nil)
+	rec := httptest.NewRecorder()
+	srv.mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
+	}
+}
+
+func TestServer_GetAsset_CompressionWithError(t *testing.T) {
+	srv := NewServer([]int{0})
+
+	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+		return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found")
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/asset/missing?compression=GZIP", nil)
+	rec := httptest.NewRecorder()
+	srv.mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("expected status %d, got %d", http.StatusNotFound, rec.Code)
+	}
 }

@@ -495,3 +495,306 @@ func TestToPayloadFromURL(t *testing.T) {
 		t.Errorf("expected empty Payload, got %d bytes", len(dp.Payload))
 	}
 }
+
+func TestCompressDecompressGzip_Roundtrip(t *testing.T) {
+	original := []byte("hello world, this is test data for gzip compression")
+	compressed, err := CompressGzip(original)
+	if err != nil {
+		t.Fatalf("CompressGzip: %v", err)
+	}
+	if len(compressed) == 0 {
+		t.Fatal("expected non-empty compressed data")
+	}
+
+	decompressed, err := DecompressGzip(compressed)
+	if err != nil {
+		t.Fatalf("DecompressGzip: %v", err)
+	}
+	if string(decompressed) != string(original) {
+		t.Errorf("roundtrip mismatch: got %q, want %q", decompressed, original)
+	}
+}
+
+func TestCompressDecompressDeflate_Roundtrip(t *testing.T) {
+	original := []byte("hello world, this is test data for deflate compression")
+	compressed, err := CompressDeflate(original)
+	if err != nil {
+		t.Fatalf("CompressDeflate: %v", err)
+	}
+	if len(compressed) == 0 {
+		t.Fatal("expected non-empty compressed data")
+	}
+
+	decompressed, err := DecompressDeflate(compressed)
+	if err != nil {
+		t.Fatalf("DecompressDeflate: %v", err)
+	}
+	if string(decompressed) != string(original) {
+		t.Errorf("roundtrip mismatch: got %q, want %q", decompressed, original)
+	}
+}
+
+func TestDecompressGzip_InvalidData(t *testing.T) {
+	_, err := DecompressGzip([]byte("not gzip data"))
+	if err == nil {
+		t.Error("expected error for invalid gzip data")
+	}
+}
+
+func TestDecompressDeflate_InvalidData(t *testing.T) {
+	_, err := DecompressDeflate([]byte("not deflate data"))
+	if err == nil {
+		t.Error("expected error for invalid deflate data")
+	}
+}
+
+func TestDecodePayload(t *testing.T) {
+	original := []byte("test payload data")
+
+	gzData, _ := CompressGzip(original)
+	deflateData, _ := CompressDeflate(original)
+
+	tests := []struct {
+		name     string
+		data     []byte
+		encoding int32
+		want     string
+		wantErr  bool
+	}{
+		{"uncompressed", original, EncodingUncompressed, "test payload data", false},
+		{"gzip", gzData, EncodingGzip, "test payload data", false},
+		{"deflate", deflateData, EncodingDeflate, "test payload data", false},
+		{"unsupported encoding", original, 99, "", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := DecodePayload(tt.data, tt.encoding)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("DecodePayload error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !tt.wantErr && string(got) != tt.want {
+				t.Errorf("DecodePayload = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestEncodePayload(t *testing.T) {
+	original := []byte("test payload data")
+
+	tests := []struct {
+		name     string
+		encoding int32
+		wantErr  bool
+	}{
+		{"uncompressed", EncodingUncompressed, false},
+		{"gzip", EncodingGzip, false},
+		{"deflate", EncodingDeflate, false},
+		{"unsupported", 99, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			encoded, err := EncodePayload(original, tt.encoding)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("EncodePayload error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantErr {
+				return
+			}
+
+			decoded, err := DecodePayload(encoded, tt.encoding)
+			if err != nil {
+				t.Fatalf("DecodePayload after encode: %v", err)
+			}
+			if string(decoded) != string(original) {
+				t.Errorf("encode→decode roundtrip: got %q, want %q", decoded, original)
+			}
+		})
+	}
+}
+
+func TestParsePayloadEncoding(t *testing.T) {
+	tests := []struct {
+		input   string
+		want    int32
+		wantErr bool
+	}{
+		{"UNCOMPRESSED", EncodingUncompressed, false},
+		{"uncompressed", EncodingUncompressed, false},
+		{"GZIP", EncodingGzip, false},
+		{"gzip", EncodingGzip, false},
+		{"DEFLATE", EncodingDeflate, false},
+		{"deflate", EncodingDeflate, false},
+		{"0", EncodingUncompressed, false},
+		{"1", EncodingGzip, false},
+		{"2", EncodingDeflate, false},
+		{"", EncodingUncompressed, false},
+		{"  GZIP  ", EncodingGzip, false},
+		{"INVALID", 0, true},
+		{"3", 0, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got, err := ParsePayloadEncoding(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("ParsePayloadEncoding(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
+			}
+			if got != tt.want {
+				t.Errorf("ParsePayloadEncoding(%q) = %d, want %d", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPayloadEncodingFromExt(t *testing.T) {
+	tests := []struct {
+		filename string
+		want     int32
+	}{
+		{"file.gz", EncodingGzip},
+		{"file.zz", EncodingDeflate},
+		{"file.txt", EncodingUncompressed},
+		{"file.png", EncodingUncompressed},
+		{"file", EncodingUncompressed},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.filename, func(t *testing.T) {
+			got := PayloadEncodingFromExt(tt.filename)
+			if got != tt.want {
+				t.Errorf("PayloadEncodingFromExt(%q) = %d, want %d", tt.filename, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTranscodeAssetPayload(t *testing.T) {
+	original := []byte("transcode test data")
+
+	// Create an uncompressed asset
+	dp := DataPayload{
+		Metadata: map[string]string{"content-type": "text/plain"},
+		Payload:  original,
+	}
+	asset, err := ToCatenaAsset(dp, true)
+	if err != nil {
+		t.Fatalf("ToCatenaAsset: %v", err)
+	}
+
+	// Transcode to GZIP
+	if err := TranscodeAssetPayload(&asset, EncodingGzip); err != nil {
+		t.Fatalf("TranscodeAssetPayload to GZIP: %v", err)
+	}
+	proto := asset.GetProtoAsset().GetPayload()
+	if int32(proto.GetPayloadEncoding()) != EncodingGzip {
+		t.Errorf("expected GZIP encoding, got %d", proto.GetPayloadEncoding())
+	}
+
+	// Verify the payload is actually gzip compressed (can decompress)
+	decompressed, err := DecompressGzip(proto.GetPayload())
+	if err != nil {
+		t.Fatalf("DecompressGzip: %v", err)
+	}
+	if string(decompressed) != string(original) {
+		t.Errorf("decompressed = %q, want %q", decompressed, original)
+	}
+
+	// Transcode from GZIP to DEFLATE
+	if err := TranscodeAssetPayload(&asset, EncodingDeflate); err != nil {
+		t.Fatalf("TranscodeAssetPayload GZIP→DEFLATE: %v", err)
+	}
+	proto = asset.GetProtoAsset().GetPayload()
+	if int32(proto.GetPayloadEncoding()) != EncodingDeflate {
+		t.Errorf("expected DEFLATE encoding, got %d", proto.GetPayloadEncoding())
+	}
+	decompressed, err = DecompressDeflate(proto.GetPayload())
+	if err != nil {
+		t.Fatalf("DecompressDeflate: %v", err)
+	}
+	if string(decompressed) != string(original) {
+		t.Errorf("decompressed = %q, want %q", decompressed, original)
+	}
+
+	// Transcode from DEFLATE to UNCOMPRESSED
+	if err := TranscodeAssetPayload(&asset, EncodingUncompressed); err != nil {
+		t.Fatalf("TranscodeAssetPayload DEFLATE→UNCOMPRESSED: %v", err)
+	}
+	proto = asset.GetProtoAsset().GetPayload()
+	if int32(proto.GetPayloadEncoding()) != EncodingUncompressed {
+		t.Errorf("expected UNCOMPRESSED encoding, got %d", proto.GetPayloadEncoding())
+	}
+	if string(proto.GetPayload()) != string(original) {
+		t.Errorf("payload = %q, want %q", proto.GetPayload(), original)
+	}
+}
+
+func TestTranscodeAssetPayload_SameEncoding_Noop(t *testing.T) {
+	dp := DataPayload{
+		Payload: []byte("data"),
+	}
+	asset, _ := ToCatenaAsset(dp, true)
+	originalBytes := asset.GetProtoAsset().GetPayload().GetPayload()
+
+	if err := TranscodeAssetPayload(&asset, EncodingUncompressed); err != nil {
+		t.Fatalf("TranscodeAssetPayload same encoding: %v", err)
+	}
+	if string(asset.GetProtoAsset().GetPayload().GetPayload()) != string(originalBytes) {
+		t.Error("expected no-op when transcoding to same encoding")
+	}
+}
+
+func TestTranscodeAssetPayload_NilAsset(t *testing.T) {
+	asset := CatenaAsset{}
+	err := TranscodeAssetPayload(&asset, EncodingGzip)
+	if err == nil {
+		t.Error("expected error for nil asset")
+	}
+}
+
+func TestToPayloadFromFS_GzipExtension(t *testing.T) {
+	original := []byte("compressed file data")
+	gzData, _ := CompressGzip(original)
+
+	fsys := fstest.MapFS{
+		"assets/test.gz": {Data: gzData},
+	}
+	dp, err := ToPayloadFromFS(fsys, "assets/test.gz")
+	if err != nil {
+		t.Fatalf("ToPayloadFromFS: %v", err)
+	}
+	if dp.PayloadEncoding != EncodingGzip {
+		t.Errorf("expected GZIP encoding, got %d", dp.PayloadEncoding)
+	}
+}
+
+func TestToPayloadFromFS_DeflateExtension(t *testing.T) {
+	original := []byte("compressed file data")
+	deflateData, _ := CompressDeflate(original)
+
+	fsys := fstest.MapFS{
+		"assets/test.zz": {Data: deflateData},
+	}
+	dp, err := ToPayloadFromFS(fsys, "assets/test.zz")
+	if err != nil {
+		t.Fatalf("ToPayloadFromFS: %v", err)
+	}
+	if dp.PayloadEncoding != EncodingDeflate {
+		t.Errorf("expected DEFLATE encoding, got %d", dp.PayloadEncoding)
+	}
+}
+
+func TestToPayloadFromFS_PlainExtension(t *testing.T) {
+	fsys := fstest.MapFS{
+		"assets/file.txt": {Data: []byte("plain text")},
+	}
+	dp, err := ToPayloadFromFS(fsys, "assets/file.txt")
+	if err != nil {
+		t.Fatalf("ToPayloadFromFS: %v", err)
+	}
+	if dp.PayloadEncoding != EncodingUncompressed {
+		t.Errorf("expected UNCOMPRESSED encoding, got %d", dp.PayloadEncoding)
+	}
+}
