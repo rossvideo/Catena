@@ -1118,6 +1118,26 @@ type noFlusher struct {
 	http.ResponseWriter
 }
 
+// failFlusherWriter implements http.ResponseWriter and http.Flusher
+// but fails on Write after a configurable number of successful writes.
+type failFlusherWriter struct {
+	*httptest.ResponseRecorder
+	failAfterN int
+	writeCount int
+}
+
+func (f *failFlusherWriter) Write(p []byte) (int, error) {
+	if f.writeCount >= f.failAfterN {
+		return 0, errors.New("write failed")
+	}
+	f.writeCount++
+	return f.ResponseRecorder.Write(p)
+}
+
+func (f *failFlusherWriter) Flush() {
+	f.ResponseRecorder.Flush()
+}
+
 func TestServer_sendSSEEvent(t *testing.T) {
 	srv := NewServer([]int{0})
 	rec := httptest.NewRecorder()
@@ -1484,6 +1504,91 @@ func TestServer_SetValue_FailureDoesNotNotify(t *testing.T) {
 	for _, line := range lines {
 		if strings.HasPrefix(line, "data: ") && strings.Contains(line, "brightness") {
 			t.Error("failed SetValue should not send SSE notification")
+		}
+	}
+}
+
+func TestBroadcastUpdate_InvalidValue(t *testing.T) {
+	srv := NewServer([]int{0})
+	// bool is not supported by catena.ToProto; this exercises the error branch
+	srv.BroadcastUpdate(0, "test/param", true)
+	// Should not panic; the error is logged internally
+}
+
+func TestSendSSEEvent_WriteFailure(t *testing.T) {
+	srv := NewServer([]int{0})
+	rec := httptest.NewRecorder()
+	w := &failFlusherWriter{ResponseRecorder: rec, failAfterN: 0}
+	update := &protos.PushUpdates{
+		Slot: 0,
+		Kind: &protos.PushUpdates_Value{
+			Value: &protos.PushUpdates_PushValue{
+				Oid:   "test/param",
+				Value: &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: 1}},
+			},
+		},
+	}
+
+	err := srv.sendSSEEvent(w, w, update)
+	if err == nil {
+		t.Error("expected error when writer fails")
+	}
+}
+
+func TestHandleConnect_InitialEventWriteFailure(t *testing.T) {
+	srv := NewServer([]int{0})
+	rec := httptest.NewRecorder()
+	w := &failFlusherWriter{ResponseRecorder: rec, failAfterN: 0}
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
+
+	srv.handleConnect(w, req)
+
+	if srv.connectionQueue.connectionCount() != 0 {
+		t.Errorf("expected 0 connections after initial event failure, got %d", srv.connectionQueue.connectionCount())
+	}
+}
+
+func TestHandleConnect_UpdateEventWriteFailure(t *testing.T) {
+	srv := NewServer([]int{0})
+	rec := httptest.NewRecorder()
+	w := &failFlusherWriter{ResponseRecorder: rec, failAfterN: 1}
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
+
+	done := make(chan struct{})
+	go func() {
+		srv.handleConnect(w, req)
+		close(done)
+	}()
+	time.Sleep(100 * time.Millisecond)
+
+	srv.BroadcastUpdate(0, "test/param", int32(42))
+
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("handler did not exit after update write failure")
+	}
+
+	if srv.connectionQueue.connectionCount() != 0 {
+		t.Errorf("expected 0 connections after write failure, got %d", srv.connectionQueue.connectionCount())
+	}
+}
+
+func TestRouting_BasePathOnly(t *testing.T) {
+	srv := NewServer([]int{0})
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/", nil)
+	rec := httptest.NewRecorder()
+
+	srv.mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("expected status %d for base path, got %d", http.StatusBadRequest, rec.Code)
+	}
+	body, _ := io.ReadAll(rec.Body)
+	var response map[string]string
+	if err := json.Unmarshal(body, &response); err == nil {
+		if _, ok := response["error"]; !ok {
+			t.Error("expected error in response body")
 		}
 	}
 }
