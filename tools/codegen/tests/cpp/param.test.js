@@ -212,104 +212,6 @@ describe('Param class', () => {
     expect(() => params.product.elementType()).toThrow(/does not have an element type/);
   });
 
-  const ALL_VALUES_DESCRIPTOR = {
-    slot: 0,
-    detail_level: 'FULL',
-    access_scopes: ['st2138:mon', 'st2138:op'],
-    default_scope: 'st2138:op',
-    params: {
-      variables: {
-        type: 'STRUCT',
-        value: {
-          struct_value: {
-            fields: {
-              var1: { empty_value: '' },
-              var2: { string_value: 'test' },
-              var3: { int32_value: 10 },
-              var4: { float32_value: 10.1 },
-              var5: { string_array_values: { strings: ['a', 'b', 'c'] } },
-              var6: { int32_array_values: { ints: [1, 2, 3] } },
-              var7: {
-                struct_value: {
-                  fields: {
-                    inner: { string_value: 'inner' }
-                  }
-                }
-              },
-              var8: {
-                struct_array_values: {
-                  struct_values: [
-                    { fields: { x: { int32_value: 1 } } },
-                    { fields: { x: { int32_value: 2 } } }
-                  ]
-                }
-              },
-              var9: {
-                struct_variant_value: {
-                  struct_variant_type: 'a',
-                  value: { string_value: 'variant_a' }
-                }
-              },
-              var11: {
-                struct_variant_array_values: {
-                  struct_variants: [
-                    {
-                      struct_variant_value: {
-                        struct_variant_type: 'a',
-                        value: { string_value: 'first' }
-                      }
-                    },
-                    {
-                      struct_variant_value: {
-                        struct_variant_type: 'b',
-                        value: { int32_value: 42 }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        params: {
-          var1: { type: 'EMPTY' },
-          var2: { type: 'STRING' },
-          var3: { type: 'INT32' },
-          var4: { type: 'FLOAT32' },
-          var5: { type: 'STRING_ARRAY' },
-          var6: { type: 'INT32_ARRAY' },
-          var7: {
-            type: 'STRUCT',
-            params: {
-              inner: { type: 'STRING' }
-            }
-          },
-          var8: {
-            type: 'STRUCT_ARRAY',
-            params: {
-              x: { type: 'INT32' }
-            }
-          },
-          var9: {
-            type: 'STRUCT_VARIANT',
-            params: {
-              a: { type: 'STRING' },
-              b: { type: 'INT32' }
-            }
-          },
-          var10: { type: 'STRUCT_VARIANTS' },
-          var11: {
-            type: 'STRUCT_VARIANT_ARRAY',
-            params: {
-              a: { type: 'STRING' },
-              b: { type: 'INT32' }
-            }
-          }
-        }
-      }
-    }
-  };
-
   test('initializeValue without value returns uninitialized declaration', () => {
     const init = params.auto.initializeValue();
     expect(init).toMatch(/std::string\s+auto_/);
@@ -320,6 +222,150 @@ describe('Param class', () => {
     const init = params.product.initializeValue();
     expect(init).toMatch(/Product\s+product/);
     expect(init).toContain('.name');
+  });
+
+  test('initializeValue with non-structs', () => {
+    const NON_STRUCT_VALUES_DESCRIPTOR = {
+      slot: 0,
+      detail_level: 'FULL',
+      access_scopes: ['st2138:mon', 'st2138:op'],
+      default_scope: 'st2138:op',
+      params: {
+        variables: {
+          type: 'STRUCT',
+          value: {
+            struct_value: {
+              fields: {
+                var1: { empty_value: '' },
+                var2: { string_value: 'test' },
+                var3: { int32_value: 10 },
+                var4: { float32_value: 10.1 },
+                var5: { string_array_values: { strings: ['a', 'b', 'c'] } },
+                var6: { int32_array_values: { ints: [1, 2, 3] } },
+                var7: { float32_array_values: { floats: [1.1, 2.2, 3.3] } },
+              }
+            }
+          },
+          params: {
+            var1: { type: 'EMPTY' },
+            var2: { type: 'STRING' },
+            var3: { type: 'INT32' },
+            var4: { type: 'FLOAT32' },
+            var5: { type: 'STRING_ARRAY' },
+            var6: { type: 'INT32_ARRAY' },
+            var7: { type: 'FLOAT32_ARRAY' },
+          }
+        }
+      }
+    };
+    const { params } = buildDeviceWithParams(NON_STRUCT_VALUES_DESCRIPTOR, 'NonStruct');
+    const init = params.variables.initializeValue();
+    expect(init).toMatch(/Variables\s+variables/);
+    expect(init).toContain('"test"');
+    expect(init).toContain('.var3{10}');
+    expect(init).toContain('.var4{10.1}');
+    expect(init).toContain('"a"');
+    expect(init).toContain('"b"');
+    expect(init).toContain('"c"');
+    expect(init).toContain('.var6{1, 2, 3}');
+    expect(init).toContain('.var7{1.1, 2.2, 3.3}');
+  });
+  
+  test('initializeValue with structs', () => {
+    const STRUCT_VALUES_DESCRIPTOR = {
+      slot: 0,
+      detail_level: 'FULL',
+      access_scopes: ['st2138:mon', 'st2138:op'],
+      default_scope: 'st2138:op',
+      params: {
+        variables: {
+          type: 'STRUCT',
+          value: {
+            struct_value: {
+              fields: {
+                var1: {
+                  struct_value: {
+                    fields: {
+                      inner: { string_value: 'inner' }
+                    }
+                  }
+                },
+                var2: {
+                  struct_array_values: {
+                    struct_values: [
+                      { fields: { x: { int32_value: 1 } } },
+                      { fields: { x: { int32_value: 2 } } }
+                    ]
+                  }
+                },
+                var3: {
+                  struct_variant_value: {
+                    struct_variant_type: 'a',
+                    value: { string_value: 'variant_a' }
+                  }
+                },
+                var5: {
+                  struct_variant_array_values: {
+                    struct_variants: [
+                      {
+                        struct_variant_value: {
+                          struct_variant_type: 'a',
+                          value: { string_value: 'first' }
+                        }
+                      },
+                      {
+                        struct_variant_value: {
+                          struct_variant_type: 'b',
+                          value: { int32_value: 42 }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          params: {
+            var1: {
+              type: 'STRUCT',
+              params: {
+                inner: { type: 'STRING' }
+              }
+            },
+            var2: {
+              type: 'STRUCT_ARRAY',
+              params: {
+                x: { type: 'INT32' }
+              }
+            },
+            var3: {
+              type: 'STRUCT_VARIANT',
+              params: {
+                a: { type: 'STRING' },
+                b: { type: 'INT32' }
+              }
+            },
+            var4: { type: 'STRUCT_VARIANTS' },
+            var5: {
+              type: 'STRUCT_VARIANT_ARRAY',
+              params: {
+                a: { type: 'STRING' },
+                b: { type: 'INT32' }
+              }
+            }
+          }
+        }
+      }
+    };
+    const { params } = buildDeviceWithParams(STRUCT_VALUES_DESCRIPTOR, 'Struct');
+    const init = params.variables.initializeValue();
+    expect(init).toMatch(/Variables\s+variables/);
+    expect(init).toContain('.inner{"inner"}');
+    expect(init).toContain('.x{1}');
+    expect(init).toContain('.x{2}');
+    expect(init).toContain('"variant_a"');
+    expect(init).toContain('"first"');
+    expect(init).toContain('42');
   });
 
   test('initializeParamWithValue format for param with value', () => {
