@@ -210,6 +210,7 @@ func (s *Server) Shutdown() {
 
 // sseMarshaler is the protojson marshaler used for SSE events.
 var sseMarshaler = protojson.MarshalOptions{
+	UseProtoNames:   true,
 	EmitUnpopulated: false,
 }
 

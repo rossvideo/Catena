@@ -157,6 +157,9 @@ func main() {
 				if counter.IsRunning() {
 					counter.Increment()
 					logger.Info("Counter tick", "value", counter.GetValue())
+					if srv != nil {
+						srv.BroadcastUpdate(0, "counter", counter.GetValue())
+					}
 				}
 			case <-shutdownChan:
 				return
@@ -322,7 +325,9 @@ func main() {
 				counter.Start()
 				logger.Info("Counter started", "value", counter.GetValue())
 			}
-			val, _ := catena.ToCatenaValue(buildCounterResponse())
+			resp := buildCounterResponse()
+			srv.BroadcastUpdate(0, "counter", resp)
+			val, _ := catena.ToCatenaValue(resp)
 			return catena.Reply(val)
 		},
 
@@ -333,21 +338,27 @@ func main() {
 				counter.Stop()
 				logger.Info("Counter stopped", "value", counter.GetValue())
 			}
-			val, _ := catena.ToCatenaValue(buildCounterResponse())
+			resp := buildCounterResponse()
+			srv.BroadcastUpdate(0, "counter", resp)
+			val, _ := catena.ToCatenaValue(resp)
 			return catena.Reply(val)
 		},
 
 		"add10": func(payload any) (catena.CatenaValue, catena.StatusResult) {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
-			val, _ := catena.ToCatenaValue(buildCounterResponse())
+			resp := buildCounterResponse()
+			srv.BroadcastUpdate(0, "counter", resp)
+			val, _ := catena.ToCatenaValue(resp)
 			return catena.Reply(val)
 		},
 
 		"reset": func(payload any) (catena.CatenaValue, catena.StatusResult) {
 			counter.Reset()
 			logger.Info("Counter reset", "value", counter.GetValue())
-			val, _ := catena.ToCatenaValue(buildCounterResponse())
+			resp := buildCounterResponse()
+			srv.BroadcastUpdate(0, "counter", resp)
+			val, _ := catena.ToCatenaValue(resp)
 			return catena.Reply(val)
 		},
 	}
@@ -464,6 +475,7 @@ func main() {
 
 		params.Store(fqoid, value)
 		logger.Info("Parameter updated", "fqoid", fqoid, "value", value)
+		srv.BroadcastUpdate(slot, fqoid, value)
 		return catena.StatusWithCode(catena.NO_CONTENT, "")
 	})
 

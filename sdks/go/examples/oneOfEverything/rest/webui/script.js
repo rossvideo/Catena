@@ -120,6 +120,7 @@ const paramConfig = [
 ];
 
 const editingInputs = new Set();
+const suppressedParams = new Map();
 
 function buildParamsUI() {
     const container = document.getElementById('paramsContainer');
@@ -152,8 +153,14 @@ function buildParamsUI() {
         if (p.type === 'bool') {
             input.addEventListener('change', () => setParam(p.name, input.checked ? 1 : 0, 'int32'));
         } else if (slider) {
-            slider.addEventListener('input', () => input.value = slider.value);
-            slider.addEventListener('change', () => setParam(p.name, parseInt(slider.value), 'int32'));
+            slider.addEventListener('input', () => {
+                editingInputs.add(p.name);
+                input.value = slider.value;
+            });
+            slider.addEventListener('change', () => {
+                setParam(p.name, parseInt(slider.value), 'int32');
+                setTimeout(() => editingInputs.delete(p.name), 500);
+            });
             input.addEventListener('input', () => slider.value = input.value);
             input.addEventListener('change', () => setParam(p.name, parseInt(input.value), 'int32'));
         } else {
@@ -165,6 +172,9 @@ function buildParamsUI() {
 
 function updateParamInput(id, value) {
     if (editingInputs.has(id)) return;
+    const expiry = suppressedParams.get(id);
+    if (expiry && Date.now() < expiry) return;
+    suppressedParams.delete(id);
     const input = document.getElementById('input-' + id);
     if (!input) return;
     if (input.type === 'checkbox') input.checked = value === 1;
@@ -174,6 +184,7 @@ function updateParamInput(id, value) {
 }
 
 async function setParam(name, value, type) {
+    suppressedParams.set(name, Date.now() + 500);
     const row = document.getElementById('row-' + name);
     if (row) row.classList.add('saving');
     try {
@@ -215,6 +226,47 @@ async function poll() {
             }
         }
     } catch (e) { console.error('poll error:', e); }
+}
+
+// =====================================================================
+// SSE Connection (replaces polling)
+// =====================================================================
+function connectSSE() {
+    const es = new EventSource('/st2138-api/v1/connect');
+
+    es.onmessage = (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            if (data.value) {
+                const oid = data.value.oid;
+                const protoVal = data.value.value;
+                if (oid === 'counter') {
+                    if (protoVal.struct_value) {
+                        const fields = protoVal.struct_value.fields;
+                        updateCounter(extractValue(fields.counter), extractValue(fields.running));
+                    } else {
+                        const el = document.getElementById('counterValue');
+                        if (el) el.textContent = extractValue(protoVal) ?? 0;
+                    }
+                } else {
+                    const val = extractValue(protoVal);
+                    if (val !== null) updateParamInput(oid, val);
+                }
+            }
+        } catch (e) {
+            console.error('SSE parse error:', e);
+        }
+    };
+
+    es.onerror = () => {
+        console.warn('SSE connection lost, will auto-reconnect');
+    };
+
+    es.addEventListener('open', () => {
+        poll();
+    });
+
+    return es;
 }
 
 // =====================================================================
@@ -365,8 +417,8 @@ function escapeHtml(text) {
 // =====================================================================
 document.addEventListener('DOMContentLoaded', () => {
     buildParamsUI();
-    setInterval(poll, 500);
     poll();
+    connectSSE();
     fetchDevice(0);
     fetchAssets();
 });
