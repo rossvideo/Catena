@@ -39,18 +39,13 @@
 package main
 
 import (
-	"crypto/sha256"
 	"embed"
 	"encoding/json"
 	"fmt"
-	"io/fs"
-	"mime"
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"reflect"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -355,8 +350,15 @@ func main() {
 	// ==========================================================================
 	assets := &sync.Map{}
 
-	// Load assets from embedded static directory
-	loadAssetsFromEmbedded(staticFS, "static", assets)
+	// Load assets from embedded static directory using catena helper
+	payloads, err := catena.LoadPayloadsFromEmbed(staticFS, "static")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to load embedded assets: %v\n", err)
+		os.Exit(1)
+	}
+	for id, payload := range payloads {
+		assets.Store(id, payload)
+	}
 
 	// ==========================================================================
 	// Server Setup
@@ -573,65 +575,4 @@ func main() {
 	// Wait for shutdown signal
 	<-shutdownChan
 	logger.Info("Server shutdown complete")
-}
-
-// loadAssetsFromEmbedded loads all files from the embedded filesystem into the asset store
-func loadAssetsFromEmbedded(embedFS embed.FS, root string, assets *sync.Map) {
-	err := fs.WalkDir(embedFS, root, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			logger.Warning("Error accessing path", "path", path, "error", err)
-			return nil // Continue walking
-		}
-
-		if d.IsDir() {
-			return nil // Skip directories
-		}
-
-		// Read file contents
-		data, err := embedFS.ReadFile(path)
-		if err != nil {
-			logger.Warning("Failed to read file", "path", path, "error", err)
-			return nil
-		}
-
-		// Determine content type from extension
-		ext := filepath.Ext(path)
-		contentType := mime.TypeByExtension(ext)
-		if contentType == "" {
-			contentType = "application/octet-stream"
-		}
-
-		// Use relative path from root as the asset ID
-		relPath, err := filepath.Rel(root, path)
-		if err != nil {
-			relPath = filepath.Base(path)
-		}
-		// Normalize path separators for URL use
-		assetID := strings.ReplaceAll(relPath, string(filepath.Separator), "/")
-
-		// Build metadata
-		metadata := map[string]string{
-			"content-type": contentType,
-			"file-name":    filepath.Base(path),
-		}
-
-		// Calculate SHA-256 digest
-		hash := sha256.Sum256(data)
-
-		// Store as DataPayload directly
-		payload := catena.DataPayload{
-			Payload:  data,
-			Metadata: metadata,
-			Digest:   hash[:],
-		}
-
-		assets.Store(assetID, payload)
-		logger.Info("Loaded asset", "id", assetID, "size", len(data), "type", contentType)
-
-		return nil
-	})
-
-	if err != nil {
-		logger.Error("Error walking embedded directory", "root", root, "error", err)
-	}
 }
