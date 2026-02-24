@@ -383,12 +383,11 @@ TEST_F(ConnectionPropsTest, ConnectionProps_PortBindingFailure) {
     config2.address = "localhost";
     config2.service_port = 443;
     
-    // Try to start second server on same port
-    ConnectionProps server2(config2, "/connect/test.xml", 8090);
-    EXPECT_FALSE(server2.start()) 
-        << "Should fail to start when port is already in use";
-    EXPECT_FALSE(server2.isRunning()) 
-        << "Server should not be running after failed start";
+    // Constructor should throw since acceptor binds at construction time
+    EXPECT_THROW(
+        ConnectionProps server2(config2, "/connect/test.xml", 8090),
+        boost::system::system_error
+    ) << "Constructor should throw when port is already in use";
     
     server1.stop();
 }
