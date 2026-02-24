@@ -1,5 +1,4 @@
 #include <SocketWriter.h>
-#include <HTTPServer.h>
 #include <Logger.h>
 using catena::REST::SocketWriter;
 using catena::REST::SSEWriter;
@@ -39,22 +38,20 @@ void SocketWriter::sendResponse(const catena::exception_with_status& err, const 
         if (buffer_ && !jsonBody_.empty()) {
             jsonBody_ = "{\"data\":[" + jsonBody_ + "]}";
         }
-        // Build headers map
-        std::map<std::string, std::string> headers;
-        headers["Content-Type"] = "application/json";
-        headers["Connection"] = "close";
-        headers["Access-Control-Allow-Origin"] = origin_;
-        headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";
-        headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level";
-        headers["Access-Control-Allow-Credentials"] = "true";
-        
-        // Format response using HTTPServer utility
-        std::string response = catena::common::HTTPServer::formatResponse(
-            httpStatus.first, httpStatus.second, headers, jsonBody_, true);
-        
+        // Adding headers and writing to client.
+        std::stringstream response;
+        response << "HTTP/1.1 " << httpStatus.first << " " << httpStatus.second << "\r\n"
+                 << "Content-Type: application/json\r\n"
+                 << "Connection: close\r\n"
+                 << "Content-Length: " << jsonBody_.length() << "\r\n"
+                 << "Access-Control-Allow-Origin: " << origin_ << "\r\n"
+                 << "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+                 << "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
+                 << "Access-Control-Allow-Credentials: true\r\n\r\n"
+                 << jsonBody_;
         // Use non-throwing write; on error, close socket to signal disconnect
         boost::system::error_code ec;
-        boost::asio::write(socket_, boost::asio::buffer(response), ec);
+        boost::asio::write(socket_, boost::asio::buffer(response.str()), ec);
         if (ec) {
             LOG(WARNING) << "Socket write error (" << ec.value() << "): " << ec.message();
             socket_.close();
@@ -64,7 +61,7 @@ void SocketWriter::sendResponse(const catena::exception_with_status& err, const 
 
 void SSEWriter::sendResponse(const catena::exception_with_status& err, const google::protobuf::Message& msg) {
     auto httpStatus = codeMap_.at(err.status);
-    std::string response;
+    std::stringstream response;
 
     // Convert message to JSON
     std::string jsonOutput = "";
@@ -84,29 +81,25 @@ void SSEWriter::sendResponse(const catena::exception_with_status& err, const goo
 
     // Send headers only once
     if (!headers_sent_) {
-        std::map<std::string, std::string> headers;
-        headers["Content-Type"] = "text/event-stream";
-        headers["Cache-Control"] = "no-cache";
-        headers["Connection"] = "keep-alive";
-        headers["Access-Control-Allow-Origin"] = origin_;
-        headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";
-        headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level";
-        headers["Access-Control-Allow-Credentials"] = "true";
-        
-        // Format SSE response headers (no Content-Length for streaming)
-        response = catena::common::HTTPServer::formatResponse(
-            httpStatus.first, httpStatus.second, headers, "", false);
+        response << "HTTP/1.1 " << httpStatus.first << " " << httpStatus.second << "\r\n"
+                 << "Content-Type: text/event-stream\r\n"
+                 << "Cache-Control: no-cache\r\n"
+                 << "Connection: keep-alive\r\n"
+                 << "Access-Control-Allow-Origin: " << origin_ << "\r\n"
+                 << "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+                 << "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
+                 << "Access-Control-Allow-Credentials: true\r\n\r\n";
         headers_sent_ = true;
     }
 
     // Only send SSE event if we have valid data.
     if (httpStatus.first < 300 && !jsonOutput.empty()) {
-        response += "data: " + jsonOutput + "\n\n";
+        response << "data: " << jsonOutput << "\n\n";
     }
 
     // Use non-throwing write; on error, close socket to signal disconnect
     boost::system::error_code ec;
-    boost::asio::write(socket_, boost::asio::buffer(response), ec);
+    boost::asio::write(socket_, boost::asio::buffer(response.str()), ec);
     if (ec) {
         LOG(WARNING) << "SSE write error (" << ec.value() << "): " << ec.message();
         socket_.close();

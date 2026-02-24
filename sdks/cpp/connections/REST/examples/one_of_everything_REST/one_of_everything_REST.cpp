@@ -343,7 +343,7 @@ int main(int argc, char* argv[])
     // Generate connection properties configuration
     // Determine if TLS is being used (typically yes for port 443)
     bool useTls = (absl::GetFlag(FLAGS_port) == 443);
-    catena::common::ConnectionPropsConfig config = generateConnectionPropsConfig("0.0.0.0", absl::GetFlag(FLAGS_port), useTls);
+    catena::common::ConnectionPropsConfig config = generateConnectionPropsConfig("localhost", absl::GetFlag(FLAGS_port), useTls);
     
     catena::common::ConnectionProps connectionProps(
         config,                           // Configuration

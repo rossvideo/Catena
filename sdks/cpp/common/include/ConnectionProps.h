@@ -38,7 +38,6 @@
  #pragma once
 
  #include <boost/asio.hpp>
- #include <HTTPServer.h>
  #include <string>
  #include <thread>
  #include <atomic>
@@ -170,19 +169,19 @@ private:
     */
     void handleRequest(tcp::socket socket);
 
-     /**
-      * @brief Generate HTTP response
-      * @param path The requested path
-      * @return HTTP response object
-      */
-     HTTPResponse generateResponse(const std::string& path);
+    /**
+     * @brief Generate HTTP response
+     * @param path The requested path
+     * @return HTTP response object
+     */
+    std::string generateResponse(const std::string& path);
 
-     /**
-      * @brief Generate XML content from configuration
-      * @param config The configuration to generate XML from
-      * @return XML string
-      */
-     static std::string generateXml(const ConnectionPropsConfig& config);
+    /**
+     * @brief Generate XML content from configuration
+     * @param config The configuration to generate XML from
+     * @return XML string
+     */
+    static std::string generateXml(const ConnectionPropsConfig& config);
 
     /**
     * @brief Port to listen on
@@ -212,12 +211,12 @@ private:
     /**
     * @brief IO context for async operations
     */
-    std::unique_ptr<boost::asio::io_context> io_context_;
+    boost::asio::io_context io_context_;
 
     /**
     * @brief Acceptor for incoming connections
     */
-    std::unique_ptr<tcp::acceptor> acceptor_;
+    tcp::acceptor acceptor_;
 
     /**
     * @brief Background thread running the server

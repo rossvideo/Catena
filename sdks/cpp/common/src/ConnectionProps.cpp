@@ -36,7 +36,6 @@
   */
 
 #include <ConnectionProps.h>
-#include <HTTPServer.h>
 #include <Logger.h>
 #include <sstream>
 
@@ -49,7 +48,9 @@ ConnectionProps::ConnectionProps(
     : endpoint_(endpoint),
       port_(port),
       config_(config),
-      running_(false) {
+      running_(false),
+      io_context_(),
+      acceptor_(io_context_, tcp::endpoint(tcp::v4(), port)) {
     response_content_ = generateXml(config);
     LOG(INFO) << "Connection props server constructed with endpoint: " << endpoint
               << ", port: " << port << ", protocol: " << config.protocol;
@@ -65,27 +66,14 @@ bool ConnectionProps::start() {
         return false;
     }
 
-    try {
-        io_context_ = std::make_unique<boost::asio::io_context>();
-        acceptor_ = std::make_unique<tcp::acceptor>(
-            *io_context_,
-            tcp::endpoint(tcp::v4(), port_)
-        );
+    running_ = true;
+    server_thread_ = std::make_unique<std::thread>([this]() {
+        run();
+    });
 
-        running_ = true;
-        server_thread_ = std::make_unique<std::thread>([this]() {
-            run();
-        });
-
-        LOG(INFO) << "Connection props server started on port " << port_ 
-                  << ", serving " << endpoint_;
-        return true;
-
-    } catch (const std::exception& e) {
-        LOG(ERROR) << "Failed to start connection props server: " << e.what();
-        running_ = false;
-        return false;
-    }
+    LOG(INFO) << "Connection props server started on port " << port_
+              << ", serving " << endpoint_;
+    return true;
 }
 
 void ConnectionProps::stop() {
@@ -96,42 +84,20 @@ void ConnectionProps::stop() {
     LOG(INFO) << "Stopping connection props server on port " << port_;
     running_ = false;
 
-    // Send a dummy connection to wake up the accept() call
-    // This ensures the server thread can exit from the blocking accept()
-    try {
-        boost::asio::io_context dummy_io;
-        tcp::socket dummy_socket(dummy_io);
-        boost::system::error_code ec;
-        dummy_socket.connect(tcp::endpoint(tcp::v4(), port_), ec);
-        // We don't care if this fails - it's just to wake up accept()
-        if (!ec) {
-            dummy_socket.close(ec);
-        }
-    } catch (...) {
-        // Ignore errors - acceptor might already be closed
+    // Send a dummy connection to wake up the blocking accept(), same as ServiceImpl
+    tcp::socket dummy_socket(io_context_);
+    boost::system::error_code ec;
+    dummy_socket.connect(tcp::endpoint(tcp::v4(), port_), ec);
+    if (!ec) {
+        dummy_socket.close(ec);
     }
 
-    // Give the thread a moment to wake up and see running_ == false
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
-    // Close the acceptor
-    if (acceptor_ && acceptor_->is_open()) {
-        boost::system::error_code ec;
-        acceptor_->close(ec);
-        if (ec) {
-            LOG(WARNING) << "Error closing acceptor: " << ec.message();
-        }
-    }
-
-    // Stop the io_context
-    if (io_context_) {
-        io_context_->stop();
-    }
-
-    // Wait for the server thread to finish
     if (server_thread_ && server_thread_->joinable()) {
         server_thread_->join();
     }
+
+    io_context_.stop();
+    acceptor_.close();
 
     LOG(INFO) << "Connection props server stopped";
 }
@@ -192,18 +158,18 @@ std::string ConnectionProps::generateXml(const ConnectionPropsConfig& config) {
 void ConnectionProps::run() {
     while (running_) {
         try {
-            tcp::socket socket(*io_context_);
-            
-            // Accept with timeout using async_accept and a timer
+            tcp::socket socket(io_context_);
+
             boost::system::error_code ec;
-            acceptor_->accept(socket, ec);
+            acceptor_.accept(socket, ec);
 
             if (ec) {
                 if (ec == boost::asio::error::operation_aborted) {
-                    // Acceptor was closed, exit gracefully
                     break;
                 }
-                LOG(WARNING) << "Accept error: " << ec.message();
+                if (running_) {
+                    LOG(WARNING) << "Accept error: " << ec.message();
+                }
                 continue;
             }
 
@@ -211,7 +177,6 @@ void ConnectionProps::run() {
                 break;
             }
 
-            // Handle the request in the current thread (it's very lightweight)
             handleRequest(std::move(socket));
 
         } catch (const std::exception& e) {
@@ -225,22 +190,28 @@ void ConnectionProps::run() {
 
 void ConnectionProps::handleRequest(tcp::socket socket) {
     try {
-        // Read the HTTP request using HTTPServer utilities
-        HTTPRequest request;
+        // Read the HTTP request
+        boost::asio::streambuf request_buf;
         boost::system::error_code ec;
         
-        if (!HTTPServer::readRequest(socket, request, ec)) {
-            if (ec && ec != boost::asio::error::eof) {
-                LOG(WARNING) << "Error reading request: " << ec.message();
-            }
+        // Read until we get the double CRLF (end of headers)
+        boost::asio::read_until(socket, request_buf, "\r\n\r\n", ec);
+        
+        if (ec && ec != boost::asio::error::eof) {
+            LOG(WARNING) << "Error reading request: " << ec.message();
             return;
         }
 
-        VLOG(2) << "Connection props request: " << request.method << " " << request.path;
+        // Parse the request line
+        std::istream request_stream(&request_buf);
+        std::string method, path, version;
+        request_stream >> method >> path >> version;
+
+        VLOG(2) << "Connection props request: " << method << " " << path;
 
         // Generate and send response
-        HTTPResponse response = generateResponse(request.path);
-        HTTPServer::writeResponse(socket, response, ec);
+        std::string response = generateResponse(path);
+        boost::asio::write(socket, boost::asio::buffer(response), ec);
 
         if (ec) {
             LOG(WARNING) << "Error writing response: " << ec.message();
@@ -254,37 +225,42 @@ void ConnectionProps::handleRequest(tcp::socket socket) {
     }
 }
 
-HTTPResponse ConnectionProps::generateResponse(const std::string& path) {
-    HTTPResponse response;
+std::string ConnectionProps::generateResponse(const std::string& path) {
+    std::stringstream response;
 
     // Check if the path matches our endpoint
     if (path == endpoint_) {
         // Serve the discovery content
         std::lock_guard<std::mutex> lock(content_mutex_);
         
-        response.status_code = 200;
-        response.status_message = "OK";
-        response.headers["Content-Type"] = "application/xml";
-        response.headers["Connection"] = "close";
-        response.headers["Access-Control-Allow-Origin"] = "*";
-        response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS";
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type";
-        response.body = response_content_;
+        response << "HTTP/1.1 200 OK\r\n"
+                 << "Content-Type: application/xml\r\n"
+                 << "Content-Length: " << response_content_.length() << "\r\n"
+                 << "Connection: close\r\n"
+                 << "Access-Control-Allow-Origin: *\r\n"
+                 << "Access-Control-Allow-Methods: GET, OPTIONS\r\n"
+                 << "Access-Control-Allow-Headers: Content-Type\r\n"
+                 << "\r\n"
+                 << response_content_;
     } else if (path == "/health") {
         // Simple health check endpoint
-        response.status_code = 200;
-        response.status_message = "OK";
-        response.headers["Content-Type"] = "text/plain";
-        response.headers["Connection"] = "close";
-        response.body = "OK";
+        std::string health = "OK";
+        response << "HTTP/1.1 200 OK\r\n"
+                 << "Content-Type: text/plain\r\n"
+                 << "Content-Length: " << health.length() << "\r\n"
+                 << "Connection: close\r\n"
+                 << "\r\n"
+                 << health;
     } else {
         // 404 Not Found for all other paths
-        response.status_code = 404;
-        response.status_message = "Not Found";
-        response.headers["Content-Type"] = "text/plain";
-        response.headers["Connection"] = "close";
-        response.body = "Not Found - Only " + endpoint_ + " is available";
+        std::string not_found = "Not Found - Only " + endpoint_ + " is available";
+        response << "HTTP/1.1 404 Not Found\r\n"
+                 << "Content-Type: text/plain\r\n"
+                 << "Content-Length: " << not_found.length() << "\r\n"
+                 << "Connection: close\r\n"
+                 << "\r\n"
+                 << not_found;
     }
 
-    return response;
+    return response.str();
 }

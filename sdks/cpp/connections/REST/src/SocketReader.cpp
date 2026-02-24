@@ -1,6 +1,5 @@
 
 #include <SocketReader.h>
-#include <HTTPServer.h>
 #include <string_view>
 using catena::REST::SocketReader;
 
@@ -27,6 +26,38 @@ static inline bool iequals_header_name(std::string_view a, std::string_view b) {
         return false;
     }
     return true;
+}
+
+boost::asio::awaitable<void> read_with_timeout(tcp::socket& socket, std::string& buf, std::size_t start, std::size_t bytes, int timeout) {
+    using namespace boost::asio::experimental::awaitable_operators;
+    boost::asio::steady_timer timer(socket.get_executor());
+    timer.expires_after(std::chrono::milliseconds(timeout));
+    
+    // Async_read and timer run simultaneously, the other cancels when one finishes
+    auto result = co_await (boost::asio::async_read(socket, boost::asio::buffer(&buf[start], bytes), boost::asio::use_awaitable) ||
+        timer.async_wait(boost::asio::use_awaitable)
+    );
+
+    // index of 0 = read finished first
+    if (result.index() != 0) {
+        throw catena::exception_with_status("Timed out", catena::StatusCode::DEADLINE_EXCEEDED);
+    }
+}
+
+boost::asio::awaitable<void> read_until_with_timeout(tcp::socket& socket, boost::asio::streambuf& buf, std::string_view delim, int timeout) {
+    using namespace boost::asio::experimental::awaitable_operators;
+    boost::asio::steady_timer timer(socket.get_executor());
+    timer.expires_after(std::chrono::milliseconds(timeout));
+
+    // Async_read and timer run simultaneously, the other cancels when one finishes
+    auto result = co_await (boost::asio::async_read_until(socket, buf, delim, boost::asio::use_awaitable) ||
+        timer.async_wait(boost::asio::use_awaitable)
+    );
+
+    // index of 0 = read finished first
+    if (result.index() != 0) {
+        throw catena::exception_with_status("Timed out", catena::StatusCode::DEADLINE_EXCEEDED);
+    }
 }
 
 static inline bool valid_content_type(std::string_view s, std::string_view contentType) {
@@ -80,29 +111,26 @@ void SocketReader::read(tcp::socket& socket, uint32_t timeout) {
 
     bool hasContentType = false; // Used for enforcing Content-Type
 
-    // Reading from the socket using HTTPServer async utilities
-    catena::common::HTTPRequest httpRequest;
-    auto reader = catena::common::HTTPServer::readRequestAsync(socket, httpRequest, timeout);
+    // Reading from the socket.
+    boost::asio::streambuf buffer;
+    auto reader = read_until_with_timeout(socket, buffer, "\r\n\r\n", timeout);
     auto result = boost::asio::co_spawn(socket.get_executor(), std::move(reader), boost::asio::use_future);
 
     try {
         result.get();
     } catch(const catena::exception_with_status& e) {
         throw;
-    } catch(const std::runtime_error& e) {
-        // Timeout or other error from HTTPServer
-        std::string msg = e.what();
-        if (msg.find("Timed out") != std::string::npos) {
-            throw catena::exception_with_status("Timed out", catena::StatusCode::DEADLINE_EXCEEDED);
-        }
-        throw catena::exception_with_status("Read error", catena::StatusCode::UNKNOWN);
     } catch(...) {
         throw catena::exception_with_status("Read error", catena::StatusCode::UNKNOWN);
     }
+    std::istream header_stream(&buffer);
 
-    // Get method, URL, and version from HTTP request
-    std::string methodStr = httpRequest.method;
-    std::string url = httpRequest.path;
+    // Getting the first line from the stream (URL), splitting, and parsing.
+    std::string header;
+    std::getline(header_stream, header);
+    std::string url, httpVersion;
+    std::string methodStr;
+    std::istringstream(header) >> methodStr >> url >> httpVersion;
 
     // Converting method to enum.
     auto& methodMap = RESTMethodMap().getReverseMap();
@@ -152,76 +180,98 @@ void SocketReader::read(tcp::socket& socket, uint32_t timeout) {
         fields_[(std::string)element.key] = element.value;
     }
     
-    // Process headers from HTTP request (headers are already lowercase keys)
+    // Looping through headers to retrieve JWS token and json body len.
     std::size_t contentLength = 0;
-    
-    // Getting jwsToken from Authorization header
-    if (service_->authorizationEnabled() && jwsToken_.empty()) {
-        std::string authHeader = catena::common::HTTPServer::getHeader(httpRequest.headers, "authorization");
-        if (!authHeader.empty()) {
+    while(std::getline(header_stream, header) && header != "\r") {
+        // Parse "<name>: <value>" and handle header name case-insensitively
+        std::size_t sep = header.find(':');
+        if (sep == std::string::npos) {
+            continue;
+        }
+        std::string name = header.substr(0, sep);
+        std::string value = header.substr(sep + 1);
+        // Trim leading spaces
+        while (!value.empty() && (value.front() == ' ' || value.front() == '\t')) {
+            value.erase(0, 1);
+        }
+        // Trim trailing CR and spaces
+        while (!value.empty() && (value.back() == '\r' || value.back() == ' ' || value.back() == '\t')) {
+            value.pop_back();
+        }
+
+        // Getting jwsToken.
+        if (service_->authorizationEnabled() && jwsToken_.empty() && iequals_header_name(name, "authorization")) {
+            // Expect "Bearer <token>" (keep scheme check case-sensitive as before)
             static const std::string kBearerPrefix = "Bearer ";
-            if (authHeader.find(kBearerPrefix) == 0) {
-                jwsToken_ = authHeader.substr(kBearerPrefix.length());
+            if (value.find(kBearerPrefix) == 0) {
+                jwsToken_ = value.substr(kBearerPrefix.length());
             }
         }
-    }
-    
-    // Getting origin
-    if (origin_.empty()) {
-        origin_ = catena::common::HTTPServer::getHeader(httpRequest.headers, "origin");
-    }
-    
-    // Getting detail level from header
-    if (detailLevel_ == st2138::Device_DetailLevel_UNSET) {
-        std::string dl = catena::common::HTTPServer::getHeader(httpRequest.headers, "detail-level");
-        if (!dl.empty()) {
+        // Getting origin
+        else if (origin_.empty() && iequals_header_name(name, "origin")) {
+            origin_ = value;
+        }
+        // Getting detail level from header
+        else if (detailLevel_ == st2138::Device_DetailLevel_UNSET && iequals_header_name(name, "detail-level")) {
+            std::string dl = value;
             auto& dlMap = catena::common::DetailLevel().getReverseMap();
             if (dlMap.contains(dl)) {
                 detailLevel_ = dlMap.at(dl);
             }
         }
-    }
-    
-    // Getting time request was sent
-    if (requestStart_ == DEFAULT_REQUEST_START) {
-        std::string requestStartStr = catena::common::HTTPServer::getHeader(httpRequest.headers, "request-start");
-        if (!requestStartStr.empty()) {
-            catena::readTimestamp(requestStartStr, requestStart_);
+        // Getting time request was sent
+        else if (requestStart_ == DEFAULT_REQUEST_START && iequals_header_name(name, "request-start")){
+            catena::readTimestamp(value, requestStart_);
+        }
+        // Getting body content-Length
+        else if (contentLength == 0 && iequals_header_name(name, "content-length")) {
+            try {
+                if (value.empty() || value[0] == '-') {
+                    throw catena::exception_with_status("Invalid Content-Length", catena::StatusCode::INVALID_ARGUMENT);
+                }
+                size_t processed = 0;
+                contentLength = stoi(value, &processed);
+                if (processed < value.length()) {
+                    throw catena::exception_with_status("Invalid Content-Length", catena::StatusCode::INVALID_ARGUMENT);
+                }
+            } catch(...) {
+                throw catena::exception_with_status("Invalid Content-Length", catena::StatusCode::INVALID_ARGUMENT);
+            }
+        }
+        // Checking Content-Type
+        else if (iequals_header_name(name, "content-type")) {
+            if (!valid_content_type(value, "application/json")) {
+                throw catena::exception_with_status("Invalid Content-Type", catena::StatusCode::INVALID_ARGUMENT);
+            }
+            hasContentType = true;
         }
     }
-    
-    // Getting body content-Length (already validated by HTTPServer::readRequestAsync)
-    std::string contentLengthStr = catena::common::HTTPServer::getHeader(httpRequest.headers, "content-length", "0");
-    try {
-        if (!contentLengthStr.empty() && contentLengthStr[0] != '-') {
-            contentLength = std::stoull(contentLengthStr);
-        }
-    } catch(...) {
-        throw catena::exception_with_status("Invalid Content-Length", catena::StatusCode::INVALID_ARGUMENT);
-    }
-    
-    // Checking Content-Type
-    std::string contentType = catena::common::HTTPServer::getHeader(httpRequest.headers, "content-type");
-    if (!contentType.empty()) {
-        if (!valid_content_type(contentType, "application/json")) {
-            throw catena::exception_with_status("Invalid Content-Type", catena::StatusCode::INVALID_ARGUMENT);
-        }
-        hasContentType = true;
-    }
-    
-    // Get body from HTTP request (already read by HTTPServer::readRequestAsync)
-    jsonBody_ = httpRequest.body;
-    
-    // Validate Content-Length matches body size
+    // If body exists, we need to handle leftover data and append the rest.
+    jsonBody_ = std::string((std::istreambuf_iterator<char>(header_stream)), std::istreambuf_iterator<char>());
     if (contentLength <= 0 && jsonBody_.size() > 0) {
         throw catena::exception_with_status("Incorrect Content-Length: data lost", catena::StatusCode::DATA_LOSS);
     }
     if (contentLength > 0) {
-        // All request bodies must be json according to the spec
+        // All request bodies must be json according to the spec, so we can just check here
         if (!hasContentType) {
             throw catena::exception_with_status("Content-Type missing", catena::StatusCode::INVALID_ARGUMENT);
         }
-        if (jsonBody_.size() != contentLength) {
+        if (jsonBody_.size() < contentLength) {
+            std::size_t leftover = contentLength - jsonBody_.size();
+            std::size_t start = jsonBody_.size();
+            jsonBody_.resize(contentLength);
+
+            auto reader = read_with_timeout(socket, jsonBody_, start, leftover, timeout);
+            auto result = boost::asio::co_spawn(socket.get_executor(), std::move(reader), boost::asio::use_future);
+
+            try {
+                result.get();
+            } catch(const catena::exception_with_status& e) {
+                throw;
+            } catch(...) {
+                throw catena::exception_with_status("Read error", catena::StatusCode::UNKNOWN);
+            }
+        } else if (jsonBody_.size() > contentLength) {
             throw catena::exception_with_status("Incorrect Content-Length: data lost", catena::StatusCode::DATA_LOSS);
         }
     }
