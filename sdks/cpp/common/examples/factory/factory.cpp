@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,8 +31,10 @@
 /**
  * @brief Example program to demonstrate the GenericFactory class
  * @file factory.cpp
- * @copyright Copyright © 2025 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-02-24
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // common
@@ -41,7 +43,7 @@
 #include <iostream>
 #include <memory>
 #include <utility>
-#include <absl/flags/parse.h>
+#include <Config.h>
 
 /*
  * Factories are useful to create objects based on values that are only known
@@ -197,8 +199,10 @@ UniDiDog::~ConcreteDog() {
 }
 
 int main (int argc, char** argv) {
-  absl::SetProgramUsageMessage("Runs the Catena Service");
-  absl::ParseCommandLine(argc, argv);
+  const auto [exit, code] = catena::common::config::initConfigVariables(argc, argv);
+  if (exit) {
+      return code;
+  }
   Logger::init("factory");
 
   try {

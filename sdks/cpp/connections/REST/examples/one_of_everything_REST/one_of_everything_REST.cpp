@@ -31,10 +31,10 @@
 /**
  * @brief Example program containing one of everyhting.
  * @file one_of_everything_REST.cpp
- * @copyright Copyright © 2026 Ross Video Ltd
- * @author Benjamin.whitten@rossvideo.com
+ * @author Benjamin Whitten (benjamin.whitten@rossvideo.com)
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-02-24
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // device model
@@ -312,15 +312,9 @@ void RunRESTServer() {
 
 int main(int argc, char* argv[])
 {
-    try {
-        auto help = config::initConfigVariables(argc, argv, "REST");
-        if (help.second) {
-            help.first.print(std::cout);
-            return 0;
-        }
-    } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
-        return 1;
+    const auto [exit, code] = config::initConfigVariables(argc, argv);
+    if (exit) {
+        return code;
     }
     Logger::init("one_of_everything_REST");
 

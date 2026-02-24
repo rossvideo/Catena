@@ -19,7 +19,7 @@
  * @author John R. Naylor (john.naylor@rossvideo.com)
  * @author John Danen (john.danen@rossvideo.com)
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-02-24
  */
 
 // device model
@@ -165,18 +165,12 @@ void RunRPCServer(std::string addr)
 int main(int argc, char* argv[])
 {
     std::string addr;
-    try {
-        auto help = config::initConfigVariables(argc, argv, "GRPC");
-        if (help.second) {
-            help.first.print(std::cout);
-            return 0;
-        }
-    } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
-        return 1;
+    const auto [exit, code] = config::initConfigVariables(argc, argv);
+    if (exit) {
+        return code;
     }
     Logger::init("audiodeck");
-  
+    
     addr = absl::StrFormat("0.0.0.0:%d", config::port);
   
     std::thread catenaRpcThread(RunRPCServer, addr);
