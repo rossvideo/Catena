@@ -53,6 +53,7 @@ import (
 	"strings"
 
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/build/go/protos"
 )
@@ -311,12 +312,12 @@ func PayloadEncodingFromExt(filename string) int32 {
 // re-encodes it to targetEncoding, modifying the asset in place.
 // If the asset is already in the target encoding, this is a no-op.
 func TranscodeAssetPayload(asset *CatenaAsset, targetEncoding int32) error {
-	proto := asset.GetProtoAsset()
-	if proto == nil || proto.GetPayload() == nil {
+	original := asset.GetProtoAsset()
+	if original == nil || original.GetPayload() == nil {
 		return fmt.Errorf("asset has no payload")
 	}
 
-	dp := proto.GetPayload()
+	dp := original.GetPayload()
 	currentEncoding := int32(dp.GetPayloadEncoding())
 
 	if currentEncoding == targetEncoding {
@@ -333,8 +334,12 @@ func TranscodeAssetPayload(asset *CatenaAsset, targetEncoding int32) error {
 		return fmt.Errorf("encode: %w", err)
 	}
 
-	dp.Kind = &protos.DataPayload_Payload{Payload: encodedData}
-	dp.PayloadEncoding = protos.DataPayload_PayloadEncoding(targetEncoding)
+	cloned := proto.Clone(original).(*protos.ExternalObjectPayload)
+	cloned.Payload.Kind = &protos.DataPayload_Payload{Payload: encodedData}
+	cloned.Payload.PayloadEncoding = protos.DataPayload_PayloadEncoding(targetEncoding)
+	newDigest := sha256.Sum256(encodedData)
+	cloned.Payload.Digest = newDigest[:]
+	asset.asset = cloned
 
 	return nil
 }

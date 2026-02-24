@@ -731,6 +731,52 @@ func TestTranscodeAssetPayload(t *testing.T) {
 	}
 }
 
+func TestTranscodeAssetPayload_RecomputesDigest(t *testing.T) {
+	original := []byte("digest recompute test data")
+	dp := ToPayload(original, "text/plain", "test.txt")
+
+	asset, err := ToCatenaAsset(dp, true)
+	if err != nil {
+		t.Fatalf("ToCatenaAsset: %v", err)
+	}
+
+	originalDigest := make([]byte, len(asset.GetProtoAsset().GetPayload().GetDigest()))
+	copy(originalDigest, asset.GetProtoAsset().GetPayload().GetDigest())
+	expectedOriginal := sha256.Sum256(original)
+	if len(originalDigest) != len(expectedOriginal) {
+		t.Fatalf("original digest length %d, want %d", len(originalDigest), len(expectedOriginal[:]))
+	}
+	for i := range expectedOriginal {
+		if originalDigest[i] != expectedOriginal[i] {
+			t.Fatalf("original digest mismatch at byte %d", i)
+		}
+	}
+
+	if err := TranscodeAssetPayload(&asset, EncodingGzip); err != nil {
+		t.Fatalf("TranscodeAssetPayload to GZIP: %v", err)
+	}
+
+	newPayloadBytes := asset.GetProtoAsset().GetPayload().GetPayload()
+	expectedDigest := sha256.Sum256(newPayloadBytes)
+	actualDigest := asset.GetProtoAsset().GetPayload().GetDigest()
+
+	if len(actualDigest) != sha256.Size {
+		t.Fatalf("digest length after transcode = %d, want %d", len(actualDigest), sha256.Size)
+	}
+	for i := range expectedDigest {
+		if actualDigest[i] != expectedDigest[i] {
+			t.Fatalf("digest mismatch after transcode at byte %d: got %x, want %x", i, actualDigest[i], expectedDigest[i])
+		}
+	}
+
+	for i := range originalDigest {
+		if originalDigest[i] != actualDigest[i] {
+			return
+		}
+	}
+	t.Error("digest should differ after transcoding to a different encoding")
+}
+
 func TestTranscodeAssetPayload_SameEncoding_Noop(t *testing.T) {
 	dp := DataPayload{
 		Payload: []byte("data"),
@@ -743,6 +789,38 @@ func TestTranscodeAssetPayload_SameEncoding_Noop(t *testing.T) {
 	}
 	if string(asset.GetProtoAsset().GetPayload().GetPayload()) != string(originalBytes) {
 		t.Error("expected no-op when transcoding to same encoding")
+	}
+}
+
+func TestTranscodeAssetPayload_DoesNotMutateOriginalProto(t *testing.T) {
+	original := []byte("shared payload data")
+	dp := DataPayload{
+		Metadata: map[string]string{"content-type": "text/plain"},
+		Payload:  original,
+	}
+	asset, err := ToCatenaAsset(dp, true)
+	if err != nil {
+		t.Fatalf("ToCatenaAsset: %v", err)
+	}
+
+	originalProto := asset.GetProtoAsset()
+
+	copy := asset // shallow copy — shares the pointer
+	if err := TranscodeAssetPayload(&copy, EncodingGzip); err != nil {
+		t.Fatalf("TranscodeAssetPayload: %v", err)
+	}
+
+	if int32(originalProto.GetPayload().GetPayloadEncoding()) != EncodingUncompressed {
+		t.Errorf("original proto encoding was mutated: got %d, want %d",
+			originalProto.GetPayload().GetPayloadEncoding(), EncodingUncompressed)
+	}
+	if string(originalProto.GetPayload().GetPayload()) != string(original) {
+		t.Errorf("original proto payload was mutated: got %q, want %q",
+			originalProto.GetPayload().GetPayload(), original)
+	}
+
+	if copy.GetProtoAsset() == originalProto {
+		t.Error("transcoded asset should point to a different proto, not the original")
 	}
 }
 
