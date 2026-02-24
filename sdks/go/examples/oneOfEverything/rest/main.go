@@ -289,6 +289,13 @@ func main() {
 	}
 
 	params := &sync.Map{}
+	params.Store("resolution", "1920x1080")
+	params.Store("brightness", int32(50))
+	params.Store("contrast", int32(50))
+	params.Store("saturation", int32(50))
+	params.Store("volume", int32(75))
+	params.Store("muted", int32(0))
+	params.Store("device_name", "Demo Device")
 
 	// ==========================================================================
 	// Commands (for ExecuteCommand endpoint)
