@@ -46,6 +46,27 @@ namespace common{
 namespace config{
 
 /**
+* Config variable names
+*/
+const std::string CATENA_SECURE_COMMS_NAME = "secure_comms";
+const std::string CATENA_CERTS_NAME = "certs";
+const std::string CATENA_STATIC_ROOT_NAME = "static_root";
+const std::string CATENA_CERT_FILE_NAME = "cert_file";
+const std::string CATENA_KEY_FILE_NAME = "key_file";
+const std::string CATENA_CA_FILE_NAME = "ca_file";
+const std::string CATENA_LOG_DIR_NAME = "log_dir";
+const std::string CATENA_PORT_NAME = "port";
+const std::string CATENA_DEFAULT_MAX_ARRAY_SIZE_NAME = "default_max_array_size";
+const std::string CATENA_DEFAULT_TOTAL_ARRAY_SIZE_NAME = "default_total_array_size";
+const std::string CATENA_MAX_CONNECTIONS_NAME = "max_connections";
+const std::string CATENA_PRIVATE_CA_NAME = "private_ca";
+const std::string CATENA_MUTUAL_AUTHC_NAME = "mutual_authc";
+const std::string CATENA_AUTHZ_NAME = "authz";
+const std::string CATENA_SILENT_NAME = "silent";
+const std::string CATENA_HELP_NAME = "help";
+
+
+/**
  * Default values of config variables
  */
 const std::string CATENA_SECURE_COMMS = "off";
@@ -65,7 +86,7 @@ const uint16_t CATENA_PORT = 6254;
  *  Code denotes the reason for exit, with 0 being --help and 1 being an exception. 
  *  The function will print the relevant material to the terminal before returning.
  */
- std::pair<bool, int> initConfigVariables(int argc, char* argv[], std::string prefix = "CATENA_");
+std::pair<bool, int> initConfigVariables(int argc, char* argv[], std::string prefix = "CATENA_");
 
 inline std::string certs = "";
 
