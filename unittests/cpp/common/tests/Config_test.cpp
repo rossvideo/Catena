@@ -29,9 +29,9 @@
  */
 
 /**
- * @brief This file is for testing the ConnectionQueue.cpp file.
+ * @brief This file is for testing the Config.cpp file.
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-02-24
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -51,7 +51,7 @@
         // Set up and tear down Google Logging
         static void SetUpTestSuite() {
             config::log_dir = UNITTEST_LOG_DIR;
-            Logger::init("ConnectionQueueTest");
+            Logger::init("ConfigTest");
         }
 
         static void TearDownTestSuite() {
@@ -98,6 +98,12 @@
             if (home != nullptr) {
                 setenv("HOME", home, 0);
             }
+
+            // Delete set environment variables
+            for (auto var : setVars) {
+                unsetenv(var.c_str());
+            }
+            setVars.clear();
         }
 
         // Build fake argv from given strings.
@@ -117,6 +123,7 @@
             for (std::string var : vars) {
                 std::size_t index = var.find("=");
                 std::string name = var.substr(0, index);
+                setVars.emplace_back(name);
                 std::string val;
                 if (index != std::string::npos) {
                     val = var.substr(index + 1);
@@ -137,6 +144,8 @@
         }
 
         char* home = nullptr;
+
+        std::vector<std::string> setVars;
     };
     
 /**
@@ -150,7 +159,9 @@ TEST_F(ConfigTest, defaultValues) {
     buildArgv(args, argc, argv);
 
     // Set config variables
-    config::initConfigVariables(argc, argv.data(), "REST", "NONE_");
+    const auto [exit, code] = config::initConfigVariables(argc, argv.data(), "NONE_");
+    EXPECT_FALSE(exit);
+    EXPECT_EQ(code, 0);
 
     // Check values
     EXPECT_EQ(config::ca_file, "ca.crt");
@@ -163,11 +174,12 @@ TEST_F(ConfigTest, defaultValues) {
     EXPECT_EQ(config::default_max_array_size, kDefaultMaxArrayLength);
     EXPECT_EQ(config::default_total_array_size, kDefaultMaxArrayLength);
     EXPECT_EQ(config::max_connections, DEFAULT_MAX_CONNECTIONS);
-    EXPECT_EQ(config::port, 443);
+    EXPECT_EQ(config::port, 6254);
     EXPECT_EQ(config::authz, false);
     EXPECT_EQ(config::mutual_authc, false);
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
+
 }
 
 /**
@@ -198,7 +210,9 @@ TEST_F(ConfigTest, CommandLine) {
     buildArgv(args, argc, argv);
 
     // Set config variables
-    config::initConfigVariables(argc, argv.data(), "REST", "NONE_");
+    const auto [exit, code] = config::initConfigVariables(argc, argv.data(), "NONE_");
+    EXPECT_FALSE(exit);
+    EXPECT_EQ(code, 0);
 
     // Check values
     EXPECT_EQ(config::ca_file, "a");
@@ -219,7 +233,7 @@ TEST_F(ConfigTest, CommandLine) {
 }
 
 /**
- * TEST 3 - All values set through command-line
+ * TEST 3 - All values set through environment variables
  */
 TEST_F(ConfigTest, EnvironmentVariables) {
     // Create environment vairbales
@@ -248,7 +262,9 @@ TEST_F(ConfigTest, EnvironmentVariables) {
     int argc = 1;
 
     // Set config variables
-    config::initConfigVariables(argc, argv, "REST", "CONFIGTEST_");
+    const auto [exit, code] = config::initConfigVariables(argc, argv, "CONFIGTEST_");
+    EXPECT_FALSE(exit);
+    EXPECT_EQ(code, 0);
 
     // Check values
     EXPECT_EQ(config::ca_file, "a");
@@ -268,7 +284,7 @@ TEST_F(ConfigTest, EnvironmentVariables) {
     EXPECT_EQ(config::silent, true);
 
     // Delete environment variables
-    unsetEnvVars(args);
+    // unsetEnvVars(args);
 }
 
 /**
@@ -295,7 +311,9 @@ TEST_F(ConfigTest, CmdAndEnv) {
     buildArgv(args, argc, argv);
 
     // Set config variables
-    config::initConfigVariables(argc, argv.data(), "GRPC", "CONFIGTEST_");
+    const auto [exit, code] = config::initConfigVariables(argc, argv.data(), "CONFIGTEST_");
+    EXPECT_FALSE(exit);
+    EXPECT_EQ(code, 0);
 
     // Check values set by environment variables
     EXPECT_EQ(config::ca_file, "a");
@@ -315,9 +333,6 @@ TEST_F(ConfigTest, CmdAndEnv) {
     EXPECT_EQ(config::port, 6254);
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
-
-    // Delete environment variables
-    unsetEnvVars(envArgs);
 }
 
 /**
@@ -368,7 +383,9 @@ TEST_F(ConfigTest, CmdOverwritesEnv) {
     buildArgv(cmdArgs, argc, argv);
 
     // Set config variables
-    config::initConfigVariables(argc, argv.data(), "GRPC", "CONFIGTEST_");
+    const auto [exit, code] = config::initConfigVariables(argc, argv.data(), "CONFIGTEST_");
+    EXPECT_FALSE(exit);
+    EXPECT_EQ(code, 0);
 
     // Check values match command line args
     EXPECT_EQ(config::ca_file, "b");
@@ -386,9 +403,6 @@ TEST_F(ConfigTest, CmdOverwritesEnv) {
     EXPECT_EQ(config::mutual_authc, false);
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
-
-    // Delete environment variables
-    unsetEnvVars(envArgs);
 }
 
 /**
@@ -406,7 +420,9 @@ TEST_F(ConfigTest, MissingHome) {
     unsetenv("HOME");
 
     // Do call resulting in throw
-    EXPECT_THROW(config::initConfigVariables(argc, argv, "GRPC", "CONFIGTEST_"), std::exception);
+    const auto [exit, code] = config::initConfigVariables(argc, argv, "CONFIGTEST_");
+    EXPECT_TRUE(exit);
+    EXPECT_EQ(code, 1);
 
     // Reset "HOME"
     setenv("HOME", home, 0);

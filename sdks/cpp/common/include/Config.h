@@ -34,7 +34,7 @@
  * @file Config.h
  * @brief Runtime configuration variables
  * @author keon.foster@rossvideo.com
- * @date 2026-02-19
+ * @date 2026-02-24
  * @copyright Copyright (c) 2026 Ross Video
  */
 
@@ -46,14 +46,26 @@ namespace common{
 namespace config{
 
 /**
+ * Default values of config variables
+ */
+const std::string CATENA_SECURE_COMMS = "off";
+const std::string CATENA_CERT_FILE = "server.crt";
+const std::string CATENA_KEY_FILE = "server.key";
+const std::string CATENA_CA_FILE = "ca.crt";
+const uint16_t CATENA_PORT = 6254;
+
+
+/**
  * @brief Parses environment variables and command line to initialize variables used for runtime configuration
  * @param argc Command-line argument count
  * @param argv Command-line arguments
  * @param serviceType The type of service being ran, can be "REST" or "GRPC".
  * @param prefix Prefix used for relevant environment variables, include trailing underscore. Defaults to "CATENA_".
- * @return Pair of option description and boolean. Boolean states if --help was selected and description can be used to print the options.
+ * @return <bool exit, int code>. Exit states if program must be exited, either due to --help or an exception.
+ *  Code denotes the reason for exit, with 0 being --help and 1 being an exception. 
+ *  The function will print the relevant material to the terminal before returning.
  */
- std::pair<boost::program_options::options_description, bool> initConfigVariables(int argc, char* argv[], std::string serviceType, std::string prefix = "CATENA_");
+ std::pair<bool, int> initConfigVariables(int argc, char* argv[], std::string prefix = "CATENA_");
 
 inline std::string certs = "";
 
