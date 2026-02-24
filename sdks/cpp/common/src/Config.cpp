@@ -25,6 +25,7 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             ("authz", po::value<bool>()->default_value(false)->implicit_value(true), "Use OAuth token authorization")
             ("silent", po::value<bool>()->default_value(false)->implicit_value(true), "Use this to suppress all log output.")
             ;
+        // TODO: Add windows functionality
         char* home = getenv("HOME");
         if (home != nullptr) {
             configArgs.add_options()
