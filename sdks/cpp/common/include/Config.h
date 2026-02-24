@@ -70,6 +70,7 @@ const std::string CATENA_HELP_NAME = "help";
  * Default values of config variables
  */
 const std::string CATENA_SECURE_COMMS = "off";
+const std::string CATENA_CERTS = "${HOME}/test_certs";
 const std::string CATENA_CERT_FILE = "server.crt";
 const std::string CATENA_KEY_FILE = "server.key";
 const std::string CATENA_CA_FILE = "ca.crt";

@@ -29,7 +29,7 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         char* home = getenv("HOME");
         if (home != nullptr) {
             configArgs.add_options()
-            (CATENA_CERTS_NAME.c_str(), po::value<std::string>()->default_value("${HOME}/test_certs"), "path/to/certs/files")
+            (CATENA_CERTS_NAME.c_str(), po::value<std::string>()->default_value(CATENA_CERTS), "path/to/certs/files")
             (CATENA_STATIC_ROOT_NAME.c_str(), po::value<std::string>()->default_value(home), "Specify the directory to search for external objects")
             ;
         } else {
