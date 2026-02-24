@@ -40,13 +40,20 @@ package rest
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
+	"time"
 
+	"github.com/rossvideo/catena/build/go/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 )
 
@@ -161,23 +168,6 @@ func TestServer_RegisterGetAssetHandler(t *testing.T) {
 
 	handler := srv.lookupGetAsset(0)
 	_, _ = handler(0, "test/asset")
-
-	if !handlerCalled {
-		t.Error("registered handler was not called")
-	}
-}
-
-func TestServer_RegisterConnectHandler(t *testing.T) {
-	srv := NewServer([]int{0})
-
-	handlerCalled := false
-	srv.RegisterConnectHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		handlerCalled = true
-		return catena.CatenaValue{}, catena.StatusResult{Code: catena.OK}
-	})
-
-	handler := srv.lookupConnect()
-	_, _ = handler(nil, nil)
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
@@ -509,40 +499,80 @@ func TestServer_ExecuteCommand_MethodNotAllowed(t *testing.T) {
 	}
 }
 
-// TODO once connect is implemented, add tests for it
 func TestServer_Connect_Route(t *testing.T) {
-	/*srv := NewServer([]int{0})
+	srv := NewServer([]int{0, 1})
 
-	handlerCalled := false
-	srv.RegisterConnectHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		handlerCalled = true
-		return catena.Reply(catena.CatenaValue{})
-	})
-
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
+	ctx, cancel := context.WithCancel(context.Background())
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
 	rec := httptest.NewRecorder()
 
-	srv.mux.ServeHTTP(rec, req)
+	go srv.mux.ServeHTTP(rec, req)
+	// Allow handler to write headers and initial SSE event
+	time.Sleep(100 * time.Millisecond)
+	cancel()
+	// Allow handler to exit and defer to run
+	time.Sleep(50 * time.Millisecond)
 
 	if rec.Code != http.StatusOK {
 		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
 	}
-	if handlerCalled {
-		t.Error("registered handler should not have been called")
-	}*/
+	if rec.Header().Get("Content-Type") != "text/event-stream" {
+		t.Errorf("expected Content-Type text/event-stream, got %s", rec.Header().Get("Content-Type"))
+	}
+	if rec.Header().Get("Cache-Control") != "no-cache" {
+		t.Errorf("expected Cache-Control no-cache, got %s", rec.Header().Get("Cache-Control"))
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, "data:") {
+		t.Error("expected SSE data in response body")
+	}
+	// Initial event must be protojson PushUpdates format: {"slotsAdded":{"slots":[...]}}
+	if !strings.Contains(body, "slotsAdded") {
+		t.Error("expected initial slotsAdded in response body")
+	}
+	if !strings.Contains(body, "\"slots\"") {
+		t.Error("expected initial event in proto format with nested \"slots\" (SlotList)")
+	}
+	lines := strings.Split(body, "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "data: ") {
+			var payload map[string]any
+			if err := json.Unmarshal([]byte(strings.TrimPrefix(line, "data: ")), &payload); err != nil {
+				t.Errorf("initial SSE data must be valid JSON: %v", err)
+				break
+			}
+			slotsAdded, ok := payload["slotsAdded"].(map[string]any)
+			if !ok {
+				t.Error("expected slotsAdded object (SlotList) in initial event")
+				break
+			}
+			slots, ok := slotsAdded["slots"].([]any)
+			if !ok || len(slots) != 2 {
+				t.Errorf("expected slotsAdded.slots to be array of 2 slots, got %T %v", slotsAdded["slots"], slotsAdded["slots"])
+			}
+			break
+		}
+	}
 }
 
 func TestServer_Connect_MethodNotAllowed(t *testing.T) {
-	/*srv := NewServer([]int{0})
+	srv := NewServer([]int{0})
 
 	req := httptest.NewRequest(http.MethodPost, "/st2138-api/v1/connect", nil)
 	rec := httptest.NewRecorder()
 
 	srv.mux.ServeHTTP(rec, req)
 
-	// POST to connect endpoint should not be allowed (GET required)
-	// Test passes if no panic occurs
-	*/
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Errorf("expected status %d, got %d", http.StatusMethodNotAllowed, rec.Code)
+	}
+	body, _ := io.ReadAll(rec.Body)
+	var response map[string]string
+	if err := json.Unmarshal(body, &response); err == nil {
+		if !strings.Contains(response["error"], "GET") {
+			t.Errorf("expected error to mention GET, got %s", response["error"])
+		}
+	}
 }
 
 func TestServer_Fallback_Route(t *testing.T) {
@@ -601,12 +631,6 @@ func TestServer_DefaultHandlers(t *testing.T) {
 	}
 	if asset.GetProtoAsset() != nil {
 		t.Error("default get asset handler should return nil asset")
-	}
-
-	// Test default connect handler
-	value, status = srv.lookupConnect()(nil, nil)
-	if status.Code != catena.UNIMPLEMENTED {
-		t.Errorf("default connect handler should return UNIMPLEMENTED, got %v", status.Code)
 	}
 
 	// Test default execute command handler
@@ -971,20 +995,38 @@ func TestDeviceEndpoint_NotRegistered(t *testing.T) {
 	}
 }
 
-func TestConnectHandler_Lookup(t *testing.T) {
-	srv := NewServer([]int{})
-	called := false
-	srv.RegisterConnectHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		called = true
-		return catena.Reply(catena.CatenaValue{})
-	})
+func TestServer_Connect_TooManyConnections(t *testing.T) {
+	srv := NewServer([]int{0})
+	srv.SetMaxConnections(1)
 
-	handler := srv.lookupConnect()
-	handler(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/", nil))
+	ctx1, cancel1 := context.WithCancel(context.Background())
+	req1 := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx1)
+	rec1 := httptest.NewRecorder()
+	go srv.mux.ServeHTTP(rec1, req1)
+	time.Sleep(50 * time.Millisecond)
 
-	if !called {
-		t.Error("custom connect handler not called")
+	req2 := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
+	rec2 := httptest.NewRecorder()
+	srv.mux.ServeHTTP(rec2, req2)
+
+	if rec2.Code != http.StatusTooManyRequests {
+		t.Errorf("expected status %d when at max connections, got %d", http.StatusTooManyRequests, rec2.Code)
 	}
+	body, _ := io.ReadAll(rec2.Body)
+	var response map[string]string
+	if err := json.Unmarshal(body, &response); err == nil {
+		if _, ok := response["error"]; !ok {
+			t.Error("expected error in response when at max connections")
+		}
+		// In dev mode server returns C++-matching message; in prod returns http.StatusText
+		msg := response["error"]
+		if msg != "Too many connections to service" && msg != "Too Many Requests" {
+			t.Errorf("expected error \"Too many connections to service\" (dev) or \"Too Many Requests\" (prod), got %q", msg)
+		}
+	}
+
+	cancel1()
+	time.Sleep(50 * time.Millisecond)
 }
 
 func TestWriteResults_ValidData(t *testing.T) {
@@ -1055,5 +1097,498 @@ func TestWriteHTTPStatusResult_WithError(t *testing.T) {
 	body, _ := io.ReadAll(rec.Body)
 	if !bytes.Contains(body, []byte("error")) {
 		t.Error("expected error in response")
+	}
+}
+
+// failWriter is an http.ResponseWriter that fails on Write (used to cover error paths).
+type failWriter struct {
+	http.ResponseWriter
+	failOnWrite bool
+}
+
+func (f *failWriter) Write(p []byte) (n int, err error) {
+	if f.failOnWrite {
+		return 0, errors.New("write failed")
+	}
+	return f.ResponseWriter.Write(p)
+}
+
+// noFlusher wraps ResponseWriter and does not implement http.Flusher (for "streaming not supported" test).
+type noFlusher struct {
+	http.ResponseWriter
+}
+
+// failFlusherWriter implements http.ResponseWriter and http.Flusher
+// but fails on Write after a configurable number of successful writes.
+type failFlusherWriter struct {
+	*httptest.ResponseRecorder
+	failAfterN int
+	writeCount int
+}
+
+func (f *failFlusherWriter) Write(p []byte) (int, error) {
+	if f.writeCount >= f.failAfterN {
+		return 0, errors.New("write failed")
+	}
+	f.writeCount++
+	return f.ResponseRecorder.Write(p)
+}
+
+func (f *failFlusherWriter) Flush() {
+	f.ResponseRecorder.Flush()
+}
+
+func TestServer_sendSSEEvent(t *testing.T) {
+	srv := NewServer([]int{0})
+	rec := httptest.NewRecorder()
+	var w http.ResponseWriter = rec
+	flusher := w.(http.Flusher)
+	update := &protos.PushUpdates{
+		Slot: 1,
+		Kind: &protos.PushUpdates_Value{
+			Value: &protos.PushUpdates_PushValue{
+				Oid:   "test/param",
+				Value: &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: 42}},
+			},
+		},
+	}
+
+	err := srv.sendSSEEvent(rec, flusher, update)
+	if err != nil {
+		t.Fatalf("sendSSEEvent: %v", err)
+	}
+	body := rec.Body.String()
+	if !strings.HasPrefix(body, "data: ") {
+		t.Errorf("expected body to start with 'data: ', got %q", body)
+	}
+	var decoded map[string]any
+	if err := json.Unmarshal([]byte(strings.TrimPrefix(strings.Split(body, "\n")[0], "data: ")), &decoded); err != nil {
+		t.Fatalf("SSE data not valid JSON: %v", err)
+	}
+	if decoded["slot"] != float64(1) {
+		t.Errorf("expected slot=1, got %v", decoded["slot"])
+	}
+	valueObj, ok := decoded["value"].(map[string]any)
+	if !ok {
+		t.Fatal("expected nested 'value' object in SSE payload")
+	}
+	if valueObj["oid"] != "test/param" {
+		t.Errorf("expected oid=test/param, got %v", valueObj["oid"])
+	}
+}
+
+func TestServer_BroadcastUpdate(t *testing.T) {
+	srv := NewServer([]int{0})
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	go srv.mux.ServeHTTP(rec, req)
+	time.Sleep(150 * time.Millisecond)
+
+	srv.BroadcastUpdate(0, "broadcast/oid", "hello")
+	time.Sleep(100 * time.Millisecond)
+	cancel()
+	time.Sleep(50 * time.Millisecond)
+
+	body := rec.Body.String()
+	if !strings.Contains(body, "broadcast/oid") {
+		t.Errorf("expected SSE body to contain broadcast/oid, got %s", body)
+	}
+}
+
+func TestServer_BroadcastUpdate_ChannelFull(t *testing.T) {
+	srv := NewServer([]int{0})
+	srv.SetMaxConnections(10)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	go srv.mux.ServeHTTP(rec, req)
+	time.Sleep(100 * time.Millisecond)
+
+	for i := 0; i < 150; i++ {
+		srv.BroadcastUpdate(0, "fill", int32(i))
+	}
+	cancel()
+	time.Sleep(50 * time.Millisecond)
+	// No assertion other than no panic; we're covering the "channel full" default branch
+}
+
+func TestServer_Start(t *testing.T) {
+	srv := NewServer([]int{0})
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		t.Fatalf("net.Listen: %v", err)
+	}
+	port := listener.Addr().(*net.TCPAddr).Port
+	listener.Close()
+
+	go func() { _ = srv.Start(port) }()
+	time.Sleep(200 * time.Millisecond)
+
+	url := fmt.Sprintf("http://127.0.0.1:%d/st2138-api/v1", port)
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("GET: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusNotFound {
+		t.Errorf("expected status %d, got %d", http.StatusNotFound, resp.StatusCode)
+	}
+}
+
+func TestWriteHTTPResult_DefaultType(t *testing.T) {
+	rec := httptest.NewRecorder()
+	result := catena.StatusResult{Code: catena.OK}
+	// Pass nil so switch hits default (no CatenaValue/Device/Asset)
+	writeHTTPResult(rec, result, nil)
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
+	}
+}
+
+func TestServer_Connect_StreamingNotSupported(t *testing.T) {
+	original := catena.GetEnv()
+	defer catena.SetEnv(original)
+	catena.SetEnv(catena.EnvDev)
+
+	srv := NewServer([]int{0})
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
+	rec := httptest.NewRecorder()
+	w := &noFlusher{ResponseWriter: rec}
+
+	srv.handleConnect(w, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Errorf("expected status %d when Flusher not supported, got %d", http.StatusInternalServerError, rec.Code)
+	}
+	body, _ := io.ReadAll(rec.Body)
+	var response map[string]string
+	if err := json.Unmarshal(body, &response); err == nil {
+		if !strings.Contains(response["error"], "streaming") && !strings.Contains(response["error"], "Internal") {
+			t.Errorf("expected error to mention streaming or Internal, got %s", response["error"])
+		}
+	}
+}
+
+func TestWriteHTTPStatusResult_ProdMode(t *testing.T) {
+	original := catena.GetEnv()
+	defer catena.SetEnv(original)
+	catena.SetEnv(catena.EnvProd)
+
+	rec := httptest.NewRecorder()
+	result := catena.StatusResult{Code: catena.NOT_FOUND, Error: "detailed internal error"}
+	writeHTTPStatusResult(rec, result)
+
+	body, _ := io.ReadAll(rec.Body)
+	if !bytes.Contains(body, []byte("Not Found")) {
+		t.Errorf("prod mode should hide details, expected 'Not Found' in body, got %q", string(body))
+	}
+	if bytes.Contains(body, []byte("detailed internal error")) {
+		t.Error("prod mode should not expose detailed error message")
+	}
+}
+
+func TestServer_Connect_WithOrigin(t *testing.T) {
+	srv := NewServer([]int{0})
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
+	req.Header.Set("Origin", "https://example.com")
+	rec := httptest.NewRecorder()
+
+	go srv.mux.ServeHTTP(rec, req)
+	time.Sleep(100 * time.Millisecond)
+	cancel()
+	time.Sleep(50 * time.Millisecond)
+
+	if rec.Header().Get("Access-Control-Allow-Origin") != "https://example.com" {
+		t.Errorf("expected CORS Origin header, got %s", rec.Header().Get("Access-Control-Allow-Origin"))
+	}
+}
+
+func TestWriteValueResult_WriteError(t *testing.T) {
+	value, _ := catena.ToCatenaValue(int32(1))
+	rec := httptest.NewRecorder()
+	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
+
+	writeValueResult(w, value, http.StatusOK)
+
+	// internal.WriteResponseJSON writes status then body; when Write fails, status may already be 200
+	if rec.Code != http.StatusInternalServerError && rec.Code != http.StatusOK {
+		t.Errorf("expected status 500 or 200 (if header already sent), got %d", rec.Code)
+	}
+}
+
+func TestWriteDeviceResult_WriteError(t *testing.T) {
+	device, _ := catena.ToCatenaDevice(map[string]any{"slot": int32(0)})
+	rec := httptest.NewRecorder()
+	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
+
+	writeDeviceResult(w, device, http.StatusOK)
+
+	// writeDeviceResult only logs on write error and does not change status after WriteHeader(200)
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected status %d (header already written), got %d", http.StatusOK, rec.Code)
+	}
+}
+
+func TestWriteAssetResult_WriteError(t *testing.T) {
+	asset, _ := catena.ToCatenaAsset(catena.DataPayload{Payload: []byte("x")}, false)
+	rec := httptest.NewRecorder()
+	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
+
+	writeAssetResult(w, asset, http.StatusOK)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected status %d (header already written before Write), got %d", http.StatusOK, rec.Code)
+	}
+}
+
+func TestWriteHTTPResult_WithError_NonDev(t *testing.T) {
+	original := catena.GetEnv()
+	defer catena.SetEnv(original)
+	catena.SetEnv(catena.EnvProd)
+
+	rec := httptest.NewRecorder()
+	result := catena.StatusResult{Code: catena.NOT_FOUND, Error: "internal detail"}
+	writeHTTPResult(rec, result, catena.CatenaValue{})
+
+	body, _ := io.ReadAll(rec.Body)
+	if bytes.Contains(body, []byte("internal detail")) {
+		t.Error("prod mode should not expose detailed error in writeHTTPResult")
+	}
+}
+
+func TestServer_Shutdown(t *testing.T) {
+	srv := NewServer([]int{0})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	go srv.mux.ServeHTTP(rec, req)
+	time.Sleep(100 * time.Millisecond)
+
+	if srv.connectionQueue.connectionCount() != 1 {
+		t.Errorf("expected 1 connection before shutdown, got %d", srv.connectionQueue.connectionCount())
+	}
+
+	done := make(chan struct{})
+	go func() {
+		srv.Shutdown()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		// Shutdown completed
+	case <-time.After(2 * time.Second):
+		t.Fatal("Shutdown timed out")
+	}
+
+	if srv.connectionQueue.connectionCount() != 0 {
+		t.Errorf("expected 0 connections after shutdown, got %d", srv.connectionQueue.connectionCount())
+	}
+}
+
+func TestServer_Shutdown_MultipleConnections(t *testing.T) {
+	srv := NewServer([]int{0})
+	srv.SetMaxConnections(10)
+
+	ctxs := make([]context.CancelFunc, 3)
+	for i := 0; i < 3; i++ {
+		ctx, cancel := context.WithCancel(context.Background())
+		ctxs[i] = cancel
+		req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
+		rec := httptest.NewRecorder()
+		go srv.mux.ServeHTTP(rec, req)
+	}
+	defer func() {
+		for _, cancel := range ctxs {
+			cancel()
+		}
+	}()
+
+	time.Sleep(150 * time.Millisecond)
+
+	if srv.connectionQueue.connectionCount() != 3 {
+		t.Errorf("expected 3 connections, got %d", srv.connectionQueue.connectionCount())
+	}
+
+	done := make(chan struct{})
+	go func() {
+		srv.Shutdown()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("Shutdown timed out")
+	}
+
+	if srv.connectionQueue.connectionCount() != 0 {
+		t.Errorf("expected 0 connections after shutdown, got %d", srv.connectionQueue.connectionCount())
+	}
+}
+
+func TestServer_SetValue_NotifiesConnections(t *testing.T) {
+	srv := NewServer([]int{0})
+
+	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
+		srv.BroadcastUpdate(slot, fqoid, value)
+		return catena.StatusResult{Code: catena.OK}
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	go srv.mux.ServeHTTP(rec, req)
+	time.Sleep(150 * time.Millisecond)
+
+	body := []byte(`{"int32_value": 42}`)
+	setReq := httptest.NewRequest(http.MethodPut, "/st2138-api/v1/0/value/brightness", bytes.NewReader(body))
+	setReq.Header.Set("Content-Type", "application/json")
+	setRec := httptest.NewRecorder()
+	srv.mux.ServeHTTP(setRec, setReq)
+
+	if setRec.Code != http.StatusOK {
+		t.Errorf("expected SetValue status %d, got %d", http.StatusOK, setRec.Code)
+	}
+
+	time.Sleep(100 * time.Millisecond)
+	cancel()
+	time.Sleep(50 * time.Millisecond)
+
+	sseBody := rec.Body.String()
+	if !strings.Contains(sseBody, "brightness") {
+		t.Errorf("expected SSE body to contain 'brightness' from SetValue notification, got %s", sseBody)
+	}
+}
+
+func TestServer_SetValue_FailureDoesNotNotify(t *testing.T) {
+	srv := NewServer([]int{0})
+
+	// Handler only broadcasts on success -- never reached here
+	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
+		return catena.StatusWithCode(catena.INVALID_ARGUMENT, "bad value")
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	go srv.mux.ServeHTTP(rec, req)
+	time.Sleep(150 * time.Millisecond)
+
+	body := []byte(`{"int32_value": -1}`)
+	setReq := httptest.NewRequest(http.MethodPut, "/st2138-api/v1/0/value/brightness", bytes.NewReader(body))
+	setReq.Header.Set("Content-Type", "application/json")
+	setRec := httptest.NewRecorder()
+	srv.mux.ServeHTTP(setRec, setReq)
+
+	time.Sleep(100 * time.Millisecond)
+	cancel()
+	time.Sleep(50 * time.Millisecond)
+
+	sseBody := rec.Body.String()
+	lines := strings.Split(sseBody, "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "data: ") && strings.Contains(line, "brightness") {
+			t.Error("failed SetValue should not send SSE notification")
+		}
+	}
+}
+
+func TestBroadcastUpdate_InvalidValue(t *testing.T) {
+	srv := NewServer([]int{0})
+	// bool is not supported by catena.ToProto; this exercises the error branch
+	srv.BroadcastUpdate(0, "test/param", true)
+	// Should not panic; the error is logged internally
+}
+
+func TestSendSSEEvent_WriteFailure(t *testing.T) {
+	srv := NewServer([]int{0})
+	rec := httptest.NewRecorder()
+	w := &failFlusherWriter{ResponseRecorder: rec, failAfterN: 0}
+	update := &protos.PushUpdates{
+		Slot: 0,
+		Kind: &protos.PushUpdates_Value{
+			Value: &protos.PushUpdates_PushValue{
+				Oid:   "test/param",
+				Value: &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: 1}},
+			},
+		},
+	}
+
+	err := srv.sendSSEEvent(w, w, update)
+	if err == nil {
+		t.Error("expected error when writer fails")
+	}
+}
+
+func TestHandleConnect_InitialEventWriteFailure(t *testing.T) {
+	srv := NewServer([]int{0})
+	rec := httptest.NewRecorder()
+	w := &failFlusherWriter{ResponseRecorder: rec, failAfterN: 0}
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
+
+	srv.handleConnect(w, req)
+
+	if srv.connectionQueue.connectionCount() != 0 {
+		t.Errorf("expected 0 connections after initial event failure, got %d", srv.connectionQueue.connectionCount())
+	}
+}
+
+func TestHandleConnect_UpdateEventWriteFailure(t *testing.T) {
+	srv := NewServer([]int{0})
+	rec := httptest.NewRecorder()
+	w := &failFlusherWriter{ResponseRecorder: rec, failAfterN: 1}
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
+
+	done := make(chan struct{})
+	go func() {
+		srv.handleConnect(w, req)
+		close(done)
+	}()
+	time.Sleep(100 * time.Millisecond)
+
+	srv.BroadcastUpdate(0, "test/param", int32(42))
+
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("handler did not exit after update write failure")
+	}
+
+	if srv.connectionQueue.connectionCount() != 0 {
+		t.Errorf("expected 0 connections after write failure, got %d", srv.connectionQueue.connectionCount())
+	}
+}
+
+func TestRouting_BasePathOnly(t *testing.T) {
+	srv := NewServer([]int{0})
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/", nil)
+	rec := httptest.NewRecorder()
+
+	srv.mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("expected status %d for base path, got %d", http.StatusBadRequest, rec.Code)
+	}
+	body, _ := io.ReadAll(rec.Body)
+	var response map[string]string
+	if err := json.Unmarshal(body, &response); err == nil {
+		if _, ok := response["error"]; !ok {
+			t.Error("expected error in response body")
+		}
 	}
 }

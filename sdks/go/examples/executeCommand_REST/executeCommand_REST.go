@@ -289,5 +289,6 @@ func main() {
 
 	// Wait for shutdown signal
 	<-shutdownChan
+	srv.Shutdown()
 	logger.Info("Server shutdown complete")
 }
