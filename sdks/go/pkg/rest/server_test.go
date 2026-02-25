@@ -39,16 +39,12 @@
 package rest
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -56,18 +52,6 @@ import (
 	"github.com/rossvideo/catena/build/go/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 )
-
-// TestMain sets up test environment for all tests in this package
-func TestMain(m *testing.M) {
-	// Set dev mode for all tests to get detailed error messages
-	catena.SetEnv(catena.EnvDev)
-
-	// Run tests
-	code := m.Run()
-
-	// Exit with test result code
-	os.Exit(code)
-}
 
 func TestNewServer(t *testing.T) {
 	slots := []int{0, 1, 2}
@@ -105,7 +89,6 @@ func TestServer_RegisterGetDeviceHandler(t *testing.T) {
 		return catena.CatenaDevice{}, catena.StatusResult{Code: catena.OK}
 	})
 
-	// Call the registered handler
 	handler := srv.getDeviceHandlers[0]
 	_, _ = handler()
 
@@ -228,20 +211,9 @@ func TestServer_GetDevice_Route(t *testing.T) {
 		return catena.Reply(device)
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0", nil)
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusOK {
-		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
-	}
-
-	// Verify response is JSON
-	contentType := rec.Header().Get("Content-Type")
-	if contentType != "application/json" {
-		t.Errorf("expected Content-Type 'application/json', got %s", contentType)
-	}
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "application/json")
 	if !handlerCalled {
 		t.Error("registered handler was not called")
 	}
@@ -256,15 +228,7 @@ func TestServer_GetDevice_NotFound(t *testing.T) {
 		return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
 	})
 
-	// Request device for slot 99 (not registered)
-	// The server returns NOT_FOUND status in the response
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/99", nil)
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	// Check response body contains error
-	// Note: actual HTTP status code handling depends on writeHTTPResult behavior
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/99", "")
 	if rec.Code != http.StatusNotFound && rec.Code != http.StatusOK {
 		t.Errorf("expected status %d or %d, got %d", http.StatusNotFound, http.StatusOK, rec.Code)
 	}
@@ -281,16 +245,9 @@ func TestServer_GetDevice_InvalidSlot(t *testing.T) {
 		handlerCalled = true
 		return catena.ReplyError[catena.CatenaDevice](catena.INVALID_ARGUMENT, "invalid slot")
 	})
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/invalid", nil)
-	rec := httptest.NewRecorder()
 
-	srv.mux.ServeHTTP(rec, req)
-
-	// Invalid slot should return an error status
-	// The exact status depends on implementation
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/invalid", "")
 	if rec.Code == http.StatusOK {
-		// If 200, check that the body indicates an error
-		// This is acceptable as errors may be returned in body
 		t.Errorf("expected status %d, got %d", http.StatusBadRequest, rec.Code)
 	}
 	if handlerCalled {
@@ -309,14 +266,8 @@ func TestServer_GetValue_Route(t *testing.T) {
 		return catena.Reply(value)
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/value/brightness", nil)
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusOK {
-		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
-	}
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/value/brightness", "")
+	assertStatus(t, rec, http.StatusOK)
 }
 
 func TestServer_SetValue_Route(t *testing.T) {
@@ -334,16 +285,8 @@ func TestServer_SetValue_Route(t *testing.T) {
 		return catena.StatusResult{Code: catena.OK}
 	})
 
-	body := []byte(`{"int32_value": 42}`)
-	req := httptest.NewRequest(http.MethodPut, "/st2138-api/v1/0/value/brightness", bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusOK {
-		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
-	}
+	rec := makeRequest(t, srv, http.MethodPut, "/st2138-api/v1/0/value/brightness", `{"int32_value": 42}`)
+	assertStatus(t, rec, http.StatusOK)
 	if !handlerCalled {
 		t.Error("registered handler was not called")
 	}
@@ -358,23 +301,12 @@ func TestServer_SetValue_InvalidContentType(t *testing.T) {
 		return catena.StatusResult{Code: catena.OK}
 	})
 
-	body := []byte(`{"int32_value": 42}`)
-	req := httptest.NewRequest(http.MethodPut, "/st2138-api/v1/0/value/brightness", bytes.NewReader(body))
-	req.Header.Set("Content-Type", "text/plain")
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusBadRequest {
-		t.Errorf("expected status %d, got %d", http.StatusBadRequest, rec.Code)
-	}
-
-	responseBody, _ := io.ReadAll(rec.Body)
-	var response map[string]string
-	if err := json.Unmarshal(responseBody, &response); err == nil {
-		if response["error"] != "invalid request body" {
-			t.Errorf("expected error 'invalid request body', got %s", response["error"])
-		}
+	rec := makeRequestWithHeaders(t, srv, http.MethodPut, "/st2138-api/v1/0/value/brightness",
+		`{"int32_value": 42}`, map[string]string{"Content-Type": "text/plain"})
+	assertStatus(t, rec, http.StatusBadRequest)
+	errMsg := assertHasError(t, rec)
+	if errMsg != "invalid request body" {
+		t.Errorf("expected error 'invalid request body', got %s", errMsg)
 	}
 	if handlerCalled {
 		t.Error("registered handler should not have been called")
@@ -394,14 +326,8 @@ func TestServer_GetAsset_Route(t *testing.T) {
 		return catena.Reply(asset)
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/asset/logo", nil)
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusOK {
-		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
-	}
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/asset/logo", "")
+	assertStatus(t, rec, http.StatusOK)
 }
 
 func TestServer_GetAsset_MethodNotAllowed(t *testing.T) {
@@ -413,13 +339,7 @@ func TestServer_GetAsset_MethodNotAllowed(t *testing.T) {
 		return catena.Reply(catena.CatenaAsset{})
 	})
 
-	req := httptest.NewRequest(http.MethodPost, "/st2138-api/v1/0/asset/logo", nil)
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	// POST to asset endpoint should not be allowed
-	// Test passes if no panic occurs and response is generated
+	makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/asset/logo", "")
 	if handlerCalled {
 		t.Error("registered handler should not have been called")
 	}
@@ -437,14 +357,8 @@ func TestServer_ExecuteCommand_Route(t *testing.T) {
 		return catena.Reply(catena.CatenaValue{})
 	})
 
-	req := httptest.NewRequest(http.MethodPost, "/st2138-api/v1/0/command/reboot", nil)
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusOK {
-		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
-	}
+	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/command/reboot", "")
+	assertStatus(t, rec, http.StatusOK)
 	if !handlerCalled {
 		t.Error("registered handler was not called")
 	}
@@ -462,16 +376,8 @@ func TestServer_ExecuteCommand_WithPayload(t *testing.T) {
 		return catena.Reply(catena.CatenaValue{})
 	})
 
-	body := []byte(`{"string_value": "test"}`)
-	req := httptest.NewRequest(http.MethodPost, "/st2138-api/v1/0/command/process", bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusOK {
-		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
-	}
+	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/command/process", `{"string_value": "test"}`)
+	assertStatus(t, rec, http.StatusOK)
 	if !handlerCalled {
 		t.Error("registered handler was not called")
 	}
@@ -486,14 +392,8 @@ func TestServer_ExecuteCommand_MethodNotAllowed(t *testing.T) {
 		return catena.Reply(catena.CatenaValue{})
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/command/reboot", nil)
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusMethodNotAllowed {
-		t.Errorf("expected status %d, got %d", http.StatusMethodNotAllowed, rec.Code)
-	}
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/command/reboot", "")
+	assertStatus(t, rec, http.StatusMethodNotAllowed)
 	if handlerCalled {
 		t.Error("registered handler was not called")
 	}
@@ -502,31 +402,17 @@ func TestServer_ExecuteCommand_MethodNotAllowed(t *testing.T) {
 func TestServer_Connect_Route(t *testing.T) {
 	srv := NewServer([]int{0, 1})
 
-	ctx, cancel := context.WithCancel(context.Background())
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
-	rec := httptest.NewRecorder()
+	rec, cancel := setupSSEConnection(t, srv)
+	cleanupSSE(cancel)
 
-	go srv.mux.ServeHTTP(rec, req)
-	// Allow handler to write headers and initial SSE event
-	time.Sleep(100 * time.Millisecond)
-	cancel()
-	// Allow handler to exit and defer to run
-	time.Sleep(50 * time.Millisecond)
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "text/event-stream")
+	assertHeader(t, rec, "Cache-Control", "no-cache")
 
-	if rec.Code != http.StatusOK {
-		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
-	}
-	if rec.Header().Get("Content-Type") != "text/event-stream" {
-		t.Errorf("expected Content-Type text/event-stream, got %s", rec.Header().Get("Content-Type"))
-	}
-	if rec.Header().Get("Cache-Control") != "no-cache" {
-		t.Errorf("expected Cache-Control no-cache, got %s", rec.Header().Get("Cache-Control"))
-	}
 	body := rec.Body.String()
 	if !strings.Contains(body, "data:") {
 		t.Error("expected SSE data in response body")
 	}
-	// Initial event must be protojson PushUpdates format: {"slotsAdded":{"slots":[...]}}
 	if !strings.Contains(body, "slotsAdded") {
 		t.Error("expected initial slotsAdded in response body")
 	}
@@ -558,20 +444,11 @@ func TestServer_Connect_Route(t *testing.T) {
 func TestServer_Connect_MethodNotAllowed(t *testing.T) {
 	srv := NewServer([]int{0})
 
-	req := httptest.NewRequest(http.MethodPost, "/st2138-api/v1/connect", nil)
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusMethodNotAllowed {
-		t.Errorf("expected status %d, got %d", http.StatusMethodNotAllowed, rec.Code)
-	}
-	body, _ := io.ReadAll(rec.Body)
-	var response map[string]string
-	if err := json.Unmarshal(body, &response); err == nil {
-		if !strings.Contains(response["error"], "GET") {
-			t.Errorf("expected error to mention GET, got %s", response["error"])
-		}
+	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/connect", "")
+	assertStatus(t, rec, http.StatusMethodNotAllowed)
+	errMsg := assertHasError(t, rec)
+	if !strings.Contains(errMsg, "GET") {
+		t.Errorf("expected error to mention GET, got %s", errMsg)
 	}
 }
 
@@ -584,14 +461,8 @@ func TestServer_Fallback_Route(t *testing.T) {
 		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "custom not found")
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/unknown/path", nil)
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusNotFound {
-		t.Errorf("expected status %d, got %d", http.StatusNotFound, rec.Code)
-	}
+	rec := makeRequest(t, srv, http.MethodGet, "/unknown/path", "")
+	assertStatus(t, rec, http.StatusNotFound)
 	if !handlerCalled {
 		t.Error("registered handler should have been called, but was not")
 	}
@@ -600,7 +471,6 @@ func TestServer_Fallback_Route(t *testing.T) {
 func TestServer_DefaultHandlers(t *testing.T) {
 	srv := NewServer([]int{0})
 
-	// Test default device handler
 	device, status := srv.getDeviceHandlers[0]()
 	if status.Code != catena.NOT_FOUND {
 		t.Errorf("default device handler should return NOT_FOUND, got %v", status.Code)
@@ -609,7 +479,6 @@ func TestServer_DefaultHandlers(t *testing.T) {
 		t.Error("default device handler should return nil device")
 	}
 
-	// Test default get value handler
 	value, status := srv.lookupGetValue(0)(0, "test")
 	if status.Code != catena.UNIMPLEMENTED {
 		t.Errorf("default get value handler should return UNIMPLEMENTED, got %v", status.Code)
@@ -618,13 +487,11 @@ func TestServer_DefaultHandlers(t *testing.T) {
 		t.Error("default get value handler should return nil value")
 	}
 
-	// Test default set value handler
 	status = srv.lookupSetValue(0)(nil, 0, "test")
 	if status.Code != catena.UNIMPLEMENTED {
 		t.Errorf("default set value handler should return UNIMPLEMENTED, got %v", status.Code)
 	}
 
-	// Test default get asset handler
 	asset, status := srv.lookupGetAsset(0)(0, "test")
 	if status.Code != catena.NOT_FOUND {
 		t.Errorf("default get asset handler should return NOT_FOUND, got %v", status.Code)
@@ -633,7 +500,6 @@ func TestServer_DefaultHandlers(t *testing.T) {
 		t.Error("default get asset handler should return nil asset")
 	}
 
-	// Test default execute command handler
 	value, status = srv.lookupExecuteCommand(0)(nil, nil, 0, "test", nil)
 	if status.Code != catena.UNIMPLEMENTED {
 		t.Errorf("default execute command handler should return UNIMPLEMENTED, got %v", status.Code)
@@ -641,9 +507,8 @@ func TestServer_DefaultHandlers(t *testing.T) {
 }
 
 func TestServer_LookupHandlers_NotRegistered(t *testing.T) {
-	srv := NewServer([]int{}) // No slots registered
+	srv := NewServer([]int{})
 
-	// Should return default handlers for unregistered slots
 	handler := srv.lookupGetValue(99)
 	_, status := handler(99, "test")
 	if status.Code != catena.UNIMPLEMENTED {
@@ -680,80 +545,37 @@ func TestServer_NestedValuePath(t *testing.T) {
 		return catena.Reply(value)
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/value/nested/path/to/param", nil)
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusOK {
-		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
-	}
-	body, _ := io.ReadAll(rec.Body)
-	var response map[string]string
-	if err := json.Unmarshal(body, &response); err == nil {
-		if response["value"] != "1" {
-			t.Errorf("expected value '1', got %s", response["value"])
-		}
-	}
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/value/nested/path/to/param", "")
+	assertStatus(t, rec, http.StatusOK)
 }
 
 func TestServer_UnknownEndpoint(t *testing.T) {
 	srv := NewServer([]int{0})
-
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/unknown", nil)
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusNotFound {
-		t.Errorf("expected status %d, got %d", http.StatusNotFound, rec.Code)
-	}
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/unknown", "")
+	assertStatus(t, rec, http.StatusNotFound)
 }
 
 func TestServer_InvalidPath(t *testing.T) {
 	srv := NewServer([]int{0})
-
-	req := httptest.NewRequest(http.MethodGet, "/kjhgjnghf", nil)
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusNotFound {
-		t.Errorf("expected status %d, got %d", http.StatusNotFound, rec.Code)
-	}
+	rec := makeRequest(t, srv, http.MethodGet, "/kjhgjnghf", "")
+	assertStatus(t, rec, http.StatusNotFound)
 }
 
 func TestServer_InvalidPathNoSlash(t *testing.T) {
 	srv := NewServer([]int{0})
-
-	// Request without trailing slash - should not redirect (301)
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1", nil)
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusNotFound {
-		t.Errorf("expected status %d, got %d", http.StatusNotFound, rec.Code)
-	}
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1", "")
+	assertStatus(t, rec, http.StatusNotFound)
 }
 
 func TestServer_NegativeSlot(t *testing.T) {
 	srv := NewServer([]int{0})
-
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/-1", nil)
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusBadRequest {
-		t.Errorf("expected status %d, got %d", http.StatusBadRequest, rec.Code)
-	}
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/-1", "")
+	assertStatus(t, rec, http.StatusBadRequest)
 }
 
 func TestServer_MultipleSlots(t *testing.T) {
 	srv := NewServer([]int{0, 1, 2})
 
-	// Register different handlers for each slot
 	for i := 0; i < 3; i++ {
 		slot := i
 		srv.RegisterGetValueHandler(slot, func(s int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
@@ -765,23 +587,15 @@ func TestServer_MultipleSlots(t *testing.T) {
 		})
 	}
 
-	// Test each slot
 	for i := 0; i < 3; i++ {
 		t.Run("slot"+string(rune('0'+i)), func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/"+string(rune('0'+i))+"/value/test", nil)
-			rec := httptest.NewRecorder()
-
-			srv.mux.ServeHTTP(rec, req)
-
-			if rec.Code != http.StatusOK {
-				t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
-			}
+			rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/"+string(rune('0'+i))+"/value/test", "")
+			assertStatus(t, rec, http.StatusOK)
 		})
 	}
 }
 
 func TestWriteHTTPResult_Error(t *testing.T) {
-	// Set dev mode for detailed error messages
 	catena.SetEnv(catena.EnvDev)
 	defer catena.SetEnv(catena.EnvProd)
 
@@ -790,32 +604,21 @@ func TestWriteHTTPResult_Error(t *testing.T) {
 		Code:  catena.NOT_FOUND,
 		Error: "test error message",
 	}
-
 	writeHTTPResult(rec, result, catena.CatenaValue{})
 
-	body, _ := io.ReadAll(rec.Body)
-	var response map[string]string
-	if err := json.Unmarshal(body, &response); err == nil {
-		if response["error"] != "test error message" {
-			t.Errorf("expected error message 'test error message', got %s", response["error"])
-		}
+	errMsg := assertHasError(t, rec)
+	if errMsg != "test error message" {
+		t.Errorf("expected error message 'test error message', got %s", errMsg)
 	}
 }
 
 func TestWriteHTTPStatusResult(t *testing.T) {
 	rec := httptest.NewRecorder()
-	result := catena.StatusResult{
-		Code: catena.CREATED,
-	}
-
+	result := catena.StatusResult{Code: catena.CREATED}
 	writeHTTPStatusResult(rec, result)
-
-	if rec.Code != http.StatusCreated {
-		t.Errorf("expected status %d, got %d", http.StatusCreated, rec.Code)
-	}
+	assertStatus(t, rec, http.StatusCreated)
 }
 
-// Edge case tests for 90% coverage
 func TestErrorMessages_DevVsProd(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -836,10 +639,7 @@ func TestErrorMessages_DevVsProd(t *testing.T) {
 			result := catena.StatusResult{Code: catena.NOT_FOUND, Error: "detailed error"}
 			writeHTTPResult(rec, result, catena.CatenaValue{})
 
-			body, _ := io.ReadAll(rec.Body)
-			if !bytes.Contains(body, []byte(tt.expected)) {
-				t.Errorf("expected %q in response, got %q", tt.expected, string(body))
-			}
+			assertBodyContains(t, rec, tt.expected)
 		})
 	}
 }
@@ -859,22 +659,19 @@ func TestWriteFunctions_NilValues(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
 			tt.fn(rec)
-			if rec.Code != tt.expectedStatus {
-				t.Errorf("expected status %d, got %d", tt.expectedStatus, rec.Code)
-			}
+			assertStatus(t, rec, tt.expectedStatus)
 		})
 	}
 }
 
 func TestCommandEndpoint_PayloadHandling(t *testing.T) {
 	tests := []struct {
-		name        string
-		body        string
-		contentType string
-		expectNil   bool
+		name      string
+		body      string
+		expectNil bool
 	}{
-		{"no payload", "", "", true},
-		{"with payload", `{"int32_value": 42}`, "application/json", false},
+		{"no payload", "", true},
+		{"with payload", `{"int32_value": 42}`, false},
 	}
 
 	for _, tt := range tests {
@@ -886,15 +683,7 @@ func TestCommandEndpoint_PayloadHandling(t *testing.T) {
 				return catena.Reply(catena.CatenaValue{})
 			})
 
-			var req *http.Request
-			if tt.body != "" {
-				req = httptest.NewRequest(http.MethodPost, "/st2138-api/v1/0/command/test", bytes.NewBufferString(tt.body))
-				req.Header.Set("Content-Type", tt.contentType)
-			} else {
-				req = httptest.NewRequest(http.MethodPost, "/st2138-api/v1/0/command/test", nil)
-			}
-
-			srv.mux.ServeHTTP(httptest.NewRecorder(), req)
+			makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/command/test", tt.body)
 
 			if tt.expectNil && receivedPayload != nil {
 				t.Errorf("expected nil payload, got %v", receivedPayload)
@@ -907,14 +696,8 @@ func TestCommandEndpoint_PayloadHandling(t *testing.T) {
 
 func TestSetValue_FromProtoError(t *testing.T) {
 	srv := NewServer([]int{0})
-	body := `{"struct_variant_value": {"variant_name": "test"}}`
-	req := httptest.NewRequest(http.MethodPut, "/st2138-api/v1/0/value/param", bytes.NewBufferString(body))
-	req.Header.Set("Content-Type", "application/json")
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	// Should handle error gracefully
+	rec := makeRequest(t, srv, http.MethodPut, "/st2138-api/v1/0/value/param",
+		`{"struct_variant_value": {"variant_name": "test"}}`)
 	if rec.Code == 0 {
 		t.Error("expected a response code")
 	}
@@ -934,17 +717,8 @@ func TestRouting_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, tt.path, nil)
-			rec := httptest.NewRecorder()
-			srv.mux.ServeHTTP(rec, req)
-
-			body, _ := io.ReadAll(rec.Body)
-			var response map[string]string
-			if err := json.Unmarshal(body, &response); err == nil {
-				if _, ok := response["error"]; !ok {
-					t.Errorf("expected error for %s", tt.name)
-				}
-			}
+			rec := makeRequest(t, srv, http.MethodGet, tt.path, "")
+			assertHasError(t, rec)
 		})
 	}
 }
@@ -966,123 +740,62 @@ func TestValueEndpoint_Methods(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var req *http.Request
-			if tt.body != "" {
-				req = httptest.NewRequest(tt.method, "/st2138-api/v1/0/value/test", bytes.NewBufferString(tt.body))
-				req.Header.Set("Content-Type", "application/json")
-			} else {
-				req = httptest.NewRequest(tt.method, "/st2138-api/v1/0/value/test", nil)
-			}
-
-			srv.mux.ServeHTTP(httptest.NewRecorder(), req)
+			makeRequest(t, srv, tt.method, "/st2138-api/v1/0/value/test", tt.body)
 		})
 	}
 }
 
 func TestDeviceEndpoint_NotRegistered(t *testing.T) {
 	srv := NewServer([]int{})
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0", nil)
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	body, _ := io.ReadAll(rec.Body)
-	var response map[string]string
-	if err := json.Unmarshal(body, &response); err == nil {
-		if _, ok := response["error"]; !ok {
-			t.Error("expected error for unregistered device")
-		}
-	}
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0", "")
+	assertHasError(t, rec)
 }
 
 func TestServer_Connect_TooManyConnections(t *testing.T) {
 	srv := NewServer([]int{0})
 	srv.SetMaxConnections(1)
 
-	ctx1, cancel1 := context.WithCancel(context.Background())
-	req1 := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx1)
-	rec1 := httptest.NewRecorder()
-	go srv.mux.ServeHTTP(rec1, req1)
-	time.Sleep(50 * time.Millisecond)
+	_, cancel1 := setupSSEConnection(t, srv)
 
-	req2 := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
-	rec2 := httptest.NewRecorder()
-	srv.mux.ServeHTTP(rec2, req2)
-
-	if rec2.Code != http.StatusTooManyRequests {
-		t.Errorf("expected status %d when at max connections, got %d", http.StatusTooManyRequests, rec2.Code)
-	}
-	body, _ := io.ReadAll(rec2.Body)
-	var response map[string]string
-	if err := json.Unmarshal(body, &response); err == nil {
-		if _, ok := response["error"]; !ok {
-			t.Error("expected error in response when at max connections")
-		}
-		// In dev mode server returns C++-matching message; in prod returns http.StatusText
-		msg := response["error"]
-		if msg != "Too many connections to service" && msg != "Too Many Requests" {
-			t.Errorf("expected error \"Too many connections to service\" (dev) or \"Too Many Requests\" (prod), got %q", msg)
-		}
+	rec2 := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/connect", "")
+	assertStatus(t, rec2, http.StatusTooManyRequests)
+	errMsg := assertHasError(t, rec2)
+	if errMsg != "Too many connections to service" && errMsg != "Too Many Requests" {
+		t.Errorf("expected error \"Too many connections to service\" (dev) or \"Too Many Requests\" (prod), got %q", errMsg)
 	}
 
-	cancel1()
-	time.Sleep(50 * time.Millisecond)
+	cleanupSSE(cancel1)
 }
 
 func TestWriteResults_ValidData(t *testing.T) {
-	// Test valid device
 	device, _ := catena.ToCatenaDevice(map[string]any{"slot": int32(0)})
 	rec := httptest.NewRecorder()
 	writeDeviceResult(rec, device, http.StatusOK)
-	if rec.Code != http.StatusOK || rec.Header().Get("Content-Type") != "application/json" {
-		t.Error("device write failed")
-	}
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "application/json")
 
-	// Test valid asset
 	asset, _ := catena.ToCatenaAsset(catena.DataPayload{Payload: []byte("data")}, false)
 	rec = httptest.NewRecorder()
 	writeAssetResult(rec, asset, http.StatusOK)
-	if rec.Code != http.StatusOK {
-		t.Error("asset write failed")
-	}
+	assertStatus(t, rec, http.StatusOK)
 }
 
 func TestCommandEndpoint_InvalidJSON(t *testing.T) {
 	srv := NewServer([]int{0})
-	body := `{invalid json}`
-	req := httptest.NewRequest(http.MethodPost, "/st2138-api/v1/0/command/test", bytes.NewBufferString(body))
-	req.Header.Set("Content-Type", "application/json")
-	rec := httptest.NewRecorder()
-	srv.mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusBadRequest {
-		t.Errorf("expected status %d, got %d", http.StatusBadRequest, rec.Code)
-	}
+	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/command/test", `{invalid json}`)
+	assertStatus(t, rec, http.StatusBadRequest)
 }
 
 func TestDeviceEndpoint_WrongMethod(t *testing.T) {
 	srv := NewServer([]int{0})
-	req := httptest.NewRequest(http.MethodPost, "/st2138-api/v1/0", nil)
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	body, _ := io.ReadAll(rec.Body)
-	var response map[string]string
-	if err := json.Unmarshal(body, &response); err == nil {
-		if _, ok := response["error"]; !ok {
-			t.Error("expected error for POST on device endpoint")
-		}
-	}
+	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0", "")
+	assertHasError(t, rec)
 }
 
 func TestCommandEndpoint_FromProtoError(t *testing.T) {
 	srv := NewServer([]int{0})
-	body := `{"struct_variant_value": {"variant_name": "test"}}`
-	req := httptest.NewRequest(http.MethodPost, "/st2138-api/v1/0/command/exec", bytes.NewBufferString(body))
-	req.Header.Set("Content-Type", "application/json")
-
-	srv.mux.ServeHTTP(httptest.NewRecorder(), req)
+	makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/command/exec",
+		`{"struct_variant_value": {"variant_name": "test"}}`)
 }
 
 func TestWriteHTTPStatusResult_WithError(t *testing.T) {
@@ -1093,49 +806,7 @@ func TestWriteHTTPStatusResult_WithError(t *testing.T) {
 	rec := httptest.NewRecorder()
 	result := catena.StatusResult{Code: catena.INTERNAL, Error: "error"}
 	writeHTTPStatusResult(rec, result)
-
-	body, _ := io.ReadAll(rec.Body)
-	if !bytes.Contains(body, []byte("error")) {
-		t.Error("expected error in response")
-	}
-}
-
-// failWriter is an http.ResponseWriter that fails on Write (used to cover error paths).
-type failWriter struct {
-	http.ResponseWriter
-	failOnWrite bool
-}
-
-func (f *failWriter) Write(p []byte) (n int, err error) {
-	if f.failOnWrite {
-		return 0, errors.New("write failed")
-	}
-	return f.ResponseWriter.Write(p)
-}
-
-// noFlusher wraps ResponseWriter and does not implement http.Flusher (for "streaming not supported" test).
-type noFlusher struct {
-	http.ResponseWriter
-}
-
-// failFlusherWriter implements http.ResponseWriter and http.Flusher
-// but fails on Write after a configurable number of successful writes.
-type failFlusherWriter struct {
-	*httptest.ResponseRecorder
-	failAfterN int
-	writeCount int
-}
-
-func (f *failFlusherWriter) Write(p []byte) (int, error) {
-	if f.writeCount >= f.failAfterN {
-		return 0, errors.New("write failed")
-	}
-	f.writeCount++
-	return f.ResponseRecorder.Write(p)
-}
-
-func (f *failFlusherWriter) Flush() {
-	f.ResponseRecorder.Flush()
+	assertBodyContains(t, rec, "error")
 }
 
 func TestServer_sendSSEEvent(t *testing.T) {
@@ -1179,18 +850,11 @@ func TestServer_sendSSEEvent(t *testing.T) {
 
 func TestServer_BroadcastUpdate(t *testing.T) {
 	srv := NewServer([]int{0})
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
-	rec := httptest.NewRecorder()
-
-	go srv.mux.ServeHTTP(rec, req)
-	time.Sleep(150 * time.Millisecond)
+	rec, cancel := setupSSEConnection(t, srv)
 
 	srv.BroadcastUpdate(0, "broadcast/oid", "hello")
 	time.Sleep(100 * time.Millisecond)
-	cancel()
-	time.Sleep(50 * time.Millisecond)
+	cleanupSSE(cancel)
 
 	body := rec.Body.String()
 	if !strings.Contains(body, "broadcast/oid") {
@@ -1201,20 +865,12 @@ func TestServer_BroadcastUpdate(t *testing.T) {
 func TestServer_BroadcastUpdate_ChannelFull(t *testing.T) {
 	srv := NewServer([]int{0})
 	srv.SetMaxConnections(10)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
-	rec := httptest.NewRecorder()
-
-	go srv.mux.ServeHTTP(rec, req)
-	time.Sleep(100 * time.Millisecond)
+	_, cancel := setupSSEConnection(t, srv)
 
 	for i := 0; i < 150; i++ {
 		srv.BroadcastUpdate(0, "fill", int32(i))
 	}
-	cancel()
-	time.Sleep(50 * time.Millisecond)
-	// No assertion other than no panic; we're covering the "channel full" default branch
+	cleanupSSE(cancel)
 }
 
 func TestServer_Start(t *testing.T) {
@@ -1243,11 +899,8 @@ func TestServer_Start(t *testing.T) {
 func TestWriteHTTPResult_DefaultType(t *testing.T) {
 	rec := httptest.NewRecorder()
 	result := catena.StatusResult{Code: catena.OK}
-	// Pass nil so switch hits default (no CatenaValue/Device/Asset)
 	writeHTTPResult(rec, result, nil)
-	if rec.Code != http.StatusOK {
-		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
-	}
+	assertStatus(t, rec, http.StatusOK)
 }
 
 func TestServer_Connect_StreamingNotSupported(t *testing.T) {
@@ -1262,15 +915,10 @@ func TestServer_Connect_StreamingNotSupported(t *testing.T) {
 
 	srv.handleConnect(w, req)
 
-	if rec.Code != http.StatusInternalServerError {
-		t.Errorf("expected status %d when Flusher not supported, got %d", http.StatusInternalServerError, rec.Code)
-	}
-	body, _ := io.ReadAll(rec.Body)
-	var response map[string]string
-	if err := json.Unmarshal(body, &response); err == nil {
-		if !strings.Contains(response["error"], "streaming") && !strings.Contains(response["error"], "Internal") {
-			t.Errorf("expected error to mention streaming or Internal, got %s", response["error"])
-		}
+	assertStatus(t, rec, http.StatusInternalServerError)
+	errMsg := assertHasError(t, rec)
+	if !strings.Contains(errMsg, "streaming") && !strings.Contains(errMsg, "Internal") {
+		t.Errorf("expected error to mention streaming or Internal, got %s", errMsg)
 	}
 }
 
@@ -1283,13 +931,8 @@ func TestWriteHTTPStatusResult_ProdMode(t *testing.T) {
 	result := catena.StatusResult{Code: catena.NOT_FOUND, Error: "detailed internal error"}
 	writeHTTPStatusResult(rec, result)
 
-	body, _ := io.ReadAll(rec.Body)
-	if !bytes.Contains(body, []byte("Not Found")) {
-		t.Errorf("prod mode should hide details, expected 'Not Found' in body, got %q", string(body))
-	}
-	if bytes.Contains(body, []byte("detailed internal error")) {
-		t.Error("prod mode should not expose detailed error message")
-	}
+	assertBodyContains(t, rec, "Not Found")
+	assertBodyNotContains(t, rec, "detailed internal error")
 }
 
 func TestServer_Connect_WithOrigin(t *testing.T) {
@@ -1305,9 +948,7 @@ func TestServer_Connect_WithOrigin(t *testing.T) {
 	cancel()
 	time.Sleep(50 * time.Millisecond)
 
-	if rec.Header().Get("Access-Control-Allow-Origin") != "https://example.com" {
-		t.Errorf("expected CORS Origin header, got %s", rec.Header().Get("Access-Control-Allow-Origin"))
-	}
+	assertHeader(t, rec, "Access-Control-Allow-Origin", "https://example.com")
 }
 
 func TestWriteValueResult_WriteError(t *testing.T) {
@@ -1317,7 +958,6 @@ func TestWriteValueResult_WriteError(t *testing.T) {
 
 	writeValueResult(w, value, http.StatusOK)
 
-	// internal.WriteResponseJSON writes status then body; when Write fails, status may already be 200
 	if rec.Code != http.StatusInternalServerError && rec.Code != http.StatusOK {
 		t.Errorf("expected status 500 or 200 (if header already sent), got %d", rec.Code)
 	}
@@ -1330,10 +970,7 @@ func TestWriteDeviceResult_WriteError(t *testing.T) {
 
 	writeDeviceResult(w, device, http.StatusOK)
 
-	// writeDeviceResult only logs on write error and does not change status after WriteHeader(200)
-	if rec.Code != http.StatusOK {
-		t.Errorf("expected status %d (header already written), got %d", http.StatusOK, rec.Code)
-	}
+	assertStatus(t, rec, http.StatusOK)
 }
 
 func TestWriteAssetResult_WriteError(t *testing.T) {
@@ -1343,9 +980,7 @@ func TestWriteAssetResult_WriteError(t *testing.T) {
 
 	writeAssetResult(w, asset, http.StatusOK)
 
-	if rec.Code != http.StatusOK {
-		t.Errorf("expected status %d (header already written before Write), got %d", http.StatusOK, rec.Code)
-	}
+	assertStatus(t, rec, http.StatusOK)
 }
 
 func TestWriteHTTPResult_WithError_NonDev(t *testing.T) {
@@ -1357,22 +992,14 @@ func TestWriteHTTPResult_WithError_NonDev(t *testing.T) {
 	result := catena.StatusResult{Code: catena.NOT_FOUND, Error: "internal detail"}
 	writeHTTPResult(rec, result, catena.CatenaValue{})
 
-	body, _ := io.ReadAll(rec.Body)
-	if bytes.Contains(body, []byte("internal detail")) {
-		t.Error("prod mode should not expose detailed error in writeHTTPResult")
-	}
+	assertBodyNotContains(t, rec, "internal detail")
 }
 
 func TestServer_Shutdown(t *testing.T) {
 	srv := NewServer([]int{0})
 
-	ctx, cancel := context.WithCancel(context.Background())
+	_, cancel := setupSSEConnection(t, srv)
 	defer cancel()
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
-	rec := httptest.NewRecorder()
-
-	go srv.mux.ServeHTTP(rec, req)
-	time.Sleep(100 * time.Millisecond)
 
 	if srv.connectionQueue.connectionCount() != 1 {
 		t.Errorf("expected 1 connection before shutdown, got %d", srv.connectionQueue.connectionCount())
@@ -1386,7 +1013,6 @@ func TestServer_Shutdown(t *testing.T) {
 
 	select {
 	case <-done:
-		// Shutdown completed
 	case <-time.After(2 * time.Second):
 		t.Fatal("Shutdown timed out")
 	}
@@ -1400,21 +1026,16 @@ func TestServer_Shutdown_MultipleConnections(t *testing.T) {
 	srv := NewServer([]int{0})
 	srv.SetMaxConnections(10)
 
-	ctxs := make([]context.CancelFunc, 3)
+	cancels := make([]context.CancelFunc, 3)
 	for i := 0; i < 3; i++ {
-		ctx, cancel := context.WithCancel(context.Background())
-		ctxs[i] = cancel
-		req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
-		rec := httptest.NewRecorder()
-		go srv.mux.ServeHTTP(rec, req)
+		_, cancel := setupSSEConnection(t, srv)
+		cancels[i] = cancel
 	}
 	defer func() {
-		for _, cancel := range ctxs {
+		for _, cancel := range cancels {
 			cancel()
 		}
 	}()
-
-	time.Sleep(150 * time.Millisecond)
 
 	if srv.connectionQueue.connectionCount() != 3 {
 		t.Errorf("expected 3 connections, got %d", srv.connectionQueue.connectionCount())
@@ -1445,27 +1066,13 @@ func TestServer_SetValue_NotifiesConnections(t *testing.T) {
 		return catena.StatusResult{Code: catena.OK}
 	})
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
-	rec := httptest.NewRecorder()
+	rec, cancel := setupSSEConnection(t, srv)
 
-	go srv.mux.ServeHTTP(rec, req)
-	time.Sleep(150 * time.Millisecond)
-
-	body := []byte(`{"int32_value": 42}`)
-	setReq := httptest.NewRequest(http.MethodPut, "/st2138-api/v1/0/value/brightness", bytes.NewReader(body))
-	setReq.Header.Set("Content-Type", "application/json")
-	setRec := httptest.NewRecorder()
-	srv.mux.ServeHTTP(setRec, setReq)
-
-	if setRec.Code != http.StatusOK {
-		t.Errorf("expected SetValue status %d, got %d", http.StatusOK, setRec.Code)
-	}
+	setRec := makeRequest(t, srv, http.MethodPut, "/st2138-api/v1/0/value/brightness", `{"int32_value": 42}`)
+	assertStatus(t, setRec, http.StatusOK)
 
 	time.Sleep(100 * time.Millisecond)
-	cancel()
-	time.Sleep(50 * time.Millisecond)
+	cleanupSSE(cancel)
 
 	sseBody := rec.Body.String()
 	if !strings.Contains(sseBody, "brightness") {
@@ -1476,28 +1083,16 @@ func TestServer_SetValue_NotifiesConnections(t *testing.T) {
 func TestServer_SetValue_FailureDoesNotNotify(t *testing.T) {
 	srv := NewServer([]int{0})
 
-	// Handler only broadcasts on success -- never reached here
 	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
 		return catena.StatusWithCode(catena.INVALID_ARGUMENT, "bad value")
 	})
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
-	rec := httptest.NewRecorder()
+	rec, cancel := setupSSEConnection(t, srv)
 
-	go srv.mux.ServeHTTP(rec, req)
-	time.Sleep(150 * time.Millisecond)
-
-	body := []byte(`{"int32_value": -1}`)
-	setReq := httptest.NewRequest(http.MethodPut, "/st2138-api/v1/0/value/brightness", bytes.NewReader(body))
-	setReq.Header.Set("Content-Type", "application/json")
-	setRec := httptest.NewRecorder()
-	srv.mux.ServeHTTP(setRec, setReq)
+	makeRequest(t, srv, http.MethodPut, "/st2138-api/v1/0/value/brightness", `{"int32_value": -1}`)
 
 	time.Sleep(100 * time.Millisecond)
-	cancel()
-	time.Sleep(50 * time.Millisecond)
+	cleanupSSE(cancel)
 
 	sseBody := rec.Body.String()
 	lines := strings.Split(sseBody, "\n")
@@ -1510,9 +1105,7 @@ func TestServer_SetValue_FailureDoesNotNotify(t *testing.T) {
 
 func TestBroadcastUpdate_InvalidValue(t *testing.T) {
 	srv := NewServer([]int{0})
-	// bool is not supported by catena.ToProto; this exercises the error branch
 	srv.BroadcastUpdate(0, "test/param", true)
-	// Should not panic; the error is logged internally
 }
 
 func TestSendSSEEvent_WriteFailure(t *testing.T) {
@@ -1576,19 +1169,7 @@ func TestHandleConnect_UpdateEventWriteFailure(t *testing.T) {
 
 func TestRouting_BasePathOnly(t *testing.T) {
 	srv := NewServer([]int{0})
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/", nil)
-	rec := httptest.NewRecorder()
-
-	srv.mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusBadRequest {
-		t.Errorf("expected status %d for base path, got %d", http.StatusBadRequest, rec.Code)
-	}
-	body, _ := io.ReadAll(rec.Body)
-	var response map[string]string
-	if err := json.Unmarshal(body, &response); err == nil {
-		if _, ok := response["error"]; !ok {
-			t.Error("expected error in response body")
-		}
-	}
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/", "")
+	assertStatus(t, rec, http.StatusBadRequest)
+	assertHasError(t, rec)
 }
