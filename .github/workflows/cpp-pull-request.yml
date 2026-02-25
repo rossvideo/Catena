@@ -10,6 +10,7 @@ on:
   pull_request:
     paths:
       - 'sdks/cpp/**'
+      - 'tools/codegen/**'
       - 'unittests/cpp/**'
       - '.github/workflows/cpp-pull-request.yml'
   workflow_dispatch:
