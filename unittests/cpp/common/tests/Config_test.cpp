@@ -403,7 +403,7 @@ TEST_F(ConfigTest, CmdOverwritesEnv) {
 }
 
 /**
- * TEST 6 - Missing "HOME" environment variable throws exception
+ * TEST 6 - Missing "HOME" environment variable changes static_root default to "/"
  */
 TEST_F(ConfigTest, MissingHome) {
 
@@ -416,47 +416,18 @@ TEST_F(ConfigTest, MissingHome) {
     home = getenv("HOME");
     unsetenv("HOME");
 
-    // Do call resulting in throw
+    // Do call resulting in new default
     const auto [exit, code] = config::initConfigVariables(argc, argv, "CONFIGTEST_");
-    EXPECT_TRUE(exit);
-    EXPECT_EQ(code, 1);
-
-    // Reset "HOME"
-    setenv("HOME", home, 0);
-}
-
-/**
- * TEST 7 - Set --certs and --static_root work with missing "HOME" environment variable
- */
-TEST_F(ConfigTest, CertAndStaticRootOverride) {
-    // Create command line args
-    std::vector<std::string> args = {
-        "./test",
-        "--certs=a",
-        "--static_root=a",
-    };
-    int argc;
-    std::vector<char*> argv;
-    buildArgv(args, argc, argv);
-
-    // Save "HOME" value and delete environment variable
-    home = getenv("HOME");
-    unsetenv("HOME");
-
-    // Do call resulting in no throw
-    const auto [exit, code] = config::initConfigVariables(argc, argv.data(), "CONFIGTEST_");
     EXPECT_FALSE(exit);
     EXPECT_EQ(code, 0);
-    EXPECT_EQ(config::certs, "a");
-    EXPECT_EQ(config::static_root, "a");
-    
+    EXPECT_EQ(config::static_root, "/");
 
     // Reset "HOME"
     setenv("HOME", home, 0);
 }
 
 /**
- * TEST 8 - --help prints message and returns exit with code 0
+ * TEST 7 - --help prints message and returns exit with code 0
  */
 TEST_F(ConfigTest, HelpMessage) {
 
@@ -470,4 +441,38 @@ TEST_F(ConfigTest, HelpMessage) {
     const auto [exit, code] = config::initConfigVariables(argc, argv, "CONFIGTEST_");
     EXPECT_TRUE(exit);
     EXPECT_EQ(code, 0);
+}
+
+/**
+ * TEST 8 - Invalid options throw exception
+ */
+TEST_F(ConfigTest, InvalidOption) {
+    // Create command line args
+    std::vector<std::string> cmdArgs = {
+        "./test",
+        "--wrong=b",
+    };
+    int argc;
+    std::vector<char*> argv;
+    buildArgv(cmdArgs, argc, argv);
+    
+    // Expect throw causing exit and code=1
+    const auto [exit, code] = config::initConfigVariables(argc, argv.data(), "CONFIGTEST_");
+    EXPECT_TRUE(exit);
+    EXPECT_EQ(code, 1);
+    
+    // Create environment vairbales
+    std::vector<std::string> envArgs = {
+        "CONFIGTEST_WRONG",
+    };
+    setEnvVars(envArgs);
+
+    char arg0[] = {"./test"};
+    char* argv2[] = {arg0, nullptr};
+    argc = 1;
+
+    // Expect throw causing exit and code=1
+    const auto [exit2, code2] = config::initConfigVariables(argc, argv2, "CONFIGTEST_");
+    EXPECT_TRUE(exit2);
+    EXPECT_EQ(code2, 1);
 }

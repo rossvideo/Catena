@@ -8,13 +8,16 @@ using namespace catena::common;
 std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::string prefix) {
     try {
         //Declare options
+        const char* home = (getenv("HOME") != nullptr) ? getenv("HOME") : CATENA_STATIC_ROOT.c_str(); // TODO: Add windows functionality
         po::options_description configArgs("Allowed options");
         configArgs.add_options()
             (CATENA_HELP_NAME.c_str(), "Get help message")
             (CATENA_SECURE_COMMS_NAME.c_str(), po::value<std::string>()->default_value(CATENA_SECURE_COMMS), "Specify type of secure comms, options are: \"off\", \"tls\"")
+            (CATENA_CERTS_NAME.c_str(), po::value<std::string>()->default_value(CATENA_CERTS), "path/to/certs/files")
             (CATENA_CERT_FILE_NAME.c_str(), po::value<std::string>()->default_value(CATENA_CERT_FILE), "Specify the certificate file")
             (CATENA_KEY_FILE_NAME.c_str(), po::value<std::string>()->default_value(CATENA_KEY_FILE), "Specify the key file")
             (CATENA_CA_FILE_NAME.c_str(), po::value<std::string>()->default_value(CATENA_CA_FILE), "Specify the CA file if using a private CA")
+            (CATENA_STATIC_ROOT_NAME.c_str(), po::value<std::string>()->default_value(home), "Specify the directory to search for external objects")
             (CATENA_LOG_DIR_NAME.c_str(), po::value<std::string>()->default_value(LOG_DIR), "Specify the directory for log files.")
             (CATENA_PORT_NAME.c_str(), po::value<uint16_t>()->default_value(CATENA_PORT), "Catena service port")
             (CATENA_DEFAULT_MAX_ARRAY_SIZE_NAME.c_str(), po::value<uint32_t>()->default_value(kDefaultMaxArrayLength), "Use this to define the default max length for array and string params.")
@@ -24,8 +27,6 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             (CATENA_MUTUAL_AUTHC_NAME.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use this to require client to authenticate")
             (CATENA_AUTHZ_NAME.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use OAuth token authorization")
             (CATENA_SILENT_NAME.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use this to suppress all log output.")
-            (CATENA_CERTS_NAME.c_str(), po::value<std::string>()->default_value("", CATENA_CERTS), "path/to/certs/files")
-            (CATENA_STATIC_ROOT_NAME.c_str(), po::value<std::string>()->default_value("", "/home/user"), "Specify the directory to search for external objects")
             ;
             
         //Read values from command line and environment variables
@@ -43,9 +44,11 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         
         //Store values in config variables
         if (vars.count(CATENA_SECURE_COMMS_NAME)) config::secure_comms = vars[CATENA_SECURE_COMMS_NAME].as<std::string>();
+        if (vars.count(CATENA_CERTS_NAME)) config::certs = vars[CATENA_CERTS_NAME].as<std::string>();
         if (vars.count(CATENA_CERT_FILE_NAME)) config::cert_file = vars[CATENA_CERT_FILE_NAME].as<std::string>();
         if (vars.count(CATENA_KEY_FILE_NAME)) config::key_file = vars[CATENA_KEY_FILE_NAME].as<std::string>();
         if (vars.count(CATENA_CA_FILE_NAME)) config::ca_file = vars[CATENA_CA_FILE_NAME].as<std::string>();
+        if (vars.count(CATENA_STATIC_ROOT_NAME)) config::static_root = vars[CATENA_STATIC_ROOT_NAME].as<std::string>();
         if (vars.count(CATENA_LOG_DIR_NAME)) config::log_dir = vars[CATENA_LOG_DIR_NAME].as<std::string>();
         if (vars.count(CATENA_DEFAULT_MAX_ARRAY_SIZE_NAME)) config::default_max_array_size = vars[CATENA_DEFAULT_MAX_ARRAY_SIZE_NAME].as<uint32_t>();
         if (vars.count(CATENA_DEFAULT_TOTAL_ARRAY_SIZE_NAME)) config::default_total_array_size = vars[CATENA_DEFAULT_TOTAL_ARRAY_SIZE_NAME].as<uint32_t>();
@@ -55,23 +58,6 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(CATENA_MUTUAL_AUTHC_NAME)) config::mutual_authc = vars[CATENA_MUTUAL_AUTHC_NAME].as<bool>();
         if (vars.count(CATENA_AUTHZ_NAME)) config::authz = vars[CATENA_AUTHZ_NAME].as<bool>();
         if (vars.count(CATENA_SILENT_NAME)) config::silent = vars[CATENA_SILENT_NAME].as<bool>();
-        
-        // TODO: Add windows functionality
-        char* home = getenv("HOME");
-        if (vars.count(CATENA_CERTS_NAME) && !vars[CATENA_CERTS_NAME].defaulted()) {
-            config::certs = vars[CATENA_CERTS_NAME].as<std::string>();
-        } else if (home != nullptr) {
-            config::certs = CATENA_CERTS;
-        } else {
-            throw std::runtime_error("\"HOME\" environment variable not found. Required to initialize certs default value.");
-        }
-        if (vars.count(CATENA_STATIC_ROOT_NAME) && !vars[CATENA_STATIC_ROOT_NAME].defaulted()) {
-            config::static_root = vars[CATENA_STATIC_ROOT_NAME].as<std::string>();
-        } else if (home != nullptr) {
-            config::static_root = home;
-        } else {
-            throw std::runtime_error("\"HOME\" environment variable not found. Required to initialize static_root default value.");
-        }
 
     } catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
