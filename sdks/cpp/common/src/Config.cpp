@@ -24,38 +24,28 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             (CATENA_MUTUAL_AUTHC_NAME.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use this to require client to authenticate")
             (CATENA_AUTHZ_NAME.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use OAuth token authorization")
             (CATENA_SILENT_NAME.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use this to suppress all log output.")
+            (CATENA_CERTS_NAME.c_str(), po::value<std::string>()->default_value("", CATENA_CERTS), "path/to/certs/files")
+            (CATENA_STATIC_ROOT_NAME.c_str(), po::value<std::string>()->default_value("", "/home/user"), "Specify the directory to search for external objects")
             ;
-        // TODO: Add windows functionality
-        char* home = getenv("HOME");
-        if (home != nullptr) {
-            configArgs.add_options()
-            (CATENA_CERTS_NAME.c_str(), po::value<std::string>()->default_value(CATENA_CERTS), "path/to/certs/files")
-            (CATENA_STATIC_ROOT_NAME.c_str(), po::value<std::string>()->default_value(home), "Specify the directory to search for external objects")
-            ;
-        } else {
-            throw std::runtime_error("\"HOME\" environment variable not found. Required to initialize static_root and certs default values.");
-        }
-
+            
         //Read values from command line and environment variables
         po::variables_map vars;
         po::store(po::parse_command_line(argc, argv, configArgs), vars);
         po::notify(vars);
         po::store(po::parse_environment(configArgs, prefix), vars);
         po::notify(vars);
-
+        
         // help message
         if (vars.count(CATENA_HELP_NAME) > 0) {
             configArgs.print(std::cout);
             return std::pair<bool, int>(true, 0);
         }
-
+        
         //Store values in config variables
-        if (vars.count(CATENA_CERTS_NAME)) config::certs = vars[CATENA_CERTS_NAME].as<std::string>();
         if (vars.count(CATENA_SECURE_COMMS_NAME)) config::secure_comms = vars[CATENA_SECURE_COMMS_NAME].as<std::string>();
         if (vars.count(CATENA_CERT_FILE_NAME)) config::cert_file = vars[CATENA_CERT_FILE_NAME].as<std::string>();
         if (vars.count(CATENA_KEY_FILE_NAME)) config::key_file = vars[CATENA_KEY_FILE_NAME].as<std::string>();
         if (vars.count(CATENA_CA_FILE_NAME)) config::ca_file = vars[CATENA_CA_FILE_NAME].as<std::string>();
-        if (vars.count(CATENA_STATIC_ROOT_NAME)) config::static_root = vars[CATENA_STATIC_ROOT_NAME].as<std::string>();
         if (vars.count(CATENA_LOG_DIR_NAME)) config::log_dir = vars[CATENA_LOG_DIR_NAME].as<std::string>();
         if (vars.count(CATENA_DEFAULT_MAX_ARRAY_SIZE_NAME)) config::default_max_array_size = vars[CATENA_DEFAULT_MAX_ARRAY_SIZE_NAME].as<uint32_t>();
         if (vars.count(CATENA_DEFAULT_TOTAL_ARRAY_SIZE_NAME)) config::default_total_array_size = vars[CATENA_DEFAULT_TOTAL_ARRAY_SIZE_NAME].as<uint32_t>();
@@ -65,6 +55,24 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(CATENA_MUTUAL_AUTHC_NAME)) config::mutual_authc = vars[CATENA_MUTUAL_AUTHC_NAME].as<bool>();
         if (vars.count(CATENA_AUTHZ_NAME)) config::authz = vars[CATENA_AUTHZ_NAME].as<bool>();
         if (vars.count(CATENA_SILENT_NAME)) config::silent = vars[CATENA_SILENT_NAME].as<bool>();
+        
+        // TODO: Add windows functionality
+        char* home = getenv("HOME");
+        if (vars.count(CATENA_CERTS_NAME) && !vars[CATENA_CERTS_NAME].defaulted()) {
+            config::certs = vars[CATENA_CERTS_NAME].as<std::string>();
+        } else if (home != nullptr) {
+            config::certs = CATENA_CERTS;
+        } else {
+            throw std::runtime_error("\"HOME\" environment variable not found. Required to initialize certs default value.");
+        }
+        if (vars.count(CATENA_STATIC_ROOT_NAME) && !vars[CATENA_STATIC_ROOT_NAME].defaulted()) {
+            config::static_root = vars[CATENA_STATIC_ROOT_NAME].as<std::string>();
+        } else if (home != nullptr) {
+            config::static_root = home;
+        } else {
+            throw std::runtime_error("\"HOME\" environment variable not found. Required to initialize static_root default value.");
+        }
+
     } catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
         return std::pair<bool, int>(true, 1);

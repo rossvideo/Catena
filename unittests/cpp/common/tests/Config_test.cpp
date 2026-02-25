@@ -164,17 +164,17 @@ TEST_F(ConfigTest, defaultValues) {
     EXPECT_EQ(code, 0);
 
     // Check values
-    EXPECT_EQ(config::ca_file, "ca.crt");
-    EXPECT_EQ(config::cert_file, "server.crt");
-    EXPECT_EQ(config::certs, "${HOME}/test_certs");
-    EXPECT_EQ(config::key_file, "server.key");
+    EXPECT_EQ(config::ca_file, config::CATENA_CA_FILE);
+    EXPECT_EQ(config::cert_file, config::CATENA_CERT_FILE);
+    EXPECT_EQ(config::certs, config::CATENA_CERTS);
+    EXPECT_EQ(config::key_file, config::CATENA_KEY_FILE);
     EXPECT_EQ(config::log_dir, LOG_DIR);
-    EXPECT_EQ(config::secure_comms, "off");
+    EXPECT_EQ(config::secure_comms, config::CATENA_SECURE_COMMS);
     EXPECT_EQ(config::static_root, getenv("HOME"));
     EXPECT_EQ(config::default_max_array_size, kDefaultMaxArrayLength);
     EXPECT_EQ(config::default_total_array_size, kDefaultMaxArrayLength);
     EXPECT_EQ(config::max_connections, DEFAULT_MAX_CONNECTIONS);
-    EXPECT_EQ(config::port, 6254);
+    EXPECT_EQ(config::port, config::CATENA_PORT);
     EXPECT_EQ(config::authz, false);
     EXPECT_EQ(config::mutual_authc, false);
     EXPECT_EQ(config::private_ca, false);
@@ -321,13 +321,13 @@ TEST_F(ConfigTest, CmdAndEnv) {
     EXPECT_EQ(config::default_total_array_size, 1);
     EXPECT_EQ(config::mutual_authc, true);
     // Check default values
-    EXPECT_EQ(config::certs, "${HOME}/test_certs");
-    EXPECT_EQ(config::key_file, "server.key");
+    EXPECT_EQ(config::certs, config::CATENA_CERTS);
+    EXPECT_EQ(config::key_file, config::CATENA_KEY_FILE);
     EXPECT_EQ(config::log_dir, LOG_DIR);
-    EXPECT_EQ(config::secure_comms, "off");
+    EXPECT_EQ(config::secure_comms, config::CATENA_SECURE_COMMS);
     EXPECT_EQ(config::static_root, getenv("HOME"));
     EXPECT_EQ(config::max_connections, DEFAULT_MAX_CONNECTIONS);
-    EXPECT_EQ(config::port, 6254);
+    EXPECT_EQ(config::port, config::CATENA_PORT);
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
 }
@@ -426,7 +426,37 @@ TEST_F(ConfigTest, MissingHome) {
 }
 
 /**
- * TEST 7 - --help prints message and returns exit with code 0
+ * TEST 7 - Set --certs and --static_root work with missing "HOME" environment variable
+ */
+TEST_F(ConfigTest, CertAndStaticRootOverride) {
+    // Create command line args
+    std::vector<std::string> args = {
+        "./test",
+        "--certs=a",
+        "--static_root=a",
+    };
+    int argc;
+    std::vector<char*> argv;
+    buildArgv(args, argc, argv);
+
+    // Save "HOME" value and delete environment variable
+    home = getenv("HOME");
+    unsetenv("HOME");
+
+    // Do call resulting in no throw
+    const auto [exit, code] = config::initConfigVariables(argc, argv.data(), "CONFIGTEST_");
+    EXPECT_FALSE(exit);
+    EXPECT_EQ(code, 0);
+    EXPECT_EQ(config::certs, "a");
+    EXPECT_EQ(config::static_root, "a");
+    
+
+    // Reset "HOME"
+    setenv("HOME", home, 0);
+}
+
+/**
+ * TEST 8 - --help prints message and returns exit with code 0
  */
 TEST_F(ConfigTest, HelpMessage) {
 
