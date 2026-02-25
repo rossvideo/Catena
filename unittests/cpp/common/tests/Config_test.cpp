@@ -282,9 +282,6 @@ TEST_F(ConfigTest, EnvironmentVariables) {
     EXPECT_EQ(config::mutual_authc, true);
     EXPECT_EQ(config::private_ca, true);
     EXPECT_EQ(config::silent, true);
-
-    // Delete environment variables
-    // unsetEnvVars(args);
 }
 
 /**
@@ -426,4 +423,21 @@ TEST_F(ConfigTest, MissingHome) {
 
     // Reset "HOME"
     setenv("HOME", home, 0);
+}
+
+/**
+ * TEST 7 - --help prints message and returns exit with code 0
+ */
+TEST_F(ConfigTest, HelpMessage) {
+
+    // Set required command line args
+    char arg0[] = {"./test"};
+    char arg1[] = {"--help"};
+    char* argv[] = {arg0, arg1, nullptr};
+    int argc = 2;
+
+    // Do call resulting in exit
+    const auto [exit, code] = config::initConfigVariables(argc, argv, "CONFIGTEST_");
+    EXPECT_TRUE(exit);
+    EXPECT_EQ(code, 0);
 }
