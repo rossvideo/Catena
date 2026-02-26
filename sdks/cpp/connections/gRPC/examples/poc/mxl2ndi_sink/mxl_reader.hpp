@@ -103,16 +103,20 @@ class MxlReader {
         for (const std::string& key : strings) {
             if (obj.contains(key)) {
                 value.set_string_value(obj[key].get<std::string>());
-                rootFields->insert({key, value});
+            } else {
+                value.set_string_value("");
             }
+            rootFields->insert({key, value});
         }
         // numbers
         std::vector<std::string> numbers{"frame_width", "frame_height"};
         for (const std::string& key : numbers) {
             if (obj.contains(key)) {
                 value.set_int32_value(static_cast<int32_t>(obj[key].get<double>()));
-                rootFields->insert({key, value});
+            } else {
+                value.set_int32_value(0);
             }
+            rootFields->insert({key, value});
         }
         // tags
         if (obj.contains("tags")) {
