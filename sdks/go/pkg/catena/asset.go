@@ -206,28 +206,42 @@ func (ca CatenaAsset) ToJSON() ([]byte, error) {
 	}).Marshal(ca.asset)
 }
 
+func compressGzipTo(w io.Writer, data []byte) error {
+	gw := gzip.NewWriter(w)
+	if _, err := gw.Write(data); err != nil {
+		return fmt.Errorf("gzip write: %w", err)
+	}
+	if err := gw.Close(); err != nil {
+		return fmt.Errorf("gzip close: %w", err)
+	}
+	return nil
+}
+
 // CompressGzip compresses data using gzip format.
 func CompressGzip(data []byte) ([]byte, error) {
 	var buf bytes.Buffer
-	w := gzip.NewWriter(&buf)
-	if _, err := w.Write(data); err != nil {
-		return nil, fmt.Errorf("gzip write: %w", err)
-	}
-	if err := w.Close(); err != nil {
-		return nil, fmt.Errorf("gzip close: %w", err)
+	if err := compressGzipTo(&buf, data); err != nil {
+		return nil, err
 	}
 	return buf.Bytes(), nil
+}
+
+func compressDeflateTo(w io.Writer, data []byte) error {
+	zw := zlib.NewWriter(w)
+	if _, err := zw.Write(data); err != nil {
+		return fmt.Errorf("zlib write: %w", err)
+	}
+	if err := zw.Close(); err != nil {
+		return fmt.Errorf("zlib close: %w", err)
+	}
+	return nil
 }
 
 // CompressDeflate compresses data using zlib (deflate) format.
 func CompressDeflate(data []byte) ([]byte, error) {
 	var buf bytes.Buffer
-	w := zlib.NewWriter(&buf)
-	if _, err := w.Write(data); err != nil {
-		return nil, fmt.Errorf("zlib write: %w", err)
-	}
-	if err := w.Close(); err != nil {
-		return nil, fmt.Errorf("zlib close: %w", err)
+	if err := compressDeflateTo(&buf, data); err != nil {
+		return nil, err
 	}
 	return buf.Bytes(), nil
 }

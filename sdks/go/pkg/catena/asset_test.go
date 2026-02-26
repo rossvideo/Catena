@@ -39,6 +39,9 @@
 package catena
 
 import (
+	"bytes"
+	"compress/gzip"
+	"compress/zlib"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
@@ -925,5 +928,80 @@ func TestToPayloadFromFS_PlainExtension(t *testing.T) {
 	}
 	if dp.PayloadEncoding != EncodingUncompressed {
 		t.Errorf("expected UNCOMPRESSED encoding, got %d", dp.PayloadEncoding)
+	}
+}
+
+type errWriter struct{}
+
+func (errWriter) Write([]byte) (int, error) {
+	return 0, errors.New("intentional write failure")
+}
+
+type failAfterBytes struct {
+	limit   int
+	written int
+}
+
+func (w *failAfterBytes) Write(p []byte) (int, error) {
+	if w.written+len(p) > w.limit {
+		return 0, errors.New("write limit exceeded")
+	}
+	w.written += len(p)
+	return len(p), nil
+}
+
+func TestCompressGzipTo_WriteError(t *testing.T) {
+	err := compressGzipTo(errWriter{}, []byte("data"))
+	if err == nil {
+		t.Fatal("expected gzip write error")
+	}
+	if !strings.Contains(err.Error(), "gzip write") {
+		t.Errorf("expected 'gzip write' in error, got: %v", err)
+	}
+}
+
+func TestCompressGzipTo_CloseError(t *testing.T) {
+	data := []byte("hello")
+	var measure bytes.Buffer
+	gw := gzip.NewWriter(&measure)
+	if _, err := gw.Write(data); err != nil {
+		t.Fatalf("measure Write: %v", err)
+	}
+	limit := measure.Len()
+
+	err := compressGzipTo(&failAfterBytes{limit: limit}, data)
+	if err == nil {
+		t.Fatal("expected gzip close error")
+	}
+	if !strings.Contains(err.Error(), "gzip close") {
+		t.Errorf("expected 'gzip close' in error, got: %v", err)
+	}
+}
+
+func TestCompressDeflateTo_WriteError(t *testing.T) {
+	err := compressDeflateTo(errWriter{}, []byte("data"))
+	if err == nil {
+		t.Fatal("expected zlib write error")
+	}
+	if !strings.Contains(err.Error(), "zlib write") {
+		t.Errorf("expected 'zlib write' in error, got: %v", err)
+	}
+}
+
+func TestCompressDeflateTo_CloseError(t *testing.T) {
+	data := []byte("hello")
+	var measure bytes.Buffer
+	zw := zlib.NewWriter(&measure)
+	if _, err := zw.Write(data); err != nil {
+		t.Fatalf("measure Write: %v", err)
+	}
+	limit := measure.Len()
+
+	err := compressDeflateTo(&failAfterBytes{limit: limit}, data)
+	if err == nil {
+		t.Fatal("expected zlib close error")
+	}
+	if !strings.Contains(err.Error(), "zlib close") {
+		t.Errorf("expected 'zlib close' in error, got: %v", err)
 	}
 }
