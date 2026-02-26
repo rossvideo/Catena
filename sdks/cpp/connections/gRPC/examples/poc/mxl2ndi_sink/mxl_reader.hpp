@@ -197,7 +197,9 @@ class MxlReader {
     }
 
     const NDIlib_video_frame_v2_t* dumpNdiFrame(uint64_t& sleepNs) {
-        uint64_t index = mxlGetCurrentIndex(&_rate);
+        // uint64_t index = mxlGetCurrentIndex(&_rate);
+        mxlFlowReaderGetInfo(_reader, &_flowInfo);
+        uint64_t index = _flowInfo.runtime.headIndex;
 
         mxlGrainInfo grainInfo;
         uint8_t* payload = nullptr;
