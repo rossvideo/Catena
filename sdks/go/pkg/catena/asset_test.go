@@ -627,13 +627,9 @@ func TestParsePayloadEncoding(t *testing.T) {
 		{"gzip", EncodingGzip, false},
 		{"DEFLATE", EncodingDeflate, false},
 		{"deflate", EncodingDeflate, false},
-		{"0", EncodingUncompressed, false},
-		{"1", EncodingGzip, false},
-		{"2", EncodingDeflate, false},
 		{"", EncodingUncompressed, false},
 		{"  GZIP  ", EncodingGzip, false},
 		{"INVALID", 0, true},
-		{"3", 0, true},
 	}
 
 	for _, tt := range tests {

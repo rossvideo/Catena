@@ -281,14 +281,14 @@ func EncodePayload(data []byte, encoding int32) ([]byte, error) {
 }
 
 // ParsePayloadEncoding converts a string (e.g. "GZIP", "DEFLATE", "UNCOMPRESSED")
-// or numeric string ("0", "1", "2") to the corresponding encoding constant.
+// to the corresponding encoding constant.
 func ParsePayloadEncoding(s string) (int32, error) {
 	switch strings.ToUpper(strings.TrimSpace(s)) {
-	case "UNCOMPRESSED", "0", "":
+	case "UNCOMPRESSED", "":
 		return EncodingUncompressed, nil
-	case "GZIP", "1":
+	case "GZIP":
 		return EncodingGzip, nil
-	case "DEFLATE", "2":
+	case "DEFLATE":
 		return EncodingDeflate, nil
 	default:
 		return 0, fmt.Errorf("invalid payload encoding: %s", s)
