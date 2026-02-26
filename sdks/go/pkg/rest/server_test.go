@@ -56,7 +56,7 @@ import (
 
 func TestNewServer(t *testing.T) {
 	slots := []int{0, 1, 2}
-	srv := NewServer(slots)
+	srv := NewServer(slots, 100)
 
 	if srv == nil {
 		t.Fatal("NewServer returned nil")
@@ -64,25 +64,25 @@ func TestNewServer(t *testing.T) {
 	if srv.mux == nil {
 		t.Error("server mux should be initialized")
 	}
-	if srv.getDeviceHandlers == nil {
+	if srv.BaseServer.GetDeviceHandlers == nil {
 		t.Error("getDeviceHandlers map should be initialized")
 	}
-	if srv.getValueHandlers == nil {
+	if srv.BaseServer.GetValueHandlers == nil {
 		t.Error("getValueHandlers map should be initialized")
 	}
-	if srv.setValueHandlers == nil {
+	if srv.BaseServer.SetValueHandlers == nil {
 		t.Error("setValueHandlers map should be initialized")
 	}
-	if srv.getAssetHandlers == nil {
+	if srv.BaseServer.GetAssetHandlers == nil {
 		t.Error("getAssetHandlers map should be initialized")
 	}
-	if srv.executeCommandHandlers == nil {
+	if srv.BaseServer.ExecuteCommandHandlers == nil {
 		t.Error("executeCommandHandlers map should be initialized")
 	}
 }
 
 func TestServer_RegisterGetDeviceHandler(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	handlerCalled := false
 	srv.RegisterGetDeviceHandler(0, func() (catena.CatenaDevice, catena.StatusResult) {
@@ -90,7 +90,8 @@ func TestServer_RegisterGetDeviceHandler(t *testing.T) {
 		return catena.CatenaDevice{}, catena.StatusResult{Code: catena.OK}
 	})
 
-	handler := srv.getDeviceHandlers[0]
+	// Call the registered handler
+	handler := srv.BaseServer.GetDeviceHandlers[0]
 	_, _ = handler()
 
 	if !handlerCalled {
@@ -99,7 +100,7 @@ func TestServer_RegisterGetDeviceHandler(t *testing.T) {
 }
 
 func TestServer_RegisterGetValueHandler(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	handlerCalled := false
 	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
@@ -113,7 +114,7 @@ func TestServer_RegisterGetValueHandler(t *testing.T) {
 		return catena.CatenaValue{}, catena.StatusResult{Code: catena.OK}
 	})
 
-	handler := srv.lookupGetValue(0)
+	handler := srv.BaseServer.LookupGetValueHandler(0)
 	_, _ = handler(0, "test/param")
 
 	if !handlerCalled {
@@ -122,7 +123,7 @@ func TestServer_RegisterGetValueHandler(t *testing.T) {
 }
 
 func TestServer_RegisterSetValueHandler(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	handlerCalled := false
 	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
@@ -133,7 +134,7 @@ func TestServer_RegisterSetValueHandler(t *testing.T) {
 		return catena.StatusResult{Code: catena.OK}
 	})
 
-	handler := srv.lookupSetValue(0)
+	handler := srv.BaseServer.LookupSetValueHandler(0)
 	_ = handler(int32(42), 0, "test/param")
 
 	if !handlerCalled {
@@ -142,7 +143,7 @@ func TestServer_RegisterSetValueHandler(t *testing.T) {
 }
 
 func TestServer_RegisterGetAssetHandler(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	handlerCalled := false
 	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
@@ -150,7 +151,7 @@ func TestServer_RegisterGetAssetHandler(t *testing.T) {
 		return catena.CatenaAsset{}, catena.StatusResult{Code: catena.OK}
 	})
 
-	handler := srv.lookupGetAsset(0)
+	handler := srv.BaseServer.LookupGetAssetHandler(0)
 	_, _ = handler(0, "test/asset")
 
 	if !handlerCalled {
@@ -159,10 +160,10 @@ func TestServer_RegisterGetAssetHandler(t *testing.T) {
 }
 
 func TestServer_RegisterExecuteCommandHandler(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	handlerCalled := false
-	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 		handlerCalled = true
 		if commandFqoid != "test/command" {
 			t.Errorf("expected commandFqoid 'test/command', got %s", commandFqoid)
@@ -170,8 +171,8 @@ func TestServer_RegisterExecuteCommandHandler(t *testing.T) {
 		return catena.CatenaValue{}, catena.StatusResult{Code: catena.OK}
 	})
 
-	handler := srv.lookupExecuteCommand(0)
-	_, _ = handler(nil, nil, 0, "test/command", nil)
+	handler := srv.LookupExecuteCommandHandler(0)
+	_, _ = handler(0, "test/command", nil)
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
@@ -179,7 +180,7 @@ func TestServer_RegisterExecuteCommandHandler(t *testing.T) {
 }
 
 func TestServer_RegisterFallbackHandler(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	handlerCalled := false
 	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
@@ -198,7 +199,7 @@ func TestServer_RegisterFallbackHandler(t *testing.T) {
 }
 
 func TestServer_GetDevice_Route(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	handlerCalled := false
 	deviceMap := map[string]any{
@@ -221,7 +222,7 @@ func TestServer_GetDevice_Route(t *testing.T) {
 }
 
 func TestServer_GetDevice_NotFound(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	handlerCalled := false
 	srv.RegisterGetDeviceHandler(0, func() (catena.CatenaDevice, catena.StatusResult) {
@@ -239,7 +240,7 @@ func TestServer_GetDevice_NotFound(t *testing.T) {
 }
 
 func TestServer_GetDevice_InvalidSlot(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	handlerCalled := false
 	srv.RegisterGetDeviceHandler(0, func() (catena.CatenaDevice, catena.StatusResult) {
@@ -257,7 +258,7 @@ func TestServer_GetDevice_InvalidSlot(t *testing.T) {
 }
 
 func TestServer_GetValue_Route(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	value, _ := catena.ToCatenaValue(int32(42))
 	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
@@ -272,7 +273,7 @@ func TestServer_GetValue_Route(t *testing.T) {
 }
 
 func TestServer_SetValue_Route(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	handlerCalled := false
 	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
@@ -294,7 +295,7 @@ func TestServer_SetValue_Route(t *testing.T) {
 }
 
 func TestServer_SetValue_InvalidContentType(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	handlerCalled := false
 	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
@@ -315,7 +316,7 @@ func TestServer_SetValue_InvalidContentType(t *testing.T) {
 }
 
 func TestServer_GetAsset_Route(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	dp := catena.DataPayload{
 		Metadata: map[string]string{"content-type": "image/png"},
@@ -332,7 +333,7 @@ func TestServer_GetAsset_Route(t *testing.T) {
 }
 
 func TestServer_GetAsset_MethodNotAllowed(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	handlerCalled := false
 	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
@@ -347,10 +348,10 @@ func TestServer_GetAsset_MethodNotAllowed(t *testing.T) {
 }
 
 func TestServer_ExecuteCommand_Route(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	handlerCalled := false
-	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 		handlerCalled = true
 		if commandFqoid != "reboot" {
 			t.Errorf("expected commandFqoid 'reboot', got %s", commandFqoid)
@@ -366,10 +367,10 @@ func TestServer_ExecuteCommand_Route(t *testing.T) {
 }
 
 func TestServer_ExecuteCommand_WithPayload(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	handlerCalled := false
-	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 		handlerCalled = true
 		if payload == nil {
 			t.Error("expected payload to be non-nil")
@@ -385,10 +386,10 @@ func TestServer_ExecuteCommand_WithPayload(t *testing.T) {
 }
 
 func TestServer_ExecuteCommand_MethodNotAllowed(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	handlerCalled := false
-	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 		handlerCalled = true
 		return catena.Reply(catena.CatenaValue{})
 	})
@@ -401,7 +402,7 @@ func TestServer_ExecuteCommand_MethodNotAllowed(t *testing.T) {
 }
 
 func TestServer_Connect_Route(t *testing.T) {
-	srv := NewServer([]int{0, 1})
+	srv := NewServer([]int{0, 1}, 100)
 
 	rec, cancel := setupSSEConnection(t, srv)
 	cleanupSSE(cancel)
@@ -443,7 +444,7 @@ func TestServer_Connect_Route(t *testing.T) {
 }
 
 func TestServer_Connect_MethodNotAllowed(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/connect", "")
 	assertStatus(t, rec, http.StatusMethodNotAllowed)
@@ -454,7 +455,7 @@ func TestServer_Connect_MethodNotAllowed(t *testing.T) {
 }
 
 func TestServer_Fallback_Route(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	handlerCalled := false
 	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
@@ -470,9 +471,10 @@ func TestServer_Fallback_Route(t *testing.T) {
 }
 
 func TestServer_DefaultHandlers(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
-	device, status := srv.getDeviceHandlers[0]()
+	// Test default device handler
+	device, status := srv.BaseServer.GetDeviceHandlers[0]()
 	if status.Code != catena.NOT_FOUND {
 		t.Errorf("default device handler should return NOT_FOUND, got %v", status.Code)
 	}
@@ -480,7 +482,8 @@ func TestServer_DefaultHandlers(t *testing.T) {
 		t.Error("default device handler should return nil device")
 	}
 
-	value, status := srv.lookupGetValue(0)(0, "test")
+	// Test default get value handler
+	value, status := srv.LookupGetValueHandler(0)(0, "test")
 	if status.Code != catena.UNIMPLEMENTED {
 		t.Errorf("default get value handler should return UNIMPLEMENTED, got %v", status.Code)
 	}
@@ -488,12 +491,14 @@ func TestServer_DefaultHandlers(t *testing.T) {
 		t.Error("default get value handler should return nil value")
 	}
 
-	status = srv.lookupSetValue(0)(nil, 0, "test")
+	// Test default set value handler
+	status = srv.LookupSetValueHandler(0)(nil, 0, "test")
 	if status.Code != catena.UNIMPLEMENTED {
 		t.Errorf("default set value handler should return UNIMPLEMENTED, got %v", status.Code)
 	}
 
-	asset, status := srv.lookupGetAsset(0)(0, "test")
+	// Test default get asset handler
+	asset, status := srv.BaseServer.LookupGetAssetHandler(0)(0, "test")
 	if status.Code != catena.NOT_FOUND {
 		t.Errorf("default get asset handler should return NOT_FOUND, got %v", status.Code)
 	}
@@ -501,42 +506,44 @@ func TestServer_DefaultHandlers(t *testing.T) {
 		t.Error("default get asset handler should return nil asset")
 	}
 
-	value, status = srv.lookupExecuteCommand(0)(nil, nil, 0, "test", nil)
+	// Test default execute command handler
+	value, status = srv.LookupExecuteCommandHandler(0)(0, "test", nil)
 	if status.Code != catena.UNIMPLEMENTED {
 		t.Errorf("default execute command handler should return UNIMPLEMENTED, got %v", status.Code)
 	}
 }
 
 func TestServer_LookupHandlers_NotRegistered(t *testing.T) {
-	srv := NewServer([]int{})
+	srv := NewServer([]int{}, 100) // No slots registered
 
-	handler := srv.lookupGetValue(99)
+	// Should return default handlers for unregistered slots
+	handler := srv.LookupGetValueHandler(99)
 	_, status := handler(99, "test")
 	if status.Code != catena.UNIMPLEMENTED {
 		t.Errorf("expected UNIMPLEMENTED for unregistered slot, got %v", status.Code)
 	}
 
-	setHandler := srv.lookupSetValue(99)
+	setHandler := srv.LookupSetValueHandler(99)
 	status = setHandler(nil, 99, "test")
 	if status.Code != catena.UNIMPLEMENTED {
 		t.Errorf("expected UNIMPLEMENTED for unregistered slot, got %v", status.Code)
 	}
 
-	assetHandler := srv.lookupGetAsset(99)
+	assetHandler := srv.LookupGetAssetHandler(99)
 	_, status = assetHandler(99, "test")
 	if status.Code != catena.NOT_FOUND {
 		t.Errorf("expected NOT_FOUND for unregistered slot, got %v", status.Code)
 	}
 
-	cmdHandler := srv.lookupExecuteCommand(99)
-	_, status = cmdHandler(nil, nil, 99, "test", nil)
+	cmdHandler := srv.LookupExecuteCommandHandler(99)
+	_, status = cmdHandler(99, "test", nil)
 	if status.Code != catena.UNIMPLEMENTED {
 		t.Errorf("expected UNIMPLEMENTED for unregistered slot, got %v", status.Code)
 	}
 }
 
 func TestServer_NestedValuePath(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		if fqoid != "nested/path/to/param" {
@@ -551,31 +558,31 @@ func TestServer_NestedValuePath(t *testing.T) {
 }
 
 func TestServer_UnknownEndpoint(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/unknown", "")
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
 func TestServer_InvalidPath(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	rec := makeRequest(t, srv, http.MethodGet, "/kjhgjnghf", "")
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
 func TestServer_InvalidPathNoSlash(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1", "")
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
 func TestServer_NegativeSlot(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/-1", "")
 	assertStatus(t, rec, http.StatusBadRequest)
 }
 
 func TestServer_MultipleSlots(t *testing.T) {
-	srv := NewServer([]int{0, 1, 2})
+	srv := NewServer([]int{0, 1, 2}, 100)
 
 	for i := 0; i < 3; i++ {
 		slot := i
@@ -677,9 +684,9 @@ func TestCommandEndpoint_PayloadHandling(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := NewServer([]int{0})
+			srv := NewServer([]int{0}, 100)
 			var receivedPayload any
-			srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, fqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+			srv.RegisterExecuteCommandHandler(0, func(slot int, fqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 				receivedPayload = payload
 				return catena.Reply(catena.CatenaValue{})
 			})
@@ -696,7 +703,7 @@ func TestCommandEndpoint_PayloadHandling(t *testing.T) {
 }
 
 func TestSetValue_FromProtoError(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	rec := makeRequest(t, srv, http.MethodPut, "/st2138-api/v1/0/value/param",
 		`{"struct_variant_value": {"variant_name": "test"}}`)
 	if rec.Code == 0 {
@@ -705,7 +712,7 @@ func TestSetValue_FromProtoError(t *testing.T) {
 }
 
 func TestRouting_EdgeCases(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	tests := []struct {
 		name string
@@ -725,7 +732,7 @@ func TestRouting_EdgeCases(t *testing.T) {
 }
 
 func TestValueEndpoint_Methods(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
 		return catena.StatusResult{Code: catena.OK}
 	})
@@ -747,13 +754,13 @@ func TestValueEndpoint_Methods(t *testing.T) {
 }
 
 func TestDeviceEndpoint_NotRegistered(t *testing.T) {
-	srv := NewServer([]int{})
+	srv := NewServer([]int{}, 100)
 	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0", "")
 	assertHasError(t, rec)
 }
 
 func TestServer_Connect_TooManyConnections(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	srv.SetMaxConnections(1)
 
 	_, cancel1 := setupSSEConnection(t, srv)
@@ -782,19 +789,19 @@ func TestWriteResults_ValidData(t *testing.T) {
 }
 
 func TestCommandEndpoint_InvalidJSON(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/command/test", `{invalid json}`)
 	assertStatus(t, rec, http.StatusBadRequest)
 }
 
 func TestDeviceEndpoint_WrongMethod(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0", "")
 	assertHasError(t, rec)
 }
 
 func TestCommandEndpoint_FromProtoError(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/command/exec",
 		`{"struct_variant_value": {"variant_name": "test"}}`)
 }
@@ -811,7 +818,7 @@ func TestWriteHTTPStatusResult_WithError(t *testing.T) {
 }
 
 func TestServer_sendSSEEvent(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	rec := httptest.NewRecorder()
 	var w http.ResponseWriter = rec
 	flusher := w.(http.Flusher)
@@ -850,7 +857,7 @@ func TestServer_sendSSEEvent(t *testing.T) {
 }
 
 func TestServer_BroadcastUpdate(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	rec, cancel := setupSSEConnection(t, srv)
 
 	srv.BroadcastUpdate(0, "broadcast/oid", "hello")
@@ -864,7 +871,7 @@ func TestServer_BroadcastUpdate(t *testing.T) {
 }
 
 func TestServer_BroadcastUpdate_ChannelFull(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	srv.SetMaxConnections(10)
 	_, cancel := setupSSEConnection(t, srv)
 
@@ -875,7 +882,7 @@ func TestServer_BroadcastUpdate_ChannelFull(t *testing.T) {
 }
 
 func TestServer_Start(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
 		t.Fatalf("net.Listen: %v", err)
@@ -993,7 +1000,7 @@ func TestServer_Connect_StreamingNotSupported(t *testing.T) {
 	defer catena.SetEnv(original)
 	catena.SetEnv(catena.EnvDev)
 
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
 	rec := httptest.NewRecorder()
 	w := &noFlusher{ResponseWriter: rec}
@@ -1021,7 +1028,7 @@ func TestWriteHTTPStatusResult_ProdMode(t *testing.T) {
 }
 
 func TestServer_Connect_WithOrigin(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
@@ -1081,13 +1088,13 @@ func TestWriteHTTPResult_WithError_NonDev(t *testing.T) {
 }
 
 func TestServer_Shutdown(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	_, cancel := setupSSEConnection(t, srv)
 	defer cancel()
 
-	if srv.connectionQueue.connectionCount() != 1 {
-		t.Errorf("expected 1 connection before shutdown, got %d", srv.connectionQueue.connectionCount())
+	if srv.ConnectionCount() != 1 {
+		t.Errorf("expected 1 connection before shutdown, got %d", srv.ConnectionCount())
 	}
 
 	done := make(chan struct{})
@@ -1102,13 +1109,13 @@ func TestServer_Shutdown(t *testing.T) {
 		t.Fatal("Shutdown timed out")
 	}
 
-	if srv.connectionQueue.connectionCount() != 0 {
-		t.Errorf("expected 0 connections after shutdown, got %d", srv.connectionQueue.connectionCount())
+	if srv.ConnectionCount() != 0 {
+		t.Errorf("expected 0 connections after shutdown, got %d", srv.ConnectionCount())
 	}
 }
 
 func TestServer_Shutdown_MultipleConnections(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	srv.SetMaxConnections(10)
 
 	cancels := make([]context.CancelFunc, 3)
@@ -1122,8 +1129,10 @@ func TestServer_Shutdown_MultipleConnections(t *testing.T) {
 		}
 	}()
 
-	if srv.connectionQueue.connectionCount() != 3 {
-		t.Errorf("expected 3 connections, got %d", srv.connectionQueue.connectionCount())
+	time.Sleep(150 * time.Millisecond)
+
+	if srv.ConnectionCount() != 3 {
+		t.Errorf("expected 3 connections, got %d", srv.ConnectionCount())
 	}
 
 	done := make(chan struct{})
@@ -1138,13 +1147,13 @@ func TestServer_Shutdown_MultipleConnections(t *testing.T) {
 		t.Fatal("Shutdown timed out")
 	}
 
-	if srv.connectionQueue.connectionCount() != 0 {
-		t.Errorf("expected 0 connections after shutdown, got %d", srv.connectionQueue.connectionCount())
+	if srv.ConnectionCount() != 0 {
+		t.Errorf("expected 0 connections after shutdown, got %d", srv.ConnectionCount())
 	}
 }
 
 func TestServer_SetValue_NotifiesConnections(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
 		srv.BroadcastUpdate(slot, fqoid, value)
@@ -1166,7 +1175,7 @@ func TestServer_SetValue_NotifiesConnections(t *testing.T) {
 }
 
 func TestServer_SetValue_FailureDoesNotNotify(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
 		return catena.StatusWithCode(catena.INVALID_ARGUMENT, "bad value")
@@ -1189,12 +1198,13 @@ func TestServer_SetValue_FailureDoesNotNotify(t *testing.T) {
 }
 
 func TestBroadcastUpdate_InvalidValue(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
+	// bool is not supported by catena.ToProto; this exercises the error branch
 	srv.BroadcastUpdate(0, "test/param", true)
 }
 
 func TestSendSSEEvent_WriteFailure(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	rec := httptest.NewRecorder()
 	w := &failFlusherWriter{ResponseRecorder: rec, failAfterN: 0}
 	update := &protos.PushUpdates{
@@ -1214,20 +1224,20 @@ func TestSendSSEEvent_WriteFailure(t *testing.T) {
 }
 
 func TestHandleConnect_InitialEventWriteFailure(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	rec := httptest.NewRecorder()
 	w := &failFlusherWriter{ResponseRecorder: rec, failAfterN: 0}
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
 
 	srv.handleConnect(w, req)
 
-	if srv.connectionQueue.connectionCount() != 0 {
-		t.Errorf("expected 0 connections after initial event failure, got %d", srv.connectionQueue.connectionCount())
+	if srv.ConnectionCount() != 0 {
+		t.Errorf("expected 0 connections after initial event failure, got %d", srv.ConnectionCount())
 	}
 }
 
 func TestHandleConnect_UpdateEventWriteFailure(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	rec := httptest.NewRecorder()
 	w := &failFlusherWriter{ResponseRecorder: rec, failAfterN: 1}
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
@@ -1247,13 +1257,13 @@ func TestHandleConnect_UpdateEventWriteFailure(t *testing.T) {
 		t.Fatal("handler did not exit after update write failure")
 	}
 
-	if srv.connectionQueue.connectionCount() != 0 {
-		t.Errorf("expected 0 connections after write failure, got %d", srv.connectionQueue.connectionCount())
+	if srv.ConnectionCount() != 0 {
+		t.Errorf("expected 0 connections after write failure, got %d", srv.ConnectionCount())
 	}
 }
 
 func TestRouting_BasePathOnly(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/", "")
 	assertStatus(t, rec, http.StatusBadRequest)
 	assertHasError(t, rec)

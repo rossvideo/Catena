@@ -115,9 +115,9 @@ golang () {
   mkdir -p ~/Catena/coverage
 
   if [ "$verbose" = true ]; then
-    go test ./pkg/... ./internal/... -v -coverpkg=./pkg/...,./internal -coverprofile="$COVERAGE_FILE" -covermode=count
+    go test ./pkg/... -v -coverpkg=./pkg/... -coverprofile="$COVERAGE_FILE" -covermode=count
   else
-    go test ./pkg/... ./internal/... -coverpkg=./pkg/...,./internal -coverprofile="$COVERAGE_FILE" -covermode=count
+    go test ./pkg/... -coverpkg=./pkg/... -coverprofile="$COVERAGE_FILE" -covermode=count
   fi
 
   # Show coverage summary

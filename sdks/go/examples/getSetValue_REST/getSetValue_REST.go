@@ -192,7 +192,7 @@ func main() {
 	slotList := []int{0, 1, 2}
 
 	// Build a BaseServer (decoupled from catena).
-	srv := rest.NewServer(slotList)
+	srv := rest.NewServer(slotList, 100)
 
 	// Register param handlers for each device.
 	// Device 0: basic param handlers for all params.
@@ -205,7 +205,7 @@ func main() {
 	// Register command handlers for each slot
 	for _, slot := range slotList {
 		slot := slot // capture loop variable
-		srv.RegisterExecuteCommandHandler(slot, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+		srv.RegisterExecuteCommandHandler(slot, func(slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 			logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid, "payload", payload)
 			// Return schema-compliant command_response format
 			// Options: {response: value}, {no_response: {}}, or {exception: {...}}

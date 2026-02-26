@@ -1,15 +1,18 @@
-CMDS := executeCommand_REST getAsset_REST getDevice_REST getSetValue_REST
+CMDS_REST := executeCommand_REST getAsset_REST getDevice_REST getSetValue_REST
+CMDS_GRPC := getDevice_GRPC getSetValue_GRPC
+CMDS := $(CMDS_REST) $(CMDS_GRPC)
 BIN_DIR := $(HOME)/Catena/$(BUILD_TARGET)
 LOG_DIR := ./logs
 
 # Proto config
-GOBIN       := $(shell go env GOPATH)/bin
-PROTO_DIR   := $(abspath ../../smpte/interface/proto)
-OUT_DIR     := $(abspath ../../build/go/protos)
-MOD_DIR     := $(abspath ../../build/go)
-IMPORT_PATH := github.com/rossvideo/catena/build/go/protos
-PROTO_FILES := $(wildcard $(PROTO_DIR)/*.proto)
-GO_M_OPTS   := $(patsubst %,--go_opt=M%=$(IMPORT_PATH),$(notdir $(PROTO_FILES)))
+GOBIN         := $(shell go env GOPATH)/bin
+PROTO_DIR     := $(abspath ../../smpte/interface/proto)
+OUT_DIR       := $(abspath ../../build/go/protos)
+MOD_DIR       := $(abspath ../../build/go)
+IMPORT_PATH   := github.com/rossvideo/catena/build/go/protos
+PROTO_FILES   := $(wildcard $(PROTO_DIR)/*.proto)
+GO_M_OPTS     := $(patsubst %,--go_opt=M%=$(IMPORT_PATH),$(notdir $(PROTO_FILES)))
+GO_GRPC_M_OPTS:= $(patsubst %,--go-grpc_opt=M%=$(IMPORT_PATH),$(notdir $(PROTO_FILES)))
 
 all: $(CMDS)
 
@@ -50,7 +53,7 @@ protos-grpc: proto-module proto-tools
 	PATH="$(PATH):$(GOBIN)" protoc -I "$(PROTO_DIR)" \
 		--go-grpc_out="$(OUT_DIR)" \
 		--go-grpc_opt=paths=source_relative \
-		--go-grpc_opt=Mservice.proto=$(IMPORT_PATH) \
+		$(GO_GRPC_M_OPTS) \
 		"$(PROTO_DIR)/service.proto"
 
 update-imports:

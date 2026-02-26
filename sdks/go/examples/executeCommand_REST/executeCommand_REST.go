@@ -220,7 +220,7 @@ func main() {
 	// Server Setup
 	// ==========================================================================
 	slotList := []int{0}
-	srv = rest.NewServer(slotList)
+	srv = rest.NewServer(slotList, 100)
 
 	// Register GetValue handler to retrieve counter state
 	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
@@ -228,11 +228,11 @@ func main() {
 			val, _ := catena.ToCatenaValue(buildResponse())
 			return catena.Reply(val)
 		}
-		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"parameter not found: " + fqoid)
+		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found: "+fqoid)
 	})
 
 	// Register ExecuteCommand handler
-	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 
 		handler, ok := commands[commandFqoid]
@@ -257,13 +257,13 @@ func main() {
 		if r.URL.Path == "/" {
 			data, err := staticFS.ReadFile("static/index.htm")
 			if err != nil {
-				return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"index.html not found")
+				return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "index.html not found")
 			}
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Write(data)
 			return catena.Reply(catena.CatenaValue{})
 		}
-		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND,"endpoint not found: " + r.URL.Path)
+		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found: "+r.URL.Path)
 	})
 
 	// ==========================================================================

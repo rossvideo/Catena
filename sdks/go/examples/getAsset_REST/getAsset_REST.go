@@ -110,7 +110,7 @@ func main() {
 	// Server Setup
 	// ==========================================================================
 	slotList := []int{0}
-	srv = rest.NewServer(slotList)
+	srv = rest.NewServer(slotList, 100)
 
 	// Register GetAsset handler
 	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {

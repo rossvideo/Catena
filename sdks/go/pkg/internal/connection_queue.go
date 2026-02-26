@@ -29,14 +29,14 @@
  */
 
 /**
- * @brief Connection queue for managing SSE connections in the Catena REST server.
+ * @brief Unified streaming connection queue for REST (SSE) and gRPC servers.
  * @file connection_queue.go
  * @copyright Copyright © 2026 Ross Video Ltd
- * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2026-02-19
+ * @author Christian Twarog (christian.twarog@rossvideo.com)
+ * @date 2026-02-26
  */
 
-package rest
+package internal
 
 import (
 	"sync"
@@ -45,44 +45,46 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
-// connection represents an active SSE connection.
+// Connection represents an active streaming connection (SSE or gRPC).
 // Each connection runs in its own goroutine and receives updates via the
-// updates channel as proto PushUpdates messages. The done channel is closed
-// by the connectionQueue to signal server-initiated shutdown.
-type connection struct {
-	id      int
-	updates chan *protos.PushUpdates
-	done    chan struct{}
+// Updates channel as proto PushUpdates messages. The Done channel is closed
+// by the ConnectionQueue to signal server-initiated shutdown.
+type Connection struct {
+	ID      int
+	Updates chan *protos.PushUpdates
+	Done    chan struct{}
 }
 
-// connectionQueue manages SSE connections to the service.
-type connectionQueue struct {
+// ConnectionQueue manages streaming connections for both REST (SSE) and gRPC servers.
+// It provides thread-safe connection registration, broadcast updates, and graceful shutdown.
+type ConnectionQueue struct {
 	mu             sync.Mutex
-	connections    map[int]*connection
+	connections    map[int]*Connection
 	nextConnID     int
 	maxConnections int
 	wg             sync.WaitGroup
 	shuttingDown   bool
 }
 
-// newConnectionQueue creates a new connectionQueue.
+// NewConnectionQueue creates a new connection queue for streaming connections.
 // maxConnections sets the limit on simultaneous connections (0 = unlimited).
-func newConnectionQueue(maxConnections int) *connectionQueue {
-	return &connectionQueue{
-		connections:    make(map[int]*connection),
+func NewConnectionQueue(maxConnections int) *ConnectionQueue {
+	return &ConnectionQueue{
+		connections:    make(map[int]*Connection),
 		maxConnections: maxConnections,
 	}
 }
 
-// setMaxConnections updates the maximum number of connections allowed (0 = unlimited).
-func (cq *connectionQueue) setMaxConnections(max int) {
+// SetMaxConnections updates the maximum number of connections allowed (0 = unlimited).
+func (cq *ConnectionQueue) SetMaxConnections(max int) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 	cq.maxConnections = max
 }
 
-// registerConnection creates a new connection and returns its ID and connection.
-func (cq *connectionQueue) registerConnection() (int, *connection) {
+// RegisterConnection creates a new connection and returns its ID and connection.
+// Returns (-1, nil) if server is shutting down or max connections reached.
+func (cq *ConnectionQueue) RegisterConnection() (int, *Connection) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
@@ -95,67 +97,67 @@ func (cq *connectionQueue) registerConnection() (int, *connection) {
 	}
 
 	cq.nextConnID++
-	conn := &connection{
-		id:      cq.nextConnID,
-		updates: make(chan *protos.PushUpdates, 100),
-		done:    make(chan struct{}),
+	conn := &Connection{
+		ID:      cq.nextConnID,
+		Updates: make(chan *protos.PushUpdates, 100),
+		Done:    make(chan struct{}),
 	}
 	cq.connections[cq.nextConnID] = conn
 	cq.wg.Add(1)
-	logger.Info("SSE connection registered", "connID", cq.nextConnID, "total", len(cq.connections))
+	logger.Info("Streaming connection registered", "connID", cq.nextConnID, "total", len(cq.connections))
 	return cq.nextConnID, conn
 }
 
-// deregisterConnection removes a connection from the queue.
+// DeregisterConnection removes a connection from the queue.
 // Safe to call multiple times for the same connID.
-func (cq *connectionQueue) deregisterConnection(connID int) {
+func (cq *ConnectionQueue) DeregisterConnection(connID int) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
 	if _, ok := cq.connections[connID]; ok {
 		delete(cq.connections, connID)
 		cq.wg.Done()
-		logger.Info("SSE connection unregistered", "connID", connID, "remaining", len(cq.connections))
+		logger.Info("Streaming connection unregistered", "connID", connID, "remaining", len(cq.connections))
 	}
 }
 
-// notifyUpdate sends a PushUpdates message to all connected clients.
+// NotifyUpdate sends a PushUpdates message to all connected clients.
 // Called when a value changes (by client or server) to propagate
-// the update to all SSE subscribers.
-func (cq *connectionQueue) notifyUpdate(update *protos.PushUpdates) {
+// the update to all streaming subscribers.
+func (cq *ConnectionQueue) NotifyUpdate(update *protos.PushUpdates) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
 	for connID, conn := range cq.connections {
 		select {
-		case conn.updates <- update:
+		case conn.Updates <- update:
 		default:
-			logger.Warning("SSE channel full, dropping update", "connID", connID)
+			logger.Warning("Streaming channel full, dropping update", "connID", connID)
 		}
 	}
 }
 
-// shutdown signals all connections to stop and waits for them to deregister.
-// Each connection's goroutine will receive the signal via the done channel,
+// Shutdown signals all connections to stop and waits for them to deregister.
+// Each connection's goroutine will receive the signal via the Done channel,
 // exit its event loop, and deregister itself.
-func (cq *connectionQueue) shutdown() {
+func (cq *ConnectionQueue) Shutdown() {
 	cq.mu.Lock()
 	cq.shuttingDown = true
 	for _, conn := range cq.connections {
 		select {
-		case <-conn.done:
+		case <-conn.Done:
 		default:
-			close(conn.done)
+			close(conn.Done)
 		}
 	}
 	cq.mu.Unlock()
 
 	cq.wg.Wait()
-	logger.Info("All SSE connections shut down")
+	logger.Info("All streaming connections shut down")
 }
 
-// connectionCount returns the number of active connections.
-func (cq *connectionQueue) connectionCount() int {
+// ConnectionCount returns the number of active connections.
+func (cq *ConnectionQueue) ConnectionCount() int {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 	return len(cq.connections)

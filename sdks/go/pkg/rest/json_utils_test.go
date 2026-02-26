@@ -29,14 +29,14 @@
  */
 
 /**
- * @brief JSON utilities for the Catena SDK.
+ * @brief JSON utilities for the Catena REST API.
  * @file json_utils.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
  * @date 2026-02-04
  */
 
-package internal
+package rest
 
 import (
 	"bytes"
