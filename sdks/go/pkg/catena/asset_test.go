@@ -48,6 +48,8 @@ import (
 	"strings"
 	"testing"
 	"testing/fstest"
+
+	"github.com/rossvideo/catena/build/go/protos"
 )
 
 func TestToCatenaAsset_WithPayload(t *testing.T) {
@@ -825,6 +827,59 @@ func TestTranscodeAssetPayload_NilAsset(t *testing.T) {
 	err := TranscodeAssetPayload(&asset, EncodingGzip)
 	if err == nil {
 		t.Error("expected error for nil asset")
+	}
+}
+
+func TestTranscodeAssetPayload_NilPayload(t *testing.T) {
+	asset := CatenaAsset{asset: &protos.ExternalObjectPayload{Payload: nil}}
+	err := TranscodeAssetPayload(&asset, EncodingGzip)
+	if err == nil {
+		t.Error("expected error for nil payload on non-nil asset")
+	}
+}
+
+func TestTranscodeAssetPayload_DecodeError(t *testing.T) {
+	dp := DataPayload{
+		Payload:         []byte("not valid gzip"),
+		PayloadEncoding: EncodingGzip,
+	}
+	asset, err := ToCatenaAsset(dp, true)
+	if err != nil {
+		t.Fatalf("ToCatenaAsset: %v", err)
+	}
+
+	err = TranscodeAssetPayload(&asset, EncodingUncompressed)
+	if err == nil {
+		t.Error("expected decode error for corrupt gzip payload")
+	}
+}
+
+func TestTranscodeAssetPayload_EncodeError(t *testing.T) {
+	dp := DataPayload{
+		Payload: []byte("valid data"),
+	}
+	asset, err := ToCatenaAsset(dp, true)
+	if err != nil {
+		t.Fatalf("ToCatenaAsset: %v", err)
+	}
+
+	err = TranscodeAssetPayload(&asset, 99)
+	if err == nil {
+		t.Error("expected encode error for unsupported target encoding")
+	}
+}
+
+func TestDecodePayload_CorruptGzip(t *testing.T) {
+	_, err := DecodePayload([]byte("not gzip"), EncodingGzip)
+	if err == nil {
+		t.Error("expected error decoding corrupt gzip via DecodePayload")
+	}
+}
+
+func TestDecodePayload_CorruptDeflate(t *testing.T) {
+	_, err := DecodePayload([]byte("not deflate"), EncodingDeflate)
+	if err == nil {
+		t.Error("expected error decoding corrupt deflate via DecodePayload")
 	}
 }
 
