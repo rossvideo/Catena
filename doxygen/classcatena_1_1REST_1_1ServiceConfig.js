@@ -1,5 +1,6 @@
 var classcatena_1_1REST_1_1ServiceConfig =
 [
+    [ "ServiceConfig", "classcatena_1_1REST_1_1ServiceConfig.html#a832e32dd7f06f3b4d7ccbdedbcb51a9b", null ],
     [ "add_dm", "classcatena_1_1REST_1_1ServiceConfig.html#a7375d6e7c7bee78efb60f24196c0df0f", null ],
     [ "set_authz", "classcatena_1_1REST_1_1ServiceConfig.html#a7138a694d04bb46b3aa3bc69f5da377c", null ],
     [ "set_dms", "classcatena_1_1REST_1_1ServiceConfig.html#ac448fdee001cfd32f370937d1e2f9f17", null ],

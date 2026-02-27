@@ -95,7 +95,7 @@ $(document).ready(function(){initNavTree('hello_world_8cpp-example.html',''); in
 <div class="contents">
 <p>Demonstrates creation of a simple device model, and how business logic can interact with it.</p>
 <div class="fragment"><div class="line"><span class="comment">/*</span></div>
-<div class="line"><span class="comment"> * Copyright 2025 Ross Video Ltd</span></div>
+<div class="line"><span class="comment"> * Copyright 2026 Ross Video Ltd</span></div>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * Redistribution and use in source and binary forms, with or without</span></div>
 <div class="line"><span class="comment"> * modification, are permitted provided that the following conditions are met:</span></div>
@@ -138,6 +138,7 @@ $(document).ready(function(){initNavTree('hello_world_8cpp-example.html',''); in
 <div class="line"><span class="preprocessor">#include &lt;<a class="code" href="ParamWithValue_8h.html">ParamWithValue.h</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;<a class="code" href="MenuGroup_8h.html">MenuGroup.h</a>&gt;</span> <span class="comment">// catena::common::MenuGroup</span></div>
 <div class="line"><span class="preprocessor">#include &lt;<a class="code" href="Menu_8h.html">Menu.h</a>&gt;</span> <span class="comment">// catena::common::Menu</span></div>
+<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="Config_8h.html">Config.h</a>&gt;</span> <span class="comment">// catena::common::config</span></div>
 <div class="line"> </div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// this include header was generated from the protobuf definition</span></div>
@@ -146,12 +147,14 @@ $(document).ready(function(){initNavTree('hello_world_8cpp-example.html',''); in
 <div class="line"> </div>
 <div class="line"><span class="preprocessor">#include &lt;<a class="code" href="Logger_8h.html">Logger.h</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;absl/flags/parse.h&gt;</span></div>
+<div class="line"> </div>
 <div class="line"> </div>
 <div class="line"><span class="keyword">using namespace </span><a class="code hl_namespace" href="namespacecatena_1_1common.html">catena::common</a>;</div>
 <div class="line"><span class="keywordtype">int</span> main (<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span>** argv) {</div>
-<div class="line">    absl::SetProgramUsageMessage(<span class="stringliteral">&quot;Runs the Catena Service&quot;</span>);</div>
-<div class="line">    absl::ParseCommandLine(argc, argv);</div>
+<div class="line">    <span class="keyword">const</span> <span class="keyword">auto</span> [exit, code] = config::initConfigVariables(argc, argv);</div>
+<div class="line">    <span class="keywordflow">if</span> (exit) {</div>
+<div class="line">        <span class="keywordflow">return</span> code;</div>
+<div class="line">    }</div>
 <div class="line">    <a id="a0" name="a0"></a><a class="code hl_function" href="classLogger.html#a96c9761055a82ecf51dfbabdf6b1984c">Logger::init</a>(<span class="stringliteral">&quot;hello_world&quot;</span>);</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// The client code, below, directly accesses parts of the device model</span></div>
@@ -302,6 +305,7 @@ $(document).ready(function(){initNavTree('hello_world_8cpp-example.html',''); in
 <div class="line"><span class="comment">physical constants is empty</span></div>
 <div class="line"><span class="comment">physical constants new value: 3.14159 2.71828 1.61803 </span></div>
 <div class="line"><span class="comment">*/</span></div>
+<div class="ttc" id="aConfig_8h_html"><div class="ttname"><a href="Config_8h.html">Config.h</a></div><div class="ttdoc">Runtime configuration variables.</div></div>
 <div class="ttc" id="aDevice_8h_html"><div class="ttname"><a href="Device_8h.html">Device.h</a></div><div class="ttdoc">Device class definition.</div></div>
 <div class="ttc" id="aIParam_8h_html"><div class="ttname"><a href="IParam_8h.html">IParam.h</a></div><div class="ttdoc">Interface for parameters.</div></div>
 <div class="ttc" id="aLogger_8h_html"><div class="ttname"><a href="Logger_8h.html">Logger.h</a></div><div class="ttdoc">Logger class.</div></div>

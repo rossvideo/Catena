@@ -118,7 +118,6 @@ var NAVTREE =
       [ "File List", "files.html", "files_dup" ],
       [ "File Members", "globals.html", [
         [ "All", "globals.html", null ],
-        [ "Variables", "globals_vars.html", null ],
         [ "Macros", "globals_defs.html", null ]
       ] ]
     ] ],
@@ -129,14 +128,14 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "AddLanguage_8h.html",
-"Tags_8h_source.html",
-"classcatena_1_1REST_1_1SocketReader.html#a31a87a254c0b5fdf897c0f3f6099e26f",
-"classcatena_1_1common_1_1Device.html#adbae70c7d6b3db45356cd6e6cf0bca95",
-"classcatena_1_1common_1_1IMenuGroup.html#ab5ab36b7072f70b19193e675d9dde352",
-"classcatena_1_1common_1_1NmosNode.html#a9ac224a448cb22885aee8a6afe7e6446",
-"classcatena_1_1common_1_1Path.html#aff66461b7b6ecc1b22bd81ff54090b35",
-"classcatena_1_1gRPC_1_1ServiceImpl.html#a9477cb0631c39828bdfa030d60b98b20",
-"md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md15"
+"Variant_8h.html",
+"classcatena_1_1REST_1_1SocketReader.html#a62c9b62d7b47d7d7d709e1304c130204",
+"classcatena_1_1common_1_1Device.html#aed9cdca4901c4e5eee7a046bd238187a",
+"classcatena_1_1common_1_1INmosNode.html#ab2eb126c6989d7642b85a60ed18e4b52",
+"classcatena_1_1common_1_1NmosNode.html#afdaae05b47defa25142a3e207a184c6f",
+"classcatena_1_1common_1_1PolyglotText.html#ae2da68a61d53ea13aa72e6b24ca56a95",
+"classcatena_1_1gRPC_1_1SetValue.html",
+"md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md24"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

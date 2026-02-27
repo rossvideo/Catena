@@ -95,7 +95,7 @@ $(document).ready(function(){initNavTree('factory_8cpp-example.html',''); initRe
 <div class="contents">
 <p>Provides example of using GenericFactory.</p>
 <div class="fragment"><div class="line"><span class="comment">/*</span></div>
-<div class="line"><span class="comment"> * Copyright 2025 Ross Video Ltd</span></div>
+<div class="line"><span class="comment"> * Copyright 2026 Ross Video Ltd</span></div>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * Redistribution and use in source and binary forms, with or without</span></div>
 <div class="line"><span class="comment"> * modification, are permitted provided that the following conditions are met:</span></div>
@@ -130,7 +130,7 @@ $(document).ready(function(){initNavTree('factory_8cpp-example.html',''); initRe
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;memory&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;utility&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;absl/flags/parse.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="Config_8h.html">Config.h</a>&gt;</span></div>
 <div class="line"> </div>
 <div class="line"><span class="comment">/*</span></div>
 <div class="line"><span class="comment"> * Factories are useful to create objects based on values that are only known</span></div>
@@ -286,9 +286,11 @@ $(document).ready(function(){initNavTree('factory_8cpp-example.html',''); initRe
 <div class="line">}</div>
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">int</span> main (<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span>** argv) {</div>
-<div class="line">  absl::SetProgramUsageMessage(<span class="stringliteral">&quot;Runs the Catena Service&quot;</span>);</div>
-<div class="line">  absl::ParseCommandLine(argc, argv);</div>
-<div class="line">  <a id="a1" name="a1"></a><a class="code hl_function" href="classLogger.html#a96c9761055a82ecf51dfbabdf6b1984c">Logger::init</a>(<span class="stringliteral">&quot;factory&quot;</span>);</div>
+<div class="line">  <span class="keyword">const</span> <span class="keyword">auto</span> [exit, code] = <a id="a1" name="a1"></a><a class="code hl_function" href="Config_8h.html#ab40b973d15c0bdc82982b0cba41c627c">catena::common::config::initConfigVariables</a>(argc, argv);</div>
+<div class="line">  <span class="keywordflow">if</span> (exit) {</div>
+<div class="line">      <span class="keywordflow">return</span> code;</div>
+<div class="line">  }</div>
+<div class="line">  <a id="a2" name="a2"></a><a class="code hl_function" href="classLogger.html#a96c9761055a82ecf51dfbabdf6b1984c">Logger::init</a>(<span class="stringliteral">&quot;factory&quot;</span>);</div>
 <div class="line"> </div>
 <div class="line">  <span class="keywordflow">try</span> {</div>
 <div class="line">    <span class="comment">// get instance of the Dog Factory</span></div>
@@ -349,6 +351,8 @@ $(document).ready(function(){initNavTree('factory_8cpp-example.html',''); initRe
 <div class="line"><span class="comment">Jack Russell whimper...</span></div>
 <div class="line"><span class="comment">Labrador whimper...</span></div>
 <div class="line"><span class="comment">*/</span></div>
+<div class="ttc" id="aConfig_8h_html"><div class="ttname"><a href="Config_8h.html">Config.h</a></div><div class="ttdoc">Runtime configuration variables.</div></div>
+<div class="ttc" id="aConfig_8h_html_ab40b973d15c0bdc82982b0cba41c627c"><div class="ttname"><a href="Config_8h.html#ab40b973d15c0bdc82982b0cba41c627c">catena::common::config::initConfigVariables</a></div><div class="ttdeci">std::pair&lt; bool, int &gt; initConfigVariables(int argc, char *argv[], std::string prefix=&quot;CATENA_&quot;)</div><div class="ttdoc">Parses environment variables and command line to initialize variables used for runtime configuration.</div></div>
 <div class="ttc" id="aGenericFactory_8h_html"><div class="ttname"><a href="GenericFactory_8h.html">GenericFactory.h</a></div><div class="ttdoc">Defines tools to create objects based on values that are only known at runtime.</div></div>
 <div class="ttc" id="aLogger_8h_html"><div class="ttname"><a href="Logger_8h.html">Logger.h</a></div><div class="ttdoc">Logger class.</div></div>
 <div class="ttc" id="aclassLogger_html_a96c9761055a82ecf51dfbabdf6b1984c"><div class="ttname"><a href="classLogger.html#a96c9761055a82ecf51dfbabdf6b1984c">Logger::init</a></div><div class="ttdeci">static void init(const std::string &amp;appName)</div><div class="ttdoc">Initialize the logger.</div></div>

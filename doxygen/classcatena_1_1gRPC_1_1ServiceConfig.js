@@ -1,5 +1,6 @@
 var classcatena_1_1gRPC_1_1ServiceConfig =
 [
+    [ "ServiceConfig", "classcatena_1_1gRPC_1_1ServiceConfig.html#ac3c41d98b458cd0bd312a7d8338c7dc3", null ],
     [ "add_dm", "classcatena_1_1gRPC_1_1ServiceConfig.html#a2bc6221b9000f9e315e23739336a12cb", null ],
     [ "set_authz", "classcatena_1_1gRPC_1_1ServiceConfig.html#ab3ee022897d2cf1eea94e7feae755be1", null ],
     [ "set_cq", "classcatena_1_1gRPC_1_1ServiceConfig.html#a60fd29ed87ef4810bc2758b5b5dedb9a", null ],

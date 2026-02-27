@@ -95,7 +95,7 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="contents">
 <p>Demonstrates use of this and other constraints.</p>
 <div class="fragment"><div class="line"><span class="comment">/*</span></div>
-<div class="line"><span class="comment"> * Copyright 2025 Ross Video Ltd</span></div>
+<div class="line"><span class="comment"> * Copyright 2026 Ross Video Ltd</span></div>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * Redistribution and use in source and binary forms, with or without</span></div>
 <div class="line"><span class="comment"> * modification, are permitted provided that the following conditions are met:</span></div>
@@ -133,13 +133,13 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line"><span class="preprocessor">#include &lt;<a class="code" href="PolyglotText_8h.html">PolyglotText.h</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;<a class="code" href="RangeConstraint_8h.html">RangeConstraint.h</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;<a class="code" href="ChoiceConstraint_8h.html">ChoiceConstraint.h</a>&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="Config_8h.html">Config.h</a>&gt;</span></div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// interface</span></div>
 <div class="line"><span class="preprocessor">#include &lt;interface/param.pb.h&gt;</span></div>
 <div class="line"> </div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;<a class="code" href="Logger_8h.html">Logger.h</a>&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;absl/flags/parse.h&gt;</span></div>
 <div class="line"> </div>
 <div class="line"><span class="keyword">using namespace </span><a class="code hl_namespace" href="namespacecatena_1_1common.html">catena::common</a>;</div>
 <div class="line"><span class="keyword">using namespace </span>use_constraints;</div>
@@ -147,8 +147,10 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line"><span class="keyword">using </span>catena::common::getParamValue;</div>
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">int</span> main (<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span>** argv) {</div>
-<div class="line">    absl::SetProgramUsageMessage(<span class="stringliteral">&quot;Runs the Catena Service&quot;</span>);</div>
-<div class="line">    absl::ParseCommandLine(argc, argv);</div>
+<div class="line">    <span class="keyword">const</span> <span class="keyword">auto</span> [exit, code] = config::initConfigVariables(argc, argv);</div>
+<div class="line">    <span class="keywordflow">if</span> (exit) {</div>
+<div class="line">        <span class="keywordflow">return</span> code;</div>
+<div class="line">    }</div>
 <div class="line">    <a id="a1" name="a1"></a><a class="code hl_function" href="classLogger.html#a96c9761055a82ecf51dfbabdf6b1984c">Logger::init</a>(<span class="stringliteral">&quot;use_constraints&quot;</span>);</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// lock the model</span></div>
@@ -360,6 +362,7 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line"><span class="comment">button_array value: 0 1 0 0 0 1</span></div>
 <div class="line"><span class="comment">*/</span></div>
 <div class="ttc" id="aChoiceConstraint_8h_html"><div class="ttname"><a href="ChoiceConstraint_8h.html">ChoiceConstraint.h</a></div><div class="ttdoc">A constraint that checks if a value is within some named choices.</div></div>
+<div class="ttc" id="aConfig_8h_html"><div class="ttname"><a href="Config_8h.html">Config.h</a></div><div class="ttdoc">Runtime configuration variables.</div></div>
 <div class="ttc" id="aDevice_8h_html"><div class="ttname"><a href="Device_8h.html">Device.h</a></div><div class="ttdoc">Device class definition.</div></div>
 <div class="ttc" id="aLogger_8h_html"><div class="ttname"><a href="Logger_8h.html">Logger.h</a></div><div class="ttdoc">Logger class.</div></div>
 <div class="ttc" id="aParamWithValue_8h_html"><div class="ttname"><a href="ParamWithValue_8h.html">ParamWithValue.h</a></div><div class="ttdoc">Interface for acessing parameter values.</div></div>
