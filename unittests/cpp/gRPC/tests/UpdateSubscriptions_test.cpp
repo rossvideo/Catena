@@ -66,7 +66,7 @@ class gRPCUpdateSubscriptionsTests : public GRPCTest {
 
         // Set up and tear down Google Logging
         static void SetUpTestSuite() {
-            absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+            config::log_dir = UNITTEST_LOG_DIR;
             Logger::init("gRPCUpdateSubscriptionsTest");
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -44,6 +44,7 @@
 #include <utils.h>
 #include <Device.h>
 #include <ParamWithValue.h>
+#include <Config.h>
 #include <iostream>
 #include <cstring>
 
@@ -92,12 +93,7 @@ void RunRESTServer() {
 
     try {
         // Setting config.
-        ServiceConfig config = ServiceConfig()
-            .set_EOPath(absl::GetFlag(FLAGS_static_root))
-            .set_authz(absl::GetFlag(FLAGS_authz))
-            .set_port(absl::GetFlag(FLAGS_port))
-            .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
-            .add_dm(&dm);
+        ServiceConfig config = ServiceConfig().add_dm(&dm);
         
         // Creating and running the REST service.
         ServiceImpl api(config);
@@ -116,8 +112,10 @@ void RunRESTServer() {
 }
 
 int main(int argc, char* argv[]) {
-    absl::SetProgramUsageMessage("Runs the Catena Service");
-    absl::ParseCommandLine(argc, argv);
+    const auto [exit, code] = config::initConfigVariables(argc, argv);
+    if (exit) {
+        return code;
+    }
     Logger::init("discovery_REST");
 
     NmosNode node("Catena Device", "Catena Node", "A Catena example Node", "discovery_REST");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,8 +31,7 @@
 
 /**
  * @brief Example program to demonstrate setting up a full Catena service using REST api.
- * @file stucts_with_authz_JSON_REST.cpp
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @file audiodeck_JSON_REST.cpp
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @author Keon Foster (keon.foster@rossvideo.com)
  * @date 2026-03-10
@@ -46,13 +45,10 @@
 #include <utils.h>
 #include <Device.h>
 #include <ParamWithValue.h>
+#include <Config.h>
 
 // REST
 #include <ServiceImpl.h>
-
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
-#include "absl/strings/str_format.h"
 
 #include <iomanip>
 #include <iostream>
@@ -110,12 +106,7 @@ void RunRESTServer() {
 
     try {
         // Setting config.
-        ServiceConfig config = ServiceConfig()
-            .set_EOPath(absl::GetFlag(FLAGS_static_root))
-            .set_authz(absl::GetFlag(FLAGS_authz))
-            .set_port(absl::GetFlag(FLAGS_port))
-            .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
-            .add_dm(&dm);
+        ServiceConfig config = ServiceConfig().add_dm(&dm);
         
         // Creating and running the REST service.
         ServiceImpl api(config);
@@ -154,8 +145,10 @@ void RunRESTServer() {
 }
 
 int main(int argc, char* argv[]) {
-    absl::SetProgramUsageMessage("Runs the Catena Service");
-    absl::ParseCommandLine(argc, argv);
+    const auto [exit, code] = config::initConfigVariables(argc, argv);
+    if (exit) {
+        return code;
+    }
     Logger::init("audiodeck_JSON_REST");
 
     std::thread catenaRestThread(RunRESTServer);

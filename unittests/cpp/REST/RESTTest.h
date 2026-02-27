@@ -61,6 +61,7 @@ using boost::asio::ip::tcp;
 #include <map>
 
 // common
+#include <Config.h>
 #include <Status.h>
 
 // REST

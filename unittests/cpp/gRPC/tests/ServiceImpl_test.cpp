@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -67,7 +67,7 @@ class gRPCServiceImplTests : public testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        config::log_dir = UNITTEST_LOG_DIR;
         Logger::init("gRPCServiceImplTest");
     }
 
