@@ -1,6 +1,7 @@
 #include <Config.h>
 #include <Device.h>
 #include <boost/program_options.hpp>
+#include <Logger.h>
 
 namespace po = boost::program_options;
 using namespace catena::common;
@@ -50,6 +51,8 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
 
                     if (allowedOptions.count(option_name))
                         return option_name;
+                    std::cout << "Ignoring environment variable " << env_name
+                              << " since it does not correspond to a valid option" << std::endl;
                     return "";
                 }),
             vars);
@@ -80,22 +83,6 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(CATENA_AUTHZ_NAME)) config::authz = vars[CATENA_AUTHZ_NAME].as<bool>();
         if (vars.count(CATENA_SILENT_NAME)) config::silent = vars[CATENA_SILENT_NAME].as<bool>();
 
-    }  
-    catch (const po::unknown_option& e)
-    {
-        std::cerr << "Unknown option: " << e.get_option_name() << "\n";
-        return std::pair<bool, int>(true, 1);
-    }
-    catch (const po::invalid_option_value& e)
-    {
-        std::cerr << "Invalid value for option: " << e.get_option_name() << "\n";
-        std::cerr << "Details: " << e.what() << "\n";
-        return std::pair<bool, int>(true, 1);
-    }
-    catch (const po::required_option& e)
-    {
-        std::cerr << "Missing required option: " << e.get_option_name() << "\n";
-        return std::pair<bool, int>(true, 1);
     } catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
         return std::pair<bool, int>(true, 1);
