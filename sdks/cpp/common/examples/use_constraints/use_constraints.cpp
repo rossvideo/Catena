@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,7 +30,9 @@
 
 /**
  * @file use_constraints.cpp
- * @author isaac.robert@rossvideo.com
+ * @author Isaac Robert (isaac.robert@rossvideo.com)
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-02-24
  * @brief showcases the use of constraints in the model
  *
  * It does not support any connections so is not a complete example
@@ -39,7 +41,7 @@
  * It presumes the reader has understood the start_here example and
  * builds on that. Less chatty comments.
  * 
- * @copyright Copyright (c) 2025 Ross Video
+ * @copyright Copyright (c) 2026 Ross Video
  */
 
 // device model
@@ -51,13 +53,13 @@
 #include <PolyglotText.h>
 #include <RangeConstraint.h>
 #include <ChoiceConstraint.h>
+#include <Config.h>
 
 // interface
 #include <interface/param.pb.h>
 
 #include <iostream>
 #include <Logger.h>
-#include <absl/flags/parse.h>
 
 using namespace catena::common;
 using namespace use_constraints;
@@ -65,8 +67,10 @@ using catena::common::ParamTag;
 using catena::common::getParamValue;
 
 int main (int argc, char** argv) {
-    absl::SetProgramUsageMessage("Runs the Catena Service");
-    absl::ParseCommandLine(argc, argv);
+    const auto [exit, code] = config::initConfigVariables(argc, argv);
+    if (exit) {
+        return code;
+    }
     Logger::init("use_constraints");
 
     // lock the model
