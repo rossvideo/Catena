@@ -25,7 +25,9 @@ clean:
 	rm -rf $(BIN_DIR)
 	rm -rf $(LOG_DIR)
 
-.PHONY: proto-module proto-tools protos protos-grpc update-imports clean-protos
+.PHONY: proto-module proto-tools protos protos-grpc protos-all update-imports clean-protos
+
+protos-all: protos protos-grpc
 
 proto-module:
 	mkdir -p "$(MOD_DIR)"

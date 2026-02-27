@@ -42,6 +42,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
@@ -50,11 +51,7 @@ import (
 )
 
 // Simple in-memory device state
-var deviceParams = map[string]int32{
-	"/volume":     50,
-	"/brightness": 75,
-	"/contrast":   60,
-}
+var deviceParams = &sync.Map{}
 
 func main() {
 	// Initialize logger with debug settings
@@ -62,13 +59,19 @@ func main() {
 		log.Fatalf("Failed to initialize logger: %v", err)
 	}
 
+	// Initialize device parameters
+	deviceParams.Store("/volume", int32(50))
+	deviceParams.Store("/brightness", int32(75))
+	deviceParams.Store("/contrast", int32(60))
+
 	// Create gRPC server with slot 0
 	server := grpcServer.NewServer([]int{0})
 
 	// Register GetValue handler
 	server.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
-		value, exists := deviceParams[fqoid]
+
+		value, exists := deviceParams.Load(fqoid)
 		if !exists {
 			logger.Error("GetParam param not found", "slot", slot, "fqoid", fqoid)
 			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found")
@@ -92,7 +95,7 @@ func main() {
 			return catena.StatusWithCode(catena.INVALID_ARGUMENT, "value must be int32")
 		}
 
-		deviceParams[fqoid] = intVal
+		deviceParams.Store(fqoid, intVal)
 		logger.Info("Parameter updated", "slot", slot, "fqoid", fqoid, "value", intVal)
 
 		server.BroadcastUpdate(slot, fqoid, value)

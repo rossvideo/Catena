@@ -196,10 +196,6 @@ func (s *Server) Start(port int) error {
 	return http.ListenAndServe(addr, s.mux)
 }
 
-func DefaultExecuteCommandHandler(slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
-	return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "ExecuteCommand not implemented")
-}
-
 func (s *Server) RegisterFallbackHandler(handler FallbackHandler) {
 	s.BaseServer.Mu.Lock()
 	defer s.BaseServer.Mu.Unlock()

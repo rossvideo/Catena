@@ -280,10 +280,10 @@ func main() {
 				},
 			},
 			"menu_groups": map[string]any{
-				"audio": map[string]any{
+				"config": map[string]any{
 					"name": map[string]any{
 						"display_strings": map[string]string{
-							"en": "Audio",
+							"en": "Configuration",
 						},
 					},
 					"menus": map[string]any{
@@ -293,7 +293,29 @@ func main() {
 									"en": "Gain Control",
 								},
 							},
-							"param_oids": []string{"master_gain", "input_1_gain", "mute"},
+							"param_oids": []string{"/master_gain", "/input_1_gain", "/mute"},
+						},
+					},
+				},
+				"status": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Status",
+						},
+					},
+					"order": int32(0),
+					"menus": map[string]any{
+						"status": map[string]any{
+							"name": map[string]any{
+								"display_strings": map[string]string{
+									"en": "Status",
+								},
+							},
+							"param_oids": []string{
+								"/master_gain",
+								"/input_1_gain",
+								"/mute",
+							},
 						},
 					},
 				},

@@ -5,7 +5,7 @@ BUILD_TARGET=$2
 ROOT_DIR=$3
 
 cd ${ROOT_DIR}/sdks/go
-make protos
+make protos-all
 
 cd ${ROOT_DIR}
 rm -rf ${ROOT_DIR}/go.work ${ROOT_DIR}/go.work.sum
