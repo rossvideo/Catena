@@ -1,6 +1,7 @@
 #include <Config.h>
 #include <Device.h>
 #include <boost/program_options.hpp>
+#include <Logger.h>
 
 namespace po = boost::program_options;
 using namespace catena::common;
@@ -29,11 +30,34 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             (CATENA_SILENT_NAME.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use this to suppress all log output.")
             ;
             
+        std::set<std::string> allowedOptions;
+        for (const auto& opt : configArgs.options()) {
+            allowedOptions.insert(opt->long_name());
+        }
+
         //Read values from command line and environment variables
         po::variables_map vars;
         po::store(po::parse_command_line(argc, argv, configArgs), vars);
-        po::notify(vars);
-        po::store(po::parse_environment(configArgs, prefix), vars);
+        po::store(
+            po::parse_environment(
+                configArgs,
+                [prefix, &allowedOptions](const std::string& env_name) -> std::string {
+                    if (env_name.rfind(prefix, 0) != 0)
+                        return "";
+                    std::string option_name = env_name.substr(prefix.size());
+                    std::transform(option_name.begin(), option_name.end(),
+                                   option_name.begin(),
+                                   [](unsigned char c) { return std::tolower(c); });
+
+                    if (allowedOptions.count(option_name))
+                        return option_name;
+                    std::cout << "Ignoring environment variable " << env_name
+                              << " since it does not correspond to a valid option" << std::endl;
+                    return "";
+                }),
+            vars);
+        
+        
         po::notify(vars);
         
         // help message

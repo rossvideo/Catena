@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the Config.cpp file.
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-24
+ * @author Nathan Rochon (nathan.rochon@rossvideo.com)
+ * @date 2026-02-27
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -444,7 +445,7 @@ TEST_F(ConfigTest, HelpMessage) {
 }
 
 /**
- * TEST 8 - Invalid options throw exception
+ * TEST 8 - Invalid options dont throw exception
  */
 TEST_F(ConfigTest, InvalidOption) {
     // Create command line args
@@ -471,8 +472,8 @@ TEST_F(ConfigTest, InvalidOption) {
     char* argv2[] = {arg0, nullptr};
     argc = 1;
 
-    // Expect throw causing exit and code=1
+    //Don't expect throw causing exit and code=1
     const auto [exit2, code2] = config::initConfigVariables(argc, argv2, "CONFIGTEST_");
-    EXPECT_TRUE(exit2);
-    EXPECT_EQ(code2, 1);
+    EXPECT_FALSE(exit2);
+    EXPECT_EQ(code2, 0);
 }
