@@ -261,19 +261,16 @@ void defineCommands() {
 
 int main(int argc, char* argv[])
 {
-    std::string addr;
     const auto [exit, code] = config::initConfigVariables(argc, argv);
     if (exit) {
         return code;
     }
     Logger::init("use_commands");
-  
-    addr = absl::StrFormat("0.0.0.0:%d", config::port);
 
     // commands should be defined before starting the RPC server 
     defineCommands();
   
-    std::thread catenaRpcThread(RunRPCServer, addr);
+    std::thread catenaRpcThread(RunRPCServer, config::hostname + ":" + std::to_string(config::port));
     catenaRpcThread.join();
     
     return 0;

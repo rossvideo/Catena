@@ -42,7 +42,7 @@
 
 // common
 #include <Logger.h>
-#include "SharedFlags.h"
+#include <Config.h>
 
 // boost
 #include <boost/asio.hpp>
@@ -60,7 +60,7 @@ class ConnectionPropsTest : public testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-      absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+      config::log_dir = UNITTEST_LOG_DIR;
       Logger::init("ConnectionPropsTest");
     }
 

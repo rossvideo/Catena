@@ -354,41 +354,37 @@ catena::common::ConnectionPropsConfig generateConnectionPropsConfig(const std::s
     config.service_port = port;
     config.node_id = "one_of_everything-a4:bb:6d:6a:6f:a3";
     config.node_name = "one_of_everything";
-    config.refresh_interval = 30000;
+    config.refresh_interval = 5000;
     config.use_tls = false;
     return config;
 }
 
 int main(int argc, char* argv[])
 {
-    std::string addr;
     const auto [exit, code] = config::initConfigVariables(argc, argv);
     if (exit) {
         return code;
     }
     Logger::init("one_of_everything");
   
-    addr = absl::StrFormat("0.0.0.0:%d", config::port);
-  
     // commands should be defined before starting the RPC server 
     defineCommands();
 
     // Generate connection properties configuration
-    std::string hostname = addr.substr(0, addr.find(':'));
-    catena::common::ConnectionPropsConfig config = generateConnectionPropsConfig(hostname, absl::GetFlag(FLAGS_port));
+    catena::common::ConnectionPropsConfig configProps = generateConnectionPropsConfig(config::hostname, config::port);
     
     catena::common::ConnectionProps connectionProps(
-        config,                           // Configuration
+        configProps,                      // Configuration
         "/connect/connection-props.xml",  // Endpoint
-        DEFAULT_CONNECTION_PROPS_PORT     // Port
+        config::dashboard_port            // Port
     );
 
     if (!connectionProps.start()) {
-        LOG(WARNING) << "Failed to start connection props server on port " << DEFAULT_CONNECTION_PROPS_PORT;
+        LOG(WARNING) << "Failed to start connection props server on port " << config::dashboard_port;
     }
     
 
-    std::thread catenaRpcThread(RunRPCServer, addr);
+    std::thread catenaRpcThread(RunRPCServer, config::hostname + ":" + std::to_string(config::port));
     catenaRpcThread.join();
 
     connectionProps.stop();

@@ -161,16 +161,13 @@ void RunRPCServer(std::string addr)
 
 int main(int argc, char* argv[])
 {
-    std::string addr;
     const auto [exit, code] = config::initConfigVariables(argc, argv);
     if (exit) {
         return code;
     }
     Logger::init("audiodeck_yaml");
   
-    addr = absl::StrFormat("0.0.0.0:%d", config::port);
-  
-    std::thread catenaRpcThread(RunRPCServer, addr);
+    std::thread catenaRpcThread(RunRPCServer, config::hostname + ":" + std::to_string(config::port));
     catenaRpcThread.join();
     
     return 0;

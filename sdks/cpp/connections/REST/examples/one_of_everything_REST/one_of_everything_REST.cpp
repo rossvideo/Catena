@@ -294,7 +294,7 @@ catena::common::ConnectionPropsConfig generateConnectionPropsConfig(const std::s
     config.service_port = port;
     config.node_id = "one_of_everything-a4:bb:6d:6a:6f:a3";
     config.node_name = "one_of_everything";
-    config.refresh_interval = 30000;
+    config.refresh_interval = 5000;
     config.use_tls = useTls;
     return config;
 }
@@ -342,17 +342,17 @@ int main(int argc, char* argv[])
 
     // Generate connection properties configuration
     // Determine if TLS is being used (typically yes for port 443)
-    bool useTls = (absl::GetFlag(FLAGS_port) == 443);
-    catena::common::ConnectionPropsConfig config = generateConnectionPropsConfig("localhost", absl::GetFlag(FLAGS_port), useTls);
+    bool useTls = (config::port == 443);
+    catena::common::ConnectionPropsConfig configProps = generateConnectionPropsConfig(config::hostname, config::port, useTls);
     
     catena::common::ConnectionProps connectionProps(
-        config,                           // Configuration
+        configProps,                      // Configuration
         "/connect/connection-props.xml",  // Endpoint
-        DEFAULT_CONNECTION_PROPS_PORT     // Port
+        config::dashboard_port            // Port
     );
 
     if (!connectionProps.start()) {
-        LOG(WARNING) << "Failed to start connection props server on port " << DEFAULT_CONNECTION_PROPS_PORT;
+        LOG(WARNING) << "Failed to start connection props server on port " << config::dashboard_port;
     }
 
     std::thread catenaRestThread(RunRESTServer);
