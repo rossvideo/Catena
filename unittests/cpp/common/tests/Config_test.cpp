@@ -31,7 +31,8 @@
 /**
  * @brief This file is for testing the Config.cpp file.
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-24
+ * @author Nathan Rochon (nathan.rochon@rossvideo.com)
+ * @date 2026-02-27
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
