@@ -285,17 +285,17 @@ In production mode (non-dev), detailed error messages are replaced with standard
 ## Examples
 
 Complete working examples:
-- `/home/ctwarog/Catena/sdks/go/examples/getSetValue_REST/` - Parameter get/set
-- `/home/ctwarog/Catena/sdks/go/examples/getDevice_REST/` - Device information
-- `/home/ctwarog/Catena/sdks/go/examples/getAsset_REST/` - Asset retrieval
-- `/home/ctwarog/Catena/sdks/go/examples/executeCommand_REST/` - Command execution
+- `~/Catena/sdks/go/examples/getSetValue_REST/` - Parameter get/set
+- `~/Catena/sdks/go/examples/getDevice_REST/` - Device information
+- `~/Catena/sdks/go/examples/getAsset_REST/` - Asset retrieval
+- `~/Catena/sdks/go/examples/executeCommand_REST/` - Command execution
 
 ## Testing
 
 Run the test suite:
 
 ```bash
-cd /home/ctwarog/Catena/sdks/go
+cd ~/Catena/sdks/go
 go test ./pkg/rest/... -v
 ```
 

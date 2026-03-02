@@ -40,6 +40,8 @@ package catena
 
 import (
 	"net/http"
+
+	"google.golang.org/grpc/codes"
 )
 
 // StatusCode represents both gRPC and HTTP status codes.
@@ -189,6 +191,68 @@ func (s StatusCode) ToHTTPStatus() int {
 		return int(s)
 	default:
 		return http.StatusInternalServerError
+	}
+}
+
+// ToGRPCCode converts a StatusCode to a gRPC codes.Code.
+// REST-specific codes are mapped to their closest gRPC equivalents.
+// Only codes 0-16 are valid gRPC codes; this ensures proper interoperability.
+func (s StatusCode) ToGRPCCode() codes.Code {
+	switch s {
+	// gRPC-compatible codes (0-16) map directly
+	case OK:
+		return codes.OK
+	case CANCELLED:
+		return codes.Canceled
+	case UNKNOWN:
+		return codes.Unknown
+	case INVALID_ARGUMENT:
+		return codes.InvalidArgument
+	case DEADLINE_EXCEEDED:
+		return codes.DeadlineExceeded
+	case NOT_FOUND:
+		return codes.NotFound
+	case ALREADY_EXISTS:
+		return codes.AlreadyExists
+	case PERMISSION_DENIED:
+		return codes.PermissionDenied
+	case RESOURCE_EXHAUSTED:
+		return codes.ResourceExhausted
+	case FAILED_PRECONDITION:
+		return codes.FailedPrecondition
+	case ABORTED:
+		return codes.Aborted
+	case OUT_OF_RANGE:
+		return codes.OutOfRange
+	case UNIMPLEMENTED:
+		return codes.Unimplemented
+	case INTERNAL:
+		return codes.Internal
+	case UNAVAILABLE:
+		return codes.Unavailable
+	case DATA_LOSS:
+		return codes.DataLoss
+	case UNAUTHENTICATED:
+		return codes.Unauthenticated
+	// REST-specific codes need conversion
+	case CREATED, ACCEPTED, NO_CONTENT:
+		return codes.OK
+	case METHOD_NOT_ALLOWED:
+		return codes.Unimplemented
+	case CONFLICT:
+		return codes.AlreadyExists
+	case UNPROCESSABLE_ENTITY:
+		return codes.InvalidArgument
+	case TOO_MANY_REQUESTS:
+		return codes.ResourceExhausted
+	case BAD_GATEWAY:
+		return codes.Unavailable
+	case SERVICE_UNAVAILABLE:
+		return codes.Unavailable
+	case GATEWAY_TIMEOUT:
+		return codes.DeadlineExceeded
+	default:
+		return codes.Unknown
 	}
 }
 

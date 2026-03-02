@@ -147,7 +147,7 @@ func (s *Server) DeviceRequest(req *protos.DeviceRequestPayload, stream grpc.Ser
 	device, res := handler()
 	if res.Error != "" {
 		logger.Error("DeviceRequest handler error", "slot", slot, "error", res.Error)
-		return status.Error(codes.Code(res.Code), res.Error)
+		return status.Error(res.Code.ToGRPCCode(), res.Error)
 	}
 
 	protoDevice := device.GetProtoDevice()
@@ -176,7 +176,7 @@ func (s *Server) GetValue(ctx context.Context, req *protos.GetValuePayload) (*pr
 	value, result := handler(slot, fqoid)
 	if result.Error != "" {
 		logger.Error("GetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
-		return nil, status.Error(codes.Code(result.Code), result.Error)
+		return nil, status.Error(result.Code.ToGRPCCode(), result.Error)
 	}
 
 	return value.Value, nil
@@ -205,7 +205,7 @@ func (s *Server) SetValue(ctx context.Context, req *protos.SingleSetValuePayload
 	result := handler(nativeValue, slot, fqoid)
 	if result.Error != "" {
 		logger.Error("SetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
-		return nil, status.Error(codes.Code(result.Code), result.Error)
+		return nil, status.Error(result.Code.ToGRPCCode(), result.Error)
 	}
 
 	return &protos.Empty{}, nil
@@ -229,7 +229,7 @@ func (s *Server) MultiSetValue(ctx context.Context, req *protos.MultiSetValuePay
 		result := handler(nativeValue, slot, fqoid)
 		if result.Error != "" {
 			logger.Error("MultiSetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
-			return nil, status.Error(codes.Code(result.Code), result.Error)
+			return nil, status.Error(result.Code.ToGRPCCode(), result.Error)
 		}
 	}
 
@@ -246,7 +246,7 @@ func (s *Server) ExternalObjectRequest(req *protos.ExternalObjectRequestPayload,
 	asset, result := handler(slot, fqoid)
 	if result.Error != "" {
 		logger.Error("ExternalObjectRequest handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
-		return status.Error(codes.Code(result.Code), result.Error)
+		return status.Error(result.Code.ToGRPCCode(), result.Error)
 	}
 
 	protoAsset := asset.GetProtoAsset()
@@ -278,7 +278,7 @@ func (s *Server) ExecuteCommand(req *protos.ExecuteCommandPayload, stream grpc.S
 	value, result := handler(slot, commandFqoid, payload)
 	if result.Error != "" {
 		logger.Error("ExecuteCommand handler error", "slot", slot, "command", commandFqoid, "error", result.Error)
-		return status.Error(codes.Code(result.Code), result.Error)
+		return status.Error(result.Code.ToGRPCCode(), result.Error)
 	}
 
 	response := &protos.CommandResponse{}

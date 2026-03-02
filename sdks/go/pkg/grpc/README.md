@@ -193,14 +193,14 @@ The server automatically converts Catena status codes to gRPC status codes:
 
 ## Examples
 
-See `/home/ctwarog/Catena/sdks/go/examples/simple_grpc/` for a complete working example.
+See `~/Catena/sdks/go/examples` for complete working examples.
 
 ## Testing
 
 Run the test suite:
 
 ```bash
-cd /home/ctwarog/Catena/sdks/go
+cd ~/Catena/sdks/go
 go test ./pkg/catena/grpc/... -v
 ```
 
@@ -219,7 +219,7 @@ This architecture ensures consistency between REST and gRPC implementations whil
 To regenerate the gRPC service code:
 
 ```bash
-cd /home/ctwarog/Catena/sdks/go
+cd ~/Catena/sdks/go
 make protos-grpc
 ```
 

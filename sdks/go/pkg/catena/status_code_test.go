@@ -41,6 +41,8 @@ package catena
 import (
 	"net/http"
 	"testing"
+
+	"google.golang.org/grpc/codes"
 )
 
 func TestStatusCode_ToHTTPStatus_gRPCCodes(t *testing.T) {
@@ -110,6 +112,79 @@ func TestStatusCode_ToHTTPStatus_Unknown(t *testing.T) {
 	result := unknownCode.ToHTTPStatus()
 	if result != http.StatusInternalServerError {
 		t.Errorf("Unknown StatusCode.ToHTTPStatus() = %d, want %d", result, http.StatusInternalServerError)
+	}
+}
+
+func TestStatusCode_ToGRPCCode_gRPCCodes(t *testing.T) {
+	tests := []struct {
+		code     StatusCode
+		expected codes.Code
+	}{
+		{OK, codes.OK},
+		{CANCELLED, codes.Canceled},
+		{UNKNOWN, codes.Unknown},
+		{INVALID_ARGUMENT, codes.InvalidArgument},
+		{DEADLINE_EXCEEDED, codes.DeadlineExceeded},
+		{NOT_FOUND, codes.NotFound},
+		{ALREADY_EXISTS, codes.AlreadyExists},
+		{PERMISSION_DENIED, codes.PermissionDenied},
+		{RESOURCE_EXHAUSTED, codes.ResourceExhausted},
+		{FAILED_PRECONDITION, codes.FailedPrecondition},
+		{ABORTED, codes.Aborted},
+		{OUT_OF_RANGE, codes.OutOfRange},
+		{UNIMPLEMENTED, codes.Unimplemented},
+		{INTERNAL, codes.Internal},
+		{UNAVAILABLE, codes.Unavailable},
+		{DATA_LOSS, codes.DataLoss},
+		{UNAUTHENTICATED, codes.Unauthenticated},
+	}
+
+	for i, tt := range tests {
+		t.Run(tt.expected.String(), func(t *testing.T) {
+			result := tt.code.ToGRPCCode()
+			if result != tt.expected {
+				t.Errorf("test %d: StatusCode(%d).ToGRPCCode() = %v, want %v", i, tt.code, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestStatusCode_ToGRPCCode_Unknown(t *testing.T) {
+	unknownCode := StatusCode(999)
+	result := unknownCode.ToGRPCCode()
+	if result != codes.Unknown {
+		t.Errorf("Unknown StatusCode.ToGRPCCode() = %v, want %v", result, codes.Unknown)
+	}
+}
+
+func TestStatusCode_ToGRPCCode_ValidRange(t *testing.T) {
+	grpcCodes := []StatusCode{
+		OK, CANCELLED, UNKNOWN, INVALID_ARGUMENT, DEADLINE_EXCEEDED,
+		NOT_FOUND, ALREADY_EXISTS, PERMISSION_DENIED, RESOURCE_EXHAUSTED,
+		FAILED_PRECONDITION, ABORTED, OUT_OF_RANGE, UNIMPLEMENTED,
+		INTERNAL, UNAVAILABLE, DATA_LOSS, UNAUTHENTICATED,
+	}
+
+	for _, code := range grpcCodes {
+		result := code.ToGRPCCode()
+		if int(result) < 0 || int(result) > 16 {
+			t.Errorf("StatusCode(%d).ToGRPCCode() = %v (%d) is outside valid gRPC code range 0-16", code, result, int(result))
+		}
+	}
+}
+
+func TestStatusCode_ToGRPCCode_RESTCodesValidRange(t *testing.T) {
+	restCodes := []StatusCode{
+		CREATED, ACCEPTED, NO_CONTENT, METHOD_NOT_ALLOWED, CONFLICT,
+		UNPROCESSABLE_ENTITY, TOO_MANY_REQUESTS, BAD_GATEWAY,
+		SERVICE_UNAVAILABLE, GATEWAY_TIMEOUT,
+	}
+
+	for _, code := range restCodes {
+		result := code.ToGRPCCode()
+		if int(result) < 0 || int(result) > 16 {
+			t.Errorf("StatusCode(%d).ToGRPCCode() = %v (%d) is outside valid gRPC code range 0-16", code, result, int(result))
+		}
 	}
 }
 
