@@ -54,6 +54,11 @@ const std::string CATENA_STATIC_ROOT_NAME = "static_root";
 const std::string CATENA_CERT_FILE_NAME = "cert_file";
 const std::string CATENA_KEY_FILE_NAME = "key_file";
 const std::string CATENA_CA_FILE_NAME = "ca_file";
+const std::string CATENA_LOG_LEVEL_NAME = "log_level";
+const std::string CATENA_LOG_CONSOLE_NAME = "log_console";
+const std::string CATENA_LOG_FILE_NAME = "log_file";
+const std::string CATENA_LOG_FILE_SIZE_NAME = "log_file_size";
+const std::string CATENA_LOG_FILE_COUNT_NAME = "log_file_count";
 const std::string CATENA_LOG_DIR_NAME = "log_dir";
 const std::string CATENA_PORT_NAME = "port";
 const std::string CATENA_DEFAULT_MAX_ARRAY_SIZE_NAME = "default_max_array_size";
@@ -75,6 +80,11 @@ const std::string CATENA_CERT_FILE = "server.crt";
 const std::string CATENA_KEY_FILE = "server.key";
 const std::string CATENA_CA_FILE = "ca.crt";
 const std::string CATENA_STATIC_ROOT = "/";
+const std::string CATENA_LOG_LEVEL = "info";
+const bool CATENA_LOG_CONSOLE = true;
+const bool CATENA_LOG_FILE = true;
+const uint32_t LOG_FILE_SIZE = 10000000; //10MB
+const uint32_t LOG_FILE_COUNT = 5;
 const uint16_t CATENA_PORT = 6254;
 
 
@@ -101,6 +111,16 @@ inline std::string key_file = "";
 inline std::string ca_file = "";
 
 inline std::string static_root = "";
+
+inline std::string log_level = "";
+
+inline bool log_console = false;
+
+inline bool log_file = false;
+
+inline uint32_t log_file_size = 0;
+
+inline uint32_t log_file_count = 0;
 
 inline std::string log_dir = "";
 

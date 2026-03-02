@@ -90,3 +90,16 @@ TEST_F(LoggerTest, LogDefaultDir) {
     //fail test if the directory has more than 1 file
     EXPECT_EQ(fileCount, 1);
 }
+
+TEST_F(LoggerTest, LogRotation) {
+    // clear out the log directory before starting the test
+    const std::string logDir = UNITTEST_LOG_DIR + std::string("/rotate");
+    std::filesystem::remove_all(logDir);
+    std::filesystem::create_directories(logDir);
+    ::FileLogSink testSink("LoggerTestRotation", logDir, 100, 3);
+    absl::AddLogSink(&testSink);
+    for (int i = 0; i < 10; i++) {
+        LOG(INFO) << "Log message " << i;
+    }
+    absl::RemoveLogSink(&testSink); // Remove the test sink immediately to prevent interference with other tests
+}

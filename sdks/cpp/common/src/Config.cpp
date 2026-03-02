@@ -18,6 +18,11 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             (CATENA_KEY_FILE_NAME.c_str(), po::value<std::string>()->default_value(CATENA_KEY_FILE), "Specify the key file")
             (CATENA_CA_FILE_NAME.c_str(), po::value<std::string>()->default_value(CATENA_CA_FILE), "Specify the CA file if using a private CA")
             (CATENA_STATIC_ROOT_NAME.c_str(), po::value<std::string>()->default_value(home), "Specify the directory to search for external objects")
+            (CATENA_LOG_LEVEL_NAME.c_str(), po::value<std::string>()->default_value(CATENA_LOG_LEVEL), "Specify the log level, options are: \"info\", \"warning\", \"error\"")
+            (CATENA_LOG_CONSOLE_NAME.c_str(), po::value<bool>()->default_value(CATENA_LOG_CONSOLE)->implicit_value(true), "Use this to enable logging to console")
+            (CATENA_LOG_FILE_NAME.c_str(), po::value<bool>()->default_value(CATENA_LOG_FILE)->implicit_value(true), "Use this to enable logging to file")
+            (CATENA_LOG_FILE_SIZE_NAME.c_str(), po::value<uint32_t>()->default_value(LOG_FILE_SIZE), "Specify the max size of log files in bytes before rotation")
+            (CATENA_LOG_FILE_COUNT_NAME.c_str(), po::value<uint32_t>()->default_value(LOG_FILE_COUNT), "Specify the number of log files to keep for rotation")
             (CATENA_LOG_DIR_NAME.c_str(), po::value<std::string>()->default_value(LOG_DIR), "Specify the directory for log files.")
             (CATENA_PORT_NAME.c_str(), po::value<uint16_t>()->default_value(CATENA_PORT), "Catena service port")
             (CATENA_DEFAULT_MAX_ARRAY_SIZE_NAME.c_str(), po::value<uint32_t>()->default_value(kDefaultMaxArrayLength), "Use this to define the default max length for array and string params.")
@@ -49,6 +54,11 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(CATENA_KEY_FILE_NAME)) config::key_file = vars[CATENA_KEY_FILE_NAME].as<std::string>();
         if (vars.count(CATENA_CA_FILE_NAME)) config::ca_file = vars[CATENA_CA_FILE_NAME].as<std::string>();
         if (vars.count(CATENA_STATIC_ROOT_NAME)) config::static_root = vars[CATENA_STATIC_ROOT_NAME].as<std::string>();
+        if (vars.count(CATENA_LOG_LEVEL_NAME)) config::log_level = vars[CATENA_LOG_LEVEL_NAME].as<std::string>();
+        if (vars.count(CATENA_LOG_CONSOLE_NAME)) config::log_console = vars[CATENA_LOG_CONSOLE_NAME].as<bool>();
+        if (vars.count(CATENA_LOG_FILE_NAME)) config::log_file = vars[CATENA_LOG_FILE_NAME].as<bool>();
+        if (vars.count(CATENA_LOG_FILE_SIZE_NAME)) config::log_file_size = vars[CATENA_LOG_FILE_SIZE_NAME].as<uint32_t>();
+        if (vars.count(CATENA_LOG_FILE_COUNT_NAME)) config::log_file_count = vars[CATENA_LOG_FILE_COUNT_NAME].as<uint32_t>();
         if (vars.count(CATENA_LOG_DIR_NAME)) config::log_dir = vars[CATENA_LOG_DIR_NAME].as<std::string>();
         if (vars.count(CATENA_DEFAULT_MAX_ARRAY_SIZE_NAME)) config::default_max_array_size = vars[CATENA_DEFAULT_MAX_ARRAY_SIZE_NAME].as<uint32_t>();
         if (vars.count(CATENA_DEFAULT_TOTAL_ARRAY_SIZE_NAME)) config::default_total_array_size = vars[CATENA_DEFAULT_TOTAL_ARRAY_SIZE_NAME].as<uint32_t>();

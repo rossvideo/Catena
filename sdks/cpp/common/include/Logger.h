@@ -51,27 +51,29 @@
 #include <fstream>
 #include <sstream>
 #include <filesystem>
+#include <set>
 
 /**
  * @brief A log sink that writes log messages to a specified file.
  */
 class FileLogSink : public absl::LogSink {
 public:
-  explicit FileLogSink(const std::string& filename) : log_file_(filename, std::ios_base::app) {
-    if (!log_file_.is_open()) {
-      std::cerr << "Error opening log file: " << filename << std::endl;
-    }
+  explicit FileLogSink(const std::string& appName, const std::string& logDir, const uint32_t logSize,
+                       const uint32_t logCount)
+      : appName_(appName), log_dir_(logDir), log_file_size_(logSize), log_file_count_(logCount) {
+      rotateLogs();
   }
 
-  void Send(const absl::LogEntry& entry) override {
-    if (log_file_.is_open()) {
-      log_file_ << entry.text_message_with_prefix_and_newline();
-      log_file_.flush(); // Ensure immediate write to file
-    }
-  }
+  void Send(const absl::LogEntry& entry) override;
 
 private:
+  std::string appName_;
+  std::string log_dir_;
+  std::uint32_t log_file_size_ = 0;
+  std::uint32_t log_file_count_ = 0;
   std::ofstream log_file_;
+
+  void rotateLogs();
 };
 
 /**
