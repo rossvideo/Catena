@@ -77,7 +77,7 @@ const std::string CATENA_CERT_FILE = "server.crt";
 const std::string CATENA_KEY_FILE = "server.key";
 const std::string CATENA_CA_FILE = "ca.crt";
 const std::string CATENA_STATIC_ROOT = "/";
-const std::string CATENA_HOSTNAME = "localhost";
+const std::string CATENA_HOSTNAME = "0.0.0.0";
 const uint16_t CATENA_PORT = 6254;
 const uint16_t CATENA_DASHBOARD_PORT = 80;
 

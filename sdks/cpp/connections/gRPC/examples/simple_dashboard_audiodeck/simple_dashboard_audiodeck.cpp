@@ -244,8 +244,8 @@ catena::common::ConnectionPropsConfig generateConnectionPropsConfig(const std::s
     config.protocol = "grpc";
     config.address = address;
     config.service_port = port;
-    config.node_id = "one_of_everything-a4:bb:6d:6a:6f:a3";
-    config.node_name = "one_of_everything";
+    config.node_id = "dashboard_audiodeck-a4:bb:6d:6a:6f:a3";
+    config.node_name = "dashboard_audiodeck";
     config.refresh_interval = 5000;
     config.use_tls = false;
     return config;
