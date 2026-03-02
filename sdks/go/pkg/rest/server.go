@@ -209,7 +209,9 @@ func (s *Server) Shutdown() {
 }
 
 // sseMarshaler is the protojson marshaler used for SSE events.
+// UseProtoNames must be true so field names match the REST responses
 var sseMarshaler = protojson.MarshalOptions{
+	UseProtoNames:   true, // Must be true so field names match the REST responses
 	EmitUnpopulated: false,
 }
 

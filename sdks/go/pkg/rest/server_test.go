@@ -398,8 +398,8 @@ func TestServer_Connect_Route(t *testing.T) {
 	if !strings.Contains(body, "data:") {
 		t.Error("expected SSE data in response body")
 	}
-	if !strings.Contains(body, "slotsAdded") {
-		t.Error("expected initial slotsAdded in response body")
+	if !strings.Contains(body, "slots_added") {
+		t.Error("expected initial slots_added in response body")
 	}
 	if !strings.Contains(body, "\"slots\"") {
 		t.Error("expected initial event in proto format with nested \"slots\" (SlotList)")
@@ -412,14 +412,14 @@ func TestServer_Connect_Route(t *testing.T) {
 				t.Errorf("initial SSE data must be valid JSON: %v", err)
 				break
 			}
-			slotsAdded, ok := payload["slotsAdded"].(map[string]any)
+			slotsAdded, ok := payload["slots_added"].(map[string]any)
 			if !ok {
-				t.Error("expected slotsAdded object (SlotList) in initial event")
+				t.Error("expected slots_added object (SlotList) in initial event")
 				break
 			}
 			slots, ok := slotsAdded["slots"].([]any)
 			if !ok || len(slots) != 2 {
-				t.Errorf("expected slotsAdded.slots to be array of 2 slots, got %T %v", slotsAdded["slots"], slotsAdded["slots"])
+				t.Errorf("expected slots_added.slots to be array of 2 slots, got %T %v", slotsAdded["slots"], slotsAdded["slots"])
 			}
 			break
 		}

@@ -299,6 +299,7 @@ func main() {
 	params.Store("volume", int32(75))
 	params.Store("muted", int32(0))
 	params.Store("device_name", "Demo Device")
+	params.Store("counter", int32(0))
 
 	// ==========================================================================
 	// Commands (for ExecuteCommand endpoint)
