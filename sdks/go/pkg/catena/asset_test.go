@@ -62,7 +62,7 @@ func TestToCatenaAsset_WithPayload(t *testing.T) {
 			"filename":     "test.png",
 		},
 		Digest:          []byte{0x01, 0x02, 0x03},
-		PayloadEncoding: 0, // UNCOMPRESSED
+		PayloadEncoding: EncodingUncompressed,
 		Payload:         []byte("fake image data"),
 	}
 
@@ -149,7 +149,7 @@ func TestToCatenaAsset_NeitherPayloadNorUrl_Error(t *testing.T) {
 func TestToCatenaAsset_WithGzipEncoding(t *testing.T) {
 	dp := DataPayload{
 		Payload:         []byte("compressed data"),
-		PayloadEncoding: 1, // GZIP
+		PayloadEncoding: EncodingGzip,
 	}
 
 	asset, err := ToCatenaAsset(dp, true)
@@ -166,15 +166,15 @@ func TestToCatenaAsset_WithGzipEncoding(t *testing.T) {
 	if payload == nil {
 		t.Fatal("expected non-nil payload")
 	}
-	if payload.GetPayloadEncoding() != 1 {
-		t.Errorf("expected GZIP encoding (1), got %v", payload.GetPayloadEncoding())
+	if Encoding(payload.GetPayloadEncoding()) != EncodingGzip {
+		t.Errorf("expected GZIP encoding, got %v", payload.GetPayloadEncoding())
 	}
 }
 
 func TestToCatenaAsset_WithDeflateEncoding(t *testing.T) {
 	dp := DataPayload{
 		Payload:         []byte("compressed data"),
-		PayloadEncoding: 2, // DEFLATE
+		PayloadEncoding: EncodingDeflate,
 	}
 
 	asset, err := ToCatenaAsset(dp, true)
@@ -184,8 +184,8 @@ func TestToCatenaAsset_WithDeflateEncoding(t *testing.T) {
 
 	proto := asset.GetProtoAsset()
 	payload := proto.GetPayload()
-	if payload.GetPayloadEncoding() != 2 {
-		t.Errorf("expected DEFLATE encoding (2), got %v", payload.GetPayloadEncoding())
+	if Encoding(payload.GetPayloadEncoding()) != EncodingDeflate {
+		t.Errorf("expected DEFLATE encoding, got %v", payload.GetPayloadEncoding())
 	}
 }
 
@@ -294,7 +294,7 @@ func TestDataPayload_Fields(t *testing.T) {
 			"key2": "value2",
 		},
 		Digest:          []byte{1, 2, 3},
-		PayloadEncoding: 1,
+		PayloadEncoding: EncodingGzip,
 		Payload:         []byte("test"),
 		Url:             "",
 	}
@@ -306,8 +306,8 @@ func TestDataPayload_Fields(t *testing.T) {
 	if len(dp.Digest) != 3 {
 		t.Errorf("expected digest length 3, got %d", len(dp.Digest))
 	}
-	if dp.PayloadEncoding != 1 {
-		t.Errorf("expected PayloadEncoding 1, got %d", dp.PayloadEncoding)
+	if dp.PayloadEncoding != EncodingGzip {
+		t.Errorf("expected PayloadEncoding GZIP, got %v", dp.PayloadEncoding)
 	}
 	if string(dp.Payload) != "test" {
 		t.Errorf("expected Payload 'test', got %s", dp.Payload)
@@ -321,8 +321,8 @@ func TestToPayload(t *testing.T) {
 
 	dp := ToPayload(data, contentType, filename)
 
-	if dp.PayloadEncoding != 0 {
-		t.Errorf("expected PayloadEncoding 0 (UNCOMPRESSED), got %d", dp.PayloadEncoding)
+	if dp.PayloadEncoding != EncodingUncompressed {
+		t.Errorf("expected PayloadEncoding UNCOMPRESSED, got %v", dp.PayloadEncoding)
 	}
 	if string(dp.Payload) != string(data) {
 		t.Errorf("expected Payload %q, got %q", data, dp.Payload)
@@ -562,14 +562,14 @@ func TestDecodePayload(t *testing.T) {
 	tests := []struct {
 		name     string
 		data     []byte
-		encoding int32
+		encoding Encoding
 		want     string
 		wantErr  bool
 	}{
 		{"uncompressed", original, EncodingUncompressed, "test payload data", false},
 		{"gzip", gzData, EncodingGzip, "test payload data", false},
 		{"deflate", deflateData, EncodingDeflate, "test payload data", false},
-		{"unsupported encoding", original, 99, "", true},
+		{"unsupported encoding", original, Encoding(99), "", true},
 	}
 
 	for _, tt := range tests {
@@ -590,13 +590,13 @@ func TestEncodePayload(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		encoding int32
+		encoding Encoding
 		wantErr  bool
 	}{
 		{"uncompressed", EncodingUncompressed, false},
 		{"gzip", EncodingGzip, false},
 		{"deflate", EncodingDeflate, false},
-		{"unsupported", 99, true},
+		{"unsupported", Encoding(99), true},
 	}
 
 	for _, tt := range tests {
@@ -623,7 +623,7 @@ func TestEncodePayload(t *testing.T) {
 func TestParsePayloadEncoding(t *testing.T) {
 	tests := []struct {
 		input   string
-		want    int32
+		want    Encoding
 		wantErr bool
 	}{
 		{"UNCOMPRESSED", EncodingUncompressed, false},
@@ -634,7 +634,7 @@ func TestParsePayloadEncoding(t *testing.T) {
 		{"deflate", EncodingDeflate, false},
 		{"", EncodingUncompressed, false},
 		{"  GZIP  ", EncodingGzip, false},
-		{"INVALID", 0, true},
+		{"INVALID", EncodingUncompressed, true},
 	}
 
 	for _, tt := range tests {
@@ -653,7 +653,7 @@ func TestParsePayloadEncoding(t *testing.T) {
 func TestPayloadEncodingFromExt(t *testing.T) {
 	tests := []struct {
 		filename string
-		want     int32
+		want     Encoding
 	}{
 		{"file.gz", EncodingGzip},
 		{"file.zz", EncodingDeflate},
@@ -690,8 +690,8 @@ func TestTranscodeAssetPayload(t *testing.T) {
 		t.Fatalf("TranscodeAssetPayload to GZIP: %v", err)
 	}
 	proto := asset.GetProtoAsset().GetPayload()
-	if int32(proto.GetPayloadEncoding()) != EncodingGzip {
-		t.Errorf("expected GZIP encoding, got %d", proto.GetPayloadEncoding())
+	if Encoding(proto.GetPayloadEncoding()) != EncodingGzip {
+		t.Errorf("expected GZIP encoding, got %v", proto.GetPayloadEncoding())
 	}
 
 	// Verify the payload is actually gzip compressed (can decompress)
@@ -708,8 +708,8 @@ func TestTranscodeAssetPayload(t *testing.T) {
 		t.Fatalf("TranscodeAssetPayload GZIP→DEFLATE: %v", err)
 	}
 	proto = asset.GetProtoAsset().GetPayload()
-	if int32(proto.GetPayloadEncoding()) != EncodingDeflate {
-		t.Errorf("expected DEFLATE encoding, got %d", proto.GetPayloadEncoding())
+	if Encoding(proto.GetPayloadEncoding()) != EncodingDeflate {
+		t.Errorf("expected DEFLATE encoding, got %v", proto.GetPayloadEncoding())
 	}
 	decompressed, err = DecompressDeflate(proto.GetPayload())
 	if err != nil {
@@ -724,8 +724,8 @@ func TestTranscodeAssetPayload(t *testing.T) {
 		t.Fatalf("TranscodeAssetPayload DEFLATE→UNCOMPRESSED: %v", err)
 	}
 	proto = asset.GetProtoAsset().GetPayload()
-	if int32(proto.GetPayloadEncoding()) != EncodingUncompressed {
-		t.Errorf("expected UNCOMPRESSED encoding, got %d", proto.GetPayloadEncoding())
+	if Encoding(proto.GetPayloadEncoding()) != EncodingUncompressed {
+		t.Errorf("expected UNCOMPRESSED encoding, got %v", proto.GetPayloadEncoding())
 	}
 	if string(proto.GetPayload()) != string(original) {
 		t.Errorf("payload = %q, want %q", proto.GetPayload(), original)
@@ -811,8 +811,8 @@ func TestTranscodeAssetPayload_DoesNotMutateOriginalProto(t *testing.T) {
 		t.Fatalf("TranscodeAssetPayload: %v", err)
 	}
 
-	if int32(originalProto.GetPayload().GetPayloadEncoding()) != EncodingUncompressed {
-		t.Errorf("original proto encoding was mutated: got %d, want %d",
+	if Encoding(originalProto.GetPayload().GetPayloadEncoding()) != EncodingUncompressed {
+		t.Errorf("original proto encoding was mutated: got %v, want %v",
 			originalProto.GetPayload().GetPayloadEncoding(), EncodingUncompressed)
 	}
 	if string(originalProto.GetPayload().GetPayload()) != string(original) {
@@ -866,7 +866,7 @@ func TestTranscodeAssetPayload_EncodeError(t *testing.T) {
 		t.Fatalf("ToCatenaAsset: %v", err)
 	}
 
-	err = TranscodeAssetPayload(&asset, 99)
+	err = TranscodeAssetPayload(&asset, Encoding(99))
 	if err == nil {
 		t.Error("expected encode error for unsupported target encoding")
 	}

@@ -58,11 +58,27 @@ import (
 	"github.com/rossvideo/catena/build/go/protos"
 )
 
+// Encoding represents a payload compression encoding.
+type Encoding int32
+
 const (
-	EncodingUncompressed int32 = 0
-	EncodingGzip         int32 = 1
-	EncodingDeflate      int32 = 2
+	EncodingUncompressed Encoding = 0
+	EncodingGzip         Encoding = 1
+	EncodingDeflate      Encoding = 2
 )
+
+func (e Encoding) String() string {
+	switch e {
+	case EncodingUncompressed:
+		return "UNCOMPRESSED"
+	case EncodingGzip:
+		return "GZIP"
+	case EncodingDeflate:
+		return "DEFLATE"
+	default:
+		return fmt.Sprintf("Encoding(%d)", int32(e))
+	}
+}
 
 // CatenaAsset wraps protos.ExternalObjectPayload for asset handling
 type CatenaAsset struct {
@@ -74,7 +90,7 @@ type CatenaAsset struct {
 type DataPayload struct {
 	Metadata        map[string]string // Information about the payload (e.g. content-type, filename)
 	Digest          []byte            // SHA-256 digest of the payload
-	PayloadEncoding int32             // 0=UNCOMPRESSED, 1=GZIP, 2=DEFLATE
+	PayloadEncoding Encoding          // Compression encoding for the payload
 	Payload         []byte            // Embedded binary data (use this OR Url, not both)
 	Url             string            // URL to external resource (use this OR Payload, not both)
 }
@@ -85,7 +101,7 @@ func ToPayload(data []byte, contentType string, filename string) DataPayload {
 	hash := sha256.Sum256(data)
 	return DataPayload{
 		Payload:         data,
-		PayloadEncoding: 0, // UNCOMPRESSED
+		PayloadEncoding: EncodingUncompressed,
 		Metadata: map[string]string{
 			"content-type": contentType,
 			"file-name":    filename,
@@ -267,7 +283,7 @@ func DecompressDeflate(data []byte) ([]byte, error) {
 }
 
 // DecodePayload decompresses payload bytes according to the given encoding.
-func DecodePayload(data []byte, encoding int32) ([]byte, error) {
+func DecodePayload(data []byte, encoding Encoding) ([]byte, error) {
 	switch encoding {
 	case EncodingGzip:
 		return DecompressGzip(data)
@@ -276,12 +292,12 @@ func DecodePayload(data []byte, encoding int32) ([]byte, error) {
 	case EncodingUncompressed:
 		return data, nil
 	default:
-		return nil, fmt.Errorf("unsupported encoding: %d", encoding)
+		return nil, fmt.Errorf("unsupported encoding: %v", encoding)
 	}
 }
 
 // EncodePayload compresses raw data according to the given encoding.
-func EncodePayload(data []byte, encoding int32) ([]byte, error) {
+func EncodePayload(data []byte, encoding Encoding) ([]byte, error) {
 	switch encoding {
 	case EncodingGzip:
 		return CompressGzip(data)
@@ -290,13 +306,13 @@ func EncodePayload(data []byte, encoding int32) ([]byte, error) {
 	case EncodingUncompressed:
 		return data, nil
 	default:
-		return nil, fmt.Errorf("unsupported encoding: %d", encoding)
+		return nil, fmt.Errorf("unsupported encoding: %v", encoding)
 	}
 }
 
 // ParsePayloadEncoding converts a string (e.g. "GZIP", "DEFLATE", "UNCOMPRESSED")
 // to the corresponding encoding constant.
-func ParsePayloadEncoding(s string) (int32, error) {
+func ParsePayloadEncoding(s string) (Encoding, error) {
 	switch strings.ToUpper(strings.TrimSpace(s)) {
 	case "UNCOMPRESSED", "":
 		return EncodingUncompressed, nil
@@ -305,13 +321,13 @@ func ParsePayloadEncoding(s string) (int32, error) {
 	case "DEFLATE":
 		return EncodingDeflate, nil
 	default:
-		return 0, fmt.Errorf("invalid payload encoding: %s", s)
+		return EncodingUncompressed, fmt.Errorf("invalid payload encoding: %s", s)
 	}
 }
 
 // PayloadEncodingFromExt returns the payload encoding implied by a file extension.
 // ".gz" → GZIP, ".zz" → DEFLATE, anything else → UNCOMPRESSED.
-func PayloadEncodingFromExt(filename string) int32 {
+func PayloadEncodingFromExt(filename string) Encoding {
 	switch filepath.Ext(filename) {
 	case ".gz":
 		return EncodingGzip
@@ -325,14 +341,14 @@ func PayloadEncodingFromExt(filename string) int32 {
 // TranscodeAssetPayload decodes the asset's current payload encoding and
 // re-encodes it to targetEncoding, modifying the asset in place.
 // If the asset is already in the target encoding, this is a no-op.
-func TranscodeAssetPayload(asset *CatenaAsset, targetEncoding int32) error {
+func TranscodeAssetPayload(asset *CatenaAsset, targetEncoding Encoding) error {
 	original := asset.GetProtoAsset()
 	if original == nil || original.GetPayload() == nil {
 		return fmt.Errorf("asset has no payload")
 	}
 
 	dp := original.GetPayload()
-	currentEncoding := int32(dp.GetPayloadEncoding())
+	currentEncoding := Encoding(dp.GetPayloadEncoding())
 
 	if currentEncoding == targetEncoding {
 		return nil
