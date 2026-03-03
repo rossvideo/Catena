@@ -28,35 +28,74 @@ static inline bool iequals_header_name(std::string_view a, std::string_view b) {
     return true;
 }
 
-boost::asio::awaitable<void> read_with_timeout(tcp::socket& socket, std::string& buf, std::size_t start, std::size_t bytes, int timeout) {
-    using namespace boost::asio::experimental::awaitable_operators;
-    boost::asio::steady_timer timer(socket.get_executor());
-    timer.expires_after(std::chrono::milliseconds(timeout));
-    
-    // Async_read and timer run simultaneously, the other cancels when one finishes
-    auto result = co_await (boost::asio::async_read(socket, boost::asio::buffer(&buf[start], bytes), boost::asio::use_awaitable) ||
-        timer.async_wait(boost::asio::use_awaitable)
-    );
+/**
+ * Result from read coroutine.
+ * Regular read will populate the vector,
+ * Read until will populate the streambuf
+ */
+struct ReadResult {
+    std::optional<tcp::socket> socket;
+    std::vector<char> vecBuffer;
+    std::unique_ptr<boost::asio::streambuf> streamBuffer;
+    boost::system::error_code ec;
 
-    // index of 0 = read finished first
-    if (result.index() != 0) {
-        throw catena::exception_with_status("Timed out", catena::StatusCode::DEADLINE_EXCEEDED);
+    // 1. MUST HAVE: Default constructor to satisfy Boost's T() call
+    ReadResult() = default;
+
+    // 2. Value constructor for your co_return statements
+    ReadResult(tcp::socket s, std::vector<char> vb, std::unique_ptr<boost::asio::streambuf> sb, boost::system::error_code e)
+        : socket(std::move(s)), vecBuffer(std::move(vb)), streamBuffer(std::move(sb)), ec(e) {}
+
+    // 3. Move support (required for futures)
+    ReadResult(ReadResult&&) noexcept = default;
+    ReadResult& operator=(ReadResult&&) noexcept = default;
+
+    // 4. Explicitly delete copy
+    ReadResult(const ReadResult&) = delete;
+    ReadResult& operator=(const ReadResult&) = delete;
+};
+
+boost::asio::awaitable<ReadResult> read_with_timeout(tcp::socket socket, std::size_t bytes, int timeout) {
+    using namespace boost::asio::experimental::awaitable_operators;
+    std::vector<char> buf(bytes);
+    boost::asio::steady_timer timer(socket.get_executor(), std::chrono::milliseconds(timeout));
+    
+    try {
+        // Async_read and timer run simultaneously, the other cancels when one finishes
+        auto result = co_await (boost::asio::async_read(socket, boost::asio::buffer(buf), boost::asio::use_awaitable) ||
+            timer.async_wait(boost::asio::use_awaitable)
+        );
+    
+        // index of 0 = read finished first
+        if (result.index() == 0) {
+            co_return ReadResult(std::move(socket), std::move(buf), nullptr, {});
+        } else {
+            co_return ReadResult(std::move(socket), {}, nullptr, boost::asio::error::timed_out);
+        }
+    } catch (...) {
+        co_return ReadResult(std::move(socket), {}, nullptr, boost::asio::error::fault);
     }
 }
 
-boost::asio::awaitable<void> read_until_with_timeout(tcp::socket& socket, boost::asio::streambuf& buf, std::string_view delim, int timeout) {
+boost::asio::awaitable<ReadResult> read_until_with_timeout(tcp::socket socket, int timeout) {
     using namespace boost::asio::experimental::awaitable_operators;
-    boost::asio::steady_timer timer(socket.get_executor());
-    timer.expires_after(std::chrono::milliseconds(timeout));
+    auto buf = std::make_unique<boost::asio::streambuf>();
+    boost::asio::steady_timer timer(socket.get_executor(), std::chrono::milliseconds(timeout));
 
-    // Async_read and timer run simultaneously, the other cancels when one finishes
-    auto result = co_await (boost::asio::async_read_until(socket, buf, delim, boost::asio::use_awaitable) ||
-        timer.async_wait(boost::asio::use_awaitable)
-    );
-
-    // index of 0 = read finished first
-    if (result.index() != 0) {
-        throw catena::exception_with_status("Timed out", catena::StatusCode::DEADLINE_EXCEEDED);
+    try {
+        // Async_read and timer run simultaneously, the other cancels when one finishes
+        auto result = co_await (boost::asio::async_read_until(socket, *buf, "\r\n\r\n", boost::asio::use_awaitable) ||
+            timer.async_wait(boost::asio::use_awaitable)
+        );
+    
+        // index of 0 = read finished first
+        if (result.index() == 0) {
+            co_return ReadResult(std::move(socket), {}, std::move(buf), {});
+        } else {
+            co_return ReadResult(std::move(socket), {}, nullptr, boost::asio::error::timed_out);
+        }
+    } catch (...) {
+        co_return ReadResult(std::move(socket), {}, nullptr, boost::asio::error::fault);
     }
 }
 
@@ -112,18 +151,17 @@ void SocketReader::read(tcp::socket& socket, uint32_t timeout) {
     bool hasContentType = false; // Used for enforcing Content-Type
 
     // Reading from the socket.
-    boost::asio::streambuf buffer;
-    auto reader = read_until_with_timeout(socket, buffer, "\r\n\r\n", timeout);
-    auto result = boost::asio::co_spawn(socket.get_executor(), std::move(reader), boost::asio::use_future);
-
-    try {
-        result.get();
-    } catch(const catena::exception_with_status& e) {
-        throw;
-    } catch(...) {
+    auto fut = boost::asio::co_spawn(socket.get_executor(), read_until_with_timeout(std::move(socket), timeout), boost::asio::use_future);
+    ReadResult result = fut.get();
+    if (result.socket.has_value()){
+        socket = std::move(*result.socket);
+    }
+    if (result.ec == boost::asio::error::timed_out) {
+        throw catena::exception_with_status("Timed out", catena::StatusCode::DEADLINE_EXCEEDED);
+    } else if (result.ec) {
         throw catena::exception_with_status("Read error", catena::StatusCode::UNKNOWN);
     }
-    std::istream header_stream(&buffer);
+    std::istream header_stream(result.streamBuffer.get());
 
     // Getting the first line from the stream (URL), splitting, and parsing.
     std::string header;
@@ -259,16 +297,16 @@ void SocketReader::read(tcp::socket& socket, uint32_t timeout) {
         if (jsonBody_.size() < contentLength) {
             std::size_t leftover = contentLength - jsonBody_.size();
             std::size_t start = jsonBody_.size();
-            jsonBody_.resize(contentLength);
 
-            auto reader = read_with_timeout(socket, jsonBody_, start, leftover, timeout);
-            auto result = boost::asio::co_spawn(socket.get_executor(), std::move(reader), boost::asio::use_future);
-
-            try {
-                result.get();
-            } catch(const catena::exception_with_status& e) {
-                throw;
-            } catch(...) {
+            auto fut = boost::asio::co_spawn(socket.get_executor(), read_with_timeout(std::move(socket), leftover, timeout), boost::asio::use_future);
+            ReadResult result = fut.get();
+            if (result.socket.has_value()){
+                socket = std::move(*result.socket);
+                jsonBody_.append(result.vecBuffer.begin(), result.vecBuffer.end());
+            }
+            if (result.ec == boost::asio::error::timed_out) {
+                throw catena::exception_with_status("Timed out", catena::StatusCode::DEADLINE_EXCEEDED);
+            } else if (result.ec) {
                 throw catena::exception_with_status("Read error", catena::StatusCode::UNKNOWN);
             }
         } else if (jsonBody_.size() > contentLength) {
