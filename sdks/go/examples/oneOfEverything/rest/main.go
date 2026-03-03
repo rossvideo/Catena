@@ -291,15 +291,20 @@ func main() {
 		},
 	}
 
-	params := &sync.Map{}
-	params.Store("resolution", "1920x1080")
-	params.Store("brightness", int32(50))
-	params.Store("contrast", int32(50))
-	params.Store("saturation", int32(50))
-	params.Store("volume", int32(75))
-	params.Store("muted", int32(0))
-	params.Store("device_name", "Demo Device")
-	params.Store("counter", int32(0))
+	// Assign params to each slot
+	slotParams := map[int]*sync.Map{
+		0: {},
+		1: {},
+		2: {},
+	}
+	slotParams[0].Store("counter", int32(0))
+	slotParams[1].Store("resolution", "1920x1080")
+	slotParams[1].Store("brightness", int32(50))
+	slotParams[1].Store("contrast", int32(50))
+	slotParams[1].Store("saturation", int32(50))
+	slotParams[2].Store("volume", int32(75))
+	slotParams[2].Store("muted", int32(0))
+	slotParams[2].Store("device_name", "Demo Device")
 
 	// ==========================================================================
 	// Commands (for ExecuteCommand endpoint)
@@ -405,80 +410,103 @@ func main() {
 	}
 
 	// --------------------------------------------------------------------------
-	// Register GetValue handler (GetParam)
+	// Register GetValue handler (GetParam) for each slot
 	// --------------------------------------------------------------------------
-	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
-		logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
+	for _, slot := range slotList {
+		slot := slot
+		p := slotParams[slot]
 
-		// Special case: return counter state
-		if fqoid == "counter" {
-			val, _ := catena.ToCatenaValue(buildCounterResponse())
-			return catena.Reply(val)
-		}
+		if slot == 0 {
+			srv.RegisterGetValueHandler(slot, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+				logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
 
-		// Special case: return all params as a struct
-		if fqoid == "all" {
-			allParams := make(map[string]any)
-			params.Range(func(key, value any) bool {
-				allParams[key.(string)] = value
-				return true
+				if fqoid == "counter" {
+					val, _ := catena.ToCatenaValue(buildCounterResponse())
+					return catena.Reply(val)
+				}
+
+				// Aggregate params across all slots for the web UI poll
+				if fqoid == "all" {
+					allParams := make(map[string]any)
+					for _, sp := range slotParams {
+						sp.Range(func(key, value any) bool {
+							allParams[key.(string)] = value
+							return true
+						})
+					}
+					var runningVal int32 = 0
+					if counter.IsRunning() {
+						runningVal = 1
+					}
+					allParams["counter"] = int32(counter.GetValue())
+					allParams["counter_running"] = runningVal
+					catenaVal, err := catena.ToCatenaValue(allParams)
+					if err != nil {
+						return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert params")
+					}
+					return catena.Reply(catenaVal)
+				}
+
+				v, ok := p.Load(fqoid)
+				if !ok {
+					return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found: "+fqoid)
+				}
+				catenaVal, err := catena.ToCatenaValue(v)
+				if err != nil {
+					return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
+				}
+				return catena.Reply(catenaVal)
 			})
-			var runningVal int32 = 0
-			if counter.IsRunning() {
-				runningVal = 1
-			}
-			allParams["counter"] = int32(counter.GetValue())
-			allParams["counter_running"] = runningVal
-			catenaVal, err := catena.ToCatenaValue(allParams)
-			if err != nil {
-				return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert params")
-			}
-			return catena.Reply(catenaVal)
-		}
+		} else {
+			srv.RegisterGetValueHandler(slot, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+				logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
 
-		v, ok := params.Load(fqoid)
-		if !ok {
-			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found: "+fqoid)
+				v, ok := p.Load(fqoid)
+				if !ok {
+					return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found: "+fqoid)
+				}
+				catenaVal, err := catena.ToCatenaValue(v)
+				if err != nil {
+					return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
+				}
+				return catena.Reply(catenaVal)
+			})
 		}
-
-		catenaVal, err := catena.ToCatenaValue(v)
-		if err != nil {
-			return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
-		}
-		return catena.Reply(catenaVal)
-	})
+	}
 
 	// --------------------------------------------------------------------------
-	// Register SetValue handler (SetParam)
+	// Register SetValue handler (SetParam) for each slot
 	// --------------------------------------------------------------------------
-	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
-		logger.Info("SetParam", "slot", slot, "fqoid", fqoid, "value", value)
+	for _, slot := range slotList {
+		slot := slot
+		p := slotParams[slot]
 
-		// Check for nil value
-		if value == nil {
-			logger.Error("SetParam nil value received", "slot", slot, "fqoid", fqoid)
-			return catena.StatusWithCode(catena.INTERNAL, "nil value received")
-		}
+		srv.RegisterSetValueHandler(slot, func(value any, slot int, fqoid string) catena.StatusResult {
+			logger.Info("SetParam", "slot", slot, "fqoid", fqoid, "value", value)
 
-		// Check if parameter exists
-		val, ok := params.Load(fqoid)
-		if !ok {
-			logger.Error("SetParam param not found", "slot", slot, "fqoid", fqoid)
-			return catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
-		}
+			if value == nil {
+				logger.Error("SetParam nil value received", "slot", slot, "fqoid", fqoid)
+				return catena.StatusWithCode(catena.INTERNAL, "nil value received")
+			}
 
-		// Verify type matches
-		if reflect.TypeOf(val) != reflect.TypeOf(value) {
-			logger.Error("SetParam type mismatch", "slot", slot, "fqoid", fqoid,
-				"expected", reflect.TypeOf(val), "got", reflect.TypeOf(value))
-			return catena.StatusWithCode(catena.INVALID_ARGUMENT, "type mismatch")
-		}
+			val, ok := p.Load(fqoid)
+			if !ok {
+				logger.Error("SetParam param not found", "slot", slot, "fqoid", fqoid)
+				return catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
+			}
 
-		params.Store(fqoid, value)
-		logger.Info("Parameter updated", "fqoid", fqoid, "value", value)
-		srv.BroadcastUpdate(slot, fqoid, value)
-		return catena.StatusWithCode(catena.NO_CONTENT, "")
-	})
+			if reflect.TypeOf(val) != reflect.TypeOf(value) {
+				logger.Error("SetParam type mismatch", "slot", slot, "fqoid", fqoid,
+					"expected", reflect.TypeOf(val), "got", reflect.TypeOf(value))
+				return catena.StatusWithCode(catena.INVALID_ARGUMENT, "type mismatch")
+			}
+
+			p.Store(fqoid, value)
+			logger.Info("Parameter updated", "fqoid", fqoid, "value", value)
+			srv.BroadcastUpdate(slot, fqoid, value)
+			return catena.StatusWithCode(catena.NO_CONTENT, "")
+		})
+	}
 
 	// --------------------------------------------------------------------------
 	// Register ExecuteCommand handler
