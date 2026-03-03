@@ -1005,3 +1005,24 @@ func TestCompressDeflateTo_CloseError(t *testing.T) {
 		t.Errorf("expected 'zlib close' in error, got: %v", err)
 	}
 }
+
+func TestEncoding_String(t *testing.T) {
+	tests := []struct {
+		enc  Encoding
+		want string
+	}{
+		{EncodingUncompressed, "UNCOMPRESSED"},
+		{EncodingGzip, "GZIP"},
+		{EncodingDeflate, "DEFLATE"},
+		{Encoding(42), "Encoding(42)"},
+		{Encoding(-1), "Encoding(-1)"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.want, func(t *testing.T) {
+			if got := tt.enc.String(); got != tt.want {
+				t.Errorf("Encoding(%d).String() = %q, want %q", int32(tt.enc), got, tt.want)
+			}
+		})
+	}
+}
