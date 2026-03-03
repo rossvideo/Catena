@@ -159,7 +159,11 @@ class GRPCTest : public ::testing::Test {
     catena::exception_with_status expRc_{"", catena::StatusCode::OK};
 
     // Address used for gRPC tests.
+    #ifdef _WIN32
+    std::string serverAddr_ = "127.0.0.1:50051";
+    #else
     std::string serverAddr_ = "0.0.0.0:50051";
+    #endif
     // Server and service variables.
     grpc::ServerBuilder builder_;
     std::unique_ptr<grpc::Server> server_ = nullptr;
@@ -186,8 +190,8 @@ class GRPCTest : public ::testing::Test {
     // gRPC test variables.
     std::unique_ptr<ICallData> testCall_ = nullptr;
     std::unique_ptr<ICallData> asyncCall_ = nullptr;
-    long requestStart_ = -1;
-    long requestReceived_ = -1;
+    long long requestStart_ = -1;
+    long long requestReceived_ = -1;
 };
 
 } // namespace gRPC

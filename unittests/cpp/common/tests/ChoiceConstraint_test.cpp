@@ -120,11 +120,9 @@ TEST_F(ChoiceConstraintTest, ChoiceConstraint_IntApply) {
  * TEST 1.4 - Testing Int ChoiceConstraint toProto
  */
 TEST_F(ChoiceConstraintTest, ChoiceConstraint_IntToProto) {
-    ChoiceConstraint<int32_t, st2138::Constraint::INT_CHOICE>::ListInitializer choicesInit = {
-        {1, PolyglotText::ListInitializer{{"en", "one"}}},
-        {2, PolyglotText::ListInitializer{{"en", "two"}}}
-    };
-    ChoiceConstraint<int32_t, st2138::Constraint::INT_CHOICE>::Choices choices(choicesInit.begin(), choicesInit.end());
+    std::unordered_map<std::string, PolyglotText::DisplayStrings> choices;
+    choices["1"] = {{"en", "one"}};
+    choices["2"] = {{"en", "two"}};
     ChoiceConstraint<int32_t, st2138::Constraint::INT_CHOICE> constraint({{1, {{"en", "one"}}}, {2, {{"en", "two"}}}}, true, "test_oid", false);
     st2138::Constraint protoConstraint;
     constraint.toProto(protoConstraint);
@@ -132,9 +130,9 @@ TEST_F(ChoiceConstraintTest, ChoiceConstraint_IntToProto) {
     EXPECT_EQ(protoConstraint.type(), st2138::Constraint_ConstraintType_INT_CHOICE);
     EXPECT_EQ(choices.size(), protoConstraint.int32_choice().choices_size());
     for (const auto& protoChoice : protoConstraint.int32_choice().choices()) {
-        ASSERT_TRUE(choices.contains(protoChoice.value())) << "Choice value should be in the choices map";
+        ASSERT_TRUE(choices.contains(std::to_string(protoChoice.value()))) << "Choice value should be in the choices map";
         const auto& protoDS = protoChoice.name().display_strings();
-        EXPECT_EQ(choices.at(protoChoice.value()).displayStrings(), PolyglotText::DisplayStrings(protoDS.begin(), protoDS.end()));
+        EXPECT_EQ(choices.at(std::to_string(protoChoice.value())), PolyglotText::DisplayStrings(protoDS.begin(), protoDS.end()));
     }
 }
 
@@ -257,11 +255,9 @@ TEST_F(ChoiceConstraintTest, ChoiceConstraint_StringToProto) {
  * TEST 2.7 - Testing STRING_STRING_CHOICE ChoiceConstraint toProto
  */
 TEST_F(ChoiceConstraintTest, ChoiceConstraint_StringStringToProto) {
-    ChoiceConstraint<std::string, st2138::Constraint::STRING_STRING_CHOICE>::ListInitializer choicesInit = {
-        {"Choice1", PolyglotText::ListInitializer{{"en", "one"}}},
-        {"Choice2", PolyglotText::ListInitializer{{"en", "two"}}}
-    };
-    ChoiceConstraint<std::string, st2138::Constraint::STRING_STRING_CHOICE>::Choices choices(choicesInit.begin(), choicesInit.end());
+    std::unordered_map<std::string, PolyglotText::DisplayStrings> choices;
+    choices["Choice1"] = {{"en", "one"}};
+    choices["Choice2"] = {{"en", "two"}};
     ChoiceConstraint<std::string, st2138::Constraint::STRING_STRING_CHOICE> constraint({{"Choice1", {{"en", "one"}}}, {"Choice2", {{"en", "two"}}}}, true, "test_oid", false);
     st2138::Constraint protoConstraint;
     constraint.toProto(protoConstraint);
@@ -271,6 +267,6 @@ TEST_F(ChoiceConstraintTest, ChoiceConstraint_StringStringToProto) {
     for (const auto& protoChoice : protoConstraint.string_string_choice().choices()) {
         ASSERT_TRUE(choices.contains(protoChoice.value())) << "Choice value should be in the choices map";
         const auto& protoDS = protoChoice.name().display_strings();
-        EXPECT_EQ(choices.at(protoChoice.value()).displayStrings(), PolyglotText::DisplayStrings(protoDS.begin(), protoDS.end()));
+        EXPECT_EQ(choices.at(protoChoice.value()), PolyglotText::DisplayStrings(protoDS.begin(), protoDS.end()));
     }
 }

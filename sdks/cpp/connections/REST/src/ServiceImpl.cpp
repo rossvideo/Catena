@@ -17,6 +17,8 @@ using catena::REST::ServiceImpl;
 #include <controllers/Subscriptions.h>
 #include <controllers/ExecuteCommand.h>
 
+#include <boost/asio/ip/address_v4.hpp>
+
 using catena::REST::Connect;
 
 // Defining the port flag from SharedFlags.h

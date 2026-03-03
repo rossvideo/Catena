@@ -192,11 +192,11 @@ std::string catena::param_value_string(const st2138::Value& value) {
     }
 }
 
-bool catena::readTimestamp(std::string& value, long& dest) {
+bool catena::readTimestamp(std::string& value, long long& dest) {
     if (value.length() == 0 || !std::isdigit(value[0])) {
         return false;
     }
-    long temp;
+    long long temp;
     const char* val = value.c_str();
     auto [ptr, ec] = std::from_chars(val, val + value.length(), temp);
     if (ec == std::errc() && ptr == (val + value.length())) {

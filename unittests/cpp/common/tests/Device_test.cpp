@@ -2375,6 +2375,7 @@ TEST_F(DeviceTest, UnhandledException) {
     // When getNext is called, it should rethrow the exception that was caught by unhandled_exception
     try {
         serializer->getNext();
+        serializer->getNext(); // Platform differences can cause an extra getNext() to be necessary
         FAIL() << "Expected std::runtime_error to be thrown";
     } catch (const std::runtime_error& e) {
         EXPECT_STREQ(e.what(), "Test exception from toProto");

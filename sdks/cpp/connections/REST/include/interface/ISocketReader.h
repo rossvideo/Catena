@@ -62,8 +62,8 @@ namespace REST {
  */
 enum RESTMethod : uint32_t { Method_NONE, Method_GET, Method_POST, Method_PUT, Method_PATCH, Method_DELETE, Method_HEAD, Method_OPTIONS };
 
-const long DEFAULT_REQUEST_START = 0;
-const long DEFAULT_REQUEST_RECEIVED = 0;
+const long long DEFAULT_REQUEST_START = 0;
+const long long DEFAULT_REQUEST_RECEIVED = 0;
 const uint32_t DEFAULT_TIMEOUT = REST_READ_TIMEOUT_MS; // value is in milliseconds
 
 /**
@@ -162,12 +162,12 @@ class ISocketReader {
      * @brief Returns the time the client started the request formatted as,
      * <number of milliseconds since start of epoch>
      */
-    virtual const long requestStart() const = 0;
+    virtual const long long requestStart() const = 0;
     /**
      * @brief Returns the time the client's request was received formatted as,
      * <number of milliseconds since start of epoch>
      */
-    virtual const long requestReceived() const = 0;
+    virtual const long long requestReceived() const = 0;
 };
  
 }; // Namespace REST

@@ -54,6 +54,8 @@
 #include <thread>
 #include <vector>
 
+#include <boost/asio/ip/address_v4.hpp>
+
 using namespace catena::REST;
 
 // Fixture
@@ -132,7 +134,7 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
         EXPECT_EQ(socketReader.jsonBody(), jsonBody);
         EXPECT_EQ(socketReader.authorizationEnabled(), authz);
         EXPECT_EQ(socketReader.stream(), stream);
-        EXPECT_EQ(socketReader.requestStart(), requestStart != "" ? std::stol(requestStart) : DEFAULT_REQUEST_START);
+        EXPECT_EQ(socketReader.requestStart(), requestStart != "" ? std::stoll(requestStart) : DEFAULT_REQUEST_START);
         EXPECT_TRUE(socketReader.requestReceived() > 0);
     }
 
@@ -347,7 +349,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderCaseInsensitive) {
     EXPECT_EQ(socketReader.jsonBody(), jsonBody);
     EXPECT_EQ(socketReader.authorizationEnabled(), true);
     EXPECT_EQ(socketReader.stream(), stream);
-    EXPECT_EQ(socketReader.requestStart(), std::stol(requestStart));
+    EXPECT_EQ(socketReader.requestStart(), std::stoll(requestStart));
     EXPECT_TRUE(socketReader.requestReceived() > 0);
 }
 
@@ -403,7 +405,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderWithoutColonIgnored) {
     EXPECT_EQ(socketReader.jsonBody(), jsonBody);
     EXPECT_EQ(socketReader.authorizationEnabled(), true);
     EXPECT_EQ(socketReader.stream(), stream);
-    EXPECT_EQ(socketReader.requestStart(), std::stol(requestStart));
+    EXPECT_EQ(socketReader.requestStart(), std::stoll(requestStart));
     EXPECT_TRUE(socketReader.requestReceived() > 0);
 }
 

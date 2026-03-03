@@ -100,7 +100,7 @@ class gRPCAddLanguageTests : public GRPCTest {
     /**
      * Makes an async RPC and checks the requestStart/requestReceived value read by the handler.
      */
-    void testRPCTimestamps(std::string input, long expected) {
+    void testRPCTimestamps(std::string input, long long expected) {
         // Create a new client context for this call to avoid metadata from previous calls
         grpc::ClientContext context;
         context.AddMetadata("request-start", input);

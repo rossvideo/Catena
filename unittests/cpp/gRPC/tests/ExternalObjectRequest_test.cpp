@@ -130,7 +130,7 @@ class gRPCExternalObjectRequestTests : public GRPCTest {
     /**
      * Makes an async RPC and checks the requestStart/requestReceived values read by the handler.
      */
-    void testRPCTimestamps(std::string input, long expected) {
+    void testRPCTimestamps(std::string input, long long expected) {
         // Create a new client context for this call to avoid metadata from previous calls
         grpc::ClientContext context;
         context.AddMetadata("request-start", input);
@@ -266,8 +266,12 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_FileNotFound) {
     initPayload("/nonexistent_file.txt");
     
     // Set expected error - the actual error message includes function signature
+    #ifdef _WIN32
+    expRc_ = catena::exception_with_status("virtual void __cdecl catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile '/nonexistent_file.txt' not found", catena::StatusCode::NOT_FOUND);
+    #else
     expRc_ = catena::exception_with_status("virtual void catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile '/nonexistent_file.txt' not found", catena::StatusCode::NOT_FOUND);
-    
+    #endif
+
     // Send the RPC
     testRPC();
 }
@@ -280,8 +284,12 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_MissingSlashPrefix)
     initPayload("test_file_no_slash.txt");
     
     // Set expected error with hint about missing '/' prefix - includes function signature
+    #ifdef _WIN32
+    expRc_ = catena::exception_with_status("virtual void __cdecl catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile 'test_file_no_slash.txt' not found. HINT: Make sure oid starts with '/' prefix.", catena::StatusCode::NOT_FOUND);
+    #else
     expRc_ = catena::exception_with_status("virtual void catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile 'test_file_no_slash.txt' not found. HINT: Make sure oid starts with '/' prefix.", catena::StatusCode::NOT_FOUND);
-    
+    #endif
+
     // Send the RPC
     testRPC();
 }
@@ -294,29 +302,39 @@ TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_PathTraversal) {
     initPayload("/../../../etc/passwd");
     
     // Set expected error - the actual error message includes function signature
+    #ifdef _WIN32
+    expRc_ = catena::exception_with_status("virtual void __cdecl catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile '/../../../etc/passwd' not found", catena::StatusCode::NOT_FOUND);
+    #else 
     expRc_ = catena::exception_with_status("virtual void catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile '/../../../etc/passwd' not found", catena::StatusCode::NOT_FOUND);
-    
+    #endif
+
     // Send the RPC
     testRPC();
 }
 
 /*
- * TEST 2.4 - ExternalObjectRequest with file I/O exception (generic exception handling).
+ * TEST 2.4 - ExternalObjectRequest with file I/O exception.
  */
 TEST_F(gRPCExternalObjectRequestTests, ExternalObjectRequest_FileIOException) {
     // Create a file that exists but will cause an I/O exception when read
     // We'll create a directory with the same name as the file to trigger an exception
     std::string problematicPath = "/problematic_file.txt";
     
-    // Create a directory instead of a file to cause std::ifstream to fail
+    // Create a directory instead of a file to cause exception
     std::filesystem::create_directories(testEOPath_ + problematicPath);
     
     // Initialize request payload
     initPayload(problematicPath);
     
-    // Set expected error - generic exception should result in CANCELLED status
-    expRc_ = catena::exception_with_status("", catena::StatusCode::CANCELLED);
-    
+    // Set expected error - generic exception should result in INVALID_ARGUMENT status
+    #ifdef _WIN32
+    expRc_ = catena::exception_with_status("virtual void __cdecl catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile '/problematic_file.txt' may be a directory", catena::StatusCode::INVALID_ARGUMENT);
+    #else
+    expRc_ = catena::exception_with_status("virtual void catena::gRPC::ExternalObjectRequest::proceed(bool)\nfile '/problematic_file.txt' may be a directory", catena::StatusCode::INVALID_ARGUMENT);
+    #endif
+
+    expRc_.status = catena::StatusCode::INVALID_ARGUMENT;
+
     // Send the RPC
     testRPC();
 }

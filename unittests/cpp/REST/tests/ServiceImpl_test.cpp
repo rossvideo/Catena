@@ -55,6 +55,8 @@
 // REST
 #include "ServiceImpl.h"
 
+#include <boost/asio/ip/address_v4.hpp>
+
 using namespace catena::common;
 using namespace catena::REST;
 

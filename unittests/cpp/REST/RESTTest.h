@@ -67,6 +67,8 @@ using boost::asio::ip::tcp;
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 
+#include <boost/asio/ip/address_v4.hpp>
+
 using namespace catena::common;
 
 namespace catena {

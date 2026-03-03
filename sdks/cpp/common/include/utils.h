@@ -120,6 +120,6 @@ std::string param_value_string(const st2138::Value& value);
  * @param dest The destination to store the converted value. Unchanged if value is invalid.
  * @return true if input string is valid.
  */
-bool readTimestamp(std::string& value, long& dest);
+bool readTimestamp(std::string& value, long long& dest);
 
 }  // namespace catena

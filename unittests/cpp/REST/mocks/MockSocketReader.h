@@ -64,8 +64,8 @@ class MockSocketReader : public ISocketReader {
     MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
     MOCK_METHOD(const std::string&, EOPath, (), (const, override));
     MOCK_METHOD(catena::common::ISubscriptionManager&, subscriptionManager, (), (override));
-    MOCK_METHOD(const long, requestStart, (), (const, override));
-    MOCK_METHOD(const long, requestReceived, (), (const, override));
+    MOCK_METHOD(const long long, requestStart, (), (const, override));
+    MOCK_METHOD(const long long, requestReceived, (), (const, override));
 };
 
 } // namespace REST
