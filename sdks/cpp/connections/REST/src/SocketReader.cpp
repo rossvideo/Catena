@@ -1,6 +1,7 @@
 
 #include <SocketReader.h>
 #include <string_view>
+#include <boost/asio/as_tuple.hpp>
 using catena::REST::SocketReader;
 
 namespace {
@@ -39,63 +40,61 @@ struct ReadResult {
     std::unique_ptr<boost::asio::streambuf> streamBuffer;
     boost::system::error_code ec;
 
-    // 1. MUST HAVE: Default constructor to satisfy Boost's T() call
+    // Needed for co_spawn to work
     ReadResult() = default;
 
-    // 2. Value constructor for your co_return statements
+    // Used in read coroutines
     ReadResult(tcp::socket s, std::vector<char> vb, std::unique_ptr<boost::asio::streambuf> sb, boost::system::error_code e)
         : socket(std::move(s)), vecBuffer(std::move(vb)), streamBuffer(std::move(sb)), ec(e) {}
-
-    // 3. Move support (required for futures)
-    ReadResult(ReadResult&&) noexcept = default;
-    ReadResult& operator=(ReadResult&&) noexcept = default;
-
-    // 4. Explicitly delete copy
-    ReadResult(const ReadResult&) = delete;
-    ReadResult& operator=(const ReadResult&) = delete;
 };
 
 boost::asio::awaitable<ReadResult> read_with_timeout(tcp::socket socket, std::size_t bytes, int timeout) {
-    using namespace boost::asio::experimental::awaitable_operators;
+    using namespace boost::asio;
+    using namespace experimental::awaitable_operators;
     std::vector<char> buf(bytes);
-    boost::asio::steady_timer timer(socket.get_executor(), std::chrono::milliseconds(timeout));
+    steady_timer timer(socket.get_executor(), std::chrono::milliseconds(timeout));
     
-    try {
-        // Async_read and timer run simultaneously, the other cancels when one finishes
-        auto result = co_await (boost::asio::async_read(socket, boost::asio::buffer(buf), boost::asio::use_awaitable) ||
-            timer.async_wait(boost::asio::use_awaitable)
-        );
-    
-        // index of 0 = read finished first
-        if (result.index() == 0) {
+
+    // Async_read and timer run simultaneously, the other cancels when one finishes
+    auto result = co_await (async_read(socket, buffer(buf), as_tuple(use_awaitable)) ||
+        timer.async_wait(as_tuple(use_awaitable))
+    );
+
+    // index of 0 = read finished first
+    if (result.index() == 0) {
+        auto [ec, n] = std::get<0>(result);
+        if (!ec) {
             co_return ReadResult(std::move(socket), std::move(buf), nullptr, {});
         } else {
-            co_return ReadResult(std::move(socket), {}, nullptr, boost::asio::error::timed_out);
+            co_return ReadResult(std::move(socket), {}, nullptr, ec);
         }
-    } catch (...) {
-        co_return ReadResult(std::move(socket), {}, nullptr, boost::asio::error::fault);
+    } else {
+        co_return ReadResult(std::move(socket), {}, nullptr, boost::asio::error::timed_out);
     }
 }
 
 boost::asio::awaitable<ReadResult> read_until_with_timeout(tcp::socket socket, int timeout) {
-    using namespace boost::asio::experimental::awaitable_operators;
+    using namespace boost::asio;
+    using namespace experimental::awaitable_operators;
     auto buf = std::make_unique<boost::asio::streambuf>();
-    boost::asio::steady_timer timer(socket.get_executor(), std::chrono::milliseconds(timeout));
+    steady_timer timer(socket.get_executor(), std::chrono::milliseconds(timeout));
 
-    try {
-        // Async_read and timer run simultaneously, the other cancels when one finishes
-        auto result = co_await (boost::asio::async_read_until(socket, *buf, "\r\n\r\n", boost::asio::use_awaitable) ||
-            timer.async_wait(boost::asio::use_awaitable)
-        );
-    
-        // index of 0 = read finished first
-        if (result.index() == 0) {
+
+    // Async_read and timer run simultaneously, the other cancels when one finishes
+    auto result = co_await (async_read_until(socket, *buf, "\r\n\r\n", as_tuple(use_awaitable)) ||
+        timer.async_wait(as_tuple(use_awaitable))
+    );
+
+    // index of 0 = read finished first
+    if (result.index() == 0) {
+        auto [ec, n] = std::get<0>(result);
+        if (!ec) {
             co_return ReadResult(std::move(socket), {}, std::move(buf), {});
         } else {
-            co_return ReadResult(std::move(socket), {}, nullptr, boost::asio::error::timed_out);
+            co_return ReadResult(std::move(socket), {}, nullptr, ec);
         }
-    } catch (...) {
-        co_return ReadResult(std::move(socket), {}, nullptr, boost::asio::error::fault);
+    } else {
+        co_return ReadResult(std::move(socket), {}, nullptr, boost::asio::error::timed_out);
     }
 }
 
