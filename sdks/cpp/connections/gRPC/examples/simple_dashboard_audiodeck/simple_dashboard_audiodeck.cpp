@@ -233,24 +233,6 @@ void RunRPCServer(std::string addr)
     }
 }
 
-/**
- * @brief Generate connection properties configuration for gRPC
- * @param address Address (e.g., "0.0.0.0")
- * @param port Port number
- * @return ConnectionPropsConfig structure
- */
-catena::common::ConnectionPropsConfig generateConnectionPropsConfig(const std::string& address, uint16_t port) {
-    catena::common::ConnectionPropsConfig config;
-    config.protocol = "grpc";
-    config.address = address;
-    config.service_port = port;
-    config.node_id = "dashboard_audiodeck-a4:bb:6d:6a:6f:a3";
-    config.node_name = "dashboard_audiodeck";
-    config.refresh_interval = 5000;
-    config.use_tls = false;
-    return config;
-}
-
 int main(int argc, char* argv[])
 {
     const auto [exit, code] = config::initConfigVariables(argc, argv);
@@ -262,18 +244,19 @@ int main(int argc, char* argv[])
     // Commands should be defined before starting the RPC server
     defineCommands();
 
-    catena::common::ConnectionPropsConfig configProps = generateConnectionPropsConfig(config::hostname, config::port);
     catena::common::ConnectionProps connectionProps(
-        configProps,                      // Configuration
-        "/connect/connection-props.xml",  // Endpoint
-        config::dashboard_port            // Port
+        ConnectionProtocol::ST2138_GRPC,        // Configuration
+        "/connect/connection-props.xml",        // Endpoint
+        30000,                                  // Refresh interval in milliseconds
+        "simple_dashboard_audiodeck",           // Node name
+        "simple_dashboard_audiodeck-01:23:45:67:89:ab"   // Node ID
     );
 
     if (!connectionProps.start()) {
         LOG(WARNING) << "Failed to start connection props server on port " << config::dashboard_port;
     }
 
-    std::thread catenaRpcThread(RunRPCServer, config::hostname + ":" + std::to_string(config::port));
+    std::thread catenaRpcThread(RunRPCServer, "0.0.0.0:" + std::to_string(config::port));
     catenaRpcThread.join();
     
     return 0;

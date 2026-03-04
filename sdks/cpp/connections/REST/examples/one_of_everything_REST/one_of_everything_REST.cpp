@@ -280,25 +280,6 @@ void startCounter() {
     }
 }
 
-/**
- * @brief Generate connection properties configuration for REST
- * @param address Address (e.g., "0.0.0.0")
- * @param port Port number
- * @param useTls Whether to use HTTPS
- * @return ConnectionPropsConfig structure
- */
-catena::common::ConnectionPropsConfig generateConnectionPropsConfig(const std::string& address, uint16_t port, bool useTls) {
-    catena::common::ConnectionPropsConfig config;
-    config.protocol = "rest";
-    config.address = address;
-    config.service_port = port;
-    config.node_id = "one_of_everything-a4:bb:6d:6a:6f:a3";
-    config.node_name = "one_of_everything";
-    config.refresh_interval = 5000;
-    config.use_tls = useTls;
-    return config;
-}
-
 void RunRESTServer() {
     // install signal handlers
     signal(SIGINT, handle_signal);
@@ -339,16 +320,13 @@ int main(int argc, char* argv[])
 
     // commands should be defined before starting the RPC server
     defineCommands();
-
-    // Generate connection properties configuration
-    // Determine if TLS is being used (typically yes for port 443)
-    bool useTls = (config::port == 443);
-    catena::common::ConnectionPropsConfig configProps = generateConnectionPropsConfig(config::hostname, config::port, useTls);
     
     catena::common::ConnectionProps connectionProps(
-        configProps,                      // Configuration
-        "/connect/connection-props.xml",  // Endpoint
-        config::dashboard_port            // Port
+        ConnectionProtocol::ST2138_REST,        // Configuration
+        "/connect/connection-props.xml",        // Endpoint
+        30000,                                  // Refresh interval in milliseconds
+        "one_of_everything",                    // Node name
+        "one_of_everything-a4:bb:6d:6a:6f:a3"   // Node ID
     );
 
     if (!connectionProps.start()) {

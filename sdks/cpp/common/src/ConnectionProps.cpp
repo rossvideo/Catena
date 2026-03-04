@@ -38,22 +38,44 @@
 #include <ConnectionProps.h>
 #include <Logger.h>
 #include <sstream>
+#include <Config.h>
+
+namespace {
+
+std::string protocolToString(catena::common::ConnectionProtocol protocol) {
+    switch (protocol) {
+        case catena::common::ConnectionProtocol::ST2138_REST:
+            return "st2138-rest";
+        case catena::common::ConnectionProtocol::ST2138_GRPC:
+            return "st2138-grpc";
+    }
+
+    return "";
+}
+
+} // namespace
 
 using namespace catena::common;
 
 ConnectionProps::ConnectionProps(
-    const ConnectionPropsConfig& config,
+    ConnectionProtocol protocol,
     const std::string& endpoint,
-    uint16_t port)
-    : endpoint_(endpoint),
-      port_(port),
-      config_(config),
+    uint32_t refresh_interval,
+    const std::string& node_name,
+    const std::string& node_id,
+    const std::string& service_name)
+    : protocol_(protocol),
+      endpoint_(endpoint),
+      refresh_interval_(refresh_interval),
+      node_name_(node_name),
+      node_id_(node_id),
+      service_name_(service_name),
       running_(false),
       io_context_(),
-      acceptor_(io_context_, tcp::endpoint(tcp::v4(), port)) {
-    response_content_ = generateXml(config);
+      acceptor_(io_context_, tcp::endpoint(tcp::v4(), config::dashboard_port)) {
+    response_content_ = generateXml();
     LOG(INFO) << "Connection props server constructed with endpoint: " << endpoint
-              << ", port: " << port << ", protocol: " << config.protocol;
+                            << ", port: " << config::dashboard_port << ", protocol: " << protocolToString(protocol_);
 }
 
 ConnectionProps::~ConnectionProps() {
@@ -62,7 +84,7 @@ ConnectionProps::~ConnectionProps() {
 
 bool ConnectionProps::start() {
     if (running_) {
-        LOG(WARNING) << "Connection props server already running on port " << port_;
+        LOG(WARNING) << "Connection props server already running on port " << config::dashboard_port;
         return false;
     }
 
@@ -71,7 +93,7 @@ bool ConnectionProps::start() {
         run();
     });
 
-    LOG(INFO) << "Connection props server started on port " << port_
+    LOG(INFO) << "Connection props server started on port " << config::dashboard_port
               << ", serving " << endpoint_;
     return true;
 }
@@ -81,13 +103,13 @@ void ConnectionProps::stop() {
         return;
     }
 
-    LOG(INFO) << "Stopping connection props server on port " << port_;
+    LOG(INFO) << "Stopping connection props server on port " << config::dashboard_port;
     running_ = false;
 
     // Send a dummy connection to wake up the blocking accept(), same as ServiceImpl
     tcp::socket dummy_socket(io_context_);
     boost::system::error_code ec;
-    dummy_socket.connect(tcp::endpoint(tcp::v4(), port_), ec);
+    dummy_socket.connect(tcp::endpoint(tcp::v4(), config::dashboard_port), ec);
     if (!ec) {
         dummy_socket.close(ec);
     }
@@ -108,47 +130,37 @@ void ConnectionProps::updateContent(const std::string& content) {
     VLOG(1) << "Connection props server content updated (legacy)";
 }
 
-void ConnectionProps::updateConfig(const ConnectionPropsConfig& config) {
-    std::lock_guard<std::mutex> lock(content_mutex_);
-    config_ = config;
-    response_content_ = generateXml(config);
-    VLOG(1) << "Connection props server config updated, protocol: " << config.protocol;
-}
-
-std::string ConnectionProps::generateXml(const ConnectionPropsConfig& config) {
+std::string ConnectionProps::generateXml() {
     std::stringstream xml;
+    const std::string protocol = protocolToString(protocol_);
     
     xml << "<properties version=\"1.0\">\n"
         << "    <comment>DashBoard Device Connection Settings</comment>\n";
     
     // Base URL and service URL
-    if (config.protocol == "rest") {
-        std::string scheme = config.use_tls ? "https" : "http";
-        xml << "    <entry key=\"base-url\">" << scheme << "://" << config.address << "/</entry>\n";
-    } else {
-        xml << "    <entry key=\"base-url\">http://" << config.address << "/</entry>\n";
-    }
+    std::string scheme = config::dashboard_tls_enabled ? "https" : "http";
+    xml << "    <entry key=\"base-url\">" << scheme << "://" << config::hostname << "/</entry>\n";
     
-    xml << "    <entry key=\"serviceUrl\">service:catena-device</entry>\n";
+    xml << "    <entry key=\"serviceUrl\">" << service_name_ << "</entry>\n";
     
     // Equipment type
-    xml << "    <entry key=\"equipmentType\">" << config.protocol << "</entry>\n";
+    xml << "    <entry key=\"equipmentType\">" << protocol << "</entry>\n";
     
     // Address and port
-    xml << "    <entry key=\"address\">" << config.address << "</entry>\n"
-        << "    <entry key=\"port\">" << config.service_port << "</entry>\n";
+    xml << "    <entry key=\"address\">" << config::hostname << "</entry>\n"
+        << "    <entry key=\"port\">" << config::port << "</entry>\n";
     
     // Node ID and name (if provided)
-    if (!config.node_id.empty()) {
-        xml << "    <entry key=\"node-id\">" << config.node_id << "</entry>\n";
+    if (node_id_ != "") {
+        xml << "    <entry key=\"node-id\">" << node_id_ << "</entry>\n";
     }
-    if (!config.node_name.empty()) {
-        xml << "    <entry key=\"node-name\">" << config.node_name << "</entry>\n";
+    if (node_name_ != "") {
+        xml << "    <entry key=\"node-name\">" << node_name_ << "</entry>\n";
     }
     
     // Index URL and refresh interval
     xml << "    <entry key=\"index-url\">connect/connection-props.xml</entry>\n"
-        << "    <entry key=\"refresh-interval\">" << config.refresh_interval << "</entry>\n";
+        << "    <entry key=\"refresh-interval\">" << refresh_interval_ << "</entry>\n";
     
     xml << "</properties>";
     
@@ -208,6 +220,19 @@ void ConnectionProps::handleRequest(tcp::socket socket) {
         request_stream >> method >> path >> version;
 
         VLOG(2) << "Connection props request: " << method << " " << path;
+
+        if (method != "GET") {
+            const std::string body = "Method Not Allowed\n";
+            const std::string response =
+                "HTTP/1.1 405 Method Not Allowed\r\n"
+                "Allow: GET\r\n"
+                "Content-Type: text/plain\r\n"
+                "Content-Length: " + std::to_string(body.size()) + "\r\n"
+                "Connection: close\r\n"
+                "\r\n" + body;
+            boost::asio::write(socket, boost::asio::buffer(response));
+            return;
+        }
 
         // Generate and send response
         std::string response = generateResponse(path);

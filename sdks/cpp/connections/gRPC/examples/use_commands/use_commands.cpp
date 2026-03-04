@@ -270,7 +270,7 @@ int main(int argc, char* argv[])
     // commands should be defined before starting the RPC server 
     defineCommands();
   
-    std::thread catenaRpcThread(RunRPCServer, config::hostname + ":" + std::to_string(config::port));
+    std::thread catenaRpcThread(RunRPCServer, "0.0.0.0:" + std::to_string(config::port));
     catenaRpcThread.join();
     
     return 0;

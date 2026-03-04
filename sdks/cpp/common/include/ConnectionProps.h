@@ -42,6 +42,7 @@
  #include <thread>
  #include <atomic>
  #include <memory>
+ #include <optional>
  
  using boost::asio::ip::tcp;
  
@@ -56,14 +57,9 @@ const uint16_t DEFAULT_CONNECTION_PROPS_PORT = 80;
 /**
  * @brief Configuration structure for connection properties
  */
-struct ConnectionPropsConfig {
-    std::string protocol = "grpc";           // "grpc" or "rest"
-    std::string address = "localhost";       // Hostname or IP address
-    uint16_t service_port = 6254;            // Port of the actual service
-    std::string node_id = "";                // Unique node identifier
-    std::string node_name = "";              // Human-readable node name
-    uint32_t refresh_interval = 30000;       // Refresh interval in milliseconds
-    bool use_tls = false;                    // Whether to use HTTPS/TLS
+enum class ConnectionProtocol {
+    ST2138_REST,
+    ST2138_GRPC
 };
  
  /**
@@ -77,7 +73,7 @@ struct ConnectionPropsConfig {
   * Example usage:
   * @code
   * ConnectionPropsConfig config;
-  * config.protocol = "grpc";
+  * config.protocol = "st2138-grpc";
   * config.address = "192.168.1.100";
   * config.service_port = 6254;
   * config.node_id = "1234567890";
@@ -92,17 +88,20 @@ struct ConnectionPropsConfig {
   */
  class ConnectionProps {
  public:
-     /**
-      * @brief Construct a new Connection Props Server with configuration
-      * 
-      * @param config Configuration for generating connection properties
-      * @param endpoint The endpoint path (default "/connect/connection-props.xml")
-      * @param port The port to listen on (default DEFAULT_CONNECTION_PROPS_PORT)
-      */
-     ConnectionProps(
-         const ConnectionPropsConfig& config,
-         const std::string& endpoint = "/connect/connection-props.xml",
-         uint16_t port = DEFAULT_CONNECTION_PROPS_PORT);
+    /**
+     * @brief Construct a new Connection Props Server with configuration
+     * 
+     * @param config Configuration for generating connection properties
+     * @param endpoint The endpoint path (default "/connect/connection-props.xml")
+     * @param port The port to listen on (default DEFAULT_CONNECTION_PROPS_PORT)
+     */
+    ConnectionProps(
+        ConnectionProtocol protocol,
+        const std::string& endpoint = "/connect/connection-props.xml",
+        uint32_t refresh_interval = 30000,
+        const std::string& node_name = "",
+        const std::string& node_id = "",
+        const std::string& service_name = "service:catena-device");
 
     /**
     * @brief Destructor - stops the server if running
@@ -132,24 +131,12 @@ struct ConnectionPropsConfig {
     */
     bool isRunning() const { return running_; }
 
-     /**
-      * @brief Update the response content
-      * @param content The new XML content to serve
-      * @deprecated Use updateConfig() instead
-      */
-     void updateContent(const std::string& content);
-
-     /**
-      * @brief Update the configuration and regenerate XML
-      * @param config The new configuration
-      */
-     void updateConfig(const ConnectionPropsConfig& config);
-
     /**
-    * @brief Get the current port
-    * @return The port number
-    */
-    uint16_t getPort() const { return port_; }
+     * @brief Update the response content
+     * @param content The new XML content to serve
+     * @deprecated Use updateConfig() instead
+     */
+    void updateContent(const std::string& content);
 
     /**
     * @brief Get the endpoint path
@@ -178,35 +165,49 @@ private:
 
     /**
      * @brief Generate XML content from configuration
-     * @param config The configuration to generate XML from
      * @return XML string
      */
-    static std::string generateXml(const ConnectionPropsConfig& config);
+    std::string generateXml();
 
     /**
-    * @brief Port to listen on
-    */
-    uint16_t port_;
+     * @brief Protocol used for the connection
+     */
+    ConnectionProtocol protocol_;
 
     /**
     * @brief Endpoint path (e.g., "/connect/connection-props.xml")
     */
     std::string endpoint_;
 
-     /**
-      * @brief Content to serve at the endpoint
-      */
-     std::string response_content_;
+    /**
+     * @brief Refresh interval in milliseconds
+     */
+    uint32_t refresh_interval_;
 
-     /**
-      * @brief Mutex to protect response_content_ and config_
-      */
-     mutable std::mutex content_mutex_;
+    /**
+     * @brief Node name for the connection
+     */
+    std::string node_name_;
 
-     /**
-      * @brief Configuration for generating connection properties
-      */
-     ConnectionPropsConfig config_;
+    /**
+     * @brief Node ID for the connection
+     */
+    std::string node_id_;
+
+    /**
+     * @brief Service name for the connection
+     */
+    std::string service_name_;
+
+    /**
+     * @brief Content to serve at the endpoint
+     */
+    std::string response_content_;
+
+    /**
+     * @brief Mutex to protect response_content_ and config_
+     */
+    mutable std::mutex content_mutex_;
 
     /**
     * @brief IO context for async operations
