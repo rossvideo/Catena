@@ -34,27 +34,26 @@ static inline bool iequals_header_name(std::string_view a, std::string_view b) {
  * Read until will populate the streambuf
  */
 struct ReadResult {
-    std::vector<char> vecBuffer;
-    std::unique_ptr<boost::asio::streambuf> streamBuffer;
+    std::unique_ptr<boost::asio::streambuf> buffer;
     boost::system::error_code ec;
 
     // Needed for co_spawn to work
     ReadResult() = default;
 
     // Used in read coroutines
-    ReadResult(std::vector<char> vb, std::unique_ptr<boost::asio::streambuf> sb, boost::system::error_code e)
-        : vecBuffer(std::move(vb)), streamBuffer(std::move(sb)), ec(e) {}
+    ReadResult(std::unique_ptr<boost::asio::streambuf> sb, boost::system::error_code e)
+        : buffer(std::move(sb)), ec(e) {}
 };
 
 boost::asio::awaitable<ReadResult> read_with_timeout(std::shared_ptr<tcp::socket> socket, std::size_t bytes, int timeout) {
     using namespace boost::asio;
     using namespace experimental::awaitable_operators;
-    std::vector<char> buf(bytes);
+    auto buf = std::make_unique<boost::asio::streambuf>();
     steady_timer timer(socket->get_executor(), std::chrono::milliseconds(timeout));
     
 
     // Async_read and timer run simultaneously, the other cancels when one finishes
-    auto result = co_await (async_read(*socket, buffer(buf), as_tuple(use_awaitable)) ||
+    auto result = co_await (async_read(*socket, *buf, transfer_exactly(bytes), as_tuple(use_awaitable)) ||
         timer.async_wait(as_tuple(use_awaitable))
     );
 
@@ -62,12 +61,12 @@ boost::asio::awaitable<ReadResult> read_with_timeout(std::shared_ptr<tcp::socket
     if (result.index() == 0) {
         auto [ec, n] = std::get<0>(result);
         if (!ec) {
-            co_return ReadResult(std::move(buf), nullptr, {});
+            co_return ReadResult(std::move(buf), {});
         } else {
-            co_return ReadResult({}, nullptr, ec);
+            co_return ReadResult(nullptr, ec);
         }
     } else {
-        co_return ReadResult({}, nullptr, boost::asio::error::timed_out);
+        co_return ReadResult(nullptr, boost::asio::error::timed_out);
     }
 }
 
@@ -87,12 +86,12 @@ boost::asio::awaitable<ReadResult> read_until_with_timeout(std::shared_ptr<tcp::
     if (result.index() == 0) {
         auto [ec, n] = std::get<0>(result);
         if (!ec) {
-            co_return ReadResult({}, std::move(buf), {});
+            co_return ReadResult(std::move(buf), {});
         } else {
-            co_return ReadResult({}, nullptr, ec);
+            co_return ReadResult(nullptr, ec);
         }
     } else {
-        co_return ReadResult({}, nullptr, boost::asio::error::timed_out);
+        co_return ReadResult(nullptr, boost::asio::error::timed_out);
     }
 }
 
@@ -155,7 +154,7 @@ void SocketReader::read(std::shared_ptr<tcp::socket>& socket, uint32_t timeout) 
     } else if (result.ec) {
         throw catena::exception_with_status("Read error", catena::StatusCode::UNKNOWN);
     }
-    std::istream header_stream(result.streamBuffer.get());
+    std::istream header_stream(result.buffer.get());
 
     // Getting the first line from the stream (URL), splitting, and parsing.
     std::string header;
@@ -294,12 +293,13 @@ void SocketReader::read(std::shared_ptr<tcp::socket>& socket, uint32_t timeout) 
 
             auto fut = boost::asio::co_spawn(socket->get_executor(), read_with_timeout(socket, leftover, timeout), boost::asio::use_future);
             ReadResult result = fut.get();
-            jsonBody_.append(result.vecBuffer.begin(), result.vecBuffer.end());
             if (result.ec == boost::asio::error::timed_out) {
                 throw catena::exception_with_status("Timed out", catena::StatusCode::DEADLINE_EXCEEDED);
             } else if (result.ec) {
                 throw catena::exception_with_status("Read error", catena::StatusCode::UNKNOWN);
             }
+            auto it = boost::asio::buffers_begin(result.buffer->data());
+            jsonBody_.append(it, it + result.buffer->size());
         } else if (jsonBody_.size() > contentLength) {
             throw catena::exception_with_status("Incorrect Content-Length: data lost", catena::StatusCode::DATA_LOSS);
         }
