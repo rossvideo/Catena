@@ -90,9 +90,20 @@ func ToCatenaValue(v any) (CatenaValue, error) {
 // ToProto converts native Go types to protos.Value
 func ToProto(v any) (*protos.Value, error) {
 	switch val := v.(type) {
-	case *protos.DataPayload:
-		// Pass through DataPayload directly
-		return nil, fmt.Errorf("DataPayload is not supported in ToProto")
+	case DataPayload:
+		pdp := &protos.DataPayload{
+			Metadata:        val.Metadata,
+			Digest:          val.Digest,
+			PayloadEncoding: protos.DataPayload_PayloadEncoding(val.PayloadEncoding),
+		}
+		if val.Url != "" && len(val.Payload) == 0 {
+			pdp.Kind = &protos.DataPayload_Url{Url: val.Url}
+		} else if len(val.Payload) > 0 && val.Url == "" {
+			pdp.Kind = &protos.DataPayload_Payload{Payload: val.Payload}
+		} else {
+			return nil, fmt.Errorf("either payload or url must be provided in DataPayload, but not both")
+		}
+		return &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: pdp}}, nil
 	case UndefinedValue:
 		return &protos.Value{Kind: &protos.Value_UndefinedValue{UndefinedValue: protos.UndefinedValue(val)}}, nil
 	case EmptyValue:
@@ -169,8 +180,22 @@ func FromProto(pv *protos.Value) (any, error) {
 	}
 	switch pv.GetKind().(type) {
 	case *protos.Value_DataPayload:
-		// Return the raw DataPayload proto
-		return nil, fmt.Errorf("DataPayload is not supported in FromProto")
+		pdp := pv.GetDataPayload()
+		if pdp == nil {
+			return nil, fmt.Errorf("nil DataPayload in Value")
+		}
+		dp := DataPayload{
+			Metadata:        pdp.GetMetadata(),
+			Digest:          pdp.GetDigest(),
+			PayloadEncoding: int32(pdp.GetPayloadEncoding()),
+		}
+		switch k := pdp.GetKind().(type) {
+		case *protos.DataPayload_Url:
+			dp.Url = k.Url
+		case *protos.DataPayload_Payload:
+			dp.Payload = k.Payload
+		}
+		return dp, nil
 	case *protos.Value_UndefinedValue:
 		return UndefinedValue(pv.GetUndefinedValue()), nil
 	case *protos.Value_EmptyValue:

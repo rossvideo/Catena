@@ -58,6 +58,8 @@ func TestToCatenaValue(t *testing.T) {
 		{"empty value", EmptyValue{}, false},
 		{"undefined value", UndefinedValue(0), false},
 		{"struct value", map[string]any{"key": int32(1)}, false},
+		{"data payload with payload", DataPayload{Payload: []byte("test")}, false},
+		{"data payload with url", DataPayload{Url: "https://example.com"}, false},
 		{"unsupported type", int64(100), true},
 	}
 
@@ -259,6 +261,188 @@ func TestToProto_StructVariantArray(t *testing.T) {
 	}
 	if list[0].GetStructVariantType() != "TypeA" {
 		t.Errorf("expected first type 'TypeA', got %v", list[0].GetStructVariantType())
+	}
+}
+
+func TestToProto_DataPayload_WithPayload(t *testing.T) {
+	input := DataPayload{
+		Metadata:        map[string]string{"content-type": "image/png"},
+		Digest:          []byte{0xab, 0xcd},
+		PayloadEncoding: 1,
+		Payload:         []byte("binary data"),
+	}
+	pv, err := ToProto(input)
+	if err != nil {
+		t.Fatalf("ToProto(DataPayload) error: %v", err)
+	}
+	dp := pv.GetDataPayload()
+	if dp == nil {
+		t.Fatal("expected DataPayload kind")
+	}
+	if dp.GetMetadata()["content-type"] != "image/png" {
+		t.Errorf("expected content-type 'image/png', got %v", dp.GetMetadata()["content-type"])
+	}
+	if string(dp.GetPayload()) != "binary data" {
+		t.Errorf("expected payload 'binary data', got %v", string(dp.GetPayload()))
+	}
+	if dp.GetPayloadEncoding() != 1 {
+		t.Errorf("expected encoding 1 (GZIP), got %v", dp.GetPayloadEncoding())
+	}
+}
+
+func TestToProto_DataPayload_WithUrl(t *testing.T) {
+	input := DataPayload{
+		Metadata: map[string]string{"content-type": "application/json"},
+		Url:      "https://example.com/data.json",
+	}
+	pv, err := ToProto(input)
+	if err != nil {
+		t.Fatalf("ToProto(DataPayload) error: %v", err)
+	}
+	dp := pv.GetDataPayload()
+	if dp == nil {
+		t.Fatal("expected DataPayload kind")
+	}
+	if dp.GetUrl() != "https://example.com/data.json" {
+		t.Errorf("expected URL, got %v", dp.GetUrl())
+	}
+}
+
+func TestToProto_DataPayload_BothPayloadAndUrl_Error(t *testing.T) {
+	input := DataPayload{
+		Payload: []byte("data"),
+		Url:     "https://example.com",
+	}
+	_, err := ToProto(input)
+	if err == nil {
+		t.Error("expected error when both payload and url are provided")
+	}
+}
+
+func TestToProto_DataPayload_NeitherPayloadNorUrl_Error(t *testing.T) {
+	input := DataPayload{
+		Metadata: map[string]string{"content-type": "text/plain"},
+	}
+	_, err := ToProto(input)
+	if err == nil {
+		t.Error("expected error when neither payload nor url are provided")
+	}
+}
+
+func TestFromProto_DataPayload_WithPayload(t *testing.T) {
+	input := DataPayload{
+		Metadata:        map[string]string{"content-type": "image/png"},
+		Digest:          []byte{0xab, 0xcd},
+		PayloadEncoding: 1,
+		Payload:         []byte("binary data"),
+	}
+	pv, err := ToProto(input)
+	if err != nil {
+		t.Fatalf("ToProto error: %v", err)
+	}
+	result, err := FromProto(pv)
+	if err != nil {
+		t.Fatalf("FromProto error: %v", err)
+	}
+	dp, ok := result.(DataPayload)
+	if !ok {
+		t.Fatalf("expected DataPayload, got %T", result)
+	}
+	if dp.Metadata["content-type"] != "image/png" {
+		t.Errorf("expected content-type 'image/png', got %v", dp.Metadata["content-type"])
+	}
+	if string(dp.Payload) != "binary data" {
+		t.Errorf("expected payload 'binary data', got %q", dp.Payload)
+	}
+	if dp.PayloadEncoding != 1 {
+		t.Errorf("expected encoding 1, got %d", dp.PayloadEncoding)
+	}
+	if !reflect.DeepEqual(dp.Digest, []byte{0xab, 0xcd}) {
+		t.Errorf("expected digest [ab cd], got %v", dp.Digest)
+	}
+}
+
+func TestFromProto_DataPayload_WithUrl(t *testing.T) {
+	input := DataPayload{
+		Url: "https://example.com/resource",
+	}
+	pv, err := ToProto(input)
+	if err != nil {
+		t.Fatalf("ToProto error: %v", err)
+	}
+	result, err := FromProto(pv)
+	if err != nil {
+		t.Fatalf("FromProto error: %v", err)
+	}
+	dp, ok := result.(DataPayload)
+	if !ok {
+		t.Fatalf("expected DataPayload, got %T", result)
+	}
+	if dp.Url != "https://example.com/resource" {
+		t.Errorf("expected URL, got %v", dp.Url)
+	}
+}
+
+func TestRoundTrip_DataPayload(t *testing.T) {
+	tests := []struct {
+		name  string
+		input DataPayload
+	}{
+		{
+			"with payload",
+			DataPayload{
+				Metadata:        map[string]string{"content-type": "application/octet-stream", "file-name": "test.bin"},
+				Digest:          []byte{0x01, 0x02, 0x03},
+				PayloadEncoding: 0,
+				Payload:         []byte("round trip data"),
+			},
+		},
+		{
+			"with url",
+			DataPayload{
+				Metadata: map[string]string{"content-type": "text/html"},
+				Url:      "https://example.com/page.html",
+			},
+		},
+		{
+			"with gzip encoding",
+			DataPayload{
+				PayloadEncoding: 1,
+				Payload:         []byte("compressed"),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pv, err := ToProto(tt.input)
+			if err != nil {
+				t.Fatalf("ToProto error: %v", err)
+			}
+			result, err := FromProto(pv)
+			if err != nil {
+				t.Fatalf("FromProto error: %v", err)
+			}
+			dp, ok := result.(DataPayload)
+			if !ok {
+				t.Fatalf("expected DataPayload, got %T", result)
+			}
+			if !reflect.DeepEqual(dp.Metadata, tt.input.Metadata) {
+				t.Errorf("metadata mismatch: got %v, want %v", dp.Metadata, tt.input.Metadata)
+			}
+			if !reflect.DeepEqual(dp.Digest, tt.input.Digest) {
+				t.Errorf("digest mismatch: got %v, want %v", dp.Digest, tt.input.Digest)
+			}
+			if dp.PayloadEncoding != tt.input.PayloadEncoding {
+				t.Errorf("encoding mismatch: got %d, want %d", dp.PayloadEncoding, tt.input.PayloadEncoding)
+			}
+			if !reflect.DeepEqual(dp.Payload, tt.input.Payload) {
+				t.Errorf("payload mismatch: got %v, want %v", dp.Payload, tt.input.Payload)
+			}
+			if dp.Url != tt.input.Url {
+				t.Errorf("url mismatch: got %v, want %v", dp.Url, tt.input.Url)
+			}
+		})
 	}
 }
 
