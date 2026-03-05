@@ -152,6 +152,7 @@ const std::map<catena::StatusCode, http_exception_with_status> codeMap_ {
     {catena::StatusCode::PERMISSION_DENIED,   {403, "Forbidden"}},
     {catena::StatusCode::NOT_FOUND,           {404, "Not Found"}},
     {catena::StatusCode::METHOD_NOT_ALLOWED,  {405, "Method Not Allowed"}},
+    {catena::StatusCode::DEADLINE_EXCEEDED,   {408, "Request Timeout"}},
     {catena::StatusCode::CONFLICT,            {409, "Conflict"}},
     {catena::StatusCode::ABORTED,             {409, "Conflict"}},
     {catena::StatusCode::FAILED_PRECONDITION, {412, "Precondition Failed"}},
