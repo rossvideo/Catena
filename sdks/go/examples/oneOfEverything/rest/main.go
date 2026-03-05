@@ -191,6 +191,40 @@ func main() {
 					},
 				},
 			},
+			"commands": map[string]any{
+				"start": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Start Counter",
+						},
+					},
+					"type": catena.ParamTypeEmpty, // command with no args
+				},
+				"stop": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Stop Counter",
+						},
+					},
+					"type": catena.ParamTypeEmpty,
+				},
+				"add10": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Add 10 to Counter",
+						},
+					},
+					"type": catena.ParamTypeEmpty, // command with no args
+				},
+				"reset": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Reset Counter",
+						},
+					},
+					"type": catena.ParamTypeEmpty,
+				},
+			},
 		},
 		1: {
 			"slot":              uint32(1),
