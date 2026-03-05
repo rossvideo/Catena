@@ -34,6 +34,7 @@
  * @file Config.h
  * @brief Runtime configuration variables
  * @author keon.foster@rossvideo.com
+ * @author Christian Twarog (christian.twarog@rossvideo.com)
  * @date 2026-02-24
  * @copyright Copyright (c) 2026 Ross Video
  */
@@ -55,7 +56,10 @@ const std::string CATENA_CERT_FILE_NAME = "cert_file";
 const std::string CATENA_KEY_FILE_NAME = "key_file";
 const std::string CATENA_CA_FILE_NAME = "ca_file";
 const std::string CATENA_LOG_DIR_NAME = "log_dir";
+const std::string CATENA_HOSTNAME_NAME = "hostname";
 const std::string CATENA_PORT_NAME = "port";
+const std::string CATENA_DASHBOARD_PORT_NAME = "dashboard_port";
+const std::string CATENA_DASHBOARD_TLS_ENABLED_NAME = "dashboard_tls_enabled";
 const std::string CATENA_DEFAULT_MAX_ARRAY_SIZE_NAME = "default_max_array_size";
 const std::string CATENA_DEFAULT_TOTAL_ARRAY_SIZE_NAME = "default_total_array_size";
 const std::string CATENA_MAX_CONNECTIONS_NAME = "max_connections";
@@ -75,7 +79,10 @@ const std::string CATENA_CERT_FILE = "server.crt";
 const std::string CATENA_KEY_FILE = "server.key";
 const std::string CATENA_CA_FILE = "ca.crt";
 const std::string CATENA_STATIC_ROOT = "/";
+const std::string CATENA_HOSTNAME = "0.0.0.0";
 const uint16_t CATENA_PORT = 6254;
+const uint16_t CATENA_DASHBOARD_PORT = 8080;
+const bool CATENA_DASHBOARD_TLS_ENABLED = false;
 
 
 /**
@@ -110,7 +117,13 @@ inline uint32_t default_total_array_size = 0;
 
 inline uint32_t max_connections = 0;
 
+inline std::string hostname = "";
+
 inline uint16_t port = 0;
+
+inline uint16_t dashboard_port = 0;
+
+inline bool dashboard_tls_enabled = false;
 
 inline bool private_ca = false;
 

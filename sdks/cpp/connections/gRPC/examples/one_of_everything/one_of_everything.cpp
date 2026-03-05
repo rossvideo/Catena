@@ -50,7 +50,7 @@
 // connections/gRPC
 #include <ServiceImpl.h>
 #include <ServiceCredentials.h>
-
+#include <ConnectionProps.h>
 
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
@@ -62,7 +62,6 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
-#include <regex>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -344,20 +343,31 @@ void RunRPCServer(std::string addr)
 
 int main(int argc, char* argv[])
 {
-    std::string addr;
     const auto [exit, code] = config::initConfigVariables(argc, argv);
     if (exit) {
         return code;
     }
     Logger::init("one_of_everything");
   
-    addr = absl::StrFormat("0.0.0.0:%d", config::port);
-  
     // commands should be defined before starting the RPC server 
     defineCommands();
+    
+    catena::common::ConnectionProps connectionProps(
+        ConnectionProtocol::ST2138_GRPC,        // Configuration
+        30000,                                  // Refresh interval in milliseconds
+        "one_of_everything",                    // Node name
+        "one_of_everything-a4:bb:6d:6a:6f:a3",  // Node ID
+        "/connect/connection-props.xml"         // Endpoint
+    );
 
-    std::thread catenaRpcThread(RunRPCServer, addr);
+    if (!connectionProps.start()) {
+        LOG(WARNING) << "Failed to start connection props server on port " << config::dashboard_port;
+    }
+
+    std::thread catenaRpcThread(RunRPCServer, "0.0.0.0:" + std::to_string(config::port));
     catenaRpcThread.join();
+
+    connectionProps.stop();
     
     return 0;
 }

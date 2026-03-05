@@ -45,6 +45,7 @@
 #include <Device.h>
 #include <ParamWithValue.h>
 #include <Config.h>
+#include <ConnectionProps.h>
 
 // connections/gRPC
 #include <ServiceImpl.h>
@@ -139,16 +140,25 @@ void RunRPCServer(std::string addr)
 
 int main(int argc, char* argv[])
 {
-    std::string addr;
     const auto [exit, code] = config::initConfigVariables(argc, argv);
     if (exit) {
         return code;
     }
     Logger::init("external_object_request");
+
+    catena::common::ConnectionProps connectionProps(
+        ConnectionProtocol::ST2138_GRPC,                // Configuration
+        30000,                                          // Refresh interval in milliseconds
+        "external_object_request",                      // Node name
+        "external_object_request-a4:bb:6d:6a:6f:a3",    // Node ID
+        "/connect/connection-props.xml"                 // Endpoint
+    );
+
+    if (!connectionProps.start()) {
+        LOG(WARNING) << "Failed to start connection props server on port " << config::dashboard_port;
+    }
   
-    addr = absl::StrFormat("0.0.0.0:%d", config::port);
-  
-    std::thread catenaRpcThread(RunRPCServer, addr);
+    std::thread catenaRpcThread(RunRPCServer, "0.0.0.0:" + std::to_string(config::port));
     catenaRpcThread.join();
 
     return 0;

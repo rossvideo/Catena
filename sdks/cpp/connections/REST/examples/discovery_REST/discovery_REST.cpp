@@ -47,6 +47,7 @@
 #include <Config.h>
 #include <iostream>
 #include <cstring>
+#include <ConnectionProps.h>
 
 // REST
 #include <ServiceImpl.h>
@@ -111,6 +112,18 @@ int main(int argc, char* argv[]) {
         return code;
     }
     Logger::init("discovery_REST");
+
+    catena::common::ConnectionProps connectionProps(
+        ConnectionProtocol::ST2138_REST,        // Configuration
+        30000,                                  // Refresh interval in milliseconds
+        "discovery_REST",                       // Node name
+        "discovery_REST-a4:bb:6d:6a:6f:a3",     // Node ID
+        "/connect/connection-props.xml"         // Endpoint
+    );
+
+    if (!connectionProps.start()) {
+        LOG(WARNING) << "Failed to start connection props server on port " << config::dashboard_port;
+    }
 
     NmosNode node("Catena Device", "Catena Node", "A Catena example Node", "discovery_REST");
     node.init();

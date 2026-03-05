@@ -44,6 +44,7 @@ set(sources
     "src/NmosNode.cpp"
     "src/Logger.cpp"
     "src/Config.cpp"
+    "src/ConnectionProps.cpp"
 )
 
 # conditionally make for gRPC
