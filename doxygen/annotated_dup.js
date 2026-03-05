@@ -6,6 +6,7 @@ var annotated_dup =
         [ "ChoiceConstraint", "classcatena_1_1common_1_1ChoiceConstraint.html", "classcatena_1_1common_1_1ChoiceConstraint" ],
         [ "CommandTag", "structcatena_1_1common_1_1CommandTag.html", null ],
         [ "Connect", "classcatena_1_1common_1_1Connect.html", "classcatena_1_1common_1_1Connect" ],
+        [ "ConnectionProps", "classcatena_1_1common_1_1ConnectionProps.html", "classcatena_1_1common_1_1ConnectionProps" ],
         [ "ConnectionQueue", "classcatena_1_1common_1_1ConnectionQueue.html", "classcatena_1_1common_1_1ConnectionQueue" ],
         [ "ConstraintTag", "structcatena_1_1common_1_1ConstraintTag.html", null ],
         [ "Device", "classcatena_1_1common_1_1Device.html", "classcatena_1_1common_1_1Device" ],

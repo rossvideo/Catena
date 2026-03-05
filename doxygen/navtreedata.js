@@ -27,67 +27,67 @@ var NAVTREE =
   [ "My Project", "index.html", [
     [ "Catena C++ SDK", "index.html", "index" ],
     [ "Cross Compiling", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html", [
-      [ "Prequisites", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md3", null ],
-      [ "Cross Compile OpenSSL", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md4", null ],
-      [ "Cross Compiling gRPC", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md5", null ],
-      [ "Cross Compiling JWT-CPP", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md6", null ],
-      [ "Update node if required", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md7", null ],
-      [ "Cross Compiling and installing Catena", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md8", null ]
+      [ "Prequisites", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md4", null ],
+      [ "Cross Compile OpenSSL", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md5", null ],
+      [ "Cross Compiling gRPC", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md6", null ],
+      [ "Cross Compiling JWT-CPP", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md7", null ],
+      [ "Update node if required", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md8", null ],
+      [ "Cross Compiling and installing Catena", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md9", null ]
     ] ],
     [ "Using Docker With The Catena C++ SDK", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html", [
-      [ "Terminal", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md10", [
-        [ "Requirements", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md11", null ]
+      [ "Terminal", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md11", [
+        [ "Requirements", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md12", null ]
       ] ],
-      [ "VSCode", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md12", [
-        [ "Recommended Extensions", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md13", null ]
+      [ "VSCode", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md13", [
+        [ "Recommended Extensions", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md14", null ]
       ] ],
-      [ "Setting up and Running", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md14", [
-        [ "Setting up Catena Service(s) with Docker", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md15", null ],
-        [ "Steps to run", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md16", null ]
+      [ "Setting up and Running", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md15", [
+        [ "Setting up Catena Service(s) with Docker", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md16", null ],
+        [ "Steps to run", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md17", null ]
       ] ]
     ] ],
     [ "Linux Toolchain Installation", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html", [
-      [ "Getting a C++ compiler", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md18", null ],
-      [ "Installing cmake", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md19", null ],
-      [ "Dependencies", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md20", [
-        [ "Install and Build gRPC and Protobufs", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md21", null ],
-        [ "Install and Build jwt-cpp", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md22", null ]
+      [ "Getting a C++ compiler", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md19", null ],
+      [ "Installing cmake", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md20", null ],
+      [ "Dependencies", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md21", [
+        [ "Install and Build gRPC and Protobufs", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md22", null ],
+        [ "Install and Build jwt-cpp", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md23", null ]
       ] ],
-      [ "Optionally Install doxygen", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md23", [
-        [ "graphviz installation", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md24", null ]
+      [ "Optionally Install doxygen", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md24", [
+        [ "graphviz installation", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md25", null ]
       ] ],
-      [ "Optionally Install Google Test", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md25", null ],
-      [ "Update node if required", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md26", null ],
-      [ "Install boost libraries if you want to use the REST connection manager", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md27", null ],
-      [ "Initialize git submodules", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md28", null ],
-      [ "Building Catena", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md29", null ]
+      [ "Optionally Install Google Test", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md26", null ],
+      [ "Update node if required", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md27", null ],
+      [ "Install boost libraries if you want to use the REST connection manager", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md28", null ],
+      [ "Initialize git submodules", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md29", null ],
+      [ "Building Catena", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md30", null ]
     ] ],
     [ "macos Toolchain Installation", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html", [
-      [ "Getting a C++ compiler", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md31", null ],
-      [ "Installing cmake", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md32", null ],
-      [ "Dependencies", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md33", [
-        [ "Install and Build gRPC and Protobufs", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md34", null ],
-        [ "Install homebrew", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md35", null ],
-        [ "Install and Build jwt-cpp", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md36", null ]
+      [ "Getting a C++ compiler", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md32", null ],
+      [ "Installing cmake", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md33", null ],
+      [ "Dependencies", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md34", [
+        [ "Install and Build gRPC and Protobufs", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md35", null ],
+        [ "Install homebrew", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md36", null ],
+        [ "Install and Build jwt-cpp", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md37", null ]
       ] ],
-      [ "Optionally install doxygen", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md37", [
-        [ "graphviz installation", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md38", null ]
+      [ "Optionally install doxygen", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md38", [
+        [ "graphviz installation", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md39", null ]
       ] ],
-      [ "Optionally install Google Test", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md39", null ],
-      [ "If you're targeting REST, install boost, and asio", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md40", null ]
+      [ "Optionally install Google Test", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md40", null ],
+      [ "If you're targeting REST, install boost, and asio", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md41", null ]
     ] ],
     [ "Windows Toolchain Installation (MSVC)", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html", [
-      [ "Getting a C++ compiler", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md42", null ],
-      [ "Installing cmake", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md43", null ],
-      [ "Dependencies", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md44", [
-        [ "Install and Build gRPC and Protobufs", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md45", null ],
-        [ "Install and Build jwt-cpp", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md46", null ],
-        [ "Install boost if using the REST connection manager", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md47", null ]
+      [ "Getting a C++ compiler", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md43", null ],
+      [ "Installing cmake", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md44", null ],
+      [ "Dependencies", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md45", [
+        [ "Install and Build gRPC and Protobufs", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md46", null ],
+        [ "Install and Build jwt-cpp", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md47", null ],
+        [ "Install boost if using the REST connection manager", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md48", null ]
       ] ],
-      [ "Optionally Install doxygen", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md48", [
-        [ "graphviz installation", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md49", null ]
+      [ "Optionally Install doxygen", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md49", [
+        [ "graphviz installation", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md50", null ]
       ] ],
-      [ "Optionally Install Google Test", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md50", null ]
+      [ "Optionally Install Google Test", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md51", null ]
     ] ],
     [ "Deprecated List", "deprecated.html", null ],
     [ "Todo List", "todo.html", null ],
@@ -128,14 +128,14 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "AddLanguage_8h.html",
-"Variant_8h.html",
-"classcatena_1_1REST_1_1SocketReader.html#a62c9b62d7b47d7d7d709e1304c130204",
-"classcatena_1_1common_1_1Device.html#aed9cdca4901c4e5eee7a046bd238187a",
-"classcatena_1_1common_1_1INmosNode.html#ab2eb126c6989d7642b85a60ed18e4b52",
-"classcatena_1_1common_1_1NmosNode.html#afdaae05b47defa25142a3e207a184c6f",
-"classcatena_1_1common_1_1PolyglotText.html#ae2da68a61d53ea13aa72e6b24ca56a95",
-"classcatena_1_1gRPC_1_1SetValue.html",
-"md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md24"
+"Typelist_8h.html#a9b379aa0c72efd6cde9b975311265d13",
+"classcatena_1_1REST_1_1SocketReader.html#a4396dda4463a5ad392092c1efb8b08a5",
+"classcatena_1_1common_1_1Device.html#acc0eb46301cab4a128ff88b7543918ff",
+"classcatena_1_1common_1_1IMenu.html#aa6e9c7b37a780715d9f1d82718d796d6",
+"classcatena_1_1common_1_1NmosNode.html#a54ebd920fdcd55e982580abfc9650a81",
+"classcatena_1_1common_1_1Path.html#ad2487342bef5315cb4413e25d95c8097",
+"classcatena_1_1gRPC_1_1ServiceImpl.html#a501f11f627d09e1c1ae45a49deb630f9",
+"md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md5"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

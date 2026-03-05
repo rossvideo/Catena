@@ -4,5 +4,6 @@ var searchData=
   ['choiceconstraint_2eh_1',['ChoiceConstraint.h',['../ChoiceConstraint_8h.html',1,'']]],
   ['config_2eh_2',['Config.h',['../Config_8h.html',1,'']]],
   ['connect_2eh_3',['connect.h',['../common_2include_2rpc_2Connect_8h.html',1,'(Global Namespace)'],['../connections_2gRPC_2include_2controllers_2Connect_8h.html',1,'(Global Namespace)'],['../connections_2REST_2include_2controllers_2Connect_8h.html',1,'(Global Namespace)']]],
-  ['connectionqueue_2eh_4',['ConnectionQueue.h',['../ConnectionQueue_8h.html',1,'']]]
+  ['connectionprops_2eh_4',['ConnectionProps.h',['../ConnectionProps_8h.html',1,'']]],
+  ['connectionqueue_2eh_5',['ConnectionQueue.h',['../ConnectionQueue_8h.html',1,'']]]
 ];

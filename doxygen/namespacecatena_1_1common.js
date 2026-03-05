@@ -4,6 +4,7 @@ var namespacecatena_1_1common =
     [ "ChoiceConstraint", "classcatena_1_1common_1_1ChoiceConstraint.html", "classcatena_1_1common_1_1ChoiceConstraint" ],
     [ "CommandTag", "structcatena_1_1common_1_1CommandTag.html", null ],
     [ "Connect", "classcatena_1_1common_1_1Connect.html", "classcatena_1_1common_1_1Connect" ],
+    [ "ConnectionProps", "classcatena_1_1common_1_1ConnectionProps.html", "classcatena_1_1common_1_1ConnectionProps" ],
     [ "ConnectionQueue", "classcatena_1_1common_1_1ConnectionQueue.html", "classcatena_1_1common_1_1ConnectionQueue" ],
     [ "ConstraintTag", "structcatena_1_1common_1_1ConstraintTag.html", null ],
     [ "Device", "classcatena_1_1common_1_1Device.html", "classcatena_1_1common_1_1Device" ],
@@ -47,6 +48,10 @@ var namespacecatena_1_1common =
     [ "IsVariantArray", "conceptcatena_1_1common_1_1IsVariantArray.html", null ],
     [ "SignalMap", "namespacecatena_1_1common.html#a2167b391607d3775a33d0e4e49dfc5c7", null ],
     [ "SlotMap", "namespacecatena_1_1common.html#a118a88218f9509068efa0f46414ee018", null ],
+    [ "ConnectionProtocol", "namespacecatena_1_1common.html#a3f69830f3a43991acdf02b5019b0fb72", [
+      [ "ST2138_REST", "namespacecatena_1_1common.html#a3f69830f3a43991acdf02b5019b0fb72a4f49103054903062603f66920f8f5c5a", null ],
+      [ "ST2138_GRPC", "namespacecatena_1_1common.html#a3f69830f3a43991acdf02b5019b0fb72a3214911e7f0928d1ef076f1215ae8818", null ]
+    ] ],
     [ "NodeCode", "namespacecatena_1_1common.html#a39956cd1eb9cc3e56518c795362fb636", [
       [ "OK", "namespacecatena_1_1common.html#a39956cd1eb9cc3e56518c795362fb636ae0aa021e21dddbd6d8cecec71e9cf564", null ],
       [ "POLL_FAILED", "namespacecatena_1_1common.html#a39956cd1eb9cc3e56518c795362fb636a871ea28924808a487c7babadd2dc7610", null ],

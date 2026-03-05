@@ -101,6 +101,9 @@ Toolchain Recommendations</h1>
 <li><a class="el" href="md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html">Mac OS</a></li>
 <li><a class="el" href="md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html">Windows MSVS</a></li>
 </ul>
+<h1><a class="anchor" id="autotoc_md2"></a>
+Connect to DashBoard</h1>
+<p>DashBoard sends an HTTP GET request to /connect/connection-props.xml at port 80. There is a ConnectionProps class inside common that listens on a default (80) but specifiable port. It serves a specified body as a reply to requests to the /connect/connection-props.xml endpoint. Both GRPC and REST one_of_everything currently uses the ConnectionProps class to serve connection info.</p>
 <p>Once toolchain is configured, use cmake to build 'makefiles' and then compiler (make, xcode, msbuild) to build targets. </p>
 </div></div><!-- PageDoc -->
 </div><!-- contents -->

@@ -9,6 +9,7 @@ var hierarchy =
       [ "catena::gRPC::JWTAuthMetadataProcessor", "classcatena_1_1gRPC_1_1JWTAuthMetadataProcessor.html", null ]
     ] ],
     [ "catena::common::CommandTag", "structcatena_1_1common_1_1CommandTag.html", null ],
+    [ "catena::common::ConnectionProps", "classcatena_1_1common_1_1ConnectionProps.html", null ],
     [ "catena::common::ConstraintTag", "structcatena_1_1common_1_1ConstraintTag.html", null ],
     [ "catena::common::EmptyValue", "structcatena_1_1common_1_1EmptyValue.html", null ],
     [ "catena::patterns::EnumDecorator< E >", "classcatena_1_1patterns_1_1EnumDecorator.html", null ],

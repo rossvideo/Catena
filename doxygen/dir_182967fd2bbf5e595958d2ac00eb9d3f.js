@@ -6,6 +6,7 @@ var dir_182967fd2bbf5e595958d2ac00eb9d3f =
     [ "Authorizer.h", "Authorizer_8h.html", "Authorizer_8h" ],
     [ "ChoiceConstraint.h", "ChoiceConstraint_8h.html", "ChoiceConstraint_8h" ],
     [ "Config.h", "Config_8h.html", "Config_8h" ],
+    [ "ConnectionProps.h", "ConnectionProps_8h.html", "ConnectionProps_8h" ],
     [ "Device.h", "Device_8h.html", "Device_8h" ],
     [ "Enums.h", "Enums_8h.html", "Enums_8h" ],
     [ "Fake.h", "Fake_8h.html", "Fake_8h" ],
