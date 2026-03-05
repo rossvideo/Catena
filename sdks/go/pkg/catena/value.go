@@ -187,7 +187,7 @@ func FromProto(pv *protos.Value) (any, error) {
 		dp := DataPayload{
 			Metadata:        pdp.GetMetadata(),
 			Digest:          pdp.GetDigest(),
-			PayloadEncoding: int32(pdp.GetPayloadEncoding()),
+			PayloadEncoding: Encoding(pdp.GetPayloadEncoding()),
 		}
 		switch k := pdp.GetKind().(type) {
 		case *protos.DataPayload_Url:
