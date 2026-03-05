@@ -168,10 +168,11 @@ uint16_t ConnectionPropsTest::nextPort_ = 8081;
 TEST_F(ConnectionPropsTest, ConnectionProps_Lifecycle) {
     ConnectionProps server(
         ConnectionProtocol::ST2138_GRPC,
-        "/connect/test.xml",
         30000,
         "Test Node",
-        "test-node-123");
+        "test-node-123",
+        "service:catena-device",
+        "/connect/test.xml");
 
     EXPECT_EQ(server.getEndpoint(), "/connect/test.xml");
     EXPECT_FALSE(server.isRunning());
@@ -194,10 +195,11 @@ TEST_F(ConnectionPropsTest, ConnectionProps_ServeEndpoint) {
     const std::string endpoint = "/connect/connection-props.xml";
     ConnectionProps server(
         ConnectionProtocol::ST2138_GRPC,
-        endpoint,
         15000,
         "Test Device",
-        "test-device-abc123");
+        "test-device-abc123",
+        "service:catena-device",
+        endpoint);
 
     ASSERT_TRUE(server.start());
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -224,6 +226,7 @@ TEST_F(ConnectionPropsTest, ConnectionProps_404Response) {
     const std::string endpoint = "/connect/connection-props.xml";
     ConnectionProps server(
         ConnectionProtocol::ST2138_GRPC,
+        30000, "", "", "service:catena-device",
         endpoint);
 
     ASSERT_TRUE(server.start());
@@ -245,6 +248,7 @@ TEST_F(ConnectionPropsTest, ConnectionProps_405Response) {
     const std::string endpoint = "/connect/connection-props.xml";
     ConnectionProps server(
         ConnectionProtocol::ST2138_GRPC,
+        30000, "", "", "service:catena-device",
         endpoint);
 
     ASSERT_TRUE(server.start());
@@ -285,6 +289,7 @@ TEST_F(ConnectionPropsTest, ConnectionProps_405Response) {
 TEST_F(ConnectionPropsTest, ConnectionProps_HealthCheckEndpoint) {
     ConnectionProps server(
         ConnectionProtocol::ST2138_GRPC,
+        30000, "", "", "service:catena-device",
         "/connect/connection-props.xml");
 
     ASSERT_TRUE(server.start());
@@ -317,7 +322,10 @@ TEST_F(ConnectionPropsTest, ConnectionProps_BaseUrl_TlsScheme) {
     {
         config::dashboard_tls_enabled = false;
         config::dashboard_port = ConnectionPropsTest::nextPort_++;
-        ConnectionProps server(ConnectionProtocol::ST2138_REST, endpoint);
+        ConnectionProps server(
+            ConnectionProtocol::ST2138_REST,
+            30000, "", "", "service:catena-device",
+            endpoint);
         ASSERT_TRUE(server.start());
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
@@ -334,7 +342,10 @@ TEST_F(ConnectionPropsTest, ConnectionProps_BaseUrl_TlsScheme) {
     {
         config::dashboard_tls_enabled = true;
         config::dashboard_port = ConnectionPropsTest::nextPort_++;
-        ConnectionProps server(ConnectionProtocol::ST2138_GRPC, endpoint);
+        ConnectionProps server(
+            ConnectionProtocol::ST2138_GRPC,
+            30000, "", "", "service:catena-device",
+            endpoint);
         ASSERT_TRUE(server.start());
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
@@ -351,11 +362,14 @@ TEST_F(ConnectionPropsTest, ConnectionProps_BaseUrl_TlsScheme) {
  * TEST 6 - Concurrent requests all return 200 with correct content.
  */
 TEST_F(ConnectionPropsTest, ConnectionProps_ConcurrentRequests) {
+    const std::string endpoint = "/connect/connection-props.xml";
     ConnectionProps server(
         ConnectionProtocol::ST2138_GRPC,
-        "/connect/test.xml",
         30000,
-        "Concurrent Test");
+        "Concurrent Test",
+        "",
+        "service:catena-device",
+        endpoint);
 
     ASSERT_TRUE(server.start());
     std::this_thread::sleep_for(std::chrono::milliseconds(100));

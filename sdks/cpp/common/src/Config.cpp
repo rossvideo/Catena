@@ -23,6 +23,7 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             (CATENA_HOSTNAME_NAME.c_str(), po::value<std::string>()->default_value(CATENA_HOSTNAME), "Specify the publicly accessible hostname")
             (CATENA_PORT_NAME.c_str(), po::value<uint16_t>()->default_value(CATENA_PORT), "Catena service port")
             (CATENA_DASHBOARD_PORT_NAME.c_str(), po::value<uint16_t>()->default_value(CATENA_DASHBOARD_PORT), "Port to serve connectionprops.xml")
+            (CATENA_DASHBOARD_TLS_ENABLED_NAME.c_str(), po::value<bool>()->default_value(CATENA_DASHBOARD_TLS_ENABLED)->implicit_value(true), "Use this to indicate to connection-props if tls_enabled")
             (CATENA_DEFAULT_MAX_ARRAY_SIZE_NAME.c_str(), po::value<uint32_t>()->default_value(kDefaultMaxArrayLength), "Use this to define the default max length for array and string params.")
             (CATENA_DEFAULT_TOTAL_ARRAY_SIZE_NAME.c_str(), po::value<uint32_t>()->default_value(kDefaultMaxArrayLength), "Use this to define the default total length for string array params.")
             (CATENA_MAX_CONNECTIONS_NAME.c_str(), po::value<uint32_t>()->default_value(DEFAULT_MAX_CONNECTIONS), "Use this to define the total number of concurrent connections that can be made to a service.")
@@ -82,6 +83,7 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(CATENA_HOSTNAME_NAME)) config::hostname = vars[CATENA_HOSTNAME_NAME].as<std::string>();
         if (vars.count(CATENA_PORT_NAME)) config::port = vars[CATENA_PORT_NAME].as<uint16_t>();
         if (vars.count(CATENA_DASHBOARD_PORT_NAME)) config::dashboard_port = vars[CATENA_DASHBOARD_PORT_NAME].as<uint16_t>();
+        if (vars.count(CATENA_DASHBOARD_TLS_ENABLED_NAME)) config::dashboard_tls_enabled = vars[CATENA_DASHBOARD_TLS_ENABLED_NAME].as<bool>();
         if (vars.count(CATENA_PRIVATE_CA_NAME)) config::private_ca = vars[CATENA_PRIVATE_CA_NAME].as<bool>();
         if (vars.count(CATENA_MUTUAL_AUTHC_NAME)) config::mutual_authc = vars[CATENA_MUTUAL_AUTHC_NAME].as<bool>();
         if (vars.count(CATENA_AUTHZ_NAME)) config::authz = vars[CATENA_AUTHZ_NAME].as<bool>();

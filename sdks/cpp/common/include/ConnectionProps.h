@@ -35,24 +35,19 @@
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
- #pragma once
+#pragma once
 
- #include <boost/asio.hpp>
- #include <string>
- #include <thread>
- #include <atomic>
- #include <memory>
- #include <optional>
- 
- using boost::asio::ip::tcp;
- 
- namespace catena {
- namespace common {
+#include <boost/asio.hpp>
+#include <string>
+#include <thread>
+#include <atomic>
+#include <memory>
+#include <optional>
 
-/**
- * @brief The default port for the connection props server.
- */
-const uint16_t DEFAULT_CONNECTION_PROPS_PORT = 80;
+using boost::asio::ip::tcp;
+
+namespace catena {
+namespace common {
 
 /**
  * @brief Configuration structure for connection properties
@@ -65,7 +60,7 @@ enum class ConnectionProtocol {
  /**
   * @brief Lightweight HTTP server for serving connection props information
   * 
-  * This server listens on a configurable port (default DEFAULT_CONNECTION_PROPS_PORT) and serves a single
+  * This server listens on a configurable port and serves a single
   * endpoint (/connect/connection-props.xml) with connection properties for
   * connection props. It runs in a background thread and can be started/stopped
   * cleanly. It generates XML content from configuration parameters.
@@ -93,15 +88,15 @@ enum class ConnectionProtocol {
      * 
      * @param config Configuration for generating connection properties
      * @param endpoint The endpoint path (default "/connect/connection-props.xml")
-     * @param port The port to listen on (default DEFAULT_CONNECTION_PROPS_PORT)
+     * @param port The port to listen on
      */
     ConnectionProps(
         ConnectionProtocol protocol,
-        const std::string& endpoint = "/connect/connection-props.xml",
         uint32_t refresh_interval = 30000,
         const std::string& node_name = "",
         const std::string& node_id = "",
-        const std::string& service_name = "service:catena-device");
+        const std::string& service_name = "service:catena-device",
+        const std::string& endpoint = "/connect/connection-props.xml");
 
     /**
     * @brief Destructor - stops the server if running
@@ -130,13 +125,6 @@ enum class ConnectionProtocol {
     * @return true if running, false otherwise
     */
     bool isRunning() const { return running_; }
-
-    /**
-     * @brief Update the response content
-     * @param content The new XML content to serve
-     * @deprecated Use updateConfig() instead
-     */
-    void updateContent(const std::string& content);
 
     /**
     * @brief Get the endpoint path

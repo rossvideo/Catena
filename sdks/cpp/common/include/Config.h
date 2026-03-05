@@ -34,6 +34,7 @@
  * @file Config.h
  * @brief Runtime configuration variables
  * @author keon.foster@rossvideo.com
+ * @author Christian Twarog (christian.twarog@rossvideo.com)
  * @date 2026-02-24
  * @copyright Copyright (c) 2026 Ross Video
  */
@@ -80,7 +81,7 @@ const std::string CATENA_CA_FILE = "ca.crt";
 const std::string CATENA_STATIC_ROOT = "/";
 const std::string CATENA_HOSTNAME = "0.0.0.0";
 const uint16_t CATENA_PORT = 6254;
-const uint16_t CATENA_DASHBOARD_PORT = 80;
+const uint16_t CATENA_DASHBOARD_PORT = 8080;
 const bool CATENA_DASHBOARD_TLS_ENABLED = false;
 
 

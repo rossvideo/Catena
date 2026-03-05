@@ -30,6 +30,7 @@
 #include <Device.h>
 #include <ParamWithValue.h>
 #include <Config.h>
+#include <ConnectionProps.h>
 
 // connections/gRPC
 #include <ServiceImpl.h>
@@ -166,6 +167,18 @@ int main(int argc, char* argv[])
         return code;
     }
     Logger::init("audiodeck_yaml");
+
+    catena::common::ConnectionProps connectionProps(
+        ConnectionProtocol::ST2138_GRPC,        // Configuration
+        30000,                                  // Refresh interval in milliseconds
+        "audiodeck_yaml",                       // Node name
+        "audiodeck_yaml-a4:bb:6d:6a:6f:a3",     // Node ID
+        "/connect/connection-props.xml"         // Endpoint
+    );
+
+    if (!connectionProps.start()) {
+        LOG(WARNING) << "Failed to start connection props server on port " << config::dashboard_port;
+    }
   
     std::thread catenaRpcThread(RunRPCServer, "0.0.0.0:" + std::to_string(config::port));
     catenaRpcThread.join();

@@ -354,10 +354,10 @@ int main(int argc, char* argv[])
     
     catena::common::ConnectionProps connectionProps(
         ConnectionProtocol::ST2138_GRPC,        // Configuration
-        "/connect/connection-props.xml",        // Endpoint
         30000,                                  // Refresh interval in milliseconds
         "one_of_everything",                    // Node name
-        "one_of_everything-a4:bb:6d:6a:6f:a3"   // Node ID
+        "one_of_everything-a4:bb:6d:6a:6f:a3",  // Node ID
+        "/connect/connection-props.xml"         // Endpoint
     );
 
     if (!connectionProps.start()) {

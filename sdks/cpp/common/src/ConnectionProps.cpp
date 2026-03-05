@@ -59,17 +59,17 @@ using namespace catena::common;
 
 ConnectionProps::ConnectionProps(
     ConnectionProtocol protocol,
-    const std::string& endpoint,
     uint32_t refresh_interval,
     const std::string& node_name,
     const std::string& node_id,
-    const std::string& service_name)
+    const std::string& service_name,
+    const std::string& endpoint)
     : protocol_(protocol),
-      endpoint_(endpoint),
       refresh_interval_(refresh_interval),
       node_name_(node_name),
       node_id_(node_id),
       service_name_(service_name),
+      endpoint_(endpoint),
       running_(false),
       io_context_(),
       acceptor_(io_context_, tcp::endpoint(tcp::v4(), config::dashboard_port)) {
@@ -122,12 +122,6 @@ void ConnectionProps::stop() {
     acceptor_.close();
 
     LOG(INFO) << "Connection props server stopped";
-}
-
-void ConnectionProps::updateContent(const std::string& content) {
-    std::lock_guard<std::mutex> lock(content_mutex_);
-    response_content_ = content;
-    VLOG(1) << "Connection props server content updated (legacy)";
 }
 
 std::string ConnectionProps::generateXml() {
@@ -278,7 +272,7 @@ std::string ConnectionProps::generateResponse(const std::string& path) {
                  << health;
     } else {
         // 404 Not Found for all other paths
-        std::string not_found = "Not Found - Only " + endpoint_ + " is available";
+        std::string not_found = "Not Found";
         response << "HTTP/1.1 404 Not Found\r\n"
                  << "Content-Type: text/plain\r\n"
                  << "Content-Length: " << not_found.length() << "\r\n"

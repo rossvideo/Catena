@@ -245,11 +245,11 @@ int main(int argc, char* argv[])
     defineCommands();
 
     catena::common::ConnectionProps connectionProps(
-        ConnectionProtocol::ST2138_GRPC,        // Configuration
-        "/connect/connection-props.xml",        // Endpoint
-        30000,                                  // Refresh interval in milliseconds
-        "simple_dashboard_audiodeck",           // Node name
-        "simple_dashboard_audiodeck-01:23:45:67:89:ab"   // Node ID
+        ConnectionProtocol::ST2138_GRPC,            // Configuration
+        30000,                                      // Refresh interval in milliseconds
+        "dashboard_audiodeck",                      // Node name
+        "dashboard_audiodeck-a4:bb:6d:6a:6f:a3",    // Node ID
+        "/connect/connection-props.xml"             // Endpoint
     );
 
     if (!connectionProps.start()) {
