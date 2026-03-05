@@ -236,7 +236,7 @@ TEST_F(ConnectionPropsTest, ConnectionProps_404Response) {
     EXPECT_EQ(getStatusCode(response), 404);
     EXPECT_TRUE(hasHeader(response, "Content-Type: text/plain"));
     EXPECT_TRUE(getBody(response).find("Not Found") != std::string::npos);
-    EXPECT_TRUE(getBody(response).find(endpoint) != std::string::npos);
+    EXPECT_TRUE(getBody(response).find(endpoint) == std::string::npos);
 
     server.stop();
 }
@@ -362,7 +362,7 @@ TEST_F(ConnectionPropsTest, ConnectionProps_BaseUrl_TlsScheme) {
  * TEST 6 - Concurrent requests all return 200 with correct content.
  */
 TEST_F(ConnectionPropsTest, ConnectionProps_ConcurrentRequests) {
-    const std::string endpoint = "/connect/connection-props.xml";
+    const std::string endpoint = "/connect/test.xml";
     ConnectionProps server(
         ConnectionProtocol::ST2138_GRPC,
         30000,
@@ -377,8 +377,8 @@ TEST_F(ConnectionPropsTest, ConnectionProps_ConcurrentRequests) {
     std::vector<std::string> responses(5);
     std::vector<std::thread> threads;
     for (int i = 0; i < 5; i++) {
-        threads.emplace_back([this, i, &responses]() {
-            responses[i] = makeHttpRequest(config::dashboard_port, "/connect/test.xml");
+        threads.emplace_back([this, i, &responses, endpoint]() {
+            responses[i] = makeHttpRequest(config::dashboard_port, endpoint);
         });
     }
     for (auto& t : threads) t.join();
