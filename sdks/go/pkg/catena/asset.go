@@ -179,25 +179,32 @@ func ToPayloadFromURL(url string) DataPayload {
 	}
 }
 
-// ToCatenaAsset converts DataPayload to CatenaAsset by building the proto directly
-func ToCatenaAsset(dp DataPayload, cachable bool) (CatenaAsset, error) {
-	// Build the proto DataPayload directly
-	protoPayload := &protos.DataPayload{
+// dataPayloadToProto converts a DataPayload to its proto representation.
+func dataPayloadToProto(dp DataPayload) (*protos.DataPayload, error) {
+	pdp := &protos.DataPayload{
 		Metadata:        dp.Metadata,
 		Digest:          dp.Digest,
 		PayloadEncoding: protos.DataPayload_PayloadEncoding(dp.PayloadEncoding),
 	}
 
-	// Handle oneof: either url or payload (not both)
 	if dp.Url != "" && len(dp.Payload) == 0 {
-		protoPayload.Kind = &protos.DataPayload_Url{Url: dp.Url}
+		pdp.Kind = &protos.DataPayload_Url{Url: dp.Url}
 	} else if len(dp.Payload) > 0 && dp.Url == "" {
-		protoPayload.Kind = &protos.DataPayload_Payload{Payload: dp.Payload}
+		pdp.Kind = &protos.DataPayload_Payload{Payload: dp.Payload}
 	} else {
-		return CatenaAsset{asset: nil}, fmt.Errorf("either payload or url must be provided in DataPayload, but not both")
+		return nil, fmt.Errorf("either payload or url must be provided in DataPayload, but not both")
 	}
 
-	// Build the ExternalObjectPayload
+	return pdp, nil
+}
+
+// ToCatenaAsset converts DataPayload to CatenaAsset by building the proto directly
+func ToCatenaAsset(dp DataPayload, cachable bool) (CatenaAsset, error) {
+	protoPayload, err := dataPayloadToProto(dp)
+	if err != nil {
+		return CatenaAsset{asset: nil}, err
+	}
+
 	asset := &protos.ExternalObjectPayload{
 		Cachable: cachable,
 		Payload:  protoPayload,

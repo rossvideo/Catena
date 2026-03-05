@@ -91,17 +91,9 @@ func ToCatenaValue(v any) (CatenaValue, error) {
 func ToProto(v any) (*protos.Value, error) {
 	switch val := v.(type) {
 	case DataPayload:
-		pdp := &protos.DataPayload{
-			Metadata:        val.Metadata,
-			Digest:          val.Digest,
-			PayloadEncoding: protos.DataPayload_PayloadEncoding(val.PayloadEncoding),
-		}
-		if val.Url != "" && len(val.Payload) == 0 {
-			pdp.Kind = &protos.DataPayload_Url{Url: val.Url}
-		} else if len(val.Payload) > 0 && val.Url == "" {
-			pdp.Kind = &protos.DataPayload_Payload{Payload: val.Payload}
-		} else {
-			return nil, fmt.Errorf("either payload or url must be provided in DataPayload, but not both")
+		pdp, err := dataPayloadToProto(val)
+		if err != nil {
+			return nil, err
 		}
 		return &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: pdp}}, nil
 	case UndefinedValue:
