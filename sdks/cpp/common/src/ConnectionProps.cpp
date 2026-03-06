@@ -126,7 +126,7 @@ void ConnectionProps::stop() {
 
 std::string ConnectionProps::generateXml() {
     std::stringstream xml;
-    const std::string protocol = protocolToString(protocol_);
+    //const std::string protocol = protocolToString(protocol_);
     
     xml << "<properties version=\"1.0\">\n"
         << "    <comment>DashBoard Device Connection Settings</comment>\n";
@@ -138,7 +138,9 @@ std::string ConnectionProps::generateXml() {
     xml << "    <entry key=\"serviceUrl\">" << service_name_ << "</entry>\n";
     
     // Equipment type
-    xml << "    <entry key=\"equipmentType\">" << protocol << "</entry>\n";
+    // have this for potential future use in dashboard to differentiate between REST and gRPC devices
+    //xml << "    <entry key=\"equipmentType\">" << protocol << "</entry>\n";
+    xml << "    <entry key=\"equipmentType\">catena</entry>\n";
     
     // Address and port
     xml << "    <entry key=\"address\">" << config::hostname << "</entry>\n"
