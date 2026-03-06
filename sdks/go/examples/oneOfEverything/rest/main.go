@@ -437,7 +437,7 @@ func main() {
 			}
 			device, err := catena.ToCatenaDevice(deviceInfo)
 			if err != nil {
-				return catena.ReplyError[catena.CatenaDevice](catena.INTERNAL, "failed to create device info")
+				return catena.ReplyError[catena.CatenaDevice](catena.INVALID_ARGUMENT, "failed to create device info")
 			}
 			return catena.Reply(device)
 		})
@@ -565,29 +565,30 @@ func main() {
 	})
 
 	// --------------------------------------------------------------------------
-	// Register GetAsset handler
+	// Register GetAsset handler for each slot
 	// --------------------------------------------------------------------------
-	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
-		logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
+	for _, slot := range slotList {
+		srv.RegisterGetAssetHandler(slot, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+			logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
 
-		val, ok := assets.Load(fqoid)
-		if !ok {
-			logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
-			return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found: "+fqoid)
-		}
+			val, ok := assets.Load(fqoid)
+			if !ok {
+				logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
+				return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found: "+fqoid)
+			}
 
-		payload := val.(catena.DataPayload)
+			payload := val.(catena.DataPayload)
 
-		// Convert DataPayload to CatenaAsset when returning
-		catenaAsset, err := catena.ToCatenaAsset(payload, true)
-		if err != nil {
-			logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", err)
-			return catena.ReplyError[catena.CatenaAsset](catena.INTERNAL, "failed to convert asset: "+err.Error())
-		}
+			catenaAsset, err := catena.ToCatenaAsset(payload, true)
+			if err != nil {
+				logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", err)
+				return catena.ReplyError[catena.CatenaAsset](catena.INTERNAL, "failed to convert asset: "+err.Error())
+			}
 
-		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(payload.Payload))
-		return catena.Reply(catenaAsset)
-	})
+			logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(payload.Payload))
+			return catena.Reply(catenaAsset)
+		})
+	}
 
 	// --------------------------------------------------------------------------
 	// Register Fallback handler - serves web UI files and assets list
