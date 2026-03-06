@@ -126,7 +126,7 @@ void ConnectionProps::stop() {
 
 std::string ConnectionProps::generateXml() {
     std::stringstream xml;
-    const std::string protocol = protocolToString(protocol_);
+    //const std::string protocol = protocolToString(protocol_);
     
     xml << "<properties version=\"1.0\">\n"
         << "    <comment>DashBoard Device Connection Settings</comment>\n";
