@@ -95,6 +95,21 @@ void run() {
     statusValue->get() = "Stopped";
     dm.getValueSetByServer().emit("/status", statusParam.get());
     LOG(INFO) << "MXL process exited";
+
+    // Remove /dev/shm/<flowId>.mxl-flow if it exists (file or directory).
+    std::filesystem::path shmPath(domain);
+    if (std::filesystem::exists(shmPath) && std::filesystem::is_directory(shmPath)) {
+        const std::filesystem::path flowPath = shmPath / (flowId + ".mxl-flow");
+        if (std::filesystem::exists(flowPath)) {
+            const auto removed = std::filesystem::remove_all(flowPath);
+            LOG(INFO) << "Removed flow path for flow id " << flowId << " (" << removed
+                      << " entries removed)";
+        } else {
+            LOG(INFO) << "Could not find flow path in " << domain << " for flow id " << flowId;
+        }
+    } else {
+        LOG(INFO) << "Shared memory path " << domain << " does not exist or is not a directory";
+    }
 }
 
 void defineCommands() {
