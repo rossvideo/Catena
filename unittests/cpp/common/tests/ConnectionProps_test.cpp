@@ -211,7 +211,7 @@ TEST_F(ConnectionPropsTest, ConnectionProps_ServeEndpoint) {
 
     const std::string body = getBody(response);
     EXPECT_TRUE(body.find("<properties version=\"1.0\">") != std::string::npos);
-    EXPECT_TRUE(body.find("equipmentType\">st2138-grpc<") != std::string::npos);
+    EXPECT_TRUE(body.find("equipmentType\">catena<") != std::string::npos);
     EXPECT_TRUE(body.find("node-id\">test-device-abc123<") != std::string::npos);
     EXPECT_TRUE(body.find("node-name\">Test Device<") != std::string::npos);
     EXPECT_TRUE(body.find("refresh-interval\">15000<") != std::string::npos);
