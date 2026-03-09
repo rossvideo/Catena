@@ -450,62 +450,24 @@ func main() {
 		slot := slot
 		p := slotParams[slot]
 
-		if slot == 0 {
-			srv.RegisterGetValueHandler(slot, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
-				logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
+		srv.RegisterGetValueHandler(slot, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+			logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
 
-				if fqoid == "counter" {
-					val, _ := catena.ToCatenaValue(buildCounterResponse())
-					return catena.Reply(val)
-				}
+			if slot == 0 && fqoid == "counter" {
+				val, _ := catena.ToCatenaValue(buildCounterResponse())
+				return catena.Reply(val)
+			}
 
-				// Aggregate params across all slots for the web UI poll
-				if fqoid == "all" {
-					allParams := make(map[string]any)
-					for _, sp := range slotParams {
-						sp.Range(func(key, value any) bool {
-							allParams[key.(string)] = value
-							return true
-						})
-					}
-					var runningVal int32 = 0
-					if counter.IsRunning() {
-						runningVal = 1
-					}
-					allParams["counter"] = int32(counter.GetValue())
-					allParams["counter_running"] = runningVal
-					catenaVal, err := catena.ToCatenaValue(allParams)
-					if err != nil {
-						return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert params")
-					}
-					return catena.Reply(catenaVal)
-				}
-
-				v, ok := p.Load(fqoid)
-				if !ok {
-					return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found: "+fqoid)
-				}
-				catenaVal, err := catena.ToCatenaValue(v)
-				if err != nil {
-					return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
-				}
-				return catena.Reply(catenaVal)
-			})
-		} else {
-			srv.RegisterGetValueHandler(slot, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
-				logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
-
-				v, ok := p.Load(fqoid)
-				if !ok {
-					return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found: "+fqoid)
-				}
-				catenaVal, err := catena.ToCatenaValue(v)
-				if err != nil {
-					return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
-				}
-				return catena.Reply(catenaVal)
-			})
-		}
+			v, ok := p.Load(fqoid)
+			if !ok {
+				return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found: "+fqoid)
+			}
+			catenaVal, err := catena.ToCatenaValue(v)
+			if err != nil {
+				return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
+			}
+			return catena.Reply(catenaVal)
+		})
 	}
 
 	// --------------------------------------------------------------------------

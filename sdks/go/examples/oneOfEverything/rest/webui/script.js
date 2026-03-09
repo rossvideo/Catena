@@ -110,13 +110,13 @@ function updateCounter(value, running) {
 // Parameters Section
 // =====================================================================
 const paramConfig = [
-    { name: 'resolution', type: 'string' },
-    { name: 'brightness', type: 'int32', min: 0, max: 100 },
-    { name: 'contrast', type: 'int32', min: 0, max: 100 },
-    { name: 'saturation', type: 'int32', min: 0, max: 100 },
-    { name: 'volume', type: 'int32', min: 0, max: 100 },
-    { name: 'muted', type: 'bool' },
-    { name: 'device_name', type: 'string' },
+    { name: 'resolution', type: 'string', slot: 1 },
+    { name: 'brightness', type: 'int32', slot: 1, min: 0, max: 100 },
+    { name: 'contrast', type: 'int32', slot: 1, min: 0, max: 100 },
+    { name: 'saturation', type: 'int32', slot: 1, min: 0, max: 100 },
+    { name: 'volume', type: 'int32', slot: 2, min: 0, max: 100 },
+    { name: 'muted', type: 'bool', slot: 2 },
+    { name: 'device_name', type: 'string', slot: 2 },
 ];
 
 const editingInputs = new Set();
@@ -191,7 +191,8 @@ async function setParam(name, value, type) {
         const body = type === 'int32' ? { int32_value: value } 
                    : type === 'string' ? { string_value: value } 
                    : value;
-        const res = await fetch(`/st2138-api/v1/0/value/${name}`, {
+        const slot = paramConfig.find(p => p.name === name)?.slot ?? 0;
+        const res = await fetch(`/st2138-api/v1/${slot}/value/${name}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
@@ -208,24 +209,35 @@ async function setParam(name, value, type) {
 }
 
 async function poll() {
-    try {
-        const res = await fetch('/st2138-api/v1/0/value/all');
-        const data = await res.json();
-        const fields = data.struct_value?.fields;
-        if (fields) {
-            // Update counter
-            const counter = extractValue(fields.counter);
-            const running = extractValue(fields.counter_running);
-            updateCounter(counter, running);
-            
-            // Update param inputs
-            for (const [key, protoVal] of Object.entries(fields)) {
-                if (key !== 'counter' && key !== 'counter_running') {
-                    updateParamInput(key, extractValue(protoVal));
+    const fetches = [];
+
+    // Fetch counter from slot 0
+    fetches.push(
+        fetch('/st2138-api/v1/0/value/counter')
+            .then(r => r.json())
+            .then(data => {
+                const fields = data.struct_value?.fields;
+                if (fields) {
+                    updateCounter(extractValue(fields.counter), extractValue(fields.running));
                 }
-            }
-        }
-    } catch (e) { console.error('poll error:', e); }
+            })
+            .catch(e => console.error('poll counter error:', e))
+    );
+
+    // Fetch each param from its proper slot
+    for (const p of paramConfig) {
+        fetches.push(
+            fetch(`/st2138-api/v1/${p.slot}/value/${p.name}`)
+                .then(r => r.json())
+                .then(data => {
+                    const val = extractValue(data);
+                    if (val !== null) updateParamInput(p.name, val);
+                })
+                .catch(e => console.error(`poll ${p.name} error:`, e))
+        );
+    }
+
+    await Promise.all(fetches);
 }
 
 // =====================================================================
