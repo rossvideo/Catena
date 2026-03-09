@@ -168,11 +168,17 @@ void RunRPCServer(std::string addr)
 int main(int argc, char* argv[])
 {
     std::string addr;
-    absl::SetProgramUsageMessage("Runs the Catena Service");
-    absl::ParseCommandLine(argc, argv);
-    Logger::init("audiodeck_REST");
-
-    addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
+    const auto [exit, code] = config::initConfigVariables(argc, argv);
+    if (exit) {
+        return code;
+    }
+    Logger::init("audiodeck_yaml");
+  
+    #ifdef _WIN32
+    addr = absl::StrFormat("127.0.0.1:%d", config::port);
+    #else
+    addr = absl::StrFormat("0.0.0.0:%d", config::port);
+    #endif
   
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();

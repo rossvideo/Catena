@@ -106,7 +106,11 @@ void RunRESTServer() {
         ServiceImpl api(config);
         globalApi = &api;
         LOG(INFO) << "API Version: " << api.version();
+        #ifdef _WIN32
+        LOG(INFO) << "REST on 127.0.0.1:" << config.port;
+        #else
         LOG(INFO) << "REST on 0.0.0.0:" << config.port;
+        #endif
         
         // Notifies the console when a value is set by the client.
         uint32_t valueSetByClientId = dm.getValueSetByClient().connect([](const std::string& oid, const IParam* p) {
