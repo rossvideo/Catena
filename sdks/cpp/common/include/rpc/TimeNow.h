@@ -39,8 +39,10 @@
 
 // std
 #include <string>
-#include <iostream>
+#include <sstream>
+#include <iomanip>
 #include <chrono>
+#include <ctime>
 
 namespace catena {
 namespace common {
@@ -55,7 +57,13 @@ inline std::string timeNow() {
     auto epoch = now_micros.time_since_epoch();
     auto micros = std::chrono::duration_cast<std::chrono::microseconds>(epoch);
     auto now_c = std::chrono::system_clock::to_time_t(now);
-    ss << std::put_time(std::localtime(&now_c), "%F %T") << '.' << std::setw(6) << std::setfill('0')
+    std::tm tm_buf{};
+#ifdef _WIN32
+    localtime_s(&tm_buf, &now_c);
+#else
+    localtime_r(&now_c, &tm_buf);
+#endif
+    ss << std::put_time(&tm_buf, "%F %T") << '.' << std::setw(6) << std::setfill('0')
        << micros.count() % 1000000;
     return ss.str();
 }

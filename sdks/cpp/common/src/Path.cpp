@@ -230,6 +230,6 @@ std::string Path::fqoid() const {
     return toString(true, 0);
 }
 
-Path operator"" _path(const char *lit, std::size_t sz) {
+Path operator""_path(const char *lit, std::size_t sz) {
     return Path(lit);
 }
