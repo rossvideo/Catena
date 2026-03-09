@@ -520,7 +520,7 @@ func main() {
 
 			if value == nil {
 				logger.Error("SetParam nil value received", "slot", slot, "fqoid", fqoid)
-				return catena.StatusWithCode(catena.INTERNAL, "nil value received")
+				return catena.StatusWithCode(catena.INVALID_ARGUMENT, "nil value received")
 			}
 
 			val, ok := p.Load(fqoid)
