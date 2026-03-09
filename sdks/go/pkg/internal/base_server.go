@@ -18,11 +18,11 @@ type ExecuteCommandHandler func(slot int, commandFqoid string, payload any) (cat
 type BaseServer struct {
 	Mu                     sync.Mutex
 	Slots                  []int
-	GetDeviceHandlers      map[int]DeviceHandler
-	GetValueHandlers       map[int]GetValueHandler
-	SetValueHandlers       map[int]SetValueHandler
-	GetAssetHandlers       map[int]GetAssetHandler
-	ExecuteCommandHandlers map[int]ExecuteCommandHandler
+	getDeviceHandlers      map[int]DeviceHandler
+	getValueHandlers       map[int]GetValueHandler
+	setValueHandlers       map[int]SetValueHandler
+	getAssetHandlers       map[int]GetAssetHandler
+	executeCommandHandlers map[int]ExecuteCommandHandler
 	connectionQueue        *ConnectionQueue
 }
 
@@ -51,57 +51,64 @@ func DefaultExecuteCommandHandler(slot int, commandFqoid string, payload any) (c
 func (bs *BaseServer) RegisterGetDeviceHandler(slot int, handler DeviceHandler) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
-	bs.GetDeviceHandlers[slot] = handler
+	bs.getDeviceHandlers[slot] = handler
 }
 
 func (bs *BaseServer) RegisterGetValueHandler(slot int, handler GetValueHandler) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
-	bs.GetValueHandlers[slot] = handler
+	bs.getValueHandlers[slot] = handler
 }
 
 func (bs *BaseServer) RegisterSetValueHandler(slot int, handler SetValueHandler) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
-	bs.SetValueHandlers[slot] = handler
+	bs.setValueHandlers[slot] = handler
 }
 
 func (bs *BaseServer) RegisterGetAssetHandler(slot int, handler GetAssetHandler) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
-	bs.GetAssetHandlers[slot] = handler
+	bs.getAssetHandlers[slot] = handler
 }
 
 func (bs *BaseServer) RegisterExecuteCommandHandler(slot int, handler ExecuteCommandHandler) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
-	bs.ExecuteCommandHandlers[slot] = handler
+	bs.executeCommandHandlers[slot] = handler
 }
 
 // Lookup helper functions
+func (bs *BaseServer) LookupGetDeviceHandler(slot int) DeviceHandler {
+	if handler, ok := bs.getDeviceHandlers[slot]; ok {
+		return handler
+	}
+	return DefaultDeviceHandler
+}
+
 func (bs *BaseServer) LookupGetValueHandler(slot int) GetValueHandler {
-	if handler, ok := bs.GetValueHandlers[slot]; ok {
+	if handler, ok := bs.getValueHandlers[slot]; ok {
 		return handler
 	}
 	return DefaultGetValueHandler
 }
 
 func (bs *BaseServer) LookupSetValueHandler(slot int) SetValueHandler {
-	if handler, ok := bs.SetValueHandlers[slot]; ok {
+	if handler, ok := bs.setValueHandlers[slot]; ok {
 		return handler
 	}
 	return DefaultSetValueHandler
 }
 
 func (bs *BaseServer) LookupGetAssetHandler(slot int) GetAssetHandler {
-	if handler, ok := bs.GetAssetHandlers[slot]; ok {
+	if handler, ok := bs.getAssetHandlers[slot]; ok {
 		return handler
 	}
 	return DefaultGetAssetHandler
 }
 
 func (bs *BaseServer) LookupExecuteCommandHandler(slot int) ExecuteCommandHandler {
-	if handler, ok := bs.ExecuteCommandHandlers[slot]; ok {
+	if handler, ok := bs.executeCommandHandlers[slot]; ok {
 		return handler
 	}
 	return DefaultExecuteCommandHandler
@@ -110,12 +117,12 @@ func (bs *BaseServer) LookupExecuteCommandHandler(slot int) ExecuteCommandHandle
 func NewBaseServer(slots []int, maxConnections int) *BaseServer {
 	bs := &BaseServer{
 		Slots:                  slots,
-		GetDeviceHandlers:      make(map[int]DeviceHandler),
-		GetValueHandlers:       make(map[int]GetValueHandler),
-		SetValueHandlers:       make(map[int]SetValueHandler),
-		GetAssetHandlers:       make(map[int]GetAssetHandler),
-		ExecuteCommandHandlers: make(map[int]ExecuteCommandHandler),
-		connectionQueue:        NewConnectionQueue(maxConnections),
+		getDeviceHandlers:      make(map[int]DeviceHandler),
+		getValueHandlers:       make(map[int]GetValueHandler),
+		setValueHandlers:       make(map[int]SetValueHandler),
+		getAssetHandlers:       make(map[int]GetAssetHandler),
+		executeCommandHandlers: make(map[int]ExecuteCommandHandler),
+		connectionQueue:        newConnectionQueue(maxConnections),
 	}
 
 	for _, slot := range slots {
@@ -131,15 +138,15 @@ func NewBaseServer(slots []int, maxConnections int) *BaseServer {
 
 // RegisterConnection registers a new streaming connection
 func (bs *BaseServer) RegisterConnection() (int, *Connection) {
-	return bs.connectionQueue.RegisterConnection()
+	return bs.connectionQueue.registerConnection()
 }
 
 // DeregisterConnection removes a streaming connection
 func (bs *BaseServer) DeregisterConnection(connID int) {
-	bs.connectionQueue.DeregisterConnection(connID)
+	bs.connectionQueue.deregisterConnection(connID)
 }
 
-// NotifyUpdate broadcasts an update to all connected clients
+// notifyUpdate broadcasts an update to all connected clients
 func (bs *BaseServer) NotifyUpdate(update *protos.PushUpdates) {
 	bs.connectionQueue.NotifyUpdate(update)
 }
@@ -149,9 +156,9 @@ func (bs *BaseServer) SetMaxConnections(max int) {
 	bs.connectionQueue.SetMaxConnections(max)
 }
 
-// ShutdownConnections gracefully shuts down all streaming connections
+// shutdown gracefully shuts down all streaming connections
 func (bs *BaseServer) ShutdownConnections() {
-	bs.connectionQueue.Shutdown()
+	bs.connectionQueue.shutdown()
 }
 
 // ConnectionCount returns the number of active streaming connections

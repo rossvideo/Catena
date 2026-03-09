@@ -40,7 +40,7 @@ import (
 
 func TestNewServer(t *testing.T) {
 	slots := []int{0, 1, 2}
-	srv := NewServer(slots)
+	srv := NewServer(slots, 100)
 
 	if srv == nil {
 		t.Fatal("NewServer returned nil")
@@ -57,7 +57,7 @@ func TestNewServer(t *testing.T) {
 
 func TestGetPopulatedSlots(t *testing.T) {
 	slots := []int{0, 1, 2}
-	srv := NewServer(slots)
+	srv := NewServer(slots, 100)
 
 	req := &protos.Empty{}
 	resp, err := srv.GetPopulatedSlots(context.Background(), req)
@@ -78,7 +78,7 @@ func TestGetPopulatedSlots(t *testing.T) {
 }
 
 func TestGetValue(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	// Register a test handler
 	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
@@ -107,7 +107,7 @@ func TestGetValue(t *testing.T) {
 }
 
 func TestSetValue(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	var receivedValue any
 	var receivedSlot int
@@ -146,4 +146,3 @@ func TestSetValue(t *testing.T) {
 		t.Errorf("expected value 123, got %v", receivedValue)
 	}
 }
-

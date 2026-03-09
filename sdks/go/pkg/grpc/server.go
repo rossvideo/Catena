@@ -82,10 +82,10 @@ func streamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamS
 }
 
 // NewServer creates a new gRPC server for the given device slots
-func NewServer(slots []int) *Server {
+func NewServer(slots []int, maxConnections int) *Server {
 	// Create gRPC server with interceptors for logging
 	s := &Server{
-		BaseServer: internal.NewBaseServer(slots, 0),
+		BaseServer: internal.NewBaseServer(slots, maxConnections),
 		grpcServer: grpc.NewServer(
 			grpc.UnaryInterceptor(unaryInterceptor),
 			grpc.StreamInterceptor(streamInterceptor),
@@ -138,12 +138,7 @@ func (s *Server) DeviceRequest(req *protos.DeviceRequestPayload, stream grpc.Ser
 	slot := int(req.Slot)
 	logger.Info("DeviceRequest", "slot", slot)
 
-	handler := s.BaseServer.GetDeviceHandlers[slot]
-	if handler == nil {
-		logger.Error("DeviceRequest slot not found", "slot", slot)
-		return status.Error(codes.NotFound, "slot not found")
-	}
-
+	handler := s.LookupGetDeviceHandler(slot)
 	device, res := handler()
 	if res.Error != "" {
 		logger.Error("DeviceRequest handler error", "slot", slot, "error", res.Error)
@@ -172,7 +167,7 @@ func (s *Server) GetValue(ctx context.Context, req *protos.GetValuePayload) (*pr
 	fqoid := req.Oid
 	logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
 
-	handler := s.BaseServer.LookupGetValueHandler(slot)
+	handler := s.LookupGetValueHandler(slot)
 	value, result := handler(slot, fqoid)
 	if result.Error != "" {
 		logger.Error("GetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
@@ -201,7 +196,7 @@ func (s *Server) SetValue(ctx context.Context, req *protos.SingleSetValuePayload
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value: %v", err))
 	}
 
-	handler := s.BaseServer.LookupSetValueHandler(slot)
+	handler := s.LookupSetValueHandler(slot)
 	result := handler(nativeValue, slot, fqoid)
 	if result.Error != "" {
 		logger.Error("SetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
@@ -225,7 +220,7 @@ func (s *Server) MultiSetValue(ctx context.Context, req *protos.MultiSetValuePay
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value for %s: %v", fqoid, err))
 		}
 
-		handler := s.BaseServer.LookupSetValueHandler(slot)
+		handler := s.LookupSetValueHandler(slot)
 		result := handler(nativeValue, slot, fqoid)
 		if result.Error != "" {
 			logger.Error("MultiSetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
@@ -242,7 +237,7 @@ func (s *Server) ExternalObjectRequest(req *protos.ExternalObjectRequestPayload,
 	fqoid := req.Oid
 	logger.Info("ExternalObjectRequest", "slot", slot, "fqoid", fqoid)
 
-	handler := s.BaseServer.LookupGetAssetHandler(slot)
+	handler := s.LookupGetAssetHandler(slot)
 	asset, result := handler(slot, fqoid)
 	if result.Error != "" {
 		logger.Error("ExternalObjectRequest handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
@@ -274,7 +269,7 @@ func (s *Server) ExecuteCommand(req *protos.ExecuteCommandPayload, stream grpc.S
 		}
 	}
 
-	handler := s.BaseServer.LookupExecuteCommandHandler(slot)
+	handler := s.LookupExecuteCommandHandler(slot)
 	value, result := handler(slot, commandFqoid, payload)
 	if result.Error != "" {
 		logger.Error("ExecuteCommand handler error", "slot", slot, "command", commandFqoid, "error", result.Error)

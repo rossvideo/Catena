@@ -35,83 +35,10 @@ import (
 	"time"
 
 	"github.com/rossvideo/catena/build/go/protos"
-	"github.com/rossvideo/catena/sdks/go/pkg/internal"
 )
 
-func TestConnectionQueue_RegisterDeregister(t *testing.T) {
-	cq := internal.NewConnectionQueue(0)
-
-	connID, conn := cq.RegisterConnection()
-	if connID <= 0 {
-		t.Fatal("RegisterConnection returned invalid ID")
-	}
-	if conn == nil {
-		t.Fatal("RegisterConnection returned nil connection")
-	}
-	if conn.Updates == nil {
-		t.Error("connection updates channel should be initialized")
-	}
-	if conn.Done == nil {
-		t.Error("connection done channel should be initialized")
-	}
-
-	cq.DeregisterConnection(connID)
-}
-
-func TestConnectionQueue_NotifyUpdate(t *testing.T) {
-	cq := internal.NewConnectionQueue(0)
-
-	_, conn1 := cq.RegisterConnection()
-	_, conn2 := cq.RegisterConnection()
-
-	update := &protos.PushUpdates{
-		Slot: 0,
-		Kind: &protos.PushUpdates_Value{
-			Value: &protos.PushUpdates_PushValue{
-				Oid: "test/param",
-			},
-		},
-	}
-
-	cq.NotifyUpdate(update)
-
-	checkUpdate := func(name string, conn *internal.Connection) {
-		select {
-		case received := <-conn.Updates:
-			pv, ok := received.Kind.(*protos.PushUpdates_Value)
-			if !ok || pv.Value.GetOid() != "test/param" {
-				t.Errorf("%s: expected OID 'test/param'", name)
-			}
-		case <-time.After(time.Second):
-			t.Errorf("%s: did not receive update", name)
-		}
-	}
-
-	checkUpdate("conn1", conn1)
-	checkUpdate("conn2", conn2)
-}
-
-func TestConnectionQueue_Shutdown(t *testing.T) {
-	cq := internal.NewConnectionQueue(0)
-
-	_, conn1 := cq.RegisterConnection()
-	_, conn2 := cq.RegisterConnection()
-
-	go func() {
-		<-conn1.Done
-		cq.DeregisterConnection(conn1.ID)
-	}()
-
-	go func() {
-		<-conn2.Done
-		cq.DeregisterConnection(conn2.ID)
-	}()
-
-	cq.Shutdown()
-}
-
 func TestBroadcastUpdate(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	// Register a connection
 	connID, conn := srv.RegisterConnection()
@@ -145,7 +72,7 @@ func TestBroadcastUpdate(t *testing.T) {
 }
 
 func TestBroadcastUpdate_InvalidValue(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	_, conn := srv.RegisterConnection()
 	defer srv.DeregisterConnection(conn.ID)

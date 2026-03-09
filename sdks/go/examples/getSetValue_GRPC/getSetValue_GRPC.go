@@ -46,7 +46,7 @@ import (
 	"syscall"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	grpcServer "github.com/rossvideo/catena/sdks/go/pkg/catena/grpc"
+	grpcServer "github.com/rossvideo/catena/sdks/go/pkg/grpc"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
@@ -65,7 +65,7 @@ func main() {
 	deviceParams.Store("/contrast", int32(60))
 
 	// Create gRPC server with slot 0
-	server := grpcServer.NewServer([]int{0})
+	server := grpcServer.NewServer([]int{0}, 100)
 
 	// Register GetValue handler
 	server.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {

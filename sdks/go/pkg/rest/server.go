@@ -59,7 +59,7 @@ type FallbackHandler func(w http.ResponseWriter, r *http.Request) (catena.Catena
 
 // Server provides REST API endpoints for Catena devices
 type Server struct {
-	*internal.BaseServer
+	baseServer      *internal.BaseServer
 	mux             *http.ServeMux
 	fallbackHandler FallbackHandler
 }
@@ -179,7 +179,7 @@ func writeAssetResult(w http.ResponseWriter, asset catena.CatenaAsset, httpStatu
 // NewServer creates a new REST server for the given device slots
 func NewServer(slots []int, maxConnections int) *Server {
 	s := &Server{
-		BaseServer: internal.NewBaseServer(slots, maxConnections),
+		baseServer: internal.NewBaseServer(slots, maxConnections),
 		mux:        http.NewServeMux(),
 	}
 
@@ -196,16 +196,20 @@ func (s *Server) Start(port int) error {
 	return http.ListenAndServe(addr, s.mux)
 }
 
+func DefaultExecuteCommandHandler(slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "ExecuteCommand not implemented")
+}
+
 func (s *Server) RegisterFallbackHandler(handler FallbackHandler) {
-	s.BaseServer.Mu.Lock()
-	defer s.BaseServer.Mu.Unlock()
+	s.baseServer.Mu.Lock()
+	defer s.baseServer.Mu.Unlock()
 	s.fallbackHandler = handler
 }
 
 // Shutdown gracefully shuts down the server by closing all SSE connections
 // and waiting for their goroutines to finish.
 func (s *Server) Shutdown() {
-	s.ShutdownConnections()
+	s.baseServer.ShutdownConnections()
 }
 
 // sseMarshaler is the protojson marshaler used for SSE events.
@@ -251,13 +255,13 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 	_ = r.Header.Get("Authorization")
 
 	// Register this connection in the connectionQueue
-	connID, conn := s.RegisterConnection()
+	connID, conn := s.baseServer.RegisterConnection()
 	if connID < 0 {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.RESOURCE_EXHAUSTED, "Too many connections to service")
 		writeHTTPResult(w, res, val)
 		return
 	}
-	defer s.DeregisterConnection(connID)
+	defer s.baseServer.DeregisterConnection(connID)
 
 	// Set SSE headers
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -274,7 +278,7 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 	flusher.Flush()
 
 	// Send initial update with populated slots using proto PushUpdates format
-	populatedSlots := s.BaseServer.Slots
+	populatedSlots := s.baseServer.Slots
 	slotUint32s := make([]uint32, len(populatedSlots))
 	for i, sl := range populatedSlots {
 		slotUint32s[i] = uint32(sl)
@@ -335,12 +339,7 @@ func (s *Server) RegisterRoutes() {
 		// Route based on path structure
 		if len(parts) == 3 && r.Method == http.MethodGet {
 			// GET /st2138-api/v1/{slot} - Get device info
-			handler, ok := s.BaseServer.GetDeviceHandlers[slot]
-			if !ok {
-				device, res := catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
-				writeHTTPResult(w, res, device)
-				return
-			}
+			handler := s.baseServer.LookupGetDeviceHandler(slot)
 			device, res := handler()
 			writeHTTPResult(w, res, device)
 			return
@@ -391,7 +390,7 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 
 	switch r.Method {
 	case http.MethodGet:
-		handler := s.BaseServer.LookupGetValueHandler(slot)
+		handler := s.baseServer.LookupGetValueHandler(slot)
 		val, res := handler(slot, fqoid)
 		writeHTTPResult(w, res, val)
 
@@ -413,7 +412,7 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 			return
 		}
 
-		handler := s.BaseServer.LookupSetValueHandler(slot)
+		handler := s.baseServer.LookupSetValueHandler(slot)
 		res := handler(nativeValue, slot, fqoid)
 		writeHTTPStatusResult(w, res)
 
@@ -431,7 +430,7 @@ func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slo
 	}
 
 	fqoid := strings.Join(pathParts, "/")
-	handler := s.BaseServer.LookupGetAssetHandler(slot)
+	handler := s.baseServer.LookupGetAssetHandler(slot)
 	asset, res := handler(slot, fqoid)
 
 	if res.Error == "" {
@@ -482,7 +481,71 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 		}
 	}
 
-	handler := s.LookupExecuteCommandHandler(slot)
+	handler := s.baseServer.LookupExecuteCommandHandler(slot)
 	val, res := handler(slot, commandFqoid, payload)
 	writeHTTPResult(w, res, val)
+}
+
+func (s *Server) RegisterGetDeviceHandler(slot int, handler internal.DeviceHandler) {
+	s.baseServer.RegisterGetDeviceHandler(slot, handler)
+}
+
+func (s *Server) RegisterGetValueHandler(slot int, handler internal.GetValueHandler) {
+	s.baseServer.RegisterGetValueHandler(slot, handler)
+}
+
+func (s *Server) RegisterSetValueHandler(slot int, handler internal.SetValueHandler) {
+	s.baseServer.RegisterSetValueHandler(slot, handler)
+}
+
+func (s *Server) RegisterGetAssetHandler(slot int, handler internal.GetAssetHandler) {
+	s.baseServer.RegisterGetAssetHandler(slot, handler)
+}
+
+func (s *Server) RegisterExecuteCommandHandler(slot int, handler internal.ExecuteCommandHandler) {
+	s.baseServer.RegisterExecuteCommandHandler(slot, handler)
+}
+
+func (s *Server) LookupGetDeviceHandler(slot int) internal.DeviceHandler {
+	return s.baseServer.LookupGetDeviceHandler(slot)
+}
+
+func (s *Server) LookupGetValueHandler(slot int) internal.GetValueHandler {
+	return s.baseServer.LookupGetValueHandler(slot)
+}
+
+func (s *Server) LookupSetValueHandler(slot int) internal.SetValueHandler {
+	return s.baseServer.LookupSetValueHandler(slot)
+}
+
+func (s *Server) LookupGetAssetHandler(slot int) internal.GetAssetHandler {
+	return s.baseServer.LookupGetAssetHandler(slot)
+}
+
+func (s *Server) LookupExecuteCommandHandler(slot int) internal.ExecuteCommandHandler {
+	return s.baseServer.LookupExecuteCommandHandler(slot)
+}
+
+func (s *Server) RegisterConnection() (int, *internal.Connection) {
+	return s.baseServer.RegisterConnection()
+}
+
+func (s *Server) DeregisterConnection(connID int) {
+	s.baseServer.DeregisterConnection(connID)
+}
+
+func (s *Server) BroadcastUpdate(slot int, fqoid string, value any) {
+	s.baseServer.BroadcastUpdate(slot, fqoid, value)
+}
+
+func (s *Server) SetMaxConnections(max int) {
+	s.baseServer.SetMaxConnections(max)
+}
+
+func (s *Server) NotifyUpdate(update *protos.PushUpdates) {
+	s.baseServer.NotifyUpdate(update)
+}
+
+func (s *Server) ConnectionCount() int {
+	return s.baseServer.ConnectionCount()
 }

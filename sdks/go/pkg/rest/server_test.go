@@ -54,33 +54,6 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 )
 
-func TestNewServer(t *testing.T) {
-	slots := []int{0, 1, 2}
-	srv := NewServer(slots, 100)
-
-	if srv == nil {
-		t.Fatal("NewServer returned nil")
-	}
-	if srv.mux == nil {
-		t.Error("server mux should be initialized")
-	}
-	if srv.BaseServer.GetDeviceHandlers == nil {
-		t.Error("getDeviceHandlers map should be initialized")
-	}
-	if srv.BaseServer.GetValueHandlers == nil {
-		t.Error("getValueHandlers map should be initialized")
-	}
-	if srv.BaseServer.SetValueHandlers == nil {
-		t.Error("setValueHandlers map should be initialized")
-	}
-	if srv.BaseServer.GetAssetHandlers == nil {
-		t.Error("getAssetHandlers map should be initialized")
-	}
-	if srv.BaseServer.ExecuteCommandHandlers == nil {
-		t.Error("executeCommandHandlers map should be initialized")
-	}
-}
-
 func TestServer_RegisterGetDeviceHandler(t *testing.T) {
 	srv := NewServer([]int{0}, 100)
 
@@ -91,7 +64,7 @@ func TestServer_RegisterGetDeviceHandler(t *testing.T) {
 	})
 
 	// Call the registered handler
-	handler := srv.BaseServer.GetDeviceHandlers[0]
+	handler := srv.LookupGetDeviceHandler(0)
 	_, _ = handler()
 
 	if !handlerCalled {
@@ -114,7 +87,7 @@ func TestServer_RegisterGetValueHandler(t *testing.T) {
 		return catena.CatenaValue{}, catena.StatusResult{Code: catena.OK}
 	})
 
-	handler := srv.BaseServer.LookupGetValueHandler(0)
+	handler := srv.LookupGetValueHandler(0)
 	_, _ = handler(0, "test/param")
 
 	if !handlerCalled {
@@ -134,7 +107,7 @@ func TestServer_RegisterSetValueHandler(t *testing.T) {
 		return catena.StatusResult{Code: catena.OK}
 	})
 
-	handler := srv.BaseServer.LookupSetValueHandler(0)
+	handler := srv.LookupSetValueHandler(0)
 	_ = handler(int32(42), 0, "test/param")
 
 	if !handlerCalled {
@@ -151,7 +124,7 @@ func TestServer_RegisterGetAssetHandler(t *testing.T) {
 		return catena.CatenaAsset{}, catena.StatusResult{Code: catena.OK}
 	})
 
-	handler := srv.BaseServer.LookupGetAssetHandler(0)
+	handler := srv.LookupGetAssetHandler(0)
 	_, _ = handler(0, "test/asset")
 
 	if !handlerCalled {
@@ -474,7 +447,7 @@ func TestServer_DefaultHandlers(t *testing.T) {
 	srv := NewServer([]int{0}, 100)
 
 	// Test default device handler
-	device, status := srv.BaseServer.GetDeviceHandlers[0]()
+	device, status := srv.LookupGetDeviceHandler(0)()
 	if status.Code != catena.NOT_FOUND {
 		t.Errorf("default device handler should return NOT_FOUND, got %v", status.Code)
 	}
@@ -498,7 +471,7 @@ func TestServer_DefaultHandlers(t *testing.T) {
 	}
 
 	// Test default get asset handler
-	asset, status := srv.BaseServer.LookupGetAssetHandler(0)(0, "test")
+	asset, status := srv.LookupGetAssetHandler(0)(0, "test")
 	if status.Code != catena.NOT_FOUND {
 		t.Errorf("default get asset handler should return NOT_FOUND, got %v", status.Code)
 	}
@@ -912,7 +885,7 @@ func TestWriteHTTPResult_DefaultType(t *testing.T) {
 }
 
 func TestServer_GetAsset_CompressionQueryParam_Gzip(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	dp := catena.DataPayload{
 		Metadata: map[string]string{"content-type": "text/plain"},
@@ -943,7 +916,7 @@ func TestServer_GetAsset_CompressionQueryParam_Gzip(t *testing.T) {
 }
 
 func TestServer_GetAsset_CompressionQueryParam_Deflate(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	dp := catena.DataPayload{
 		Metadata: map[string]string{"content-type": "text/plain"},
@@ -974,7 +947,7 @@ func TestServer_GetAsset_CompressionQueryParam_Deflate(t *testing.T) {
 }
 
 func TestServer_GetAsset_CompressionQueryParam_Uncompressed(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	original := []byte("test asset data")
 	gzData, _ := catena.CompressGzip(original)
@@ -1270,7 +1243,7 @@ func TestRouting_BasePathOnly(t *testing.T) {
 }
 
 func TestServer_GetAsset_CompressionQueryParam_Invalid(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	dp := catena.DataPayload{
 		Metadata: map[string]string{"content-type": "text/plain"},
@@ -1292,7 +1265,7 @@ func TestServer_GetAsset_CompressionQueryParam_Invalid(t *testing.T) {
 }
 
 func TestServer_GetAsset_NoCompressionParam(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	dp := catena.DataPayload{
 		Metadata: map[string]string{"content-type": "text/plain"},
@@ -1314,7 +1287,7 @@ func TestServer_GetAsset_NoCompressionParam(t *testing.T) {
 }
 
 func TestServer_GetAsset_CompressionWithError(t *testing.T) {
-	srv := NewServer([]int{0})
+	srv := NewServer([]int{0}, 100)
 
 	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 		return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found")

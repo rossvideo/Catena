@@ -38,7 +38,7 @@ import (
 )
 
 func TestNewConnectionQueue(t *testing.T) {
-	cq := NewConnectionQueue(10)
+	cq := newConnectionQueue(10)
 
 	if cq == nil {
 		t.Fatal("NewConnectionQueue returned nil")
@@ -49,9 +49,9 @@ func TestNewConnectionQueue(t *testing.T) {
 }
 
 func TestConnectionQueue_RegisterDeregister(t *testing.T) {
-	cq := NewConnectionQueue(0)
+	cq := newConnectionQueue(0)
 
-	connID, conn := cq.RegisterConnection()
+	connID, conn := cq.registerConnection()
 	if connID <= 0 {
 		t.Fatal("RegisterConnection returned negative ID")
 	}
@@ -68,26 +68,26 @@ func TestConnectionQueue_RegisterDeregister(t *testing.T) {
 		t.Errorf("expected 1 connection, got %d", cq.ConnectionCount())
 	}
 
-	cq.DeregisterConnection(connID)
+	cq.deregisterConnection(connID)
 	if cq.ConnectionCount() != 0 {
 		t.Errorf("expected 0 connections after deregister, got %d", cq.ConnectionCount())
 	}
 }
 
 func TestConnectionQueue_MaxConnections(t *testing.T) {
-	cq := NewConnectionQueue(2)
+	cq := newConnectionQueue(2)
 
-	id1, conn1 := cq.RegisterConnection()
+	id1, conn1 := cq.registerConnection()
 	if id1 < 0 || conn1 == nil {
 		t.Fatal("first connection should succeed")
 	}
 
-	id2, conn2 := cq.RegisterConnection()
+	id2, conn2 := cq.registerConnection()
 	if id2 < 0 || conn2 == nil {
 		t.Fatal("second connection should succeed")
 	}
 
-	id3, conn3 := cq.RegisterConnection()
+	id3, conn3 := cq.registerConnection()
 	if id3 >= 0 || conn3 != nil {
 		t.Error("third connection should be rejected (max 2)")
 	}
@@ -96,34 +96,34 @@ func TestConnectionQueue_MaxConnections(t *testing.T) {
 		t.Errorf("expected 2 connections, got %d", cq.ConnectionCount())
 	}
 
-	cq.DeregisterConnection(id1)
-	id4, conn4 := cq.RegisterConnection()
+	cq.deregisterConnection(id1)
+	id4, conn4 := cq.registerConnection()
 	if id4 < 0 || conn4 == nil {
 		t.Error("should be able to connect after one disconnects")
 	}
 }
 
 func TestConnectionQueue_SetMaxConnections(t *testing.T) {
-	cq := NewConnectionQueue(1)
+	cq := newConnectionQueue(1)
 
-	cq.RegisterConnection()
-	id2, _ := cq.RegisterConnection()
+	cq.registerConnection()
+	id2, _ := cq.registerConnection()
 	if id2 >= 0 {
 		t.Error("second connection should be rejected")
 	}
 
 	cq.SetMaxConnections(2)
-	id3, conn3 := cq.RegisterConnection()
+	id3, conn3 := cq.registerConnection()
 	if id3 < 0 || conn3 == nil {
 		t.Error("should succeed after increasing limit")
 	}
 }
 
 func TestConnectionQueue_NotifyUpdate(t *testing.T) {
-	cq := NewConnectionQueue(0)
+	cq := newConnectionQueue(0)
 
-	_, conn1 := cq.RegisterConnection()
-	_, conn2 := cq.RegisterConnection()
+	_, conn1 := cq.registerConnection()
+	_, conn2 := cq.registerConnection()
 
 	update := &protos.PushUpdates{
 		Slot: 0,
@@ -153,22 +153,22 @@ func TestConnectionQueue_NotifyUpdate(t *testing.T) {
 }
 
 func TestConnectionQueue_Shutdown(t *testing.T) {
-	cq := NewConnectionQueue(0)
+	cq := newConnectionQueue(0)
 
-	_, conn1 := cq.RegisterConnection()
-	_, conn2 := cq.RegisterConnection()
+	_, conn1 := cq.registerConnection()
+	_, conn2 := cq.registerConnection()
 
 	go func() {
 		<-conn1.Done
-		cq.DeregisterConnection(conn1.ID)
+		cq.deregisterConnection(conn1.ID)
 	}()
 
 	go func() {
 		<-conn2.Done
-		cq.DeregisterConnection(conn2.ID)
+		cq.deregisterConnection(conn2.ID)
 	}()
 
-	cq.Shutdown()
+	cq.shutdown()
 
 	if cq.ConnectionCount() != 0 {
 		t.Errorf("expected 0 connections after shutdown, got %d", cq.ConnectionCount())
@@ -176,18 +176,18 @@ func TestConnectionQueue_Shutdown(t *testing.T) {
 }
 
 func TestConnectionQueue_Shutdown_RejectsNewConnections(t *testing.T) {
-	cq := NewConnectionQueue(0)
+	cq := newConnectionQueue(0)
 
-	_, conn := cq.RegisterConnection()
+	_, conn := cq.registerConnection()
 
 	go func() {
 		<-conn.Done
-		cq.DeregisterConnection(conn.ID)
+		cq.deregisterConnection(conn.ID)
 	}()
 
-	cq.Shutdown()
+	cq.shutdown()
 
-	id, c := cq.RegisterConnection()
+	id, c := cq.registerConnection()
 	if id >= 0 || c != nil {
 		t.Error("should reject new connections after shutdown")
 	}

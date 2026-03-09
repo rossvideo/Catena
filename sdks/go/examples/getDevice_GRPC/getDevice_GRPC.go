@@ -46,7 +46,7 @@ import (
 	"syscall"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	grpcServer "github.com/rossvideo/catena/sdks/go/pkg/catena/grpc"
+	grpcServer "github.com/rossvideo/catena/sdks/go/pkg/grpc"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
@@ -334,7 +334,7 @@ func main() {
 	}
 
 	slotList := []int{0, 1}
-	server := grpcServer.NewServer(slotList)
+	server := grpcServer.NewServer(slotList, 100)
 
 	// Register GetDevice handler for each slot
 	for _, slot := range slotList {

@@ -68,7 +68,7 @@ type ConnectionQueue struct {
 
 // NewConnectionQueue creates a new connection queue for streaming connections.
 // maxConnections sets the limit on simultaneous connections (0 = unlimited).
-func NewConnectionQueue(maxConnections int) *ConnectionQueue {
+func newConnectionQueue(maxConnections int) *ConnectionQueue {
 	return &ConnectionQueue{
 		connections:    make(map[int]*Connection),
 		maxConnections: maxConnections,
@@ -82,9 +82,9 @@ func (cq *ConnectionQueue) SetMaxConnections(max int) {
 	cq.maxConnections = max
 }
 
-// RegisterConnection creates a new connection and returns its ID and connection.
+// registerConnection creates a new connection and returns its ID and connection.
 // Returns (-1, nil) if server is shutting down or max connections reached.
-func (cq *ConnectionQueue) RegisterConnection() (int, *Connection) {
+func (cq *ConnectionQueue) registerConnection() (int, *Connection) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
@@ -108,9 +108,9 @@ func (cq *ConnectionQueue) RegisterConnection() (int, *Connection) {
 	return cq.nextConnID, conn
 }
 
-// DeregisterConnection removes a connection from the queue.
+// deregisterConnection removes a connection from the queue.
 // Safe to call multiple times for the same connID.
-func (cq *ConnectionQueue) DeregisterConnection(connID int) {
+func (cq *ConnectionQueue) deregisterConnection(connID int) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
@@ -121,7 +121,7 @@ func (cq *ConnectionQueue) DeregisterConnection(connID int) {
 	}
 }
 
-// NotifyUpdate sends a PushUpdates message to all connected clients.
+// notifyUpdate sends a PushUpdates message to all connected clients.
 // Called when a value changes (by client or server) to propagate
 // the update to all streaming subscribers.
 func (cq *ConnectionQueue) NotifyUpdate(update *protos.PushUpdates) {
@@ -137,10 +137,10 @@ func (cq *ConnectionQueue) NotifyUpdate(update *protos.PushUpdates) {
 	}
 }
 
-// Shutdown signals all connections to stop and waits for them to deregister.
+// shutdown signals all connections to stop and waits for them to deregister.
 // Each connection's goroutine will receive the signal via the Done channel,
 // exit its event loop, and deregister itself.
-func (cq *ConnectionQueue) Shutdown() {
+func (cq *ConnectionQueue) shutdown() {
 	cq.mu.Lock()
 	cq.shuttingDown = true
 	for _, conn := range cq.connections {
