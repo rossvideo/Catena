@@ -41,6 +41,8 @@ package catena
 import (
 	"reflect"
 	"testing"
+
+	"github.com/rossvideo/catena/build/go/protos"
 )
 
 func TestToCatenaValue(t *testing.T) {
@@ -667,6 +669,128 @@ func TestRoundTrip(t *testing.T) {
 				t.Errorf("round trip failed: input=%v, result=%v", tt.input, result)
 			}
 		})
+	}
+}
+
+func TestFromProto_UndefinedValue(t *testing.T) {
+	pv, err := ToProto(UndefinedValue(42))
+	if err != nil {
+		t.Fatalf("ToProto(UndefinedValue) error: %v", err)
+	}
+	result, err := FromProto(pv)
+	if err != nil {
+		t.Fatalf("FromProto error: %v", err)
+	}
+	uv, ok := result.(UndefinedValue)
+	if !ok {
+		t.Fatalf("expected UndefinedValue, got %T", result)
+	}
+	if uv != UndefinedValue(42) {
+		t.Errorf("expected UndefinedValue(42), got %v", uv)
+	}
+}
+
+func TestFromProto_NilDataPayload(t *testing.T) {
+	pv := &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: nil}}
+	_, err := FromProto(pv)
+	if err == nil {
+		t.Error("FromProto with nil DataPayload expected error")
+	}
+}
+
+func TestFromProto_UnsupportedKind(t *testing.T) {
+	pv := &protos.Value{}
+	_, err := FromProto(pv)
+	if err == nil {
+		t.Error("FromProto with nil Kind expected error")
+	}
+}
+
+func TestFromProto_StructFieldError(t *testing.T) {
+	pv := &protos.Value{Kind: &protos.Value_StructValue{StructValue: &protos.StructValue{
+		Fields: map[string]*protos.Value{
+			"bad": nil,
+		},
+	}}}
+	_, err := FromProto(pv)
+	if err == nil {
+		t.Error("FromProto with nil struct field value expected error")
+	}
+}
+
+func TestFromProto_StructArrayFieldError(t *testing.T) {
+	pv := &protos.Value{Kind: &protos.Value_StructArrayValues{StructArrayValues: &protos.StructList{
+		StructValues: []*protos.StructValue{
+			{Fields: map[string]*protos.Value{"bad": nil}},
+		},
+	}}}
+	_, err := FromProto(pv)
+	if err == nil {
+		t.Error("FromProto with nil struct array field value expected error")
+	}
+}
+
+func TestFromProto_StructVariantValueError(t *testing.T) {
+	pv := &protos.Value{Kind: &protos.Value_StructVariantValue{StructVariantValue: &protos.StructVariantValue{
+		StructVariantType: "bad",
+		Value:             nil,
+	}}}
+	_, err := FromProto(pv)
+	if err == nil {
+		t.Error("FromProto with nil struct variant value expected error")
+	}
+}
+
+func TestFromProto_StructVariantArrayError(t *testing.T) {
+	pv := &protos.Value{Kind: &protos.Value_StructVariantArrayValues{StructVariantArrayValues: &protos.StructVariantList{
+		StructVariants: []*protos.StructVariantValue{
+			{StructVariantType: "bad", Value: nil},
+		},
+	}}}
+	_, err := FromProto(pv)
+	if err == nil {
+		t.Error("FromProto with nil struct variant array value expected error")
+	}
+}
+
+func TestToProto_StructFieldError(t *testing.T) {
+	input := map[string]any{
+		"bad": int64(1),
+	}
+	_, err := ToProto(input)
+	if err == nil {
+		t.Error("ToProto with unsupported struct field type expected error")
+	}
+}
+
+func TestToProto_StructArrayFieldError(t *testing.T) {
+	input := []map[string]any{
+		{"bad": int64(1)},
+	}
+	_, err := ToProto(input)
+	if err == nil {
+		t.Error("ToProto with unsupported struct array field type expected error")
+	}
+}
+
+func TestToProto_StructVariantValueError(t *testing.T) {
+	input := StructVariantValue{
+		StructVariantType: "bad",
+		Value:             int64(1),
+	}
+	_, err := ToProto(input)
+	if err == nil {
+		t.Error("ToProto with unsupported struct variant value type expected error")
+	}
+}
+
+func TestToProto_StructVariantArrayError(t *testing.T) {
+	input := []StructVariantValue{
+		{StructVariantType: "bad", Value: int64(1)},
+	}
+	_, err := ToProto(input)
+	if err == nil {
+		t.Error("ToProto with unsupported struct variant array value type expected error")
 	}
 }
 
