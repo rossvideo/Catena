@@ -1,0 +1,24 @@
+# Catena configuration example
+#
+# This file defines which plugins are loaded into which slots,
+# along with their arguments and optional trust information.
+
+slot_map:
+  # Slot 0: Counter demo plugin with full configuration
+  0:
+    path: counter.so
+    args:
+      - name: tls
+        value: "on"
+      - name: static_root
+        value: ./custom_static
+    trust:
+      anchor: example_trust_anchor
+      signature: abc123
+
+  # Additional slots can use simple string format
+  # 16: ./another_plugin.so
+
+# Global settings
+log_level: INFO
+port: 6254
