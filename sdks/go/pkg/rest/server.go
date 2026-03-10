@@ -473,8 +473,18 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 	}
 
 	handler := s.baseServer.LookupExecuteCommandHandler(slot)
-	val, res := handler(slot, commandFqoid, payload)
-	writeHTTPResult(w, res, val)
+	cmdResult, res := handler(slot, commandFqoid, payload)
+	if res.Code != catena.OK {
+		writeHTTPResult(w, res, catena.CatenaValue{})
+		return
+	}
+
+	respond := r.URL.Query().Get("respond")
+	if respond == "false" {
+		cmdResult = catena.CommandResult{}
+	}
+
+	_ = WriteCommandResponseJSON(w, cmdResult.ToProto(), http.StatusOK)
 }
 
 // ToHTTPStatus converts a StatusCode to an HTTP status code.

@@ -56,8 +56,8 @@ import (
 //go:embed static/*
 var staticFS embed.FS
 
-// CommandHandler processes a command and returns a response
-type CommandHandler func(payload any) (catena.CatenaValue, catena.StatusResult)
+// CommandHandler processes a command and returns a CommandResult
+type CommandHandler func(payload any) (catena.CommandResult, catena.StatusResult)
 
 // Global state for graceful shutdown
 var (
@@ -174,45 +174,45 @@ func main() {
 	// ==========================================================================
 	commands := map[string]CommandHandler{
 		// Start command
-		"start": func(payload any) (catena.CatenaValue, catena.StatusResult) {
+		"start": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			if counter.IsRunning() {
 				logger.Info("Start command - already running")
 				val, _ := catena.ToCatenaValue(buildResponse())
-				return catena.Reply(val)
+				return catena.CommandReply(val)
 			}
 			counter.Start()
 			logger.Info("Counter started", "value", counter.GetValue())
 			val, _ := catena.ToCatenaValue(buildResponse())
-			return catena.Reply(val)
+			return catena.CommandReply(val)
 		},
 
 		// Stop command
-		"stop": func(payload any) (catena.CatenaValue, catena.StatusResult) {
+		"stop": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			if !counter.IsRunning() {
 				logger.Info("Stop command - already stopped")
 				val, _ := catena.ToCatenaValue(buildResponse())
-				return catena.Reply(val)
+				return catena.CommandReply(val)
 			}
 			counter.Stop()
 			logger.Info("Counter stopped", "value", counter.GetValue())
 			val, _ := catena.ToCatenaValue(buildResponse())
-			return catena.Reply(val)
+			return catena.CommandReply(val)
 		},
 
 		// Add10 command
-		"add10": func(payload any) (catena.CatenaValue, catena.StatusResult) {
+		"add10": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
 			val, _ := catena.ToCatenaValue(buildResponse())
-			return catena.Reply(val)
+			return catena.CommandReply(val)
 		},
 
 		// Reset command
-		"reset": func(payload any) (catena.CatenaValue, catena.StatusResult) {
+		"reset": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			counter.Reset()
 			logger.Info("Counter reset", "value", counter.GetValue())
 			val, _ := catena.ToCatenaValue(buildResponse())
-			return catena.Reply(val)
+			return catena.CommandReply(val)
 		},
 	}
 
@@ -232,20 +232,17 @@ func main() {
 	})
 
 	// Register ExecuteCommand handler
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 
 		handler, ok := commands[commandFqoid]
 		if !ok {
 			logger.Warning("Command not found", "slot", slot, "command", commandFqoid)
-			exception := map[string]any{
-				"exception": map[string]any{
-					"type":    "Invalid Command",
-					"details": "Command not found: " + commandFqoid,
-				},
-			}
-			val, _ := catena.ToCatenaValue(exception)
-			return catena.Reply(val)
+			return catena.CommandExceptionResult(
+				"InvalidCommand",
+				"Command not found: "+commandFqoid,
+				map[string]string{"en": "Command not found: " + commandFqoid},
+			)
 		}
 
 		return handler(payload)

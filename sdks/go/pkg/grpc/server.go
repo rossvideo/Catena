@@ -299,24 +299,13 @@ func (s *Server) ExecuteCommand(req *protos.ExecuteCommandPayload, stream grpc.S
 	}
 
 	handler := s.baseServer.LookupExecuteCommandHandler(slot)
-	value, result := handler(slot, commandFqoid, payload)
+	cmdResult, result := handler(slot, commandFqoid, payload)
 	if result.Error != "" {
 		logger.Error("ExecuteCommand handler error", "slot", slot, "command", commandFqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
-	response := &protos.CommandResponse{}
-	if value.Value != nil {
-		response.Kind = &protos.CommandResponse_Response{
-			Response: value.Value,
-		}
-	} else {
-		response.Kind = &protos.CommandResponse_NoResponse{
-			NoResponse: &protos.Empty{},
-		}
-	}
-
-	return stream.Send(response)
+	return stream.Send(cmdResult.ToProto())
 }
 
 // GetParam returns a single parameter's metadata
