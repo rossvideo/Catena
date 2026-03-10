@@ -30,9 +30,11 @@
 
 /**
  * @brief Example program containing one of everyhting.
- * @file one_of_everything.cpp
- * @copyright Copyright © 2025 Ross Video Ltd
- * @author Benjamin.whitten@rossvideo.com
+ * @file one_of_everything_REST.cpp
+ * @author Benjamin Whitten (benjamin.whitten@rossvideo.com)
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-03-10
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // device model

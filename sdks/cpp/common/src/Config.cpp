@@ -19,7 +19,7 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             home = CATENA_STATIC_ROOT.c_str();
         }
         #else
-        home = (getenv("HOME") != nullptr) ? getenv("HOME") : CATENA_STATIC_ROOT.c_str(); // TODO: Add windows functionality
+        home = (getenv("HOME") != nullptr) ? getenv("HOME") : CATENA_STATIC_ROOT.c_str();
         #endif
         po::options_description configArgs("Allowed options");
         configArgs.add_options()
@@ -93,6 +93,7 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(CATENA_AUTHZ_NAME)) config::authz = vars[CATENA_AUTHZ_NAME].as<bool>();
         if (vars.count(CATENA_SILENT_NAME)) config::silent = vars[CATENA_SILENT_NAME].as<bool>();
 
+    free(buf);
     } catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
         return std::pair<bool, int>(true, 1);

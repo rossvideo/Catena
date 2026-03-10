@@ -32,8 +32,9 @@
  * @brief This file is for testing the MultiSetValue.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
- * @date 25/12/01
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-03-10
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #include "interface/param.pb.h"

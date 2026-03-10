@@ -29,11 +29,12 @@
  */
 
 /**
- * @brief Example program to demonstrate Catena external object request
- * the REST API.
- * @file external_object_request_REST.cpp
- * @copyright Copyright © 2025 Ross Video Ltd
- * @author Christian Twarog
+ * @brief Example program to demonstrate Catena asset request with the REST API.
+ * @file asset_request_REST.cpp
+ * @author Christian Twarog (christian.twarog@rossvideo.com)
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-03-10
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // device model

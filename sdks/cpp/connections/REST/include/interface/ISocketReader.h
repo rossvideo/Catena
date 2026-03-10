@@ -33,7 +33,7 @@
  * @brief Interface for the SocketReader class.
  * @author benjamin.whitten@rossvideo.com
  * @author keon.foster@rossvideo.com
- * @date 2026/02/11
+ * @date 2026-03-10
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 

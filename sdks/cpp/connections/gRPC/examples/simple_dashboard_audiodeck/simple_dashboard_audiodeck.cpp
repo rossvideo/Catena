@@ -33,7 +33,9 @@
  * @file simple_dashboard_audiodeck.cpp
  * @copyright Copyright © 2025 Ross Video Ltd 
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2025-11-18
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-03-10
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // device model

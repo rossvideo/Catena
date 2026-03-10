@@ -33,7 +33,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @author keon.foster@rossvideo.com
- * @date 2026/02/09
+ * @date 2026-03-10
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -565,8 +565,13 @@ TEST_F(RESTSocketReaderTests, SocketReader_MultipleActiveRequests) {
     constexpr std::size_t body_size = 10000;
     const std::string body(body_size, 'a');
     boost::asio::io_context ioc;
-    tcp::acceptor acceptor(ioc, tcp::endpoint(tcp::v4(), 0));
-    auto endpoint = acceptor.local_endpoint();
+    tcp::acceptor accept(ioc, tcp::endpoint(tcp::v4(), 0));
+    auto endpoint = accept.local_endpoint();
+    #ifdef _WIN32
+    tcp::endpoint connect_ep(boost::asio::ip::address_v4::loopback(), endpoint.port());
+    #else
+    tcp::endpoint connect_ep = endpoint;
+    #endif
 
     // Connecting clients to sockets
     std::vector<tcp::socket> clients;
@@ -653,8 +658,13 @@ TEST_F(RESTSocketReaderTests, SocketReader_MultipleIncorrectActiveRequests) {
     constexpr std::size_t body_size = 10;
     const std::string body(body_size, 'a');
     boost::asio::io_context ioc;
-    tcp::acceptor acceptor(ioc, tcp::endpoint(tcp::v4(), 0));
-    auto endpoint = acceptor.local_endpoint();
+    tcp::acceptor accept(ioc, tcp::endpoint(tcp::v4(), 0));
+    auto endpoint = accept.local_endpoint();
+    #ifdef _WIN32
+    tcp::endpoint connect_ep(boost::asio::ip::address_v4::loopback(), endpoint.port());
+    #else
+    tcp::endpoint connect_ep = endpoint;
+    #endif
 
     // Connecting clients to sockets
     std::vector<tcp::socket> clients;

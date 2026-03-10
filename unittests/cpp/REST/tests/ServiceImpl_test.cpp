@@ -32,8 +32,9 @@
  * @brief This file is for testing the ServiceImpl.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2025/11/03
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-03-10
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // common
@@ -99,7 +100,11 @@ class RESTServiceImplTests : public testing::Test {
         // Creating client and connecting to the service port.
         boost::asio::io_context io_context;
         tcp::socket clientSocket(io_context);
+        #ifdef _WIN32
+        clientSocket.connect(tcp::endpoint(boost::asio::ip::address_v4::loopback(), port_));
+        #else
         clientSocket.connect(tcp::endpoint(tcp::v4(), port_));
+        #endif
         // Compiling request.
         std::string request = "";
         request += RESTMethodMap().getForwardMap().at(method);

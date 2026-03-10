@@ -31,8 +31,10 @@
 /**
  * @brief Example program to demonstrate NMos discovery through a Catena device
  * @file discovery_REST.cpp
- * @copyright Copyright © 2025 Ross Video Ltd
- * @author Christian Twarog
+ * @author Christian Twarog (christian.twarog@rossvideo.com)
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-03-10
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // device model

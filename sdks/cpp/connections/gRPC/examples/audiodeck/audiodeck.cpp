@@ -18,6 +18,8 @@
  * @copyright Copyright © 2024 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
  * @author John Danen (john.danen@rossvideo.com)
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-03-10
  */
 
 // device model

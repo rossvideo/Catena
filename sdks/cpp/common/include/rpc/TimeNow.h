@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,8 @@
  * @file TimeNow.h
  * @brief Contains a function which returns the current time as a string.
  * @author Unknown See grpc::ServiceImpl.h.
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @date 2026-03-10
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #pragma once

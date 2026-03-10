@@ -34,6 +34,9 @@
  * @file stucts_with_authz_JSON_REST.cpp
  * @copyright Copyright © 2025 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-03-10
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // device model

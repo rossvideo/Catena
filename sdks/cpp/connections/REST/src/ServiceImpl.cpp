@@ -175,7 +175,11 @@ void ServiceImpl::Shutdown() {
     shutdown_ = true;
     // Sending dummy connection to run() loop.
     tcp::socket dummySocket(io_context_);
+    #ifdef _WIN32
+    dummySocket.connect(tcp::endpoint(boost::asio::ip::address_v4::loopback(), port_));
+    #else
     dummySocket.connect(tcp::endpoint(tcp::v4(), port_));
+    #endif
 };
 
 // (UNUSED)
@@ -183,7 +187,11 @@ void ServiceImpl::Shutdown() {
 bool ServiceImpl::is_port_in_use_() const {
     try {
         boost::asio::io_context io_context;
+        #ifdef _WIN32
+        tcp::acceptor acceptor(io_context, tcp::endpoint(boost::asio::ip::address_v4::loopback(), port_));
+        #else
         tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), port_));
+        #endif
         return false;  // Port is not in use
     } catch (const boost::system::system_error& e) {
         return true;  // Port is in use

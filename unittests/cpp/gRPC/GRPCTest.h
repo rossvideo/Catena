@@ -32,8 +32,9 @@
  * @brief A parent class for gRPC test fixtures.
  * @author christian.twarogn@rossvideo.com
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/18
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-03-10
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #pragma once

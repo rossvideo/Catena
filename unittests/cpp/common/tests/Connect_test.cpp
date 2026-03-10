@@ -28,6 +28,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @brief This file is for testing the Connect.cpp file.
+ * @date 2026-03-10
+ * @copyright Copyright © 2026 Ross Video Ltd
+ */
+
 #include "MockDevice.h"
 #include "MockSubscriptionManager.h"
 #include "MockParam.h"

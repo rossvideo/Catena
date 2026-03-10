@@ -33,7 +33,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @author keon.foster@rossvideo.com
- * @date 2026/02/03
+ * @date 2026-03-10
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -87,7 +87,13 @@ class RESTTest {
             throw std::invalid_argument("RESTTest: Both sockets must be provided.");
         }
         // Connecting sockets (write(in) -> read(out)).
+        #ifdef _WIN32
+        auto ep = acceptor_.local_endpoint();
+        tcp::endpoint connect_ep(boost::asio::ip::address_v4::loopback(), ep.port());
+        readSocket_->connect(connect_ep);
+        #else
         readSocket_->connect(acceptor_.local_endpoint());
+        #endif
         acceptor_.accept(*writeSocket_);
     }
 

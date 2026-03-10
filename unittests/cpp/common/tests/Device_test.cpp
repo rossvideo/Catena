@@ -30,10 +30,11 @@
 
 /**
  * @brief Unit tests for Device.cpp
- * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com) 
- * @author Nelson Daniels (nelson.daniels@rossvideo.com) 
- * @date 2025-10-01
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-03-10
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #include <gtest/gtest.h>
