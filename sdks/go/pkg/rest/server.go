@@ -452,6 +452,11 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 
 	commandFqoid := strings.Join(pathParts, "/")
 
+	respond := true
+	if r.URL.Query().Get("respond") == "false" {
+		respond = false
+	}
+
 	// Read command payload
 	var payload any
 	if r.ContentLength > 0 {
@@ -479,9 +484,8 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 		return
 	}
 
-	respond := r.URL.Query().Get("respond")
-	if respond == "false" {
-		cmdResult = catena.CommandResult{}
+	if !respond {
+		cmdResult, _ = catena.CommandNoResponse()
 	}
 
 	_ = WriteCommandResponseJSON(w, cmdResult.ToProto(), http.StatusOK)
