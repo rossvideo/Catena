@@ -63,7 +63,7 @@ npm install --yes
 ```
 
 ### Building the project
-If using a pre-existing repo, you may run into cache issues which can be fixed by clearing build\cpp using `rmdir cpp`
+If using a pre-existing repo, you may run into cache issues which can be fixed by clearing build\cpp using `rmdir cpp`. If you installed static packages, set `VCPKG_TARGET_TRIPLET` to `x64-windows-static` instead.
 
 ```powershell
 # from C:\<Catena-root>
@@ -71,6 +71,3 @@ mkdir build; cd build
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCONNECTIONS="gRPC;REST" -DCOVERAGE=OFF -DCMAKE_INSTALL_PREFIX=install -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE -DLOG_DIR="../logs" -B cpp -DCATENA_UNITTESTS_DIR="../unittests" -S ../sdks/cpp -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" -DCMAKE_PREFIX_PATH="C:/jwt-cpp/install-clangcl-all" -Djwt-cpp_DIR="C:/jwt-cpp/install-clangcl-all/cmake" -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_C_COMPILER="C:/PROGRA~1/LLVM/bin/clang-cl.exe" -DCMAKE_CXX_COMPILER="C:/PROGRA~1/LLVM/bin/clang-cl.exe" -DCMAKE_RC_COMPILER="C:/PROGRA~1/LLVM/bin/llvm-rc.exe" -DCMAKE_MT="C:/PROGRA~1/LLVM/bin/llvm-mt.exe"
 cmake --build cpp
 ```
-
-jwt-cpp is chosen automatically from `C:/jwt-cpp/install-clangcl-<Debug|Release>` based on `CMAKE_BUILD_TYPE`. Use `-DJWT_CPP_INSTALL_BASE=<path>` if your jwt-cpp installs are elsewhere, or `-Djwt-cpp_DIR=<path>/cmake` to pin a specific install.
-
