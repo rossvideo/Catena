@@ -10,8 +10,8 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
     try {
         //Declare options
         const char* home;
-        #ifdef _WIN32
         char* buf = nullptr;
+        #ifdef _WIN32
         size_t len = 0;
         if (_dupenv_s(&buf, &len, "USERPROFILE") == 0 && buf != nullptr) {
             home = buf;
