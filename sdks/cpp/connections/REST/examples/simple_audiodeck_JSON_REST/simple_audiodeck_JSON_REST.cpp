@@ -163,7 +163,8 @@ void RunRESTServer() {
         handlers["audio_deck"] = audioDeckUpdateHandler;
 
         dm.getValueSetByClient().connect([&handlers](const std::string& oid, const IParam* p) {
-            if (std::regex_match(oid, std::regex(R"(^/audio_deck/\d+/input$)"))) {
+            static const std::regex inputMeterPattern(R"(^/audio_deck/\d+/input$)");
+            if (std::regex_match(oid, inputMeterPattern)) {
                 return;
             }
             LOG(INFO) << "signal received: " << oid << " has been changed by client";
@@ -179,10 +180,16 @@ void RunRESTServer() {
 
         std::thread businessLogicThread(inputMeters);
 
-        dm.setHeartbeatParam("/product/version");
-        dm.startHeartbeat();
-        api.run();
-        dm.stopHeartbeat();
+        try {
+            dm.setHeartbeatParam("/product/version");
+            dm.startHeartbeat();
+            api.run();
+            dm.stopHeartbeat();
+        } catch (...) {
+            globalLoop = false;
+            businessLogicThread.join();
+            throw;
+        }
 
         businessLogicThread.join();
 
