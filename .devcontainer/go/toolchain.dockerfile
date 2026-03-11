@@ -21,7 +21,7 @@ RUN . /root/toolchain.env \
     libssl-dev=$OPENSSL_VERSION \
     doxygen=$DOXYGEN_VERSION \
     valgrind=$VALGRIND_VERSION \
-    curl=$CURL_VERSION \
+    curl \
     ca-certificates \
     wget \
     && curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x -o /tmp/nodesource_setup.sh \
