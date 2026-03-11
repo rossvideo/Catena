@@ -146,8 +146,8 @@ std::string ConnectionProps::generateXml() {
     xml << "    <entry key=\"address\">" << config::hostname << "</entry>\n"
         << "    <entry key=\"port\">" << config::port << "</entry>\n";
 
-    std::string use_ssl = config::dashboard_tls_enabled ? "SSL" : "TCP";
-    xml << "    <entry key=\"connectionType\">" << use_ssl << "</entry>\n";
+    const std::string connection_type = config::dashboard_tls_enabled ? "SSL" : "TCP";
+    xml << "    <entry key=\"connectionType\">" << connection_type << "</entry>\n";
     
     // Node ID and name (if provided)
     if (node_id_ != "") {
