@@ -216,6 +216,10 @@ TEST_F(ConnectionPropsTest, ConnectionProps_ServeEndpoint) {
     EXPECT_TRUE(body.find("node-name\">Test Device<") != std::string::npos);
     EXPECT_TRUE(body.find("refresh-interval\">15000<") != std::string::npos);
 
+    // connectionType reflects global TLS setting (disabled by default in tests)
+    const std::string expectedConnectionType = config::dashboard_tls_enabled ? "SSL" : "TCP";
+    EXPECT_TRUE(body.find("connectionType\">" + expectedConnectionType + "<") != std::string::npos);
+
     server.stop();
 }
 
@@ -305,6 +309,7 @@ TEST_F(ConnectionPropsTest, ConnectionProps_HealthCheckEndpoint) {
 
 /*
  * TEST 5 - base-url uses http:// or https:// from global config::dashboard_tls_enabled.
+ *          connectionType must also reflect the TLS setting.
  */
 TEST_F(ConnectionPropsTest, ConnectionProps_BaseUrl_TlsScheme) {
     const std::string endpoint = "/connect/connection-props.xml";
@@ -318,7 +323,7 @@ TEST_F(ConnectionPropsTest, ConnectionProps_BaseUrl_TlsScheme) {
         }
     } guard{config::dashboard_tls_enabled, config::dashboard_port};
 
-    // TLS disabled -> http://
+    // TLS disabled -> http://, connectionType TCP
     {
         config::dashboard_tls_enabled = false;
         config::dashboard_port = ConnectionPropsTest::nextPort_++;
@@ -329,16 +334,22 @@ TEST_F(ConnectionPropsTest, ConnectionProps_BaseUrl_TlsScheme) {
         ASSERT_TRUE(server.start());
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-        auto baseUrl = getXmlEntryValue(
-            getBody(makeHttpRequest(config::dashboard_port, endpoint)), "base-url");
+        const std::string body = getBody(makeHttpRequest(config::dashboard_port, endpoint));
+
+        auto baseUrl = getXmlEntryValue(body, "base-url");
         ASSERT_TRUE(baseUrl.has_value());
         EXPECT_TRUE(baseUrl->rfind("http://", 0) == 0)
             << "Expected http://, got: " << *baseUrl;
+
+        auto connectionType = getXmlEntryValue(body, "connectionType");
+        ASSERT_TRUE(connectionType.has_value());
+        EXPECT_EQ(*connectionType, "TCP");
+
         server.stop();
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 
-    // TLS enabled -> https://
+    // TLS enabled -> https://, connectionType SSL
     {
         config::dashboard_tls_enabled = true;
         config::dashboard_port = ConnectionPropsTest::nextPort_++;
@@ -349,11 +360,17 @@ TEST_F(ConnectionPropsTest, ConnectionProps_BaseUrl_TlsScheme) {
         ASSERT_TRUE(server.start());
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-        auto baseUrl = getXmlEntryValue(
-            getBody(makeHttpRequest(config::dashboard_port, endpoint)), "base-url");
+        const std::string body = getBody(makeHttpRequest(config::dashboard_port, endpoint));
+
+        auto baseUrl = getXmlEntryValue(body, "base-url");
         ASSERT_TRUE(baseUrl.has_value());
         EXPECT_TRUE(baseUrl->rfind("https://", 0) == 0)
             << "Expected https://, got: " << *baseUrl;
+
+        auto connectionType = getXmlEntryValue(body, "connectionType");
+        ASSERT_TRUE(connectionType.has_value());
+        EXPECT_EQ(*connectionType, "SSL");
+
         server.stop();
     }
 }
