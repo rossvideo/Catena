@@ -37,6 +37,7 @@ else()
     add_subdirectory("status_update_JSON_REST")
     add_subdirectory("use_commands_REST")
     add_subdirectory("use_menus_REST")
+    add_subdirectory("simple_audiodeck_JSON_REST")
 
 endif()
 
