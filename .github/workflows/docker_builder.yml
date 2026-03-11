@@ -47,11 +47,10 @@ jobs:
           GO_CHANGED="${{ steps.go.outputs.toolchain }}"
 
           if [[ "$ON_MAIN" == "true" ]]; then
+            # always build everything on main
             CPP_CHANGED=true
-            
+            GO_CHANGED=true
           fi
-          # For now, we want to build the Go toolchain on every push cuz the matrix cant be empty.
-          GO_CHANGED=true
 
           output='['
           if [[ "$CPP_CHANGED" == "true" ]]; then
@@ -63,6 +62,10 @@ jobs:
           fi
           if [[ "$GO_CHANGED" == "true" ]]; then
             output+='{"toolchain":"go","platform":"linux/amd64","runner":"ubuntu-latest"}'
+          fi
+          if [[ "$output" == "[" ]]; then
+            # no changes to build, make a skip matrix
+            output+='{"skip":"true","runner":"ubuntu-latest"}'
           fi
           output+=']'
           echo "build=$output" >> "$GITHUB_OUTPUT"
@@ -77,9 +80,13 @@ jobs:
           if [[ "$GO_CHANGED" == "true" ]]; then
             output+='{"toolchain":"go"}'
           fi
+          if [[ "$output" == "[" ]]; then
+            # no changes to build, make a skip matrix
+            output+='{"skip":"true"}'
+          fi
           output+=']'
           echo "merge=$output" >> "$GITHUB_OUTPUT"
-  
+
   build-and-push-toolchain:
     needs:
       - check-if-toolchain-changed
@@ -99,18 +106,26 @@ jobs:
       id-token: write
       #
     steps:
+      - name: Skip message
+        if: ${{ matrix.skip == 'true' }}
+        run: echo "No changes detected for ${{ matrix.toolchain }} toolchain, skipping build and push."
+
       - name: Prepare
+        if: ${{ matrix.skip != 'true' }}
         run: |
           platform=${{ matrix.platform }}
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
           echo "REGISTRY_IMAGE=${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
 
       - name: Checkout repository
+        if: ${{ matrix.skip != 'true' }}
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
+
       # Uses the `docker/login-action` action to log in to the Container registry registry using the account and password that will publish the packages. Once published, the packages are scoped to the account defined here.
       - name: Log in to the Container registry
+        if: ${{ matrix.skip != 'true' }}
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -119,6 +134,7 @@ jobs:
 
       # This step uses [docker/metadata-action](https://github.com/docker/metadata-action#about) to extract tags and labels that will be applied to the specified image. The `id` "meta" allows the output of this step to be referenced in a subsequent step. The `images` value provides the base name for the tags and labels.
       - name: Extract metadata (tags, labels) for Docker
+        if: ${{ matrix.skip != 'true' }}
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -127,6 +143,7 @@ jobs:
             org.opencontainers.image.version=latest
 
       - name: Print stuff
+        if: ${{ matrix.skip != 'true' }}
         run: |
           echo "IMAGE_NAME: ${{ env.IMAGE_NAME }}"
           echo "REGISTRY: ${{ env.REGISTRY }}"
@@ -134,12 +151,15 @@ jobs:
           echo "labels: ${{ steps.meta.outputs.labels }}"
 
       - name: Set up QEMU
+        if: ${{ matrix.skip != 'true' }}
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
+        if: ${{ matrix.skip != 'true' }}
         uses: docker/setup-buildx-action@v3
         
       - name: Build and push Docker image
+        if: ${{ matrix.skip != 'true' }}
         id: push
         uses: docker/build-push-action@v6
         with:
@@ -151,11 +171,14 @@ jobs:
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
       
       - name: Export digest
+        if: ${{ matrix.skip != 'true' }}
         run: |
           mkdir -p ${{ runner.temp }}/digests
           digest="${{ steps.push.outputs.digest }}"
           touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
       - name: Upload digest as artifact
+        if: ${{ matrix.skip != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: digests-${{ matrix.toolchain }}-${{ env.PLATFORM_PAIR }}
@@ -181,20 +204,30 @@ jobs:
       id-token: write
       #
     steps:
+      - name: Skip message
+        if: ${{ matrix.skip == 'true' }}
+        run: echo "No changes detected for ${{ matrix.toolchain }} toolchain, skipping build and push."
+
       - uses: actions/checkout@v4
+        if: ${{ matrix.skip != 'true' }}
         with:
           submodules: 'recursive'
+
       - name: Prepare
+        if: ${{ matrix.skip != 'true' }}
         run: |
           echo "REGISTRY_IMAGE=${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
+
       - name: Download digests
+        if: ${{ matrix.skip != 'true' }}
         uses: actions/download-artifact@v4
         with:
           path: ${{ runner.temp }}/digests
           pattern: digests-${{ matrix.toolchain }}-*
           merge-multiple: true
-      
+
       - name: Log in to the Container registry
+        if: ${{ matrix.skip != 'true' }}
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -202,9 +235,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Set up Docker Buildx
+        if: ${{ matrix.skip != 'true' }}
         uses: docker/setup-buildx-action@v3
 
       - name: Resolve image version
+        if: ${{ matrix.skip != 'true' }}
         id: version
         run: |
           if [[ "${{ github.ref_name }}" == "develop" ]]; then
@@ -228,6 +263,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Docker meta
+        if: ${{ matrix.skip != 'true' }}
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -238,14 +274,17 @@ jobs:
             org.opencontainers.image.version=${{ steps.version.outputs.version }} 
 
       - name: Create manifest list and push
+        if: ${{ matrix.skip != 'true' }}
         working-directory: ${{ runner.temp }}/digests
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
-          
+
   trigger-build-examples:
     runs-on: ubuntu-latest
-    needs: build-and-push-toolchain
+    needs:
+      - build-and-push-toolchain
+      - merge-digests
     steps:
       - name: Create JWT
         uses: actions/create-github-app-token@v2
