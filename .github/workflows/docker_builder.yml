@@ -49,14 +49,23 @@ jobs:
 
           if [[ "$ON_MAIN" == "true" ]]; then
             CPP_CHANGED=true
-            
+            GO_CHANGED=true
           fi
 
           TOOLCHAIN_CHANGED=false
-          if [[ "$CPP_CHANGED" == "true" || "$GO_CHANGED" == "true" ]]; then
+          if [[ "$CPP_CHANGED" == "true" ]]; then
+            TOOLCHAIN_CHANGED=true
+          fi
+          if [[ "$GO_CHANGED" == "true" ]]; then
             TOOLCHAIN_CHANGED=true
           fi
           echo "toolchain_changed=$TOOLCHAIN_CHANGED" >> "$GITHUB_OUTPUT"
+          if [[ "$TOOLCHAIN_CHANGED" == "false" ]]; then
+            echo "No changes to toolchain, skipping build"
+            echo 'build=[{"toolchain":"none","platform":"none","runner":"ubuntu-latest"}]' >> "$GITHUB_OUTPUT"
+            echo 'merge=[{"toolchain":"none"}]' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
           output='['
           if [[ "$CPP_CHANGED" == "true" ]]; then
@@ -252,7 +261,7 @@ jobs:
           
   trigger-build-examples:
     runs-on: ubuntu-latest
-    if: ${{ always() && (
+    if: ${{ !canceled() && (
       needs.check-if-toolchain-changed.outputs.toolchain_changed == 'false' || 
       (needs.check-if-toolchain-changed.outputs.toolchain_changed == 'true' && needs.build-and-push-toolchain.result == 'success' && needs.merge-digests.result == 'success')
       ) }}
