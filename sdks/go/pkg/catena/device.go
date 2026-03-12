@@ -112,8 +112,8 @@ func (cd CatenaDevice) ToJSON() ([]byte, StatusResult) {
 	}
 
 	b, err := (protojson.MarshalOptions{
-		UseProtoNames:   true,
-		EmitUnpopulated: false,
+		UseProtoNames:     true,
+		EmitDefaultValues: true,
 	}).Marshal(cd.device)
 	if err != nil {
 		return nil, StatusResult{Code: INTERNAL, Error: fmt.Sprintf("failed to marshal device to JSON: %v", err)}

@@ -122,8 +122,8 @@ func WriteResponseJSON(w http.ResponseWriter, value *protos.Value, statusCode in
 	}
 
 	b, err := (protojson.MarshalOptions{
-		UseProtoNames:   true,
-		EmitUnpopulated: false,
+		UseProtoNames:     true,
+		EmitDefaultValues: true,
 	}).Marshal(value)
 	if err != nil {
 		// Marshaling failed (e.g., invalid UTF-8). Don't return a 2xx with an empty body.

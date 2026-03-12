@@ -276,6 +276,43 @@ func TestWriteResponseJSON_DifferentStatusCodes(t *testing.T) {
 	}
 }
 
+func TestWriteResponseJSON_EmitsDefaultValues(t *testing.T) {
+	tests := []struct {
+		name     string
+		value    *protos.Value
+		expected string
+	}{
+		{
+			"zero int32",
+			&protos.Value{Kind: &protos.Value_Int32Value{Int32Value: 0}},
+			`"int32_value":0`,
+		},
+		{
+			"empty string",
+			&protos.Value{Kind: &protos.Value_StringValue{StringValue: ""}},
+			`"string_value":""`,
+		},
+		{
+			"zero float32",
+			&protos.Value{Kind: &protos.Value_Float32Value{Float32Value: 0}},
+			`"float32_value":0`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			err := WriteResponseJSON(w, tt.value, http.StatusOK)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !strings.Contains(w.Body.String(), tt.expected) {
+				t.Errorf("expected body to contain %q, got %q", tt.expected, w.Body.String())
+			}
+		})
+	}
+}
+
 func TestWriteResponseJSON_BoolValue(t *testing.T) {
 	w := httptest.NewRecorder()
 	val := &protos.Value{
