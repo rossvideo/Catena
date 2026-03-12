@@ -261,7 +261,7 @@ jobs:
           
   trigger-build-examples:
     runs-on: ubuntu-latest
-    if: ${{ !canceled() && (
+    if: ${{ always() && !cancelled() && (
       needs.check-if-toolchain-changed.outputs.toolchain_changed == 'false' || 
       (needs.check-if-toolchain-changed.outputs.toolchain_changed == 'true' && needs.build-and-push-toolchain.result == 'success' && needs.merge-digests.result == 'success')
       ) }}
