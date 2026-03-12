@@ -71,26 +71,12 @@ if(WIN32)
         set(_ucrt_debug_dll "C:/Windows/System32/ucrtbased.dll")
     endif()
 
-    set(_vcpkg_triplet "x64-windows")
-    if(DEFINED VCPKG_TARGET_TRIPLET)
-        set(_vcpkg_triplet "${VCPKG_TARGET_TRIPLET}")
-    endif()
-    if(NOT _vcpkg_triplet STREQUAL "x64-windows-static")
-        file(GLOB _vcpkg_debug_bin_dlls "C:/vcpkg/installed/${_vcpkg_triplet}/debug/bin/*.dll")
-        file(GLOB _vcpkg_bin_dlls "C:/vcpkg/installed/${_vcpkg_triplet}/bin/*.dll")
-    endif()
-
     add_custom_command(TARGET ${TARGET} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:${TARGET}> $<TARGET_RUNTIME_DLLS:${TARGET}>
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${_msvc_debug_crt_dlls} ${_ucrt_debug_dll} $<TARGET_FILE_DIR:${TARGET}>
+        COMMAND ${CMAKE_COMMAND} -D DEST=$<TARGET_FILE_DIR:${TARGET}> -P ${CMAKE_CURRENT_SOURCE_DIR}/CopyVcpkgDlls.cmake
         COMMAND_EXPAND_LISTS
     )
-    if(NOT _vcpkg_triplet STREQUAL "x64-windows-static")
-        add_custom_command(TARGET ${TARGET} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${_vcpkg_debug_bin_dlls} ${_vcpkg_bin_dlls} $<TARGET_FILE_DIR:${TARGET}>
-            COMMAND_EXPAND_LISTS
-        )
-    endif()
 endif()
 
 target_compile_features(${TARGET}

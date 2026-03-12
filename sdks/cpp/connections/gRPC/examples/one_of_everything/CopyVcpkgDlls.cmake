@@ -1,0 +1,8 @@
+if(NOT DEST)
+  message(FATAL_ERROR "DEST not set")
+endif()
+file(GLOB _debug "C:/vcpkg/installed/x64-windows/debug/bin/*.dll")
+file(GLOB _release "C:/vcpkg/installed/x64-windows/bin/*.dll")
+foreach(_f IN LISTS _debug _release)
+  file(COPY "${_f}" DESTINATION "${DEST}")
+endforeach()
