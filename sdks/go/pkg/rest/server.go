@@ -42,9 +42,7 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"google.golang.org/protobuf/encoding/protojson"
@@ -177,7 +175,7 @@ func writeAssetResult(w http.ResponseWriter, asset catena.CatenaAsset, httpStatu
 }
 
 // NewServer creates a new REST server for the given device slots
-func NewServer(slots []int, maxConnections int) *Server {
+func NewServer(slots []uint16, maxConnections int) *Server {
 	s := &Server{
 		baseServer: internal.NewBaseServer(slots, maxConnections),
 		mux:        http.NewServeMux(),
@@ -194,10 +192,6 @@ func (s *Server) Start(port int) error {
 	addr := fmt.Sprintf(":%d", port)
 	logger.Info("Starting HTTP server", "address", addr)
 	return http.ListenAndServe(addr, s.mux)
-}
-
-func DefaultExecuteCommandHandler(slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
-	return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "ExecuteCommand not implemented")
 }
 
 func (s *Server) RegisterFallbackHandler(handler FallbackHandler) {
@@ -279,14 +273,10 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 
 	// Send initial update with populated slots using proto PushUpdates format
 	populatedSlots := s.baseServer.Slots
-	slotUint32s := make([]uint32, len(populatedSlots))
-	for i, sl := range populatedSlots {
-		slotUint32s[i] = uint32(sl)
-	}
 	initialEvent := &protos.PushUpdates{
 		Kind: &protos.PushUpdates_SlotsAdded{
 			SlotsAdded: &protos.SlotList{
-				Slots: slotUint32s,
+				Slots: populatedSlots,
 			},
 		},
 	}
@@ -329,8 +319,8 @@ func (s *Server) RegisterRoutes() {
 		}
 
 		slotStr := parts[2]
-		slot, err := strconv.Atoi(slotStr)
-		if err != nil || slot < 0 || slot > math.MaxInt16 {
+		slot, err := s.baseServer.ValidateSlotString(slotStr)
+		if err != nil {
 			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid slot number")
 			writeHTTPResult(w, res, val)
 			return
@@ -385,7 +375,7 @@ func (s *Server) RegisterRoutes() {
 	})
 }
 
-func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slot int, pathParts []string) {
+func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	fqoid := strings.Join(pathParts, "/")
 
 	switch r.Method {
@@ -422,7 +412,7 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 	}
 }
 
-func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slot int, pathParts []string) {
+func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	if r.Method != http.MethodGet {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
 		writeHTTPResult(w, res, val)
@@ -453,7 +443,7 @@ func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slo
 	writeHTTPResult(w, res, asset)
 }
 
-func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, slot int, pathParts []string) {
+func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	if r.Method != http.MethodPost {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only POST allowed")
 		writeHTTPResult(w, res, val)
@@ -486,64 +476,52 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 	writeHTTPResult(w, res, val)
 }
 
-func (s *Server) RegisterGetDeviceHandler(slot int, handler internal.DeviceHandler) {
+func (s *Server) RegisterGetDeviceHandler(slot uint16, handler internal.DeviceHandler) {
 	s.baseServer.RegisterGetDeviceHandler(slot, handler)
 }
 
-func (s *Server) RegisterGetValueHandler(slot int, handler internal.GetValueHandler) {
+func (s *Server) RegisterGetValueHandler(slot uint16, handler internal.GetValueHandler) {
 	s.baseServer.RegisterGetValueHandler(slot, handler)
 }
 
-func (s *Server) RegisterSetValueHandler(slot int, handler internal.SetValueHandler) {
+func (s *Server) RegisterSetValueHandler(slot uint16, handler internal.SetValueHandler) {
 	s.baseServer.RegisterSetValueHandler(slot, handler)
 }
 
-func (s *Server) RegisterGetAssetHandler(slot int, handler internal.GetAssetHandler) {
+func (s *Server) RegisterGetAssetHandler(slot uint16, handler internal.GetAssetHandler) {
 	s.baseServer.RegisterGetAssetHandler(slot, handler)
 }
 
-func (s *Server) RegisterExecuteCommandHandler(slot int, handler internal.ExecuteCommandHandler) {
+func (s *Server) RegisterExecuteCommandHandler(slot uint16, handler internal.ExecuteCommandHandler) {
 	s.baseServer.RegisterExecuteCommandHandler(slot, handler)
 }
 
-func (s *Server) LookupGetDeviceHandler(slot int) internal.DeviceHandler {
+func (s *Server) LookupGetDeviceHandler(slot uint16) internal.DeviceHandler {
 	return s.baseServer.LookupGetDeviceHandler(slot)
 }
 
-func (s *Server) LookupGetValueHandler(slot int) internal.GetValueHandler {
+func (s *Server) LookupGetValueHandler(slot uint16) internal.GetValueHandler {
 	return s.baseServer.LookupGetValueHandler(slot)
 }
 
-func (s *Server) LookupSetValueHandler(slot int) internal.SetValueHandler {
+func (s *Server) LookupSetValueHandler(slot uint16) internal.SetValueHandler {
 	return s.baseServer.LookupSetValueHandler(slot)
 }
 
-func (s *Server) LookupGetAssetHandler(slot int) internal.GetAssetHandler {
+func (s *Server) LookupGetAssetHandler(slot uint16) internal.GetAssetHandler {
 	return s.baseServer.LookupGetAssetHandler(slot)
 }
 
-func (s *Server) LookupExecuteCommandHandler(slot int) internal.ExecuteCommandHandler {
+func (s *Server) LookupExecuteCommandHandler(slot uint16) internal.ExecuteCommandHandler {
 	return s.baseServer.LookupExecuteCommandHandler(slot)
 }
 
-func (s *Server) RegisterConnection() (int, *internal.Connection) {
-	return s.baseServer.RegisterConnection()
-}
-
-func (s *Server) DeregisterConnection(connID int) {
-	s.baseServer.DeregisterConnection(connID)
-}
-
-func (s *Server) BroadcastUpdate(slot int, fqoid string, value any) {
+func (s *Server) BroadcastUpdate(slot uint16, fqoid string, value any) {
 	s.baseServer.BroadcastUpdate(slot, fqoid, value)
 }
 
 func (s *Server) SetMaxConnections(max int) {
 	s.baseServer.SetMaxConnections(max)
-}
-
-func (s *Server) NotifyUpdate(update *protos.PushUpdates) {
-	s.baseServer.NotifyUpdate(update)
 }
 
 func (s *Server) ConnectionCount() int {

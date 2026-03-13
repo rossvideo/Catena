@@ -40,7 +40,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -49,6 +48,9 @@ import (
 	grpcServer "github.com/rossvideo/catena/sdks/go/pkg/grpc"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
+
+// Global state for graceful shutdown
+var shutdownChan = make(chan struct{})
 
 func main() {
 	// Initialize SDK with prefix and app name
@@ -59,11 +61,20 @@ func main() {
 	}
 	defer catena.Close()
 
+	// Handle signals for graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigChan
+		logger.Info("Caught signal, shutting down", "signal", sig)
+		close(shutdownChan)
+	}()
+
 	// Port comes from the unified config (parsed from CATENA_PORT)
 	port := cfg.Port
 
 	// Define device metadata for multiple slots
-	devices := map[int]map[string]any{
+	devices := map[uint16]map[string]any{
 		0: {
 			"slot":              uint32(0),
 			"detail_level":      catena.DetailLevelFull,
@@ -333,13 +344,13 @@ func main() {
 		},
 	}
 
-	slotList := []int{0, 1}
-	server := grpcServer.NewServer(slotList, 100)
+	slotList := []uint16{0, 1}
+	server := grpcServer.NewServer(slotList, 100, cfg)
 
 	// Register GetDevice handler for each slot
 	for _, slot := range slotList {
 		slot := slot
-		server.RegisterGetDeviceHandler(slot, func() (catena.CatenaDevice, catena.StatusResult) {
+		server.RegisterGetDeviceHandler(uint16(slot), func() (catena.CatenaDevice, catena.StatusResult) {
 			logger.Info("GetDevice", "slot", slot)
 			_, ok := devices[slot]
 			if !ok {
@@ -374,19 +385,16 @@ func main() {
 	logger.Info("  grpcurl -plaintext localhost:" + fmt.Sprintf("%d", port) + " st2138.CatenaService/GetPopulatedSlots")
 	logger.Info("=======================================================")
 
-	// Handle graceful shutdown
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-
+	// Start server in a goroutine so shutdown handling works
 	go func() {
-		sig := <-sigChan
-		logger.Info("Caught signal, shutting down", "signal", sig)
-		server.Shutdown()
-		os.Exit(0)
+		if err := server.Start(port); err != nil {
+			logger.Error("server failed", "error", err)
+			os.Exit(1)
+		}
 	}()
 
-	// Start the server
-	if err := server.Start(port); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-	}
+	// Wait for shutdown signal
+	<-shutdownChan
+	server.Shutdown()
+	logger.Info("Server shutdown complete")
 }

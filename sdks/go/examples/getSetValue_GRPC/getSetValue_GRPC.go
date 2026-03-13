@@ -39,7 +39,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"os/signal"
 	"sync"
@@ -50,14 +50,32 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
-// Simple in-memory device state
-var deviceParams = &sync.Map{}
+// Global state for graceful shutdown
+var (
+	shutdownChan = make(chan struct{})
+	deviceParams = &sync.Map{}
+)
 
 func main() {
-	// Initialize logger with debug settings
-	if err := logger.Init(logger.DebugSettings()); err != nil {
-		log.Fatalf("Failed to initialize logger: %v", err)
+	// Initialize SDK with prefix and app name
+	cfg, err := catena.InitOptions(catena.Options{AppName: "getSetValue_GRPC"})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize SDK: %v\n", err)
+		os.Exit(1)
 	}
+	defer catena.Close()
+
+	// Handle signals for graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigChan
+		logger.Info("Caught signal, shutting down", "signal", sig)
+		close(shutdownChan)
+	}()
+
+	// Start server in a goroutine so shutdown handling works
+	port := cfg.Port
 
 	// Initialize device parameters
 	deviceParams.Store("/volume", int32(50))
@@ -65,10 +83,10 @@ func main() {
 	deviceParams.Store("/contrast", int32(60))
 
 	// Create gRPC server with slot 0
-	server := grpcServer.NewServer([]int{0}, 100)
+	server := grpcServer.NewServer([]uint16{0}, 100, catena.Config{})
 
 	// Register GetValue handler
-	server.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	server.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
 
 		value, exists := deviceParams.Load(fqoid)
@@ -87,7 +105,7 @@ func main() {
 	})
 
 	// Register SetValue handler
-	server.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
+	server.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string) catena.StatusResult {
 		logger.Info("SetParam", "slot", slot, "fqoid", fqoid)
 		intVal, ok := value.(int32)
 		if !ok {
@@ -103,7 +121,7 @@ func main() {
 	})
 
 	// Register ExecuteCommand handler
-	server.RegisterExecuteCommandHandler(0, func(slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	server.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 		logger.Info("Command executed", "command", commandFqoid, "payload", payload)
 
 		// Return a simple response
@@ -111,21 +129,16 @@ func main() {
 		return catena.CatenaValue{Value: response}, catena.StatusWithCode(catena.OK, "")
 	})
 
-	// Handle graceful shutdown
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-
+	logger.Info("Starting gRPC server", "port", port)
 	go func() {
-		<-sigChan
-		logger.Info("Shutting down gRPC server...")
-		server.Shutdown()
-		os.Exit(0)
+		if err := server.Start(port); err != nil {
+			logger.Error("server failed", "error", err)
+			os.Exit(1)
+		}
 	}()
 
-	// Start the server
-	port := 6254
-	logger.Info("Starting gRPC server", "port", port)
-	if err := server.Start(port); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-	}
+	// Wait for shutdown signal
+	<-shutdownChan
+	server.Shutdown()
+	logger.Info("Server shutdown complete")
 }

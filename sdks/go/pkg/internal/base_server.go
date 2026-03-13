@@ -1,28 +1,33 @@
 package internal
 
 import (
+	"fmt"
+	"math"
+	"strconv"
 	"sync"
 
 	"github.com/rossvideo/catena/build/go/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Handlers now return (CatenaValue, StatusResult) so the server can respond consistently.
 type DeviceHandler func() (catena.CatenaDevice, catena.StatusResult)
-type GetValueHandler func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult)
-type SetValueHandler func(value any, slot int, fqoid string) catena.StatusResult
-type GetAssetHandler func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult)
-type ExecuteCommandHandler func(slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult)
+type GetValueHandler func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult)
+type SetValueHandler func(value any, slot uint16, fqoid string) catena.StatusResult
+type GetAssetHandler func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult)
+type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult)
 
 type BaseServer struct {
 	Mu                     sync.Mutex
-	Slots                  []int
-	getDeviceHandlers      map[int]DeviceHandler
-	getValueHandlers       map[int]GetValueHandler
-	setValueHandlers       map[int]SetValueHandler
-	getAssetHandlers       map[int]GetAssetHandler
-	executeCommandHandlers map[int]ExecuteCommandHandler
+	Slots                  []uint32
+	getDeviceHandlers      map[uint16]DeviceHandler
+	getValueHandlers       map[uint16]GetValueHandler
+	setValueHandlers       map[uint16]SetValueHandler
+	getAssetHandlers       map[uint16]GetAssetHandler
+	executeCommandHandlers map[uint16]ExecuteCommandHandler
 	connectionQueue        *ConnectionQueue
 }
 
@@ -31,98 +36,102 @@ func DefaultDeviceHandler() (catena.CatenaDevice, catena.StatusResult) {
 	return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "GetDevice not implemented")
 }
 
-func DefaultGetValueHandler(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+func DefaultGetValueHandler(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 	return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "GetValue not implemented")
 }
 
-func DefaultSetValueHandler(value any, slot int, fqoid string) catena.StatusResult {
+func DefaultSetValueHandler(value any, slot uint16, fqoid string) catena.StatusResult {
 	return catena.StatusWithCode(catena.UNIMPLEMENTED, "SetValue not implemented")
 }
 
-func DefaultGetAssetHandler(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+func DefaultGetAssetHandler(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 	return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "GetAsset not implemented")
 }
 
-func DefaultExecuteCommandHandler(slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+func DefaultExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 	return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "ExecuteCommand not implemented")
 }
 
 // Handler registration methods
-func (bs *BaseServer) RegisterGetDeviceHandler(slot int, handler DeviceHandler) {
+func (bs *BaseServer) RegisterGetDeviceHandler(slot uint16, handler DeviceHandler) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.getDeviceHandlers[slot] = handler
 }
 
-func (bs *BaseServer) RegisterGetValueHandler(slot int, handler GetValueHandler) {
+func (bs *BaseServer) RegisterGetValueHandler(slot uint16, handler GetValueHandler) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.getValueHandlers[slot] = handler
 }
 
-func (bs *BaseServer) RegisterSetValueHandler(slot int, handler SetValueHandler) {
+func (bs *BaseServer) RegisterSetValueHandler(slot uint16, handler SetValueHandler) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.setValueHandlers[slot] = handler
 }
 
-func (bs *BaseServer) RegisterGetAssetHandler(slot int, handler GetAssetHandler) {
+func (bs *BaseServer) RegisterGetAssetHandler(slot uint16, handler GetAssetHandler) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.getAssetHandlers[slot] = handler
 }
 
-func (bs *BaseServer) RegisterExecuteCommandHandler(slot int, handler ExecuteCommandHandler) {
+func (bs *BaseServer) RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.executeCommandHandlers[slot] = handler
 }
 
 // Lookup helper functions
-func (bs *BaseServer) LookupGetDeviceHandler(slot int) DeviceHandler {
+func (bs *BaseServer) LookupGetDeviceHandler(slot uint16) DeviceHandler {
 	if handler, ok := bs.getDeviceHandlers[slot]; ok {
 		return handler
 	}
 	return DefaultDeviceHandler
 }
 
-func (bs *BaseServer) LookupGetValueHandler(slot int) GetValueHandler {
+func (bs *BaseServer) LookupGetValueHandler(slot uint16) GetValueHandler {
 	if handler, ok := bs.getValueHandlers[slot]; ok {
 		return handler
 	}
 	return DefaultGetValueHandler
 }
 
-func (bs *BaseServer) LookupSetValueHandler(slot int) SetValueHandler {
+func (bs *BaseServer) LookupSetValueHandler(slot uint16) SetValueHandler {
 	if handler, ok := bs.setValueHandlers[slot]; ok {
 		return handler
 	}
 	return DefaultSetValueHandler
 }
 
-func (bs *BaseServer) LookupGetAssetHandler(slot int) GetAssetHandler {
+func (bs *BaseServer) LookupGetAssetHandler(slot uint16) GetAssetHandler {
 	if handler, ok := bs.getAssetHandlers[slot]; ok {
 		return handler
 	}
 	return DefaultGetAssetHandler
 }
 
-func (bs *BaseServer) LookupExecuteCommandHandler(slot int) ExecuteCommandHandler {
+func (bs *BaseServer) LookupExecuteCommandHandler(slot uint16) ExecuteCommandHandler {
 	if handler, ok := bs.executeCommandHandlers[slot]; ok {
 		return handler
 	}
 	return DefaultExecuteCommandHandler
 }
 
-func NewBaseServer(slots []int, maxConnections int) *BaseServer {
+func NewBaseServer(slots []uint16, maxConnections int) *BaseServer {
 	bs := &BaseServer{
-		Slots:                  slots,
-		getDeviceHandlers:      make(map[int]DeviceHandler),
-		getValueHandlers:       make(map[int]GetValueHandler),
-		setValueHandlers:       make(map[int]SetValueHandler),
-		getAssetHandlers:       make(map[int]GetAssetHandler),
-		executeCommandHandlers: make(map[int]ExecuteCommandHandler),
+		Slots:                  make([]uint32, len(slots)),
+		getDeviceHandlers:      make(map[uint16]DeviceHandler),
+		getValueHandlers:       make(map[uint16]GetValueHandler),
+		setValueHandlers:       make(map[uint16]SetValueHandler),
+		getAssetHandlers:       make(map[uint16]GetAssetHandler),
+		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
 		connectionQueue:        newConnectionQueue(maxConnections),
+	}
+
+	for i, slot := range slots {
+		bs.Slots[i] = uint32(slot)
 	}
 
 	for _, slot := range slots {
@@ -134,6 +143,25 @@ func NewBaseServer(slots []int, maxConnections int) *BaseServer {
 	}
 
 	return bs
+}
+
+func (bs *BaseServer) ValidateSlot(slot uint32) (uint16, error) {
+	if slot < 0 || slot > uint32(math.MaxUint16) {
+		if catena.IsDev() {
+			return 0, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid slot number: %d", slot))
+		} else {
+			return 0, status.Error(codes.InvalidArgument, "")
+		}
+	}
+	return uint16(slot), nil
+}
+
+func (bs *BaseServer) ValidateSlotString(slot string) (uint16, error) {
+	slotInt, err := strconv.Atoi(slot)
+	if err != nil {
+		return 0, err
+	}
+	return bs.ValidateSlot(uint32(slotInt))
 }
 
 // RegisterConnection registers a new streaming connection
@@ -169,7 +197,7 @@ func (bs *BaseServer) ConnectionCount() int {
 // BroadcastUpdate converts a native Go value into a proto PushUpdates message
 // and sends it to all connected streaming clients. Business logic calls this with
 // plain Go types; the proto serialization is handled internally.
-func (bs *BaseServer) BroadcastUpdate(slot int, oid string, value any) {
+func (bs *BaseServer) BroadcastUpdate(slot uint16, oid string, value any) {
 	protoValue, err := catena.ToProto(value)
 	if err != nil {
 		logger.Error("BroadcastUpdate: failed to convert value to proto", "error", err)

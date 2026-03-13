@@ -14,7 +14,9 @@ PROTO_FILES   := $(wildcard $(PROTO_DIR)/*.proto)
 GO_M_OPTS     := $(patsubst %,--go_opt=M%=$(IMPORT_PATH),$(notdir $(PROTO_FILES)))
 GO_GRPC_M_OPTS:= $(patsubst %,--go-grpc_opt=M%=$(IMPORT_PATH),$(notdir $(PROTO_FILES)))
 
-all: $(CMDS)
+.PHONY: proto-module proto-tools protos protos-grpc protos-all update-imports clean-protos
+
+all: protos-all $(CMDS)
 
 $(CMDS):
 	mkdir -p $(BIN_DIR)/$@
@@ -25,7 +27,6 @@ clean:
 	rm -rf $(BIN_DIR)
 	rm -rf $(LOG_DIR)
 
-.PHONY: proto-module proto-tools protos protos-grpc protos-all update-imports clean-protos
 
 protos-all: protos protos-grpc
 

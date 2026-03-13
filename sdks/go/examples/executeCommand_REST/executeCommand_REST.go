@@ -219,11 +219,11 @@ func main() {
 	// ==========================================================================
 	// Server Setup
 	// ==========================================================================
-	slotList := []int{0}
+	slotList := []uint16{0}
 	srv = rest.NewServer(slotList, 100)
 
 	// Register GetValue handler to retrieve counter state
-	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		if fqoid == "counter" {
 			val, _ := catena.ToCatenaValue(buildResponse())
 			return catena.Reply(val)
@@ -232,7 +232,7 @@ func main() {
 	})
 
 	// Register ExecuteCommand handler
-	srv.RegisterExecuteCommandHandler(0, func(slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 
 		handler, ok := commands[commandFqoid]

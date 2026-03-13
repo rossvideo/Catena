@@ -56,8 +56,8 @@ import (
 
 // Server provides gRPC API endpoints for Catena devices
 type Server struct {
-	*internal.BaseServer
 	protos.UnimplementedCatenaServiceServer
+	baseServer *internal.BaseServer
 	grpcServer *grpc.Server
 }
 
@@ -76,16 +76,21 @@ func streamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamS
 	logger.Debug("gRPC stream call received", "method", info.FullMethod, "isClientStream", info.IsClientStream, "isServerStream", info.IsServerStream)
 	err := handler(srv, ss)
 	if err != nil {
-		logger.Error("gRPC stream call error", "method", info.FullMethod, "error", err)
+		// Context cancellation is normal when clients disconnect - log at debug level
+		if status.Code(err) == codes.Canceled || err == context.Canceled || err == context.DeadlineExceeded {
+			logger.Debug("gRPC stream ended", "method", info.FullMethod, "reason", err)
+		} else {
+			logger.Error("gRPC stream call error", "method", info.FullMethod, "error", err)
+		}
 	}
 	return err
 }
 
 // NewServer creates a new gRPC server for the given device slots
-func NewServer(slots []int, maxConnections int) *Server {
+func NewServer(slots []uint16, maxConnections int, cfg catena.Config) *Server {
 	// Create gRPC server with interceptors for logging
 	s := &Server{
-		BaseServer: internal.NewBaseServer(slots, maxConnections),
+		baseServer: internal.NewBaseServer(slots, maxConnections),
 		grpcServer: grpc.NewServer(
 			grpc.UnaryInterceptor(unaryInterceptor),
 			grpc.StreamInterceptor(streamInterceptor),
@@ -96,9 +101,12 @@ func NewServer(slots []int, maxConnections int) *Server {
 	protos.RegisterCatenaServiceServer(s.grpcServer, s)
 
 	// Register reflection service for grpcurl, grpc_cli, and other tools
-	reflection.Register(s.grpcServer)
-
-	logger.Info("gRPC server created", "slots", slots)
+	if cfg.GRPCReflection {
+		reflection.Register(s.grpcServer)
+		logger.Info("gRPC server created with reflection enabled", "slots", slots)
+	} else {
+		logger.Info("gRPC server created", "slots", slots)
+	}
 
 	return s
 }
@@ -111,8 +119,9 @@ func (s *Server) Start(port int) error {
 		logger.Error("Failed to create listener", "address", addr, "error", err)
 		return fmt.Errorf("failed to listen on %s: %w", addr, err)
 	}
+	defer listener.Close()
 
-	logger.Info("Starting gRPC server", "address", addr, "slots", s.BaseServer.Slots)
+	logger.Info("Starting gRPC server", "address", addr, "slots", s.baseServer.Slots)
 	logger.Info("Server listening and ready to accept connections")
 
 	if err := s.grpcServer.Serve(listener); err != nil {
@@ -126,19 +135,20 @@ func (s *Server) Start(port int) error {
 // GetPopulatedSlots returns the list of populated slots
 func (s *Server) GetPopulatedSlots(ctx context.Context, req *protos.Empty) (*protos.SlotList, error) {
 	logger.Info("GetPopulatedSlots")
-	slots := make([]uint32, len(s.BaseServer.Slots))
-	for i, slot := range s.BaseServer.Slots {
-		slots[i] = uint32(slot)
-	}
+	slots := s.baseServer.Slots
 	return &protos.SlotList{Slots: slots}, nil
 }
 
 // DeviceRequest streams the device information for a slot
 func (s *Server) DeviceRequest(req *protos.DeviceRequestPayload, stream grpc.ServerStreamingServer[protos.DeviceComponent]) error {
-	slot := int(req.Slot)
+	slot, err := s.baseServer.ValidateSlot(req.Slot)
+	if err != nil {
+		return err
+	}
+
 	logger.Info("DeviceRequest", "slot", slot)
 
-	handler := s.LookupGetDeviceHandler(slot)
+	handler := s.baseServer.LookupGetDeviceHandler(slot)
 	device, res := handler()
 	if res.Error != "" {
 		logger.Error("DeviceRequest handler error", "slot", slot, "error", res.Error)
@@ -163,11 +173,15 @@ func (s *Server) DeviceRequest(req *protos.DeviceRequestPayload, stream grpc.Ser
 
 // GetValue returns the value of a parameter
 func (s *Server) GetValue(ctx context.Context, req *protos.GetValuePayload) (*protos.Value, error) {
-	slot := int(req.Slot)
+	slot, err := s.baseServer.ValidateSlot(req.Slot)
+	if err != nil {
+		return nil, err
+	}
+
 	fqoid := req.Oid
 	logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
 
-	handler := s.LookupGetValueHandler(slot)
+	handler := s.baseServer.LookupGetValueHandler(slot)
 	value, result := handler(slot, fqoid)
 	if result.Error != "" {
 		logger.Error("GetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
@@ -179,7 +193,10 @@ func (s *Server) GetValue(ctx context.Context, req *protos.GetValuePayload) (*pr
 
 // SetValue sets the value of a parameter
 func (s *Server) SetValue(ctx context.Context, req *protos.SingleSetValuePayload) (*protos.Empty, error) {
-	slot := int(req.Slot)
+	slot, err := s.baseServer.ValidateSlot(req.Slot)
+	if err != nil {
+		return nil, err
+	}
 
 	if req.Value == nil {
 		logger.Error("SetValue nil value payload", "slot", slot)
@@ -196,7 +213,7 @@ func (s *Server) SetValue(ctx context.Context, req *protos.SingleSetValuePayload
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value: %v", err))
 	}
 
-	handler := s.LookupSetValueHandler(slot)
+	handler := s.baseServer.LookupSetValueHandler(slot)
 	result := handler(nativeValue, slot, fqoid)
 	if result.Error != "" {
 		logger.Error("SetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
@@ -208,9 +225,14 @@ func (s *Server) SetValue(ctx context.Context, req *protos.SingleSetValuePayload
 
 // MultiSetValue sets multiple parameter values
 func (s *Server) MultiSetValue(ctx context.Context, req *protos.MultiSetValuePayload) (*protos.Empty, error) {
-	slot := int(req.Slot)
+	slot, err := s.baseServer.ValidateSlot(req.Slot)
+	if err != nil {
+		return nil, err
+	}
+
 	logger.Info("MultiSetValue", "slot", slot, "count", len(req.Values))
 
+	handler := s.baseServer.LookupSetValueHandler(slot)
 	for _, setValue := range req.Values {
 		fqoid := setValue.Oid
 
@@ -220,7 +242,6 @@ func (s *Server) MultiSetValue(ctx context.Context, req *protos.MultiSetValuePay
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value for %s: %v", fqoid, err))
 		}
 
-		handler := s.LookupSetValueHandler(slot)
 		result := handler(nativeValue, slot, fqoid)
 		if result.Error != "" {
 			logger.Error("MultiSetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
@@ -233,11 +254,15 @@ func (s *Server) MultiSetValue(ctx context.Context, req *protos.MultiSetValuePay
 
 // ExternalObjectRequest streams external object (asset) data
 func (s *Server) ExternalObjectRequest(req *protos.ExternalObjectRequestPayload, stream grpc.ServerStreamingServer[protos.ExternalObjectPayload]) error {
-	slot := int(req.Slot)
+	slot, err := s.baseServer.ValidateSlot(req.Slot)
+	if err != nil {
+		return err
+	}
+
 	fqoid := req.Oid
 	logger.Info("ExternalObjectRequest", "slot", slot, "fqoid", fqoid)
 
-	handler := s.LookupGetAssetHandler(slot)
+	handler := s.baseServer.LookupGetAssetHandler(slot)
 	asset, result := handler(slot, fqoid)
 	if result.Error != "" {
 		logger.Error("ExternalObjectRequest handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
@@ -255,7 +280,11 @@ func (s *Server) ExternalObjectRequest(req *protos.ExternalObjectRequestPayload,
 
 // ExecuteCommand executes a command and streams the response
 func (s *Server) ExecuteCommand(req *protos.ExecuteCommandPayload, stream grpc.ServerStreamingServer[protos.CommandResponse]) error {
-	slot := int(req.Slot)
+	slot, err := s.baseServer.ValidateSlot(req.Slot)
+	if err != nil {
+		return err
+	}
+
 	commandFqoid := req.Oid
 	logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 
@@ -269,7 +298,7 @@ func (s *Server) ExecuteCommand(req *protos.ExecuteCommandPayload, stream grpc.S
 		}
 	}
 
-	handler := s.LookupExecuteCommandHandler(slot)
+	handler := s.baseServer.LookupExecuteCommandHandler(slot)
 	value, result := handler(slot, commandFqoid, payload)
 	if result.Error != "" {
 		logger.Error("ExecuteCommand handler error", "slot", slot, "command", commandFqoid, "error", result.Error)
@@ -311,18 +340,18 @@ func (s *Server) UpdateSubscriptions(req *protos.UpdateSubscriptionsPayload, str
 // Connect establishes a streaming connection for push updates
 func (s *Server) Connect(req *protos.ConnectPayload, stream grpc.ServerStreamingServer[protos.PushUpdates]) error {
 	// Register this connection in the connectionQueue
-	connID, conn := s.RegisterConnection()
+	connID, conn := s.baseServer.RegisterConnection()
 	if connID < 0 {
 		logger.Error("gRPC connection rejected - server shutting down")
 		return status.Error(codes.Unavailable, "server shutting down")
 	}
-	defer s.DeregisterConnection(connID)
+	defer s.baseServer.DeregisterConnection(connID)
 
 	logger.Info("gRPC Connect started", "connID", connID)
 
 	// Send initial populated slots
-	slots := make([]uint32, len(s.BaseServer.Slots))
-	for i, slot := range s.BaseServer.Slots {
+	slots := make([]uint32, len(s.baseServer.Slots))
+	for i, slot := range s.baseServer.Slots {
 		slots[i] = uint32(slot)
 	}
 
@@ -361,7 +390,7 @@ func (s *Server) Connect(req *protos.ConnectPayload, stream grpc.ServerStreaming
 // Shutdown gracefully shuts down the gRPC server and all streaming connections
 func (s *Server) Shutdown() {
 	logger.Info("Shutting down gRPC server")
-	s.ShutdownConnections()
+	s.baseServer.ShutdownConnections()
 	s.grpcServer.GracefulStop()
 }
 
@@ -388,4 +417,70 @@ func (s *Server) RefreshToken(ctx context.Context, req *protos.RefreshTokenPaylo
 // RevokeAccess revokes access for a token
 func (s *Server) RevokeAccess(ctx context.Context, req *protos.RevokeAccessPayload) (*protos.RevocationResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "RevokeAccess not implemented")
+}
+
+// Handler registration methods (delegate to baseServer)
+
+func (s *Server) RegisterGetDeviceHandler(slot uint16, handler internal.DeviceHandler) {
+	s.baseServer.RegisterGetDeviceHandler(slot, handler)
+}
+
+func (s *Server) RegisterGetValueHandler(slot uint16, handler internal.GetValueHandler) {
+	s.baseServer.RegisterGetValueHandler(slot, handler)
+}
+
+func (s *Server) RegisterSetValueHandler(slot uint16, handler internal.SetValueHandler) {
+	s.baseServer.RegisterSetValueHandler(slot, handler)
+}
+
+func (s *Server) RegisterGetAssetHandler(slot uint16, handler internal.GetAssetHandler) {
+	s.baseServer.RegisterGetAssetHandler(slot, handler)
+}
+
+func (s *Server) RegisterExecuteCommandHandler(slot uint16, handler internal.ExecuteCommandHandler) {
+	s.baseServer.RegisterExecuteCommandHandler(slot, handler)
+}
+
+func (s *Server) LookupGetDeviceHandler(slot uint16) internal.DeviceHandler {
+	return s.baseServer.LookupGetDeviceHandler(slot)
+}
+
+func (s *Server) LookupGetValueHandler(slot uint16) internal.GetValueHandler {
+	return s.baseServer.LookupGetValueHandler(slot)
+}
+
+func (s *Server) LookupSetValueHandler(slot uint16) internal.SetValueHandler {
+	return s.baseServer.LookupSetValueHandler(slot)
+}
+
+func (s *Server) LookupGetAssetHandler(slot uint16) internal.GetAssetHandler {
+	return s.baseServer.LookupGetAssetHandler(slot)
+}
+
+func (s *Server) LookupExecuteCommandHandler(slot uint16) internal.ExecuteCommandHandler {
+	return s.baseServer.LookupExecuteCommandHandler(slot)
+}
+
+func (s *Server) BroadcastUpdate(slot uint16, fqoid string, value any) {
+	s.baseServer.BroadcastUpdate(slot, fqoid, value)
+}
+
+func (s *Server) SetMaxConnections(max int) {
+	s.baseServer.SetMaxConnections(max)
+}
+
+func (s *Server) ConnectionCount() int {
+	return s.baseServer.ConnectionCount()
+}
+
+func (s *Server) RegisterConnection() (int, *internal.Connection) {
+	return s.baseServer.RegisterConnection()
+}
+
+func (s *Server) DeregisterConnection(id int) {
+	s.baseServer.DeregisterConnection(id)
+}
+
+func (s *Server) ShutdownConnections() {
+	s.baseServer.ShutdownConnections()
 }

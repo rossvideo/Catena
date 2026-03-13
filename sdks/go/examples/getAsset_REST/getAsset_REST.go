@@ -109,11 +109,11 @@ func main() {
 	// ==========================================================================
 	// Server Setup
 	// ==========================================================================
-	slotList := []int{0}
+	slotList := []uint16{0}
 	srv = rest.NewServer(slotList, 100)
 
 	// Register GetAsset handler
-	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	srv.RegisterGetAssetHandler(0, func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 		logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
 
 		val, ok := assets.Load(fqoid)
