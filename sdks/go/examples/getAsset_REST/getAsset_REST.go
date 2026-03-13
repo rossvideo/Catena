@@ -113,12 +113,12 @@ func main() {
 	srv = rest.NewServer(slotList)
 
 	// Register GetAsset handler
-	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
-		logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
+	srv.RegisterGetAssetHandler(0, func(fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+		logger.Info("Asset download request", "slot", 0, "fqoid", fqoid)
 
 		val, ok := assets.Load(fqoid)
 		if !ok {
-			logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
+			logger.Warning("Asset not found", "slot", 0, "fqoid", fqoid)
 			return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found: "+fqoid)
 		}
 
@@ -127,11 +127,11 @@ func main() {
 		// Convert DataPayload to CatenaAsset when returning
 		catenaAsset, err := catena.ToCatenaAsset(payload, true)
 		if err != nil {
-			logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", err)
+			logger.Error("Failed to convert payload to asset", "slot", 0, "fqoid", fqoid, "error", err)
 			return catena.ReplyError[catena.CatenaAsset](catena.INTERNAL, "failed to convert asset: "+err.Error())
 		}
 
-		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(payload.Payload))
+		logger.Info("Asset download complete", "slot", 0, "fqoid", fqoid, "size", len(payload.Payload))
 		return catena.Reply(catenaAsset)
 	})
 

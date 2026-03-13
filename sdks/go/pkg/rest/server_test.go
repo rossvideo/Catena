@@ -102,11 +102,8 @@ func TestServer_RegisterGetValueHandler(t *testing.T) {
 	srv := NewServer([]int{0})
 
 	handlerCalled := false
-	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterGetValueHandler(0, func(fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		handlerCalled = true
-		if slot != 0 {
-			t.Errorf("expected slot 0, got %d", slot)
-		}
 		if fqoid != "test/param" {
 			t.Errorf("expected fqoid 'test/param', got %s", fqoid)
 		}
@@ -114,7 +111,7 @@ func TestServer_RegisterGetValueHandler(t *testing.T) {
 	})
 
 	handler := srv.lookupGetValue(0)
-	_, _ = handler(0, "test/param")
+	_, _ = handler("test/param")
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
@@ -125,7 +122,7 @@ func TestServer_RegisterSetValueHandler(t *testing.T) {
 	srv := NewServer([]int{0})
 
 	handlerCalled := false
-	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
+	srv.RegisterSetValueHandler(0, func(value any, fqoid string) catena.StatusResult {
 		handlerCalled = true
 		if value != int32(42) {
 			t.Errorf("expected value int32(42), got %v", value)
@@ -134,7 +131,7 @@ func TestServer_RegisterSetValueHandler(t *testing.T) {
 	})
 
 	handler := srv.lookupSetValue(0)
-	_ = handler(int32(42), 0, "test/param")
+	_ = handler(int32(42), "test/param")
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
@@ -145,13 +142,13 @@ func TestServer_RegisterGetAssetHandler(t *testing.T) {
 	srv := NewServer([]int{0})
 
 	handlerCalled := false
-	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	srv.RegisterGetAssetHandler(0, func(fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 		handlerCalled = true
 		return catena.CatenaAsset{}, catena.StatusResult{Code: catena.OK}
 	})
 
 	handler := srv.lookupGetAsset(0)
-	_, _ = handler(0, "test/asset")
+	_, _ = handler("test/asset")
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
@@ -162,7 +159,7 @@ func TestServer_RegisterExecuteCommandHandler(t *testing.T) {
 	srv := NewServer([]int{0})
 
 	handlerCalled := false
-	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 		handlerCalled = true
 		if commandFqoid != "test/command" {
 			t.Errorf("expected commandFqoid 'test/command', got %s", commandFqoid)
@@ -171,7 +168,7 @@ func TestServer_RegisterExecuteCommandHandler(t *testing.T) {
 	})
 
 	handler := srv.lookupExecuteCommand(0)
-	_, _ = handler(nil, nil, 0, "test/command", nil)
+	_, _ = handler(nil, nil, "test/command", nil)
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
@@ -260,7 +257,7 @@ func TestServer_GetValue_Route(t *testing.T) {
 	srv := NewServer([]int{0})
 
 	value, _ := catena.ToCatenaValue(int32(42))
-	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterGetValueHandler(0, func(fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		if fqoid != "brightness" {
 			t.Errorf("expected fqoid 'brightness', got %s", fqoid)
 		}
@@ -275,7 +272,7 @@ func TestServer_SetValue_Route(t *testing.T) {
 	srv := NewServer([]int{0})
 
 	handlerCalled := false
-	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
+	srv.RegisterSetValueHandler(0, func(value any, fqoid string) catena.StatusResult {
 		handlerCalled = true
 		if v, ok := value.(int32); !ok || v != 42 {
 			t.Errorf("expected value int32(42), got %v (%T)", value, value)
@@ -297,7 +294,7 @@ func TestServer_SetValue_InvalidContentType(t *testing.T) {
 	srv := NewServer([]int{0})
 
 	handlerCalled := false
-	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
+	srv.RegisterSetValueHandler(0, func(value any, fqoid string) catena.StatusResult {
 		handlerCalled = true
 		return catena.StatusResult{Code: catena.OK}
 	})
@@ -323,7 +320,7 @@ func TestServer_GetAsset_Route(t *testing.T) {
 	}
 	asset, _ := catena.ToCatenaAsset(dp, true)
 
-	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	srv.RegisterGetAssetHandler(0, func(fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 		return catena.Reply(asset)
 	})
 
@@ -335,7 +332,7 @@ func TestServer_GetAsset_MethodNotAllowed(t *testing.T) {
 	srv := NewServer([]int{0})
 
 	handlerCalled := false
-	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	srv.RegisterGetAssetHandler(0, func(fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 		handlerCalled = true
 		return catena.Reply(catena.CatenaAsset{})
 	})
@@ -350,7 +347,7 @@ func TestServer_ExecuteCommand_Route(t *testing.T) {
 	srv := NewServer([]int{0})
 
 	handlerCalled := false
-	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 		handlerCalled = true
 		if commandFqoid != "reboot" {
 			t.Errorf("expected commandFqoid 'reboot', got %s", commandFqoid)
@@ -369,7 +366,7 @@ func TestServer_ExecuteCommand_WithPayload(t *testing.T) {
 	srv := NewServer([]int{0})
 
 	handlerCalled := false
-	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 		handlerCalled = true
 		if payload == nil {
 			t.Error("expected payload to be non-nil")
@@ -388,7 +385,7 @@ func TestServer_ExecuteCommand_MethodNotAllowed(t *testing.T) {
 	srv := NewServer([]int{0})
 
 	handlerCalled := false
-	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 		handlerCalled = true
 		return catena.Reply(catena.CatenaValue{})
 	})
@@ -480,7 +477,7 @@ func TestServer_DefaultHandlers(t *testing.T) {
 		t.Error("default device handler should return nil device")
 	}
 
-	value, status := srv.lookupGetValue(0)(0, "test")
+	value, status := srv.lookupGetValue(0)("test")
 	if status.Code != catena.UNIMPLEMENTED {
 		t.Errorf("default get value handler should return UNIMPLEMENTED, got %v", status.Code)
 	}
@@ -488,12 +485,12 @@ func TestServer_DefaultHandlers(t *testing.T) {
 		t.Error("default get value handler should return nil value")
 	}
 
-	status = srv.lookupSetValue(0)(nil, 0, "test")
+	status = srv.lookupSetValue(0)(nil, "test")
 	if status.Code != catena.UNIMPLEMENTED {
 		t.Errorf("default set value handler should return UNIMPLEMENTED, got %v", status.Code)
 	}
 
-	asset, status := srv.lookupGetAsset(0)(0, "test")
+	asset, status := srv.lookupGetAsset(0)("test")
 	if status.Code != catena.NOT_FOUND {
 		t.Errorf("default get asset handler should return NOT_FOUND, got %v", status.Code)
 	}
@@ -501,7 +498,7 @@ func TestServer_DefaultHandlers(t *testing.T) {
 		t.Error("default get asset handler should return nil asset")
 	}
 
-	value, status = srv.lookupExecuteCommand(0)(nil, nil, 0, "test", nil)
+	value, status = srv.lookupExecuteCommand(0)(nil, nil, "test", nil)
 	if status.Code != catena.UNIMPLEMENTED {
 		t.Errorf("default execute command handler should return UNIMPLEMENTED, got %v", status.Code)
 	}
@@ -511,25 +508,25 @@ func TestServer_LookupHandlers_NotRegistered(t *testing.T) {
 	srv := NewServer([]int{})
 
 	handler := srv.lookupGetValue(99)
-	_, status := handler(99, "test")
+	_, status := handler("test")
 	if status.Code != catena.UNIMPLEMENTED {
 		t.Errorf("expected UNIMPLEMENTED for unregistered slot, got %v", status.Code)
 	}
 
 	setHandler := srv.lookupSetValue(99)
-	status = setHandler(nil, 99, "test")
+	status = setHandler(nil, "test")
 	if status.Code != catena.UNIMPLEMENTED {
 		t.Errorf("expected UNIMPLEMENTED for unregistered slot, got %v", status.Code)
 	}
 
 	assetHandler := srv.lookupGetAsset(99)
-	_, status = assetHandler(99, "test")
+	_, status = assetHandler("test")
 	if status.Code != catena.NOT_FOUND {
 		t.Errorf("expected NOT_FOUND for unregistered slot, got %v", status.Code)
 	}
 
 	cmdHandler := srv.lookupExecuteCommand(99)
-	_, status = cmdHandler(nil, nil, 99, "test", nil)
+	_, status = cmdHandler(nil, nil, "test", nil)
 	if status.Code != catena.UNIMPLEMENTED {
 		t.Errorf("expected UNIMPLEMENTED for unregistered slot, got %v", status.Code)
 	}
@@ -538,7 +535,7 @@ func TestServer_LookupHandlers_NotRegistered(t *testing.T) {
 func TestServer_NestedValuePath(t *testing.T) {
 	srv := NewServer([]int{0})
 
-	srv.RegisterGetValueHandler(0, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterGetValueHandler(0, func(fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		if fqoid != "nested/path/to/param" {
 			t.Errorf("expected fqoid 'nested/path/to/param', got %s", fqoid)
 		}
@@ -579,10 +576,7 @@ func TestServer_MultipleSlots(t *testing.T) {
 
 	for i := 0; i < 3; i++ {
 		slot := i
-		srv.RegisterGetValueHandler(slot, func(s int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
-			if s != slot {
-				t.Errorf("handler received wrong slot: expected %d, got %d", slot, s)
-			}
+		srv.RegisterGetValueHandler(slot, func(fqoid string) (catena.CatenaValue, catena.StatusResult) {
 			value, _ := catena.ToCatenaValue(int32(slot * 10))
 			return catena.Reply(value)
 		})
@@ -679,7 +673,7 @@ func TestCommandEndpoint_PayloadHandling(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			srv := NewServer([]int{0})
 			var receivedPayload any
-			srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, fqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+			srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, fqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 				receivedPayload = payload
 				return catena.Reply(catena.CatenaValue{})
 			})
@@ -726,7 +720,7 @@ func TestRouting_EdgeCases(t *testing.T) {
 
 func TestValueEndpoint_Methods(t *testing.T) {
 	srv := NewServer([]int{0})
-	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
+	srv.RegisterSetValueHandler(0, func(value any, fqoid string) catena.StatusResult {
 		return catena.StatusResult{Code: catena.OK}
 	})
 
@@ -913,7 +907,7 @@ func TestServer_GetAsset_CompressionQueryParam_Gzip(t *testing.T) {
 	}
 	asset, _ := catena.ToCatenaAsset(dp, true)
 
-	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	srv.RegisterGetAssetHandler(0, func(fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 		return catena.Reply(asset)
 	})
 
@@ -944,7 +938,7 @@ func TestServer_GetAsset_CompressionQueryParam_Deflate(t *testing.T) {
 	}
 	asset, _ := catena.ToCatenaAsset(dp, true)
 
-	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	srv.RegisterGetAssetHandler(0, func(fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 		return catena.Reply(asset)
 	})
 
@@ -978,7 +972,7 @@ func TestServer_GetAsset_CompressionQueryParam_Uncompressed(t *testing.T) {
 	}
 	asset, _ := catena.ToCatenaAsset(dp, true)
 
-	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	srv.RegisterGetAssetHandler(0, func(fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 		return catena.Reply(asset)
 	})
 
@@ -1146,8 +1140,8 @@ func TestServer_Shutdown_MultipleConnections(t *testing.T) {
 func TestServer_SetValue_NotifiesConnections(t *testing.T) {
 	srv := NewServer([]int{0})
 
-	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
-		srv.BroadcastUpdate(slot, fqoid, value)
+	srv.RegisterSetValueHandler(0, func(value any, fqoid string) catena.StatusResult {
+		srv.BroadcastUpdate(0, fqoid, value)
 		return catena.StatusResult{Code: catena.OK}
 	})
 
@@ -1168,7 +1162,7 @@ func TestServer_SetValue_NotifiesConnections(t *testing.T) {
 func TestServer_SetValue_FailureDoesNotNotify(t *testing.T) {
 	srv := NewServer([]int{0})
 
-	srv.RegisterSetValueHandler(0, func(value any, slot int, fqoid string) catena.StatusResult {
+	srv.RegisterSetValueHandler(0, func(value any, fqoid string) catena.StatusResult {
 		return catena.StatusWithCode(catena.INVALID_ARGUMENT, "bad value")
 	})
 
@@ -1268,7 +1262,7 @@ func TestServer_GetAsset_CompressionQueryParam_Invalid(t *testing.T) {
 	}
 	asset, _ := catena.ToCatenaAsset(dp, true)
 
-	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	srv.RegisterGetAssetHandler(0, func(fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 		return catena.Reply(asset)
 	})
 
@@ -1290,7 +1284,7 @@ func TestServer_GetAsset_NoCompressionParam(t *testing.T) {
 	}
 	asset, _ := catena.ToCatenaAsset(dp, true)
 
-	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	srv.RegisterGetAssetHandler(0, func(fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 		return catena.Reply(asset)
 	})
 
@@ -1306,7 +1300,7 @@ func TestServer_GetAsset_NoCompressionParam(t *testing.T) {
 func TestServer_GetAsset_CompressionWithError(t *testing.T) {
 	srv := NewServer([]int{0})
 
-	srv.RegisterGetAssetHandler(0, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	srv.RegisterGetAssetHandler(0, func(fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 		return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found")
 	})
 

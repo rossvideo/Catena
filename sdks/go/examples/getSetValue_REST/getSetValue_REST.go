@@ -53,7 +53,7 @@ var (
 
 // Implementation for registering parameter handlers for every fqoid on a given slot
 func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
-	srv.RegisterSetValueHandler(slot, func(value any, slot int, fqoid string) catena.StatusResult {
+	srv.RegisterSetValueHandler(slot, func(value any, fqoid string) catena.StatusResult {
 		logger.Info("SetParam", "slot", slot, "fqoid", fqoid)
 		if value == nil {
 			logger.Error("SetParam nil value received", "slot", slot, "fqoid", fqoid)
@@ -75,7 +75,7 @@ func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
 		return catena.StatusWithCode(catena.NO_CONTENT, "")
 	})
 
-	srv.RegisterGetValueHandler(slot, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterGetValueHandler(slot, func(fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
 		v, ok := params.Load(fqoid)
 		if !ok {
@@ -93,7 +93,7 @@ func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
 
 // For a given slot implement param handlers for a specific param oid only
 func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid string, slot int) {
-	srv.RegisterSetValueHandler(slot, func(value any, slot int, fqoid_ string) catena.StatusResult {
+	srv.RegisterSetValueHandler(slot, func(value any, fqoid_ string) catena.StatusResult {
 		if fqoid_ != fqoid {
 			return catena.StatusWithCode(catena.UNIMPLEMENTED, "no handler for fqoid "+fqoid_)
 		}
@@ -114,7 +114,7 @@ func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid str
 		return catena.StatusWithCode(catena.OK, "")
 	})
 
-	srv.RegisterGetValueHandler(slot, func(slot int, fqoid_ string) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterGetValueHandler(slot, func(fqoid_ string) (catena.CatenaValue, catena.StatusResult) {
 		if fqoid_ != fqoid {
 			return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "no handler for fqoid "+fqoid_)
 		}
@@ -205,7 +205,7 @@ func main() {
 	// Register command handlers for each slot
 	for _, slot := range slotList {
 		slot := slot // capture loop variable
-		srv.RegisterExecuteCommandHandler(slot, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+		srv.RegisterExecuteCommandHandler(slot, func(w http.ResponseWriter, r *http.Request, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 			logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid, "payload", payload)
 			// Return schema-compliant command_response format
 			// Options: {response: value}, {no_response: {}}, or {exception: {...}}

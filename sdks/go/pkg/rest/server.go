@@ -59,10 +59,10 @@ import (
 
 // Handlers now return (CatenaValue, StatusResult) so the server can respond consistently.
 type DeviceHandler func() (catena.CatenaDevice, catena.StatusResult)
-type GetValueHandler func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult)
-type SetValueHandler func(value any, slot int, fqoid string) catena.StatusResult
-type GetAssetHandler func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult)
-type ExecuteCommandHandler func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult)
+type GetValueHandler func(fqoid string) (catena.CatenaValue, catena.StatusResult)
+type SetValueHandler func(value any, fqoid string) catena.StatusResult
+type GetAssetHandler func(fqoid string) (catena.CatenaAsset, catena.StatusResult)
+type ExecuteCommandHandler func(w http.ResponseWriter, r *http.Request, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult)
 type FallbackHandler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
 
 // Server provides REST API endpoints for Catena devices
@@ -230,19 +230,19 @@ func DefaultDeviceHandler() (catena.CatenaDevice, catena.StatusResult) {
 	return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "GetDevice not implemented")
 }
 
-func DefaultGetValueHandler(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+func DefaultGetValueHandler(fqoid string) (catena.CatenaValue, catena.StatusResult) {
 	return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "GetValue not implemented")
 }
 
-func DefaultSetValueHandler(value any, slot int, fqoid string) catena.StatusResult {
+func DefaultSetValueHandler(value any, fqoid string) catena.StatusResult {
 	return catena.StatusWithCode(catena.UNIMPLEMENTED, "SetValue not implemented")
 }
 
-func DefaultGetAssetHandler(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+func DefaultGetAssetHandler(fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 	return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "GetAsset not implemented")
 }
 
-func DefaultExecuteCommandHandler(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+func DefaultExecuteCommandHandler(w http.ResponseWriter, r *http.Request, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 	return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "ExecuteCommand not implemented")
 }
 
@@ -558,7 +558,7 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 	switch r.Method {
 	case http.MethodGet:
 		handler := s.lookupGetValue(slot)
-		val, res := handler(slot, fqoid)
+		val, res := handler(fqoid)
 		writeHTTPResult(w, res, val)
 
 	case http.MethodPut:
@@ -580,7 +580,7 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 		}
 
 		handler := s.lookupSetValue(slot)
-		res := handler(nativeValue, slot, fqoid)
+		res := handler(nativeValue, fqoid)
 		writeHTTPStatusResult(w, res)
 
 	default:
@@ -598,7 +598,7 @@ func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slo
 
 	fqoid := strings.Join(pathParts, "/")
 	handler := s.lookupGetAsset(slot)
-	asset, res := handler(slot, fqoid)
+	asset, res := handler(fqoid)
 
 	if res.Error == "" {
 		if compressionStr := r.URL.Query().Get("compression"); compressionStr != "" {
@@ -649,6 +649,6 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 	}
 
 	handler := s.lookupExecuteCommand(slot)
-	val, res := handler(w, r, slot, commandFqoid, payload)
+	val, res := handler(w, r, commandFqoid, payload)
 	writeHTTPResult(w, res, val)
 }

@@ -1,4 +1,6 @@
 CMDS := executeCommand_REST getAsset_REST getDevice_REST getSetValue_REST
+PLUGINS := counter
+BUILD_TARGET ?= bin
 BIN_DIR := $(HOME)/Catena/$(BUILD_TARGET)
 LOG_DIR := ./logs
 
@@ -11,17 +13,42 @@ IMPORT_PATH := github.com/rossvideo/catena/build/go/protos
 PROTO_FILES := $(wildcard $(PROTO_DIR)/*.proto)
 GO_M_OPTS   := $(patsubst %,--go_opt=M%=$(IMPORT_PATH),$(notdir $(PROTO_FILES)))
 
-all: $(CMDS)
+# Default target: build catena, plugins, and examples
+all: build-catena build-plugins build-examples
 
-$(CMDS):
-	mkdir -p $(BIN_DIR)/$@
-	go build -o $(BIN_DIR)/$@/$@ ./examples/$@
+# Build standalone examples
+build-examples: FORCE
+	@for cmd in $(CMDS); do \
+		echo "Building example: $$cmd"; \
+		mkdir -p $(BIN_DIR)/$$cmd; \
+		go build -o $(BIN_DIR)/$$cmd/$$cmd ./examples/$$cmd; \
+	done
+
+# Build the catena executable
+build-catena: FORCE
+	mkdir -p $(BIN_DIR)
+	go build -o $(BIN_DIR)/catena ./cmd/catena
+
+# Build all plugins into build/go/plugins and copy configs
+build-plugins: FORCE
+	mkdir -p $(MOD_DIR)/plugins
+	@for p in $(PLUGINS); do \
+		echo "Building plugin: $$p"; \
+		go build -buildmode=plugin -o $(MOD_DIR)/plugins/$$p.so ./plugins/$$p; \
+		if [ -f ./plugins/$$p/config.yaml ]; then \
+			echo "Copying config: $$p/config.yaml"; \
+			cp ./plugins/$$p/config.yaml $(MOD_DIR)/plugins/$$p.yaml; \
+		fi; \
+	done
+
+FORCE:
 
 # Clean build artifacts and logs
 clean:
 	rm -rf $(BIN_DIR)
 	rm -rf $(LOG_DIR)
 
+.PHONY: all build-catena build-plugins build-examples clean FORCE
 .PHONY: proto-module proto-tools protos protos-grpc update-imports clean-protos
 
 proto-module:
