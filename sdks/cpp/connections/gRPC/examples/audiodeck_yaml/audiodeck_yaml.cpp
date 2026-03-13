@@ -14,10 +14,12 @@
 
 /**
  * @brief Example program to demonstrate setting up a full Catena service.
- * @file stucts_with_authz.cpp
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @file audiodeck_yaml.cpp
+ * @copyright Copyright © 2026 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
  * @author John Danen (john.danen@rossvideo.com)
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-02-24
  */
 
 // device model
@@ -27,6 +29,7 @@
 #include <utils.h>
 #include <Device.h>
 #include <ParamWithValue.h>
+#include <Config.h>
 
 // connections/gRPC
 #include <ServiceImpl.h>
@@ -39,8 +42,6 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
 
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
 #include "absl/strings/str_format.h"
 
 #include <iomanip>
@@ -103,9 +104,9 @@ void RunRPCServer(std::string addr)
 
     try {
         // // check that static_root is a valid file path
-        // if (!std::filesystem::exists(absl::GetFlag(FLAGS_static_root))) {
+        // if (!std::filesystem::exists(config::static_root)) {
         //     std::stringstream why;
-        //     why << std::quoted(absl::GetFlag(FLAGS_static_root)) << " is not a valid file path";
+        //     why << std::quoted(config::static_root) << " is not a valid file path";
         //     throw std::invalid_argument(why.str());
         // }
 
@@ -115,18 +116,13 @@ void RunRPCServer(std::string addr)
 
         builder.AddListeningPort(addr, catena::gRPC::getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
-        ServiceConfig config = ServiceConfig()
-            .set_EOPath(absl::GetFlag(FLAGS_static_root))
-            .set_authz(absl::GetFlag(FLAGS_authz))
-            .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
-            .set_cq(cq.get())
-            .add_dm(&dm);
+        ServiceConfig config = ServiceConfig().set_cq(cq.get()).add_dm(&dm);
         ServiceImpl service(config);
 
         builder.RegisterService(&service);
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
-        LOG(INFO) << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
+        LOG(INFO) << "GRPC on " << addr << " secure mode: " << config::secure_comms;
 
         globalServer = server.get();
 
@@ -168,11 +164,13 @@ void RunRPCServer(std::string addr)
 int main(int argc, char* argv[])
 {
     std::string addr;
-    absl::SetProgramUsageMessage("Runs the Catena Service");
-    absl::ParseCommandLine(argc, argv);
-    Logger::init("audiodeck_REST");
-
-    addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
+    const auto [exit, code] = config::initConfigVariables(argc, argv);
+    if (exit) {
+        return code;
+    }
+    Logger::init("audiodeck_yaml");
+  
+    addr = absl::StrFormat("0.0.0.0:%d", config::port);
   
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();

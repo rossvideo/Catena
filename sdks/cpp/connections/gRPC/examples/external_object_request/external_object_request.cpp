@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,8 +31,10 @@
 /**
  * @brief Example program to demonstrate ExternalObjectRequest.
  * @file external_object_request.cpp
- * @copyright Copyright © 2025 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-02-24
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // device model
@@ -42,6 +44,7 @@
 #include <utils.h>
 #include <Device.h>
 #include <ParamWithValue.h>
+#include <Config.h>
 
 // connections/gRPC
 #include <ServiceImpl.h>
@@ -53,8 +56,6 @@
 #include <grpcpp/health_check_service_interface.h>
 
 
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
 #include "absl/strings/str_format.h"
 
 #include <signal.h>
@@ -94,9 +95,9 @@ void RunRPCServer(std::string addr)
 
     try {
         // // check that static_root is a valid file path
-        // if (!std::filesystem::exists(absl::GetFlag(FLAGS_static_root))) {
+        // if (!std::filesystem::exists(config::static_root)) {
         //     std::stringstream why;
-        //     why << std::quoted(absl::GetFlag(FLAGS_static_root)) << " is not a valid file path";
+        //     why << std::quoted(config::static_root) << " is not a valid file path";
         //     throw std::invalid_argument(why.str());
         // }
         grpc::ServerBuilder builder;
@@ -105,22 +106,17 @@ void RunRPCServer(std::string addr)
 
         builder.AddListeningPort(addr, catena::gRPC::getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
-        ServiceConfig config = ServiceConfig()
-            .set_EOPath(absl::GetFlag(FLAGS_static_root))
-            .set_authz(absl::GetFlag(FLAGS_authz))
-            .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
-            .set_cq(cq.get())
-            .add_dm(&dm);
+        ServiceConfig config = ServiceConfig().set_cq(cq.get()).add_dm(&dm);
         ServiceImpl service(config);
 
         // Updating device's default max array length.
-        dm.set_default_max_length(absl::GetFlag(FLAGS_default_max_array_size));
+        dm.set_default_max_length(config::default_max_array_size);
 
         builder.RegisterService(&service);
 
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
-        LOG(INFO) << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
+        LOG(INFO) << "GRPC on " << addr << " secure mode: " << config::secure_comms;
 
         globalServer = server.get();
 
@@ -146,11 +142,13 @@ void RunRPCServer(std::string addr)
 int main(int argc, char* argv[])
 {
     std::string addr;
-    absl::SetProgramUsageMessage("Runs the Catena Service");
-    absl::ParseCommandLine(argc, argv);
+    const auto [exit, code] = config::initConfigVariables(argc, argv);
+    if (exit) {
+        return code;
+    }
     Logger::init("external_object_request");
   
-    addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
+    addr = absl::StrFormat("0.0.0.0:%d", config::port);
   
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
