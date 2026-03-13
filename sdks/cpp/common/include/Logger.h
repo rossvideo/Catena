@@ -51,6 +51,20 @@
 #include <fstream>
 #include <sstream>
 #include <filesystem>
+#include <boost/make_shared.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/core/record_view.hpp>
+#include <boost/log/sinks/text_file_backend.hpp>
+#include <boost/log/sinks/sync_frontend.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/utility/formatting_ostream.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/expressions/formatters/stream.hpp>
+#include <boost/log/expressions/formatters/date_time.hpp>
+#include <boost/log/support/date_time.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
 
 /**
  * @brief A log sink that writes log messages to a specified file.
@@ -103,4 +117,32 @@ private:
 
   std::ostringstream stream_;
   std::unique_ptr<FileLogSink> fileLogSink_ = nullptr;
+};
+
+/**
+ * @brief Logger class for logging messages to both console and file.
+ */
+class Logger2 {
+public:
+  /**
+  * @brief Initialize the logger.
+  * @param appName The name of the application.
+  */
+  static void init(const std::string& appName);
+
+  // ~Logger() {
+  //   if (fileLogSink_) {
+  //     absl::RemoveLogSink(fileLogSink_.get());
+  //   }
+  // }
+
+private:
+  static Logger2& instance() {
+    static Logger2 logger;
+    return logger;
+  }
+
+  Logger2() = default;
+  Logger2(const Logger&) = delete;
+  Logger2& operator=(const Logger2&) = delete;
 };

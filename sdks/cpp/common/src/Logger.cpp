@@ -74,3 +74,63 @@ void Logger::init(const std::string& appName) {
         absl::AddLogSink(instance().fileLogSink_.get());
     });
 }
+
+using namespace boost::log;
+using namespace catena::common;
+typedef sinks::synchronous_sink<sinks::text_file_backend> sink_t;
+
+void init_file_collecting(boost::shared_ptr<sink_t> sink)
+{
+    sink->locked_backend()->set_file_collector(sinks::file::make_collector(
+        keywords::target = config::log_dir,
+        keywords::max_files = config::log_count
+    ));
+}
+
+void formatter(record_view const& rec, formatting_ostream &strm) {
+    namespace expr = expressions;
+
+    strm << extract<unsigned int>("LineID", rec)
+        << ": " << rec[trivial::severity];
+
+
+    expr::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S.%f");
+}
+
+void Logger2::init(const std::string& appName) {
+    if (!std::filesystem::exists(config::log_dir)) {
+        std::filesystem::create_directories(config::log_dir);
+    }
+
+    std::string fileName = "%Y%m%d_%H%M%S_" + appName + ".log";
+    const int MB = 1024 * 1024;
+    
+    boost::shared_ptr<sinks::text_file_backend> backend =
+    boost::make_shared<sinks::text_file_backend >(
+        keywords::file_name = config::log_dir + "/" + appName + ".log",
+        keywords::target_file_name = config::log_dir + "/" + fileName,
+        keywords::rotation_size = config::log_size * 50
+    );
+    
+    // Wrap it into the frontend and register in the core.
+    // The backend requires synchronization in the frontend.
+    boost::shared_ptr<sink_t> sink(new sink_t(backend));
+    init_file_collecting(sink);
+    sink->locked_backend()->scan_for_files();
+    sink->locked_backend()->auto_flush();
+
+    boost::shared_ptr<core> core = core::get();
+    core->add_sink(sink);
+
+    add_common_attributes();
+    
+
+    sink->set_formatter(expressions::stream 
+        << expressions::attr<unsigned int>("LineID")
+        << ": " << trivial::severity
+        << " " << expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S.%f")
+        << "  " << expressions::attr<attributes::current_process_id::value_type>("ProcessID")
+        << "  " << expressions::attr<attributes::current_thread_id::value_type>("ThreadID")
+        << " ??:??]  "
+        << expressions::message);
+}

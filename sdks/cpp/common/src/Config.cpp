@@ -31,6 +31,12 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             (CATENA_MUTUAL_AUTHC_NAME.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use this to require client to authenticate")
             (CATENA_AUTHZ_NAME.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use OAuth token authorization")
             (CATENA_SILENT_NAME.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use this to suppress all log output.")
+            (CATENA_LOG_LEVEL_NAME.c_str(), po::value<std::string>()->default_value(CATENA_LOG_LEVEL), "Level of logging detail. Options are 'info', 'warning', and 'error'")
+            (CATENA_LOG_CONSOLE_NAME.c_str(), po::value<bool>()->default_value(CATENA_LOG_CONSOLE)->implicit_value(true), "Use console logging(stdout/stderr)")
+            (CATENA_LOG_FILE_NAME.c_str(), po::value<bool>()->default_value(CATENA_LOG_FILE)->implicit_value(true), "Use file logging")
+            (CATENA_LOG_SIZE_NAME.c_str(), po::value<int>()->default_value(CATENA_LOG_SIZE), "Max mb of log files before rotating")
+            (CATENA_LOG_COUNT_NAME.c_str(), po::value<int>()->default_value(CATENA_LOG_COUNT), "Max number of log files before rotating")
+            (CATENA_LOG_MAX_SIZE_NAME.c_str(), po::value<int>()->default_value(CATENA_LOG_MAX_SIZE), "???")
             ;
             
         std::set<std::string> allowedOptions;
@@ -88,6 +94,12 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(CATENA_MUTUAL_AUTHC_NAME)) config::mutual_authc = vars[CATENA_MUTUAL_AUTHC_NAME].as<bool>();
         if (vars.count(CATENA_AUTHZ_NAME)) config::authz = vars[CATENA_AUTHZ_NAME].as<bool>();
         if (vars.count(CATENA_SILENT_NAME)) config::silent = vars[CATENA_SILENT_NAME].as<bool>();
+        if (vars.count(CATENA_LOG_LEVEL_NAME)) config::log_level = vars[CATENA_LOG_LEVEL_NAME].as<std::string>();
+        if (vars.count(CATENA_LOG_CONSOLE_NAME)) config::log_console = vars[CATENA_LOG_CONSOLE_NAME].as<bool>();
+        if (vars.count(CATENA_LOG_FILE_NAME)) config::log_file = vars[CATENA_LOG_FILE_NAME].as<bool>();
+        if (vars.count(CATENA_LOG_SIZE_NAME)) config::log_size = vars[CATENA_LOG_SIZE_NAME].as<int>();
+        if (vars.count(CATENA_LOG_COUNT_NAME)) config::log_count = vars[CATENA_LOG_COUNT_NAME].as<int>();
+        if (vars.count(CATENA_LOG_MAX_SIZE_NAME)) config::log_max_size = vars[CATENA_LOG_MAX_SIZE_NAME].as<int>();
 
     } catch (std::exception& e) {
         std::cerr << e.what() << std::endl;

@@ -68,6 +68,12 @@ const std::string CATENA_MUTUAL_AUTHC_NAME = "mutual_authc";
 const std::string CATENA_AUTHZ_NAME = "authz";
 const std::string CATENA_SILENT_NAME = "silent";
 const std::string CATENA_HELP_NAME = "help";
+const std::string CATENA_LOG_LEVEL_NAME = "log_level";
+const std::string CATENA_LOG_CONSOLE_NAME = "log_console";
+const std::string CATENA_LOG_FILE_NAME = "log_file";
+const std::string CATENA_LOG_SIZE_NAME = "log_size";
+const std::string CATENA_LOG_COUNT_NAME = "log_count";
+const std::string CATENA_LOG_MAX_SIZE_NAME = "log_max_size";
 
 
 /**
@@ -83,6 +89,12 @@ const std::string CATENA_HOSTNAME = "0.0.0.0";
 const uint16_t CATENA_PORT = 6254;
 const uint16_t CATENA_DASHBOARD_PORT = 8080;
 const bool CATENA_DASHBOARD_TLS_ENABLED = false;
+const std::string CATENA_LOG_LEVEL = "info";
+const bool CATENA_LOG_CONSOLE = true;
+const bool CATENA_LOG_FILE = true;
+const int CATENA_LOG_SIZE = 10;
+const int CATENA_LOG_COUNT = 5;
+const int CATENA_LOG_MAX_SIZE = 50;
 
 
 /**
@@ -132,6 +144,18 @@ inline bool authz = false;
 inline bool mutual_authc = false;
 
 inline bool silent = false;
+
+inline std::string log_level = "";
+
+inline bool log_console = false;
+
+inline bool log_file = false;
+
+inline int log_size = 0;
+
+inline int log_count = 0;
+
+inline int log_max_size = 0;
 
 } // namespace config     
 } // namespace common
