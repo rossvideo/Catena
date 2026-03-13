@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,11 +30,10 @@
 
 /**
  * @brief This file is for testing the Menu.cpp file.
- * @author benjamin.whitten@rossvideo.com
- * @author (Nelson Daniels) nelson.daniels@rossvideo.com
- * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
- * @copyright Copyright © 2026 Ross Video Ltd
+ * @author benjamin.whitten@rossvideo.com 
+ * @author (Nelson Daniels) nelson.daniels@rossvideo.com 
+ * @date 25/10/01
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 // gtest
@@ -47,7 +46,7 @@
 
 // common
 #include "Menu.h"
-#include "Config.h"
+#include "SharedFlags.h"
 
 using namespace catena::common;
 
@@ -55,7 +54,7 @@ class MenuTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
         Logger::init("MenuTest");
     }
 

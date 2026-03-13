@@ -19,6 +19,9 @@ using catena::REST::ServiceImpl;
 
 using catena::REST::Connect;
 
+// Defining the port flag from SharedFlags.h
+ABSL_FLAG(uint16_t, port, 443, "Catena REST service port");
+
 // (UNUSED) expand env variables
 // GCOVR_EXCL_START
 void expandEnvVariables(std::string &str) {

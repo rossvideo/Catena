@@ -33,7 +33,7 @@
  * @author nelson.daniels@rossvideo.com
  * @author jason.chen@rossvideo.com
  * @author keon.foster@rossvideo.com
- * @date 2026-02-19
+ * @date 2026/02/11
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -57,7 +57,7 @@ class gRPCExternalObjectRequestTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
         Logger::init("gRPCExternalObjectRequestTest");
     }
 

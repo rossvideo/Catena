@@ -102,8 +102,6 @@ function(set_up_gRPC_targets)
         LIBRARY_OUTPUT_DIRECTORY "${GRPC_SERVICE_DIR}/lib"
     )
 
-    find_package(Boost 1.81 REQUIRED COMPONENTS program_options)
-
     # Provide link libraries
     target_link_libraries(${GRPC_TARGET} PUBLIC
         protobuf::libprotobuf
@@ -111,8 +109,7 @@ function(set_up_gRPC_targets)
         absl::log
         absl::log_globals
         absl::log_initialize
-        absl::log_severity
-        Boost::program_options)
+        absl::log_severity)
 
     # use the protobuf generate function provided by the protobuf package to make the c++ source files
     protobuf_generate(

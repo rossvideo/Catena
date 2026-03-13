@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,13 +31,11 @@
 /**
  * @brief Example program to demonstrate setting up a full Catena service with
  * the REST API.
- * @file status_update_JSON_REST.cpp
+ * @file status_update_REST.cpp
+ * @copyright Copyright © 2025 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
  * @author John Danen (john.danen@rossvideo.com)
  * @author Ben Whitten (Benjamin.whitten@rossvideo.com)
- * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-24
- * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // device model
@@ -47,11 +45,13 @@
 #include <utils.h>
 #include <Device.h>
 #include <ParamWithValue.h>
-#include <Config.h>
-#include <ConnectionProps.h>
 
 // REST
 #include <ServiceImpl.h>
+
+#include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
+#include "absl/strings/str_format.h"
 
 #include <iomanip>
 #include <iostream>
@@ -168,7 +168,12 @@ void RunRESTServer() {
 
     try {
        // Setting config.
-        ServiceConfig config = ServiceConfig().add_dm(&dm);
+        ServiceConfig config = ServiceConfig()
+            .set_EOPath(absl::GetFlag(FLAGS_static_root))
+            .set_authz(absl::GetFlag(FLAGS_authz))
+            .set_port(absl::GetFlag(FLAGS_port))
+            .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
+            .add_dm(&dm);
         
         // Creating and running the REST service.
         ServiceImpl api(config);
@@ -190,23 +195,9 @@ void RunRESTServer() {
 }
 
 int main(int argc, char* argv[]) {
-    const auto [exit, code] = config::initConfigVariables(argc, argv);
-    if (exit) {
-        return code;
-    }
-    Logger::init("status_update_JSON_REST");
-    
-    catena::common::ConnectionProps connectionProps(
-        ConnectionProtocol::ST2138_REST,                // Configuration
-        30000,                                          // Refresh interval in milliseconds
-        "status_update_JSON_REST",                      // Node name
-        "status_update_JSON_REST-a4:bb:6d:6a:6f:a3",    // Node ID
-        "/connect/connection-props.xml"                 // Endpoint
-    );
-
-    if (!connectionProps.start()) {
-        LOG(WARNING) << "Failed to start connection props server on port " << config::dashboard_port;
-    }
+    absl::SetProgramUsageMessage("Runs the Catena Service");
+    absl::ParseCommandLine(argc, argv);
+    Logger::init("status_update_REST");
 
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();

@@ -33,8 +33,7 @@
  * @file value.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
- * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2026-03-09
+ * @date 2026-02-04
  */
 
 package catena
@@ -91,12 +90,9 @@ func ToCatenaValue(v any) (CatenaValue, error) {
 // ToProto converts native Go types to protos.Value
 func ToProto(v any) (*protos.Value, error) {
 	switch val := v.(type) {
-	case DataPayload:
-		pdp, err := dataPayloadToProto(val)
-		if err != nil {
-			return nil, err
-		}
-		return &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: pdp}}, nil
+	case *protos.DataPayload:
+		// Pass through DataPayload directly
+		return nil, fmt.Errorf("DataPayload is not supported in ToProto")
 	case UndefinedValue:
 		return &protos.Value{Kind: &protos.Value_UndefinedValue{UndefinedValue: protos.UndefinedValue(val)}}, nil
 	case EmptyValue:
@@ -173,22 +169,8 @@ func FromProto(pv *protos.Value) (any, error) {
 	}
 	switch pv.GetKind().(type) {
 	case *protos.Value_DataPayload:
-		pdp := pv.GetDataPayload()
-		if pdp == nil {
-			return nil, fmt.Errorf("nil DataPayload in Value")
-		}
-		dp := DataPayload{
-			Metadata:        pdp.GetMetadata(),
-			Digest:          pdp.GetDigest(),
-			PayloadEncoding: Encoding(pdp.GetPayloadEncoding()),
-		}
-		switch k := pdp.GetKind().(type) {
-		case *protos.DataPayload_Url:
-			dp.Url = k.Url
-		case *protos.DataPayload_Payload:
-			dp.Payload = k.Payload
-		}
-		return dp, nil
+		// Return the raw DataPayload proto
+		return nil, fmt.Errorf("DataPayload is not supported in FromProto")
 	case *protos.Value_UndefinedValue:
 		return UndefinedValue(pv.GetUndefinedValue()), nil
 	case *protos.Value_EmptyValue:

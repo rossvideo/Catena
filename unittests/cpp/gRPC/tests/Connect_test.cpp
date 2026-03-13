@@ -32,7 +32,7 @@
  * @brief This file is for testing the Connect.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author keon.foster@rossvideo.com
- * @date 2026-02-19
+ * @date 22/01/26
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -59,7 +59,7 @@ class gRPCConnectTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
         Logger::init("gRPCConnectTests");
     }
 

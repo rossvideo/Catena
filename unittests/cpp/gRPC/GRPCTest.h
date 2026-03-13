@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,9 +32,8 @@
  * @brief A parent class for gRPC test fixtures.
  * @author christian.twarogn@rossvideo.com
  * @author benjamin.whitten@rossvideo.com
- * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
- * @copyright Copyright © 2026 Ross Video Ltd
+ * @date 25/06/18
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
@@ -58,9 +57,9 @@
 #include <grpcpp/grpcpp.h>
 
 // common
-#include <Config.h>
 #include <Status.h>
 #include <Logger.h>
+#include <SharedFlags.h>
 
 namespace catena {
 namespace gRPC {

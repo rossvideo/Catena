@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,9 +31,8 @@
 /**
  * @brief This file is for testing the Authorizer.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
- * @copyright Copyright © 2026 Ross Video Ltd
+ * @date 25/05/20
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #include "MockParam.h"
@@ -42,7 +41,7 @@
 #include "Enums.h"
 #include "CommonTestHelpers.h"
 #include <Logger.h>
-#include "Config.h"
+#include "SharedFlags.h"
 
 // gtest
 #include <gtest/gtest.h>
@@ -73,7 +72,7 @@ class AuthorizationTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
         Logger::init("AuthorizationTest");
     }
 

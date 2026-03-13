@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,15 +30,14 @@
 
 /**
  * @file hello_world.cpp
- * @author John R. Naylor (john.naylor@rossvideo.com)
- * @author Keon Foster (keon.foster@rossvideo.com)
+ * @author john.naylor@rossvideo.com
  * @brief Demonstrates how to create a trivially simple device model
  * and access a parameter within it from your business logic.
  * 
  * It does not support any connections so is not a complete example
  * of a working device.
  * 
- * @copyright Copyright © 2026 Ross Video Ltd
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 // this include header was generated from the json device model
@@ -55,7 +54,6 @@
 #include <ParamWithValue.h>
 #include <MenuGroup.h> // catena::common::MenuGroup
 #include <Menu.h> // catena::common::Menu
-#include <Config.h> // catena::common::config
 
 
 // this include header was generated from the protobuf definition
@@ -64,14 +62,12 @@
 
 #include <Logger.h>
 #include <iostream>
-
+#include <absl/flags/parse.h>
 
 using namespace catena::common;
 int main (int argc, char** argv) {
-    const auto [exit, code] = config::initConfigVariables(argc, argv);
-    if (exit) {
-        return code;
-    }
+    absl::SetProgramUsageMessage("Runs the Catena Service");
+    absl::ParseCommandLine(argc, argv);
     Logger::init("hello_world");
 
     // The client code, below, directly accesses parts of the device model

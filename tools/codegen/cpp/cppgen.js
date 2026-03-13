@@ -1,4 +1,4 @@
-/*Copyright 2026 Ross Video Ltd
+/*Copyright 2025 Ross Video Ltd
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 *
@@ -317,7 +317,7 @@ class CppGen {
 
     } else if (param.isVariantType() && !param.isTemplated()) {
       // define subparams for the variant
-      hloc(`namespace _${param.cppIdentifier} {`, hindent++);
+      hloc(`namespace _${param.oid} {`, hindent++);
       let subParamCount = 0;
       for (let subParam of param.getSubParams()) {
         subParamCount++;
@@ -325,7 +325,7 @@ class CppGen {
           this.writeTypeInfo(subParam);
         }
       }
-      hloc(`} // namespace _${param.cppIdentifier}`, --hindent);
+      hloc(`} // namespace _${param.oid}`, --hindent);
 
       // write variant type alias
       let defType = param.isArrayType() ? param.elementType() : param.objectType();
@@ -351,7 +351,7 @@ class CppGen {
     if (param.constraint != undefined && !param.constraint.isInitialized()) {
       bloc(param.constraint.getInitializer());
     }
-    let varName = `${parentVarName}_${param.cppIdentifier}`;
+    let varName = `${parentVarName}_${param.oid}`;
     bloc(`catena::common::ParamDescriptor ${varName}Descriptor(${param.descriptor.getArgs(parentVarName)});`);
     if (param.hasTypeInfo()) {
       for (let subParam of param.getSubParams()) {

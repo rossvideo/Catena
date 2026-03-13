@@ -37,15 +37,15 @@
 
 // common
 #include <Logger.h>
-#include <Config.h>
+#include <SharedFlags.h>
 
 void Logger::init(const std::string& appName) {
     static std::once_flag flag;
     std::call_once(flag, [&]() {
         absl::InitializeLog();
         
-        if (!std::filesystem::exists(catena::common::config::log_dir)) {
-            std::filesystem::create_directories(catena::common::config::log_dir);
+        if (!std::filesystem::exists(absl::GetFlag(FLAGS_log_dir))) {
+            std::filesystem::create_directories(absl::GetFlag(FLAGS_log_dir));
         }
 
 #ifdef NDEBUG
@@ -55,7 +55,7 @@ void Logger::init(const std::string& appName) {
         // Debug mode: show both LOG and VLOG
         absl::SetGlobalVLogLevel(2);
 #endif
-        if (catena::common::config::silent) {
+        if (absl::GetFlag(FLAGS_silent)) {
             absl::SetMinLogLevel(absl::LogSeverityAtLeast::kError);
         }
         
@@ -73,7 +73,7 @@ void Logger::init(const std::string& appName) {
         char datetime[32];
         std::strftime(datetime, sizeof(datetime), "%Y%m%d_%H%M%S", &tm_buf);
 
-        std::string log_file = catena::common::config::log_dir + "/" + datetime + std::string("_") + appName + ".log";
+        std::string log_file = absl::GetFlag(FLAGS_log_dir) + "/" + datetime + std::string("_") + appName + ".log";
         instance().fileLogSink_ = std::make_unique<FileLogSink>(log_file);
         absl::AddLogSink(instance().fileLogSink_.get());
     });

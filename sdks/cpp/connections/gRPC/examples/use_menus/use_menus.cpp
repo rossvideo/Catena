@@ -1,4 +1,4 @@
-// Copyright 2026 Ross Video Ltd
+// Copyright 2024 Ross Video Ltd
 //
 // Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 //
@@ -17,12 +17,10 @@
 /**
  * @brief Example program to demonstrate setting up a Catena service using menus.
  * @file use_menus.cpp
+ * @copyright Copyright © 2024 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
  * @author John Danen (john.danen@rossvideo.com)
  * @author Ben Mostafa (ben.mostafa@rossvideo.com)
- * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-24
- * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // device model
@@ -32,8 +30,6 @@
 #include <utils.h>
 #include <Device.h>
 #include <ParamWithValue.h>
-#include <Config.h>
-#include <ConnectionProps.h>
 
 // connections/gRPC
 #include <ServiceImpl.h>
@@ -46,6 +42,8 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
 
+#include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
 #include "absl/strings/str_format.h"
 
 #include <iomanip>
@@ -131,13 +129,18 @@ void RunRPCServer(std::string addr)
 
         builder.AddListeningPort(addr, catena::gRPC::getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
-        ServiceConfig config = ServiceConfig().set_cq(cq.get()).add_dm(&dm);
+        ServiceConfig config = ServiceConfig()
+            .set_EOPath(absl::GetFlag(FLAGS_static_root))
+            .set_authz(absl::GetFlag(FLAGS_authz))
+            .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
+            .set_cq(cq.get())
+            .add_dm(&dm);
         ServiceImpl service(config);
 
         builder.RegisterService(&service);
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
-        LOG(INFO) << "GRPC on " << addr << " secure mode: " << config::secure_comms;
+        LOG(INFO) << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
 
         globalServer = server.get();
 
@@ -166,21 +169,14 @@ void RunRPCServer(std::string addr)
 
 int main(int argc, char* argv[])
 {
-    const auto [exit, code] = config::initConfigVariables(argc, argv);
-    if (exit) {
-        return code;
-    }
+    std::string addr;
+    absl::SetProgramUsageMessage("Runs the Catena Service");
+    absl::ParseCommandLine(argc, argv);
     Logger::init("use_menus");
-    
-    catena::common::ConnectionProps connectionProps(
-        ConnectionProtocol::ST2138_GRPC,    // Configuration
-        30000,                              // Refresh interval in milliseconds
-        "use_menus",                        // Node name
-        "use_menus-a4:bb:6d:6a:6f:a3",      // Node ID
-        "/connect/connection-props.xml"     // Endpoint
-    );
   
-    std::thread catenaRpcThread(RunRPCServer, "0.0.0.0:" + std::to_string(config::port));
+    addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
+  
+    std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
     
     return 0;

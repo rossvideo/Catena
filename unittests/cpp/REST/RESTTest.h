@@ -33,7 +33,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @author keon.foster@rossvideo.com
- * @date 2026-02-19
+ * @date 2026/02/03
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -61,7 +61,6 @@ using boost::asio::ip::tcp;
 #include <map>
 
 // common
-#include <Config.h>
 #include <Status.h>
 
 // REST

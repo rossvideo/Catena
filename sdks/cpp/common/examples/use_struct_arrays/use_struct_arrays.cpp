@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,8 +30,7 @@
 
 /**
  * @file use_structs.cpp
- * @author John R. Naylor (john.naylor@rossvideo.com)
- * @author Keon Foster (keon.foster@rossvideo.com)
+ * @author john.naylor@rossvideo.com
  * @brief Steps up the complexity a notch by dealing with structured data
  *
  * It does not support any connections so is not a complete example
@@ -40,7 +39,7 @@
  * It presumes the reader has understood the start_here example and
  * builds on that. Less chatty comments.
  * 
- * @copyright Copyright © 2026 Ross Video Ltd
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 // device model
@@ -51,23 +50,21 @@
 #include <ParamWithValue.h>
 #include <PolyglotText.h>
 #include <Authorizer.h>
-#include <Config.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
 
 #include <iostream>
 #include <Logger.h>
+#include <absl/flags/parse.h>
 
 using namespace catena::common;
 using namespace AudioDeck;
 using catena::common::ParamTag;
 
 int main (int argc, char** argv) {
-    const auto [exit, code] = config::initConfigVariables(argc, argv);
-    if (exit) {
-        return code;
-    }
+    absl::SetProgramUsageMessage("Runs the Catena Service");
+    absl::ParseCommandLine(argc, argv);
     Logger::init("use_struct_arrays");
 
     // lock the model

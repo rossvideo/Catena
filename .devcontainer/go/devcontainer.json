@@ -49,13 +49,7 @@
         "[go]": {
           "editor.formatOnSave": true
         },
-        "go.formatTool": "gofmt",
-        "coverage-gutters.coverageFileNames": [
-          "coverage/go_coverage.lcov",
-          "coverage/lcov.info"
-        ],
-        "coverage-gutters.showLineCoverage": true,
-        "coverage-gutters.showRulerCoverage": true
+        "go.formatTool": "gofmt"
       },
       "extensions": [
         "redhat.vscode-yaml",

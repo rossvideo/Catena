@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,16 +30,14 @@
 
 /**
  * @file import_params.cpp
- * @author John R. Naylor (john.naylor@rossvideo.com)
- * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-24
+ * @author john.naylor@rossvideo.com
  * @brief Demo's a device model that uses imported params
  *
  * On the C++ side, imported params are identical to params that are defined in the device file.
  * 
  * This example aims to give more detail on how default values can be set for subparams of a struct.
  *
- * @copyright Copyright © 2026 Ross Video Ltd
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 // device model
@@ -50,13 +48,13 @@
 #include <Device.h>
 #include <ParamWithValue.h>
 #include <PolyglotText.h>
-#include <Config.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
 
 #include <iostream>
 #include <Logger.h>
+#include <absl/flags/parse.h>
 
 using namespace catena::common;
 using namespace import_params;
@@ -75,10 +73,8 @@ std::string locationToString(const City::Location& location) {
 }
 
 int main (int argc, char** argv) {
-    const auto [exit, code] = config::initConfigVariables(argc, argv);
-    if (exit) {
-        return code;
-    }
+    absl::SetProgramUsageMessage("Runs the Catena Service");
+    absl::ParseCommandLine(argc, argv);
     Logger::init("import_params");
 
     // lock the model

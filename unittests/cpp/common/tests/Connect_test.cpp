@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,12 +28,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @brief This file is for testing the Connect.cpp file.
- * @date 2026-02-19
- * @copyright Copyright © 2026 Ross Video Ltd
- */
-
 #include "MockDevice.h"
 #include "MockSubscriptionManager.h"
 #include "MockParam.h"
@@ -43,7 +37,7 @@
 #include <rpc/Connect.h>
 #include <iostream>
 #include <Logger.h>
-#include "Config.h"
+#include "SharedFlags.h"
 
 using namespace catena::common;
 
@@ -72,7 +66,7 @@ class CommonConnectTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
         Logger::init("ConnectTest");
     }
 

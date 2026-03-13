@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Ross Video Ltd
+ * Copyright 2024 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,11 +31,9 @@
 /**
  * @brief Example program to demonstrate setting up a full Catena service.
  * @file status_update.cpp
+ * @copyright Copyright © 2024 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
  * @author John Danen (john.danen@rossvideo.com)
- * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-24
- * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // device model
@@ -45,8 +43,6 @@
 #include <utils.h>
 #include <Device.h>
 #include <ParamWithValue.h>
-#include <Config.h>
-#include <ConnectionProps.h>
 
 // connections/gRPC
 #include <ServiceImpl.h>
@@ -181,9 +177,9 @@ void RunRPCServer(std::string addr)
 
     try {
         // // check that static_root is a valid file path
-        // if (!std::filesystem::exists(config::static_root)) {
+        // if (!std::filesystem::exists(absl::GetFlag(FLAGS_static_root))) {
         //     std::stringstream why;
-        //     why << std::quoted(config::static_root) << " is not a valid file path";
+        //     why << std::quoted(absl::GetFlag(FLAGS_static_root)) << " is not a valid file path";
         //     throw std::invalid_argument(why.str());
         // }
         grpc::ServerBuilder builder;
@@ -193,18 +189,21 @@ void RunRPCServer(std::string addr)
         builder.AddListeningPort(addr, catena::gRPC::getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
         ServiceConfig config = ServiceConfig()
+            .set_EOPath(absl::GetFlag(FLAGS_static_root))
+            .set_authz(absl::GetFlag(FLAGS_authz))
+            .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
             .set_cq(cq.get())
             .add_dm(&dm);
         ServiceImpl service(config);
 
         // Updating device's default max array length.
-        dm.set_default_max_length(config::default_max_array_size);
+        dm.set_default_max_length(absl::GetFlag(FLAGS_default_max_array_size));
 
         builder.RegisterService(&service);
 
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
-        LOG(INFO) << "GRPC on " << addr << " secure mode: " << config::secure_comms;
+        LOG(INFO) << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
 
         globalServer = server.get();
 
@@ -233,25 +232,14 @@ void RunRPCServer(std::string addr)
 
 int main(int argc, char* argv[])
 {
-    const auto [exit, code] = config::initConfigVariables(argc, argv);
-    if (exit) {
-        return code;
-    }
+    std::string addr;
+    absl::SetProgramUsageMessage("Runs the Catena Service");
+    absl::ParseCommandLine(argc, argv);
     Logger::init("status_update");
-
-    catena::common::ConnectionProps connectionProps(
-        ConnectionProtocol::ST2138_GRPC,        // Configuration
-        30000,                                  // Refresh interval in milliseconds
-        "status_update",                        // Node name
-        "status_update-a4:bb:6d:6a:6f:a3",      // Node ID
-        "/connect/connection-props.xml"         // Endpoint
-    );
-
-    if (!connectionProps.start()) {
-        LOG(WARNING) << "Failed to start connection props server on port " << config::dashboard_port;
-    }
   
-    std::thread catenaRpcThread(RunRPCServer, "0.0.0.0:" + std::to_string(config::port));
+    addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
+  
+    std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
     
     return 0;

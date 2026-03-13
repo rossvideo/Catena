@@ -33,13 +33,14 @@
  * @author benjamin.whitten@rossvideo.com
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @author keon.foster@rossvideo.com
- * @date 2026-02-19
+ * @date 2026/02/09
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // Common
 #include <SubscriptionManager.h>
 #include <Logger.h>
+#include <SharedFlags.h>
 
 // Test helpers
 #include "RESTTest.h"
@@ -60,7 +61,7 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
         Logger::init("RESTSocketReaderTest");
     }
 

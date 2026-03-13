@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,10 +30,9 @@
 
 /**
  * @brief This file is for testing the Logger.cpp file.
- * @author Christian Twarog (christian.twarog@rossvideo.com)
- * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
- * @copyright Copyright © 2026 Ross Video Ltd
+ * @author christian.twarog@rossvideo.com
+ * @date 2025-10-01
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #include "MockParam.h"
@@ -42,7 +41,7 @@
 #include "Enums.h"
 #include "CommonTestHelpers.h"
 #include <Logger.h>
-#include <Config.h>
+#include <SharedFlags.h>
 #include <regex>
 
 // gtest
@@ -54,7 +53,8 @@ class LoggerTest : public ::testing::Test {
     void SetUp() override {
         //wipe entire UNITTEST_LOG_DIR logging dir
         std::filesystem::remove_all(UNITTEST_LOG_DIR + std::string("/logger"));
-        config::log_dir = UNITTEST_LOG_DIR + std::string("/logger");
+
+        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR + std::string("/logger"));
         Logger::init("LoggerTest");
     }
 };
