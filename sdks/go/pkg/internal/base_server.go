@@ -146,7 +146,7 @@ func NewBaseServer(slots []uint16, maxConnections int) *BaseServer {
 }
 
 func (bs *BaseServer) ValidateSlot(slot uint32) (uint16, error) {
-	if slot < 0 || slot > uint32(math.MaxUint16) {
+	if slot > uint32(math.MaxUint16) {
 		if catena.IsDev() {
 			return 0, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid slot number: %d", slot))
 		} else {
