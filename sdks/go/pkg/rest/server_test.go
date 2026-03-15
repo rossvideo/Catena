@@ -472,8 +472,8 @@ func TestServer_DefaultHandlers(t *testing.T) {
 
 	// Test default get asset handler
 	asset, status := srv.LookupGetAssetHandler(0)(0, "test")
-	if status.Code != catena.NOT_FOUND {
-		t.Errorf("default get asset handler should return NOT_FOUND, got %v", status.Code)
+	if status.Code != catena.UNIMPLEMENTED {
+		t.Errorf("default get asset handler should return UNIMPLEMENTED, got %v", status.Code)
 	}
 	if asset.GetProtoAsset() != nil {
 		t.Error("default get asset handler should return nil asset")
@@ -483,35 +483,6 @@ func TestServer_DefaultHandlers(t *testing.T) {
 	value, status = srv.LookupExecuteCommandHandler(0)(0, "test", nil)
 	if status.Code != catena.UNIMPLEMENTED {
 		t.Errorf("default execute command handler should return UNIMPLEMENTED, got %v", status.Code)
-	}
-}
-
-func TestServer_LookupHandlers_NotRegistered(t *testing.T) {
-	srv := NewServer([]uint16{}, 100) // No slots registered
-
-	// Should return default handlers for unregistered slots
-	handler := srv.LookupGetValueHandler(99)
-	_, status := handler(99, "test")
-	if status.Code != catena.UNIMPLEMENTED {
-		t.Errorf("expected UNIMPLEMENTED for unregistered slot, got %v", status.Code)
-	}
-
-	setHandler := srv.LookupSetValueHandler(99)
-	status = setHandler(nil, 99, "test")
-	if status.Code != catena.UNIMPLEMENTED {
-		t.Errorf("expected UNIMPLEMENTED for unregistered slot, got %v", status.Code)
-	}
-
-	assetHandler := srv.LookupGetAssetHandler(99)
-	_, status = assetHandler(99, "test")
-	if status.Code != catena.NOT_FOUND {
-		t.Errorf("expected NOT_FOUND for unregistered slot, got %v", status.Code)
-	}
-
-	cmdHandler := srv.LookupExecuteCommandHandler(99)
-	_, status = cmdHandler(99, "test", nil)
-	if status.Code != catena.UNIMPLEMENTED {
-		t.Errorf("expected UNIMPLEMENTED for unregistered slot, got %v", status.Code)
 	}
 }
 

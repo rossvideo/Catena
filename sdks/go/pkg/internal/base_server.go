@@ -33,7 +33,7 @@ type BaseServer struct {
 
 // Default handlers that return "not implemented"
 func DefaultDeviceHandler() (catena.CatenaDevice, catena.StatusResult) {
-	return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "GetDevice not implemented")
+	return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "No device defined at slot")
 }
 
 func DefaultGetValueHandler(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
@@ -45,7 +45,7 @@ func DefaultSetValueHandler(value any, slot uint16, fqoid string) catena.StatusR
 }
 
 func DefaultGetAssetHandler(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
-	return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "GetAsset not implemented")
+	return catena.ReplyError[catena.CatenaAsset](catena.UNIMPLEMENTED, "GetAsset not implemented")
 }
 
 func DefaultExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
