@@ -51,20 +51,41 @@
 #include <fstream>
 #include <sstream>
 #include <filesystem>
+
+//BOOST libraries
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/core/record_view.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/expressions/formatters/stream.hpp>
+#include <boost/log/expressions/formatters/date_time.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/formatting_ostream.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/expressions/formatters/stream.hpp>
-#include <boost/log/expressions/formatters/date_time.hpp>
+#include <boost/log/utility/manipulators/add_value.hpp>
 #include <boost/log/support/date_time.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/posix_time/posix_time_io.hpp>
+
+// Helper to get basename of __FILE__
+inline const char* log_basename(const char* path) {
+    const char* p = std::strrchr(path, '/');
+    if (!p) p = std::strrchr(path, '\\');
+    return p ? p + 1 : path;
+}
+
+BOOST_LOG_ATTRIBUTE_KEYWORD(IsVlog, "IsVlog", bool);
+#define CATENA_LOG(severity) \
+BOOST_LOG_SCOPED_THREAD_ATTR("IsVlog", boost::log::attributes::constant<bool>(false)); \
+  BOOST_LOG_TRIVIAL(severity) << boost::log::add_value("File", log_basename(__FILE__)) \
+                              << boost::log::add_value("Line", __LINE__)
+#define CATENA_VLOG(severity) \
+  BOOST_LOG_SCOPED_THREAD_ATTR("IsVlog", boost::log::attributes::constant<bool>(true)); \
+  BOOST_LOG_TRIVIAL(severity) << boost::log::add_value("File", log_basename(__FILE__)) \
+                              << boost::log::add_value("Line", __LINE__)
 
 /**
  * @brief A log sink that writes log messages to a specified file.

@@ -77,6 +77,7 @@ void Logger::init(const std::string& appName) {
 
 using namespace boost::log;
 using namespace catena::common;
+namespace expr = expressions;
 typedef sinks::synchronous_sink<sinks::text_file_backend> sink_t;
 
 void init_file_collecting(boost::shared_ptr<sink_t> sink)
@@ -87,21 +88,40 @@ void init_file_collecting(boost::shared_ptr<sink_t> sink)
     ));
 }
 
-void formatter(record_view const& rec, formatting_ostream &strm) {
-    namespace expr = expressions;
-
-    strm << extract<unsigned int>("LineID", rec)
+void catena_formatter(record_view const& rec, formatting_ostream &strm) {
+    static std::atomic<unsigned int> rec_id{0};
+    strm << (++rec_id)
         << ": " << rec[trivial::severity];
+    
+    // Format timestamp asd HH::MM::SS.Microseconds
+    std::ostringstream oss;
+    boost::posix_time::time_facet* facet = new boost::posix_time::time_facet();
+    facet->format("%H:%M:%S.%f");
+    auto ts = extract<boost::posix_time::ptime>("TimeStamp", rec);
+    oss.imbue(std::locale(oss.getloc(), facet));
+    oss << *ts;
 
+    strm << " " << oss.str()
+        << "  " << extract<attributes::current_process_id::value_type>("ProcessID", rec)->native_id()
+        << " " << extract<std::string>("File", rec)
+        << ":" << extract<int>("Line", rec)
+        <<"]  " << rec[expr::message];
+}
 
-    expr::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S.%f");
+bool catena_vlog_filter(boost::log::attribute_value_set const& attrs) {
+    auto is_vlog = boost::log::extract<bool>("IsVlog", attrs);
+    auto vlog_enabled = boost::log::extract<bool>("VlogEnabled", attrs);
+
+    if (*is_vlog && !(*vlog_enabled))
+        return false;
+    return true;
 }
 
 void Logger2::init(const std::string& appName) {
     if (!std::filesystem::exists(config::log_dir)) {
         std::filesystem::create_directories(config::log_dir);
     }
-
+    
     std::string fileName = "%Y%m%d_%H%M%S_" + appName + ".log";
     const int MB = 1024 * 1024;
     
@@ -118,19 +138,31 @@ void Logger2::init(const std::string& appName) {
     init_file_collecting(sink);
     sink->locked_backend()->scan_for_files();
     sink->locked_backend()->auto_flush();
+    sink->set_formatter(&catena_formatter);
 
     boost::shared_ptr<core> core = core::get();
     core->add_sink(sink);
+    add_common_attributes();  
 
-    add_common_attributes();
-    
+    //Filter VLOG if not in debug
+#ifdef NDEBUG
+    core->add_global_attribute("VlogEnabled", attributes::constant<bool>(false));
+#else
+    core->add_global_attribute("VlogEnabled", attributes::constant<bool>(true));
+#endif
+    sink->set_filter(&catena_vlog_filter);
 
-    sink->set_formatter(expressions::stream 
-        << expressions::attr<unsigned int>("LineID")
-        << ": " << trivial::severity
-        << " " << expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S.%f")
-        << "  " << expressions::attr<attributes::current_process_id::value_type>("ProcessID")
-        << "  " << expressions::attr<attributes::current_thread_id::value_type>("ThreadID")
-        << " ??:??]  "
-        << expressions::message);
+    // sink->set_filter(
+    //     !expr::has_attr("IsVlog") ||
+    //     expr::attr<bool>("VlogEnabled") == true
+    // );
+
+    // sink->set_formatter(expressions::stream 
+    //     << expressions::attr<unsigned int>("LineID")
+    //     << ": " << trivial::severity
+    //     << " " << expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S.%f")
+    //     << "  " << expressions::attr<attributes::current_process_id::value_type>("ProcessID")
+    //     << "  " << expressions::attr<attributes::current_thread_id::value_type>("ThreadID")
+    //     << " ??:??]  "
+    //     << expressions::message);
 }

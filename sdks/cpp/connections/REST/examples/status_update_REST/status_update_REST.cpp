@@ -76,7 +76,7 @@ std::atomic<bool> globalLoop = true;
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
-        BOOST_LOG_TRIVIAL(info) << "Caught signal " << sig << ", shutting down";
+        CATENA_LOG(info) << "Caught signal " << sig << ", shutting down";
         globalLoop = false;
         if (globalApi != nullptr) {
             globalApi->Shutdown();
@@ -90,35 +90,35 @@ void counterUpdateHandler(const std::string& oid, const IParam* p) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
     const int32_t& counter = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    BOOST_LOG_TRIVIAL(info) << "*** client set counter to " << counter;
+    CATENA_LOG(info) << "*** client set counter to " << counter;
 }
 
 void text_boxUpdateHandler(const std::string& oid, const IParam* p) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
     const std::string& text_box = dynamic_cast<const ParamWithValue<std::string>*>(p)->get();
-    BOOST_LOG_TRIVIAL(info) << "*** client set text_box to " << text_box;
+    CATENA_LOG(info) << "*** client set text_box to " << text_box;
 }
 
 void buttonUpdateHandler(const std::string& oid, const IParam* p) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
     const int32_t& button = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    BOOST_LOG_TRIVIAL(info) << "*** client set button to " << button;
+    CATENA_LOG(info) << "*** client set button to " << button;
 }
 
 void sliderUpdateHandler(const std::string& oid, const IParam* p) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
     const int32_t& slider = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    BOOST_LOG_TRIVIAL(info) << "*** client set slider to " << slider;
+    CATENA_LOG(info) << "*** client set slider to " << slider;
 }
 
 void combo_boxUpdateHandler(const std::string& oid, const IParam* p) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
     const int32_t& combo_box = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    BOOST_LOG_TRIVIAL(info) << "*** client set combo_box to " << combo_box;
+    CATENA_LOG(info) << "*** client set combo_box to " << combo_box;
 }
 
 void statusUpdateExample(){   
@@ -154,7 +154,7 @@ void statusUpdateExample(){
             std::lock_guard lg(dm.mutex());
             counter.get()++;
             // VLOG(1) << counter.getOid() << " set to " << counter.get();
-            BOOST_LOG_TRIVIAL(info) << counter.getOid() << " set to " << counter.get();
+            CATENA_LOG(info) << counter.getOid() << " set to " << counter.get();
             dm.getValueSetByServer().emit("/counter", &counter);
         }
     }
@@ -173,8 +173,8 @@ void RunRESTServer() {
         // Creating and running the REST service.
         ServiceImpl api(config);
         globalApi = &api;
-        BOOST_LOG_TRIVIAL(info) << "API Version: " << api.version();
-        BOOST_LOG_TRIVIAL(info) << "REST on 0.0.0.0:" << config.port;
+        CATENA_VLOG(info) << "API Version: " << api.version();
+        CATENA_VLOG(info) << "REST on 0.0.0.0:" << config.port;
         
         std::thread counterLoop(statusUpdateExample);
 
@@ -185,7 +185,7 @@ void RunRESTServer() {
 
         counterLoop.join();
     } catch (std::exception &why) {
-        BOOST_LOG_TRIVIAL(error) << "Problem: " << why.what();
+        CATENA_LOG(error) << "Problem: " << why.what();
     }
 }
 
@@ -205,7 +205,7 @@ int main(int argc, char* argv[]) {
     // );
 
     // if (!connectionProps.start()) {
-    //     BOOST_LOG_TRIVIAL(warning) << "Failed to start connection props server on port " << config::dashboard_port;
+    //     CATENA_LOG(warning) << "Failed to start connection props server on port " << config::dashboard_port;
     // }
 
     std::thread catenaRestThread(RunRESTServer);
