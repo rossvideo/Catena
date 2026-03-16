@@ -472,15 +472,3 @@ func (s *Server) SetMaxConnections(max int) {
 func (s *Server) ConnectionCount() int {
 	return s.baseServer.ConnectionCount()
 }
-
-func (s *Server) RegisterConnection() (int, *internal.Connection) {
-	return s.baseServer.RegisterConnection()
-}
-
-func (s *Server) DeregisterConnection(id int) {
-	s.baseServer.DeregisterConnection(id)
-}
-
-func (s *Server) ShutdownConnections() {
-	s.baseServer.ShutdownConnections()
-}
