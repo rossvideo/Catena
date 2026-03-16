@@ -157,7 +157,7 @@ func (bs *BaseServer) ValidateSlot(slot uint32) (uint16, error) {
 }
 
 func (bs *BaseServer) ValidateSlotString(slot string) (uint16, error) {
-	slotInt, err := strconv.Atoi(slot)
+	slotInt, err := strconv.ParseUint(slot, 10, 32)
 	if err != nil {
 		return 0, err
 	}
