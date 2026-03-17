@@ -38,12 +38,6 @@
 
 package catena
 
-import (
-	"net/http"
-
-	"google.golang.org/grpc/codes"
-)
-
 // StatusCode represents both gRPC and HTTP status codes.
 // Codes 0-16 are compatible with gRPC status codes.
 // Codes 200+ are HTTP-specific and should not be used in gRPC contexts.
@@ -124,6 +118,9 @@ const (
 	// NO_CONTENT indicates the server successfully processed the request with no content.
 	NO_CONTENT StatusCode = 204
 
+	// BAD_REQUEST indicates the request was malformed.
+	BAD_REQUEST StatusCode = 400
+
 	// METHOD_NOT_ALLOWED indicates the method is not allowed for the requested resource.
 	METHOD_NOT_ALLOWED StatusCode = 405
 
@@ -145,116 +142,6 @@ const (
 	// GATEWAY_TIMEOUT indicates the server did not receive a timely response from upstream.
 	GATEWAY_TIMEOUT StatusCode = 504
 )
-
-// ToHTTPStatus converts a StatusCode to an HTTP status code.
-// gRPC codes are mapped to their closest HTTP equivalents.
-func (s StatusCode) ToHTTPStatus() int {
-	switch s {
-	case OK:
-		return http.StatusOK
-	case CANCELLED:
-		return 499 // Client Closed Request (nginx convention)
-	case UNKNOWN:
-		return http.StatusInternalServerError
-	case INVALID_ARGUMENT:
-		return http.StatusBadRequest
-	case DEADLINE_EXCEEDED:
-		return http.StatusGatewayTimeout
-	case NOT_FOUND:
-		return http.StatusNotFound
-	case ALREADY_EXISTS:
-		return http.StatusConflict
-	case PERMISSION_DENIED:
-		return http.StatusForbidden
-	case RESOURCE_EXHAUSTED:
-		return http.StatusTooManyRequests
-	case FAILED_PRECONDITION:
-		return http.StatusBadRequest
-	case ABORTED:
-		return http.StatusConflict
-	case OUT_OF_RANGE:
-		return http.StatusBadRequest
-	case UNIMPLEMENTED:
-		return http.StatusNotImplemented
-	case INTERNAL:
-		return http.StatusInternalServerError
-	case UNAVAILABLE:
-		return http.StatusServiceUnavailable
-	case DATA_LOSS:
-		return http.StatusInternalServerError
-	case UNAUTHENTICATED:
-		return http.StatusUnauthorized
-	// REST codes map directly
-	case CREATED, ACCEPTED, NO_CONTENT, METHOD_NOT_ALLOWED, CONFLICT,
-		UNPROCESSABLE_ENTITY, TOO_MANY_REQUESTS, BAD_GATEWAY,
-		SERVICE_UNAVAILABLE, GATEWAY_TIMEOUT:
-		return int(s)
-	default:
-		return http.StatusInternalServerError
-	}
-}
-
-// ToGRPCCode converts a StatusCode to a gRPC codes.Code.
-// REST-specific codes are mapped to their closest gRPC equivalents.
-// Only codes 0-16 are valid gRPC codes; this ensures proper interoperability.
-func (s StatusCode) ToGRPCCode() codes.Code {
-	switch s {
-	// gRPC-compatible codes (0-16) map directly
-	case OK:
-		return codes.OK
-	case CANCELLED:
-		return codes.Canceled
-	case UNKNOWN:
-		return codes.Unknown
-	case INVALID_ARGUMENT:
-		return codes.InvalidArgument
-	case DEADLINE_EXCEEDED:
-		return codes.DeadlineExceeded
-	case NOT_FOUND:
-		return codes.NotFound
-	case ALREADY_EXISTS:
-		return codes.AlreadyExists
-	case PERMISSION_DENIED:
-		return codes.PermissionDenied
-	case RESOURCE_EXHAUSTED:
-		return codes.ResourceExhausted
-	case FAILED_PRECONDITION:
-		return codes.FailedPrecondition
-	case ABORTED:
-		return codes.Aborted
-	case OUT_OF_RANGE:
-		return codes.OutOfRange
-	case UNIMPLEMENTED:
-		return codes.Unimplemented
-	case INTERNAL:
-		return codes.Internal
-	case UNAVAILABLE:
-		return codes.Unavailable
-	case DATA_LOSS:
-		return codes.DataLoss
-	case UNAUTHENTICATED:
-		return codes.Unauthenticated
-	// REST-specific codes need conversion
-	case CREATED, ACCEPTED, NO_CONTENT:
-		return codes.OK
-	case METHOD_NOT_ALLOWED:
-		return codes.Unimplemented
-	case CONFLICT:
-		return codes.AlreadyExists
-	case UNPROCESSABLE_ENTITY:
-		return codes.InvalidArgument
-	case TOO_MANY_REQUESTS:
-		return codes.ResourceExhausted
-	case BAD_GATEWAY:
-		return codes.Unavailable
-	case SERVICE_UNAVAILABLE:
-		return codes.Unavailable
-	case GATEWAY_TIMEOUT:
-		return codes.DeadlineExceeded
-	default:
-		return codes.Unknown
-	}
-}
 
 // ResponseType is a constraint for types that can be returned from handlers
 type ResponseType interface {

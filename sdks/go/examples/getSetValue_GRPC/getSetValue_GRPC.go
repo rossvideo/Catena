@@ -83,7 +83,7 @@ func main() {
 	deviceParams.Store("/contrast", int32(60))
 
 	// Create gRPC server with slot 0
-	server := grpcServer.NewServer([]uint16{0}, 100, catena.Config{})
+	server := grpcServer.NewServer([]uint16{0}, 100, cfg)
 
 	// Register GetValue handler
 	server.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {

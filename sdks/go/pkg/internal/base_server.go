@@ -9,8 +9,6 @@ import (
 	"github.com/rossvideo/catena/build/go/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // Handlers now return (CatenaValue, StatusResult) so the server can respond consistently.
@@ -145,21 +143,18 @@ func NewBaseServer(slots []uint16, maxConnections int) *BaseServer {
 	return bs
 }
 
-func (bs *BaseServer) ValidateSlot(slot uint32) (uint16, error) {
+func (bs *BaseServer) ValidateSlot(slot uint32) (uint16, catena.StatusResult) {
 	if slot > uint32(math.MaxUint16) {
-		if catena.IsDev() {
-			return 0, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid slot number: %d", slot))
-		} else {
-			return 0, status.Error(codes.InvalidArgument, "")
-		}
+		return 0, catena.StatusWithCode(catena.INVALID_ARGUMENT, fmt.Sprintf("invalid slot number: %d", slot))
+
 	}
-	return uint16(slot), nil
+	return uint16(slot), catena.StatusWithCode(catena.OK, "")
 }
 
-func (bs *BaseServer) ValidateSlotString(slot string) (uint16, error) {
+func (bs *BaseServer) ValidateSlotString(slot string) (uint16, catena.StatusResult) {
 	slotInt, err := strconv.ParseUint(slot, 10, 32)
 	if err != nil {
-		return 0, err
+		return 0, catena.StatusWithCode(catena.INVALID_ARGUMENT, fmt.Sprintf("invalid slot string: %s", slot))
 	}
 	return bs.ValidateSlot(uint32(slotInt))
 }

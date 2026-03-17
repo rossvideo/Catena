@@ -64,7 +64,7 @@ type Server struct {
 
 // writeHTTPResult is a unified function that handles writing different response types
 func writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value interface{}) {
-	httpStatus := result.Code.ToHTTPStatus()
+	httpStatus := ToHTTPStatus(result.Code)
 
 	if result.Error != "" {
 		// Set status code BEFORE writing error body
@@ -94,8 +94,8 @@ func writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value in
 
 // writeHTTPStatusResult writes a StatusResult to the HTTP response (no value).
 func writeHTTPStatusResult(w http.ResponseWriter, result catena.StatusResult) {
-	httpStatus := result.Code.ToHTTPStatus()
-	logger.Info("writeHTTPStatusResult", "httpStatus", httpStatus, "error", result.Error, "code", result.Code.ToHTTPStatus())
+	httpStatus := ToHTTPStatus(result.Code)
+	logger.Info("writeHTTPStatusResult", "httpStatus", httpStatus, "error", result.Error, "code", result.Code)
 
 	// Set status code BEFORE writing body
 	w.WriteHeader(httpStatus)
@@ -320,7 +320,7 @@ func (s *Server) RegisterRoutes() {
 
 		slotStr := parts[2]
 		slot, err := s.baseServer.ValidateSlotString(slotStr)
-		if err != nil {
+		if err.Code != catena.OK {
 			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid slot number")
 			writeHTTPResult(w, res, val)
 			return
@@ -387,16 +387,16 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 	case http.MethodPut:
 		// Read request body
 		reqValue, err := ReadRequestJSON(r)
-		if err != nil {
+		if err.Code != catena.OK {
 			logger.Error("failed to read request", "error", err)
 			writeHTTPStatusResult(w, catena.StatusWithCode(catena.INVALID_ARGUMENT, "invalid request body"))
 			return
 		}
 
 		// Convert proto value to native Go type
-		nativeValue, err := catena.FromProto(reqValue)
-		if err != nil {
-			logger.Error("failed to convert proto value to native Go type", "error", err)
+		nativeValue, errProto := catena.FromProto(reqValue)
+		if errProto != nil {
+			logger.Error("failed to convert proto value to native Go type", "error", err.Error)
 			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid request body")
 			writeHTTPResult(w, res, val)
 			return
@@ -456,15 +456,16 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 	var payload any
 	if r.ContentLength > 0 {
 		reqValue, err := ReadRequestJSON(r)
-		if err != nil {
+		if err.Code != catena.OK {
 			logger.Error("failed to read command payload", "error", err)
 			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid command payload")
 			writeHTTPResult(w, res, val)
 			return
 		}
-		payload, err = catena.FromProto(reqValue)
-		if err != nil {
-			logger.Error("failed to convert proto value to native Go type", "error", err)
+		var errProto error
+		payload, errProto = catena.FromProto(reqValue)
+		if errProto != nil {
+			logger.Error("failed to convert proto value to native Go type", "error", err.Error)
 			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid command payload")
 			writeHTTPResult(w, res, val)
 			return
@@ -474,6 +475,54 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 	handler := s.baseServer.LookupExecuteCommandHandler(slot)
 	val, res := handler(slot, commandFqoid, payload)
 	writeHTTPResult(w, res, val)
+}
+
+// ToHTTPStatus converts a StatusCode to an HTTP status code.
+// gRPC codes are mapped to their closest HTTP equivalents.
+func ToHTTPStatus(s catena.StatusCode) int {
+	switch s {
+	case catena.OK:
+		return http.StatusOK
+	case catena.CANCELLED:
+		return 499 // Client Closed Request (nginx convention)
+	case catena.UNKNOWN:
+		return http.StatusInternalServerError
+	case catena.INVALID_ARGUMENT:
+		return http.StatusBadRequest
+	case catena.DEADLINE_EXCEEDED:
+		return http.StatusGatewayTimeout
+	case catena.NOT_FOUND:
+		return http.StatusNotFound
+	case catena.ALREADY_EXISTS:
+		return http.StatusConflict
+	case catena.PERMISSION_DENIED:
+		return http.StatusForbidden
+	case catena.RESOURCE_EXHAUSTED:
+		return http.StatusTooManyRequests
+	case catena.FAILED_PRECONDITION:
+		return http.StatusBadRequest
+	case catena.ABORTED:
+		return http.StatusConflict
+	case catena.OUT_OF_RANGE:
+		return http.StatusBadRequest
+	case catena.UNIMPLEMENTED:
+		return http.StatusNotImplemented
+	case catena.INTERNAL:
+		return http.StatusInternalServerError
+	case catena.UNAVAILABLE:
+		return http.StatusServiceUnavailable
+	case catena.DATA_LOSS:
+		return http.StatusInternalServerError
+	case catena.UNAUTHENTICATED:
+		return http.StatusUnauthorized
+	// REST codes map directly
+	case catena.CREATED, catena.ACCEPTED, catena.NO_CONTENT, catena.METHOD_NOT_ALLOWED, catena.CONFLICT,
+		catena.UNPROCESSABLE_ENTITY, catena.TOO_MANY_REQUESTS, catena.BAD_GATEWAY,
+		catena.SERVICE_UNAVAILABLE, catena.GATEWAY_TIMEOUT:
+		return int(s)
+	default:
+		return http.StatusInternalServerError
+	}
 }
 
 func (s *Server) RegisterGetDeviceHandler(slot uint16, handler internal.DeviceHandler) {

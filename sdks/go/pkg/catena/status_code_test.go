@@ -39,154 +39,9 @@
 package catena
 
 import (
-	"net/http"
+	"fmt"
 	"testing"
-
-	"google.golang.org/grpc/codes"
 )
-
-func TestStatusCode_ToHTTPStatus_gRPCCodes(t *testing.T) {
-	tests := []struct {
-		code     StatusCode
-		expected int
-	}{
-		{OK, http.StatusOK},
-		{CANCELLED, 499},
-		{UNKNOWN, http.StatusInternalServerError},
-		{INVALID_ARGUMENT, http.StatusBadRequest},
-		{DEADLINE_EXCEEDED, http.StatusGatewayTimeout},
-		{NOT_FOUND, http.StatusNotFound},
-		{ALREADY_EXISTS, http.StatusConflict},
-		{PERMISSION_DENIED, http.StatusForbidden},
-		{RESOURCE_EXHAUSTED, http.StatusTooManyRequests},
-		{FAILED_PRECONDITION, http.StatusBadRequest},
-		{ABORTED, http.StatusConflict},
-		{OUT_OF_RANGE, http.StatusBadRequest},
-		{UNIMPLEMENTED, http.StatusNotImplemented},
-		{INTERNAL, http.StatusInternalServerError},
-		{UNAVAILABLE, http.StatusServiceUnavailable},
-		{DATA_LOSS, http.StatusInternalServerError},
-		{UNAUTHENTICATED, http.StatusUnauthorized},
-	}
-
-	for i, tt := range tests {
-		t.Run(http.StatusText(tt.expected), func(t *testing.T) {
-			result := tt.code.ToHTTPStatus()
-			if result != tt.expected {
-				t.Errorf("test %d: StatusCode(%d).ToHTTPStatus() = %d, want %d", i, tt.code, result, tt.expected)
-			}
-		})
-	}
-}
-
-func TestStatusCode_ToHTTPStatus_RESTCodes(t *testing.T) {
-	tests := []struct {
-		code     StatusCode
-		expected int
-	}{
-		{CREATED, 201},
-		{ACCEPTED, 202},
-		{NO_CONTENT, 204},
-		{METHOD_NOT_ALLOWED, 405},
-		{CONFLICT, 409},
-		{UNPROCESSABLE_ENTITY, 422},
-		{TOO_MANY_REQUESTS, 429},
-		{BAD_GATEWAY, 502},
-		{SERVICE_UNAVAILABLE, 503},
-		{GATEWAY_TIMEOUT, 504},
-	}
-
-	for i, tt := range tests {
-		t.Run(http.StatusText(tt.expected), func(t *testing.T) {
-			result := tt.code.ToHTTPStatus()
-			if result != tt.expected {
-				t.Errorf("test %d: StatusCode(%d).ToHTTPStatus() = %d, want %d", i, tt.code, result, tt.expected)
-			}
-		})
-	}
-}
-
-func TestStatusCode_ToHTTPStatus_Unknown(t *testing.T) {
-	// Unknown codes should default to InternalServerError
-	unknownCode := StatusCode(999)
-	result := unknownCode.ToHTTPStatus()
-	if result != http.StatusInternalServerError {
-		t.Errorf("Unknown StatusCode.ToHTTPStatus() = %d, want %d", result, http.StatusInternalServerError)
-	}
-}
-
-func TestStatusCode_ToGRPCCode_gRPCCodes(t *testing.T) {
-	tests := []struct {
-		code     StatusCode
-		expected codes.Code
-	}{
-		{OK, codes.OK},
-		{CANCELLED, codes.Canceled},
-		{UNKNOWN, codes.Unknown},
-		{INVALID_ARGUMENT, codes.InvalidArgument},
-		{DEADLINE_EXCEEDED, codes.DeadlineExceeded},
-		{NOT_FOUND, codes.NotFound},
-		{ALREADY_EXISTS, codes.AlreadyExists},
-		{PERMISSION_DENIED, codes.PermissionDenied},
-		{RESOURCE_EXHAUSTED, codes.ResourceExhausted},
-		{FAILED_PRECONDITION, codes.FailedPrecondition},
-		{ABORTED, codes.Aborted},
-		{OUT_OF_RANGE, codes.OutOfRange},
-		{UNIMPLEMENTED, codes.Unimplemented},
-		{INTERNAL, codes.Internal},
-		{UNAVAILABLE, codes.Unavailable},
-		{DATA_LOSS, codes.DataLoss},
-		{UNAUTHENTICATED, codes.Unauthenticated},
-	}
-
-	for i, tt := range tests {
-		t.Run(tt.expected.String(), func(t *testing.T) {
-			result := tt.code.ToGRPCCode()
-			if result != tt.expected {
-				t.Errorf("test %d: StatusCode(%d).ToGRPCCode() = %v, want %v", i, tt.code, result, tt.expected)
-			}
-		})
-	}
-}
-
-func TestStatusCode_ToGRPCCode_Unknown(t *testing.T) {
-	unknownCode := StatusCode(999)
-	result := unknownCode.ToGRPCCode()
-	if result != codes.Unknown {
-		t.Errorf("Unknown StatusCode.ToGRPCCode() = %v, want %v", result, codes.Unknown)
-	}
-}
-
-func TestStatusCode_ToGRPCCode_ValidRange(t *testing.T) {
-	grpcCodes := []StatusCode{
-		OK, CANCELLED, UNKNOWN, INVALID_ARGUMENT, DEADLINE_EXCEEDED,
-		NOT_FOUND, ALREADY_EXISTS, PERMISSION_DENIED, RESOURCE_EXHAUSTED,
-		FAILED_PRECONDITION, ABORTED, OUT_OF_RANGE, UNIMPLEMENTED,
-		INTERNAL, UNAVAILABLE, DATA_LOSS, UNAUTHENTICATED,
-	}
-
-	for _, code := range grpcCodes {
-		result := code.ToGRPCCode()
-		if int(result) < 0 || int(result) > 16 {
-			t.Errorf("StatusCode(%d).ToGRPCCode() = %v (%d) is outside valid gRPC code range 0-16", code, result, int(result))
-		}
-	}
-}
-
-func TestStatusCode_ToGRPCCode_RESTCodesValidRange(t *testing.T) {
-	restCodes := []StatusCode{
-		CREATED, ACCEPTED, NO_CONTENT, METHOD_NOT_ALLOWED, CONFLICT,
-		UNPROCESSABLE_ENTITY, TOO_MANY_REQUESTS, BAD_GATEWAY,
-		SERVICE_UNAVAILABLE, GATEWAY_TIMEOUT,
-	}
-
-	for _, code := range restCodes {
-		result := code.ToGRPCCode()
-		if int(result) < 0 || int(result) > 16 {
-			t.Errorf("StatusCode(%d).ToGRPCCode() = %v (%d) is outside valid gRPC code range 0-16", code, result, int(result))
-		}
-	}
-}
 
 func TestStatusCodeConstants(t *testing.T) {
 	// Verify gRPC-compatible codes are in the expected range (0-16)
@@ -392,7 +247,7 @@ func TestReplyError_AllStatusCodes(t *testing.T) {
 	}
 
 	for i, code := range codes {
-		t.Run(http.StatusText(code.ToHTTPStatus()), func(t *testing.T) {
+		t.Run(fmt.Sprintf("StatusCode_%d", code), func(t *testing.T) {
 			result, status := ReplyError[CatenaValue](code, "test error")
 			if status.Code != code {
 				t.Errorf("test %d: ReplyError code = %d, want %d", i, status.Code, code)
