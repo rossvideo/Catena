@@ -94,12 +94,19 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(CATENA_MUTUAL_AUTHC_NAME)) config::mutual_authc = vars[CATENA_MUTUAL_AUTHC_NAME].as<bool>();
         if (vars.count(CATENA_AUTHZ_NAME)) config::authz = vars[CATENA_AUTHZ_NAME].as<bool>();
         if (vars.count(CATENA_SILENT_NAME)) config::silent = vars[CATENA_SILENT_NAME].as<bool>();
-        if (vars.count(CATENA_LOG_LEVEL_NAME)) config::log_level = vars[CATENA_LOG_LEVEL_NAME].as<std::string>();
         if (vars.count(CATENA_LOG_CONSOLE_NAME)) config::log_console = vars[CATENA_LOG_CONSOLE_NAME].as<bool>();
         if (vars.count(CATENA_LOG_FILE_NAME)) config::log_file = vars[CATENA_LOG_FILE_NAME].as<bool>();
         if (vars.count(CATENA_LOG_SIZE_NAME)) config::log_size = vars[CATENA_LOG_SIZE_NAME].as<int>();
         if (vars.count(CATENA_LOG_COUNT_NAME)) config::log_count = vars[CATENA_LOG_COUNT_NAME].as<int>();
         if (vars.count(CATENA_LOG_MAX_SIZE_NAME)) config::log_max_size = vars[CATENA_LOG_MAX_SIZE_NAME].as<int>();
+        if (vars.count(CATENA_LOG_LEVEL_NAME)){ 
+            config::log_level = vars[CATENA_LOG_LEVEL_NAME].as<std::string>();
+            std::transform(log_level.begin(), log_level.end(), log_level.begin(), toupper);
+            if (log_level.compare("INFO") != 0 && log_level.compare("WARNING") != 0 && log_level.compare("ERROR") != 0) {
+                std::cout << "WARNING: log_level {" << log_level << "} is invalid. Defaulting to INFO instead." << std::endl;
+                config::log_level = "INFO"; 
+            }
+        }
 
     } catch (std::exception& e) {
         std::cerr << e.what() << std::endl;

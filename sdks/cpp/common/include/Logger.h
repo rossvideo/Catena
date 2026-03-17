@@ -77,15 +77,22 @@ inline const char* log_basename(const char* path) {
     return p ? p + 1 : path;
 }
 
+inline int kernel_thread_id() {
+  return static_cast<int>(gettid());
+}
+
+
 BOOST_LOG_ATTRIBUTE_KEYWORD(IsVlog, "IsVlog", bool);
 #define CATENA_LOG(severity) \
-BOOST_LOG_SCOPED_THREAD_ATTR("IsVlog", boost::log::attributes::constant<bool>(false)); \
+  BOOST_LOG_SCOPED_THREAD_ATTR("IsVlog", boost::log::attributes::constant<bool>(false)); \
   BOOST_LOG_TRIVIAL(severity) << boost::log::add_value("File", log_basename(__FILE__)) \
-                              << boost::log::add_value("Line", __LINE__)
+                              << boost::log::add_value("Line", __LINE__) \
+                              << boost::log::add_value("KernelThreadID", kernel_thread_id())
 #define CATENA_VLOG(severity) \
   BOOST_LOG_SCOPED_THREAD_ATTR("IsVlog", boost::log::attributes::constant<bool>(true)); \
   BOOST_LOG_TRIVIAL(severity) << boost::log::add_value("File", log_basename(__FILE__)) \
-                              << boost::log::add_value("Line", __LINE__)
+                              << boost::log::add_value("Line", __LINE__) \
+                              << boost::log::add_value("KernelThreadID", kernel_thread_id())
 
 /**
  * @brief A log sink that writes log messages to a specified file.

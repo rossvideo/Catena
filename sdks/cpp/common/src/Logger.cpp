@@ -78,16 +78,9 @@ void Logger::init(const std::string& appName) {
 using namespace boost::log;
 using namespace catena::common;
 namespace expr = expressions;
-typedef sinks::synchronous_sink<sinks::text_file_backend> sink_t;
+typedef sinks::synchronous_sink<sinks::text_file_backend> file_sink_t;
 
-void init_file_collecting(boost::shared_ptr<sink_t> sink)
-{
-    sink->locked_backend()->set_file_collector(sinks::file::make_collector(
-        keywords::target = config::log_dir,
-        keywords::max_files = config::log_count
-    ));
-}
-
+// Helper function dictating the format of a log record
 void catena_formatter(record_view const& rec, formatting_ostream &strm) {
     static std::atomic<unsigned int> rec_id{0};
     strm << (++rec_id)
@@ -102,12 +95,13 @@ void catena_formatter(record_view const& rec, formatting_ostream &strm) {
     oss << *ts;
 
     strm << " " << oss.str()
-        << "  " << extract<attributes::current_process_id::value_type>("ProcessID", rec)->native_id()
+        << "  " << extract<int>("KernelThreadID", rec)
         << " " << extract<std::string>("File", rec)
         << ":" << extract<int>("Line", rec)
         <<"]  " << rec[expr::message];
 }
 
+// Helper filter for VLOG
 bool catena_vlog_filter(boost::log::attribute_value_set const& attrs) {
     auto is_vlog = boost::log::extract<bool>("IsVlog", attrs);
     auto vlog_enabled = boost::log::extract<bool>("VlogEnabled", attrs);
@@ -117,6 +111,29 @@ bool catena_vlog_filter(boost::log::attribute_value_set const& attrs) {
     return true;
 }
 
+// Helper filter for severity level
+bool catena_severity_filter(boost::log::attribute_value_set const& attrs) {
+    trivial::severity_level filter_level = trivial::info;
+    if (config::log_level.compare("WARNING") == 0) {
+        filter_level = trivial::warning;
+    } else if (config::log_level.compare("ERROR") == 0) {
+        filter_level = trivial::error;
+    }
+    return attrs[trivial::severity] >= filter_level;
+}
+
+// Main filter that calls the helpers
+bool catena_filter(boost::log::attribute_value_set const& attrs) {
+    if (config::silent) {
+        return false;
+    }
+    return catena_vlog_filter(attrs) && catena_severity_filter(attrs);
+}
+
+/**
+ *  Initializes the logging system
+ *  @param appName The name of the application. Will be used to determine the log file name.
+ */
 void Logger2::init(const std::string& appName) {
     if (!std::filesystem::exists(config::log_dir)) {
         std::filesystem::create_directories(config::log_dir);
@@ -125,20 +142,22 @@ void Logger2::init(const std::string& appName) {
     std::string fileName = "%Y%m%d_%H%M%S_" + appName + ".log";
     const int MB = 1024 * 1024;
     
-    boost::shared_ptr<sinks::text_file_backend> backend =
+    boost::shared_ptr<sinks::text_file_backend> text_backend =
     boost::make_shared<sinks::text_file_backend >(
         keywords::file_name = config::log_dir + "/" + appName + ".log",
         keywords::target_file_name = config::log_dir + "/" + fileName,
         keywords::rotation_size = config::log_size * 50
     );
     
-    // Wrap it into the frontend and register in the core.
-    // The backend requires synchronization in the frontend.
-    boost::shared_ptr<sink_t> sink(new sink_t(backend));
-    init_file_collecting(sink);
+    boost::shared_ptr<file_sink_t> sink(new file_sink_t(text_backend));
+    sink->locked_backend()->set_file_collector(sinks::file::make_collector(
+        keywords::target = config::log_dir,
+        keywords::max_files = config::log_count
+    ));
     sink->locked_backend()->scan_for_files();
     sink->locked_backend()->auto_flush();
     sink->set_formatter(&catena_formatter);
+    sink->set_filter(&catena_filter);
 
     boost::shared_ptr<core> core = core::get();
     core->add_sink(sink);
@@ -150,19 +169,4 @@ void Logger2::init(const std::string& appName) {
 #else
     core->add_global_attribute("VlogEnabled", attributes::constant<bool>(true));
 #endif
-    sink->set_filter(&catena_vlog_filter);
-
-    // sink->set_filter(
-    //     !expr::has_attr("IsVlog") ||
-    //     expr::attr<bool>("VlogEnabled") == true
-    // );
-
-    // sink->set_formatter(expressions::stream 
-    //     << expressions::attr<unsigned int>("LineID")
-    //     << ": " << trivial::severity
-    //     << " " << expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S.%f")
-    //     << "  " << expressions::attr<attributes::current_process_id::value_type>("ProcessID")
-    //     << "  " << expressions::attr<attributes::current_thread_id::value_type>("ThreadID")
-    //     << " ??:??]  "
-    //     << expressions::message);
 }
