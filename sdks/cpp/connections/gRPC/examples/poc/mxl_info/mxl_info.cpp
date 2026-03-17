@@ -4,11 +4,6 @@
 #include <ServiceImpl.h>
 #include <ServiceCredentials.h>
 
-#include <absl/flags/parse.h>
-#include <absl/flags/usage.h>
-#include <absl/strings/str_format.h>
-#include <absl/strings/escaping.h>
-
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
 #include <google/protobuf/util/json_util.h>
@@ -211,22 +206,17 @@ void RunRPCServer(std::string addr) {
 
         builder.AddListeningPort(addr, catena::gRPC::getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
-        ServiceConfig config = ServiceConfig()
-                                 .set_EOPath(absl::GetFlag(FLAGS_static_root))
-                                 .set_authz(absl::GetFlag(FLAGS_authz))
-                                 .set_maxConnections(absl::GetFlag(FLAGS_max_connections))
-                                 .set_cq(cq.get())
-                                 .add_dm(&dm);
+        ServiceConfig config = ServiceConfig().set_cq(cq.get()).add_dm(&dm);
         ServiceImpl service(config);
 
         // Updating device's default max array length.
-        dm.set_default_max_length(absl::GetFlag(FLAGS_default_max_array_size));
+        dm.set_default_max_length(config::default_max_array_size);
 
         builder.RegisterService(&service);
 
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
-        LOG(INFO) << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms);
+        LOG(INFO) << "GRPC on " << addr << " secure mode: " << config::secure_comms;
 
         globalServer = server.get();
 
@@ -254,12 +244,13 @@ void RunRPCServer(std::string addr) {
 }
 
 int main(int argc, char* argv[]) {
-    std::string addr;
-    absl::SetProgramUsageMessage("Runs the Catena Service");
-    absl::ParseCommandLine(argc, argv);
+    auto [exit, code] = config::initConfigVariables(argc, argv);
+    if (exit) {
+        return code;
+    }
     Logger::init("one_of_everything");
 
-    addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
+    std::string addr = "0.0.0.0:" + std::to_string(config::port);
 
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
