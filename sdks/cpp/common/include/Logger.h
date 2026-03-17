@@ -53,22 +53,13 @@
 #include <filesystem>
 
 //BOOST libraries
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/posix_time/posix_time_io.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/core/record_view.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/expressions/formatters/stream.hpp>
-#include <boost/log/expressions/formatters/date_time.hpp>
-#include <boost/log/sinks/text_file_backend.hpp>
+#include <boost/log/expressions/keyword.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
+#include <boost/log/sinks/text_file_backend.hpp>
+#include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/trivial.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/utility/formatting_ostream.hpp>
 #include <boost/log/utility/manipulators/add_value.hpp>
-#include <boost/log/support/date_time.hpp>
 
 // Helper to get basename of __FILE__
 inline const char* log_basename(const char* path) {
@@ -77,22 +68,29 @@ inline const char* log_basename(const char* path) {
     return p ? p + 1 : path;
 }
 
+// Helper to get kernel id of thread
 inline int kernel_thread_id() {
   return static_cast<int>(gettid());
 }
 
+static unsigned int current_id = 0;
+inline unsigned int get_record_id() {
+  return ++current_id;
+}
 
 BOOST_LOG_ATTRIBUTE_KEYWORD(IsVlog, "IsVlog", bool);
 #define CATENA_LOG(severity) \
   BOOST_LOG_SCOPED_THREAD_ATTR("IsVlog", boost::log::attributes::constant<bool>(false)); \
   BOOST_LOG_TRIVIAL(severity) << boost::log::add_value("File", log_basename(__FILE__)) \
                               << boost::log::add_value("Line", __LINE__) \
-                              << boost::log::add_value("KernelThreadID", kernel_thread_id())
+                              << boost::log::add_value("KernelThreadID", kernel_thread_id()) \
+                              << boost::log::add_value("RecordID", get_record_id())
 #define CATENA_VLOG(severity) \
   BOOST_LOG_SCOPED_THREAD_ATTR("IsVlog", boost::log::attributes::constant<bool>(true)); \
   BOOST_LOG_TRIVIAL(severity) << boost::log::add_value("File", log_basename(__FILE__)) \
                               << boost::log::add_value("Line", __LINE__) \
-                              << boost::log::add_value("KernelThreadID", kernel_thread_id())
+                              << boost::log::add_value("KernelThreadID", kernel_thread_id()) \
+                              << boost::log::add_value("RecordID", get_record_id())
 
 /**
  * @brief A log sink that writes log messages to a specified file.
@@ -115,6 +113,9 @@ public:
 private:
   std::ofstream log_file_;
 };
+
+typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend> file_sink_t;
+typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend> console_sink_t;
 
 /**
  * @brief Logger class for logging messages to both console and file.
@@ -158,11 +159,11 @@ public:
   */
   static void init(const std::string& appName);
 
-  // ~Logger() {
-  //   if (fileLogSink_) {
-  //     absl::RemoveLogSink(fileLogSink_.get());
-  //   }
-  // }
+  ~Logger2() {
+    auto core = boost::log::core::get();
+    core->flush();
+    core->remove_all_sinks();
+  }
 
 private:
   static Logger2& instance() {
@@ -171,6 +172,9 @@ private:
   }
 
   Logger2() = default;
-  Logger2(const Logger&) = delete;
+  Logger2(const Logger2&) = delete;
   Logger2& operator=(const Logger2&) = delete;
+
+  boost::shared_ptr<file_sink_t> file_sink_;
+  boost::shared_ptr<console_sink_t> console_sink_;
 };

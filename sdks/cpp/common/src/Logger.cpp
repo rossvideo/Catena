@@ -39,6 +39,19 @@
 #include <Logger.h>
 #include <Config.h>
 
+// boost
+#include <boost/core/null_deleter.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/core/record_view.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/expressions/formatters/stream.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/utility/formatting_ostream.hpp>
+#include <boost/log/support/date_time.hpp>
+
 void Logger::init(const std::string& appName) {
     static std::once_flag flag;
     std::call_once(flag, [&]() {
@@ -78,12 +91,10 @@ void Logger::init(const std::string& appName) {
 using namespace boost::log;
 using namespace catena::common;
 namespace expr = expressions;
-typedef sinks::synchronous_sink<sinks::text_file_backend> file_sink_t;
 
 // Helper function dictating the format of a log record
 void catena_formatter(record_view const& rec, formatting_ostream &strm) {
-    static std::atomic<unsigned int> rec_id{0};
-    strm << (++rec_id)
+    strm << extract<unsigned int>("RecordID", rec)
         << ": " << rec[trivial::severity];
     
     // Format timestamp asd HH::MM::SS.Microseconds
@@ -135,38 +146,54 @@ bool catena_filter(boost::log::attribute_value_set const& attrs) {
  *  @param appName The name of the application. Will be used to determine the log file name.
  */
 void Logger2::init(const std::string& appName) {
-    if (!std::filesystem::exists(config::log_dir)) {
-        std::filesystem::create_directories(config::log_dir);
-    }
-    
-    std::string fileName = "%Y%m%d_%H%M%S_" + appName + ".log";
-    const int MB = 1024 * 1024;
-    
-    boost::shared_ptr<sinks::text_file_backend> text_backend =
-    boost::make_shared<sinks::text_file_backend >(
-        keywords::file_name = config::log_dir + "/" + appName + ".log",
-        keywords::target_file_name = config::log_dir + "/" + fileName,
-        keywords::rotation_size = config::log_size * 50
-    );
-    
-    boost::shared_ptr<file_sink_t> sink(new file_sink_t(text_backend));
-    sink->locked_backend()->set_file_collector(sinks::file::make_collector(
-        keywords::target = config::log_dir,
-        keywords::max_files = config::log_count
-    ));
-    sink->locked_backend()->scan_for_files();
-    sink->locked_backend()->auto_flush();
-    sink->set_formatter(&catena_formatter);
-    sink->set_filter(&catena_filter);
+    static std::once_flag flag;
+    std::call_once(flag, [&]() {
+        if (!std::filesystem::exists(config::log_dir)) {
+            std::filesystem::create_directories(config::log_dir);
+        }
+        
+        std::string fileName = "%Y%m%d_%H%M%S_" + appName + ".log";
+        const int MB = 1024 * 1024;
+        
+        boost::shared_ptr<core> core = core::get();
+        if (config::log_file) {
+            // Create file sink and set parameters
+            auto file_sink = instance().file_sink_;
+            file_sink = boost::make_shared<file_sink_t>(
+                keywords::file_name = config::log_dir + "/" + appName + ".log",
+                keywords::target_file_name = config::log_dir + "/" + fileName,
+                keywords::rotation_size = config::log_size * MB
+            );
+            
+            // Set filtering, formatting, and file collecting
+            file_sink->locked_backend()->set_file_collector(sinks::file::make_collector(
+                keywords::target = config::log_dir,
+                keywords::max_files = config::log_count
+            ));
+            file_sink->locked_backend()->scan_for_files();
+            file_sink->locked_backend()->auto_flush();
+            file_sink->set_formatter(&catena_formatter);
+            file_sink->set_filter(&catena_filter);
+            core->add_sink(file_sink);
+        }
+        if (config::log_console) {
+            // Create console sink and set filtering, formatting, file collecting
+            auto console_sink = instance().console_sink_;
+            console_sink = boost::make_shared<console_sink_t>();
+            console_sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&std::cerr, boost::null_deleter()));
+            console_sink->locked_backend()->auto_flush();
+            console_sink->set_formatter(&catena_formatter);
+            console_sink->set_filter(&catena_filter);
+            core->add_sink(console_sink);
+        }
 
-    boost::shared_ptr<core> core = core::get();
-    core->add_sink(sink);
-    add_common_attributes();  
+        add_common_attributes();  // Timestamps
 
-    //Filter VLOG if not in debug
-#ifdef NDEBUG
-    core->add_global_attribute("VlogEnabled", attributes::constant<bool>(false));
-#else
-    core->add_global_attribute("VlogEnabled", attributes::constant<bool>(true));
-#endif
+        //Filter VLOG if not in debug
+        #ifdef NDEBUG
+        core->add_global_attribute("VlogEnabled", attributes::constant<bool>(false));
+        #else
+        core->add_global_attribute("VlogEnabled", attributes::constant<bool>(true));
+        #endif
+    });
 }
