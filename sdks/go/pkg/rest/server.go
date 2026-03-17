@@ -598,8 +598,26 @@ func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slo
 
 	fqoid := strings.Join(pathParts, "/")
 	handler := s.lookupGetAsset(slot)
-	val, res := handler(slot, fqoid)
-	writeHTTPResult(w, res, val)
+	asset, res := handler(slot, fqoid)
+
+	if res.Error == "" {
+		if compressionStr := r.URL.Query().Get("compression"); compressionStr != "" {
+			targetEncoding, err := catena.ParsePayloadEncoding(compressionStr)
+			if err != nil {
+				_, errRes := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, err.Error())
+				writeHTTPResult(w, errRes, catena.CatenaValue{})
+				return
+			}
+			if err := catena.TranscodeAssetPayload(&asset, targetEncoding); err != nil {
+				logger.Error("failed to transcode asset payload", "error", err)
+				_, errRes := catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to transcode payload: "+err.Error())
+				writeHTTPResult(w, errRes, catena.CatenaValue{})
+				return
+			}
+		}
+	}
+
+	writeHTTPResult(w, res, asset)
 }
 
 func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, slot int, pathParts []string) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,9 +31,10 @@
 /**
  * @brief This file is for testing the ChoiceConstraint.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @author (Nelson Daniels) nelson.daniels@rossvideo.com 
- * @date 25/10/01
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author (Nelson Daniels) nelson.daniels@rossvideo.com
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-02-19
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // gtest
@@ -42,7 +43,7 @@
 
 #include "MockDevice.h"
 #include "Logger.h"
-#include "SharedFlags.h"
+#include "Config.h"
 
 #include "ChoiceConstraint.h"
 
@@ -53,7 +54,7 @@ class ChoiceConstraintTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        config::log_dir = UNITTEST_LOG_DIR;
         Logger::init("ChoiceConstraintTest");
     }
 

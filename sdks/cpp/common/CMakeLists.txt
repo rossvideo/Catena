@@ -38,12 +38,13 @@ set(sources
     "src/MenuGroup.cpp"
     "src/ParamVisitor.cpp"
     "src/SubscriptionManager.cpp"
-    "src/SharedFlags.cpp"
     "src/ConnectionQueue.cpp"
     "src/ChoiceConstraint.cpp"
     "src/Heartbeat.cpp"
     "src/NmosNode.cpp"
     "src/Logger.cpp"
+    "src/Config.cpp"
+    "src/ConnectionProps.cpp"
 )
 
 # conditionally make for gRPC
