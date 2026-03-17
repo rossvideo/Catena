@@ -44,6 +44,40 @@ import (
 	"github.com/rossvideo/catena/build/go/protos"
 )
 
+func TestNewPolyglotText(t *testing.T) {
+	pt := NewPolyglotText("en", "Hello")
+	if pt["en"] != "Hello" {
+		t.Errorf("expected 'Hello', got %s", pt["en"])
+	}
+}
+
+func TestPolyglotText_With(t *testing.T) {
+	pt := NewPolyglotText("en", "Hello").With("fr", "Bonjour")
+	if pt["en"] != "Hello" {
+		t.Errorf("expected 'Hello', got %s", pt["en"])
+	}
+	if pt["fr"] != "Bonjour" {
+		t.Errorf("expected 'Bonjour', got %s", pt["fr"])
+	}
+}
+
+func TestPolyglotText_Get(t *testing.T) {
+	pt := NewPolyglotText("en", "Hello").With("fr", "Bonjour")
+	if pt.Get("fr", "en") != "Bonjour" {
+		t.Errorf("expected 'Bonjour', got %s", pt.Get("fr", "en"))
+	}
+	if pt.Get("de", "en") != "Hello" {
+		t.Errorf("expected fallback 'Hello', got %s", pt.Get("de", "en"))
+	}
+}
+
+func TestPolyglotText_Get_MissingFallback(t *testing.T) {
+	pt := NewPolyglotText("en", "Hello")
+	if pt.Get("de", "fr") != "" {
+		t.Errorf("expected empty string for missing fallback, got %s", pt.Get("de", "fr"))
+	}
+}
+
 func TestCommandReply(t *testing.T) {
 	val, _ := ToCatenaValue(int32(42))
 	result, status := CommandReply(val)
@@ -58,7 +92,7 @@ func TestCommandReply(t *testing.T) {
 		t.Error("expected non-exception result")
 	}
 
-	proto := result.ToProto()
+	proto := result.GetProtoResponse()
 	resp := proto.GetResponse()
 	if resp == nil {
 		t.Fatal("expected response in proto")
@@ -81,7 +115,7 @@ func TestCommandNoResponse(t *testing.T) {
 		t.Error("expected non-exception result")
 	}
 
-	proto := result.ToProto()
+	proto := result.GetProtoResponse()
 	if proto.GetNoResponse() == nil {
 		t.Error("expected no_response in proto")
 	}
@@ -94,7 +128,7 @@ func TestCommandNoResponse(t *testing.T) {
 }
 
 func TestCommandExceptionResult(t *testing.T) {
-	errorMsg := map[string]string{"en": "Something failed"}
+	errorMsg := NewPolyglotText("en", "Something failed")
 	result, status := CommandExceptionResult("TestError", "detailed info", errorMsg)
 
 	if status.Code != OK {
@@ -108,17 +142,18 @@ func TestCommandExceptionResult(t *testing.T) {
 	}
 
 	exc := result.GetException()
-	if exc.Type != "TestError" {
-		t.Errorf("expected type 'TestError', got %s", exc.Type)
+	if exc.GetType() != "TestError" {
+		t.Errorf("expected type 'TestError', got %s", exc.GetType())
 	}
-	if exc.Details != "detailed info" {
-		t.Errorf("expected details 'detailed info', got %s", exc.Details)
+	if exc.GetDetails() != "detailed info" {
+		t.Errorf("expected details 'detailed info', got %s", exc.GetDetails())
 	}
-	if exc.ErrorMessage["en"] != "Something failed" {
-		t.Errorf("expected en error message 'Something failed', got %s", exc.ErrorMessage["en"])
+	if exc.GetErrorMessage().GetDisplayStrings()["en"] != "Something failed" {
+		t.Errorf("expected en error message 'Something failed', got %s",
+			exc.GetErrorMessage().GetDisplayStrings()["en"])
 	}
 
-	proto := result.ToProto()
+	proto := result.GetProtoResponse()
 	protoExc := proto.GetException()
 	if protoExc == nil {
 		t.Fatal("expected exception in proto")
@@ -135,10 +170,24 @@ func TestCommandExceptionResult(t *testing.T) {
 	}
 }
 
+func TestCommandExceptionResult_MultipleLanguages(t *testing.T) {
+	errorMsg := NewPolyglotText("en", "Command not found").With("fr", "Commande introuvable")
+	result, _ := CommandExceptionResult("NotFound", "missing", errorMsg)
+
+	exc := result.GetException()
+	ds := exc.GetErrorMessage().GetDisplayStrings()
+	if ds["en"] != "Command not found" {
+		t.Errorf("expected en='Command not found', got %s", ds["en"])
+	}
+	if ds["fr"] != "Commande introuvable" {
+		t.Errorf("expected fr='Commande introuvable', got %s", ds["fr"])
+	}
+}
+
 func TestCommandExceptionResult_NilErrorMessage(t *testing.T) {
 	result, _ := CommandExceptionResult("Error", "details", nil)
 
-	proto := result.ToProto()
+	proto := result.GetProtoResponse()
 	protoExc := proto.GetException()
 	if protoExc == nil {
 		t.Fatal("expected exception in proto")
@@ -162,10 +211,20 @@ func TestCommandError(t *testing.T) {
 	}
 }
 
-func TestCommandResult_ToProto_Response(t *testing.T) {
+func TestCommandError_NilResponse(t *testing.T) {
+	result, _ := CommandError(INTERNAL, "error")
+	if result.GetProtoResponse() != nil {
+		t.Error("expected nil proto response for CommandError")
+	}
+	if result.GetException() != nil {
+		t.Error("expected nil exception for CommandError")
+	}
+}
+
+func TestCommandResult_GetProtoResponse_Response(t *testing.T) {
 	val, _ := ToCatenaValue("hello")
 	result, _ := CommandReply(val)
-	proto := result.ToProto()
+	proto := result.GetProtoResponse()
 
 	if _, ok := proto.Kind.(*protos.CommandResponse_Response); !ok {
 		t.Errorf("expected CommandResponse_Response, got %T", proto.Kind)
@@ -175,18 +234,18 @@ func TestCommandResult_ToProto_Response(t *testing.T) {
 	}
 }
 
-func TestCommandResult_ToProto_NoResponse(t *testing.T) {
+func TestCommandResult_GetProtoResponse_NoResponse(t *testing.T) {
 	result, _ := CommandNoResponse()
-	proto := result.ToProto()
+	proto := result.GetProtoResponse()
 
 	if _, ok := proto.Kind.(*protos.CommandResponse_NoResponse); !ok {
 		t.Errorf("expected CommandResponse_NoResponse, got %T", proto.Kind)
 	}
 }
 
-func TestCommandResult_ToProto_Exception(t *testing.T) {
-	result, _ := CommandExceptionResult("E", "d", map[string]string{"fr": "erreur"})
-	proto := result.ToProto()
+func TestCommandResult_GetProtoResponse_Exception(t *testing.T) {
+	result, _ := CommandExceptionResult("E", "d", NewPolyglotText("fr", "erreur"))
+	proto := result.GetProtoResponse()
 
 	if _, ok := proto.Kind.(*protos.CommandResponse_Exception); !ok {
 		t.Errorf("expected CommandResponse_Exception, got %T", proto.Kind)

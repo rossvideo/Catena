@@ -488,7 +488,7 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 		cmdResult, _ = catena.CommandNoResponse()
 	}
 
-	_ = WriteCommandResponseJSON(w, cmdResult.ToProto(), http.StatusOK)
+	_ = WriteCommandResponseJSON(w, cmdResult.GetProtoResponse(), http.StatusOK)
 }
 
 // ToHTTPStatus converts a StatusCode to an HTTP status code.

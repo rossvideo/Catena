@@ -496,7 +496,6 @@ func TestServer_DefaultHandlers(t *testing.T) {
 	}
 }
 
-
 func TestServer_NestedValuePath(t *testing.T) {
 	srv := NewServer([]uint16{0}, 100)
 
@@ -792,7 +791,7 @@ func TestCommandEndpoint_ExceptionResponse(t *testing.T) {
 		return catena.CommandExceptionResult(
 			"InvalidCommand",
 			"Command not found: "+fqoid,
-			map[string]string{"en": "Command not found"},
+			catena.NewPolyglotText("en", "Command not found"),
 		)
 	})
 

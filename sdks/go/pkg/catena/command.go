@@ -42,90 +42,90 @@ import (
 	"github.com/rossvideo/catena/build/go/protos"
 )
 
-type commandResultKind int
+// PolyglotText maps BCP-47 language codes to display strings.
+type PolyglotText map[string]string
 
-const (
-	commandResultEmpty commandResultKind = iota
-	commandResultValue
-	commandResultException
-)
-
-// CommandException represents a server/device error executing a command,
-// matching the proto Exception message.
-type CommandException struct {
-	Type         string
-	ErrorMessage map[string]string // language code -> display string
-	Details      string
+// NewPolyglotText creates a PolyglotText with a single language entry.
+func NewPolyglotText(lang, text string) PolyglotText {
+	return PolyglotText{lang: text}
 }
 
-// CommandResult represents the three possible outcomes of ExecuteCommand,
-// matching the proto CommandResponse oneof: no_response, response, or exception.
+// With returns the PolyglotText with an additional language entry added.
+func (p PolyglotText) With(lang, text string) PolyglotText {
+	p[lang] = text
+	return p
+}
+
+// Get returns the display string for lang, falling back to fallback if not present.
+func (p PolyglotText) Get(lang, fallback string) string {
+	if s, ok := p[lang]; ok {
+		return s
+	}
+	return p[fallback]
+}
+
+// CommandResult wraps protos.CommandResponse, representing the three possible
+// outcomes of ExecuteCommand: no_response, response, or exception.
 type CommandResult struct {
-	kind      commandResultKind
-	value     CatenaValue
-	exception CommandException
+	response *protos.CommandResponse
 }
 
 // IsEmpty returns true if this is a no_response result.
 func (r CommandResult) IsEmpty() bool {
-	return r.kind == commandResultEmpty
+	return r.response == nil || r.response.GetNoResponse() != nil
 }
 
 // IsException returns true if this is an exception result.
 func (r CommandResult) IsException() bool {
-	return r.kind == commandResultException
+	return r.response != nil && r.response.GetException() != nil
 }
 
-// GetException returns the exception data. Only valid when IsException() is true.
-func (r CommandResult) GetException() CommandException {
-	return r.exception
-}
-
-// ToProto converts the CommandResult to a proto CommandResponse message.
-func (r CommandResult) ToProto() *protos.CommandResponse {
-	switch r.kind {
-	case commandResultValue:
-		return &protos.CommandResponse{
-			Kind: &protos.CommandResponse_Response{Response: r.value.Value},
-		}
-	case commandResultException:
-		exc := &protos.Exception{
-			Type:    r.exception.Type,
-			Details: r.exception.Details,
-		}
-		if r.exception.ErrorMessage != nil {
-			exc.ErrorMessage = &protos.PolyglotText{DisplayStrings: r.exception.ErrorMessage}
-		}
-		return &protos.CommandResponse{
-			Kind: &protos.CommandResponse_Exception{Exception: exc},
-		}
-	default:
-		return &protos.CommandResponse{
-			Kind: &protos.CommandResponse_NoResponse{NoResponse: &protos.Empty{}},
-		}
+// GetException returns the underlying proto Exception.
+// Only valid when IsException() is true.
+func (r CommandResult) GetException() *protos.Exception {
+	if r.response != nil {
+		return r.response.GetException()
 	}
+	return nil
+}
+
+// GetProtoResponse returns the underlying protos.CommandResponse.
+func (r CommandResult) GetProtoResponse() *protos.CommandResponse {
+	return r.response
 }
 
 // CommandReply returns a successful command response wrapping a value.
 func CommandReply(value CatenaValue) (CommandResult, StatusResult) {
-	return CommandResult{kind: commandResultValue, value: value}, StatusResult{Code: OK}
+	return CommandResult{
+		response: &protos.CommandResponse{
+			Kind: &protos.CommandResponse_Response{Response: value.Value},
+		},
+	}, StatusResult{Code: OK}
 }
 
 // CommandNoResponse returns an empty command response (no_response).
 func CommandNoResponse() (CommandResult, StatusResult) {
-	return CommandResult{kind: commandResultEmpty}, StatusResult{Code: OK}
+	return CommandResult{
+		response: &protos.CommandResponse{
+			Kind: &protos.CommandResponse_NoResponse{NoResponse: &protos.Empty{}},
+		},
+	}, StatusResult{Code: OK}
 }
 
 // CommandExceptionResult returns a command exception response.
 // exType is the exception type, details provides additional context,
-// and errorMessage is a map of language code to display string (may be nil).
-func CommandExceptionResult(exType, details string, errorMessage map[string]string) (CommandResult, StatusResult) {
+// and errorMessage is a PolyglotText map of language code to display string (may be nil).
+func CommandExceptionResult(exType, details string, errorMessage PolyglotText) (CommandResult, StatusResult) {
+	exc := &protos.Exception{
+		Type:    exType,
+		Details: details,
+	}
+	if errorMessage != nil {
+		exc.ErrorMessage = &protos.PolyglotText{DisplayStrings: errorMessage}
+	}
 	return CommandResult{
-		kind: commandResultException,
-		exception: CommandException{
-			Type:         exType,
-			ErrorMessage: errorMessage,
-			Details:      details,
+		response: &protos.CommandResponse{
+			Kind: &protos.CommandResponse_Exception{Exception: exc},
 		},
 	}, StatusResult{Code: OK}
 }

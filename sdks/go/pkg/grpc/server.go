@@ -305,7 +305,7 @@ func (s *Server) ExecuteCommand(req *protos.ExecuteCommandPayload, stream grpc.S
 		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
-	return stream.Send(cmdResult.ToProto())
+	return stream.Send(cmdResult.GetProtoResponse())
 }
 
 // GetParam returns a single parameter's metadata

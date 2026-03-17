@@ -173,7 +173,7 @@ func main() {
 	// Commands
 	// ==========================================================================
 	commands := map[string]CommandHandler{
-		// Start command
+		// Start command - returns a response with current state
 		"start": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			if counter.IsRunning() {
 				logger.Info("Start command - already running")
@@ -186,7 +186,7 @@ func main() {
 			return catena.CommandReply(val)
 		},
 
-		// Stop command
+		// Stop command - returns a response with current state
 		"stop": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			if !counter.IsRunning() {
 				logger.Info("Stop command - already stopped")
@@ -199,7 +199,7 @@ func main() {
 			return catena.CommandReply(val)
 		},
 
-		// Add10 command
+		// Add10 command - returns a response with current state
 		"add10": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
@@ -207,12 +207,21 @@ func main() {
 			return catena.CommandReply(val)
 		},
 
-		// Reset command
+		// Reset command - returns no response
 		"reset": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			counter.Reset()
-			logger.Info("Counter reset", "value", counter.GetValue())
-			val, _ := catena.ToCatenaValue(buildResponse())
-			return catena.CommandReply(val)
+			logger.Info("Counter reset")
+			return catena.CommandNoResponse()
+		},
+
+		// Error command - returns a command exception
+		"error": func(payload any) (catena.CommandResult, catena.StatusResult) {
+			logger.Info("Error command executed")
+			return catena.CommandExceptionResult(
+				"DemoError",
+				"This is a demonstration of a command exception",
+				catena.NewPolyglotText("en", "An example error occurred"),
+			)
 		},
 	}
 
@@ -238,11 +247,7 @@ func main() {
 		handler, ok := commands[commandFqoid]
 		if !ok {
 			logger.Warning("Command not found", "slot", slot, "command", commandFqoid)
-			return catena.CommandExceptionResult(
-				"InvalidCommand",
-				"Command not found: "+commandFqoid,
-				map[string]string{"en": "Command not found: " + commandFqoid},
-			)
+			return catena.CommandError(catena.NOT_FOUND, "Command not found: "+commandFqoid)
 		}
 
 		return handler(payload)
