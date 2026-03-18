@@ -218,8 +218,8 @@ bool NmosNode::http_post_json(const std::string& url, const std::string& jsonObj
     curl_easy_setopt(c, CURLOPT_TIMEOUT, 5L);
     CURLcode rc = curl_easy_perform(c);
     long code = 0; curl_easy_getinfo(c, CURLINFO_RESPONSE_CODE, &code);
-    if (rc != CURLE_OK) LOG(ERROR) << "HTTP POST failed: " << curl_easy_strerror(rc) << "\n";
-    else LOG(ERROR) << "HTTP POST " << url << " -> " << code << "\n";
+    if (rc != CURLE_OK) {LOG(ERROR) << "HTTP POST failed: " << curl_easy_strerror(rc) << "\n";}
+    else {LOG(ERROR) << "HTTP POST " << url << " -> " << code << "\n";}
     curl_slist_free_all(hdrs); curl_easy_cleanup(c);
     return rc == CURLE_OK && (code == 200 || code == 201 || code == 202 || code == 204);
 }
@@ -385,18 +385,17 @@ void NmosNode::browse_cb(
 {
     NmosNode* node = static_cast<NmosNode*>(userdata);
     switch (event) {
-        case AVAHI_BROWSER_NEW:
+        case AVAHI_BROWSER_NEW: {
             VLOG(1) << "Discovered service: " << name << " of type " << type << " in domain " << domain;
             // Found a new service, resolve it
             if (!(avahi_service_resolver_new(
                 node->getClient(), interface, protocol, name, type, domain,
                 AVAHI_PROTO_UNSPEC, (AvahiLookupFlags)0, resolve_cb, node)))
-            {
-                LOG(ERROR) << "Failed to resolve service '" << name << "': " << avahi_strerror(avahi_client_errno(node->getClient()));
-            }
+            { LOG(ERROR) << "Failed to resolve service '" << name << "': " << avahi_strerror(avahi_client_errno(node->getClient()));}
             break;
-        case AVAHI_BROWSER_FAILURE:
-            LOG(ERROR) << "browse failure: " << avahi_strerror(avahi_client_errno(node->getClient())) << "\n";
+        }
+        case AVAHI_BROWSER_FAILURE: 
+            {LOG(ERROR) << "browse failure: " << avahi_strerror(avahi_client_errno(node->getClient())) << "\n";}
             avahi_simple_poll_quit(node->getPoll());
             break;
         case AVAHI_BROWSER_REMOVE:

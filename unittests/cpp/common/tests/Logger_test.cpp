@@ -57,18 +57,18 @@ class LoggerTest : public ::testing::Test {
         config::log_dir = UNITTEST_LOG_DIR + std::string("/logger");
         config::log_file = true;
         config::log_console = true;
-        config::log_size = 100;
-        Logger2::init("LoggerTest");
+        config::log_size = 10;
+        Logger::init("LoggerTest");
     }
 };
 
 TEST_F(LoggerTest, LogDefaultDir) {
-    CATENA_LOG(info) << "This is an info log message.";
-    CATENA_LOG(warning) << "This is a warning log message.";
-    CATENA_LOG(error) << "This is an error log message.";
+    LOG(INFO) << "This is an info log message.";
+    LOG(WARNING) << "This is a warning log message.";
+    LOG(ERROR) << "This is an error log message.";
 
     //verify that the log file was created and contains the log messages
-    std::string logFilePattern = "LoggerTest.log"; // Log file name starts with this
+    std::string logFilePattern = "_LoggerTest.log"; // Log file name starts with this
     bool foundLogFile = false;
     int fileCount = 0;
 
@@ -85,7 +85,7 @@ TEST_F(LoggerTest, LogDefaultDir) {
             EXPECT_NE(logContent.find("This is an info log message."), std::string::npos);
             EXPECT_NE(logContent.find("This is a warning log message."), std::string::npos);
             EXPECT_NE(logContent.find("This is an error log message."), std::string::npos);
-            EXPECT_TRUE(std::regex_match(entry.path().filename().string(), std::regex(R"(^LoggerTest[.]log$)")));
+            EXPECT_TRUE(std::regex_match(entry.path().filename().string(), std::regex(R"(^\d{8}_\d{6}_LoggerTest[.]log$)")));
             break;
         }
     }

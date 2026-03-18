@@ -31,12 +31,13 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             (CATENA_MUTUAL_AUTHC_NAME.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use this to require client to authenticate")
             (CATENA_AUTHZ_NAME.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use OAuth token authorization")
             (CATENA_SILENT_NAME.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use this to suppress all log output.")
-            (CATENA_LOG_LEVEL_NAME.c_str(), po::value<std::string>()->default_value(CATENA_LOG_LEVEL), "Level of logging detail. Options are 'info', 'warning', and 'error'")
+            (CATENA_LOG_LEVEL_NAME.c_str(), po::value<std::string>()->default_value(CATENA_LOG_LEVEL), "Minimum severity level of logs. Options are 'info', 'warning', and 'error'")
             (CATENA_LOG_CONSOLE_NAME.c_str(), po::value<bool>()->default_value(CATENA_LOG_CONSOLE)->implicit_value(true), "Use console logging(stdout/stderr)")
             (CATENA_LOG_FILE_NAME.c_str(), po::value<bool>()->default_value(CATENA_LOG_FILE)->implicit_value(true), "Use file logging")
             (CATENA_LOG_SIZE_NAME.c_str(), po::value<int>()->default_value(CATENA_LOG_SIZE), "Max mb of log files before rotating")
             (CATENA_LOG_COUNT_NAME.c_str(), po::value<int>()->default_value(CATENA_LOG_COUNT), "Max number of log files before rotating")
             (CATENA_LOG_MAX_SIZE_NAME.c_str(), po::value<int>()->default_value(CATENA_LOG_MAX_SIZE), "???")
+            (CATENA_LOG_VERBOSITY_NAME.c_str(), po::value<int>()->default_value(CATENA_LOG_VERBOSITY), "Max verbosity level of logs. Options are 0, 1, 2")
             ;
             
         std::set<std::string> allowedOptions;
@@ -99,6 +100,7 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(CATENA_LOG_SIZE_NAME)) config::log_size = vars[CATENA_LOG_SIZE_NAME].as<int>();
         if (vars.count(CATENA_LOG_COUNT_NAME)) config::log_count = vars[CATENA_LOG_COUNT_NAME].as<int>();
         if (vars.count(CATENA_LOG_MAX_SIZE_NAME)) config::log_max_size = vars[CATENA_LOG_MAX_SIZE_NAME].as<int>();
+        if (vars.count(CATENA_LOG_VERBOSITY_NAME)) config::log_verbosity = vars[CATENA_LOG_VERBOSITY_NAME].as<int>();
         if (vars.count(CATENA_LOG_LEVEL_NAME)){ 
             config::log_level = vars[CATENA_LOG_LEVEL_NAME].as<std::string>();
             std::transform(log_level.begin(), log_level.end(), log_level.begin(), toupper);

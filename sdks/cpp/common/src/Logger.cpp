@@ -52,42 +52,6 @@
 #include <boost/log/utility/formatting_ostream.hpp>
 #include <boost/log/support/date_time.hpp>
 
-void Logger::init(const std::string& appName) {
-    static std::once_flag flag;
-    std::call_once(flag, [&]() {
-        absl::InitializeLog();
-        
-        if (!std::filesystem::exists(catena::common::config::log_dir)) {
-            std::filesystem::create_directories(catena::common::config::log_dir);
-        }
-
-#ifdef NDEBUG
-        // Release mode: only show LOG
-        absl::SetGlobalVLogLevel(0);
-#else
-        // Debug mode: show both LOG and VLOG
-        absl::SetGlobalVLogLevel(2);
-#endif
-        if (catena::common::config::silent) {
-            absl::SetMinLogLevel(absl::LogSeverityAtLeast::kError);
-        }
-        
-        absl::SetStderrThreshold(absl::LogSeverity::kInfo);
-
-        //append date and time to the front of file name in YYYYMMDD_HHMMSS format
-        auto now = std::chrono::system_clock::now();
-        std::time_t now_time = std::chrono::system_clock::to_time_t(now);
-        std::tm tm_buf;
-        localtime_r(&now_time, &tm_buf);
-        char datetime[32];
-        std::strftime(datetime, sizeof(datetime), "%Y%m%d_%H%M%S", &tm_buf);
-
-        std::string log_file = catena::common::config::log_dir + "/" + datetime + std::string("_") + appName + ".log";
-        instance().fileLogSink_ = std::make_unique<FileLogSink>(log_file);
-        absl::AddLogSink(instance().fileLogSink_.get());
-    });
-}
-
 using namespace boost::log;
 using namespace catena::common;
 namespace expr = expressions;
@@ -114,10 +78,9 @@ void catena_formatter(record_view const& rec, formatting_ostream &strm) {
 
 // Helper filter for VLOG
 bool catena_vlog_filter(boost::log::attribute_value_set const& attrs) {
-    auto is_vlog = boost::log::extract<bool>("IsVlog", attrs);
-    auto vlog_enabled = boost::log::extract<bool>("VlogEnabled", attrs);
-
-    if (*is_vlog && !(*vlog_enabled))
+    auto verbosity_level = boost::log::extract<int>("Verbosity", attrs);
+    auto v = *verbosity_level;
+    if (*verbosity_level > config::log_verbosity)
         return false;
     return true;
 }
@@ -145,32 +108,31 @@ bool catena_filter(boost::log::attribute_value_set const& attrs) {
  *  Initializes the logging system
  *  @param appName The name of the application. Will be used to determine the log file name.
  */
-void Logger2::init(const std::string& appName) {
+void Logger::init(const std::string& appName) {
     static std::once_flag flag;
     std::call_once(flag, [&]() {
         if (!std::filesystem::exists(config::log_dir)) {
             std::filesystem::create_directories(config::log_dir);
         }
         
-        std::string fileName = "%Y%m%d_%H%M%S_" + appName + ".log";
+        std::string fileName = config::log_dir + "/" + "%Y%m%d_%H%M%S_" + appName + ".log";
         const int MB = 1024 * 1024;
         
         boost::shared_ptr<core> core = core::get();
         if (config::log_file) {
             // Create file sink and set parameters
-            auto file_sink = instance().file_sink_;
-            file_sink = boost::make_shared<file_sink_t>(
-                keywords::file_name = config::log_dir + "/" + appName + ".log",
-                keywords::target_file_name = config::log_dir + "/" + fileName,
+            instance().file_sink_ = boost::make_shared<file_sink_t>(
+                keywords::file_name = fileName,
                 keywords::rotation_size = config::log_size * MB
             );
-            
+            auto& file_sink = instance().file_sink_;
             // Set filtering, formatting, and file collecting
             file_sink->locked_backend()->set_file_collector(sinks::file::make_collector(
                 keywords::target = config::log_dir,
-                keywords::max_files = config::log_count
+                keywords::max_files = config::log_count,
+                keywords::enable_final_rotation = false
             ));
-            file_sink->locked_backend()->scan_for_files();
+            file_sink->locked_backend()->scan_for_files(sinks::file::scan_all);
             file_sink->locked_backend()->auto_flush();
             file_sink->set_formatter(&catena_formatter);
             file_sink->set_filter(&catena_filter);
@@ -178,7 +140,7 @@ void Logger2::init(const std::string& appName) {
         }
         if (config::log_console) {
             // Create console sink and set filtering, formatting, file collecting
-            auto console_sink = instance().console_sink_;
+            auto& console_sink = instance().console_sink_;
             console_sink = boost::make_shared<console_sink_t>();
             console_sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&std::cerr, boost::null_deleter()));
             console_sink->locked_backend()->auto_flush();
@@ -186,14 +148,11 @@ void Logger2::init(const std::string& appName) {
             console_sink->set_filter(&catena_filter);
             core->add_sink(console_sink);
         }
-
+        
         add_common_attributes();  // Timestamps
-
-        //Filter VLOG if not in debug
-        #ifdef NDEBUG
-        core->add_global_attribute("VlogEnabled", attributes::constant<bool>(false));
-        #else
-        core->add_global_attribute("VlogEnabled", attributes::constant<bool>(true));
-        #endif
+        core->add_global_attribute("Verbosity", boost::log::attributes::mutable_constant<int>(0));
+        // Force a rotation on startup to ensure old files are deleted
+        BOOST_LOG_TRIVIAL(info) << "rotate";
+        instance().file_sink_->locked_backend()->rotate_file();
     });
 }

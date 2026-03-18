@@ -74,6 +74,7 @@ const std::string CATENA_LOG_FILE_NAME = "log_file";
 const std::string CATENA_LOG_SIZE_NAME = "log_size";
 const std::string CATENA_LOG_COUNT_NAME = "log_count";
 const std::string CATENA_LOG_MAX_SIZE_NAME = "log_max_size";
+const std::string CATENA_LOG_VERBOSITY_NAME = "log_verbosity";
 
 
 /**
@@ -95,6 +96,11 @@ const bool CATENA_LOG_FILE = true;
 const int CATENA_LOG_SIZE = 10;
 const int CATENA_LOG_COUNT = 5;
 const int CATENA_LOG_MAX_SIZE = 50;
+#ifdef NDEBUG
+const int CATENA_LOG_VERBOSITY = 0;
+#else
+const int CATENA_LOG_VERBOSITY = 2;
+#endif
 
 
 /**
@@ -156,6 +162,8 @@ inline int log_size = 0;
 inline int log_count = 0;
 
 inline int log_max_size = 0;
+
+inline int log_verbosity = 0;
 
 } // namespace config     
 } // namespace common
