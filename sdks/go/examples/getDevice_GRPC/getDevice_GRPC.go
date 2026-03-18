@@ -29,36 +29,32 @@
  */
 
 /**
- * @brief GetDevice REST example.
- * @file getDevice_REST.go
+ * @brief GetDevice gRPC example.
+ * @file getDevice_GRPC.go
  * @copyright Copyright © 2026 Ross Video Ltd
- * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2026-01-12
+ * @author Christian Twarog (christian.twarog@rossvideo.com)
+ * @date 2026-02-26
  */
 
 package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	grpcServer "github.com/rossvideo/catena/sdks/go/pkg/grpc"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
-	"github.com/rossvideo/catena/sdks/go/pkg/rest"
 )
 
 // Global state for graceful shutdown
-var (
-	shutdownChan = make(chan struct{})
-	srv          *rest.Server
-)
+var shutdownChan = make(chan struct{})
 
 func main() {
 	// Initialize SDK with prefix and app name
-	cfg, err := catena.InitOptions(catena.Options{AppName: "getDevice_REST"})
+	cfg, err := catena.InitOptions(catena.Options{AppName: "getDevice_GRPC"})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to initialize SDK: %v\n", err)
 		os.Exit(1)
@@ -145,7 +141,7 @@ func main() {
 				"video": map[string]any{
 					"name": map[string]any{
 						"display_strings": map[string]string{
-							"en": "Video Settings",
+							"en": "Video",
 						},
 					},
 					"menus": map[string]any{
@@ -193,7 +189,7 @@ func main() {
 							"fr": "Redémarrer l'appareil",
 						},
 					},
-					"type": catena.ParamTypeEmpty, // command with no args
+					"type": catena.ParamTypeEmpty,
 				},
 				"reset": map[string]any{
 					"name": map[string]any{
@@ -289,181 +285,72 @@ func main() {
 							"en": "Mute",
 						},
 					},
-					"type":      catena.ParamTypeInt32, // treating boolean as int32
+					"type":      catena.ParamTypeInt32,
 					"widget":    "CHECKBOX",
 					"read_only": false,
 				},
 			},
 			"menu_groups": map[string]any{
-				"audio": map[string]any{
+				"config": map[string]any{
 					"name": map[string]any{
 						"display_strings": map[string]string{
-							"en": "Audio Settings",
+							"en": "Configuration",
 						},
 					},
 					"menus": map[string]any{
-						"levels": map[string]any{
+						"gain": map[string]any{
 							"name": map[string]any{
 								"display_strings": map[string]string{
-									"en": "Levels",
+									"en": "Gain Control",
+								},
+							},
+							"param_oids": []string{"/master_gain", "/input_1_gain", "/mute"},
+						},
+					},
+				},
+				"status": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Status",
+						},
+					},
+					"order": int32(0),
+					"menus": map[string]any{
+						"status": map[string]any{
+							"name": map[string]any{
+								"display_strings": map[string]string{
+									"en": "Status",
 								},
 							},
 							"param_oids": []string{
-								"master_gain",
-								"input_1_gain",
-								"mute",
+								"/master_gain",
+								"/input_1_gain",
+								"/mute",
 							},
 						},
 					},
 				},
 			},
 			"commands": map[string]any{
-				"reset_meters": map[string]any{
+				"mute_all": map[string]any{
 					"name": map[string]any{
 						"display_strings": map[string]string{
-							"en": "Reset Peak Meters",
+							"en": "Mute All Channels",
 						},
 					},
 					"type": catena.ParamTypeEmpty,
-				},
-			},
-			"language_packs": map[string]any{
-				"packs": map[string]any{
-					"en": map[string]any{
-						"name": "English",
-						"words": map[string]string{
-							"master_gain":  "Master Gain",
-							"input_1_gain": "Input 1 Gain",
-							"mute":         "Mute",
-							"reset_meters": "Reset Peak Meters",
-							"audio":        "Audio Settings",
-							"levels":       "Levels",
-						},
-					},
-				},
-			},
-		},
-		2: {
-			"slot":              uint32(2),
-			"detail_level":      catena.DetailLevelFull,
-			"multi_set_enabled": true,
-			"subscriptions":     false,
-			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg"},
-			"default_scope":     "st2138:op",
-			"constraints": map[string]any{
-				"input_choice": map[string]any{
-					"int32_range": map[string]any{
-						"min_value": int32(1),
-						"max_value": int32(32),
-					},
-				},
-				"output_choice": map[string]any{
-					"int32_range": map[string]any{
-						"min_value": int32(1),
-						"max_value": int32(32),
-					},
-				},
-			},
-			"params": map[string]any{
-				"output_1_source": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Output 1 Source",
-						},
-					},
-					"type": catena.ParamTypeInt32,
-					"constraint": map[string]any{
-						"ref_oid": "input_choice",
-					},
-					"widget":    "DROPDOWN",
-					"read_only": false,
-				},
-				"lock_enabled": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Lock Enabled",
-						},
-					},
-					"type":      catena.ParamTypeInt32, // treating boolean as int32
-					"widget":    "CHECKBOX",
-					"read_only": false,
-				},
-			},
-			"menu_groups": map[string]any{
-				"routing": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Routing",
-						},
-					},
-					"menus": map[string]any{
-						"outputs": map[string]any{
-							"name": map[string]any{
-								"display_strings": map[string]string{
-									"en": "Output Configuration",
-								},
-							},
-							"param_oids": []string{
-								"output_1_source",
-							},
-						},
-						"settings": map[string]any{
-							"name": map[string]any{
-								"display_strings": map[string]string{
-									"en": "Settings",
-								},
-							},
-							"param_oids": []string{
-								"lock_enabled",
-							},
-						},
-					},
-				},
-			},
-			"commands": map[string]any{
-				"take": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Take (Execute Salvo)",
-						},
-					},
-					"type": catena.ParamTypeEmpty,
-				},
-				"clear_locks": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Clear All Locks",
-						},
-					},
-					"type": catena.ParamTypeEmpty,
-				},
-			},
-			"language_packs": map[string]any{
-				"packs": map[string]any{
-					"en": map[string]any{
-						"name": "English",
-						"words": map[string]string{
-							"output_1_source": "Output 1 Source",
-							"lock_enabled":    "Lock Enabled",
-							"take":            "Take (Execute Salvo)",
-							"clear_locks":     "Clear All Locks",
-							"routing":         "Routing",
-							"outputs":         "Output Configuration",
-							"settings":        "Settings",
-						},
-					},
 				},
 			},
 		},
 	}
 
-	slotList := []uint16{0, 1, 2}
-	srv := rest.NewServer(slotList, 100)
+	slotList := []uint16{0, 1}
+	server := grpcServer.NewServer(slotList, 100, cfg)
 
 	// Register GetDevice handler for each slot
 	for _, slot := range slotList {
 		slot := slot
-		srv.RegisterGetDeviceHandler(uint16(slot), func() (catena.CatenaDevice, catena.StatusResult) {
+		server.RegisterGetDeviceHandler(uint16(slot), func() (catena.CatenaDevice, catena.StatusResult) {
 			logger.Info("GetDevice", "slot", slot)
 			_, ok := devices[slot]
 			if !ok {
@@ -481,27 +368,26 @@ func main() {
 		})
 	}
 
-	// Register fallback handler
-	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		logger.Warning("Endpoint not found")
-		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found")
-	})
-
 	// Logger info about the example
 	logger.Info("=======================================================")
-	logger.Info("GetDevice Example")
+	logger.Info("GetDevice gRPC Example")
 	logger.Info("=======================================================")
 	logger.Info("Listening", "port", port)
 	logger.Info("")
 	logger.Info("Available devices:")
 	logger.Info("  Primary Video Processor (slot 0)")
 	logger.Info("  Audio Mixer (slot 1)")
-	logger.Info("  Router Controller (slot 2)")
+	logger.Info("=======================================================")
+	logger.Info("")
+	logger.Info("Test with grpcurl:")
+	logger.Info("  grpcurl -plaintext localhost:" + fmt.Sprintf("%d", port) + " list")
+	logger.Info("  grpcurl -plaintext -d '{\"slot\": 0}' localhost:" + fmt.Sprintf("%d", port) + " st2138.CatenaService/DeviceRequest")
+	logger.Info("  grpcurl -plaintext localhost:" + fmt.Sprintf("%d", port) + " st2138.CatenaService/GetPopulatedSlots")
 	logger.Info("=======================================================")
 
 	// Start server in a goroutine so shutdown handling works
 	go func() {
-		if err := srv.Start(port); err != nil {
+		if err := server.Start(port); err != nil {
 			logger.Error("server failed", "error", err)
 			os.Exit(1)
 		}
@@ -509,6 +395,6 @@ func main() {
 
 	// Wait for shutdown signal
 	<-shutdownChan
-	srv.Shutdown()
+	server.Shutdown()
 	logger.Info("Server shutdown complete")
 }

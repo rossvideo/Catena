@@ -29,14 +29,14 @@
  */
 
 /**
- * @brief JSON utilities for the Catena SDK.
+ * @brief JSON utilities for the Catena REST API.
  * @file json_utils.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
  * @date 2026-02-04
  */
 
-package internal
+package rest
 
 import (
 	"bytes"
@@ -46,6 +46,7 @@ import (
 	"testing"
 
 	"github.com/rossvideo/catena/build/go/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 )
 
 func TestReadRequestJSON_ValidInt32(t *testing.T) {
@@ -54,7 +55,7 @@ func TestReadRequestJSON_ValidInt32(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	val, err := ReadRequestJSON(req)
-	if err != nil {
+	if err.Code != catena.OK {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if val.GetInt32Value() != 42 {
@@ -68,7 +69,7 @@ func TestReadRequestJSON_ValidString(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	val, err := ReadRequestJSON(req)
-	if err != nil {
+	if err.Code != catena.OK {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if val.GetStringValue() != "hello" {
@@ -82,7 +83,7 @@ func TestReadRequestJSON_ValidFloat(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	val, err := ReadRequestJSON(req)
-	if err != nil {
+	if err.Code != catena.OK {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if val.GetFloat32Value() < 3.13 || val.GetFloat32Value() > 3.15 {
@@ -96,7 +97,7 @@ func TestReadRequestJSON_ContentTypeWithCharset(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 
 	val, err := ReadRequestJSON(req)
-	if err != nil {
+	if err.Code != catena.OK {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if val.GetInt32Value() != 100 {
@@ -110,11 +111,11 @@ func TestReadRequestJSON_MissingContentType(t *testing.T) {
 	// No Content-Type header
 
 	_, err := ReadRequestJSON(req)
-	if err == nil {
-		t.Fatal("expected error for missing Content-Type")
+	if err.Code != catena.BAD_REQUEST {
+		t.Fatal("expected BAD_REQUEST error for missing Content-Type")
 	}
-	if !strings.Contains(err.Error(), "missing Content-Type") {
-		t.Errorf("expected 'missing Content-Type' error, got: %v", err)
+	if err.Error != "missing Content-Type header" {
+		t.Errorf("expected 'missing Content-Type header' error, got: %v", err)
 	}
 }
 
@@ -124,11 +125,11 @@ func TestReadRequestJSON_InvalidContentType(t *testing.T) {
 	req.Header.Set("Content-Type", "text/plain")
 
 	_, err := ReadRequestJSON(req)
-	if err == nil {
+	if err.Code != catena.INVALID_ARGUMENT {
 		t.Fatal("expected error for invalid Content-Type")
 	}
-	if !strings.Contains(err.Error(), "unsupported content type") {
-		t.Errorf("expected 'unsupported content type' error, got: %v", err)
+	if err.Error != "unsupported content type: text/plain, expected application/json" {
+		t.Errorf("expected 'unsupported content type: text/plain, expected application/json' error, got: %v", err)
 	}
 }
 
@@ -138,10 +139,10 @@ func TestReadRequestJSON_MalformedContentType(t *testing.T) {
 	req.Header.Set("Content-Type", "invalid;;;type")
 
 	_, err := ReadRequestJSON(req)
-	if err == nil {
+	if err.Code != catena.BAD_REQUEST {
 		t.Fatal("expected error for malformed Content-Type")
 	}
-	if !strings.Contains(err.Error(), "invalid content type") {
+	if err.Error != "invalid content type: invalid;;;type" {
 		t.Errorf("expected 'invalid content type' error, got: %v", err)
 	}
 }
@@ -152,8 +153,11 @@ func TestReadRequestJSON_InvalidJSON(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	_, err := ReadRequestJSON(req)
-	if err == nil {
-		t.Fatal("expected error for invalid JSON")
+	if err.Code != catena.BAD_REQUEST {
+		t.Fatal("expected BAD_REQUEST error for invalid JSON")
+	}
+	if !strings.Contains(err.Error, "failed to unmarshal request body") {
+		t.Errorf("expected error to contain 'failed to unmarshal request body', got: %v", err.Error)
 	}
 }
 
@@ -162,8 +166,11 @@ func TestReadRequestJSON_EmptyBody(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	_, err := ReadRequestJSON(req)
-	if err == nil {
-		t.Fatal("expected error for empty body")
+	if err.Code != catena.BAD_REQUEST {
+		t.Fatal("expected BAD_REQUEST error for empty body")
+	}
+	if !strings.Contains(err.Error, "failed to unmarshal request body") {
+		t.Errorf("expected error to contain 'failed to unmarshal request body', got: %v", err.Error)
 	}
 }
 

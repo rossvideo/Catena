@@ -175,7 +175,7 @@ jobs:
           
           # Run tests as non-root to properly test permission errors
           # Using runuser to preserve environment including PATH
-          runuser -u testuser -- bash -c "cd ${GITHUB_WORKSPACE}/sdks/go && go test ./pkg/... ./internal/... -v -coverpkg=./pkg/...,./internal -coverprofile=coverage.out -covermode=count"
+          runuser -u testuser -- bash -c "cd ${GITHUB_WORKSPACE}/sdks/go && go test ./pkg/... -v -coverpkg=./pkg/...,./internal -coverprofile=coverage.out -covermode=count"
 
       - name: Generate coverage report
         run: |
