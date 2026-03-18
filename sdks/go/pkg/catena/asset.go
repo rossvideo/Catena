@@ -225,8 +225,8 @@ func (ca CatenaAsset) ToJSON() ([]byte, StatusResult) {
 	}
 
 	b, err := (protojson.MarshalOptions{
-		UseProtoNames:     true,
-		EmitDefaultValues: true,
+		UseProtoNames:   true,
+		EmitUnpopulated: false,
 	}).Marshal(ca.asset)
 	if err != nil {
 		return nil, StatusResult{Code: INTERNAL, Error: fmt.Sprintf("failed to marshal asset to JSON: %v", err)}

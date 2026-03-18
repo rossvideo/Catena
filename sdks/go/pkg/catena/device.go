@@ -106,7 +106,7 @@ func (cd CatenaDevice) ToJSON() ([]byte, error) {
 	}
 
 	return (protojson.MarshalOptions{
-		UseProtoNames:     true,
-		EmitDefaultValues: true,
+		UseProtoNames:   true,
+		EmitUnpopulated: false,
 	}).Marshal(cd.device)
 }
