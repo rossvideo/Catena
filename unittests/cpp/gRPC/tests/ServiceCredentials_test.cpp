@@ -77,6 +77,11 @@ class gRPCServiceCredentialsTests : public testing::Test {
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
         config::log_dir = UNITTEST_LOG_DIR;
+        config::log_file = true;
+        config::log_level = "INFO";
+        config::log_size = 10;
+        config::log_count = 128;
+        config::log_verbosity = 0;
         Logger::init("gRPCServiceCredentialsTest");
     }
 

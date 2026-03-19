@@ -81,6 +81,11 @@ protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
         catena::common::config::log_dir = UNITTEST_LOG_DIR;
+        catena::common::config::log_file = true;
+        catena::common::config::log_level = "INFO";
+        catena::common::config::log_size = 10;
+        catena::common::config::log_count = 128;
+        catena::common::config::log_verbosity = 0;
         Logger::init("EnumDecoratorTest");
     }
 
