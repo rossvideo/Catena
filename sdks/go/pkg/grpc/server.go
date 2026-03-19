@@ -113,7 +113,7 @@ func NewServer(slots []uint16, maxConnections int, cfg catena.Config) *Server {
 
 // Start starts the gRPC server on the specified port
 func (s *Server) Start(port int) error {
-	addr := fmt.Sprintf(":%d", port)
+	addr := fmt.Sprintf("0.0.0.0:%d", port)
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("Failed to create listener", "address", addr, "error", err)
