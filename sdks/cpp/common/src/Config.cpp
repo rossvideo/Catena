@@ -34,9 +34,9 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             (CATENA_LOG_LEVEL_NAME.c_str(), po::value<std::string>()->default_value(CATENA_LOG_LEVEL), "Minimum severity level of logs. Options are 'info', 'warning', and 'error'")
             (CATENA_LOG_CONSOLE_NAME.c_str(), po::value<bool>()->default_value(CATENA_LOG_CONSOLE)->implicit_value(true), "Use console logging(stdout/stderr)")
             (CATENA_LOG_FILE_NAME.c_str(), po::value<bool>()->default_value(CATENA_LOG_FILE)->implicit_value(true), "Use file logging")
-            (CATENA_LOG_SIZE_NAME.c_str(), po::value<int>()->default_value(CATENA_LOG_SIZE), "Max mb of log files before rotating")
+            (CATENA_LOG_SIZE_NAME.c_str(), po::value<double>()->default_value(CATENA_LOG_SIZE), "Max mb of log files before rotating")
             (CATENA_LOG_COUNT_NAME.c_str(), po::value<int>()->default_value(CATENA_LOG_COUNT), "Max number of log files before rotating")
-            (CATENA_LOG_MAX_SIZE_NAME.c_str(), po::value<int>()->default_value(CATENA_LOG_MAX_SIZE), "???")
+            (CATENA_LOG_MAX_SIZE_NAME.c_str(), po::value<int>()->default_value(CATENA_LOG_MAX_SIZE), "Convenience option. Derives count and size based on the max size in MB.")
             (CATENA_LOG_VERBOSITY_NAME.c_str(), po::value<int>()->default_value(CATENA_LOG_VERBOSITY), "Max verbosity level of logs. Options are 0, 1, 2")
             ;
             
@@ -97,9 +97,8 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(CATENA_SILENT_NAME)) config::silent = vars[CATENA_SILENT_NAME].as<bool>();
         if (vars.count(CATENA_LOG_CONSOLE_NAME)) config::log_console = vars[CATENA_LOG_CONSOLE_NAME].as<bool>();
         if (vars.count(CATENA_LOG_FILE_NAME)) config::log_file = vars[CATENA_LOG_FILE_NAME].as<bool>();
-        if (vars.count(CATENA_LOG_SIZE_NAME)) config::log_size = vars[CATENA_LOG_SIZE_NAME].as<int>();
+        if (vars.count(CATENA_LOG_SIZE_NAME)) config::log_size = vars[CATENA_LOG_SIZE_NAME].as<double>();
         if (vars.count(CATENA_LOG_COUNT_NAME)) config::log_count = vars[CATENA_LOG_COUNT_NAME].as<int>();
-        if (vars.count(CATENA_LOG_MAX_SIZE_NAME)) config::log_max_size = vars[CATENA_LOG_MAX_SIZE_NAME].as<int>();
         if (vars.count(CATENA_LOG_VERBOSITY_NAME)) config::log_verbosity = vars[CATENA_LOG_VERBOSITY_NAME].as<int>();
         if (vars.count(CATENA_LOG_LEVEL_NAME)){ 
             config::log_level = vars[CATENA_LOG_LEVEL_NAME].as<std::string>();
@@ -107,6 +106,22 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             if (log_level.compare("INFO") != 0 && log_level.compare("WARNING") != 0 && log_level.compare("ERROR") != 0) {
                 std::cout << "WARNING: log_level {" << log_level << "} is invalid. Defaulting to INFO instead." << std::endl;
                 config::log_level = "INFO"; 
+            }
+        }
+        if (vars.count(CATENA_LOG_MAX_SIZE_NAME)) {
+            config::log_max_size = vars[CATENA_LOG_MAX_SIZE_NAME].as<int>();
+            if (config::log_max_size < 10) {
+                std::cout << "WARNING: log_size_max is set below the minimum of 10. Ignoring log_max_size." << std::endl;
+            }
+            else if (!vars[CATENA_LOG_MAX_SIZE_NAME].defaulted()) {
+                if (!vars[CATENA_LOG_SIZE_NAME].defaulted()) {
+                    std::cout << "WARNING: log_size is set. Ignoring log_max_size." << std::endl;
+                } else if (!vars[CATENA_LOG_COUNT_NAME].defaulted()) {
+                    std::cout << "WARNING: log_count is set. Ignoring log_max_size." << std::endl;
+                } else {
+                    config::log_count = config::log_max_size / 10;
+                    config::log_size = config::log_max_size / config::log_count;
+                }
             }
         }
 

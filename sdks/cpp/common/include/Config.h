@@ -93,7 +93,7 @@ const bool CATENA_DASHBOARD_TLS_ENABLED = false;
 const std::string CATENA_LOG_LEVEL = "info";
 const bool CATENA_LOG_CONSOLE = true;
 const bool CATENA_LOG_FILE = true;
-const int CATENA_LOG_SIZE = 10;
+const double CATENA_LOG_SIZE = 10.0;
 const int CATENA_LOG_COUNT = 5;
 const int CATENA_LOG_MAX_SIZE = 50;
 #ifdef NDEBUG
@@ -157,7 +157,7 @@ inline bool log_console = false;
 
 inline bool log_file = false;
 
-inline int log_size = 0;
+inline double log_size = 0;
 
 inline int log_count = 0;
 

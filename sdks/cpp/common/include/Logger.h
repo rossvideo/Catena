@@ -75,20 +75,13 @@ inline int kernel_thread_id() {
   return static_cast<int>(gettid());
 }
 
-static unsigned int current_id = 0;
+// Helper for log file line numbers
+inline unsigned int current_record_id = 0;
 inline unsigned int get_record_id() {
-  return ++current_id;
+  return ++current_record_id;
 }
 
-struct LogVerbosityScope {
-    boost::log::aux::scoped_thread_attribute guard_;
-
-    LogVerbosityScope(int verbosity)
-        : guard_(boost::log::attribute_name("Verbosity"), boost::log::attributes::constant<int>(verbosity)) {}
-};
-
 // This map is to keep the boost system consistent with the old abseil system which uses all-caps for severity
-// BOOST_LOG_ATTRIBUTE_KEYWORD(Verbosity, "Verbosity", int);
 #define CATENA_SEV_(x)    CATENA_SEV_##x
 #define CATENA_SEV_INFO   info
 #define CATENA_SEV_WARNING warning
