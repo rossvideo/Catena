@@ -125,7 +125,6 @@ void Logger::init(const std::string& appName) {
         }
         
         std::string fileName = config::log_dir + "/" + "%Y%m%d_%H%M%S_" + appName + ".log";
-        std::string targetName = config::log_count > 0? fileName: "";
         const int MB = 1024 * 1024;
         
         boost::shared_ptr<core> core = core::get();

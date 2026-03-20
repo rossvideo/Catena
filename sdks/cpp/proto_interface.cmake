@@ -72,10 +72,6 @@ function(set_up_proto_targets)
     # Provide link libraries
     target_link_libraries(${PROTO_TARGET} PUBLIC
         protobuf::libprotobuf
-        absl::log
-        absl::log_globals
-        absl::log_initialize
-        absl::log_severity
         Boost::program_options
         Boost::log)
 

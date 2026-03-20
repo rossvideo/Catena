@@ -108,10 +108,6 @@ function(set_up_gRPC_targets)
     target_link_libraries(${GRPC_TARGET} PUBLIC
         protobuf::libprotobuf-lite
         gRPC::grpc++
-        absl::log
-        absl::log_globals
-        absl::log_initialize
-        absl::log_severity
         Boost::program_options
         Boost::log)
 
