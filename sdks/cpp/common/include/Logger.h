@@ -68,21 +68,36 @@ inline int kernel_thread_id() {
 }
 
 // Helper for log file line numbers
-inline unsigned int current_record_id = 0;
+inline std::atomic<unsigned int> current_record_id = 0;
 inline unsigned int get_record_id() {
   return ++current_record_id;
 }
+
+/**
+ * Helper struct for the verbosity levels
+ * Can't be added like the other attributes due to filtering occuring
+ * before record attributes are added, and this is needed for the filter itself
+ */
+struct ScopeVerbosity {
+  boost::log::attribute_set::iterator attr;
+  ScopeVerbosity(int v) {
+    attr = boost::log::core::get()->add_thread_attribute("Verbosity", boost::log::attributes::constant<int>(v)).first;
+  }
+  ~ScopeVerbosity() {
+    boost::log::core::get()->remove_thread_attribute(attr);
+  }
+
+  explicit operator bool() const { return true; }
+};
 
 // This map is to keep the boost system consistent with the old abseil system which uses all-caps for severity
 #define CATENA_SEV_(x)    CATENA_SEV_##x
 #define CATENA_SEV_INFO   info
 #define CATENA_SEV_WARNING warning
 #define CATENA_SEV_ERROR  error
-
+    
 #define LOG_IMPL(severity) \
-  boost::log::attribute_cast<boost::log::attributes::mutable_constant<int>>( \
-      boost::log::core::get()->get_global_attributes()["Verbosity"] \
-  ).set(0); \
+  if (ScopeVerbosity v = ScopeVerbosity(0))\
   BOOST_LOG_TRIVIAL(severity) \
     << boost::log::add_value("File", log_basename(__FILE__)) \
     << boost::log::add_value("Line", __LINE__) \
@@ -93,9 +108,7 @@ inline unsigned int get_record_id() {
   LOG_IMPL(CATENA_SEV_(severity))
 
 #define VLOG(verbosity) \
-  boost::log::attribute_cast<boost::log::attributes::mutable_constant<int>>( \
-      boost::log::core::get()->get_global_attributes()["Verbosity"] \
-  ).set(verbosity); \
+  if (ScopeVerbosity v = ScopeVerbosity(verbosity))\
   BOOST_LOG_TRIVIAL(info) \
     << boost::log::add_value("File", log_basename(__FILE__)) \
     << boost::log::add_value("Line", __LINE__) \

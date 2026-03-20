@@ -95,7 +95,7 @@ const bool CATENA_LOG_CONSOLE = true;
 const bool CATENA_LOG_FILE = true;
 const double CATENA_LOG_SIZE = 10.0;
 const int CATENA_LOG_COUNT = 5;
-const int CATENA_LOG_MAX_SIZE = 50;
+const double CATENA_LOG_MAX_SIZE = 50.0;
 #ifdef NDEBUG
 const int CATENA_LOG_VERBOSITY = 0;
 #else
@@ -159,9 +159,9 @@ inline bool log_file = false;
 
 inline double log_size = 0;
 
-inline int log_count = 0;
+inline double log_max_size = 0;
 
-inline int log_max_size = 0;
+inline int log_count = 0;
 
 inline int log_verbosity = 0;
 

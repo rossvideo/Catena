@@ -86,12 +86,10 @@ void clear_directory(const std::filesystem::path& path) {
 
 // Helper filter for VLOG
 bool catena_vlog_filter(boost::log::attribute_value_set const& attrs) {
-    auto verbosity_level = boost::log::extract<int>("Verbosity", attrs);
+    auto verbosity_level = attrs["Verbosity"].extract<int>();
     if (!verbosity_level)
         return true;
-    if (*verbosity_level > config::log_verbosity)
-        return false;
-    return true;
+    return verbosity_level.get() <= config::log_verbosity;
 }
 
 // Helper filter for severity level
@@ -129,7 +127,6 @@ void Logger::init(const std::string& appName) {
         
         boost::shared_ptr<core> core = core::get();
         add_common_attributes();  // Timestamps
-        core->add_global_attribute("Verbosity", boost::log::attributes::mutable_constant<int>(0));
         if (config::log_file) {
             // Create file sink and set parameters
             instance().file_sink_ = boost::make_shared<file_sink_t>(
