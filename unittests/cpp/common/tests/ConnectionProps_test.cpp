@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the ConnectionProps class.
  * @author christian.twarog@rossvideo.com
- * @date 2026-02-05
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 

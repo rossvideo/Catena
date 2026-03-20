@@ -33,9 +33,9 @@
 /**
  * @file Config.h
  * @brief Runtime configuration variables
- * @author keon.foster@rossvideo.com
+ * @author Keon Foster (keon.foster@rossvideo.com)
  * @author Christian Twarog (christian.twarog@rossvideo.com)
- * @date 2026-02-24
+ * @date 2026-03-20
  * @copyright Copyright (c) 2026 Ross Video
  */
 
