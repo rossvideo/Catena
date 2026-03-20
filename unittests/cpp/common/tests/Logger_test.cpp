@@ -44,6 +44,8 @@
 #include <Logger.h>
 #include <Config.h>
 #include <regex>
+#include <sstream>
+#include <string_view>
 
 // gtest
 #include <gtest/gtest.h>
@@ -52,77 +54,95 @@ using namespace catena::common;
 
 class LoggerTest : public ::testing::Test {
     protected:
-        static void clear_directory(const std::filesystem::path& path) {
-            for (const auto& entry : std::filesystem::directory_iterator(path)) {
-                std::filesystem::remove_all(entry.path());
+
+        static std::filesystem::path FindPath() {
+            constexpr std::string_view suffix = "_LoggerTest.log";
+            for (const auto& entry : std::filesystem::directory_iterator(config::log_dir)) {
+                if (!entry.is_regular_file()) {
+                    continue;
+                }
+                const std::string fn = entry.path().filename().string();
+                if (fn.size() >= suffix.size() &&
+                    fn.compare(fn.size() - suffix.size(), suffix.size(), suffix) == 0) {
+                    return entry.path();
+                }
             }
+            return {};
+        }
+
+        static std::string ReadFile(const std::filesystem::path& path) {
+            std::ifstream f(path);
+            return std::string(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
+        }
+
+        // Slice of log file belonging to the test case
+        static std::string TestSlice(const std::string& fullLog, const std::string& marker) {
+            const size_t pos = fullLog.find(marker);
+            if (pos == std::string::npos) {
+                return {};
+            }
+            return fullLog.substr(pos + marker.size());
+        }
+
+        static int CountFiles() {
+            int n = 0;
+            for (const auto& entry :
+                 std::filesystem::directory_iterator(config::log_dir)) {
+                if (entry.is_regular_file()) {
+                    ++n;
+                }
+            }
+            return n;
         }
 
         // Set up and tear down Google Logging
         static void SetUpTestSuite() {
             config::log_dir = UNITTEST_LOG_DIR + std::string("/logger");
-            clear_directory(config::log_dir);
             config::log_console = true;
             config::log_file = true;
             config::log_level = "INFO";
-            config::log_size = 0.001;
+            config::log_size = 10;
             config::log_count = 1;
             config::log_verbosity = 2;
             config::silent = false;
             Logger::init("LoggerTest");
         }
-
-        void SetUp() override {
-            //wipe entire UNITTEST_LOG_DIR logging dir
-        }
-
-        void rotate_log_file(int bytes){
-            int bytes_to_add = config::log_size * 1024 * 1024 - bytes - 100;
-            const std::string padding(bytes_to_add, 'a');
-            LOG(INFO) << padding;
-            boost::log::core::get()->flush();
-        }
 };
 
 // Test 1: Normal case
 TEST_F(LoggerTest, LogDefaultDir) {
+    // Log test messages
+    const std::string marker = "<<<CATENA_LOGGER_TEST: LogDefaultDir>>>";
+    LOG(INFO) << marker;
     LOG(INFO) << "This is an info log message.";
     LOG(WARNING) << "This is a warning log message.";
     LOG(ERROR) << "This is an error log message.";
 
-    //verify that the log file was created and contains the log messages
-    std::string logFilePattern = "_LoggerTest.log"; // Log file name starts with this
-    bool foundLogFile = false;
-    int fileCount = 0;
+    boost::log::core::get()->flush();
 
-    int size = 0;
-    for (const auto& entry : std::filesystem::directory_iterator(UNITTEST_LOG_DIR + std::string("/logger"))) {
-        if (entry.is_regular_file()) {
-            fileCount++;
-            size = entry.file_size();
-        }
+    // Verify file created properly
+    const std::filesystem::path logPath = FindPath();
+    ASSERT_FALSE(logPath.empty());
+    EXPECT_TRUE(std::regex_match(logPath.filename().string(),
+                                 std::regex(R"(^\d{8}_\d{6}_LoggerTest[.]log$)")));
 
-        //get the file that ends with _LoggerTest
-        if (entry.is_regular_file() && entry.path().filename().string().find(logFilePattern) == entry.path().filename().string().length() - logFilePattern.length()) {
-            foundLogFile = true;
-            std::ifstream logFile(entry.path());
-            std::string logContent((std::istreambuf_iterator<char>(logFile)), std::istreambuf_iterator<char>());
-            EXPECT_NE(logContent.find("This is an info log message."), std::string::npos);
-            EXPECT_NE(logContent.find("This is a warning log message."), std::string::npos);
-            EXPECT_NE(logContent.find("This is an error log message."), std::string::npos);
-            EXPECT_TRUE(std::regex_match(entry.path().filename().string(), std::regex(R"(^\d{8}_\d{6}_LoggerTest[.]log$)")));
-            break;
-        }
-    }
+    const std::string fullLog = ReadFile(logPath);
+    const std::string slice = TestSlice(fullLog, marker);
+    ASSERT_FALSE(slice.empty()) << "Test marker not found in log";
+    // Check messages were written correctly
+    EXPECT_NE(slice.find("This is an info log message."), std::string::npos);
+    EXPECT_NE(slice.find("This is a warning log message."), std::string::npos);
+    EXPECT_NE(slice.find("This is an error log message."), std::string::npos);
 
-    //fail test if the directory has more than 1 file
-    EXPECT_EQ(fileCount, 1);
-
-    rotate_log_file(size);
+    EXPECT_EQ(CountFiles(), 1);
 }
 
 // Test 2: Severity filter only passes severity >= minimum
 TEST_F(LoggerTest, LogSeverityFilter) {
+    const std::string marker = "<<<CATENA_LOGGER_TEST: LogSeverityFilter>>>";
+    LOG(INFO) << marker;
+
+    // Log test messages at different severity levels
     config::log_level = "INFO";
     LOG(INFO) << "This is an info log message.";
     LOG(WARNING) << "This is a warning log message.";
@@ -136,49 +156,46 @@ TEST_F(LoggerTest, LogSeverityFilter) {
     LOG(WARNING) << "This is a warning log message.";
     LOG(ERROR) << "This is an error log message.";
 
-    //verify that the log file was created and contains the log messages
-    std::string logFilePattern = "_LoggerTest.log"; // Log file name starts with this
-    bool foundLogFile = false;
-    int fileCount = 0;
+    boost::log::core::get()->flush();
 
-    int size = 0;
-    for (const auto& entry : std::filesystem::directory_iterator(UNITTEST_LOG_DIR + std::string("/logger"))) {
-        if (entry.is_regular_file()) {
-            fileCount++;
-            size = entry.file_size();
-        }
+    const std::filesystem::path logPath = FindPath();
+    ASSERT_FALSE(logPath.empty());
+    const std::string slice = TestSlice(ReadFile(logPath), marker);
+    ASSERT_FALSE(slice.empty()) << "Test marker not found in log";
 
-        //get the file that ends with _LoggerTest
-        if (entry.is_regular_file() && entry.path().filename().string().find(logFilePattern) == entry.path().filename().string().length() - logFilePattern.length()) {
-            foundLogFile = true;
-            std::ifstream logFile(entry.path());
-            std::regex severity_re(R"(^\d+:\s*(info|warning|error)\s)");
-            std::smatch m;
-            int info_count = 0, warning_count = 0, error_count = 0;
-
-            for (std::string line; std::getline(logFile, line); ) {
-                if (std::regex_search(line, m, severity_re)) {
-                    std::string sev = m[1].str();
-                    if (sev == "info")    ++info_count;
-                    if (sev == "warning") ++warning_count;
-                    if (sev == "error")   ++error_count;
-                }
+    // Check messages were written in the right quantity
+    std::regex severity_re(R"(^\d+:\s*(info|warning|error)\s)");
+    std::smatch m;
+    int info_count = 0, warning_count = 0, error_count = 0;
+    std::istringstream stream(slice);
+    for (std::string line; std::getline(stream, line);) {
+        if (std::regex_search(line, m, severity_re)) {
+            const std::string& sev = m[1].str();
+            if (sev == "info") {
+                ++info_count;
             }
-            EXPECT_EQ(info_count, 1);
-            EXPECT_EQ(warning_count, 2);
-            EXPECT_EQ(error_count, 3);
-            break;
+            if (sev == "warning") {
+                ++warning_count;
+            }
+            if (sev == "error") {
+                ++error_count;
+            }
         }
     }
+    EXPECT_EQ(info_count, 1);
+    EXPECT_EQ(warning_count, 2);
+    EXPECT_EQ(error_count, 3);
 
-    //fail test if the directory has more than 1 file
-    EXPECT_EQ(fileCount, 1);
+    EXPECT_EQ(CountFiles(), 1);
     config::log_level = "INFO";
-    rotate_log_file(size);
 }
 
 // Test 3: Verbosity filter only passes verbosity <= maximum
 TEST_F(LoggerTest, LogVerbosityFilter) {
+    const std::string marker = "<<<CATENA_LOGGER_TEST: LogVerbosityFilter>>>";
+    LOG(INFO) << marker;
+
+    // Log test messages at different verbosity levels
     config::log_verbosity = 0;
     VLOG(0) << "level 0";
     VLOG(1) << "level 1";
@@ -192,74 +209,58 @@ TEST_F(LoggerTest, LogVerbosityFilter) {
     VLOG(1) << "level 1";
     VLOG(2) << "level 2";
 
-    //verify that the log file was created and contains the log messages
-    std::string logFilePattern = "_LoggerTest.log"; // Log file name starts with this
-    bool foundLogFile = false;
-    int fileCount = 0;
+    boost::log::core::get()->flush();
 
-    int size = 0;
-    for (const auto& entry : std::filesystem::directory_iterator(UNITTEST_LOG_DIR + std::string("/logger"))) {
-        if (entry.is_regular_file()) {
-            fileCount++;
-            size = entry.file_size();
-        }
+    const std::filesystem::path logPath = FindPath();
+    ASSERT_FALSE(logPath.empty());
+    const std::string slice = TestSlice(ReadFile(logPath), marker);
+    ASSERT_FALSE(slice.empty()) << "Test marker not found in log";
 
-        //get the file that ends with _LoggerTest
-        if (entry.is_regular_file() && entry.path().filename().string().find(logFilePattern) == entry.path().filename().string().length() - logFilePattern.length()) {
-            foundLogFile = true;
-            std::ifstream logFile(entry.path());
-            std::regex verbosity_re(R"(level ([012]))");
-            std::smatch m;
-            int lvl_0 = 0, lvl_1 = 0, lvl_2 = 0;
-
-            for (std::string line; std::getline(logFile, line); ) {
-                if (std::regex_search(line, m, verbosity_re)) {
-                    std::string verb = m[1].str();
-                    if (verb == "0")    ++lvl_0;
-                    if (verb == "1") ++lvl_1;
-                    if (verb == "2")   ++lvl_2;
-                }
+    // Check messages were written in the right quantity
+    std::regex verbosity_re(R"(level ([012]))");
+    std::smatch m;
+    int lvl_0 = 0, lvl_1 = 0, lvl_2 = 0;
+    std::istringstream stream(slice);
+    for (std::string line; std::getline(stream, line);) {
+        if (std::regex_search(line, m, verbosity_re)) {
+            const std::string& verb = m[1].str();
+            if (verb == "0") {
+                ++lvl_0;
             }
-            EXPECT_EQ(lvl_0, 3);
-            EXPECT_EQ(lvl_1, 2);
-            EXPECT_EQ(lvl_2, 1);
-            break;
+            if (verb == "1") {
+                ++lvl_1;
+            }
+            if (verb == "2") {
+                ++lvl_2;
+            }
         }
     }
+    EXPECT_EQ(lvl_0, 3);
+    EXPECT_EQ(lvl_1, 2);
+    EXPECT_EQ(lvl_2, 1);
 
-    //fail test if the directory has more than 1 file
-    EXPECT_EQ(fileCount, 1);
-    rotate_log_file(size);
+    EXPECT_EQ(CountFiles(), 1);
+    config::log_verbosity = 2;
 }
 
 // Test 4: Silence prevents all messages
 TEST_F(LoggerTest, LogSilence) {
-    LOG(INFO) << "ROTATE";
+    const std::string marker = "<<<CATENA_LOGGER_TEST: LogSilence>>>";
+    LOG(INFO) << marker;
+
+    // Log test message which shouldn't be written
     config::silent = true;
     LOG(INFO) << "MESSAGE";
 
-    //verify that the log file was created and does not contain the log messages
-    std::string logFilePattern = "_LoggerTest.log"; // Log file name starts with this
-    bool foundLogFile = false;
-    int fileCount = 0;
+    boost::log::core::get()->flush();
 
-    for (const auto& entry : std::filesystem::directory_iterator(UNITTEST_LOG_DIR + std::string("/logger"))) {
-        if (entry.is_regular_file()) {
-            fileCount++;
-        }
+    const std::filesystem::path logPath = FindPath();
+    ASSERT_FALSE(logPath.empty());
+    const std::string slice = TestSlice(ReadFile(logPath), marker);
+    ASSERT_FALSE(slice.empty()) << "Test marker not found in log";
+    // Check message not in file
+    EXPECT_EQ(slice.find("MESSAGE"), std::string::npos);
 
-        //get the file that ends with _LoggerTest
-        if (entry.is_regular_file() && entry.path().filename().string().find(logFilePattern) == entry.path().filename().string().length() - logFilePattern.length()) {
-            foundLogFile = true;
-            std::ifstream logFile(entry.path());
-            std::string logContent((std::istreambuf_iterator<char>(logFile)), std::istreambuf_iterator<char>());
-            EXPECT_EQ(logContent.find("MESSAGE"), std::string::npos);
-            EXPECT_TRUE(std::regex_match(entry.path().filename().string(), std::regex(R"(^\d{8}_\d{6}_LoggerTest[.]log$)")));
-            break;
-        }
-    }
-
-    //fail test if the directory has more than 1 file
-    EXPECT_EQ(fileCount, 1);
+    EXPECT_EQ(CountFiles(), 1);
     config::silent = false;
 }
