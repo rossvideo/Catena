@@ -58,7 +58,7 @@ class RESTMultiSetValueTests : public RESTEndpointTest {
         config::log_level = "INFO";
         config::log_size = 10;
         config::log_count = 128;
-        config::log_verbosity = 0;
+        config::log_verbosity = 2;
         Logger::init("RESTMultiSetValueTest");
     }
 

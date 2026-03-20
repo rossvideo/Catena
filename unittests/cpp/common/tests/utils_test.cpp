@@ -27,7 +27,7 @@ protected:
         catena::common::config::log_level = "INFO";
         catena::common::config::log_size = 10;
         catena::common::config::log_count = 128;
-        catena::common::config::log_verbosity = 0;
+        catena::common::config::log_verbosity = 2;
         Logger::init("UtilsTest");
     }
 

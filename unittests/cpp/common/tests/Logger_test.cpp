@@ -67,7 +67,7 @@ class LoggerTest : public ::testing::Test {
             config::log_level = "INFO";
             config::log_size = 0.001;
             config::log_count = 1;
-            config::log_verbosity = 0;
+            config::log_verbosity = 2;
             config::silent = false;
             Logger::init("LoggerTest");
         }
