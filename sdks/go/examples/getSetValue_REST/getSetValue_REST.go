@@ -204,20 +204,13 @@ func main() {
 	// Register command handlers for each slot
 	for _, slot := range slotList {
 		slot := slot // capture loop variable
-		srv.RegisterExecuteCommandHandler(slot, func(slot uint16, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+		srv.RegisterExecuteCommandHandler(slot, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 			logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid, "payload", payload)
-			// Return schema-compliant command_response format
-			// Options: {response: value}, {no_response: {}}, or {exception: {...}}
-			response := map[string]any{
-				"response": map[string]any{
-					"string_value": "Command " + commandFqoid + " executed successfully",
-				},
-			}
-			catenaVal, err := catena.ToCatenaValue(response)
+			catenaVal, err := catena.ToCatenaValue("Command " + commandFqoid + " executed successfully")
 			if err != nil {
-				return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to create command response")
+				return catena.CommandError(catena.INTERNAL, "failed to create command response")
 			}
-			return catena.Reply(catenaVal)
+			return catena.CommandReply(catenaVal)
 		})
 	}
 

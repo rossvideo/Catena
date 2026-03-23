@@ -662,17 +662,16 @@ func TestServer_ExecuteCommand_WithResponse(t *testing.T) {
 	defer cleanup()
 
 	handlerCalled := false
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 		handlerCalled = true
 		if fqoid != "device.reboot" {
 			t.Errorf("expected fqoid 'device.reboot', got %s", fqoid)
 		}
-		// Verify payload was passed
 		if payload == nil {
 			t.Error("expected non-nil payload")
 		}
 		value, _ := catena.ToCatenaValue(string("Command executed"))
-		return catena.Reply(value)
+		return catena.CommandReply(value)
 	})
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -698,9 +697,8 @@ func TestServer_ExecuteCommand_WithoutResponse(t *testing.T) {
 	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
 	defer cleanup()
 
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
-		// Return empty value (no response)
-		return catena.Reply(catena.CatenaValue{})
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+		return catena.CommandNoResponse()
 	})
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -719,14 +717,14 @@ func TestServer_ExecuteCommand_NilPayload(t *testing.T) {
 	defer cleanup()
 
 	receivedPayload := "not nil"
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 		if payload != nil {
 			receivedPayload = "not nil"
 		} else {
 			receivedPayload = "nil"
 		}
 		value, _ := catena.ToCatenaValue(string("OK"))
-		return catena.Reply(value)
+		return catena.CommandReply(value)
 	})
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -765,8 +763,8 @@ func TestServer_ExecuteCommand_HandlerError(t *testing.T) {
 	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
 	defer cleanup()
 
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
-		return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "command not supported")
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+		return catena.CommandError(catena.UNIMPLEMENTED, "command not supported")
 	})
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)

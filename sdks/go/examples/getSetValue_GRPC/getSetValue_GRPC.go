@@ -121,12 +121,10 @@ func main() {
 	})
 
 	// Register ExecuteCommand handler
-	server.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	server.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 		logger.Info("Command executed", "command", commandFqoid, "payload", payload)
-
-		// Return a simple response
-		response, _ := catena.ToProto("Command executed successfully")
-		return catena.CatenaValue{Value: response}, catena.StatusWithCode(catena.OK, "")
+		val, _ := catena.ToCatenaValue("Command executed successfully")
+		return catena.CommandReply(val)
 	})
 
 	logger.Info("Starting gRPC server", "port", port)

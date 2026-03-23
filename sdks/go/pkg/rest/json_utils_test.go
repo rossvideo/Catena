@@ -324,3 +324,88 @@ func TestWriteResponseJSON_WriteError(t *testing.T) {
 		t.Fatal("expected error when Write fails")
 	}
 }
+
+func TestWriteCommandResponseJSON_NilResponse(t *testing.T) {
+	w := httptest.NewRecorder()
+
+	err := WriteCommandResponseJSON(w, nil, http.StatusOK)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if w.Code != http.StatusOK {
+		t.Errorf("expected status 200, got %d", w.Code)
+	}
+	if ct := w.Header().Get("Content-Type"); ct != "application/json" {
+		t.Errorf("expected Content-Type application/json, got %q", ct)
+	}
+	if w.Body.Len() != 0 {
+		t.Errorf("expected empty body, got %q", w.Body.String())
+	}
+}
+
+func TestWriteCommandResponseJSON_ValidNoResponse(t *testing.T) {
+	w := httptest.NewRecorder()
+	cmdResp := &protos.CommandResponse{
+		Kind: &protos.CommandResponse_NoResponse{NoResponse: &protos.Empty{}},
+	}
+
+	err := WriteCommandResponseJSON(w, cmdResp, http.StatusOK)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if w.Code != http.StatusOK {
+		t.Errorf("expected status 200, got %d", w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "no_response") {
+		t.Errorf("expected body to contain 'no_response', got %q", w.Body.String())
+	}
+}
+
+func TestWriteCommandResponseJSON_ValidResponse(t *testing.T) {
+	w := httptest.NewRecorder()
+	cmdResp := &protos.CommandResponse{
+		Kind: &protos.CommandResponse_Response{
+			Response: &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: 42}},
+		},
+	}
+
+	err := WriteCommandResponseJSON(w, cmdResp, http.StatusOK)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(w.Body.String(), "response") {
+		t.Errorf("expected body to contain 'response', got %q", w.Body.String())
+	}
+}
+
+func TestWriteCommandResponseJSON_MarshalError(t *testing.T) {
+	w := httptest.NewRecorder()
+	cmdResp := &protos.CommandResponse{
+		Kind: &protos.CommandResponse_Response{
+			Response: &protos.Value{Kind: &protos.Value_StringValue{StringValue: "\xff"}},
+		},
+	}
+
+	err := WriteCommandResponseJSON(w, cmdResp, http.StatusOK)
+	if err == nil {
+		t.Fatal("expected error for invalid UTF-8 string")
+	}
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("expected status 500, got %d", w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "failed to marshal command response") {
+		t.Errorf("expected error body, got %q", w.Body.String())
+	}
+}
+
+func TestWriteCommandResponseJSON_WriteError(t *testing.T) {
+	w := &errorWriter{}
+	cmdResp := &protos.CommandResponse{
+		Kind: &protos.CommandResponse_NoResponse{NoResponse: &protos.Empty{}},
+	}
+
+	err := WriteCommandResponseJSON(w, cmdResp, http.StatusOK)
+	if err == nil {
+		t.Fatal("expected error when Write fails")
+	}
+}

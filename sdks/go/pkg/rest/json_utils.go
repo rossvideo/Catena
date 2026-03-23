@@ -50,6 +50,33 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+// WriteCommandResponseJSON marshals a protos.CommandResponse to JSON and writes it
+// to the HTTP response with the specified status code.
+func WriteCommandResponseJSON(w http.ResponseWriter, cmdResp *protos.CommandResponse, statusCode int) error {
+	w.Header().Set("Content-Type", "application/json")
+
+	if cmdResp == nil {
+		w.WriteHeader(statusCode)
+		return nil
+	}
+
+	b, err := (protojson.MarshalOptions{
+		UseProtoNames:   true,
+		EmitUnpopulated: false,
+	}).Marshal(cmdResp)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"error": "failed to marshal command response",
+		})
+		return fmt.Errorf("failed to marshal command response: %w", err)
+	}
+
+	w.WriteHeader(statusCode)
+	_, writeErr := w.Write(b)
+	return writeErr
+}
+
 // ReadRequestJSON reads and unmarshals a JSON request body into a protos.Value.
 // It validates the Content-Type header and returns an error if it's not application/json.
 func ReadRequestJSON(r *http.Request) (*protos.Value, catena.StatusResult) {

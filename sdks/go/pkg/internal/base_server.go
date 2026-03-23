@@ -16,7 +16,7 @@ type DeviceHandler func() (catena.CatenaDevice, catena.StatusResult)
 type GetValueHandler func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult)
 type SetValueHandler func(value any, slot uint16, fqoid string) catena.StatusResult
 type GetAssetHandler func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult)
-type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult)
+type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult)
 
 type BaseServer struct {
 	Mu                     sync.Mutex
@@ -46,8 +46,8 @@ func DefaultGetAssetHandler(slot uint16, fqoid string) (catena.CatenaAsset, cate
 	return catena.ReplyError[catena.CatenaAsset](catena.UNIMPLEMENTED, "GetAsset not implemented")
 }
 
-func DefaultExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
-	return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "ExecuteCommand not implemented")
+func DefaultExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+	return catena.CommandError(catena.UNIMPLEMENTED, "ExecuteCommand not implemented")
 }
 
 // Handler registration methods

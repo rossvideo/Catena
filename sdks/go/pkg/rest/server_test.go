@@ -136,12 +136,12 @@ func TestServer_RegisterExecuteCommandHandler(t *testing.T) {
 	srv := NewServer([]uint16{0}, 100)
 
 	handlerCalled := false
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 		handlerCalled = true
 		if commandFqoid != "test/command" {
 			t.Errorf("expected commandFqoid 'test/command', got %s", commandFqoid)
 		}
-		return catena.CatenaValue{}, catena.StatusResult{Code: catena.OK}
+		return catena.CommandNoResponse()
 	})
 
 	handler := srv.LookupExecuteCommandHandler(0)
@@ -324,16 +324,21 @@ func TestServer_ExecuteCommand_Route(t *testing.T) {
 	srv := NewServer([]uint16{0}, 100)
 
 	handlerCalled := false
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 		handlerCalled = true
 		if commandFqoid != "reboot" {
 			t.Errorf("expected commandFqoid 'reboot', got %s", commandFqoid)
 		}
-		return catena.Reply(catena.CatenaValue{})
+		return catena.CommandNoResponse()
 	})
 
 	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/command/reboot", "")
 	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "application/json")
+	response := parseJSONBody(t, rec)
+	if _, ok := response["no_response"]; !ok {
+		t.Errorf("expected no_response in CommandResponse, got %v", response)
+	}
 	if !handlerCalled {
 		t.Error("registered handler was not called")
 	}
@@ -343,16 +348,21 @@ func TestServer_ExecuteCommand_WithPayload(t *testing.T) {
 	srv := NewServer([]uint16{0}, 100)
 
 	handlerCalled := false
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 		handlerCalled = true
 		if payload == nil {
 			t.Error("expected payload to be non-nil")
 		}
-		return catena.Reply(catena.CatenaValue{})
+		val, _ := catena.ToCatenaValue(payload)
+		return catena.CommandReply(val)
 	})
 
 	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/command/process", `{"string_value": "test"}`)
 	assertStatus(t, rec, http.StatusOK)
+	response := parseJSONBody(t, rec)
+	if _, ok := response["response"]; !ok {
+		t.Errorf("expected response field in CommandResponse, got %v", response)
+	}
 	if !handlerCalled {
 		t.Error("registered handler was not called")
 	}
@@ -362,9 +372,9 @@ func TestServer_ExecuteCommand_MethodNotAllowed(t *testing.T) {
 	srv := NewServer([]uint16{0}, 100)
 
 	handlerCalled := false
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 		handlerCalled = true
-		return catena.Reply(catena.CatenaValue{})
+		return catena.CommandNoResponse()
 	})
 
 	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/command/reboot", "")
@@ -480,9 +490,9 @@ func TestServer_DefaultHandlers(t *testing.T) {
 	}
 
 	// Test default execute command handler
-	value, status = srv.LookupExecuteCommandHandler(0)(0, "test", nil)
-	if status.Code != catena.UNIMPLEMENTED {
-		t.Errorf("default execute command handler should return UNIMPLEMENTED, got %v", status.Code)
+	_, cmdStatus := srv.LookupExecuteCommandHandler(0)(0, "test", nil)
+	if cmdStatus.Code != catena.UNIMPLEMENTED {
+		t.Errorf("default execute command handler should return UNIMPLEMENTED, got %v", cmdStatus.Code)
 	}
 }
 
@@ -630,9 +640,9 @@ func TestCommandEndpoint_PayloadHandling(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			srv := NewServer([]uint16{0}, 100)
 			var receivedPayload any
-			srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+			srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 				receivedPayload = payload
-				return catena.Reply(catena.CatenaValue{})
+				return catena.CommandNoResponse()
 			})
 
 			makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/command/test", tt.body)
@@ -748,6 +758,147 @@ func TestCommandEndpoint_FromProtoError(t *testing.T) {
 	srv := NewServer([]uint16{0}, 100)
 	makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/command/exec",
 		`{"struct_variant_value": {"variant_name": "test"}}`)
+}
+
+func TestCommandEndpoint_ResponseValue(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+		val, _ := catena.ToCatenaValue("command executed")
+		return catena.CommandReply(val)
+	})
+
+	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/command/run", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "application/json")
+
+	response := parseJSONBody(t, rec)
+	resp, ok := response["response"]
+	if !ok {
+		t.Fatalf("expected 'response' field in CommandResponse, got %v", response)
+	}
+	respMap, ok := resp.(map[string]any)
+	if !ok {
+		t.Fatalf("expected response to be an object, got %T", resp)
+	}
+	if respMap["string_value"] != "command executed" {
+		t.Errorf("expected string_value 'command executed', got %v", respMap["string_value"])
+	}
+}
+
+func TestCommandEndpoint_ExceptionResponse(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+		return catena.CommandExceptionResult(
+			"InvalidCommand",
+			"Command not found: "+fqoid,
+			catena.NewPolyglotText("en", "Command not found"),
+		)
+	})
+
+	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/command/bad_cmd", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "application/json")
+
+	response := parseJSONBody(t, rec)
+	exc, ok := response["exception"]
+	if !ok {
+		t.Fatalf("expected 'exception' field in CommandResponse, got %v", response)
+	}
+	excMap, ok := exc.(map[string]any)
+	if !ok {
+		t.Fatalf("expected exception to be an object, got %T", exc)
+	}
+	if excMap["type"] != "InvalidCommand" {
+		t.Errorf("expected exception type 'InvalidCommand', got %v", excMap["type"])
+	}
+	if excMap["details"] != "Command not found: bad_cmd" {
+		t.Errorf("expected exception details, got %v", excMap["details"])
+	}
+	errMsg, ok := excMap["error_message"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected error_message to be an object, got %T", excMap["error_message"])
+	}
+	displayStrings, ok := errMsg["display_strings"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected display_strings in error_message, got %T", errMsg["display_strings"])
+	}
+	if displayStrings["en"] != "Command not found" {
+		t.Errorf("expected en display string 'Command not found', got %v", displayStrings["en"])
+	}
+}
+
+func TestCommandEndpoint_RespondFalse(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+
+	handlerCalled := false
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+		handlerCalled = true
+		val, _ := catena.ToCatenaValue("should be thrown away")
+		return catena.CommandReply(val)
+	})
+
+	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/command/run?respond=false", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "application/json")
+
+	if !handlerCalled {
+		t.Error("handler should still be called when respond=false")
+	}
+
+	response := parseJSONBody(t, rec)
+	if _, ok := response["no_response"]; !ok {
+		t.Errorf("expected no_response when respond=false, got %v", response)
+	}
+	if _, ok := response["response"]; ok {
+		t.Error("should not have response field when respond=false")
+	}
+}
+
+func TestCommandEndpoint_RespondTrue(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+		val, _ := catena.ToCatenaValue(int32(42))
+		return catena.CommandReply(val)
+	})
+
+	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/command/run?respond=true", "")
+	assertStatus(t, rec, http.StatusOK)
+
+	response := parseJSONBody(t, rec)
+	if _, ok := response["response"]; !ok {
+		t.Errorf("expected response field when respond=true, got %v", response)
+	}
+}
+
+func TestCommandEndpoint_RespondDefaultIsTrue(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+		val, _ := catena.ToCatenaValue(int32(42))
+		return catena.CommandReply(val)
+	})
+
+	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/command/run", "")
+	assertStatus(t, rec, http.StatusOK)
+
+	response := parseJSONBody(t, rec)
+	if _, ok := response["response"]; !ok {
+		t.Errorf("expected response field by default (respond not set), got %v", response)
+	}
+}
+
+func TestCommandEndpoint_RespondFalseWithException(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+		return catena.CommandExceptionResult("Error", "something failed", nil)
+	})
+
+	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/command/run?respond=false", "")
+	assertStatus(t, rec, http.StatusOK)
+
+	response := parseJSONBody(t, rec)
+	if _, ok := response["no_response"]; !ok {
+		t.Errorf("expected no_response even when handler returns exception and respond=false, got %v", response)
+	}
 }
 
 func TestWriteHTTPStatusResult_WithError(t *testing.T) {
