@@ -27,7 +27,18 @@ void expandEnvVariables(std::string &str) {
     static std::regex env{"\\$\\{([^}]+)\\}"};
     std::smatch match;
     while (std::regex_search(str, match, env)) {
-        const char *s = getenv(match[1].str().c_str());
+        const char *s;
+        char *buf = nullptr;
+        #ifdef _WIN32
+        size_t len = 0;
+        if (_dupenv_s(&buf, &len, match[1].str().c_str()) == 0 && buf != nullptr) {
+            s = buf;
+        } else {
+            s = NULL;
+        }
+        #else
+        s = getenv(match[1].str().c_str());
+        #endif
         const std::string var(s == nullptr ? "" : s);
         str.replace(match[0].first, match[0].second, var);
     }

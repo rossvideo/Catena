@@ -225,7 +225,13 @@ TEST_F(gRPCServiceCredentialsTests, FlagsSecureCommsOff) {
     // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
     auto insecure = grpc::InsecureServerCredentials();
+    #ifdef _WIN32
+    grpc::ServerCredentials& cr = *creds;
+    grpc::ServerCredentials& in = *insecure;
+    EXPECT_EQ(typeid(cr), typeid(in));
+    #else
     EXPECT_EQ(typeid(*creds), typeid(*insecure));
+    #endif
 }
 
 /*
@@ -239,7 +245,13 @@ TEST_F(gRPCServiceCredentialsTests, MutualAuthcFalse) {
     auto creds = catena::gRPC::getServerCredentials();
     auto insecure = grpc::InsecureServerCredentials();
     EXPECT_NE(creds, nullptr);
+    #ifdef _WIN32
+    grpc::ServerCredentials& cr = *creds;
+    grpc::ServerCredentials& in = *insecure;
+    EXPECT_NE(typeid(cr), typeid(in));
+    #else
     EXPECT_NE(typeid(*creds), typeid(*insecure));
+    #endif
 }
 
 /*
@@ -253,7 +265,13 @@ TEST_F(gRPCServiceCredentialsTests, MutualAuthcTrue) {
     auto creds = catena::gRPC::getServerCredentials();
     auto insecure = grpc::InsecureServerCredentials();
     EXPECT_NE(creds, nullptr);
+    #ifdef _WIN32
+    grpc::ServerCredentials& cr = *creds;
+    grpc::ServerCredentials& in = *insecure;
+    EXPECT_NE(typeid(cr), typeid(in));
+    #else
     EXPECT_NE(typeid(*creds), typeid(*insecure));
+    #endif
 }
 
 /*
@@ -271,7 +289,13 @@ TEST_F(gRPCServiceCredentialsTests, PrivateCaFalse) {
     auto creds = catena::gRPC::getServerCredentials();
     auto insecure = grpc::InsecureServerCredentials();
     EXPECT_NE(creds, nullptr);
+    #ifdef _WIN32
+    grpc::ServerCredentials& cr = *creds;
+    grpc::ServerCredentials& in = *insecure;
+    EXPECT_NE(typeid(cr), typeid(in));
+    #else
     EXPECT_NE(typeid(*creds), typeid(*insecure));
+    #endif
 }
 
 /*
@@ -289,7 +313,13 @@ TEST_F(gRPCServiceCredentialsTests, PrivateCaTrue) {
     auto creds = catena::gRPC::getServerCredentials();
     auto insecure = grpc::InsecureServerCredentials();
     EXPECT_NE(creds, nullptr);
+    #ifdef _WIN32
+    grpc::ServerCredentials& cr = *creds;
+    grpc::ServerCredentials& in = *insecure;
+    EXPECT_NE(typeid(cr), typeid(in));
+    #else
     EXPECT_NE(typeid(*creds), typeid(*insecure));
+    #endif
 }
 
 /*
@@ -306,7 +336,13 @@ TEST_F(gRPCServiceCredentialsTests, AuthzFalse) {
     auto creds = catena::gRPC::getServerCredentials();
     auto insecure = grpc::InsecureServerCredentials();
     EXPECT_NE(creds, nullptr);
+    #ifdef _WIN32
+    grpc::ServerCredentials& cr = *creds;
+    grpc::ServerCredentials& in = *insecure;
+    EXPECT_NE(typeid(cr), typeid(in));
+    #else
     EXPECT_NE(typeid(*creds), typeid(*insecure));
+    #endif
 }
 
 /*
@@ -324,7 +360,13 @@ TEST_F(gRPCServiceCredentialsTests, AuthzTrue) {
     auto creds = catena::gRPC::getServerCredentials();
     auto insecure = grpc::InsecureServerCredentials();
     EXPECT_NE(creds, nullptr);
+    #ifdef _WIN32
+    grpc::ServerCredentials& cr = *creds;
+    grpc::ServerCredentials& in = *insecure;
+    EXPECT_NE(typeid(cr), typeid(in));
+    #else
     EXPECT_NE(typeid(*creds), typeid(*insecure));
+    #endif
 }
 
 /*
