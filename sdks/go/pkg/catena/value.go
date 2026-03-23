@@ -80,78 +80,78 @@ const (
 	ParamTypeData               ParamType = protos.ParamType_DATA
 )
 
-func ToCatenaValue(v any) (CatenaValue, error) {
-	val, err := ToProto(v)
-	if err != nil {
-		return CatenaValue{}, fmt.Errorf("ToCatenaValue: %w", err)
+func ToCatenaValue(v any) (CatenaValue, StatusResult) {
+	val, res := ToProto(v)
+	if res.Code != OK {
+		return CatenaValue{}, StatusResult{Code: res.Code, Error: "ToCatenaValue: " + res.Error}
 	}
-	return CatenaValue{Value: val}, nil
+	return CatenaValue{Value: val}, StatusResult{Code: OK}
 }
 
 // ToProto converts native Go types to protos.Value
-func ToProto(v any) (*protos.Value, error) {
+func ToProto(v any) (*protos.Value, StatusResult) {
 	switch val := v.(type) {
 	case DataPayload:
-		pdp, err := dataPayloadToProto(val)
-		if err != nil {
-			return nil, err
+		pdp, res := dataPayloadToProto(val)
+		if res.Code != OK {
+			return nil, res
 		}
-		return &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: pdp}}, nil
+		return &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: pdp}}, StatusResult{Code: OK}
 	case UndefinedValue:
-		return &protos.Value{Kind: &protos.Value_UndefinedValue{UndefinedValue: protos.UndefinedValue(val)}}, nil
+		return &protos.Value{Kind: &protos.Value_UndefinedValue{UndefinedValue: protos.UndefinedValue(val)}}, StatusResult{Code: OK}
 	case EmptyValue:
-		return &protos.Value{Kind: &protos.Value_EmptyValue{EmptyValue: &protos.Empty{}}}, nil
+		return &protos.Value{Kind: &protos.Value_EmptyValue{EmptyValue: &protos.Empty{}}}, StatusResult{Code: OK}
 	case int32:
-		return &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: val}}, nil
+		return &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: val}}, StatusResult{Code: OK}
 	case float32:
-		return &protos.Value{Kind: &protos.Value_Float32Value{Float32Value: val}}, nil
+		return &protos.Value{Kind: &protos.Value_Float32Value{Float32Value: val}}, StatusResult{Code: OK}
 	case string:
-		return &protos.Value{Kind: &protos.Value_StringValue{StringValue: val}}, nil
+		return &protos.Value{Kind: &protos.Value_StringValue{StringValue: val}}, StatusResult{Code: OK}
 	case []int32:
-		return &protos.Value{Kind: &protos.Value_Int32ArrayValues{Int32ArrayValues: &protos.Int32List{Ints: val}}}, nil
+		return &protos.Value{Kind: &protos.Value_Int32ArrayValues{Int32ArrayValues: &protos.Int32List{Ints: val}}}, StatusResult{Code: OK}
 	case []float32:
-		return &protos.Value{Kind: &protos.Value_Float32ArrayValues{Float32ArrayValues: &protos.Float32List{Floats: val}}}, nil
+		return &protos.Value{Kind: &protos.Value_Float32ArrayValues{Float32ArrayValues: &protos.Float32List{Floats: val}}}, StatusResult{Code: OK}
 	case []string:
-		return &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: val}}}, nil
+		return &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: val}}}, StatusResult{Code: OK}
 	case map[string]any:
 		fields := make(map[string]*protos.Value)
 		for k, v := range val {
-			res, err := ToProto(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to convert map field %s: %w", k, err)
+			res, sr := ToProto(v)
+			if sr.Code != OK {
+				return nil, StatusResult{Code: sr.Code, Error: fmt.Sprintf("failed to convert map field %s: %s", k, sr.Error)}
 			}
 			fields[k] = res
 		}
-		return &protos.Value{Kind: &protos.Value_StructValue{StructValue: &protos.StructValue{Fields: fields}}}, nil
+		return &protos.Value{Kind: &protos.Value_StructValue{StructValue: &protos.StructValue{Fields: fields}}}, StatusResult{Code: OK}
 	case []map[string]any:
 		structArr := make([]*protos.StructValue, len(val))
 		for i, m := range val {
 			fields := make(map[string]*protos.Value)
 			for k, v := range m {
-				res, err := ToProto(v)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert map field %s: %w", k, err)
+				res, sr := ToProto(v)
+				if sr.Code != OK {
+					return nil, StatusResult{Code: sr.Code, Error: fmt.Sprintf("failed to convert map field %s: %s", k, sr.Error)}
 				}
 				fields[k] = res
 			}
 			structArr[i] = &protos.StructValue{Fields: fields}
 		}
-		return &protos.Value{Kind: &protos.Value_StructArrayValues{StructArrayValues: &protos.StructList{StructValues: structArr}}}, nil
+		return &protos.Value{Kind: &protos.Value_StructArrayValues{StructArrayValues: &protos.StructList{StructValues: structArr}}}, StatusResult{Code: OK}
 	case StructVariantValue:
-		protoVal, err := ToProto(val.Value)
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert StructVariantValue.Value: %w", err)
+		protoVal, sr := ToProto(val.Value)
+		if sr.Code != OK {
+			return nil, StatusResult{Code: sr.Code, Error: "failed to convert StructVariantValue.Value: " + sr.Error}
 		}
 		return &protos.Value{Kind: &protos.Value_StructVariantValue{StructVariantValue: &protos.StructVariantValue{
 			StructVariantType: val.StructVariantType,
 			Value:             protoVal,
-		}}}, nil
+		}}}, StatusResult{Code: OK}
 	case []StructVariantValue:
 		var structVariants []*protos.StructVariantValue
 		for _, sv := range val {
-			protoVal, err := ToProto(sv.Value)
-			if err != nil {
-				return nil, fmt.Errorf("failed to convert StructVariantValue.Value in array: %w", err)
+			protoVal, sr := ToProto(sv.Value)
+			if sr.Code != OK {
+				return nil, StatusResult{Code: sr.Code, Error: "failed to convert StructVariantValue.Value in array: " + sr.Error}
 			}
 			structVariants = append(structVariants, &protos.StructVariantValue{
 				StructVariantType: sv.StructVariantType,
@@ -160,22 +160,22 @@ func ToProto(v any) (*protos.Value, error) {
 		}
 		return &protos.Value{Kind: &protos.Value_StructVariantArrayValues{StructVariantArrayValues: &protos.StructVariantList{
 			StructVariants: structVariants,
-		}}}, nil
+		}}}, StatusResult{Code: OK}
 	default:
-		return nil, fmt.Errorf("unsupported type: %T", v)
+		return nil, StatusResult{Code: INVALID_ARGUMENT, Error: fmt.Sprintf("unsupported type: %T", v)}
 	}
 }
 
 // FromProto converts protos.Value to native Go types
-func FromProto(pv *protos.Value) (any, error) {
+func FromProto(pv *protos.Value) (any, StatusResult) {
 	if pv == nil {
-		return nil, fmt.Errorf("nil Value")
+		return nil, StatusResult{Code: INVALID_ARGUMENT, Error: "nil Value"}
 	}
 	switch pv.GetKind().(type) {
 	case *protos.Value_DataPayload:
 		pdp := pv.GetDataPayload()
 		if pdp == nil {
-			return nil, fmt.Errorf("nil DataPayload in Value")
+			return nil, StatusResult{Code: INVALID_ARGUMENT, Error: "nil DataPayload in Value"}
 		}
 		dp := DataPayload{
 			Metadata:        pdp.GetMetadata(),
@@ -188,34 +188,34 @@ func FromProto(pv *protos.Value) (any, error) {
 		case *protos.DataPayload_Payload:
 			dp.Payload = k.Payload
 		}
-		return dp, nil
+		return dp, StatusResult{Code: OK}
 	case *protos.Value_UndefinedValue:
-		return UndefinedValue(pv.GetUndefinedValue()), nil
+		return UndefinedValue(pv.GetUndefinedValue()), StatusResult{Code: OK}
 	case *protos.Value_EmptyValue:
-		return EmptyValue{}, nil
+		return EmptyValue{}, StatusResult{Code: OK}
 	case *protos.Value_Int32Value:
-		return pv.GetInt32Value(), nil
+		return pv.GetInt32Value(), StatusResult{Code: OK}
 	case *protos.Value_Float32Value:
-		return pv.GetFloat32Value(), nil
+		return pv.GetFloat32Value(), StatusResult{Code: OK}
 	case *protos.Value_StringValue:
-		return pv.GetStringValue(), nil
+		return pv.GetStringValue(), StatusResult{Code: OK}
 	case *protos.Value_Int32ArrayValues:
-		return pv.GetInt32ArrayValues().GetInts(), nil
+		return pv.GetInt32ArrayValues().GetInts(), StatusResult{Code: OK}
 	case *protos.Value_Float32ArrayValues:
-		return pv.GetFloat32ArrayValues().GetFloats(), nil
+		return pv.GetFloat32ArrayValues().GetFloats(), StatusResult{Code: OK}
 	case *protos.Value_StringArrayValues:
-		return pv.GetStringArrayValues().GetStrings(), nil
+		return pv.GetStringArrayValues().GetStrings(), StatusResult{Code: OK}
 	case *protos.Value_StructValue:
 		fields := pv.GetStructValue().GetFields()
 		m := make(map[string]any, len(fields))
 		for k, v := range fields {
-			val, err := FromProto(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to convert struct field %s: %w", k, err)
+			val, sr := FromProto(v)
+			if sr.Code != OK {
+				return nil, StatusResult{Code: sr.Code, Error: fmt.Sprintf("failed to convert struct field %s: %s", k, sr.Error)}
 			}
 			m[k] = val
 		}
-		return m, nil
+		return m, StatusResult{Code: OK}
 	case *protos.Value_StructArrayValues:
 		list := pv.GetStructArrayValues().GetStructValues()
 		arr := make([]map[string]any, len(list))
@@ -223,40 +223,40 @@ func FromProto(pv *protos.Value) (any, error) {
 			fields := sv.GetFields()
 			m := make(map[string]any, len(fields))
 			for k, v := range fields {
-				val, err := FromProto(v)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert struct field %s: %w", k, err)
+				val, sr := FromProto(v)
+				if sr.Code != OK {
+					return nil, StatusResult{Code: sr.Code, Error: fmt.Sprintf("failed to convert struct field %s: %s", k, sr.Error)}
 				}
 				m[k] = val
 			}
 			arr[i] = m
 		}
-		return arr, nil
+		return arr, StatusResult{Code: OK}
 	case *protos.Value_StructVariantValue:
 		sv := pv.GetStructVariantValue()
-		val, err := FromProto(sv.GetValue())
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert struct variant value: %w", err)
+		val, sr := FromProto(sv.GetValue())
+		if sr.Code != OK {
+			return nil, StatusResult{Code: sr.Code, Error: "failed to convert struct variant value: " + sr.Error}
 		}
 		return StructVariantValue{
 			StructVariantType: sv.GetStructVariantType(),
 			Value:             val,
-		}, nil
+		}, StatusResult{Code: OK}
 	case *protos.Value_StructVariantArrayValues:
 		list := pv.GetStructVariantArrayValues().GetStructVariants()
 		arr := make([]StructVariantValue, 0, len(list))
 		for _, sv := range list {
-			val, err := FromProto(sv.GetValue())
-			if err != nil {
-				return nil, fmt.Errorf("failed to convert struct variant value: %w", err)
+			val, sr := FromProto(sv.GetValue())
+			if sr.Code != OK {
+				return nil, StatusResult{Code: sr.Code, Error: "failed to convert struct variant value: " + sr.Error}
 			}
 			arr = append(arr, StructVariantValue{
 				StructVariantType: sv.GetStructVariantType(),
 				Value:             val,
 			})
 		}
-		return arr, nil
+		return arr, StatusResult{Code: OK}
 	default:
-		return nil, fmt.Errorf("unsupported Value type: %T", pv.GetKind())
+		return nil, StatusResult{Code: INVALID_ARGUMENT, Error: fmt.Sprintf("unsupported Value type: %T", pv.GetKind())}
 	}
 }

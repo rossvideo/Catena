@@ -81,9 +81,9 @@ func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot uint16)
 			logger.Error("GetParam param not found", "slot", slot, "fqoid", fqoid)
 			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "param not found")
 		}
-		catenaVal, err := catena.ToCatenaValue(v)
-		if err != nil {
-			logger.Error("GetParam failed to convert value", "slot", slot, "fqoid", fqoid, "error", err)
+		catenaVal, res := catena.ToCatenaValue(v)
+		if res.Code != catena.OK {
+			logger.Error("GetParam failed to convert value", "slot", slot, "fqoid", fqoid, "error", res.Error)
 			return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
 		}
 		return catena.Reply(catenaVal)
@@ -123,9 +123,9 @@ func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid str
 			logger.Error("GetSpecificParam param not found", "slot", slot, "fqoid", fqoid_)
 			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "param not found")
 		}
-		catenaVal, err := catena.ToCatenaValue(v)
-		if err != nil {
-			logger.Error("GetSpecificParam failed to convert value", "slot", slot, "fqoid", fqoid_, "error", err)
+		catenaVal, res := catena.ToCatenaValue(v)
+		if res.Code != catena.OK {
+			logger.Error("GetSpecificParam failed to convert value", "slot", slot, "fqoid", fqoid_, "error", res.Error)
 			return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
 		}
 		return catena.Reply(catenaVal)
@@ -206,8 +206,13 @@ func main() {
 		slot := slot // capture loop variable
 		srv.RegisterExecuteCommandHandler(slot, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 			logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid, "payload", payload)
-			catenaVal, err := catena.ToCatenaValue("Command " + commandFqoid + " executed successfully")
-			if err != nil {
+			response := map[string]any{
+				"response": map[string]any{
+					"string_value": "Command " + commandFqoid + " executed successfully",
+				},
+			}
+			catenaVal, res := catena.ToCatenaValue(response)
+			if res.Code != catena.OK {
 				return catena.CommandError(catena.INTERNAL, "failed to create command response")
 			}
 			return catena.CommandReply(catenaVal)
@@ -245,8 +250,8 @@ func main() {
 		deviceInfo := deviceInfo // capture loop variable
 		srv.RegisterGetDeviceHandler(uint16(slot), func() (catena.CatenaDevice, catena.StatusResult) {
 			logger.Info("GetDevice", "slot", slot)
-			device, err := catena.ToCatenaDevice(deviceInfo)
-			if err != nil {
+			device, res := catena.ToCatenaDevice(deviceInfo)
+			if res.Code != catena.OK {
 				return catena.ReplyError[catena.CatenaDevice](catena.INTERNAL, "failed to create device info")
 			}
 			return catena.Reply(device)
