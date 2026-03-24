@@ -80,6 +80,13 @@
             config::mutual_authc = false;
             config::private_ca = false;
             config::silent = false;
+            config::log_level = "";
+            config::log_console = false;
+            config::log_file = false;
+            config::log_size = 0;
+            config::log_max_size = 0;
+            config::log_count = 0;
+            config::log_verbosity = 0;
         }
 
         void TearDown() override {
@@ -99,6 +106,13 @@
             config::mutual_authc = false;
             config::private_ca = false;
             config::silent = false;
+            config::log_level = "";
+            config::log_console = false;
+            config::log_file = false;
+            config::log_size = 0;
+            config::log_max_size = 0;
+            config::log_count = 0;
+            config::log_verbosity = 0;
 
             // Reset "HOME" in case missing "HOME" test case couldn't
             if (home != nullptr) {
@@ -185,7 +199,13 @@ TEST_F(ConfigTest, defaultValues) {
     EXPECT_EQ(config::mutual_authc, false);
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
-
+    EXPECT_EQ(config::log_level, "INFO");
+    EXPECT_EQ(config::log_console, config::LOG_CONSOLE_DEFAULT);
+    EXPECT_EQ(config::log_file, config::LOG_FILE_DEFAULT);
+    EXPECT_DOUBLE_EQ(config::log_size, config::LOG_SIZE_DEFAULT);
+    EXPECT_EQ(config::log_count, config::LOG_COUNT_DEFAULT);
+    EXPECT_DOUBLE_EQ(config::log_max_size, config::LOG_MAX_SIZE_DEFAULT);
+    EXPECT_EQ(config::log_verbosity, config::LOG_VERBOSITY_DEFAULT);
 }
 
 /**
@@ -209,7 +229,14 @@ TEST_F(ConfigTest, CommandLine) {
         "--authz",
         "--mutual_authc",
         "--private_ca",
-        "--silent"
+        "--silent",
+        "--log_level=warning",
+        "--log_console=false",
+        "--log_file=false",
+        "--log_size=3",
+        "--log_count=7",
+        "--log_max_size=100",
+        "--log_verbosity=1"
     };
     int argc;
     std::vector<char*> argv;
@@ -236,6 +263,13 @@ TEST_F(ConfigTest, CommandLine) {
     EXPECT_EQ(config::mutual_authc, true);
     EXPECT_EQ(config::private_ca, true);
     EXPECT_EQ(config::silent, true);
+    EXPECT_EQ(config::log_level, "WARNING");
+    EXPECT_EQ(config::log_console, false);
+    EXPECT_EQ(config::log_file, false);
+    EXPECT_DOUBLE_EQ(config::log_size, 3.0);
+    EXPECT_EQ(config::log_count, 7);
+    EXPECT_DOUBLE_EQ(config::log_max_size, 100.0);
+    EXPECT_EQ(config::log_verbosity, 1);
 }
 
 /**
@@ -258,7 +292,13 @@ TEST_F(ConfigTest, EnvironmentVariables) {
         "CONFIGTEST_AUTHZ",
         "CONFIGTEST_MUTUAL_AUTHC",
         "CONFIGTEST_PRIVATE_CA",
-        "CONFIGTEST_SILENT"
+        "CONFIGTEST_SILENT",
+        "CONFIGTEST_LOG_LEVEL=error",
+        "CONFIGTEST_LOG_CONSOLE=false",
+        "CONFIGTEST_LOG_FILE=false",
+        "CONFIGTEST_LOG_SIZE=4",
+        "CONFIGTEST_LOG_COUNT=8",
+        "CONFIGTEST_LOG_VERBOSITY=0"
     };
     setEnvVars(args);
 
@@ -288,6 +328,13 @@ TEST_F(ConfigTest, EnvironmentVariables) {
     EXPECT_EQ(config::mutual_authc, true);
     EXPECT_EQ(config::private_ca, true);
     EXPECT_EQ(config::silent, true);
+    EXPECT_EQ(config::log_level, "ERROR");
+    EXPECT_EQ(config::log_console, false);
+    EXPECT_EQ(config::log_file, false);
+    EXPECT_DOUBLE_EQ(config::log_size, 4.0);
+    EXPECT_EQ(config::log_count, 8);
+    EXPECT_DOUBLE_EQ(config::log_max_size, config::LOG_MAX_SIZE_DEFAULT);
+    EXPECT_EQ(config::log_verbosity, 0);
 }
 
 /**
@@ -336,6 +383,13 @@ TEST_F(ConfigTest, CmdAndEnv) {
     EXPECT_EQ(config::port, config::PORT_DEFAULT);
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
+    EXPECT_EQ(config::log_level, "INFO");
+    EXPECT_EQ(config::log_console, config::LOG_CONSOLE_DEFAULT);
+    EXPECT_EQ(config::log_file, config::LOG_FILE_DEFAULT);
+    EXPECT_DOUBLE_EQ(config::log_size, config::LOG_SIZE_DEFAULT);
+    EXPECT_EQ(config::log_count, config::LOG_COUNT_DEFAULT);
+    EXPECT_DOUBLE_EQ(config::log_max_size, config::LOG_MAX_SIZE_DEFAULT);
+    EXPECT_EQ(config::log_verbosity, config::LOG_VERBOSITY_DEFAULT);
 }
 
 /**
@@ -358,7 +412,14 @@ TEST_F(ConfigTest, CmdOverwritesEnv) {
         "CONFIGTEST_AUTHZ",
         "CONFIGTEST_MUTUAL_AUTHC",
         "CONFIGTEST_PRIVATE_CA",
-        "CONFIGTEST_SILENT"
+        "CONFIGTEST_SILENT",
+        "CONFIGTEST_LOG_LEVEL=warning",
+        "CONFIGTEST_LOG_CONSOLE=true",
+        "CONFIGTEST_LOG_FILE=true",
+        "CONFIGTEST_LOG_SIZE=2",
+        "CONFIGTEST_LOG_COUNT=3",
+        "CONFIGTEST_LOG_MAX_SIZE=40",
+        "CONFIGTEST_LOG_VERBOSITY=1"
     };
     setEnvVars(envArgs);
 
@@ -379,7 +440,14 @@ TEST_F(ConfigTest, CmdOverwritesEnv) {
         "--authz=false",
         "--mutual_authc=false",
         "--private_ca=false",
-        "--silent=false"
+        "--silent=false",
+        "--log_level=error",
+        "--log_console=false",
+        "--log_file=false",
+        "--log_size=9",
+        "--log_count=11",
+        "--log_max_size=120",
+        "--log_verbosity=0"
     };
     int argc;
     std::vector<char*> argv;
@@ -406,6 +474,13 @@ TEST_F(ConfigTest, CmdOverwritesEnv) {
     EXPECT_EQ(config::mutual_authc, false);
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
+    EXPECT_EQ(config::log_level, "ERROR");
+    EXPECT_EQ(config::log_console, false);
+    EXPECT_EQ(config::log_file, false);
+    EXPECT_DOUBLE_EQ(config::log_size, 9.0);
+    EXPECT_EQ(config::log_count, 11);
+    EXPECT_DOUBLE_EQ(config::log_max_size, 120.0);
+    EXPECT_EQ(config::log_verbosity, 0);
 }
 
 /**
