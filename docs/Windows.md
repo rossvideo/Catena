@@ -22,20 +22,16 @@ Before working with Catena in Windows, you must first ensure that all of the nec
 
 ### vcpkg installation
  
-With the above tools installed, you now need to clone vcpkg and use it to install some more packages. These installations may take a while. It is also important to note that if building Catena in debug, One_of_everthing examples will only work if installing the static versions instead.
+With the above tools installed, you now need to clone vcpkg and use it to install some more packages. These installations may take a while.
 
 ```powershell
 git clone https://github.com/microsoft/vcpkg C:\vcpkg
 cd C:\vcpkg
 .\bootstrap-vcpkg.bat
 .\vcpkg install boost-system:x64-windows boost-date-time:x64-windows boost-url:x64-windows boost-asio:x64-windows boost-program-options:x64-windows curl:x64-windows zlib:x64-windows asio:x64-windows gtest:x64-windows abseil:x64-windows grpc:x64-windows protobuf:x64-windows protobuf[zlib]:x64-windows pkgconf:x64-windows --vcpkg-root .
-# If building in debug and running one_of_everything
-.\vcpkg install boost-system:x64-windows-static boost-date-time:x64-windows-static boost-url:x64-windows-static boost-asio:x64-windows-static boost-program-options:x64-windows-static curl:x64-windows-static zlib:x64-windows-static asio:x64-windows-static gtest:x64-windows-static abseil:x64-windows-static grpc:x64-windows-static protobuf:x64-windows-static protobuf[zlib]:x64-windows-static pkgconf:x64-windows-static --vcpkg-root .
 ```
 
 ### jwt-cpp installation
-
-Build both Debug and Release installs so Catena can use the matching one for each build type. From a Visual Studio developer prompt:
 
 ```powershell
 cd "C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Auxiliary\Build" 
@@ -63,7 +59,7 @@ npm install --yes
 ```
 
 ### Building the project
-If using a pre-existing repo, you may run into cache issues which can be fixed by clearing build\cpp using `rmdir cpp`. If you installed static packages, set `VCPKG_TARGET_TRIPLET` to `x64-windows-static` instead.
+If using a pre-existing repo, you may run into cache issues which can be fixed by clearing build\cpp using `rmdir cpp`.
 
 ```powershell
 # from C:\<Catena-root>
