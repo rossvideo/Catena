@@ -45,7 +45,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rossvideo/catena/sdks/go/internal/testutil"
+	"github.com/rossvideo/catena/sdks/go/pkg/internal/testutil"
 )
 
 func TestInit(t *testing.T) {
