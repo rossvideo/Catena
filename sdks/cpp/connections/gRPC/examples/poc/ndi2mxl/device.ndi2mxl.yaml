@@ -1,0 +1,200 @@
+slot: 0
+access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
+default_scope: st2138:mon
+params:
+  dashboard_icon:
+    type: STRING
+    oid_aliases: ["0xFF0C"]
+    read_only: true
+    value: { string_value: "eo://mxl_ingress_network.png" }
+
+  product:
+    type: STRUCT
+    read_only: true
+    params:
+      name:
+        type: STRING
+        name:
+          display_strings:
+            en: Product Name
+      vendor:
+        type: STRING
+        name:
+          display_strings:
+            en: Vendor
+      version:
+        type: STRING
+        name:
+          display_strings:
+            en: Version
+      catena_sdk:
+        type: STRING
+        name:
+          display_strings:
+            en: Catena SDK
+      catena_sdk_version:
+        type: STRING
+        name:
+          display_strings:
+            en: Catena SDK Version
+      serial_number:
+        type: STRING
+        name:
+          display_strings:
+            en: Serial Number
+    value:
+      struct_value:
+        fields:
+          name:
+            string_value: NDI2MXL
+          vendor:
+            string_value: Ross Video
+          version:
+            string_value: "1.0.0"
+          catena_sdk:
+            string_value: Catena C++ SDK
+          serial_number:
+            string_value: SN0987654321
+
+  flow_def:
+    import:
+      url: ../templates/param.flow_def.yaml
+
+  domain:
+    type: STRING
+    name:
+      display_strings:
+        en: "Domain"
+    value:
+      string_value: "/dev/shm"
+
+  flow_id:
+    type: STRING
+    name:
+      display_strings:
+        en: "Flow ID"
+    value:
+      string_value: "19736e97-a32d-40b3-a2b1-4aa0cf4a5f10"
+
+  flow_label:
+    type: STRING
+    name:
+      display_strings:
+        en: "Flow Label"
+    value:
+      string_value: "NDI Video Flow"
+
+  ndi_sources:
+    type: STRING_ARRAY
+    name:
+      display_strings:
+        en: "NDI Sources"
+    read_only: true
+    value:
+      string_array_values:
+        strings: []
+
+  ndi_source_ips:
+    type: STRING
+    name:
+      display_strings:
+        en: "NDI Source IPs"
+    value:
+      string_value: "127.0.0.1"
+
+  status:
+    type: STRING
+    name:
+      display_strings:
+        en: "Status"
+    constraint:
+      type: STRING_STRING_CHOICE
+      string_string_choice:
+        choices:
+          - name:
+              display_strings:
+                en: "Running"
+            value: "Running"
+          - name:
+              display_strings:
+                en: "Stopped"
+            value: "Stopped"
+    value:
+      string_value: "Stopped"
+
+commands:
+  start:
+    type: EMPTY
+    name:
+      display_strings:
+        en: "Start"
+    response: false
+  stop:
+    type: EMPTY
+    name:
+      display_strings:
+        en: "Stop"
+    response: false
+  ndi_refresh:
+    type: EMPTY
+    name:
+      display_strings:
+        en: "Refresh Sources"
+    response: false
+
+menu_groups:
+  status:
+    name:
+      display_strings:
+        en: "Status"
+    order: 0
+    menus:
+      status:
+        name:
+          display_strings:
+            en: "Status"
+        param_oids:
+          - /status
+          - /product/name
+          - /product/vendor
+          - /product/version
+          - /product/catena_sdk
+          - /product/catena_sdk_version
+          - /product/serial_number
+      flow_def:
+        name:
+          display_strings:
+            en: "Flow Definition"
+        param_oids:
+          - /status
+          - /flow_def/id
+          - /flow_def/description
+          - /flow_def/tags
+          - /flow_def/format
+          - /flow_def/label
+          - /flow_def/parents
+          - /flow_def/media_type
+          - /flow_def/grain_rate
+          - /flow_def/frame_width
+          - /flow_def/frame_height
+          - /flow_def/interlace_mode
+          - /flow_def/colorspace
+          - /flow_def/components
+  config:
+    name:
+      display_strings:
+        en: "Configuration"
+    order: 1
+    menus:
+      demo:
+        name:
+          display_strings:
+            en: Demo
+        client_hints:
+          oglml: eo://demo.grid
+      # control:
+      #   name:
+      #     display_strings:
+      #       en: Control
+      #   client_hints:
+      #     oglml: eo://control.grid
