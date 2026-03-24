@@ -49,57 +49,57 @@ namespace config{
 /**
 * Config variable names
 */
-const std::string CATENA_SECURE_COMMS_NAME = "secure_comms";
-const std::string CATENA_CERTS_NAME = "certs";
-const std::string CATENA_STATIC_ROOT_NAME = "static_root";
-const std::string CATENA_CERT_FILE_NAME = "cert_file";
-const std::string CATENA_KEY_FILE_NAME = "key_file";
-const std::string CATENA_CA_FILE_NAME = "ca_file";
-const std::string CATENA_LOG_DIR_NAME = "log_dir";
-const std::string CATENA_HOSTNAME_NAME = "hostname";
-const std::string CATENA_PORT_NAME = "port";
-const std::string CATENA_DASHBOARD_PORT_NAME = "dashboard_port";
-const std::string CATENA_DASHBOARD_TLS_ENABLED_NAME = "dashboard_tls_enabled";
-const std::string CATENA_DEFAULT_MAX_ARRAY_SIZE_NAME = "default_max_array_size";
-const std::string CATENA_DEFAULT_TOTAL_ARRAY_SIZE_NAME = "default_total_array_size";
-const std::string CATENA_MAX_CONNECTIONS_NAME = "max_connections";
-const std::string CATENA_PRIVATE_CA_NAME = "private_ca";
-const std::string CATENA_MUTUAL_AUTHC_NAME = "mutual_authc";
-const std::string CATENA_AUTHZ_NAME = "authz";
-const std::string CATENA_SILENT_NAME = "silent";
-const std::string CATENA_HELP_NAME = "help";
-const std::string CATENA_LOG_LEVEL_NAME = "log_level";
-const std::string CATENA_LOG_CONSOLE_NAME = "log_console";
-const std::string CATENA_LOG_FILE_NAME = "log_file";
-const std::string CATENA_LOG_SIZE_NAME = "log_size";
-const std::string CATENA_LOG_COUNT_NAME = "log_count";
-const std::string CATENA_LOG_MAX_SIZE_NAME = "log_max_size";
-const std::string CATENA_LOG_VERBOSITY_NAME = "log_verbosity";
+const std::string SECURE_COMMS_KEY = "secure_comms";
+const std::string CERTS_KEY = "certs";
+const std::string STATIC_ROOT_KEY = "static_root";
+const std::string CERT_FILE_KEY = "cert_file";
+const std::string KEY_FILE_KEY = "key_file";
+const std::string CA_FILE_KEY = "ca_file";
+const std::string LOG_DIR_KEY = "log_dir";
+const std::string HOSTNAME_KEY = "hostname";
+const std::string PORT_KEY = "port";
+const std::string DASHBOARD_PORT_KEY = "dashboard_port";
+const std::string DASHBOARD_TLS_ENABLED_KEY = "dashboard_tls_enabled";
+const std::string DEFAULT_MAX_ARRAY_SIZE_KEY = "default_max_array_size";
+const std::string DEFAULT_TOTAL_ARRAY_SIZE_KEY = "default_total_array_size";
+const std::string MAX_CONNECTIONS_KEY = "max_connections";
+const std::string PRIVATE_CA_KEY = "private_ca";
+const std::string MUTUAL_AUTHC_KEY = "mutual_authc";
+const std::string AUTHZ_KEY = "authz";
+const std::string SILENT_KEY = "silent";
+const std::string HELP_KEY = "help";
+const std::string LOG_LEVEL_KEY = "log_level";
+const std::string LOG_CONSOLE_KEY = "log_console";
+const std::string LOG_FILE_KEY = "log_file";
+const std::string LOG_SIZE_KEY = "log_size";
+const std::string LOG_COUNT_KEY = "log_count";
+const std::string LOG_MAX_SIZE_KEY = "log_max_size";
+const std::string LOG_VERBOSITY_KEY = "log_verbosity";
 
 
 /**
  * Default values of config variables
  */
-const std::string CATENA_SECURE_COMMS = "off";
-const std::string CATENA_CERTS = "${HOME}/test_certs";
-const std::string CATENA_CERT_FILE = "server.crt";
-const std::string CATENA_KEY_FILE = "server.key";
-const std::string CATENA_CA_FILE = "ca.crt";
-const std::string CATENA_STATIC_ROOT = "/";
-const std::string CATENA_HOSTNAME = "0.0.0.0";
-const uint16_t CATENA_PORT = 6254;
-const uint16_t CATENA_DASHBOARD_PORT = 8080;
-const bool CATENA_DASHBOARD_TLS_ENABLED = false;
-const std::string CATENA_LOG_LEVEL = "info";
-const bool CATENA_LOG_CONSOLE = true;
-const bool CATENA_LOG_FILE = true;
-const double CATENA_LOG_SIZE = 10.0;
-const int CATENA_LOG_COUNT = 5;
-const double CATENA_LOG_MAX_SIZE = 50.0;
+const std::string SECURE_COMMS_DEFAULT = "off";
+const std::string CERTS_DEFAULT = "${HOME}/test_certs";
+const std::string CERT_FILE_DEFAULT = "server.crt";
+const std::string KEY_FILE_DEFAULT = "server.key";
+const std::string CA_FILE_DEFAULT = "ca.crt";
+const std::string STATIC_ROOT_DEFAULT = "/";
+const std::string HOSTNAME_DEFAULT = "0.0.0.0";
+const uint16_t PORT_DEFAULT = 6254;
+const uint16_t DASHBOARD_PORT_DEFAULT = 8080;
+const bool DASHBOARD_TLS_ENABLED_DEFAULT = false;
+const std::string LOG_LEVEL_DEFAULT = "info";
+const bool LOG_CONSOLE_DEFAULT = true;
+const bool LOG_FILE_DEFAULT = true;
+const double LOG_SIZE_DEFAULT = 10.0;
+const int LOG_COUNT_DEFAULT = 5;
+const double LOG_MAX_SIZE_DEFAULT = 50.0;
 #ifdef NDEBUG
-const int CATENA_LOG_VERBOSITY = 0;
+const int LOG_VERBOSITY_DEFAULT = 0;
 #else
-const int CATENA_LOG_VERBOSITY = 2;
+const int LOG_VERBOSITY_DEFAULT = 2;
 #endif
 
 

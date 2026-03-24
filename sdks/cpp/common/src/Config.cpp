@@ -9,35 +9,35 @@ using namespace catena::common;
 std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::string prefix) {
     try {
         //Declare options
-        const char* home = (getenv("HOME") != nullptr) ? getenv("HOME") : CATENA_STATIC_ROOT.c_str(); // TODO: Add windows functionality
+        const char* home = (getenv("HOME") != nullptr) ? getenv("HOME") : STATIC_ROOT_DEFAULT.c_str(); // TODO: Add windows functionality
         po::options_description configArgs("Allowed options");
         configArgs.add_options()
-            (CATENA_HELP_NAME.c_str(), "Get help message")
-            (CATENA_SECURE_COMMS_NAME.c_str(), po::value<std::string>()->default_value(CATENA_SECURE_COMMS), "Specify type of secure comms, options are: \"off\", \"tls\"")
-            (CATENA_CERTS_NAME.c_str(), po::value<std::string>()->default_value(CATENA_CERTS), "path/to/certs/files")
-            (CATENA_CERT_FILE_NAME.c_str(), po::value<std::string>()->default_value(CATENA_CERT_FILE), "Specify the certificate file")
-            (CATENA_KEY_FILE_NAME.c_str(), po::value<std::string>()->default_value(CATENA_KEY_FILE), "Specify the key file")
-            (CATENA_CA_FILE_NAME.c_str(), po::value<std::string>()->default_value(CATENA_CA_FILE), "Specify the CA file if using a private CA")
-            (CATENA_STATIC_ROOT_NAME.c_str(), po::value<std::string>()->default_value(home), "Specify the directory to search for external objects")
-            (CATENA_LOG_DIR_NAME.c_str(), po::value<std::string>()->default_value(LOG_DIR), "Specify the directory for log files.")
-            (CATENA_HOSTNAME_NAME.c_str(), po::value<std::string>()->default_value(CATENA_HOSTNAME), "Specify the publicly accessible hostname")
-            (CATENA_PORT_NAME.c_str(), po::value<uint16_t>()->default_value(CATENA_PORT), "Catena service port")
-            (CATENA_DASHBOARD_PORT_NAME.c_str(), po::value<uint16_t>()->default_value(CATENA_DASHBOARD_PORT), "Port to serve connectionprops.xml")
-            (CATENA_DASHBOARD_TLS_ENABLED_NAME.c_str(), po::value<bool>()->default_value(CATENA_DASHBOARD_TLS_ENABLED)->implicit_value(true), "Use this to indicate to connection-props if tls_enabled")
-            (CATENA_DEFAULT_MAX_ARRAY_SIZE_NAME.c_str(), po::value<uint32_t>()->default_value(kDefaultMaxArrayLength), "Use this to define the default max length for array and string params.")
-            (CATENA_DEFAULT_TOTAL_ARRAY_SIZE_NAME.c_str(), po::value<uint32_t>()->default_value(kDefaultMaxArrayLength), "Use this to define the default total length for string array params.")
-            (CATENA_MAX_CONNECTIONS_NAME.c_str(), po::value<uint32_t>()->default_value(DEFAULT_MAX_CONNECTIONS), "Use this to define the total number of concurrent connections that can be made to a service.")
-            (CATENA_PRIVATE_CA_NAME.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Specify if using a private CA")
-            (CATENA_MUTUAL_AUTHC_NAME.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use this to require client to authenticate")
-            (CATENA_AUTHZ_NAME.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use OAuth token authorization")
-            (CATENA_SILENT_NAME.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use this to suppress all log output.")
-            (CATENA_LOG_LEVEL_NAME.c_str(), po::value<std::string>()->default_value(CATENA_LOG_LEVEL), "Minimum severity level of logs. Options are 'info', 'warning', and 'error'")
-            (CATENA_LOG_CONSOLE_NAME.c_str(), po::value<bool>()->default_value(CATENA_LOG_CONSOLE)->implicit_value(true), "Use console logging(stdout/stderr)")
-            (CATENA_LOG_FILE_NAME.c_str(), po::value<bool>()->default_value(CATENA_LOG_FILE)->implicit_value(true), "Use file logging")
-            (CATENA_LOG_SIZE_NAME.c_str(), po::value<double>()->default_value(CATENA_LOG_SIZE), "Max mb of log files before rotating")
-            (CATENA_LOG_COUNT_NAME.c_str(), po::value<int>()->default_value(CATENA_LOG_COUNT), "Max number of log files before rotating")
-            (CATENA_LOG_MAX_SIZE_NAME.c_str(), po::value<int>()->default_value(CATENA_LOG_MAX_SIZE), "Convenience option. Derives count and size based on the max size in MB.")
-            (CATENA_LOG_VERBOSITY_NAME.c_str(), po::value<int>()->default_value(CATENA_LOG_VERBOSITY), "Max verbosity level of logs. Options are 0, 1, 2")
+            (HELP_KEY.c_str(), "Get help message")
+            (SECURE_COMMS_KEY.c_str(), po::value<std::string>()->default_value(SECURE_COMMS_DEFAULT), "Specify type of secure comms, options are: \"off\", \"tls\"")
+            (CERTS_KEY.c_str(), po::value<std::string>()->default_value(CERTS_DEFAULT), "path/to/certs/files")
+            (CERT_FILE_KEY.c_str(), po::value<std::string>()->default_value(CERT_FILE_DEFAULT), "Specify the certificate file")
+            (KEY_FILE_KEY.c_str(), po::value<std::string>()->default_value(KEY_FILE_DEFAULT), "Specify the key file")
+            (CA_FILE_KEY.c_str(), po::value<std::string>()->default_value(CA_FILE_DEFAULT), "Specify the CA file if using a private CA")
+            (STATIC_ROOT_KEY.c_str(), po::value<std::string>()->default_value(home), "Specify the directory to search for external objects")
+            (LOG_DIR_KEY.c_str(), po::value<std::string>()->default_value(LOG_DIR), "Specify the directory for log files.")
+            (HOSTNAME_KEY.c_str(), po::value<std::string>()->default_value(HOSTNAME_DEFAULT), "Specify the publicly accessible hostname")
+            (PORT_KEY.c_str(), po::value<uint16_t>()->default_value(PORT_DEFAULT), "Catena service port")
+            (DASHBOARD_PORT_KEY.c_str(), po::value<uint16_t>()->default_value(DASHBOARD_PORT_DEFAULT), "Port to serve connectionprops.xml")
+            (DASHBOARD_TLS_ENABLED_KEY.c_str(), po::value<bool>()->default_value(DASHBOARD_TLS_ENABLED_DEFAULT)->implicit_value(true), "Use this to indicate to connection-props if tls_enabled")
+            (DEFAULT_MAX_ARRAY_SIZE_KEY.c_str(), po::value<uint32_t>()->default_value(kDefaultMaxArrayLength), "Use this to define the default max length for array and string params.")
+            (DEFAULT_TOTAL_ARRAY_SIZE_KEY.c_str(), po::value<uint32_t>()->default_value(kDefaultMaxArrayLength), "Use this to define the default total length for string array params.")
+            (MAX_CONNECTIONS_KEY.c_str(), po::value<uint32_t>()->default_value(DEFAULT_MAX_CONNECTIONS), "Use this to define the total number of concurrent connections that can be made to a service.")
+            (PRIVATE_CA_KEY.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Specify if using a private CA")
+            (MUTUAL_AUTHC_KEY.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use this to require client to authenticate")
+            (AUTHZ_KEY.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use OAuth token authorization")
+            (SILENT_KEY.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use this to suppress all log output.")
+            (LOG_LEVEL_KEY.c_str(), po::value<std::string>()->default_value(LOG_LEVEL_DEFAULT), "Minimum severity level of logs. Options are 'info', 'warning', and 'error'")
+            (LOG_CONSOLE_KEY.c_str(), po::value<bool>()->default_value(LOG_CONSOLE_DEFAULT)->implicit_value(true), "Use console logging(stdout/stderr)")
+            (LOG_FILE_KEY.c_str(), po::value<bool>()->default_value(LOG_FILE_DEFAULT)->implicit_value(true), "Use file logging")
+            (LOG_SIZE_KEY.c_str(), po::value<double>()->default_value(LOG_SIZE_DEFAULT), "Max mb of log files before rotating")
+            (LOG_COUNT_KEY.c_str(), po::value<int>()->default_value(LOG_COUNT_DEFAULT), "Max number of log files before rotating")
+            (LOG_MAX_SIZE_KEY.c_str(), po::value<int>()->default_value(LOG_MAX_SIZE_DEFAULT), "Convenience option. Derives count and size based on the max size in MB.")
+            (LOG_VERBOSITY_KEY.c_str(), po::value<int>()->default_value(LOG_VERBOSITY_DEFAULT), "Max verbosity level of logs. Options are 0, 1, 2")
             ;
             
         std::set<std::string> allowedOptions;
@@ -71,52 +71,52 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         po::notify(vars);
         
         // help message
-        if (vars.count(CATENA_HELP_NAME) > 0) {
+        if (vars.count(HELP_KEY) > 0) {
             configArgs.print(std::cout);
             return std::pair<bool, int>(true, 0);
         }
         
         //Store values in config variables
-        if (vars.count(CATENA_SECURE_COMMS_NAME)) config::secure_comms = vars[CATENA_SECURE_COMMS_NAME].as<std::string>();
-        if (vars.count(CATENA_CERTS_NAME)) config::certs = vars[CATENA_CERTS_NAME].as<std::string>();
-        if (vars.count(CATENA_CERT_FILE_NAME)) config::cert_file = vars[CATENA_CERT_FILE_NAME].as<std::string>();
-        if (vars.count(CATENA_KEY_FILE_NAME)) config::key_file = vars[CATENA_KEY_FILE_NAME].as<std::string>();
-        if (vars.count(CATENA_CA_FILE_NAME)) config::ca_file = vars[CATENA_CA_FILE_NAME].as<std::string>();
-        if (vars.count(CATENA_STATIC_ROOT_NAME)) config::static_root = vars[CATENA_STATIC_ROOT_NAME].as<std::string>();
-        if (vars.count(CATENA_LOG_DIR_NAME)) config::log_dir = vars[CATENA_LOG_DIR_NAME].as<std::string>();
-        if (vars.count(CATENA_DEFAULT_MAX_ARRAY_SIZE_NAME)) config::default_max_array_size = vars[CATENA_DEFAULT_MAX_ARRAY_SIZE_NAME].as<uint32_t>();
-        if (vars.count(CATENA_DEFAULT_TOTAL_ARRAY_SIZE_NAME)) config::default_total_array_size = vars[CATENA_DEFAULT_TOTAL_ARRAY_SIZE_NAME].as<uint32_t>();
-        if (vars.count(CATENA_MAX_CONNECTIONS_NAME)) config::max_connections = vars[CATENA_MAX_CONNECTIONS_NAME].as<uint32_t>();
-        if (vars.count(CATENA_HOSTNAME_NAME)) config::hostname = vars[CATENA_HOSTNAME_NAME].as<std::string>();
-        if (vars.count(CATENA_PORT_NAME)) config::port = vars[CATENA_PORT_NAME].as<uint16_t>();
-        if (vars.count(CATENA_DASHBOARD_PORT_NAME)) config::dashboard_port = vars[CATENA_DASHBOARD_PORT_NAME].as<uint16_t>();
-        if (vars.count(CATENA_DASHBOARD_TLS_ENABLED_NAME)) config::dashboard_tls_enabled = vars[CATENA_DASHBOARD_TLS_ENABLED_NAME].as<bool>();
-        if (vars.count(CATENA_PRIVATE_CA_NAME)) config::private_ca = vars[CATENA_PRIVATE_CA_NAME].as<bool>();
-        if (vars.count(CATENA_MUTUAL_AUTHC_NAME)) config::mutual_authc = vars[CATENA_MUTUAL_AUTHC_NAME].as<bool>();
-        if (vars.count(CATENA_AUTHZ_NAME)) config::authz = vars[CATENA_AUTHZ_NAME].as<bool>();
-        if (vars.count(CATENA_SILENT_NAME)) config::silent = vars[CATENA_SILENT_NAME].as<bool>();
-        if (vars.count(CATENA_LOG_CONSOLE_NAME)) config::log_console = vars[CATENA_LOG_CONSOLE_NAME].as<bool>();
-        if (vars.count(CATENA_LOG_FILE_NAME)) config::log_file = vars[CATENA_LOG_FILE_NAME].as<bool>();
-        if (vars.count(CATENA_LOG_SIZE_NAME)) config::log_size = vars[CATENA_LOG_SIZE_NAME].as<double>();
-        if (vars.count(CATENA_LOG_COUNT_NAME)) config::log_count = vars[CATENA_LOG_COUNT_NAME].as<int>();
-        if (vars.count(CATENA_LOG_VERBOSITY_NAME)) config::log_verbosity = vars[CATENA_LOG_VERBOSITY_NAME].as<int>();
-        if (vars.count(CATENA_LOG_LEVEL_NAME)){ 
-            config::log_level = vars[CATENA_LOG_LEVEL_NAME].as<std::string>();
+        if (vars.count(SECURE_COMMS_KEY)) config::secure_comms = vars[SECURE_COMMS_KEY].as<std::string>();
+        if (vars.count(CERTS_KEY)) config::certs = vars[CERTS_KEY].as<std::string>();
+        if (vars.count(CERT_FILE_KEY)) config::cert_file = vars[CERT_FILE_KEY].as<std::string>();
+        if (vars.count(KEY_FILE_KEY)) config::key_file = vars[KEY_FILE_KEY].as<std::string>();
+        if (vars.count(CA_FILE_KEY)) config::ca_file = vars[CA_FILE_KEY].as<std::string>();
+        if (vars.count(STATIC_ROOT_KEY)) config::static_root = vars[STATIC_ROOT_KEY].as<std::string>();
+        if (vars.count(LOG_DIR_KEY)) config::log_dir = vars[LOG_DIR_KEY].as<std::string>();
+        if (vars.count(DEFAULT_MAX_ARRAY_SIZE_KEY)) config::default_max_array_size = vars[DEFAULT_MAX_ARRAY_SIZE_KEY].as<uint32_t>();
+        if (vars.count(DEFAULT_TOTAL_ARRAY_SIZE_KEY)) config::default_total_array_size = vars[DEFAULT_TOTAL_ARRAY_SIZE_KEY].as<uint32_t>();
+        if (vars.count(MAX_CONNECTIONS_KEY)) config::max_connections = vars[MAX_CONNECTIONS_KEY].as<uint32_t>();
+        if (vars.count(HOSTNAME_KEY)) config::hostname = vars[HOSTNAME_KEY].as<std::string>();
+        if (vars.count(PORT_KEY)) config::port = vars[PORT_KEY].as<uint16_t>();
+        if (vars.count(DASHBOARD_PORT_KEY)) config::dashboard_port = vars[DASHBOARD_PORT_KEY].as<uint16_t>();
+        if (vars.count(DASHBOARD_TLS_ENABLED_KEY)) config::dashboard_tls_enabled = vars[DASHBOARD_TLS_ENABLED_KEY].as<bool>();
+        if (vars.count(PRIVATE_CA_KEY)) config::private_ca = vars[PRIVATE_CA_KEY].as<bool>();
+        if (vars.count(MUTUAL_AUTHC_KEY)) config::mutual_authc = vars[MUTUAL_AUTHC_KEY].as<bool>();
+        if (vars.count(AUTHZ_KEY)) config::authz = vars[AUTHZ_KEY].as<bool>();
+        if (vars.count(SILENT_KEY)) config::silent = vars[SILENT_KEY].as<bool>();
+        if (vars.count(LOG_CONSOLE_KEY)) config::log_console = vars[LOG_CONSOLE_KEY].as<bool>();
+        if (vars.count(LOG_FILE_KEY)) config::log_file = vars[LOG_FILE_KEY].as<bool>();
+        if (vars.count(LOG_SIZE_KEY)) config::log_size = vars[LOG_SIZE_KEY].as<double>();
+        if (vars.count(LOG_COUNT_KEY)) config::log_count = vars[LOG_COUNT_KEY].as<int>();
+        if (vars.count(LOG_VERBOSITY_KEY)) config::log_verbosity = vars[LOG_VERBOSITY_KEY].as<int>();
+        if (vars.count(LOG_LEVEL_KEY)){ 
+            config::log_level = vars[LOG_LEVEL_KEY].as<std::string>();
             std::transform(log_level.begin(), log_level.end(), log_level.begin(), toupper);
             if (log_level.compare("INFO") != 0 && log_level.compare("WARNING") != 0 && log_level.compare("ERROR") != 0) {
                 std::cout << "WARNING: log_level {" << log_level << "} is invalid. Defaulting to INFO instead." << std::endl;
                 config::log_level = "INFO"; 
             }
         }
-        if (vars.count(CATENA_LOG_MAX_SIZE_NAME)) {
-            config::log_max_size = vars[CATENA_LOG_MAX_SIZE_NAME].as<int>();
+        if (vars.count(LOG_MAX_SIZE_KEY)) {
+            config::log_max_size = vars[LOG_MAX_SIZE_KEY].as<int>();
             if (config::log_max_size < 10) {
                 std::cout << "WARNING: log_size_max is set below the minimum of 10. Ignoring log_max_size." << std::endl;
             }
-            else if (!vars[CATENA_LOG_MAX_SIZE_NAME].defaulted()) {
-                if (!vars[CATENA_LOG_SIZE_NAME].defaulted()) {
+            else if (!vars[LOG_MAX_SIZE_KEY].defaulted()) {
+                if (!vars[LOG_SIZE_KEY].defaulted()) {
                     std::cout << "WARNING: log_size is set. Ignoring log_max_size." << std::endl;
-                } else if (!vars[CATENA_LOG_COUNT_NAME].defaulted()) {
+                } else if (!vars[LOG_COUNT_KEY].defaulted()) {
                     std::cout << "WARNING: log_count is set. Ignoring log_max_size." << std::endl;
                 } else {
                     config::log_count = config::log_max_size / 10;

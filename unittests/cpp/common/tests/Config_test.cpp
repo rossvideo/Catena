@@ -170,17 +170,17 @@ TEST_F(ConfigTest, defaultValues) {
     EXPECT_EQ(code, 0);
 
     // Check values
-    EXPECT_EQ(config::ca_file, config::CATENA_CA_FILE);
-    EXPECT_EQ(config::cert_file, config::CATENA_CERT_FILE);
-    EXPECT_EQ(config::certs, config::CATENA_CERTS);
-    EXPECT_EQ(config::key_file, config::CATENA_KEY_FILE);
+    EXPECT_EQ(config::ca_file, config::CA_FILE_DEFAULT);
+    EXPECT_EQ(config::cert_file, config::CERT_FILE_DEFAULT);
+    EXPECT_EQ(config::certs, config::CERTS_DEFAULT);
+    EXPECT_EQ(config::key_file, config::KEY_FILE_DEFAULT);
     EXPECT_EQ(config::log_dir, LOG_DIR);
-    EXPECT_EQ(config::secure_comms, config::CATENA_SECURE_COMMS);
+    EXPECT_EQ(config::secure_comms, config::SECURE_COMMS_DEFAULT);
     EXPECT_EQ(config::static_root, getenv("HOME"));
     EXPECT_EQ(config::default_max_array_size, kDefaultMaxArrayLength);
     EXPECT_EQ(config::default_total_array_size, kDefaultMaxArrayLength);
     EXPECT_EQ(config::max_connections, DEFAULT_MAX_CONNECTIONS);
-    EXPECT_EQ(config::port, config::CATENA_PORT);
+    EXPECT_EQ(config::port, config::PORT_DEFAULT);
     EXPECT_EQ(config::authz, false);
     EXPECT_EQ(config::mutual_authc, false);
     EXPECT_EQ(config::private_ca, false);
@@ -327,13 +327,13 @@ TEST_F(ConfigTest, CmdAndEnv) {
     EXPECT_EQ(config::default_total_array_size, 1);
     EXPECT_EQ(config::mutual_authc, true);
     // Check default values
-    EXPECT_EQ(config::certs, config::CATENA_CERTS);
-    EXPECT_EQ(config::key_file, config::CATENA_KEY_FILE);
+    EXPECT_EQ(config::certs, config::CERTS_DEFAULT);
+    EXPECT_EQ(config::key_file, config::KEY_FILE_DEFAULT);
     EXPECT_EQ(config::log_dir, LOG_DIR);
-    EXPECT_EQ(config::secure_comms, config::CATENA_SECURE_COMMS);
+    EXPECT_EQ(config::secure_comms, config::SECURE_COMMS_DEFAULT);
     EXPECT_EQ(config::static_root, getenv("HOME"));
     EXPECT_EQ(config::max_connections, DEFAULT_MAX_CONNECTIONS);
-    EXPECT_EQ(config::port, config::CATENA_PORT);
+    EXPECT_EQ(config::port, config::PORT_DEFAULT);
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
 }
