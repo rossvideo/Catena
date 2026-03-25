@@ -223,6 +223,7 @@ void RunVideoFlow() {
 
     statusValue->get() = "Running";
     dm.getValueSetByServer().emit("/status", statusParam.get());
+    int32_t goodFrames = 0;
 
     while (isRunning && !shutdownToken) {
         // no timeout, we are letting mxl drive the timing of the flow, so we want to capture frames as they come in and process them immediately
@@ -252,14 +253,15 @@ void RunVideoFlow() {
         if (recvResult == NDIlib_frame_type_video) {
             gInfo.validSlices = gInfo.totalSlices;
             convertFrame(videoFrame.p_data, mxl_buffer, videoFrame.xres, videoFrame.yres, videoFrame.line_stride_in_bytes);
+            ++goodFrames;
 
             // DON't FORGET TO FREE!!
             NDIlib_recv_free_video_v2(ndi_recv, &videoFrame);
         } else {
             // if we didn't receive a video frame, write an invalid grain
-            gInfo.validSlices = 0;
-            gInfo.flags |= MXL_GRAIN_FLAG_INVALID;
-            LOG(WARNING) << "Received non-video frame, writing invalid grain at index " << currentIndex;
+            gInfo.flags = MXL_GRAIN_FLAG_INVALID;
+            LOG(WARNING) << "Received non-video frame, writing invalid grain at index " << currentIndex << " good frames: " << goodFrames;
+            goodFrames = 0;  // reset good frame counter on a bad frame, just for logging purposes
         }
 
         mxl_status = mxlFlowWriterCommitGrain(writer, &gInfo);
