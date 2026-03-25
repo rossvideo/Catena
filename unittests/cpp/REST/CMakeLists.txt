@@ -48,14 +48,14 @@ foreach(test_file ${REST_TEST_FILES})
     target_link_libraries(REST_${test_name} PRIVATE
         catena_connections_REST
         Threads::Threads
-        #${GTEST_BOTH_LIBRARIES}
+        ${GTEST_BOTH_LIBRARIES}
         absl::log
         absl::log_globals
         absl::log_initialize
         absl::log_severity
-        #GTest::GTest
-        #GTest::Main
-        #GTest::gmock
+        GTest::GTest
+        GTest::Main
+        GTest::gmock
         GTest::gmock_main
     )
     endif()
