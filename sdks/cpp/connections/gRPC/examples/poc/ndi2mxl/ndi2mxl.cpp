@@ -224,11 +224,14 @@ void RunVideoFlow() {
     statusValue->get() = "Running";
     dm.getValueSetByServer().emit("/status", statusParam.get());
     int32_t goodFrames = 0;
+    std::optional<uint64_t> currentIndex;
 
     while (isRunning && !shutdownToken) {
-        // no timeout, we are letting mxl drive the timing of the flow, so we want to capture frames as they come in and process them immediately
-        // if we don't a frame mxl wants us to generate a nil grain still and move on to the next one
-        int recvResult = NDIlib_recv_capture_v2(ndi_recv, &videoFrame, nullptr, nullptr, 0);
+        // ndi timeout is in ms, mxl works with nanosec, which is a divide by 1,000,000
+        uint32_t timeout = currentIndex.has_value()
+                             ? mxlGetNsUntilIndex(currentIndex.value() + 1, &videoGrainRate) / 1000000
+                             : 100; // first real frame, fallback timeout of 100ms
+        int recvResult = NDIlib_recv_capture_v2(ndi_recv, &videoFrame, nullptr, nullptr, timeout);
         // if (recvResult == NDIlib_frame_type_none) {
         //     LOG(INFO) << "No frame received within timeout";
         //     continue;
@@ -238,21 +241,22 @@ void RunVideoFlow() {
             break;
         }
 
-        uint64_t currentIndex = mxlGetCurrentIndex(&videoGrainRate);
+        currentIndex = mxlGetCurrentIndex(&videoGrainRate);
 
         mxlGrainInfo gInfo;
         uint8_t* mxl_buffer = nullptr;
 
-        mxl_status = mxlFlowWriterOpenGrain(writer, currentIndex, &gInfo, &mxl_buffer);
+        mxl_status = mxlFlowWriterOpenGrain(writer, currentIndex.value(), &gInfo, &mxl_buffer);
         if (mxl_status != MXL_STATUS_OK) {
-            LOG(ERROR) << "Failed to open grain for writing at index " << currentIndex << ": " << mxl_status;
+            LOG(ERROR) << "Failed to open grain for writing at index " << currentIndex.value() << ": " << mxl_status;
             break;
         }
 
         // if we received a video frame, copy it into the mxl buffer
         if (recvResult == NDIlib_frame_type_video) {
             gInfo.validSlices = gInfo.totalSlices;
-            convertFrame(videoFrame.p_data, mxl_buffer, videoFrame.xres, videoFrame.yres, videoFrame.line_stride_in_bytes);
+            convertFrame(videoFrame.p_data, mxl_buffer, videoFrame.xres, videoFrame.yres,
+                         videoFrame.line_stride_in_bytes);
             ++goodFrames;
 
             // DON't FORGET TO FREE!!
@@ -260,19 +264,20 @@ void RunVideoFlow() {
         } else {
             // if we didn't receive a video frame, write an invalid grain
             gInfo.flags = MXL_GRAIN_FLAG_INVALID;
-            LOG(WARNING) << "Received non-video frame, writing invalid grain at index " << currentIndex << " good frames: " << goodFrames;
+            LOG(WARNING) << "Received non-video frame(" << recvResult << "), writing invalid grain at index "
+                         << currentIndex.value() << " good frames: " << goodFrames;
             goodFrames = 0;  // reset good frame counter on a bad frame, just for logging purposes
         }
 
         mxl_status = mxlFlowWriterCommitGrain(writer, &gInfo);
         if (mxl_status != MXL_STATUS_OK) {
-            LOG(ERROR) << "Failed to commit grain at index " << currentIndex << ": " << mxl_status;
+            LOG(ERROR) << "Failed to commit grain at index " << currentIndex.value() << ": " << mxl_status;
             break;
         }
 
-        ++currentIndex;
+        ++*currentIndex;
 
-        uint64_t nsUntilNextIndex = mxlGetNsUntilIndex(currentIndex, &videoGrainRate);
+        uint64_t nsUntilNextIndex = mxlGetNsUntilIndex(currentIndex.value(), &videoGrainRate);
         mxlSleepForNs(nsUntilNextIndex);
     }
 
