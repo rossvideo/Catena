@@ -588,6 +588,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_MultipleActiveRequests) {
 
     // Build RESTMethodMap reverse map on main thread so worker threads don't race on lazy init.
     (void)RESTMethodMap().getReverseMap();
+    (void)catena::common::DetailLevel().getReverseMap();
 
     // Running IOC on seperate thread, mimics ServiceImpl
     auto work = boost::asio::make_work_guard(ioc);
