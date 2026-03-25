@@ -233,7 +233,7 @@ void defineCommands() {
                     co_return response;
                 }
             }
-            
+            co_return response; // For Windows build warning, this should not be reached
         }(value, respond));
     });
 

@@ -196,7 +196,10 @@ TEST_F(ConfigTest, defaultValues) {
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
     #ifdef _WIN32
-    EXPECT_EQ(config::static_root, getenv("USERPROFILE"));
+    char *buf = nullptr;
+    size_t len = 0;
+    _dupenv_s(&buf, &len, "USERPROFILE");
+    EXPECT_EQ(config::static_root, buf);
     #else
     EXPECT_EQ(config::static_root, getenv("HOME"));
     #endif
@@ -350,7 +353,10 @@ TEST_F(ConfigTest, CmdAndEnv) {
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
     #ifdef _WIN32
-    EXPECT_EQ(config::static_root, getenv("USERPROFILE"));
+    char *buf = nullptr;
+    size_t len = 0;
+    _dupenv_s(&buf, &len, "USERPROFILE");
+    EXPECT_EQ(config::static_root, buf);
     #else
     EXPECT_EQ(config::static_root, getenv("HOME"));
     #endif

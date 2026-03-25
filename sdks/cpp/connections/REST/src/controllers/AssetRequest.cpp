@@ -222,7 +222,16 @@ void AssetRequest::proceed() {
             
             std::time_t modified_time;
             if (get_last_write_time(path, modified_time)) {
+                #ifdef _WIN32
+                tm local_tm;
+                localtime_s(&local_tm, &modified_time);
+                char time_buf[26];
+                if (asctime_s(time_buf, sizeof(time_buf), &local_tm) == 0) {
+                    metadata->insert({"last-modified", time_buf});
+                };
+                #else
                 metadata->insert({"last-modified", std::asctime(std::localtime(&modified_time))});
+                #endif
             }
             else {
                 metadata->insert({"last-modified", "unknown"});
