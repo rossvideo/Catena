@@ -11,12 +11,12 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-// Handlers now return (CatenaValue, StatusResult) so the server can respond consistently.
-type DeviceHandler func() (catena.CatenaDevice, catena.StatusResult)
-type GetValueHandler func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult)
-type SetValueHandler func(value any, slot uint16, fqoid string) catena.StatusResult
-type GetAssetHandler func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult)
-type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult)
+// Handler type aliases — canonical definitions live in the catena package.
+type DeviceHandler = catena.DeviceHandler
+type GetValueHandler = catena.GetValueHandler
+type SetValueHandler = catena.SetValueHandler
+type GetAssetHandler = catena.GetAssetHandler
+type ExecuteCommandHandler = catena.ExecuteCommandHandler
 
 type BaseServer struct {
 	Mu                     sync.Mutex

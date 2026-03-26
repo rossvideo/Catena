@@ -28,11 +28,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package main
+/**
+ * @brief Shared GetValue/SetValue example logic for REST and gRPC.
+ * @file getsetvalue.go
+ * @copyright Copyright © 2026 Ross Video Ltd
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ */
+
+package getsetvalue
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"reflect"
@@ -42,16 +48,74 @@ import (
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
-	"github.com/rossvideo/catena/sdks/go/pkg/rest"
 )
 
-// Global state for graceful shutdown
-var (
-	shutdownChan = make(chan struct{})
-)
+var SlotList = []uint16{0, 1, 2}
 
-// Implementation for registering parameter handlers for every fqoid on a given slot
-func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot uint16) {
+// InitParams creates and populates the per-slot parameter stores.
+func InitParams() (params0, params1, params2 *sync.Map) {
+	params0 = &sync.Map{}
+	params0.Store("alpha", "alpha")
+	params0.Store("beta", int32(42))
+	params0.Store("counter", int32(0))
+
+	params1 = &sync.Map{}
+	params1.Store("alpha", "default")
+	params1.Store("beta", float32(3.14))
+	params1.Store("status", "idle")
+
+	params2 = &sync.Map{}
+	params2.Store("struct", map[string]any{"field1": int32(1), "field2": "two"})
+	params2.Store("struct_array", []map[string]any{
+		{"item": "one", "field": int32(1)},
+		{"item": "two", "field": int32(2)},
+		{"item": "three", "field": int32(3)},
+	})
+	params2.Store("struct_variant", catena.StructVariantValue{
+		StructVariantType: "typeA",
+		Value:             "some value",
+	})
+	params2.Store("struct_variant_array", []catena.StructVariantValue{
+		{
+			StructVariantType: "typeA",
+			Value:             "value A1",
+		},
+		{
+			StructVariantType: "typeB",
+			Value:             int32(123),
+		},
+	})
+	params2.Store("int_list", []int32{1, 2, 3, 4, 5})
+	params2.Store("float_list", []float32{1.1, 2.2, 3.3})
+	return
+}
+
+var DeviceModels = map[uint16]map[string]any{
+	0: {
+		"slot":              int32(0),
+		"multi_set_enabled": true,
+		"subscriptions":     true,
+		"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
+		"default_scope":     "st2138:op",
+	},
+	1: {
+		"slot":              int32(1),
+		"multi_set_enabled": false,
+		"subscriptions":     false,
+		"access_scopes":     []string{"st2138:op"},
+		"default_scope":     "st2138:op",
+	},
+	2: {
+		"slot":              int32(2),
+		"multi_set_enabled": true,
+		"subscriptions":     true,
+		"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg"},
+		"default_scope":     "st2138:cfg",
+	},
+}
+
+// RegisterBasicParamHandlers registers get/set handlers that accept every fqoid on a slot.
+func RegisterBasicParamHandlers(srv catena.CatenaServer, params *sync.Map, slot uint16) {
 	srv.RegisterSetValueHandler(slot, func(value any, slot uint16, fqoid string) catena.StatusResult {
 		logger.Info("SetParam", "slot", slot, "fqoid", fqoid)
 		if value == nil {
@@ -69,7 +133,6 @@ func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot uint16)
 		}
 		params.Store(fqoid, value)
 
-		// Broadcast the update to all connected clients
 		srv.BroadcastUpdate(slot, fqoid, value)
 		return catena.StatusWithCode(catena.NO_CONTENT, "")
 	})
@@ -90,8 +153,8 @@ func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot uint16)
 	})
 }
 
-// For a given slot implement param handlers for a specific param oid only
-func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid string, slot uint16) {
+// RegisterSpecificParamHandlers registers get/set handlers that only respond to a single fqoid on a slot.
+func RegisterSpecificParamHandlers(srv catena.CatenaServer, params *sync.Map, fqoid string, slot uint16) {
 	srv.RegisterSetValueHandler(slot, func(value any, slot uint16, fqoid_ string) catena.StatusResult {
 		if fqoid_ != fqoid {
 			return catena.StatusWithCode(catena.UNIMPLEMENTED, "no handler for fqoid "+fqoid_)
@@ -108,7 +171,6 @@ func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid str
 		}
 		params.Store(fqoid_, value)
 
-		// Broadcast the update to all connected clients
 		srv.BroadcastUpdate(slot, fqoid_, value)
 		return catena.StatusWithCode(catena.OK, "")
 	})
@@ -132,105 +194,30 @@ func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid str
 	})
 }
 
-func main() {
-	// Initialize SDK with prefix and app name
-	cfg, err := catena.InitOptions(catena.Options{AppName: "getSetValue_REST"})
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to initialize SDK: %v\n", err)
-		os.Exit(1)
-	}
-	defer catena.Close()
+// RegisterHandlers wires up all param, command, and device handlers on the given server.
+func RegisterHandlers(srv catena.CatenaServer) {
+	params0, params1, params2 := InitParams()
 
-	// Handle signals for graceful shutdown
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		sig := <-sigChan
-		logger.Info("Caught signal, shutting down", "signal", sig)
-		close(shutdownChan)
-	}()
+	RegisterBasicParamHandlers(srv, params0, 0)
+	RegisterSpecificParamHandlers(srv, params1, "alpha", 1)
+	RegisterBasicParamHandlers(srv, params2, 2)
 
-	// Port comes from the unified config (parsed from CATENA_PORT)
-	port := cfg.Port
-	logger.Info("Starting Dummy BaseServer", "port", port)
-
-	var params0 = &sync.Map{}
-	params0.Store("alpha", "alpha")
-	params0.Store("beta", int32(42))
-	params0.Store("counter", int32(0))
-
-	var params1 = &sync.Map{}
-	params1.Store("alpha", "default")
-	params1.Store("beta", float32(3.14))
-	params1.Store("status", "idle")
-
-	var params2 = &sync.Map{}
-	params2.Store("struct", map[string]any{"field1": int32(1), "field2": "two"})
-	params2.Store("struct_array", []map[string]any{
-		{"item": "one", "field": int32(1)},
-		{"item": "two", "field": int32(2)},
-		{"item": "three", "field": int32(3)},
-	})
-	params2.Store("struct_variant", catena.StructVariantValue{
-		StructVariantType: "typeA",
-		Value:             "some value",
-	})
-	params2.Store("struct_variant_array", []catena.StructVariantValue{
-		{
-			StructVariantType: "typeA",
-			Value:             "value A1",
-		},
-		{
-			StructVariantType: "typeB",
-			Value:             int32(123),
-		},
-	})
-	params2.Store("int_list", []int32{1, 2, 3, 4, 5})
-	params2.Store("float_list", []float32{1.1, 2.2, 3.3})
-
-	slotList := []uint16{0, 1, 2}
-
-	// Build a BaseServer (decoupled from catena).
-	srv := rest.NewServer(slotList, 100)
-
-	// Register param handlers for each device.
-	// Device 0: basic param handlers for all params.
-	registerBasicParamHandlers(srv, params0, 0)
-	// Device 1: specific param handler for "alpha" only.
-	registerSpecificParamHandlers(srv, params1, "alpha", 1)
-	// Device 2: basic param handlers for all params.
-	registerBasicParamHandlers(srv, params2, 2)
-
-	// Define device models for each slot
-	devices := map[uint16]map[string]any{
-		0: {
-			"slot":              int32(0),
-			"multi_set_enabled": true,
-			"subscriptions":     true,
-			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
-			"default_scope":     "st2138:op",
-		},
-		1: {
-			"slot":              int32(1),
-			"multi_set_enabled": false,
-			"subscriptions":     false,
-			"access_scopes":     []string{"st2138:op"},
-			"default_scope":     "st2138:op",
-		},
-		2: {
-			"slot":              int32(2),
-			"multi_set_enabled": true,
-			"subscriptions":     true,
-			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg"},
-			"default_scope":     "st2138:cfg",
-		},
+	for _, slot := range SlotList {
+		slot := slot
+		srv.RegisterExecuteCommandHandler(slot, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+			logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid, "payload", payload)
+			catenaVal, res := catena.ToCatenaValue("Command " + commandFqoid + " executed successfully")
+			if res.Code != catena.OK {
+				return catena.CommandError(catena.INTERNAL, "failed to create command response")
+			}
+			return catena.CommandReply(catenaVal)
+		})
 	}
 
-	// Register device handler (parses slot from URL path)
-	for slot, deviceInfo := range devices {
-		slot := slot             // capture loop variable
-		deviceInfo := deviceInfo // capture loop variable
-		srv.RegisterGetDeviceHandler(uint16(slot), func() (catena.CatenaDevice, catena.StatusResult) {
+	for slot, deviceInfo := range DeviceModels {
+		slot := slot
+		deviceInfo := deviceInfo
+		srv.RegisterGetDeviceHandler(slot, func() (catena.CatenaDevice, catena.StatusResult) {
 			logger.Info("GetDevice", "slot", slot)
 			device, res := catena.ToCatenaDevice(deviceInfo)
 			if res.Code != catena.OK {
@@ -239,17 +226,35 @@ func main() {
 			return catena.Reply(device)
 		})
 	}
+}
 
-	// Register handler for non-existent endpoints
-	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		logger.Error("Endpoint not found")
-		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found")
-	})
+// RunExample encapsulates the full example lifecycle:
+// SDK init, signal handling, server creation, handler registration, and graceful shutdown.
+func RunExample(appName string, makeServer func(slots []uint16, cfg catena.Config) catena.CatenaServer) {
+	cfg, err := catena.InitOptions(catena.Options{AppName: appName})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize SDK: %v\n", err)
+		os.Exit(1)
+	}
+	defer catena.Close()
+
+	shutdownChan := make(chan struct{})
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigChan
+		logger.Info("Caught signal, shutting down", "signal", sig)
+		close(shutdownChan)
+	}()
+
+	port := cfg.Port
+	srv := makeServer(SlotList, cfg)
+	RegisterHandlers(srv)
 
 	addr := ":" + strconv.Itoa(port)
+	logger.Info("Starting Dummy BaseServer", "port", port)
 	logger.Info("Dummy BaseServer listening", "address", addr)
 
-	// Start server in a goroutine so shutdown handling works
 	go func() {
 		if err := srv.Start(port); err != nil {
 			logger.Error("server failed", "error", err)
@@ -257,7 +262,6 @@ func main() {
 		}
 	}()
 
-	// Wait for shutdown signal
 	<-shutdownChan
 	srv.Shutdown()
 	logger.Info("Server shutdown complete")
