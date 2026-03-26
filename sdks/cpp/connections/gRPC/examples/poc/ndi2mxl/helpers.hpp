@@ -3,17 +3,33 @@
 #include "picojson/picojson.h"
 #include <Processing.NDI.Advanced.h>
 
-std::string createVideoFlowJson(const NDIlib_video_frame_v2_t& videoFrame, const std::string& flowId, const std::string& label)
-{
-    auto root = picojson::object{};
-    root["description"] = picojson::value("NDI video flow");
+#include "device.ndi2mxl.yaml.h"
 
-    root["id"] = picojson::value(flowId);
+void createFlowDef(const NDIlib_video_frame_v2_t& videoFrame, ndi2mxl::Flow_def& flowDef) {
+    flowDef.colorspace = "bt709";
+    flowDef.components = {ndi2mxl::Flow_def::Components_elem{"Y", videoFrame.xres, videoFrame.yres, 10},
+                          ndi2mxl::Flow_def::Components_elem{"Cb", videoFrame.xres / 2, videoFrame.yres, 10},
+                          ndi2mxl::Flow_def::Components_elem{"Cr", videoFrame.xres / 2, videoFrame.yres, 10}};
+    flowDef.description = "NDI video flow";
+    flowDef.format = "urn:x-nmos:format:video";
+    flowDef.frame_width = videoFrame.xres;
+    flowDef.frame_height = videoFrame.yres;
+    flowDef.grain_rate = {videoFrame.frame_rate_N, videoFrame.frame_rate_D};
+    flowDef.interlace_mode = "progressive";
+    flowDef.media_type = "video/v210";
+    flowDef.tags = {ndi2mxl::Flow_def::Tags_elem{"urn:x-nmos:tag:grouphint/v1.0", {"NDI Source:Video"}}};
+}
+
+std::string createVideoFlowJson(const ndi2mxl::Flow_def& flowDef) {
+    auto root = picojson::object{};
+    root["description"] = picojson::value(flowDef.description);
+
+    root["id"] = picojson::value(flowDef.id);
     root["tags"] = picojson::value(picojson::object());
-    root["format"] = picojson::value("urn:x-nmos:format:video");
-    root["label"] = picojson::value(label);
+    root["format"] = picojson::value(flowDef.format);
+    root["label"] = picojson::value(flowDef.label);
     root["parents"] = picojson::value(picojson::array());
-    root["media_type"] = picojson::value("video/v210");
+    root["media_type"] = picojson::value(flowDef.media_type);
 
     auto tags = picojson::object{};
     auto groupHint = picojson::array{};
@@ -22,18 +38,17 @@ std::string createVideoFlowJson(const NDIlib_video_frame_v2_t& videoFrame, const
     root["tags"] = picojson::value(tags);
 
     auto grain_rate = picojson::object{};
-    grain_rate["numerator"] = picojson::value(static_cast<double>(videoFrame.frame_rate_N));
-    grain_rate["denominator"] = picojson::value(static_cast<double>(videoFrame.frame_rate_D));
+    grain_rate["numerator"] = picojson::value(static_cast<double>(flowDef.grain_rate.numerator));
+    grain_rate["denominator"] = picojson::value(static_cast<double>(flowDef.grain_rate.denominator));
     root["grain_rate"] = picojson::value(grain_rate);
 
-    root["frame_width"] = picojson::value(static_cast<double>(videoFrame.xres));
-    root["frame_height"] = picojson::value(static_cast<double>(videoFrame.yres));
-    root["interlace_mode"] = picojson::value("progressive");
-    root["colorspace"] = picojson::value("bt709");
+    root["frame_width"] = picojson::value(static_cast<double>(flowDef.frame_width));
+    root["frame_height"] = picojson::value(static_cast<double>(flowDef.frame_height));
+    root["interlace_mode"] = picojson::value(flowDef.interlace_mode);
+    root["colorspace"] = picojson::value(flowDef.colorspace);
 
     auto components = picojson::array{};
-    auto add_component = [&](std::string const &name, int w, int h)
-    {
+    auto add_component = [&](std::string const& name, int w, int h) {
         auto comp = picojson::object{};
         comp["name"] = picojson::value(name);
         comp["width"] = picojson::value(static_cast<double>(w));
@@ -42,18 +57,16 @@ std::string createVideoFlowJson(const NDIlib_video_frame_v2_t& videoFrame, const
         components.emplace_back(comp);
     };
 
-    add_component("Y", videoFrame.xres, videoFrame.yres);
-    add_component("Cb", videoFrame.xres / 2, videoFrame.yres);
-    add_component("Cr", videoFrame.xres / 2, videoFrame.yres);
+    for (const auto& comp : flowDef.components) {
+        add_component(comp.name, comp.width, comp.height);
+    }
 
     root["components"] = picojson::value(components);
 
     return picojson::value(root).serialize(true);
 }
 
-inline std::uint16_t eight_to_ten(std::uint8_t v8) {
-    return static_cast<std::uint16_t>(v8) << 2;
-}
+inline std::uint16_t eight_to_ten(std::uint8_t v8) { return static_cast<std::uint16_t>(v8) << 2; }
 
 // Convert one line of UYVY 8-bit into v210 packed 10-bit 4:2:2.
 // This is the inverse of v210_to_uyvy_line in mxl_reader.hpp.
@@ -72,38 +85,34 @@ inline void uyvy_to_v210_line(const std::uint8_t* src_uyvy, std::uint8_t* dst_v2
     while (x < width_pixels) {
         // Read 6 pixels from UYVY (3 macro-pixels of U Y V Y = 12 bytes)
         std::uint16_t Cb0 = eight_to_ten(s[0]);
-        std::uint16_t Y0  = eight_to_ten(s[1]);
+        std::uint16_t Y0 = eight_to_ten(s[1]);
         std::uint16_t Cr0 = eight_to_ten(s[2]);
-        std::uint16_t Y1  = eight_to_ten(s[3]);
+        std::uint16_t Y1 = eight_to_ten(s[3]);
 
         std::uint16_t Cb2 = eight_to_ten(s[4]);
-        std::uint16_t Y2  = eight_to_ten(s[5]);
+        std::uint16_t Y2 = eight_to_ten(s[5]);
         std::uint16_t Cr2 = eight_to_ten(s[6]);
-        std::uint16_t Y3  = eight_to_ten(s[7]);
+        std::uint16_t Y3 = eight_to_ten(s[7]);
 
         std::uint16_t Cb4 = eight_to_ten(s[8]);
-        std::uint16_t Y4  = eight_to_ten(s[9]);
+        std::uint16_t Y4 = eight_to_ten(s[9]);
         std::uint16_t Cr4 = eight_to_ten(s[10]);
-        std::uint16_t Y5  = eight_to_ten(s[11]);
+        std::uint16_t Y5 = eight_to_ten(s[11]);
 
         // Pack into 4 x uint32_t words
-        *d++ = (static_cast<std::uint32_t>(Cb0))
-             | (static_cast<std::uint32_t>(Y0)  << 10)
-             | (static_cast<std::uint32_t>(Cr0) << 20);
+        *d++ = (static_cast<std::uint32_t>(Cb0)) | (static_cast<std::uint32_t>(Y0) << 10) |
+               (static_cast<std::uint32_t>(Cr0) << 20);
 
-        *d++ = (static_cast<std::uint32_t>(Y1))
-             | (static_cast<std::uint32_t>(Cb2) << 10)
-             | (static_cast<std::uint32_t>(Y2)  << 20);
+        *d++ = (static_cast<std::uint32_t>(Y1)) | (static_cast<std::uint32_t>(Cb2) << 10) |
+               (static_cast<std::uint32_t>(Y2) << 20);
 
-        *d++ = (static_cast<std::uint32_t>(Cr2))
-             | (static_cast<std::uint32_t>(Y3)  << 10)
-             | (static_cast<std::uint32_t>(Cb4) << 20);
+        *d++ = (static_cast<std::uint32_t>(Cr2)) | (static_cast<std::uint32_t>(Y3) << 10) |
+               (static_cast<std::uint32_t>(Cb4) << 20);
 
-        *d++ = (static_cast<std::uint32_t>(Y4))
-             | (static_cast<std::uint32_t>(Cr4) << 10)
-             | (static_cast<std::uint32_t>(Y5)  << 20);
+        *d++ = (static_cast<std::uint32_t>(Y4)) | (static_cast<std::uint32_t>(Cr4) << 10) |
+               (static_cast<std::uint32_t>(Y5) << 20);
 
-        s += 12; // 6 pixels × 2 bytes per pixel in UYVY
+        s += 12;  // 6 pixels × 2 bytes per pixel in UYVY
         x += 6;
     }
 }

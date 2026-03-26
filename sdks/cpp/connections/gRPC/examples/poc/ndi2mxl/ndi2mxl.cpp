@@ -187,6 +187,9 @@ void RunVideoFlow() {
         return;
     }
 
+    std::unique_ptr<IParam> flowDefParam = dm.getParam("/flow_def", status);
+    ParamWithValue<ndi2mxl::Flow_def>* flowDefValue =
+      dynamic_cast<ParamWithValue<ndi2mxl::Flow_def>*>(flowDefParam.get());
     std::unique_ptr<IParam> flowDomain = dm.getParam("/domain", status);
     ParamWithValue<std::string>* flowDomainValue =
       dynamic_cast<ParamWithValue<std::string>*>(flowDomain.get());
@@ -196,12 +199,16 @@ void RunVideoFlow() {
     ParamWithValue<std::string>* flowLabelValue =
       dynamic_cast<ParamWithValue<std::string>*>(flowLabelParam.get());
 
-    std::string flowDef = createVideoFlowJson(videoFrame, flowIdValue->get(), flowLabelValue->get());
-    LOG(INFO) << "Generated flow definition: " << flowDef;
+    flowDefValue->get().id = flowIdValue->get();
+    flowDefValue->get().label = flowLabelValue->get();
+    createFlowDef(videoFrame, flowDefValue->get());
+    std::string flowDefJson = createVideoFlowJson(flowDefValue->get());
+    LOG(INFO) << "Generated flow definition: " << flowDefJson;
+    dm.getValueSetByServer().emit("/flow_def", flowDefParam.get());
 
     mxlRational videoGrainRate = {videoFrame.frame_rate_N, videoFrame.frame_rate_D};
 
-    // DON't FORGET TO FREE!! less catastrophic here, but still a memory leak if we don't
+    // DON'T FORGET TO FREE!! less catastrophic here, but still a memory leak if we don't
     NDIlib_recv_free_video_v2(ndi_recv, &videoFrame);
 
     LOG(INFO) << flowDomainValue->get();
@@ -213,7 +220,7 @@ void RunVideoFlow() {
     }
     bool created;
     mxlStatus mxl_status =
-      mxlCreateFlowWriter(instance, flowDef.c_str(), nullptr, &writer, nullptr, &created);
+      mxlCreateFlowWriter(instance, flowDefJson.c_str(), nullptr, &writer, nullptr, &created);
     if (mxl_status != MXL_STATUS_OK) {
         LOG(ERROR) << "Failed to create MXL flow writer: " << mxl_status;
         cleanup();
@@ -270,8 +277,7 @@ void RunVideoFlow() {
 
         mxl_status = mxlFlowWriterOpenGrain(writer, currentIndex, &gInfo, &mxl_buffer);
         if (mxl_status != MXL_STATUS_OK) {
-            LOG(ERROR) << "Failed to open grain for writing at index " << currentIndex << ": "
-                       << mxl_status;
+            LOG(ERROR) << "Failed to open grain for writing at index " << currentIndex << ": " << mxl_status;
             break;
         }
 
