@@ -360,13 +360,13 @@ TEST_F(RESTConnectTest, Connect_HandlesWriterFailure) {
     std::thread proceed_thread([this]() {
         endpoint_->proceed();
     });
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     clientSocket_.close();
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     dm0_.getValueSetByServer().emit(paramOid_, param.get());
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     EXPECT_FALSE(serverSocket_.is_open());
 
