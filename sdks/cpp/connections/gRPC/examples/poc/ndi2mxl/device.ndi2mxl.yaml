@@ -6,7 +6,7 @@ params:
     type: STRING
     oid_aliases: ["0xFF0C"]
     read_only: true
-    value: { string_value: "eo://mxl_ingress_network.png" }
+    value: { string_value: "eo://mxl_ingress_stream.png" }
 
   product:
     type: STRUCT
@@ -85,14 +85,54 @@ params:
       string_value: "NDI Video Flow"
 
   ndi_sources:
-    type: STRING_ARRAY
+    type: STRUCT_ARRAY
     name:
       display_strings:
         en: "NDI Sources"
     read_only: true
+    params:
+      source:
+        type: STRING
+        name:
+          display_strings:
+            en: "Source Name"
+      live:
+        type: INT32
+        widget: checkbox
+        name:
+          display_strings:
+            en: Live
+        constraint:
+          type: INT_CHOICE
+          int32_choice:
+            choices:
+              - value: 0
+                name:
+                  display_strings:
+                    en: "Off"
+              - value: 1
+                name:
+                  display_strings:
+                    en: "On"
     value:
-      string_array_values:
-        strings: []
+      struct_array_values:
+        # struct_values: []
+        struct_values:
+          - fields:
+              source:
+                string_value: "NDI Source 1"
+              live:
+                int32_value: 0
+          - fields:
+              source:
+                string_value: "NDI Source 2"
+              live:
+                int32_value: 1
+          - fields:
+              source:
+                string_value: "NDI Source 3"
+              live:
+                int32_value: 1
 
   ndi_source_ips:
     type: STRING
