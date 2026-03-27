@@ -6,7 +6,7 @@ params:
     type: STRING
     oid_aliases: ["0xFF0C"]
     read_only: true
-    value: { string_value: "eo://mxl_ingress_stream.png" }
+    value: { string_value: "eo://mxl_ingest_stream.png" }
 
   product:
     type: STRUCT
@@ -141,6 +141,11 @@ params:
         en: "NDI Source IPs"
     value:
       string_value: "127.0.0.1"
+
+  refresh_status:
+    type: STRING
+    value:
+      string_value: ""
 
   status:
     type: STRING

@@ -4,6 +4,7 @@
     <label height="68" left="60" name="&lt;html&gt;Source Ips&lt;br/&gt;(comma separated)&lt;/html&gt;" style="txt-align:west;" top="160" width="150"/>
     <param expand="true" height="36" left="215" oid="ndi_source_ips" showlabel="false" top="176" width="495"/>
     <param editable="false" expand="true" height="230" left="60" oid="ndi_sources" showlabel="false" top="246" widget="default" width="650"/>
+    <param editable="false" height="36" left="60" oid="refresh_status" showlabel="false" style="txt-align:left;" top="492" width="500" widget="label"/>
     <button buttontype="push" height="52" left="572" name="Refresh" top="492" width="138">
         <task tasktype="ogscript">
             params.executeCommand("ndi_refresh", null, null);

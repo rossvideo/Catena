@@ -62,6 +62,13 @@ std::string handleRefresh(bool force = false) {
     if (inProgress) {
         return "Refresh already in progress";
     }
+
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    std::unique_ptr<IParam> statusParam = dm.getParam("/refresh_status", status);
+    ParamWithValue<std::string>* statusValue = dynamic_cast<ParamWithValue<std::string>*>(statusParam.get());
+    statusValue->get() = "Refreshing";
+    dm.getValueSetByServer().emit("/refresh_status", statusParam.get());
+
     NDIlib_find_create_t find_create;
     st2138::Value extraIpsValue;
     dm.getValue("/ndi_source_ips", extraIpsValue);
@@ -71,50 +78,49 @@ std::string handleRefresh(bool force = false) {
         return "Unable to create NDI finder with provided IPs";
     }
 
-    std::vector<NdiSource> discovered;
-    bool found = false;
+    uint32_t num_sources = 0;
+    const NDIlib_source_t* sources = nullptr;
     do {
-        found = NDIlib_find_wait_for_sources(finder, 5000);
-        if (found) {
-            uint32_t num_sources = 0;
-            // NOTE: existing pointers from a previous get_current_sources call are
-            // invalidated here, so we copy immediately and don't hold NDIlib_source_t.
-            const NDIlib_source_t* sources = NDIlib_find_get_current_sources(finder, &num_sources);
-            LOG(INFO) << "Number of NDI sources found: " << num_sources;
-            discovered.clear();
-            for (uint32_t j = 0; j < num_sources; j++) {
-                LOG(INFO) << "Source " << j << ": " << sources[j].p_ndi_name << " at "
-                          << sources[j].p_url_address;
-                discovered.push_back({sources[j].p_ndi_name, sources[j].p_url_address});
-            }
-        } else {
-            LOG(INFO) << "No change in NDI sources detected within timeout";
-        }
-        // if force is true, keep trying until we find sources or the process is shutting down
-    } while (!found || (force && discovered.empty() && !shutdownToken));
-
-    // Finder is destroyed here; safe because we copied all strings above.
-    NDIlib_find_destroy(finder);
+        // loop until we don't find anything new
+        do {
+            LOG(INFO) << "Searching for NDI sources...";
+        } while (!shutdownToken && NDIlib_find_wait_for_sources(finder, 1000));
+        sources = NDIlib_find_get_current_sources(finder, &num_sources);
+        LOG(INFO) << "Found " << num_sources << " NDI sources";
+        // wait until we have *something*
+    } while (!shutdownToken && (force && num_sources == 0));
 
     if (shutdownToken) {
-        // just get outta here if we're shutting down, no need to update params or anything
         refreshInProgress = false;
+        NDIlib_find_destroy(finder);
         return "Refresh cancelled";
     }
 
-    ndiSources = std::move(discovered);
-
-    catena::exception_with_status status{"", catena::StatusCode::OK};
+    // update the source parameter
     std::unique_ptr<IParam> sourcesParam = dm.getParam("/ndi_sources", status);
-    ParamWithValue<std::vector<std::string>>* sourcesValue =
-      dynamic_cast<ParamWithValue<std::vector<std::string>>*>(sourcesParam.get());
+    ParamWithValue<ndi2mxl::Ndi_sources>* sourcesValue =
+      dynamic_cast<ParamWithValue<ndi2mxl::Ndi_sources>*>(sourcesParam.get());
     sourcesValue->get().clear();
-    for (const NdiSource& source : ndiSources) {
-        sourcesValue->get().push_back(source.name);
+
+    // internal list of source structs
+    ndiSources.clear();
+
+    // go through the source and add them to our lists
+    for (uint32_t i = 0; i < num_sources; i++) {
+        ndiSources.push_back({sources[i].p_ndi_name, sources[i].p_url_address});
+        sourcesValue->get().push_back(ndi2mxl::Ndi_sources_elem{sources[i].p_ndi_name, 1 /* live */});
     }
-    sourcesValue->get().push_back("DummySource");  // for testing purposes
+
+    // clean up finder
+    sources = nullptr;
+    NDIlib_find_destroy(finder);
+
+    // finish up
     dm.getValueSetByServer().emit("/ndi_sources", sourcesParam.get());
+    statusValue->get() = "Found " + std::to_string(num_sources) + " source(s)";
+    dm.getValueSetByServer().emit("/refresh_status", statusParam.get());
     refreshInProgress = false;
+
     return "";
 }
 
