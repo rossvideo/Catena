@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { afterEach, describe, expect, test } from '@jest/globals';
+import { describe, expect, test } from '@jest/globals';
 import CppGen from '../../cpp/cppgen.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -245,7 +245,7 @@ describe('CppGen.generate', () => {
   });
 
   test('STRUCT_VARIANT param writes variant and alternativeNames', () => {
-    const { headerPath, bodyPath } = runGenerate(
+    const { headerPath } = runGenerate(
       'variant.json',
       'VarNs',
       baseDesc({
@@ -262,7 +262,6 @@ describe('CppGen.generate', () => {
       })
     );
     const header = fs.readFileSync(headerPath, 'utf8');
-    const body = fs.readFileSync(bodyPath, 'utf8');
     expect(header).toContain('namespace _choice');
     expect(header).toContain('std::variant<');
     expect(header).toContain('alternativeNames');

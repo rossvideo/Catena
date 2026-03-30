@@ -55,22 +55,22 @@ describe('Constraint INT_RANGE', () => {
 
   test('argsToString includes range fields', () => {
     const c = new Constraint('r', desc);
-    const s = c.argsToString();
-    expect(s).toContain('0');
-    expect(s).toContain('100');
-    expect(s).toContain('5');
-    expect(s).toContain('1');
-    expect(s).toContain('99');
+    const s = c.argsToString().split(", ");
+    expect(s[0]).toContain('0');
+    expect(s[1]).toContain('100');
+    expect(s[2]).toContain('5');
+    expect(s[3]).toContain('1');
+    expect(s[4]).toContain('99');
   });
 
   test('step defaults to 0 when omitted', () => {
     const d = {
       type: 'INT_RANGE',
-      int32_range: { min_value: 0, max_value: 10 }
+      int32_range: { min_value: 1, max_value: 10 }
     };
     const c = new Constraint('r', d);
     const parts = c.argsToString().split(', ');
-    expect(parts).toContain('0');
+    expect(parts[2]).toMatch('0');
   });
 
   test('display min/max default to min/max when omitted', () => {
@@ -79,9 +79,9 @@ describe('Constraint INT_RANGE', () => {
       int32_range: { min_value: 2, max_value: 8 }
     };
     const c = new Constraint('r', d);
-    const s = c.argsToString();
-    expect(s).toMatch(/(^|,\s*)2(,|$)/);
-    expect(s).toMatch(/8/);
+    const s = c.argsToString().split(", ");
+    expect(s[3]).toMatch('2');
+    expect(s[4]).toMatch('8');
   });
 
   test('getInitializer emits RangeConstraint and marks initialized', () => {
@@ -119,9 +119,12 @@ describe('Constraint FLOAT_RANGE', () => {
       }
     };
     const c = new Constraint('f', desc);
-    const s = c.argsToString();
-    expect(s).toContain('0');
-    expect(s).toContain('0.1');
+    const s = c.argsToString().split(", ");
+    expect(s[0]).toContain('0');
+    expect(s[1]).toContain('1');
+    expect(s[2]).toContain('0.1');
+    expect(s[3]).toContain('0');
+    expect(s[4]).toContain('1');
   });
 
   test('getInitializer emits RangeConstraint<float>', () => {
@@ -138,9 +141,9 @@ describe('Constraint FLOAT_RANGE', () => {
       type: 'FLOAT_RANGE',
       float32_range: { min_value: 0.5, max_value: 2.5 }
     };
-    const s = new Constraint('f', desc).argsToString();
-    expect(s).toContain('0.5');
-    expect(s).toContain('2.5');
+    const s = new Constraint('f', desc).argsToString().split(", ");
+    expect(s[3]).toContain('0.5');
+    expect(s[4]).toContain('2.5');
   });
 });
 
@@ -223,7 +226,7 @@ describe('Constraint STRING_STRING_CHOICE', () => {
     expect(line).toContain('true');
   });
 
-  test('strict from string_string_choice when false', () => {
+  test('strict from string_string_choice false when explicitly false', () => {
     const desc = {
       type: 'STRING_STRING_CHOICE',
       string_string_choice: {
