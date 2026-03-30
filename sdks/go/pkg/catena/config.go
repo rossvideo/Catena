@@ -91,10 +91,11 @@ func SetEnv(env Environment) {
 
 // Config holds all Catena SDK configuration.
 type Config struct {
-	Prefix string        // Environment variable prefix (e.g., "CATENA" or "MYAPP")
-	Env    Environment   // dev or prod (default: prod)
-	Logger logger.Settings // Logger configuration
-	Port   int           // HTTP server port (default: 6254)
+	Prefix         string          // Environment variable prefix (e.g., "CATENA" or "MYAPP")
+	Env            Environment     // dev or prod (default: prod)
+	Logger         logger.Settings // Logger configuration
+	Port           int             // HTTP server port (default: 6254)
+	GRPCReflection bool            // Enable gRPC reflection (default: false)
 }
 
 // DefaultConfig returns sensible defaults with the given prefix.
@@ -103,10 +104,11 @@ func DefaultConfig(prefix string) Config {
 		prefix = "CATENA"
 	}
 	return Config{
-		Prefix: prefix,
-		Env:    EnvProd,
-		Logger: logger.DefaultSettings(),
-		Port:   6254,
+		Prefix:         prefix,
+		Env:            EnvProd,
+		Logger:         logger.DefaultSettings(),
+		Port:           6254,
+		GRPCReflection: false,
 	}
 }
 
@@ -136,6 +138,11 @@ func parseConfig(prefix string) Config {
 			os.Exit(1)
 		}
 		cfg.Port = port
+	}
+
+	// Parse gRPC reflection
+	if v := os.Getenv(prefix + "_GRPC_REFLECTION"); v != "" {
+		cfg.GRPCReflection = v == "true"
 	}
 
 	return cfg
