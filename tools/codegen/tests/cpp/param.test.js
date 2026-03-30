@@ -165,7 +165,7 @@ function buildDeviceWithParams(desc, deviceName = 'Test') {
 
 describe('Param class', () => {
 
-  const { device, params } = buildDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
+  const { params } = buildDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
 
   test('getFQOid returns correct path', () => {
     expect(params.product.getFQOid()).toBe('/product');
