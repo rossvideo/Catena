@@ -501,7 +501,7 @@ describe('objectType, objectNamespaceType, elementType, elementNamespaceType', (
   });
 
   test('objectNamespaceType for struct returns namespace::Type', () => {
-    const { device, params } = buildDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
+    const { params } = buildDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
     expect(params.product.objectNamespaceType()).toBe('keywords::Product');
   });
 
