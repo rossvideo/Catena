@@ -325,6 +325,7 @@
         "unittests/common/common_Logger_test",
         "unittests/common/common_GenericFactory_test",
         "unittests/common/common_EnumDecorator_test",
+        "unittests/common/common_ConnectionProps_test",
         "unittests/gRPC/gRPC_ParamInfoRequest_test",
         "unittests/gRPC/gRPC_UpdateSubscriptions_test",
         "unittests/gRPC/gRPC_DeviceRequest_test",
@@ -374,7 +375,8 @@
         "use_menus_REST",
         "structs_with_authz_REST",
         "one_of_everything_REST",
-        "structs_with_authz_JSON_REST"
+        "structs_with_authz_JSON_REST",
+        "simple_audiodeck_JSON_REST"
       ],
       "default": "status_update_REST"
     }

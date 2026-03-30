@@ -9,6 +9,7 @@ jobs:
   check-if-toolchain-changed:
     runs-on: ubuntu-latest
     outputs:
+      toolchain_changed: ${{ steps.matrix.outputs.toolchain_changed }}
       matrix_to_build: ${{ steps.matrix.outputs.build }}
       matrix_to_merge: ${{ steps.matrix.outputs.merge }}
     steps:
@@ -48,10 +49,23 @@ jobs:
 
           if [[ "$ON_MAIN" == "true" ]]; then
             CPP_CHANGED=true
-            
+            GO_CHANGED=true
           fi
-          # For now, we want to build the Go toolchain on every push cuz the matrix cant be empty.
-          GO_CHANGED=true
+
+          TOOLCHAIN_CHANGED=false
+          if [[ "$CPP_CHANGED" == "true" ]]; then
+            TOOLCHAIN_CHANGED=true
+          fi
+          if [[ "$GO_CHANGED" == "true" ]]; then
+            TOOLCHAIN_CHANGED=true
+          fi
+          echo "toolchain_changed=$TOOLCHAIN_CHANGED" >> "$GITHUB_OUTPUT"
+          if [[ "$TOOLCHAIN_CHANGED" == "false" ]]; then
+            echo "No changes to toolchain, skipping build"
+            echo 'build=[{"toolchain":"none","platform":"none","runner":"ubuntu-latest"}]' >> "$GITHUB_OUTPUT"
+            echo 'merge=[{"toolchain":"none"}]' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
           output='['
           if [[ "$CPP_CHANGED" == "true" ]]; then
@@ -89,6 +103,7 @@ jobs:
         include: ${{ fromJson(needs.check-if-toolchain-changed.outputs.matrix_to_build) }}
 
     runs-on: ${{ matrix.runner }}
+    if: ${{ needs.check-if-toolchain-changed.outputs.toolchain_changed == 'true' }}
     env:
       IMAGE_NAME: catena-${{ matrix.toolchain }}-toolchain
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
@@ -165,6 +180,7 @@ jobs:
 
   merge-digests:
     runs-on: ubuntu-latest
+    if: ${{ needs.check-if-toolchain-changed.outputs.toolchain_changed == 'true' }}
     needs:
       - build-and-push-toolchain
       - check-if-toolchain-changed
@@ -245,7 +261,14 @@ jobs:
           
   trigger-build-examples:
     runs-on: ubuntu-latest
-    needs: build-and-push-toolchain
+    if: ${{ always() && !cancelled() && (
+      needs.check-if-toolchain-changed.outputs.toolchain_changed == 'false' || 
+      (needs.check-if-toolchain-changed.outputs.toolchain_changed == 'true' && needs.build-and-push-toolchain.result == 'success' && needs.merge-digests.result == 'success')
+      ) }}
+    needs:
+      - check-if-toolchain-changed
+      - build-and-push-toolchain
+      - merge-digests
     steps:
       - name: Create JWT
         uses: actions/create-github-app-token@v2

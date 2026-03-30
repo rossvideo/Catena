@@ -38,11 +38,13 @@ set(TEST_FILES
     ParamDescriptor_test.cpp
     Device_test.cpp
     ConnectionQueue_test.cpp
+    ConnectionProps_test.cpp
     Heartbeat_test.cpp
     NmosNode_test.cpp
     Logger_test.cpp
     GenericFactory_test.cpp
     EnumDecorator_test.cpp
+    Config_test.cpp
 )
 
 foreach(test_file ${TEST_FILES})
@@ -60,7 +62,17 @@ foreach(test_file ${TEST_FILES})
         GTest::gmock_main
         ${common_lib}
     )
-    gtest_discover_tests(common_${test_name} TEST_PREFIX "common." DISCOVERY_MODE PRE_TEST)
+    # ConnectionProps tests use network ports and should run serially
+    # Use RESOURCE_LOCK to ensure they don't run in parallel
+    if(test_name STREQUAL "ConnectionProps_test")
+        gtest_discover_tests(common_${test_name} 
+            TEST_PREFIX "common." 
+            DISCOVERY_MODE PRE_TEST
+            PROPERTIES RESOURCE_LOCK ConnectionPropsNetworkPorts
+        )
+    else()
+        gtest_discover_tests(common_${test_name} TEST_PREFIX "common." DISCOVERY_MODE PRE_TEST)
+    endif()
 endforeach()
 
 #special avahi linking for NmosNode_test

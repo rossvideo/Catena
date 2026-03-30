@@ -149,11 +149,20 @@ func main() {
 	logger.Info("REST server starting", "port", port)
 	logger.Info("")
 	logger.Info("Available endpoint:")
-	logger.Info("  GET  /st2138-api/v1/0/asset/{oid}  - GetAsset")
+	logger.Info("  GET  /st2138-api/v1/0/asset/{oid}                      - GetAsset")
+	logger.Info("  GET  /st2138-api/v1/0/asset/{oid}?compression=GZIP     - GetAsset (gzip)")
+	logger.Info("  GET  /st2138-api/v1/0/asset/{oid}?compression=DEFLATE  - GetAsset (deflate)")
+	logger.Info("")
+	logger.Info("Available assets:")
+	assets.Range(func(key, _ any) bool {
+		logger.Info(fmt.Sprintf("  %s", key.(string)))
+		return true
+	})
 	logger.Info("")
 	if firstAssetName != "" {
 		logger.Info("Example curl:")
 		logger.Info(fmt.Sprintf("  curl http://localhost:%d/st2138-api/v1/0/asset/%s", port, firstAssetName))
+		logger.Info(fmt.Sprintf("  curl http://localhost:%d/st2138-api/v1/0/asset/%s?compression=GZIP", port, firstAssetName))
 	}
 	logger.Info("=======================================================")
 
@@ -167,5 +176,6 @@ func main() {
 
 	// Wait for shutdown signal
 	<-shutdownChan
+	srv.Shutdown()
 	logger.Info("Server shutdown complete")
 }

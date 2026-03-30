@@ -33,7 +33,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
  * @author keon.foster@rossvideo.com
- * @date 22/01/26
+ * @date 2026-02-19
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -51,7 +51,7 @@ class gRPCListLanguagesTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
+        config::log_dir = UNITTEST_LOG_DIR;
         Logger::init("gRPCListLanguagesTest");
     }
 

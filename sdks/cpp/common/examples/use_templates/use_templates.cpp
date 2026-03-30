@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,7 +30,8 @@
 
 /**
  * @file use_templates.cpp
- * @author john.danen@rossvideo.com
+ * @author John Danen (john.danen@rossvideo.com)
+ * @author Keon Foster (keon.foster@rossvideo.com)
  * @brief Shows how to use templates to create multiple struct params of the same type.
  *
  * It does not support any connections so is not a complete example
@@ -39,7 +40,7 @@
  * It presumes the reader has understood the start_here and use_structs examples and
  * builds on that. Less chatty comments.
  * 
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // device model
@@ -50,20 +51,22 @@
 #include <ParamWithValue.h>
 #include <ParamDescriptor.h>
 #include <PolyglotText.h>
+#include <Config.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
 
 #include <iostream>
 #include <Logger.h>
-#include <absl/flags/parse.h>
 
 using namespace catena::common;
 using namespace use_templates;
 
 int main (int argc, char** argv) {
-    absl::SetProgramUsageMessage("Runs the Catena Service");
-    absl::ParseCommandLine(argc, argv);
+    const auto [exit, code] = config::initConfigVariables(argc, argv);
+    if (exit) {
+        return code;
+    }
     Logger::init("use_templates");
 
     // lock the model

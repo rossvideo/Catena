@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,7 +33,9 @@
  * @brief Implements REST API
  * @author Benjamin.whitten@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author keon.foster@rossvideo.com
+ * @date 2026-02-19
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #pragma once
@@ -46,7 +48,7 @@
 #include <Authorizer.h>
 #include <Enums.h>
 #include <SubscriptionManager.h>
-#include <SharedFlags.h>
+#include <Config.h>
 #include <rpc/ConnectionQueue.h>
 
 // REST
@@ -82,6 +84,16 @@ namespace REST {
  */
 class ServiceConfig {
   public:
+
+    /**
+     * @brief Constructor for REST Service Config. Device pointers must be added manually.
+     */
+    ServiceConfig() {
+      this->port = config::port;
+      this->EOPath = config::static_root;
+      this->maxConnections = config::max_connections;
+      this->authz = config::authz;
+    }
     /**
      * @brief Sets the vector of Device pointers.
      * @param dms A vector of Device pointers.
