@@ -60,29 +60,61 @@ params:
     import:
       url: ../templates/param.flow_def.yaml
 
-  domain:
-    type: STRING
-    name:
-      display_strings:
-        en: "Domain"
+  create_flow:
+    type: STRUCT
+    params:
+      domain:
+        type: STRING
+        name:
+          display_strings:
+            en: "Domain"
+      id:
+        type: STRING
+        name:
+          display_strings:
+            en: "Flow ID"
+      label:
+        type: STRING
+        name:
+          display_strings:
+            en: "Flow Label"
+      width:
+        type: INT32
+        name:
+          display_strings:
+            en: "Frame Width"
+      height:
+        type: INT32
+        name:
+          display_strings:
+            en: "Frame Height"
+      numerator:
+        type: INT32
+        name:
+          display_strings:
+            en: "Grain Rate Numerator"
+      denominator:
+        type: INT32
+        name:
+          display_strings:
+            en: "Grain Rate Denominator"
     value:
-      string_value: "/dev/shm"
-
-  flow_id:
-    type: STRING
-    name:
-      display_strings:
-        en: "Flow ID"
-    value:
-      string_value: "19736e97-a32d-40b3-a2b1-4aa0cf4a5f10"
-
-  flow_label:
-    type: STRING
-    name:
-      display_strings:
-        en: "Flow Label"
-    value:
-      string_value: "NDI Video Flow"
+      struct_value:
+        fields:
+          domain:
+            string_value: "/dev/shm"
+          id:
+            string_value: "19736e97-a32d-40b3-a2b1-4aa0cf4a5f10"
+          label:
+            string_value: "NDI Video Flow"
+          width:
+            int32_value: 1920
+          height:
+            int32_value: 1080
+          numerator:
+            int32_value: 30000
+          denominator:
+            int32_value: 1001
 
   ndi_sources:
     type: STRUCT_ARRAY
@@ -144,6 +176,7 @@ params:
 
   refresh_status:
     type: STRING
+    read_only: true
     value:
       string_value: ""
 

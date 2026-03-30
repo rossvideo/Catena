@@ -5,17 +5,19 @@
 
 #include "device.ndi2mxl.yaml.h"
 
-void createFlowDef(const NDIlib_video_frame_v2_t& videoFrame, ndi2mxl::Flow_def& flowDef) {
+void createFlowDef(const ndi2mxl::Create_flow& createFlow, ndi2mxl::Flow_def& flowDef) {
     flowDef.colorspace = "bt709";
-    flowDef.components = {ndi2mxl::Flow_def::Components_elem{"Y", videoFrame.xres, videoFrame.yres, 10},
-                          ndi2mxl::Flow_def::Components_elem{"Cb", videoFrame.xres / 2, videoFrame.yres, 10},
-                          ndi2mxl::Flow_def::Components_elem{"Cr", videoFrame.xres / 2, videoFrame.yres, 10}};
+    flowDef.components = {ndi2mxl::Flow_def::Components_elem{"Y", createFlow.width, createFlow.height, 10},
+                          ndi2mxl::Flow_def::Components_elem{"Cb", createFlow.width / 2, createFlow.height, 10},
+                          ndi2mxl::Flow_def::Components_elem{"Cr", createFlow.width / 2, createFlow.height, 10}};
     flowDef.description = "NDI video flow";
     flowDef.format = "urn:x-nmos:format:video";
-    flowDef.frame_width = videoFrame.xres;
-    flowDef.frame_height = videoFrame.yres;
-    flowDef.grain_rate = {videoFrame.frame_rate_N, videoFrame.frame_rate_D};
+    flowDef.frame_width = createFlow.width;
+    flowDef.frame_height = createFlow.height;
+    flowDef.grain_rate = {createFlow.numerator, createFlow.denominator};
+    flowDef.id = createFlow.id;
     flowDef.interlace_mode = "progressive";
+    flowDef.label = createFlow.label;
     flowDef.media_type = "video/v210";
     flowDef.tags = {ndi2mxl::Flow_def::Tags_elem{"urn:x-nmos:tag:grouphint/v1.0", {"NDI Source:Video"}}};
 }

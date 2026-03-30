@@ -35,9 +35,15 @@ using namespace catena::common;
 
 std::unique_ptr<Server> globalServer = nullptr;
 std::atomic<bool> isRunning = false;
+std::unique_ptr<std::thread> recvThread = nullptr;
 std::unique_ptr<std::thread> flowThread = nullptr;
 std::atomic<bool> refreshInProgress = false;
 std::atomic<bool> shutdownToken = false;
+std::mutex bufferMutex;
+std::atomic<uint32_t> readIndex = 0;  // index the MXL writer reads from
+uint8_t* videoBuffer[2];              // double buffering between reader and writer threads
+std::atomic<int32_t> frameWidth = 1920;
+std::atomic<int32_t> frameHeight = 1080;
 
 struct NdiSource {
     std::string name;
@@ -124,28 +130,15 @@ std::string handleRefresh(bool force = false) {
     return "";
 }
 
-void RunVideoFlow() {
+void RunNdiRecv() {
     catena::exception_with_status status{"", catena::StatusCode::OK};
-    std::unique_ptr<IParam> statusParam = dm.getParam("/status", status);
-    ParamWithValue<std::string>* statusValue = dynamic_cast<ParamWithValue<std::string>*>(statusParam.get());
-
     // things to cleanup on exit
     NDIlib_recv_instance_t ndi_recv = nullptr;
-    mxlInstance instance = nullptr;
-    mxlFlowWriter writer = nullptr;
 
     auto cleanup = [&]() {
         if (ndi_recv) {
             NDIlib_recv_destroy(ndi_recv);
             ndi_recv = nullptr;
-        }
-        if (writer) {
-            mxlReleaseFlowWriter(instance, writer);
-            writer = nullptr;
-        }
-        if (instance) {
-            mxlDestroyInstance(instance);
-            instance = nullptr;
         }
     };
 
@@ -173,52 +166,99 @@ void RunVideoFlow() {
 
     NDIlib_recv_connect(ndi_recv, &source);
 
-    // get a frame to determine the frame format and other metadata
-    // to build the mxl flow def
     NDIlib_video_frame_v2_t videoFrame;
-    int recvResult = NDIlib_frame_type_none;
-    while (recvResult != NDIlib_frame_type_video && !shutdownToken) {
-        recvResult = NDIlib_recv_capture_v2(ndi_recv, &videoFrame, nullptr, nullptr, 5000);
+
+    // stuff for printing the frame rate
+    const int32_t windowSize = 100;
+    std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
+    std::deque<std::chrono::nanoseconds> frameTimes;
+    std::chrono::milliseconds logInterval(5000);
+    std::chrono::steady_clock::time_point lastLogTime = lastTime;
+
+    while (!shutdownToken && isRunning) {
+        NDIlib_frame_type_e recvResult =
+          NDIlib_recv_capture_v2(ndi_recv, &videoFrame, nullptr, nullptr, 10000);
+        std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
         if (recvResult == NDIlib_frame_type_none) {
-            LOG(INFO) << "No frame received within timeout while waiting for first frame";
+            LOG(WARNING) << "No frame received within timeout";
         } else if (recvResult == NDIlib_frame_type_error) {
-            LOG(ERROR) << "Error receiving frame while waiting for first frame";
-            cleanup();
-            return;
+            LOG(ERROR) << "Error receiving frame";
+            break;
+        } else if (recvResult == NDIlib_frame_type_video) {
+            // write to the buffer the MXL writer is NOT reading
+            uint32_t writeIndex = 1 - readIndex.load();
+            convertFrame(videoFrame.p_data, videoBuffer[writeIndex], std::min(static_cast<int32_t>(videoFrame.xres), frameWidth.load()),
+                         std::min(static_cast<int32_t>(videoFrame.yres), frameHeight.load()), videoFrame.line_stride_in_bytes);
+
+            // swap: tell the MXL writer to read from the freshly written buffer
+            {
+                std::lock_guard<std::mutex> lock(bufferMutex);
+                readIndex.store(writeIndex);
+            }
+
+            NDIlib_recv_free_video_v2(ndi_recv, &videoFrame);
+            frameTimes.emplace_back(now - lastTime);
+            lastTime = now;
+            if (frameTimes.size() > windowSize) {
+                frameTimes.pop_front();
+            }
+        }
+        if (now - lastLogTime > logInterval) {
+            if (frameTimes.empty()) {
+                LOG(INFO) << "Current NDI source: " << source.p_ndi_name << " no frames received yet";
+            } else {
+                double avgFrameTime =
+                  std::accumulate(frameTimes.begin(), frameTimes.end(), std::chrono::nanoseconds(0)).count() /
+                  static_cast<double>(frameTimes.size());
+                double fps = 1e9 / avgFrameTime;
+                LOG(INFO) << "Current NDI source: " << source.p_ndi_name << " actual FPS: " << fps
+                          << " (based on " << frameTimes.size() << " frames)";
+            }
+            lastLogTime = now;
         }
     }
-    if (recvResult != NDIlib_frame_type_video) {
-        LOG(ERROR) << "First frame received is not a video frame";
-        cleanup();
-        return;
-    }
+    isRunning = false;
+    cleanup();
+}
+
+void RunVideoFlow() {
+    catena::exception_with_status status{"", catena::StatusCode::OK};
+    std::unique_ptr<IParam> statusParam = dm.getParam("/status", status);
+    ParamWithValue<std::string>* statusValue = dynamic_cast<ParamWithValue<std::string>*>(statusParam.get());
+
+    // things to cleanup on exit
+    mxlInstance instance = nullptr;
+    mxlFlowWriter writer = nullptr;
+
+    auto cleanup = [&]() {
+        if (writer) {
+            mxlReleaseFlowWriter(instance, writer);
+            writer = nullptr;
+        }
+        if (instance) {
+            mxlDestroyInstance(instance);
+            instance = nullptr;
+        }
+    };
+
+    std::unique_ptr<IParam> createFlowParam = dm.getParam("/create_flow", status);
+    ParamWithValue<ndi2mxl::Create_flow>* createFlowValue =
+      dynamic_cast<ParamWithValue<ndi2mxl::Create_flow>*>(createFlowParam.get());
 
     std::unique_ptr<IParam> flowDefParam = dm.getParam("/flow_def", status);
     ParamWithValue<ndi2mxl::Flow_def>* flowDefValue =
       dynamic_cast<ParamWithValue<ndi2mxl::Flow_def>*>(flowDefParam.get());
-    std::unique_ptr<IParam> flowDomain = dm.getParam("/domain", status);
-    ParamWithValue<std::string>* flowDomainValue =
-      dynamic_cast<ParamWithValue<std::string>*>(flowDomain.get());
-    std::unique_ptr<IParam> flowIdParam = dm.getParam("/flow_id", status);
-    ParamWithValue<std::string>* flowIdValue = dynamic_cast<ParamWithValue<std::string>*>(flowIdParam.get());
-    std::unique_ptr<IParam> flowLabelParam = dm.getParam("/flow_label", status);
-    ParamWithValue<std::string>* flowLabelValue =
-      dynamic_cast<ParamWithValue<std::string>*>(flowLabelParam.get());
 
-    flowDefValue->get().id = flowIdValue->get();
-    flowDefValue->get().label = flowLabelValue->get();
-    createFlowDef(videoFrame, flowDefValue->get());
+    frameWidth = createFlowValue->get().width;
+    frameHeight = createFlowValue->get().height;
+    createFlowDef(createFlowValue->get(), flowDefValue->get());
     std::string flowDefJson = createVideoFlowJson(flowDefValue->get());
     LOG(INFO) << "Generated flow definition: " << flowDefJson;
     dm.getValueSetByServer().emit("/flow_def", flowDefParam.get());
 
-    mxlRational videoGrainRate = {videoFrame.frame_rate_N, videoFrame.frame_rate_D};
+    mxlRational videoGrainRate = {createFlowValue->get().numerator, createFlowValue->get().denominator};
 
-    // DON'T FORGET TO FREE!! less catastrophic here, but still a memory leak if we don't
-    NDIlib_recv_free_video_v2(ndi_recv, &videoFrame);
-
-    LOG(INFO) << flowDomainValue->get();
-    instance = mxlCreateInstance(flowDomainValue->get().c_str(), nullptr);
+    instance = mxlCreateInstance(createFlowValue->get().domain.c_str(), nullptr);
     if (!instance) {
         LOG(ERROR) << "Failed to create MXL instance";
         cleanup();
@@ -239,45 +279,30 @@ void RunVideoFlow() {
     int32_t goodFrames = 0;
     uint64_t currentIndex = mxlGetCurrentIndex(&videoGrainRate);
 
+    // init the buffer, need to make the frames v210 width x height
+    // which is (width / 6) * 16 for 6 pixels per group and 16 bytes per group,
+    // times the height for the full frame size
+    uint32_t bufferSize = ((flowDefValue->get().frame_width / 6) * 16) * flowDefValue->get().frame_height;
+    LOG(INFO) << "Allocating video buffers with size " << bufferSize << " bytes each";
+    for (int i = 0; i < 2; i++) {
+        videoBuffer[i] = new uint8_t[bufferSize];
+        std::memset(videoBuffer[i], 0, bufferSize);
+    }
+    readIndex.store(0);
+
+    // start the recv thread
+    recvThread = std::make_unique<std::thread>(RunNdiRecv);
+
+    // stuff for printing the frame rate
+    const int32_t windowSize = 100;
+    std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
+    std::deque<std::chrono::nanoseconds> frameTimes;
+    std::chrono::milliseconds logInterval(5000);
+    std::chrono::steady_clock::time_point lastLogTime = lastTime;
+
+    // get the time
+    currentIndex = mxlGetCurrentIndex(&videoGrainRate);
     while (isRunning && !shutdownToken) {
-        // give ndi until the next frame is expected to arrive based on the video grain rate
-        // ndi timeout is in ms, mxl works with nanosec, which is a divide by 1,000,000
-        uint32_t timeout = mxlGetNsUntilIndex(currentIndex + 1, &videoGrainRate) / 1000000;
-        NDIlib_frame_type_e recvResult =
-          NDIlib_recv_capture_v2(ndi_recv, &videoFrame, nullptr, nullptr, timeout);
-        if (recvResult == NDIlib_frame_type_error) {
-            LOG(ERROR) << "Error receiving frame";
-            break;
-        }
-
-        // uint64_t lastIndex = currentIndex;
-        // currentIndex = mxlGetCurrentIndex(&videoGrainRate);
-        // if (lastIndex < currentIndex) {
-        //     LOG(WARNING) << "Current index " << currentIndex
-        //                  << " is ahead of last index " << lastIndex
-        //                  << ", missed commit window for " << (currentIndex - lastIndex)
-        //                  << " grains, resetting to current index";
-        //     // quickly catch up
-        //     for (uint64_t i = lastIndex; i < currentIndex; i++) {
-        //         mxlGrainInfo gInfo;
-        //         uint8_t* mxl_buffer = nullptr;
-        //         mxl_status = mxlFlowWriterOpenGrain(writer, i, &gInfo, &mxl_buffer);
-        //         if (mxl_status != MXL_STATUS_OK) {
-        //             LOG(ERROR) << "Failed to open grain for writing at index " << i << ": " << mxl_status;
-        //             break;
-        //         }
-        //         gInfo.flags = MXL_GRAIN_FLAG_INVALID;
-        //         mxl_status = mxlFlowWriterCommitGrain(writer, &gInfo);
-        //         if (mxl_status != MXL_STATUS_OK) {
-        //             LOG(ERROR) << "Failed to commit invalid grain at index " << i << ": " << mxl_status;
-        //             break;
-        //         }
-        //     }
-        // }
-        // just in case those invalid grains took too long, do one last
-        // resync and if we missed a grain, so be it.
-        currentIndex = mxlGetCurrentIndex(&videoGrainRate);
-
         mxlGrainInfo gInfo;
         uint8_t* mxl_buffer = nullptr;
 
@@ -287,27 +312,31 @@ void RunVideoFlow() {
             break;
         }
 
-        // if we received a video frame, copy it into the mxl buffer
-        if (recvResult == NDIlib_frame_type_video) {
+        {
+            std::lock_guard<std::mutex> lock(bufferMutex);
             gInfo.validSlices = gInfo.totalSlices;
-            convertFrame(videoFrame.p_data, mxl_buffer, videoFrame.xres, videoFrame.yres,
-                         videoFrame.line_stride_in_bytes);
-            ++goodFrames;
-
-            // DON'T FORGET TO FREE!!
-            NDIlib_recv_free_video_v2(ndi_recv, &videoFrame);
-        } else {
-            // if we didn't receive a video frame, write an invalid grain
-            gInfo.flags = MXL_GRAIN_FLAG_INVALID;
-            LOG(WARNING) << "Received non-video frame(" << recvResult << "), writing invalid grain at index "
-                         << currentIndex << " good frames: " << goodFrames;
-            goodFrames = 0;  // reset good frame counter on a bad frame, just for logging purposes
+            memcpy(mxl_buffer, videoBuffer[readIndex.load()], bufferSize);
         }
 
         mxl_status = mxlFlowWriterCommitGrain(writer, &gInfo);
         if (mxl_status != MXL_STATUS_OK) {
             LOG(ERROR) << "Failed to commit grain at index " << currentIndex << ": " << mxl_status;
             break;
+        }
+
+        std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+        frameTimes.emplace_back(now - lastTime);
+        lastTime = now;
+        if (frameTimes.size() > windowSize) {
+            frameTimes.pop_front();
+        }
+        if (now - lastLogTime > logInterval) {
+            double avgFrameTime =
+              std::accumulate(frameTimes.begin(), frameTimes.end(), std::chrono::nanoseconds(0)).count() /
+              static_cast<double>(frameTimes.size());
+            double fps = 1e9 / avgFrameTime;
+            LOG(INFO) << "MXL writer index " << currentIndex << " committed, actual FPS: " << fps;
+            lastLogTime = now;
         }
 
         ++currentIndex;
@@ -437,6 +466,10 @@ void RunRPCServer(std::string addr) {
 
         if (flowThread && flowThread->joinable()) {
             flowThread->join();
+        }
+
+        if (recvThread && recvThread->joinable()) {
+            recvThread->join();
         }
 
         cq->Shutdown();
