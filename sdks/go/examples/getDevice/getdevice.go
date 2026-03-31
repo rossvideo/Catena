@@ -38,11 +38,7 @@
 package getdevice
 
 import (
-	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
-
+	"github.com/rossvideo/catena/sdks/go/examples/exampleutil"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
@@ -454,45 +450,22 @@ func RegisterHandlers(srv catena.CatenaServer) {
 // RunExample encapsulates the full example lifecycle:
 // SDK init, signal handling, server creation, handler registration, and graceful shutdown.
 func RunExample(appName string, makeServer func(slots []uint16, cfg catena.Config) catena.CatenaServer) {
-	cfg, err := catena.InitOptions(catena.Options{AppName: appName})
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to initialize SDK: %v\n", err)
-		os.Exit(1)
-	}
-	defer catena.Close()
-
-	shutdownChan := make(chan struct{})
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		sig := <-sigChan
-		logger.Info("Caught signal, shutting down", "signal", sig)
-		close(shutdownChan)
-	}()
-
-	port := cfg.Port
-	srv := makeServer(SlotList, cfg)
-	RegisterHandlers(srv)
-
-	logger.Info("=======================================================")
-	logger.Info("GetDevice Example", "transport", appName)
-	logger.Info("=======================================================")
-	logger.Info("Listening", "port", port)
-	logger.Info("")
-	logger.Info("Available devices:")
-	logger.Info("  Primary Video Processor (slot 0)")
-	logger.Info("  Audio Mixer (slot 1)")
-	logger.Info("  Router Controller (slot 2)")
-	logger.Info("=======================================================")
-
-	go func() {
-		if err := srv.Start(port); err != nil {
-			logger.Error("server failed", "error", err)
-			os.Exit(1)
-		}
-	}()
-
-	<-shutdownChan
-	srv.Shutdown()
-	logger.Info("Server shutdown complete")
+	exampleutil.RunExample(exampleutil.RunConfig{
+		AppName:          appName,
+		Slots:            SlotList,
+		MakeServer:       makeServer,
+		RegisterHandlers: RegisterHandlers,
+		OnReady: func(port int) {
+			logger.Info("=======================================================")
+			logger.Info("GetDevice Example", "transport", appName)
+			logger.Info("=======================================================")
+			logger.Info("Listening", "port", port)
+			logger.Info("")
+			logger.Info("Available devices:")
+			logger.Info("  Primary Video Processor (slot 0)")
+			logger.Info("  Audio Mixer (slot 1)")
+			logger.Info("  Router Controller (slot 2)")
+			logger.Info("=======================================================")
+		},
+	})
 }
