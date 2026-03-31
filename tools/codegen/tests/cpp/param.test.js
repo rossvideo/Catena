@@ -488,10 +488,6 @@ describe('Param class', () => {
     expect(params.item_list.template_param).toBe(params.item);
     expect(params.item_list.minimal_set).toBe(true);
   });
-
-  // test('templated STRING_ARRAY param objectType is vector of string', () => {
-  //   expect(params.item_list.objectType()).toBe('std::vector<std::string>');
-  // });
 });
 
 describe('objectType, objectNamespaceType, elementType, elementNamespaceType', () => {
