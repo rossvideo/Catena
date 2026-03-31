@@ -121,10 +121,10 @@ params:
     name:
       display_strings:
         en: "NDI Sources"
-    read_only: true
     params:
       source:
         type: STRING
+        read_only: true
         name:
           display_strings:
             en: "Source Name"
@@ -148,23 +148,15 @@ params:
                     en: "On"
     value:
       struct_array_values:
-        # struct_values: []
-        struct_values:
-          - fields:
-              source:
-                string_value: "NDI Source 1"
-              live:
-                int32_value: 0
-          - fields:
-              source:
-                string_value: "NDI Source 2"
-              live:
-                int32_value: 1
-          - fields:
-              source:
-                string_value: "NDI Source 3"
-              live:
-                int32_value: 1
+        struct_values: []
+
+  selected_ndi_source:
+    type: STRING
+    name:
+      display_strings:
+        en: "Selected NDI Source"
+    value:
+      string_value: ""
 
   ndi_source_ips:
     type: STRING
@@ -245,6 +237,7 @@ menu_groups:
             en: "Flow Definition"
         param_oids:
           - /status
+          - /selected_ndi_source
           - /flow_def/id
           - /flow_def/description
           - /flow_def/tags

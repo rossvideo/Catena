@@ -39,6 +39,7 @@ std::unique_ptr<std::thread> recvThread = nullptr;
 std::unique_ptr<std::thread> flowThread = nullptr;
 std::atomic<bool> refreshInProgress = false;
 std::atomic<bool> shutdownToken = false;
+std::atomic<uint32_t> currentSource = 0;
 std::mutex bufferMutex;
 std::atomic<uint32_t> readIndex = 0;  // index the MXL writer reads from
 uint8_t* videoBuffer[2];              // double buffering between reader and writer threads
@@ -76,9 +77,9 @@ std::string handleRefresh(bool force = false) {
     dm.getValueSetByServer().emit("/refresh_status", statusParam.get());
 
     NDIlib_find_create_t find_create;
-    st2138::Value extraIpsValue;
-    dm.getValue("/ndi_source_ips", extraIpsValue);
-    find_create.p_extra_ips = extraIpsValue.string_value().c_str();
+    st2138::Value value;
+    dm.getValue("/ndi_source_ips", value);
+    find_create.p_extra_ips = value.string_value().c_str();
     NDIlib_find_instance_t finder = NDIlib_find_create_v2(&find_create);
     if (!finder) {
         return "Unable to create NDI finder with provided IPs";
@@ -121,6 +122,20 @@ std::string handleRefresh(bool force = false) {
     sources = nullptr;
     NDIlib_find_destroy(finder);
 
+    // update the current source
+    dm.getValue("/selected_ndi_source", value);
+    if (num_sources > 0 && !value.string_value().empty()) {
+        std::lock_guard<std::mutex> lock(dm.mutex());
+        for (int i = 0; i < ndiSources.size(); i++) {
+            if (ndiSources[i].name == value.string_value()) {
+                LOG(INFO) << "Restoring current source index to " << i;
+                sourcesValue->get()[i].live = 0;  // mark as live
+                currentSource.store(i);
+                break;
+            }
+        }
+    }
+
     // finish up
     dm.getValueSetByServer().emit("/ndi_sources", sourcesParam.get());
     statusValue->get() = "Found " + std::to_string(num_sources) + " source(s)";
@@ -155,16 +170,21 @@ void RunNdiRecv() {
         return;
     }
 
+    std::unique_ptr<IParam> sourcesParam = dm.getParam("/ndi_sources", status);
+    ParamWithValue<ndi2mxl::Ndi_sources>* sourcesValue =
+      dynamic_cast<ParamWithValue<ndi2mxl::Ndi_sources>*>(sourcesParam.get());
+    std::unique_ptr<IParam> selectedSourceParam = dm.getParam("/selected_ndi_source", status);
+    ParamWithValue<std::string>* selectedSourceValue =
+      dynamic_cast<ParamWithValue<std::string>*>(selectedSourceParam.get());
+
+    uint32_t current = -1;
+
     NDIlib_source_t source;
-    source.p_ndi_name = ndiSources[0].name.c_str();
-    source.p_url_address = ndiSources[0].url.c_str();
+    source.p_ndi_name = ndiSources[currentSource.load()].name.c_str();
+    source.p_url_address = ndiSources[currentSource.load()].url.c_str();
 
     NDIlib_recv_create_v3_t recvCreateDesc;
     recvCreateDesc.color_format = NDIlib_recv_color_format_UYVY_BGRA;
-
-    ndi_recv = NDIlib_recv_create_v3(&recvCreateDesc);
-
-    NDIlib_recv_connect(ndi_recv, &source);
 
     NDIlib_video_frame_v2_t videoFrame;
 
@@ -176,6 +196,37 @@ void RunNdiRecv() {
     std::chrono::steady_clock::time_point lastLogTime = lastTime;
 
     while (!shutdownToken && isRunning) {
+        // check if we need to change sources
+        uint32_t loadCurrent = currentSource.load();
+        if (loadCurrent >= ndiSources.size()) {
+            LOG(WARNING) << "Current source index " << loadCurrent << " is out of range, resetting to 0";
+            currentSource.store(0);
+        } else if (loadCurrent != current) {
+            current = loadCurrent;
+            source.p_ndi_name = ndiSources[current].name.c_str();
+            source.p_url_address = ndiSources[current].url.c_str();
+            LOG(INFO) << "Switching to NDI source: " << source.p_ndi_name;
+            if (ndi_recv) {
+                NDIlib_recv_destroy(ndi_recv);
+                ndi_recv = nullptr;
+            }
+            ndi_recv = NDIlib_recv_create_v3(&recvCreateDesc);
+            NDIlib_recv_connect(ndi_recv, &source);
+            {
+                std::lock_guard<std::mutex> lock(dm.mutex());
+                for (int32_t i = 0; i < sourcesValue->get().size(); i++) {
+                    if (i == current) {
+                        sourcesValue->get()[i].live = 0;
+                    } else {
+                        sourcesValue->get()[i].live = 1;
+                    }
+                }
+                selectedSourceValue->get() = source.p_ndi_name;
+                dm.getValueSetByServer().emit("/selected_ndi_source", selectedSourceParam.get());
+                dm.getValueSetByServer().emit("/ndi_sources", sourcesParam.get());
+            }
+        }
+
         NDIlib_frame_type_e recvResult =
           NDIlib_recv_capture_v2(ndi_recv, &videoFrame, nullptr, nullptr, 10000);
         std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
@@ -187,8 +238,10 @@ void RunNdiRecv() {
         } else if (recvResult == NDIlib_frame_type_video) {
             // write to the buffer the MXL writer is NOT reading
             uint32_t writeIndex = 1 - readIndex.load();
-            convertFrame(videoFrame.p_data, videoBuffer[writeIndex], std::min(static_cast<int32_t>(videoFrame.xres), frameWidth.load()),
-                         std::min(static_cast<int32_t>(videoFrame.yres), frameHeight.load()), videoFrame.line_stride_in_bytes);
+            convertFrame(videoFrame.p_data, videoBuffer[writeIndex],
+                         std::min(static_cast<int32_t>(videoFrame.xres), frameWidth.load()),
+                         std::min(static_cast<int32_t>(videoFrame.yres), frameHeight.load()),
+                         videoFrame.line_stride_in_bytes);
 
             // swap: tell the MXL writer to read from the freshly written buffer
             {
@@ -426,6 +479,25 @@ void defineCommands() {
 
 void valueChangedCallback(const std::string& fqoid, const catena::common::IParam* param) {
     LOG(INFO) << "Value changed callback for OID: " << fqoid;
+    if (fqoid.starts_with("/ndi_sources/")) {
+        // ignore changes while refresh is in progress to avoid conflicts with the refresh logic
+        if (refreshInProgress) {
+            LOG(INFO) << "Refresh in progress, ignoring value change for OID: " << fqoid;
+            return;
+        }
+        // get the index from the OID
+        size_t nextSlash = fqoid.find('/', 13);  // length of "/ndi_sources/" is 13
+        if (nextSlash != std::string::npos) {
+            std::string indexStr = fqoid.substr(13, nextSlash - 13);
+            try {
+                int index = std::stoi(indexStr);
+                LOG(INFO) << "Setting current source index to " << index;
+                currentSource.store(index);
+            } catch (const std::exception& e) {
+                LOG(ERROR) << "Failed to parse index from OID: " << fqoid << " Error: " << e.what();
+            }
+        }
+    }
 }
 
 void RunRPCServer(std::string addr) {
@@ -459,6 +531,8 @@ void RunRPCServer(std::string addr) {
         // start the heartbeat on the device
         dm.setHeartbeatParam("/product/version");
         dm.startHeartbeat();
+
+        dm.getValueSetByClient().connect(valueChangedCallback);
 
         // wait for the server to shutdown and tidy up
         globalServer->Wait();
