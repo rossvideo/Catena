@@ -59,15 +59,17 @@ void RunVideoFlow() {
         return;
     }
 
+    st2138::Value value;
+    dm.getValue("/ndi_name", value);
+
     NDIlib_send_create_t NDI_send_create_desc;
-    NDI_send_create_desc.p_ndi_name = "Catena MXL Sink";
+    NDI_send_create_desc.p_ndi_name = value.string_value().c_str();
     NDIlib_send_instance_t pNDI_send = NDIlib_send_create(&NDI_send_create_desc);
     if (pNDI_send == nullptr) {
         LOG(ERROR) << "Failed to create NDI sender";
         return;
     }
 
-    st2138::Value value;
     std::vector<std::unique_ptr<mxlcpp::MxlReader>> readers;
     catena::exception_with_status statusErr = dm.getValue("/inputs", value);
     if (statusErr.status != catena::StatusCode::OK) {

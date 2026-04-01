@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<simplegrid cols="1" rows="3">
-    <label name="TS to MXL Catena Demo" style="txt-align:center;size:biggest;bg-u:eo://mxl_ingest_stream.png;bg-align:west;bg-fill:vertical;o#000000" />
-    <simplegrid cols="2" rows="2" >
+<abs>
+   <abs height="80" id="brand_logos" left="15" style="bg#00000000;bdr:round;bdr#teal;" top="15" width="650">
+      <label height="60" left="0" name="" style="bg-u:eo://catena_logo.png;bg-fill:fit;bg#00000000;" top="10" width="650"/>
+   </abs>
+   <label height="80" left="15" name="TS 🡆 MXL" style="txt-align:center;bdr:round;bg#teal;size:Biggest;fg#000000;" top="110" width="650"/>
+   <simplegrid height="100" left="15" cols="2" rows="2" top="205" width="650">
         <button buttontype="push" name="Start">
             <task tasktype="ogscript">
                 params.executeCommand("start", null, null);
@@ -13,4 +15,8 @@
             </task>
         </button>
     </simplegrid>
-</simplegrid>
+   <abs height="50" id="partner_logos" left="15" style="bg#00000000;" top="330" width="650">
+      <label height="50" left="0" name="" style="bg-u:eo://mxl_supporter.png;bg-fill:fit;bg#00000000;" top="0" width="207"/>
+      <label height="50" left="445" name="" style="bg-u:eo://Ross-Logo.png;bg-fill:fit;bg#00000000;" top="0" width="207"/>
+   </abs>
+</abs>

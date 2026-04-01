@@ -1,13 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <abs>
-    <label height="100" left="60" name="NDI 🡆 MXL" style="txt-align:center;bg#selectedmuted;size:Big;" top="40" width="650"/>
-    <label height="68" left="60" name="&lt;html&gt;Source Ips&lt;br/&gt;(comma separated)&lt;/html&gt;" style="txt-align:west;" top="160" width="150"/>
-    <param expand="true" height="36" left="215" oid="ndi_source_ips" showlabel="false" top="176" width="495"/>
-    <param editable="false" expand="true" height="230" left="60" oid="ndi_sources" showlabel="false" top="246" widget="default" width="650"/>
-    <param editable="false" height="36" left="60" oid="refresh_status" showlabel="false" style="txt-align:left;" top="492" width="500" widget="label"/>
-    <button buttontype="push" height="52" left="572" name="Refresh" top="492" width="138">
-        <task tasktype="ogscript">
-            params.executeCommand("ndi_refresh", null, null);
-        </task>
-    </button>
+   <abs height="80" id="brand_logos" left="15" style="bg#00000000;bdr:round;bdr#teal;" top="15" width="650">
+      <label height="60" left="0" name="" style="bg-u:eo://catena_logo.png;bg-fill:fit;bg#00000000;" top="10" width="650"/>
+   </abs>
+   <label height="80" left="15" name="NDI 🡆 MXL" style="txt-align:center;bdr:round;bg#teal;size:Biggest;fg#000000;" top="110" width="650"/>
+   <abs height="80" id="buttons" left="15" style="bg#2D323902;bdr:round;bdr#teal;" top="205" width="650">
+      <label height="40" left="15" name="&lt;html&gt;Source Ips&lt;br/&gt;(comma separated)&lt;/html&gt;" style="txt-align:west;" top="15" width="200"/>
+      <param expand="true" height="36" left="160" oid="ndi_source_ips" showlabel="false" top="15" width="480"/>
+   </abs>
+   <param editable="false" expand="true" height="230" left="15" oid="ndi_sources" showlabel="false" top="300" widget="default" width="650"/>
+   <param editable="false" height="36" left="15" oid="refresh_status" showlabel="false" style="txt-align:left;" top="550" width="500" widget="label"/>
+   <button buttontype="push" height="52" left="525" name="Refresh" top="550" width="138">
+      <task tasktype="ogscript">
+         params.executeCommand("ndi_refresh", null, null);
+      </task>
+   </button>
+   <abs height="50" id="partner_logos" left="15" style="bg#00000000;" top="630" width="650">
+      <label height="50" left="0" name="" style="bg-u:eo://mxl_supporter.png;bg-fill:fit;bg#00000000;" top="0" width="207"/>
+      <label height="50" left="445" name="" style="bg-u:eo://Ross-Logo.png;bg-fill:fit;bg#00000000;" top="0" width="207"/>
+   </abs>
 </abs>

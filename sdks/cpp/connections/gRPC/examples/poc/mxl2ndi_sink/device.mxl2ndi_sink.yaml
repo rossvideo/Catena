@@ -294,6 +294,14 @@ params:
       struct_array_values:
         struct_values: []
 
+  ndi_name:
+    type: STRING
+    name:
+      display_strings:
+        en: "NDI Source Name"
+    value:
+      string_value: Catena MXL to NDI Sink
+
 commands:
   start:
     type: EMPTY
