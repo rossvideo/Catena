@@ -148,12 +148,13 @@ func makeExternalObjectRequest(t *testing.T, client protos.CatenaServiceClient, 
 }
 
 // makeExecuteCommandRequest initiates an ExecuteCommand stream with optional payload.
-func makeExecuteCommandRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, slot uint32, oid string, payload any) (grpc.ServerStreamingClient[protos.CommandResponse], error) {
+func makeExecuteCommandRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, slot uint32, oid string, payload any, respond bool) (grpc.ServerStreamingClient[protos.CommandResponse], error) {
 	t.Helper()
 
 	req := &protos.ExecuteCommandPayload{
-		Slot: slot,
-		Oid:  oid,
+		Slot:    slot,
+		Oid:     oid,
+		Respond: respond,
 	}
 
 	if payload != nil {

@@ -899,7 +899,7 @@ func TestGrpcTransport_ExecuteCommand_WithResponse(t *testing.T) {
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.reboot", int32(5))
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.reboot", int32(5), true)
 	assertNoError(t, err)
 
 	resp := receiveCommandResponse(t, stream)
@@ -926,7 +926,7 @@ func TestGrpcTransport_ExecuteCommand_WithoutResponse(t *testing.T) {
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil, false)
 	assertNoError(t, err)
 
 	resp := receiveCommandResponse(t, stream)
@@ -952,7 +952,7 @@ func TestGrpcTransport_ExecuteCommand_NilPayload(t *testing.T) {
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil, true)
 	assertNoError(t, err)
 
 	_ = receiveCommandResponse(t, stream)
@@ -970,7 +970,7 @@ func TestGrpcTransport_ExecuteCommand_InvalidSlot(t *testing.T) {
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 999999, "device.command", nil)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 999999, "device.command", nil, true)
 	if err != nil {
 		assertGRPCCode(t, err, codes.NotFound, "NotFound for invalid slot at stream creation") // Note: server returns NotFound for slots without handlers
 		return
@@ -992,7 +992,7 @@ func TestGrpcTransport_ExecuteCommand_HandlerError(t *testing.T) {
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil, true)
 	if err != nil {
 		assertGRPCCode(t, err, codes.NotFound, "handler error at stream creation")
 		return
