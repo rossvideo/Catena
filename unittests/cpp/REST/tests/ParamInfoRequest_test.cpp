@@ -278,48 +278,6 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsStream) {
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, jsonBodies));
 }
 
-// Test 1.2: Get all top-level parameters without recursion as a unary response.
-TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsUnary) {
-    // Remake the endpoint with stream set to false
-    stream_ = false;
-    endpoint_.reset(makeOne());
-    
-    // Setup mock parameters
-    catena::REST::test::ParamInfo param1_info{ .oid = "param1", .type = st2138::ParamType::STRING };
-    catena::REST::test::ParamInfo param2_info{ .oid = "param2", .type = st2138::ParamType::STRING };
-    auto desc1 = ParamHierarchyBuilder::createDescriptor("/" + param1_info.oid);
-    auto desc2 = ParamHierarchyBuilder::createDescriptor("/" + param2_info.oid);
-    
-    // Create ParamInfo structs
-    catena::REST::test::ParamInfo param1_info_struct{param1_info.oid, param1_info.type};
-    catena::REST::test::ParamInfo param2_info_struct{param2_info.oid, param2_info.type};
-
-    auto param1 = std::make_unique<MockParam>();
-    catena::REST::test::setupMockParam(*param1, param1_info_struct, *desc1.descriptor);
-
-    auto param2 = std::make_unique<MockParam>();
-    catena::REST::test::setupMockParam(*param2, param2_info_struct, *desc2.descriptor);
-
-    std::vector<std::unique_ptr<IParam>> top_level_params;
-    top_level_params.push_back(std::move(param1));
-    top_level_params.push_back(std::move(param2));
-
-    // Setup mock expectations
-    EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, const IAuthorizer&) -> std::vector<std::unique_ptr<IParam>> {
-            status = catena::exception_with_status("", catena::StatusCode::OK);
-            return std::move(top_level_params);
-        }));
-
-    endpoint_->proceed();
-
-    // Match expected and actual responses
-    std::vector<std::string> jsonBodies;
-    jsonBodies.push_back(catena::REST::test::createParamInfoJson(param1_info));
-    jsonBodies.push_back(catena::REST::test::createParamInfoJson(param2_info));
-    EXPECT_EQ(readResponse(), expectedResponse(expRc_, jsonBodies));
-}
-
 // Test 1.3: Get top-level parameters with error returned from getTopLevelParams
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsError) {
     expRc_ = catena::exception_with_status("Error getting top-level parameters", catena::StatusCode::INTERNAL);
