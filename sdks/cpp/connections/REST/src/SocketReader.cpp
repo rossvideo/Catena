@@ -29,9 +29,7 @@ static inline bool iequals_header_name(std::string_view a, std::string_view b) {
 }
 
 /**
- * Result from read coroutine.
- * Regular read will populate the vector,
- * Read until will populate the streambuf
+ * Result from async read coroutine.
  */
 struct ReadResult {
     std::unique_ptr<boost::asio::streambuf> buffer;
