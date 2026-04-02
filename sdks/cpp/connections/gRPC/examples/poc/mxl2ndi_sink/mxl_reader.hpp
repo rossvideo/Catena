@@ -8,38 +8,61 @@
 #include <mxl/mxl.h>
 #include <mxl/flow.h>
 
+#include "device.mxl2ndi_sink.yaml.h"
+
+#include "Logger.h"
+
 namespace mxlcpp {
 class MxlReader {
   public:
     MxlReader(std::string const& name, std::string const& domain, std::string flowId)
-        : _name(name), _domain(domain), _flowId(flowId) {
-        _instance = mxlCreateInstance(_domain.c_str(), "");
+        : _name(name), _domain(domain), _flowId(flowId) { }
+
+    ~MxlReader() {
+        // have a helper function
+        releaseReader();
+        if (_instance != nullptr) {
+            mxlDestroyInstance(_instance);
+        }
+    }
+
+    bool open(mxl2ndi_sink::Flow_def& flowDef) {
+        mxlStatus status;
         if (_instance == nullptr) {
-            throw std::runtime_error("Failed to create MXL instance");
+            _instance = mxlCreateInstance(_domain.c_str(), "");
+            if (_instance == nullptr) {
+                LOG(ERROR) << "Failed to create MXL instance: " << _domain;
+                return false;
+            }
         }
 
-        auto ret = mxlCreateFlowReader(_instance, _flowId.c_str(), "", &_reader);
-        if (ret != MXL_STATUS_OK) {
-            throw std::runtime_error("Failed to create MXL Flow Reader with error status \"" +
-                                     std::to_string(static_cast<int>(ret)) + "\"");
+        if (_reader != nullptr) {
+            return true;
         }
-        ret = mxlFlowReaderGetInfo(_reader, &_flowInfo);
-        if (ret != MXL_STATUS_OK) {
-            throw std::runtime_error("Failed to get MXL Flow Info with error status \"" +
-                                     std::to_string(static_cast<int>(ret)) + "\"");
+        status = mxlCreateFlowReader(_instance, _flowId.c_str(), "", &_reader);
+        if (status != MXL_STATUS_OK) {
+            LOG(ERROR) << "Failed to create MXL Flow Reader: " << _flowId << " with error status \"" << status << "\"";
+            return false;
         }
 
-        std::unique_ptr<st2138::Value> flowDef = getFlowDef();
-        if (flowDef == nullptr) {
-            throw std::runtime_error("Failed to get MXL Flow Definition");
+        // just always update the flow reader
+        status = mxlFlowReaderGetInfo(_reader, &_flowInfo);
+        if (status != MXL_STATUS_OK) {
+            LOG(ERROR) << "Failed to get MXL Flow Info: " << _flowId << " with error status \"" << status << "\"";
+            // doesn't fail the whole reader
         }
+
+        _index = _flowInfo.runtime.headIndex;
+        LOG(INFO) << "Opened MXL Flow Reader for flow " << _flowId << " with head index " << _index;
+
+        fillFlowDef(flowDef);
 
         _rate = _flowInfo.config.common.grainRate;
         _timeoutNs = static_cast<std::uint64_t>(
           1.0 * _rate.denominator * (1'000'000'000.0 / _rate.numerator) + 1'000'000ULL);
 
-        _ndiFrame.xres = flowDef->struct_value().fields().at("frame_width").int32_value();
-        _ndiFrame.yres = flowDef->struct_value().fields().at("frame_height").int32_value();
+        _ndiFrame.xres = flowDef.frame_width;
+        _ndiFrame.yres = flowDef.frame_height;
         _ndiFrame.FourCC = NDIlib_FourCC_video_type_UYVY;  // 8-bit 4:2:2
         _ndiFrame.frame_rate_N = static_cast<int>(_rate.numerator);
         _ndiFrame.frame_rate_D = static_cast<int>(_rate.denominator);
@@ -52,19 +75,8 @@ class MxlReader {
           static_cast<size_t>(_ndiFrame.yres) * static_cast<size_t>(_ndiFrame.line_stride_in_bytes);
 
         _ndiFrame.p_data = new std::uint8_t[_ndiBufferBytes];
-    }
 
-    ~MxlReader() {
-        if (_ndiFrame.p_data != nullptr) {
-            delete[] _ndiFrame.p_data;
-            _ndiFrame.p_data = nullptr;
-        }
-        if (_reader != nullptr) {
-            mxlReleaseFlowReader(_instance, _reader);
-        }
-        if (_instance != nullptr) {
-            mxlDestroyInstance(_instance);
-        }
+        return true;
     }
 
     const std::string& getName() const { return _name; }
@@ -77,19 +89,23 @@ class MxlReader {
 
     const mxlInstance& instance() const { return _instance; }
 
-    std::unique_ptr<st2138::Value> getFlowDef() const {
+    void fillFlowDef(mxl2ndi_sink::Flow_def& flowDef) const {
+        if (_instance == nullptr) {
+            LOG(WARNING) << "Cannot fill flow definition for reader " << _name << " because MXL instance is null";
+            return;
+        }
         char buffer[1024];
         size_t bufferSize = sizeof(buffer);
         mxlStatus status = mxlGetFlowDef(_instance, _flowId.c_str(), buffer, &bufferSize);
         if (status != MXL_STATUS_OK) {
-            LOG(ERROR) << "Failed to get MXL flow definition: " << status;
-            return nullptr;
+            LOG(ERROR) << "Failed to get MXL flow definition: " << _flowId << " with error status \"" << status << "\"";
+            return;
         }
         picojson::value picoVal;
         std::string err = picojson::parse(picoVal, buffer);
         if (!err.empty()) {
             LOG(ERROR) << "Failed to parse flow definition JSON: " << err;
-            return nullptr;
+            return;
         }
         // we have json to parse now
         std::unique_ptr<st2138::Value> retValue = std::make_unique<st2138::Value>();
@@ -97,134 +113,116 @@ class MxlReader {
           retValue->mutable_struct_value()->mutable_fields();
         st2138::Value value;
         picojson::object& obj = picoVal.get<picojson::object>();
-        //strings
-        std::vector<std::string> strings{"id",         "description",    "format",    "label",
-                                         "media_type", "interlace_mode", "colorspace"};
-        for (const std::string& key : strings) {
-            if (obj.contains(key)) {
-                value.set_string_value(obj[key].get<std::string>());
-            } else {
-                value.set_string_value("");
-            }
-            rootFields->insert({key, value});
+        if (obj.contains("id")) {
+            flowDef.id = obj["id"].get<std::string>();
         }
-        // numbers
-        std::vector<std::string> numbers{"frame_width", "frame_height"};
-        for (const std::string& key : numbers) {
-            if (obj.contains(key)) {
-                value.set_int32_value(static_cast<int32_t>(obj[key].get<double>()));
-            } else {
-                value.set_int32_value(0);
-            }
-            rootFields->insert({key, value});
+        if (obj.contains("description")) {
+            flowDef.description = obj["description"].get<std::string>();
         }
-        // tags
+        if (obj.contains("format")) {
+            flowDef.format = obj["format"].get<std::string>();
+        }
+        if (obj.contains("label")) {
+            flowDef.label = obj["label"].get<std::string>();
+        }
+        if (obj.contains("media_type")) {
+            flowDef.media_type = obj["media_type"].get<std::string>();
+        }
+        if (obj.contains("interlace_mode")) {
+            flowDef.interlace_mode = obj["interlace_mode"].get<std::string>();
+        }
+        if (obj.contains("colorspace")) {
+            flowDef.colorspace = obj["colorspace"].get<std::string>();
+        }
+        if (obj.contains("frame_width")) {
+            flowDef.frame_width = static_cast<int32_t>(obj["frame_width"].get<double>());
+        }
+        if (obj.contains("frame_height")) {
+            flowDef.frame_height = static_cast<int32_t>(obj["frame_height"].get<double>());
+        }
         if (obj.contains("tags")) {
+            flowDef.tags.clear();
             picojson::object& tags = obj["tags"].get<picojson::object>();
-            /* making this structure:
-                "string_array_values": {
-                    "struct_values": [{
-                        "fields": {
-                            "name": { "string_value": "NAME" },
-                            "values": { "string_array_values": { "strings": ["VALUE1", "VALUE23"] } }
-                        }
-                    }]
-                }
-                */
-            google::protobuf::RepeatedPtrField<st2138::StructValue>* structValues =
-              value.mutable_struct_array_values()->mutable_struct_values();
             for (const auto& [tagKey, tagValue] : tags) {
                 picojson::array tagArray = tagValue.get<picojson::array>();
-                st2138::Value nameValue;
-                nameValue.set_string_value(tagKey);
-                st2138::Value tagValues;
-                google::protobuf::RepeatedPtrField<std::string>* strings =
-                  tagValues.mutable_string_array_values()->mutable_strings();
+                std::vector<std::string> values;
                 for (const auto& tagItem : tagArray) {
-                    strings->Add()->assign(tagItem.get<std::string>());
+                    values.push_back(tagItem.get<std::string>());
                 }
-                google::protobuf::Map<std::string, st2138::Value>* tag =
-                  structValues->Add()->mutable_fields();
-                tag->insert({"name", nameValue});
-                tag->insert({"values", tagValues});
+                flowDef.tags.push_back({tagKey, values});
             }
-            rootFields->insert({"tags", value});
         }
-        // grain rate
         if (obj.contains("grain_rate")) {
             picojson::object& grainRate = obj["grain_rate"].get<picojson::object>();
-            st2138::Value grainRateValue;
-            google::protobuf::Map<std::string, st2138::Value>* grainRateFields =
-              grainRateValue.mutable_struct_value()->mutable_fields();
             if (grainRate.contains("numerator") && grainRate.contains("denominator")) {
-                int32_t numerator = static_cast<int32_t>(grainRate["numerator"].get<double>());
-                value.set_int32_value(numerator);
-                grainRateFields->insert({"numerator", value});
-                int32_t denominator = static_cast<int32_t>(grainRate["denominator"].get<double>());
-                value.set_int32_value(denominator);
-                grainRateFields->insert({"denominator", value});
+                flowDef.grain_rate.numerator = static_cast<int32_t>(grainRate["numerator"].get<double>());
+                flowDef.grain_rate.denominator = static_cast<int32_t>(grainRate["denominator"].get<double>());
             }
-            rootFields->insert({"grain_rate", grainRateValue});
         }
-        // components
         if (obj.contains("components")) {
+            flowDef.components.clear();
             picojson::array components = obj["components"].get<picojson::array>();
-            google::protobuf::RepeatedPtrField<st2138::StructValue>* structValues =
-              value.mutable_struct_array_values()->mutable_struct_values();
             for (const auto& compItem : components) {
                 picojson::object compObj = compItem.get<picojson::object>();
-                st2138::Value nameValue;
-                nameValue.set_string_value(compObj["name"].get<std::string>());
-                st2138::Value widthValue;
-                widthValue.set_int32_value(static_cast<int32_t>(compObj["width"].get<double>()));
-                st2138::Value heightValue;
-                heightValue.set_int32_value(static_cast<int32_t>(compObj["height"].get<double>()));
-                st2138::Value bitDepthValue;
-                bitDepthValue.set_int32_value(static_cast<int32_t>(compObj["bit_depth"].get<double>()));
-                google::protobuf::Map<std::string, st2138::Value>* compMap =
-                  structValues->Add()->mutable_fields();
-                compMap->insert({"name", nameValue});
-                compMap->insert({"width", widthValue});
-                compMap->insert({"height", heightValue});
-                compMap->insert({"bit_depth", bitDepthValue});
+                mxl2ndi_sink::Flow_def::Components_elem compDef;
+                if (compObj.contains("name")) {
+                    compDef.name = compObj["name"].get<std::string>();
+                }
+                if (compObj.contains("width")) {
+                    compDef.width = static_cast<int32_t>(compObj["width"].get<double>());
+                }
+                if (compObj.contains("height")) {
+                    compDef.height = static_cast<int32_t>(compObj["height"].get<double>());
+                }
+                if (compObj.contains("bit_depth")) {
+                    compDef.bit_depth = static_cast<int32_t>(compObj["bit_depth"].get<double>());
+                }
+                flowDef.components.push_back(compDef);
             }
-            rootFields->insert({"components", value});
         }
-        st2138::Value parents;
-        parents.mutable_string_array_values();
-        rootFields->insert({"parents", parents});  // empty for now
-        return retValue;
+        if (obj.contains("parents")) {
+            flowDef.parents.clear();
+            picojson::array parents = obj["parents"].get<picojson::array>();
+            for (const auto& parentItem : parents) {
+                flowDef.parents.push_back(parentItem.get<std::string>());
+            }
+        }
     }
 
     const NDIlib_video_frame_v2_t* dumpNdiFrame(uint64_t& sleepNs) {
-        // uint64_t index = mxlGetCurrentIndex(&_rate);
-        mxlFlowReaderGetInfo(_reader, &_flowInfo);
-        uint64_t index = _flowInfo.runtime.headIndex;
+        if (_reader == nullptr) {
+            LOG(WARNING) << "Cannot dump NDI frame for reader " << _name << " because MXL Flow Reader is null";
+            return nullptr;
+        }
 
         mxlGrainInfo grainInfo;
         uint8_t* payload = nullptr;
 
-        mxlStatus status = mxlFlowReaderGetGrain(_reader, index, 1000000000, &grainInfo, &payload);
+        mxlStatus status = mxlFlowReaderGetGrain(_reader, _index, 1000000000, &grainInfo, &payload);
         if (status == MXL_ERR_OUT_OF_RANGE_TOO_EARLY) {
             // We are too early somehow, keep trying the same grain index
             mxlFlowReaderGetInfo(_reader, &_flowInfo);
-            LOG(WARNING) << "Failed to get samples at index " << index << ": TOO EARLY. Last published "
+            LOG(WARNING) << "Failed to get samples at index " << _index << ": TOO EARLY. Last published "
                          << _flowInfo.runtime.headIndex;
             return nullptr;
         } else if (status == MXL_ERR_OUT_OF_RANGE_TOO_LATE) {
             mxlFlowReaderGetInfo(_reader, &_flowInfo);
-            LOG(WARNING) << "Failed to get grain at index " << index << ": TOO LATE. Last published "
+            LOG(WARNING) << "Failed to get grain at index " << _index << ": TOO LATE. Last published "
                          << _flowInfo.runtime.headIndex;
             // Grain expired. Realign to current index. GStreamer repeats the last valid frame for missing data; consuming applications
             // should do the same.
-            index = mxlGetCurrentIndex(&_rate);
+            _index = mxlGetCurrentIndex(&_rate);
             return nullptr;
         } else if (status == MXL_ERR_TIMEOUT) {
             // Timeout waiting for grain
-            LOG(WARNING) << "Timeout waiting for grain at index " << index;
+            LOG(WARNING) << "Timeout waiting for grain at index " << _index;
+            return nullptr;
+        } else if (status == MXL_ERR_FLOW_INVALID) {
+            LOG(WARNING) << "Flow became invalid when trying to read grain at index " << _index;
+            releaseReader();
             return nullptr;
         } else if (status != MXL_STATUS_OK) {
-            LOG(ERROR) << "Unexpected error when reading the grain " << index << " with status "
+            LOG(ERROR) << "Unexpected error when reading the grain " << _index << " with status "
                        << static_cast<int>(status) << ". Exiting.";
             return nullptr;
         }
@@ -255,7 +253,9 @@ class MxlReader {
 
                 v210_to_uyvy_line(src_line, dst_line, width);
             }
-            sleepNs = mxlGetNsUntilIndex(index + 1, &_rate);
+
+            ++_index;
+            sleepNs = mxlGetNsUntilIndex(_index, &_rate);
             return &_ndiFrame;
         }
         return nullptr;
@@ -268,11 +268,22 @@ class MxlReader {
     mxlInstance _instance;
     mxlFlowReader _reader;
     mxlFlowInfo _flowInfo;
+    uint64_t _index;
     mxlRational _rate;
     uint64_t _timeoutNs;
     NDIlib_video_frame_v2_t _ndiFrame{};
     size_t _ndiBufferBytes = 0;
 
+    void releaseReader() {
+        if (_ndiFrame.p_data != nullptr) {
+            delete[] _ndiFrame.p_data;
+            _ndiFrame.p_data = nullptr;
+        }
+        if (_reader != nullptr) {
+            mxlReleaseFlowReader(_instance, _reader);
+            _reader = nullptr;
+        }
+    }
 
     // Map 10-bit (0..1023) to 8-bit (0..255)
     inline std::uint8_t ten_to_eight(std::uint16_t v10) {

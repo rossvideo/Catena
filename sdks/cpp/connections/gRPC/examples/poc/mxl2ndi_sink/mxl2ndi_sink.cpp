@@ -127,14 +127,9 @@ void RunVideoFlow() {
     catena::common::ParamWithValue<std::string>* selectedName =
       dynamic_cast<catena::common::ParamWithValue<std::string>*>(selectedNameParam.get());
 
-    st2138::StructList* flowDefs = value.mutable_struct_array_values();
-    flowDefs->clear_struct_values();
-    for (const std::unique_ptr<mxlcpp::MxlReader>& reader : readers) {
-        std::unique_ptr<st2138::Value> flowDefValue = reader->getFlowDef();
-        st2138::StructValue flowDefStruct = flowDefValue->struct_value();
-        flowDefs->mutable_struct_values()->Add(std::move(flowDefStruct));
-    }
-    dm.setValue("/flow_defs", value);
+    std::unique_ptr<catena::common::IParam> flowDefParam = dm.getParam("/flow_def", statusErr);
+    catena::common::ParamWithValue<mxl2ndi_sink::Flow_def>* flowDef =
+      dynamic_cast<catena::common::ParamWithValue<mxl2ndi_sink::Flow_def>*>(flowDefParam.get());
 
     int readerIndex = -1;
     int updateDisplayIndex = -1;
@@ -214,13 +209,14 @@ void RunVideoFlow() {
                 }
                 dm.getValueSetByServer().emit("/inputs", inputsParam.get());
             }
-            std::unique_ptr<st2138::Value> flowDefValue = readers[updateDisplayIndex]->getFlowDef();
-            statusErr = dm.setValue("/flow_def", *flowDefValue);
-            if (statusErr.status != catena::StatusCode::OK) {
-                LOG(ERROR) << "Failed to set flow definition: " << statusErr.what();
-                isRunning = false;
-                break;
-            }
+            readers[updateDisplayIndex]->open(flowDef->get());
+            dm.getValueSetByServer().emit("/flow_def", flowDefParam.get());
+        }
+
+        if (!currentReader.open(flowDef->get())) {
+            LOG(INFO) << "No flow available for reader " << currentReader.getName() << ", retrying";
+            mxlSleepForNs(500'000'000);  // 500ms
+            continue;
         }
 
         // do the frame
