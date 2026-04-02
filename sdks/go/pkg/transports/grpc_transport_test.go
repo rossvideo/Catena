@@ -899,7 +899,7 @@ func TestGrpcTransport_ExecuteCommand_WithResponse(t *testing.T) {
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.reboot", int32(5), true)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.reboot", int32(5), boolPtr(true))
 	assertNoError(t, err)
 
 	resp := receiveCommandResponse(t, stream)
@@ -926,11 +926,33 @@ func TestGrpcTransport_ExecuteCommand_WithoutResponse(t *testing.T) {
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil, false)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil, boolPtr(false))
 	assertNoError(t, err)
 
 	resp := receiveCommandResponse(t, stream)
 	assertCommandNoResponse(t, resp)
+}
+
+func TestGrpcTransport_ExecuteCommand_RespondDefaultIsTrue(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.commandFn = func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+		value, _ := catena.ToValue(string("default response"))
+		return catena.CommandReply(value)
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil, nil)
+	assertNoError(t, err)
+
+	resp := receiveCommandResponse(t, stream)
+	assertCommandHasResponse(t, resp)
+	assertStringValue(t, resp.GetResponse(), "default response")
+	assertStreamEOF(t, stream)
 }
 
 func TestGrpcTransport_ExecuteCommand_NilPayload(t *testing.T) {
@@ -952,7 +974,7 @@ func TestGrpcTransport_ExecuteCommand_NilPayload(t *testing.T) {
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil, true)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil, boolPtr(true))
 	assertNoError(t, err)
 
 	_ = receiveCommandResponse(t, stream)
@@ -970,7 +992,7 @@ func TestGrpcTransport_ExecuteCommand_InvalidSlot(t *testing.T) {
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 999999, "device.command", nil, true)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 999999, "device.command", nil, boolPtr(true))
 	if err != nil {
 		assertGRPCCode(t, err, codes.NotFound, "NotFound for invalid slot at stream creation") // Note: server returns NotFound for slots without handlers
 		return
@@ -992,7 +1014,7 @@ func TestGrpcTransport_ExecuteCommand_HandlerError(t *testing.T) {
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil, true)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil, boolPtr(true))
 	if err != nil {
 		assertGRPCCode(t, err, codes.NotFound, "handler error at stream creation")
 		return

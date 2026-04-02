@@ -52,6 +52,8 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
+func boolPtr(b bool) *bool { return &b }
+
 // --- Client setup helpers ---
 
 // setupGRPCClient creates a gRPC client connected to the test server.
@@ -148,7 +150,8 @@ func makeExternalObjectRequest(t *testing.T, client protos.CatenaServiceClient, 
 }
 
 // makeExecuteCommandRequest initiates an ExecuteCommand stream with optional payload.
-func makeExecuteCommandRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, slot uint32, oid string, payload any, respond bool) (grpc.ServerStreamingClient[protos.CommandResponse], error) {
+// Pass nil for respond to leave it unset (server defaults to responding).
+func makeExecuteCommandRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, slot uint32, oid string, payload any, respond *bool) (grpc.ServerStreamingClient[protos.CommandResponse], error) {
 	t.Helper()
 
 	req := &protos.ExecuteCommandPayload{
