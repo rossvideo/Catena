@@ -69,6 +69,9 @@ func registerBasicParamHandlers(srv *rest.Server, params *sync.Map, slot int) {
 			return catena.StatusWithCode(catena.INVALID_ARGUMENT, "type mismatch")
 		}
 		params.Store(fqoid, value)
+
+		// Broadcast the update to all connected clients
+		srv.BroadcastUpdate(slot, fqoid, value)
 		return catena.StatusWithCode(catena.NO_CONTENT, "")
 	})
 
@@ -105,6 +108,9 @@ func registerSpecificParamHandlers(srv *rest.Server, params *sync.Map, fqoid str
 			return catena.StatusWithCode(catena.INVALID_ARGUMENT, "type mismatch")
 		}
 		params.Store(fqoid_, value)
+
+		// Broadcast the update to all connected clients
+		srv.BroadcastUpdate(slot, fqoid_, value)
 		return catena.StatusWithCode(catena.OK, "")
 	})
 
@@ -196,22 +202,6 @@ func main() {
 	// Device 2: basic param handlers for all params.
 	registerBasicParamHandlers(srv, params2, 2)
 
-	// Register global connect handler (SSE streaming endpoint)
-	srv.RegisterConnectHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		logger.Info("Connect - SSE stream requested")
-		// Set SSE headers for streaming
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("Connection", "keep-alive")
-		// For this example, just acknowledge the connection
-		// A real implementation would keep the connection open and push updates
-		catenaVal, err := catena.ToCatenaValue("connected")
-		if err != nil {
-			return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to create response")
-		}
-		return catena.Reply(catenaVal)
-	})
-
 	// Register command handlers for each slot
 	for _, slot := range slotList {
 		slot := slot // capture loop variable
@@ -290,5 +280,6 @@ func main() {
 
 	// Wait for shutdown signal
 	<-shutdownChan
+	srv.Shutdown()
 	logger.Info("Server shutdown complete")
 }

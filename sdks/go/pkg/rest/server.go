@@ -44,12 +44,14 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
 
 	"google.golang.org/protobuf/encoding/protojson"
 
+	"github.com/rossvideo/catena/build/go/protos"
 	"github.com/rossvideo/catena/sdks/go/internal"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
@@ -60,7 +62,6 @@ type DeviceHandler func() (catena.CatenaDevice, catena.StatusResult)
 type GetValueHandler func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult)
 type SetValueHandler func(value any, slot int, fqoid string) catena.StatusResult
 type GetAssetHandler func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult)
-type ConnectHandler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
 type ExecuteCommandHandler func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult)
 type FallbackHandler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
 
@@ -72,9 +73,9 @@ type Server struct {
 	getValueHandlers       map[int]GetValueHandler
 	setValueHandlers       map[int]SetValueHandler
 	getAssetHandlers       map[int]GetAssetHandler
-	connectHandler         ConnectHandler
 	executeCommandHandlers map[int]ExecuteCommandHandler
 	fallbackHandler        FallbackHandler
+	connectionQueue        *connectionQueue
 }
 
 // writeHTTPResult is a unified function that handles writing different response types
@@ -198,6 +199,7 @@ func NewServer(slots []int) *Server {
 		setValueHandlers:       make(map[int]SetValueHandler),
 		getAssetHandlers:       make(map[int]GetAssetHandler),
 		executeCommandHandlers: make(map[int]ExecuteCommandHandler),
+		connectionQueue:        newConnectionQueue(100),
 	}
 
 	// Register default handlers for each slot
@@ -208,9 +210,6 @@ func NewServer(slots []int) *Server {
 		s.RegisterGetAssetHandler(slot, DefaultGetAssetHandler)
 		s.RegisterExecuteCommandHandler(slot, DefaultExecuteCommandHandler)
 	}
-
-	// Register default connect handler
-	s.RegisterConnectHandler(DefaultConnectHandler)
 
 	// Register routes
 	s.RegisterRoutes()
@@ -243,10 +242,6 @@ func DefaultGetAssetHandler(slot int, fqoid string) (catena.CatenaAsset, catena.
 	return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "GetAsset not implemented")
 }
 
-func DefaultConnectHandler(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-	return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "Connect not implemented")
-}
-
 func DefaultExecuteCommandHandler(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
 	return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "ExecuteCommand not implemented")
 }
@@ -275,12 +270,6 @@ func (s *Server) RegisterGetAssetHandler(slot int, handler GetAssetHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.getAssetHandlers[slot] = handler
-}
-
-func (s *Server) RegisterConnectHandler(handler ConnectHandler) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.connectHandler = handler
 }
 
 func (s *Server) RegisterExecuteCommandHandler(slot int, handler ExecuteCommandHandler) {
@@ -318,18 +307,175 @@ func (s *Server) lookupGetAsset(slot int) GetAssetHandler {
 	return DefaultGetAssetHandler
 }
 
-func (s *Server) lookupConnect() ConnectHandler {
-	if s.connectHandler != nil {
-		return s.connectHandler
-	}
-	return DefaultConnectHandler
-}
-
 func (s *Server) lookupExecuteCommand(slot int) ExecuteCommandHandler {
 	if handler, ok := s.executeCommandHandlers[slot]; ok {
 		return handler
 	}
 	return DefaultExecuteCommandHandler
+}
+
+// SetMaxConnections sets the maximum number of SSE connections allowed (0 = unlimited)
+func (s *Server) SetMaxConnections(max int) {
+	s.connectionQueue.setMaxConnections(max)
+}
+
+// BroadcastUpdate converts a native Go value into a proto PushUpdates message
+// and sends it to all connected SSE clients. Business logic calls this with
+// plain Go types; the proto serialization is handled internally.
+func (s *Server) BroadcastUpdate(slot int, oid string, value any) {
+	protoValue, err := catena.ToProto(value)
+	if err != nil {
+		logger.Error("BroadcastUpdate: failed to convert value to proto", "error", err)
+		return
+	}
+	update := &protos.PushUpdates{
+		Slot: uint32(slot),
+		Kind: &protos.PushUpdates_Value{
+			Value: &protos.PushUpdates_PushValue{
+				Oid:   oid,
+				Value: protoValue,
+			},
+		},
+	}
+	s.connectionQueue.notifyUpdate(update)
+}
+
+// Shutdown gracefully shuts down the server by closing all SSE connections
+// and waiting for their goroutines to finish.
+func (s *Server) Shutdown() {
+	s.connectionQueue.shutdown()
+}
+
+// sseMarshaler is the protojson marshaler used for SSE events.
+var sseMarshaler = protojson.MarshalOptions{
+	EmitUnpopulated: false,
+}
+
+// sendSSEEvent writes a single SSE event to the response writer,
+// serializing the proto PushUpdates message with protojson.
+func (s *Server) sendSSEEvent(w http.ResponseWriter, flusher http.Flusher, update *protos.PushUpdates) error {
+	data, err := sseMarshaler.Marshal(update)
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintf(w, "data: %s\n\n", data)
+	if err != nil {
+		return err
+	}
+	flusher.Flush()
+	return nil
+}
+
+// getPopulatedSlots returns the list of slots that have at least one handler registered (inferred from handler maps).
+func (s *Server) getPopulatedSlots() []int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	slotSet := make(map[int]struct{})
+	for slot := range s.getDeviceHandlers {
+		slotSet[slot] = struct{}{}
+	}
+	for slot := range s.getValueHandlers {
+		slotSet[slot] = struct{}{}
+	}
+	for slot := range s.setValueHandlers {
+		slotSet[slot] = struct{}{}
+	}
+	for slot := range s.getAssetHandlers {
+		slotSet[slot] = struct{}{}
+	}
+	for slot := range s.executeCommandHandlers {
+		slotSet[slot] = struct{}{}
+	}
+	slots := make([]int, 0, len(slotSet))
+	for slot := range slotSet {
+		slots = append(slots, slot)
+	}
+	sort.Ints(slots)
+	return slots
+}
+
+// handleConnect handles GET /st2138-api/v1/connect (SSE streaming)
+func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
+	// Check if the request method is GET
+	if r.Method != http.MethodGet {
+		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
+		writeHTTPResult(w, res, val)
+		return
+	}
+
+	// Check if SSE streaming is supported
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		val, res := catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "streaming not supported")
+		writeHTTPResult(w, res, val)
+		return
+	}
+
+	// Read request headers (not used yet)
+	_ = r.Header.Get("Detail-Level")
+	_ = r.Header.Get("User-Agent")
+	_ = r.Header.Get("Authorization")
+
+	// Register this connection in the connectionQueue
+	connID, conn := s.connectionQueue.registerConnection()
+	if connID < 0 {
+		val, res := catena.ReplyError[catena.CatenaValue](catena.RESOURCE_EXHAUSTED, "Too many connections to service")
+		writeHTTPResult(w, res, val)
+		return
+	}
+	defer s.connectionQueue.deregisterConnection(connID)
+
+	// Set SSE headers
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	origin := r.Header.Get("Origin")
+	if origin != "" {
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin, X-Requested-With, Language, Detail-Level")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+	}
+	w.WriteHeader(http.StatusOK)
+	flusher.Flush()
+
+	// Send initial update with populated slots using proto PushUpdates format
+	populatedSlots := s.getPopulatedSlots()
+	slotUint32s := make([]uint32, len(populatedSlots))
+	for i, sl := range populatedSlots {
+		slotUint32s[i] = uint32(sl)
+	}
+	initialEvent := &protos.PushUpdates{
+		Kind: &protos.PushUpdates_SlotsAdded{
+			SlotsAdded: &protos.SlotList{
+				Slots: slotUint32s,
+			},
+		},
+	}
+	if err := s.sendSSEEvent(w, flusher, initialEvent); err != nil {
+		logger.Error("failed to send initial SSE event", "error", err)
+		return
+	}
+
+	logger.Info("SSE Connect started", "connID", connID)
+
+	// Each connection's goroutine listens for setValue updates and server shutdown signals
+	ctx := r.Context()
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Info("SSE client disconnected", "connID", connID)
+			return
+		case <-conn.done:
+			logger.Info("SSE connection shut down by server", "connID", connID)
+			return
+		case update := <-conn.updates:
+			if err := s.sendSSEEvent(w, flusher, update); err != nil {
+				logger.Error("failed to send SSE event", "connID", connID, "error", err)
+				return
+			}
+		}
+	}
 }
 
 // RegisterRoutes sets up all HTTP routes
@@ -386,17 +532,8 @@ func (s *Server) RegisterRoutes() {
 		writeHTTPResult(w, res, val)
 	})
 
-	// Connect endpoint: GET /st2138-api/v1/connect
-	s.mux.HandleFunc("/st2138-api/v1/connect", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
-			writeHTTPResult(w, res, val)
-			return
-		}
-		handler := s.lookupConnect()
-		val, res := handler(w, r)
-		writeHTTPResult(w, res, val)
-	})
+	// Connect endpoint: GET /st2138-api/v1/connect (SSE streaming)
+	s.mux.HandleFunc("/st2138-api/v1/connect", s.handleConnect)
 
 	// Catch-all for 404 - must be registered last
 	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
