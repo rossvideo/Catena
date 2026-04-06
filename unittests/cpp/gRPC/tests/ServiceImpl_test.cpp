@@ -121,11 +121,7 @@ class gRPCServiceImplTests : public testing::Test {
     std::streambuf* oldCout_;
 
     // Address used for gRPC tests.
-    #ifdef _WIN32
-    std::string serverAddr_ = "127.0.0.1:50051";
-    #else
     std::string serverAddr_ = "0.0.0.0:50051";
-    #endif
     // Server and service variables.
     grpc::ServerBuilder builder_;
     std::unique_ptr<grpc::Server> server_ = nullptr;

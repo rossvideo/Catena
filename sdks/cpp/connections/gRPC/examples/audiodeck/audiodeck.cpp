@@ -173,11 +173,7 @@ int main(int argc, char* argv[])
     }
     Logger::init("audiodeck");
     
-    #ifdef _WIN32
-    addr = absl::StrFormat("127.0.0.1:%d", config::port);
-    #else
     addr = absl::StrFormat("0.0.0.0:%d", config::port);
-    #endif
   
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();

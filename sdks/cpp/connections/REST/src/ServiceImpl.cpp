@@ -50,14 +50,9 @@ ServiceImpl::ServiceImpl(const ServiceConfig& config)
       EOPath_{config.EOPath},
       port_{config.port},
       authorizationEnabled_{config.authz},
-      #ifdef _WIN32
-      acceptor_{io_context_, tcp::endpoint(boost::asio::ip::address_v4::loopback(), config.port)},
-      #else
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), config.port)},
-      #endif
       router_{Router::getInstance()},
       connectionQueue_{config.maxConnections} {
-
     if (authorizationEnabled_) { LOG(INFO) <<"Authorization enabled."; }
     // Adding dms to slotMap.
     for (auto dm : config.dms) {
@@ -197,11 +192,7 @@ void ServiceImpl::Shutdown() {
 bool ServiceImpl::is_port_in_use_() const {
     try {
         boost::asio::io_context io_context;
-        #ifdef _WIN32
-        tcp::acceptor acceptor(io_context, tcp::endpoint(boost::asio::ip::address_v4::loopback(), port_));
-        #else
         tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), port_));
-        #endif
         return false;  // Port is not in use
     } catch (const boost::system::system_error& e) {
         return true;  // Port is in use

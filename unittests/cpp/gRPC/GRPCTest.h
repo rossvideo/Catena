@@ -108,7 +108,7 @@ class GRPCTest : public ::testing::Test {
         server_ = builder_.BuildAndStart();
 
         // Creating the gRPC client.
-        channel_ = grpc::CreateChannel(serverAddr_, grpc::InsecureChannelCredentials());
+        channel_ = grpc::CreateChannel(clientAddr_, grpc::InsecureChannelCredentials());
         client_ = st2138::CatenaService::NewStub(channel_);
 
         // Setting common expected values for the mock service.
@@ -160,10 +160,11 @@ class GRPCTest : public ::testing::Test {
 
     // Address used for gRPC tests.
     #ifdef _WIN32
-    std::string serverAddr_ = "127.0.0.1:50051";
+    std::string clientAddr_ = "127.0.0.1:50051";
     #else
-    std::string serverAddr_ = "0.0.0.0:50051";
+    std::string clientAddr_ = "0.0.0.0:50051";
     #endif
+    std::string serverAddr_ = "0.0.0.0:50051";
     // Server and service variables.
     grpc::ServerBuilder builder_;
     std::unique_ptr<grpc::Server> server_ = nullptr;
