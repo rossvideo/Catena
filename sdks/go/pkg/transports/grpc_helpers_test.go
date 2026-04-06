@@ -155,9 +155,14 @@ func makeExecuteCommandRequest(t *testing.T, client protos.CatenaServiceClient, 
 	t.Helper()
 
 	req := &protos.ExecuteCommandPayload{
-		Slot:    slot,
-		Oid:     oid,
-		Respond: respond,
+		Slot: slot,
+		Oid:  oid,
+	}
+
+	if respond != nil {
+		req.Respond = *respond
+	} else {
+		req.Respond = true
 	}
 
 	if payload != nil {

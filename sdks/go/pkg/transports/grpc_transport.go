@@ -385,7 +385,7 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
-	if req.Respond != nil && !*req.Respond {
+	if !req.Respond {
 		cmdResult, _ = catena.CommandNoResponse()
 	}
 
