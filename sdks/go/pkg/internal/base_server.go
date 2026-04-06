@@ -193,9 +193,9 @@ func (bs *BaseServer) ConnectionCount() int {
 // and sends it to all connected streaming clients. Business logic calls this with
 // plain Go types; the proto serialization is handled internally.
 func (bs *BaseServer) BroadcastUpdate(slot uint16, oid string, value any) {
-	protoValue, err := catena.ToProto(value)
-	if err != nil {
-		logger.Error("BroadcastUpdate: failed to convert value to proto", "error", err)
+	protoValue, res := catena.ToProto(value)
+	if res.Code != catena.OK {
+		logger.Error("BroadcastUpdate: failed to convert value to proto", "error", res.Error)
 		return
 	}
 	update := &protos.PushUpdates{
