@@ -201,24 +201,6 @@ func main() {
 	// Device 2: basic param handlers for all params.
 	registerBasicParamHandlers(srv, params2, 2)
 
-	// Register command handlers for each slot
-	for _, slot := range slotList {
-		slot := slot // capture loop variable
-		srv.RegisterExecuteCommandHandler(slot, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
-			logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid, "payload", payload)
-			response := map[string]any{
-				"response": map[string]any{
-					"string_value": "Command " + commandFqoid + " executed successfully",
-				},
-			}
-			catenaVal, res := catena.ToCatenaValue(response)
-			if res.Code != catena.OK {
-				return catena.CommandError(catena.INTERNAL, "failed to create command response")
-			}
-			return catena.CommandReply(catenaVal)
-		})
-	}
-
 	// Define device models for each slot
 	devices := map[uint16]map[string]any{
 		0: {
