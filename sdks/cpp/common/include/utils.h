@@ -39,6 +39,7 @@
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
+#include <cstdint>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -112,14 +113,14 @@ std::string fmt(const char* f, ...);
 std::string param_value_string(const st2138::Value& value);
 
 /**
- * @brief Converts a string to a long and stores in dest
+ * @brief Converts a string to an unsigned 64-bit integer and stores in dest
  * 
  * <number of milliseconds since start of epoch>
  * 
- * @param value The string to convert. Entire string must be a valid positive long.
+ * @param value The string to convert. Entire string must be a valid positive integer.
  * @param dest The destination to store the converted value. Unchanged if value is invalid.
  * @return true if input string is valid.
  */
-bool readTimestamp(std::string& value, long long& dest);
+bool readTimestamp(std::string& value, uint64_t& dest);
 
 }  // namespace catena

@@ -144,7 +144,8 @@ void SocketReader::read(std::shared_ptr<tcp::socket>& socket, uint32_t timeout) 
     // Getting request receival time formatted as,
     // <number of milliseconds since start of epoch>
     const auto epoch_time = std::chrono::system_clock::now().time_since_epoch();
-    requestReceived_ = std::chrono::duration_cast<std::chrono::milliseconds>(epoch_time).count();
+    requestReceived_ = static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(epoch_time).count());
 
     bool hasContentType = false; // Used for enforcing Content-Type
 

@@ -120,7 +120,7 @@ protected:
     /**
      * Makes an async RPC and checks the requestStart/requestReceived values read by the handler.
      */
-    void testRPCTimestamps(std::string input, long long expected) {
+    void testRPCTimestamps(std::string input, uint64_t expected) {
         // Create a new client context for this call to avoid metadata from previous calls
         grpc::ClientContext context;
         context.AddMetadata("request-start", input);
@@ -846,5 +846,5 @@ TEST_F(gRPCParamInfoRequestTests, ParamInfoRequest_InvalidRequestStart) {
     // Test with empty value
     testRPCTimestamps("", DEFAULT_REQUEST_START);
     // Test with too large of a value
-    testRPCTimestamps(std::string(20, '1'), DEFAULT_REQUEST_START);
+    testRPCTimestamps(std::string(21, '1'), DEFAULT_REQUEST_START);
 }

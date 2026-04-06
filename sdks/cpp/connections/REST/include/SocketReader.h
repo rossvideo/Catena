@@ -210,12 +210,12 @@ class SocketReader : public ISocketReader {
      * @brief Returns the time the client started the request formatted as,
      * <number of milliseconds since start of epoch>
      */
-    const long long requestStart() const override { return requestStart_; }
+    const uint64_t requestStart() const override { return requestStart_; }
     /**
      * @brief Returns the time the client's request was received formatted as,
      * <number of milliseconds since start of epoch>
      */
-    const long long requestReceived() const override { return requestReceived_; }
+    const uint64_t requestReceived() const override { return requestReceived_; }
 
 
   private:
@@ -272,12 +272,12 @@ class SocketReader : public ISocketReader {
      * @brief The time at which the request was sent formatted as,
      * <number of milliseconds since start of epoch>
      */
-    long long requestStart_ = DEFAULT_REQUEST_START;
+    uint64_t requestStart_ = DEFAULT_REQUEST_START;
     /**
      * @brief The time at which the request was received formatted as,
      * <number of milliseconds since start of epoch>
      */
-    long long requestReceived_ = DEFAULT_REQUEST_RECEIVED;
+    uint64_t requestReceived_ = DEFAULT_REQUEST_RECEIVED;
 };
 
 }; // Namespace REST

@@ -44,6 +44,7 @@
 #include <gmock/gmock.h>
 
 // std
+#include <cstdint>
 #include <string>
 
 #include "MockDevice.h"
@@ -191,8 +192,8 @@ class GRPCTest : public ::testing::Test {
     // gRPC test variables.
     std::unique_ptr<ICallData> testCall_ = nullptr;
     std::unique_ptr<ICallData> asyncCall_ = nullptr;
-    long long requestStart_ = -1;
-    long long requestReceived_ = -1;
+    uint64_t requestStart_ = 0;
+    uint64_t requestReceived_ = 0;
 };
 
 } // namespace gRPC
