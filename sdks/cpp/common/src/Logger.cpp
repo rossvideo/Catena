@@ -37,6 +37,8 @@
  * @date 2026-03-20
  */
 
+#include <filesystem>
+
 // common
 #include <Logger.h>
 #include <Config.h>

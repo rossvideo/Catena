@@ -40,12 +40,6 @@
  * @date 2026-03-20
  */
 
-#include <mutex>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <filesystem>
-
 //BOOST libraries
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/attributes/constant.hpp>
