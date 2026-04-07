@@ -285,10 +285,10 @@ In production mode (non-dev), detailed error messages are replaced with standard
 ## Examples
 
 Complete working examples:
-- `~/Catena/sdks/go/examples/getSetValue_REST/` - Parameter get/set
-- `~/Catena/sdks/go/examples/getDevice_REST/` - Device information
-- `~/Catena/sdks/go/examples/getAsset_REST/` - Asset retrieval
-- `~/Catena/sdks/go/examples/executeCommand_REST/` - Command execution
+- `~/Catena/sdks/go/examples/getSetValue/rest/` - Parameter get/set
+- `~/Catena/sdks/go/examples/getDevice/rest/` - Device information
+- `~/Catena/sdks/go/examples/getAsset/rest/` - Asset retrieval
+- `~/Catena/sdks/go/examples/executeCommand/rest/` - Command execution
 
 ## Testing
 

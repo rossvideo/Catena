@@ -29,43 +29,26 @@
  */
 
 /**
- * @brief ExecuteCommand REST example - Counter Demo.
- * @file executeCommand_REST.go
+ * @brief Shared ExecuteCommand example logic for REST and gRPC.
+ * @file executecommand.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2026-01-12
  */
 
-package main
+package executecommand
 
 import (
-	"embed"
 	"fmt"
-	"net/http"
-	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
 
+	"github.com/rossvideo/catena/sdks/go/examples/exampleutil"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
-	"github.com/rossvideo/catena/sdks/go/pkg/rest"
 )
 
-//go:embed static/*
-var staticFS embed.FS
-
-// CommandHandler processes a command and returns a CommandResult
 type CommandHandler func(payload any) (catena.CommandResult, catena.StatusResult)
 
-// Global state for graceful shutdown
-var (
-	shutdownChan = make(chan struct{})
-	srv          *rest.Server
-)
-
-// Counter state
 type CounterState struct {
 	mu      sync.RWMutex
 	value   int32
@@ -116,105 +99,74 @@ func (c *CounterState) Increment() {
 	}
 }
 
-func main() {
-	// Initialize SDK with prefix and app name
-	cfg, err := catena.InitOptions(catena.Options{AppName: "executeCommand_REST"})
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to initialize SDK: %v\n", err)
-		os.Exit(1)
+var SlotList = []uint16{0}
+
+func BuildResponse(counter *CounterState) map[string]any {
+	var runningVal int32 = 0
+	if counter.IsRunning() {
+		runningVal = 1
 	}
-	defer catena.Close()
+	return map[string]any{
+		"counter": int32(counter.GetValue()),
+		"running": runningVal,
+	}
+}
 
-	// Handle signals for graceful shutdown
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM) // sends a signal to the channel when the process is interrupted
-	go func() {
-		sig := <-sigChan // blocks until a signal is received
-		logger.Info("Caught signal, shutting down", "signal", sig)
-		close(shutdownChan) // closes the channel to signal the main goroutine to shut down
-	}()
-
-	// Port comes from the unified config
-	port := cfg.Port
-
-	// Initialize counter
+// RegisterHandlers registers the GetValue and ExecuteCommand handlers for the
+// counter demo. It also starts a background goroutine that increments the
+// counter every second while running.
+func RegisterHandlers(srv catena.CatenaServer) {
 	counter := &CounterState{}
 
-	// Start counter goroutine - increments every second when running
 	go func() {
 		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
-		for {
-			select {
-			case <-ticker.C:
-				if counter.IsRunning() {
-					counter.Increment()
-					logger.Info("Counter tick", "value", counter.GetValue())
-				}
-			case <-shutdownChan:
-				return
+		for range ticker.C {
+			if counter.IsRunning() {
+				counter.Increment()
+				logger.Info("Counter tick", "value", counter.GetValue())
 			}
 		}
 	}()
 
-	// Helper to build response with current state
-	buildResponse := func() map[string]any {
-		var runningVal int32 = 0
-		if counter.IsRunning() {
-			runningVal = 1
-		}
-		return map[string]any{
-			"counter": int32(counter.GetValue()),
-			"running": runningVal,
-		}
-	}
-
-	// ==========================================================================
-	// Commands
-	// ==========================================================================
 	commands := map[string]CommandHandler{
-		// Start command - returns a response with current state
 		"start": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			if counter.IsRunning() {
 				logger.Info("Start command - already running")
-				val, _ := catena.ToCatenaValue(buildResponse())
+				val, _ := catena.ToCatenaValue(BuildResponse(counter))
 				return catena.CommandReply(val)
 			}
 			counter.Start()
 			logger.Info("Counter started", "value", counter.GetValue())
-			val, _ := catena.ToCatenaValue(buildResponse())
+			val, _ := catena.ToCatenaValue(BuildResponse(counter))
 			return catena.CommandReply(val)
 		},
 
-		// Stop command - returns a response with current state
 		"stop": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			if !counter.IsRunning() {
 				logger.Info("Stop command - already stopped")
-				val, _ := catena.ToCatenaValue(buildResponse())
+				val, _ := catena.ToCatenaValue(BuildResponse(counter))
 				return catena.CommandReply(val)
 			}
 			counter.Stop()
 			logger.Info("Counter stopped", "value", counter.GetValue())
-			val, _ := catena.ToCatenaValue(buildResponse())
+			val, _ := catena.ToCatenaValue(BuildResponse(counter))
 			return catena.CommandReply(val)
 		},
 
-		// Add10 command - returns a response with current state
 		"add10": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
-			val, _ := catena.ToCatenaValue(buildResponse())
+			val, _ := catena.ToCatenaValue(BuildResponse(counter))
 			return catena.CommandReply(val)
 		},
 
-		// Reset command - returns no response
 		"reset": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			counter.Reset()
 			logger.Info("Counter reset")
 			return catena.CommandNoResponse()
 		},
 
-		// Error command - returns a command exception
 		"error": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			logger.Info("Error command executed")
 			return catena.CommandExceptionResult(
@@ -225,22 +177,14 @@ func main() {
 		},
 	}
 
-	// ==========================================================================
-	// Server Setup
-	// ==========================================================================
-	slotList := []uint16{0}
-	srv = rest.NewServer(slotList, 100)
-
-	// Register GetValue handler to retrieve counter state
 	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		if fqoid == "counter" {
-			val, _ := catena.ToCatenaValue(buildResponse())
+			val, _ := catena.ToCatenaValue(BuildResponse(counter))
 			return catena.Reply(val)
 		}
 		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found: "+fqoid)
 	})
 
-	// Register ExecuteCommand handler
 	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 
@@ -252,45 +196,26 @@ func main() {
 
 		return handler(payload)
 	})
+}
 
-	// Serve static files at root (including index.html)
-	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		// Serve index.html for root path
-		if r.URL.Path == "/" {
-			data, err := staticFS.ReadFile("static/index.htm")
-			if err != nil {
-				return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "index.html not found")
-			}
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			w.Write(data)
-			return catena.Reply(catena.CatenaValue{})
-		}
-		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found: "+r.URL.Path)
+// RunExample encapsulates the full example lifecycle:
+// SDK init, signal handling, server creation, handler registration, and graceful shutdown.
+func RunExample(appName string, makeServer func(slots []uint16, cfg catena.Config) catena.CatenaServer) {
+	exampleutil.RunExample(exampleutil.RunConfig{
+		AppName:          appName,
+		Slots:            SlotList,
+		MakeServer:       makeServer,
+		RegisterHandlers: RegisterHandlers,
+		OnReady: func(port int) {
+			logger.Info("=======================================================")
+			logger.Info("ExecuteCommand Example", "transport", appName)
+			logger.Info("=======================================================")
+			logger.Info("Listening", "port", port)
+			logger.Info("")
+			logger.Info("Web UI available at:")
+			logger.Info(fmt.Sprintf("  http://localhost:%d/", port))
+			logger.Info("")
+			logger.Info("=======================================================")
+		},
 	})
-
-	// ==========================================================================
-	// Start Server
-	// ==========================================================================
-	logger.Info("=======================================================")
-	logger.Info("ExecuteCommand REST Example")
-	logger.Info("=======================================================")
-	logger.Info("REST server starting", "port", port)
-	logger.Info("")
-	logger.Info("Web UI available at:")
-	logger.Info(fmt.Sprintf("  http://localhost:%d/", port))
-	logger.Info("")
-	logger.Info("=======================================================")
-
-	// Start server in a goroutine so shutdown handling works
-	go func() {
-		if err := srv.Start(port); err != nil {
-			logger.Error("server failed", "error", err)
-			os.Exit(1)
-		}
-	}()
-
-	// Wait for shutdown signal
-	<-shutdownChan
-	srv.Shutdown()
-	logger.Info("Server shutdown complete")
 }
