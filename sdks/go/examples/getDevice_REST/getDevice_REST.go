@@ -78,7 +78,7 @@ func main() {
 	port := cfg.Port
 
 	// Define device metadata for multiple slots
-	devices := map[int]map[string]any{
+	devices := map[uint16]map[string]any{
 		0: {
 			"slot":              uint32(0),
 			"detail_level":      catena.DetailLevelFull,
@@ -457,13 +457,13 @@ func main() {
 		},
 	}
 
-	slotList := []int{0, 1, 2}
-	srv := rest.NewServer(slotList)
+	slotList := []uint16{0, 1, 2}
+	srv := rest.NewServer(slotList, 100)
 
 	// Register GetDevice handler for each slot
 	for _, slot := range slotList {
 		slot := slot
-		srv.RegisterGetDeviceHandler(slot, func() (catena.CatenaDevice, catena.StatusResult) {
+		srv.RegisterGetDeviceHandler(uint16(slot), func() (catena.CatenaDevice, catena.StatusResult) {
 			logger.Info("GetDevice", "slot", slot)
 			_, ok := devices[slot]
 			if !ok {
@@ -471,9 +471,9 @@ func main() {
 				return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
 			}
 
-			device, err := catena.ToCatenaDevice(devices[slot])
-			if err != nil {
-				logger.Error("failed to convert device", "slot", slot, "error", err)
+			device, res := catena.ToCatenaDevice(devices[slot])
+			if res.Code != catena.OK {
+				logger.Error("failed to convert device", "slot", slot, "error", res.Error)
 				return catena.ReplyError[catena.CatenaDevice](catena.INTERNAL, "failed to convert device")
 			}
 

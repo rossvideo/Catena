@@ -29,14 +29,14 @@
  */
 
 /**
- * @brief JSON utilities for the Catena SDK.
+ * @brief JSON utilities for the Catena REST API.
  * @file json_utils.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
  * @date 2026-02-04
  */
 
-package internal
+package rest
 
 import (
 	"encoding/json"
@@ -45,43 +45,70 @@ import (
 	"mime"
 	"net/http"
 
-	"google.golang.org/protobuf/encoding/protojson"
-
 	"github.com/rossvideo/catena/build/go/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"google.golang.org/protobuf/encoding/protojson"
 )
+
+// WriteCommandResponseJSON marshals a protos.CommandResponse to JSON and writes it
+// to the HTTP response with the specified status code.
+func WriteCommandResponseJSON(w http.ResponseWriter, cmdResp *protos.CommandResponse, statusCode int) error {
+	w.Header().Set("Content-Type", "application/json")
+
+	if cmdResp == nil {
+		w.WriteHeader(statusCode)
+		return nil
+	}
+
+	b, err := (protojson.MarshalOptions{
+		UseProtoNames:   true,
+		EmitUnpopulated: false,
+	}).Marshal(cmdResp)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"error": "failed to marshal command response",
+		})
+		return fmt.Errorf("failed to marshal command response: %w", err)
+	}
+
+	w.WriteHeader(statusCode)
+	_, writeErr := w.Write(b)
+	return writeErr
+}
 
 // ReadRequestJSON reads and unmarshals a JSON request body into a protos.Value.
 // It validates the Content-Type header and returns an error if it's not application/json.
-func ReadRequestJSON(r *http.Request) (*protos.Value, error) {
+func ReadRequestJSON(r *http.Request) (*protos.Value, catena.StatusResult) {
 	defer r.Body.Close()
 
 	// Check Content-Type header
 	contentType := r.Header.Get("Content-Type")
 	if contentType == "" {
-		return nil, fmt.Errorf("missing Content-Type header")
+		return nil, catena.StatusResult{Code: catena.BAD_REQUEST, Error: "missing Content-Type header"}
 	} else {
 		// Parse media type to handle parameters like charset
 		mediaType, _, err := mime.ParseMediaType(contentType)
 		if err != nil {
-			return nil, fmt.Errorf("invalid content type: %s", contentType)
+			return nil, catena.StatusResult{Code: catena.BAD_REQUEST, Error: fmt.Sprintf("invalid content type: %s", contentType)}
 		}
 		if mediaType != "application/json" {
-			return nil, fmt.Errorf("unsupported content type: %s, expected application/json", mediaType)
+			return nil, catena.StatusResult{Code: catena.INVALID_ARGUMENT, Error: fmt.Sprintf("unsupported content type: %s, expected application/json", mediaType)}
 		}
 	}
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil || err == io.EOF {
-		return nil, err
+		return nil, catena.StatusResult{Code: catena.BAD_REQUEST, Error: fmt.Sprintf("failed to read request body: %v", err)}
 	}
 
 	v := &protos.Value{}
 	if err := (protojson.UnmarshalOptions{
 		DiscardUnknown: true,
 	}).Unmarshal(data, v); err != nil {
-		return nil, err
+		return nil, catena.StatusResult{Code: catena.BAD_REQUEST, Error: fmt.Sprintf("failed to unmarshal request body: %v", err)}
 	}
-	return v, nil
+	return v, catena.StatusResult{Code: catena.OK}
 }
 
 // WriteResponseJSON marshals a protos.Value to JSON and writes it to the HTTP response

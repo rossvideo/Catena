@@ -39,79 +39,9 @@
 package catena
 
 import (
-	"net/http"
+	"fmt"
 	"testing"
 )
-
-func TestStatusCode_ToHTTPStatus_gRPCCodes(t *testing.T) {
-	tests := []struct {
-		code     StatusCode
-		expected int
-	}{
-		{OK, http.StatusOK},
-		{CANCELLED, 499},
-		{UNKNOWN, http.StatusInternalServerError},
-		{INVALID_ARGUMENT, http.StatusBadRequest},
-		{DEADLINE_EXCEEDED, http.StatusGatewayTimeout},
-		{NOT_FOUND, http.StatusNotFound},
-		{ALREADY_EXISTS, http.StatusConflict},
-		{PERMISSION_DENIED, http.StatusForbidden},
-		{RESOURCE_EXHAUSTED, http.StatusTooManyRequests},
-		{FAILED_PRECONDITION, http.StatusBadRequest},
-		{ABORTED, http.StatusConflict},
-		{OUT_OF_RANGE, http.StatusBadRequest},
-		{UNIMPLEMENTED, http.StatusNotImplemented},
-		{INTERNAL, http.StatusInternalServerError},
-		{UNAVAILABLE, http.StatusServiceUnavailable},
-		{DATA_LOSS, http.StatusInternalServerError},
-		{UNAUTHENTICATED, http.StatusUnauthorized},
-	}
-
-	for i, tt := range tests {
-		t.Run(http.StatusText(tt.expected), func(t *testing.T) {
-			result := tt.code.ToHTTPStatus()
-			if result != tt.expected {
-				t.Errorf("test %d: StatusCode(%d).ToHTTPStatus() = %d, want %d", i, tt.code, result, tt.expected)
-			}
-		})
-	}
-}
-
-func TestStatusCode_ToHTTPStatus_RESTCodes(t *testing.T) {
-	tests := []struct {
-		code     StatusCode
-		expected int
-	}{
-		{CREATED, 201},
-		{ACCEPTED, 202},
-		{NO_CONTENT, 204},
-		{METHOD_NOT_ALLOWED, 405},
-		{CONFLICT, 409},
-		{UNPROCESSABLE_ENTITY, 422},
-		{TOO_MANY_REQUESTS, 429},
-		{BAD_GATEWAY, 502},
-		{SERVICE_UNAVAILABLE, 503},
-		{GATEWAY_TIMEOUT, 504},
-	}
-
-	for i, tt := range tests {
-		t.Run(http.StatusText(tt.expected), func(t *testing.T) {
-			result := tt.code.ToHTTPStatus()
-			if result != tt.expected {
-				t.Errorf("test %d: StatusCode(%d).ToHTTPStatus() = %d, want %d", i, tt.code, result, tt.expected)
-			}
-		})
-	}
-}
-
-func TestStatusCode_ToHTTPStatus_Unknown(t *testing.T) {
-	// Unknown codes should default to InternalServerError
-	unknownCode := StatusCode(999)
-	result := unknownCode.ToHTTPStatus()
-	if result != http.StatusInternalServerError {
-		t.Errorf("Unknown StatusCode.ToHTTPStatus() = %d, want %d", result, http.StatusInternalServerError)
-	}
-}
 
 func TestStatusCodeConstants(t *testing.T) {
 	// Verify gRPC-compatible codes are in the expected range (0-16)
@@ -317,7 +247,7 @@ func TestReplyError_AllStatusCodes(t *testing.T) {
 	}
 
 	for i, code := range codes {
-		t.Run(http.StatusText(code.ToHTTPStatus()), func(t *testing.T) {
+		t.Run(fmt.Sprintf("StatusCode_%d", code), func(t *testing.T) {
 			result, status := ReplyError[CatenaValue](code, "test error")
 			if status.Code != code {
 				t.Errorf("test %d: ReplyError code = %d, want %d", i, status.Code, code)

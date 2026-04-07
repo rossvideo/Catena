@@ -46,6 +46,7 @@
 #include <Device.h>
 #include <ParamWithValue.h>
 #include <Config.h>
+#include <ConnectionProps.h>
 
 // REST
 #include <ServiceImpl.h>
@@ -144,6 +145,18 @@ int main(int argc, char* argv[]) {
         return code;
     }
     Logger::init("audiodeck_JSON_REST");
+
+    catena::common::ConnectionProps connectionProps(
+        ConnectionProtocol::ST2138_REST,            // Configuration
+        30000,                                      // Refresh interval in milliseconds
+        "audiodeck_JSON_REST",                      // Node name
+        "audiodeck_JSON_REST-a4:bb:6d:6a:6f:a3",    // Node ID
+        "/connect/connection-props.xml"             // Endpoint
+    );
+
+    if (!connectionProps.start()) {
+        LOG(WARNING) << "Failed to start connection props server on port " << config::dashboard_port;
+    }
 
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();

@@ -47,6 +47,7 @@
 #include <ParamWithValue.h>
 #include <ParamDescriptor.h>
 #include <Config.h>
+#include <ConnectionProps.h>
 
 // REST
 #include <ServiceImpl.h>
@@ -183,6 +184,18 @@ int main(int argc, char* argv[]) {
         return code;
     }
     Logger::init("use_commands_REST");
+
+    catena::common::ConnectionProps connectionProps(
+        ConnectionProtocol::ST2138_REST,        // Configuration
+        30000,                                  // Refresh interval in milliseconds
+        "use_commands_REST",                    // Node name
+        "use_commands_REST-a4:bb:6d:6a:6f:a3",  // Node ID
+        "/connect/connection-props.xml"         // Endpoint
+    );
+
+    if (!connectionProps.start()) {
+        LOG(WARNING) << "Failed to start connection props server on port " << config::dashboard_port;
+    }
 
     // commands should be defined before starting the REST server
     defineCommands();

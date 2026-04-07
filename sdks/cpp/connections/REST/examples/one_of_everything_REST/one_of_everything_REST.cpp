@@ -49,11 +49,11 @@
 
 // REST
 #include <ServiceImpl.h>
+#include <ConnectionProps.h>
 
 #include <iomanip>
 #include <iostream>
 #include <memory>
-#include <regex>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -320,9 +320,23 @@ int main(int argc, char* argv[])
 
     // commands should be defined before starting the RPC server
     defineCommands();
+    
+    catena::common::ConnectionProps connectionProps(
+        ConnectionProtocol::ST2138_REST,            // Configuration
+        30000,                                      // Refresh interval in milliseconds
+        "one_of_everything_REST",                   // Node name
+        "one_of_everything_REST-a4:bb:6d:6a:6f:a3", // Node ID
+        "/connect/connection-props.xml"             // Endpoint
+    );
+
+    if (!connectionProps.start()) {
+        LOG(WARNING) << "Failed to start connection props server on port " << config::dashboard_port;
+    }
 
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
+
+    connectionProps.stop();
     
     return 0;
 }
