@@ -1,4 +1,6 @@
 #pragma once
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcomment"
 
 /*
  * Copyright 2025 Ross Video Ltd
@@ -102,3 +104,4 @@ class ISubscriptionManager {
 
 } // namespace common
 } // namespace catena 
+#pragma GCC diagnostic pop
