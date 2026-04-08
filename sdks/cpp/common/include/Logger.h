@@ -41,10 +41,6 @@
  */
 
 //BOOST libraries
-#include <boost/log/attributes/scoped_attribute.hpp>
-#include <boost/log/attributes/constant.hpp>
-#include <boost/log/attributes/mutable_constant.hpp>
-#include <boost/log/expressions/keyword.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>

@@ -47,12 +47,10 @@
 #include <boost/core/null_deleter.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_io.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/core/record_view.hpp>
 #include <boost/log/expressions.hpp>
-#include <boost/log/expressions/formatters/stream.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/formatting_ostream.hpp>
 #include <boost/log/support/date_time.hpp>
