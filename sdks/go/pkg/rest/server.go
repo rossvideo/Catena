@@ -159,8 +159,8 @@ func writeAssetResult(w http.ResponseWriter, asset catena.CatenaAsset, httpStatu
 	}
 
 	// Convert asset to JSON
-	jsonData, err := asset.ToJSON()
-	if err != nil {
+	jsonData, res := asset.ToJSON()
+	if res.Code != catena.OK {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Asset payload is missing"})
@@ -395,8 +395,8 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 
 		// Convert proto value to native Go type
 		nativeValue, errProto := catena.FromProto(reqValue)
-		if errProto != nil {
-			logger.Error("failed to convert proto value to native Go type", "error", err.Error)
+		if errProto.Code != catena.OK {
+			logger.Error("failed to convert proto value to native Go type", "error", errProto.Error)
 			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid request body")
 			writeHTTPResult(w, res, val)
 			return
@@ -425,15 +425,15 @@ func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slo
 
 	if res.Error == "" {
 		if compressionStr := r.URL.Query().Get("compression"); compressionStr != "" {
-			targetEncoding, err := catena.ParsePayloadEncoding(compressionStr)
-			if err != nil {
-				_, errRes := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, err.Error())
+			targetEncoding, encRes := catena.ParsePayloadEncoding(compressionStr)
+			if encRes.Code != catena.OK {
+				_, errRes := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, encRes.Error)
 				writeHTTPResult(w, errRes, catena.CatenaValue{})
 				return
 			}
-			if err := catena.TranscodeAssetPayload(&asset, targetEncoding); err != nil {
-				logger.Error("failed to transcode asset payload", "error", err)
-				_, errRes := catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to transcode payload: "+err.Error())
+			if tcRes := catena.TranscodeAssetPayload(&asset, targetEncoding); tcRes.Code != catena.OK {
+				logger.Error("failed to transcode asset payload", "error", tcRes.Error)
+				_, errRes := catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to transcode payload: "+tcRes.Error)
 				writeHTTPResult(w, errRes, catena.CatenaValue{})
 				return
 			}
@@ -467,10 +467,10 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 			writeHTTPResult(w, res, val)
 			return
 		}
-		var errProto error
+		var errProto catena.StatusResult
 		payload, errProto = catena.FromProto(reqValue)
-		if errProto != nil {
-			logger.Error("failed to convert proto value to native Go type", "error", err.Error)
+		if errProto.Code != catena.OK {
+			logger.Error("failed to convert proto value to native Go type", "error", errProto.Error)
 			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid command payload")
 			writeHTTPResult(w, res, val)
 			return

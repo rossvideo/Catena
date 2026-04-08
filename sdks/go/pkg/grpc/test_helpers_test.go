@@ -95,8 +95,8 @@ func makeSetValueRequest(t *testing.T, client protos.CatenaServiceClient, ctx co
 	t.Helper()
 
 	protoValue, err := catena.ToProto(value)
-	if err != nil {
-		t.Fatalf("failed to convert value to proto: %v", err)
+	if err.Code != catena.OK {
+		t.Fatalf("failed to convert value to proto: %v", err.Error)
 	}
 
 	return client.SetValue(ctx, &protos.SingleSetValuePayload{
@@ -115,8 +115,8 @@ func makeMultiSetValueRequest(t *testing.T, client protos.CatenaServiceClient, c
 	setValues := make([]*protos.SetValuePayload, 0, len(values))
 	for oid, value := range values {
 		protoValue, err := catena.ToProto(value)
-		if err != nil {
-			t.Fatalf("failed to convert value for %s to proto: %v", oid, err)
+		if err.Code != catena.OK {
+			t.Fatalf("failed to convert value for %s to proto: %v", oid, err.Error)
 		}
 		setValues = append(setValues, &protos.SetValuePayload{
 			Oid:   oid,
@@ -158,8 +158,8 @@ func makeExecuteCommandRequest(t *testing.T, client protos.CatenaServiceClient, 
 
 	if payload != nil {
 		protoValue, err := catena.ToProto(payload)
-		if err != nil {
-			t.Fatalf("failed to convert command payload to proto: %v", err)
+		if err.Code != catena.OK {
+			t.Fatalf("failed to convert command payload to proto: %v", err.Error)
 		}
 		req.Value = protoValue
 	}

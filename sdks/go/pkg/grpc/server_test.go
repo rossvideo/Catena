@@ -199,8 +199,8 @@ func TestServer_DeviceRequest_Success(t *testing.T) {
 			"detail_level": catena.DetailLevelFull,
 		}
 		device, err := catena.ToCatenaDevice(deviceMap)
-		if err != nil {
-			t.Fatalf("ToCatenaDevice failed: %v", err)
+		if err.Code != catena.OK {
+			t.Fatalf("ToCatenaDevice failed: %v", err.Error)
 		}
 		return catena.Reply(device)
 	})

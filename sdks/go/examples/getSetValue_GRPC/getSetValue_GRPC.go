@@ -95,9 +95,9 @@ func main() {
 			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found")
 		}
 
-		protoValue, err := catena.ToProto(value)
-		if err != nil {
-			logger.Error("GetParam failed to convert value", "slot", slot, "fqoid", fqoid, "error", err)
+		protoValue, res := catena.ToProto(value)
+		if res.Code != catena.OK {
+			logger.Error("GetParam failed to convert value", "slot", slot, "fqoid", fqoid, "error", res.Error)
 			return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
 		}
 
