@@ -101,10 +101,9 @@ class LoggerTest : public ::testing::Test {
             config::log_dir = UNITTEST_LOG_DIR + std::string("/logger");
             config::log_console = true;
             config::log_file = true;
-            config::log_level = "INFO";
+            config::log_level = "TRACE";
             config::log_size = 10;
             config::log_count = 1;
-            config::log_verbosity = 2;
             config::silent = false;
             Logger::init("LoggerTest");
         }
@@ -115,9 +114,12 @@ TEST_F(LoggerTest, LogDefaultDir) {
     // Log test messages
     const std::string marker = "<<<CATENA_LOGGER_TEST: LogDefaultDir>>>";
     LOG(INFO) << marker;
+    LOG(TRACE) << "This is a trace log message.";
+    LOG(DEBUG) << "This is a debug log message.";
     LOG(INFO) << "This is an info log message.";
     LOG(WARNING) << "This is a warning log message.";
     LOG(ERROR) << "This is an error log message.";
+    LOG(FATAL) << "This is a fatal log message.";
 
     boost::log::core::get()->flush();
 
@@ -131,9 +133,12 @@ TEST_F(LoggerTest, LogDefaultDir) {
     const std::string slice = TestSlice(fullLog, marker);
     ASSERT_FALSE(slice.empty()) << "Test marker not found in log";
     // Check messages were written correctly
+    EXPECT_NE(slice.find("This is a trace log message."), std::string::npos);
+    EXPECT_NE(slice.find("This is a debug log message."), std::string::npos);
     EXPECT_NE(slice.find("This is an info log message."), std::string::npos);
     EXPECT_NE(slice.find("This is a warning log message."), std::string::npos);
     EXPECT_NE(slice.find("This is an error log message."), std::string::npos);
+    EXPECT_NE(slice.find("This is a fatal log message."), std::string::npos);
 
     EXPECT_EQ(CountFiles(), 1);
 }
@@ -144,18 +149,48 @@ TEST_F(LoggerTest, LogSeverityFilter) {
     LOG(INFO) << marker;
 
     // Log test messages at different severity levels
+    config::log_level = "TRACE";
+    LOG(TRACE) << "This is a trace log message.";
+    LOG(DEBUG) << "This is a debug log message.";
+    LOG(INFO) << "This is an info log message.";
+    LOG(WARNING) << "This is a warning log message.";
+    LOG(ERROR) << "This is an error log message.";
+    LOG(FATAL) << "This is a fatal log message.";
+    config::log_level = "DEBUG";
+    LOG(TRACE) << "This is a trace log message.";
+    LOG(DEBUG) << "This is a debug log message.";
+    LOG(INFO) << "This is an info log message.";
+    LOG(WARNING) << "This is a warning log message.";
+    LOG(ERROR) << "This is an error log message.";
+    LOG(FATAL) << "This is a fatal log message.";
     config::log_level = "INFO";
+    LOG(TRACE) << "This is a trace log message.";
+    LOG(DEBUG) << "This is a debug log message.";
     LOG(INFO) << "This is an info log message.";
     LOG(WARNING) << "This is a warning log message.";
     LOG(ERROR) << "This is an error log message.";
+    LOG(FATAL) << "This is a fatal log message.";
     config::log_level = "WARNING";
+    LOG(TRACE) << "This is a trace log message.";
+    LOG(DEBUG) << "This is a debug log message.";
     LOG(INFO) << "This is an info log message.";
     LOG(WARNING) << "This is a warning log message.";
     LOG(ERROR) << "This is an error log message.";
+    LOG(FATAL) << "This is a fatal log message.";
     config::log_level = "ERROR";
+    LOG(TRACE) << "This is a trace log message.";
+    LOG(DEBUG) << "This is a debug log message.";
     LOG(INFO) << "This is an info log message.";
     LOG(WARNING) << "This is a warning log message.";
     LOG(ERROR) << "This is an error log message.";
+    LOG(FATAL) << "This is a fatal log message.";
+    config::log_level = "FATAL";
+    LOG(TRACE) << "This is a trace log message.";
+    LOG(DEBUG) << "This is a debug log message.";
+    LOG(INFO) << "This is an info log message.";
+    LOG(WARNING) << "This is a warning log message.";
+    LOG(ERROR) << "This is an error log message.";
+    LOG(FATAL) << "This is a fatal log message.";
 
     boost::log::core::get()->flush();
 
@@ -165,86 +200,40 @@ TEST_F(LoggerTest, LogSeverityFilter) {
     ASSERT_FALSE(slice.empty()) << "Test marker not found in log";
 
     // Check messages were written in the right quantity
-    std::regex severity_re(R"(^\d+:\s*(info|warning|error)\s)");
+    std::regex severity_re(R"(^\d+:\s*(trace|debug|info|warning|error|fatal)\s)");
     std::smatch m;
-    int info_count = 0, warning_count = 0, error_count = 0;
+    int trace_count = 0, debug_count = 0, info_count = 0, warning_count = 0, error_count = 0, fatal_count = 0;
     std::istringstream stream(slice);
     for (std::string line; std::getline(stream, line);) {
         if (std::regex_search(line, m, severity_re)) {
             const std::string& sev = m[1].str();
-            if (sev == "info") {
+            if (sev == "trace") {
+                ++trace_count;
+            } else if (sev == "debug") {
+                ++debug_count;
+            } else if (sev == "info") {
                 ++info_count;
-            }
-            if (sev == "warning") {
+            } else if (sev == "warning") {
                 ++warning_count;
-            }
-            if (sev == "error") {
+            } else if (sev == "error") {
                 ++error_count;
+            } else if (sev == "fatal") {
+                ++fatal_count;
             }
         }
     }
-    EXPECT_EQ(info_count, 1);
-    EXPECT_EQ(warning_count, 2);
-    EXPECT_EQ(error_count, 3);
+    EXPECT_EQ(trace_count, 1);
+    EXPECT_EQ(debug_count, 2);
+    EXPECT_EQ(info_count, 3);
+    EXPECT_EQ(warning_count, 4);
+    EXPECT_EQ(error_count, 5);
+    EXPECT_EQ(fatal_count, 6);
 
     EXPECT_EQ(CountFiles(), 1);
-    config::log_level = "INFO";
+    config::log_level = "TRACE";
 }
 
-// Test 3: Verbosity filter only passes verbosity <= maximum
-TEST_F(LoggerTest, LogVerbosityFilter) {
-    const std::string marker = "<<<CATENA_LOGGER_TEST: LogVerbosityFilter>>>";
-    LOG(INFO) << marker;
-
-    // Log test messages at different verbosity levels
-    config::log_verbosity = 0;
-    VLOG(0) << "level 0";
-    VLOG(1) << "level 1";
-    VLOG(2) << "level 2";
-    config::log_verbosity = 1;
-    VLOG(0) << "level 0";
-    VLOG(1) << "level 1";
-    VLOG(2) << "level 2";
-    config::log_verbosity = 2;
-    VLOG(0) << "level 0";
-    VLOG(1) << "level 1";
-    VLOG(2) << "level 2";
-
-    boost::log::core::get()->flush();
-
-    const std::filesystem::path logPath = FindPath();
-    ASSERT_FALSE(logPath.empty());
-    const std::string slice = TestSlice(ReadFile(logPath), marker);
-    ASSERT_FALSE(slice.empty()) << "Test marker not found in log";
-
-    // Check messages were written in the right quantity
-    std::regex verbosity_re(R"(level ([012]))");
-    std::smatch m;
-    int lvl_0 = 0, lvl_1 = 0, lvl_2 = 0;
-    std::istringstream stream(slice);
-    for (std::string line; std::getline(stream, line);) {
-        if (std::regex_search(line, m, verbosity_re)) {
-            const std::string& verb = m[1].str();
-            if (verb == "0") {
-                ++lvl_0;
-            }
-            if (verb == "1") {
-                ++lvl_1;
-            }
-            if (verb == "2") {
-                ++lvl_2;
-            }
-        }
-    }
-    EXPECT_EQ(lvl_0, 3);
-    EXPECT_EQ(lvl_1, 2);
-    EXPECT_EQ(lvl_2, 1);
-
-    EXPECT_EQ(CountFiles(), 1);
-    config::log_verbosity = 2;
-}
-
-// Test 4: Silence prevents all messages
+// Test 3: Silence prevents all messages
 TEST_F(LoggerTest, LogSilence) {
     const std::string marker = "<<<CATENA_LOGGER_TEST: LogSilence>>>";
     LOG(INFO) << marker;

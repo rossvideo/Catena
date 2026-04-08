@@ -49,7 +49,7 @@ GetValue::GetValue(IServiceImpl *service, SlotMap& dms, bool ok) : CallData(serv
 
 // Manages gRPC command execution process using the state variable status.
 void GetValue::proceed( bool ok) {
-    VLOG(1) << "GetValue::proceed[" << objectId_ << "]: " << timeNow()
+    LOG(DEBUG) << "GetValue::proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: "
                 << std::boolalpha << ok;
 

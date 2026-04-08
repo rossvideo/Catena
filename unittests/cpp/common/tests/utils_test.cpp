@@ -24,10 +24,9 @@ protected:
     static void SetUpTestSuite() {
         catena::common::config::log_dir = UNITTEST_LOG_DIR;
         catena::common::config::log_file = true;
-        catena::common::config::log_level = "INFO";
+        catena::common::config::log_level = "TRACE";
         catena::common::config::log_size = 10;
         catena::common::config::log_count = 128;
-        catena::common::config::log_verbosity = 2;
         Logger::init("UtilsTest");
     }
 

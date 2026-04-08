@@ -218,7 +218,7 @@ void ConnectionProps::handleRequest(tcp::socket socket) {
         std::string method, path, version;
         request_stream >> method >> path >> version;
 
-        VLOG(2) << "Connection props request: " << method << " " << path;
+        LOG(TRACE) << "Connection props request: " << method << " " << path;
 
         if (method != "GET") {
             const std::string body = "Method Not Allowed\n";

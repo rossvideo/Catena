@@ -44,7 +44,7 @@ ParamInfoRequest::ParamInfoRequest(IServiceImpl *service, SlotMap& dms, bool ok)
 }
 
 void ParamInfoRequest::proceed(bool ok) {
-    VLOG(1) << "ParamInfoRequest::proceed[" << objectId_ << "]: "
+    LOG(DEBUG) << "ParamInfoRequest::proceed[" << objectId_ << "]: "
               << timeNow() << " status: " << static_cast<int>(status_)
               << ", ok: " << std::boolalpha << ok;
 

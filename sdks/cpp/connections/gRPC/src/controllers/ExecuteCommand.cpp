@@ -53,7 +53,7 @@ ExecuteCommand::ExecuteCommand(IServiceImpl *service, SlotMap& dms, bool ok)
  * handling errors and responses accordingly 
  */
 void ExecuteCommand::proceed(bool ok) {
-    VLOG(1) << "ExecuteCommand proceed[" << objectId_ << "]: " << timeNow()
+    LOG(DEBUG) << "ExecuteCommand proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok;
 

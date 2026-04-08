@@ -74,7 +74,6 @@ const std::string LOG_FILE_KEY = "log_file";
 const std::string LOG_SIZE_KEY = "log_size";
 const std::string LOG_COUNT_KEY = "log_count";
 const std::string LOG_MAX_SIZE_KEY = "log_max_size";
-const std::string LOG_VERBOSITY_KEY = "log_verbosity";
 
 
 /**
@@ -90,16 +89,15 @@ const std::string HOSTNAME_DEFAULT = "0.0.0.0";
 const uint16_t PORT_DEFAULT = 6254;
 const uint16_t DASHBOARD_PORT_DEFAULT = 8080;
 const bool DASHBOARD_TLS_ENABLED_DEFAULT = false;
-const std::string LOG_LEVEL_DEFAULT = "info";
 const bool LOG_CONSOLE_DEFAULT = true;
 const bool LOG_FILE_DEFAULT = true;
 const double LOG_SIZE_DEFAULT = 10.0;
 const int LOG_COUNT_DEFAULT = 5;
 const double LOG_MAX_SIZE_DEFAULT = 50.0;
 #ifdef NDEBUG
-const int LOG_VERBOSITY_DEFAULT = 0;
+const std::string LOG_LEVEL_DEFAULT = "info";
 #else
-const int LOG_VERBOSITY_DEFAULT = 2;
+const std::string LOG_LEVEL_DEFAULT = "trace";
 #endif
 
 
@@ -162,8 +160,6 @@ inline double log_size = 0;
 inline double log_max_size = 0;
 
 inline int log_count = 0;
-
-inline int log_verbosity = 0;
 
 } // namespace config     
 } // namespace common

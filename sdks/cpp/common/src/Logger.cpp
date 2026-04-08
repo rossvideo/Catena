@@ -61,6 +61,23 @@ using namespace boost::log;
 using namespace catena::common;
 namespace expr = expressions;
 
+// Helper for LOG() macro to get basename of __FILE__
+const char* LogHelper::log_basename(const char* path) {
+    const char* p = std::strrchr(path, '/');
+    if (!p) p = std::strrchr(path, '\\');
+    return p ? p + 1 : path;
+}
+
+// Helper for LOG() macro to get kernel id of thread
+int LogHelper::kernel_thread_id() {
+    return static_cast<int>(gettid());
+}
+
+// Helper for LOG() macro for log file line numbers
+unsigned int LogHelper::get_record_id() {
+    return ++current_record_id;
+}
+
 // Helper function dictating the format of a log record
 void catena_formatter(record_view const& rec, formatting_ostream &strm) {
     strm << extract<unsigned int>("RecordID", rec)
@@ -88,21 +105,19 @@ void clear_directory(const std::filesystem::path& path) {
     }
 }
 
-// Helper filter for VLOG
-bool catena_vlog_filter(boost::log::attribute_value_set const& attrs) {
-    auto verbosity_level = attrs["Verbosity"].extract<int>();
-    if (!verbosity_level)
-        return true;
-    return verbosity_level.get() <= config::log_verbosity;
-}
-
 // Helper filter for severity level
 bool catena_severity_filter(boost::log::attribute_value_set const& attrs) {
-    trivial::severity_level filter_level = trivial::info;
-    if (config::log_level.compare("WARNING") == 0) {
+    trivial::severity_level filter_level = trivial::trace;
+    if (config::log_level.compare("DEBUG") == 0) {
+        filter_level = trivial::debug;
+    } else if (config::log_level.compare("INFO") == 0) {
+        filter_level = trivial::info;
+    } else if (config::log_level.compare("WARNING") == 0) {
         filter_level = trivial::warning;
     } else if (config::log_level.compare("ERROR") == 0) {
         filter_level = trivial::error;
+    } else if (config::log_level.compare("FATAL") == 0) {
+        filter_level = trivial::fatal;
     }
     return attrs[trivial::severity] >= filter_level;
 }
@@ -112,7 +127,7 @@ bool catena_filter(boost::log::attribute_value_set const& attrs) {
     if (config::silent) {
         return false;
     }
-    return catena_vlog_filter(attrs) && catena_severity_filter(attrs);
+    return catena_severity_filter(attrs);
 }
 
 /**

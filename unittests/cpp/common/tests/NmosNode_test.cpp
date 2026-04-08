@@ -97,7 +97,7 @@ struct FakeRegistry {
                 } else if (method == "POST" &&
                            path.rfind("/x-nmos/registration/v1.3/health/nodes/", 0) == 0) {
                     heartbeats++; write_resp(fd, 200);
-                    VLOG(1) << "Heartbeat received: " << heartbeats << "\n";
+                    LOG(DEBUG) << "Heartbeat received: " << heartbeats << "\n";
                 } else {
                     write_resp(fd, 404);
                 }
@@ -176,10 +176,9 @@ protected:
     static void SetUpTestSuite() {
         config::log_dir = UNITTEST_LOG_DIR;
         config::log_file = true;
-        config::log_level = "INFO";
+        config::log_level = "TRACE";
         config::log_size = 10;
         config::log_count = 128;
-        config::log_verbosity = 2;
         Logger::init("NmosNodeTest");
     }
 

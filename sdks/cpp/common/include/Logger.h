@@ -51,65 +51,37 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/manipulators/add_value.hpp>
 
-// Helper to get basename of __FILE__
-inline const char* log_basename(const char* path) {
-    const char* p = std::strrchr(path, '/');
-    if (!p) p = std::strrchr(path, '\\');
-    return p ? p + 1 : path;
+// Helper functions used by the LOG() macro
+namespace LogHelper{
+  // Helper to get basename of __FILE__
+  const char* log_basename(const char* path);
+
+  // Helper to get kernel id of thread
+  int kernel_thread_id();
+
+  // Helper for log file line numbers
+  inline std::atomic<unsigned int> current_record_id = 0;
+  unsigned int get_record_id();
 }
-
-// Helper to get kernel id of thread
-inline int kernel_thread_id() {
-  return static_cast<int>(gettid());
-}
-
-// Helper for log file line numbers
-inline std::atomic<unsigned int> current_record_id = 0;
-inline unsigned int get_record_id() {
-  return ++current_record_id;
-}
-
-/**
- * Helper struct for the verbosity levels
- * Can't be added like the other attributes due to filtering occuring
- * before record attributes are added, and this is needed for the filter itself
- */
-struct ScopeVerbosity {
-  boost::log::attribute_set::iterator attr;
-  ScopeVerbosity(int v) {
-    attr = boost::log::core::get()->add_thread_attribute("Verbosity", boost::log::attributes::constant<int>(v)).first;
-  }
-  ~ScopeVerbosity() {
-    boost::log::core::get()->remove_thread_attribute(attr);
-  }
-
-  explicit operator bool() const { return true; }
-};
 
 // This map is to keep the boost system consistent with the old abseil system which uses all-caps for severity
 #define CATENA_SEV_(x)    CATENA_SEV_##x
+#define CATENA_SEV_TRACE   trace
+#define CATENA_SEV_DEBUG   debug
 #define CATENA_SEV_INFO   info
 #define CATENA_SEV_WARNING warning
 #define CATENA_SEV_ERROR  error
+#define CATENA_SEV_FATAL  fatal
     
 #define LOG_IMPL(severity) \
-  if (ScopeVerbosity v = ScopeVerbosity(0))\
   BOOST_LOG_TRIVIAL(severity) \
-    << boost::log::add_value("File", log_basename(__FILE__)) \
+    << boost::log::add_value("File", LogHelper::log_basename(__FILE__)) \
     << boost::log::add_value("Line", __LINE__) \
-    << boost::log::add_value("KernelThreadID", kernel_thread_id()) \
-    << boost::log::add_value("RecordID", get_record_id())
+    << boost::log::add_value("KernelThreadID", LogHelper::kernel_thread_id()) \
+    << boost::log::add_value("RecordID", LogHelper::get_record_id())
 
 #define LOG(severity) \
   LOG_IMPL(CATENA_SEV_(severity))
-
-#define VLOG(verbosity) \
-  if (ScopeVerbosity v = ScopeVerbosity(verbosity))\
-  BOOST_LOG_TRIVIAL(info) \
-    << boost::log::add_value("File", log_basename(__FILE__)) \
-    << boost::log::add_value("Line", __LINE__) \
-    << boost::log::add_value("KernelThreadID", kernel_thread_id()) \
-    << boost::log::add_value("RecordID", get_record_id())
 
 typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend> file_sink_t;
 typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend> console_sink_t;

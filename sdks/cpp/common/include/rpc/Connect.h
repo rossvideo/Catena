@@ -176,7 +176,7 @@ class Connect : public IConnect {
                     rc = p->toProto(*value, *authz_);
                     //If the param conversion was successful, send the update
                     if (rc.status == catena::StatusCode::OK) {
-                        VLOG(1) << "Connect::updateResponse_: Param \"" << oid << "\" set to new value: " << catena::param_value_string(*value);
+                        LOG(DEBUG) << "Connect::updateResponse_: Param \"" << oid << "\" set to new value: " << catena::param_value_string(*value);
                         hasUpdate_ = true;
                         cv_.notify_one();
                     }

@@ -37,7 +37,6 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             (LOG_SIZE_KEY.c_str(), po::value<double>()->default_value(LOG_SIZE_DEFAULT), "Max mb of log files before rotating")
             (LOG_COUNT_KEY.c_str(), po::value<int>()->default_value(LOG_COUNT_DEFAULT), "Max number of log files before rotating")
             (LOG_MAX_SIZE_KEY.c_str(), po::value<int>()->default_value(LOG_MAX_SIZE_DEFAULT), "Convenience option. Derives count and size based on the max size in MB.")
-            (LOG_VERBOSITY_KEY.c_str(), po::value<int>()->default_value(LOG_VERBOSITY_DEFAULT), "Max verbosity level of logs. Options are 0, 1, 2")
             ;
             
         std::set<std::string> allowedOptions;
@@ -99,13 +98,18 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(LOG_FILE_KEY)) config::log_file = vars[LOG_FILE_KEY].as<bool>();
         if (vars.count(LOG_SIZE_KEY)) config::log_size = vars[LOG_SIZE_KEY].as<double>();
         if (vars.count(LOG_COUNT_KEY)) config::log_count = vars[LOG_COUNT_KEY].as<int>();
-        if (vars.count(LOG_VERBOSITY_KEY)) config::log_verbosity = vars[LOG_VERBOSITY_KEY].as<int>();
         if (vars.count(LOG_LEVEL_KEY)){ 
             config::log_level = vars[LOG_LEVEL_KEY].as<std::string>();
             std::transform(log_level.begin(), log_level.end(), log_level.begin(), toupper);
             if (log_level.compare("INFO") != 0 && log_level.compare("WARNING") != 0 && log_level.compare("ERROR") != 0) {
-                std::cout << "WARNING: log_level {" << log_level << "} is invalid. Defaulting to INFO instead." << std::endl;
+                std::cout << "WARNING: log_level {" << log_level << "} is invalid. ";
+                #ifdef NDEBUG 
+                std::cout << "Defaulting to INFO instead." << std::endl;
                 config::log_level = "INFO"; 
+                #else
+                std::cout << "Defaulting to TRACE instead." << std::endl;
+                config::log_level = "TRACE"; 
+                #endif
             }
         }
         if (vars.count(LOG_MAX_SIZE_KEY)) {

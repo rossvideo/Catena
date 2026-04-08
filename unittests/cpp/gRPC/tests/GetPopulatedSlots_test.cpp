@@ -56,10 +56,9 @@ class gRPCGetPopulatedSlotsTests : public GRPCTest {
     static void SetUpTestSuite() {
         config::log_dir = UNITTEST_LOG_DIR;
         config::log_file = true;
-        config::log_level = "INFO";
+        config::log_level = "TRACE";
         config::log_size = 10;
         config::log_count = 128;
-        config::log_verbosity = 2;
         Logger::init("gRPCGetPopulatedSlotsTest");
     }
 

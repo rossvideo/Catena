@@ -44,7 +44,7 @@ UpdateSubscriptions::UpdateSubscriptions(IServiceImpl *service, SlotMap& dms, bo
 }
 
 void UpdateSubscriptions::proceed(bool ok) {
-    VLOG(1) << "UpdateSubscriptions proceed[" << objectId_ << "]: "
+    LOG(DEBUG) << "UpdateSubscriptions proceed[" << objectId_ << "]: "
               << timeNow() << " status: " << static_cast<int>(status_)
               << ", ok: " << std::boolalpha << ok;
 
