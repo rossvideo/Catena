@@ -273,9 +273,11 @@
       "type": "pickString",
       "options": [
         "getDevice_REST",
+        "getDevice_GRPC",
         "executeCommand_REST",
         "getAsset_REST",
-        "getSetValue_REST"
+        "getSetValue_REST",
+        "getSetValue_GRPC"
       ],
       "default": "getSetValue_REST"
     },
