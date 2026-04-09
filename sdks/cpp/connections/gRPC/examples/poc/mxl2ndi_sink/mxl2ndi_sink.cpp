@@ -182,24 +182,15 @@ void RunVideoFlow() {
     catena::common::ParamWithValue<mxl2ndi_sink::Inputs>* inputs =
       dynamic_cast<catena::common::ParamWithValue<mxl2ndi_sink::Inputs>*>(inputsParam.get());
 
+    int inputsCount = 0;
     std::vector<std::unique_ptr<mxlcpp::MxlReader>> readers;
     for (auto& input : inputs->get()) {
-        if (input.flow_id.empty()) {
-            LOG(WARNING) << "Skipping input with empty flow ID";
-            continue;
-        }
-        readers.emplace_back(std::make_unique<mxlcpp::MxlReader>(input.name, input.domain, input.flow_id));
-        
-        if (input.name.empty()) {
-            mxl2ndi_sink::Flow_def flowDef;
-            readers.back()->open(flowDef);
-            readers.back()->setName(flowDef.label);
-            input.name = flowDef.label;
+        if (!input.flow_id.empty()) {
+            inputsCount++;
         }
     }
-    dm.getValueSetByServer().emit("/inputs", inputsParam.get());
 
-    if (readers.empty()) {
+    if (inputsCount == 0) {
         LOG(ERROR) << "No inputs configured";
         return;
     }
@@ -257,7 +248,7 @@ void RunVideoFlow() {
                 readers.emplace_back(std::make_unique<mxlcpp::MxlReader>(elem.name, elem.domain, elem.flow_id));
                 if (elem.name.empty()) {
                     mxl2ndi_sink::Flow_def flowDef;
-                    readers.back()->fillFlowDef(flowDef);
+                    readers.back()->open(flowDef);
                     readers.back()->setName(flowDef.label);
                     elem.name = flowDef.label;
                     change = true;
