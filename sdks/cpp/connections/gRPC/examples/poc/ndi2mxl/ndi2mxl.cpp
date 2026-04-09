@@ -76,14 +76,10 @@ std::string handleRefresh(bool force = false) {
     statusValue->get() = "Refreshing";
     dm.getValueSetByServer().emit("/refresh_status", statusParam.get());
 
-    NDIlib_find_create_t find_create;
     st2138::Value value;
-    dm.getValue("/ndi_source_ips", value);
-    find_create.p_extra_ips = value.string_value().c_str();
-    NDIlib_find_instance_t finder = NDIlib_find_create_v2(&find_create);
-    if (!finder) {
-        return "Unable to create NDI finder with provided IPs";
-    }
+    std::string currentIps;
+    NDIlib_find_create_t find_create;
+    NDIlib_find_instance_t finder = nullptr;
 
     uint32_t num_sources = 0;
     const NDIlib_source_t* sources = nullptr;
@@ -91,6 +87,23 @@ std::string handleRefresh(bool force = false) {
         // loop until we don't find anything new
         do {
             LOG(INFO) << "Searching for NDI sources...";
+
+            // re-read IPs each iteration so UI changes take effect (or first init)
+            dm.getValue("/ndi_source_ips", value);
+            std::string newIps = value.string_value();
+            if (newIps != currentIps || !finder) {
+                LOG(INFO) << "Creating NDI finder with IPs: " << newIps;
+                currentIps = newIps;
+                if (finder) {
+                    NDIlib_find_destroy(finder);
+                }
+                find_create.p_extra_ips = currentIps.c_str();
+                finder = NDIlib_find_create_v2(&find_create);
+                if (!finder) {
+                    refreshInProgress = false;
+                    return "Unable to create NDI finder with provided IPs";
+                }
+            }
         } while (!shutdownToken && NDIlib_find_wait_for_sources(finder, 1000));
         sources = NDIlib_find_get_current_sources(finder, &num_sources);
         LOG(INFO) << "Found " << num_sources << " NDI sources";
