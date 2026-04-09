@@ -128,13 +128,17 @@ bool catena_filter(boost::log::attribute_value_set const& attrs) {
     return catena_severity_filter(attrs);
 }
 
+//Initialize static member variables
+bool Logger::initialized_ = false;
+std::mutex Logger::mutex_;
+
 /**
  *  Initializes the logging system
  *  @param appName The name of the application. Will be used to determine the log file name.
  */
 void Logger::init(const std::string& appName) {
-    static std::once_flag flag;
-    std::call_once(flag, [&]() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!initialized_) {
         if (!std::filesystem::exists(config::log_dir)) {
             std::filesystem::create_directories(config::log_dir);
         }
@@ -182,5 +186,6 @@ void Logger::init(const std::string& appName) {
             console_sink->set_filter(&catena_filter);
             core->add_sink(console_sink);
         }
-    });
+        initialized_ = true;
+    }
 }

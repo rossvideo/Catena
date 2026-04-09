@@ -40,6 +40,8 @@
  * @date 2026-03-20
  */
 
+#include <mutex>
+
 //BOOST libraries
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
@@ -93,10 +95,23 @@ public:
   */
   static void init(const std::string& appName);
 
+  /**
+   * @brief Reset the logger
+   * 
+   * Must be called before re-initializing the Logger.
+   * Intended for use in the unit tests, shouldn't be needed for production.
+   * If used, ensure that no threads are currently logging or can log when called.
+   */
+  static void reset() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (initialized_) {
+      instance().teardown();
+      initialized_ = false;
+    }
+  }
+
   ~Logger() {
-    auto core = boost::log::core::get();
-    core->flush();
-    core->remove_all_sinks();
+    teardown();
   }
 
 private:
@@ -109,6 +124,17 @@ private:
   Logger(const Logger&) = delete;
   Logger& operator=(const Logger&) = delete;
 
+  void teardown(){
+      auto core = boost::log::core::get();
+      core->flush();
+      core->remove_all_sinks();
+      instance().file_sink_.reset();
+      instance().console_sink_.reset();
+  }
+
   boost::shared_ptr<file_sink_t> file_sink_;
   boost::shared_ptr<console_sink_t> console_sink_;
+
+  static bool initialized_;
+  static std::mutex mutex_;
 };

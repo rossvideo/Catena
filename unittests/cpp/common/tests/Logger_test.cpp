@@ -96,9 +96,26 @@ class LoggerTest : public ::testing::Test {
             return n;
         }
 
+        static std::optional<std::filesystem::path> NewestFile(const std::filesystem::path& dir) {
+            std::optional<std::filesystem::path> newest;
+            std::optional<std::filesystem::file_time_type> new_time;
+            for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+                if (!entry.is_regular_file()) {
+                    continue;
+                }
+                auto t = std::filesystem::last_write_time(entry);
+                if (!new_time || t > *new_time) {
+                    new_time = t;
+                    newest = entry.path();
+                }
+            }
+            return newest;
+        }
+
         // Set up and tear down Google Logging
         static void SetUpTestSuite() {
             config::log_dir = UNITTEST_LOG_DIR + std::string("/logger");
+            std::filesystem::create_directory(config::log_dir);
             config::log_console = true;
             config::log_file = true;
             config::log_level = "TRACE";
@@ -120,8 +137,6 @@ TEST_F(LoggerTest, LogDefaultDir) {
     LOG(WARNING) << "This is a warning log message.";
     LOG(ERROR) << "This is an error log message.";
     LOG(FATAL) << "This is a fatal log message.";
-
-    boost::log::core::get()->flush();
 
     // Verify file created properly
     const std::filesystem::path logPath = FindPath();
@@ -192,8 +207,6 @@ TEST_F(LoggerTest, LogSeverityFilter) {
     LOG(ERROR) << "This is an error log message.";
     LOG(FATAL) << "This is a fatal log message.";
 
-    boost::log::core::get()->flush();
-
     const std::filesystem::path logPath = FindPath();
     ASSERT_FALSE(logPath.empty());
     const std::string slice = TestSlice(ReadFile(logPath), marker);
@@ -242,8 +255,6 @@ TEST_F(LoggerTest, LogSilence) {
     config::silent = true;
     LOG(INFO) << "MESSAGE";
 
-    boost::log::core::get()->flush();
-
     const std::filesystem::path logPath = FindPath();
     ASSERT_FALSE(logPath.empty());
     const std::string slice = TestSlice(ReadFile(logPath), marker);
@@ -253,4 +264,73 @@ TEST_F(LoggerTest, LogSilence) {
 
     EXPECT_EQ(CountFiles(), 1);
     config::silent = false;
+}
+
+// Test 4: File Rotation
+TEST_F(LoggerTest, Rotate) {
+    // Some config variables are only evaluated upon initialization
+    // so we must reset and reinitialize if we want to change them
+    Logger::reset();
+    config::log_dir = UNITTEST_LOG_DIR + std::string("/logger/rotate");
+    std::filesystem::create_directory(config::log_dir);
+    config::log_size = 0.00015; // ~0.15KB
+    config::log_count = 3;
+    Logger::init("LoggerTest");
+    if (CountFiles() >= 1) {
+        std::filesystem::remove_all(config::log_dir); // Clear any old files
+        std::filesystem::create_directory(config::log_dir);
+    }
+
+    // First file
+    LOG(INFO) << std::string(50, '_'); // Padding to fill up the file
+    std::this_thread::sleep_for(std::chrono::milliseconds(750));
+    EXPECT_EQ(CountFiles(), 1);
+    LOG(INFO) << "ROTATE 1"; // This will cause a rotation and be written to a new file
+    std::this_thread::sleep_for(std::chrono::milliseconds(750));
+    EXPECT_EQ(CountFiles(), 2);
+    // Second file
+    LOG(INFO) << std::string(1, '/');
+    std::this_thread::sleep_for(std::chrono::milliseconds(750));
+    EXPECT_EQ(CountFiles(), 2);
+    LOG(INFO) << "ROTATE 2";
+    std::this_thread::sleep_for(std::chrono::milliseconds(750));
+    EXPECT_EQ(CountFiles(), 3);
+    // Third file
+    LOG(INFO) << std::string(1, '|');
+    std::this_thread::sleep_for(std::chrono::milliseconds(750));
+    EXPECT_EQ(CountFiles(), 3);
+    LOG(INFO) << "ROTATE 3";
+    std::this_thread::sleep_for(std::chrono::milliseconds(750));
+    EXPECT_EQ(CountFiles(), 3); // At max, oldest file is deleted upon rotation
+
+    // Check contents of final file
+    auto file = NewestFile(config::log_dir);
+    std::string body = ReadFile(*file);
+    EXPECT_NE(body.find("ROTATE 3"), std::string::npos);
+}
+
+// Test 5: Single File Rotation
+TEST_F(LoggerTest, RotateSingleFile) {
+    // Some config variables are only evaluated upon initialization
+    // so we must reset and reinitialize if we want to change them
+    Logger::reset();
+    config::log_dir = UNITTEST_LOG_DIR + std::string("/logger/single");
+    std::filesystem::create_directory(config::log_dir);
+    config::log_size = 0.0001; // ~0.1KB
+    config::log_count = 1;
+    Logger::init("LoggerTest");
+    if (CountFiles() >= 1) {
+        std::filesystem::remove_all(config::log_dir); // Clear any old files
+        std::filesystem::create_directory(config::log_dir);
+    }
+
+    LOG(INFO) << std::string(50, '-'); // Padding to fill up the file
+    EXPECT_EQ(CountFiles(), 1);
+    LOG(INFO) << "ROTATE 1"; // This will cause a rotation and be written to a new file
+    EXPECT_EQ(CountFiles(), 1); // Number of files stays the same
+
+    // Check contents of rotated file
+    auto file = NewestFile(config::log_dir);
+    std::string body = ReadFile(*file);
+    EXPECT_NE(body.find("ROTATE 1"), std::string::npos);
 }
