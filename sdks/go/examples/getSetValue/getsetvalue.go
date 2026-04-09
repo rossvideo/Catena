@@ -216,8 +216,8 @@ func RegisterHandlers(srv catena.CatenaServer) {
 		deviceInfo := deviceInfo
 		srv.RegisterGetDeviceHandler(slot, func() (catena.CatenaDevice, catena.StatusResult) {
 			logger.Info("GetDevice", "slot", slot)
-			device, res := catena.ToCatenaDevice(deviceInfo)
-			if res.Code != catena.OK {
+			device, err := catena.ToCatenaDevice(deviceInfo)
+			if err != nil {
 				return catena.ReplyError[catena.CatenaDevice](catena.INTERNAL, "failed to create device info")
 			}
 			return catena.Reply(device)

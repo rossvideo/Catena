@@ -50,8 +50,8 @@ func TestToCatenaDevice_Basic(t *testing.T) {
 	}
 
 	cd, err := ToCatenaDevice(deviceMap)
-	if err.Code != OK {
-		t.Fatalf("ToCatenaDevice error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToCatenaDevice error: %v", err)
 	}
 	if cd.GetProtoDevice() == nil {
 		t.Error("expected non-nil proto device")
@@ -77,8 +77,8 @@ func TestToCatenaDevice_WithParams(t *testing.T) {
 	}
 
 	cd, err := ToCatenaDevice(deviceMap)
-	if err.Code != OK {
-		t.Fatalf("ToCatenaDevice error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToCatenaDevice error: %v", err)
 	}
 	proto := cd.GetProtoDevice()
 	if proto == nil {
@@ -119,8 +119,8 @@ func TestToCatenaDevice_WithConstraints(t *testing.T) {
 	}
 
 	cd, err := ToCatenaDevice(deviceMap)
-	if err.Code != OK {
-		t.Fatalf("ToCatenaDevice error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToCatenaDevice error: %v", err)
 	}
 	proto := cd.GetProtoDevice()
 	if proto == nil {
@@ -188,8 +188,8 @@ func TestToCatenaDevice_WithLanguagePacks(t *testing.T) {
 	}
 
 	cd, err := ToCatenaDevice(deviceMap)
-	if err.Code != OK {
-		t.Fatalf("ToCatenaDevice error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToCatenaDevice error: %v", err)
 	}
 	proto := cd.GetProtoDevice()
 	if proto == nil {
@@ -243,8 +243,8 @@ func TestToCatenaDevice_WithMenuGroups(t *testing.T) {
 	}
 
 	cd, err := ToCatenaDevice(deviceMap)
-	if err.Code != OK {
-		t.Fatalf("ToCatenaDevice error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToCatenaDevice error: %v", err)
 	}
 	proto := cd.GetProtoDevice()
 	if proto == nil {
@@ -294,8 +294,8 @@ func TestToCatenaDevice_WithCommands(t *testing.T) {
 	}
 
 	cd, err := ToCatenaDevice(deviceMap)
-	if err.Code != OK {
-		t.Fatalf("ToCatenaDevice error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToCatenaDevice error: %v", err)
 	}
 	proto := cd.GetProtoDevice()
 	if proto == nil {
@@ -333,13 +333,13 @@ func TestCatenaDevice_ToJSON(t *testing.T) {
 	}
 
 	cd, err := ToCatenaDevice(deviceMap)
-	if err.Code != OK {
-		t.Fatalf("ToCatenaDevice error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToCatenaDevice error: %v", err)
 	}
 
 	jsonData, err := cd.ToJSON()
-	if err.Code != OK {
-		t.Fatalf("ToJSON error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToJSON error: %v", err)
 	}
 	if jsonData == nil {
 		t.Fatal("expected non-nil JSON data")
@@ -360,8 +360,8 @@ func TestCatenaDevice_ToJSON(t *testing.T) {
 func TestCatenaDevice_ToJSON_Nil(t *testing.T) {
 	cd := CatenaDevice{device: nil}
 	jsonData, err := cd.ToJSON()
-	if err.Code != OK {
-		t.Fatalf("ToJSON error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToJSON error: %v", err)
 	}
 	if jsonData != nil {
 		t.Error("expected nil JSON data for nil device")
@@ -472,8 +472,8 @@ func TestToCatenaDevice_CompleteDevice(t *testing.T) {
 	}
 
 	cd, err := ToCatenaDevice(deviceMap)
-	if err.Code != OK {
-		t.Fatalf("ToCatenaDevice error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToCatenaDevice error: %v", err)
 	}
 
 	proto := cd.GetProtoDevice()
@@ -503,8 +503,8 @@ func TestToCatenaDevice_CompleteDevice(t *testing.T) {
 
 	// Verify JSON output works
 	jsonData, err := cd.ToJSON()
-	if err.Code != OK {
-		t.Fatalf("ToJSON error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToJSON error: %v", err)
 	}
 	if len(jsonData) == 0 {
 		t.Error("expected non-empty JSON")
@@ -526,8 +526,8 @@ func TestToCatenaDevice_FloatRangeConstraint(t *testing.T) {
 	}
 
 	cd, err := ToCatenaDevice(deviceMap)
-	if err.Code != OK {
-		t.Fatalf("ToCatenaDevice error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToCatenaDevice error: %v", err)
 	}
 	proto := cd.GetProtoDevice()
 	if proto == nil {
