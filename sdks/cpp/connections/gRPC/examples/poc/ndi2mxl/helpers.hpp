@@ -6,7 +6,7 @@
 #include "device.ndi2mxl.yaml.h"
 
 void createFlowDef(const ndi2mxl::Create_flow& createFlow, ndi2mxl::Flow_def& flowDef) {
-    flowDef.colorspace = "bt709";
+    flowDef.colorspace = "BT709";
     flowDef.components = {ndi2mxl::Flow_def::Components_elem{"Y", createFlow.width, createFlow.height, 10},
                           ndi2mxl::Flow_def::Components_elem{"Cb", createFlow.width / 2, createFlow.height, 10},
                           ndi2mxl::Flow_def::Components_elem{"Cr", createFlow.width / 2, createFlow.height, 10}};
