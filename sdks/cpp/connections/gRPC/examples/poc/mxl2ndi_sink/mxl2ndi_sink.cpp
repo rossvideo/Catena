@@ -23,6 +23,7 @@
 // std
 #include <atomic>
 #include <filesystem>
+#include <set>
 #include <thread>
 
 #include "mxl_reader.hpp"
@@ -40,6 +41,9 @@ std::atomic<bool> flowIdChanged = false;
 std::atomic<int> liveIndexChanged = -1;
 std::atomic<int> displayIndexChanged = -1;
 std::unique_ptr<std::thread> flowThread = nullptr;
+
+std::atomic<bool> isScanning = false;
+
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
@@ -53,11 +57,114 @@ void handle_signal(int sig) {
     t.join();
 }
 
+void ScanDomains() {
+    if (isScanning.exchange(true)) {
+        LOG(WARNING) << "Already scanning domains, ignoring request";
+        return;
+    }
+    st2138::Value value;
+    dm.getValue("/domains", value);
+    // comma separated paths
+    std::stringstream ss(value.string_value());
+    std::string domain;
+
+    catena::exception_with_status statusErr{"OK", catena::StatusCode::OK};
+    std::unique_ptr<catena::common::IParam> inputsParam = dm.getParam("/inputs", statusErr);
+    catena::common::ParamWithValue<mxl2ndi_sink::Inputs>* inputs =
+      dynamic_cast<catena::common::ParamWithValue<mxl2ndi_sink::Inputs>*>(inputsParam.get());
+    std::unique_ptr<catena::common::IParam> statusParam = dm.getParam("/scan_status", statusErr);
+    catena::common::ParamWithValue<std::string>* scanStatus =
+      dynamic_cast<catena::common::ParamWithValue<std::string>*>(statusParam.get());
+    scanStatus->get() = "Scanning domains...";
+    dm.getValueSetByServer().emit("/scan_status", statusParam.get());
+
+    // collect existing (domain, flow_id) pairs so we don't add duplicates
+    std::set<std::pair<std::string, std::string>> existingFlows;
+    {
+        std::lock_guard<std::mutex> lock(dm.mutex());
+        for (const auto& elem : inputs->get()) {
+            if (!elem.flow_id.empty()) {
+                existingFlows.emplace(elem.domain, elem.flow_id);
+            }
+        }
+    }
+
+    std::vector<mxl2ndi_sink::Inputs_elem> newEntries;
+
+    while (std::getline(ss, domain, ',')) {
+        std::string trimmedDomain = std::string(domain.begin(), domain.end());
+        // trim whitespace
+        trimmedDomain.erase(0, trimmedDomain.find_first_not_of(" \t"));
+        trimmedDomain.erase(trimmedDomain.find_last_not_of(" \t") + 1);
+        if (trimmedDomain.empty()) {
+            continue;
+        }
+        LOG(INFO) << "Scanning domain: " << trimmedDomain;
+        std::filesystem::path domainPath(trimmedDomain);
+        if (!std::filesystem::exists(domainPath)) {
+            LOG(WARNING) << "Domain path does not exist: " << trimmedDomain;
+            continue;
+        }
+        if (!std::filesystem::is_directory(domainPath)) {
+            LOG(WARNING) << "Domain path is not a directory: " << trimmedDomain;
+            continue;
+        }
+        // scan all dirs in the domain path and look for MXL flows
+        for (const auto& entry : std::filesystem::directory_iterator(domainPath)) {
+            if (!entry.is_directory()) {
+                continue;
+            }
+            std::filesystem::path flowPath = entry.path();
+            std::string flowId = flowPath.stem().string();
+            if (existingFlows.count({trimmedDomain, flowId})) {
+                LOG(INFO) << "Flow already in inputs, skipping: " << flowId << " in domain: " << trimmedDomain;
+                continue;
+            }
+            LOG(INFO) << "Found new flow: " << flowId << " in domain: " << trimmedDomain;
+            existingFlows.emplace(trimmedDomain, flowId);
+            mxl2ndi_sink::Inputs_elem elem;
+            elem.name = "";
+            elem.domain = trimmedDomain;
+            elem.flow_id = flowId;
+            elem.live = 1;
+            elem.display = 1;
+            newEntries.push_back(std::move(elem));
+        }
+    }
+
+    if (!newEntries.empty()) {
+        std::lock_guard<std::mutex> lock(dm.mutex());
+        // inputs starts with a bunch of empty entries
+        // overwrite empty slots first, then append any remaining
+        auto& inputsVec = inputs->get();
+        auto newIt = newEntries.begin();
+        for (auto& slot : inputsVec) {
+            if (newIt == newEntries.end()) break;
+            if (slot.flow_id.empty()) {
+                slot = std::move(*newIt);
+                ++newIt;
+            }
+        }
+        // append any remaining new entries that didn't fit in empty slots
+        for (; newIt != newEntries.end(); ++newIt) {
+            inputsVec.push_back(std::move(*newIt));
+        }
+        dm.getValueSetByServer().emit("/inputs", inputsParam.get());
+        LOG(INFO) << "Added " << newEntries.size() << " new inputs from domain scan";
+    }
+
+    isScanning = false;
+    scanStatus->get() = "Found " + std::to_string(newEntries.size()) + " new flows";
+    dm.getValueSetByServer().emit("/scan_status", statusParam.get());
+}
+
 void RunVideoFlow() {
     if (!NDIlib_initialize()) {
         LOG(ERROR) << "Failed to initialize NDI library";
         return;
     }
+
+    ScanDomains();
 
     st2138::Value value;
     dm.getValue("/ndi_name", value);
@@ -70,22 +177,27 @@ void RunVideoFlow() {
         return;
     }
 
+    catena::exception_with_status statusErr{"OK", catena::StatusCode::OK};
+    std::unique_ptr<catena::common::IParam> inputsParam = dm.getParam("/inputs", statusErr);
+    catena::common::ParamWithValue<mxl2ndi_sink::Inputs>* inputs =
+      dynamic_cast<catena::common::ParamWithValue<mxl2ndi_sink::Inputs>*>(inputsParam.get());
+
     std::vector<std::unique_ptr<mxlcpp::MxlReader>> readers;
-    catena::exception_with_status statusErr = dm.getValue("/inputs", value);
-    if (statusErr.status != catena::StatusCode::OK) {
-        LOG(ERROR) << "Failed to get inputs: " << statusErr.what();
-        return;
-    }
-    for (const auto& input : value.struct_array_values().struct_values()) {
-        std::string name = input.fields().at("name").string_value();
-        std::string domain = input.fields().at("domain").string_value();
-        std::string flowId = input.fields().at("flow_id").string_value();
-        if (flowId.empty()) {
+    for (auto& input : inputs->get()) {
+        if (input.flow_id.empty()) {
             LOG(WARNING) << "Skipping input with empty flow ID";
             continue;
         }
-        readers.emplace_back(std::make_unique<mxlcpp::MxlReader>(name, domain, flowId));
+        readers.emplace_back(std::make_unique<mxlcpp::MxlReader>(input.name, input.domain, input.flow_id));
+        
+        if (input.name.empty()) {
+            mxl2ndi_sink::Flow_def flowDef;
+            readers.back()->open(flowDef);
+            readers.back()->setName(flowDef.label);
+            input.name = flowDef.label;
+        }
     }
+    dm.getValueSetByServer().emit("/inputs", inputsParam.get());
 
     if (readers.empty()) {
         LOG(ERROR) << "No inputs configured";
@@ -100,10 +212,6 @@ void RunVideoFlow() {
 
     value.set_string_value("Running");
     dm.setValue("/status", value);
-
-    std::unique_ptr<catena::common::IParam> inputsParam = dm.getParam("/inputs", statusErr);
-    catena::common::ParamWithValue<mxl2ndi_sink::Inputs>* inputs =
-      dynamic_cast<catena::common::ParamWithValue<mxl2ndi_sink::Inputs>*>(inputsParam.get());
 
     std::unique_ptr<catena::common::IParam> selectedIndexParam = dm.getParam("/selected_index", statusErr);
     if (statusErr.status != catena::StatusCode::OK) {
@@ -139,6 +247,26 @@ void RunVideoFlow() {
     while (isRunning) {
         {
             std::lock_guard<std::mutex> lock(dm.mutex());
+            // grow readers vector if ScanDomains appended new /inputs entries
+            bool change = false;
+            for (size_t i = readers.size(); i < inputs->get().size(); ++i) {
+                auto& elem = inputs->get()[i];
+                if (elem.flow_id.empty()) {
+                    continue;
+                }
+                readers.emplace_back(std::make_unique<mxlcpp::MxlReader>(elem.name, elem.domain, elem.flow_id));
+                if (elem.name.empty()) {
+                    mxl2ndi_sink::Flow_def flowDef;
+                    readers.back()->fillFlowDef(flowDef);
+                    readers.back()->setName(flowDef.label);
+                    elem.name = flowDef.label;
+                    change = true;
+                }
+                LOG(INFO) << "Added reader for flow: " << elem.flow_id;
+            }
+            if (change) {
+                dm.getValueSetByServer().emit("/inputs", inputsParam.get());
+            }
             int liveIndex = liveIndexChanged.exchange(-1);
             if (liveIndex >= 0) {
                 if (liveIndex < 0 || liveIndex >= readers.size()) {
@@ -184,7 +312,7 @@ void RunVideoFlow() {
                     }
                 }
                 if (!found) {
-                    LOG(WARNING) << "Selected flow ID not found: " << selectedFlowId;
+                    LOG(WARNING) << "Selected flow ID not found: " << selectedFlowId->get();
                     mxlSleepForNs(100'000'000);  // 100ms
                     continue;
                 }
@@ -209,7 +337,7 @@ void RunVideoFlow() {
                 }
                 dm.getValueSetByServer().emit("/inputs", inputsParam.get());
             }
-            readers[updateDisplayIndex]->open(flowDef->get());
+            readers[updateDisplayIndex]->fillFlowDef(flowDef->get());
             dm.getValueSetByServer().emit("/flow_def", flowDefParam.get());
         }
 
@@ -284,6 +412,27 @@ void defineCommands() {
                 response.mutable_no_response();
                 co_return response;
             }(value, respond));
+      });
+
+    std::unique_ptr<IParam> scanCommand = dm.getCommand("/scan_domains", err);
+    scanCommand->defineCommand(
+      [](const st2138::Value& value,
+         const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> {
+            return std::make_unique<ParamDescriptor::CommandResponder>(
+                [](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+                    st2138::CommandResponse response;
+                    if (isScanning) {
+                        response.mutable_exception()->set_type("Invalid Command");
+                        response.mutable_exception()->set_details("Already scanning domains");
+                        co_return response;
+                    }
+
+                    // just do it in this thread since it won't take long
+                    ScanDomains();
+
+                    response.mutable_no_response();
+                    co_return response;
+                }(value, respond));
       });
 }
 

@@ -80,6 +80,7 @@ class MxlReader {
     }
 
     const std::string& getName() const { return _name; }
+    void setName(std::string const& name) { _name = name; }
 
     const std::string& getDomain() const { return _domain; }
 
@@ -265,8 +266,8 @@ class MxlReader {
     std::string _name;
     std::string _domain;
     std::string _flowId;
-    mxlInstance _instance;
-    mxlFlowReader _reader;
+    mxlInstance _instance = nullptr;
+    mxlFlowReader _reader = nullptr;
     mxlFlowInfo _flowInfo;
     uint64_t _index;
     mxlRational _rate;

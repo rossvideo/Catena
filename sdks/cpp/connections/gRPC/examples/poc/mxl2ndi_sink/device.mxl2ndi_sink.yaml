@@ -302,6 +302,22 @@ params:
     value:
       string_value: Catena MXL to NDI Sink
 
+  domains:
+    type: STRING
+    name:
+      display_strings:
+        en: "Scan Domains"
+    value:
+      string_value: ""
+
+  scan_status:
+    type: STRING
+    name:
+      display_strings:
+        en: "Scan Status"
+    value:
+      string_value: ""
+
 commands:
   start:
     type: EMPTY
@@ -314,6 +330,12 @@ commands:
     name:
       display_strings:
         en: "Stop"
+    response: false
+  scan_domains:
+    type: EMPTY
+    name:
+      display_strings:
+        en: "Scan Domains"
     response: false
 
 menu_groups:

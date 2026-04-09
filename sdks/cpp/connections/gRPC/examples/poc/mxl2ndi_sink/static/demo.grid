@@ -5,8 +5,18 @@
    </abs>
    <label height="80" left="15" name="MXL 🡆 NDI" style="txt-align:center;bdr:round;bg#teal;size:Biggest;fg#000000;" top="110" width="650"/>
    <param anchor="west" height="200" left="15" oid="inputs" top="205" width="650"/>
-   <ndi height="200" left="15" srcname="NDI_SOURCE (Catena MXL Sink)" top="420" width="650" window=""/>
-   <abs height="50" id="partner_logos" left="15" style="bg#00000000;" top="630" width="650">
+   <abs height="100" id="scan_box" left="15" style="bg#2D323902;bdr:round;bdr#teal;" top="420" width="650">
+      <label height="40" left="15" name="&lt;html&gt;Domains&lt;br/&gt;(comma separated)&lt;/html&gt;" style="txt-align:west;" top="15" width="200"/>
+      <param expand="true" height="36" left="160" oid="domains" showlabel="false" top="15" width="480"/>
+      <param editable="false" height="36" left="15" oid="scan_status" showlabel="false" style="txt-align:left;" top="50" width="500" widget="label"/>
+      <button buttontype="push" height="32" left="480" name="Scan Domains" top="60" width="138">
+         <task tasktype="ogscript">
+            params.executeCommand("scan_domains", null, null);
+         </task>
+      </button>
+   </abs>
+   <ndi height="200" left="15" srcname="NDI_SOURCE (Catena MXL to NDI Sink)" top="530" width="650" window=""/>
+   <abs height="50" id="partner_logos" left="15" style="bg#00000000;" top="740" width="650">
       <label height="50" left="0" name="" style="bg-u:eo://mxl_supporter.png;bg-fill:fit;bg#00000000;" top="0" width="207"/>
       <label height="50" left="445" name="" style="bg-u:eo://Ross-Logo.png;bg-fill:fit;bg#00000000;" top="0" width="207"/>
    </abs>
