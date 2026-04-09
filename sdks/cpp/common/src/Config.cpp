@@ -115,7 +115,7 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(LOG_MAX_SIZE_KEY)) {
             config::log_max_size = vars[LOG_MAX_SIZE_KEY].as<int>();
             if (config::log_max_size < 10) {
-                std::cout << "WARNING: log_size_max is set below the minimum of 10. Ignoring log_max_size." << std::endl;
+                std::cout << "WARNING: log_max_size is set below the minimum of 10. Ignoring log_max_size." << std::endl;
             }
             else if (!vars[LOG_MAX_SIZE_KEY].defaulted()) {
                 if (!vars[LOG_SIZE_KEY].defaulted()) {

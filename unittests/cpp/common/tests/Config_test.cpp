@@ -545,3 +545,51 @@ TEST_F(ConfigTest, InvalidOption) {
     EXPECT_FALSE(exit2);
     EXPECT_EQ(code2, 0);
 }
+
+/**
+ * TEST 9 - log_max_size sets log_count and log_size
+ */
+TEST_F(ConfigTest, LogMaxSize) {
+    // Create command line args
+    std::vector<std::string> cmdArgs = {
+        "./test",
+        "--log_max_size=100",
+    };
+    int argc;
+    std::vector<char*> argv;
+    buildArgv(cmdArgs, argc, argv);
+
+    // Do call resulting in new default
+    const auto [exit, code] = config::initConfigVariables(argc, argv.data(), "CONFIGTEST_");
+    EXPECT_FALSE(exit);
+    EXPECT_EQ(code, 0);
+
+    EXPECT_EQ(config::log_max_size, 100);
+    EXPECT_EQ(config::log_count, 10);
+    EXPECT_EQ(config::log_size, 10);
+}
+
+/**
+ * TEST 9 - ignored log_max_size doesn't set log_count and log_size
+ */
+TEST_F(ConfigTest, IgnoredLogMaxSize) {
+    // Create command line args
+    std::vector<std::string> cmdArgs = {
+        "./test",
+        "--log_max_size=100",
+        "--log_count=20",
+        "--log_size=50"
+    };
+    int argc;
+    std::vector<char*> argv;
+    buildArgv(cmdArgs, argc, argv);
+
+    // Do call resulting in new default
+    const auto [exit, code] = config::initConfigVariables(argc, argv.data(), "CONFIGTEST_");
+    EXPECT_FALSE(exit);
+    EXPECT_EQ(code, 0);
+
+    EXPECT_EQ(config::log_max_size, 100);
+    EXPECT_EQ(config::log_count, 20);
+    EXPECT_EQ(config::log_size, 50);
+}
