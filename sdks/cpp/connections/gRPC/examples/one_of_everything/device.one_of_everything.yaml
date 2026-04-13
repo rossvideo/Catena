@@ -144,6 +144,51 @@ params:
   constraint_examples:
     import: { url: constraints/param.constraint_examples.yaml }
 
+  authz_monitor:
+    type: STRING
+    access_scope: st2138:mon
+    name:
+      display_strings:
+        en: "Monitor Scope (st2138:mon)"
+        fr: "Portée de Surveillance (st2138:mon)"
+        es: "Alcance de Monitoreo (st2138:mon)"
+        ja: "監視スコープ (st2138:mon)"
+    value:
+      string_value: "You have st2138:mon scope!"
+  authz_operate:
+    type: STRING
+    access_scope: st2138:op
+    name:
+      display_strings:
+        en: "Operate Scope (st2138:op)"
+        fr: "Portée d'Opération (st2138:op)"
+        es: "Alcance de Operación (st2138:op)"
+        ja: "操作スコープ (st2138:op)"
+    value:
+      string_value: "You have st2138:op scope!"
+  authz_configure:
+    type: STRING
+    access_scope: st2138:cfg
+    name:
+      display_strings:
+        en: "Configure Scope (st2138:cfg)"
+        fr: "Portée de Configuration (st2138:cfg)"
+        es: "Alcance de Configuración (st2138:cfg)"
+        ja: "設定スコープ (st2138:cfg)"
+    value:
+      string_value: "You have st2138:cfg scope!"
+  authz_admin:
+    type: STRING
+    access_scope: st2138:adm
+    name:
+      display_strings:
+        en: "Admin Scope (st2138:adm)"
+        fr: "Portée Admin (st2138:adm)"
+        es: "Alcance de Admin (st2138:adm)"
+        ja: "管理スコープ (st2138:adm)"
+    value:
+      string_value: "You have st2138:adm scope!"
+
   product:
     type: STRUCT
     read_only: true
@@ -250,6 +295,17 @@ menu_groups:
         client_hints: {
           "oglml": "eo://commands.grid"
         }
+      authz_examples:
+        name: { display_strings: {
+          en: "Authorization Examples",
+          fr: "Exemples d'Autorisation",
+          es: "Ejemplos de Autorización",
+          ja: "認可の例"}}
+        param_oids:
+          - /authz_monitor
+          - /authz_operate
+          - /authz_configure
+          - /authz_admin
 commands:
   fib_start:
     type: EMPTY
