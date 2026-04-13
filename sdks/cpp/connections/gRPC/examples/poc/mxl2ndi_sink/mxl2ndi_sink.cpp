@@ -91,6 +91,10 @@ void ScanDomains() {
 
     std::vector<mxl2ndi_sink::Inputs_elem> newEntries;
 
+    // list of domains to scan, we might append subdirs to recurse
+    std::vector<std::pair<int, std::string>> domains;
+    const int maxDepth = 1;
+
     while (std::getline(ss, domain, ',')) {
         std::string trimmedDomain = std::string(domain.begin(), domain.end());
         // trim whitespace
@@ -99,14 +103,20 @@ void ScanDomains() {
         if (trimmedDomain.empty()) {
             continue;
         }
-        LOG(INFO) << "Scanning domain: " << trimmedDomain;
-        std::filesystem::path domainPath(trimmedDomain);
+        domains.emplace_back(0, trimmedDomain);
+    }
+
+    while (!domains.empty()) {
+        auto [depth, currentDomain] = domains.back();
+        domains.pop_back();
+        LOG(INFO) << "Scanning domain: " << currentDomain << " at depth: " << depth;
+        std::filesystem::path domainPath(currentDomain);
         if (!std::filesystem::exists(domainPath)) {
-            LOG(WARNING) << "Domain path does not exist: " << trimmedDomain;
+            LOG(WARNING) << "Domain path does not exist: " << currentDomain;
             continue;
         }
         if (!std::filesystem::is_directory(domainPath)) {
-            LOG(WARNING) << "Domain path is not a directory: " << trimmedDomain;
+            LOG(WARNING) << "Domain path is not a directory: " << currentDomain;
             continue;
         }
         // scan all dirs in the domain path and look for MXL flows
@@ -114,17 +124,24 @@ void ScanDomains() {
             if (!entry.is_directory()) {
                 continue;
             }
-            std::filesystem::path flowPath = entry.path();
-            std::string flowId = flowPath.stem().string();
-            if (existingFlows.count({trimmedDomain, flowId})) {
-                LOG(INFO) << "Flow already in inputs, skipping: " << flowId << " in domain: " << trimmedDomain;
+            std::filesystem::path path = entry.path();
+            if (path.extension() != ".mxl-flow") {
+                // not an MXL flow, if it's a directory and we haven't reached max depth, add it to the list of domains to scan
+                if (path.extension() == "" && depth < maxDepth) {
+                    domains.emplace_back(depth + 1, path.string());
+                }
                 continue;
             }
-            LOG(INFO) << "Found new flow: " << flowId << " in domain: " << trimmedDomain;
-            existingFlows.emplace(trimmedDomain, flowId);
+            std::string flowId = path.stem().string();
+            if (existingFlows.count({currentDomain, flowId})) {
+                LOG(INFO) << "Flow already in inputs, skipping: " << flowId << " in domain: " << currentDomain;
+                continue;
+            }
+            LOG(INFO) << "Found new flow: " << flowId << " in domain: " << currentDomain;
+            existingFlows.emplace(currentDomain, flowId);
             mxl2ndi_sink::Inputs_elem elem;
             elem.name = "";
-            elem.domain = trimmedDomain;
+            elem.domain = currentDomain;
             elem.flow_id = flowId;
             elem.live = 1;
             elem.display = 1;
