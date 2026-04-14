@@ -213,7 +213,7 @@ TEST_F(LoggerTest, LogSeverityFilter) {
     ASSERT_FALSE(slice.empty()) << "Test marker not found in log";
 
     // Check messages were written in the right quantity
-    std::regex severity_re(R"(^\d+:\s*(trace|debug|info|warning|error|fatal)\s)");
+    std::regex severity_re(R"(\s*(trace|debug|info|warning|error|fatal)\s)");
     std::smatch m;
     int trace_count = 0, debug_count = 0, info_count = 0, warning_count = 0, error_count = 0, fatal_count = 0;
     std::istringstream stream(slice);

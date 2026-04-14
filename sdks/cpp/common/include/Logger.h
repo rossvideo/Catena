@@ -56,10 +56,6 @@ namespace LogHelper{
 
   // Helper to get kernel id of thread
   int kernel_thread_id();
-
-  // Helper for log file line numbers
-  inline std::atomic<unsigned int> current_record_id = 0;
-  unsigned int get_record_id();
 }
 
 // This map is to keep the boost system consistent with the old abseil system which uses all-caps for severity
@@ -75,8 +71,7 @@ namespace LogHelper{
   BOOST_LOG_TRIVIAL(severity) \
     << boost::log::add_value("File", LogHelper::log_basename(__FILE__)) \
     << boost::log::add_value("Line", __LINE__) \
-    << boost::log::add_value("KernelThreadID", LogHelper::kernel_thread_id()) \
-    << boost::log::add_value("RecordID", LogHelper::get_record_id())
+    << boost::log::add_value("KernelThreadID", LogHelper::kernel_thread_id())
 
 #define LOG(severity) \
   LOG_IMPL(CATENA_SEV_(severity))
