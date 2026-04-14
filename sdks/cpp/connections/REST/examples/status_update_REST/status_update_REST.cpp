@@ -64,8 +64,6 @@
 #include <functional>
 #include <Logger.h>
 
-#include <boost/log/trivial.hpp>
-
 using namespace catena::common;
 using catena::REST::ServiceConfig;
 using catena::REST::ServiceImpl;
