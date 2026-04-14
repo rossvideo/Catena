@@ -136,8 +136,8 @@ func writeDeviceResult(w http.ResponseWriter, device catena.CatenaDevice, httpSt
 
 	w.Header().Set("Content-Type", "application/json")
 	b, err := (protojson.MarshalOptions{
-		UseProtoNames:     true,
-		EmitDefaultValues: true,
+		UseProtoNames:   true,
+		EmitUnpopulated: false,
 	}).Marshal(protoDevice)
 	if err != nil {
 		logger.Error("failed to marshal device response", "error", err)
@@ -211,8 +211,8 @@ func (s *Server) Shutdown() {
 // sseMarshaler is the protojson marshaler used for SSE events.
 // UseProtoNames must be true so field names match the REST responses
 var sseMarshaler = protojson.MarshalOptions{
-	UseProtoNames:     true,
-	EmitDefaultValues: true,
+	UseProtoNames:   true,
+	EmitUnpopulated: false,
 }
 
 // sendSSEEvent writes a single SSE event to the response writer,
