@@ -102,7 +102,7 @@ func (cd CatenaDevice) GetProtoDevice() *protos.Device {
 // ToJSON converts CatenaDevice to JSON bytes using protojson.
 // Post-processes the JSON to inject schema-required fields that proto3
 // omits at their default values (slot, command response, menu_group order,
-// constraint range bounds).
+// constraint range bounds). Preserves protojson's original field ordering.
 func (cd CatenaDevice) ToJSON() ([]byte, error) {
 	if cd.device == nil {
 		return nil, nil
@@ -120,50 +120,55 @@ func (cd CatenaDevice) ToJSON() ([]byte, error) {
 
 // postProcessDeviceJSON ensures all SMPTE-schema-required fields are present
 // in the Device JSON even when proto3 omits them at their default values.
+// Preserves the original field ordering from protojson.
 func postProcessDeviceJSON(data []byte, slot uint32) ([]byte, error) {
-	var m map[string]any
-	if err := json.Unmarshal(data, &m); err != nil {
+	obj, err := parseOrderedJSON(data)
+	if err != nil {
 		return nil, err
 	}
 
-	m["slot"] = slot
+	obj.setFirst("slot", slot)
 
-	if commands, ok := m["commands"].(map[string]any); ok {
-		for _, cmd := range commands {
-			if cmdMap, ok := cmd.(map[string]any); ok {
-				setDefault(cmdMap, "response", false)
-			}
-		}
-	}
-
-	if menuGroups, ok := m["menu_groups"].(map[string]any); ok {
-		for _, mg := range menuGroups {
-			if mgMap, ok := mg.(map[string]any); ok {
-				setDefault(mgMap, "order", 0)
-			}
-		}
-	}
-
-	if constraints, ok := m["constraints"].(map[string]any); ok {
-		for _, c := range constraints {
-			if cMap, ok := c.(map[string]any); ok {
-				if r, ok := cMap["int32_range"].(map[string]any); ok {
-					setDefault(r, "min_value", 0)
-					setDefault(r, "max_value", 0)
-				}
-				if r, ok := cMap["float32_range"].(map[string]any); ok {
-					setDefault(r, "min_value", 0)
-					setDefault(r, "max_value", 0)
+	if v, ok := obj.get("commands"); ok {
+		if cmds, ok := v.(*orderedObj); ok {
+			for _, p := range cmds.pairs {
+				if cmd, ok := p.val.(*orderedObj); ok {
+					cmd.setDefault("response", false)
 				}
 			}
 		}
 	}
 
-	return json.Marshal(m)
-}
-
-func setDefault(m map[string]any, key string, value any) {
-	if _, exists := m[key]; !exists {
-		m[key] = value
+	if v, ok := obj.get("menu_groups"); ok {
+		if mgs, ok := v.(*orderedObj); ok {
+			for _, p := range mgs.pairs {
+				if mg, ok := p.val.(*orderedObj); ok {
+					mg.setDefault("order", int64(0))
+				}
+			}
+		}
 	}
+
+	if v, ok := obj.get("constraints"); ok {
+		if cs, ok := v.(*orderedObj); ok {
+			for _, p := range cs.pairs {
+				if c, ok := p.val.(*orderedObj); ok {
+					if r, ok := c.get("int32_range"); ok {
+						if rObj, ok := r.(*orderedObj); ok {
+							rObj.setDefault("min_value", int64(0))
+							rObj.setDefault("max_value", int64(0))
+						}
+					}
+					if r, ok := c.get("float32_range"); ok {
+						if rObj, ok := r.(*orderedObj); ok {
+							rObj.setDefault("min_value", 0.0)
+							rObj.setDefault("max_value", 0.0)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return obj.MarshalJSON()
 }

@@ -80,6 +80,21 @@ const (
 	ParamTypeData               ParamType = protos.ParamType_DATA
 )
 
+// ConstraintType represents the type of a constraint
+// Mirrors protos.Constraint_ConstraintType for convenience
+type ConstraintType = protos.Constraint_ConstraintType
+
+// ConstraintType constants matching the proto enum
+const (
+	ConstraintTypeUndefined          ConstraintType = protos.Constraint_UNDEFINED
+	ConstraintTypeIntRange           ConstraintType = protos.Constraint_INT_RANGE
+	ConstraintTypeFloatRange         ConstraintType = protos.Constraint_FLOAT_RANGE
+	ConstraintTypeIntChoice          ConstraintType = protos.Constraint_INT_CHOICE
+	ConstraintTypeStringChoice       ConstraintType = protos.Constraint_STRING_CHOICE
+	ConstraintTypeStringStringChoice ConstraintType = protos.Constraint_STRING_STRING_CHOICE
+	ConstraintTypeAlarmTable         ConstraintType = protos.Constraint_ALARM_TABLE
+)
+
 func ToCatenaValue(v any) (CatenaValue, StatusResult) {
 	val, res := ToProto(v)
 	if res.Code != OK {
