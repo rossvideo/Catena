@@ -274,6 +274,7 @@ TEST_F(LoggerTest, Rotate) {
     config::log_dir = UNITTEST_LOG_DIR + std::string("/logger/rotate");
     std::filesystem::create_directory(config::log_dir);
     config::log_size = 0.00015; // ~0.15KB
+    const uintmax_t max_bytes = config::log_size * 1024 * 1024;
     config::log_count = 3;
     Logger::init("LoggerTest");
     if (CountFiles() >= 1) {
@@ -282,29 +283,43 @@ TEST_F(LoggerTest, Rotate) {
     }
 
     // First file
-    LOG(INFO) << std::string(50, '_'); // Padding to fill up the file
+    LOG(INFO) << std::string(60, '_'); // Padding to fill up the file
     std::this_thread::sleep_for(std::chrono::milliseconds(750));
     EXPECT_EQ(CountFiles(), 1);
+    auto file = NewestFile(config::log_dir);
+    EXPECT_NEAR(std::filesystem::file_size(*file), max_bytes, 50); // Should be close to max (full file)
+    
     LOG(INFO) << "ROTATE 1"; // This will cause a rotation and be written to a new file
     std::this_thread::sleep_for(std::chrono::milliseconds(750));
     EXPECT_EQ(CountFiles(), 2);
+    file = NewestFile(config::log_dir);
+    EXPECT_NEAR(std::filesystem::file_size(*file), 0, 65); // Should be close to zero (new file)
+    
     // Second file
     LOG(INFO) << std::string(1, '/');
     std::this_thread::sleep_for(std::chrono::milliseconds(750));
     EXPECT_EQ(CountFiles(), 2);
+    EXPECT_NEAR(std::filesystem::file_size(*file), max_bytes, 50);
+    
     LOG(INFO) << "ROTATE 2";
     std::this_thread::sleep_for(std::chrono::milliseconds(750));
     EXPECT_EQ(CountFiles(), 3);
+    file = NewestFile(config::log_dir);
+    EXPECT_NEAR(std::filesystem::file_size(*file), 0, 65);
+
     // Third file
     LOG(INFO) << std::string(1, '|');
     std::this_thread::sleep_for(std::chrono::milliseconds(750));
     EXPECT_EQ(CountFiles(), 3);
+    EXPECT_NEAR(std::filesystem::file_size(*file), max_bytes, 50);
+    
     LOG(INFO) << "ROTATE 3";
     std::this_thread::sleep_for(std::chrono::milliseconds(750));
     EXPECT_EQ(CountFiles(), 3); // At max, oldest file is deleted upon rotation
-
+    file = NewestFile(config::log_dir);
+    EXPECT_NEAR(std::filesystem::file_size(*file), 0, 65);
+    
     // Check contents of final file
-    auto file = NewestFile(config::log_dir);
     std::string body = ReadFile(*file);
     EXPECT_NE(body.find("ROTATE 3"), std::string::npos);
 }
@@ -317,6 +332,7 @@ TEST_F(LoggerTest, RotateSingleFile) {
     config::log_dir = UNITTEST_LOG_DIR + std::string("/logger/single");
     std::filesystem::create_directory(config::log_dir);
     config::log_size = 0.0001; // ~0.1KB
+    const uintmax_t max_bytes = config::log_size * 1024 * 1024;
     config::log_count = 1;
     Logger::init("LoggerTest");
     if (CountFiles() >= 1) {
@@ -326,11 +342,14 @@ TEST_F(LoggerTest, RotateSingleFile) {
 
     LOG(INFO) << std::string(50, '-'); // Padding to fill up the file
     EXPECT_EQ(CountFiles(), 1);
+    auto file = NewestFile(config::log_dir);
+    EXPECT_NEAR(std::filesystem::file_size(*file), max_bytes, 50);
     LOG(INFO) << "ROTATE 1"; // This will cause a rotation and be written to a new file
     EXPECT_EQ(CountFiles(), 1); // Number of files stays the same
+    file = NewestFile(config::log_dir);
+    EXPECT_NEAR(std::filesystem::file_size(*file), 0, 65);
 
     // Check contents of rotated file
-    auto file = NewestFile(config::log_dir);
     std::string body = ReadFile(*file);
     EXPECT_NE(body.find("ROTATE 1"), std::string::npos);
 }
