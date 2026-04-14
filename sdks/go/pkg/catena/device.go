@@ -159,7 +159,7 @@ func postProcessDeviceJSON(data []byte, slot uint32) ([]byte, error) {
 							rObj.setDefault("max_value", int64(0))
 						}
 					}
-					if r, ok := c.get("float32_range"); ok {
+					if r, ok := c.get("float_range"); ok {
 						if rObj, ok := r.(*orderedObj); ok {
 							rObj.setDefault("min_value", 0.0)
 							rObj.setDefault("max_value", 0.0)

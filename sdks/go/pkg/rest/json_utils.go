@@ -62,69 +62,14 @@ func MarshalProtoJSON(msg proto.Message) ([]byte, error) {
 	return protoMarshalOpts.Marshal(msg)
 }
 
-// injectJSONField sets key:value in a JSON object, preserving original key order.
+// injectJSONField sets key:value in a JSON object.
 func injectJSONField(data []byte, key string, value any) ([]byte, error) {
-	obj, err := parseOrderedJSON(data)
-	if err != nil {
+	var obj map[string]any
+	if err := json.Unmarshal(data, &obj); err != nil {
 		return nil, err
 	}
-	obj.set(key, value)
-	return obj.MarshalJSON()
-}
-
-// PostProcessDeviceJSON ensures all SMPTE-schema-required fields are present
-// in the Device JSON even when proto3 omits them at their default values.
-// Preserves the original field ordering from protojson.
-func PostProcessDeviceJSON(data []byte, slot uint32) ([]byte, error) {
-	obj, err := parseOrderedJSON(data)
-	if err != nil {
-		return nil, err
-	}
-
-	obj.setFirst("slot", slot)
-
-	if v, ok := obj.get("commands"); ok {
-		if cmds, ok := v.(*orderedObj); ok {
-			for _, p := range cmds.pairs {
-				if cmd, ok := p.val.(*orderedObj); ok {
-					cmd.setDefault("response", false)
-				}
-			}
-		}
-	}
-
-	if v, ok := obj.get("menu_groups"); ok {
-		if mgs, ok := v.(*orderedObj); ok {
-			for _, p := range mgs.pairs {
-				if mg, ok := p.val.(*orderedObj); ok {
-					mg.setDefault("order", int64(0))
-				}
-			}
-		}
-	}
-
-	if v, ok := obj.get("constraints"); ok {
-		if cs, ok := v.(*orderedObj); ok {
-			for _, p := range cs.pairs {
-				if c, ok := p.val.(*orderedObj); ok {
-					if r, ok := c.get("int32_range"); ok {
-						if rObj, ok := r.(*orderedObj); ok {
-							rObj.setDefault("min_value", int64(0))
-							rObj.setDefault("max_value", int64(0))
-						}
-					}
-					if r, ok := c.get("float32_range"); ok {
-						if rObj, ok := r.(*orderedObj); ok {
-							rObj.setDefault("min_value", 0.0)
-							rObj.setDefault("max_value", 0.0)
-						}
-					}
-				}
-			}
-		}
-	}
-
-	return obj.MarshalJSON()
+	obj[key] = value
+	return json.Marshal(obj)
 }
 
 // WriteCommandResponseJSON marshals a protos.CommandResponse to JSON and writes it
@@ -137,10 +82,7 @@ func WriteCommandResponseJSON(w http.ResponseWriter, cmdResp *protos.CommandResp
 		return nil
 	}
 
-	b, err := (protojson.MarshalOptions{
-		UseProtoNames:   true,
-		EmitUnpopulated: false,
-	}).Marshal(cmdResp)
+	b, err := MarshalProtoJSON(cmdResp)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(map[string]string{
@@ -198,10 +140,7 @@ func WriteResponseJSON(w http.ResponseWriter, value *protos.Value, statusCode in
 		return nil
 	}
 
-	b, err := (protojson.MarshalOptions{
-		UseProtoNames:   true,
-		EmitUnpopulated: false,
-	}).Marshal(value)
+	b, err := MarshalProtoJSON(value)
 	if err != nil {
 		// Marshaling failed (e.g., invalid UTF-8). Don't return a 2xx with an empty body.
 		// Prefer a JSON error body so clients that always parse JSON don't explode.

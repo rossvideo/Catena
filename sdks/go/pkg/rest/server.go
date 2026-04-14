@@ -126,27 +126,20 @@ func writeValueResult(w http.ResponseWriter, value catena.CatenaValue, httpStatu
 
 // writeDeviceResult writes a CatenaDevice as JSON
 func writeDeviceResult(w http.ResponseWriter, device catena.CatenaDevice, httpStatus int) {
-	protoDevice := device.GetProtoDevice()
-	if protoDevice == nil {
+	if device.GetProtoDevice() == nil {
 		w.WriteHeader(httpStatus)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	b, err := MarshalProtoJSON(protoDevice)
+	b, err := device.ToJSON()
 	if err != nil {
 		logger.Error("failed to marshal device response", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "failed to marshal device response"})
 		return
 	}
-	b, err = PostProcessDeviceJSON(b, protoDevice.GetSlot())
-	if err != nil {
-		logger.Error("failed to post-process device JSON", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(httpStatus)
 	if _, writeErr := w.Write(b); writeErr != nil {
 		logger.Error("failed to write device response", "error", writeErr)
