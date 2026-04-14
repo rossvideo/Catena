@@ -48,7 +48,109 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
+
+var protoMarshalOpts = protojson.MarshalOptions{
+	UseProtoNames:   true,
+	EmitUnpopulated: false,
+}
+
+// MarshalProtoJSON marshals a proto message to JSON using proto field names
+// and without emitting unpopulated fields.
+func MarshalProtoJSON(msg proto.Message) ([]byte, error) {
+	return protoMarshalOpts.Marshal(msg)
+}
+
+// injectJSONField parses a JSON object, sets key to value, and re-serializes.
+// Used to ensure fields like "slot":0 appear even though proto3 JSON omits
+// default-valued scalars.
+func injectJSONField(data []byte, key string, value any) ([]byte, error) {
+	var m map[string]any
+	if err := json.Unmarshal(data, &m); err != nil {
+		return nil, err
+	}
+	m[key] = value
+	return json.Marshal(m)
+}
+
+// PostProcessDeviceJSON ensures all SMPTE-schema-required fields are present
+// in the Device JSON even when proto3 omits them at their default values.
+func PostProcessDeviceJSON(data []byte, slot uint32) ([]byte, error) {
+	var m map[string]any
+	if err := json.Unmarshal(data, &m); err != nil {
+		return nil, err
+	}
+
+	m["slot"] = slot
+
+	injectCommandDefaults(m)
+	injectMenuGroupDefaults(m)
+	injectConstraintDefaults(m)
+
+	return json.Marshal(m)
+}
+
+// injectCommandDefaults ensures "response" is present on every command.
+// The schema requires it, but proto3 omits bool fields that are false.
+func injectCommandDefaults(device map[string]any) {
+	commands, ok := device["commands"].(map[string]any)
+	if !ok {
+		return
+	}
+	for _, cmd := range commands {
+		cmdMap, ok := cmd.(map[string]any)
+		if !ok {
+			continue
+		}
+		setDefault(cmdMap, "response", false)
+	}
+}
+
+// injectMenuGroupDefaults ensures "order" is present on menu groups and menus.
+// The schema requires "order" on menu_group.
+func injectMenuGroupDefaults(device map[string]any) {
+	menuGroups, ok := device["menu_groups"].(map[string]any)
+	if !ok {
+		return
+	}
+	for _, mg := range menuGroups {
+		mgMap, ok := mg.(map[string]any)
+		if !ok {
+			continue
+		}
+		setDefault(mgMap, "order", 0)
+	}
+}
+
+// injectConstraintDefaults ensures required range fields are present.
+// The schema requires min_value/max_value on int32_range and float32_range.
+func injectConstraintDefaults(device map[string]any) {
+	constraints, ok := device["constraints"].(map[string]any)
+	if !ok {
+		return
+	}
+	for _, c := range constraints {
+		cMap, ok := c.(map[string]any)
+		if !ok {
+			continue
+		}
+		if r, ok := cMap["int32_range"].(map[string]any); ok {
+			setDefault(r, "min_value", 0)
+			setDefault(r, "max_value", 0)
+		}
+		if r, ok := cMap["float32_range"].(map[string]any); ok {
+			setDefault(r, "min_value", 0)
+			setDefault(r, "max_value", 0)
+		}
+	}
+}
+
+func setDefault(m map[string]any, key string, value any) {
+	if _, exists := m[key]; !exists {
+		m[key] = value
+	}
+}
 
 // WriteCommandResponseJSON marshals a protos.CommandResponse to JSON and writes it
 // to the HTTP response with the specified status code.

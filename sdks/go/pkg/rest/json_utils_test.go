@@ -447,3 +447,184 @@ func TestWriteCommandResponseJSON_WriteError(t *testing.T) {
 		t.Fatal("expected error when Write fails")
 	}
 }
+
+func TestMarshalProtoJSON_DoesNotEmitDefaults(t *testing.T) {
+	device := &protos.Device{
+		Slot: 0,
+		Params: map[string]*protos.Param{
+			"volume": {
+				Type: protos.ParamType_INT32,
+				Value: &protos.Value{
+					Kind: &protos.Value_Int32Value{Int32Value: 50},
+				},
+			},
+		},
+	}
+
+	b, err := MarshalProtoJSON(device)
+	if err != nil {
+		t.Fatalf("MarshalProtoJSON error: %v", err)
+	}
+	body := string(b)
+
+	if strings.Contains(body, `"precision"`) {
+		t.Errorf("MarshalProtoJSON should not emit default precision, got %s", body)
+	}
+	if strings.Contains(body, `"params":{}`) {
+		t.Errorf("MarshalProtoJSON should not emit empty params map, got %s", body)
+	}
+}
+
+func TestInjectJSONField_AddsSlotZero(t *testing.T) {
+	device := &protos.Device{
+		Slot: 0,
+		Params: map[string]*protos.Param{
+			"volume": {
+				Type: protos.ParamType_INT32,
+			},
+		},
+	}
+
+	b, err := MarshalProtoJSON(device)
+	if err != nil {
+		t.Fatalf("MarshalProtoJSON error: %v", err)
+	}
+
+	if strings.Contains(string(b), `"slot"`) {
+		t.Fatal("expected slot to be absent before injection")
+	}
+
+	b, err = injectJSONField(b, "slot", device.GetSlot())
+	if err != nil {
+		t.Fatalf("injectJSONField error: %v", err)
+	}
+
+	body := string(b)
+	if !strings.Contains(body, `"slot":0`) {
+		t.Errorf("expected slot:0 after injection, got %s", body)
+	}
+}
+
+func TestInjectJSONField_PreservesExistingSlot(t *testing.T) {
+	device := &protos.Device{
+		Slot: 5,
+		Params: map[string]*protos.Param{
+			"volume": {
+				Type: protos.ParamType_INT32,
+			},
+		},
+	}
+
+	b, err := MarshalProtoJSON(device)
+	if err != nil {
+		t.Fatalf("MarshalProtoJSON error: %v", err)
+	}
+
+	b, err = injectJSONField(b, "slot", device.GetSlot())
+	if err != nil {
+		t.Fatalf("injectJSONField error: %v", err)
+	}
+
+	body := string(b)
+	if !strings.Contains(body, `"slot":5`) {
+		t.Errorf("expected slot:5 after injection, got %s", body)
+	}
+}
+
+func TestInjectJSONField_PushUpdatesSlotZero(t *testing.T) {
+	update := &protos.PushUpdates{
+		Slot: 0,
+		Kind: &protos.PushUpdates_SlotsAdded{
+			SlotsAdded: &protos.SlotList{
+				Slots: []uint32{0, 1},
+			},
+		},
+	}
+
+	b, err := MarshalProtoJSON(update)
+	if err != nil {
+		t.Fatalf("MarshalProtoJSON error: %v", err)
+	}
+
+	b, err = injectJSONField(b, "slot", update.GetSlot())
+	if err != nil {
+		t.Fatalf("injectJSONField error: %v", err)
+	}
+
+	body := string(b)
+	if !strings.Contains(body, `"slot":0`) {
+		t.Errorf("expected slot:0 in PushUpdates output, got %s", body)
+	}
+	if !strings.Contains(body, `"slots_added"`) {
+		t.Errorf("expected slots_added in output, got %s", body)
+	}
+}
+
+func TestPostProcessDeviceJSON_InjectsRequiredDefaults(t *testing.T) {
+	device := &protos.Device{
+		Slot: 0,
+		Params: map[string]*protos.Param{
+			"brightness": {
+				Type: protos.ParamType_INT32,
+			},
+		},
+		Commands: map[string]*protos.Param{
+			"reboot": {
+				Type: protos.ParamType_EMPTY,
+			},
+		},
+		MenuGroups: map[string]*protos.MenuGroup{
+			"video": {
+				Name: &protos.PolyglotText{
+					DisplayStrings: map[string]string{"en": "Video"},
+				},
+				Menus: map[string]*protos.Menu{
+					"basic": {
+						Name: &protos.PolyglotText{
+							DisplayStrings: map[string]string{"en": "Basic"},
+						},
+					},
+				},
+			},
+		},
+		Constraints: map[string]*protos.Constraint{
+			"range": {
+				Type: protos.Constraint_INT_RANGE,
+				Kind: &protos.Constraint_Int32Range{
+					Int32Range: &protos.Int32RangeConstraint{
+						MinValue: 0,
+						MaxValue: 100,
+					},
+				},
+			},
+		},
+	}
+
+	b, err := MarshalProtoJSON(device)
+	if err != nil {
+		t.Fatalf("MarshalProtoJSON error: %v", err)
+	}
+
+	b, err = PostProcessDeviceJSON(b, device.GetSlot())
+	if err != nil {
+		t.Fatalf("PostProcessDeviceJSON error: %v", err)
+	}
+
+	body := string(b)
+
+	if !strings.Contains(body, `"slot":0`) {
+		t.Errorf("expected slot:0, got %s", body)
+	}
+	if !strings.Contains(body, `"response":false`) {
+		t.Errorf("expected response:false on command, got %s", body)
+	}
+	if !strings.Contains(body, `"order":0`) {
+		t.Errorf("expected order:0 on menu_group, got %s", body)
+	}
+	if !strings.Contains(body, `"min_value":0`) {
+		t.Errorf("expected min_value:0 on int32_range, got %s", body)
+	}
+	if strings.Contains(body, `"precision"`) {
+		t.Errorf("precision should not appear, got %s", body)
+	}
+}

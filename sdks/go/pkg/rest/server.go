@@ -45,8 +45,6 @@ import (
 	"net/http"
 	"strings"
 
-	"google.golang.org/protobuf/encoding/protojson"
-
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/internal"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
@@ -135,14 +133,17 @@ func writeDeviceResult(w http.ResponseWriter, device catena.CatenaDevice, httpSt
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	b, err := (protojson.MarshalOptions{
-		UseProtoNames:   true,
-		EmitUnpopulated: false,
-	}).Marshal(protoDevice)
+	b, err := MarshalProtoJSON(protoDevice)
 	if err != nil {
 		logger.Error("failed to marshal device response", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "failed to marshal device response"})
+		return
+	}
+	b, err = PostProcessDeviceJSON(b, protoDevice.GetSlot())
+	if err != nil {
+		logger.Error("failed to post-process device JSON", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -208,17 +209,14 @@ func (s *Server) Shutdown() {
 	s.baseServer.ShutdownConnections()
 }
 
-// sseMarshaler is the protojson marshaler used for SSE events.
-// UseProtoNames must be true so field names match the REST responses
-var sseMarshaler = protojson.MarshalOptions{
-	UseProtoNames:   true,
-	EmitUnpopulated: false,
-}
-
 // sendSSEEvent writes a single SSE event to the response writer,
-// serializing the proto PushUpdates message with protojson.
+// serializing the proto PushUpdates message via MarshalProtoJSON.
 func (s *Server) sendSSEEvent(w http.ResponseWriter, flusher http.Flusher, update *protos.PushUpdates) error {
-	data, err := sseMarshaler.Marshal(update)
+	data, err := MarshalProtoJSON(update)
+	if err != nil {
+		return err
+	}
+	data, err = injectJSONField(data, "slot", update.GetSlot())
 	if err != nil {
 		return err
 	}

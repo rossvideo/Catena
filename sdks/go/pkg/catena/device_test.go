@@ -40,6 +40,7 @@ package catena
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 )
 
@@ -354,6 +355,51 @@ func TestCatenaDevice_ToJSON(t *testing.T) {
 	// Check some fields exist
 	if _, ok := result["params"]; !ok {
 		t.Error("expected 'params' in JSON output")
+	}
+}
+
+func TestCatenaDevice_ToJSON_SlotZeroPresent(t *testing.T) {
+	deviceMap := map[string]any{
+		"slot":         uint32(0),
+		"detail_level": DetailLevelFull,
+		"params": map[string]any{
+			"volume": map[string]any{
+				"type": ParamTypeInt32,
+				"value": map[string]any{
+					"int32_value": 0,
+				},
+			},
+		},
+	}
+
+	cd, err := ToCatenaDevice(deviceMap)
+	if err != nil {
+		t.Fatalf("ToCatenaDevice error: %v", err)
+	}
+
+	jsonData, err := cd.ToJSON()
+	if err != nil {
+		t.Fatalf("ToJSON error: %v", err)
+	}
+
+	body := string(jsonData)
+
+	if !strings.Contains(body, `"slot":0`) {
+		t.Errorf("expected slot:0 in JSON output, got %s", body)
+	}
+
+	if !strings.Contains(body, `"int32_value":0`) {
+		t.Errorf("expected int32_value:0 in JSON output, got %s", body)
+	}
+
+	// Non-struct params must not have empty params map
+	if strings.Contains(body, `"params":{}`) {
+		t.Errorf("empty params map should not appear in output, got %s", body)
+	}
+
+	// Schema-forbidden fields like precision must not appear for INT32 params
+	if strings.Contains(body, `"precision"`) {
+		t.Errorf("precision should not appear in output for INT32 param, got %s", body)
 	}
 }
 

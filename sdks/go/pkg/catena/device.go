@@ -99,14 +99,71 @@ func (cd CatenaDevice) GetProtoDevice() *protos.Device {
 	return cd.device
 }
 
-// ToJSON converts CatenaDevice to JSON bytes using protojson
+// ToJSON converts CatenaDevice to JSON bytes using protojson.
+// Post-processes the JSON to inject schema-required fields that proto3
+// omits at their default values (slot, command response, menu_group order,
+// constraint range bounds).
 func (cd CatenaDevice) ToJSON() ([]byte, error) {
 	if cd.device == nil {
 		return nil, nil
 	}
 
-	return (protojson.MarshalOptions{
+	b, err := (protojson.MarshalOptions{
 		UseProtoNames:   true,
 		EmitUnpopulated: false,
 	}).Marshal(cd.device)
+	if err != nil {
+		return nil, err
+	}
+	return postProcessDeviceJSON(b, cd.device.GetSlot())
+}
+
+// postProcessDeviceJSON ensures all SMPTE-schema-required fields are present
+// in the Device JSON even when proto3 omits them at their default values.
+func postProcessDeviceJSON(data []byte, slot uint32) ([]byte, error) {
+	var m map[string]any
+	if err := json.Unmarshal(data, &m); err != nil {
+		return nil, err
+	}
+
+	m["slot"] = slot
+
+	if commands, ok := m["commands"].(map[string]any); ok {
+		for _, cmd := range commands {
+			if cmdMap, ok := cmd.(map[string]any); ok {
+				setDefault(cmdMap, "response", false)
+			}
+		}
+	}
+
+	if menuGroups, ok := m["menu_groups"].(map[string]any); ok {
+		for _, mg := range menuGroups {
+			if mgMap, ok := mg.(map[string]any); ok {
+				setDefault(mgMap, "order", 0)
+			}
+		}
+	}
+
+	if constraints, ok := m["constraints"].(map[string]any); ok {
+		for _, c := range constraints {
+			if cMap, ok := c.(map[string]any); ok {
+				if r, ok := cMap["int32_range"].(map[string]any); ok {
+					setDefault(r, "min_value", 0)
+					setDefault(r, "max_value", 0)
+				}
+				if r, ok := cMap["float32_range"].(map[string]any); ok {
+					setDefault(r, "min_value", 0)
+					setDefault(r, "max_value", 0)
+				}
+			}
+		}
+	}
+
+	return json.Marshal(m)
+}
+
+func setDefault(m map[string]any, key string, value any) {
+	if _, exists := m[key]; !exists {
+		m[key] = value
+	}
 }
