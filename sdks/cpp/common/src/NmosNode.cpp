@@ -385,7 +385,7 @@ void NmosNode::browse_cb(
 {
     NmosNode* node = static_cast<NmosNode*>(userdata);
     switch (event) {
-        case AVAHI_BROWSER_NEW: {
+        case AVAHI_BROWSER_NEW: 
             LOG(DEBUG) << "Discovered service: " << name << " of type " << type << " in domain " << domain;
             // Found a new service, resolve it
             if (!(avahi_service_resolver_new(
@@ -393,7 +393,6 @@ void NmosNode::browse_cb(
                 AVAHI_PROTO_UNSPEC, (AvahiLookupFlags)0, resolve_cb, node)))
             LOG(ERROR) << "Failed to resolve service '" << name << "': " << avahi_strerror(avahi_client_errno(node->getClient()));
             break;
-        }
         case AVAHI_BROWSER_FAILURE: 
             LOG(ERROR) << "browse failure: " << avahi_strerror(avahi_client_errno(node->getClient())) << "\n";
             avahi_simple_poll_quit(node->getPoll());
