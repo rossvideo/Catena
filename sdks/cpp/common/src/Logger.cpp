@@ -150,15 +150,15 @@ void Logger::init(const std::string& appName) {
             // Create file sink and set parameters
             instance().file_sink_ = boost::make_shared<file_sink_t>(
                 keywords::file_name = fileName,
-                keywords::rotation_size = config::log_size * MB
+                keywords::rotation_size = config::log_size * MB,
+                keywords::enable_final_rotation = false
             );
             auto& file_sink = instance().file_sink_;
             // Set filtering, formatting, and file collecting
             if (config::log_count > 1) {
                 file_sink->locked_backend()->set_file_collector(sinks::file::make_collector(
                     keywords::target = config::log_dir,
-                    keywords::max_files = config::log_count - 1, // The backend doesn't count the active file, so adjust down by 1
-                    keywords::enable_final_rotation = false
+                    keywords::max_files = config::log_count - 1 // The backend doesn't count the active file, so adjust down by 1
                 ));
                 file_sink->locked_backend()->scan_for_files(sinks::file::scan_all);
             } else {
